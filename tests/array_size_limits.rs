@@ -26,7 +26,7 @@ fn array_size_limits_agree_with_raw_interpreter_and_generic_wrappers() {
         let source = scratch.0.join(format!("{label}.fwp"));
         std::fs::write(&source, format!("{prefix}main = read-all () | string.length | {expression} | array.length | echo\n")).unwrap();
         let reference = Command::new(fwp).env("FWP_NO_OPT", "1").args(["run", "--interp"]).arg(&source).output().unwrap();
-        assert_eq!(reference.status.code(), Some(if trap.is_some() {1} else {0}), "{label}: {}", String::from_utf8_lossy(&reference.stderr));
+        assert_eq!(reference.status.code(), Some(if trap.is_some() {101} else {0}), "{label}: {}", String::from_utf8_lossy(&reference.stderr));
         if let Some(trap) = trap { assert_eq!(reference.stderr, format!("fwp: trap: {trap}\n").as_bytes()); }
         else { assert_eq!(reference.stdout, b"0\n"); }
         for opt in ["-O1", "-O2"] { for reuse in ["0", "1"] {
@@ -95,7 +95,11 @@ fn bump_allocation_checks_alignment_overflow_and_empty_initialization() {
     let initialization = "!fwp_heap_cur || ";
     assert_eq!(allocator.matches(guard).count(),1);
     assert_eq!(allocator.matches(initialization).count(),1);
-    let variants = [("checked",allocator.to_string(),102),("omit-alignment",allocator.replace(guard,"0"),128),("omit-initialization",allocator.replace(initialization,""),129)];
+    let variants = [("checked",allocator.to_string(),102),("omit-alignment",allocator.replace(guard,"0"),128),("omit-initialization",allocator.replace(initialization,"")
+        // Keep the negative control's null-address arithmetic defined;
+        // removing initialization must fail independently of C pointer UB.
+        .replace("fwp_heap_end - fwp_heap_cur", "(uintptr_t)fwp_heap_end - (uintptr_t)fwp_heap_cur")
+        .replace("fwp_heap_cur += n;", "fwp_heap_cur = (char *)((uintptr_t)fwp_heap_cur + n);"),129)];
     for opt in ["-O1","-O2"] { for (label,code,expected) in &variants {
         let cfile=directory.join(format!("{label}{}.c",&opt[1..]));let executable=cfile.with_extension("bin");
         let probe=include_str!("fixtures/bump_size_probe.c").replace("/* BUMP_ALLOCATOR */",code);std::fs::write(&cfile,&probe).unwrap();
