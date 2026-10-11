@@ -1,4 +1,4 @@
-"""Publish a runner-only allocation driver with identical State native source."""
+"""Publish ownership exit finalization after verified PR124 acceptance."""
 from pathlib import Path
 import hashlib, json, subprocess
 REPO = 'repos/e6qu/fun-with-pipes'

@@ -6,11 +6,13 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `c9468213bc0b8a85ea187718702b831ccf0c02cb` passes audit38185008317
+checkpoint `47d71b6598f1e8d08842075f7a9370db89cea213` passes audit38185353180
 and retains the latest AD/input and callback diagnostic sources. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
-Git blob hashes using restore-roadmap-recovery.py. The AST-based restore repair
-is source-reviewed, but its execution has not been validated. Never rerun
+Git blob hashes using restore-roadmap-recovery.py. Actual runner restoration passes in38185353180:365 temporary targets and
+9134228 bytes have verified hashes. Only bounded report metadata was downloaded
+to fwp-verified-recovery-restoration; no local restoration, helper execution or
+compiler check ran. Never rerun
 completed publishers. Phases2–6 remain unfinished.
 
 ## Execution contract
@@ -310,9 +312,24 @@ The future finalization publisher now pins repaired3aae99 and includes this
 patch. The accepted-source phase2 audit remains a source-only draft until the
 finite review bundle is merged and its exact source is checked.
 
-The recovery checkpoint audit is being extended with actual temporary-file
-restoration on a disposable GitHub runner. It verifies the restored source
-hashes and preserves its report without executing publishers, merge helpers
-or compiler workloads. This is preparation, not a passed restoration check:
-fwp-validate-restoration-on-runner.py and the handoff-audit workflow must pass
-before the earlier unvalidated-restorer limitation can be removed.
+Actual temporary recovery restoration passes on disposable GitHub runner38185353180.
+All365 restored targets (9134228 bytes) have verified source hashes; publishers,
+merge helpers and compiler workloads were not executed. Metadata and proof are
+retained in fwp-verified-recovery-restoration. Checkout and artifact upload v7
+also pass there; the dedicated kernel preflight below proves both actions on
+Linux and both macOS architectures. No local recovery restoration ran.
+
+An encountered numeric kernel bug is also fixed in preparation: computing
+(sp - 1) at an empty evaluation stack forms an out-of-bounds top pointer.
+Candidate28db5471d503763aa27e7da4f60c5ad880ad4183 passes Linux/ARM/Intel
+runner38185769269. Extracted actual kernels pass O1/O2 address/undefined/unsigned-
+overflow sanitizers with first leaf/constant operations, lengths0/1/7/127/256,
+nonzero offsets, exact numeric bytes and boundary sentinels. Removing the guard
+must fail on the empty-stack subtraction. Existing parallel-kernel and missing-
+OpenCL controls also pass against explicit FWP_NO_OPT=1 interpreter results.
+Original benchmark remains ignored; no timing or real GPU claim is established.
+Retain C, binary and status artifacts on GitHub. The next finite phase2 exit
+bundle combines this fix with buffer/array/bump bounds and Node24 actions;
+PR124's current head remains frozen. Future finalizer pins all three passing
+kernel jobs and retains array/kernel controls; metadata exports are separate
+from binary artifacts to keep local downloads bounded.

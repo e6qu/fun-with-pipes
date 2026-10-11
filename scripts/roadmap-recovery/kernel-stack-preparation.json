@@ -1,0 +1,10 @@
+{
+  "head": "3aae99bfa705e26babc2cf251b0e583dfd95cf38",
+  "nativeSourceHead": "d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0",
+  "nativeSourceSha256": "c205d5b43438d36af0b63e40a5aab4669d53dc1747109b3f56e118c84cf186c7",
+  "candidateSha256": "ef08874d18f88b49febabb23008dfdb6094873ca6d7b44811602c2659a20d615",
+  "numericTestBlob": "61186256b9a70ba2c04557bd2dc682b8d99debca",
+  "change": "Avoid forming a pointer before the evaluation stack when sp is zero; retain operation order and force the interpreter oracle to use FWP_NO_OPT=1",
+  "status": "Source-only fix; Linux/ARM/Intel sanitizer and native/interpreter numeric checks required",
+  "sanitizerDocumentation": "https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html"
+}

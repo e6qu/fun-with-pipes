@@ -81,7 +81,8 @@ Never call skipped, queued, superseded or cancelled runs passing support.
 
 Finish phase2 by accepting PR124's combined resource/State, codec and scoped
 gradient work, then the finite177-declaration review with checked structural
-buffer and array/bump allocation boundaries in one coherent next bundle.
+buffer and array/bump allocation boundaries, kernel stack bounds and current
+CI actions in one coherent next bundle.
 Classify each remaining boundary with its argument/result/alias/callback policy
 or explicit tracing fallback, including retained contexts, partial reconstruction
 and cycle lifetime. Complete allocator counters must include initializer fast

@@ -1,4 +1,4 @@
-name: Preflight finite ownership exit and buffer bundle
+name: Preflight ownership coverage and allocation boundaries
 on:
   push:
     branches: [ownership-phase2-exit-finalization]
@@ -52,4 +52,18 @@ jobs:
         if: always()
         with:
           name: phase2-exit-finalization
-          path: phase2-exit-evidence/
+          path: |
+            phase2-exit-evidence/phase2-exit.json
+            phase2-exit-evidence/prepared-commits.json.gz
+            phase2-exit-evidence/inventory.json
+            phase2-exit-evidence/fallback-review.json
+            phase2-exit-evidence/*.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: phase2-exit-controls
+          path: |
+            phase2-exit-evidence/buffers/
+            phase2-exit-evidence/arrays/
+            phase2-exit-evidence/kernels/
+            phase2-exit-evidence/codecs/
