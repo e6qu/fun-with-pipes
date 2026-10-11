@@ -1,6 +1,6 @@
 from pathlib import Path
 import subprocess,json,os
-root=Path.cwd();wt=root.parent/'resource-network';source='9ad102d5a16f';oldbase='3dba256655a3';target='b0ae00d5512df825271970cafcf569f52dbfc0cd';branch='ownership-resource-network-bundle'
+root=Path.cwd();wt=root.parent/'resource-network';source='b45e93a71d40';oldbase='3dba256655a3';target='b0ae00d5512df825271970cafcf569f52dbfc0cd';branch='ownership-resource-network-bundle'
 docs=['CONTRIBUTING.md','PLAN.md','docs/design.md','docs/development-state.md','docs/ownership.md','docs/primitive-ownership.md','docs/roadmap-queue.md','docs/roadmap-history.md','docs/reference.md','docs/concurrency.md','docs/numerics.md']
 new_files={'src/cgen.rs','src/ownership.rs','src/ffi_interp.rs','lib/ffi.fwp','tests/ffi_pointer_arithmetic.rs','tests/raw_memory_ownership.rs'}
 env=dict(os.environ,GIT_EDITOR='true')
@@ -9,7 +9,7 @@ def blob(rev,name):return subprocess.check_output(['git','show',rev+':'+name],cw
 source=git('rev-parse',source);oldbase=git('rev-parse',oldbase)
 assert not git('ls-remote','origin','refs/heads/'+branch)
 assert git('merge-base',oldbase,source)==oldbase
-originals=git('rev-list','--reverse',oldbase+'..'+source).splitlines();assert len(originals)==44
+originals=git('rev-list','--reverse',oldbase+'..'+source).splitlines();assert len(originals)==85
 original_docs={name:blob(target,name) for name in docs}
 ci_old='      - name: test\n        run: cargo test --all-targets --no-fail-fast\n'
 ci_new='      - name: test\n        env:\n          FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"\n        run: cargo test --all-targets --no-fail-fast\n'
@@ -62,7 +62,7 @@ while r.returncode:
   assert set(git('diff','--name-only',rev+'^',rev,cwd=wt).splitlines())<=set(docs)
   git('commit','--allow-empty','-C',rev,cwd=wt)
  r=rebase('--continue')
-head=git('rev-parse','HEAD',cwd=wt);rebased=git('rev-list','--reverse',target+'..'+head,cwd=wt).splitlines();assert len(rebased)==44
+head=git('rev-parse','HEAD',cwd=wt);rebased=git('rev-list','--reverse',target+'..'+head,cwd=wt).splitlines();assert len(rebased)==85
 for before,after in zip(originals,rebased):assert git('show','-s','--format=%s',before)==git('show','-s','--format=%s',after)
 assert blob(head,'.github/workflows/ci.yml')==expected_ci
 assert blob(head,'tests/golden_run.rs')==blob(target,'tests/golden_run.rs')
@@ -81,7 +81,7 @@ for revision in git('rev-list',target+'..'+head,cwd=wt).splitlines():
  assert len(message.splitlines())==1 and len(message)<=80
  assert not any(term in message.lower() for term in ['co-authored','authored-by','authored by','ai attribution'])
 subprocess.run(['python3','scripts/check-roadmap.py'],cwd=wt,check=True)
-record=dict(source=source,oldbase=oldbase,base=target,head=head,branch=branch,originalCommits=originals,rebasedCommits=rebased,includedRows=list(range(74,94)),stage='GitHub preparation published; final actual-squash rebase and full mandatory-WASI production CI pending',ciRequirement='Inherited exact golden diagnostics plus FWP_REQUIRE_WASM_RESOURCE_COUNTS=1')
+record=dict(source=source,oldbase=oldbase,base=target,head=head,branch=branch,originalCommits=originals,rebasedCommits=rebased,includedRows=list(range(74,113)),stage='GitHub preparation published; final actual-squash rebase and full mandatory-WASI production CI pending',ciRequirement='Inherited exact golden diagnostics plus FWP_REQUIRE_WASM_RESOURCE_COUNTS=1')
 (root/'preparation.json').write_text(json.dumps(record,indent=2)+'\n')
 git('push','origin','HEAD:refs/heads/'+branch,cwd=wt)
 assert git('ls-remote','origin','refs/heads/'+branch).split()[0]==head
