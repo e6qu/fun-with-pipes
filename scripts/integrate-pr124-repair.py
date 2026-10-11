@@ -83,7 +83,7 @@ for name in NATIVE:
     assert source.encode() == blob(STATE,name), name
     (WT/name).write_text(source)
 fixtures = {
-    'tests/typed_state_ownership.rs': (RECOVERY,'scripts/roadmap-recovery/typed-state-expanded-test.rs'),
+    'tests/typed_state_ownership.rs': ('HEAD','scripts/typed-state-expanded-test.rs'),
     'tests/fixtures/typed_state_probe.c': (STATE,'tests/fixtures/typed_state_probe.c'),
     'scripts/check-roadmap.py': (RECOVERY,'scripts/check-roadmap.py'),
     'scripts/check-primitive-inventory.py': (RECOVERY,'scripts/roadmap-recovery/check-primitive-inventory-state.py'),
