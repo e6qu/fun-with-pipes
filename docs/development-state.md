@@ -6,7 +6,7 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `80e9b271a2e73928ff887c593ae1435709bba5ed` passes audit38181241047
+checkpoint `2e597098a5f2007be64bf09e5ff1e330ec93487a` passes audit38182062034
 and retains the latest AD/input and callback diagnostic sources. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
 Git blob hashes using restore-roadmap-recovery.py. The AST-based restore repair
@@ -66,7 +66,7 @@ lifetimes, list callback owners, closure cleanup and typed State ownership.
 Production head is `d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0`, complete tree
 `db8348f963973fa32fb0803348fcb53a2c072a52`, identical to the final runner export.
 Full CI38180852377 is running at that exact head; bench and ARM GC pass; the other
-four jobs run. Roadmap_docs38180852369 passes.
+three regular-platform jobs run; both GC jobs pass. Roadmap_docs38180852369 passes.
 Publication receipt: /private/tmp/fwp-pr124-final-ownership-export/publication.json.
 Do not merge until all six jobs and the documentation audit pass.
 
@@ -101,7 +101,9 @@ bytes272212→206676; counted freed bytes rise0→262144. List2048-call profiles
 retain43008 calls/965374 bytes and raise counted freed bytes65536→917504.
 Scoped grad4096-call profiles match the baseline33 calls/720 bytes per gradient,
 repairing the40-call/872-byte regression without weakening assertions. Hardware,
-compiler, flags and source/binary hashes remain in the runner artifacts.
+compiler, flags and source/binary hashes remain in the runner artifacts. Combined
+Linux report metadata is retained in fwp-pr124-final-combined-profile-metadata,
+with source893a9c60586ede490c8d949223d6a45862ae3fd8 and artifact11716429988.
 No timing or tracing-free claim is established.
 
 The old production38174221614 is complete: regular Linux/ARM/Intel fail only
@@ -224,27 +226,30 @@ variants. Drafts: fwp-structural-buffer-{draft.c,test.rs,probe.c,patch.json}.
 Fold it into the next ownership exit bundle after PR124 acceptance; no second
 production PR opens before that merge.
 
-The same exact-source audit found unchecked generic array size multiplication,
-interpreter capacity overflow for huge make counts, and bump-heap alignment
-addition/initial empty allocation issues. Array-limit candidate
-b42f318357658f277bf6615c0207b33aa810b57b on
-ownership-evidence-array-size-limits extendsd8e334ba with checked bump alignment
-and nonnull zero-size initialization; run38181946074 is queued. Earlier
-38181835721 is running atd8e334ba and cannot gate the newer controls. Native
-constructor guards and matching interpreter make/generate limits preserve
-negative counts and argument/callback trap order. Raw/native O1/O2 with reuse
-on/off and real GC/reuse verification plus ASan/UBSan constructor/bump omission
-controls are pending. Fold the passing final repair into the same phase2 exit
-bundle; keep original controls. Drafts: fwp-array-size-{runtime-draft.c,
-interpreter-draft.rs,gc-draft.c,test.rs,probe.c}; fwp-bump-size-probe.c.
+Array-limit candidate296ea83b45bb153c2b86d1df68e05c799013b2eb on
+ownership-evidence-array-size-limits passes all three jobs in38182446407.
+Central constructor multiplication, matching interpreter make/generate limits,
+bump alignment overflow and nonnull empty initialization are checked. Five
+raw/native cases preserve oversized make/generate traps, argument trap order
+and negative counts at O1/O2 with reuse on/off and real GC/reuse verification.
+ASan/UBSan constructor/bump omission controls,71 library units, all golden type
+snapshots and eight effect tests pass. Proof: fwp-array-size-passing-proof.json.
+Earlierd8/b42 failed a missing native forward declaration; a2 passed all C/unit/
+effect/snapshot controls but the new semantic fixture expected1 rather than the
+established trap status101. The final head corrects that fixture and makes the
+initialization omission's null-address arithmetic defined. No control was removed.
+Logs: fwp-array-size-d8-failed.log and fwp-array-size-a2-linux-failed.log.
+Fold this passing repair into the same phase2 exit bundle; final full gates still
+apply. Drafts: fwp-array-size-{runtime-draft.c,interpreter-draft.rs,gc-draft.c,
+test.rs,probe.c}; fwp-bump-size-probe.c.
 
 Prepared post-merge helpers: fwp-record-pr124-remote-acceptance.py backs up11 docs
 and archives39 live/primitive rows only after exact-head squash/raw-payload proof.
 It streamlines obsolete design/resource notes into history. Never execute before
 verified acceptance. fwp-finalize-phase2-exit-on-runner.py and
 fwp-publish-phase2-exit-finalization.py require the actual PR124 squash and passing
-finite review. Extend that finalizer with the passing latest array/bump source
-and controls before publishing its driver. It will export a focused ownership
+finite review. That finalizer pins the passing296ea83 array/bump source
+and all original controls. It will export a focused ownership
 exit/buffer/array-limit bundle and fresh docs for the next full matrix.
 
 Numeric design preparation reads30 blob-verified files at d5ae8c and maps108

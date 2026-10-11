@@ -1,0 +1,14 @@
+{
+  "run": 38180262247,
+  "driver": "040a3f64f4e2fcc9466c76aea7466a6fc36a3d68",
+  "artifact": 11716429988,
+  "testedProductionHead": "d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0",
+  "tree": "db8348f963973fa32fb0803348fcb53a2c072a52",
+  "measuredCandidate": "893a9c60586ede490c8d949223d6a45862ae3fd8",
+  "reportHashes": {
+    "state": "cae521a32712289229e689feb246f3075294a9e13dcc3b01480eee292a52d55c",
+    "ad": "27ef516b2e3b5c0fd7d129afbad7506a199597278a5bd7cb1ce14378a269a2de",
+    "list": "1aa508925dc04ef3d4a4675d4148380d7c14d70f9bc7edb9fff1c2ad17fd79fe"
+  },
+  "scope": "Combined-source Linux O1/O2 complete managed allocation comparisons; no timing or tracing-free claim"
+}

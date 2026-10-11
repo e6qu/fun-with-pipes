@@ -71,6 +71,7 @@ static void *fwp_mem_alloc(size_t n);
 static void *fwp_mem_realloc(void *p, size_t old, size_t n);
 static void fwp_mem_free(void *p);
 static void fwp_gc_start(void *top);
+static void fwp_trap(const char *msg);
 
 /* runtime/fwp_rt_task.c: preemption. A safe point (the entry of a
  * function of a program that uses tasks, an iteration of `loop`) spends
@@ -81,7 +82,6 @@ static void fwp_preempt(void);
 /* WebAssembly with Asyncify: a task's C stack (linear memory) is checked
  * here, since the engine's stack, on which its calls run, is much larger */
 static uintptr_t fwp_stack_low = 0;
-static void fwp_trap(const char *msg);
 #define FWP_TICK()                                                                              \
     do {                                                                                        \
         volatile char fwp_sp_;                                                                  \

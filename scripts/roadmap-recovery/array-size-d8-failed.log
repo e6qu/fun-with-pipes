@@ -1,0 +1,326 @@
+arrays (ubuntu-latest)	Format and validate array limits and trap order	﻿2026-10-11T22:49:41.7997037Z ##[group]Run rustfmt --edition 2021 src/prims_std.rs tests/array_size_limits.rs
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.7998506Z ^[[36;1mrustfmt --edition 2021 src/prims_std.rs tests/array_size_limits.rs^[[0m
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.7999608Z ^[[36;1mcargo test --lib^[[0m
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8000928Z ^[[36;1mcargo test --test array_size_limits --test golden_check --test call_effects --no-fail-fast -- --nocapture^[[0m
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8061161Z shell: /usr/bin/bash -e {0}
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8061915Z env:
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8062511Z   CARGO_BUILD_JOBS: 2
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8063378Z   CARGO_INCREMENTAL: 0
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8064099Z   CARGO_PROFILE_DEV_DEBUG: 0
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8064848Z   CARGO_PROFILE_TEST_DEBUG: 0
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8065568Z   CC: clang
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8066208Z   CARGO_HOME: /home/runner/.cargo
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8066986Z   CARGO_TERM_COLOR: always
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8067948Z   FWP_ARRAY_SIZE_ARTIFACTS: /home/runner/work/_temp/array-size-evidence
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:41.8069005Z ##[endgroup]
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:42.3325599Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6552843Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 7.42s
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6556939Z ^[[1m^[[92m     Running^[[0m unittests src/lib.rs (target/debug/deps/fwp-cbe53280e50fe968)
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6572234Z 
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6572407Z running 71 tests
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6588792Z test cli::tests::names ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6589321Z test cli::tests::field_comments ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6589689Z test csv::tests::quoting ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6590101Z test escape::tests::applying_a_closure_does_not_let_it_escape ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6590678Z test escape::tests::counts_around_an_argument_are_seen_through ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6591133Z test escape::tests::match_aliases_are_followed ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6591435Z test escape::tests::passing_on_follows_the_callee ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6591995Z test escape::tests::reading_fields_does_not_escape ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6592309Z test fmt::tests::comments_and_blank_lines ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6592580Z test fmt::tests::spelling_and_ambiguities ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6593150Z test escape::tests::returning_or_storing_escapes ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6593814Z test grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6594431Z test fmt::tests::layout ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6613100Z test grpc::web::tests::sha1_and_accept ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6613846Z test grpc::web::tests::websocket_messages_deflate_and_inflate ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6619424Z test grpc::web::tests::zlib_round_trip ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6620513Z test gzip::tests::crc ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6633642Z test gzip::tests::chunks_make_one_stream ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6636739Z test gzip::tests::reads_other_encoders ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6639413Z test gzip::tests::rejects_bad_data ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6651430Z test grpc::web::tests::frames_round_trip ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6652572Z test jsontype::tests::base64_round_trip ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6654766Z test jsontype::tests::durations ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6657004Z test jsontype::tests::exact_integers ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6658052Z test lexer::tests::hyphen_vs_negative ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6660247Z test lexer::tests::idents_and_selectors ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6661249Z test lexer::tests::layout_flags ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6661835Z test lexer::tests::numbers ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6667377Z test lexer::tests::strings_comments_macros ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6668456Z test numerics::tape_validation_tests::invalid_nodes_preserve_push_state_and_consume_backward_tapes ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6672085Z test numerics::tape_validation_tests::scoped_callbacks_release_only_their_live_tapes ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6673300Z test ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6674316Z test rc::tests::a_borrowed_argument_lives_until_the_operation ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6675576Z test rc::tests::a_match_dups_the_fields_an_arm_keeps_and_drops_the_rest ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6677575Z test rc::tests::a_parameter_returned_is_moved ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6678487Z test rc::tests::a_parameter_used_twice_is_duplicated_once ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6680233Z test rc::tests::an_unused_parameter_is_dropped ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6681084Z test rc::tests::borrowed_pattern_values_are_not_unwind_owners ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6684636Z test rc::tests::call_liveness_distinguishes_borrows_transfers_and_duplicate_owners ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6685652Z test rc::tests::constructors_transfer_fields_and_keep_other_caller_owners ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6686731Z test rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6687707Z test rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6690925Z test rc::tests::earlier_caf_owner_remains_owned_during_a_final_scalar_call ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6694374Z test rc::tests::earlier_consumed_arguments_remain_owned_during_later_calls ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6695261Z test rc::tests::earlier_duplicate_remains_owned_during_the_final_call ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6698233Z test rc::tests::earlier_owner_remains_owned_during_a_final_scalar_call ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6705591Z test rc::tests::matched_value_conversion_keeps_remaining_caller_owners ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6706445Z test rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6707248Z test rc::tests::original_resource_parameters_enter_the_frame_before_dead_drops ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6707876Z test rc::tests::parts_keep_their_order ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6708777Z test rc::tests::retain_liveness_excludes_the_unfinished_extra_reference ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6709572Z test rc::tests::scalars_are_not_counted ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6710032Z test rc::tests::the_checker_rejects_mistakes ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6710610Z test rc::tests::uninitialized_region_bindings_are_not_entry_owners ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6711327Z test rc::tests::update_liveness_keeps_the_borrowed_base_and_remaining_owners ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6712565Z test resource::tests::fusion_preserves_resource_stage_frames_even_with_pure_bodies ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6714010Z test resource::tests::nominal_recursive_resource_graphs_and_nonowning_arrows ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6715253Z test resource::tests::owner_metadata_rejects_missing_duplicate_and_scalar_slots ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6717933Z test swagger::tests::converts_a_document ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6721920Z test value::tests::floats_round_trip_shortest ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6722691Z test value::tests::trits ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6725134Z test yaml::tests::anchors ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6727239Z test yaml::tests::block_collections ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6728106Z test yaml::tests::block_scalars ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6728549Z test yaml::tests::errors ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6728914Z test yaml::tests::flow_over_lines ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6736919Z test yaml::tests::reads_what_openapi_writes ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6738128Z test yaml::tests::scalars ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.6780342Z test gzip::tests::round_trip ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:49.7514203Z test gzip::tests::others_read_ours ... ok
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9513706Z test grpc::web::tests::body_bounds_and_error_order_agree_with_native ... FAILED
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9514217Z 
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9517871Z failures:
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9518028Z 
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9518322Z ---- grpc::web::tests::body_bounds_and_error_order_agree_with_native stdout ----
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9518717Z 
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9518985Z thread 'grpc::web::tests::body_bounds_and_error_order_agree_with_native' (2216) panicked at src/h2web.rs:1116:77:
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9522262Z called `Result::unwrap()` on an `Err` value: "C compiler failed:\n/tmp/fwp-build-b08a935286a3c16c6bef338c7b1d1bef/probe.c:185:55: error: call to undeclared function 'fwp_trap'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n  185 |     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");\n      |                                                       ^\n/tmp/fwp-build-b08a935286a3c16c6bef338c7b1d1bef/probe.c:185:55: note: did you mean 'fwp_tag'?\n/tmp/fwp-build-b08a935286a3c16c6bef338c7b1d1bef/probe.c:117:24: note: 'fwp_tag' declared here\n  117 | static inline uint32_t fwp_tag(V v) { return v < 4096 ? (uint32_t)v : OBJ(v)->tag; }\n      |                        ^\n/tmp/fwp-build-b08a935286a3c16c6bef338c7b1d1bef/probe.c:308:13: error: static declaration of 'fwp_trap' follows non-static declaration\n  308 | static void fwp_trap(const char *msg) {\n      |             ^\n/tmp/fwp-build-b08a935286a3c16c6bef338c7b1d1bef/probe.c:185:55: note: previous implicit declaration is here\n  185 |     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");\n      |                                                       ^\n2 errors generated.\ncompiler status: exit status: 1 (signal=None, core_dumped=false)"
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9526017Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9526253Z 
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9526266Z 
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9526333Z failures:
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9526561Z     grpc::web::tests::body_bounds_and_error_order_agree_with_native
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9526762Z 
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9526966Z test result: FAILED. 70 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.29s
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9527239Z 
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9575848Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--lib`
+arrays (ubuntu-latest)	Format and validate array limits and trap order	2026-10-11T22:49:56.9609449Z ##[error]Process completed with exit code 101.
+arrays (macos-15-intel)	Format and validate array limits and trap order	﻿2026-10-11T22:49:36.0628960Z ##[group]Run rustfmt --edition 2021 src/prims_std.rs tests/array_size_limits.rs
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0630260Z ^[[36;1mrustfmt --edition 2021 src/prims_std.rs tests/array_size_limits.rs^[[0m
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0631120Z ^[[36;1mcargo test --lib^[[0m
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0632160Z ^[[36;1mcargo test --test array_size_limits --test golden_check --test call_effects --no-fail-fast -- --nocapture^[[0m
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0697910Z shell: /bin/bash -e {0}
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0698430Z env:
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0698850Z   CARGO_BUILD_JOBS: 2
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0699340Z   CARGO_INCREMENTAL: 0
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0699830Z   CARGO_PROFILE_DEV_DEBUG: 0
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0700370Z   CARGO_PROFILE_TEST_DEBUG: 0
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0700880Z   CC: clang
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0701320Z   CARGO_HOME: /Users/runner/.cargo
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0701890Z   CARGO_TERM_COLOR: always
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0702440Z   FWP_OPENSSL_DIR: /usr/local/opt/openssl@3
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0703300Z   FWP_ARRAY_SIZE_ARTIFACTS: /Users/runner/work/_temp/array-size-evidence
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.0704260Z ##[endgroup]
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:49:36.3945790Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/Users/runner/work/fun-with-pipes/fun-with-pipes)
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.0965520Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 47.81s
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.1864250Z ^[[1m^[[92m     Running^[[0m unittests src/lib.rs (target/debug/deps/fwp-79d51d0b5199fbf2)
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.1867500Z 
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.1969900Z running 71 tests
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.2018790Z test csv::tests::quoting ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.2020600Z test cli::tests::names ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.2044240Z test cli::tests::field_comments ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.2086340Z test escape::tests::applying_a_closure_does_not_let_it_escape ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.2372410Z test escape::tests::counts_around_an_argument_are_seen_through ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.2419760Z test escape::tests::passing_on_follows_the_callee ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.2484000Z test escape::tests::reading_fields_does_not_escape ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.3246170Z test escape::tests::match_aliases_are_followed ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.3479930Z test escape::tests::returning_or_storing_escapes ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.3646130Z test grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.3708350Z test fmt::tests::comments_and_blank_lines ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.3819950Z test fmt::tests::spelling_and_ambiguities ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.3865000Z test fmt::tests::layout ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.3912010Z test grpc::web::tests::sha1_and_accept ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.3990890Z test grpc::web::tests::zlib_round_trip ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4101280Z test grpc::web::tests::websocket_messages_deflate_and_inflate ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4210550Z test gzip::tests::crc ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4271130Z test gzip::tests::chunks_make_one_stream ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4327930Z test gzip::tests::reads_other_encoders ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4363110Z test gzip::tests::rejects_bad_data ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4441260Z test grpc::web::tests::frames_round_trip ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4442520Z test jsontype::tests::base64_round_trip ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4483240Z test jsontype::tests::durations ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4605400Z test jsontype::tests::exact_integers ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4769600Z test lexer::tests::hyphen_vs_negative ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4880270Z test lexer::tests::idents_and_selectors ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4930420Z test lexer::tests::layout_flags ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.4973760Z test lexer::tests::numbers ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5028010Z test lexer::tests::strings_comments_macros ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5112550Z test numerics::tape_validation_tests::invalid_nodes_preserve_push_state_and_consume_backward_tapes ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5176240Z test numerics::tape_validation_tests::scoped_callbacks_release_only_their_live_tapes ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5249440Z test ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5325590Z test rc::tests::a_borrowed_argument_lives_until_the_operation ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5437250Z test rc::tests::a_match_dups_the_fields_an_arm_keeps_and_drops_the_rest ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5517860Z test rc::tests::a_parameter_returned_is_moved ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5600650Z test rc::tests::a_parameter_used_twice_is_duplicated_once ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5635120Z test rc::tests::an_unused_parameter_is_dropped ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5678100Z test rc::tests::borrowed_pattern_values_are_not_unwind_owners ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5700110Z test rc::tests::call_liveness_distinguishes_borrows_transfers_and_duplicate_owners ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5719690Z test rc::tests::constructors_transfer_fields_and_keep_other_caller_owners ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5746110Z test rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5788820Z test rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5821670Z test rc::tests::earlier_caf_owner_remains_owned_during_a_final_scalar_call ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5877150Z test rc::tests::earlier_consumed_arguments_remain_owned_during_later_calls ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5939340Z test rc::tests::earlier_duplicate_remains_owned_during_the_final_call ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.5995310Z test rc::tests::earlier_owner_remains_owned_during_a_final_scalar_call ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.6041400Z test rc::tests::matched_value_conversion_keeps_remaining_caller_owners ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.6096230Z test rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.6171970Z test rc::tests::original_resource_parameters_enter_the_frame_before_dead_drops ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.6235240Z test rc::tests::parts_keep_their_order ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.6273850Z test rc::tests::retain_liveness_excludes_the_unfinished_extra_reference ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.6600380Z test rc::tests::scalars_are_not_counted ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.6823500Z test rc::tests::the_checker_rejects_mistakes ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.6885100Z test rc::tests::uninitialized_region_bindings_are_not_entry_owners ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.6926720Z test rc::tests::update_liveness_keeps_the_borrowed_base_and_remaining_owners ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.6983190Z test resource::tests::fusion_preserves_resource_stage_frames_even_with_pure_bodies ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7017510Z test resource::tests::nominal_recursive_resource_graphs_and_nonowning_arrows ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7074690Z test resource::tests::owner_metadata_rejects_missing_duplicate_and_scalar_slots ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7107670Z test swagger::tests::converts_a_document ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7145640Z test value::tests::floats_round_trip_shortest ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7174700Z test value::tests::trits ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7214950Z test yaml::tests::anchors ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7273450Z test yaml::tests::block_collections ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7379980Z test yaml::tests::block_scalars ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7415650Z test yaml::tests::errors ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7444110Z test yaml::tests::flow_over_lines ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7461000Z test yaml::tests::reads_what_openapi_writes ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7485790Z test yaml::tests::scalars ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7512030Z test gzip::tests::round_trip ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:24.7542060Z test gzip::tests::others_read_ours ... ok
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7111830Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--lib`
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7113280Z test grpc::web::tests::body_bounds_and_error_order_agree_with_native ... FAILED
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7172350Z 
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7872090Z failures:
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7877880Z 
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7880200Z ---- grpc::web::tests::body_bounds_and_error_order_agree_with_native stdout ----
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7882590Z 
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7886350Z thread 'grpc::web::tests::body_bounds_and_error_order_agree_with_native' (11204) panicked at src/h2web.rs:1116:77:
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7902460Z called `Result::unwrap()` on an `Err` value: "C compiler failed:\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/fwp-build-2a2fc8590c6a4333ba263b881e6e1442/probe.c:185:55: error: call to undeclared function 'fwp_trap'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n  185 |     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");\n      |                                                       ^\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/fwp-build-2a2fc8590c6a4333ba263b881e6e1442/probe.c:185:55: note: did you mean 'fwp_tag'?\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/fwp-build-2a2fc8590c6a4333ba263b881e6e1442/probe.c:117:24: note: 'fwp_tag' declared here\n  117 | static inline uint32_t fwp_tag(V v) { return v < 4096 ? (uint32_t)v : OBJ(v)->tag; }\n      |                        ^\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/fwp-build-2a2fc8590c6a4333ba263b881e6e1442/probe.c:308:13: error: static declaration of 'fwp_trap' follows non-static declaration\n  308 | static void fwp_trap(const char *msg) {\n      |             ^\n/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/fwp-build-2a2fc8590c6a4333ba263b881e6e1442/probe.c:185:55: note: previous implicit declaration is here\n  185 |     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");\n      |                                                       ^\n2 errors generated.\ncompiler status: exit status: 1 (signal=None, core_dumped=false)"
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7916840Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7917580Z 
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7919040Z 
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7920270Z failures:
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7922340Z     grpc::web::tests::body_bounds_and_error_order_agree_with_native
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7923000Z 
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7924800Z test result: FAILED. 70 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.59s
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7926000Z 
+arrays (macos-15-intel)	Format and validate array limits and trap order	2026-10-11T22:50:27.7959490Z ##[error]Process completed with exit code 101.
+arrays (macos-15)	Format and validate array limits and trap order	﻿2026-10-11T22:48:35.0264010Z ##[group]Run rustfmt --edition 2021 src/prims_std.rs tests/array_size_limits.rs
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0264690Z ^[[36;1mrustfmt --edition 2021 src/prims_std.rs tests/array_size_limits.rs^[[0m
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0265010Z ^[[36;1mcargo test --lib^[[0m
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0265430Z ^[[36;1mcargo test --test array_size_limits --test golden_check --test call_effects --no-fail-fast -- --nocapture^[[0m
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0306280Z shell: /bin/bash -e {0}
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0306520Z env:
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0306700Z   CARGO_BUILD_JOBS: 2
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0306870Z   CARGO_INCREMENTAL: 0
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0307080Z   CARGO_PROFILE_DEV_DEBUG: 0
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0307280Z   CARGO_PROFILE_TEST_DEBUG: 0
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0307490Z   CC: clang
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0307670Z   CARGO_HOME: /Users/runner/.cargo
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0307890Z   CARGO_TERM_COLOR: always
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0308120Z   FWP_OPENSSL_DIR: /opt/homebrew/opt/openssl@3
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0308480Z   FWP_ARRAY_SIZE_ARTIFACTS: /Users/runner/work/_temp/array-size-evidence
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.0308860Z ##[endgroup]
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:35.3275400Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/Users/runner/work/fun-with-pipes/fun-with-pipes)
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7021910Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 14.53s
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7069320Z ^[[1m^[[92m     Running^[[0m unittests src/lib.rs (target/debug/deps/fwp-8f676c78df5f58f8)
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7139600Z 
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7140940Z running 71 tests
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7160340Z test csv::tests::quoting ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7163270Z test cli::tests::names ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7201150Z test cli::tests::field_comments ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7202240Z test escape::tests::match_aliases_are_followed ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7203180Z test escape::tests::applying_a_closure_does_not_let_it_escape ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7204280Z test escape::tests::counts_around_an_argument_are_seen_through ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7205390Z test escape::tests::passing_on_follows_the_callee ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7208260Z test escape::tests::reading_fields_does_not_escape ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7210090Z test escape::tests::returning_or_storing_escapes ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7210720Z test fmt::tests::comments_and_blank_lines ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7211320Z test grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7212080Z test fmt::tests::layout ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7212710Z test fmt::tests::spelling_and_ambiguities ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7215800Z test grpc::web::tests::sha1_and_accept ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7217040Z test grpc::web::tests::websocket_messages_deflate_and_inflate ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7231870Z test grpc::web::tests::zlib_round_trip ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7235140Z test gzip::tests::chunks_make_one_stream ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7238020Z test gzip::tests::crc ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7240250Z test grpc::web::tests::frames_round_trip ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7244960Z test gzip::tests::reads_other_encoders ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7247220Z test gzip::tests::rejects_bad_data ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7394230Z test gzip::tests::round_trip ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7397050Z test jsontype::tests::base64_round_trip ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7401410Z test jsontype::tests::durations ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7403840Z test jsontype::tests::exact_integers ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7506110Z test lexer::tests::hyphen_vs_negative ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7508880Z test lexer::tests::idents_and_selectors ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7509760Z test lexer::tests::layout_flags ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7510040Z test lexer::tests::numbers ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7510280Z test lexer::tests::strings_comments_macros ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7510710Z test numerics::tape_validation_tests::invalid_nodes_preserve_push_state_and_consume_backward_tapes ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7511250Z test numerics::tape_validation_tests::scoped_callbacks_release_only_their_live_tapes ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7511860Z test ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7513820Z test rc::tests::a_borrowed_argument_lives_until_the_operation ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7514330Z test rc::tests::a_match_dups_the_fields_an_arm_keeps_and_drops_the_rest ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7514900Z test rc::tests::a_parameter_returned_is_moved ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7592860Z test rc::tests::a_parameter_used_twice_is_duplicated_once ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7594180Z test rc::tests::an_unused_parameter_is_dropped ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7595010Z test rc::tests::borrowed_pattern_values_are_not_unwind_owners ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7596310Z test rc::tests::call_liveness_distinguishes_borrows_transfers_and_duplicate_owners ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7597620Z test rc::tests::constructors_transfer_fields_and_keep_other_caller_owners ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7599130Z test rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7600550Z test rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7601750Z test rc::tests::earlier_caf_owner_remains_owned_during_a_final_scalar_call ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7602980Z test rc::tests::earlier_consumed_arguments_remain_owned_during_later_calls ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7604230Z test rc::tests::earlier_duplicate_remains_owned_during_the_final_call ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7605500Z test rc::tests::earlier_owner_remains_owned_during_a_final_scalar_call ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7606540Z test rc::tests::matched_value_conversion_keeps_remaining_caller_owners ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7607920Z test rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7609250Z test rc::tests::original_resource_parameters_enter_the_frame_before_dead_drops ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7610490Z test rc::tests::parts_keep_their_order ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7611620Z test rc::tests::retain_liveness_excludes_the_unfinished_extra_reference ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7612720Z test rc::tests::scalars_are_not_counted ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7613630Z test rc::tests::the_checker_rejects_mistakes ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7614620Z test rc::tests::uninitialized_region_bindings_are_not_entry_owners ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7616030Z test rc::tests::update_liveness_keeps_the_borrowed_base_and_remaining_owners ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7617360Z test resource::tests::fusion_preserves_resource_stage_frames_even_with_pure_bodies ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7618940Z test resource::tests::nominal_recursive_resource_graphs_and_nonowning_arrows ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7620640Z test resource::tests::owner_metadata_rejects_missing_duplicate_and_scalar_slots ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7621800Z test swagger::tests::converts_a_document ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7622820Z test value::tests::floats_round_trip_shortest ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7623730Z test value::tests::trits ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7624630Z test yaml::tests::anchors ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7625330Z test yaml::tests::block_collections ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7626140Z test yaml::tests::block_scalars ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7626870Z test yaml::tests::errors ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7627690Z test yaml::tests::flow_over_lines ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7628340Z test yaml::tests::reads_what_openapi_writes ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:49.7629250Z test yaml::tests::scalars ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.1041790Z test gzip::tests::others_read_ours ... ok
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8926170Z test grpc::web::tests::body_bounds_and_error_order_agree_with_native ... FAILED
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8927410Z 
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8927920Z failures:
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8928920Z 
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8930050Z ---- grpc::web::tests::body_bounds_and_error_order_agree_with_native stdout ----
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8930940Z 
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8931340Z thread 'grpc::web::tests::body_bounds_and_error_order_agree_with_native' (52853) panicked at src/h2web.rs:1116:77:
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8936580Z called `Result::unwrap()` on an `Err` value: "C compiler failed:\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/fwp-build-5e9f83997f92d2323acf8fa511d6c3f2/probe.c:185:55: error: call to undeclared function 'fwp_trap'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n  185 |     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");\n      |                                                       ^\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/fwp-build-5e9f83997f92d2323acf8fa511d6c3f2/probe.c:185:55: note: did you mean 'fwp_tag'?\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/fwp-build-5e9f83997f92d2323acf8fa511d6c3f2/probe.c:117:24: note: 'fwp_tag' declared here\n  117 | static inline uint32_t fwp_tag(V v) { return v < 4096 ? (uint32_t)v : OBJ(v)->tag; }\n      |                        ^\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/fwp-build-5e9f83997f92d2323acf8fa511d6c3f2/probe.c:308:13: error: static declaration of 'fwp_trap' follows non-static declaration\n  308 | static void fwp_trap(const char *msg) {\n      |             ^\n/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/fwp-build-5e9f83997f92d2323acf8fa511d6c3f2/probe.c:185:55: note: previous implicit declaration is here\n  185 |     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");\n      |                                                       ^\n2 errors generated.\ncompiler status: exit status: 1 (signal=None, core_dumped=false)"
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8942980Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--lib`
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8948360Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8948890Z 
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8948890Z 
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8948970Z failures:
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8949460Z     grpc::web::tests::body_bounds_and_error_order_agree_with_native
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8949860Z 
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8951000Z test result: FAILED. 70 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.18s
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8951440Z 
+arrays (macos-15)	Format and validate array limits and trap order	2026-10-11T22:48:50.8972120Z ##[error]Process completed with exit code 101.
