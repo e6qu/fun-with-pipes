@@ -11,9 +11,13 @@ static void state_probe_task_exit(void) {
 }
 static void state_probe_scan(const char *lo, const char *hi, int root) {
     if (root || !fwp_state || lo != (const char *)fwp_state) return;
-    if (hi < lo + fwp_state_cap * sizeof(V)) exit(107);
+    /* Growth publishes the next capacity before realloc can collect the old
+     * allocation. Check only words in the collector's actual object range. */
+    size_t scanned=(size_t)(hi-lo)/sizeof(V);
+    if(scanned<fwp_state_len) exit(107);
+    size_t limit=scanned<fwp_state_cap?scanned:fwp_state_cap;
     state_scans++;
-    for (size_t i=fwp_state_len;i<fwp_state_cap;i++)
+    for (size_t i=fwp_state_len;i<limit;i++)
         if (fwp_state[i]) exit(107);
 }
 static void state_collect(void) {
