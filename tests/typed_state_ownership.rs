@@ -101,7 +101,7 @@ fail-change = const "changed" | put | const "expected error" | fail
 child : () -> String ! {Async}
 child = run-state ("child" | concat " State") (tap (const () | task.yield) | get) | .0
 parent : () -> String ! {State[String], Async, IO}
-parent = const (task.spawn child) | tap (const () | task.yield) | task.await | tap echo | const () | get
+parent = const child | task.spawn | tap (const () | task.yield) | task.await | tap echo | const () | get
 cancelled-child : () -> String ! {Async}
 cancelled-child = run-state ("cancelled" | concat " State") (tap (const 1s | task.sleep) | get) | .0
 main = [

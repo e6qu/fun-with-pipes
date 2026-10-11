@@ -13,6 +13,9 @@ static void typed_drop_string(V value) {
     uint8_t *count=fwp_rc_slot(value);
     int last=count && *count==1;
     double before=fwp_gc.freed;
+    /* A live State slot is an additional owner, including under poisoning.
+     * Detect an omitted retain before destroying or reading its payload. */
+    if(last && fwp_state_len && fwp_p_get()==value) exit(typed_failure(127,__LINE__));
     DROP_STRING(value);
     if(last) {
         count=fwp_rc_slot(value);
