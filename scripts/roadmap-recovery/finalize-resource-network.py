@@ -23,6 +23,8 @@ AD_HEAD = os.environ['FWP_AD_EVIDENCE_HEAD']
 AD_RUN = int(os.environ['FWP_AD_EVIDENCE_RUN'])
 SCOPE_HEAD = os.environ['FWP_SCOPE_EVIDENCE_HEAD']
 SCOPE_RUN = int(os.environ['FWP_SCOPE_EVIDENCE_RUN'])
+ALLOCATION_HEAD = os.environ['FWP_ALLOCATION_EVIDENCE_HEAD']
+ALLOCATION_RUN = int(os.environ['FWP_ALLOCATION_EVIDENCE_RUN'])
 PREP_RUN = 38140923130
 PREP_DRIVER = '82c7bc7509c04b9e94004c06b02d83d665539ac6'
 BRANCH = 'ownership-resource-network-bundle'
@@ -65,6 +67,34 @@ prep_gate = gate(PREP_RUN, PREP_DRIVER, {'prepare'})
 gc_gate = gate(GC_RUN, GC_HEAD, {'diagnostics'})
 ad_gate = gate(AD_RUN, AD_HEAD, {'tapes (ubuntu-latest)', 'tapes (macos-15)', 'tapes (macos-15-intel)'})
 scope_gate = gate(SCOPE_RUN, SCOPE_HEAD, {'scopes (ubuntu-latest)', 'scopes (macos-15)', 'scopes (macos-15-intel)'})
+allocation_gate = gate(ALLOCATION_RUN, ALLOCATION_HEAD,
+    {'allocations (ubuntu-latest)', 'allocations (macos-15)', 'allocations (macos-15-intel)'})
+allocation_artifacts = OUT / 'allocations'
+subprocess.run(['gh', 'run', 'download', str(ALLOCATION_RUN), '--pattern',
+                'scope-allocations-*', '--dir', str(allocation_artifacts)], check=True)
+allocation_reports = {}
+for platform in ['ubuntu-latest', 'macos-15', 'macos-15-intel']:
+    directory = allocation_artifacts / ('scope-allocations-' + platform)
+    assert (directory / 'driver.txt').read_text().strip() == ALLOCATION_HEAD
+    report = json.loads((directory / 'comparison.json').read_text())
+    assert report['baseline'] == AD_HEAD and report['candidate'] == SCOPE_HEAD
+    assert set(report['results']) == {'baseline-O1', 'baseline-O2', 'candidate-O1', 'candidate-O2'}
+    for name, expected_hash in report['sourceHashes'].items():
+        assert Path(name).name == name
+        assert hashlib.sha256((directory / name).read_bytes()).hexdigest() == expected_hash
+    for opt in ['-O1', '-O2']:
+        before, after = report['results']['baseline' + opt], report['results']['candidate' + opt]
+        for label, measured, head in [('baseline', before, AD_HEAD), ('candidate', after, SCOPE_HEAD)]:
+            assert measured['head'] == head and measured['opt'] == opt
+            assert measured['iterations'] == 4096 and measured['collections'] >= 2
+            assert measured['managedCalls'] > 0 and measured['externalCalls'] == 5 * 4096
+            assert label + '.measured.c' in report['sourceHashes']
+            assert label + opt in report['sourceHashes']
+        assert after['managedCalls'] <= before['managedCalls']
+        assert after['managedRequestedBytes'] <= before['managedRequestedBytes']
+        assert after['externalCalls'] == before['externalCalls']
+        assert after['externalRequestedBytes'] == before['externalRequestedBytes']
+    allocation_reports[platform] = report
 post = json.loads(command('gh', 'api', REPO + '/pulls/123'))
 assert post['merged'] and post['head']['sha'] == TESTED
 assert post['base']['sha'] == OLD
@@ -223,8 +253,7 @@ for name, edits in ad_edits.items():
         source = source.replace(edit['old'], edit['new'])
     assert evidence_source.encode() == blob(AD_HEAD, name), name
     (wt / name).write_text(source)
-for name in ['tests/ad_tape_ownership.rs', 'tests/fixtures/ad_unwind_probe.c', 'src/interp.rs', 'src/ownership.rs',
-                'lib/autodiff.fwp', 'tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']:
+for name in ['tests/ad_tape_ownership.rs', 'tests/fixtures/ad_unwind_probe.c']:
     (wt / name).parent.mkdir(parents=True, exist_ok=True)
     (wt / name).write_bytes(blob(AD_HEAD, name))
 # Add the checked gradient scope without copying older whole native files.
@@ -277,7 +306,8 @@ for revision in git('rev-list', accepted + '..HEAD', cwd=wt).splitlines():
 record = dict(base=accepted, head=head, previous=prepared, branch=BRANCH,
               originalCommits=prep['originalCommits'], rebasedCommits=rebased,
               includedRows=prep['includedRows'], gcEvidence=gc_gate, adEvidence=ad_gate,
-              scopeEvidence=scope_gate, scopePatchHash=hashlib.sha256(scope_patch).hexdigest(),
+              scopeEvidence=scope_gate, allocationEvidence=allocation_gate,
+              allocationReports=allocation_reports, scopePatchHash=hashlib.sha256(scope_patch).hexdigest(),
               adPatchHash=hashlib.sha256(ad_patch).hexdigest(),
               preparationGate=prep_gate, recoveryHead=RECOVERY,
               compilerPatchHash=hashlib.sha256(compiler_patch).hexdigest(),

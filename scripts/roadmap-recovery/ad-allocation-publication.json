@@ -1,0 +1,13 @@
+{
+  "head": "a2513d60fd086d1077533bdee7b31e50735fa369",
+  "candidate": "475cb242715961e5e396e4fe74026545160d2e3c",
+  "baseline": "602e076604d3dd759c47b396c10cf848dd9dbb61",
+  "branch": "ownership-evidence-autodiff-allocations",
+  "files": [
+    ".github/workflows/ad-scope-allocation.yml",
+    "scripts/measure-ad-scope-allocations.py"
+  ],
+  "stage": "Allocation comparison published; all measurements pending",
+  "previous": "50036dc35ac0964fcc53bd476ce41a6959a949e2",
+  "reason": "Runtime-dependent quadratic gradient, real tape allocation paths, external live/peak bytes and source/binary hashes"
+}

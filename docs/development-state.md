@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-ad-roadmap-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-scoped-export-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint7e842cd43ad88deb0f205a20d5459b032e1e9389 has
-exact-head audit38139353448 queued. Earlier checkpoints and cancelled audits
+Current checkpoint3c57a7187d3c43fca1b4d4f2ba4734c343c71ab0 has
+exact-head audit38142490677 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -80,8 +80,8 @@ macOS CI found the stale comment; fix receipt is
 /private/tmp/fwp-pr123-stdlib-repair.json and its completed ARM job log is
 /private/tmp/fwp-pr123-arm-regular-failed.log. Native source remainsfd930e541db6;
 all original probes and focused checks remain in history.
-New full CI38138731040 is live: ARM macOS GC is running; the other five
-jobs are queued. Docs38138731036 is queued. Require all six jobs and
+New full CI38138731040 has passing ARM macOS GC stress; the other five
+jobs are queued or running (regular ARM is running). This is one required current-head gate, not merge acceptance. Docs38138731036 is queued. Require all six jobs and
 roadmap_docs on this exact new head before squash; earlier-head passes do not
 transfer. The remaining superseded CI38128387224 jobs were cancelled to save
 runner time. Current acceptance helpers use the new head and run identities.
@@ -291,7 +291,7 @@ The draft adds a cheap standard-library documentation preflight before Cargo
 gates in all six jobs, using the actual generator test; original full gates
 and mandatory WASI remain unchanged. Runner validation is pending.
 
-Local disk is about32.9GiB free at13:12UTC, below64GiB. No local build, test,
+Latest disk observation is about13.6GiB free, below64GiB. No local build, test,
 format or rebase is authorized while the reserve is unavailable; only source
 editing and lightweight remote administration ran here.
 
@@ -322,7 +322,34 @@ Raw interpreter/native cases include the original reverse-AD golden program
 and gradient/vjp callback errors. Compiler argument vectors and artifacts are
 retained. Scoped evidence runs all library units and both AD integration targets;
 its FWP_BLESS regeneration and subsequent exact doc comparison verify the
-standard-library reference on GitHub. No test or compile has run yet.
+standard-library reference on GitHub. No test or compile has run yet. Before accepting the scope, measure equivalent
+steady-state gradient allocation counts/bytes against602e0766 at O1/O2 on the
+runners. A stack owner does not establish that its curried callback/return
+bridges avoid extra managed boxes. Preserve public signatures and fix any
+allocation regression before final bundle acceptance. Do not claim zero-cost
+scopes or no-extra-allocation from the owner layout alone.
+
+Allocation comparison driver a2513d60fd086d1077533bdee7b31e50735fa369,
+branch ownership-evidence-autodiff-allocations, runs38144375898 (queued).
+It compares runtime-dependent quadratic gradients on baseline602e0766 and
+scope candidate475cb242 at O1/O2 across Linux and both macOS architectures.
+The 4096-call steady-state probe requires real managed allocations and five
+external tape-buffer allocation calls per gradient. It records cold/warm
+requested bytes, external live/peak bytes, collected live/peak bytes, collections,
+tape size/alignment, compiler arguments, hardware and source/binary hashes.
+Acceptance requires no additional steady-state managed calls/bytes and identical
+external calls/bytes. All measurements remain pending; no speed or no-tracing
+claim. Superseded50036dc3/run38144127914 was cancelled while entirely queued.
+Receipt: /private/tmp/fwp-ad-allocation-publication.json. Recovery must retain
+measure-ad-scope-allocations.py, ad-scope-allocation.yml and this receipt.
+
+The finalizer now requires all three allocation jobs and verifies downloaded
+comparison metrics, exact baseline/candidate/driver identities and source/binary
+hashes before integrating scoped gradients. Source review also fixed its attempt
+to copy scoped tests from the earlier tape-only commit and overwrite later
+interp/ownership/autodiff source wholesale; it now copies only the two tape
+fixtures there and applies scoped source transformations to the later bundle.
+These runner draft repairs have not executed and need their actual runner gate.
 
 Older scopea369/38140572629 andd262/38141448694 were cancelled while queued
 before adding counted-array controls and correcting the array destructor
