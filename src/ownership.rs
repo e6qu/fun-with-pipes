@@ -21,6 +21,8 @@ pub enum ResultOwnership {
     OwnedResource,
     /// Synchronous effect handler owns either callback result or error payload.
     OwnedAttempt,
+    /// Typed State slots retain their own references and return owned aliases.
+    OwnedState,
     FreshContainer,
     /// A synchronous callback returns a typed owned value.
     OwnedCallback,
@@ -139,6 +141,9 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "get" | "put" => (&[B], ResultOwnership::OwnedState, None, &[]),
+        "modify" => (&[B], ResultOwnership::OwnedState, Some(Callback::Borrowed(0)), &[]),
+        "run-state" => (&[B, B, B], ResultOwnership::OwnedState, Some(Callback::Borrowed(1)), &[0, 1, 2]),
         // Raw address words are not managed owners. String conversion copies;
         // only read-string returns a fresh managed leaf.
         "mem.alloc" | "mem.free" | "mem.string" | "ptr.cast" | "ptr.address" | "ptr.read" => {

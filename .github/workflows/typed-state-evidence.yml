@@ -1,0 +1,68 @@
+name: Typed scoped State ownership
+on:
+  push:
+    branches: [ownership-evidence-typed-state]
+permissions:
+  contents: read
+jobs:
+  state:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+      RUST_TEST_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: macOS OpenSSL
+        if: runner.os == 'macOS'
+        run: echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Record hardware and every native compiler invocation
+        run: |
+          export FWP_TYPED_STATE_ARTIFACTS="$RUNNER_TEMP/typed-state"
+          echo "FWP_TYPED_STATE_ARTIFACTS=$FWP_TYPED_STATE_ARTIFACTS" >> "$GITHUB_ENV"
+          mkdir -p "$FWP_TYPED_STATE_ARTIFACTS"
+          git rev-parse HEAD > "$FWP_TYPED_STATE_ARTIFACTS/head.txt"
+          uname -a > "$FWP_TYPED_STATE_ARTIFACTS/hardware.txt"
+          clang --version > "$FWP_TYPED_STATE_ARTIFACTS/compiler.txt"
+          rustc --version > "$FWP_TYPED_STATE_ARTIFACTS/rustc.txt"
+          cat > "$FWP_TYPED_STATE_ARTIFACTS/record-cc" <<'SH'
+          #!/bin/sh
+          printf 'clang argument vector\n' >> "$FWP_TYPED_STATE_ARTIFACTS/compiler-invocations.txt"
+          printf '%s\n' "$@" >> "$FWP_TYPED_STATE_ARTIFACTS/compiler-invocations.txt"
+          exec clang "$@"
+          SH
+          chmod +x "$FWP_TYPED_STATE_ARTIFACTS/record-cc"
+          echo "CC=$FWP_TYPED_STATE_ARTIFACTS/record-cc" >> "$GITHUB_ENV"
+      - name: Preserve formatting suggestions and restore exact tested source
+        run: |
+          rustfmt src/ownership.rs src/cgen.rs tests/typed_state_ownership.rs
+          mkdir -p "$FWP_TYPED_STATE_ARTIFACTS/formatted/src" "$FWP_TYPED_STATE_ARTIFACTS/formatted/tests"
+          cp src/ownership.rs src/cgen.rs "$FWP_TYPED_STATE_ARTIFACTS/formatted/src/"
+          cp tests/typed_state_ownership.rs "$FWP_TYPED_STATE_ARTIFACTS/formatted/tests/"
+          git diff > "$FWP_TYPED_STATE_ARTIFACTS/format.patch"
+          git restore src/ownership.rs src/cgen.rs tests/typed_state_ownership.rs
+      - name: Lint and interpreter regressions
+        run: |
+          cargo clippy --lib --test typed_state_ownership --test list_applicative_ownership -- -D warnings
+          cargo test --lib -- --nocapture
+      - name: Actual State ownership, unwind and task-switch controls
+        run: |
+          cargo test --test typed_state_ownership -- --nocapture
+          cargo test --test list_applicative_ownership -- --nocapture
+          git diff --exit-code
+          shasum -a 256 src/ownership.rs src/cgen.rs runtime/fwp_rt.c runtime/fwp_rt_task.c runtime/fwp_rt_prims.c tests/typed_state_ownership.rs tests/fixtures/typed_state_probe.c target/debug/fwp > "$FWP_TYPED_STATE_ARTIFACTS/source-binary-hashes.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: typed-state-${{ matrix.runner }}
+          path: ${{ runner.temp }}/typed-state/

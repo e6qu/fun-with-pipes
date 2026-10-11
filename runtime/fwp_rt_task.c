@@ -181,6 +181,7 @@ struct fwp_task {
     fwp_cleanup *cleanups;
     V *st;
     size_t st_len, st_cap;
+    fwp_state_owner *state_owners;
     struct fwp_scope *scope;
     /* a task running C code (gRPC connections and calls): called with 0,
      * then again with 1 if the task was cancelled while running it */
@@ -509,6 +510,7 @@ static void fwp_enter(fwp_task *to) {
     fwp_state = to->st;
     fwp_state_len = to->st_len;
     fwp_state_cap = to->st_cap;
+    fwp_state_owners = to->state_owners;
 }
 
 static void fwp_switch(fwp_task *to) {
@@ -519,6 +521,7 @@ static void fwp_switch(fwp_task *to) {
     from->st = fwp_state;
     from->st_len = fwp_state_len;
     from->st_cap = fwp_state_cap;
+    from->state_owners = fwp_state_owners;
     fwp_enter(to);
 #if FWP_GC
     from->gc_sp = fwp_gc_sp();
@@ -1882,6 +1885,7 @@ static void fwp_library_tasks_finish(void) {
     fwp_handlers = 0;
     fwp_state = 0;
     fwp_state_len = fwp_state_cap = 0;
+    fwp_state_owners = 0;
     struct sigaction current;
     if (fwp_saved_sigint && sigaction(SIGINT, 0, &current) == 0 &&
         !(current.sa_flags & SA_SIGINFO) && current.sa_handler == fwp_on_signal)
