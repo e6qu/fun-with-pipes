@@ -16219,3 +16219,47 @@ Accepted queue41 in PR119 at 8770e73ed17ddaed44c03504faa380d1f724d070 on e07b03d
 Accepted primitive contract41, removed from prepared-only table:
 
 | 41 | Boxed-to-struct variants retain original typed owners through payload preparation; consumed-value checkpoints protect only remaining caller references | Sequential CI; retain overflow, aliases, scalar safety and exact IR ownership checkpoint |
+
+## PR119 final acceptance and record-update rebase, 2026-10-11
+
+All six CI38098598991 jobs and roadmap_docs38098598965 pass at exact frozen
+5a068dc348f3b331a262543ae4ee2b1fcf88f0ab before match-head squash. PR119 merged
+as8770e73ed17ddaed44c03504faa380d1f724d070 at2026-10-11T01:09:42Z.
+Entire message `Protect boxed variants and caller owners during struct conversion`
+is one65-character line, empty body, without trailers or attribution. Raw
+commit has one parente07b03d9d4040ad458072c4aaf401a26c79f4fb9 and complete tree
+c26e645934b38faa7e62bbeaf104165228731f65 identical to tested5a068dc348f3.
+All11 docs freshly hashed in /private/tmp/fwp-main-docs-pre119 and restored
+byte-for-byte after main fast-forward. Merge0.26CPU/6.71elapsed, fetch0.04/0.99s,
+proof/protection0.04/0.14s, acceptance bookkeeping0.00/0.14s and updated shared
+audit0.50/3.71s pass (44/106/71). Duplicate actual-main production38100888804
+cancelled after parity proof (0.11/2.61s); actual-main docs38100888798 remains
+queued, not passing. Full gate, post-merge and raw/tree proofs are retained in
+/private/tmp/fwp-pr119-final-gate-proof.json, fwp-pr119-postmerge.json and
+fwp-pr119-merge-proof.json. Completed merge/protect/acceptance helpers must
+not rerun. Queue41 is accepted and removed from live pending tables.
+
+Queue42 originalcd2c8fa4251aea65354d64f09f2fab0291ac4dc8 rebased FROM actual
+prepared41cca935846750b6190b6a8823eb4f55d689c75c0e onto actual119 squash,
+preserving all three original commits and every original native/compiler/probe/
+production-workflow byte. Docs conflicts resolved using all11 root files; the
+original docs-only commit was explicitly preserved after becoming empty.
+Final native head8fe0adb0e54305e328b87933b84d52bbcc6b2649; rebase0.13/0.99s PASS.
+Before switching Rust checkouts, guarded cargo clean -p fwp in LAST41 removed
+62 files/89.2MiB (0.05CPU/0.38elapsed). Fresh two original native regressions
+pass15.68/31.41s, each once, zero ignored. Remaining RC units/lint/format and
+final source parity/publication audit must complete before sole next PR opens.
+No resource limit was changed or bypassed.
+
+Final queue42 checks on actual PR119 squash pass: all19 RC units3.33CPU/
+6.92elapsed, clippy of both original native test targets2.33/4.71s, format0.44/
+0.82s. Both original native regressions previously passed15.68/31.41s, zero
+ignored. Native head8fe0adb0e543 preserves all three original commits and original
+source/probes/production workflow. Exact unique omission exits3/8/11/7 and
+general original/copy/partial/replacement omission exits9/8/11/7 remain required.
+Guarded commands: cargo test --test record_update_ownership --test
+general_record_update_ownership; cargo test --lib rc::tests; cargo clippy --test
+record_update_ownership --test general_record_update_ownership -- -D warnings;
+cargo fmt --all -- --check. Resource limits unchanged. Publication will append
+a fresh all11 documentation snapshot, retain oldcd2c8fa4251a before exact-lease
+push, and require full exact-head runner gates before squash.

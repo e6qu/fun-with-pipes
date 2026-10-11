@@ -34,7 +34,9 @@ roadmap_docs38098598965. Match-head squash at 2026-10-11T01:09:42Z has the exact
 65-character subject `Protect boxed variants and caller owners during struct conversion`, one line, empty
 body and no trailers or attribution. One parent `e07b03d9d4040ad458072c4aaf401a26c79f4fb9` and
 complete tree `c26e645934b38faa7e62bbeaf104165228731f65` match the tested head. All11 live docs were
-hashed in /private/tmp/fwp-main-docs-pre119 and restored byte-for-byte.
+hashed in /private/tmp/fwp-main-docs-pre119 and restored byte-for-byte. Actual
+main docs38100888798 is queued; duplicate production CI38100888804 was
+cancelled only after complete-tree parity proof.
 Queue33 and35–41 are accepted; queue34 is a verified duplicate. Boxed-to-struct
 variant conversion now protects the original boxed value and only remaining
 caller owners until typed payload retention succeeds. Original omission exits3/7,
@@ -106,7 +108,7 @@ preparations need final squash rebases and all seven exact-head production gates
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 42 ownership-record-update | cd2c8fa4251a | cca935846750 | Both original implementation/regression commits and the original docs commit preserved; two native tests16.05CPU/32.33elapsed and exact update unit3.62/7.57s, lint2.80/5.59s and format0.44/0.86s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 42 ownership-record-update | 8fe0adb0e543 | 8770e73ed17d | Final actual-squash source preserves all three original commits; both original record-update/general-copy regressions15.68CPU/31.41elapsed, all19 RC units3.33/6.92s, lint2.33/4.71s and format0.44/0.82s pass; source/probes unchanged including exact unique omission exits3/8/11/7 and general original/copy/partial/replacement omission exits9/8/11/7, aliases/scalar bits and raw interpreter/native agreement; prepared ARM/Intel original-test binary evidence passes, corrected positive-fixture layout evidence running; full exact-head gates required |
 | 43 ownership-record-conversion | 6b809877a1ac | cd2c8fa4251a | Both original conversion/checkpoint repair commits and the original docs commit preserved; seven native tests34.28CPU/68.76elapsed and all20 ownership units3.61/7.63s, lint2.53/5.21s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
 | 45 ownership-match-context | 2b7dc81c7d1f | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
@@ -210,9 +212,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 python3 scripts/local-guard.py python3 scripts/check-roadmap.py
 ```
 
-Last Rust checkout is /private/tmp/fwp-variant-conversion-worktree, native
-78de90c921e33508119ebf09f5ab4197cdfa5f1e on actual PR118 squash. All three native regressions17.81CPU/35.79elapsed, all18 RC units3.46/7.10s,
-lint2.48/5.02s and format0.50/0.83s pass. Before switching Rust checkouts, use the absolute root guard
+Last Rust checkout is /private/tmp/fwp-record-update-worktree, native
+8fe0adb0e54305e328b87933b84d52bbcc6b2649 on actual PR119 squash.
+Both original record-update/general-copy regressions pass (15.68CPU/31.41elapsed,
+zero ignored). All19 RC units3.33CPU/6.92elapsed, lint2.33/4.71s and format0.44/0.82s pass. Before switching Rust checkouts, use the absolute root guard
 with cargo clean -p fwp in that last checkout, then rebuild requested targets.
 Do not infer source identity from shared outputs. Refusals and prior metrics
 remain in history; each new guard invocation samples current resources.
