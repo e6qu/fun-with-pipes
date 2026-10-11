@@ -128,15 +128,26 @@ fn inferred_pure_callbacks_agree_with_native_execution() {
 #[test]
 fn state_function_values_preserve_callback_effects_in_pipes_and_applications() {
     for source in [
-        "read : () -> String ! {State[(String -> String)]}\nread = get | apply \"!\"\n",
-        "read : () -> String ! {State[(String -> String)]}\nread = match\n    () -> apply \"!\" (get ())\n",
-        "read : () -> String ! {State[(String -> String ! {IO})], IO}\nread = get | apply \"!\"\n",
-        "read : () -> String ! {State[(String -> String ! {IO})], IO}\nread = match\n    () -> apply \"!\" (get ())\n",
+        r#"read : () -> String ! {State[(String -> String)]}
+read = get | apply "!"
+"#,
+        r#"read : () -> String ! {State[(String -> String)]}
+read = match
+    () -> apply "!" (get ())
+"#,
+        r#"read : () -> String ! {State[(String -> String ! {IO})], IO}
+read = get | apply "!"
+"#,
+        r#"read : () -> String ! {State[(String -> String ! {IO})], IO}
+read = match
+    () -> apply "!" (get ())
+"#,
     ] {
         check_source("stored-function-effects.fwp", source, None)
             .unwrap_or_else(|error| panic!("{}", error.rendered));
     }
-    for body in ["get | apply \"!\"", "match\n    () -> apply \"!\" (get ())"] {
+    for body in [r#"get | apply "!""#, r#"match
+    () -> apply "!" (get ())"#] {
         let source = format!(
             "bad : () -> String ! {{State[(String -> String ! {{IO}})]}}\nbad = {body}\n"
         );
