@@ -1,0 +1,86 @@
+{
+  "src/numerics.rs": [
+    {
+      "old": "static TAPES: Mutex<Vec<Tape>> = Mutex::new(Vec::new());",
+      "new": "static TAPES: Mutex<Vec<Tape>> = Mutex::new(Vec::new());\n\nthread_local! {\n    static TAPE_SCOPES: std::cell::RefCell<Vec<Vec<i64>>> = const {\n        std::cell::RefCell::new(Vec::new())\n    };\n}\n\nstruct TapeScope;\nimpl Drop for TapeScope {\n    fn drop(&mut self) {\n        let owned = TAPE_SCOPES.with(|scopes| scopes.borrow_mut().pop().unwrap());\n        let mut tapes = TAPES.lock().unwrap();\n        for base in owned {\n            if let Ok(slot) = slot_of(&tapes, base >> 32) {\n                let tape = std::mem::take(&mut tapes[slot]);\n                tapes[slot].gen = tape.gen;\n            }\n        }\n    }\n}\n\n/// Run a synchronous callback with exception-safe ownership of its new tapes.\npub(crate) fn with_tape_scope<T>(callback: impl FnOnce() -> R<T>) -> R<T> {\n    TAPE_SCOPES.with(|scopes| scopes.borrow_mut().push(Vec::new()));\n    let _scope = TapeScope;\n    callback()\n}\n\nfn forget_scoped_tape(id: i64) {\n    TAPE_SCOPES.with(|scopes| {\n        for owned in scopes.borrow_mut().iter_mut().rev() {\n            if let Some(index) = owned.iter().position(|base| *base >> 32 == id) {\n                owned.swap_remove(index);\n                break;\n            }\n        }\n    });\n}"
+    },
+    {
+      "old": "    Ok(id << 32)\n}",
+      "new": "    let base = id << 32;\n    TAPE_SCOPES.with(|scopes| {\n        if let Some(owned) = scopes.borrow_mut().last_mut() {\n            owned.push(base);\n        }\n    });\n    Ok(base)\n}"
+    },
+    {
+      "old": "    tapes[slot].gen = t.gen;\n    drop(tapes);",
+      "new": "    tapes[slot].gen = t.gen;\n    drop(tapes);\n    forget_scoped_tape(id);"
+    },
+    {
+      "old": "mod tape_validation_tests {\n    use super::*;",
+      "new": "mod tape_validation_tests {\n    use super::*;\n    static TAPE_TEST_LOCK: Mutex<()> = Mutex::new(());"
+    },
+    {
+      "old": "    fn invalid_nodes_preserve_push_state_and_consume_backward_tapes() {",
+      "new": "    fn invalid_nodes_preserve_push_state_and_consume_backward_tapes() {\n        let _serial = TAPE_TEST_LOCK.lock().unwrap();"
+    },
+    {
+      "old": "        assert!(backward(next, &[], &[]).unwrap().is_empty());\n    }\n}",
+      "new": "        assert!(backward(next, &[], &[]).unwrap().is_empty());\n    }\n    #[test]\n    fn scoped_callbacks_release_only_their_live_tapes() {\n        let _serial = TAPE_TEST_LOCK.lock().unwrap();\n        let mut base = 0;\n        with_tape_scope(|| {\n            base = tape_new(2)?;\n            Ok(())\n        }).unwrap();\n        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);\n        expect_trap(with_tape_scope(|| {\n            base = tape_new(2)?;\n            trap::<()>(\"gradient callback control\")\n        }), \"gradient callback control\");\n        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);\n        with_tape_scope(|| {\n            let outer = tape_new(1)?;\n            let inner = with_tape_scope(|| tape_new(1))?;\n            expect_trap(backward(inner, &[], &[]), USED_OUTSIDE);\n            assert_eq!(backward(outer, &[outer], &[2.0])?, [2.0]);\n            for _ in 0..64 {\n                let current = tape_new(1)?;\n                TAPE_SCOPES.with(|scopes| assert_eq!(scopes.borrow().last().unwrap().len(), 1));\n                backward(current, &[], &[])?;\n                TAPE_SCOPES.with(|scopes| assert!(scopes.borrow().last().unwrap().is_empty()));\n            }\n            Ok(())\n        }).unwrap();\n        TAPE_SCOPES.with(|scopes| assert!(scopes.borrow().is_empty()));\n    }\n\n}"
+    }
+  ],
+  "src/interp.rs": [
+    {
+      "old": "            // arithmetic (data-last: `sub a b` is b - a)",
+      "new": "            \"ad.scope\" => crate::numerics::with_tape_scope(|| {\n                self.apply(a[0].clone(), vec![Value::unit()])\n            }),\n            // arithmetic (data-last: `sub a b` is b - a)"
+    }
+  ],
+  "src/ownership.rs": [
+    {
+      "old": "        \"task.scope\" => (",
+      "new": "        \"task.scope\" | \"ad.scope\" => ("
+    },
+    {
+      "old": "        assert_eq!(scope.result, ResultOwnership::OwnedCallback);",
+      "new": "        assert_eq!(scope.result, ResultOwnership::OwnedCallback);\n        let ad_scope = primitive(\"ad.scope\").unwrap();\n        assert_eq!(ad_scope.argument(0), Argument::Borrow);\n        assert_eq!(ad_scope.callback, Some(Callback::Borrowed(0)));\n        assert_eq!(ad_scope.result, ResultOwnership::OwnedCallback);\n        assert_eq!(ad_scope.aliases, &[0]);"
+    }
+  ],
+  "src/cgen.rs": [
+    {
+      "old": "                    (\"ad.tape\", \"fwp_p_ad_tape(l0)\"),",
+      "new": "                    (\"ad.scope\", \"fwp_p_ad_scope(l0)\"),\n                    (\"ad.tape\", \"fwp_p_ad_tape(l0)\"),"
+    }
+  ],
+  "lib/autodiff.fwp": [
+    {
+      "old": "# internal\nforeign \"fwp\" ad.tape : I64 -> I64",
+      "new": "# internal\nforeign \"fwp\" ad.scope : (() -> a) -> a\n# internal\nforeign \"fwp\" ad.tape : I64 -> I64"
+    },
+    {
+      "old": "value-and-grad = second | compose rev._seed | flip compose rev._finish",
+      "new": "value-and-grad = curry (const | flip compose (uncurry rev._value-and-grad) | ad.scope)\n\n# internal\nrev._value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]\nrev._value-and-grad = second | compose rev._seed | flip compose rev._finish"
+    },
+    {
+      "old": "vjp = curry (both (.0 | second | compose rev._seed) (.1 | rev._vjp-finish)\n    | uncurry compose)",
+      "new": "vjp = curry3 (const | flip compose (uncurry3 rev._vjp) | ad.scope)\n\n# internal\nrev._vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where Float[t], Dup[t]\nrev._vjp = curry (both (.0 | second | compose rev._seed) (.1 | rev._vjp-finish)\n    | uncurry compose)"
+    }
+  ],
+  "runtime/fwp_rt_kernel.c": [
+    {
+      "old": "typedef struct {\n    uint32_t gen;",
+      "new": "typedef struct {\n    int32_t head;\n} fwp_tape_scope;\n\ntypedef struct {\n    uint32_t gen;"
+    },
+    {
+      "old": "    double *da, *db;\n} fwp_tape;",
+      "new": "    double *da, *db;\n    fwp_tape_scope *scope;\n    int32_t scope_prev, scope_next;\n} fwp_tape;"
+    },
+    {
+      "old": "static const char *FWP_AD_OUTSIDE =",
+      "new": "/* Slot indices remain stable when the tape registry reallocates. */\nstatic void fwp_tape_unlink_scope(fwp_tape *t) {\n    fwp_tape_scope *scope = t->scope;\n    if (!scope) return;\n    if (t->scope_prev >= 0) fwp_tapes[t->scope_prev].scope_next = t->scope_next;\n    else scope->head = t->scope_next;\n    if (t->scope_next >= 0) fwp_tapes[t->scope_next].scope_prev = t->scope_prev;\n    t->scope = 0;\n    t->scope_prev = t->scope_next = -1;\n}\n\nstatic void fwp_tape_scope_release(void *arg) {\n    fwp_tape_scope *scope = (fwp_tape_scope *)arg;\n    while (scope->head >= 0) {\n        fwp_tape *t = &fwp_tapes[scope->head];\n        fwp_tape_unlink_scope(t);\n        t->live = 0;\n        free(t->pa);free(t->pb);free(t->da);free(t->db);\n        t->pa = t->pb = 0;t->da = t->db = 0;\n        t->len = t->cap = t->leaves = 0;\n    }\n}\n\n/* The cleanup chain is already saved/restored by task context switches. */\nstatic void fwp_tape_link_scope(fwp_tape *t, int32_t slot) {\n    t->scope = 0;\n    t->scope_prev = t->scope_next = -1;\n    for (fwp_cleanup *c = fwp_cleanups; c; c = c->prev) {\n        if (c->release == fwp_tape_scope_release) {\n            fwp_tape_scope *scope = (fwp_tape_scope *)c->arg;\n            t->scope = scope;t->scope_next = scope->head;\n            if (scope->head >= 0) fwp_tapes[scope->head].scope_prev = slot;\n            scope->head = slot;\n            break;\n        }\n    }\n}\n\nstatic V fwp_p_ad_scope(V callback) {\n    fwp_tape_scope scope = {-1};\n    fwp_cleanup cleanup;\n    fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);\n    V unit = FWP_UNIT;\n    V result = fwp_apply_borrowed(callback, 1, &unit);\n    fwp_cleanup_pop(&cleanup);\n    fwp_tape_scope_release(&scope);\n    FWP_KEEP_ALIVE(callback);\n    return result;\n}\n\nstatic const char *FWP_AD_OUTSIDE ="
+    },
+    {
+      "old": "    t->len = n;\n    int64_t id =",
+      "new": "    t->len = n;\n    fwp_tape_link_scope(t, (int32_t)slot);\n    int64_t id ="
+    },
+    {
+      "old": "    fwp_tape tp = *t;\n    t->live = 0;",
+      "new": "    fwp_tape_unlink_scope(t);\n    fwp_tape tp = *t;\n    t->live = 0;"
+    }
+  ]
+}

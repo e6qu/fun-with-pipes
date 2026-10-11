@@ -1,0 +1,87 @@
+//! Gradients own active tape buffers across callback return and nonlocal exits.
+use std::path::PathBuf;
+use std::process::{Command, Output};
+struct Scratch(PathBuf);
+impl Scratch {
+    fn new(label: &str) -> Self {
+        let path=std::env::temp_dir().join(format!("fwp-ad-scope-{}-{label}",std::process::id()));
+        std::fs::create_dir(&path).unwrap();Self(path)
+    }
+}
+impl Drop for Scratch {
+    fn drop(&mut self) { let _=std::fs::remove_dir_all(&self.0); }
+}
+fn checked(command: &mut Command) -> Output {
+    let output=command.output().unwrap();
+    assert!(output.status.success(),"{command:?}: {}: {}",output.status,String::from_utf8_lossy(&output.stderr));
+    output
+}
+const PROBE: &str=include_str!("fixtures/ad_scope_probe.c");
+#[test]
+fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
+    let scratch=Scratch::new("unwind");
+    let input=scratch.0.join("runtime.fwp");let cfile=scratch.0.join("runtime.c");
+    std::fs::write(&input,"main = echo \"runtime\"\n").unwrap();
+    checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT")
+        .arg("build").arg(&input).args(["--emit-c","-o"]).arg(&cfile));
+    let original=std::fs::read_to_string(cfile).unwrap();
+    let start=original.find("/* ------------------------------------------------------------------ tapes */").unwrap();
+    let end=original[start..].find("/* ---------------------------------------------------------------- kernels */").unwrap()+start;
+    let declarations="static void scope_probe_free(void *);\nstatic void *scope_probe_calloc(size_t,size_t);\n";
+    let tape_code=original[start..end].replace("free(","scope_probe_free(").replace("(double *)calloc(","(double *)scope_probe_calloc(");
+    let runtime=format!("{}{}{}{}",&original[..start],declarations,tape_code,&original[end..])
+        .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
+    let link="    fwp_tape_link_scope(t, (int32_t)slot);";
+    let unlink="    fwp_tape_unlink_scope(t);\n    fwp_tape tp = *t;";
+    assert_eq!(runtime.matches(link).count(),1);assert_eq!(runtime.matches(unlink).count(),1);
+    let unlinked=runtime.replace(link,"");
+    let unconsumed=runtime.replace(unlink,"    fwp_tape tp = *t;");
+    for opt in ["-O1","-O2"] {
+        for (label,source,expected) in [("scoped",&runtime,0),("unlinked",&unlinked,61),("unconsumed",&unconsumed,62)] {
+            let executable=scratch.0.join(format!("{label}{}",&opt[1..]));
+            let code=format!("{source}\n{PROBE}");
+            fwp::cgen::compile_c(&code,&executable,opt).unwrap();
+            for reuse in ["0","1"] {
+                let output=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1")
+                    .env("FWP_REUSE_VERIFY",reuse).output().unwrap();
+                if let Some(directory)=std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
+                    let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
+                    let prefix=directory.join(format!("{label}{}-reuse{reuse}",&opt[1..]));
+                    std::fs::copy(&executable,prefix.with_extension("bin")).unwrap();
+                    std::fs::write(prefix.with_extension("c"),&code).unwrap();
+                    std::fs::write(prefix.with_extension("stdout"),&output.stdout).unwrap();
+                    std::fs::write(prefix.with_extension("stderr"),&output.stderr).unwrap();
+                    std::fs::write(prefix.with_extension("status"),format!("{}\n",output.status)).unwrap();
+                }
+                assert_eq!(output.status.code(),Some(expected),"{label} {opt} reuse={reuse}: {}",String::from_utf8_lossy(&output.stderr));
+                if expected==0 { assert!(String::from_utf8_lossy(&output.stdout).starts_with("scoped autodiff releases callback tapes; tape=")); }
+            }
+        }
+    }
+}
+
+#[test]
+fn scoped_gradient_functions_agree_with_raw_interpreter() {
+    let scratch=Scratch::new("semantics");let input=scratch.0.join("gradient.fwp");
+    let original=std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/run/autodiff_reverse.fwp")).unwrap();
+    let cases=[("gradients",original,false),
+        ("callback-error","bad : List[Rev[F64]] -> Rev[F64]\nbad = const \"gradient callback control\" | panic\nmain = [1.0, 2.0] | grad bad | echo\n".into(),true),
+        ("vjp-error","bad : List[Rev[F64]] -> List[Rev[F64]]\nbad = const \"gradient callback control\" | panic\nmain = [1.0, 2.0] | vjp bad [1.0] | echo\n".into(),true)];
+    for (label,source,invalid) in cases {
+        std::fs::write(&input,&source).unwrap();
+        let reference=Command::new(env!("CARGO_BIN_EXE_fwp")).env("FWP_NO_OPT","1")
+            .args(["run","--interp"]).arg(&input).output().unwrap();
+        assert_eq!(reference.status.success(),!invalid,"{label}: {}",String::from_utf8_lossy(&reference.stderr));
+        if invalid { assert!(String::from_utf8_lossy(&reference.stderr).contains("gradient callback control")); }
+        for opt in ["-O1","-O2"] {
+            let executable=scratch.0.join(format!("{label}{}",&opt[1..]));
+            checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT")
+                .arg("build").arg(&input).args([opt,"-o"]).arg(&executable));
+            let output=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1")
+                .env("FWP_REUSE_VERIFY","1").output().unwrap();
+            assert_eq!(output.status.success(),reference.status.success(),"{label} {opt}: {}",String::from_utf8_lossy(&output.stderr));
+            assert_eq!(output.stdout,reference.stdout,"{label} {opt}");
+            if invalid { assert_eq!(output.status.code(),Some(101));assert!(String::from_utf8_lossy(&output.stderr).contains("gradient callback control")); }
+        }
+    }
+}

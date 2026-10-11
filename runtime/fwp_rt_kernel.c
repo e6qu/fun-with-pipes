@@ -20,15 +20,71 @@
 /* ------------------------------------------------------------------ tapes */
 
 typedef struct {
+    int32_t head;
+} fwp_tape_scope;
+
+typedef struct {
     uint32_t gen;
     int live;
     int64_t leaves, len, cap;
     int32_t *pa, *pb;
     double *da, *db;
+    fwp_tape_scope *scope;
+    int32_t scope_prev, scope_next;
 } fwp_tape;
 
 static fwp_tape *fwp_tapes = 0;
 static int64_t fwp_ntapes = 0;
+
+/* Slot indices remain stable when the tape registry reallocates. */
+static void fwp_tape_unlink_scope(fwp_tape *t) {
+    fwp_tape_scope *scope = t->scope;
+    if (!scope) return;
+    if (t->scope_prev >= 0) fwp_tapes[t->scope_prev].scope_next = t->scope_next;
+    else scope->head = t->scope_next;
+    if (t->scope_next >= 0) fwp_tapes[t->scope_next].scope_prev = t->scope_prev;
+    t->scope = 0;
+    t->scope_prev = t->scope_next = -1;
+}
+
+static void fwp_tape_scope_release(void *arg) {
+    fwp_tape_scope *scope = (fwp_tape_scope *)arg;
+    while (scope->head >= 0) {
+        fwp_tape *t = &fwp_tapes[scope->head];
+        fwp_tape_unlink_scope(t);
+        t->live = 0;
+        free(t->pa);free(t->pb);free(t->da);free(t->db);
+        t->pa = t->pb = 0;t->da = t->db = 0;
+        t->len = t->cap = t->leaves = 0;
+    }
+}
+
+/* The cleanup chain is already saved/restored by task context switches. */
+static void fwp_tape_link_scope(fwp_tape *t, int32_t slot) {
+    t->scope = 0;
+    t->scope_prev = t->scope_next = -1;
+    for (fwp_cleanup *c = fwp_cleanups; c; c = c->prev) {
+        if (c->release == fwp_tape_scope_release) {
+            fwp_tape_scope *scope = (fwp_tape_scope *)c->arg;
+            t->scope = scope;t->scope_next = scope->head;
+            if (scope->head >= 0) fwp_tapes[scope->head].scope_prev = slot;
+            scope->head = slot;
+            break;
+        }
+    }
+}
+
+static V fwp_p_ad_scope(V callback) {
+    fwp_tape_scope scope = {-1};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);
+    V unit = FWP_UNIT;
+    V result = fwp_apply_borrowed(callback, 1, &unit);
+    fwp_cleanup_pop(&cleanup);
+    fwp_tape_scope_release(&scope);
+    FWP_KEEP_ALIVE(callback);
+    return result;
+}
 
 static const char *FWP_AD_OUTSIDE =
     "autodiff: a reverse-mode value was used after the grad that made it returned";
@@ -112,6 +168,7 @@ static V fwp_p_ad_tape(V nv) {
         t->db[i] = 0.0;
     }
     t->len = n;
+    fwp_tape_link_scope(t, (int32_t)slot);
     int64_t id = ((int64_t)t->gen << 16) | (slot + 1);
     return (V)(id << 32);
 }
@@ -147,6 +204,7 @@ static V fwp_p_ad_push(V tup) {
 static V fwp_p_ad_backward(V base, V outs, V seeds) {
     int64_t id = (int64_t)base >> 32;
     fwp_tape *t = fwp_tape_of(id);
+    fwp_tape_unlink_scope(t);
     fwp_tape tp = *t;
     t->live = 0;
     t->pa = t->pb = 0;

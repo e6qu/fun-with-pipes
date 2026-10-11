@@ -161,6 +161,8 @@ test "gradient" =
 Rev[T] = { value: T, vertex: I64 }
 
 # internal
+foreign "fwp" ad.scope : (() -> a) -> a
+# internal
 foreign "fwp" ad.tape : I64 -> I64
 # internal
 foreign "fwp" ad.push : (I64, F64, I64, F64) -> I64
@@ -285,7 +287,11 @@ rev._finish =
 # The value of a scalar function and its gradient at a point, in one
 # forward and one backward pass.
 value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]
-value-and-grad = second | compose rev._seed | flip compose rev._finish
+value-and-grad = curry (const | flip compose (uncurry rev._value-and-grad) | ad.scope)
+
+# internal
+rev._value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]
+rev._value-and-grad = second | compose rev._seed | flip compose rev._finish
 
 # All partial derivatives of a scalar function at a point (reverse mode;
 # the same numbers as `gradient`, for any number of inputs at the cost of
@@ -308,7 +314,11 @@ rev._vjp-finish = curry (make { 0 = .1 | .0, 1 = .1 | .1 | map .vertex, 2 = .0 }
 # Vector-Jacobian product: `xs | vjp f v` is vᵀ·J where J is the Jacobian
 # of f at xs (one backward pass, whatever the number of outputs).
 vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where Float[t], Dup[t]
-vjp = curry (both (.0 | second | compose rev._seed) (.1 | rev._vjp-finish)
+vjp = curry3 (const | flip compose (uncurry3 rev._vjp) | ad.scope)
+
+# internal
+rev._vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where Float[t], Dup[t]
+rev._vjp = curry (both (.0 | second | compose rev._seed) (.1 | rev._vjp-finish)
     | uncurry compose)
 
 # The Jacobian in reverse mode, one backward pass per output (rows are
