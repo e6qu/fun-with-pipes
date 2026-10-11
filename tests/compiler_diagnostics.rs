@@ -54,7 +54,7 @@ fn source(dir: &Path, interpreter: bool) -> PathBuf {
         "native.fwp"
     });
     let text = if interpreter {
-        "foreign \"C\" c-abs : I32 -> I32 = \"abs\"\nmain = -7:I32 | c-abs | echo\n"
+        "foreign \"C\" c-abs : I32 -> I32 = \"abs\"\nmain = -7 | c-abs | echo\n"
     } else {
         "main = \"compiler-diagnostics\" | echo\n"
     };
