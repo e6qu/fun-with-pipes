@@ -1,0 +1,40 @@
+name: Array allocation limits and evaluation order
+on:
+  push:
+    branches: [ownership-evidence-array-size-limits]
+permissions:
+  contents: read
+jobs:
+  arrays:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+      CC: clang
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: macOS OpenSSL
+        if: runner.os == 'macOS'
+        run: echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Format and validate array limits and trap order
+        env:
+          FWP_ARRAY_SIZE_ARTIFACTS: ${{ runner.temp }}/array-size-evidence
+        run: |
+          rustfmt --edition 2021 src/prims_std.rs tests/array_size_limits.rs
+          cargo test --lib
+          cargo test --test array_size_limits --test golden_check --test call_effects --no-fail-fast -- --nocapture
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: array-size-controls-${{ matrix.os }}
+          path: ${{ runner.temp }}/array-size-evidence/

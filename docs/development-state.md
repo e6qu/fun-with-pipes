@@ -6,7 +6,7 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `323f52cd9708212c6bfd212a68e296ab12aab572` passes audit38180735110
+checkpoint `80e9b271a2e73928ff887c593ae1435709bba5ed` passes audit38181241047
 and retains the latest AD/input and callback diagnostic sources. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
 Git blob hashes using restore-roadmap-recovery.py. The AST-based restore repair
@@ -65,8 +65,8 @@ resource/network items74–112, compiler/cache diagnostics, AD tape/scoped-gradi
 lifetimes, list callback owners, closure cleanup and typed State ownership.
 Production head is `d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0`, complete tree
 `db8348f963973fa32fb0803348fcb53a2c072a52`, identical to the final runner export.
-Full CI38180852377 is running at that exact head; bench passes and the other
-five jobs run. Roadmap_docs38180852369 passes.
+Full CI38180852377 is running at that exact head; bench and ARM GC pass; the other
+four jobs run. Roadmap_docs38180852369 passes.
 Publication receipt: /private/tmp/fwp-pr124-final-ownership-export/publication.json.
 Do not merge until all six jobs and the documentation audit pass.
 
@@ -223,6 +223,29 @@ allocation failure at O1/O2 with ASan/UBSan, plus three deliberate omission
 variants. Drafts: fwp-structural-buffer-{draft.c,test.rs,probe.c,patch.json}.
 Fold it into the next ownership exit bundle after PR124 acceptance; no second
 production PR opens before that merge.
+
+The same exact-source audit found unchecked generic array size multiplication,
+interpreter capacity overflow for huge make counts, and bump-heap alignment
+addition/initial empty allocation issues. Array-limit candidate
+b42f318357658f277bf6615c0207b33aa810b57b on
+ownership-evidence-array-size-limits extendsd8e334ba with checked bump alignment
+and nonnull zero-size initialization; run38181946074 is queued. Earlier
+38181835721 is running atd8e334ba and cannot gate the newer controls. Native
+constructor guards and matching interpreter make/generate limits preserve
+negative counts and argument/callback trap order. Raw/native O1/O2 with reuse
+on/off and real GC/reuse verification plus ASan/UBSan constructor/bump omission
+controls are pending. Fold the passing final repair into the same phase2 exit
+bundle; keep original controls. Drafts: fwp-array-size-{runtime-draft.c,
+interpreter-draft.rs,gc-draft.c,test.rs,probe.c}; fwp-bump-size-probe.c.
+
+Prepared post-merge helpers: fwp-record-pr124-remote-acceptance.py backs up11 docs
+and archives39 live/primitive rows only after exact-head squash/raw-payload proof.
+It streamlines obsolete design/resource notes into history. Never execute before
+verified acceptance. fwp-finalize-phase2-exit-on-runner.py and
+fwp-publish-phase2-exit-finalization.py require the actual PR124 squash and passing
+finite review. Extend that finalizer with the passing latest array/bump source
+and controls before publishing its driver. It will export a focused ownership
+exit/buffer/array-limit bundle and fresh docs for the next full matrix.
 
 Numeric design preparation reads30 blob-verified files at d5ae8c and maps108
 direct array references in seven runtime files. Current arrays have8-byte

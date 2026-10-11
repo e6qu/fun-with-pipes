@@ -1,0 +1,55 @@
+name: Preflight finite ownership exit and buffer bundle
+on:
+  push:
+    branches: [ownership-phase2-exit-finalization]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: e6qu/fun-with-pipes
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Dependencies
+        run: sudo apt-get update -qq && sudo apt-get install -y libssl-dev
+      - name: Retain exact evidence and preparation tags
+        run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*'
+      - name: Ordinary commit metadata
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - name: Record hardware and all native compiler arguments
+        run: |
+          mkdir -p phase2-exit-evidence
+          uname -a > phase2-exit-evidence/hardware.txt
+          clang --version > phase2-exit-evidence/compiler.txt
+          rustc --version > phase2-exit-evidence/rustc.txt
+          cat > phase2-exit-evidence/record-cc <<'SH'
+          #!/bin/sh
+          printf 'clang argument vector\n' >> "$FWP_FINAL_COMPILER_LOG"
+          printf '%s\n' "$@" >> "$FWP_FINAL_COMPILER_LOG"
+          exec clang "$@"
+          SH
+          chmod +x phase2-exit-evidence/record-cc
+          echo "FWP_FINAL_COMPILER_LOG=$PWD/phase2-exit-evidence/compiler-invocations.txt" >> "$GITHUB_ENV"
+          echo "CC=$PWD/phase2-exit-evidence/record-cc" >> "$GITHUB_ENV"
+      - name: Rebase and validate the finite ownership exit bundle
+        run: python3 scripts/finalize-phase2-exit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase2-exit-finalization
+          path: phase2-exit-evidence/

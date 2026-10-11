@@ -1,0 +1,48 @@
+"""Rebase the passing finite review onto the verified PR124 squash on a runner."""
+from pathlib import Path
+import hashlib,json,os,subprocess
+from export_prepared_commits import export_history
+assert os.environ.get('GITHUB_ACTIONS')=='true'
+ROOT=Path.cwd();OUT=ROOT/'phase2-exit-evidence';OUT.mkdir(exist_ok=True)
+SOURCE='d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0';PREP='167d769deaa28fae9b361ba4e9fa33b443d1a79c'
+DOCS=['CONTRIBUTING.md','PLAN.md','docs/design.md','docs/development-state.md','docs/ownership.md','docs/primitive-ownership.md','docs/roadmap-queue.md','docs/roadmap-history.md','docs/reference.md','docs/concurrency.md','docs/numerics.md']
+FILES=['runtime/fwp_rt_ops.c','tests/structural_buffer.rs','tests/fixtures/structural_buffer_probe.c','scripts/check-explicit-fallback-review.py','tests/fixtures/primitive-fallback-review.json']
+def git(*a,cwd=ROOT):return subprocess.check_output(['git',*a],cwd=cwd,text=True).strip()
+def blob(head,path):return subprocess.check_output(['git','show',head+':'+path],cwd=ROOT)
+review=json.loads(subprocess.check_output(['gh','run','view','38180899508','--json','headSha,status,conclusion,jobs'],text=True))
+assert review['headSha']==PREP and review['status']=='completed' and review['conclusion']=='success'
+assert len(review['jobs'])==3 and {j['name'] for j in review['jobs']}=={'review ('+s+')' for s in ['ubuntu-latest','macos-15','macos-15-intel']}
+assert all(j['status']=='completed' and j['conclusion']=='success' for j in review['jobs'])
+pr=json.loads(subprocess.check_output(['gh','api','repos/e6qu/fun-with-pipes/pulls/124'],text=True))
+assert pr['merged'] and pr['head']['sha']==SOURCE and pr['merge_commit_sha']
+BASE=pr['merge_commit_sha'];assert git('rev-parse','origin/main')==BASE
+assert git('rev-parse',BASE+'^{tree}')==git('rev-parse',SOURCE+'^{tree}')
+message=subprocess.check_output(['git','show','-s','--format=%B',BASE],text=True).strip();assert '\n' not in message and len(message)<=80
+assert not any(x in message.lower() for x in ['co-authored','authored by','authored-by','ai attribution'])
+WT=ROOT.parent/'phase2-exit-final';subprocess.run(['git','worktree','add','--detach',str(WT),BASE],check=True)
+for path in FILES:(WT/path).parent.mkdir(parents=True,exist_ok=True);(WT/path).write_bytes(blob(PREP,path))
+for path in DOCS:(WT/path).write_bytes(blob('HEAD',path))
+env=dict(os.environ,CARGO_INCREMENTAL='0',CARGO_PROFILE_DEV_DEBUG='0',CARGO_PROFILE_TEST_DEBUG='0',RUST_TEST_THREADS='1',FWP_BUFFER_ARTIFACTS=str(OUT/'buffers'),FWP_CODEC_ARTIFACTS=str(OUT/'codecs'))
+def run(*a,environment=None):subprocess.run(a,cwd=WT,env=environment or env,check=True)
+run('rustfmt','--edition','2021','tests/structural_buffer.rs');run('cargo','fmt','--check')
+run('cargo','clippy','--test','structural_buffer','--','-D','warnings')
+run('cargo','test','--lib');run('cargo','test','--no-fail-fast','--test','structural_buffer','--test','serializer_leaf_ownership','--test','golden_check','--test','fmt','--test','stdlib_doc')
+run('python3','scripts/check-roadmap.py')
+changed=set(FILES+DOCS);git('add',*sorted(changed),cwd=WT);assert set(git('diff','--cached','--name-only',cwd=WT).splitlines())<=changed
+git('commit','-m','Record explicit runtime fallbacks and check buffer growth',cwd=WT)
+head=git('rev-parse','HEAD',cwd=WT)
+run('python3','scripts/check-primitive-inventory.py','--baseline','tests/fixtures/primitive-inventory-baseline.json','--output',str(OUT/'inventory.json'),environment=dict(env,FWP_INVENTORY_EXPECTED_HEAD=head))
+run('python3','scripts/check-explicit-fallback-review.py','--inventory',str(OUT/'inventory.json'),'--review','tests/fixtures/primitive-fallback-review.json','--output',str(OUT/'fallback-review.json'))
+state=WT/'docs/development-state.md';state.write_text(state.read_text()+'''\nFinite phase2 exit candidate: all177 remaining declarations explicitly retain
+tracing-compatible argument/result/callback, retention and teardown policies.
+The exact-source audit and checked buffer controls pass together with codec
+aliases, type snapshots, format/stdlib docs and71 library units. This candidate
+still requires publication, all six exact-head jobs and roadmap_docs before
+acceptance; phase2 is not complete yet. Numeric representation remains next.
+''')
+git('add','docs/development-state.md',cwd=WT);git('commit','-m','Record finite ownership coverage and checked buffer validation',cwd=WT)
+head=git('rev-parse','HEAD',cwd=WT)
+run('python3','scripts/check-primitive-inventory.py','--baseline','tests/fixtures/primitive-inventory-baseline.json','--output',str(OUT/'inventory.json'),environment=dict(env,FWP_INVENTORY_EXPECTED_HEAD=head));run('python3','scripts/check-explicit-fallback-review.py','--inventory',str(OUT/'inventory.json'),'--review','tests/fixtures/primitive-fallback-review.json','--output',str(OUT/'fallback-review.json'));run('python3','scripts/check-roadmap.py')
+assert not git('status','--porcelain',cwd=WT)
+record=dict(base=BASE,previous=BASE,head=head,branch='ownership-exit-and-buffer-bundle',reviewEvidence=review,inventoryReport=json.loads((OUT/'inventory.json').read_text()),fallbackReport=json.loads((OUT/'fallback-review.json').read_text()),sourceHashes={n:hashlib.sha256((WT/n).read_bytes()).hexdigest() for n in changed},stage='Phase2 exit candidate prepared; full exact-head production gates and acceptance required')
+record['export']=export_history(WT,BASE,head,OUT/'prepared-commits.json.gz');record['tree']=record['export']['tree'];(OUT/'phase2-exit.json').write_text(json.dumps(record,indent=2)+'\n');print('Final phase2 exit export',head,flush=True)

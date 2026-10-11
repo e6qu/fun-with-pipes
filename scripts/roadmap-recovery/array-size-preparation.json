@@ -1,0 +1,7 @@
+{
+  "base": "d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0",
+  "status": "Source-reviewed array allocation limit repair; runner tests pending",
+  "native": "Central header and V-slot multiplication check protects typed and generic paths",
+  "interpreter": "Same native-representation upper bound before make allocation and generator callback",
+  "preserved": "Negative counts stay empty; arguments still evaluate before saturated calls"
+}
