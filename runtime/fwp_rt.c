@@ -330,6 +330,19 @@ static void fwp_fail(V value, const fwp_desc *d) {
     longjmp(fwp_handlers->jb, 1);
 }
 
+/* Unused State slots must not remain conservative roots in this buffer. */
+static void fwp_state_restore(size_t depth) {
+    while (fwp_state_len > depth) fwp_state[--fwp_state_len] = 0;
+    fwp_state_len = depth;
+}
+
+static V fwp_state_pop(void) {
+    V value = fwp_state[fwp_state_len - 1];
+    fwp_state[fwp_state_len - 1] = 0;
+    fwp_state_len--;
+    return value;
+}
+
 static void fwp_state_push(V s) {
     if (fwp_state_len == fwp_state_cap) {
         size_t old = fwp_state_cap;

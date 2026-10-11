@@ -164,3 +164,100 @@ fn closure_drop_context_recovers_after_capture_trap_and_spill_oom() {
         }
     }
 }
+
+#[test]
+fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() {
+    let scratch=Scratch::new("state-slots");
+    let input=scratch.0.join("state.fwp");let cfile=scratch.0.join("state.c");
+    // Keep both task and gRPC runtime handlers in the emitted translation unit.
+    std::fs::write(&input,"main = [task.yield (), grpc.with-metadata [] (const ())] | ignore\n").unwrap();
+    checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT")
+        .arg("build").arg(&input).args(["--emit-c","-o"]).arg(&cfile));
+    let original=std::fs::read_to_string(cfile).unwrap();
+    assert!(original.contains("#define FWP_UNWIND 1"));
+    assert!(original.contains("static int g_apply_user("));
+    let scan="    uintptr_t a = ((uintptr_t)lo + 7) & ~(uintptr_t)7;";
+    let declaration="__attribute__((no_sanitize_address)) static void fwp_gc_scan(";
+    assert_eq!(original.matches(scan).count(),1);
+    assert_eq!(original.matches(declaration).count(),1);
+    let runtime=original.replace(declaration,&format!("static void state_probe_scan(const char *,const char *,int);\n{declaration}"))
+        .replace(scan,&format!("    state_probe_scan(lo,hi,root);\n{scan}"))
+        .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
+    let task_exit="    t->unwinding = 1;\n    fwp_handlers = 0;\n    fwp_state_restore(0);\n    fwp_join_children();";
+    assert_eq!(runtime.matches(task_exit).count(),1);
+    let runtime=runtime.replace("static void fwp_task_main(void) {","static int state_empty_from(size_t);\nstatic void state_probe_task_exit(void);\nstatic void fwp_task_main(void) {")
+        .replace(task_exit,"    t->unwinding = 1;\n    fwp_handlers = 0;\n    fwp_state_restore(0);\n    state_probe_task_exit();\n    fwp_join_children();");
+    let pop="    fwp_state[fwp_state_len - 1] = 0;";
+    let restore="    while (fwp_state_len > depth) fwp_state[--fwp_state_len] = 0;";
+    assert_eq!(runtime.matches(pop).count(),1);assert_eq!(runtime.matches(restore).count(),1);
+    let pop_control=runtime.replace(pop,"");let restore_control=runtime.replace(restore,"");
+    let task_control=runtime.replace("    fwp_state_restore(0);\n    state_probe_task_exit();","    state_probe_task_exit();");
+    assert_ne!(task_control,runtime);
+    for opt in ["-O1","-O2"] {
+        for (label,source,expected) in [("state-cleared",&runtime,0),("state-pop-retained",&pop_control,104),("state-restore-retained",&restore_control,105),("state-task-retained",&task_control,112)] {
+            let code=format!("{source}\n{}",include_str!("fixtures/state_slot_probe.c"));
+            let executable=scratch.0.join(format!("{label}{}",&opt[1..]));
+            if let Some(directory)=std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
+                let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
+                std::fs::write(directory.join(format!("{label}{}.c",&opt[1..])),&code).unwrap();
+            }
+            fwp::cgen::compile_c(&code,&executable,opt).unwrap();
+            for reuse in ["0","1"] {
+                let output=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1")
+                    .env("FWP_REUSE_VERIFY",reuse).output().unwrap();
+                retain(&format!("{label}{}-reuse{reuse}",&opt[1..]),&code,&executable,&output);
+                assert_eq!(output.status.code(),Some(expected),"{label} {opt} reuse={reuse}: {}",String::from_utf8_lossy(&output.stderr));
+                if expected==0 { assert!(String::from_utf8_lossy(&output.stdout).starts_with("State inactive slots cleared; real collections=")); }
+            }
+        }
+    }
+}
+
+#[test]
+fn state_aliases_nested_errors_and_task_cancellation_match_raw_interpreter() {
+    let scratch=Scratch::new("state-semantics");let input=scratch.0.join("state-semantics.fwp");
+    let source=r#"
+read-and-change : () -> String ! {State[String]}
+read-and-change = both (const () | get) (const "replacement" | put) | .0
+fail-change : () -> String ! {State[String], Error[String]}
+fail-change = const "changed" | put | const "expected error" | fail
+child : () -> String ! {Async}
+child = run-state "child" (tap (const 1s | task.sleep) | get) | .0
+main = [
+    () | run-state "original" read-and-change | echo,
+    () | run-state "outer" (both (run-state "inner" get) get) | echo,
+    () | run-state "outer" (attempt fail-change) | echo,
+    () | run-state "outer" (attempt (run-state "inner" fail-change)) | echo,
+    child | task.spawn | tap (const () | task.yield) | tap task.cancel | task.await | echo,
+    () | run-state "parent after child" get | echo,
+] | ignore
+"#;
+    std::fs::write(&input,source).unwrap();
+    let reference=checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env("FWP_NO_OPT","1")
+        .args(["run","--interp"]).arg(&input));
+    if let Some(directory)=std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
+        let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(directory.join("state-semantics.fwp"),source).unwrap();
+        std::fs::write(directory.join("state-semantics.raw.stdout"),&reference.stdout).unwrap();
+        std::fs::write(directory.join("state-semantics.raw.stderr"),&reference.stderr).unwrap();
+        std::fs::write(directory.join("state-semantics.raw.status"),format!("{}\n",reference.status)).unwrap();
+    }
+    for opt in ["-O1","-O2"] {
+        let executable=scratch.0.join(format!("state-semantics{}",&opt[1..]));let cfile=executable.with_extension("c");
+        checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT")
+            .arg("build").arg(&input).args(["--emit-c","-o"]).arg(&cfile));
+        let code=std::fs::read_to_string(cfile).unwrap();
+        if let Some(directory)=std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
+            let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
+            std::fs::write(directory.join(format!("state-semantics{}.c",&opt[1..])),&code).unwrap();
+        }
+        fwp::cgen::compile_c(&code,&executable,opt).unwrap();
+        for reuse in ["0","1"] {
+            let output=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1")
+                .env("FWP_REUSE_VERIFY",reuse).output().unwrap();
+            retain(&format!("state-semantics{}-reuse{reuse}",&opt[1..]),&code,&executable,&output);
+            assert!(output.status.success(),"{opt} reuse={reuse}: {}",String::from_utf8_lossy(&output.stderr));
+            assert_eq!(output.stdout,reference.stdout,"{opt} reuse={reuse}");
+        }
+    }
+}

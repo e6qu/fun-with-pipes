@@ -7582,7 +7582,7 @@ static const fwp_exec_spec exec_spec{i} = {{
             if (v == FWP_TRUE) {{ pass++; printf("test %s ... ok\n", {name}); }}
             else {{ fail++; printf("test %s ... FAILED\n", {name}); }}
         }} else {{
-            fwp_handlers = h.prev; fwp_state_len = h.state_depth; fail++;
+            fwp_handlers = h.prev; fwp_state_restore(h.state_depth); fail++;
             fwp_tasks_abort();
             fwp_buf b = {{0}}; fwp_write(&b, h.value, h.desc, 1);
             printf("test %s ... FAILED (error: %s)\n", {name}, b.d ? b.d : "");

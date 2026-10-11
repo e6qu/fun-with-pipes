@@ -2462,7 +2462,7 @@ static V fwp_p_attempt(V f, V x) {
         return fwp_data(0, 1, &r);
     }
     fwp_handlers = h.prev;
-    fwp_state_len = h.state_depth;
+    fwp_state_restore(h.state_depth);
     V e = h.value;
     return fwp_data(1, 1, &e);
 }
@@ -2492,11 +2492,11 @@ static V fwp_p_run_state(V s, V f, V x) {
     if (setjmp(h.jb) == 0) {
         V r = fwp_apply1(f, x);
         fwp_handlers = h.prev;
-        V st = fwp_state[--fwp_state_len];
+        V st = fwp_state_pop();
         return fwp_tuple2(r, st);
     }
     fwp_handlers = h.prev;
-    fwp_state_len = h.state_depth;
+    fwp_state_restore(h.state_depth);
     fwp_fail(h.value, h.desc);
     return 0;
 }
