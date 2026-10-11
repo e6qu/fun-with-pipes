@@ -4317,7 +4317,7 @@ impl<'p> Gen<'p> {
             "ptr.at" => {
                 let t = crate::ffi::classify_scalar(&elem(&p(1), 0));
                 format!(
-                    "return (V)((int64_t)l1 + (int64_t)l0 * (int64_t)sizeof({}));",
+                    "return (V)((uintptr_t)l1 + (uintptr_t)l0 * sizeof({}));",
                     crate::ffi::c_name(&t)
                 )
             }
