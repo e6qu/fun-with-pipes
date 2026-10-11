@@ -48,9 +48,11 @@ main = read-all () | concat "heap-dependent text" | both id checks | echo
     );
     let artifacts = std::env::var_os("FWP_CODEC_ARTIFACTS")
         .map(PathBuf::from)
-        .unwrap_or_else(|| directory.clone());
+        .unwrap_or_else(|| directory.join("artifacts"));
     std::fs::create_dir_all(&artifacts).unwrap();
+    let source_bytes = std::fs::read(&source).unwrap();
     std::fs::copy(&source, artifacts.join("codecs.fwp")).unwrap();
+    assert_eq!(std::fs::read(&source).unwrap(), source_bytes);
     for opt in ["-O1", "-O2"] {
         for stack in ["0", "1"] {
             let label = format!("codecs{opt}-stack{stack}");
