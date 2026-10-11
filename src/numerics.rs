@@ -184,62 +184,6 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
     Ok(adj)
 }
 
-
-#[cfg(test)]
-mod tape_validation_tests {
-    use super::*;
-
-    fn expect_trap<T>(result: R<T>, expected: &str) {
-        match result {
-            Err(Ctl::Trap(message)) => assert_eq!(message, expected),
-            _ => panic!("expected autodiff trap: {expected}"),
-        }
-    }
-
-    #[test]
-    fn invalid_nodes_preserve_push_state_and_consume_backward_tapes() {
-        let base = tape_new(2).unwrap();
-        let other = tape_new(1).unwrap();
-        for invalid in [base + 2, base | 0xffff_ffff] {
-            expect_trap(push(invalid, 1.0, -1, 0.0), INVALID_NODE);
-            expect_trap(push(base, 1.0, invalid, 1.0), INVALID_NODE);
-            expect_trap(push(-1, 0.0, invalid, 1.0), INVALID_NODE);
-        }
-        // Mixing computations retains precedence over checking node indices.
-        expect_trap(push(base + 2, 1.0, other, 1.0), MIXED);
-        let node = push(base, 4.0, base + 1, 5.0).unwrap();
-        assert_eq!(node, base + 2);
-        assert_eq!(backward(base, &[node, base + 1], &[2.0, 3.0]).unwrap(), [8.0, 13.0]);
-        expect_trap(push(base, 1.0, -1, 0.0), USED_OUTSIDE);
-        expect_trap(backward(other, &[other + 1], &[1.0]), INVALID_NODE);
-        expect_trap(backward(other, &[], &[]), USED_OUTSIDE);
-
-        let base = tape_new(1).unwrap();
-        let other = tape_new(1).unwrap();
-        expect_trap(backward(base, &[other | 0xffff_ffff], &[1.0]), MIXED);
-        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
-        assert_eq!(backward(other, &[other], &[3.0]).unwrap(), [3.0]);
-
-        // Zip semantics ignore unpaired outputs and constant sentinels.
-        let base = tape_new(0).unwrap();
-        assert!(backward(base, &[-1, base | 0xffff_ffff], &[1.0]).unwrap().is_empty());
-        assert_eq!(push(-1, 1.0, -2, 2.0).unwrap(), -1);
-
-        // Exhaust a generation without resetting its identity to an old token.
-        let slot = ((base >> 32) & 0xffff) as usize - 1;
-        TAPES.lock().unwrap()[slot].gen = 32766;
-        let last = tape_new(0).unwrap();
-        assert_eq!((last >> 32) & 0xffff, (base >> 32) & 0xffff);
-        assert_eq!(last >> 48, 32767);
-        assert!(backward(last, &[], &[]).unwrap().is_empty());
-        let next = tape_new(0).unwrap();
-        assert_ne!((next >> 32) & 0xffff, (last >> 32) & 0xffff);
-        expect_trap(backward(last, &[], &[]), USED_OUTSIDE);
-        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
-        assert!(backward(next, &[], &[]).unwrap().is_empty());
-    }
-}
-
 // ---------------------------------------------------------------- kernels
 
 const OP_LEAF: i64 = 0;
@@ -928,5 +872,60 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
         Ok(Some(v)) => Some(Ok(v)),
         Ok(None) => None,
         Err(e) => Some(Err(e)),
+    }
+}
+
+#[cfg(test)]
+mod tape_validation_tests {
+    use super::*;
+
+    fn expect_trap<T>(result: R<T>, expected: &str) {
+        match result {
+            Err(Ctl::Trap(message)) => assert_eq!(message, expected),
+            _ => panic!("expected autodiff trap: {expected}"),
+        }
+    }
+
+    #[test]
+    fn invalid_nodes_preserve_push_state_and_consume_backward_tapes() {
+        let base = tape_new(2).unwrap();
+        let other = tape_new(1).unwrap();
+        for invalid in [base + 2, base | 0xffff_ffff] {
+            expect_trap(push(invalid, 1.0, -1, 0.0), INVALID_NODE);
+            expect_trap(push(base, 1.0, invalid, 1.0), INVALID_NODE);
+            expect_trap(push(-1, 0.0, invalid, 1.0), INVALID_NODE);
+        }
+        // Mixing computations retains precedence over checking node indices.
+        expect_trap(push(base + 2, 1.0, other, 1.0), MIXED);
+        let node = push(base, 4.0, base + 1, 5.0).unwrap();
+        assert_eq!(node, base + 2);
+        assert_eq!(backward(base, &[node, base + 1], &[2.0, 3.0]).unwrap(), [8.0, 13.0]);
+        expect_trap(push(base, 1.0, -1, 0.0), USED_OUTSIDE);
+        expect_trap(backward(other, &[other + 1], &[1.0]), INVALID_NODE);
+        expect_trap(backward(other, &[], &[]), USED_OUTSIDE);
+
+        let base = tape_new(1).unwrap();
+        let other = tape_new(1).unwrap();
+        expect_trap(backward(base, &[other | 0xffff_ffff], &[1.0]), MIXED);
+        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
+        assert_eq!(backward(other, &[other], &[3.0]).unwrap(), [3.0]);
+
+        // Zip semantics ignore unpaired outputs and constant sentinels.
+        let base = tape_new(0).unwrap();
+        assert!(backward(base, &[-1, base | 0xffff_ffff], &[1.0]).unwrap().is_empty());
+        assert_eq!(push(-1, 1.0, -2, 2.0).unwrap(), -1);
+
+        // Exhaust a generation without resetting its identity to an old token.
+        let slot = ((base >> 32) & 0xffff) as usize - 1;
+        TAPES.lock().unwrap()[slot].gen = 32766;
+        let last = tape_new(0).unwrap();
+        assert_eq!((last >> 32) & 0xffff, (base >> 32) & 0xffff);
+        assert_eq!(last >> 48, 32767);
+        assert!(backward(last, &[], &[]).unwrap().is_empty());
+        let next = tape_new(0).unwrap();
+        assert_ne!((next >> 32) & 0xffff, (last >> 32) & 0xffff);
+        expect_trap(backward(last, &[], &[]), USED_OUTSIDE);
+        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
+        assert!(backward(next, &[], &[]).unwrap().is_empty());
     }
 }

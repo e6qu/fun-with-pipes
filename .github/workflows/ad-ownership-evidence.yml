@@ -18,7 +18,6 @@ jobs:
       CARGO_INCREMENTAL: 0
       CARGO_PROFILE_TEST_DEBUG: 0
       RUST_TEST_THREADS: 1
-      FWP_AD_ARTIFACTS: ${{ runner.temp }}/autodiff-tapes
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -30,6 +29,8 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
       - name: Record source, hardware and compiler
         run: |
+          export FWP_AD_ARTIFACTS="$RUNNER_TEMP/autodiff-tapes"
+          echo "FWP_AD_ARTIFACTS=$FWP_AD_ARTIFACTS" >> "$GITHUB_ENV"
           mkdir -p "$FWP_AD_ARTIFACTS"
           git rev-parse HEAD > "$FWP_AD_ARTIFACTS/head.txt"
           uname -a > "$FWP_AD_ARTIFACTS/hardware.txt"
