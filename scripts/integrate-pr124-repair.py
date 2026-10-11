@@ -103,7 +103,7 @@ for name,(head,saved) in fixtures.items():
 for name in DOCS:
     (WT/name).write_bytes(blob('HEAD',name))
 subprocess.run(['rustfmt','src/cgen.rs','src/ownership.rs','src/infer.rs','src/types.rs','tests/call_effects.rs','tests/typed_state_ownership.rs'],cwd=WT,check=True)
-env = dict(os.environ,CARGO_PROFILE_DEV_DEBUG='0',CARGO_PROFILE_TEST_DEBUG='0',CARGO_INCREMENTAL='0',RUST_TEST_THREADS='1')
+env = dict(os.environ,CARGO_PROFILE_DEV_DEBUG='0',CARGO_PROFILE_TEST_DEBUG='0',CARGO_INCREMENTAL='0',RUST_TEST_THREADS='1',FWP_TYPED_STATE_ARTIFACTS=str(OUT/'typed-state-native'))
 subprocess.run(['cargo','build','--bin','fwp'],cwd=WT,env=env,check=True)
 subprocess.run([str(WT/'target/debug/fwp'),'fmt','lib/autodiff.fwp'],cwd=WT,check=True)
 subprocess.run([str(WT/'target/debug/fwp'),'fmt','--check','lib/autodiff.fwp'],cwd=WT,check=True)
@@ -111,7 +111,7 @@ subprocess.run(['cargo','fmt','--check'],cwd=WT,check=True)
 # Check the library's formatting/faithfulness and reference before another full
 # matrix, and exercise the newly added aggregate/escaping-closure State cases.
 subprocess.run(['cargo','test','--lib'],cwd=WT,env=env,check=True)
-subprocess.run(['cargo','test','--test','call_effects','--test','golden_check','--test','fmt','--test','stdlib_doc','--test','typed_state_ownership','--','--nocapture'],cwd=WT,env=env,check=True)
+subprocess.run(['cargo','test','--no-fail-fast','--test','call_effects','--test','golden_check','--test','fmt','--test','stdlib_doc','--test','typed_state_ownership','--','--nocapture'],cwd=WT,env=env,check=True)
 subprocess.run(['python3','scripts/check-roadmap.py'],cwd=WT,check=True)
 state_doc = WT/'docs/development-state.md'
 state_doc.write_text(state_doc.read_text() + '\n## Combined repair prepared on GitHub\n\n'

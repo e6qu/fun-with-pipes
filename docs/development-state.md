@@ -118,6 +118,14 @@ matching a payload binds an outer tail, then stale row-tail handling discards
 that required IO. The prepared fix re-flattens/rechecks tails after common
 payload unification, preserving required effects. Source:
 /private/tmp/fwp-row-tail-refresh-patch.json; log fwp-combined-repair-21-failed.log.
+Combinedc7/38172978312 verifies both fixes:71 units, all five effect tests
+(including four positives/two missing-IO negatives), all type snapshots, fwp
+format stability/faithfulness, stdlib docs and original State ownership controls
+pass. The remaining fixture error pipes an escaped function into apply, invoking
+composition under the existing semantics. The repair uses ordinary application,
+retains runtime-dependent heap captures, and saves actual C, binaries and statuses
+before native assertions. Source-language artifacts use their correct extension.
+Log: /private/tmp/fwp-combined-repair-c7-failed.log.
 All original and new controls remain required. Earlier7235/eccd drivers were
 cancelled with their only jobs queued while controls were completed; neither
 provides a passing gate. The next runner includes both inference fixes.
