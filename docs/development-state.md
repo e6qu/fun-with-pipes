@@ -6,8 +6,7 @@ Updated 2026-10-11. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Current checkpoint56ae30b4499292744a566ca6171fa5fa8761ecad retains the inference
-repair and corrected recovery helper. Audit38170442223 is queued; earlierb952
-audit38169481098 passes only that earlier snapshot.
+repair and corrected recovery helper. Exact-head audit38170442223 passes.
 It retains all11 authoritative docs, State source/fixtures and recovery recipes.
 Earlier024 audit failed the numeric-row parser; the section-scoped fix is verified.
 Recovery destinations are temporary files only. The prepared restore fix reads
@@ -112,10 +111,19 @@ with known ambient labels. All original snapshots and the simple closure
 fixture remain required. Log: fwp-combined-repair-322-complete.log.
 Driver7d/38170194296 was cancelled with its only job queued because its
 snapshot target was misnamed; it provides no passing checks.
-Next: validate this combined runner repair, fix every failure, then publish the
+Driver21d8/38171839872 preserves all71 library units and existing effect
+snapshots/raw-native callback tests, and accepts the four new pure/effectful
+State cases. Its missing-IO negative catches an unsafe row-unifier overwrite:
+matching a payload binds an outer tail, then stale row-tail handling discards
+that required IO. The prepared fix re-flattens/rechecks tails after common
+payload unification, preserving required effects. Source:
+/private/tmp/fwp-row-tail-refresh-patch.json; log fwp-combined-repair-21-failed.log.
+All original and new controls remain required. Earlier7235/eccd drivers were
+cancelled with their only jobs queued while controls were completed; neither
+provides a passing gate. The next runner includes both inference fixes.
+Next: validate this combined runner repair, fix every failure, then publish its
 exact-tree export with a9550 lease. Require a new full current-head matrix;
-earlier focused or production passes cannot gate squash. Recovery scripts and
-receipt names are retained on ownership-pr124-combined-repair. The narrower replacement is prepared; no new native support is verified.
+earlier focused or production passes cannot gate squash.
 
 Integrated inventory at runner head13c92139da8ddc3d7c9755539cd1e95d80a5b2b9
 reports374 declarations,364 symbols,40 aliases,149 explicit contracts,19 IR

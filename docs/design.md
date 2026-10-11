@@ -124,6 +124,9 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   allowing callee effects in a larger ambient context without contaminating
   function-valued argument types. Pipe application, composition and ordinary
   application use this rule; required callback effects remain checked.
+- The prepared row-unifier repair refreshes tails after payload unification,
+  preserving required effects or fields bound by those payloads. Positive and
+  missing-IO State callback controls remain mandatory before acceptance.
 - Tuples are records with numeric labels, and unit is the empty record.
 - Nominal records are distinct from each other but unify structurally with
   open rows, so `.name` accepts both `User {…}` and `{name = "x"}`.

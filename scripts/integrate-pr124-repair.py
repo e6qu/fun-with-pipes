@@ -83,7 +83,8 @@ for name in NATIVE:
     assert source.encode() == blob(STATE,name), name
     (WT/name).write_text(source)
 inference_recipe = json.loads(blob('HEAD','scripts/call-row-ambient-patch.json'))
-assert set(inference_recipe) == {'src/infer.rs'}
+inference_recipe.update(json.loads(blob('HEAD','scripts/row-tail-refresh-patch.json')))
+assert set(inference_recipe) == {'src/infer.rs','src/types.rs'}
 for name, edits in inference_recipe.items():
     source = (WT/name).read_text()
     for edit in edits:
@@ -101,7 +102,7 @@ for name,(head,saved) in fixtures.items():
     (WT/name).write_bytes(blob(head,saved))
 for name in DOCS:
     (WT/name).write_bytes(blob('HEAD',name))
-subprocess.run(['rustfmt','src/cgen.rs','src/ownership.rs','src/infer.rs','tests/call_effects.rs','tests/typed_state_ownership.rs'],cwd=WT,check=True)
+subprocess.run(['rustfmt','src/cgen.rs','src/ownership.rs','src/infer.rs','src/types.rs','tests/call_effects.rs','tests/typed_state_ownership.rs'],cwd=WT,check=True)
 env = dict(os.environ,CARGO_PROFILE_DEV_DEBUG='0',CARGO_PROFILE_TEST_DEBUG='0',CARGO_INCREMENTAL='0',RUST_TEST_THREADS='1')
 subprocess.run(['cargo','build','--bin','fwp'],cwd=WT,env=env,check=True)
 subprocess.run([str(WT/'target/debug/fwp'),'fmt','lib/autodiff.fwp'],cwd=WT,check=True)
@@ -121,7 +122,7 @@ state_doc.write_text(state_doc.read_text() + '\n## Combined repair prepared on G
     'array/record/escaping-closure State controls. The current-head primitive\n'
     'inventory follows. Full six-job production CI and roadmap_docs remain\n'
     'mandatory before PR124 squash; earlier passes do not satisfy that gate.\n')
-changed = set(NATIVE + ['src/infer.rs'] + list(fixtures) + DOCS + ['lib/autodiff.fwp'])
+changed = set(NATIVE + ['src/infer.rs','src/types.rs'] + list(fixtures) + DOCS + ['lib/autodiff.fwp'])
 git('add',*sorted(changed),cwd=WT)
 assert set(git('diff','--cached','--name-only',cwd=WT).splitlines()) <= changed
 git('commit','-m','Own scoped State and repair library formatting and roadmap validation',cwd=WT)
