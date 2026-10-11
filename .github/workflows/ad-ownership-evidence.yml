@@ -1,0 +1,59 @@
+name: Autodiff tape ownership and invalid token evidence
+on:
+  push:
+    branches: [ownership-evidence-autodiff-tapes]
+permissions:
+  contents: read
+jobs:
+  tapes:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+      RUST_TEST_THREADS: 1
+      FWP_AD_ARTIFACTS: ${{ runner.temp }}/autodiff-tapes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: macOS OpenSSL
+        if: runner.os == 'macOS'
+        run: |
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Record source, hardware and compiler
+        run: |
+          mkdir -p "$FWP_AD_ARTIFACTS"
+          git rev-parse HEAD > "$FWP_AD_ARTIFACTS/head.txt"
+          uname -a > "$FWP_AD_ARTIFACTS/hardware.txt"
+          clang --version > "$FWP_AD_ARTIFACTS/compiler.txt"
+          rustc --version > "$FWP_AD_ARTIFACTS/rustc.txt"
+      - name: Preserve formatting diagnostics
+        run: |
+          rustfmt src/numerics.rs tests/ad_tape_ownership.rs
+          mkdir -p "$FWP_AD_ARTIFACTS/formatted/src" "$FWP_AD_ARTIFACTS/formatted/tests"
+          cp src/numerics.rs "$FWP_AD_ARTIFACTS/formatted/src/"
+          cp tests/ad_tape_ownership.rs "$FWP_AD_ARTIFACTS/formatted/tests/"
+          git diff > "$FWP_AD_ARTIFACTS/format.patch"
+          # Test the published bytes; formatted copies are retained for the final PR.
+          git restore src/numerics.rs tests/ad_tape_ownership.rs
+          git diff --exit-code
+      - name: Lint, interpreter token lifetimes and native unwind controls
+        run: |
+          cargo clippy --lib --test ad_tape_ownership -- -D warnings
+          cargo test --lib numerics::tape_validation_tests::invalid_nodes_preserve_push_state_and_consume_backward_tapes -- --exact --nocapture
+          cargo test --test ad_tape_ownership -- --nocapture
+          git diff --exit-code
+          shasum -a 256 src/numerics.rs runtime/fwp_rt_kernel.c tests/ad_tape_ownership.rs tests/fixtures/ad_unwind_probe.c target/debug/fwp > "$FWP_AD_ARTIFACTS/source-binary-hashes.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: autodiff-tapes-${{ matrix.runner }}
+          path: ${{ runner.temp }}/autodiff-tapes/
