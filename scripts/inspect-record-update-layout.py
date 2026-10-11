@@ -35,18 +35,19 @@ for kind,marker in [('unique-update','/* replace-old :'),('general-copy','/* kee
    (folder/(name[1:-1]+'.txt')).write_text('\n'.join(block)+'\n')
    functions[name]={'instructions':sum(bool(re.match(r'^[0-9a-f]{16}\s+',line)) for line in block),'prologue':block[1:14]}
   record=json.loads((folder/'header.json').read_text())
-  record.update(directory=folder.name,binaryBytes=binary.stat().st_size,functions=functions,updateFunction='f'+fn,registeredScopes=scopes)
+  record.update(directory=folder.name,binaryBytes=binary.stat().st_size,functions=functions,updateFunction='f'+fn,registeredScopes=scopes,uniqueReplacedFieldDrop=any('(OBJ(l0)->f[2]);' in line for line in function.splitlines()))
   records.append(record)
  maximum=max(len(record['registeredScopes']) for record in records)
  assert maximum>=3
- positive=next(record for record in records if len(record['registeredScopes'])==maximum)
+ positive=next(record for record in records if len(record['registeredScopes'])==maximum and (kind!='unique-update' or record['uniqueReplacedFieldDrop']))
  original=set(positive['registeredScopes'])
  for opt in ['O1','O2']:
   selected=[r for r in records if r['directory'].startswith(opt+'-')]
   assert len(selected)==5
   assert sum(len(r['registeredScopes'])==maximum for r in selected)==(2 if kind=='unique-update' else 1)
+  if kind=='unique-update':assert {r['uniqueReplacedFieldDrop'] for r in selected if len(r['registeredScopes'])==maximum}=={True,False}
   assert all(set(r['registeredScopes'])<=original and len(r['registeredScopes']) in [maximum,maximum-1] for r in selected)
- selected=next(root/kind/r['directory'] for r in records if r['directory'].startswith('O2-') and len(r['registeredScopes'])==maximum)
+ selected=next(root/kind/r['directory'] for r in records if r['directory'].startswith('O2-') and len(r['registeredScopes'])==maximum and (kind!='unique-update' or r['uniqueReplacedFieldDrop']))
  code=(selected/'probe.c').read_text();start=code.index(marker);end=code.index('/* other :',start)
  contexts=sorted(set(re.findall(r'\b(fwp_owner_ctx[0-9]+)\b',code[start:end])),key=lambda n:int(n.removeprefix('fwp_owner_ctx')))
  assert contexts
@@ -58,6 +59,6 @@ for kind,marker in [('unique-update','/* replace-old :'),('general-copy','/* kee
  args[args.index('-o')+1]=str(root/kind/'layout')
  subprocess.run([cc,*args],check=True)
  output=subprocess.check_output([str(root/kind/'layout')],text=True).strip()
- report['fixtures'][kind]={'binaries':records,'ownerContexts':contexts,'layout':output}
+ report['fixtures'][kind]={'binaries':records,'ownerContexts':contexts,'layout':output,'layoutSourceSha256':__import__('hashlib').sha256(code.encode()).hexdigest()}
  print(kind,machine,output)
 (root/'inspection.json').write_text(json.dumps(report,indent=2)+'\n')

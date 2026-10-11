@@ -16075,3 +16075,54 @@ Cargo output. Guard limits remain unchanged. Complete proof:
 /private/tmp/fwp-primitive-inventory-669c19e.log. Completed publication/collection
 journals must not rerun. Recheck this inventory on actual merged source at the
 phase2 exit checkpoint.
+
+## Record update binary evidence preparation, 2026-10-11
+
+Independent ownership-evidence-record-update-layout source
+cd2c8fa4251aea65354d64f09f2fab0291ac4dc8 is unchanged outside all11 docs and
+three capture/inspection/evidence-workflow files. Published head
+7249699c8f3896877f75e14c6fe2a3db99372d71 queues CI38099902933. Both original
+record_update_ownership and general_record_update_ownership regressions run on
+ARM/Intel; no original assertion or negative control is changed. Exact unique
+replacement/copy/partial/replacement omission exits3/8/11/7 and general
+original/copy/partial/replacement omission exits9/8/11/7 remain mandatory,
+alongside alias/scalar, SIZE_MAX, GC/reuse and raw interpreter/native controls.
+Capture delegates compiler arguments unchanged and retains ten O1/O2 Mach-O
+binaries for each fixture. Inspector retains C, flags, headers, symbols,
+disassembly and compiled layouts. Static registered scopes are not live scope
+counts; owner context sizes are not summed into frame sizes. No performance,
+ABI or passing-run support is claimed while the run is queued.
+
+Guarded worktree preparation0.04CPU/0.26elapsed, syntax/snapshot audit0.61/4.37s
+(44/106/72), publication0.24/3.54s pass. Limits unchanged; actual fixture builds
+and binary inspection run on GitHub. Completed publication journal:
+/private/tmp/fwp-record-update-layout-evidence-publication.json. Production119
+remains the sole open production PR; this evidence does not accept queue42.
+
+### Record-update layout selector correction
+
+CI38099902933 passes both platform jobs at7249699c8f38. Each of the two
+unchanged original tests executes once per platform, zero ignored. All forty
+actual Mach-O binaries, exact C, flags, symbols and disassembly are retained.
+Both platforms (macOS15.7.9/24G830, AppleClang17.0.0/1700.0.13.5; ARM Apple M1
+Virtual and Intel i7-8700B3.20GHz) show V8/align8, object header8/payload8,
+cleanup24 and wide-count metadata24/count offset8. Unique-update context types
+are8/8/8/16/24 bytes, align8; general-copy8/8/8/16/16, align8. These definitions
+are not summed into frames; six static registered pushes in an intact function
+are not six simultaneously live scopes.
+
+The layout selector chose unique-update source6bb15e95d338, whose old-field
+drop is deliberately omitted, rather than the intact7fd5093fc0b7 source.
+Definitions match, but the original result is qualified as a control-fixture
+layout. The diagnostic now requires both all six registered scopes and the
+intact unique old-field drop, records the selected layout source hash, and
+checks the two full-scope fixtures distinguish that omission. General-copy
+positive54d8750cac83 selection was already intact. Compiler/runtime/tests and
+all original exact omission controls remain unchanged. Re-run only corrected
+independent evidence; prior passing original tests and artifacts remain retained.
+
+Bounded collection0.33CPU/8.63elapsed passes. Original proof:
+/private/tmp/fwp-record-update-layout-passing-proof.json; retained artifacts:
+/private/tmp/fwp-record-update-layout-7249699-artifacts; full log:
+/private/tmp/fwp-record-update-layout-7249699.log. Corrected-head evidence is
+required before claiming positive unique-fixture compiled layout support.

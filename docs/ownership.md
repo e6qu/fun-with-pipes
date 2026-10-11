@@ -199,7 +199,10 @@ header has a64-bit length followed by V slots; it has no spare32-bit field to
 reuse without a new layout contract. Preserve length/bounds/overflow behavior.
 Specialized hot loops should select concrete loads/stores at compile time;
 unknown or mixed runtime boundaries need an explicit representation fallback or
-conversion. A narrower array.get alone does not establish representation support.
+conversion. Measure any representation-tag/header or side-metadata overhead
+alongside payload savings, including empty and small arrays; narrow storage does
+not automatically reduce total allocated bytes. A narrower array.get alone does
+not establish representation support.
 
 Handle boxed128-bit and F16 paths explicitly: retain current numeric behavior
 until their representation/conversion contracts pass. Keep default reduction

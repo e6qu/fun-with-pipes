@@ -92,11 +92,13 @@ does not identify a runtime sharing boundary. The scalar
 category includes `ad.tape`, which creates external tape state; scalar values do
 not prove allocation freedom or complete lifetime coverage. Generic numeric,
 boxed 128-bit, callback, resource and reconstructed-value cases require their
-actual representations. The corrected alias-aware audit passes through the root guard (0.18 CPU /
-0.72 elapsed s), without building the full compiler or changing source. It is
+actual representations. The portable audit passes on GitHub at evidence head
+669c19e7cb67 (CI38099556010), checking actual contract metadata and IR lowering,
+explicit aliases and all recorded compiler/library source hashes. Run the
+inventory again on actual merged source at the phase 2 exit checkpoint. This is
 prepared-source classification, not main acceptance or a tracing-free guarantee.
-Original counts and the new reproducible method are in
-[history](roadmap-history.md#effective-primitive-declaration-review).
+Counts and scope are recorded in
+[history](roadmap-history.md#portable-finite-ownership-inventory-2026-10-11).
 
 Unknown primitive, foreign and remote boundaries keep the explicit shared
 fallback in [src/ownership.rs](../src/ownership.rs). A successful result or a

@@ -51,8 +51,8 @@ commits and source/probe/workflow bytes. Rebase0.10CPU/1.05elapsed, three native
 regressions17.81/35.79s, all18 RC units3.46/7.10s, lint2.48/5.02s and format
 0.50/0.83s pass. Publication1.99/19.24s passes all three audits (44/106/72),
 retaining oldcca935846750 before exact-lease update. PR creation0.16/3.76s passes.
-CI38098598991 passes bench and ARM GC stress; Linux, both regular macOS and
-Intel GC stress jobs are running. Docs38098598965 passes at the frozen head. Require all
+CI38098598991 passes bench and both macOS GC stress jobs; Linux and both
+regular macOS jobs are running. Docs38098598965 passes at the frozen head. Require all
 seven passing gates before match-head squash with
 `Protect boxed variants and caller owners during struct conversion` and empty
 body. Original-box/caller omission exits3/7 and alias/scalar/raw-interpreter
@@ -62,6 +62,16 @@ existing commits, including both implementation/regression commits, then run
 fresh focused checks. Independent evidence does not replace production gates.
 
 ## Evidence and preservation requirements
+
+Queue42 record-update binary evidence7249699c8f38 passes both ARM/Intel
+jobs in CI38099902933: each unchanged original test once, zero ignored, all
+forty real O1/O2 Mach-O binaries retained. The inspector selected the
+old-field-drop omission control for the unique-update layout probe; context
+types match, but a diagnostic correction now selects the intact positive
+fixture and records its source hash. Require the corrected exact-head runner
+evidence before calling that positive-fixture layout verified. Original
+runtime/compiler/tests/production workflow remain unchanged; this does not
+replace final queue42 production gates.
 
 Portable ownership inventory669c19e7cb6779536377af7f78651f97dc1e51d9 passes
 CI38099556010 on unchanged prepared112 sourceb45e93a71d40. It checks actual
