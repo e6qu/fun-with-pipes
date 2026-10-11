@@ -1,0 +1,55 @@
+name: Preflight final ownership and allocation bundle
+on:
+  push:
+    branches: [ownership-pr124-final-ownership]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: e6qu/fun-with-pipes
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Dependencies
+        run: sudo apt-get update -qq && sudo apt-get install -y libssl-dev
+      - name: Retain exact evidence and preparation tags
+        run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*'
+      - name: Ordinary commit metadata
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - name: Record hardware and all native compiler arguments
+        run: |
+          mkdir -p final-ownership-evidence
+          uname -a > final-ownership-evidence/hardware.txt
+          clang --version > final-ownership-evidence/compiler.txt
+          rustc --version > final-ownership-evidence/rustc.txt
+          cat > final-ownership-evidence/record-cc <<'SH'
+          #!/bin/sh
+          printf 'clang argument vector\n' >> "$FWP_FINAL_COMPILER_LOG"
+          printf '%s\n' "$@" >> "$FWP_FINAL_COMPILER_LOG"
+          exec clang "$@"
+          SH
+          chmod +x final-ownership-evidence/record-cc
+          echo "FWP_FINAL_COMPILER_LOG=$PWD/final-ownership-evidence/compiler-invocations.txt" >> "$GITHUB_ENV"
+          echo "CC=$PWD/final-ownership-evidence/record-cc" >> "$GITHUB_ENV"
+      - name: Integrate and validate the final ownership bundle
+        run: python3 scripts/integrate-final-ownership.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr124-final-ownership
+          path: final-ownership-evidence/

@@ -1,0 +1,8 @@
+{
+  "src/ownership.rs": [
+    {
+      "old": "        // Raw address words are not managed owners. String conversion copies;",
+      "new": "        // Serializers and codecs copy their borrowed inputs into fresh leaves.\n        \"json.encode\" | \"json.write\" | \"url.encode\" | \"int.to-hex\" | \"cli.help\"\n        | \"zlib.gzip\" | \"zlib.gzip-chunk\" | \"zlib.deflate\" | \"ws.accept\" | \"ws.deflate\" => {\n            (&[B], ResultOwnership::FreshLeaf, None, &[])\n        }\n        \"ws.key\" => (&[B], ResultOwnership::FreshLeaf, None, &[]),\n        \"zlib.gzip-end\" | \"ws.close-payload\" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),\n        \"ws.frame\" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),\n        // Raw address words are not managed owners. String conversion copies;"
+    }
+  ]
+}
