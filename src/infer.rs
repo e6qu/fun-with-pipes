@@ -552,6 +552,15 @@ impl<'a> Infer<'a> {
             return actual.clone();
         };
         let mut effects = self.env.table.zonk_row(&effects);
+        // Forbidden effects cannot be weakened away. Keep the original value
+        // type on this failure path so diagnostics do not invent permitted ones.
+        if permitted.tail.is_none()
+            && effects.fields.iter().any(|(label, _)| {
+                !permitted.fields.iter().any(|(allowed, _)| allowed == label)
+            })
+        {
+            return actual.clone();
+        }
         if effects.tail.is_none() {
             effects.tail = Some(self.env.table.fresh(Kind::Eff, self.level));
         }
