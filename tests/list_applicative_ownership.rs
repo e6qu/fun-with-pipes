@@ -127,3 +127,40 @@ main = [
         }
     }
 }
+
+#[test]
+fn closure_drop_context_recovers_after_capture_trap_and_spill_oom() {
+    let scratch=Scratch::new("closure-drop");
+    let input=scratch.0.join("closure.fwp");let cfile=scratch.0.join("closure.c");
+    std::fs::write(&input,"main = () | task.yield | const \"closure cleanup\" | echo\n").unwrap();
+    checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT")
+        .arg("build").arg(&input).args(["--emit-c","-o"]).arg(&cfile));
+    let original=std::fs::read_to_string(cfile).unwrap();
+    let start=original.find("static void fwp_closure_drop_push(").unwrap();
+    let end=original[start..].find("#ifndef FWP_UNWIND").unwrap()+start;
+    let region=original[start..end].replace("malloc(","closure_probe_alloc(").replace("free(","closure_probe_free(");
+    let declarations="static void *closure_probe_alloc(size_t);\nstatic void closure_probe_free(void *);\nstatic void closure_probe_noop(void *);\n";
+    let runtime=format!("{}{}{}{}",&original[..start],declarations,region,&original[end..])
+        .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
+    let registration="fwp_cleanup_push(&cleanup, fwp_closure_drop_release, &work);";
+    assert_eq!(runtime.matches(registration).count(),1);
+    let uncontrolled=runtime.replace(registration,"fwp_cleanup_push(&cleanup, closure_probe_noop, &work);");
+    for opt in ["-O1","-O2"] {
+        for (label,source,expected) in [("closure-protected",&runtime,0),("closure-unprotected",&uncontrolled,94)] {
+            let code=format!("{source}\n{}",include_str!("fixtures/closure_drop_probe.c"));
+            let executable=scratch.0.join(format!("{label}{}",&opt[1..]));
+            if let Some(directory)=std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
+                let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
+                std::fs::write(directory.join(format!("{label}{}.c",&opt[1..])),&code).unwrap();
+            }
+            fwp::cgen::compile_c(&code,&executable,opt).unwrap();
+            for reuse in ["0","1"] {
+                let output=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1")
+                    .env("FWP_REUSE_VERIFY",reuse).output().unwrap();
+                retain(&format!("{label}{}-reuse{reuse}",&opt[1..]),&code,&executable,&output);
+                assert_eq!(output.status.code(),Some(expected),"{label} {opt} reuse={reuse}: {}",String::from_utf8_lossy(&output.stderr));
+                if expected==0 { assert!(String::from_utf8_lossy(&output.stdout).starts_with("Closure cleanup context resets after capture trap and spill OOM; real collections=")); }
+            }
+        }
+    }
+}
