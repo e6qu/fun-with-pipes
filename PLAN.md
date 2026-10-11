@@ -59,16 +59,10 @@ running. Complete counters exposed an included AD allocation regression; fold
 its verified repair, codec contracts and streamlined docs into PR124 before the
 final exact-head matrix. Preserve current-run diagnostics.
 
-Phase 2 remaining audits: scoped autodiff buffers and counted gradient arrays,
-borrowed resource metadata roots, reconstructed/untyped
-aggregate ownership, typed State retention/teardown, general resource discard,
-retained callbacks and cycles. Deliver inactive root clearing and the independently verified typed State
-owners with the list callback owners and original resource/network tests.
-Bundle the State work with PR124 formatting/docs repairs; run full gates once
-for that final combined head. PR123 accepts
-the native pointer-offset and raw-memory copy contracts; remaining numeric
-widths and unsafe-buffer lifetimes stay explicit. Prepared resource/unwind
-improvements require full CI per final bundle.
+Phase2 remaining audits cover borrowed metadata roots, reconstructed/untyped
+aggregates, retained contexts, resource disposal and cycles. Verify each boundary
+against the accepted bundle and retain explicit tracing fallbacks where ownership
+is not proved. Prepared changes require full CI per final bundle.
 Finish phase 2 before numeric representation, numerics/autodiff and optional
 tracing-free work. Windows, new deployment interfaces and a new backend remain
 deferred unless the user changes priorities.
@@ -85,7 +79,7 @@ Never call skipped, queued, superseded or cancelled runs passing support.
 ## Concrete remaining deliveries
 
 Finish phase2 with the resource/State bundle, then serializer/codec contracts,
-the scoped-gradient allocation regression and the finite191-declaration review.
+the scoped-gradient allocation regression and the finite177-declaration review.
 Classify each remaining boundary with its argument/result/alias/callback policy
 or explicit tracing fallback, including retained contexts, partial reconstruction
 and cycle lifetime. Complete allocator counters must include initializer fast

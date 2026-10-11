@@ -256,14 +256,15 @@ disabled contraction while measuring SIMD, buffer reuse and fused gradients.
   reductions along an axis) on devices.
 
 
-## Current scoped-gradient allocation finding
+## Scoped-gradient allocation validation
 
-The earlier scoped-gradient report counted fwp_gc_alloc entries and missed the
-initializer fast path. Complete counters reveal33→40 managed allocations and
-720→872 requested bytes per gradient on the equivalent Linux4096-call O1/O2
-workload, despite lower live memory. The original allocation assertion therefore
-fails; retain it while repairing the wrapper. Direct input-bearing scoped
-callbacks are prepared for runner validation, preserving public grad/vjp
-signatures and all tape cleanup controls. [The handoff](development-state.md)
-records exact candidates, results and the next action. Earlier partial counters
-do not establish total allocation parity.
+Complete managed-allocation counters include initializer fast paths and count
+slow delegation once. They exposed a33→40 calls/720→872 bytes regression per
+gradient in the first scoped wrapper. Direct borrowed arguments through internal
+ad.scope/ad.scope2 and projection inside the grad callback restore33 calls/720
+bytes, matching the baseline on4096 equivalent O1/O2 calls across Linux and
+ARM/Intel macOS. The combined candidate Linux profiles also pass. Public grad/vjp
+signatures stay intact; borrowed scoped inputs require Dup, and affine File
+rejection, input aliases and tape cleanup controls pass. [The handoff](development-state.md)
+records exact candidates and final production gates. No timing gain or tracing-free
+support is established, and earlier partial counters do not prove allocation parity.

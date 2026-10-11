@@ -6,7 +6,7 @@ assert os.environ.get('GITHUB_ACTIONS')=='true'
 ROOT=Path.cwd();OUT=ROOT/'final-ownership-evidence';OUT.mkdir(exist_ok=True)
 WT=ROOT.parent/'pr124-final-ownership';BASE='1aadb8a075e1737d0e6a4db96eae5d675f6fb404'
 SCOPE='42774f981491bb321f4d66a43d6c7088da7db70b';CODEC='b837f55fc91f073ef147455916d704b1ed12c673'
-FRONT='bbb68321b522f5e732c6988df8b77345967ecd2f'
+FRONT='6ff1ffb1a7ad14b83e2149757f5c476d806803b4'
 BRANCH='ownership-resource-network-bundle'
 DOCS=['CONTRIBUTING.md','PLAN.md','docs/design.md','docs/development-state.md','docs/ownership.md','docs/primitive-ownership.md','docs/roadmap-queue.md','docs/roadmap-history.md','docs/reference.md','docs/concurrency.md','docs/numerics.md']
 def git(*a,cwd=ROOT):return subprocess.check_output(['git',*a],cwd=cwd,text=True).strip()
@@ -23,7 +23,7 @@ checks={
  'state':gate(38174682933,'771c2b83b9a5db0142df759006b960704606a86a','allocations'),
  'list':gate(38175393180,'186cd79f64a0781cb9588975f863c983b072d1ac','allocations'),
 }
-front=json.loads(subprocess.check_output(['gh','run','view','38177992930','--json','headSha,status,conclusion,jobs,url'],text=True))
+front=json.loads(subprocess.check_output(['gh','run','view','38179961853','--json','headSha,status,conclusion,jobs,url'],text=True))
 assert front['headSha']==FRONT and front['status']=='completed' and front['conclusion']=='success'
 assert len(front['jobs'])==1 and front['jobs'][0]['name']=='codecs' and front['jobs'][0]['conclusion']=='success'
 checks['functionArguments']=front
