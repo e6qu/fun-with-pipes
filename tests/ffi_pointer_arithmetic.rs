@@ -76,12 +76,14 @@ fn native_boundary_offsets_match_raw_interpreter_and_reject_signed_overflow() {
     let names = [
         "I8", "U8", "I16", "U16", "I32", "U32", "I64", "U64", "F32", "F64", "ISize", "USize",
     ];
-    for (id, name) in names.iter().enumerate() {
-        text.push_str(&format!("same-{id} : Ptr[{name}] -> Bool\nsame-{id} = fork eq ptr.address (ptr.at 9223372036854775807 | ptr.at -9223372036854775808 | ptr.at 1 | ptr.address)\nprobe-{id} : Ptr[{name}] -> () ! {{IO, Unsafe}}\nprobe-{id} = tap (same-{id} | echo) | mem.free\n"));
+    for name in &names {
+        let suffix = name.to_ascii_lowercase();
+        text.push_str(&format!("same-{suffix} : Ptr[{name}] -> Bool\nsame-{suffix} = fork eq ptr.address (ptr.at 9223372036854775807 | ptr.at -9223372036854775808 | ptr.at 1 | ptr.address)\nprobe-{suffix} : Ptr[{name}] -> () ! {{IO, Unsafe}}\nprobe-{suffix} = tap (same-{suffix} | echo) | mem.free\n"));
     }
     text.push_str("main = [\n");
-    for id in 0..names.len() {
-        text.push_str(&format!("    16 | mem.alloc | probe-{id},\n"));
+    for name in &names {
+        let suffix = name.to_ascii_lowercase();
+        text.push_str(&format!("    16 | mem.alloc | probe-{suffix},\n"));
     }
     text.push_str("] | ignore\n");
     std::fs::write(&source, text).unwrap();
