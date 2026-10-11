@@ -982,6 +982,81 @@ static V fwp_p_list_ap(V fs, V xs) {
     return fwp_list_from(out, k);
 }
 
+/* Call every callback before rebuilding the flattened output, preserving
+ * function/input trap order. Returned chunks and copied aliases have distinct
+ * owners until each counted output node takes its element. */
+static V fwp_p_flat_map_owned(V f, V xs, void (*element_dup)(V), void (*element_drop)(V), void (*list_drop)(V)) {
+    size_t n;
+    V *items = fwp_map_items(xs, &n);
+    fwp_map_owner chunks = {items, 0, 0, list_drop, NULL};
+    fwp_cleanup chunks_cleanup;
+    fwp_map_protect(&chunks, &chunks_cleanup);
+    for (size_t i = 0; i < n; i++) {
+        items[i] = fwp_apply_borrowed(f, 1, &items[i]);
+        chunks.count++;
+    }
+    fwp_value_owner result = {0, list_drop};
+    fwp_cleanup result_cleanup;
+    fwp_value_protect(&result, &result_cleanup);
+    for (size_t i = n; i; i--) {
+        size_t count;
+        V *aliases = fwp_map_items(items[i - 1], &count);
+        fwp_map_owner copy = {aliases, 0, result.value, element_drop, list_drop};
+        fwp_cleanup copy_cleanup;
+        fwp_map_protect(&copy, &copy_cleanup);
+        result.value = 0;
+        for (size_t j = 0; j < count; j++) {
+            if (element_dup) element_dup(aliases[j]);
+            copy.count++;
+        }
+        result.value = fwp_map_finish_protected(&copy, &copy_cleanup);
+    }
+    /* The completed output stays protected while owned chunks are destroyed.
+     * The emptied chunk owner remains safe if destruction itself unwinds. */
+    fwp_map_release(&chunks);
+    V output = fwp_value_finish(&result, &result_cleanup);
+#if FWP_UNWIND
+    fwp_cleanup_pop(&chunks_cleanup);
+#endif
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(xs);
+    return output;
+}
+
+/* Own every completed Cartesian-product callback result until its list node
+ * takes it. Borrowed function/input scratch remains rooted and unwinds separately. */
+static size_t fwp_list_ap_count(size_t nf, size_t nx) {
+    size_t maximum = SIZE_MAX / sizeof(V) - 1;
+    if (nf && nx > maximum / nf) fwp_trap("list.ap too large");
+    return nf * nx;
+}
+static V fwp_p_list_ap_owned(V fs, V xs, void (*element_drop)(V), void (*list_drop)(V)) {
+    size_t nf, nx;
+    V *functions = fwp_map_items(fs, &nf);
+    fwp_cleanup functions_cleanup;
+    fwp_scratch_protect(&functions, &functions_cleanup);
+    V *inputs = fwp_map_items(xs, &nx);
+    fwp_cleanup inputs_cleanup;
+    fwp_scratch_protect(&inputs, &inputs_cleanup);
+    size_t count = fwp_list_ap_count(nf, nx);
+    V *out = (V *)fwp_mem_alloc((count + 1) * sizeof(V));
+    fwp_map_owner owner = {out, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
+    for (size_t i = 0; i < nf; i++) {
+        for (size_t j = 0; j < nx; j++) {
+            out[owner.count] = fwp_apply_borrowed(functions[i], 1, &inputs[j]);
+            owner.count++;
+        }
+    }
+    V result = fwp_map_finish_protected(&owner, &cleanup);
+    fwp_scratch_finish(&inputs, &inputs_cleanup);
+    fwp_scratch_finish(&functions, &functions_cleanup);
+    FWP_KEEP_ALIVE(fs);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
+
 /* ---------------------------------------------------------------- strings */
 
 static int fwp_is_space(char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r'; }
@@ -2387,7 +2462,7 @@ static V fwp_p_attempt(V f, V x) {
         return fwp_data(0, 1, &r);
     }
     fwp_handlers = h.prev;
-    fwp_state_len = h.state_depth;
+    fwp_state_restore(h.state_depth);
     V e = h.value;
     return fwp_data(1, 1, &e);
 }
@@ -2404,7 +2479,7 @@ static V fwp_p_attempt_owned(V f, V x, void (*drop_result)(V), void (*drop_error
         value = fwp_apply_borrowed(f, 1, &x);
         tag = 0;
     } else {
-        fwp_state_len = h.state_depth;
+        fwp_state_restore(h.state_depth);
         value = h.value;
         tag = 1;
     }
@@ -2443,11 +2518,11 @@ static V fwp_p_run_state(V s, V f, V x) {
     if (setjmp(h.jb) == 0) {
         V r = fwp_apply1(f, x);
         fwp_handlers = h.prev;
-        V st = fwp_state[--fwp_state_len];
+        V st = fwp_state_pop();
         return fwp_tuple2(r, st);
     }
     fwp_handlers = h.prev;
-    fwp_state_len = h.state_depth;
+    fwp_state_restore(h.state_depth);
     fwp_fail(h.value, h.desc);
     return 0;
 }

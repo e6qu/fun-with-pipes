@@ -743,13 +743,14 @@ static void fwp_task_main(void) {
     } else if (t->cfn) {
         t->unwinding = 1;
         fwp_handlers = 0;
-        fwp_state_len = 0;
+        fwp_state_restore(0);
         t->trap_jb = 0;
         t->trap_cleanup = 0;
         t->cfn(t->carg, 1);
     }
     t->unwinding = 1;
     fwp_handlers = 0;
+    fwp_state_restore(0);
     fwp_join_children();
     if (t->cfinish) {
         void (*finish)(void *) = t->cfinish;
@@ -1067,7 +1068,7 @@ static V fwp_task_scope_impl(V body, int borrowed, void (*drop)(V)) {
         result_owner.value = r;
     } else {
         failed = 1;
-        fwp_state_len = h.state_depth;
+        fwp_state_restore(h.state_depth);
     }
     fwp_handlers = h.prev;
     t->scope = s.prev;

@@ -146,6 +146,8 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         }
         "ptr.at" | "ptr.write" => (&[B, B], R, None, &[]),
         "ptr.read-string" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "ad.tape" | "ad.push" => (&[B], ResultOwnership::Shared, None, &[]),
+        "ad.backward" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "task.spawn" => (
             &[B],
             ResultOwnership::OwnedTask,
@@ -169,7 +171,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(1)),
             &[1],
         ),
-        "task.scope" => (
+        "task.scope" | "ad.scope" => (
             &[B],
             ResultOwnership::OwnedCallback,
             Some(Callback::Borrowed(0)),
@@ -218,6 +220,13 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "split" | "string.split-once" | "string.find" | "bytes.find" | "bytes.get" => {
             (&[B, B], ResultOwnership::FreshTree, None, &[])
         }
+        "list.ap" => (&[B, B], ResultOwnership::FreshSpine, None, &[0, 1]),
+        "list.flat-map" => (
+            &[B, B],
+            ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
         "map" => (
             &[B, B],
             ResultOwnership::FreshSpine,
@@ -489,6 +498,16 @@ mod tests {
 
     #[test]
     fn declared_collection_and_text_boundaries_have_consistent_contracts() {
+        let ap = primitive("list.ap").unwrap();
+        assert_eq!(ap.arguments, &[Argument::Borrow, Argument::Borrow]);
+        assert_eq!(ap.result, ResultOwnership::FreshSpine);
+        assert!(ap.callback.is_none());
+        assert_eq!(ap.aliases, &[0, 1]);
+        let flat_map = primitive("list.flat-map").unwrap();
+        assert_eq!(flat_map.arguments, &[Argument::Borrow, Argument::Borrow]);
+        assert_eq!(flat_map.result, ResultOwnership::FreshSpine);
+        assert_eq!(flat_map.callback, Some(Callback::Borrowed(0)));
+        assert_eq!(flat_map.aliases, &[0, 1]);
         for symbol in [
             "channel.make",
             "channel.send",
@@ -512,6 +531,11 @@ mod tests {
         assert!(scope.borrows_callback());
         assert_eq!(scope.argument(0), Argument::Borrow);
         assert_eq!(scope.result, ResultOwnership::OwnedCallback);
+        let ad_scope = primitive("ad.scope").unwrap();
+        assert_eq!(ad_scope.argument(0), Argument::Borrow);
+        assert_eq!(ad_scope.callback, Some(Callback::Borrowed(0)));
+        assert_eq!(ad_scope.result, ResultOwnership::OwnedCallback);
+        assert_eq!(ad_scope.aliases, &[0]);
         let within = primitive("task.within").unwrap();
         assert_eq!(within.argument(1), Argument::Borrow);
         assert_eq!(within.callback, Some(Callback::Retained(1)));

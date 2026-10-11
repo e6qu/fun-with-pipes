@@ -5419,6 +5419,7 @@ impl<'p> Gen<'p> {
                     ("linalg.qr", "fwp_p_qr(l0, l1, l2)"),
                     ("linalg.cg", "fwp_p_cg(l0, l1, l2, l3, l4)"),
                     ("list.transpose", "fwp_p_list_transpose(l0)"),
+                    ("ad.scope", "fwp_p_ad_scope(l0)"),
                     ("ad.tape", "fwp_p_ad_tape(l0)"),
                     ("ad.push", "fwp_p_ad_push(l0)"),
                     ("ad.backward", "fwp_p_ad_backward(l0, l1, l2)"),
@@ -6016,7 +6017,12 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                             ResultOwnership::FreshSpine | ResultOwnership::AliasTail { .. } => {
                                 if matches!(
                                     sym.as_str(),
-                                    "map" | "filter" | "take-while" | "zip-with"
+                                    "map"
+                                        | "filter"
+                                        | "take-while"
+                                        | "zip-with"
+                                        | "list.ap"
+                                        | "list.flat-map"
                                 ) {
                                     let result = func.ty.params(func.arity as usize).1;
                                     let MT::Con(name, elements) = &result else {
@@ -6025,17 +6031,27 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     if name != "std::List" || elements.len() != 1 {
                                         return Err("list selection has a non-list result".into());
                                     }
-                                    let ops = self.map_ops(&elements[0]);
+                                    let mut ops = self.map_ops(&elements[0]);
+                                    let runtime = if sym == "list.flat-map" {
+                                        let duplicate =
+                                            if crate::rc::needs_rc(&self.prog.shapes, &elements[0])
+                                            {
+                                                "fwp_rc_dup"
+                                            } else {
+                                                "NULL"
+                                            };
+                                        ops = format!("{duplicate}, {ops}");
+                                        "flat_map".to_string()
+                                    } else {
+                                        sym.replace(['-', '.'], "_")
+                                    };
                                     let args = (0..func.arity)
                                         .map(|i| format!("l{i}"))
                                         .collect::<Vec<_>>()
                                         .join(", ");
                                     s = s.replace(
-                                        &format!("fwp_p_{}({args})", sym.replace('-', "_")),
-                                        &format!(
-                                            "fwp_p_{}_owned({args}, {ops})",
-                                            sym.replace('-', "_")
-                                        ),
+                                        &format!("fwp_p_{}({args})", runtime),
+                                        &format!("fwp_p_{}_owned({args}, {ops})", runtime),
                                     );
                                 }
                                 s = s
@@ -8048,7 +8064,7 @@ static const fwp_exec_spec exec_spec{i} = {{
             if (v == FWP_TRUE) {{ pass++; printf("test %s ... ok\n", {name}); }}
             else {{ fail++; printf("test %s ... FAILED\n", {name}); }}
         }} else {{
-            fwp_handlers = h.prev; fwp_state_len = h.state_depth; fail++;
+            fwp_handlers = h.prev; fwp_state_restore(h.state_depth); fail++;
             fwp_tasks_abort();
             fwp_buf b = {{0}}; fwp_write(&b, h.value, h.desc, 1);
             printf("test %s ... FAILED (error: %s)\n", {name}, b.d ? b.d : "");
@@ -8326,6 +8342,29 @@ pub fn compile_c(c_source: &str, output: &std::path::Path, opt: &str) -> Result<
     compile_for(c_source, output, opt, Target::Native)
 }
 
+/// Preserve failed compiler output and termination details for native and FFI builds.
+pub(crate) fn compiler_failure(context: &str, output: &std::process::Output) -> String {
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let mut message = format!("{context}:\n{stdout}{stderr}");
+    if !message.ends_with('\n') {
+        message.push('\n');
+    }
+    write!(message, "compiler status: {}", output.status).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        write!(
+            message,
+            " (signal={:?}, core_dumped={})",
+            output.status.signal(),
+            output.status.core_dumped()
+        )
+        .unwrap();
+    }
+    message
+}
+
 fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
     let res = cmd
         .output()
@@ -8333,7 +8372,11 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
     if !res.status.success() {
         let err = String::from_utf8_lossy(&res.stderr);
         // a program that uses TLS needs OpenSSL's headers and libraries
-        let tls = err.contains("openssl/") || err.contains("-lssl");
+        let stdout = String::from_utf8_lossy(&res.stdout);
+        let tls = err.contains("openssl/")
+            || err.contains("-lssl")
+            || stdout.contains("openssl/")
+            || stdout.contains("-lssl");
         let hint = match native_options().cross {
             Some(t) if tls => {
                 let deb = match t.split('-').next().unwrap_or_default() {
@@ -8350,7 +8393,11 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
             _ if tls => "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (Debian and Ubuntu: libssl-dev; see docs/tls.md)".to_string(),
             _ => String::new(),
         };
-        return Err(format!("C compiler failed:\n{}{}", err, hint));
+        return Err(format!(
+            "{}{}",
+            compiler_failure("C compiler failed", &res),
+            hint
+        ));
     }
     Ok(())
 }

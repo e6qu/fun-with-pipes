@@ -59,9 +59,9 @@ fn load(prog: &Program) -> Result<FfiLib, String> {
         .map_err(|e| format!("cannot run C compiler `{}`: {}", cc, e))?;
     let _ = std::fs::remove_file(&c_path);
     if !out.status.success() {
-        return Err(format!(
-            "building the foreign function shim failed:\n{}",
-            String::from_utf8_lossy(&out.stderr)
+        return Err(crate::cgen::compiler_failure(
+            "building the foreign function shim failed",
+            &out,
         ));
     }
     let path = CString::new(so_path.to_string_lossy().as_bytes()).unwrap();

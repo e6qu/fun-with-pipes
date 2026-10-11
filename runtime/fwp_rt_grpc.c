@@ -1228,7 +1228,7 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
             return G_DEC_OK;
         }
         fwp_handlers = h.prev;
-        fwp_state_len = h.state_depth;
+        fwp_state_restore(h.state_depth);
         *why = strdup(STR(OBJ(h.value)->f[1])->d);
         return G_DEC_BAD;
     }
@@ -1937,7 +1937,7 @@ static int g_apply_user(V f, uint32_t n, V *args, V *out, V *err, const fwp_desc
         t->trap_jb = saved;
         t->trap_cleanup = saved_cleanup;
         fwp_handlers = h.prev;
-        fwp_state_len = h.state_depth;
+        fwp_state_restore(h.state_depth);
         return 2;
     }
     t->trap_jb = &tj;
@@ -1952,7 +1952,7 @@ static int g_apply_user(V f, uint32_t n, V *args, V *out, V *err, const fwp_desc
         return 0;
     }
     fwp_handlers = h.prev;
-    fwp_state_len = h.state_depth;
+    fwp_state_restore(h.state_depth);
     t->trap_jb = saved;
     t->trap_cleanup = saved_cleanup;
     *err = h.value;
@@ -2537,7 +2537,7 @@ static V g_with_ctx(g_ctx *ctx, V f) {
         return r;
     }
     fwp_handlers = h.prev;
-    fwp_state_len = h.state_depth;
+    fwp_state_restore(h.state_depth);
     fwp_cleanup_pop(&context_cleanup);
     g_context_restore(&owner);
     fwp_fail(h.value, h.desc);
