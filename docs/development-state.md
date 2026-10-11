@@ -85,7 +85,7 @@ grad/vjp signatures are preserved; borrowed scoped inputs require Dup.
 Complete initializer-aware allocation counters are preserved; the original
 partial counters do not establish total allocation parity. Independent exact
 three-platform State, list and scoped AD comparisons pass. The combined-source
-Linux comparison follows, retaining original assertions and source/binary hashes.
+Linux comparisons pass, retaining original assertions and source/binary hashes.
 No timing or tracing-free claim is established. Runtime ownership fallbacks and
 cycles still require the finite phase2 exit review. Phases2–6 remain unfinished.
 
@@ -200,3 +200,6 @@ guarded cleaning before switching compiled checkouts when resources permit.
 Immutable tags, remote source heads and retained receipt hashes survive temporary
 file loss. Never treat an earlier head, skipped check or source snapshot as a
 passing production gate.
+
+Verified final inventory:375 declarations/365 symbols,40 aliases,168 contracts,
+19 IR combinators,11 flat signatures and177 review declarations/167 symbols.
