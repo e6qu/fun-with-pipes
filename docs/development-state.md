@@ -6,7 +6,7 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `d92d05cf564d7452c40bb3e2a0762077c291390b` passes audit38180292480
+checkpoint `323f52cd9708212c6bfd212a68e296ab12aab572` passes audit38180735110
 and retains the latest AD/input and callback diagnostic sources. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
 Git blob hashes using restore-roadmap-recovery.py. The AST-based restore repair
@@ -63,11 +63,12 @@ GPU hardware support, and F16/128-bit/WASI pointer widths remain unverified.
 Current delivery is PR[#124](https://github.com/e6qu/fun-with-pipes/pull/124):
 resource/network items74–112, compiler/cache diagnostics, AD tape/scoped-gradient
 lifetimes, list callback owners, closure cleanup and typed State ownership.
-Production head is `1aadb8a075e1737d0e6a4db96eae5d675f6fb404`, complete tree
-`e630e0ff07988dee60a7e2a61bb3689d089ed92b`. CI38174221614 finished; Linux and both regular macOS jobs fail the original
-task_ownership pass-fn effect comparison, while bench and both GC jobs pass;
-roadmap_docs38174221611 passes at that head. No full-matrix acceptance yet.
-Publication receipt: /private/tmp/fwp-pr124-combined-repair-export/publication.json.
+Production head is `d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0`, complete tree
+`db8348f963973fa32fb0803348fcb53a2c072a52`, identical to the final runner export.
+Full CI38180852377 is running at that exact head; bench passes and the other
+five jobs run. Roadmap_docs38180852369 passes.
+Publication receipt: /private/tmp/fwp-pr124-final-ownership-export/publication.json.
+Do not merge until all six jobs and the documentation audit pass.
 
 Duplicate main CI38161107239 was cancelled while all six jobs were queued,
 after complete-tree identity and all seven passing pre-merge gates were proved.
@@ -90,7 +91,7 @@ State controls and71 library units. Argument comparison permits only the
 parameter's known outer effects, preserves nested input rows and displays the
 original callback type on every mismatch. No original task fixture was changed.
 Final driver040a3f64f4e2fcc9466c76aea7466a6fc36a3d68 integrates this refinement
-and streamlined docs; runner38180262247 is in progress before publication.
+and streamlined docs; runner38180262247 passes and its exact tree is published.
 
 Complete counters include initializer fast paths and count slow delegation once.
 Independent Linux/ARM/Intel State38174682933, list38175393180 and scoped
@@ -108,12 +109,15 @@ the original pass-fn callback comparison; bench and both GC jobs pass.
 Documentation38174221611 passes. These are earlier-head diagnostics, not final
 gates. Logs: fwp-pr124-combined-{linux,arm,intel}-failed.log.
 
-Next: rerun the final integration with6ff1ff and the streamlined docs, publish
-its exact-tree export with the1aadb lease, then require all six current-head
-production jobs and roadmap_docs before squash. Keep one production PR. Prepare
-the finite177-declaration phase2 classification while CI runs. Earlier preflights
-and cancelled runs cannot supply final production gates. Phases2–6 remain open.
-Integration recipe: /private/tmp/fwp-integrate-final-ownership-on-runner.py.
+Next: monitor all six production jobs and roadmap_docs at d5ae8c. Fix any
+failures without weakening original controls; squash only after all seven gates
+pass for that head. Prepared merge/verification scripts now pin d5ae8c and both
+current run IDs; do not execute while gates are pending. Keep one production PR.
+Prepare the finite177-declaration phase2 classification while CI runs. Earlier
+preflights and cancelled runs cannot supply final production gates. Phases2–6
+remain open. Integration recipe: fwp-integrate-final-ownership-on-runner.py.
+Final runner/export head0b4a2d61781b6151fda28d690c0db9a5463b9090 has the
+same complete tree as production d5ae8c. No local compiled test ran.
 
 ## Remaining ownership deliveries
 
@@ -200,19 +204,33 @@ measured acceptance; the prepared ownership queue is not the whole plan.
 The177 remaining declarations have an explicit shared-fallback review draft at
 /private/tmp/fwp-phase2-explicit-fallback-review-draft.json. It records argument,
 result, callback, retention, teardown and cycle policies across18 families.
-This is preparation, not a merged-source audit or tracing-free eligibility proof.
+Three-platform review38180899508 passes at167d769deaa28fae9b361ba4e9fa33b443d1a79c
+on ownership-evidence-phase2-exit-review: actual inventory, compiler fallback
+rules and the buffer controls agree. PR124 acceptance and the next final full
+production matrix remain required; this does not establish tracing-free eligibility.
 Validate the actual accepted inventory and compiler wrappers before phase2 exit.
+Verifier and three-platform workflow drafts: fwp-check-explicit-fallback-review-draft.py
+and fwp-phase2-exit-review-evidence.yml. No phase2 exit claim is established. Publication receipt:
+fwp-phase2-exit-review-publication.json.
 
 The boy scout audit found structural buffer addition/doubling overflow and
 unchecked realloc failure in the exact1aadb runtime/fwp_rt_ops.c. Draft repair
 preserves malloc/free storage and exits102 on overflow/allocation failure.
 Runner-only branch ownership-evidence-structural-buffer publishes
-c95d970c8c300cf3b342847ee60f7fd052294f28; runner38180514117 has passing Linux/ARM controls, with Intel still running. Tests cover
+c95d970c8c300cf3b342847ee60f7fd052294f28; runner38180514117 passes Linux and both Macs. Tests cover
 ordinary growth/data preservation, addition overflow, capacity overflow and
 allocation failure at O1/O2 with ASan/UBSan, plus three deliberate omission
 variants. Drafts: fwp-structural-buffer-{draft.c,test.rs,probe.c,patch.json}.
 Fold it into the next ownership exit bundle after PR124 acceptance; no second
 production PR opens before that merge.
+
+Numeric design preparation reads30 blob-verified files at d5ae8c and maps108
+direct array references in seven runtime files. Current arrays have8-byte
+headers and V-word payloads; F32 values use low32-bit encoding. Draft layout
+alternatives and producer/consumer, view-owner and ABI requirements are in
+fwp-numeric-representation-design-preparation.json. This is source review, not
+a representation implementation or compiled evidence. Complete phase2 before
+changing numeric representation.
 
 ## Local checks and recovery
 

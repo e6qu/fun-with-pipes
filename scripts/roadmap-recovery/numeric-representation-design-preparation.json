@@ -1,0 +1,478 @@
+{
+  "head": "d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0",
+  "status": "Exact-source design preparation; no representation change or compiled verification",
+  "sourceManifest": "/private/tmp/fwp-numeric-representation-source/manifest.json",
+  "baseline": {
+    "headerBytes": 8,
+    "payload": "V words for every Array element",
+    "F32Value": "low32 IEEE bits, not a widened F64 value",
+    "alignment": "allocation alignment plus8-byte header; natural scalar alignment only"
+  },
+  "consumers": {
+    "runtime/fwp_rt.c": [
+      {
+        "line": 100,
+        "text": "typedef struct { uint64_t len; V d[]; } fwp_arr;"
+      },
+      {
+        "line": 108,
+        "text": "#define ARR(v) ((fwp_arr *)(uintptr_t)(v))"
+      },
+      {
+        "line": 180,
+        "text": "fwp_arr *a = (fwp_arr *)fwp_alloc(sizeof(fwp_arr) + n * sizeof(V));"
+      }
+    ],
+    "runtime/fwp_rt_gc.c": [
+      {
+        "line": 865,
+        "text": "ARR(v)->len = 0;"
+      }
+    ],
+    "runtime/fwp_rt_json.c": [
+      {
+        "line": 432,
+        "text": "for (uint64_t i = 0; i < ARR(v)->len; i++) {"
+      },
+      {
+        "line": 434,
+        "text": "fwp_jt_write(b, ARR(v)->d[i], d->elem);"
+      }
+    ],
+    "runtime/fwp_rt_kernel.c": [
+      {
+        "line": 232,
+        "text": "size_t no = ARR(outs)->len, ns = ARR(seeds)->len, m = no < ns ? no : ns;"
+      },
+      {
+        "line": 234,
+        "text": "int64_t o = (int64_t)ARR(outs)->d[i];"
+      },
+      {
+        "line": 238,
+        "text": "adj[o & 0xffffffff] += fwp_f64(ARR(seeds)->d[i]);"
+      },
+      {
+        "line": 247,
+        "text": "for (int64_t i = 0; i < tp.leaves; i++) ARR(r)->d[i] = fwp_from_f64(adj[i]);"
+      },
+      {
+        "line": 411,
+        "text": "k->code = (const int64_t *)ARR(code)->d;"
+      },
+      {
+        "line": 412,
+        "text": "k->ncode = ARR(code)->len;"
+      },
+      {
+        "line": 430,
+        "text": "if (sp != 1 || leaves != nin || nconsts != ARR(consts)->len) fwp_trap(\"device: malformed kernel\");"
+      },
+      {
+        "line": 431,
+        "text": "k->consts = (const double *)ARR(consts)->d;"
+      },
+      {
+        "line": 437,
+        "text": "if (ARR(a)->len != n) {"
+      },
+      {
+        "line": 440,
+        "text": "(unsigned long long)ARR(a)->len, n);"
+      },
+      {
+        "line": 444,
+        "text": "k->inputs[i] = (const double *)ARR(a)->d;"
+      },
+      {
+        "line": 457,
+        "text": "memcpy(ARR(r)->d, out, n * sizeof(double));"
+      },
+      {
+        "line": 691,
+        "text": "size_t len = i == 0 ? n : ARR(a)->len;"
+      },
+      {
+        "line": 693,
+        "text": "void *host = (i > 0 && len > 0) ? (void *)ARR(a)->d : 0;"
+      },
+      {
+        "line": 730,
+        "text": "memcpy(ARR(r)->d, result, n * sizeof(double));"
+      }
+    ],
+    "runtime/fwp_rt_num.c": [
+      {
+        "line": 462,
+        "text": "#define LANES(v) ARR(OBJ(v)->f[0])"
+      },
+      {
+        "line": 466,
+        "text": "for (size_t i = 0; i < n; i++) ARR(a)->d[i] = x;"
+      },
+      {
+        "line": 471,
+        "text": "if (ARR(a)->len != n) return FWP_NONE;"
+      },
+      {
+        "line": 484,
+        "text": "fwp_arr *xs = LANES(subj), *ys = LANES(arg);"
+      },
+      {
+        "line": 488,
+        "text": "V *out = ARR(r)->d;"
+      },
+      {
+        "line": 513,
+        "text": "fwp_arr *xs = LANES(v);"
+      }
+    ],
+    "runtime/fwp_rt_ops.c": [
+      {
+        "line": 239,
+        "text": "for (uint64_t i = 0; i < ARR(v)->len; i++) {"
+      },
+      {
+        "line": 241,
+        "text": "fwp_write(b, ARR(v)->d[i], d->elem, 0);"
+      },
+      {
+        "line": 384,
+        "text": "uint64_t la = ARR(a)->len, lb = ARR(b)->len;"
+      },
+      {
+        "line": 386,
+        "text": "int c = fwp_cmp(ARR(a)->d[i], ARR(b)->d[i], d->elem);"
+      },
+      {
+        "line": 436,
+        "text": "if (ARR(a)->len != ARR(b)->len) return 0;"
+      },
+      {
+        "line": 437,
+        "text": "for (uint64_t i = 0; i < ARR(a)->len; i++)"
+      },
+      {
+        "line": 438,
+        "text": "if (!fwp_eq(ARR(a)->d[i], ARR(b)->d[i], d->elem)) return 0;"
+      },
+      {
+        "line": 507,
+        "text": "fwp_leb128(b, ARR(v)->len);"
+      },
+      {
+        "line": 508,
+        "text": "for (uint64_t i = 0; i < ARR(v)->len; i++) fwp_encode(b, ARR(v)->d[i], d->elem);"
+      }
+    ],
+    "runtime/fwp_rt_prims.c": [
+      {
+        "line": 1511,
+        "text": "for (size_t i = 0; i < n; i++) { ARR(a)->d[i] = OBJ(xs)->f[0]; xs = OBJ(xs)->f[1]; }"
+      },
+      {
+        "line": 1515,
+        "text": "static V fwp_p_array_to_list(V a) { return fwp_list_from(ARR(a)->d, ARR(a)->len); }"
+      },
+      {
+        "line": 1518,
+        "text": "if ((int64_t)i < 0 || (uint64_t)(int64_t)i >= ARR(a)->len) return FWP_NONE;"
+      },
+      {
+        "line": 1519,
+        "text": "return fwp_some(ARR(a)->d[(int64_t)i]);"
+      },
+      {
+        "line": 1523,
+        "text": "V r = fwp_arr_new(ARR(a)->len + extra);"
+      },
+      {
+        "line": 1524,
+        "text": "memcpy(ARR(r)->d, ARR(a)->d, ARR(a)->len * sizeof(V));"
+      },
+      {
+        "line": 1529,
+        "text": "if ((int64_t)i < 0 || (uint64_t)(int64_t)i >= ARR(a)->len) return FWP_NONE;"
+      },
+      {
+        "line": 1531,
+        "text": "ARR(r)->d[(int64_t)i] = x;"
+      },
+      {
+        "line": 1537,
+        "text": "ARR(r)->d[ARR(a)->len] = x;"
+      },
+      {
+        "line": 1546,
+        "text": "if ((int64_t)i < 0 || (uint64_t)(int64_t)i >= ARR(a)->len) {"
+      },
+      {
+        "line": 1554,
+        "text": "if (u == 2) ARR(a)->len = 0; /* poisoned */"
+      },
+      {
+        "line": 1557,
+        "text": "ARR(r)->d[(int64_t)i] = x;"
+      },
+      {
+        "line": 1562,
+        "text": "size_t n = ARR(a)->len;"
+      },
+      {
+        "line": 1564,
+        "text": "if (u == 1 && fwp_rc_capacity(a) >= sizeof(fwp_arr) + (n + 1) * sizeof(V)) {"
+      },
+      {
+        "line": 1565,
+        "text": "ARR(a)->d[n] = x;"
+      },
+      {
+        "line": 1566,
+        "text": "ARR(a)->len = n + 1;"
+      },
+      {
+        "line": 1571,
+        "text": "memcpy(ARR(r)->d, ARR(a)->d, n * sizeof(V));"
+      },
+      {
+        "line": 1572,
+        "text": "ARR(r)->len = n + 1;"
+      },
+      {
+        "line": 1573,
+        "text": "ARR(r)->d[n] = x;"
+      },
+      {
+        "line": 1574,
+        "text": "if (u == 2) ARR(a)->len = 0; /* poisoned */"
+      },
+      {
+        "line": 1582,
+        "text": "for (size_t i = 0; i < k; i++) ARR(r)->d[i] = x;"
+      },
+      {
+        "line": 1589,
+        "text": "for (size_t i = 0; i < k; i++) ARR(r)->d[i] = fwp_apply1(f, (V)(int64_t)i);"
+      },
+      {
+        "line": 1594,
+        "text": "V r = fwp_arr_new(ARR(a)->len);"
+      },
+      {
+        "line": 1595,
+        "text": "for (uint64_t i = 0; i < ARR(a)->len; i++) ARR(r)->d[i] = fwp_apply1(f, ARR(a)->d[i]);"
+      },
+      {
+        "line": 1600,
+        "text": "for (uint64_t i = 0; i < ARR(a)->len; i++) z = fwp_apply2(f, z, ARR(a)->d[i]);"
+      },
+      {
+        "line": 1605,
+        "text": "size_t n = ARR(a)->len, s = fwp_count_arg(start);"
+      },
+      {
+        "line": 1610,
+        "text": "memcpy(ARR(r)->d, ARR(a)->d + s, (e - s) * sizeof(V));"
+      },
+      {
+        "line": 1615,
+        "text": "V r = fwp_arr_new(ARR(a)->len + ARR(b)->len);"
+      },
+      {
+        "line": 1616,
+        "text": "memcpy(ARR(r)->d, ARR(a)->d, ARR(a)->len * sizeof(V));"
+      },
+      {
+        "line": 1617,
+        "text": "memcpy(ARR(r)->d + ARR(a)->len, ARR(b)->d, ARR(b)->len * sizeof(V));"
+      },
+      {
+        "line": 1623,
+        "text": "fwp_sort_array(ARR(r)->d, ARR(r)->len, elem);"
+      },
+      {
+        "line": 1630,
+        "text": "if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");"
+      },
+      {
+        "line": 1634,
+        "text": "size_t n = ARR(a)->len;"
+      },
+      {
+        "line": 1638,
+        "text": "V value = ARR(a)->d[i];"
+      },
+      {
+        "line": 1640,
+        "text": "ARR(result)->d[i] = value;"
+      },
+      {
+        "line": 1651,
+        "text": "ARR(result)->d[i] = value;"
+      },
+      {
+        "line": 1658,
+        "text": "for (size_t i = ARR(a)->len; i; i--) {"
+      },
+      {
+        "line": 1659,
+        "text": "V value = ARR(a)->d[i - 1];"
+      },
+      {
+        "line": 1667,
+        "text": "if ((int64_t)i < 0 || (uint64_t)(int64_t)i >= ARR(a)->len) return FWP_NONE;"
+      },
+      {
+        "line": 1668,
+        "text": "V value = ARR(a)->d[(int64_t)i];"
+      },
+      {
+        "line": 1676,
+        "text": "if ((int64_t)i < 0 || (uint64_t)(int64_t)i >= ARR(a)->len) {"
+      },
+      {
+        "line": 1686,
+        "text": "if (unique) ARR(a)->len = 0;"
+      },
+      {
+        "line": 1690,
+        "text": "V previous = ARR(result)->d[(int64_t)i];"
+      },
+      {
+        "line": 1691,
+        "text": "ARR(result)->d[(int64_t)i] = x;"
+      },
+      {
+        "line": 1700,
+        "text": "size_t n = ARR(a)->len;"
+      },
+      {
+        "line": 1701,
+        "text": "if (n >= (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");"
+      },
+      {
+        "line": 1703,
+        "text": "if (unique == 1 && fwp_rc_capacity(a) >= sizeof(fwp_arr) + (n + 1) * sizeof(V)) {"
+      },
+      {
+        "line": 1705,
+        "text": "ARR(a)->d[n] = x;"
+      },
+      {
+        "line": 1706,
+        "text": "ARR(a)->len = n + 1;"
+      },
+      {
+        "line": 1710,
+        "text": "if (unique && n <= (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V) / 2)"
+      },
+      {
+        "line": 1713,
+        "text": "ARR(result)->len = n + 1;"
+      },
+      {
+        "line": 1715,
+        "text": "ARR(result)->d[n] = x;"
+      },
+      {
+        "line": 1716,
+        "text": "if (unique) ARR(a)->len = 0;"
+      },
+      {
+        "line": 1726,
+        "text": "ARR(result)->d[i] = x;"
+      },
+      {
+        "line": 1736,
+        "text": "ARR(result)->d[i] = fwp_apply_borrowed(f, 1, &index);"
+      },
+      {
+        "line": 1742,
+        "text": "size_t count = ARR(a)->len;"
+      },
+      {
+        "line": 1745,
+        "text": "V value = ARR(a)->d[i];"
+      },
+      {
+        "line": 1746,
+        "text": "ARR(result)->d[i] = fwp_apply_borrowed(f, 1, &value);"
+      },
+      {
+        "line": 1753,
+        "text": "for (size_t i = 0; i < ARR(a)->len; i++) {"
+      },
+      {
+        "line": 1754,
+        "text": "V args[] = {z, ARR(a)->d[i]};"
+      },
+      {
+        "line": 1762,
+        "text": "size_t n = ARR(a)->len, first = fwp_count_arg(start);"
+      },
+      {
+        "line": 1768,
+        "text": "V value = ARR(a)->d[first + i];"
+      },
+      {
+        "line": 1770,
+        "text": "ARR(result)->d[i] = value;"
+      },
+      {
+        "line": 1776,
+        "text": "size_t n = ARR(a)->len, m = ARR(b)->len;"
+      },
+      {
+        "line": 1780,
+        "text": "V value = i < n ? ARR(a)->d[i] : ARR(b)->d[i - n];"
+      },
+      {
+        "line": 1782,
+        "text": "ARR(result)->d[i] = value;"
+      },
+      {
+        "line": 1790,
+        "text": "size_t n = ARR(result)->len;"
+      },
+      {
+        "line": 1795,
+        "text": "memcpy(keys, ARR(result)->d, n * sizeof(V));"
+      },
+      {
+        "line": 1796,
+        "text": "fwp_msort(keys, ARR(result)->d, n, elem, tk, tv);"
+      },
+      {
+        "line": 3112,
+        "text": "for (size_t i = 0; i < n; i++) d[i] = fwp_f64(ARR(arr)->d[i]);"
+      },
+      {
+        "line": 3124,
+        "text": "size_t len = ARR(arr)->len;"
+      },
+      {
+        "line": 3134,
+        "text": "for (size_t i = 0; i < n; i++) ARR(r)->d[i] = fwp_from_f64(d[i]);"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "layout": "Descriptor-directed packed inline payload",
+      "tradeoff": "Preserves8-byte header; all dynamic producers/consumers need element descriptor; views still need a representation discriminator and owner."
+    },
+    {
+      "layout": "Self-describing16-byte header and packed inline payload; views carry backing owner and data pointer",
+      "tradeoff": "Adds8 bytes per owning array and32-byte view objects; offers16-byte inline-data alignment and uniform descriptor-independent width. Prove tiny-array overhead and compiler specialization before choosing."
+    }
+  ],
+  "requirements": [
+    "I8/U8,I16/U16,I32/U32,F32 use1/2/4-byte storage; I64/U64/F64 stay8 bytes. Signed loads preserve extension; F32 loads preserve low32-bit encoding.",
+    "Every producer, callback, copy, equality/order/hash, text/binary/JSON, SIMD,tensor,linalg,foreign boundary and typed destructor must agree.",
+    "Packed scalar storage is an unscanned leaf; pointer/boxed payloads retain typed owner handling.",
+    "Views flatten backing ownership, validate bounds/offset arithmetic and alignment, and cannot reuse shared backing for mutation.",
+    "Keep F16/128-bit representation limitations explicit.",
+    "Inspect bytes, sizeof/offsetof/alignment, ARM/Intel generated assembly, raw/native behavior, GC/reuse controls and requested/live allocation before acceptance."
+  ],
+  "next": "Complete accepted phase2 audit first; choose layout using equivalent workload overhead measurements and then implement every consumer in one coherent representation bundle."
+}

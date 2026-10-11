@@ -1,0 +1,46 @@
+name: Explicit phase2 fallback and buffer review
+on:
+  push:
+    branches: [ownership-evidence-phase2-exit-review]
+permissions:
+  contents: read
+jobs:
+  review:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+      CC: clang
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Current inventory and explicit fallback coverage
+        run: |
+          mkdir -p phase2-review-evidence
+          export FWP_INVENTORY_EXPECTED_HEAD="$GITHUB_SHA"
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output phase2-review-evidence/inventory.json
+          python3 scripts/check-explicit-fallback-review.py --inventory phase2-review-evidence/inventory.json --review tests/fixtures/primitive-fallback-review.json --output phase2-review-evidence/review.json
+      - name: Validate checked buffer growth
+        env:
+          FWP_BUFFER_ARTIFACTS: ${{ runner.temp }}/buffer-evidence
+        run: |
+          rustfmt --edition 2021 tests/structural_buffer.rs
+          cargo test --test structural_buffer -- --nocapture
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase2-review-${{ matrix.os }}
+          path: |
+            phase2-review-evidence/
+            ${{ runner.temp }}/buffer-evidence/

@@ -2,7 +2,7 @@
 from pathlib import Path
 import hashlib,json,subprocess
 REPO='repos/e6qu/fun-with-pipes'
-HEAD='1aadb8a075e1737d0e6a4db96eae5d675f6fb404'
+HEAD='d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0'
 BASE='b4285fc177b3ae7afaf195e5ebd7115cc77b815c'
 SUBJECT='Own resource and State lifetimes and preserve inferred effects'
 def api(path):return json.loads(subprocess.check_output(['gh','api',REPO+path],text=True))
@@ -27,7 +27,7 @@ for gate in (gates['ci'],gates['docs']):
 proof=dict(sha=sha,mergedAt=post['merged_at'],subject=subject,message=message.decode(),
     characters=len(subject),tree=accepted['tree']['sha'],acceptedHead=HEAD,parents=[BASE],
     rawPayloadHash=hashlib.sha256(raw).hexdigest(),verification='GitHub verified signed commit payload',
-    localMain=BASE,localFastForward='Deferred while free disk is below 64 GiB')
+    localMain='68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4',localFastForward='Deferred while free disk is below 64 GiB')
 Path('/private/tmp/fwp-pr124-merge-proof.json').write_text(json.dumps(proof,indent=2)+'\n')
 Path('/private/tmp/fwp-pr124-signed-payload.txt').write_bytes(raw)
 print('Verified squash',sha,'subject characters',len(subject),'tree',proof['tree'],flush=True)
