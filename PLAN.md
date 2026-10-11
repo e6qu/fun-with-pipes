@@ -20,6 +20,10 @@ Keep the roadmap run going through queued CI: monitor results, fix failures
 and prepare independent work until every phase meets its exit criteria.
 Update the handoff and queue after meaningful progress. This authorization
 persists across sessions and compactions; no repeat approval is required.
+Apply the boy scout rule: fix issues and bugs encountered in this repository,
+including those outside the current roadmap item. Preserve regression controls,
+record the evidence and include coherent fixes in the next bundle. This does
+not change the phase order or defer a failing check as unrelated.
 
 ## Direction and acceptance
 

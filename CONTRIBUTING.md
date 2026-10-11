@@ -85,6 +85,10 @@ than accepting a stress variable with collection disabled.
 
 ## Rules the code follows
 
+- **Leave encountered code healthier.** Fix discovered bugs and issues even
+  when they are outside the current roadmap item. Preserve semantic regression
+  controls and record validation in the handoff. Group coherent fixes without
+  weakening the required CI gates or changing the roadmap's phase order.
 - **No third-party crates.** fwp depends only on Rust's standard library,
   so everything it needs is written here: HTTP/2, gzip, protobuf, JSON,
   YAML and the rest. The C runtime uses only the C library, pthreads,

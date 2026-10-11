@@ -147,6 +147,24 @@ assert git('rev-parse', 'HEAD^{tree}', cwd=wt) == git('rev-parse', prepared + '^
 # Integrate only the tested harness and its GC artifact additions. In particular,
 # preserve the new mandatory WASI environment and every existing test command.
 (wt / 'tests/gc.rs').write_bytes(blob(GC_HEAD, 'tests/gc.rs'))
+(wt / 'tests/compiler_diagnostics.rs').write_bytes(blob(GC_HEAD, 'tests/compiler_diagnostics.rs'))
+# Applying the tested transforms preserves the later resource/network changes
+# in these files; copying the older evidence branch's entire files would not.
+compiler_patch = blob(GC_HEAD, 'scripts/compiler-diagnostics-patch.json')
+compiler_edits = json.loads(compiler_patch)
+assert set(compiler_edits) == {'src/cgen.rs', 'src/ffi_interp.rs'}
+for name, edits in compiler_edits.items():
+    evidence_source = blob(TESTED, name).decode()
+    for edit in edits:
+        assert evidence_source.count(edit['old']) == 1, (name, edit['old'])
+        evidence_source = evidence_source.replace(edit['old'], edit['new'])
+    assert evidence_source.encode() == blob(GC_HEAD, name), (
+        name, 'Compiler recipe must match the exact tested and formatted evidence source')
+    source = (wt / name).read_text()
+    for edit in edits:
+        assert source.count(edit['old']) == 1, (name, edit['old'])
+        source = source.replace(edit['old'], edit['new'])
+    (wt / name).write_text(source)
 original_ci = (wt / '.github/workflows/ci.yml').read_text()
 assert 'FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"' in original_ci
 draft_ci = blob(RECOVERY, 'scripts/roadmap-recovery/gc-diagnostics-ci-draft.yml').decode()
@@ -160,9 +178,11 @@ updated_ci = original_ci.replace(anchor, anchor + addition, 1)
 assert updated_ci.replace(addition, '', 1) == original_ci
 (wt / '.github/workflows/ci.yml').write_text(updated_ci)
 assert set(git('diff', '--name-only', cwd=wt).splitlines()) == {
-    'tests/gc.rs', '.github/workflows/ci.yml'}
-git('add', 'tests/gc.rs', '.github/workflows/ci.yml', cwd=wt)
-git('commit', '-m', 'Report GC compiler failures and preserve native diagnostics', cwd=wt)
+    'tests/gc.rs', 'tests/compiler_diagnostics.rs', 'src/cgen.rs',
+    'src/ffi_interp.rs', '.github/workflows/ci.yml'}
+git('add', 'tests/gc.rs', 'tests/compiler_diagnostics.rs', 'src/cgen.rs',
+    'src/ffi_interp.rs', '.github/workflows/ci.yml', cwd=wt)
+git('commit', '-m', 'Preserve compiler diagnostics and reject silent GC build failures', cwd=wt)
 for name in DOCS:
     (wt / name).write_bytes((accepted_wt / name).read_bytes())
 git('add', *DOCS, cwd=wt)
@@ -179,8 +199,11 @@ record = dict(base=accepted, head=head, previous=prepared, branch=BRANCH,
               originalCommits=prep['originalCommits'], rebasedCommits=rebased,
               includedRows=prep['includedRows'], gcEvidence=gc_gate,
               preparationGate=prep_gate, recoveryHead=RECOVERY,
+              compilerPatchHash=hashlib.sha256(compiler_patch).hexdigest(),
               sourceHashes={name: hashlib.sha256((wt / name).read_bytes()).hexdigest()
-                            for name in DOCS + ['tests/gc.rs', '.github/workflows/ci.yml']},
+                            for name in DOCS + ['tests/gc.rs', 'tests/compiler_diagnostics.rs',
+                                               'src/cgen.rs', 'src/ffi_interp.rs',
+                                               '.github/workflows/ci.yml']},
               stage='Preparation only; publish one PR and require all exact-head production gates')
 (OUT / 'finalization.json').write_text(json.dumps(record, indent=2) + '\n')
 git('push', '--force-with-lease=refs/heads/' + BRANCH + ':' + prepared,

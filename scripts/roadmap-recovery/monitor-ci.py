@@ -9,8 +9,8 @@ RUNS = {
     'pr123_docs': (38128387231, 'b0ae00d5512df825271970cafcf569f52dbfc0cd'),
     'main122_docs': (38127751825, '68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4'),
     'resource_network_preparation': (38130008122, 'cfcb70d16044915206c2e681a72618021ba0ea97'),
-    'gc_build_diagnostics': (38132388036, '9a7c7da652e2bc95e209e1fc0f98a45c1ef942dc'),
-    'streamlined_handoff_docs': (38134652467, '17241ed2f8443a351da1e475f6daa023e8a35186'),
+    'gc_build_diagnostics': (38135741797, '49d13a898e5dc7abac307f53848795a4a89b8877'),
+    'streamlined_handoff_docs': (38134968638, '1105e776e47131432727c6c353ba7f1aee50d4dc'),
 }
 record = {'observedAt': datetime.now(timezone.utc).isoformat(), 'runs': {}}
 for label, (number, head) in RUNS.items():

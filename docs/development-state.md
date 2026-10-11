@@ -7,19 +7,27 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: `roadmap/handoff-pr123-20261011`, checkpoint
-17241ed2f8443a351da1e475f6daa023e8a35186. It retains all11 docs and nine
+1105e776e47131432727c6c353ba7f1aee50d4dc. It retains all11 docs and eleven
 merge, recovery, inventory and GC repair drafts under `scripts/roadmap-recovery/`.
 Restore temporary helpers from that branch if /private/tmp is lost; copy the
 inventory pair into repo `scripts/` before its runner execution. Published blobs
 match their recorded source hashes; draft execution and the latest docs audit
-remain pending. Journal: /private/tmp/fwp-streamlined-handoff-checkpoint.json.
+remain pending. Journal: /private/tmp/fwp-runner-finalization-checkpoint.json.
 This is a recovery branch, with no production PR or native acceptance.
 This checkpoint archives59 verbose preparation records. Audit38134652467 was
 confirmed cancelled while unstarted before the updated runner drafts were
 checkpointed; cancellation is not verification. The updated checkpoint reruns
 the focused docs/ancestry and recovery Python syntax audit.
-Finalization-draft checkpoint journal: /private/tmp/fwp-runner-finalization-checkpoint.json.
+Audit38134968638 was also confirmed cancelled while unstarted before saving
+the resumed-goal handoff and additional compiler repairs. The current publication
+journal is /private/tmp/fwp-active-goal-diagnostics-checkpoint.json; collect its
+new exact-head audit after publication. The updated recovery adds the compiler
+patch recipe and test draft alongside the eleven previous drafts.
 This focused audit does not replace production gates or execute merge drafts.
+
+The saved goal controller is active again, verified by get_goal on this resumed
+turn. Keep the full objective active: phases2–6 remain unfinished. Queued CI and
+failing tests remain work to monitor and fix, not roadmap stop conditions.
 
 ## Execution contract
 
@@ -34,6 +42,9 @@ semantics and phase order in PLAN. Require all six exact-head jobs and roadmap_d
 `macos_gc (macos-15)`, `macos_gc (macos-15-intel)`. Skipped, queued, cancelled,
 superseded or earlier-head runs do not pass a gate. Regular macOS excludes only
 the golden GC stress suite; dedicated GC jobs execute it.
+The user also authorized the boy scout rule: fix encountered issues and bugs
+even outside the current roadmap item. Preserve original controls and record
+actual validation; bundle coherent fixes without changing the phase order.
 
 Every entire commit message is one line, at most 80 characters, with no body,
 trailers or attribution. Use ordinary author metadata. Squash with an explicit
@@ -252,8 +263,8 @@ No refused compiler/check/preparation ran outside the guard, and limits were
 unchanged. Remote GitHub merge and Git metadata verification continued. Disk
 subsequently returned above64GiB without project cleanup, enabling guarded
 main update and final54–73 rebase. Disk again fell below reserve after PR123
-creation; stop local workloads. At 11:08 UTC, available space is approximately
-41.2 GiB. No local build, test or bundle preparation is authorized while the
+creation; stop local workloads. At 11:23 UTC, available space is approximately
+37.3 GiB. No local build, test or bundle preparation is authorized while the
 guard refuses the workload. Read-only source review and remote administration
 continue.
 The current remote preparation drivercfcb70d16044915206c2e681a72618021ba0ea97,
@@ -293,8 +304,10 @@ the future workflow; copying the whole draft would lose mandatory WASI.
 PR123's frozen head remains unchanged. Current gates are required as recorded;
 the later harness repair does not count as passed support.
 Published independent validation branch: ownership-evidence-gc-build-diagnostics,
-head9a7c7da652e2bc95e209e1fc0f98a45c1ef942dc on PR123 native source.
-CI38132388036 is queued. It runs formatting, focused lint, a real failing-CC
+head49d13a898e5dc7abac307f53848795a4a89b8877 on PR123 native source.
+CI38135741797 is queued. Superseded38132388036 was confirmed cancelled
+while unstarted, before adding the boy scout compiler-diagnostic repair.
+The replacement runs formatting, focused lint, a real failing-CC
 control and a positive native GC
 execution, then requires exact Rust test exit101 and the specific diagnostic
 when compiler failure reporting is deliberately silenced. Artifacts include
@@ -302,7 +315,17 @@ generated C, the positive binary, real statuses, hardware/compiler and hashes.
 Evidence is pending, with no production PR or extra full matrix. Copy only the
 tested gc.rs and added GC failure steps into the next bundle; keep the evidence
 workflow outside production ancestry and preserve mandatory actual WASI.
-Journal: /private/tmp/fwp-gc-build-diagnostics-publication.json.
+Compiler source review also found that native and interpreter FFI builds discard
+compiler stdout and termination details. Published repairs share diagnostic
+rendering, preserve stdout/stderr and exit/signal/core status, and detect OpenSSL
+errors in stdout as well as stderr. Two new compiler_diagnostics tests cover
+stdout-only and mixed errors, status37, signal15, TLS hints and successful
+native/raw-interpreter execution. A deliberately discarded stdout control must
+fail with exact Rust exit101 and its specific diagnostic. These tests have not
+run yet. Journal: /private/tmp/fwp-combined-compiler-diagnostics-publication.json.
+After focused evidence passes, apply the exact compiler-diagnostics-patch.json
+transforms to the final resource bundle; do not copy older whole cgen/ffi files
+over its85 prepared commits. Include tests/compiler_diagnostics.rs as well.
 For the original85-commit preparation, preserve accepted base CI plus the
 intentional mandatory WASI requirement. After the GC repair is verified and
 integrated, additionally allow its explicit GC failure-artifact steps. Preserve
@@ -316,7 +339,8 @@ all seven original PR123 gates completed before squash, validates the raw
 one-line message/parent/tree, restores all11 authoritative recovery docs and
 records acceptance in a runner worktree. It then rebases the verified preparation
 onto the actual squash, preserves its complete tree and original subjects,
-and adds only the tested GC harness/artifact steps plus fresh accepted docs.
+and adds the tested GC harness/artifact steps, compiler diagnostic transforms
+and tests, plus fresh accepted docs.
 An exact old-head push lease protects concurrent edits. This is an unexecuted
 draft, with final documentation audit and all production gates still required.
 Its workflow bindings must follow any repaired evidence heads. Local main

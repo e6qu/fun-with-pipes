@@ -1,0 +1,22 @@
+{
+  "src/cgen.rs": [
+    {
+      "old": "fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {",
+      "new": "/// Preserve failed compiler output and termination details for native and FFI builds.\npub(crate) fn compiler_failure(context: &str, output: &std::process::Output) -> String {\n    let stdout = String::from_utf8_lossy(&output.stdout);\n    let stderr = String::from_utf8_lossy(&output.stderr);\n    let mut message = format!(\"{context}:\\n{stdout}{stderr}\");\n    if !message.ends_with('\\n') {\n        message.push('\\n');\n    }\n    write!(message, \"compiler status: {}\", output.status).unwrap();\n    #[cfg(unix)]\n    {\n        use std::os::unix::process::ExitStatusExt;\n        write!(\n            message,\n            \" (signal={:?}, core_dumped={})\",\n            output.status.signal(),\n            output.status.core_dumped()\n        )\n        .unwrap();\n    }\n    message\n}\n\nfn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {"
+    },
+    {
+      "old": "return Err(format!(\"C compiler failed:\\n{}{}\", err, hint));",
+      "new": "return Err(format!(\"{}{}\", compiler_failure(\"C compiler failed\", &res), hint));"
+    },
+    {
+      "old": "let tls = err.contains(\"openssl/\") || err.contains(\"-lssl\");",
+      "new": "let stdout = String::from_utf8_lossy(&res.stdout);\n        let tls = err.contains(\"openssl/\")\n            || err.contains(\"-lssl\")\n            || stdout.contains(\"openssl/\")\n            || stdout.contains(\"-lssl\");"
+    }
+  ],
+  "src/ffi_interp.rs": [
+    {
+      "old": "return Err(format!(\n            \"building the foreign function shim failed:\\n{}\",\n            String::from_utf8_lossy(&out.stderr)\n        ));",
+      "new": "return Err(crate::cgen::compiler_failure(\n            \"building the foreign function shim failed\",\n            &out,\n        ));"
+    }
+  ]
+}

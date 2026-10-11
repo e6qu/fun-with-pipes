@@ -17,9 +17,9 @@ jobs:
       GH_REPO: e6qu/fun-with-pipes
       # Replace these frozen evidence bindings if a focused repair is needed.
       # Publish this driver only after PR123, preparation and GC evidence pass.
-      FWP_RECOVERY_HEAD: 17241ed2f8443a351da1e475f6daa023e8a35186
-      FWP_GC_EVIDENCE_HEAD: 9a7c7da652e2bc95e209e1fc0f98a45c1ef942dc
-      FWP_GC_EVIDENCE_RUN: "38132388036"
+      FWP_RECOVERY_HEAD: 1105e776e47131432727c6c353ba7f1aee50d4dc
+      FWP_GC_EVIDENCE_HEAD: 49d13a898e5dc7abac307f53848795a4a89b8877
+      FWP_GC_EVIDENCE_RUN: "38135741797"
     steps:
       - uses: actions/checkout@v4
         with:
