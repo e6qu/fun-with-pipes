@@ -7900,7 +7900,11 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
             _ if tls => "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (Debian and Ubuntu: libssl-dev; see docs/tls.md)".to_string(),
             _ => String::new(),
         };
-        return Err(format!("{}{}", compiler_failure("C compiler failed", &res), hint));
+        return Err(format!(
+            "{}{}",
+            compiler_failure("C compiler failed", &res),
+            hint
+        ));
     }
     Ok(())
 }

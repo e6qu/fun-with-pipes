@@ -48,7 +48,11 @@ fn fake_compiler(dir: &Path, body: &str) -> PathBuf {
 }
 
 fn source(dir: &Path, interpreter: bool) -> PathBuf {
-    let path = dir.join(if interpreter { "foreign.fwp" } else { "native.fwp" });
+    let path = dir.join(if interpreter {
+        "foreign.fwp"
+    } else {
+        "native.fwp"
+    });
     let text = if interpreter {
         "foreign \"C\" c-abs : I32 -> I32 = \"abs\"\nmain = -7:I32 | c-abs | echo\n"
     } else {
@@ -73,19 +77,31 @@ fn compiler_failure_preserves_stdout_stderr_and_status() {
             let output = invoke(&source, interpreter, Some(&compiler));
             assert!(!output.status.success(), "compiler failure was accepted");
             let diagnostic = String::from_utf8_lossy(&output.stderr);
-            assert!(diagnostic.contains("compiler stdout control"), "compiler stdout was discarded: {diagnostic}");
+            assert!(
+                diagnostic.contains("compiler stdout control"),
+                "compiler stdout was discarded: {diagnostic}"
+            );
             assert!(diagnostic.contains("exit status: 37"), "{diagnostic}");
             if stderr {
-                assert!(diagnostic.contains("compiler stderr control"), "{diagnostic}");
+                assert!(
+                    diagnostic.contains("compiler stderr control"),
+                    "{diagnostic}"
+                );
             }
             if !interpreter {
-                assert!(diagnostic.contains("OpenSSL 3"), "stdout-only TLS hint was lost: {diagnostic}");
+                assert!(
+                    diagnostic.contains("OpenSSL 3"),
+                    "stdout-only TLS hint was lost: {diagnostic}"
+                );
             }
-            assert!(diagnostic.contains(if interpreter {
-                "building the foreign function shim failed:"
-            } else {
-                "C compiler failed:"
-            }), "{diagnostic}");
+            assert!(
+                diagnostic.contains(if interpreter {
+                    "building the foreign function shim failed:"
+                } else {
+                    "C compiler failed:"
+                }),
+                "{diagnostic}"
+            );
         }
     }
 }
@@ -101,8 +117,16 @@ fn compiler_signal_is_reported_and_successful_programs_still_run() {
         let diagnostic = String::from_utf8_lossy(&output.stderr);
         assert!(diagnostic.contains("signal=Some(15)"), "{diagnostic}");
         let positive = invoke(&source, false, None);
-        assert!(positive.status.success(), "{}", String::from_utf8_lossy(&positive.stderr));
-        let expected = if interpreter { b"7\n".as_slice() } else { b"compiler-diagnostics\n".as_slice() };
+        assert!(
+            positive.status.success(),
+            "{}",
+            String::from_utf8_lossy(&positive.stderr)
+        );
+        let expected = if interpreter {
+            b"7\n".as_slice()
+        } else {
+            b"compiler-diagnostics\n".as_slice()
+        };
         let run = Command::new(source.with_extension("bin")).output().unwrap();
         assert!(run.status.success());
         assert_eq!(run.stdout, expected);
