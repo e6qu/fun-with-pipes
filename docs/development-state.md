@@ -6,6 +6,13 @@ Updated 2026-10-11. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 contains detailed checks and superseded instructions. Root docs are authoritative;
 prepared branch docs are historical snapshots.
 
+Published recovery snapshot: `roadmap/handoff-pr123-20261011`, head
+38294dd28c3bf5ed1949321f50d523f5fc605960. All11 document blobs match their
+publication hashes; journal: /private/tmp/fwp-pr123-handoff-publication.json.
+This is a docs recovery branch, with no production PR or native changes.
+The latest streamlined edits await the next GitHub roadmap audit; local checks
+remain stopped below the disk reserve. Later progress stays in this live file.
+
 ## Execution contract
 
 Finish the plan automatically, one coherent bundle production PR at a time. The
@@ -251,6 +258,13 @@ initially remained queued, so publication waited for confirmed cancellation.
 Expansion journal: /private/tmp/fwp-resource-network-expanded-runner-publication.json.
 Its source112 already includes mandatory WASI test environment;
 preserve that alongside inherited golden artifact diagnostics when rebasing.
+The phase2 exit inventory draft is /private/tmp/fwp-check-primitive-inventory-exit.py
+with /private/tmp/fwp-primitive-inventory-exit.rs. It compares every parsed
+declaration and actual Rust contract with the frozen669c19e baseline, allowing
+only the nine intentional raw-memory contract additions and preserving every
+other row. It has not executed or established new counts. Copy it into an
+evidence branch on actual merged112-equivalent source and run on GitHub after
+the resource/network bundle is accepted; retain the old JSON as baseline.
 Do not use the unchanged exact-inherited-ci assertion for that later bundle:
 verify only the intentional WASI requirement in addition to accepted base CI.
 
