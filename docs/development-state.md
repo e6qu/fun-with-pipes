@@ -218,10 +218,12 @@ These are allocation results, with no timing or tracing-free claim.
 Runner integration must preserve all original resource tests and mandatory WASI,
 apply the exact five-source recipe, format Rust and lib/autodiff.fwp, and execute
 cheap docs/fwp-format checks before publication. The strict inventory extension
-permits only these four additional State contracts; its expected153 contracts
-and191 review declarations are not verified counts yet. Additional array/record
-and escaping-closure State cases are prepared for the final bundle in
-/private/tmp/fwp-typed-state-expanded-test.rs and have not executed. Full native,
+permits only these four additional State contracts; the runner verifies153 contracts,191 review declarations/181 symbols,
+374 total declarations/364 symbols,40 aliases,19 IR combinators and11 flat
+signatures. Source classification does not establish tracing-free eligibility. Additional array/record
+and escaping-closure State cases pass runner preflight against the raw interpreter
+at O1/O2, both stack settings and both reuse verification settings. The ambient
+call-row inference fix passes library units and effect/type snapshots. Full native,
 GC, reuse, resource/File and Linux WASI gates remain required. Later phase2
 reconstruction, retained-context, disposal and cycle classifications remain.
 A finite review map prepares191 declarations/181 symbols after excluding the
