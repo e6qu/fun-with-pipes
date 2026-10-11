@@ -104,10 +104,8 @@ parent : () -> String ! {State[String], Async, IO}
 parent = const child | task.spawn | tap (const () | task.yield) | task.await | tap echo | const () | get
 cancelled-child : () -> String ! {Async}
 cancelled-child = run-state ("cancelled" | concat " State") (tap (const 1s | task.sleep) | get) | .0
-make-concat : String -> (String -> String ! {})
-make-concat = concat
-change-closure : () -> String ! {State[(String -> String ! {})]}
-change-closure = const ("captured" | concat ":") | make-concat | put | get | apply "!"
+change-closure : () -> String ! {State[(String -> String)]}
+change-closure = const ("captured" | concat ":") | concat | put | get | apply "!"
 main = [
     () | run-state ("initial" | concat " State") read-change | echo,
     () | run-state "outer" (both (run-state "inner" get) get) | echo,
@@ -119,8 +117,8 @@ main = [
     [1, 2, 3] | run-state 0 (map (const (add 1) | modify)) | echo,
     () | run-state (["a", "b"] | array.from-list) (both get (const (array.map (concat "!")) | modify) | .0) | echo,
     () | run-state ("left", ["right"]) get | echo,
-    () | run-state ("initial:" | make-concat) change-closure | .0 | echo,
-    () | run-state ("initial:" | make-concat) change-closure | .1 | apply "!" | echo,
+    () | run-state (concat "initial:") change-closure | .0 | echo,
+    () | run-state (concat "initial:") change-closure | .1 | apply "!" | echo,
 ] | ignore
 "#;
     std::fs::write(&input, source).unwrap();

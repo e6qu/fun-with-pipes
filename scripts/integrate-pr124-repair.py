@@ -82,6 +82,14 @@ for name in NATIVE:
         source = source.replace(edit['old'],edit['new'],1)
     assert source.encode() == blob(STATE,name), name
     (WT/name).write_text(source)
+inference_recipe = json.loads(blob('HEAD','scripts/instantiate-function-effects-patch.json'))
+assert set(inference_recipe) == {'src/infer.rs'}
+for name, edits in inference_recipe.items():
+    source = (WT/name).read_text()
+    for edit in edits:
+        assert source.count(edit['old']) == 1, name
+        source = source.replace(edit['old'],edit['new'],1)
+    (WT/name).write_text(source)
 fixtures = {
     'tests/typed_state_ownership.rs': ('HEAD','scripts/typed-state-expanded-test.rs'),
     'tests/fixtures/typed_state_probe.c': (STATE,'tests/fixtures/typed_state_probe.c'),
@@ -92,7 +100,7 @@ for name,(head,saved) in fixtures.items():
     (WT/name).write_bytes(blob(head,saved))
 for name in DOCS:
     (WT/name).write_bytes(blob(RECOVERY,name))
-subprocess.run(['rustfmt','src/cgen.rs','src/ownership.rs','tests/typed_state_ownership.rs'],cwd=WT,check=True)
+subprocess.run(['rustfmt','src/cgen.rs','src/ownership.rs','src/infer.rs','tests/typed_state_ownership.rs'],cwd=WT,check=True)
 env = dict(os.environ,CARGO_PROFILE_DEV_DEBUG='0',CARGO_PROFILE_TEST_DEBUG='0',CARGO_INCREMENTAL='0',RUST_TEST_THREADS='1')
 subprocess.run(['cargo','build','--bin','fwp'],cwd=WT,env=env,check=True)
 subprocess.run([str(WT/'target/debug/fwp'),'fmt','lib/autodiff.fwp'],cwd=WT,check=True)
@@ -100,7 +108,8 @@ subprocess.run([str(WT/'target/debug/fwp'),'fmt','--check','lib/autodiff.fwp'],c
 subprocess.run(['cargo','fmt','--check'],cwd=WT,check=True)
 # Check the library's formatting/faithfulness and reference before another full
 # matrix, and exercise the newly added aggregate/escaping-closure State cases.
-subprocess.run(['cargo','test','--test','fmt','--test','stdlib_doc','--test','typed_state_ownership','--','--nocapture'],cwd=WT,env=env,check=True)
+subprocess.run(['cargo','test','--lib'],cwd=WT,env=env,check=True)
+subprocess.run(['cargo','test','--test','call_effects','--test','check','--test','fmt','--test','stdlib_doc','--test','typed_state_ownership','--','--nocapture'],cwd=WT,env=env,check=True)
 subprocess.run(['python3','scripts/check-roadmap.py'],cwd=WT,check=True)
 state_doc = WT/'docs/development-state.md'
 state_doc.write_text(state_doc.read_text() + '\n## Combined repair prepared on GitHub\n\n'
@@ -111,7 +120,7 @@ state_doc.write_text(state_doc.read_text() + '\n## Combined repair prepared on G
     'array/record/escaping-closure State controls. The current-head primitive\n'
     'inventory follows. Full six-job production CI and roadmap_docs remain\n'
     'mandatory before PR124 squash; earlier passes do not satisfy that gate.\n')
-changed = set(NATIVE + list(fixtures) + DOCS + ['lib/autodiff.fwp'])
+changed = set(NATIVE + ['src/infer.rs'] + list(fixtures) + DOCS + ['lib/autodiff.fwp'])
 git('add',*sorted(changed),cwd=WT)
 assert set(git('diff','--cached','--name-only',cwd=WT).splitlines()) <= changed
 git('commit','-m','Own scoped State and repair library formatting and roadmap validation',cwd=WT)
