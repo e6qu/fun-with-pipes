@@ -114,6 +114,26 @@ requirements until phase 6 proves eligibility for execution without collection.
 | Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
+The prepared source 112 declaration review separates 134 explicit contracts,
+19 combinators lowered to ordinary owned IR functions, 12 flat concrete scalar
+signatures and 208 declarations requiring monomorphic/runtime review. These are
+373 declarations resolving to363 runtime symbols after40 explicit aliases,
+not a count of shared heap objects or ownership gaps.
+Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
+when no proven borrowing contract applies; scalar words remain uncounted.
+Reconstructed decode/parse values and retained network contexts can therefore
+still require tracing even when their temporary C buffers reclaim deterministically.
+Classify these conservative requirements explicitly before phase 3; phase 6 must
+prove eligibility separately. External AD/FFI state has its own lifetime contract.
+
+The nine raw-memory declarations need a separate review: mem.alloc/mem.string
+allocate C buffers released by mem.free; mem.string copies its input. Raw pointer
+casts, address arithmetic and memcpy-based numeric reads/writes do not establish
+managed-value ownership. ptr.read-string copies into a managed String. Verify
+borrowed input and fresh result contracts before claiming immediate reclamation.
+Compare pointer arithmetic and numeric widths with the interpreter, including
+boundary arithmetic without dereferencing addresses and WebAssembly pointer width.
+
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
 and reuse verification, with allocation/live-memory evidence for reclamation.
 Shared fallback is documented coverage, not deterministic reclamation or a
@@ -133,13 +153,27 @@ aligned payloads where useful, and views with explicit backing lifetimes.
 Measure array-of-struct versus struct-of-arrays layouts for each workload.
 Do not pad every small object to a cache line.
 
-Focused ARM64 layout evidence for returned-variant preparation44 confirms an
-8-byte `V`, an 8-byte array header and 8-byte element slots; its three-field
-variant occupies32 bytes, aligned to8, with fields at offset8. Exact original
-positive/control binaries, compiler inputs, flags and disassembly are retained
-and recorded in [history](roadmap-history.md). The O2 alias transfers share one
-32-byte stack slot; this shape-specific evidence is not a general ABI or timing
-claim. Natural-width numeric slots and broader register/FFI evidence remain phase3.
+Actual binary/layout baselines are preserved in [history](roadmap-history.md#archived-representation-measurement-detail).
+These are fixture-specific results at prepared source heads; each final delivery
+still needs exact-head CI. They establish representations and allocation
+requests, not production speed, cache behavior or collector-free execution.
+
+| Preparation / platform | Verified representation or allocation difference |
+|---|---|
+| 44 / ARM+Intel | V8, array header8 and element slot8; three-field variant32/align8 |
+| 65 / ARM | Six-I64 worker value48/align8 versus boxed56; return through caller storage |
+| 79 / ARM | Typed frame holder removes one16-byte parent box; File/path allocation remains |
+| 80 / ARM | Inline File header16/align8 versus24; one request16+n+1 versus two requesting24+n+1 |
+| 83 / ARM | Variant holder16/align8; zero parent boxes versus one16-byte box |
+| 111 / ARM+Intel | Packed TLS header64/align8; one request101/8311 for the tested inputs |
+| 112 / ARM+Intel | Connection header272/align8 versus520; short address request278 |
+
+A bounded ARM capacity check measures TLS requested101/8311 as112/8704 malloc
+usable bytes, and connection request278 as320 GC-slot bytes versus640 for an
+allocation of the old520-byte header size in the same allocator. It does not
+execute the old constructor. Metadata, pool reservation, Intel capacity and
+cache/timing effects are excluded or unmeasured; exact evidence is in
+[history](roadmap-history.md#actual-local-grpc-allocator-capacity).
 
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
@@ -153,6 +187,14 @@ blocked matrix multiplication, reusable tape/scratch buffers and exceptional
 cleanup before adding accelerator backends. OpenCL discovery is not evidence
 that kernels executed on a real device.
 
+Preserve the existing fusion guards in [src/fuse.rs](../src/fuse.rs): eager
+list stages interleave only when they are pure, terminating and have at most
+one observable trap message; early-stop `find` requires nontrapping stages.
+Keep the [distinct-trap](../tests/run/fusion_traps.fwp) and
+[early-stop](../tests/run/fusion_find_trap.fwp) oracles when extending numeric
+fusion. AD tape operations retain their evaluation order even with pure public
+types; new fused gradient kernels need raw interpreter/native order checks.
+
 ### Phase 3 delivery sequence
 
 Keep source array/value types, pipe syntax and wire behavior unchanged. Make
@@ -165,6 +207,25 @@ field types; generic/foreign boundaries keep explicit conversion contracts.
 | Scalar/aggregate ABI | Prefer natural C scalar fields and direct workers where measured; verify arm64/x86-64 integer and floating-point register use, spills, boxing and FFI conversion |
 | Views and reusable backing | Retain backing owners across escapes; unique updates preserve immutable aliases; cover zero-length/subrange/overflow cases and exceptional release |
 | Measured representation gate | Equivalent C/Rust work, allocation-inclusive and kernel-only results, requested/actual bytes and peak live memory; hardware/compiler/flags/assembly recorded |
+
+The current worker ABI passes fields as V words and keys fwp_r layouts by field
+count. Natural scalar fields therefore need layouts keyed by concrete field
+types, typed worker parameters/results and bit-preserving bridges to generic V
+entries. Verify floating-point register use in the emitted machine code; an
+unboxed record alone does not establish a natural floating-point calling
+convention. Keep closure, callback and foreign conversion contracts explicit.
+
+Natural-width storage must cover every producer and consumer, including owned
+array primitives, typed destruction, display/equality, JSON and binary decode,
+constant construction and callback/dynamic boundaries. The current fwp_arr
+header has a64-bit length followed by V slots; it has no spare32-bit field to
+reuse without a new layout contract. Preserve length/bounds/overflow behavior.
+Specialized hot loops should select concrete loads/stores at compile time;
+unknown or mixed runtime boundaries need an explicit representation fallback or
+conversion. Measure any representation-tag/header or side-metadata overhead
+alongside payload savings, including empty and small arrays; narrow storage does
+not automatically reduce total allocated bytes. A narrower array.get alone does
+not establish representation support.
 
 Handle boxed128-bit and F16 paths explicitly: retain current numeric behavior
 until their representation/conversion contracts pass. Keep default reduction
@@ -184,20 +245,33 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #110 includes the following contracts. Detailed primitive modes
+Main through PR #120 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
 - Compiler reuse tokens clear dead fields before retaining empty young cells,
   transfer to compatible constructors, release unused cells and unlink cleanup
   before tail calls. Failure/trap/cancellation releases registered tokens.
-  Compiler call liveness is merged; remaining constructor/callback paths stay prepared.
+  Compiler call liveness and consumed constructor-field protection are merged;
+  worker argument preparation is merged. Wider callback paths stay prepared.
 - Registered runtime owners and scoped files release exactly once before failure,
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.
   Compiler live caller/pending-argument and incoming-parameter cleanup is
   merged in PR106; runtime application and partial capture preparation in PR107.
-  Constructor and wider callback registration remains prepared.
+  Constructor fields and remaining caller references are registered before allocation
+  in PR113. Worker result fields and remaining caller references stay registered
+  until record/variant boxing succeeds in PR114. Worker argument preparation
+  protects original boxes and completed field duplicates until transfer in PR115;
+  flattened loop argument preparation protects original boxes and completed field
+  duplicates until transfer in PR116. Multi-field retains release completed extras
+  on count overflow in PR117, with caller owners registered before duplication.
+  Nested constructor temporaries inherit known monomorphic context for typed
+  child cleanup in PR118. Boxed variant conversion protects the original box
+  and remaining caller owners through typed retention in PR119. Record updates
+  retain typed kept fields, release replaced owners and protect replacement,
+  partial retains and unfinished copies in PR120; general copies preserve the
+  borrowed original. Wider callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.
@@ -226,12 +300,17 @@ and measurements are in [history](roadmap-history.md).
   preserves trap order. General unwind protection remains prepared work.
 - Loop consumes its state and transfers callback inputs; it retains selected
   typed Step payloads before destroying wrappers. Specialized/flattened workers
-  reclaim typed boxed inputs and ABI wrappers; general unwind work remains prepared.
+  reclaim typed boxed inputs and ABI wrappers. Registered cleanup protects current
+  state during first/later cancellation ticks and Step owners during payload
+  preparation; flattened Again records remain unboxed. Later reconstruction
+  and retained-callback extensions remain prepared.
 - Scan/iterate borrow callbacks and own each stored state, retaining initial
   aliases and adopting subsequent callback results.
 - Synchronous callbacks borrow typed inputs and return owned results. Map/filter
   own fresh spines; fold/right-fold transfer accumulators; zip-with owns callback
-  results; registered map, selection and zip cleanup releases owned results,
+  results; fold preparation protects the current accumulator and completed
+  borrowed duplicates, and right-fold scratch releases on unwind. Registered
+  map, selection and zip cleanup releases owned results,
   partial spines and scratch on failure, trap or cancellation. Both zip scratch
   buffers release, including a failure while preparing the second buffer.
   Prefix/copy operations preserve owned aliases. Optional list results
@@ -262,8 +341,9 @@ in [the handoff](development-state.md), rather than a second priority list here.
 
 File values stay affine: no duplication trait or resource capture is added.
 A File parameter remains alive until its original function frame exits, even
-when ignored; early close would change later IO failures. Internal ResourceRegion
-anchors are recorded before optimization and must survive inlining and fusion.
+when ignored; early close would change later IO failures. Prepared internal ResourceRegion
+anchors record these lifetimes before optimization and preserve them through
+inlining and fusion; their implementation still requires sequential delivery.
 Returned/error aliases retain their owners. Partially failed patterns retain
 already bound locals until frame exit, matching the interpreter.
 
