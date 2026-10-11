@@ -18,5 +18,27 @@
       "old": "return Err(format!(\n            \"building the foreign function shim failed:\\n{}\",\n            String::from_utf8_lossy(&out.stderr)\n        ));",
       "new": "return Err(crate::cgen::compiler_failure(\n            \"building the foreign function shim failed\",\n            &out,\n        ));"
     }
+  ],
+  "src/aot.rs": [
+    {
+      "old": "        return Ok(exe);\n    }\n    if !have_cc()",
+      "new": "        prune(&dir, &exe);\n        return Ok(exe);\n    }\n    if !have_cc()"
+    },
+    {
+      "old": "    prune(&dir);\n    Ok(exe)",
+      "new": "    prune(&dir, &exe);\n    Ok(exe)"
+    },
+    {
+      "old": "fn prune(dir: &Path) {",
+      "new": "fn prune(dir: &Path, keep: &Path) {"
+    },
+    {
+      "old": ".filter(|e| !e.file_name().to_string_lossy().starts_with('.'))",
+      "new": ".filter(|e| !e.file_name().to_string_lossy().starts_with('.'))\n        .filter(|e| e.path().as_path() != keep)"
+    },
+    {
+      "old": "    let max = cache_max();",
+      "new": "    // Keep the executable being returned even when the configured limit is zero.\n    // Reserve one slot for it; prune only older entries, regardless of timestamps.\n    let max = cache_max().saturating_sub(1);"
+    }
   ]
 }

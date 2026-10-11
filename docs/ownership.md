@@ -299,8 +299,11 @@ and measurements are in [history](roadmap-history.md).
   and immutable updates. Synchronous callbacks borrow inputs and adopt results;
   typed destruction releases children and storage. General unwind remains prepared.
 - Task result/deadline boundaries own fresh typed result wrappers and retain
-  aliases without treating scalar words as pointers. Retained task thunks,
-  scheduler handles and queue lifetimes remain later preparations.
+  aliases without treating scalar words as pointers. Spawn/deadline thunks retain
+  captures through entry, completion or cancellation, with preparation rollback.
+  Counted task handles own cached results; each await returns a separate owner.
+  Typed channels own queued elements and transfer them on receive. Closing
+  preserves queued values; unproved unreachable cycles still require tracing.
 - Eligible old counted storage is reclaimed at last release. Verification
   clears freed child words so stale conservative roots cannot retain reused cells;
   newly allocated cells become young. Shared graphs still require tracing.
@@ -349,9 +352,9 @@ in [the handoff](development-state.md), rather than a second priority list here.
 
 | Area | Prepared contract | Acceptance still required |
 |---|---|---|
-| Containers and callbacks | Typed elements, retained results, owning runtime boundaries and unwind cleanup | Bundle CI; aliases, traps and cancellation |
-| Aggregates and compiler temporaries | Typed constructors, reconstruction, worker/loop/variant conversion and CAF ownership | Bundle CI; ambiguous nominal contexts and nested holders |
-| Tasks, channels, libraries and devices | Owned handles/queues/caches, teardown, retained callbacks and library roots | Bundle CI; shared graph/cycle policy and actual device evidence |
+| Loop and resource aggregates | Remaining reconstruction/context protections and original resource holders | Bundle CI; partial retains, traps and nested holders |
+| Libraries and devices | Input/result/unload ownership, resource teardown and OpenCL loader lifetimes | Bundle CI; host aliases and actual device evidence |
+| Networking and retained contexts | TLS/HTTP2/gRPC owners, cancellation, caches and context restoration | Bundle CI; metadata roots, callback lifetimes and protocol behavior |
 | Files and original frames | Logical ownership, borrowed IO, original scope anchors and deterministic close | Bundle CI; all escaping/error/shared boundaries |
 | File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Bundle CI; shared/stale handles and actual WASI behavior |
 | WASM resources | Logical aggregate/task counts and disposal metadata | Actual-WASI full gates; physical bump storage remains allocated |

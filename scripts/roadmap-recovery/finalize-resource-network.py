@@ -148,11 +148,12 @@ assert git('rev-parse', 'HEAD^{tree}', cwd=wt) == git('rev-parse', prepared + '^
 # preserve the new mandatory WASI environment and every existing test command.
 (wt / 'tests/gc.rs').write_bytes(blob(GC_HEAD, 'tests/gc.rs'))
 (wt / 'tests/compiler_diagnostics.rs').write_bytes(blob(GC_HEAD, 'tests/compiler_diagnostics.rs'))
+(wt / 'tests/cache_lifetime.rs').write_bytes(blob(GC_HEAD, 'tests/cache_lifetime.rs'))
 # Applying the tested transforms preserves the later resource/network changes
 # in these files; copying the older evidence branch's entire files would not.
 compiler_patch = blob(GC_HEAD, 'scripts/compiler-diagnostics-patch.json')
 compiler_edits = json.loads(compiler_patch)
-assert set(compiler_edits) == {'src/cgen.rs', 'src/ffi_interp.rs'}
+assert set(compiler_edits) == {'src/cgen.rs', 'src/ffi_interp.rs', 'src/aot.rs'}
 for name, edits in compiler_edits.items():
     evidence_source = blob(TESTED, name).decode()
     for edit in edits:
@@ -178,13 +179,19 @@ updated_ci = original_ci.replace(anchor, anchor + addition, 1)
 assert updated_ci.replace(addition, '', 1) == original_ci
 (wt / '.github/workflows/ci.yml').write_text(updated_ci)
 assert set(git('diff', '--name-only', cwd=wt).splitlines()) == {
-    'tests/gc.rs', 'tests/compiler_diagnostics.rs', 'src/cgen.rs',
-    'src/ffi_interp.rs', '.github/workflows/ci.yml'}
-git('add', 'tests/gc.rs', 'tests/compiler_diagnostics.rs', 'src/cgen.rs',
-    'src/ffi_interp.rs', '.github/workflows/ci.yml', cwd=wt)
-git('commit', '-m', 'Preserve compiler diagnostics and reject silent GC build failures', cwd=wt)
+    'tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lifetime.rs',
+    'src/cgen.rs', 'src/ffi_interp.rs', 'src/aot.rs', '.github/workflows/ci.yml'}
+git('add', 'tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lifetime.rs',
+    'src/cgen.rs', 'src/ffi_interp.rs', 'src/aot.rs', '.github/workflows/ci.yml', cwd=wt)
+git('commit', '-m', 'Preserve cached executable lifetimes and compiler diagnostics', cwd=wt)
 for name in DOCS:
     (wt / name).write_bytes((accepted_wt / name).read_bytes())
+reference = wt / 'docs/reference.md'
+reference_text = reference.read_text()
+cache_row = '| `FWP_CACHE_MAX` | how many executables it keeps, the least recently used going first (256) |'
+assert reference_text.count(cache_row) == 1
+reference.write_text(reference_text.replace(cache_row,
+    '| `FWP_CACHE_MAX` | how many executables it keeps (256; minimum 1, including when set to 0); pruning preserves the current executable |'))
 git('add', *DOCS, cwd=wt)
 git('commit', '-m', 'Record accepted library ownership and the resource network bundle', cwd=wt)
 subprocess.run(['python3', 'scripts/check-roadmap.py'], cwd=wt, check=True)
@@ -202,6 +209,7 @@ record = dict(base=accepted, head=head, previous=prepared, branch=BRANCH,
               compilerPatchHash=hashlib.sha256(compiler_patch).hexdigest(),
               sourceHashes={name: hashlib.sha256((wt / name).read_bytes()).hexdigest()
                             for name in DOCS + ['tests/gc.rs', 'tests/compiler_diagnostics.rs',
+                                               'tests/cache_lifetime.rs', 'src/aot.rs',
                                                'src/cgen.rs', 'src/ffi_interp.rs',
                                                '.github/workflows/ci.yml']},
               stage='Preparation only; publish one PR and require all exact-head production gates')

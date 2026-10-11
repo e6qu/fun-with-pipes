@@ -214,8 +214,12 @@ Merged PR102 owns fresh typed result wrappers from task.await, task.within and
 Channel receives. Wrappers retain pointer-bearing payload owners; scalar words
 do not select reference destructors. task.deadline borrows its typed argument
 and retains the returned alias instead of forcing it into runtime sharing.
-Retained task thunks and scheduler/queue lifetimes remain later preparations;
-these contracts do not establish complete ARC or tracing-free execution.
+PR122 also retains spawn/deadline captures through entry, completion or
+cancellation and protects scope results through joining and unwind. Counted
+task handles own typed cached results; repeated awaits return separate owners.
+Typed channels retain queued elements and transfer them on receive; close
+preserves the queue. These contracts do not establish automatic cycle
+reclamation, complete ARC or tracing-free execution.
 
 ## Compiled closures and synchronous callbacks
 
@@ -314,7 +318,6 @@ prepared rows and acceptance evidence are in history.
 | 75 | Mandatory resource ownership releases File aliases at original frame boundaries even when ordinary reuse/freeing is disabled | Bundle CI; descriptor-bound discard, preserved parameter lifetimes, aliases and omitted-frame-drop controls |
 | 76 | Scoped File callbacks return separately owned result aliases; task/loop results preserve File owners while disabled ordinary freeing still retains child storage | Bundle CI; raw interpreter/scoped/task/loop outputs, lost-owner and storage-free controls |
 | 77 | Bump-heap resource aggregates use logical count metadata and drop typed File children; count metadata releases while physical value storage remains | Bundle CI; required actual WASI fstat, wide counts/overflow and scalar-bit safety; host C is separate evidence |
-| 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Bundle CI; escapes, cancellation and actual host behavior |
 | 78 | Disabled-free aggregates/tasks/channels dispose logical metadata and File children while physical bump storage remains | Bundle CI; O1/O2 omission controls and required actual WASI in both free modes |
 | 79 | Eligible field-only original record holders retain typed children without a parent box; boxed holders retain the parent | Bundle CI; original lifetime, partial-retain unwind and parent-box count control |
 | 80 | File handle, count and inline path share one aligned leaf allocation; checked size includes terminator | Bundle CI; display/I/O agreement, one allocation versus two and constructor rollback |

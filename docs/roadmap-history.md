@@ -17238,3 +17238,30 @@ drafts; every published blob matches its source hash. No new audit or native
 check is inferred from publication. Journal:
 /private/tmp/fwp-roadmap-current-gates-checkpoint.json.
 
+
+## Superseded recovery audit handoff before cache lifetime repair
+
+Durable recovery: `roadmap/handoff-pr123-20261011`, checkpoint
+becc2fae2deceeec90afda6eb526801b64acb92f. It retains all11 docs and thirteen
+merge, recovery, inventory and GC repair drafts under `scripts/roadmap-recovery/`.
+Restore temporary helpers from that branch if /private/tmp is lost; copy the
+inventory pair into repo `scripts/` before its runner execution. Published blobs
+match their recorded source hashes; draft execution and the latest docs audit
+remain pending. Journal: /private/tmp/fwp-active-goal-diagnostics-checkpoint.json.
+This is a recovery branch, with no production PR or native acceptance.
+This checkpoint archives59 verbose preparation records. Audit38134652467 was
+confirmed cancelled while unstarted before the updated runner drafts were
+checkpointed; cancellation is not verification. The updated checkpoint reruns
+the focused docs/ancestry and recovery Python syntax audit.
+Audit38134968638 was also confirmed cancelled while unstarted before saving
+the resumed-goal handoff and additional compiler repairs. The current publication
+journal is /private/tmp/fwp-active-goal-diagnostics-checkpoint.json. Exact-head
+audit38135983611 is queued. The updated recovery adds the compiler
+patch recipe and test draft alongside the eleven previous drafts.
+This focused audit does not replace production gates or execute merge drafts.
+Later source-reviewed documentation corrections remove obsolete prepared labels
+for accepted PR122 CAF, task and channel contracts, and the duplicate45–72
+primitive summary. The actual PR122 gate/merge proofs above remain their
+acceptance evidence. These latest documentation edits await the next audit.
+
+Audit38135983611 was subsequently confirmed cancelled while unstarted before its replacement checkpoint. Cancellation is not verification.

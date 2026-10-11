@@ -6,24 +6,15 @@ Updated 2026-10-11. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 contains detailed checks and superseded instructions. Root docs are authoritative;
 prepared branch docs are historical snapshots.
 
-Durable recovery: `roadmap/handoff-pr123-20261011`, checkpoint
-1105e776e47131432727c6c353ba7f1aee50d4dc. It retains all11 docs and eleven
-merge, recovery, inventory and GC repair drafts under `scripts/roadmap-recovery/`.
-Restore temporary helpers from that branch if /private/tmp is lost; copy the
-inventory pair into repo `scripts/` before its runner execution. Published blobs
-match their recorded source hashes; draft execution and the latest docs audit
-remain pending. Journal: /private/tmp/fwp-runner-finalization-checkpoint.json.
-This is a recovery branch, with no production PR or native acceptance.
-This checkpoint archives59 verbose preparation records. Audit38134652467 was
-confirmed cancelled while unstarted before the updated runner drafts were
-checkpointed; cancellation is not verification. The updated checkpoint reruns
-the focused docs/ancestry and recovery Python syntax audit.
-Audit38134968638 was also confirmed cancelled while unstarted before saving
-the resumed-goal handoff and additional compiler repairs. The current publication
-journal is /private/tmp/fwp-active-goal-diagnostics-checkpoint.json; collect its
-new exact-head audit after publication. The updated recovery adds the compiler
-patch recipe and test draft alongside the eleven previous drafts.
-This focused audit does not replace production gates or execute merge drafts.
+Durable recovery: `roadmap/handoff-pr123-20261011`. The latest completed
+checkpoint is becc2fae2deceeec90afda6eb526801b64acb92f; the current cache-lifetime
+checkpoint publication is recorded in /private/tmp/fwp-cache-lifetime-checkpoint.json.
+It retains all11 authoritative docs and fourteen recovery/inventory/repair drafts
+under `scripts/roadmap-recovery/`. Restore helpers there if /private/tmp is lost;
+copy the inventory pair into repo `scripts/` before running its audit on GitHub.
+Publication verifies source blobs, not draft execution or production acceptance.
+The latest accepted-status corrections and cache recipe await the new exact-head
+recovery audit. Earlier cancelled audit records are archived in history.
 
 The saved goal controller is active again, verified by get_goal on this resumed
 turn. Keep the full objective active: phases2–6 remain unfinished. Queued CI and
@@ -84,8 +75,10 @@ PR122 squash. All42 original commits and probes plus both new repairs remain;
 accepted diagnostics inherit exactly. Eight focused tests and65 library units,
 lint and format pass at identical native source hashes. Publication2.41CPU/
 22.57elapsed and PR creation0.18CPU/4.35elapsed pass. Full CI38128387224 and
-docs38128387231 remain pending. Intel macOS GC stress passes; the other
-jobs are queued. Require all seven passing gates before squash. Latest remote
+docs38128387231 remain pending. Intel macOS GC stress passes. Regular ARM job
+114437427481 started at11:39:35UTC; formatting and lint pass, and its full
+non-GC test gate is running. The other four production jobs and docs are queued.
+Require all seven passing gates before squash. Latest remote
 status: /private/tmp/fwp-roadmap-active-ci-status.json; refresh with the remote
 administration helper /private/tmp/fwp-monitor-roadmap-ci.py.
 Next concrete action: monitor/fix those gates, then squash with the recorded
@@ -263,8 +256,8 @@ No refused compiler/check/preparation ran outside the guard, and limits were
 unchanged. Remote GitHub merge and Git metadata verification continued. Disk
 subsequently returned above64GiB without project cleanup, enabling guarded
 main update and final54–73 rebase. Disk again fell below reserve after PR123
-creation; stop local workloads. At 11:23 UTC, available space is approximately
-37.3 GiB. No local build, test or bundle preparation is authorized while the
+creation; stop local workloads. At 11:36 UTC, available space is approximately
+57.7 GiB. No local build, test or bundle preparation is authorized while the
 guard refuses the workload. Read-only source review and remote administration
 continue.
 The current remote preparation drivercfcb70d16044915206c2e681a72618021ba0ea97,
@@ -304,9 +297,9 @@ the future workflow; copying the whole draft would lose mandatory WASI.
 PR123's frozen head remains unchanged. Current gates are required as recorded;
 the later harness repair does not count as passed support.
 Published independent validation branch: ownership-evidence-gc-build-diagnostics,
-head49d13a898e5dc7abac307f53848795a4a89b8877 on PR123 native source.
-CI38135741797 is queued. Superseded38132388036 was confirmed cancelled
-while unstarted, before adding the boy scout compiler-diagnostic repair.
+heada44c3da1aa344266262fc99471b331b053db371b on PR123 native source.
+CI38136959809 is queued. Superseded38132388036 and38135741797 were confirmed
+cancelled while unstarted before adding the compiler and cache repairs.
 The replacement runs formatting, focused lint, a real failing-CC
 control and a positive native GC
 execution, then requires exact Rust test exit101 and the specific diagnostic
@@ -322,10 +315,22 @@ errors in stdout as well as stderr. Two new compiler_diagnostics tests cover
 stdout-only and mixed errors, status37, signal15, TLS hints and successful
 native/raw-interpreter execution. A deliberately discarded stdout control must
 fail with exact Rust exit101 and its specific diagnostic. These tests have not
-run yet. Journal: /private/tmp/fwp-combined-compiler-diagnostics-publication.json.
+run yet. Journals: /private/tmp/fwp-combined-compiler-diagnostics-publication.json
+and /private/tmp/fwp-cache-compiler-diagnostics-publication.json.
+The AOT cache source also allowed pruning to delete the executable returned for
+execution: zero limits removed all entries, and a future-dated older entry could
+make the just-built file sort first. The candidate reserves one entry for the
+current executable, prunes only older entries and applies reduced limits on cache
+hits. Two cache_lifetime tests cover zero/one limits, future timestamps, native
+execution against a raw interpreter and limit reduction on a hit. An omitted
+current-file protection control must fail with exact Rust exit101 and its
+specific eviction diagnostic. No cache tests have run yet.
 After focused evidence passes, apply the exact compiler-diagnostics-patch.json
 transforms to the final resource bundle; do not copy older whole cgen/ffi files
-over its85 prepared commits. Include tests/compiler_diagnostics.rs as well.
+over its85 prepared commits. The recipe now includes src/aot.rs; include both
+tests/compiler_diagnostics.rs and tests/cache_lifetime.rs. The finalizer verifies
+that each recipe reproduces the exact tested/formatted evidence source before
+applying it to the later bundle. Formatting repairs must update the recipes too.
 For the original85-commit preparation, preserve accepted base CI plus the
 intentional mandatory WASI requirement. After the GC repair is verified and
 integrated, additionally allow its explicit GC failure-artifact steps. Preserve
@@ -339,8 +344,9 @@ all seven original PR123 gates completed before squash, validates the raw
 one-line message/parent/tree, restores all11 authoritative recovery docs and
 records acceptance in a runner worktree. It then rebases the verified preparation
 onto the actual squash, preserves its complete tree and original subjects,
-and adds the tested GC harness/artifact steps, compiler diagnostic transforms
-and tests, plus fresh accepted docs.
+and adds the tested GC harness/artifact steps, compiler/cache transforms and
+tests, plus fresh accepted docs. Its candidate reference documents the minimum
+one-entry cache and current-executable protection only alongside that repair.
 An exact old-head push lease protects concurrent edits. This is an unexecuted
 draft, with final documentation audit and all production gates still required.
 Its workflow bindings must follow any repaired evidence heads. Local main
