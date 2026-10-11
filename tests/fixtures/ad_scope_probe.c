@@ -80,6 +80,13 @@ int main(void) {
         }
     }
     fwp_trap_recover=0;fwp_trap_jb=0;
+    memset(scope_tracked,0,sizeof(scope_tracked));
+    fwp_fns=fwp_fn_table;
+    scope_base=fwp_p_ad_tape(1);ARR(scope_outputs)->d[0]=scope_base;
+    V owned=AD_BACKWARD(scope_base,scope_outputs,scope_seeds);
+    if (*fwp_rc_slot(owned)!=1 || ARR(owned)->len!=1 || fwp_f64(ARR(owned)->d[0])!=1) return 76;
+    fwp_rc_free_obj(owned);
+    if (*fwp_rc_slot(owned)!=0 || (fwp_reuse_verify && ARR(owned)->len!=0)) return 77;
     printf("scoped autodiff releases callback tapes; tape=%zu align=%zu scope=%zu cleanup=%zu\n",
            sizeof(fwp_tape),_Alignof(fwp_tape),sizeof(fwp_tape_scope),sizeof(fwp_cleanup));
     return 0;

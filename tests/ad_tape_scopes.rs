@@ -21,10 +21,15 @@ const PROBE: &str=include_str!("fixtures/ad_scope_probe.c");
 fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
     let scratch=Scratch::new("unwind");
     let input=scratch.0.join("runtime.fwp");let cfile=scratch.0.join("runtime.c");
-    std::fs::write(&input,"main = echo \"runtime\"\n").unwrap();
+    std::fs::write(&input,"finish : I64 -> Array[F64]\nfinish = make { 0 = id, 1 = singleton | array.from-list, 2 = const [1.0] | array.from-list } | uncurry3 ad.backward\nmain = 1 | ad.tape | finish | echo\n").unwrap();
     checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT")
         .arg("build").arg(&input).args(["--emit-c","-o"]).arg(&cfile));
     let original=std::fs::read_to_string(cfile).unwrap();
+    let call="fwp_p_ad_backward(l0, l1, l2)";
+    assert_eq!(original.matches(call).count(),1);
+    let call_start=original.find(call).unwrap();
+    let backward_worker=format!("f{}",original[..call_start].rsplit("static V f").next().unwrap().split('(').next().unwrap());
+    let probe=PROBE.replace("AD_BACKWARD",&backward_worker);
     let start=original.find("/* ------------------------------------------------------------------ tapes */").unwrap();
     let end=original[start..].find("/* ---------------------------------------------------------------- kernels */").unwrap()+start;
     let declarations="static void scope_probe_free(void *);\nstatic void *scope_probe_calloc(size_t,size_t);\n";
@@ -36,10 +41,13 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
     assert_eq!(runtime.matches(link).count(),1);assert_eq!(runtime.matches(unlink).count(),1);
     let unlinked=runtime.replace(link,"");
     let unconsumed=runtime.replace(unlink,"    fwp_tape tp = *t;");
+    let fresh="fwp_rc_fresh(fwp_p_ad_backward(l0, l1, l2))";
+    assert_eq!(runtime.matches(fresh).count(),1);
+    let uncounted=runtime.replace(fresh,call);
     for opt in ["-O1","-O2"] {
-        for (label,source,expected) in [("scoped",&runtime,0),("unlinked",&unlinked,61),("unconsumed",&unconsumed,62)] {
+        for (label,source,expected) in [("scoped",&runtime,0),("unlinked",&unlinked,61),("unconsumed",&unconsumed,62),("uncounted",&uncounted,76)] {
             let executable=scratch.0.join(format!("{label}{}",&opt[1..]));
-            let code=format!("{source}\n{PROBE}");
+            let code=format!("{source}\n{probe}");
             fwp::cgen::compile_c(&code,&executable,opt).unwrap();
             for reuse in ["0","1"] {
                 let output=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1")

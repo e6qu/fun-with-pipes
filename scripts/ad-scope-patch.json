@@ -33,6 +33,10 @@
   ],
   "src/ownership.rs": [
     {
+      "old": "        \"task.spawn\" => (",
+      "new": "        \"ad.tape\" | \"ad.push\" => (&[B], ResultOwnership::Shared, None, &[]),\n        \"ad.backward\" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),\n        \"task.spawn\" => ("
+    },
+    {
       "old": "        \"task.scope\" => (",
       "new": "        \"task.scope\" | \"ad.scope\" => ("
     },

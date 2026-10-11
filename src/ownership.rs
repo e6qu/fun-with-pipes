@@ -142,6 +142,8 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         }
         "ptr.at" | "ptr.write" => (&[B, B], R, None, &[]),
         "ptr.read-string" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "ad.tape" | "ad.push" => (&[B], ResultOwnership::Shared, None, &[]),
+        "ad.backward" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "task.spawn" => (
             &[B],
             ResultOwnership::OwnedTask,
