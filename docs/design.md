@@ -153,9 +153,11 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   compiler solves `Eq`, `Ord`, `Hash`, `Display`, `Dup`, `Encode` and
   `Decode` structurally. Integer and float literals are classes that fall
   back to `FromInt` and `FromFloat`, so `Dual[F64]` accepts literals.
-- Every arrow carries an effect row. A closed row in a signature is opened
-  when instantiated, which gives subeffecting. Handlers (`attempt`, `try`,
-  `run-state`) remove labels by unification.
+- Every arrow carries an effect row. Application opens only the current
+  call row for subeffecting. The prepared inference repair preserves returned
+  function rows during signature instantiation; the simple closure State
+  regression and existing type snapshots must pass before acceptance.
+  Handlers (`attempt`, `try`, `run-state`) remove labels by unification.
 - Only the last arrow of a binding may have effects, so effects happen
   exactly when a call is saturated. Top-level values that are not
   functions must be pure (`main` and tests aside).
@@ -258,7 +260,10 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
 - Native State uses per-task scanned word storage. Prepared cleanup clears
   inactive slots on return, error recovery and task exit, preserving active
   suspended values and live aliases. This adds no surface syntax or counted
-  State contract; typed retention and teardown still require phase2 evidence.
+  State contract. The separately verified typed State candidate retains values
+  with stack ownership records and typed duplicate/drop functions, saves scope
+  heads across task switches and releases them on failure/cancellation. Its
+  aggregate/escaping-closure cases and final production gates remain pending.
 - A type descriptor per monomorphic type drives equality, ordering,
   hashing, `Display`, text parsing, typed JSON and the binary protocol in
   C. For JSON, nominal records also carry their declaration order and the
