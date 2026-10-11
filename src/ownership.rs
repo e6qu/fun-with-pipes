@@ -154,6 +154,14 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(1)),
             &[0, 1, 2],
         ),
+        // Serializers and codecs copy their borrowed inputs into fresh leaves.
+        "json.encode" | "json.write" | "url.encode" | "int.to-hex" | "cli.help"
+        | "zlib.gzip" | "zlib.gzip-chunk" | "zlib.deflate" | "ws.accept" | "ws.deflate" => {
+            (&[B], ResultOwnership::FreshLeaf, None, &[])
+        }
+        "ws.key" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "zlib.gzip-end" | "ws.close-payload" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "ws.frame" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         // Raw address words are not managed owners. String conversion copies;
         // only read-string returns a fresh managed leaf.
         "mem.alloc" | "mem.free" | "mem.string" | "ptr.cast" | "ptr.address" | "ptr.read" => {
