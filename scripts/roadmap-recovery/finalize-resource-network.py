@@ -311,7 +311,7 @@ for name in ['tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']:
 # Add owned Cartesian-product callbacks without replacing later native files.
 ap_patch = blob(AP_HEAD, 'scripts/list-ap-ownership-patch.json')
 ap_edits = json.loads(ap_patch)
-assert set(ap_edits) == {'src/cgen.rs', 'src/ownership.rs', 'runtime/fwp_rt_prims.c'}
+assert set(ap_edits) == {'src/cgen.rs', 'src/ownership.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_gc.c'}
 for name, edits in ap_edits.items():
     evidence_source = blob(TESTED, name).decode()
     source = (wt / name).read_text()
@@ -321,7 +321,7 @@ for name, edits in ap_edits.items():
         source = source.replace(edit['old'], edit['new'])
     assert evidence_source.encode() == blob(AP_HEAD, name), name
     (wt / name).write_text(source)
-for name in ['tests/list_applicative_ownership.rs', 'tests/fixtures/list_ap_probe.c']:
+for name in ['tests/list_applicative_ownership.rs', 'tests/fixtures/list_ap_probe.c', 'tests/fixtures/closure_drop_probe.c']:
     (wt / name).parent.mkdir(parents=True, exist_ok=True)
     (wt / name).write_bytes(blob(AP_HEAD, name))
 repair_files = ['tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lifetime.rs',
@@ -329,7 +329,7 @@ repair_files = ['tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lif
                 'src/numerics.rs', 'runtime/fwp_rt_kernel.c', 'tests/ad_tape_ownership.rs',
                 'tests/fixtures/ad_unwind_probe.c', 'src/interp.rs', 'src/ownership.rs',
                 'lib/autodiff.fwp', 'tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']
-repair_files += ['runtime/fwp_rt_prims.c', 'tests/list_applicative_ownership.rs', 'tests/fixtures/list_ap_probe.c']
+repair_files += ['runtime/fwp_rt_prims.c', 'runtime/fwp_rt_gc.c', 'tests/list_applicative_ownership.rs', 'tests/fixtures/list_ap_probe.c', 'tests/fixtures/closure_drop_probe.c']
 # Runner formatting makes the final candidate reviewable; full exact-head CI
 # verifies these candidate bytes rather than transferring older evidence gates.
 subprocess.run(['rustfmt', *[name for name in repair_files if name.endswith('.rs')]],

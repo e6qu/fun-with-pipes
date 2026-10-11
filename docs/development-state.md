@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-formatted-diagnostics-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-closure-cleanup-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint4282115f61132e4462a6fb8616c511dc36b8eb07 has
-exact-head audit38149016348 queued. Earlier checkpoints and cancelled audits
+Current checkpoint d4411019cdde0dfd41c17ad923d85ece6a6d87d1 has
+exact-head audit38151272665 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -345,15 +345,15 @@ counts and phase2 exit remain unverified until merged-source runner evidence.
 ## List applicative and flat-map ownership candidate
 
 Branch ownership-evidence-list-applicative at
-05556bfb3d7f7e2299cdfcad84d220d5455f75f2 runs38148442793, queued on
+88b5e20a497e6482ea7918d26a961531588499b0 runs38152053646, queued on
 Linux and both macOS architectures. Its exact baseline is PR123 head9e7d0b24.
-The three-source recipe adds borrowed list.ap inputs, counted output spines
+The recipe adds borrowed list.ap inputs, counted output spines
 and owned callback results. Two borrowed scratch arrays and the completed result
 prefix have separate unwind owners; partial list construction transfers each
 result exactly once. Callback order remains function-major/input-minor.
 The Cartesian-product size is checked before allocating its output scratch.
 
-Two regression tests cover real collection, GC/reuse verification, raw/native
+The list regression tests cover real collection, GC/reuse verification, raw/native
 alias and trap-order agreement, empty inputs/functions, shared function
 captures, callback failure, actual task cancellation, partial-spine allocation
 failure and size boundaries without dereferencing fabricated storage. Three
@@ -399,8 +399,27 @@ Build targets stay outside uploaded artifacts, on GitHub runners only.
 The preceding6840f7e0/run38147216423 was cancelled while all three jobs were
 queued before adding this measurement stage. Original controls remain intact.
 
+Boy scout source review found a recoverable closure-destructor bug: a capture
+trap or spill-buffer OOM leaves the per-thread work context pointing into the
+discarded C frame. The repair registers a stack cleanup that clears the context
+and frees its spill buffer on normal return and recovered trap. It preserves
+PR123's context getter/setter and native-library pthread-key unload behavior.
+The fourth recipe source is runtime/fwp_rt_gc.c; copying local main's older
+whole file would lose those library changes and is prohibited.
+A third regression test forces normal queue spilling, a capture-destructor trap
+and failure of the second actual spill allocation, then checks a subsequent
+drop. A no-op unwind registration must exit94 before dereferencing dead storage.
+O1/O2 and both reuse settings retain C, binaries and statuses and require actual
+collection. The controls are prepared, not executed. Failed destruction is not
+retried; pending unreachable values retain the tracing fallback, so this is no
+claim of complete deterministic cleanup after arbitrary destructor failure.
+Previous05556bfb/run38148442793 was cancelled with all three jobs unstarted.
+Receipt: /private/tmp/fwp-closure-drop-list-publication.json. Publication verifies
+the exact-base function transform and source bytes; runner checks remain pending.
+
 Drafts: /private/tmp/fwp-list-ap-ownership-patch.json, fwp-list-ap-test.rs,
-fwp-list-ap-probe.c, fwp-list-ap-evidence.yml and fwp-list-ap-publication.json.
+fwp-list-ap-probe.c, fwp-closure-drop-probe.c, fwp-list-ap-evidence.yml and
+fwp-closure-drop-list-publication.json.
 After all three focused jobs pass, the finalizer applies the exact tested recipe
 to the later resource bundle, preserving its source instead of copying older
 whole files. Full final-head production gates remain mandatory. The finite exit

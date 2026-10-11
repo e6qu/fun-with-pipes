@@ -47,8 +47,9 @@ allocations before counting is needed.
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
 | Arrays, maps, sets | Counted where supported; unique updates in place | More precise borrowing/results, typed storage and views |
 | Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
-| Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, temporary contexts and exceptional cleanup |
-| Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
+| Escaping closures | Compiled dynamic calls own heap closures and typed captures; selected synchronous callbacks borrow | Unmodeled retained callbacks, temporary contexts and exceptional cleanup |
+| Tasks and channels | Counted handles, retained task captures and typed channel queues | Broader runtime boundaries and explicit cycle lifetimes |
+| Networking and external callbacks | Selected C resources own storage; unmodeled value boundaries share | Resource bundle acceptance, retained value ownership and teardown |
 | AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
 
 Native executables still need a generational conservative collector for shared

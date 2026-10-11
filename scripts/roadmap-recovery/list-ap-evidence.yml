@@ -62,7 +62,7 @@ jobs:
         run: |
           cargo test --test list_applicative_ownership -- --nocapture
           git diff --exit-code
-          shasum -a 256 src/cgen.rs src/ownership.rs runtime/fwp_rt_prims.c tests/list_applicative_ownership.rs tests/fixtures/list_ap_probe.c target/debug/fwp > "$FWP_LIST_AP_ARTIFACTS/source-binary-hashes.txt"
+          shasum -a 256 src/cgen.rs src/ownership.rs runtime/fwp_rt_prims.c runtime/fwp_rt_gc.c tests/list_applicative_ownership.rs tests/fixtures/list_ap_probe.c tests/fixtures/closure_drop_probe.c target/debug/fwp > "$FWP_LIST_AP_ARTIFACTS/source-binary-hashes.txt"
       - name: Equivalent callback pipeline allocations and counted reclamation
         run: python3 scripts/measure-list-callback-allocations.py
       - uses: actions/upload-artifact@v4

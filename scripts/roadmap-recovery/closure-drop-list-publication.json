@@ -1,0 +1,15 @@
+{
+  "head": "88b5e20a497e6482ea7918d26a961531588499b0",
+  "previous": "05556bfb3d7f7e2299cdfcad84d220d5455f75f2",
+  "base": "9e7d0b24610524cf54125c44b47ee07185c0b7c3",
+  "branch": "ownership-evidence-list-applicative",
+  "supersededRun": 38148442793,
+  "sourceHashes": {
+    "runtime/fwp_rt_gc.c": "357c52f473830b9ce6ce111d61798b0707fc0779be9bbfcc6c8bdf49738853f4",
+    "tests/list_applicative_ownership.rs": "9d7548ce1c864f3cb37763b59d5cc75567248716eaecdff5f685788febd13d1c",
+    "tests/fixtures/closure_drop_probe.c": "0bdef6322d833864273076fa00a91328fc9217c942a46b25ee7e8d3f0de9a835",
+    "scripts/list-ap-ownership-patch.json": "50cc4853560cf882a5d4a4a60bea096054fadaf658f35ff265124534fe572f51",
+    ".github/workflows/list-applicative-evidence.yml": "8a2d2cb203a2af786fd692fba927d4f5a699a8cebd5e383f71c42da46cc974d1"
+  },
+  "stage": "Published closure cleanup repair and controls; native checks and allocation parity pending"
+}
