@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-fixture-repair-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-pr123-acceptance-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint1992c95d376c343b00a6ca662ac5f9b5f1c28888 has
-exact-head audit38156304805 queued. Earlier checkpoints and cancelled audits
+Current checkpoint6a2f51c33d5a355291f7e7a3ee258f733928eb68 has
+exact-head audit38160936480 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -52,55 +52,41 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is `68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4` (PR #122). Accepted frozen head
-`31d038c4ea78cbea81e1001f1662ef7bb771bbfa` passes all six jobs in CI38123585926 and
-roadmap_docs38123585877 before match-head squash at 2026-10-11T09:15:55Z.
-Subject `Own typed compiler values and task and channel lifetimes` has 56 characters, one line,
-empty body and no trailers or attribution. One parent `0f32e7560398c048478c4186c63d90c32e7c1727`
-and complete tree `ccb67ec38e9ee3adfa222dcd1979374da688a9d7` match the tested head. All11 live docs
-were hashed in /private/tmp/fwp-main-docs-pre122 and restored byte-for-byte.
-Protected main update0.05CPU/0.26elapsed and acceptance record0.00CPU/0.14elapsed
-pass; docs audit44/106/59 passes0.73CPU/5.16elapsed. Actual-main docs38127751825
-passes. Duplicate production38127751789 has the identical tested tree and
-was cancelled after strict gate/tree proof checks,0.15CPU/3.18elapsed.
-Queue33 and35–53 are accepted; queue34 is a verified duplicate. Bundle44–53
-adds direct typed variant alias transfer, nominal match/field cleanup context,
-CAF cache/evaluation ownership, retained task captures, deadlines/scopes,
-counted task handles and typed channel queues. Original regression and negative
-controls remain unchanged, including GC/reuse and raw interpreter agreement.
-Channel close preserves queued values; automatic unreachable-cycle reclamation
-remains unproved. Phase2 is incomplete; phases3–6 are pending.
+Main is `b4285fc177b3ae7afaf195e5ebd7115cc77b815c` (PR #123). Frozen head `9e7d0b24610524cf54125c44b47ee07185c0b7c3`
+passes all six exact-head jobs in CI38138731040 and roadmap_docs38138731036
+before match-head squash at 2026-10-11T17:47:22Z. Subject `Own library file and raw-memory resource lifetimes`
+has 50 characters, one line, empty body and no trailers or
+attribution. One parent `68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4` and complete tree `c94ed7f1bbc4e0c1f8f74b2fcbbbbe70e1359b0c` match
+the tested head. The raw signed payload is retained in
+/private/tmp/fwp-pr123-signed-payload.txt. All11 live docs were backed up before
+acceptance edits in /private/tmp/fwp-main-docs-remote-pre123. Local main remains
+`68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4` until the guarded fast-forward has at least64GiB free disk; no local
+checkout update or full check ran. Actual-main documentation status must still be
+collected; do not infer it from the PR gate.
 
-[PR123](https://github.com/e6qu/fun-with-pipes/pull/123) is the sole open
-production PR, bundling library/OpenCL/TLS/file/resource items54–73 plus the
-pointer and raw-memory repairs. Current head
-9e7d0b24610524cf54125c44b47ee07185c0b7c3 adds only docs/stdlib.md to b0ae:
-the generated pointer-offset comment now matches lib/ffi.fwp. Required ARM
-macOS CI found the stale comment; fix receipt is
-/private/tmp/fwp-pr123-stdlib-repair.json and its completed ARM job log is
-/private/tmp/fwp-pr123-arm-regular-failed.log. Native source remainsfd930e541db6;
-all original probes and focused checks remain in history.
-Current CI38138731040 has passed Linux, benchmarks, regular ARM macOS and both
-GC stress jobs. Regular Intel macOS is still running; docs38138731036 passed.
-These current-head results are not merge acceptance. Require all six jobs and
-roadmap_docs on this exact new head before squash; earlier-head passes do not
-transfer. The remaining superseded CI38128387224 jobs were cancelled to save
-runner time. Current acceptance helpers use the new head and run identities.
-Next concrete action: monitor and fix the new gates, then squash with the
-recorded one-line subject and empty body. Prepare74–112 concurrently on GitHub;
-open its sole production PR after123 merges. Refresh the exact-head remote
-status using /private/tmp/fwp-monitor-roadmap-ci.py. Independent evidence never
-replaces final production gates. Phases2–6 remain incomplete.
+Queue33 and35–73 are accepted; queue34 is a verified duplicate. PR123 accepts
+all42 original library/OpenCL/TLS/file/resource commits and both pointer and
+raw-memory repairs. Raw pointer offsets wrap at the native pointer width;
+ordinary arithmetic remains checked. Nine raw-memory primitive contracts
+borrow their arguments; ptr.read-string returns a counted independent managed
+copy. C buffers still require mem.free. Fake OpenCL coverage does not prove
+GPU hardware support, and F16/128-bit/WASI pointer widths remain unverified.
 
-Prepared acceptance helpers (not executed): /private/tmp/fwp-merge-pr123.py
-requires every exact-head gate; /private/tmp/fwp-protect-main-after123.py checks
-the raw squash message, parent/tree parity and protects all11 docs before FF;
-/private/tmp/fwp-record-pr123-acceptance.py removes20 accepted live rows and
-updates the next bundle. The acceptance update is a draft, not a passed check. Its next-action text now
-uses the corrected82c7 preparation driver and38140923130, avoiding the failed
-App-token publication driver; runner execution remains pending.
-Run local updates and audits through the guard when resource limits permit;
-move final bundle rebasing to GitHub if the reserve remains below64GiB.
+Next delivery: related resource/network items74–112 plus the compiler/cache,
+autodiff, list and State repairs below. Preparation38140923130 passed at
+driver82c7bc7509c04b9e94004c06b02d83d665539ac6; its85-commit history is published
+at066b497040ff7b7f59fec6ff3337c63428f83d77. Once the remaining focused gates
+pass, finalize on this actual squash with all11 fresh docs, preserve original
+tests/subjects and mandatory WASI, then publish the sole next production PR.
+Require six
+exact-head production jobs and roadmap_docs, then complete the finite phase2
+exit review. Phases2–6 remain incomplete.
+
+Actual-main docs38161107226 is queued. Duplicate full CI38161107239 was cancelled
+while all six jobs were queued, after proving complete-tree identity with the
+accepted pre-merge head and all seven passing gates before squash. This is
+duplicate-run avoidance, not a passing main gate or a replacement for the next
+PR's exact-head matrix. Proof: /private/tmp/fwp-main123-duplicate-ci-proof.json.
 
 ## Evidence and preservation requirements
 
@@ -121,11 +107,6 @@ multi-commit repairs. Rows77–78 require actual mandatory WASI on Linux in both
 free modes. OpenCL57–58 fake APIs do not establish hardware coverage. Recheck
 the finite primitive inventory against actual merged source at phase2 exit.
 
-PR123 branch: `ownership-library-resource-bundle`; worktree:
-/private/tmp/fwp-library-resource-bundle-worktree. The final rebase preserves
-every tested native byte. Publication journal:
-/private/tmp/fwp-library-resource-bundle-publication.json.
-
 ## Remaining ownership deliveries
 
 Original focused checks are preserved in
@@ -137,26 +118,6 @@ preparations need final squash rebases and all seven exact-head production gates
 
 | Row / branch | Current head | Actual current base | Delivery status |
 |---|---|---|---|
-| 54 ownership-library-results | 46afd27c986c | b304e91f628c | PR123 exact-head gates pending |
-| 55 ownership-library-inputs | 96ee4fd963e3 | 46afd27c986c | PR123 exact-head gates pending |
-| 56 ownership-library-unload | 6c367aa9a921 | 96ee4fd963e3 | PR123 exact-head gates pending |
-| 57 ownership-opencl-lifetime | 3dd39a69a430 | 6c367aa9a921 | PR123 exact-head gates pending |
-| 58 ownership-interpreter-opencl | 4119be1cdaf9 | 3dd39a69a430 | PR123 exact-head gates pending |
-| 59 ownership-tls-listeners | f5e2a298537d | 4119be1cdaf9 | PR123 exact-head gates pending |
-| 60 ownership-library-resources | 3eb64f54869f | f5e2a298537d | PR123 exact-head gates pending |
-| 61 ownership-grpc-server-cleanup | ca75ca461682 | 3eb64f54869f | PR123 exact-head gates pending |
-| 62 ownership-tls-cache-failures | 0b51abc49371 | ca75ca461682 | PR123 exact-head gates pending |
-| 63 ownership-tls-wire-preparation | 2c2c562401ab | 0b51abc49371 | PR123 exact-head gates pending |
-| 64 ownership-connect-cancellation | d7641a1ab055 | 2c2c562401ab | PR123 exact-head gates pending |
-| 65 ownership-unboxed-worker-locals | e217ad8ce0d9 | d7641a1ab055 | PR123 exact-head gates pending |
-| 66 ownership-tls-peer-subject | 7250692d5758 | e217ad8ce0d9 | PR123 exact-head gates pending |
-| 67 ownership-tls-alpn-roots | 6d80e63524c2 | 7250692d5758 | PR123 exact-head gates pending |
-| 68 ownership-ci-probe-repairs | c0cdb26eb99b | 6d80e63524c2 | PR123 exact-head gates pending |
-| 69 ownership-nested-loop-boxing | 7a68a54d2660 | c0cdb26eb99b | PR123 exact-head gates pending |
-| 70 ownership-file-construction | ab3a93780dc3 | 7a68a54d2660 | PR123 exact-head gates pending |
-| 71 ownership-file-write-visibility | 702cd9b0a69a | ab3a93780dc3 | PR123 exact-head gates pending |
-| 72 ownership-file-io-errors | eee4807a3954 | 702cd9b0a69a | PR123 exact-head gates pending |
-| 73 ownership-resource-frames | 3dba256655a3 | eee4807a3954 | PR123 exact-head gates pending |
 | 74 ownership-file-runtime-owners | 8d5cb3c4e3e4 | 3dba256655a3 | 39-item runner rebase and full gates pending |
 | 75 ownership-file-discard | 423a7ddcc760 | 8d5cb3c4e3e4 | 39-item runner rebase and full gates pending |
 | 76 ownership-file-runtime-boundaries | 603bb0b914db | 423a7ddcc760 | 39-item runner rebase and full gates pending |
@@ -199,16 +160,12 @@ preparations need final squash rebases and all seven exact-head production gates
 
 ## Finish phase2, then continue the plan
 
-A separate FFI boundary preparation, branch `ownership-ffi-pointer-arithmetic`,
-head227f15356da8f9a5c7675eea9fda074a6be8857a passes Linux/ARM/Intel
-CI38123787995. Its repair is included in PR123, pending current production gates.
-The proof is /private/tmp/fwp-pointer-boundary-passing-proof.json; artifacts are
-/private/tmp/fwp-pointer-boundary-227f153-artifacts. Unsigned native pointer-width
-offsets wrap; ordinary checked arithmetic is unchanged. All84 specified address
-boundaries and12 numeric pointer types preserve raw/native behavior; twelve
-sanitizer binaries retain exact success0/overflow1 controls. Boundary addresses
-are never dereferenced. F16/128-bit/WASI widths and unsafe-buffer lifetimes remain
-separate. Full preparation chronology is retained in history.
+The pointer-width and raw-memory contracts are accepted in PR123.
+Independent Linux/ARM/Intel evidence remains in
+/private/tmp/fwp-pointer-boundary-passing-proof.json and its retained artifacts.
+The twelve sanitizer binaries preserve exact success0/overflow1 statuses;
+F16/128-bit, WASI pointer widths and automatic raw-buffer lifetimes remain
+separate requirements. Production acceptance is recorded above.
 
 After queue112 is delivered, recheck the finite [ownership exit gates](ownership.md#phase-2-exit-gates)
 and [primitive contracts](primitive-ownership.md) against merged source. The
@@ -312,8 +269,8 @@ errors that merely quote the fixture's message. It retains every semantic case,
 source/binary/status artifacts and both reuse modes. Native scope source is
 unchanged, verified by Git blob identity in
 /private/tmp/fwp-ad-scope-trap-publication.json. Failed log:
-/private/tmp/fwp-ad-scope-475-failed.log. Replacement ARM scope job passed;
-Linux and Intel jobs remain queued.
+/private/tmp/fwp-ad-scope-475-failed.log. All three replacement scope jobs passed
+in38159488927. Final bundle validation and merged acceptance remain required.
 Before accepting the scope, measure equivalent
 steady-state gradient allocation counts/bytes against602e0766 at O1/O2 on the
 runners. A stack owner does not establish that its curried callback/return
@@ -332,8 +289,8 @@ requested bytes, external live/peak bytes, collected live/peak bytes, collection
 tape size/alignment, compiler arguments, hardware and source/binary hashes.
 Acceptance requires no additional steady-state managed calls/bytes and identical
 external calls/bytes, with external live bytes equal to the persistent registry
-slot size after all tape buffers are released. ARM comparison passed; Linux and
-Intel remain queued. No speed or no-tracing
+slot size after all tape buffers are released. ARM and Intel comparisons passed;
+Linux remains queued. No speed or no-tracing
 claim. Superseded50036dc3/run38144127914 was cancelled while entirely queued.
 The intermediatea2513d60/run38144375898 was also cancelled while entirely
 queued before fixing entry retention and checking external buffer reclamation.
@@ -377,8 +334,10 @@ omission controls require exact native exits: missing result-prefix owner81,
 missing counted spine86 and missing product-size guard88. The probe explicitly
 requires real FWP_UNWIND=1 from a task-yield fixture. It retains source, binaries,
 statuses, compiler arguments, hardware and source/binary hashes.
-No compile or test has run yet; these are candidate contracts, not accepted
-reclamation or tracing-free support. Superseded runs are recorded in history.
+The combined replacement ARM job passed all five tests and its allocation
+comparison. Linux and Intel remain queued; these are candidate contracts,
+with final bundle acceptance and tracing-free support unproved. Superseded runs
+are recorded in history.
 
 The combined candidate also owns list.flat-map callback chunks before copying
 any output spine, preserving callback-before-copy evaluation order. Copied
@@ -422,7 +381,8 @@ A third regression test forces normal queue spilling, a capture-destructor trap
 and failure of the second actual spill allocation, then checks a subsequent
 drop. A no-op unwind registration must exit94 before dereferencing dead storage.
 O1/O2 and both reuse settings retain C, binaries and statuses and require actual
-collection. The controls are prepared, not executed. Failed destruction is not
+collection. Current ARM controls passed; Linux/Intel and final bundle gates
+remain pending. Failed destruction is not
 retried; pending unreachable values retain the tracing fallback, so this is no
 claim of complete deterministic cleanup after arbitrary destructor failure.
 Receipt: /private/tmp/fwp-closure-drop-list-publication.json. Publication verifies
@@ -440,7 +400,8 @@ and cancelled C callbacks on the real scheduler. Three omitted stores require
 exact native exits104/105/112 before reading discarded values. Raw/native Pipe
 controls cover retained aliases, nested states, inner/outer errors and task
 cancellation. O1/O2 with both reuse settings require GC stress/verification and
-retain source, binaries and statuses. These controls have not executed.
+retain source, binaries and statuses. Current ARM controls passed; the other
+platforms and final bundle remain pending.
 Receipt: /private/tmp/fwp-state-slot-list-publication.json. The seven-source
 recipe is reproduced from PR123's exact baseline; bounded replacement counts
 also preserve prepared112's additional File handler. Finalization includes the
@@ -569,17 +530,23 @@ or executed; run focused checks on GitHub and include it in the next bundle,
 preserving every original regression. /private/tmp/fwp-gc-diagnostics-ci-draft.yml
 adds failure artifacts to both macOS GC jobs. Apply only its added GC steps to
 the future workflow; copying the whole draft would lose mandatory WASI.
-PR123's native source remains unchanged by this later harness draft. Its new
-documentation-repair head requires all gates as recorded;
-the later harness repair does not count as passed support.
+PR123's accepted native source remains unchanged by this later harness repair,
+which still requires its focused and final production gates.
 Published independent validation branch: ownership-evidence-gc-build-diagnostics,
-heada27f8e5f78ab12e397119b76049aa6eefbf88157 on PR123 native source.
-CI38151169253 is queued. Previous38136959809 at a44c3da failed formatting
+head6f2ff860197831b990c2c918e25aa29871488ea3 on PR123 native source.
+Replacement38161909445 is queued. Previous38136959809 at a44c3da failed formatting
 before lint or native regression execution. Its 95KiB artifact is retained at
 /private/tmp/fwp-gc-build-diagnostics-a44-artifacts. The repair copies all six
 runner-formatted Rust files and updates the compiler replay recipe to reproduce
-those exact bytes from b0ae. Publication/source parity is verified; replacement
-formatting, lint, positive tests and omission controls remain pending. Receipt:
+those exact bytes from b0ae. Publication/source parity is verified. That
+a27/run38151169253 passed formatting, lint and the GC failing-CC control, then
+both compiler diagnostics tests failed parsing the foreign fixture's invalid
+`-7:I32` literal. The repair uses `-7`; its c-abs signature infers I32, as in the
+existing FFI suite. Only that fixture changed; compiler/cache/runtime source
+and every positive, signal and omission control remain intact. Failed log:
+/private/tmp/fwp-gc-a27-failed.log; current receipt:
+/private/tmp/fwp-foreign-compiler-fixture-publication.json. Replacement positive
+and omission gates remain pending. Earlier formatting receipt:
 /private/tmp/fwp-formatted-compiler-diagnostics-publication.json. No local compiler
 workload ran; free disk remains below the required64GiB reserve.
 Superseded38132388036 and38135741797 were confirmed
@@ -681,7 +648,7 @@ Protect all11 docs with a fresh hashed snapshot before each main fast-forward:
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md, docs/concurrency.md and docs/numerics.md. Preserve other tracked
-user changes too. Latest snapshot: /private/tmp/fwp-main-docs-pre122, restored
+user changes too. Latest snapshot: /private/tmp/fwp-main-docs-pre123, restored
 byte-for-byte. Actual bases, immutable preparation tags and retained revision
 tags are the recovery record if temporary helpers disappear. The shared audit
 checks all tracked links, whole commit messages, immutable ancestry and live

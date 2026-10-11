@@ -49,21 +49,21 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#122: native macOS ARM/Intel support and selected ownership,
-last-owner reclamation and unwind protections. Queues33 and35–53 are accepted;
-queue34 is a verified duplicate delivered in #107. Deliver54–73 with the raw-memory
-repairs on the actual PR122 squash, then deliver ownership74–112 together as
-one coherent resource/network bundle to avoid a second full CI cycle.
-[The handoff](docs/development-state.md) gives exact heads, checks and the sole
-next action. Prepared work still requires final rebases and full CI.
+Main includes #74–#123: native macOS ARM/Intel support and selected ownership,
+last-owner reclamation and unwind protections. Queues33 and35–73 are accepted;
+queue34 is a verified duplicate delivered in #107. Next bundle74–112 resource and
+network ownership on the actual PR123 squash, then the finite phase2
+exit review. [The handoff](docs/development-state.md) records exact heads,
+checks and the next action. Prepared work requires final rebases and full CI.
 
 Phase 2 remaining audits: scoped autodiff buffers and counted gradient arrays,
 borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, typed State retention/teardown, general resource discard,
 retained callbacks and cycles. Deliver candidate inactive State root clearing
-with the list callback owners and original resource/network tests. Repair
-reproduced FFI pointer-offset overflow and verify raw-memory
-boundaries. Prepared resource/unwind improvements require full CI per final bundle.
+with the list callback owners and original resource/network tests. PR123 accepts
+the native pointer-offset and raw-memory copy contracts; remaining numeric
+widths and unsafe-buffer lifetimes stay explicit. Prepared resource/unwind
+improvements require full CI per final bundle.
 Finish phase 2 before numeric representation, numerics/autodiff and optional
 tracing-free work. Windows, new deployment interfaces and a new backend remain
 deferred unless the user changes priorities.

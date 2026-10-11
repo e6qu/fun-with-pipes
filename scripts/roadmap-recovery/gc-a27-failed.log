@@ -1,0 +1,61 @@
+diagnostics	Focused lint and real failed compiler control	﻿2026-10-11T17:46:36.1923238Z ##[group]Run cargo clippy --test gc --test compiler_diagnostics --test cache_lifetime -- -D warnings
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1924295Z ^[[36;1mcargo clippy --test gc --test compiler_diagnostics --test cache_lifetime -- -D warnings^[[0m
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1925004Z ^[[36;1mcargo test --test gc gc_stress_reports_native_compiler_failure -- --exact --nocapture^[[0m
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1925579Z ^[[36;1mcargo test --test compiler_diagnostics -- --nocapture^[[0m
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1926026Z ^[[36;1mcargo test --test cache_lifetime -- --nocapture^[[0m
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1994045Z shell: /usr/bin/bash -e {0}
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1994394Z env:
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1994637Z   CC: clang
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1994880Z   CARGO_BUILD_JOBS: 2
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1995180Z   CARGO_INCREMENTAL: 0
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1995468Z   CARGO_PROFILE_TEST_DEBUG: 0
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1995763Z   RUST_TEST_THREADS: 1
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1996081Z   CARGO_HOME: /home/runner/.cargo
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1996412Z   CARGO_TERM_COLOR: always
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1996905Z   FWP_GC_DIAGNOSTICS_ARTIFACTS: /home/runner/work/_temp/gc-build-diagnostics/fixtures
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.1997377Z ##[endgroup]
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:36.8668954Z ^[[1m^[[92m    Checking^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:46.7599596Z ^[[1m^[[92m    Finished^[[0m `dev` profile [unoptimized + debuginfo] target(s) in 10.42s
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:46.8182477Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:58.5602378Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 11.78s
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:58.5611639Z ^[[1m^[[92m     Running^[[0m tests/gc.rs (target/debug/deps/gc-bc6eb34e6f1d5332)
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:58.5625452Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:46:58.5625730Z running 1 test
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:00.5613043Z GC stress C retained at /tmp/fwp-golden-gc-2511-gc-compiler-failure-control.c
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:02.6750747Z test gc_stress_reports_native_compiler_failure ... ok
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:02.6751415Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:02.6751870Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 4.11s
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:02.6752514Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:02.6950262Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:02.8162947Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 0.13s
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:02.8171712Z ^[[1m^[[92m     Running^[[0m tests/compiler_diagnostics.rs (target/debug/deps/compiler_diagnostics-e2332cf89fb1074a)
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:02.8180848Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:02.8181166Z running 2 tests
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:04.8368826Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:04.8370044Z thread 'compiler_failure_preserves_stdout_stderr_and_status' (2550) panicked at tests/compiler_diagnostics.rs:80:13:
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:04.8371758Z compiler stdout was discarded: /tmp/fwp-compiler-diagnostics-2549-output/foreign.fwp:2:10: error: expected end of declaration, found `:`
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:04.8372908Z 2 | main = -7:I32 | c-abs | echo
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:04.8373320Z   |          ^
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:04.8374289Z   note: indented lines continue the previous declaration; start a new declaration in column 1
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:04.8374945Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:04.8375336Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:04.8376607Z test compiler_failure_preserves_stdout_stderr_and_status ... FAILED
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4709459Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4710489Z thread 'compiler_signal_is_reported_and_successful_programs_still_run' (2560) panicked at tests/compiler_diagnostics.rs:118:9:
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4711489Z /tmp/fwp-compiler-diagnostics-2549-signal/foreign.fwp:2:10: error: expected end of declaration, found `:`
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4712192Z 2 | main = -7:I32 | c-abs | echo
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4712581Z   |          ^
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4713276Z   note: indented lines continue the previous declaration; start a new declaration in column 1
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4714089Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4714447Z test compiler_signal_is_reported_and_successful_programs_still_run ... FAILED
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4715471Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4715665Z failures:
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4715813Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4715933Z failures:
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4716279Z     compiler_failure_preserves_stdout_stderr_and_status
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4716784Z     compiler_signal_is_reported_and_successful_programs_still_run
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4717094Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4717394Z test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.65s
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4717812Z 
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4762382Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test compiler_diagnostics`
+diagnostics	Focused lint and real failed compiler control	2026-10-11T17:47:08.4796201Z ##[error]Process completed with exit code 101.

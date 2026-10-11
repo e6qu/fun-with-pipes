@@ -138,20 +138,17 @@ still require tracing even when their temporary C buffers reclaim deterministica
 Classify these conservative requirements explicitly before phase 3; phase 6 must
 prove eligibility separately. External AD/FFI state has its own lifetime contract.
 
-The nine raw-memory declarations need a separate review: mem.alloc/mem.string
-allocate C buffers released by mem.free; mem.string copies its input. Raw pointer
-casts, address arithmetic and memcpy-based numeric reads/writes do not establish
-managed-value ownership. ptr.read-string copies into a managed String. Verify
-borrowed input and fresh result contracts before claiming immediate reclamation.
-Compare pointer arithmetic and numeric widths with the interpreter, including
-boundary arithmetic without dereferencing addresses and WebAssembly pointer width.
-The existing raw interpreter reproducibly panics on a large I16 element offset;
-native code uses signed overflow-prone arithmetic. A separate pointer-width
-wrapping repair passes boundary/native/sanitizer controls on Linux and both
-macOS architectures; final bundle acceptance is pending. Bundle54–73 also
-prepares borrowed raw-memory contracts and counted ptr.read-string copies,
-with copy independence and last-owner native release controls.
-It does not establish F16/128-bit, WebAssembly or raw-buffer lifetime coverage.
+PR123 accepts borrowed arguments for all nine raw-memory declarations.
+mem.alloc/mem.string allocate raw C buffers released explicitly by mem.free;
+mem.string copies its input without changing managed input ownership.
+ptr.read-string makes an independent counted managed String. Native copy,
+last-owner release, omitted-sharing and omitted-fresh-owner controls pass along
+with raw interpreter agreement. Pointer arithmetic wraps at the native pointer
+width, with matching interpreter/native boundary checks and UBSan controls on
+Linux and both macOS architectures. Ordinary arithmetic remains checked.
+This acceptance does not establish F16/128-bit, WebAssembly pointer widths or
+automatic raw-buffer lifetime coverage. Unsafe raw reads/writes still require
+valid addresses supplied by the program.
 
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
 and reuse verification, with allocation/live-memory evidence for reclamation.
@@ -264,7 +261,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #122 includes the following contracts. Detailed primitive modes
+Main through PR #123 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 

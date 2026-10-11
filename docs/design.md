@@ -239,6 +239,14 @@ retain elements and transfer them on receive; close preserves queued values.
 Explicit draining breaks the tested counted cycle; automatic unreachable-cycle
 reclamation remains unproved. Other resource boundaries stay prepared.
 
+PR123 accepts library input/result/unload ownership, scoped native and
+interpreter OpenCL teardown, TLS listener/cache/wire/connect cleanup and File
+construction/write/error/resource-frame protections. Fake OpenCL tests verify
+API lifetimes; GPU hardware coverage remains separate. Nine raw-memory primitive
+contracts borrow inputs; ptr.read-string returns an independent counted String.
+Unsigned pointer-width wrapping matches the interpreter and keeps ordinary
+checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
+
 ## Runtime
 
 - In C every value is a 64-bit word. Integers up to 64 bits and floats are

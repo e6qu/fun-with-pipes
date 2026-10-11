@@ -189,15 +189,22 @@ for name in DOCS:
 (backup / 'metadata.json').write_text(json.dumps(dict(
     recoveryHead=RECOVERY, acceptedHead=TESTED, squash=accepted,
     scope='GitHub runner acceptance snapshot; local main is unchanged'), indent=2) + '\n')
-updater = blob(RECOVERY, 'scripts/roadmap-recovery/record-pr123-acceptance.py').decode()
-assert updater.count("ROOT = Path('/Users/zardoz/projects/fun-with-pipes')") == 1
-updater = updater.replace("ROOT = Path('/Users/zardoz/projects/fun-with-pipes')",
-                          'ROOT = Path(' + repr(str(accepted_wt)) + ')')
-updater = updater.replace('/private/tmp/', str(OUT) + '/')
-update_path = OUT / 'record-acceptance.py'
-update_path.write_text(updater)
-subprocess.run(['python3', str(update_path)], check=True)
 state_path = accepted_wt / 'docs/development-state.md'
+if 'Main is `' + accepted + '` (PR #123)' in state_path.read_text():
+    # Remote acceptance can be recorded while the local disk guard defers FF.
+    # Preserve that fresh handoff rather than trying to archive its rows again.
+    history = (accepted_wt / 'docs/roadmap-history.md').read_text()
+    assert '## Archived handoff after PR #123' in history
+    assert accepted in history and tree in history
+else:
+    updater = blob(RECOVERY, 'scripts/roadmap-recovery/record-pr123-acceptance.py').decode()
+    assert updater.count("ROOT = Path('/Users/zardoz/projects/fun-with-pipes')") == 1
+    updater = updater.replace("ROOT = Path('/Users/zardoz/projects/fun-with-pipes')",
+                              'ROOT = Path(' + repr(str(accepted_wt)) + ')')
+    updater = updater.replace('/private/tmp/', str(OUT) + '/')
+    update_path = OUT / 'record-acceptance.py'
+    update_path.write_text(updater)
+    subprocess.run(['python3', str(update_path)], check=True)
 state = state_path.read_text()
 assert 'Main is `' + accepted + '` (PR #123)' in state
 state = state.replace('All11 live docs are protected', 'All11 runner docs are protected', 1)

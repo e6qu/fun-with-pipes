@@ -17412,3 +17412,118 @@ The previous compiler/task package clean removed62 files/99.1MiB,
 /private/tmp/fwp-library-raw-memory-focused-checks.json. Combined first run
 passes both pointer tests but fails raw-memory fixture RC insertion; corrected
 fixtures pass. History records subsequent fixture corrections and guard refusal.
+
+## Archived handoff after PR #123
+
+Main is `68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4` (PR #122). Accepted frozen head
+`31d038c4ea78cbea81e1001f1662ef7bb771bbfa` passes all six jobs in CI38123585926 and
+roadmap_docs38123585877 before match-head squash at 2026-10-11T09:15:55Z.
+Subject `Own typed compiler values and task and channel lifetimes` has 56 characters, one line,
+empty body and no trailers or attribution. One parent `0f32e7560398c048478c4186c63d90c32e7c1727`
+and complete tree `ccb67ec38e9ee3adfa222dcd1979374da688a9d7` match the tested head. All11 live docs
+were hashed in /private/tmp/fwp-main-docs-pre122 and restored byte-for-byte.
+Protected main update0.05CPU/0.26elapsed and acceptance record0.00CPU/0.14elapsed
+pass; docs audit44/106/59 passes0.73CPU/5.16elapsed. Actual-main docs38127751825
+passes. Duplicate production38127751789 has the identical tested tree and
+was cancelled after strict gate/tree proof checks,0.15CPU/3.18elapsed.
+Queue33 and35–53 are accepted; queue34 is a verified duplicate. Bundle44–53
+adds direct typed variant alias transfer, nominal match/field cleanup context,
+CAF cache/evaluation ownership, retained task captures, deadlines/scopes,
+counted task handles and typed channel queues. Original regression and negative
+controls remain unchanged, including GC/reuse and raw interpreter agreement.
+Channel close preserves queued values; automatic unreachable-cycle reclamation
+remains unproved. Phase2 is incomplete; phases3–6 are pending.
+
+[PR123](https://github.com/e6qu/fun-with-pipes/pull/123) is the sole open
+production PR, bundling library/OpenCL/TLS/file/resource items54–73 plus the
+pointer and raw-memory repairs. Current head
+9e7d0b24610524cf54125c44b47ee07185c0b7c3 adds only docs/stdlib.md to b0ae:
+the generated pointer-offset comment now matches lib/ffi.fwp. Required ARM
+macOS CI found the stale comment; fix receipt is
+/private/tmp/fwp-pr123-stdlib-repair.json and its completed ARM job log is
+/private/tmp/fwp-pr123-arm-regular-failed.log. Native source remainsfd930e541db6;
+all original probes and focused checks remain in history.
+Current CI38138731040 has passed Linux, benchmarks, regular ARM macOS and both
+GC stress jobs. Regular Intel macOS is still running; docs38138731036 passed.
+These current-head results are not merge acceptance. Require all six jobs and
+roadmap_docs on this exact new head before squash; earlier-head passes do not
+transfer. The remaining superseded CI38128387224 jobs were cancelled to save
+runner time. Current acceptance helpers use the new head and run identities.
+Next concrete action: monitor and fix the new gates, then squash with the
+recorded one-line subject and empty body. Prepare74–112 concurrently on GitHub;
+open its sole production PR after123 merges. Refresh the exact-head remote
+status using /private/tmp/fwp-monitor-roadmap-ci.py. Independent evidence never
+replaces final production gates. Phases2–6 remain incomplete.
+
+Prepared acceptance helpers (not executed): /private/tmp/fwp-merge-pr123.py
+requires every exact-head gate; /private/tmp/fwp-protect-main-after123.py checks
+the raw squash message, parent/tree parity and protects all11 docs before FF;
+/private/tmp/fwp-record-pr123-acceptance.py removes20 accepted live rows and
+updates the next bundle. The acceptance update is a draft, not a passed check. Its next-action text now
+uses the corrected82c7 preparation driver and38140923130, avoiding the failed
+App-token publication driver; runner execution remains pending.
+Run local updates and audits through the guard when resource limits permit;
+move final bundle rebasing to GitHub if the reserve remains below64GiB.
+
+
+Verified acceptance: {"acceptedHead": "9e7d0b24610524cf54125c44b47ee07185c0b7c3", "characters": 50, "localFastForward": "Deferred while free disk is below 64 GiB", "localMain": "68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4", "mergedAt": "2026-10-11T17:47:22Z", "message": "Own library file and raw-memory resource lifetimes", "parents": ["68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4"], "rawPayloadHash": "ad4db5023f75092d3a902e91d6914fd3298d91fe89b4885ce4e6c2317a9adc6c", "sha": "b4285fc177b3ae7afaf195e5ebd7115cc77b815c", "subject": "Own library file and raw-memory resource lifetimes", "tree": "c94ed7f1bbc4e0c1f8f74b2fcbbbbe70e1359b0c", "verification": "GitHub verified signed commit payload"}
+
+Accepted bundle54–73 handoff rows:
+
+| 54 ownership-library-results | 46afd27c986c | b304e91f628c | PR123 exact-head gates pending |
+| 55 ownership-library-inputs | 96ee4fd963e3 | 46afd27c986c | PR123 exact-head gates pending |
+| 56 ownership-library-unload | 6c367aa9a921 | 96ee4fd963e3 | PR123 exact-head gates pending |
+| 57 ownership-opencl-lifetime | 3dd39a69a430 | 6c367aa9a921 | PR123 exact-head gates pending |
+| 58 ownership-interpreter-opencl | 4119be1cdaf9 | 3dd39a69a430 | PR123 exact-head gates pending |
+| 59 ownership-tls-listeners | f5e2a298537d | 4119be1cdaf9 | PR123 exact-head gates pending |
+| 60 ownership-library-resources | 3eb64f54869f | f5e2a298537d | PR123 exact-head gates pending |
+| 61 ownership-grpc-server-cleanup | ca75ca461682 | 3eb64f54869f | PR123 exact-head gates pending |
+| 62 ownership-tls-cache-failures | 0b51abc49371 | ca75ca461682 | PR123 exact-head gates pending |
+| 63 ownership-tls-wire-preparation | 2c2c562401ab | 0b51abc49371 | PR123 exact-head gates pending |
+| 64 ownership-connect-cancellation | d7641a1ab055 | 2c2c562401ab | PR123 exact-head gates pending |
+| 65 ownership-unboxed-worker-locals | e217ad8ce0d9 | d7641a1ab055 | PR123 exact-head gates pending |
+| 66 ownership-tls-peer-subject | 7250692d5758 | e217ad8ce0d9 | PR123 exact-head gates pending |
+| 67 ownership-tls-alpn-roots | 6d80e63524c2 | 7250692d5758 | PR123 exact-head gates pending |
+| 68 ownership-ci-probe-repairs | c0cdb26eb99b | 6d80e63524c2 | PR123 exact-head gates pending |
+| 69 ownership-nested-loop-boxing | 7a68a54d2660 | c0cdb26eb99b | PR123 exact-head gates pending |
+| 70 ownership-file-construction | ab3a93780dc3 | 7a68a54d2660 | PR123 exact-head gates pending |
+| 71 ownership-file-write-visibility | 702cd9b0a69a | ab3a93780dc3 | PR123 exact-head gates pending |
+| 72 ownership-file-io-errors | eee4807a3954 | 702cd9b0a69a | PR123 exact-head gates pending |
+| 73 ownership-resource-frames | 3dba256655a3 | eee4807a3954 | PR123 exact-head gates pending |
+
+Accepted primitive preparation rows54–73:
+
+| 54 | C exports evaluate results once, release copied wrappers and preserve library-owned string pointers for the host | Bundle CI; conversion failure, nullable pointers, cached calls and host lifetimes |
+| 55 | C library strings/records are copied into owned inputs; partial conversion protects earlier arguments and fields until transfer | Bundle CI; invalid inputs, allocation/callee traps, scalar/pointer ABI and lengthless Bytes rejection |
+| 56 | Native library unload drains tasks, releases caches/runtime regions and restores host signal handlers; static archives clean at exit | Bundle CI; actual reload, finalizer order, descriptors, mappings and pthread cleanup metadata |
+| 57 | Native OpenCL initialization/teardown owns the loader handle, context and queue with ordered release on failure and exit | Bundle CI; fake API controls establish ownership, not real device execution |
+| 58 | Staged interpreter OpenCL owners release partial initialization before caching a failure; successful cache remains process-lived | Bundle CI; raw native/interpreter failure diagnostics and fake API lifetime controls |
+| 59 | TLS server context and ALPN owners survive listener stop and raw accepted-session transfer; last session releases them | Bundle CI; real OpenSSL failures, engine agreement and full TLS stress suites |
+| 60 | Library unload finalizes owned File/socket/HTTP2 descriptors and TLS sessions/caches without implicit shutdown traffic | Bundle CI; actual reload, explicit-close idempotence, host peers and cleanup omission controls |
+| 61 | gRPC service listener owners protect descriptors/TLS contexts through preparation and cancellation while accepted sessions retain protocol state | Bundle CI; source gRPC/TLS behavior and precise listener cleanup controls |
+| 62 | TLS client-cache publication preserves old entries and releases partial context/name owners on allocation failure; retry succeeds | Bundle CI; source TLS behavior, allocation controls and cached identity |
+| 63 | ALPN packing borrows list elements without collector scratch, checks wire length and allocation, and closes a newly connected socket on failure | Bundle CI; source TLS behavior, bounds and allocation/descriptor omission controls |
+| 64 | TCP preparation owns resolver results and pending descriptors through cancellation; TLS connection wrappers own sockets and SSL handshakes until transfer | Bundle CI; cancellation at each preparation boundary, refusal and cleanup omission controls |
+| 65 | Compatible complete worker calls transfer record fields directly; typed aliases and trap cleanup preserve ownership, with boxed partial/dynamic captures | Bundle CI; emitted box removal, interpreter agreement and field cleanup |
+| 66 | TLS peer subjects release acquired certificates, BIOs and native copy buffers on preparation failure or language String copy trap | Bundle CI; real handshakes, retry, Rust metadata agreement and omission controls |
+| 67 | TLS protocol String allocation keeps its owning connection live while reading SSL-owned bytes | Bundle CI; forced major trace, actual collection, session lifetime and missing-fence control |
+| 68 | Ownership probes pass valid GC metadata outputs; timer regressions exercise the merged join/drain/sort fixture under deliberate wake-order overtaking | Bundle CI; raw interpreter, preemption, stress and cleanup controls |
+| 69 | Rebuilt nested loop records remain flat; original owners, progressive retains and completed fields survive failed whole-result reconstruction | Bundle CI; alias matrices, scalar bits, retain/allocation traps and omission controls |
+| 70 | File construction owns raw streams before handle allocation and managed handles before path/finalizer preparation; failures close once and clear stale streams | Bundle CI; direct/scoped create/open, allocation/callback failures and finalization controls |
+| 71 | Native File writes flush stdio before returning so later descriptor reads see interpreter-equivalent bytes and flush errors preserve the borrowed handle | Bundle CI; immediate visibility, short-write/flush errors and omitted-flush controls |
+| 72 | File reads protect temporary buffers and owned streams, report read/write errors, and validate UTF-8 only for text; arbitrary byte reads remain binary | Bundle CI; raw interpreter errors, binary/text kinds, injected cleanup controls |
+| 73 | Original resource frames are anchored before optimization and remain observable through inlining; fusion cannot interleave their cleanup | Bundle CI; parameter/local/result/error lifetimes and pure-pipeline fusion control |
+
+Completed pointer repair preparation evidence:
+
+A separate FFI boundary preparation, branch `ownership-ffi-pointer-arithmetic`,
+head227f15356da8f9a5c7675eea9fda074a6be8857a passes Linux/ARM/Intel
+CI38123787995. Its repair is included in PR123, pending current production gates.
+The proof is /private/tmp/fwp-pointer-boundary-passing-proof.json; artifacts are
+/private/tmp/fwp-pointer-boundary-227f153-artifacts. Unsigned native pointer-width
+offsets wrap; ordinary checked arithmetic is unchanged. All84 specified address
+boundaries and12 numeric pointer types preserve raw/native behavior; twelve
+sanitizer binaries retain exact success0/overflow1 controls. Boundary addresses
+are never dereferenced. F16/128-bit/WASI widths and unsafe-buffer lifetimes remain
+separate. Full preparation chronology is retained in history.
+
