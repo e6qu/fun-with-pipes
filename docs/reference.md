@@ -392,7 +392,7 @@ and warnings are reported as before.
 | `--interp`, `FWP_RUN=interp` | run the interpreter instead (`--native` and `FWP_RUN=native` ask for the default) |
 | `-O0` .. `-O3`, `-Os` before the file | the C optimization level: `-O2`, and `-O1` for tests |
 | `FWP_CACHE_DIR` | the cache: `$XDG_CACHE_HOME/fwp`, else `~/.cache/fwp`, else `fwp-cache` in the temporary directory |
-| `FWP_CACHE_MAX` | how many executables it keeps, the least recently used going first (256) |
+| `FWP_CACHE_MAX` | how many executables it keeps (256; minimum 1, including when set to 0); pruning preserves the current executable |
 | `fwp cache dir`, `fwp cache clean` | print its directory, remove its executables |
 | `CC` | the C compiler (`cc`) |
 | `FWP_LTO` | with GCC, a large program (over 1 MB of C, such as a REST or HTTP server with its standard library) is compiled with `-flto=auto`, which generates its code on all cores: a REST server's first start takes about half as long on four. `FWP_LTO=0` compiles it as one unit, `FWP_LTO=1` uses LTO for any size |

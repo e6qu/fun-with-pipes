@@ -100,6 +100,13 @@ prepared-source classification, not main acceptance or a tracing-free guarantee.
 Counts and scope are recorded in
 [history](roadmap-history.md#portable-finite-ownership-inventory-2026-10-11).
 
+Integrated finalization38163941948 at runner head13c92139da8d verifies the
+expected changes against that frozen baseline:374 declarations,364 symbols,
+40 aliases,149 contracts,19 IR combinators,11 flat signatures and195 review
+declarations representing185 symbols. It adds only internal ad.scope and the
+recorded raw-memory, AD and list contracts. Final production gates and merged
+source classification remain required. These counts do not prove reclamation.
+
 Unknown primitive, foreign and remote boundaries keep the explicit shared
 fallback in [src/ownership.rs](../src/ownership.rs). A successful result or a
 known descriptor does not establish ownership of every reconstructed node.
@@ -138,17 +145,18 @@ in its regular Linux and ARM/Intel macOS jobs. It reads the actual shared
 contract module, checks the candidate commit identity and records all compiler,
 runtime and library source hashes. Expected changes are explicit; unknown
 declarations remain visible in the observed report even when the audit fails.
-This gate is prepared, not executed. A passing declaration audit establishes
+The integrated candidate audit passes in finalization38163941948; its regular
+production gates and actual merged-source exit review remain required. A passing declaration audit establishes
 inventory consistency, not runtime retention, exceptional cleanup or tracing-free
 eligibility. Those still require the controls and lifetime policies above.
 
 The combined list.ap/list.flat-map candidate supplies borrowed inputs, owned
 synchronous callback results and counted spines, with scratch/result-prefix/
 partial-spine unwind controls. Flat-map copies retain typed element aliases and
-release the original callback chunks. Both repairs remain pending focused
-Linux/macOS evidence and final bundle gates. The same candidate clears inactive
+release the original callback chunks. Both repairs pass focused Linux/ARM/Intel evidence38160607296; final bundle
+gates remain required. The same candidate clears inactive
 State buffer words after pop, depth restoration and task exit; collector-scan,
-alias/error and real scheduler controls remain pending. Clearing dead roots
+alias/error and real scheduler controls pass the same focused matrix. Clearing dead roots
 does not count or destroy live State values. Typed State slot policies remain
 on the tracing compatibility path. See the handoff for candidate identities.
 
