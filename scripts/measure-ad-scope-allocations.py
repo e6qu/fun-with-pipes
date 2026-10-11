@@ -6,7 +6,7 @@ BASE='602e076604d3dd759c47b396c10cf848dd9dbb61'
 CANDIDATE=os.environ['FWP_SCOPE_CANDIDATE']
 SOURCE='''loss : List[Rev[F64]] -> Rev[F64]
 loss = nth 0 | option.unwrap-or (rev.const 0.0) | fork mul id id
-step : I64 -> F64
+export step : I64 -> F64
 step = int.to-float | singleton | grad loss | sum
 main = 0 | step | echo
 '''
@@ -83,7 +83,7 @@ for label,head in [('baseline',BASE),('candidate',CANDIDATE)]:
  if label=='baseline':reference=raw
  else:assert raw==reference,'Raw interpreter behavior changed'
  cfile=OUT/(label+'.original.c')
- run(str(executable),'build',str(fixture),'--emit-c','-o',str(cfile))
+ run(str(executable),'build',str(fixture),'--fn','step','--emit-c','-o',str(cfile))
  source=cfile.read_text()
  marker='static inline void *fwp_gc_alloc(size_t n, int leaf) {'
  assert source.count(marker)==1
@@ -112,6 +112,7 @@ for label,head in [('baseline',BASE),('candidate',CANDIDATE)]:
   assert result.returncode==0,(label,opt,result.returncode,result.stderr.decode(errors='replace'))
   data=json.loads(result.stdout);assert data['iterations']==4096 and data['collections']>=2
   assert data['managedCalls']>0 and data['externalCalls']==5*4096, 'Comparison must execute managed allocation and real tape-buffer API paths'
+  assert data['externalLiveBytes']==data['tapeSize'], 'Only the one persistent registry slot may remain live after backward'
   results[label+opt]=dict(head=head,opt=opt,**data)
   print(label,opt,json.dumps(data),flush=True)
  # Build intermediates are not artifacts; emitted source and native binaries are.
