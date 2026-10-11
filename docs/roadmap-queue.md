@@ -68,8 +68,8 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 39 | variant-preparation | `ownership-variant-preparation` | `3aeb9655d492` | `1bb11bece9ae` | `b879eca20812` |
 | 40 | constructor-types | `ownership-constructor-types` | `d5959b7981d9` | `b0219671dca3` | `1bb11bece9ae` |
 | 41 | variant-conversion | `ownership-variant-conversion` | `5a068dc348f3` | `34873f41a4c4` | `b0219671dca3` |
-| 42 | record-update | `ownership-record-update` | `8fe0adb0e543` | `5c5875d30b8e` | `34873f41a4c4` |
-| 43 | record-conversion | `ownership-record-conversion` | `6b809877a1ac` | `614dd3b19c13` | `5c5875d30b8e` |
+| 42 | record-update | `ownership-record-update` | `f2b2688a179d` | `5c5875d30b8e` | `34873f41a4c4` |
+| 43 | record-conversion | `ownership-record-conversion` | `df5ac6202a77` | `614dd3b19c13` | `5c5875d30b8e` |
 | 44 | variant-alias | `ownership-variant-alias` | `b094ffbe7e46` | `de8562194d54` | `614dd3b19c13` |
 | 45 | typed-expression | `ownership-match-context` | `2b7dc81c7d1f` | `3f61f51521d9` | `de8562194d54` |
 | 46 | field-context | `ownership-field-context` | `6255a8f54f54` | `085dc716d599` | `3f61f51521d9` |
