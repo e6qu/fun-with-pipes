@@ -59,8 +59,10 @@ checks and the next action. Prepared work requires final rebases and full CI.
 Phase 2 remaining audits: scoped autodiff buffers and counted gradient arrays,
 borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, typed State retention/teardown, general resource discard,
-retained callbacks and cycles. Deliver candidate inactive State root clearing
-with the list callback owners and original resource/network tests. PR123 accepts
+retained callbacks and cycles. Deliver inactive root clearing and the independently verified typed State
+owners with the list callback owners and original resource/network tests.
+Bundle the State work with PR124 formatting/docs repairs; run full gates once
+for that final combined head. PR123 accepts
 the native pointer-offset and raw-memory copy contracts; remaining numeric
 widths and unsafe-buffer lifetimes stay explicit. Prepared resource/unwind
 improvements require full CI per final bundle.

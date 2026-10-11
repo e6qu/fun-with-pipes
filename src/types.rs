@@ -680,6 +680,19 @@ impl TypeTable {
         for (a, b) in common {
             self.unify(&a, &b)?;
         }
+        // Payload unification can bind an outer row's tail (for example a
+        // function effect variable also used as the enclosing State tail).
+        // Recompute differences before binding those tails, preserving the
+        // newly required labels instead of overwriting their bindings.
+        if r1
+            .tail
+            .is_some_and(|v| self.vars[v as usize].bound.is_some())
+            || r2
+                .tail
+                .is_some_and(|v| self.vars[v as usize].bound.is_some())
+        {
+            return self.unify_row(&r1, &r2, kind);
+        }
         let missing = |only: &Vec<(String, Type)>| -> UnifyError {
             UnifyError::MissingLabel(only[0].0.clone(), kind)
         };

@@ -87,6 +87,16 @@ for row in rows:
             contract='Some(Contract { arguments: [Borrow], result: OwnedCallback, callback: Some(Borrowed(0)), aliases: [0] })')
         continue
     before = baseline_rows[key]
+    if row['symbol'] in {'get', 'put', 'modify', 'run-state'}:
+        assert before['contract'] == 'None' and before['bucket'] == 'runtime_or_specialization_review'
+        assert row['bucket'] == 'contract'
+        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
+        arguments = '[Borrow, Borrow, Borrow]' if row['symbol'] == 'run-state' else '[Borrow]'
+        callback = 'Some(Borrowed(1))' if row['symbol'] == 'run-state' else 'Some(Borrowed(0))' if row['symbol'] == 'modify' else 'None'
+        aliases = '[0, 1, 2]' if row['symbol'] == 'run-state' else '[]'
+        assert row['contract'] == 'Some(Contract { arguments: ' + arguments + ', result: OwnedState, callback: ' + callback + ', aliases: ' + aliases + ' })'
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] in {'list.ap', 'list.flat-map'}:
         assert before['contract'] == 'None' and before['bucket'] == 'runtime_or_specialization_review'
         assert row['bucket'] == 'contract'
@@ -118,15 +128,15 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map'}
+assert changed_symbols == raw_symbols | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state'}
 expected_counts = dict(baseline['counts'])
-expected_counts['contract'] += len(raw_symbols) + 6
-expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 4
+expected_counts['contract'] += len(raw_symbols) + 10
+expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 8
 expected_counts['flat_scalar_signature'] -= 1
 assert counts == expected_counts, counts
 review = [row for row in rows if row['bucket'] == 'runtime_or_specialization_review']
 review_symbols = len({row['symbol'] for row in review})
-assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 4
+assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 8
 report = {
     'head': head,
     'declarations': len(rows), 'distinctSymbols': len({row['symbol'] for row in rows}), 'explicitAliases': 40,

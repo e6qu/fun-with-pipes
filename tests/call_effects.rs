@@ -124,3 +124,42 @@ fn inferred_pure_callbacks_agree_with_native_execution() {
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn state_function_values_preserve_callback_effects_in_pipes_and_applications() {
+    for source in [
+        r#"read : () -> String ! {State[(String -> String)]}
+read = get | apply "!"
+"#,
+        r#"read : () -> String ! {State[(String -> String)]}
+read = match
+    () -> apply "!" (get ())
+"#,
+        r#"read : () -> String ! {State[(String -> String ! {IO})], IO}
+read = get | apply "!"
+"#,
+        r#"read : () -> String ! {State[(String -> String ! {IO})], IO}
+read = match
+    () -> apply "!" (get ())
+"#,
+    ] {
+        check_source("stored-function-effects.fwp", source, None)
+            .unwrap_or_else(|error| panic!("{}", error.rendered));
+    }
+    for body in [
+        r#"get | apply "!""#,
+        r#"match
+    () -> apply "!" (get ())"#,
+    ] {
+        let source =
+            format!("bad : () -> String ! {{State[(String -> String ! {{IO}})]}}\nbad = {body}\n");
+        let error = check_source("missing-stored-function-effects.fwp", &source, None)
+            .err()
+            .unwrap_or_else(|| panic!("accepted a callback without its IO effect"));
+        assert!(
+            error.rendered.contains("effect `IO` is not allowed"),
+            "{}",
+            error.rendered
+        );
+    }
+}

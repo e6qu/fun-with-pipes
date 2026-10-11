@@ -53,7 +53,11 @@ def check_subject(revision):
 
 def check_handoff(queue):
     rows = set()
-    for row in (ROOT / "docs/development-state.md").read_text().splitlines():
+    state = (ROOT / "docs/development-state.md").read_text()
+    heading = "## Remaining ownership deliveries\n"
+    assert state.count(heading) == 1, "missing or duplicate live delivery section"
+    live = state.split(heading, 1)[1].split("\n## ", 1)[0]
+    for row in live.splitlines():
         match = re.match(r"^\| (\d+) [^|]+\|", row)
         if not match:
             continue

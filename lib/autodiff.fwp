@@ -287,7 +287,8 @@ rev._finish =
 # The value of a scalar function and its gradient at a point, in one
 # forward and one backward pass.
 value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]
-value-and-grad = curry (const | flip compose (uncurry rev._value-and-grad) | ad.scope)
+value-and-grad =
+    curry (const | flip compose (uncurry rev._value-and-grad) | ad.scope)
 
 # internal
 rev._value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]

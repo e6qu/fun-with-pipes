@@ -275,6 +275,14 @@ typedef struct fwp_handler {
 static fwp_handler *fwp_handlers = 0;
 static V *fwp_state = 0;
 static size_t fwp_state_len = 0, fwp_state_cap = 0;
+typedef struct fwp_state_owner {
+    struct fwp_state_owner *prev;
+    size_t index;
+    V value;
+    void (*duplicate)(V);
+    void (*drop)(V);
+} fwp_state_owner;
+static fwp_state_owner *fwp_state_owners = 0;
 
 static FILE *fwp_prog_out; /* where `print` writes (stderr in binary exec mode) */
 
