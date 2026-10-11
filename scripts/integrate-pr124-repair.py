@@ -91,6 +91,7 @@ for name, edits in inference_recipe.items():
         source = source.replace(edit['old'],edit['new'],1)
     (WT/name).write_text(source)
 fixtures = {
+    'tests/call_effects.rs': ('HEAD','scripts/call-effects-state-tests.rs'),
     'tests/typed_state_ownership.rs': ('HEAD','scripts/typed-state-expanded-test.rs'),
     'tests/fixtures/typed_state_probe.c': (STATE,'tests/fixtures/typed_state_probe.c'),
     'scripts/check-roadmap.py': (RECOVERY,'scripts/check-roadmap.py'),
@@ -100,7 +101,7 @@ for name,(head,saved) in fixtures.items():
     (WT/name).write_bytes(blob(head,saved))
 for name in DOCS:
     (WT/name).write_bytes(blob('HEAD',name))
-subprocess.run(['rustfmt','src/cgen.rs','src/ownership.rs','src/infer.rs','tests/typed_state_ownership.rs'],cwd=WT,check=True)
+subprocess.run(['rustfmt','src/cgen.rs','src/ownership.rs','src/infer.rs','tests/call_effects.rs','tests/typed_state_ownership.rs'],cwd=WT,check=True)
 env = dict(os.environ,CARGO_PROFILE_DEV_DEBUG='0',CARGO_PROFILE_TEST_DEBUG='0',CARGO_INCREMENTAL='0',RUST_TEST_THREADS='1')
 subprocess.run(['cargo','build','--bin','fwp'],cwd=WT,env=env,check=True)
 subprocess.run([str(WT/'target/debug/fwp'),'fmt','lib/autodiff.fwp'],cwd=WT,check=True)
