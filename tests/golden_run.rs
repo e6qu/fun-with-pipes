@@ -30,7 +30,7 @@ fn have_cc() -> bool {
 }
 
 /// Build a program natively and run the executable.
-fn run_native(path: &Path) -> String {
+fn run_native(path: &Path, want: &str) -> String {
     let exe = std::env::temp_dir().join(format!(
         "fwp-golden-{}-{}",
         std::process::id(),
@@ -50,7 +50,26 @@ fn run_native(path: &Path) -> String {
         return render(b"", &build.stderr, build.status.code().unwrap_or(-1));
     }
     let out = exec(Command::new(&exe), path);
-    let _ = std::fs::remove_file(&exe);
+    if out == want {
+        let _ = std::fs::remove_file(&exe);
+    } else {
+        // Preserve the failing artifact before another compilation or cleanup
+        // can erase it. The emitted C uses the same optimization level.
+        let source = exe.with_extension("c");
+        let emitted = Command::new(fwp())
+            .args(["build", "--emit-c", "-O1", "-o"])
+            .arg(&source)
+            .arg(path.file_name().unwrap())
+            .current_dir(path.parent().unwrap())
+            .output();
+        eprintln!("native mismatch: binary retained at {}", exe.display());
+        match emitted {
+            Ok(result) if result.status.success() => {
+                eprintln!("generated C retained at {}", source.display());
+            }
+            result => eprintln!("could not retain generated C: {result:?}"),
+        }
+    }
     out
 }
 
@@ -68,6 +87,17 @@ fn exec(mut cmd: Command, path: &Path) -> String {
         .unwrap();
     child.stdin.take().unwrap().write_all(&input).unwrap();
     let out = child.wait_with_output().unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        if let Some(signal) = out.status.signal() {
+            eprintln!(
+                "{}: child terminated by signal {signal}, core dumped: {}",
+                path.display(),
+                out.status.core_dumped()
+            );
+        }
+    }
     render(&out.stdout, &out.stderr, out.status.code().unwrap_or(-1))
 }
 
@@ -106,7 +136,7 @@ fn run_snapshots() {
             ));
         }
         if native {
-            let got = run_native(&path);
+            let got = run_native(&path, &want);
             if got != want {
                 failures.push(format!(
                     "{} (native):\n--- expected\n{}--- got\n{}",
