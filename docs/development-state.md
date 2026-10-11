@@ -31,146 +31,79 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is `0f32e7560398c048478c4186c63d90c32e7c1727` (PR #121). Accepted frozen head
-`df5ac6202a77a3c0f6f4e315f0a73bbab266db63` passes all six jobs in CI38109195705 and
-roadmap_docs38109195711. Match-head squash at 2026-10-11T07:49:58Z has the exact
-68-character subject `Protect boxed records and remaining callers during worker conversion`, one line, empty
-body and no trailers or attribution. One parent `ddef2e7a7dc22048675c4958029635f8082739db` and
-complete tree `cc6f3985708ca65df7d260782735137977ce049f` match the tested head. All11 live docs were
-hashed in /private/tmp/fwp-main-docs-pre121 and restored byte-for-byte.
-Actual-main docs38122701714 passes at the squash. Duplicate CI38122701716
-was cancelled only after full tested-tree parity verification.
-Queue33 and35–43 are accepted; queue34 is a verified duplicate. Boxed record
-conversion protects the original box, remaining caller owners and completed
-typed field retains until worker transfer. Matched results preserve the remaining
-caller checkpoint. Original omission exits3/7/4, alias/scalar and SIZE_MAX
-controls, GC/reuse and raw interpreter agreement remain checked. Phase2 is
-incomplete; phases3–6 are pending. Golden mismatches now retain binaries and
-O1 C, report actual Unix signals and upload failures. The original Intel signal
-was not identified; diagnostic changes do not establish a runtime repair.
+Main is `68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4` (PR #122). Accepted frozen head
+`31d038c4ea78cbea81e1001f1662ef7bb771bbfa` passes all six jobs in CI38123585926 and
+roadmap_docs38123585877 before match-head squash at 2026-10-11T09:15:55Z.
+Subject `Own typed compiler values and task and channel lifetimes` has 56 characters, one line,
+empty body and no trailers or attribution. One parent `0f32e7560398c048478c4186c63d90c32e7c1727`
+and complete tree `ccb67ec38e9ee3adfa222dcd1979374da688a9d7` match the tested head. All11 live docs
+were hashed in /private/tmp/fwp-main-docs-pre122 and restored byte-for-byte.
+Protected main update0.05CPU/0.26elapsed and acceptance record0.00CPU/0.14elapsed
+pass; docs audit44/106/59 passes0.73CPU/5.16elapsed. Actual-main docs38127751825
+is queued. Duplicate production38127751789 has the identical tested tree and
+was cancelled after strict gate/tree proof checks,0.15CPU/3.18elapsed.
+Queue33 and35–53 are accepted; queue34 is a verified duplicate. Bundle44–53
+adds direct typed variant alias transfer, nominal match/field cleanup context,
+CAF cache/evaluation ownership, retained task captures, deadlines/scopes,
+counted task handles and typed channel queues. Original regression and negative
+controls remain unchanged, including GC/reuse and raw interpreter agreement.
+Channel close preserves queued values; automatic unreachable-cycle reclamation
+remains unproved. Phase2 is incomplete; phases3–6 are pending.
 
-Next production delivery bundles queues44–53: returned variant aliases,
-nominal match/field contexts, CAF caches/evaluation, retained task callbacks,
-deadlines/scopes/handles and typed channel queues. Rebase the contiguous
-prepared53 source b304e91f628c FROM actual prepared43
-6b809877a1ac493015e1902204cc5ea72b68a875 onto this actual PR121 squash.
-Preserve all20 original commits and compiler/runtime/ownership probes; inherit
-accepted golden diagnostics and artifact steps exactly. Worktree:
-/private/tmp/fwp-compiler-task-bundle-worktree; branch:
-ownership-compiler-task-bundle. Keep existing preparation branches/anchors intact.
-Run bounded focused checks and all original included regressions on CI, with
-full production gates once at the final bundle head. Copy all11 docs and audit
-before publication and the sole next PR. Include exact negative controls,
-alias/scalar, GC/reuse and raw interpreter agreement. Independent evidence
-stays outside production ancestry. Do not open a standalone queue44 PR.
+[PR123](https://github.com/e6qu/fun-with-pipes/pull/123) is the sole open
+production PR, bundling library/OpenCL/TLS/file/resource items54–73 plus the
+pointer and raw-memory string-copy repairs. Published head
+b0ae00d5512df825271970cafcf569f52dbfc0cd, nativefd930e541db6, is on this actual
+PR122 squash. All42 original commits and probes plus both new repairs remain;
+accepted diagnostics inherit exactly. Eight focused tests and65 library units,
+lint and format pass at identical native source hashes. Publication2.41CPU/
+22.57elapsed and PR creation0.18CPU/4.35elapsed pass. Full CI38128387224 and
+docs38128387231 remain pending. Intel macOS GC stress has started; the other
+jobs are queued. Require all seven passing gates before squash. Latest remote
+status: /private/tmp/fwp-roadmap-active-ci-status.json; refresh with the remote
+administration helper /private/tmp/fwp-monitor-roadmap-ci.py.
+Next concrete action: monitor/fix those gates, then squash with the recorded
+one-line subject and empty body. Prepare74–112 on a GitHub runner while CI runs;
+open its production PR after123 merges. Independent evidence does not replace
+production gates. Phases2–6 remain incomplete.
 
-Bundle native head77af0259095cfaf436978929558e514be2e36086 preserves20
-original commits on actual0f32e7560398 and every prepared53 compiler/runtime/
-ownership probe byte. Golden diagnostics and CI artifact steps match main
-byte-for-byte. Preparation initially dropped empty docs-only commits and failed
-its count check; corrected rebase explicitly preserves them and passes1.25CPU/
-9.36elapsed. Bounded native alias/channel/task-handle targets pass four tests,
-zero ignored,18.91CPU/37.93elapsed. All21 RC units, focused lint and format
-pass together6.47CPU/12.90elapsed. Full bundled CI remains required. Journal:
-/private/tmp/fwp-compiler-task-bundle-preparation.json; focused logs/checks:
-/private/tmp/fwp-compiler-task-bundle-focused-checks.log and .json.
+Prepared acceptance helpers (not executed): /private/tmp/fwp-merge-pr123.py
+requires every exact-head gate; /private/tmp/fwp-protect-main-after123.py checks
+the raw squash message, parent/tree parity and protects all11 docs before FF;
+/private/tmp/fwp-record-pr123-acceptance.py removes20 accepted live rows and
+updates the next bundle. The acceptance update is a draft, not a passed check.
+Run local updates and audits through the guard when resource limits permit;
+move final bundle rebasing to GitHub if the reserve remains below64GiB.
 
 ## Evidence and preservation requirements
 
-Queue48 unused-CAF-argument evidence32dbb066a08f448c4b68f64d7cd40ed4a4eb696e
-runs CI38109342751 on unchanged prepared36fb4e1de52e compiler/runtime/library
-and both original tests. The capture delegates original compiler arguments,
-retains four owner/control fixtures per architecture and selects the intact
-argument-drop fixture for compiled layout. Exact missing-release exit4 and
-original evaluation/trap order, GC/reuse and raw interpreter controls remain.
-The original two tests pass on both architectures, but the evidence inspector
-fails: it incorrectly counted the echoed-text drop as the CAF argument drop.
-Correction selects the CAF-bound local explicitly. Corrected evidence CI is
-required; final48 is included in bundle44–53 and needs all production gates.
-Publication0.77CPU/6.56elapsed passes; a mistaken branch trigger was corrected
-in a separate commit0.07/2.45s before execution. Journal:
-/private/tmp/fwp-inline-caf-layout-publication.json.
+Completed independent evidence is archived in
+[history](roadmap-history.md#archived-completed-evidence-before-pr122-acceptance).
+Original tests ran once per architecture, with zero ignored; controls,
+C/binaries/flags/disassembly and proof JSON remain retained. These runs do not
+replace the final production gates or establish speed/collector-free support.
 
-Queue47 cache ownership evidence1a873414e446dae3d005cfa3f3c620791c2d75b5
-passes ARM/Intel in CI38106592858 on unchanged source7e1c164a0e81. All three
-original tests execute once per platform, zero ignored; forty O1/O2 fixtures are
-retained. Root/previous-cache/return-owner/manual-teardown/source-teardown/caller
-omission exits3/12/11/9/3/4 remain exact, including retry/reentrancy, aliases,
-scalar bits, SIZE_MAX, GC/reuse and raw interpreter agreement. Intact layout
-hash310a9301bd04 matches both platforms: V8/align8, object header/payload8,
-cleanup24; separate cache value8/align8 and state4/align4 exclude linker padding.
-Proof: /private/tmp/fwp-caf-layout-passing-proof.json. Artifacts:
-/private/tmp/fwp-caf-layout-1a87341-artifacts. Final queue47 still requires
-sequential actual-squash rebase and full production gates.
+| Evidence | Passing CI | Frozen evidence head | Proof in /private/tmp |
+|---|---|---|---|
+| Queue44 variant alias | 38104532520 | ded20c6239f6 | fwp-variant-alias-layout-passing-proof.json |
+| Queue45 nominal match | 38105588952 | 8d138284bdd2 | fwp-match-context-layout-passing-proof.json |
+| Queue46 field projection | 38106022932 | 1494a3300d23 | fwp-field-context-layout-passing-proof.json |
+| Queue47 CAF caches | 38106592858 | 1a873414e446 | fwp-caf-layout-passing-proof.json |
+| Queue48 inlined CAF arguments | 38124620463 | 15c2f44d32ec | fwp-inline-caf-layout-passing-proof.json |
+| Queue43 record conversion, accepted #121 | 38101505851 | 342d7d47a729 | fwp-record-conversion-layout-passing-proof.json |
+| Prepared112 primitive inventory | 38099556010 | 669c19e7cb67 | fwp-primitive-inventory-passing-proof.json |
+| Full prepared112 integration, seven gates | 38048222203 | 0f8c53199b2c | fwp-full-0f8c531-passing-proof.json |
 
-Queue46 field-projection evidence1494a3300d234ea852078d21ce319ac81bdd2cc5
-passes ARM/Intel in CI38106022932 on unchanged source6255a8f54f54. Both
-original tests execute once per platform, zero ignored; twelve actual O1/O2
-fixtures are retained. Typed-discard calls differ2/1 in intact/erased IR,
-with exact erased-type rejection exit3. Outer record construction remains
-eliminated; original alias/child, GC/reuse and raw interpreter controls pass.
-Source-positive layout hashc2bf508e3b1f matches both platforms: V8/align8,
-object header/payload8 and cleanup24. No speed or dynamic allocation claim.
-Proof: /private/tmp/fwp-field-context-layout-passing-proof.json. Artifacts:
-/private/tmp/fwp-field-context-layout-1494a33-artifacts. Final queue46 still
-requires sequential actual-squash rebase and full production gates.
+Preserve inherited worker, HTTP2/x86 root and static-handler fixture repairs,
+exact omission/allocation controls, raw interpreter comparisons and original
+multi-commit repairs. Rows77–78 require actual mandatory WASI on Linux in both
+free modes. OpenCL57–58 fake APIs do not establish hardware coverage. Recheck
+the finite primitive inventory against actual merged source at phase2 exit.
 
-Queue45 nominal-match binary evidence8d138284bdd29114623dc89cea8f4fc090ba7e3c
-passes ARM/Intel in CI38105588952 on unchanged source2b7dc81c7d1f. Both original
-tests execute once per platform, zero ignored; twelve actual O1/O2 fixtures are
-retained. Typed-discard calls differ2/1 in the intact/erased IR fixtures;
-original exact erased-type rejection exit3 and GC/reuse/interpreter controls
-remain checked. Source-positive layout hashb2eb3e78fc03 matches both platforms:
-V8/align8, object header/payload8 and cleanup24. No production speed or allocation
-count claim follows. Proof: /private/tmp/fwp-match-context-layout-passing-proof.json.
-Artifacts: /private/tmp/fwp-match-context-layout-8d13828-artifacts. Final queue45
-still requires sequential actual-squash rebase and full production gates.
-
-Queue44 returned-alias binary evidence ded20c6239f657d4c47a1fa6c856fce9a9174c14
-passes both ARM/Intel jobs in CI38104532520 on unchanged sourceb094ffbe7e46.
-Both original tests execute once per platform, zero ignored; four O1/O2
-transfer/extra-retain Mach-O fixtures per platform are retained. Exact
-extra-retain rejection exit3, GC/reuse and raw interpreter agreement remain
-checked. Intact layout source hash3bf5a4633923 matches both platforms:
-V8/align8, array header/slot8 and variant32/align8/payload8. Holder code has no
-box/unbox bridge. Static instructions are not speed or dynamic allocation counts.
-Proof: /private/tmp/fwp-variant-alias-layout-passing-proof.json. Artifacts:
-/private/tmp/fwp-variant-alias-layout-ded20c6-artifacts. Final queue44 still
-requires actual-squash rebase and full production gates.
-
-Queue43 binary evidence342d7d47a729296ad458ad2ec6ce672cf0e6d324 passes both
-ARM/Intel jobs in CI38101505851 on unchanged source6b809877a1ac. The original
-record-conversion test executes once per platform, zero ignored; sixteen actual
-O1/O2 Mach-O fixtures are retained with C, flags, symbols and disassembly.
-Intact layout C hashb7bc11c046c3 and original-box/remaining-caller/partial-retain
-omission exits3/7/4 remain verified. Both platforms have V8/align8, object
-header/payload8, cleanup24; active scopes at the first retain protect one
-remaining caller8-byte context, original box8 and partial retained fields16.
-Owner context sizes are not summed into frames; no production speed/ABI/cache
-claim is inferred. Proof: /private/tmp/fwp-record-conversion-layout-passing-proof.json.
-Artifacts: /private/tmp/fwp-record-conversion-layout-342d7d4-artifacts.
-Final queue43 still requires actual-squash rebase and production gates.
-
-Portable ownership inventory669c19e7cb6779536377af7f78651f97dc1e51d9 passes
-CI38099556010 on unchanged prepared112 sourceb45e93a71d40. It checks actual
-runtime-contract metadata and IR lowering, explicit aliases, all compiler/library
-source hashes and the documentation audit (44/106/72). Counts:373 declarations,
-363 distinct symbols,40 aliases;134 contracts,19 IR templates,12 flat scalar
-signatures and208 declarations/198 symbols requiring semantic review. Scalar
-signatures do not prove absence of externally allocated state. This is a finite
-source-review inventory, not runtime acceptance or tracing-free support.
-Proof: /private/tmp/fwp-primitive-inventory-passing-proof.json. Artifact and full
-log are retained locally and on GitHub; recheck against actual merged source at
-the phase2 exit checkpoint.
-
-Full prepared source112 integration0f8c53199b2c / CI38048222203 passes all seven
-gates, including actual mandatory WASI disposal/count controls with no skip.
-It is not sequential acceptance or collector-free support. Other binary evidence
-and diagnostic details are in ownership/history. Preserve inherited worker,
-HTTP2/x86 root and static-handler fixture repairs, exact omission/allocation
-controls, raw interpreter comparisons and every original multi-commit repair.
-Rows77–78 require actual WASI on Linux in both free modes; native checks do not
-replace them. OpenCL57–58 fake APIs are not hardware coverage.
+PR123 branch: `ownership-library-resource-bundle`; worktree:
+/private/tmp/fwp-library-resource-bundle-worktree. The final rebase preserves
+every tested native byte. Publication journal:
+/private/tmp/fwp-library-resource-bundle-publication.json.
 
 ## Remaining ownership deliveries
 
@@ -181,16 +114,6 @@ preparations need final squash rebases and all seven exact-head production gates
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
-| 45 ownership-match-context | 2b7dc81c7d1f | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
-| 46 ownership-field-context | 6255a8f54f54 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
-| 47 ownership-caf-cache | 7e1c164a0e81 | 6255a8f54f54 | Three original native tests11.60CPU/25.24elapsed and all21 ownership units3.48/7.37s, lint2.50/4.92s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
-| 48 ownership-inline-caf | 36fb4e1de52e | 7e1c164a0e81 | Two original unused-argument evaluation/release tests12.99CPU/26.95elapsed, lint2.57/5.15s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
-| 49 ownership-task-thunks | 215e0edec0f1 | 36fb4e1de52e | Both original retained-capture and failed-spawn controls11.38CPU/23.18elapsed, lint2.63/5.26s and format0.43/0.81s pass; all original source/probes unchanged; final actual-squash/full gates required |
-| 50 ownership-task-within | 5cfbbf10087a | 215e0edec0f1 | Three original deadline/retained-thunk controls5.34CPU/10.77elapsed, exact contract inventory3.62/7.53s, lint2.44/4.88s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
-| 51 ownership-task-scope | f36bacf80bfc | 5cfbbf10087a | Four original scope/deadline/retained-thunk controls15.75CPU/31.78elapsed, exact contract inventory3.45/7.06s lint2.48/4.97s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
-| 52 ownership-task-handles | df26a860c99f | f36bacf80bfc | Five original task-handle/scope/deadline/retained-thunk controls20.97CPU/42.72elapsed, all21 RC units3.49/7.14s, exact contract inventory0.00/0.13s, lint2.45/5.02s and format0.45/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
-| 53 ownership-channel-queues | b304e91f628c | df26a860c99f | Five original channel/task-alias/task-handle controls19.72CPU/39.59elapsed, all21 RC units3.59/7.54s, exact contract inventory0.00/0.13s, lint2.49/4.99s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 54 ownership-library-results | 46afd27c986c | b304e91f628c | Original C library result control7.96CPU/17.73elapsed, lint2.47/4.88s and format0.43/0.82s pass; original source/probes unchanged, including all four reclamation/string/guard/evaluation controls; final actual-squash/full gates required |
 | 55 ownership-library-inputs | 96ee4fd963e3 | 46afd27c986c | Three original C library input/result controls9.78CPU/22.08elapsed, lint2.46/4.98s and format0.44/0.82s pass; original source/probes unchanged, including input rollback/transfer omissions and missing Bytes-length diagnostic; final actual-squash/full gates required |
 | 56 ownership-library-unload | 6c367aa9a921 | 96ee4fd963e3 | Four original unload/input/result controls12.41CPU/31.49elapsed, lint2.50/5.12s and format0.44/0.82s pass; original source/probes unchanged, including actual loader/static-exit behavior and all six teardown omissions; final actual-squash/full gates required |
@@ -254,16 +177,19 @@ preparations need final squash rebases and all seven exact-head production gates
 ## Finish phase2, then continue the plan
 
 A separate FFI boundary preparation, branch `ownership-ffi-pointer-arithmetic`,
-head a7e782cb1ccca48c15fe980f8db914a9b026a7a6 on actual main120, runs
-CI38109876885 passes Linux, but ARM fails the negative sanitizer exit-code
-assertion and Intel fails Rust toolchain DNS provisioning before tests. The
-original terminating signal was not recorded; corrected controls use explicit
-UBSan exit behavior, distinct binaries and retained status/C/binary diagnostics.
-A fresh exact-head preparation run is required. Include it with the next related C-library/raw-memory ownership bundle after
-44–53, with a final actual-squash rebase and all production gates. Do not open
-a separate pointer-only production PR. ptr.at uses unsigned pointer-width
-arithmetic in C and explicit wrapping multiplication/addition in the interpreter.
-Two new regressions cover84 independently specified address boundaries and12
+head227f15356da8f9a5c7675eea9fda074a6be8857a on actual main120 passes all
+three platform jobs in CI38123787995. Two original tests per platform execute,
+zero ignored. Twelve retained sanitizer binaries have exact success0/overflow1
+statuses; old signed-expression controls report signed integer overflow.
+Collector0.29CPU/9.19elapsed verifies C/binary hashes and hardware/compiler
+reports. Proof: /private/tmp/fwp-pointer-boundary-passing-proof.json; artifacts:
+/private/tmp/fwp-pointer-boundary-227f153-artifacts. Earlier38109876885 failed
+ARM exit assertion and Intel toolchain DNS provisioning. Explicit sanitizer
+exit policy, distinct binaries and diagnostics preserve the strict control.
+Include the repair in bundle54–73 with final actual-squash rebase and full
+production gates. No separate pointer-only PR. ptr.at wraps unsigned native
+pointer-width multiplication/addition; ordinary checked arithmetic is unchanged.
+The tests cover84 independently specified address boundaries and12
 ordinary numeric pointer types, raw/native O1/O2 agreement with GC/reuse, and an
 old signed-expression UBSan control. No boundary address is dereferenced.
 F16/128-bit, WebAssembly widths and raw-buffer lifetime acceptance remain separate.
@@ -276,7 +202,8 @@ is recorded without inferring its source head. Evidence:
 0.75CPU/1.44elapsed passes; preparation0.55/5.94s, format0.45/0.84s,
 format check0.33/0.61s and publication repairs0.13/3.08s +0.31/6.57s pass.
 Superseded preparation runs38109666010/38109740663 were cancelled, not passed.
-Candidate compilation/testing runs only on GitHub; no verified repair claim yet.
+Independent boundary support is verified on three64-bit native platforms;
+merged acceptance and wider raw-memory coverage remain pending.
 Publication journal: /private/tmp/fwp-pointer-arithmetic-publication.json.
 
 After queue112 is delivered, recheck the finite [ownership exit gates](ownership.md#phase-2-exit-gates)
@@ -296,6 +223,37 @@ buffer lifetimes. Numeric lifetime findings and future regressions are in
 performance and tracing-free work. Phases3–6 still require implementation and
 measured acceptance; the prepared ownership queue is not the whole plan.
 
+## Local resource incident and next preparation
+
+The attempted future bundle preparation was refused before execution when free
+disk fell below64GiB; observed available62.17GiB and project target101MiB.
+No refused compiler/check/preparation ran outside the guard, and limits were
+unchanged. Remote GitHub merge and Git metadata verification continued. Disk
+subsequently returned above64GiB without project cleanup, enabling guarded
+main update and final54–73 rebase. Disk again fell below reserve after PR123
+creation; stop local workloads. At 09:49 UTC, available space is approximately
+52.9 GiB. No local build, test or bundle preparation is authorized while the
+guard refuses the workload. Read-only source review and remote administration
+continue.
+The current remote preparation drivercfcb70d16044915206c2e681a72618021ba0ea97,
+branch ownership-roadmap-preparation, runs CI38130008122 (queued). It targets
+original112 b45e93a71d40
+FROM73 3dba256655a3 onto published123 candidateb0ae00d5512d. It prepares
+all39 remaining rows74–112 as one resource/network bundle, preserving85
+original commits and exact tested raw-memory changes. It publishes
+ownership-resource-network-bundle as a preparation only, with both accepted
+golden diagnostics and mandatory WASI retained. Runner full validation and final
+actual123-squash rebase remain required. Driver workflow is outside production
+ancestry; no extra production PR is open. The earlier20-item preparation
+CI38129146591, head96f6b3d2c073, was verified cancelled before publishing its
+replacement; cancellation is not a passing check. The cancellation request
+initially remained queued, so publication waited for confirmed cancellation.
+Expansion journal: /private/tmp/fwp-resource-network-expanded-runner-publication.json.
+Its source112 already includes mandatory WASI test environment;
+preserve that alongside inherited golden artifact diagnostics when rebasing.
+Do not use the unchanged exact-inherited-ci assertion for that later bundle:
+verify only the intentional WASI requirement in addition to accepted base CI.
+
 ## Local checks and durable recovery
 
 Full builds/tests, benchmarks and large regeneration run on GitHub. Local work
@@ -309,11 +267,16 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 python3 scripts/local-guard.py python3 scripts/check-roadmap.py
 ```
 
-Last Rust checkout is /private/tmp/fwp-compiler-task-bundle-worktree, native
-77af0259095cfaf436978929558e514be2e36086 on actual PR121 squash.
-Alias/channel/task-handle targets pass four tests18.91CPU/37.93elapsed, zero
-ignored. All21 RC units plus focused lint and format pass6.47CPU/12.90elapsed.
-Previous conversion package clean removed116 files/94.6MiB,0.00CPU/0.14elapsed.
+Last Rust checkout is /private/tmp/fwp-library-resource-bundle-worktree,
+Current source ed442426ff6e0ce4e646913720c95c098596da02 passes focused
+raw-memory/pointer/resource-frame tests,65 library units, lint and format.
+Smaller candidate9664d0607d16 checks are scoped to that previous source;
+clean removed68files131.2MiB,0.00CPU/0.14elapsed before the expanded rebuild.
+The previous compiler/task package clean removed62 files/99.1MiB,
+0.00CPU/0.13elapsed. Source/check hashes:
+/private/tmp/fwp-library-raw-memory-focused-checks.json. Combined first run
+passes both pointer tests but fails raw-memory fixture RC insertion; corrected
+fixtures pass. History records subsequent fixture corrections and guard refusal.
 Before switching Rust checkouts, use the absolute root guard
 with cargo clean -p fwp in that last checkout, then rebuild requested targets.
 Do not infer source identity from shared outputs. Refusals and prior metrics
@@ -323,7 +286,7 @@ Protect all11 docs with a fresh hashed snapshot before each main fast-forward:
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md, docs/concurrency.md and docs/numerics.md. Preserve other tracked
-user changes too. Latest snapshot: /private/tmp/fwp-main-docs-pre120, restored
+user changes too. Latest snapshot: /private/tmp/fwp-main-docs-pre122, restored
 byte-for-byte. Actual bases, immutable preparation tags and retained revision
 tags are the recovery record if temporary helpers disappear. The shared audit
 checks all tracked links, whole commit messages, immutable ancestry and live

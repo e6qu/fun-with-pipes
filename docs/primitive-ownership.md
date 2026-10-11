@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #121. Arrays, maps and sets own typed elements.
+The tables describe main through PR #122. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -263,6 +263,13 @@ passed all six production gates and the documentation audit.
 
 ## Prepared refinements
 
+Bundle54–73 also prepares raw-memory contracts: address words borrow without
+managed counting; mem.string copies a borrowed managed String; ptr.read-string
+returns a fresh counted managed String independent of the raw buffer. Buffers
+from mem.alloc/mem.string require manual mem.free. These are locally checked
+candidate contracts, pending full production CI and merge. Numeric width and
+WebAssembly limitations remain in [ownership](ownership.md#phase-2-exit-gates).
+
 The remaining contracts below are prepared, with exact heads and immutable
 anchors in [the queue](roadmap-queue.md). [The handoff](development-state.md)
 gives current checks and the sole next action. Each delivery still needs its
@@ -272,77 +279,67 @@ prepared rows and acceptance evidence are in history.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 44 | Returned variant aliases transfer existing typed field owners directly, avoiding an extra box or retain set | Sequential CI; emitted ownership counts, aliases across yields and source/native agreement |
-| 45 | Match elimination preserves nominal types for effectful discarded constructor fields and their child destruction | Sequential CI; nested fields, aliasing, effects and evaluation order |
-| 46 | Inlined record projections retain checked base types while removing outer storage and dropping discarded children | Sequential CI; aliases, discarded nested fields and evaluation order |
-| 47 | Typed CAF cache owners survive caller drops; calls return separate owners and executable teardown releases caches after tasks | Sequential CI; initialization failures, reentry, overflow, aliases and teardown |
-| 48 | Inlining evaluates CAF arguments before the callee, including unused arguments, and releases their temporary owners | Sequential CI; first-trap order, raw interpreter agreement and missing-release control |
-| 49 | task.spawn borrows the caller thunk and retains a typed task owner until entry or cancellation; failed preparation rolls back before publication | Sequential CI; stack/scope failures, captures, aliases and scalar results; task graph still shares |
-| 50 | task.within borrows the caller thunk and retains typed captures through deadline completion or cancellation | Sequential CI; external aliases and rollback; task results still share |
-| 51 | task.scope borrows its callback, returns an owned result and protects result/scope storage through joining, traps and cancellation | Sequential CI; handler restoration, aliases and cleanup omission controls |
-| 52 | Counted task handles own typed cached results; scheduler/scope owners preserve tasks and each await returns an independent typed result owner | Sequential CI; minor roots, repeated awaits, overflow and cancelled/failed private awaits |
-| 53 | Typed channels retain queued elements and transfer queue ownership into receive results; close preserves queued values | Sequential CI; blocked calls, allocation/retain failures, minor roots and cycle policy |
-| 54 | C exports evaluate results once, release copied wrappers and preserve library-owned string pointers for the host | Sequential CI; conversion failure, nullable pointers, cached calls and host lifetimes |
-| 55 | C library strings/records are copied into owned inputs; partial conversion protects earlier arguments and fields until transfer | Sequential CI; invalid inputs, allocation/callee traps, scalar/pointer ABI and lengthless Bytes rejection |
-| 56 | Native library unload drains tasks, releases caches/runtime regions and restores host signal handlers; static archives clean at exit | Sequential CI; actual reload, finalizer order, descriptors, mappings and pthread cleanup metadata |
-| 57 | Native OpenCL initialization/teardown owns the loader handle, context and queue with ordered release on failure and exit | Sequential CI; fake API controls establish ownership, not real device execution |
-| 58 | Staged interpreter OpenCL owners release partial initialization before caching a failure; successful cache remains process-lived | Sequential CI; raw native/interpreter failure diagnostics and fake API lifetime controls |
-| 59 | TLS server context and ALPN owners survive listener stop and raw accepted-session transfer; last session releases them | Sequential CI; real OpenSSL failures, engine agreement and full TLS stress suites |
-| 60 | Library unload finalizes owned File/socket/HTTP2 descriptors and TLS sessions/caches without implicit shutdown traffic | Sequential CI; actual reload, explicit-close idempotence, host peers and cleanup omission controls |
-| 61 | gRPC service listener owners protect descriptors/TLS contexts through preparation and cancellation while accepted sessions retain protocol state | Sequential CI; source gRPC/TLS behavior and precise listener cleanup controls |
-| 62 | TLS client-cache publication preserves old entries and releases partial context/name owners on allocation failure; retry succeeds | Sequential CI; source TLS behavior, allocation controls and cached identity |
-| 63 | ALPN packing borrows list elements without collector scratch, checks wire length and allocation, and closes a newly connected socket on failure | Sequential CI; source TLS behavior, bounds and allocation/descriptor omission controls |
-| 64 | TCP preparation owns resolver results and pending descriptors through cancellation; TLS connection wrappers own sockets and SSL handshakes until transfer | Sequential CI; cancellation at each preparation boundary, refusal and cleanup omission controls |
-| 65 | Compatible complete worker calls transfer record fields directly; typed aliases and trap cleanup preserve ownership, with boxed partial/dynamic captures | Sequential CI; emitted box removal, interpreter agreement and field cleanup |
-| 66 | TLS peer subjects release acquired certificates, BIOs and native copy buffers on preparation failure or language String copy trap | Sequential CI; real handshakes, retry, Rust metadata agreement and omission controls |
-| 67 | TLS protocol String allocation keeps its owning connection live while reading SSL-owned bytes | Sequential CI; forced major trace, actual collection, session lifetime and missing-fence control |
-| 68 | Ownership probes pass valid GC metadata outputs; timer regressions exercise the merged join/drain/sort fixture under deliberate wake-order overtaking | Sequential CI; raw interpreter, preemption, stress and cleanup controls |
-| 69 | Rebuilt nested loop records remain flat; original owners, progressive retains and completed fields survive failed whole-result reconstruction | Sequential CI; alias matrices, scalar bits, retain/allocation traps and omission controls |
-| 70 | File construction owns raw streams before handle allocation and managed handles before path/finalizer preparation; failures close once and clear stale streams | Sequential CI; direct/scoped create/open, allocation/callback failures and finalization controls |
-| 71 | Native File writes flush stdio before returning so later descriptor reads see interpreter-equivalent bytes and flush errors preserve the borrowed handle | Sequential CI; immediate visibility, short-write/flush errors and omitted-flush controls |
-| 72 | File reads protect temporary buffers and owned streams, report read/write errors, and validate UTF-8 only for text; arbitrary byte reads remain binary | Sequential CI; raw interpreter errors, binary/text kinds, injected cleanup controls |
-| 73 | Original resource frames are anchored before optimization and remain observable through inlining; fusion cannot interleave their cleanup | Sequential CI; parameter/local/result/error lifetimes and pure-pipeline fusion control |
-| 74 | File logical alias counts live in the header independently of GC metadata; borrowed IO returns separately owned aliases and protects them during failures | Sequential CI; wide counts/overflow, GC-off close, IO traps and omission controls |
-| 75 | Mandatory resource ownership releases File aliases at original frame boundaries even when ordinary reuse/freeing is disabled | Sequential CI; descriptor-bound discard, preserved parameter lifetimes, aliases and omitted-frame-drop controls |
-| 76 | Scoped File callbacks return separately owned result aliases; task/loop results preserve File owners while disabled ordinary freeing still retains child storage | Sequential CI; raw interpreter/scoped/task/loop outputs, lost-owner and storage-free controls |
-| 77 | Bump-heap resource aggregates use logical count metadata and drop typed File children; count metadata releases while physical value storage remains | Sequential CI; required actual WASI fstat, wide counts/overflow and scalar-bit safety; host C is separate evidence |
-| 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
-| 78 | Disabled-free aggregates/tasks/channels dispose logical metadata and File children while physical bump storage remains | Sequential CI; O1/O2 omission controls and required actual WASI in both free modes |
-| 79 | Eligible field-only original record holders retain typed children without a parent box; boxed holders retain the parent | Sequential CI; original lifetime, partial-retain unwind and parent-box count control |
-| 80 | File handle, count and inline path share one aligned leaf allocation; checked size includes terminator | Sequential CI; display/I/O agreement, one allocation versus two and constructor rollback |
-| 81 | Last File owner closes the stream, removes weak finalizers and reclaims unshared native storage; shared/bump or disabled-free storage remains | Sequential CI; finalizer omission, reuse, freed-byte and scoped close-before-drop controls |
-| 82 | Failed File construction closes raw streams and releases allocated headers; finalizer growth commits only after checked allocation succeeds | Sequential CI; constructor fault stages, retained registry, overflow and stale-finalizer controls |
-| 83 | Original variant holders retain active typed payloads in structs; incoming values survive partial retains and boxed fallback | Sequential CI; tag/nullary/scalar safety, cleanup IDs and parent-box count controls |
-| 84 | Whole-pattern variant holders initialize from the current scrutinee on each binding path | Sequential CI; mixed let/pattern arms, exact-once close and stale-local prevention |
-| 85 | Whole-match scrutinees preserve nominal context; whole stack binders retain and drop their typed children | Sequential CI; File disposal plus HTTP/stack alias regressions and retain omission controls |
-| 86 | Record pattern holders initialize borrowed typed fields from their own current scrutinee before frame retention | Sequential CI; mixed let/pattern arms, exact-once close and preserved stack binder repair |
-| 87 | Nested nominal source matches discard typed File payloads at original frame exit without exhausting descriptors | Sequential CI; raw interpreter, optimized/unoptimized source, reuse/free and GC modes |
-| 88 | Channel close preserves queued values; explicit receive/discard drains and breaks a counted self-cycle | Sequential CI; queue counts and normal/poison disposal; automatic cycle reclamation remains unproved |
-| 89 | HTTP/2 body copying keeps the borrowed call/stream owner live while allocating from its external malloc buffer | Sequential CI; actual major collection, arbitrary bytes, finalizer lifetime and omitted-fence control |
-| 90 | Negative HTTP/2 body limits clamp to zero; size, completion, reset/dead and timeout retain interpreter ordering | Sequential CI; thirteen raw interpreter/native cases, removed-clamp and borrowed-root controls |
-| 91 | HTTP/2 peer subject malloc temporary remains unwind-owned through String/Option copying | Sequential CI; exactly-once release, copy traps, absent peer and no-TLS paths, omitted-cleanup controls |
-| 92 | Served gRPC peer metadata has a task owner plus retained detached-sender owners; release each after child joins, protect spawning | Sequential CI; tracing off/on, child and detached callbacks, cancellation, preparation traps, overflow and leak/early controls |
-| 93 | Served status messages transfer cancellation storage, stay unwind-owned through final encoding, and free normally; replaced stored statuses copy before old release | Sequential CI; final wire bytes, tracing off/on, cancellation, aliased replacement, retained context and allocation-failure/leak controls |
-| 94 | Unary server receive owns dequeued request/copied status through subsequent wait; transfers only returned request or error text; reflection releases end text | Sequential CI; binary transfer, missing/extra messages, reset/cancelled wait and omitted-release controls |
-| 95 | Streaming force owns received payload/status through decoding/copying; decoder failure and temporary error text unwind; first-error return transfers ownership | Sequential CI; first-error/memo behavior, decoder/copy traps, scalar/results, tracing off/on and three omission controls |
-| 96 | Streamed non-status error owns its rendering scratch before formatting/trapping | Sequential CI; partial-render/final trap, exact diagnostics, tracing off/on and omitted cleanup |
-| 97 | Encoded gRPC message h2_buf owns its malloc storage through cancellable flow-control waits | Sequential CI; zero/partial window cancellation, wake/resume, closed streams, exact plain/gzip frames and omitted cleanup |
-| 98 | Detached sender owns request encoding scratch through encoding and cancellable send | Sequential CI; encode trap recovery, normal request bytes/end marker, simultaneous request/wire cancellation and omitted cleanup |
-| 99 | Message/request encoders own canonical serialization scratch until transcoding completes or unwinds | Sequential CI; actual fixed-width/oneof bytes, partial serialization/transcoder traps, diagnostics and omitted cleanup |
-| 100 | Served unary/stream/error responses own encoded buffers through cancellation; error canonical scratch owns partial serialization | Sequential CI; real parked scheduler cancellation, normal bytes, partial traps and omitted cleanup controls |
-| 101 | Synchronous unary/iterator client requests own encoded buffers through encoding and cancellable sends | Sequential CI; real parked cancellation, request bytes/end marker, diagnostics and omitted cleanup controls |
-| 102 | Client failure helper takes copied transport/status/iterator text and releases it after raising | Sequential CI; exact raw trap and typed GrpcError code/text, copying before release and omitted cleanup |
-| 103 | Client receives own dequeued messages, status copies and decoder text across retry, callbacks and cancellation | Sequential CI; actual receive/scheduler success/retry/error/callback/cancel and first/next/decoder omission controls |
-| 104 | Pending gRPC connects own address lookup, descriptor and SSL through handshake and wrapper transfer | Sequential CI; actual loopback connect/handshake cancellation, refusal/handoff and omitted fd/SSL cleanup; partial background startup remains separate |
-| 105 | Background gRPC startup owns temporary and per-task reserved references until publication | Sequential CI; first/second spawn traps, actual reader/writer termination, descriptor/ref/finalizer checks and omitted reservation/startup/marker controls |
-| 106 | Dynamic gRPC context restores its saved task pointer on every callback exit | Sequential CI; nested normal/typed/raw failures, actual parked cancellation and omitted unwind restore |
-| 107 | Scoped TLS options have checked dynamic-scope and original inheriting-task owners | Sequential CI; structured/detached escapes, cancellation/preparation/overflow, original-context replacement, six malloc releases and three omission controls; plain tasks omit hooks |
-| 108 | Response metadata captures have constructor, scope and inheriting-task owners | Sequential CI; snapshots resist later child appends, nested forwarding, typed/raw/cancel exits, failed preparation and counter acquisition; three omission controls |
-| 109 | TLS pool identity preserves full fields with checked length framing | Sequential CI; delimiter collisions, every field, names beyond 1 KiB, actual key copy/pool reuse after scoped release, interpreter oracle and old-encoding rejection |
-| 110 | Library teardown releases read-once environment TLS caches after tasks/finalizers | Focused GitHub CI37948869170 passes; cache immutability, task/finalizer order, ten malloc frees, reinit/idempotence and omission control; sequential CI remains required |
-| 111 | Immutable TLS options pack header, strings and full key into one checked allocation | Focused GitHub CI37950759037 passes; sequential CI remains required; actual allocation/byte counts, header alignment, copied inputs, failure cleanup and existing scope/task/cache/pool controls |
-| 112 | Connections preserve full addresses after aligned headers in one checked allocation | Focused GitHub CI37958243461 passes; sequential CI remains required; actual long-address loopback/pool reuse, truncation rejection, copied inputs and requested bytes against legacy short-address layout; tracing compatibility remains |
-| 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
+| 54 | C exports evaluate results once, release copied wrappers and preserve library-owned string pointers for the host | Bundle CI; conversion failure, nullable pointers, cached calls and host lifetimes |
+| 55 | C library strings/records are copied into owned inputs; partial conversion protects earlier arguments and fields until transfer | Bundle CI; invalid inputs, allocation/callee traps, scalar/pointer ABI and lengthless Bytes rejection |
+| 56 | Native library unload drains tasks, releases caches/runtime regions and restores host signal handlers; static archives clean at exit | Bundle CI; actual reload, finalizer order, descriptors, mappings and pthread cleanup metadata |
+| 57 | Native OpenCL initialization/teardown owns the loader handle, context and queue with ordered release on failure and exit | Bundle CI; fake API controls establish ownership, not real device execution |
+| 58 | Staged interpreter OpenCL owners release partial initialization before caching a failure; successful cache remains process-lived | Bundle CI; raw native/interpreter failure diagnostics and fake API lifetime controls |
+| 59 | TLS server context and ALPN owners survive listener stop and raw accepted-session transfer; last session releases them | Bundle CI; real OpenSSL failures, engine agreement and full TLS stress suites |
+| 60 | Library unload finalizes owned File/socket/HTTP2 descriptors and TLS sessions/caches without implicit shutdown traffic | Bundle CI; actual reload, explicit-close idempotence, host peers and cleanup omission controls |
+| 61 | gRPC service listener owners protect descriptors/TLS contexts through preparation and cancellation while accepted sessions retain protocol state | Bundle CI; source gRPC/TLS behavior and precise listener cleanup controls |
+| 62 | TLS client-cache publication preserves old entries and releases partial context/name owners on allocation failure; retry succeeds | Bundle CI; source TLS behavior, allocation controls and cached identity |
+| 63 | ALPN packing borrows list elements without collector scratch, checks wire length and allocation, and closes a newly connected socket on failure | Bundle CI; source TLS behavior, bounds and allocation/descriptor omission controls |
+| 64 | TCP preparation owns resolver results and pending descriptors through cancellation; TLS connection wrappers own sockets and SSL handshakes until transfer | Bundle CI; cancellation at each preparation boundary, refusal and cleanup omission controls |
+| 65 | Compatible complete worker calls transfer record fields directly; typed aliases and trap cleanup preserve ownership, with boxed partial/dynamic captures | Bundle CI; emitted box removal, interpreter agreement and field cleanup |
+| 66 | TLS peer subjects release acquired certificates, BIOs and native copy buffers on preparation failure or language String copy trap | Bundle CI; real handshakes, retry, Rust metadata agreement and omission controls |
+| 67 | TLS protocol String allocation keeps its owning connection live while reading SSL-owned bytes | Bundle CI; forced major trace, actual collection, session lifetime and missing-fence control |
+| 68 | Ownership probes pass valid GC metadata outputs; timer regressions exercise the merged join/drain/sort fixture under deliberate wake-order overtaking | Bundle CI; raw interpreter, preemption, stress and cleanup controls |
+| 69 | Rebuilt nested loop records remain flat; original owners, progressive retains and completed fields survive failed whole-result reconstruction | Bundle CI; alias matrices, scalar bits, retain/allocation traps and omission controls |
+| 70 | File construction owns raw streams before handle allocation and managed handles before path/finalizer preparation; failures close once and clear stale streams | Bundle CI; direct/scoped create/open, allocation/callback failures and finalization controls |
+| 71 | Native File writes flush stdio before returning so later descriptor reads see interpreter-equivalent bytes and flush errors preserve the borrowed handle | Bundle CI; immediate visibility, short-write/flush errors and omitted-flush controls |
+| 72 | File reads protect temporary buffers and owned streams, report read/write errors, and validate UTF-8 only for text; arbitrary byte reads remain binary | Bundle CI; raw interpreter errors, binary/text kinds, injected cleanup controls |
+| 73 | Original resource frames are anchored before optimization and remain observable through inlining; fusion cannot interleave their cleanup | Bundle CI; parameter/local/result/error lifetimes and pure-pipeline fusion control |
+| 74 | File logical alias counts live in the header independently of GC metadata; borrowed IO returns separately owned aliases and protects them during failures | Bundle CI; wide counts/overflow, GC-off close, IO traps and omission controls |
+| 75 | Mandatory resource ownership releases File aliases at original frame boundaries even when ordinary reuse/freeing is disabled | Bundle CI; descriptor-bound discard, preserved parameter lifetimes, aliases and omitted-frame-drop controls |
+| 76 | Scoped File callbacks return separately owned result aliases; task/loop results preserve File owners while disabled ordinary freeing still retains child storage | Bundle CI; raw interpreter/scoped/task/loop outputs, lost-owner and storage-free controls |
+| 77 | Bump-heap resource aggregates use logical count metadata and drop typed File children; count metadata releases while physical value storage remains | Bundle CI; required actual WASI fstat, wide counts/overflow and scalar-bit safety; host C is separate evidence |
+| 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Bundle CI; escapes, cancellation and actual host behavior |
+| 78 | Disabled-free aggregates/tasks/channels dispose logical metadata and File children while physical bump storage remains | Bundle CI; O1/O2 omission controls and required actual WASI in both free modes |
+| 79 | Eligible field-only original record holders retain typed children without a parent box; boxed holders retain the parent | Bundle CI; original lifetime, partial-retain unwind and parent-box count control |
+| 80 | File handle, count and inline path share one aligned leaf allocation; checked size includes terminator | Bundle CI; display/I/O agreement, one allocation versus two and constructor rollback |
+| 81 | Last File owner closes the stream, removes weak finalizers and reclaims unshared native storage; shared/bump or disabled-free storage remains | Bundle CI; finalizer omission, reuse, freed-byte and scoped close-before-drop controls |
+| 82 | Failed File construction closes raw streams and releases allocated headers; finalizer growth commits only after checked allocation succeeds | Bundle CI; constructor fault stages, retained registry, overflow and stale-finalizer controls |
+| 83 | Original variant holders retain active typed payloads in structs; incoming values survive partial retains and boxed fallback | Bundle CI; tag/nullary/scalar safety, cleanup IDs and parent-box count controls |
+| 84 | Whole-pattern variant holders initialize from the current scrutinee on each binding path | Bundle CI; mixed let/pattern arms, exact-once close and stale-local prevention |
+| 85 | Whole-match scrutinees preserve nominal context; whole stack binders retain and drop their typed children | Bundle CI; File disposal plus HTTP/stack alias regressions and retain omission controls |
+| 86 | Record pattern holders initialize borrowed typed fields from their own current scrutinee before frame retention | Bundle CI; mixed let/pattern arms, exact-once close and preserved stack binder repair |
+| 87 | Nested nominal source matches discard typed File payloads at original frame exit without exhausting descriptors | Bundle CI; raw interpreter, optimized/unoptimized source, reuse/free and GC modes |
+| 88 | Channel close preserves queued values; explicit receive/discard drains and breaks a counted self-cycle | Bundle CI; queue counts and normal/poison disposal; automatic cycle reclamation remains unproved |
+| 89 | HTTP/2 body copying keeps the borrowed call/stream owner live while allocating from its external malloc buffer | Bundle CI; actual major collection, arbitrary bytes, finalizer lifetime and omitted-fence control |
+| 90 | Negative HTTP/2 body limits clamp to zero; size, completion, reset/dead and timeout retain interpreter ordering | Bundle CI; thirteen raw interpreter/native cases, removed-clamp and borrowed-root controls |
+| 91 | HTTP/2 peer subject malloc temporary remains unwind-owned through String/Option copying | Bundle CI; exactly-once release, copy traps, absent peer and no-TLS paths, omitted-cleanup controls |
+| 92 | Served gRPC peer metadata has a task owner plus retained detached-sender owners; release each after child joins, protect spawning | Bundle CI; tracing off/on, child and detached callbacks, cancellation, preparation traps, overflow and leak/early controls |
+| 93 | Served status messages transfer cancellation storage, stay unwind-owned through final encoding, and free normally; replaced stored statuses copy before old release | Bundle CI; final wire bytes, tracing off/on, cancellation, aliased replacement, retained context and allocation-failure/leak controls |
+| 94 | Unary server receive owns dequeued request/copied status through subsequent wait; transfers only returned request or error text; reflection releases end text | Bundle CI; binary transfer, missing/extra messages, reset/cancelled wait and omitted-release controls |
+| 95 | Streaming force owns received payload/status through decoding/copying; decoder failure and temporary error text unwind; first-error return transfers ownership | Bundle CI; first-error/memo behavior, decoder/copy traps, scalar/results, tracing off/on and three omission controls |
+| 96 | Streamed non-status error owns its rendering scratch before formatting/trapping | Bundle CI; partial-render/final trap, exact diagnostics, tracing off/on and omitted cleanup |
+| 97 | Encoded gRPC message h2_buf owns its malloc storage through cancellable flow-control waits | Bundle CI; zero/partial window cancellation, wake/resume, closed streams, exact plain/gzip frames and omitted cleanup |
+| 98 | Detached sender owns request encoding scratch through encoding and cancellable send | Bundle CI; encode trap recovery, normal request bytes/end marker, simultaneous request/wire cancellation and omitted cleanup |
+| 99 | Message/request encoders own canonical serialization scratch until transcoding completes or unwinds | Bundle CI; actual fixed-width/oneof bytes, partial serialization/transcoder traps, diagnostics and omitted cleanup |
+| 100 | Served unary/stream/error responses own encoded buffers through cancellation; error canonical scratch owns partial serialization | Bundle CI; real parked scheduler cancellation, normal bytes, partial traps and omitted cleanup controls |
+| 101 | Synchronous unary/iterator client requests own encoded buffers through encoding and cancellable sends | Bundle CI; real parked cancellation, request bytes/end marker, diagnostics and omitted cleanup controls |
+| 102 | Client failure helper takes copied transport/status/iterator text and releases it after raising | Bundle CI; exact raw trap and typed GrpcError code/text, copying before release and omitted cleanup |
+| 103 | Client receives own dequeued messages, status copies and decoder text across retry, callbacks and cancellation | Bundle CI; actual receive/scheduler success/retry/error/callback/cancel and first/next/decoder omission controls |
+| 104 | Pending gRPC connects own address lookup, descriptor and SSL through handshake and wrapper transfer | Bundle CI; actual loopback connect/handshake cancellation, refusal/handoff and omitted fd/SSL cleanup; partial background startup remains separate |
+| 105 | Background gRPC startup owns temporary and per-task reserved references until publication | Bundle CI; first/second spawn traps, actual reader/writer termination, descriptor/ref/finalizer checks and omitted reservation/startup/marker controls |
+| 106 | Dynamic gRPC context restores its saved task pointer on every callback exit | Bundle CI; nested normal/typed/raw failures, actual parked cancellation and omitted unwind restore |
+| 107 | Scoped TLS options have checked dynamic-scope and original inheriting-task owners | Bundle CI; structured/detached escapes, cancellation/preparation/overflow, original-context replacement, six malloc releases and three omission controls; plain tasks omit hooks |
+| 108 | Response metadata captures have constructor, scope and inheriting-task owners | Bundle CI; snapshots resist later child appends, nested forwarding, typed/raw/cancel exits, failed preparation and counter acquisition; three omission controls |
+| 109 | TLS pool identity preserves full fields with checked length framing | Bundle CI; delimiter collisions, every field, names beyond 1 KiB, actual key copy/pool reuse after scoped release, interpreter oracle and old-encoding rejection |
+| 110 | Library teardown releases read-once environment TLS caches after tasks/finalizers | Focused GitHub CI37948869170 passes; cache immutability, task/finalizer order, ten malloc frees, reinit/idempotence and omission control; final bundle CI remains required |
+| 111 | Immutable TLS options pack header, strings and full key into one checked allocation | Focused GitHub CI37950759037 passes; final bundle CI remains required; actual allocation/byte counts, header alignment, copied inputs, failure cleanup and existing scope/task/cache/pool controls |
+| 112 | Connections preserve full addresses after aligned headers in one checked allocation | Focused GitHub CI37958243461 passes; final bundle CI remains required; actual long-address loopback/pool reuse, truncation rejection, copied inputs and requested bytes against legacy short-address layout; tracing compatibility remains |
+| 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Bundle CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes
 idempotently. file.with transfers the owned callback result before scoped close;
@@ -361,7 +358,7 @@ not automatic cycle reclamation or general tracing-free support.
 ## Validation and limits
 
 Merged contracts through #103 passed their exact-head full platform gates.
-Prepared ownership extensions remain subject to their own sequential full
+Prepared ownership extensions remain subject to their final bundle full
 acceptance. Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,
 GC stress/verification and reuse poisoning. The interpreter/native comparison
