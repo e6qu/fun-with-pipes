@@ -81,8 +81,9 @@ for revision in git('rev-list',target+'..'+head,cwd=wt).splitlines():
  assert len(message.splitlines())==1 and len(message)<=80
  assert not any(term in message.lower() for term in ['co-authored','authored-by','authored by','ai attribution'])
 subprocess.run(['python3','scripts/check-roadmap.py'],cwd=wt,check=True)
-record=dict(source=source,oldbase=oldbase,base=target,head=head,branch=branch,originalCommits=originals,rebasedCommits=rebased,includedRows=list(range(74,113)),stage='GitHub preparation published; final actual-squash rebase and full mandatory-WASI production CI pending',ciRequirement='Inherited exact golden diagnostics plus FWP_REQUIRE_WASM_RESOURCE_COUNTS=1')
+record=dict(source=source,oldbase=oldbase,base=target,head=head,branch=branch,originalCommits=originals,rebasedCommits=rebased,includedRows=list(range(74,113)),stage='Verified runner preparation exported; user-authenticated publication and final production CI pending',ciRequirement='Inherited exact golden diagnostics plus FWP_REQUIRE_WASM_RESOURCE_COUNTS=1')
+from export_prepared_commits import export_history
+record['export']=export_history(wt,target,head,root/'prepared-commits.json.gz')
+record['tree']=record['export']['tree']
 (root/'preparation.json').write_text(json.dumps(record,indent=2)+'\n')
-git('push','origin','HEAD:refs/heads/'+branch,cwd=wt)
-assert git('ls-remote','origin','refs/heads/'+branch).split()[0]==head
-print(head)
+print('Verified preparation exported for authorized publication: '+head)
