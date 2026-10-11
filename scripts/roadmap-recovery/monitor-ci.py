@@ -10,6 +10,7 @@ RUNS = {
     'main122_docs': (38127751825, '68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4'),
     'resource_network_preparation': (38130008122, 'cfcb70d16044915206c2e681a72618021ba0ea97'),
     'gc_build_diagnostics': (38132388036, '9a7c7da652e2bc95e209e1fc0f98a45c1ef942dc'),
+    'streamlined_handoff_docs': (38134652467, '17241ed2f8443a351da1e475f6daa023e8a35186'),
 }
 record = {'observedAt': datetime.now(timezone.utc).isoformat(), 'runs': {}}
 for label, (number, head) in RUNS.items():

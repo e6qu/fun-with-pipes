@@ -7,16 +7,18 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: `roadmap/handoff-pr123-20261011`, checkpoint
-4226355397c0e488ab47eae2482978b9a4f691a8. It retains all11 docs and nine
+17241ed2f8443a351da1e475f6daa023e8a35186. It retains all11 docs and nine
 merge, recovery, inventory and GC repair drafts under `scripts/roadmap-recovery/`.
 Restore temporary helpers from that branch if /private/tmp is lost; copy the
 inventory pair into repo `scripts/` before its runner execution. Published blobs
 match their recorded source hashes; draft execution and the latest docs audit
-remain pending. Journal: /private/tmp/fwp-roadmap-current-gates-checkpoint.json.
+remain pending. Journal: /private/tmp/fwp-streamlined-handoff-checkpoint.json.
 This is a recovery branch, with no production PR or native acceptance.
-The next checkpoint also archives59 verbose preparation records and runs a
-GitHub docs/ancestry audit plus Python syntax checks for recovery drafts.
-Publication journal: /private/tmp/fwp-streamlined-handoff-checkpoint.json.
+This checkpoint archives59 verbose preparation records. Audit38134652467 was
+confirmed cancelled while unstarted before the updated runner drafts were
+checkpointed; cancellation is not verification. The updated checkpoint reruns
+the focused docs/ancestry and recovery Python syntax audit.
+Finalization-draft checkpoint journal: /private/tmp/fwp-runner-finalization-checkpoint.json.
 This focused audit does not replace production gates or execute merge drafts.
 
 ## Execution contract
@@ -306,6 +308,19 @@ intentional mandatory WASI requirement. After the GC repair is verified and
 integrated, additionally allow its explicit GC failure-artifact steps. Preserve
 all six job names, full test commands and inherited golden diagnostics; do not
 resolve either change by replacing the entire workflow with an older snapshot.
+
+Runner finalization draft: /private/tmp/fwp-finalize-resource-network-on-runner.py
+and its matching .yml. Publish its separate driver only after PR123 merges,
+the85-commit preparation passes and the focused GC repair passes. It requires
+all seven original PR123 gates completed before squash, validates the raw
+one-line message/parent/tree, restores all11 authoritative recovery docs and
+records acceptance in a runner worktree. It then rebases the verified preparation
+onto the actual squash, preserves its complete tree and original subjects,
+and adds only the tested GC harness/artifact steps plus fresh accepted docs.
+An exact old-head push lease protects concurrent edits. This is an unexecuted
+draft, with final documentation audit and all production gates still required.
+Its workflow bindings must follow any repaired evidence heads. Local main
+requires a separate guarded protection/update when the disk reserve permits.
 
 ## Local checks and durable recovery
 

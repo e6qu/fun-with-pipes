@@ -1,0 +1,39 @@
+name: Finalize accepted resource network bundle
+
+on:
+  push:
+    branches: [ownership-roadmap-finalization]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: e6qu/fun-with-pipes
+      # Replace these frozen evidence bindings if a focused repair is needed.
+      # Publish this driver only after PR123, preparation and GC evidence pass.
+      FWP_RECOVERY_HEAD: 17241ed2f8443a351da1e475f6daa023e8a35186
+      FWP_GC_EVIDENCE_HEAD: 9a7c7da652e2bc95e209e1fc0f98a45c1ef942dc
+      FWP_GC_EVIDENCE_RUN: "38132388036"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Retain actual main, evidence and immutable preparation tags
+        run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*'
+      - name: Ordinary commit metadata
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - name: Verify prerequisites and finalize preparation
+        run: python3 scripts/finalize-resource-network.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resource-network-finalization
+          path: finalization-evidence/
