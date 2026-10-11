@@ -146,16 +146,20 @@ The combined list.ap/list.flat-map candidate supplies borrowed inputs, owned
 synchronous callback results and counted spines, with scratch/result-prefix/
 partial-spine unwind controls. Flat-map copies retain typed element aliases and
 release the original callback chunks. Both repairs remain pending focused
-Linux/macOS evidence and final bundle gates; State slot policies remain on the
-tracing compatibility path. See the live handoff for exact candidate identities.
+Linux/macOS evidence and final bundle gates. The same candidate clears inactive
+State buffer words after pop, depth restoration and task exit; collector-scan,
+alias/error and real scheduler controls remain pending. Clearing dead roots
+does not count or destroy live State values. Typed State slot policies remain
+on the tracing compatibility path. See the handoff for candidate identities.
 
 The additional list and state rows are source review at main68f959bbf28c:
 [runtime list helpers](../runtime/fwp_rt_prims.c) call generic `fwp_apply1`
 and reconstruct their outputs; state handlers store V words without typed slot
 drop metadata. [Task switching](../runtime/fwp_rt_task.c) saves and restores the
 state buffer, and typed-error handlers restore its depth. These observations
-identify remaining contract work, not a reproduced semantic failure or a new
-reclamation result. Preserve callback order and nested task/error/trap behavior
+identify remaining contract work. The prepared root-clearing fix addresses
+source-visible retention without supplying a new reclamation result. Preserve
+callback order and nested task/error/trap behavior
 when extending ownership; the existing tracing fallback remains required.
 
 Keep these boundaries on tracing compatibility until their contracts and cleanup

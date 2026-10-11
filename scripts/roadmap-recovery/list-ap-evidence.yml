@@ -1,4 +1,4 @@
-name: Typed list applicative and flat-map callback ownership
+name: Typed list callbacks and State stack root cleanup
 on:
   push:
     branches: [ownership-evidence-list-applicative]
@@ -58,11 +58,11 @@ jobs:
         run: |
           cargo clippy --lib --test list_applicative_ownership -- -D warnings
           cargo test --lib -- --nocapture
-      - name: Native applicative/flat-map ownership, unwind, cancellation and alias controls
+      - name: List ownership, closure cleanup and State root controls
         run: |
           cargo test --test list_applicative_ownership -- --nocapture
           git diff --exit-code
-          shasum -a 256 src/cgen.rs src/ownership.rs runtime/fwp_rt_prims.c runtime/fwp_rt_gc.c tests/list_applicative_ownership.rs tests/fixtures/list_ap_probe.c tests/fixtures/closure_drop_probe.c target/debug/fwp > "$FWP_LIST_AP_ARTIFACTS/source-binary-hashes.txt"
+          shasum -a 256 src/cgen.rs src/ownership.rs runtime/fwp_rt.c runtime/fwp_rt_prims.c runtime/fwp_rt_gc.c runtime/fwp_rt_task.c runtime/fwp_rt_grpc.c tests/list_applicative_ownership.rs tests/fixtures/list_ap_probe.c tests/fixtures/closure_drop_probe.c tests/fixtures/state_slot_probe.c target/debug/fwp > "$FWP_LIST_AP_ARTIFACTS/source-binary-hashes.txt"
       - name: Equivalent callback pipeline allocations and counted reclamation
         run: python3 scripts/measure-list-callback-allocations.py
       - uses: actions/upload-artifact@v4

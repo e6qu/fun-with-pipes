@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-inventory-gate-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-state-slot-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint666f7cc7f3dfd35c897c85f2806e813ae521da71 has
-exact-head audit38152195379 queued. Earlier checkpoints and cancelled audits
+Current checkpoint05dc6c6795de6ae229ea852f024cf3ac595a11b9 has
+exact-head audit38153270436 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -220,10 +220,11 @@ typed ownership and teardown are proved.
 
 Review borrowed metadata roots, reconstruction/partial failure, retained
 callbacks/contexts and resource disposal. The source-reviewed fallback list also
-includes generic list.flat-map/list.ap reconstruction and per-task State slots;
-see [primitive contracts](primitive-ownership.md). Typed slot teardown and
-callback/temporary ownership remain acceptance work, without a reproduced
-failure or new reclamation claim. Channel close preserves queued values;
+includes per-task typed State slots and remaining callback/reconstruction paths;
+see [primitive contracts](primitive-ownership.md). List reconstruction owners
+and inactive State root clearing now have published candidate controls below.
+Typed State retention and deterministic teardown remain acceptance work.
+Channel close preserves queued values;
 explicit drain breaks its counted cycle, while automatic unreachable-cycle
 reclamation remains unproved. Scalar AD tape handles do not prove external
 buffer lifetimes. Numeric lifetime findings and future regressions are in
@@ -270,7 +271,8 @@ The draft adds a cheap standard-library documentation preflight before Cargo
 gates in all six jobs, using the actual generator test; original full gates
 and mandatory WASI remain unchanged. Runner validation is pending.
 
-Latest disk observation is about8.6GiB free, below64GiB. No local build, test,
+Disk is below64GiB; the current observation is recorded in Local checks below.
+No local build, test,
 format or rebase is authorized while the reserve is unavailable; only source
 editing and lightweight remote administration ran here.
 
@@ -342,10 +344,10 @@ all original tests and formats the final candidate on GitHub. Source inventory
 now intentionally includes the new scope and three AD refinements, but actual
 counts and phase2 exit remain unverified until merged-source runner evidence.
 
-## List applicative and flat-map ownership candidate
+## List ownership and State root cleanup candidate
 
 Branch ownership-evidence-list-applicative at
-88b5e20a497e6482ea7918d26a961531588499b0 runs38152053646, queued on
+0d1c44fedd083aca203db7c5a4a4a8d4e27057a1 runs38156088446, queued on
 Linux and both macOS architectures. Its exact baseline is PR123 head9e7d0b24.
 The recipe adds borrowed list.ap inputs, counted output spines
 and owned callback results. Two borrowed scratch arrays and the completed result
@@ -362,8 +364,7 @@ missing counted spine86 and missing product-size guard88. The probe explicitly
 requires real FWP_UNWIND=1 from a task-yield fixture. It retains source, binaries,
 statuses, compiler arguments, hardware and source/binary hashes.
 No compile or test has run yet; these are candidate contracts, not accepted
-reclamation or tracing-free support. The preceding31172327/run38146139289
-was cancelled while entirely queued before requiring actual unwind lowering.
+reclamation or tracing-free support. Superseded runs are recorded in history.
 
 The combined candidate also owns list.flat-map callback chunks before copying
 any output spine, preserving callback-before-copy evaluation order. Copied
@@ -377,9 +378,7 @@ functions, scalar and empty chunks, and callback trap order. Native GC/reuse
 probes add callback failure, task cancellation, partial-spine construction and
 immediate chunk drop controls. Omitted chunk-prefix ownership must exit99;
 omitted copied-element retain must exit100 before reading freed storage.
-The precedingb53a5f88/run38146295630 was cancelled while every job remained
-queued, then replaced by the combined three-platform matrix; no original
-applicative control was removed. The finite inventory draft permits exactly
+No original applicative control was removed. The finite inventory draft permits exactly
 these two collection contracts, with actual derived counts still pending.
 
 The same focused jobs now include runner-only equivalent allocation evidence.
@@ -396,16 +395,15 @@ three downloaded reports. Acceptance requires no increase in managed calls/bytes
 fewer shared count clears and more counted-storage reclamation on this workload.
 No timing, total external-allocation or tracing-free claim; measurements pending.
 Build targets stay outside uploaded artifacts, on GitHub runners only.
-The preceding6840f7e0/run38147216423 was cancelled while all three jobs were
-queued before adding this measurement stage. Original controls remain intact.
+Original controls remain intact.
 
 Boy scout source review found a recoverable closure-destructor bug: a capture
 trap or spill-buffer OOM leaves the per-thread work context pointing into the
 discarded C frame. The repair registers a stack cleanup that clears the context
 and frees its spill buffer on normal return and recovered trap. It preserves
 PR123's context getter/setter and native-library pthread-key unload behavior.
-The fourth recipe source is runtime/fwp_rt_gc.c; copying local main's older
-whole file would lose those library changes and is prohibited.
+Its runtime/fwp_rt_gc.c transform preserves the tested baseline; copying local
+main's older whole file would lose those library changes and is prohibited.
 A third regression test forces normal queue spilling, a capture-destructor trap
 and failure of the second actual spill allocation, then checks a subsequent
 drop. A no-op unwind registration must exit94 before dereferencing dead storage.
@@ -413,13 +411,31 @@ O1/O2 and both reuse settings retain C, binaries and statuses and require actual
 collection. The controls are prepared, not executed. Failed destruction is not
 retried; pending unreachable values retain the tracing fallback, so this is no
 claim of complete deterministic cleanup after arbitrary destructor failure.
-Previous05556bfb/run38148442793 was cancelled with all three jobs unstarted.
 Receipt: /private/tmp/fwp-closure-drop-list-publication.json. Publication verifies
 the exact-base function transform and source bytes; runner checks remain pending.
 
+Source review also found inactive State pointers in the GC-scanned backing
+buffer after normal pop, depth restoration and task exit. The candidate clears
+those words while preserving active prefixes, returned/error aliases and
+suspended task states. This uses existing storage, with no new allocation or
+ownership contract. Typed State ownership and trace-free eligibility remain
+separate phase2 work.
+Two additional tests cover pop and grown-buffer restoration, actual collector
+scans, run-state return/error, gRPC served-call trap/error recovery, and normal
+and cancelled C callbacks on the real scheduler. Three omitted stores require
+exact native exits104/105/112 before reading discarded values. Raw/native Pipe
+controls cover retained aliases, nested states, inner/outer errors and task
+cancellation. O1/O2 with both reuse settings require GC stress/verification and
+retain source, binaries and statuses. These controls have not executed.
+Receipt: /private/tmp/fwp-state-slot-list-publication.json. The seven-source
+recipe is reproduced from PR123's exact baseline; bounded replacement counts
+also preserve prepared112's additional File handler. Finalization includes the
+new state_slot_probe.c and all three State runtime sources, rather than replacing
+whole earlier files. The previous88b5 evidence run was cancelled entirely queued.
+
 Drafts: /private/tmp/fwp-list-ap-ownership-patch.json, fwp-list-ap-test.rs,
-fwp-list-ap-probe.c, fwp-closure-drop-probe.c, fwp-list-ap-evidence.yml and
-fwp-closure-drop-list-publication.json.
+fwp-list-ap-probe.c, fwp-closure-drop-probe.c, fwp-state-slot-probe.c,
+fwp-list-ap-evidence.yml and fwp-state-slot-list-publication.json.
 After all three focused jobs pass, the finalizer applies the exact tested recipe
 to the later resource bundle, preserving its source instead of copying older
 whole files. Full final-head production gates remain mandatory. The finite exit
@@ -446,7 +462,7 @@ actual evidence on the accepted source before proceeding to phase3.
 ## Local resource incident and next preparation
 
 Local compiled checks and rebases remain stopped below the64GiB reserve;
-latest observation is about8.6GiB free. Target data is approximately101MiB.
+Target data is approximately101MiB; current free disk is recorded below.
 Source editing and lightweight remote administration continue. Earlier refusals,
 recoveries and measurements are archived; no limit was raised or bypassed.
 
@@ -519,7 +535,7 @@ runner-formatted Rust files and updates the compiler replay recipe to reproduce
 those exact bytes from b0ae. Publication/source parity is verified; replacement
 formatting, lint, positive tests and omission controls remain pending. Receipt:
 /private/tmp/fwp-formatted-compiler-diagnostics-publication.json. No local compiler
-workload ran: free disk remains about9.5GiB, below the required64GiB reserve.
+workload ran; free disk remains below the required64GiB reserve.
 Superseded38132388036 and38135741797 were confirmed
 cancelled while unstarted before adding the compiler and cache repairs.
 The replacement runs formatting, focused lint, a real failing-CC
@@ -581,6 +597,15 @@ is serial, low priority and guarded: sampled aggregate RSS below1GiB, target
 below2GiB, at least64GiB free disk, deadline180 seconds. Stop at limits and move
 work to CI; never raise or bypass limits. The fun-refactor guard applies only to
 that other repository.
+
+Latest disk observation: df reports2,873,184KiB available, about2.7GiB.
+No local compiled check, full documentation audit or rebase ran on this turn.
+Source edits and publication ran serially; GitHub runner validation remains
+required. State publication command:
+`nice -n 15 python3 /private/tmp/fwp-publish-state-slot-list-evidence.py`.
+It verifies baseline recipe counts, staged/source hashes and the current branch
+parent before publication; receipt records head0d1c44fe. It is source verification,
+not a compiler or runtime result. Do not rerun completed publication helpers.
 
 ```sh
 env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test RELEVANT_TEST

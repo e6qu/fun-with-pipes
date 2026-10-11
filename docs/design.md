@@ -247,6 +247,10 @@ reclamation remains unproved. Other resource boundaries stay prepared.
 - A closure is a partial application of a known function. Tacit code has
   no free variables, so every function value can be serialized, which is
   how `comptime` results become static data.
+- Native State uses per-task scanned word storage. Prepared cleanup clears
+  inactive slots on return, error recovery and task exit, preserving active
+  suspended values and live aliases. This adds no surface syntax or counted
+  State contract; typed retention and teardown still require phase2 evidence.
 - A type descriptor per monomorphic type drives equality, ordering,
   hashing, `Display`, text parsing, typed JSON and the binary protocol in
   C. For JSON, nominal records also carry their declaration order and the

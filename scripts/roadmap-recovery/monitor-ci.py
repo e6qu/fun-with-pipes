@@ -11,10 +11,10 @@ RUNS = {
     'resource_network_preparation': (38140923130, '82c7bc7509c04b9e94004c06b02d83d665539ac6'),
     'gc_build_diagnostics': (38151169253, 'a27f8e5f78ab12e397119b76049aa6eefbf88157'),
     'autodiff_allocations': (38145198463, 'e586a4d12a477aefcc854e12f6bbf2f640299de8'),
-    'list_applicative': (38152053646, '88b5e20a497e6482ea7918d26a961531588499b0'),
+    'list_applicative': (38156088446, '0d1c44fedd083aca203db7c5a4a4a8d4e27057a1'),
     'autodiff_scopes': (38141558055, '475cb242715961e5e396e4fe74026545160d2e3c'),
     'autodiff_tapes': (38139112950, '602e076604d3dd759c47b396c10cf848dd9dbb61'),
-    'streamlined_handoff_docs': (38152195379, '666f7cc7f3dfd35c897c85f2806e813ae521da71'),
+    'streamlined_handoff_docs': (38153270436, '05dc6c6795de6ae229ea852f024cf3ac595a11b9'),
 }
 record = {'observedAt': datetime.now(timezone.utc).isoformat(), 'runs': {}}
 for label, (number, head) in RUNS.items():

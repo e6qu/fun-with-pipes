@@ -333,20 +333,24 @@ for name, edits in scope_edits.items():
 for name in ['tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']:
     (wt / name).parent.mkdir(parents=True, exist_ok=True)
     (wt / name).write_bytes(blob(SCOPE_HEAD, name))
-# Add owned Cartesian-product callbacks without replacing later native files.
+# Add owned list callbacks and State dead-root cleanup without replacing later files.
 ap_patch = blob(AP_HEAD, 'scripts/list-ap-ownership-patch.json')
 ap_edits = json.loads(ap_patch)
-assert set(ap_edits) == {'src/cgen.rs', 'src/ownership.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_gc.c'}
+assert set(ap_edits) == {'src/cgen.rs', 'src/ownership.rs', 'runtime/fwp_rt_prims.c',
+                         'runtime/fwp_rt_gc.c', 'runtime/fwp_rt.c',
+                         'runtime/fwp_rt_grpc.c', 'runtime/fwp_rt_task.c'}
 for name, edits in ap_edits.items():
     evidence_source = blob(TESTED, name).decode()
     source = (wt / name).read_text()
     for edit in edits:
-        assert evidence_source.count(edit['old']) == source.count(edit['old']) == 1, name
+        assert evidence_source.count(edit['old']) == edit.get('count', 1), name
+        assert source.count(edit['old']) == edit.get('preparedCount', edit.get('count', 1)), name
         evidence_source = evidence_source.replace(edit['old'], edit['new'])
         source = source.replace(edit['old'], edit['new'])
     assert evidence_source.encode() == blob(AP_HEAD, name), name
     (wt / name).write_text(source)
-for name in ['tests/list_applicative_ownership.rs', 'tests/fixtures/list_ap_probe.c', 'tests/fixtures/closure_drop_probe.c']:
+for name in ['tests/list_applicative_ownership.rs', 'tests/fixtures/list_ap_probe.c',
+             'tests/fixtures/closure_drop_probe.c', 'tests/fixtures/state_slot_probe.c']:
     (wt / name).parent.mkdir(parents=True, exist_ok=True)
     (wt / name).write_bytes(blob(AP_HEAD, name))
 repair_files = ['tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lifetime.rs',
@@ -355,6 +359,8 @@ repair_files = ['tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lif
                 'tests/fixtures/ad_unwind_probe.c', 'src/interp.rs', 'src/ownership.rs',
                 'lib/autodiff.fwp', 'tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']
 repair_files += ['runtime/fwp_rt_prims.c', 'runtime/fwp_rt_gc.c', 'tests/list_applicative_ownership.rs', 'tests/fixtures/list_ap_probe.c', 'tests/fixtures/closure_drop_probe.c']
+repair_files += ['runtime/fwp_rt.c', 'runtime/fwp_rt_grpc.c', 'runtime/fwp_rt_task.c',
+                 'tests/fixtures/state_slot_probe.c']
 inventory_files = {
     'scripts/check-primitive-inventory.py': 'scripts/roadmap-recovery/check-primitive-inventory.py',
     'scripts/primitive-inventory.rs': 'scripts/roadmap-recovery/primitive-inventory.rs',

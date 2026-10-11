@@ -360,6 +360,7 @@ in [the handoff](development-state.md), rather than a second priority list here.
 | File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Bundle CI; shared/stale handles and actual WASI behavior |
 | Autodiff ownership | Scoped numeric buffers, validated/retired tokens and counted gradient arrays | Callback return/error/cancellation, nested scopes, GC/reuse and raw/native controls; equivalent steady-state allocation counts/bytes must not increase |
 | Applicative and flat-map callbacks | Borrowed inputs, owned results/chunks, retained copied aliases and counted spines; separate scratch/unwind owners | Raw/native aliases and order, callback trap/cancellation, partial spine and size controls; focused and full bundle gates |
+| State backing storage | Clear inactive scanned words on pop, handler restoration and task exit; preserve suspended active states | Actual collector scans, live aliases, nested failures, gRPC recovery and real task exit/cancellation; typed State ownership remains separate |
 | WASM resources | Logical aggregate/task counts and disposal metadata | Actual-WASI full gates; physical bump storage remains allocated |
 | Frame representation | Typed record fields and variant structs, per-path pattern initialization | Bundle CI; nested holders and partial-retain traps |
 

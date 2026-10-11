@@ -1,0 +1,58 @@
+{
+  "base": "9e7d0b24610524cf54125c44b47ee07185c0b7c3",
+  "current": "88b5e20a497e6482ea7918d26a961531588499b0",
+  "prepared": "b45e93a71d400ae3872142c70b29aa8128793e07",
+  "counts": {
+    "runtime/fwp_rt.c": [
+      {
+        "old": "static void fwp_state_push(V s) {",
+        "baselineCount": 1,
+        "preparedCount": 1
+      }
+    ],
+    "runtime/fwp_rt_prims.c": [
+      {
+        "old": "fwp_state_len = h.state_depth;",
+        "baselineCount": 2,
+        "preparedCount": 3
+      },
+      {
+        "old": "V st = fwp_state[--fwp_state_len];",
+        "baselineCount": 1,
+        "preparedCount": 1
+      }
+    ],
+    "runtime/fwp_rt_grpc.c": [
+      {
+        "old": "fwp_state_len = h.state_depth;",
+        "baselineCount": 4,
+        "preparedCount": 4
+      }
+    ],
+    "runtime/fwp_rt_task.c": [
+      {
+        "old": "        fwp_state_len = 0;",
+        "baselineCount": 1,
+        "preparedCount": 1
+      },
+      {
+        "old": "    t->unwinding = 1;\n    fwp_handlers = 0;\n    fwp_join_children();",
+        "baselineCount": 1,
+        "preparedCount": 1
+      },
+      {
+        "old": "fwp_state_len = h.state_depth;",
+        "baselineCount": 1,
+        "preparedCount": 1
+      }
+    ],
+    "src/cgen.rs": [
+      {
+        "old": "fwp_state_len = h.state_depth;",
+        "baselineCount": 1,
+        "preparedCount": 1
+      }
+    ]
+  },
+  "stage": "Exact source transforms prepared; no compiler or native test executed"
+}

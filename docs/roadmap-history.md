@@ -7,6 +7,23 @@ not current instructions or a priority queue. Consult [the active plan](../PLAN.
 for current heads, validation requirements and next actions. Old "next" actions,
 pending statuses and former CI job counts below are superseded by the handoff.
 
+## Superseded list evidence preparations, 2026-10-11
+
+All jobs in each replaced run were still queued when cancelled. These are
+publication history, not passing controls:
+
+| Head / run | Reason for replacement |
+|---|---|
+| 31172327 /38146139289 | Require actual unwind lowering in native probe |
+| b53a5f88 /38146295630 | Bundle typed flat-map chunk/copy owners |
+| 6840f7e0 /38147216423 | Add equivalent runner allocation measurement |
+| 05556bfb /38148442793 | Repair recovered closure-destructor contexts |
+| 88b5e20a /38152053646 | Clear inactive State roots and add real handler/task controls |
+
+Original list and closure controls remain present in the current candidate.
+The handoff contains its exact head and pending runner gate; none of these old
+runs supplies production acceptance or tracing-free support.
+
 ## Early deliveries
 
 Automatic sequential roadmap execution was authorized on 2026-10-07. The old
