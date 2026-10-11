@@ -26,6 +26,17 @@ fn int(v: &Value) -> i64 {
     v.as_i128().unwrap_or(0) as i64
 }
 
+// Match the native length/header/V-slot overflow limit before allocating or
+// invoking a generator callback. Negative counts retain their empty result.
+fn array_count(v: &Value) -> R<usize> {
+    let count = int(v).max(0) as u64;
+    let limit = (usize::MAX - std::mem::size_of::<u64>()) / std::mem::size_of::<u64>();
+    if count > limit as u64 {
+        return trap("array too large");
+    }
+    Ok(count as usize)
+}
+
 fn chars(s: &str) -> Vec<char> {
     s.chars().collect()
 }
@@ -673,13 +684,13 @@ impl<'p> Interp<'p> {
                     Value::Array(Rc::new(v))
                 }
                 "array.make" => {
-                    Value::Array(Rc::new(vec![a[1].clone(); int(&a[0]).max(0) as usize]))
+                    Value::Array(Rc::new(vec![a[1].clone(); array_count(&a[0])?]))
                 }
                 "array.generate" => {
                     let f = a[1].clone();
                     let mut out = Vec::new();
-                    for i in 0..int(&a[0]).max(0) {
-                        out.push(self.apply(f.clone(), vec![Value::I64(i)])?);
+                    for i in 0..array_count(&a[0])? {
+                        out.push(self.apply(f.clone(), vec![Value::I64(i as i64)])?);
                     }
                     Value::Array(Rc::new(out))
                 }

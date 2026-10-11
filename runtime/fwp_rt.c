@@ -177,6 +177,7 @@ static V fwp_list_from(const V *a, size_t n) {
 }
 
 static V fwp_arr_new(size_t n) {
+    if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
     fwp_arr *a = (fwp_arr *)fwp_alloc(sizeof(fwp_arr) + n * sizeof(V));
     a->len = n;
     return PTR(a);
