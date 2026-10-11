@@ -1,0 +1,11 @@
+{
+  "base": "1aadb8a075e1737d0e6a4db96eae5d675f6fb404",
+  "sourceSha256": "ff580b8fe3e67639d5f7b97d4ddfc16c989abdf9ccdb81b089bd4c758d2f1af5",
+  "status": "Source-reviewed draft; runner controls and final production gates pending",
+  "issues": [
+    "Addition overflow",
+    "Capacity doubling overflow",
+    "Unchecked realloc failure"
+  ],
+  "policy": "Retain malloc/free family and exit102 out-of-memory behavior"
+}

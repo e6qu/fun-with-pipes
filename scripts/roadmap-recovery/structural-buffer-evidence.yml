@@ -1,0 +1,36 @@
+name: Structural buffer overflow and allocation controls
+on:
+  push:
+    branches: [ownership-evidence-structural-buffer]
+permissions:
+  contents: read
+jobs:
+  buffers:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+      CC: clang
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Format and validate checked buffer growth
+        env:
+          FWP_BUFFER_ARTIFACTS: ${{ runner.temp }}/buffer-evidence
+        run: |
+          rustfmt --edition 2021 tests/structural_buffer.rs
+          cargo test --test structural_buffer -- --nocapture
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: buffer-controls-${{ matrix.os }}
+          path: ${{ runner.temp }}/buffer-evidence/

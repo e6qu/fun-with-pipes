@@ -6,9 +6,8 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `160a5ef367316fe1e9647a5bea441b91c21a4771` passes audit38175639142.
-The next checkpoint retains the completed repair export and this streamlined
-handoff. Query the branch tip when recovering; do not assume an embedded
+checkpoint `d92d05cf564d7452c40bb3e2a0762077c291390b` passes audit38180292480
+and retains the latest AD/input and callback diagnostic sources. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
 Git blob hashes using restore-roadmap-recovery.py. The AST-based restore repair
 is source-reviewed, but its execution has not been validated. Never rerun
@@ -90,7 +89,8 @@ runner38179961853: eight effect controls, original snapshots, native task aliase
 State controls and71 library units. Argument comparison permits only the
 parameter's known outer effects, preserves nested input rows and displays the
 original callback type on every mismatch. No original task fixture was changed.
-Integrate this refinement and these docs before publication and full gates.
+Final driver040a3f64f4e2fcc9466c76aea7466a6fc36a3d68 integrates this refinement
+and streamlined docs; runner38180262247 is in progress before publication.
 
 Complete counters include initializer fast paths and count slow delegation once.
 Independent Linux/ARM/Intel State38174682933, list38175393180 and scoped
@@ -195,6 +195,25 @@ buffer lifetimes. Numeric lifetime findings and future regressions are in
 performance and tracing-free work. Phases3–6 still require implementation and
 measured acceptance; the prepared ownership queue is not the whole plan.
 
+## Next bundle preparation
+
+The177 remaining declarations have an explicit shared-fallback review draft at
+/private/tmp/fwp-phase2-explicit-fallback-review-draft.json. It records argument,
+result, callback, retention, teardown and cycle policies across18 families.
+This is preparation, not a merged-source audit or tracing-free eligibility proof.
+Validate the actual accepted inventory and compiler wrappers before phase2 exit.
+
+The boy scout audit found structural buffer addition/doubling overflow and
+unchecked realloc failure in the exact1aadb runtime/fwp_rt_ops.c. Draft repair
+preserves malloc/free storage and exits102 on overflow/allocation failure.
+Runner-only branch ownership-evidence-structural-buffer publishes
+c95d970c8c300cf3b342847ee60f7fd052294f28; runner38180514117 has passing Linux/ARM controls, with Intel still running. Tests cover
+ordinary growth/data preservation, addition overflow, capacity overflow and
+allocation failure at O1/O2 with ASan/UBSan, plus three deliberate omission
+variants. Drafts: fwp-structural-buffer-{draft.c,test.rs,probe.c,patch.json}.
+Fold it into the next ownership exit bundle after PR124 acceptance; no second
+production PR opens before that merge.
+
 ## Local checks and recovery
 
 Full builds/tests, benchmarks and large regeneration run on GitHub. Local
@@ -202,7 +221,7 @@ workloads are serial, low priority and guarded: sampled aggregate RSS below1GiB,
 target below2GiB, at least64GiB free disk, deadline180 seconds. Stop at limits;
 never raise or bypass them. Use `python3 scripts/local-guard.py COMMAND...` for
 fwp checks. The fun-refactor guard applies to that other repository.
-Latest disk observation:44,150,024KiB available, about42.1GiB; local target
+Latest disk observation:61,067,468KiB available, about58.2GiB; local target
 103,696KiB, about101.3MiB. The64GiB reserve remains unavailable. No local compiled
 check, broad doc audit, rebase or fast-forward ran. Only source edits and bounded
 remote metadata publication/downloads ran serially at low priority.

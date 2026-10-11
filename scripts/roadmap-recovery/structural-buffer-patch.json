@@ -1,0 +1,8 @@
+{
+  "runtime/fwp_rt_ops.c": [
+    {
+      "old": "static void buf_grow(fwp_buf *b, size_t extra) {\n    if (b->len + extra + 1 > b->cap) {\n        size_t cap = b->cap ? b->cap : 64;\n        while (cap < b->len + extra + 1) cap *= 2;\n        b->d = (char *)realloc(b->d, cap);\n        b->cap = cap;\n    }\n}",
+      "new": "static void buf_grow(fwp_buf *b, size_t extra) {\n    if (b->len == SIZE_MAX || extra > SIZE_MAX - b->len - 1) {\n        fprintf(stderr, \"fwp: out of memory\\n\");\n        exit(102);\n    }\n    size_t needed = b->len + extra + 1;\n    if (needed > b->cap) {\n        size_t cap = b->cap ? b->cap : 64;\n        while (cap < needed) {\n            if (cap > SIZE_MAX / 2) { cap = needed; break; }\n            cap *= 2;\n        }\n        char *data = (char *)realloc(b->d, cap);\n        if (!data) {\n            fprintf(stderr, \"fwp: out of memory\\n\");\n            exit(102);\n        }\n        b->d = data;\n        b->cap = cap;\n    }\n}"
+    }
+  ]
+}
