@@ -78,20 +78,80 @@ fn render(stdout: &[u8], stderr: &[u8], code: i32) -> String {
     s
 }
 
+fn status_detail(status: std::process::ExitStatus) -> String {
+    let detail = format!("code={:?}", status.code());
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        format!(
+            "{detail} signal={:?} core_dumped={}",
+            status.signal(),
+            status.core_dumped()
+        )
+    }
+    #[cfg(not(unix))]
+    {
+        detail
+    }
+}
+
+fn retain_stress_failure(path: &Path, dir: &Path, want: &str, got: &str) {
+    let stem = path.file_stem().unwrap();
+    let exe = dir.join(stem);
+    let retained = std::env::temp_dir().join(format!(
+        "fwp-golden-gc-{}-{}",
+        std::process::id(),
+        stem.to_string_lossy()
+    ));
+    if exe.exists() {
+        std::fs::copy(&exe, &retained).unwrap();
+        eprintln!("GC stress binary retained at {}", retained.display());
+    }
+    std::fs::copy(exe.with_extension("status"), retained.with_extension("status")).unwrap();
+    std::fs::write(
+        retained.with_extension("report"),
+        format!("--- expected\n{want}--- got\n{got}"),
+    )
+    .unwrap();
+    let source = retained.with_extension("c");
+    let emitted = Command::new(fwp())
+        .args(["build", "--emit-c", "-O2", "-o"])
+        .arg(&source)
+        .arg(path.file_name().unwrap())
+        .current_dir(path.parent().unwrap())
+        .output()
+        .unwrap();
+    if emitted.status.success() {
+        eprintln!("GC stress C retained at {}", source.display());
+    } else {
+        std::fs::write(retained.with_extension("emit.log"), &emitted.stderr).unwrap();
+    }
+}
+
 /// A golden program built natively and run with a collection at every
 /// allocation: the output must not change.
-fn stressed(path: &Path, dir: &Path) -> Option<String> {
+fn stressed(path: &Path, dir: &Path) -> String {
+    stressed_with_env(path, dir, &[])
+}
+
+fn stressed_with_env(path: &Path, dir: &Path, env: &[(&str, &str)]) -> String {
     let exe = dir.join(path.file_stem().unwrap());
     let b = Command::new(fwp())
         .arg("build")
         .arg(path.file_name().unwrap())
         .args(["-O2", "-o"])
         .arg(&exe)
+        .envs(env.iter().copied())
         .current_dir(path.parent().unwrap())
         .output()
         .unwrap();
+    let status_path = exe.with_extension("status");
+    let build_status = format!("build -O2: {}\n", status_detail(b.status));
+    std::fs::write(&status_path, &build_status).unwrap();
     if !b.status.success() {
-        return None; // compile errors are covered by tests/golden_run.rs
+        // Expected source errors still match their snapshots. A native C
+        // compiler failure for a valid program must not silently skip GC CI.
+        return render(b"", &b.stderr, b.status.code().unwrap_or(-1));
     }
     let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
     let mut child = Command::new(&exe)
@@ -107,11 +167,15 @@ fn stressed(path: &Path, dir: &Path) -> Option<String> {
         .unwrap();
     child.stdin.take().unwrap().write_all(&input).unwrap();
     let out = child.wait_with_output().unwrap();
-    Some(render(
-        &out.stdout,
-        &out.stderr,
-        out.status.code().unwrap_or(-1),
-    ))
+    std::fs::write(
+        &status_path,
+        format!(
+            "{build_status}run FWP_GC_STRESS=1 FWP_GC_VERIFY=1: {}\n",
+            status_detail(out.status)
+        ),
+    )
+    .unwrap();
+    render(&out.stdout, &out.stderr, out.status.code().unwrap_or(-1))
 }
 
 #[test]
@@ -135,21 +199,84 @@ fn golden_programs_under_gc_stress() {
                     break;
                 };
                 let want = std::fs::read_to_string(path.with_extension("out")).unwrap_or_default();
-                if let Some(got) = stressed(&path, &dir.0) {
-                    if got != want {
-                        failures.lock().unwrap().push(format!(
-                            "{} (FWP_GC_STRESS=1):\n--- expected\n{}--- got\n{}",
-                            path.display(),
-                            want,
-                            got
-                        ));
-                    }
+                let got = stressed(&path, &dir.0);
+                if got != want {
+                    retain_stress_failure(&path, &dir.0, &want, &got);
+                    failures.lock().unwrap().push(format!(
+                        "{} (FWP_GC_STRESS=1):\n--- expected\n{}--- got\n{}",
+                        path.display(),
+                        want,
+                        got
+                    ));
                 }
             });
         }
     });
     let failures = failures.into_inner().unwrap();
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[cfg(unix)]
+#[test]
+fn gc_stress_reports_native_compiler_failure() {
+    use std::os::unix::fs::PermissionsExt;
+    if !have_cc() {
+        return;
+    }
+    let dir = TempDir::new("compiler-failure-control");
+    let source = dir.0.join("gc-compiler-failure-control.fwp");
+    std::fs::write(&source, "main = \"hello\" | string.repeat 3 | echo\n").unwrap();
+    let compiler = dir.0.join("fail-cc");
+    std::fs::write(
+        &compiler,
+        "#!/bin/sh\nprintf '%s\\n' 'GC compiler failure control' >&2\nexit 37\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&compiler, std::fs::Permissions::from_mode(0o755)).unwrap();
+    let got = stressed_with_env(&source, &dir.0, &[("CC", compiler.to_str().unwrap())]);
+    assert!(
+        got.contains("GC compiler failure control"),
+        "native compiler failure was not reported: {got}"
+    );
+    assert!(got.contains("--- exit "), "{got}");
+    assert_ne!(got, "hellohellohello\n");
+    retain_stress_failure(&source, &dir.0, "hellohellohello\n", &got);
+    let retained = std::env::temp_dir().join(format!(
+        "fwp-golden-gc-{}-gc-compiler-failure-control",
+        std::process::id()
+    ));
+    assert!(retained.with_extension("c").exists());
+    assert!(std::fs::read_to_string(retained.with_extension("status"))
+        .unwrap()
+        .contains("build -O2: code=Some("));
+    let positive = stressed(&source, &dir.0);
+    assert_eq!(positive, "hellohellohello\n");
+    let executable = dir.0.join("gc-compiler-failure-control");
+    assert!(executable.exists());
+    let positive_status = std::fs::read_to_string(executable.with_extension("status")).unwrap();
+    assert!(positive_status.contains("build -O2: code=Some(0)"));
+    assert!(positive_status.contains("run FWP_GC_STRESS=1 FWP_GC_VERIFY=1: code=Some(0)"));
+    if let Some(destination) = std::env::var_os("FWP_GC_DIAGNOSTICS_ARTIFACTS") {
+        let destination = PathBuf::from(destination);
+        std::fs::create_dir_all(&destination).unwrap();
+        std::fs::copy(&source, destination.join("source.fwp")).unwrap();
+        std::fs::copy(&executable, destination.join("positive.bin")).unwrap();
+        std::fs::copy(
+            executable.with_extension("status"),
+            destination.join("positive.status"),
+        )
+        .unwrap();
+        for extension in ["c", "status", "report"] {
+            std::fs::copy(
+                retained.with_extension(extension),
+                destination.join(format!("negative.{extension}")),
+            )
+            .unwrap();
+        }
+    }
+    for extension in ["c", "status", "report", "emit.log"] {
+        let _ = std::fs::remove_file(retained.with_extension(extension));
+    }
 }
 
 /// The collector's statistics line (FWP_GC_STATS=1): (MiB allocated,
