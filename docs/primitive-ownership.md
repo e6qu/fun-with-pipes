@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #118. Arrays, maps and sets own typed elements.
+The tables describe main through PR #119. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -92,11 +92,13 @@ does not identify a runtime sharing boundary. The scalar
 category includes `ad.tape`, which creates external tape state; scalar values do
 not prove allocation freedom or complete lifetime coverage. Generic numeric,
 boxed 128-bit, callback, resource and reconstructed-value cases require their
-actual representations. The corrected alias-aware audit passes through the root guard (0.18 CPU /
-0.72 elapsed s), without building the full compiler or changing source. It is
+actual representations. The portable audit passes on GitHub at evidence head
+669c19e7cb67 (CI38099556010), checking actual contract metadata and IR lowering,
+explicit aliases and all recorded compiler/library source hashes. Run the
+inventory again on actual merged source at the phase 2 exit checkpoint. This is
 prepared-source classification, not main acceptance or a tracing-free guarantee.
-Original counts and the new reproducible method are in
-[history](roadmap-history.md#effective-primitive-declaration-review).
+Counts and scope are recorded in
+[history](roadmap-history.md#portable-finite-ownership-inventory-2026-10-11).
 
 Unknown primitive, foreign and remote boundaries keep the explicit shared
 fallback in [src/ownership.rs](../src/ownership.rs). A successful result or a
@@ -261,23 +263,15 @@ passed all six production gates and the documentation audit.
 
 ## Prepared refinements
 
-Rows marked delivered or skipped already have main acceptance; the remaining
-contracts are published preparations. Exact heads and immutable parent anchors
-are in [the queue](roadmap-queue.md); current commands
-and failures are in [the handoff](development-state.md). Each sequential PR needs
-its own final rebase, focused checks and six passing exact-head full gates.
+The remaining contracts below are prepared, with exact heads and immutable
+anchors in [the queue](roadmap-queue.md). [The handoff](development-state.md)
+gives current checks and the sole next action. Each delivery still needs its
+actual squash-base rebase and all seven exact-head gates. Merged contracts are
+summarized in [ownership](ownership.md#merged-ownership-boundaries); earlier
+prepared rows and acceptance evidence are in history.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 33 | Delivered in PR112: loop state/Step unwind and flattened Again preservation | All seven exact-head gates pass; later reconstruction extensions remain prepared |
-| 34 | Immutable argument/capture preparation anchor; code/probes delivered in PR107 through row28 | Skipped after33 acceptance; preserve anchor and later coverage |
-| 35 | Constructors protect consumed typed fields before allocating storage; caller owners stay separate until actual transfer | Sequential CI; record/variant allocation failures, aliases and IR transfer checks |
-| 36 | Owned worker record/variant results keep typed field owners until boxing succeeds; remaining caller owners stay protected | Sequential CI; boxing allocation failures, external aliases and nested typed fields |
-| 37 | Delivered in PR115: boxed-to-worker wrappers protect original arguments and completed typed field duplicates until worker entry | All seven exact-head gates pass; partial retention failure, boxed/scalar arguments, aliases and transfer preserved |
-| 38 | Delivered in PR116: eligible loop state stays flattened; initial boxes and completed typed field duplicates stay owned until transfer | All seven exact-head gates pass; partial field failures, cancellation slots, aliases and trap/evaluation order preserved |
-| 39 | Delivered in PR117: multi-field retains protect completed extras and existing caller owners through count overflow | All seven exact-head gates pass; unfinished references excluded, partial variant/stack retains and aliases preserved |
-| 40 | Delivered in PR118: monomorphic context supplies missing nested constructor/field temporary types; inferred expression types remain authoritative | All seven exact-head gates pass; later-field failure, dynamic arguments, updates and exact IR types |
-| 41 | Boxed-to-struct variants retain original typed owners through payload preparation; consumed-value checkpoints protect only remaining caller references | Sequential CI; retain overflow, aliases, scalar safety and exact IR ownership checkpoint |
 | 42 | Record updates retain typed kept fields, release overwritten owners and protect replacement/partial-copy storage; general copies preserve borrowed original | Sequential CI; unique/copied updates, partial retention/allocation failures, scalar safety and aliases |
 | 43 | Boxed record conversion protects consumed original and caller owners before each typed worker-field retain; partial extras release on failure | Sequential CI; count-overflow conversion, external aliases, scalar safety and entry transfer |
 | 44 | Returned variant aliases transfer existing typed field owners directly, avoiding an extra box or retain set | Sequential CI; emitted ownership counts, aliases across yields and source/native agreement |
@@ -347,7 +341,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 107 | Scoped TLS options have checked dynamic-scope and original inheriting-task owners | Sequential CI; structured/detached escapes, cancellation/preparation/overflow, original-context replacement, six malloc releases and three omission controls; plain tasks omit hooks |
 | 108 | Response metadata captures have constructor, scope and inheriting-task owners | Sequential CI; snapshots resist later child appends, nested forwarding, typed/raw/cancel exits, failed preparation and counter acquisition; three omission controls |
 | 109 | TLS pool identity preserves full fields with checked length framing | Sequential CI; delimiter collisions, every field, names beyond 1 KiB, actual key copy/pool reuse after scoped release, interpreter oracle and old-encoding rejection |
-| 110 | Library teardown releases read-once environment TLS caches after tasks/finalizers | Focused GitHub CI37948869170 passes; sequential CI remains required; cache immutability, blocked task/finalizer order, ten malloc frees, reinit/idempotence and omission control; sequential CI remains required |
+| 110 | Library teardown releases read-once environment TLS caches after tasks/finalizers | Focused GitHub CI37948869170 passes; cache immutability, task/finalizer order, ten malloc frees, reinit/idempotence and omission control; sequential CI remains required |
 | 111 | Immutable TLS options pack header, strings and full key into one checked allocation | Focused GitHub CI37950759037 passes; sequential CI remains required; actual allocation/byte counts, header alignment, copied inputs, failure cleanup and existing scope/task/cache/pool controls |
 | 112 | Connections preserve full addresses after aligned headers in one checked allocation | Focused GitHub CI37958243461 passes; sequential CI remains required; actual long-address loopback/pool reuse, truncation rejection, copied inputs and requested bytes against legacy short-address layout; tracing compatibility remains |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
