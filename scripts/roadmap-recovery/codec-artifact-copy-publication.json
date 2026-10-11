@@ -1,0 +1,11 @@
+{
+  "head": "647d45ca45a76f46aaa22d0901d7fd3ea7949220",
+  "base": "d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0",
+  "branch": "ownership-evidence-codec-artifact-copy",
+  "unchangedNativeTree": "db8348f963973fa32fb0803348fcb53a2c072a52",
+  "sourceHashes": {
+    "tests/serializer_leaf_ownership.rs": "7f973f2ba61a6b3d3056b9f12d589fa127823297f118fa81344b3568f125aa3b",
+    ".github/workflows/codec-artifact-copy-evidence.yml": "3e8c729633d4aac8513fbbae8ba4f947726c729bbaa56b31bb184a8e8c8a97fa"
+  },
+  "stage": "Codec default artifact-path repair published; controls pending"
+}

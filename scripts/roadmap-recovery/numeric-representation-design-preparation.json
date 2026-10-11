@@ -464,6 +464,14 @@
     {
       "layout": "Self-describing16-byte header and packed inline payload; views carry backing owner and data pointer",
       "tradeoff": "Adds8 bytes per owning array and32-byte view objects; offers16-byte inline-data alignment and uniform descriptor-independent width. Prove tiny-array overhead and compiler specialization before choosing."
+    },
+    {
+      "layout": "Eight-byte owning header with descriptor-directed packed payload; low-bit-tagged24-byte array views",
+      "tradeoff": "Keeps ordinary array header size but requires tagged-pointer canonicalization across native physical freeing and poisoning, big-object RC slots, sharing, generated typed destruction and bump/WASM ownership tables. Existing fwp_mem_free writes through the supplied pointer; passing an interior tagged pointer corrupts the free list. Source-only alternative, not compatible without explicit changes."
+    },
+    {
+      "layout": "Eight-byte owning header with descriptor-directed packed payload; high length-bit flags24-byte view header",
+      "tradeoff": "Preserves allocation addresses and ordinary8-byte header. All length readers must mask the flag and all data access must select inline payload versus view data. Reserve bit63 with explicit logical length<=INT64_MAX and checked arithmetic even for packed I8/U8. A view retains one same-element backing Array; view updates copy and cannot reuse backing. Requires all generated/native consumers, SIMD LANES aliases and typed destructors to use helpers. No width or ownership evidence yet."
     }
   ],
   "requirements": [
@@ -474,5 +482,10 @@
     "Keep F16/128-bit representation limitations explicit.",
     "Inspect bytes, sizeof/offsetof/alignment, ARM/Intel generated assembly, raw/native behavior, GC/reuse controls and requested/live allocation before acceptance."
   ],
-  "next": "Complete accepted phase2 audit first; choose layout using equivalent workload overhead measurements and then implement every consumer in one coherent representation bundle."
+  "next": "Complete accepted phase2 audit first; choose layout using equivalent workload overhead measurements and then implement every consumer in one coherent representation bundle.",
+  "sourceReview": {
+    "nativeRc": "Small RC slots accept interior words and sharing canonicalizes them, but big-object slots accept only object starts. Physical small frees clear memory and insert a free-list link at the supplied address. Low-bit tagging is unsafe unchanged.",
+    "wasmRc": "Resource counts use exact V keys; native slot behavior cannot be assumed on bump/WASM.",
+    "preferredExperiment": "Evaluate high length-bit view flag against explicit16-byte metadata header using actual tiny-array/AD overhead and all-width views; choose after phase2 acceptance."
+  }
 }

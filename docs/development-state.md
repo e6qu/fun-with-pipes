@@ -6,7 +6,7 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `2e597098a5f2007be64bf09e5ff1e330ec93487a` passes audit38182062034
+checkpoint `760ebc259bb0eb96c972e0f4aeec91c6bd6a9bc7` passes audit38183407052
 and retains the latest AD/input and callback diagnostic sources. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
 Git blob hashes using restore-roadmap-recovery.py. The AST-based restore repair
@@ -65,8 +65,13 @@ resource/network items74–112, compiler/cache diagnostics, AD tape/scoped-gradi
 lifetimes, list callback owners, closure cleanup and typed State ownership.
 Production head is `d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0`, complete tree
 `db8348f963973fa32fb0803348fcb53a2c072a52`, identical to the final runner export.
-Full CI38180852377 is running at that exact head; bench and ARM GC pass; the other
-three regular-platform jobs run; both GC jobs pass. Roadmap_docs38180852369 passes.
+Full CI38180852377 is running at that exact head: bench and both GC jobs pass;
+ARM regular fails the codec fixture after its default artifact copy overwrites
+the source with itself. Linux and Intel regular still run. Roadmap_docs38180852369
+passes. Isolated codec preflights used an explicit artifact directory and missed
+this default-path bug. Repair the fallback to a separate artifacts subdirectory
+and assert the source bytes remain unchanged; validate both default and explicit
+paths on all three platforms before updating the production head.
 Publication receipt: /private/tmp/fwp-pr124-final-ownership-export/publication.json.
 Do not merge until all six jobs and the documentation audit pass.
 
@@ -115,7 +120,10 @@ Next: monitor all six production jobs and roadmap_docs at d5ae8c. Fix any
 failures without weakening original controls; squash only after all seven gates
 pass for that head. Prepared merge/verification scripts now pin d5ae8c and both
 current run IDs; do not execute while gates are pending. Keep one production PR.
-Prepare the finite177-declaration phase2 classification while CI runs. Earlier
+Repair the codec default artifact path in preflight647d45ca45a76f46aaa22d0901d7fd3ea7949220 /
+runner38184029472 (both paths, Linux/ARM/Intel), then publish that test-only
+repair and rerun all seven production gates. Do not reuse d5 gate IDs after
+the head changes. The finite177-declaration classification is prepared. Earlier
 preflights and cancelled runs cannot supply final production gates. Phases2–6
 remain open. Integration recipe: fwp-integrate-final-ownership-on-runner.py.
 Final runner/export head0b4a2d61781b6151fda28d690c0db9a5463b9090 has the
