@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-closure-cleanup-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-inventory-gate-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint d4411019cdde0dfd41c17ad923d85ece6a6d87d1 has
-exact-head audit38151272665 queued. Earlier checkpoints and cancelled audits
+Current checkpoint666f7cc7f3dfd35c897c85f2806e813ae521da71 has
+exact-head audit38152195379 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -425,6 +425,23 @@ to the later resource bundle, preserving its source instead of copying older
 whole files. Full final-head production gates remain mandatory. The finite exit
 inventory draft permits these two additional explicit contracts and hashes the
 actual list runtime; its derived counts still have not been verified.
+
+The finalizer now carries the finite inventory into the candidate and its regular
+Linux/ARM/Intel production jobs. It adds scripts/check-primitive-inventory.py,
+scripts/primitive-inventory.rs and the unchanged frozen baseline JSON. Baseline
+SHA256 is fa71949b3e93e8696b7c8bc7c35b729641c3ef156896803b679b05ccb4b62e0e;
+the finalizer verifies its passing669c19e inventory job and original source hashes.
+The candidate audit permits only the recorded raw-memory, AD and list contract
+changes; all other declaration rows must match the frozen review. It checks the
+declared candidate Git head, hashes compiler/runtime/library sources and retains
+compile/declaration statuses plus observed rows before contract assertions.
+CI uploads these reports before the full tests, including on audit failure.
+All four CI templates explicitly check out the PR head (or push SHA); all six
+job names, original commands and required WASI remain intact. Candidate
+finalization also executes the audit before export, after committing the final
+source/docs. These are unexecuted integration drafts, not a passed inventory or
+phase2 exit. Derived counts and retained/exceptional/cycle policies still need
+actual evidence on the accepted source before proceeding to phase3.
 
 ## Local resource incident and next preparation
 

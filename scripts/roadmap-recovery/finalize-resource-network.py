@@ -67,6 +67,7 @@ ci = gate(38138731040, TESTED, NAMES)
 docs = gate(38138731036, TESTED, {'roadmap_docs'})
 prep_gate = gate(PREP_RUN, PREP_DRIVER, {'prepare'})
 gc_gate = gate(GC_RUN, GC_HEAD, {'diagnostics'})
+inventory_baseline_gate = gate(38099556010, '669c19e7cb6779536377af7f78651f97dc1e51d9', {'inventory'})
 ad_gate = gate(AD_RUN, AD_HEAD, {'tapes (ubuntu-latest)', 'tapes (macos-15)', 'tapes (macos-15-intel)'})
 scope_gate = gate(SCOPE_RUN, SCOPE_HEAD, {'scopes (ubuntu-latest)', 'scopes (macos-15)', 'scopes (macos-15-intel)'})
 allocation_gate = gate(ALLOCATION_RUN, ALLOCATION_HEAD,
@@ -274,6 +275,30 @@ updated_ci = updated_ci.replace('      - name: benchmarks against C and Rust (do
                                preflight + '      - name: benchmarks against C and Rust (docs/benchmarks.md)\n')
 assert updated_ci.count(preflight) == 4
 assert updated_ci.replace(preflight, '').replace(addition, '', 1) == original_ci
+# Bind every native gate to the real PR head, so source identity and inventory
+# reports cannot accidentally describe GitHub's synthetic merge checkout.
+checkout_anchor = '      - uses: actions/checkout@v4\n'
+checkout = (checkout_anchor + '        with:\n'
+            '          ref: ${{ github.event.pull_request.head.sha || github.sha }}\n')
+assert updated_ci.count(checkout_anchor) == 4
+updated_ci = updated_ci.replace(checkout_anchor, checkout)
+inventory_step = (
+    '      - name: Exact-head primitive contract inventory\n'
+    '        env:\n'
+    '          FWP_INVENTORY_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}\n'
+    '        run: |\n'
+    '          mkdir -p "$RUNNER_TEMP/ownership-inventory"\n'
+    '          rustc --version > "$RUNNER_TEMP/ownership-inventory/rustc.txt"\n'
+    '          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output "$RUNNER_TEMP/ownership-inventory/candidate.json" 2>&1 | tee "$RUNNER_TEMP/ownership-inventory/audit.log"\n'
+    '      - uses: actions/upload-artifact@v4\n'
+    '        if: always()\n'
+    '        with:\n'
+    '          name: ownership-inventory-${{ runner.os }}-${{ runner.arch }}\n'
+    '          path: ${{ runner.temp }}/ownership-inventory/\n')
+assert updated_ci.count('      - name: fmt\n') == 2
+updated_ci = updated_ci.replace('      - name: fmt\n', inventory_step + '      - name: fmt\n')
+assert updated_ci.count(inventory_step) == 2
+assert updated_ci.replace(inventory_step, '').replace(checkout, checkout_anchor).replace(preflight, '').replace(addition, '', 1) == original_ci
 (wt / '.github/workflows/ci.yml').write_text(updated_ci)
 # Preserve all later device changes when adding the independently checked AD repair.
 ad_patch = blob(AD_HEAD, 'scripts/ad-ownership-patch.json')
@@ -330,6 +355,21 @@ repair_files = ['tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lif
                 'tests/fixtures/ad_unwind_probe.c', 'src/interp.rs', 'src/ownership.rs',
                 'lib/autodiff.fwp', 'tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']
 repair_files += ['runtime/fwp_rt_prims.c', 'runtime/fwp_rt_gc.c', 'tests/list_applicative_ownership.rs', 'tests/fixtures/list_ap_probe.c', 'tests/fixtures/closure_drop_probe.c']
+inventory_files = {
+    'scripts/check-primitive-inventory.py': 'scripts/roadmap-recovery/check-primitive-inventory.py',
+    'scripts/primitive-inventory.rs': 'scripts/roadmap-recovery/primitive-inventory.rs',
+    'tests/fixtures/primitive-inventory-baseline.json': 'scripts/roadmap-recovery/primitive-inventory-baseline.json',
+}
+for name, saved in inventory_files.items():
+    (wt / name).parent.mkdir(parents=True, exist_ok=True)
+    (wt / name).write_bytes(blob(RECOVERY, saved))
+baseline_bytes = (wt / 'tests/fixtures/primitive-inventory-baseline.json').read_bytes()
+assert hashlib.sha256(baseline_bytes).hexdigest() == 'fa71949b3e93e8696b7c8bc7c35b729641c3ef156896803b679b05ccb4b62e0e'
+inventory_baseline = json.loads(baseline_bytes)
+assert inventory_baseline['head'] == inventory_baseline_gate['headSha']
+for name, expected_hash in inventory_baseline['sourceHashes'].items():
+    assert hashlib.sha256(blob(inventory_baseline['head'], name)).hexdigest() == expected_hash, name
+repair_files += list(inventory_files)
 # Runner formatting makes the final candidate reviewable; full exact-head CI
 # verifies these candidate bytes rather than transferring older evidence gates.
 subprocess.run(['rustfmt', *[name for name in repair_files if name.endswith('.rs')]],
@@ -349,6 +389,16 @@ git('add', *DOCS, cwd=wt)
 git('commit', '-m', 'Record accepted library ownership and the resource network bundle', cwd=wt)
 subprocess.run(['python3', 'scripts/check-roadmap.py'], cwd=wt, check=True)
 head = git('rev-parse', 'HEAD', cwd=wt)
+inventory_output = OUT / 'primitive-inventory.json'
+subprocess.run(['python3', 'scripts/check-primitive-inventory.py',
+                '--baseline', 'tests/fixtures/primitive-inventory-baseline.json',
+                '--output', str(inventory_output)], cwd=wt,
+               env=dict(os.environ, FWP_INVENTORY_EXPECTED_HEAD=head), check=True)
+inventory_report = json.loads(inventory_output.read_text())
+assert inventory_report['head'] == head
+assert inventory_report['status'] == 'Expected contract changes verified'
+for name, expected_hash in inventory_report['sourceHashes'].items():
+    assert hashlib.sha256((wt / name).read_bytes()).hexdigest() == expected_hash, name
 assert not git('status', '--porcelain', cwd=wt)
 for revision in git('rev-list', accepted + '..HEAD', cwd=wt).splitlines():
     text = git('show', '-s', '--format=%B', revision)
@@ -361,6 +411,8 @@ record = dict(base=accepted, head=head, previous=prepared, branch=BRANCH,
               scopeEvidence=scope_gate, allocationEvidence=allocation_gate,
               allocationReports=allocation_reports, applicativeEvidence=ap_gate,
               applicativeAllocationReports=ap_reports,
+              inventoryBaselineGate=inventory_baseline_gate,
+              inventoryReport=inventory_report,
               applicativePatchHash=hashlib.sha256(ap_patch).hexdigest(), scopePatchHash=hashlib.sha256(scope_patch).hexdigest(),
               adPatchHash=hashlib.sha256(ad_patch).hexdigest(),
               preparationGate=prep_gate, recoveryHead=RECOVERY,

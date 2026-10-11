@@ -133,6 +133,15 @@ verified deterministic reclamation. Keep them in the finite phase 2 exit review;
 changing a boundary requires interpreter/native, alias, partial-failure and
 retention/teardown evidence before removing sharing.
 
+The resource/network candidate will carry a baseline-pinned declaration audit
+in its regular Linux and ARM/Intel macOS jobs. It reads the actual shared
+contract module, checks the candidate commit identity and records all compiler,
+runtime and library source hashes. Expected changes are explicit; unknown
+declarations remain visible in the observed report even when the audit fails.
+This gate is prepared, not executed. A passing declaration audit establishes
+inventory consistency, not runtime retention, exceptional cleanup or tracing-free
+eligibility. Those still require the controls and lifetime policies above.
+
 The combined list.ap/list.flat-map candidate supplies borrowed inputs, owned
 synchronous callback results and counted spines, with scratch/result-prefix/
 partial-spine unwind controls. Flat-map copies retain typed element aliases and

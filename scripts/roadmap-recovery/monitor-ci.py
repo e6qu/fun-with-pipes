@@ -14,7 +14,7 @@ RUNS = {
     'list_applicative': (38152053646, '88b5e20a497e6482ea7918d26a961531588499b0'),
     'autodiff_scopes': (38141558055, '475cb242715961e5e396e4fe74026545160d2e3c'),
     'autodiff_tapes': (38139112950, '602e076604d3dd759c47b396c10cf848dd9dbb61'),
-    'streamlined_handoff_docs': (38151272665, 'd4411019cdde0dfd41c17ad923d85ece6a6d87d1'),
+    'streamlined_handoff_docs': (38152195379, '666f7cc7f3dfd35c897c85f2806e813ae521da71'),
 }
 record = {'observedAt': datetime.now(timezone.utc).isoformat(), 'runs': {}}
 for label, (number, head) in RUNS.items():

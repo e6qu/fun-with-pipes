@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Recheck merged contracts against the frozen prepared112 declaration review."""
+"""Recheck candidate contracts against the frozen prepared112 declaration review."""
 import argparse
 from collections import Counter
 import hashlib
@@ -15,7 +15,10 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output', type=Path, required=True)
 parser.add_argument('--baseline', type=Path, required=True)
 args = parser.parse_args()
-baseline = json.loads(args.baseline.read_text())
+baseline_bytes = args.baseline.read_bytes()
+baseline_hash = hashlib.sha256(baseline_bytes).hexdigest()
+assert baseline_hash == 'fa71949b3e93e8696b7c8bc7c35b729641c3ef156896803b679b05ccb4b62e0e'
+baseline = json.loads(baseline_bytes)
 assert baseline['head'] == '669c19e7cb6779536377af7f78651f97dc1e51d9'
 mono = (root / 'src/mono.rs').read_text()
 start = mono.index('fn combinator(symbol:')
@@ -24,19 +27,48 @@ lowered = re.findall(r'^\s*"([^"\n]+)"\s*=>', mono[start:end], re.M)
 assert len(lowered) == len(set(lowered)) == 19
 assert 'Some((a, e)) => (a, Body::Expr(e))' in mono
 assert 'None => (arity, Body::Prim(symbol.to_string()))' in mono
+args.output.parent.mkdir(parents=True, exist_ok=True)
+
+def recorded_command(label, command, environment=None):
+    result = subprocess.run(command, cwd=root, env=environment, capture_output=True)
+    prefix = args.output.parent / (args.output.stem + '.' + label)
+    prefix.with_suffix(prefix.suffix + '.stdout').write_bytes(result.stdout)
+    prefix.with_suffix(prefix.suffix + '.stderr').write_bytes(result.stderr)
+    prefix.with_suffix(prefix.suffix + '.status').write_text(str(result.returncode) + '\n')
+    if result.returncode:
+        raise RuntimeError(f'{command}: exit {result.returncode}: '
+                           + result.stderr.decode(errors='replace'))
+    return result.stdout.decode()
+
 with tempfile.TemporaryDirectory(prefix='fwp-primitive-inventory-') as temporary:
     executable = Path(temporary) / 'audit'
-    subprocess.run(['rustc', '--edition=2021', '-Awarnings',
-                    str(root / 'scripts/primitive-inventory.rs'), '-o', str(executable)],
-                   cwd=root, check=True)
-    output = subprocess.check_output([str(executable)], cwd=root, text=True,
-                                     env=dict(os.environ, FWP_AUDIT_LOWERED=','.join(lowered)))
+    recorded_command('compile', ['rustc', '--edition=2021', '-Awarnings',
+                     str(root / 'scripts/primitive-inventory.rs'), '-o', str(executable)])
+    output = recorded_command('declarations', [str(executable)],
+                              dict(os.environ, FWP_AUDIT_LOWERED=','.join(lowered)))
 fields = ['file', 'declared', 'symbol', 'aliased', 'bucket', 'contract', 'signature']
 rows = [dict(zip(fields, line.split('\t', 6), strict=True)) for line in output.splitlines()]
 for row in rows:
     assert row['aliased'] in {'true', 'false'}
     row['aliased'] = row['aliased'] == 'true'
 counts = dict(Counter(row['bucket'] for row in rows))
+head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
+expected_head = os.environ.get('FWP_INVENTORY_EXPECTED_HEAD')
+if expected_head:
+    assert head == expected_head, ('Audit must inspect the declared candidate head', head, expected_head)
+files = sorted((root / 'src').rglob('*.rs'))
+files.extend(path for path in sorted((root / 'runtime').rglob('*'))
+             if path.is_file() and path.suffix in {'.c', '.h', '.S'})
+files.extend(sorted((root / 'lib').rglob('*.fwp')))
+files.extend([Path(__file__).resolve(), root / 'scripts/primitive-inventory.rs'])
+source_hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+                 for path in files}
+observed = dict(head=head, baselineHead=baseline['head'], baselineSha256=baseline_hash,
+                declarations=len(rows), distinctSymbols=len({row['symbol'] for row in rows}),
+                explicitAliases=sum(row['aliased'] for row in rows), counts=counts,
+                lowered=lowered, rows=rows, sourceHashes=source_hashes,
+                status='Observed candidate; contract assertions have not passed')
+args.output.with_suffix('.observed.json').write_text(json.dumps(observed, indent=2) + '\n')
 assert len(rows) == len(baseline['rows']) + 1
 assert len({(row['file'], row['declared']) for row in rows}) == len(rows)
 assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 1
@@ -95,18 +127,17 @@ assert counts == expected_counts, counts
 review = [row for row in rows if row['bucket'] == 'runtime_or_specialization_review']
 review_symbols = len({row['symbol'] for row in review})
 assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 4
-files = [root / name for name in ['src/ownership.rs', 'src/mono.rs', 'src/cgen.rs', 'src/rc.rs', 'src/parser.rs', 'src/numerics.rs', 'src/interp.rs', 'runtime/fwp_rt_kernel.c', 'runtime/fwp_rt_prims.c']]
-files.extend(sorted((root / 'lib').rglob('*.fwp')))
 report = {
-    'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),
+    'head': head,
     'declarations': len(rows), 'distinctSymbols': len({row['symbol'] for row in rows}), 'explicitAliases': 40,
     'counts': counts, 'reviewSymbols': review_symbols, 'lowered': lowered,
     'baselineHead': baseline['head'],
+    'baselineSha256': baseline_hash,
     'changedContractSymbols': sorted(changed_symbols),
     'addedContractSymbols': ['ad.scope'],
-    'sourceHashes': {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
-                     for path in files},
+    'sourceHashes': source_hashes,
     'rows': rows,
+    'status': 'Expected contract changes verified',
     'limits': 'Source declaration review using actual runtime contracts. Flat scalar signatures do not prove absence of external allocation/state. Remaining declarations require monomorphic wrapper, retention and teardown review, not an assumed number of sharing bugs. Single-line declarations and literal unescaped aliases are asserted for this source snapshot.',
 }
 args.output.parent.mkdir(parents=True, exist_ok=True)

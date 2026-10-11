@@ -19,7 +19,7 @@ jobs:
       # Publish this driver only after PR123, preparation and GC evidence pass.
       # Set only after the verified export is published and its exact head checked.
       FWP_PREPARATION_HEAD: REPLACE_WITH_VERIFIED_PUBLICATION_HEAD
-      FWP_RECOVERY_HEAD: d4411019cdde0dfd41c17ad923d85ece6a6d87d1
+      FWP_RECOVERY_HEAD: 666f7cc7f3dfd35c897c85f2806e813ae521da71
       FWP_SCOPE_EVIDENCE_HEAD: 475cb242715961e5e396e4fe74026545160d2e3c
       FWP_SCOPE_EVIDENCE_RUN: "38141558055"
       FWP_ALLOCATION_EVIDENCE_HEAD: e586a4d12a477aefcc854e12f6bbf2f640299de8
