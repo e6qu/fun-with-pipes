@@ -1,0 +1,37 @@
+name: Preflight combined ownership repair
+on:
+  push:
+    branches: [ownership-pr124-combined-repair]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: e6qu/fun-with-pipes
+      FWP_RECOVERY_HEAD: b9527f81af81342742daf48ce386ec3c9bd9b37b
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Dependencies
+        run: sudo apt-get update -qq && sudo apt-get install -y libssl-dev
+      - name: Retain exact evidence and preparation tags
+        run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*'
+      - name: Ordinary commit metadata
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - name: Integrate and validate the combined repair
+        run: python3 scripts/integrate-pr124-repair.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr124-combined-repair
+          path: repair-evidence/

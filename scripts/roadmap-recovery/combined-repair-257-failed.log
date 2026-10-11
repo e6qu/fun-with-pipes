@@ -1,0 +1,65 @@
+repair	Integrate and validate the combined repair	﻿2026-10-11T19:48:06.7711245Z ##[group]Run python3 scripts/integrate-pr124-repair.py
+repair	Integrate and validate the combined repair	2026-10-11T19:48:06.7711704Z ^[[36;1mpython3 scripts/integrate-pr124-repair.py^[[0m
+repair	Integrate and validate the combined repair	2026-10-11T19:48:06.7772133Z shell: /usr/bin/bash -e {0}
+repair	Integrate and validate the combined repair	2026-10-11T19:48:06.7772415Z env:
+repair	Integrate and validate the combined repair	2026-10-11T19:48:06.7775141Z   GH_TOKEN: ***
+repair	Integrate and validate the combined repair	2026-10-11T19:48:06.7775395Z   GH_REPO: e6qu/fun-with-pipes
+repair	Integrate and validate the combined repair	2026-10-11T19:48:06.7775724Z   FWP_RECOVERY_HEAD: b9527f81af81342742daf48ce386ec3c9bd9b37b
+repair	Integrate and validate the combined repair	2026-10-11T19:48:06.7776084Z   CARGO_HOME: /home/runner/.cargo
+repair	Integrate and validate the combined repair	2026-10-11T19:48:06.7776337Z   CARGO_INCREMENTAL: 0
+repair	Integrate and validate the combined repair	2026-10-11T19:48:06.7776561Z   CARGO_TERM_COLOR: always
+repair	Integrate and validate the combined repair	2026-10-11T19:48:06.7776784Z ##[endgroup]
+repair	Integrate and validate the combined repair	2026-10-11T19:48:10.1862230Z Preparing worktree (detached HEAD 9550aab)
+repair	Integrate and validate the combined repair	2026-10-11T19:48:10.2532172Z HEAD is now at 9550aab Focus the handoff on verified ownership progress and remaining gates
+repair	Integrate and validate the combined repair	2026-10-11T19:48:10.6728387Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/pr124-combined-repair)
+repair	Integrate and validate the combined repair	2026-10-11T19:48:20.0362290Z ^[[1m^[[92m    Finished^[[0m `dev` profile [unoptimized] target(s) in 9.47s
+repair	Integrate and validate the combined repair	2026-10-11T19:48:21.2136557Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/pr124-combined-repair)
+repair	Integrate and validate the combined repair	2026-10-11T19:48:29.8407044Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 8.63s
+repair	Integrate and validate the combined repair	2026-10-11T19:48:29.8415636Z ^[[1m^[[92m     Running^[[0m tests/fmt.rs (target/debug/deps/fmt-ee65bc147d15d75a)
+repair	Integrate and validate the combined repair	2026-10-11T19:48:29.8426780Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:48:29.8427136Z running 3 tests
+repair	Integrate and validate the combined repair	2026-10-11T19:48:30.0203516Z test fmt_check_command ... ok
+repair	Integrate and validate the combined repair	2026-10-11T19:49:03.8642258Z test formatting_is_stable_and_faithful ... ok
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0221736Z test repository_is_formatted ... ok
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0222295Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0222670Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 34.18s
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0223381Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0225378Z ^[[1m^[[92m     Running^[[0m tests/stdlib_doc.rs (target/debug/deps/stdlib_doc-92a583c73dbd0cfd)
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0236178Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0236388Z running 1 test
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0301040Z test stdlib_doc_is_current ... ok
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0301328Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0301611Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0302011Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0304413Z ^[[1m^[[92m     Running^[[0m tests/typed_state_ownership.rs (target/debug/deps/typed_state_ownership-8a781609851c3baf)
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0312989Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:04.0313167Z running 2 tests
+repair	Integrate and validate the combined repair	2026-10-11T19:49:19.2515798Z test state_owners_reclaim_aliases_and_unwind_on_actual_runtime_boundaries ... ok
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1988251Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1989562Z thread 'typed_state_changes_preserve_pipe_semantics_and_suspended_tasks' (3307) panicked at tests/typed_state_ownership.rs:20:5:
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1992142Z FWP_NO_OPT="1" "/home/runner/work/fun-with-pipes/pr124-combined-repair/target/debug/fwp" "run" "--interp" "/tmp/fwp-typed-state-3202-semantics/semantics.fwp": exit status: 1: /tmp/fwp-typed-state-3202-semantics/semantics.fwp:13:71: error: type mismatch in the stage after `|`: expected `(String -> String ! e) -> String ! {State[String -> String ! e]}`, found `(String -> String ! e) -> String ! e`
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1993980Z 13 | change-closure = const ("captured" | concat ":") | concat | put | get | apply "!"
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1995020Z    |                                                                       ^
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1995571Z   note: `e` would have to contain itself (`{State: String -> String ! e | e1}`); the type would be infinite
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1996487Z /tmp/fwp-typed-state-3202-semantics/semantics.fwp:26:60: error: type mismatch in pipe input (composition): expected `String -> a`, found `String`
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1997335Z 26 |     () | run-state (concat "initial:") change-closure | .1 | apply "!" | echo,
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1997777Z    |                                                            ^
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1997997Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1998225Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1999474Z test typed_state_changes_preserve_pipe_semantics_and_suspended_tasks ... FAILED
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.1999968Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2000346Z failures:
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2000508Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2000649Z failures:
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2001088Z     typed_state_changes_preserve_pipe_semantics_and_suspended_tasks
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2001436Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2001769Z test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.17s
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2002202Z 
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2005670Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test typed_state_ownership`
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2694031Z Traceback (most recent call last):
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2695513Z   File "/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/integrate-pr124-repair.py", line 103, in <module>
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2696574Z     subprocess.run(['cargo','test','--test','fmt','--test','stdlib_doc','--test','typed_state_ownership','--','--nocapture'],cwd=WT,env=env,check=True)
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2697377Z   File "/usr/lib/python3.12/subprocess.py", line 571, in run
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2701264Z     raise CalledProcessError(retcode, process.args,
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2702354Z subprocess.CalledProcessError: Command '['cargo', 'test', '--test', 'fmt', '--test', 'stdlib_doc', '--test', 'typed_state_ownership', '--', '--nocapture']' returned non-zero exit status 101.
+repair	Integrate and validate the combined repair	2026-10-11T19:49:20.2846035Z ##[error]Process completed with exit code 1.

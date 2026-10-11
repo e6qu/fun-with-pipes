@@ -1,0 +1,1770 @@
+{
+  "basisHead": "13c92139da8ddc3d7c9755539cd1e95d80a5b2b9",
+  "inventorySha256": "9295fb4b6dd2d1ead906fbbed0cbe9f6f16c45af30898fbccaad44c97d6b22ad",
+  "stateContractsExcluded": [
+    "get",
+    "put",
+    "modify",
+    "run-state"
+  ],
+  "remainingDeclarations": 191,
+  "remainingSymbols": 181,
+  "families": {
+    "lib/cli.fwp": [
+      {
+        "file": "lib/cli.fwp",
+        "declared": "cli.parse",
+        "symbol": "cli.parse",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "o -> List[String] -> Result[(o, List[String]), String]"
+      },
+      {
+        "file": "lib/cli.fwp",
+        "declared": "cli.help",
+        "symbol": "cli.help",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "o -> String"
+      },
+      {
+        "file": "lib/cli.fwp",
+        "declared": "term.read-secret",
+        "symbol": "term.read-secret",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> Option[String] ! {IO}"
+      }
+    ],
+    "lib/csv.fwp": [
+      {
+        "file": "lib/csv.fwp",
+        "declared": "csv.parse-with",
+        "symbol": "csv.parse-with",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> List[List[String]]"
+      },
+      {
+        "file": "lib/csv.fwp",
+        "declared": "csv.decode",
+        "symbol": "csv.decode",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[List[String]] -> Result[List[t], String] where Decode[t]"
+      }
+    ],
+    "lib/fs.fwp": [
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.exists",
+        "symbol": "file.exists",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bool ! {FileIO}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.is-dir",
+        "symbol": "file.is-dir",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bool ! {FileIO}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.info",
+        "symbol": "file.info",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> FileInfo ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.remove",
+        "symbol": "file.remove",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.rename",
+        "symbol": "file.rename",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.append",
+        "symbol": "file.append",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.read-bytes",
+        "symbol": "file.read-bytes",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bytes ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.write-bytes",
+        "symbol": "file.write-bytes",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bytes -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.list",
+        "symbol": "dir.list",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> List[String] ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.create",
+        "symbol": "dir.create",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.create-all",
+        "symbol": "dir.create-all",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.remove",
+        "symbol": "dir.remove",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> () ! {FileIO, Error[IoError]}"
+      }
+    ],
+    "lib/grpc.fwp": [
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.metadata",
+        "symbol": "grpc.metadata",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> List[(String, String)] ! {Network}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.set-header",
+        "symbol": "grpc.set-header",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> () ! {Network}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.set-trailer",
+        "symbol": "grpc.set-trailer",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> () ! {Network}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-gzip",
+        "symbol": "grpc.with-gzip",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "(() -> a ! {Network | e}) -> a ! {Network | e}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-response-metadata",
+        "symbol": "grpc.with-response-metadata",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "(() -> a ! {Network | e}) -> (a, List[(String, String)]) ! {Network | e}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.peer-subject",
+        "symbol": "grpc.peer-subject",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> Option[String] ! {Network}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-tls",
+        "symbol": "grpc.with-tls",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "TlsOptions -> (() -> a ! {Network | e}) -> a ! {Network | e}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-metadata",
+        "symbol": "grpc.with-metadata",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[(String, String)] -> (() -> a ! {Network | e}) -> a ! {Network | e}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-deadline",
+        "symbol": "grpc.with-deadline",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> (() -> a ! {Network | e}) -> a ! {Network | e}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc._force",
+        "symbol": "grpc._force",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "GrpcCell[a] -> Option[(a, GrpcCell[a])]"
+      }
+    ],
+    "lib/http.fwp": [
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.parse-request-head",
+        "symbol": "http.parse-request-head",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Result[(String, String, String, List[(String, String)]), String]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.parse-response-head",
+        "symbol": "http.parse-response-head",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Result[(String, I64, String, List[(String, String)]), String]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.field-ok",
+        "symbol": "http.field-ok",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> Bool"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.content-length",
+        "symbol": "http.content-length",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[(String, String)] -> I64"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.to-hex",
+        "symbol": "int.to-hex",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> String"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.parse-hex",
+        "symbol": "int.parse-hex",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[I64]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip.compress",
+        "symbol": "zlib.gzip",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Bytes"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip.decompress-max",
+        "symbol": "zlib.gunzip",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Bytes -> Result[Bytes, String]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "deflate.compress",
+        "symbol": "zlib.deflate",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Bytes"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "deflate.decompress-max",
+        "symbol": "zlib.inflate",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Bytes -> Result[Bytes, String]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip._chunk",
+        "symbol": "zlib.gzip-chunk",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Bytes"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip._crc32",
+        "symbol": "zlib.crc32",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Bytes -> I64"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip._end",
+        "symbol": "zlib.gzip-end",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> I64 -> Bytes"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-serve",
+        "symbol": "http2.serve",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> Bytes -> (I64, I64, Duration) -> (H2Stream -> () ! {Async, IO, Network, FileIO}) -> Option[(String, String, List[(String, String)], Bytes)] -> () ! {Async, IO, Network, FileIO}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-request",
+        "symbol": "http2.request",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "H2Stream -> (String, String, List[(String, String)], String, Option[String]) ! {Network}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-body",
+        "symbol": "http2.body",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Duration -> H2Stream -> Result[Bytes, I64] ! {Async, Network}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-respond",
+        "symbol": "http2.respond",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> List[(String, String)] -> Bytes -> Bool -> H2Stream -> Bool ! {Async, Network}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-data",
+        "symbol": "http2.data",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Bool -> H2Stream -> Bool ! {Async, Network}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-send",
+        "symbol": "http2.send",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[Conn] -> (String, String, String, String, List[(String, String)], Bytes) -> (I64, List[(String, String)], Bytes) ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-pooled",
+        "symbol": "http2.pooled",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bool ! {Network}"
+      }
+    ],
+    "lib/io.fwp": [
+      {
+        "file": "lib/io.fwp",
+        "declared": "read-line",
+        "symbol": "read-line",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> Option[String] ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "read-all",
+        "symbol": "read-all",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> String ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "read-lines",
+        "symbol": "read-lines",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> List[String] ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "env.get",
+        "symbol": "env.get",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[String] ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "env.vars",
+        "symbol": "env.vars",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> List[(String, String)] ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "env.cwd",
+        "symbol": "env.cwd",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> String ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "time.monotonic",
+        "symbol": "time.monotonic",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> Duration ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "time.unix",
+        "symbol": "time.unix",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> Duration ! {IO}"
+      }
+    ],
+    "lib/json.fwp": [
+      {
+        "file": "lib/json.fwp",
+        "declared": "json.parse",
+        "symbol": "json.parse",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Result[Json, String]"
+      },
+      {
+        "file": "lib/json.fwp",
+        "declared": "json.encode",
+        "symbol": "json.encode",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Json -> String"
+      },
+      {
+        "file": "lib/json.fwp",
+        "declared": "json.write",
+        "symbol": "json.write",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> String where Encode[a]"
+      },
+      {
+        "file": "lib/json.fwp",
+        "declared": "json.read",
+        "symbol": "json.read",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Result[a, String] where Decode[a]"
+      }
+    ],
+    "lib/log.fwp": [
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.add",
+        "symbol": "metrics.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> F64 -> () ! {IO}"
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.set",
+        "symbol": "metrics.set",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> F64 -> () ! {IO}"
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.observe",
+        "symbol": "metrics.observe",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> F64 -> () ! {IO}"
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.snapshot",
+        "symbol": "metrics.snapshot",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> List[(String, String, F64)] ! {IO}"
+      }
+    ],
+    "lib/net.fwp": [
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.listen",
+        "symbol": "tcp.listen",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Listener ! {Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.local-addr",
+        "symbol": "tcp.local-addr",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> String ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.accept",
+        "symbol": "tcp.accept",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> Conn ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.accept-for",
+        "symbol": "tcp.accept-for",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> Listener -> Option[Conn] ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.stop",
+        "symbol": "tcp.stop",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> () ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.connect",
+        "symbol": "tcp.connect",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Conn ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.read",
+        "symbol": "tcp.read",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Conn -> Bytes ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.read-for",
+        "symbol": "tcp.read-for",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> I64 -> Conn -> Option[Bytes] ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.write",
+        "symbol": "tcp.write",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Conn -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.write-for",
+        "symbol": "tcp.write-for",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.close",
+        "symbol": "tcp.close",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> () ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.peer-addr",
+        "symbol": "tcp.peer-addr",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> String ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.bind",
+        "symbol": "udp.bind",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> UdpSocket ! {Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.local-addr",
+        "symbol": "udp.local-addr",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "UdpSocket -> String ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.send-to",
+        "symbol": "udp.send-to",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bytes -> UdpSocket -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.recv-from",
+        "symbol": "udp.recv-from",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> UdpSocket -> (Bytes, String) ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.close",
+        "symbol": "udp.close",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "UdpSocket -> () ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "dns.resolve",
+        "symbol": "dns.resolve",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> List[String] ! {Network, Error[IoError]}"
+      }
+    ],
+    "lib/numeric.fwp": [
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.lu-solve",
+        "symbol": "linalg.lu-solve",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Array[F64] -> Array[F64] -> Option[Array[F64]]"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.det",
+        "symbol": "linalg.det",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Array[F64] -> F64"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.inverse",
+        "symbol": "linalg.inverse",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Array[F64] -> Option[Array[F64]]"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.cholesky",
+        "symbol": "linalg.cholesky",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Array[F64] -> Option[Array[F64]]"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.qr",
+        "symbol": "linalg.qr",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> I64 -> Array[F64] -> (Array[F64], Array[F64])"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.cg",
+        "symbol": "linalg.cg",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> F64 -> I64 -> Array[F64] -> Array[F64] -> Array[F64]"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "list.transpose",
+        "symbol": "list.transpose",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[List[a]] -> List[List[a]]"
+      }
+    ],
+    "lib/prelude.fwp": [
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "syntax.show",
+        "symbol": "syntax.show",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Syntax -> String"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.add",
+        "symbol": "prim.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.sub",
+        "symbol": "prim.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.mul",
+        "symbol": "prim.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.div",
+        "symbol": "prim.div",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.rem",
+        "symbol": "prim.rem",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.neg",
+        "symbol": "prim.neg",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.zero",
+        "symbol": "prim.zero",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.one",
+        "symbol": "prim.one",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.from-int",
+        "symbol": "prim.from-int",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.from-float",
+        "symbol": "prim.from-float",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "F64 -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.trap",
+        "symbol": "prim.trap",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "wrapping.add",
+        "symbol": "wrapping.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "wrapping.sub",
+        "symbol": "wrapping.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "wrapping.mul",
+        "symbol": "wrapping.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "saturating.add",
+        "symbol": "saturating.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "saturating.sub",
+        "symbol": "saturating.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "saturating.mul",
+        "symbol": "saturating.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "overflowing.add",
+        "symbol": "overflowing.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> (a, Bool) where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "overflowing.sub",
+        "symbol": "overflowing.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> (a, Bool) where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "overflowing.mul",
+        "symbol": "overflowing.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> (a, Bool) where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.add",
+        "symbol": "checked.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> Option[a] where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.sub",
+        "symbol": "checked.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> Option[a] where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.mul",
+        "symbol": "checked.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> Option[a] where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.div",
+        "symbol": "checked.div",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> Option[a] where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.and",
+        "symbol": "bit.and",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.or",
+        "symbol": "bit.or",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.xor",
+        "symbol": "bit.xor",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.not",
+        "symbol": "bit.not",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.shl",
+        "symbol": "bit.shl",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "U32 -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.shr",
+        "symbol": "bit.shr",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "U32 -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "int.convert",
+        "symbol": "int.convert",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> Option[b] where Integer[a], Integer[b]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "int.to-float",
+        "symbol": "int.to-float",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> b where Integer[a], Float[b]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "float.to-int",
+        "symbol": "float.to-int",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> Option[b] where Float[a], Integer[b]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "float.convert",
+        "symbol": "float.convert",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> b where Float[a], Float[b]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.sqrt",
+        "symbol": "sqrt",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.exp",
+        "symbol": "exp",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.ln",
+        "symbol": "ln",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.sin",
+        "symbol": "sin",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.cos",
+        "symbol": "cos",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.tan",
+        "symbol": "tan",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "pow",
+        "symbol": "pow",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "floor",
+        "symbol": "floor",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "ceil",
+        "symbol": "ceil",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "round",
+        "symbol": "round",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "abs",
+        "symbol": "abs",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Signed[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "min",
+        "symbol": "min",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Ord[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "max",
+        "symbol": "max",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Ord[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "hash",
+        "symbol": "hash",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> U64 where Hash[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.read",
+        "symbol": "file.read",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.write-new",
+        "symbol": "file.write-new",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "args",
+        "symbol": "args",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> List[String] ! {IO}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "exit",
+        "symbol": "exit",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I32 -> a ! {IO}"
+      }
+    ],
+    "lib/process.fwp": [
+      {
+        "file": "lib/process.fwp",
+        "declared": "process.run-input",
+        "symbol": "process.run-input",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> List[String] -> ProcessOutput ! {Process, Error[IoError]}"
+      },
+      {
+        "file": "lib/process.fwp",
+        "declared": "process.call",
+        "symbol": "process.call",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[String] -> I32 ! {Process, Error[IoError]}"
+      }
+    ],
+    "lib/simd.fwp": [
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.splat",
+        "symbol": "simd.splat",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "t -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.from-array",
+        "symbol": "simd.from-array",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Array[t] -> Option[Vec[n, t]] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.add",
+        "symbol": "simd.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.sub",
+        "symbol": "simd.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.mul",
+        "symbol": "simd.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.div",
+        "symbol": "simd.div",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.min",
+        "symbol": "simd.min",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.max",
+        "symbol": "simd.max",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.sum",
+        "symbol": "simd.sum",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> t where Numeric[t]"
+      }
+    ],
+    "lib/tensor.fwp": [
+      {
+        "file": "lib/tensor.fwp",
+        "declared": "device.run",
+        "symbol": "device.run",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> I64 -> Array[I64] -> Array[F64] -> List[Array[F64]] -> Array[F64]"
+      },
+      {
+        "file": "lib/tensor.fwp",
+        "declared": "device.sum",
+        "symbol": "device.sum",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> I64 -> Array[I64] -> Array[F64] -> List[Array[F64]] -> F64"
+      },
+      {
+        "file": "lib/tensor.fwp",
+        "declared": "device.gpu-run",
+        "symbol": "device.gpu-run",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> I64 -> Array[F64] -> List[Array[F64]] -> Result[Array[F64], String]"
+      }
+    ],
+    "lib/ternary.fwp": [
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trit.from-sign",
+        "symbol": "trit.from-sign",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Trit"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trit.to-int",
+        "symbol": "trit.to-int",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Trit -> I64"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.to-int",
+        "symbol": "tint.to-int",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "TInt[n] -> I64"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.of-int",
+        "symbol": "tint.of-int",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Option[TInt[n]]"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.trits",
+        "symbol": "tint.trits",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "TInt[n] -> List[Trit]"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.from-trits",
+        "symbol": "tint.from-trits",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[Trit] -> Option[TInt[n]]"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trits.pack",
+        "symbol": "trits.pack",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[Trit] -> Bytes"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trits.unpack",
+        "symbol": "trits.unpack",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Bytes -> List[Trit]"
+      }
+    ],
+    "lib/tls.fwp": [
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls._connect",
+        "symbol": "tls._connect",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bool -> String -> List[String] -> String -> String -> String -> Conn ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls._listen",
+        "symbol": "tls._listen",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> List[String] -> String -> String -> Listener ! {Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.handshake",
+        "symbol": "tls.handshake",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.alpn",
+        "symbol": "tls.alpn",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> String ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.secure",
+        "symbol": "tls.secure",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> Bool ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.peer-subject",
+        "symbol": "tls.peer-subject",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> Option[String] ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.accept",
+        "symbol": "tcp.accept",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> Conn ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.accept-for",
+        "symbol": "tcp.accept-for",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> Listener -> Option[Conn] ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.local-addr",
+        "symbol": "tcp.local-addr",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> String ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.stop",
+        "symbol": "tcp.stop",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> () ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.read",
+        "symbol": "tcp.read",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Conn -> Bytes ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.read-for",
+        "symbol": "tcp.read-for",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> I64 -> Conn -> Option[Bytes] ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.write",
+        "symbol": "tcp.write",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Conn -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.write-for",
+        "symbol": "tcp.write-for",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.close",
+        "symbol": "tcp.close",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> () ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.peer-addr",
+        "symbol": "tcp.peer-addr",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> String ! {Network}"
+      }
+    ],
+    "lib/url.fwp": [
+      {
+        "file": "lib/url.fwp",
+        "declared": "url.split",
+        "symbol": "url.split",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[(String, String, I64, String, String)]"
+      },
+      {
+        "file": "lib/url.fwp",
+        "declared": "url.encode",
+        "symbol": "url.encode",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String"
+      },
+      {
+        "file": "lib/url.fwp",
+        "declared": "url.decode",
+        "symbol": "url.decode",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[String]"
+      },
+      {
+        "file": "lib/url.fwp",
+        "declared": "form.decode",
+        "symbol": "form.decode",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[String]"
+      }
+    ],
+    "lib/websocket.fwp": [
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._accept",
+        "symbol": "ws.accept",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._key",
+        "symbol": "ws.key",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> String ! {Network}"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._frame",
+        "symbol": "ws.frame",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bool -> I64 -> Bytes -> Bytes"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._parse",
+        "symbol": "ws.parse",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> I64 -> Bytes -> (I64, Bool, I64, Bool, Bytes)"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._close-payload",
+        "symbol": "ws.close-payload",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> String -> Bytes"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._close-parse",
+        "symbol": "ws.close-parse",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> (I64, String)"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._deflate",
+        "symbol": "ws.deflate",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Bytes"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._inflate",
+        "symbol": "ws.inflate",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Bytes -> (I64, Bytes)"
+      }
+    ]
+  },
+  "stage": "Prepared finite review map; exact integrated State inventory and runtime evidence still required"
+}

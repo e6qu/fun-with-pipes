@@ -1,0 +1,16 @@
+{
+  "src/infer.rs": [
+    {
+      "old": "        let ty = TypeTable::subst(&s.ty, &map);\n        let ty = self.open_spine(ty);\n",
+      "new": "        // Instantiation preserves effects on returned function values.\n        // Only an actual application/composition opens its own call row.\n        let ty = TypeTable::subst(&s.ty, &map);\n"
+    },
+    {
+      "old": "    fn open_spine(&mut self, t: Type) -> Type {\n        match t {\n            Type::Fun(a, b, mut e) => {\n                if e.tail.is_none() {\n                    e.tail = Some(self.env.table.fresh(Kind::Eff, self.level));\n                }\n                let b = self.open_spine(*b);\n                Type::Fun(a, Box::new(b), e)\n            }\n            other => other,\n        }\n    }\n\n",
+      "new": ""
+    },
+    {
+      "old": "    /// Instantiate a scheme, opening closed effect rows along the result\n    /// spine (subeffecting).",
+      "new": "    /// Instantiate type variables while preserving function-value effects.\n    /// Actual calls apply subeffecting through `open_call`."
+    }
+  ]
+}

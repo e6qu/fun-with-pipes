@@ -1,0 +1,32 @@
+{
+  "head": "7d5848c58687e8c57d3b0934896bfb03beafd183",
+  "base": "9550aab94bf5cb2adb4f6a462381537d37ce3644",
+  "branch": "ownership-pr124-combined-repair",
+  "recovery": "b9527f81af81342742daf48ce386ec3c9bd9b37b",
+  "prerequisites": {
+    "38167118922": {
+      "head": "ec1915e7386128352a792071701c16b076084e75",
+      "jobs": [
+        "state (macos-15-intel)",
+        "state (ubuntu-latest)",
+        "state (macos-15)"
+      ]
+    },
+    "38166896486": {
+      "head": "ac7b518c5b1d80dd55c385728cdae5bbdde1f44e",
+      "jobs": [
+        "allocations (ubuntu-latest)",
+        "allocations (macos-15-intel)",
+        "allocations (macos-15)"
+      ]
+    }
+  },
+  "sourceHashes": {
+    ".github/workflows/pr124-combined-repair.yml": "c6cb1bd544f11cceaabed7c992616cba29b80a5e95a6f7f3da4b940c23eac020",
+    "scripts/integrate-pr124-repair.py": "44427f8b2e28a6fce1ee919d0a70988278fa5821336aeae2d5fd70bbb03a9b22",
+    "scripts/export_prepared_commits.py": "63be0cd83351414289202dd99983a513558915796fb36207ff8b2cb0cb8dd343",
+    "scripts/typed-state-expanded-test.rs": "f306d6a47d587683f8680d35ae4954d9dfae48050baeaf514f193507fd694660",
+    "scripts/instantiate-function-effects-patch.json": "adceb250ded16e6b20c4c40ef6cc77cd7b0cb9d4c5efc605b5177f56b1551b64"
+  },
+  "stage": "Verified prerequisites and published read-only finalization driver; runner integration pending"
+}
