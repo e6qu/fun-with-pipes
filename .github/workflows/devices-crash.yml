@@ -1,0 +1,50 @@
+name: Focused devices and effects native crash diagnostics
+on:
+  push:
+    branches: [ownership-evidence-devices-crash]
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Retain preparation anchors
+        run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Docs and immutable anchors
+        run: python3 scripts/check-roadmap.py
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Linux native headers
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang libssl-dev
+      - name: macOS OpenSSL
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Focused compiler build
+        run: cargo build
+      - name: Strict raw interpreter and repeated fresh native oracle
+        run: python3 scripts/probe-devices-native.py "$PWD/target/debug/fwp" "$PWD" "$RUNNER_TEMP/native-crash"
+      - name: Preserve macOS crash reports
+        if: always() && runner.os == 'macOS'
+        run: |
+          mkdir -p "$RUNNER_TEMP/native-crash/os-reports"
+          for reports in "$HOME/Library/Logs/DiagnosticReports" /Library/Logs/DiagnosticReports; do
+            if [ -d "$reports" ]; then
+              find "$reports" -type f -mmin -40 -exec cp {} "$RUNNER_TEMP/native-crash/os-reports/" ";"
+            fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-crash-${{ matrix.runner }}
+          path: ${{ runner.temp }}/native-crash/

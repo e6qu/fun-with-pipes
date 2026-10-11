@@ -126,6 +126,14 @@ still require tracing even when their temporary C buffers reclaim deterministica
 Classify these conservative requirements explicitly before phase 3; phase 6 must
 prove eligibility separately. External AD/FFI state has its own lifetime contract.
 
+The nine raw-memory declarations need a separate review: mem.alloc/mem.string
+allocate C buffers released by mem.free; mem.string copies its input. Raw pointer
+casts, address arithmetic and memcpy-based numeric reads/writes do not establish
+managed-value ownership. ptr.read-string copies into a managed String. Verify
+borrowed input and fresh result contracts before claiming immediate reclamation.
+Compare pointer arithmetic and numeric widths with the interpreter, including
+boundary arithmetic without dereferencing addresses and WebAssembly pointer width.
+
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
 and reuse verification, with allocation/live-memory evidence for reclamation.
 Shared fallback is documented coverage, not deterministic reclamation or a
@@ -152,7 +160,7 @@ requests, not production speed, cache behavior or collector-free execution.
 
 | Preparation / platform | Verified representation or allocation difference |
 |---|---|
-| 44 / ARM | V8, array header8 and element slot8; three-field variant32/align8 |
+| 44 / ARM+Intel | V8, array header8 and element slot8; three-field variant32/align8 |
 | 65 / ARM | Six-I64 worker value48/align8 versus boxed56; return through caller storage |
 | 79 / ARM | Typed frame holder removes one16-byte parent box; File/path allocation remains |
 | 80 / ARM | Inline File header16/align8 versus24; one request16+n+1 versus two requesting24+n+1 |
@@ -199,6 +207,13 @@ field types; generic/foreign boundaries keep explicit conversion contracts.
 | Scalar/aggregate ABI | Prefer natural C scalar fields and direct workers where measured; verify arm64/x86-64 integer and floating-point register use, spills, boxing and FFI conversion |
 | Views and reusable backing | Retain backing owners across escapes; unique updates preserve immutable aliases; cover zero-length/subrange/overflow cases and exceptional release |
 | Measured representation gate | Equivalent C/Rust work, allocation-inclusive and kernel-only results, requested/actual bytes and peak live memory; hardware/compiler/flags/assembly recorded |
+
+The current worker ABI passes fields as V words and keys fwp_r layouts by field
+count. Natural scalar fields therefore need layouts keyed by concrete field
+types, typed worker parameters/results and bit-preserving bridges to generic V
+entries. Verify floating-point register use in the emitted machine code; an
+unboxed record alone does not establish a natural floating-point calling
+convention. Keep closure, callback and foreign conversion contracts explicit.
 
 Natural-width storage must cover every producer and consumer, including owned
 array primitives, typed destruction, display/equality, JSON and binary decode,
