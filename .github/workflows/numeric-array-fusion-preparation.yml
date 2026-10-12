@@ -13,25 +13,34 @@ jobs:
       FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
       FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: WebAssembly toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32
       - name: Format and validate compiler changes
         run: |
           cargo fmt --all
           cargo clippy --all-targets -- -D warnings
           cargo test --lib
-          cargo test --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals
-      - name: Compare semantics and complete allocation controls
-        run: python3 scripts/measure-numeric-array-fusion.py
+          cargo test --no-fail-fast --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals
+      - name: Actual wasm32 autodiff capacity controls
+        env:
+          FWP_REQUIRE_WASI_COUNTS: 1
+        run: cargo test --test wasm autodiff_capacity_bounds_precede_actual_wasm32_allocation
+      - name: Retain permanent allocation evidence
+        run: python3 scripts/summarize-numeric-array-fusion.py
       - name: Export formatted source
         if: always()
         run: |
           mkdir -p array-fusion-evidence/source
-          cp src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/
+          cp src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/wasm.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/
           cp runtime/fwp_rt_kernel.c array-fusion-evidence/source/
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: numeric-array-fusion-evidence
