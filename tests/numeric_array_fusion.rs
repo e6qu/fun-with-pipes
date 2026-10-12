@@ -49,8 +49,9 @@ fn numeric_array_fusion_eliminates_intermediates_and_reclaims_inputs() {
         for opt in ["-O1","-O2"] {
             let executable=directory.join(format!("profile-{mode}{}",&opt[1..]));fwp::cgen::compile_c(&format!("{code}\n{probe}"),&executable,opt).unwrap();
             let out=checked(Command::new(&executable).env("FWP_GC_STRESS","0").env("FWP_GC_VERIFY","1").env("FWP_REUSE_VERIFY","0"));
-            let report:serde_json::Value=serde_json::from_slice(&out.stdout).unwrap();
-            let bits:Vec<_>=report["cases"].as_array().unwrap().iter().map(|case| (case["elements"].clone(),case["resultBits"].clone())).collect();
+            let report=fwp::json::Json::parse(std::str::from_utf8(&out.stdout).unwrap()).unwrap();
+            let Some(fwp::json::Json::Arr(cases))=report.get("cases") else {panic!("missing measured cases");};
+            let bits:Vec<_>=cases.iter().map(|case| (case.get("elements").unwrap().clone(),case.get("resultBits").unwrap().clone())).collect();
             results.push(bits);
         }
     }
