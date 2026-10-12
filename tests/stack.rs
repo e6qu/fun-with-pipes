@@ -111,7 +111,7 @@ fn record_return_aliases_preserve_owners_and_effects() {
     let dir = TempDir::new("owned-return-alias");
     let src = dir.0.join("owned.fwp");
     std::fs::write(&src, r#"
-rec alias : String -> (String, String, String, String, String, String)
+rec alias : String -> (String, String, String, String, String, String) ! {IO}
 alias = make { 0 = id, 1 = concat "a", 2 = concat "b", 3 = concat "c", 4 = concat "d", 5 = concat "e" }
     | fork const id (const "effect" | print)
 main = range 1 17 | map (flip string.repeat "seed" | alias) | echo
