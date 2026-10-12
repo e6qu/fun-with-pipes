@@ -3,7 +3,7 @@ from pathlib import Path
 import hashlib,json,os,platform,re,statistics,subprocess
 assert os.environ.get('GITHUB_ACTIONS')=='true'
 root=Path.cwd();out=Path(os.environ['FWP_ARRAY_FUSION_ARTIFACTS'])/'performance';out.mkdir(parents=True,exist_ok=True)
-cc=os.environ.get('CC','clang');commands=[]
+cc=os.environ['CC'];commands=[]
 def run(args,environment=None):
  p=subprocess.run(list(map(str,args)),env=environment,capture_output=True,text=True)
  if p.returncode:raise RuntimeError(str(args)+'\n'+p.stdout+'\n'+p.stderr)
@@ -47,6 +47,9 @@ for profile in [False,True]:
   path=out/(case+'-'+suffix+'.c');path.write_text(source)
   binary=out/('fwp-'+case+'-'+suffix);cmd=[cc,*flags,'-DPROFILE='+str(int(profile)),'-DMATRIX_BENCH='+str(int(case=='matrix')),str(path),'-o',str(binary),'-lm','-lpthread'];run(cmd);commands.append(cmd)
   binaries['fwp-'+case]=binary
+  if not profile:
+   disassembly=['otool','-tvV',str(binary)] if platform.system()=='Darwin' else ['objdump','-d',str(binary)]
+   (out/(case+'-timing.asm')).write_text(run(disassembly).stdout);commands.append(disassembly)
  for case in ['array','matrix']:
   for language in ['c','rust','fwp']:
    binary=binaries[language if language!='fwp' else 'fwp-'+case];args=[str(binary)]+([] if language=='fwp' else [case])

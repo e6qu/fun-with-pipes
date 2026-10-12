@@ -432,47 +432,6 @@ struct Gen<'p> {
     owned_right_fold_callbacks: Vec<FuncId>,
 }
 
-/// `e` without the reference count changes of local `x`, if it does
-/// not use `x` otherwise.
-fn without_counts(e: &Expr, x: Local) -> Option<Expr> {
-    let go = |e: &Expr| without_counts(e, x);
-    let all = |es: &[Expr]| es.iter().map(go).collect::<Option<Vec<Expr>>>();
-    Some(match e {
-        Expr::Dup(l, b) | Expr::Drop(l, b) if *l == x => go(b)?,
-        Expr::ResourceRegion {
-            parameters,
-            bindings,
-            body,
-        } => Expr::ResourceRegion {
-            parameters: parameters.clone(),
-            bindings: bindings.clone(),
-            body: Box::new(go(body)?),
-        },
-        Expr::Dup(l, b) => Expr::Dup(*l, Box::new(go(b)?)),
-        Expr::Drop(l, b) => Expr::Drop(*l, Box::new(go(b)?)),
-        Expr::Local(l) if *l == x => return None,
-        Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => e.clone(),
-        Expr::Call(f, a) => Expr::Call(*f, all(a)?),
-        Expr::Construct(t, a) => Expr::Construct(*t, all(a)?),
-        Expr::Record(a) => Expr::Record(all(a)?),
-        Expr::Apply(f, a) => Expr::Apply(Box::new(go(f)?), all(a)?),
-        Expr::Field(r, i) => Expr::Field(Box::new(go(r)?), *i),
-        Expr::SetFields(r, sets) => Expr::SetFields(
-            Box::new(go(r)?),
-            sets.iter()
-                .map(|(i, v)| go(v).map(|v| (*i, v)))
-                .collect::<Option<Vec<_>>>()?,
-        ),
-        Expr::Let(l, v, b) => Expr::Let(*l, Box::new(go(v)?), Box::new(go(b)?)),
-        Expr::Match(s, arms) => Expr::Match(
-            Box::new(go(s)?),
-            arms.iter()
-                .map(|(p, b)| go(b).map(|b| (p.clone(), b)))
-                .collect::<Option<Vec<_>>>()?,
-        ),
-    })
-}
-
 /// Whether `e` is local `x`, under reference count changes.
 fn is_local_through_counts(e: &Expr, x: Local) -> bool {
     match e {
@@ -2724,11 +2683,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
         f.ty.params(f.arity as usize).1.clone()
     }
 
-    fn scalar_array_get(&self, id: FuncId) -> Option<MT> {
+    fn lookup_value_type(&self, id: FuncId) -> Option<MT> {
         let function = &self.g.prog.funcs[id];
-        if function.arity != 2 || !matches!(&function.body, Body::Prim(symbol) if symbol == "array.get") { return None; }
-        match &function.locals[1] {
-            MT::Con(name, elements) if name == "std::Array" && elements.len() == 1 && scalar(&elements[0]).is_some() => Some(elements[0].clone()),
+        if function.arity != 2 { return None; }
+        match (&function.body, &function.locals[1]) {
+            (Body::Prim(symbol), MT::Con(name, fields))
+                if symbol == "array.get" && name == "std::Array" && fields.len() == 1
+                    && scalar(&fields[0]).is_some() => Some(fields[0].clone()),
+            (Body::Prim(symbol), MT::Con(name, fields))
+                if symbol == "map.get" && name == "std::Map" && fields.len() == 2 => Some(fields[1].clone()),
             _ => None,
         }
     }
@@ -2765,7 +2728,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     Some(fields)
                 }
                 Expr::Construct(_, xs) => Some(!xs.is_empty()),
-                Expr::Call(id, args) if m == 1 && args.len() == 2 && fg.scalar_array_get(*id).is_some() => Some(true),
+                Expr::Call(id, args) if m == 1 && args.len() == 2 && fg.lookup_value_type(*id).is_some() => Some(true),
                 Expr::Call(id, _) if fg.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m) => {
                     Some(true)
                 }
@@ -2796,14 +2759,29 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 let u = self.vlocals[l].0.clone();
                 parts(&u)
             }
-            Expr::Call(id, args) if m == 1 && args.len() == 2 && self.scalar_array_get(*id).is_some() => {
-                let element = self.scalar_array_get(*id).unwrap();
-                let descriptor = self.g.desc(&element);
+            Expr::Call(id, args) if m == 1 && args.len() == 2 && self.lookup_value_type(*id).is_some() => {
+                let element = self.lookup_value_type(*id).unwrap();
                 let values = self.args(args);
                 let pending = self.begin_call(e as *const Expr);
-                let tag = self.bind(format!("(V)((int64_t){index} >= 0 && (uint64_t){index} < fwp_array_len({array}))", index=values[0], array=values[1]));
-                let value = self.bind(format!("{tag} ? fwp_array_load({array}, (size_t){index}, {descriptor}) : 0", index=values[0], array=values[1]));
-                self.line(&format!("FWP_KEEP_ALIVE({});", values[1]));
+                let (tag, value) = if matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "map.get") {
+                    let key = self.g.prog.funcs[*id].locals[0].clone();
+                    let descriptor = self.g.desc(&key);
+                    let found = self.fresh();
+                    let at = self.fresh();
+                    self.line(&format!("int {found}; uint64_t {at} = fwp_map_find({}, {}, {descriptor}, &{found});", values[1], values[0]));
+                    let value = self.bind(format!("{found} ? MAP({})->d[2 * {at} + 1] : 0", values[1]));
+                    (found, value)
+                } else {
+                    let descriptor = self.g.desc(&element);
+                    let tag = self.bind(format!("(V)((int64_t){index} >= 0 && (uint64_t){index} < fwp_array_len({array}))", index=values[0], array=values[1]));
+                    let value = self.bind(format!("{tag} ? fwp_array_load({array}, (size_t){index}, {descriptor}) : 0", index=values[0], array=values[1]));
+                    (tag, value)
+                };
+                if self.g.reuse && crate::rc::needs_rc(&self.g.prog.shapes, &element) {
+                    let duplicate = self.g.value_dup(&element);
+                    self.line(&format!("if ({tag}) {duplicate}({value});"));
+                }
+                self.keep_borrowed_args(*id, &values);
                 self.end_call(pending);
                 (tag, vec![value])
             }
@@ -4764,21 +4742,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.record_update(e, r, &rv, sets, &xs)
             }
             Expr::Let(l, v, body) => {
-                // `let o = map.get k m in match o ...`, with only o's
-                // reference counts in the arms: no `Some` is built
-                if let Expr::Match(s, arms) = &**body {
-                    if matches!(**s, Expr::Local(x) if x == *l) {
-                        let stripped: Option<Vec<(Pat, Expr)>> = arms
-                            .iter()
-                            .map(|(p, b)| without_counts(b, *l).map(|b| (p.clone(), b)))
-                            .collect();
-                        if let Some(arms) = stripped {
-                            if let Some(r) = self.lookup_match(v, &arms) {
-                                return r;
-                            }
-                        }
-                    }
-                }
+                // Keep the original IR nodes: loop tails and cleanup liveness
+                // are keyed by their addresses. Lookup variants are emitted as
+                // tag/payload locals by bind_local, without cloning match arms.
                 let body = self.bind_local(*l, v, body);
                 self.expr(body)
             }

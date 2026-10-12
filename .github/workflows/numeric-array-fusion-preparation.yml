@@ -69,3 +69,4 @@ jobs:
             array-fusion-evidence/performance/*.json
             array-fusion-evidence/performance/*.txt
             array-fusion-evidence/performance/*.c
+            array-fusion-evidence/performance/*.asm
