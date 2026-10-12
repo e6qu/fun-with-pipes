@@ -473,7 +473,10 @@ impl<'p> Opt<'p> {
         for (i, a) in args.into_iter().enumerate() {
             let n = uses(&body, i as u32);
             let anchored = matches!(&body, Expr::ResourceRegion { parameters, .. } if parameters.contains(&(i as Local)));
-            if !anchored && (self.trivial(&a) || (n <= 1 && self.pure(&a))) {
+            // An aggregate carries its field/variant types through the callee
+            // parameter. Preserve that existing typed local when substituting
+            // the value would erase the context needed for child ownership.
+            if !anchored && !builds_object(&a) && (self.trivial(&a) || (n <= 1 && self.pure(&a))) {
                 subst[i] = Some(a);
             } else {
                 let l = self.fresh(&types[i]);

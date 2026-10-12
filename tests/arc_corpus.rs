@@ -9,6 +9,14 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
     std::fs::create_dir(&scratch).unwrap();
     let mut paths: Vec<_> = std::fs::read_dir(&root).unwrap().map(|p| p.unwrap().path())
         .filter(|p| p.extension().is_some_and(|extension| extension == "fwp")).collect();
+    // The raw evaluator exhausts its bounded stack at 100000 non-tail calls.
+    // Keep the original deep native/golden control and compare the same program
+    // at 100 calls against the raw evaluator without raising resource limits.
+    let optimizer = std::fs::read_to_string(root.join("optimizer.fwp")).unwrap();
+    assert_eq!(optimizer.matches("100000 | count-down").count(), 1);
+    let bounded = scratch.join("optimizer_bounded.fwp");
+    std::fs::write(&bounded, optimizer.replace("100000 | count-down", "100 | count-down")).unwrap();
+    paths.push(bounded);
     paths.sort();
     let total = paths.len();
     let mut executed = 0;
@@ -21,9 +29,12 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
     for path in paths {
         let name = path.file_stem().unwrap().to_str().unwrap();
         let cfile = scratch.join(format!("{name}.c"));
+        let source_path = if path.parent() == Some(root.as_path()) {
+            std::path::Path::new(path.file_name().unwrap())
+        } else { path.as_path() };
         let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT").args(["build", "--gc", "arc", "--emit-c", "-O1"])
-            .arg(path.file_name().unwrap()).current_dir(&root).arg("-o").arg(&cfile)
+            .arg(source_path).current_dir(&root).arg("-o").arg(&cfile)
             .output().unwrap();
         if name.starts_with("err_") {
             assert_eq!(emitted.status.code(), Some(1), "{name}");
@@ -63,8 +74,14 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                 child.stdin.take().unwrap().write_all(&input).unwrap();
                 child.wait_with_output().unwrap()
             };
-            let reference = execute(Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env("FWP_NO_OPT", "1").args(["run", "--interp"]).arg(path.file_name().unwrap()));
+            let mut interpreter = Command::new(env!("CARGO_BIN_EXE_fwp"));
+            if name == "optimizer" { interpreter.env_remove("FWP_NO_OPT"); }
+            else { interpreter.env("FWP_NO_OPT", "1"); }
+            let reference = execute(interpreter.args(["run", "--interp"]).arg(source_path));
+            if name == "optimizer" {
+                assert!(reference.status.success() && reference.stderr.is_empty());
+                assert_eq!(reference.stdout, std::fs::read(path.with_extension("out")).unwrap());
+            }
             let actual = execute(&mut Command::new(&binary));
             let matches = actual.status.code().is_some() && actual.status.code() == reference.status.code()
                 && actual.stdout == reference.stdout && actual.stderr == reference.stderr;
@@ -77,7 +94,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             if !matches { failures.push(format!("ARC corpus {name}: expected {:?} stdout={} stderr={}; got {:?} stdout={} stderr={}",
                 reference.status.code(), String::from_utf8_lossy(&reference.stdout), String::from_utf8_lossy(&reference.stderr),
                 actual.status.code(), String::from_utf8_lossy(&actual.stdout), String::from_utf8_lossy(&actual.stderr))); }
-            report.push_str(&format!("executed\t{name}\tstatus={:?}\treturn-ledger={}\n", actual.status.code(), actual.status.success()));
+            report.push_str(&format!("executed\t{name}\tstatus={:?}\treturn-ledger={}\toracle={}\n", actual.status.code(), actual.status.success(), if name == "optimizer" { "optimized-interpreter-and-golden" } else { "raw-interpreter" }));
             executed += 1;
         }
         if let Some(path) = &artifacts { std::fs::write(path.join("corpus.txt"), &report).unwrap(); }
