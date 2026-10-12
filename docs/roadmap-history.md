@@ -18749,7 +18749,7 @@ plain/gzip payloads, fixed-width representation, oneof prefixes, diagnostics,
 receive order and error/trap order remain unchanged.
 
 These are prepared contracts, subject to full platform/GC CI per bundle.
-[Primitive ownership](primitive-ownership.md#prepared-refinements) records individual
+[Primitive ownership](primitive-ownership.md#accepted-ownership-review) records individual
 acceptance controls; [the handoff](development-state.md) records delivery status.
 Prepared pending gRPC connections also own lookup results, descriptors and
 SSL state across connection/handshake suspension, transferring them after
@@ -18810,3 +18810,6706 @@ in [the handoff](development-state.md), rather than a second priority list here.
 | WASM resources | Logical aggregate/task counts and disposal metadata | Actual-WASI full gates; physical bump storage remains allocated |
 | Frame representation | Typed record fields and variant structs, per-path pattern initialization | Bundle CI; nested holders and partial-retain traps |
 
+
+
+## Ownership classification notes before accepted PR124 streamlining
+
+## Conservative reconstruction and external boundaries
+
+A bounded audit of prepared source 112 (`b45e93a71d40`) enumerates 373 library primitive declarations,
+resolves 40 explicit foreign aliases and finds 363 distinct runtime symbols.
+It queries the unmodified shared contract module using those actual symbols
+and checks monomorphization templates:
+
+| Declaration category | Count | Meaning |
+|---|---|---|
+| Explicit ownership contract | 134 | IR counting and native wrapper selection use the shared inventory |
+| Combinator lowered to ordinary IR | 19 | `mono::foreign_instance` emits `Body::Expr`; ordinary function ownership applies |
+| Flat concrete scalar signature | 12 | No counted value parameters/results in these declared signatures; external state may still exist |
+| Runtime or specialization review | 208 | Inspect actual monomorphic types, lowering and wrappers before judging sharing or ownership |
+
+The208 review declarations resolve to198 distinct symbols; aliases remain
+declaration coverage, not extra runtime boundaries. Missing metadata alone
+does not identify a runtime sharing boundary. The scalar
+category includes `ad.tape`, which creates external tape state; scalar values do
+not prove allocation freedom or complete lifetime coverage. Generic numeric,
+boxed 128-bit, callback, resource and reconstructed-value cases require their
+actual representations. The portable audit passes on GitHub at evidence head
+669c19e7cb67 (CI38099556010), checking actual contract metadata and IR lowering,
+explicit aliases and all recorded compiler/library source hashes. Run the
+inventory again on actual merged source at the phase 2 exit checkpoint. This is
+prepared-source classification, not main acceptance or a tracing-free guarantee.
+Counts and scope are recorded in
+[history](roadmap-history.md#portable-finite-ownership-inventory-2026-10-11).
+
+Final integration38179558348 verifies375 declarations,365 symbols,40 aliases,
+168 contracts,19 IR combinators,11 flat signatures and177 review declarations
+representing167 symbols in accepted PR124. It includes internal ad.scope
+and ad.scope2, raw-memory, AD, list, typed State and14 codec contracts. Final
+production gates and merged-source classification remain required. These counts
+classify boundaries and do not establish tracing-free eligibility.
+
+Unknown primitive, foreign and remote boundaries keep the explicit shared
+fallback in [src/ownership.rs](../src/ownership.rs). A successful result or a
+known descriptor does not establish ownership of every reconstructed node.
+
+| Boundary | Current requirement and remaining ownership evidence |
+|---|---|
+| JSON/CSV/protocol parsing | Shared reconstructed aggregates; typed child transfer and partial-failure cleanup need separate contracts |
+| Descriptor-based text/binary decode | Normal scratch cleanup does not make returned trees counted; fresh nodes, aliases and partial construction require typed review |
+| Remote values and memoized decoding | Cached decoded results may have several readers; preserve a cache owner before returning independently owned aliases |
+| Foreign values and retained callbacks | Explicit sharing protects unknown retention; ownership requires a verified host/runtime lifetime and teardown contract |
+| list.flat-map and list.ap | Generic runtime application and list reconstruction retain the compatibility path; owned callback results, temporary storage and copied spines need explicit contracts before tracing-free eligibility |
+| State handlers | The PR124 candidate owns typed get/put/modify/run-state values and preserves per-task scope chains; focused nonlocal-exit and escaping-capture controls pass, while full production acceptance remains required |
+
+Source review of the same prepared head separates three concrete cases:
+
+- `parse-int` and `parse-float` already borrow String input and return a shared
+  `Option` result. Their wrappers select the monomorphic numeric kind; integer
+  parsing can include boxed numeric payloads. Counting only the outer `Some`
+  would not establish typed payload ownership.
+- `g_force` returns `cell->memo` on repeated reads and stores the decoded result
+  after the first successful force. A future counted contract must retain the
+  cache's owner and acquire independent reader aliases; scratch-buffer cleanup
+  alone does not supply that contract.
+- `grpc.with-tls` copies option text into explicitly owned C storage and releases
+  its scoped owner after `g_with_ctx`. Prepared task inheritance holds that C
+  storage separately. The current primitive wrapper still shares counted fwp
+  arguments, including callbacks; the C counter does not count their value graphs.
+
+These are source-reviewed compatibility policies, not new runtime tests or
+verified deterministic reclamation. Keep them in the finite phase 2 exit review;
+changing a boundary requires interpreter/native, alias, partial-failure and
+retention/teardown evidence before removing sharing.
+
+The resource/network candidate will carry a baseline-pinned declaration audit
+in its regular Linux and ARM/Intel macOS jobs. It reads the actual shared
+contract module, checks the candidate commit identity and records all compiler,
+runtime and library source hashes. Expected changes are explicit; unknown
+declarations remain visible in the observed report even when the audit fails.
+The integrated candidate audit passes in finalization38163941948; its regular
+production gates and actual merged-source exit review remain required. A passing declaration audit establishes
+inventory consistency, not runtime retention, exceptional cleanup or tracing-free
+eligibility. Those still require the controls and lifetime policies above.
+
+The combined list.ap/list.flat-map candidate supplies borrowed inputs, owned
+synchronous callback results and counted spines, with scratch/result-prefix/
+partial-spine unwind controls. Flat-map copies retain typed element aliases and
+release the original callback chunks. Both repairs pass focused Linux/ARM/Intel evidence38160607296; final bundle
+gates remain required. The same candidate clears inactive
+State buffer words after pop, depth restoration and task exit; collector-scan,
+alias/error and real scheduler controls pass the same focused matrix. Clearing dead roots
+does not count or destroy live State values. Candidate typed State scope controls now pass; legacy/unmodeled fallbacks remain
+on the tracing compatibility path. See the handoff for candidate identities.
+
+Current list callback and typed State candidates have focused retention and
+cleanup evidence described above. The earlier main68f source observations are
+archived in [history](roadmap-history.md#historical-list-and-state-source-observations).
+Legacy/unmodeled states, reconstruction and unknown runtime callbacks still
+require explicit fallback classification. Preserve callback evaluation order
+and task/error/trap behavior when extending ownership.
+
+Keep these boundaries on tracing compatibility until their contracts and cleanup
+are proved. Phase2 records coverage and remaining fallback requirements; phase6
+must establish eligibility and cycle policy before claiming collection-free use.
+
+
+
+## Recovery snapshot and complete-map repairs
+
+Recovery audit38189929028 at42c1aa913f8ba370b29068c7edbb2803ce47871b
+found that copied backup Markdown was being checked as live documentation,
+so its original relative links no longer resolve inside the backup directory.
+Preserve the original bytes under snapshot source names and remove duplicate
+live Markdown paths on the recovery branch; then rerun that audit. Production
+source/combined validation is independent and passes38189708217.
+
+Combined ownership exit preparation passes runner38189708217 at driver83f240569685274589bc1a003f2f444b0dd79e94.
+Native export 07fb6f72f7a0b4309057f89209250ca573d7103e has tree30a0ccea090697165713d2411ed75f3f0aa03a35 on the actual
+PR124 squash. All original allocation, sanitizer, raw/native, codec, type,
+format/library/docs, inventory and finite fallback controls pass together.
+Current root docs are refreshed before opening the production PR; this update
+changes documentation only. Query ownership-exit-and-buffer-bundle for its
+current tip and require all six exact-head jobs and roadmap_docs before squash.
+Phase2 stays open until the actual merged-source audit passes.
+
+Recovery audit38190316575 atc1d0b8b04a7c4f97526056ed9780f3aba05555e9
+passes links/ancestry/subjects, but restoration selected an older map because
+the repair publisher lacked the checkpoint suffix. The restorer now considers
+all publish Python files with safe literal maps, requires every mapped blob to
+exist and requires a self entry before selecting the largest map. Verify this
+refinement with actual runner restoration before marking recovery verified.
+
+Numeric source preparation now also retains30 blob-verified files at frozen
+PR125 head37e94c1 in fwp-numeric-representation-phase2-candidate-source. This is
+source preparation only; full gates and actual merged-source phase2 acceptance
+remain required before representation implementation.
+
+
+## Accepted phase2 ownership exit
+
+Main is `3598a675b5bd9ad2e22ac17d42a27a89ea74fdeb` (PR #124). Frozen head `3aae99bfa705e26babc2cf251b0e583dfd95cf38` passes all six
+jobs in CI38184549852 and roadmap_docs38184549850 before match-head squash
+at 2026-10-12T00:52:11Z. Subject `Own resource and State lifetimes and preserve inferred effects` has 62 characters,
+one line and no body/trailers/attribution. One parent `b4285fc177b3ae7afaf195e5ebd7115cc77b815c` and complete
+tree `28ae0e5cea7fa5948683adb39a035ed40fb9b226` match the tested head. Raw signed payload:
+fwp-pr124-signed-payload.txt. All11 docs were backed up before these acceptance
+edits in /private/tmp/fwp-main-docs-remote-pre124. Local main remains `68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4`;
+no local fast-forward or compiled check ran while free disk is below64GiB.
+
+Queue33 and35–112 are accepted;34 is a verified duplicate. PR124 accepts resource
+and network owners, compiler/cache/effect repairs, scoped AD and list/closure
+lifetimes, typed State and14 fresh codec leaves, plus codec fixture-copy repair. Borrowed scoped inputs require
+Dup; affine File rejection, type snapshots, actual WASI and all original nonlocal
+exit/omission controls pass. Public Pipe and grad/vjp signatures remain unchanged.
+Raw buffers still require mem.free; unknown reconstruction and retained contexts
+keep tracing. Fake OpenCL tests do not establish GPU hardware support.
+
+## Current verified bundle evidence
+
+Accepted strict inventory:375 declarations/365 symbols,40 aliases,168 contracts,
+19 IR combinators,11 flat signatures and177 review declarations/167 symbols.
+Complete counters include initializer fast paths and count slow delegation once.
+Independent Linux/ARM/Intel and final combined Linux profiles pass. Scoped grad
+matches33 calls/720 requested bytes per gradient. State4096-call profiles reduce
+managed calls16384→12288 and requested bytes272212→206676, with counted freed
+bytes0→262144. List2048-call profiles retain43008 calls/965374 bytes and raise
+counted freed bytes65536→917504. These are workload-specific results, without
+a timing or tracing-free claim. Earlier partial counter reports remain archived.
+
+## Remaining ownership deliveries
+
+All immutable preparation rows74–112 are delivered; their contracts, heads and
+original checks are archived in history. Queue anchors remain unchanged.
+Current delivery is PR[#125](https://github.com/e6qu/fun-with-pipes/pull/125),
+head37e94c1efa1bb99e955d026b8dde46dfe632e972 on the accepted PR124 squash.
+Roadmap_docs38190218974 passes; full CI38190218968 is running. The combined
+runner38189708217 passes at83f240569685274589bc1a003f2f444b0dd79e94;
+exportd5e0386c526c399f4bfe67c171ed44f9c3bc2f05 then documentation-only37e94c1
+preserves the verified native tree. Do not restart this matrix for handoff-only
+updates. Require all six current-head jobs and docs before merge-phase2-exit.py;
+then run the accepted-source audit and record its actual proof before phase3.
+Receipts: phase2-exit-finalization-export/publication.json,
+fwp-phase2-exit-docs-publication.json and fwp-pr125-publication.json.
+
+Next: fix any failed current-head gate; squash PR125 only after all seven
+pass. Run the actual accepted-source audit before marking phase2 complete,
+then deliver numeric storage/views and ABI work followed by phases4–6.
+
+## Verified PR125 preparation
+
+The177 remaining declarations have an explicit shared-fallback review draft at
+/private/tmp/fwp-phase2-explicit-fallback-review-draft.json. It records argument,
+result, callback, retention, teardown and cycle policies across18 families.
+Three-platform review38180899508 passes at167d769deaa28fae9b361ba4e9fa33b443d1a79c
+on ownership-evidence-phase2-exit-review: actual inventory, compiler fallback
+rules and the buffer controls agree. PR124 is accepted; the next final full
+production matrix and merged-source audit remain required; this does not establish tracing-free eligibility.
+Validate the actual accepted inventory and compiler wrappers before phase2 exit.
+Verifier and three-platform workflow drafts: fwp-check-explicit-fallback-review-draft.py
+and fwp-phase2-exit-review-evidence.yml. No phase2 exit claim is established. Publication receipt:
+fwp-phase2-exit-review-publication.json.
+
+The boy scout audit found structural buffer addition/doubling overflow and
+unchecked realloc failure in the exact1aadb runtime/fwp_rt_ops.c. Draft repair
+preserves malloc/free storage and exits102 on overflow/allocation failure.
+Runner-only branch ownership-evidence-structural-buffer publishes
+c95d970c8c300cf3b342847ee60f7fd052294f28; runner38180514117 passes Linux and both Macs. Tests cover
+ordinary growth/data preservation, addition overflow, capacity overflow and
+allocation failure at O1/O2 with ASan/UBSan, plus three deliberate omission
+variants. Drafts: fwp-structural-buffer-{draft.c,test.rs,probe.c,patch.json}.
+Deliver it with the finite ownership exit review in the next coherent bundle.
+
+Array-limit candidate296ea83b45bb153c2b86d1df68e05c799013b2eb on
+ownership-evidence-array-size-limits passes all three jobs in38182446407.
+Central constructor multiplication, matching interpreter make/generate limits,
+bump alignment overflow and nonnull empty initialization are checked. Five
+raw/native cases preserve oversized make/generate traps, argument trap order
+and negative counts at O1/O2 with reuse on/off and real GC/reuse verification.
+ASan/UBSan constructor/bump omission controls,71 library units, all golden type
+snapshots and eight effect tests pass. Proof: fwp-array-size-passing-proof.json.
+Earlierd8/b42 failed a missing native forward declaration; a2 passed all C/unit/
+effect/snapshot controls but the new semantic fixture expected1 rather than the
+established trap status101. The final head corrects that fixture and makes the
+initialization omission's null-address arithmetic defined. No control was removed.
+Logs: fwp-array-size-d8-failed.log and fwp-array-size-a2-linux-failed.log.
+Include this passing repair in the same phase2 exit bundle; final full gates still
+apply. Drafts: fwp-array-size-{runtime-draft.c,interpreter-draft.rs,gc-draft.c,
+test.rs,probe.c}; fwp-bump-size-probe.c.
+
+Completed acceptance: fwp-record-pr124-remote-acceptance.py backed up11 docs
+and archived39 live/primitive rows after exact-head squash/raw-payload proof.
+It streamlined obsolete design/resource notes into history. Do not rerun it. fwp-finalize-phase2-exit-on-runner.py and
+fwp-publish-phase2-exit-finalization.py require the actual PR124 squash and passing
+finite review. That finalizer pins the passing296ea83 array/bump source
+and passing kernel/device sources and all three verified preflight jobs.
+It preserved original controls and exported the ownership exit/allocation
+bundle and fresh docs now undergoing PR125 full CI.
+
+Numeric design preparation reads30 blob-verified files at d5ae8c and maps108
+direct array references in seven runtime files. Current arrays have8-byte
+headers and V-word payloads; F32 values use low32-bit encoding. Draft layout
+alternatives and producer/consumer, view-owner and ABI requirements are in
+fwp-numeric-representation-design-preparation.json. This is source review, not
+a representation implementation or compiled evidence. Complete phase2 before
+changing numeric representation.
+
+Kernel candidate d240231c5dd33e83ecdd5bf3df06715a0e279768 passes all three
+platform jobs in38186836622. It guards empty-stack pointer formation and reads
+F64 constant V words through the existing memcpy bit decoder. Extracted actual
+kernels pass O1/O2 sanitizers with first leaf/constant operations, lengths
+0/1/7/127/256, nonzero offsets, exact bytes and sentinels. Omitted stack guards
+and constant decoders fail their controls. Original parallel/missing-OpenCL
+tests pass against FWP_NO_OPT=1; the benchmark remains ignored, with no timing
+or GPU hardware claim. Proof: fwp-kernel-constant-bits-passing-proof.json.
+
+Device candidate6ee21a54dee1029178b28291d60dd31dd179a7a7 on
+ownership-evidence-device-output-bounds checks positive output counts before
+multiplication/allocation, preserving malformed code and input-length trap order
+and releasing the temporary input table. Workspace limits follow input validation
+in both implementations. All three jobs in38188567610 pass; proof: fwp-device-bounds-passing-proof.json. Previous
+857 candidate passed both Macs; Linux38188246198 found LeakSanitizer changed
+deliberate omission exits because the sentinel left small probe allocations alive.
+The repaired sentinel records omitted bounds/cleanup before freeing its own
+allocations; leak detection remains enabled. Original raw/O1/O2/GC/reuse and
+omission controls remain. The passing candidate is ready for inclusion in the next coherent
+bundle; its final production gates remain required. Receipts: fwp-device-bounds-publication.json and
+fwp-device-bounds-control-cleanup-publication.json; diagnostic log:
+fwp-device-bounds-857-linux-failed.log.
+
+
+
+Verified exact merged-source acceptance:
+
+```json
+{
+  "head": "cbf68ea60c3b9439a117ef9d9b28b472f23dc632",
+  "testedHead": "37e94c1efa1bb99e955d026b8dde46dfe632e972",
+  "parent": "3598a675b5bd9ad2e22ac17d42a27a89ea74fdeb",
+  "pr": 125,
+  "mergedAt": "2026-10-12T02:13:11Z",
+  "tree": "07fe7b60a473f8c5ae6b7aede7678ff7fb17906a",
+  "subject": "Check ownership fallbacks and allocation boundaries",
+  "rawPayloadSha256": "72027555158d90145f8f83d87e87389616e296023c269b97e5e1d96c72fad4f1",
+  "gates": {
+    "CI": {
+      "run": 38190218968,
+      "proof": {
+        "conclusion": "success",
+        "headSha": "37e94c1efa1bb99e955d026b8dde46dfe632e972",
+        "jobs": [
+          {
+            "completedAt": "2026-10-12T01:01:56Z",
+            "conclusion": "success",
+            "databaseId": 114621162136,
+            "name": "bench",
+            "startedAt": "2026-10-12T01:00:47Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T01:00:49Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T01:00:48Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:50Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T01:00:49Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:51Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T01:00:50Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:55Z",
+                "conclusion": "success",
+                "name": "OpenSSL headers (TLS)",
+                "number": 4,
+                "startedAt": "2026-10-12T01:00:51Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:03Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 5,
+                "startedAt": "2026-10-12T01:00:55Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:53Z",
+                "conclusion": "success",
+                "name": "benchmarks against C and Rust (docs/benchmarks.md)",
+                "number": 6,
+                "startedAt": "2026-10-12T01:01:03Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:53Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 12,
+                "startedAt": "2026-10-12T01:01:53Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:53Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 13,
+                "startedAt": "2026-10-12T01:01:53Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38190218968/job/114621162136"
+          },
+          {
+            "completedAt": "2026-10-12T02:08:12Z",
+            "conclusion": "success",
+            "databaseId": 114621162364,
+            "name": "test",
+            "startedAt": "2026-10-12T01:00:47Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T01:00:49Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T01:00:48Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:50Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T01:00:49Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:52Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T01:00:50Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:53Z",
+                "conclusion": "success",
+                "name": "Run actions/setup-node@v4",
+                "number": 4,
+                "startedAt": "2026-10-12T01:00:52Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:04Z",
+                "conclusion": "success",
+                "name": "WebAssembly toolchain, OpenSSL headers (TLS)",
+                "number": 5,
+                "startedAt": "2026-10-12T01:00:53Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:14Z",
+                "conclusion": "success",
+                "name": "aarch64 cross compiler and qemu (tests/cross.rs)",
+                "number": 6,
+                "startedAt": "2026-10-12T01:01:04Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:15Z",
+                "conclusion": "success",
+                "name": "binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)",
+                "number": 7,
+                "startedAt": "2026-10-12T01:01:14Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:16Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 8,
+                "startedAt": "2026-10-12T01:01:15Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:17Z",
+                "conclusion": "success",
+                "name": "Exact-head primitive contract inventory",
+                "number": 9,
+                "startedAt": "2026-10-12T01:01:16Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:17Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 10,
+                "startedAt": "2026-10-12T01:01:17Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:19Z",
+                "conclusion": "success",
+                "name": "fmt",
+                "number": 11,
+                "startedAt": "2026-10-12T01:01:17Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:28Z",
+                "conclusion": "success",
+                "name": "clippy",
+                "number": 12,
+                "startedAt": "2026-10-12T01:01:19Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:33Z",
+                "conclusion": "success",
+                "name": "clippy (WebAssembly build)",
+                "number": 13,
+                "startedAt": "2026-10-12T01:01:28Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:08:10Z",
+                "conclusion": "success",
+                "name": "test",
+                "number": 14,
+                "startedAt": "2026-10-12T01:01:33Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:08:10Z",
+                "conclusion": "skipped",
+                "name": "Preserve failed native golden binaries and C",
+                "number": 15,
+                "startedAt": "2026-10-12T02:08:10Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:08:10Z",
+                "conclusion": "skipped",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 16,
+                "startedAt": "2026-10-12T02:08:10Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:08:10Z",
+                "conclusion": "success",
+                "name": "Post Run actions/setup-node@v4",
+                "number": 31,
+                "startedAt": "2026-10-12T02:08:10Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:08:10Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 32,
+                "startedAt": "2026-10-12T02:08:10Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:08:10Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 33,
+                "startedAt": "2026-10-12T02:08:10Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38190218968/job/114621162364"
+          },
+          {
+            "completedAt": "2026-10-12T01:14:16Z",
+            "conclusion": "success",
+            "databaseId": 114621162389,
+            "name": "macos_gc (macos-15)",
+            "startedAt": "2026-10-12T01:00:52Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T01:00:55Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T01:00:53Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:56Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T01:00:55Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:07Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T01:00:56Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:10Z",
+                "conclusion": "success",
+                "name": "OpenSSL 3",
+                "number": 4,
+                "startedAt": "2026-10-12T01:01:07Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:15Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 5,
+                "startedAt": "2026-10-12T01:01:10Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:14:12Z",
+                "conclusion": "success",
+                "name": "Full GC stress and verification golden suite",
+                "number": 6,
+                "startedAt": "2026-10-12T01:01:15Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:14:12Z",
+                "conclusion": "skipped",
+                "name": "Preserve failed GC stress binaries, C and statuses",
+                "number": 7,
+                "startedAt": "2026-10-12T01:14:12Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:14:12Z",
+                "conclusion": "skipped",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 8,
+                "startedAt": "2026-10-12T01:14:12Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:14:12Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 16,
+                "startedAt": "2026-10-12T01:14:12Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:14:13Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "startedAt": "2026-10-12T01:14:12Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38190218968/job/114621162389"
+          },
+          {
+            "completedAt": "2026-10-12T01:40:03Z",
+            "conclusion": "success",
+            "databaseId": 114621162428,
+            "name": "macos (macos-15)",
+            "startedAt": "2026-10-12T01:00:52Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T01:00:54Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T01:00:52Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:56Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T01:00:54Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:05Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T01:00:56Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:07Z",
+                "conclusion": "success",
+                "name": "OpenSSL 3",
+                "number": 4,
+                "startedAt": "2026-10-12T01:01:05Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:10Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 5,
+                "startedAt": "2026-10-12T01:01:07Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:10Z",
+                "conclusion": "success",
+                "name": "Exact-head primitive contract inventory",
+                "number": 6,
+                "startedAt": "2026-10-12T01:01:10Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:11Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 7,
+                "startedAt": "2026-10-12T01:01:11Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:13Z",
+                "conclusion": "success",
+                "name": "fmt",
+                "number": 8,
+                "startedAt": "2026-10-12T01:01:11Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:25Z",
+                "conclusion": "success",
+                "name": "clippy",
+                "number": 9,
+                "startedAt": "2026-10-12T01:01:13Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:39:55Z",
+                "conclusion": "success",
+                "name": "test (GC stress golden suite runs in macos_gc)",
+                "number": 10,
+                "startedAt": "2026-10-12T01:01:25Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:39:55Z",
+                "conclusion": "skipped",
+                "name": "Preserve failed native golden binaries and C",
+                "number": 11,
+                "startedAt": "2026-10-12T01:39:55Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:39:55Z",
+                "conclusion": "skipped",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 12,
+                "startedAt": "2026-10-12T01:39:55Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:39:57Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 24,
+                "startedAt": "2026-10-12T01:39:55Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:40:01Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 25,
+                "startedAt": "2026-10-12T01:39:57Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38190218968/job/114621162428"
+          },
+          {
+            "completedAt": "2026-10-12T01:27:22Z",
+            "conclusion": "success",
+            "databaseId": 114621162498,
+            "name": "macos_gc (macos-15-intel)",
+            "startedAt": "2026-10-12T01:00:48Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T01:00:52Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T01:00:49Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:55Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T01:00:52Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:36Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T01:00:55Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:43Z",
+                "conclusion": "success",
+                "name": "OpenSSL 3",
+                "number": 4,
+                "startedAt": "2026-10-12T01:01:36Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:49Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 5,
+                "startedAt": "2026-10-12T01:01:43Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:27:17Z",
+                "conclusion": "success",
+                "name": "Full GC stress and verification golden suite",
+                "number": 6,
+                "startedAt": "2026-10-12T01:01:49Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:27:17Z",
+                "conclusion": "skipped",
+                "name": "Preserve failed GC stress binaries, C and statuses",
+                "number": 7,
+                "startedAt": "2026-10-12T01:27:17Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:27:17Z",
+                "conclusion": "skipped",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 8,
+                "startedAt": "2026-10-12T01:27:17Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:27:20Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 16,
+                "startedAt": "2026-10-12T01:27:17Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:27:20Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "startedAt": "2026-10-12T01:27:20Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38190218968/job/114621162498"
+          },
+          {
+            "completedAt": "2026-10-12T02:03:04Z",
+            "conclusion": "success",
+            "databaseId": 114621163094,
+            "name": "macos (macos-15-intel)",
+            "startedAt": "2026-10-12T01:00:49Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T01:00:52Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T01:00:50Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:02Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T01:00:52Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:27Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T01:01:02Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:34Z",
+                "conclusion": "success",
+                "name": "OpenSSL 3",
+                "number": 4,
+                "startedAt": "2026-10-12T01:01:27Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:38Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 5,
+                "startedAt": "2026-10-12T01:01:34Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:39Z",
+                "conclusion": "success",
+                "name": "Exact-head primitive contract inventory",
+                "number": 6,
+                "startedAt": "2026-10-12T01:01:38Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:40Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 7,
+                "startedAt": "2026-10-12T01:01:39Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:01:43Z",
+                "conclusion": "success",
+                "name": "fmt",
+                "number": 8,
+                "startedAt": "2026-10-12T01:01:40Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:02:06Z",
+                "conclusion": "success",
+                "name": "clippy",
+                "number": 9,
+                "startedAt": "2026-10-12T01:01:43Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:03:00Z",
+                "conclusion": "success",
+                "name": "test (GC stress golden suite runs in macos_gc)",
+                "number": 10,
+                "startedAt": "2026-10-12T01:02:06Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:03:00Z",
+                "conclusion": "skipped",
+                "name": "Preserve failed native golden binaries and C",
+                "number": 11,
+                "startedAt": "2026-10-12T02:03:00Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:03:00Z",
+                "conclusion": "skipped",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 12,
+                "startedAt": "2026-10-12T02:03:00Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:03:01Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 24,
+                "startedAt": "2026-10-12T02:03:00Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T02:03:01Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 25,
+                "startedAt": "2026-10-12T02:03:01Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38190218968/job/114621163094"
+          }
+        ],
+        "status": "completed"
+      }
+    },
+    "Roadmap documentation": {
+      "run": 38190218974,
+      "proof": {
+        "conclusion": "success",
+        "headSha": "37e94c1efa1bb99e955d026b8dde46dfe632e972",
+        "jobs": [
+          {
+            "completedAt": "2026-10-12T01:00:54Z",
+            "conclusion": "success",
+            "databaseId": 114621162221,
+            "name": "roadmap_docs",
+            "startedAt": "2026-10-12T01:00:47Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T01:00:48Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T01:00:47Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:50Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T01:00:48Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:51Z",
+                "conclusion": "success",
+                "name": "Retain review heads for preparation references",
+                "number": 3,
+                "startedAt": "2026-10-12T01:00:50Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:52Z",
+                "conclusion": "success",
+                "name": "Documentation, immutable tags and commit messages",
+                "number": 4,
+                "startedAt": "2026-10-12T01:00:51Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:53Z",
+                "conclusion": "success",
+                "name": "Local guard sampling integration checks",
+                "number": 5,
+                "startedAt": "2026-10-12T01:00:52Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:53Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 10,
+                "startedAt": "2026-10-12T01:00:53Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T01:00:53Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 11,
+                "startedAt": "2026-10-12T01:00:53Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38190218974/job/114621162221"
+          }
+        ],
+        "status": "completed"
+      }
+    }
+  },
+  "inventoryReport": {
+    "head": "cbf68ea60c3b9439a117ef9d9b28b472f23dc632",
+    "declarations": 375,
+    "distinctSymbols": 365,
+    "explicitAliases": 40,
+    "counts": {
+      "contract": 168,
+      "runtime_or_specialization_review": 177,
+      "flat_scalar_signature": 11,
+      "ir_template": 19
+    },
+    "reviewSymbols": 167,
+    "lowered": [
+      "id",
+      "const",
+      "flip",
+      "compose",
+      "apply",
+      "fork",
+      "both",
+      "dup",
+      "on",
+      "uncurry",
+      "curry",
+      "swap",
+      "first",
+      "second",
+      "then2",
+      "curry3",
+      "uncurry3",
+      "tap",
+      "if"
+    ],
+    "baselineHead": "669c19e7cb6779536377af7f78651f97dc1e51d9",
+    "baselineSha256": "fa71949b3e93e8696b7c8bc7c35b729641c3ef156896803b679b05ccb4b62e0e",
+    "changedContractSymbols": [
+      "ad.backward",
+      "ad.push",
+      "ad.tape",
+      "cli.help",
+      "get",
+      "int.to-hex",
+      "json.encode",
+      "json.write",
+      "list.ap",
+      "list.flat-map",
+      "mem.alloc",
+      "mem.free",
+      "mem.string",
+      "modify",
+      "ptr.address",
+      "ptr.at",
+      "ptr.cast",
+      "ptr.read",
+      "ptr.read-string",
+      "ptr.write",
+      "put",
+      "run-state",
+      "url.encode",
+      "ws.accept",
+      "ws.close-payload",
+      "ws.deflate",
+      "ws.frame",
+      "ws.key",
+      "zlib.deflate",
+      "zlib.gzip",
+      "zlib.gzip-chunk",
+      "zlib.gzip-end"
+    ],
+    "addedContractSymbols": [
+      "ad.scope",
+      "ad.scope2"
+    ],
+    "sourceHashes": {
+      "src/aot.rs": "e68fa7d18f066aa85938fffae183bab6fb5deef5367b21d59be8c0b59d55260f",
+      "src/ast.rs": "24b9a16480da5817ebce3fa66033ae2f30cc5d77b6e8ed64a3459784d12614c0",
+      "src/asyncify.rs": "837ae68939520ce4b4dd7d9959c68d7bf22840c70786ab748176b464c162326a",
+      "src/cgen.rs": "5cb9f0212c713a7f5ad257cab50ab512bfe9e2b49afdb014f92cd1b76776ca74",
+      "src/cli.rs": "38a47f4f1a0adf06525918ded42e36b2bd483c6ec9b083691f08c2da0a59cc04",
+      "src/cli_gen.rs": "ad9d5c41d92327e2dfcbe64920febf3aa5b89095ee2fcf2c6a2c6eb0e8f76a59",
+      "src/csv.rs": "d7b4e4e6d790a96c59060188171cf931ab773bdb48a4c86d90ebbd4f35dcddab",
+      "src/diag.rs": "73fa709be411699a00ba78c312dbaa4684637877fcd09f1abb8a934314a350c4",
+      "src/driver.rs": "15a60b137dd27ad1493b89f2edd31f72d67ba34879a4f459447c533357994ad5",
+      "src/env.rs": "6a11cb2af4d154d6e12e491d7c2aad0b63dbd108f148a55168bac4e0c0a9eaf0",
+      "src/escape.rs": "4653928c3ead819248fd5df280e3c2c1ce1906130c05ff953b3b27469a1276e4",
+      "src/exec.rs": "77232f300f12d7082958b684a2e2dc9751e8005e1f3e1c696e73504951125ef6",
+      "src/exhaust.rs": "974f72270de2b54c08a57f1bbdfec4cf1298b661f02311c58945519de9048b1f",
+      "src/ffi.rs": "d01193c6634c699747769c072bca6cfcdf9b3a166b0f24fea622f5178ebbdf0f",
+      "src/ffi_interp.rs": "636843db3813024f57d84e92af8a44063cdb9f3469318ce98a2ca670861cebd9",
+      "src/fiber.rs": "02804a5560f6bf3a046d9b8f7b43c79b1d6c255b6d7d2c2888bf90a9f10b65d8",
+      "src/fmt.rs": "ce9e70df247a90ef3a04b3062151a489ebb00d6954207a99b02adf78a8a42250",
+      "src/fuse.rs": "a72be2481dc6cd1d1510d71bbb2913521ce1c462d73d26e9febfea958a8226ba",
+      "src/grpc.rs": "b606fd7af8f4a58e78494e3d478212610eed7971be40ef2771bc37c5e10daee2",
+      "src/gzip.rs": "dc81f00686690cf51e2a3c306730efa72580c37024c694636ead46f74439bf94",
+      "src/h2.rs": "5d665bfccb762f7d47badbfa49e12b9ace395cd25f9bfb32146d50ebb0fe9bc5",
+      "src/h2web.rs": "91e7d512b8a5cda636fefe47e5885900de9b3e92ac952b19fe4b56d2d84b015b",
+      "src/infer.rs": "af785407667998d40a7cde40c2d662f1c8763ed8fd4489a26a7d7e2f29f40840",
+      "src/interp.rs": "dd743604f59ca7b32116a49a7ce435ddeed1f3c82939413794bf145b122dd787",
+      "src/ir.rs": "52980b69a4aac8ec0d92eaf4e479df377d041e514df82578663209ff3ea874ec",
+      "src/json.rs": "07b0e6a9bbda65f081c932d71e4b9d661f6749749b4279d47628d81f49146a4d",
+      "src/jsontype.rs": "ea6040d476eaacf8cbe29e44dd13ae311ba5dba5f010ecd848555619ccb9d7e3",
+      "src/lexer.rs": "ff7435822de017724ce7bcf8ca2bfb698fd41d8b83620a9fdec0aa2f6a203a03",
+      "src/lib.rs": "d38fb7119bd3e82dc1541a5a4763cb028585d4dc90b59c0734c59b7e61c211f7",
+      "src/linalg.rs": "472ae03674aedfc14aaecf9801ef75907be37bc1046eec7b0a758e7da4473dcb",
+      "src/lint.rs": "7eeb22864fe256fa1f65721cd382da78703aeac1e5fe09d33d759f7814700598",
+      "src/lsp.rs": "b9d85f43ca3f7fc5643a6f0034f65dc6cf2bf42a8a4184ee91f2965f06f3e648",
+      "src/macros.rs": "09fc7d538b923ac286bf6bff44a6ad8ff80948cd02bb98058c93e4303ef5e590",
+      "src/main.rs": "7e27b743f79a62c690c11498f38470a2c0e39b823416d64afc3f7fe765d001ba",
+      "src/mcp.rs": "482d6f39f59ac2302a1b6479b801d3dcf9691def8f8a9dac694e3c3ac4b87393",
+      "src/mono.rs": "e5f6b1d76808a31f964518e899bb4850bd4c72d2b27d14583ab7059eb4efb3fd",
+      "src/numerics.rs": "a4588cf6bd5a23d85e98bc54461eecf5d19cdc32a0504ac896eaf6dd0a99a7b1",
+      "src/openapi.rs": "89efa3f9ee4ba8b74250a84e5657ffd70ad707b808687068331e215a3f2b19d2",
+      "src/openapi_import.rs": "4127deeb84c72d5b39aa76d7a29416960b4ef36b3687cac2e7239f77f22b561e",
+      "src/opt.rs": "02260a296837a8825edd1773c025b14c317304a1f4ad1fd6cef4d60ff2dc222d",
+      "src/ownership.rs": "af9dc0ac3e30ce641c6f03dc67c9608da3631c4d3e3aa80ea97d2333d9a4fced",
+      "src/parser.rs": "6dd3d5d82148178cb75a735180ac7fd100add10aed2665d4e9ce151a6a04602c",
+      "src/pretty.rs": "54018a351dc0f4aba052a5667059f563b214403216de2b93020d9d809a3790f9",
+      "src/prims_std.rs": "3c925536ee49947a9672829af87da21401a252702d409184a83e8b5713a07ee3",
+      "src/proto.rs": "c4ff3e2bede6d93bb1ab829127e4bb0902c84f9374ea073504e63b8ad1089024",
+      "src/protobuf.rs": "e260d7ee10df7fb5d59ac7054ca24555eedb96dfc80912a31a7777944863ee11",
+      "src/rc.rs": "7ea40cd4f1512d93c9b9aaf0531865b5b72f673d5fd98f0385faf96216e26415",
+      "src/resource.rs": "6e84008a267c9d9b7603eb77613c1ee42c36655e40f81fe4ad2d27de9fdc3347",
+      "src/rest.rs": "a7c3e2218de4dc03f0aa7727b6ef60a978d48175c9ef29d7a9764795df421a54",
+      "src/rpc.rs": "9528e5c024e9dc3c7c717c1a8c0db6b69cf54605bf89c27bf63c01e40db8cb25",
+      "src/sched.rs": "fc789d02e9965e14f8854b301041068634df2194fbafcbfbcc3ab806670d7247",
+      "src/services.rs": "a8ff497822703c75acf67b11a5ee127e7454519ae42181845361de57baa2cb4d",
+      "src/solve.rs": "81769d9d9e2a0d39a4560e15f85455ea0433f5e3920d9d465ee1026ba4027240",
+      "src/stdgen.rs": "6f758475d9dcfafb9cf0f3e6a21c2f88108283bf56e6c6fc83a21b98dae4fbf7",
+      "src/swagger.rs": "01002e3212fe0da1da99b39bb4d950a90161f1738fd0cbf55f9c0389feb948a6",
+      "src/syntax.rs": "147a0d87b69c5aad70fd8d16acc1cb0598ce4f970a322a10fa26bc1cd023bc8b",
+      "src/sys.rs": "b919140397be47c4536d4f85b6bd08cab84242883d61520e4563f008c11df420",
+      "src/textio.rs": "5b330f569e168554248960e3896a0f0bb7c694361ec1e87d6e9db68a2c669349",
+      "src/tls.rs": "4bf521b539467582014c8f609f4bbde0f2a5f957133352f1b6475c61ad7f5e05",
+      "src/transport.rs": "df364bfdd9e17afd10581b21f423dd4cca7f67197380c0ae5473e4133e730766",
+      "src/types.rs": "516a6dc499929ef501b45a07b24fe34db127ae8541a49790f852fff1451d4892",
+      "src/value.rs": "e7a136a50242f905827b41289dcdcbf9c1a4399d47dc84ec6124e598cc3b86bb",
+      "src/web.rs": "3af11b27f0cbb92ab93e40f81a334f363e4ffd3aa3547686f815f7a792a60e16",
+      "src/yaml.rs": "b4770a3d1582f304217096d740881d0a8ba86ae36edd24a922b1d1c1a02bcbaf",
+      "runtime/fwp_rt.c": "af1b387be75b0cce9fdd87d1a3ab230a3f64c70e650bac12d3aea57041ce95fc",
+      "runtime/fwp_rt_exec.c": "868f6e267b8a45b899f6a743d51d2b86972d2fa051aeb3ce0daa8a25cf616419",
+      "runtime/fwp_rt_gc.c": "31841a745a14f494fbc88be8d23e89fa9656e718eb3a6d6f1a21f6b3ba7400d2",
+      "runtime/fwp_rt_grpc.c": "6bc445d8b86ccd978062fb5d498e39f5c2306b93557df0a23cf4fe151acac5d8",
+      "runtime/fwp_rt_h2.c": "ff7132fabacfd66ebc00654ee05d273ed222da5316d285ee2446a18c766bb14d",
+      "runtime/fwp_rt_http2.c": "e578a481080f2cdbdb0db2816dfc6d5b7cec9cf4daf38a479b38e6729a5b3126",
+      "runtime/fwp_rt_json.c": "0cbcacb962729e2717f2fd64460d33f31b53962c3aa694ba23c38e060f6ebe8c",
+      "runtime/fwp_rt_kernel.c": "1a7319ebe3eb5f213f73b68516f4781f42ece070eeadfd119220e2618399eb2a",
+      "runtime/fwp_rt_num.c": "75f800d3ab2ca2149b45b3981c0285960aa171130e56c6c59e59452ea0357c8b",
+      "runtime/fwp_rt_ops.c": "e88fb8f309d7cd3b9fa8a6a199599419b19f648c7537251983b2a73a25924948",
+      "runtime/fwp_rt_pipe.c": "c13cc1ca1502a156f062e564e5c20860dfab2efbf6662096391bf51bb965a458",
+      "runtime/fwp_rt_prims.c": "964cfe7f42f01c64cca7af557bd8bd6aa7a17718b646b58a3c984b2a6a88d737",
+      "runtime/fwp_rt_static.c": "d0bed2896eaa05d4bd295ffdbfd62200a1709f262516819d3cfc5199c79c9e29",
+      "runtime/fwp_rt_sys.c": "9fa195fdf417b9d39d447dfb058cb86940b1e67117484c4739b4ea0df628e0a3",
+      "runtime/fwp_rt_task.c": "1798431e098079b2aa89ff936def415844cf055a6476617f08e52b9118e18ce7",
+      "runtime/fwp_rt_tls.c": "9e18c7224df6e3257da62e98a35bd9ff09ab86dd4575e306ec5970c70a60d33f",
+      "runtime/fwp_rt_web.c": "f1f28e5d45999414b0fc17c12d3101efe567ca44bbe2da9ae7810279fdce4a6a",
+      "runtime/wasm/longjmp.S": "da6692c52286e77ff5d757c30f6399fadb10180d4a835bc9afa95dafa35f5bf0",
+      "runtime/wasm/sjlj.c": "adaaa1f60d844002107ccae218af1ca30ea7f8d5a395d1c7b9ae4f576be2ad84",
+      "lib/autodiff.fwp": "a18e4435f97e516e2243d0c0c76bb92b9d83c43840d0a4125469902311c55f7b",
+      "lib/cli.fwp": "ca0c8256005a9557180480a0aa9cf96cdb03b19230b7e7f388306d9077c92103",
+      "lib/collections.fwp": "700682626edb42bc19afb441e7f28aa9a9f8baf4f4052c024f987d2d59637d9e",
+      "lib/csv.fwp": "26f4768b602e317e1b700d2f3c0defdf9df25600320add1a44153bd506d27ae1",
+      "lib/ffi.fwp": "e1a2f416e8dd8cbf6641cf7a26f5d184d21c7fa9ec2243e0b84eb087caf1b238",
+      "lib/fs.fwp": "f41e15624be10f47491959c8aab877e1e3300ed9a1f07a211802b49da9caf537",
+      "lib/grpc.fwp": "2c55a1003d3195eeb3fff9e849d956d078036f296fdc08bbdfa35b2f650ce619",
+      "lib/http.fwp": "ee867225d5d3354e6600ab82639f98751f04e48a366b9c132deae875c94e9ecc",
+      "lib/io.fwp": "1ad0bb42fb1676fb13759c5cd8b346a601b07ba419f8fa4b8c6048112e893a95",
+      "lib/iter.fwp": "a24d9e99a7e5a1c8b2749d743086d61d1bdbbcf5a45464ce7a6ebe33ce527450",
+      "lib/json.fwp": "c7c13137fff0ccfe8b84317a4dc41f0f8ae17b357e7fffe8849f46fea10c8ba5",
+      "lib/list.fwp": "64495637c34358febfb4b7a9cb97da43114761f6344109af4e02468542daf77e",
+      "lib/log.fwp": "89464a1419ddf60433210ba732a7b5153ff7e554945be618372abaa4b0e2011b",
+      "lib/mcp.fwp": "e7244666d4e3cf4768ab9885e019d63b7472ca7531bcfe6511b32daccabadd49",
+      "lib/net.fwp": "7802ed49cb0ca5e0b786302379aee6f66d9968495edb683373d50ef6651d7cd1",
+      "lib/numeric.fwp": "cea08e12e86617e70831e9301933b7bf11aa0601d35eb3f0c108e2801e5260ec",
+      "lib/option.fwp": "38d9568efc00e29b3932717d58ad79dad82432fdd5ea342b1262d906ccf9f1a2",
+      "lib/prelude.fwp": "59add3f6ad6c1b42547d211d4be3a0866d581d1cc7e88bc32b27b823ccd0a7e3",
+      "lib/process.fwp": "31751348e1120c68696957d4fbbb6759a7ed256ea37007b200ef70e32dfbc96a",
+      "lib/rest.fwp": "23f0b663a4fdb66db921b2f96ce4afa140f5fb15263a15e6b1fe07ee97d4bf4a",
+      "lib/simd.fwp": "4edcace9d0521f57db6012e8f472c58ab24b53d2fa899620b2cda88ba8f49511",
+      "lib/string.fwp": "98d07feb51abea11253bf9c8cc3d0d8a6ef130f268182fd00e588ffa686f438a",
+      "lib/task.fwp": "2765605c0c6b871c78b852d3df7f90f12ee7357bd556df5ef5a36e3817417b53",
+      "lib/tensor.fwp": "865d9e3639866264a803109bcb945ff5e5c63264b371964d70e42e67191abf34",
+      "lib/ternary.fwp": "e166100893b4b2fce3a3cd4d76e35c12ddbab2695a2ab92a1a5154da1265aa63",
+      "lib/tls.fwp": "58cdcbdb683f535c50b1ed0f1d98ff34f970a8770188752314f627569c6cd5d2",
+      "lib/url.fwp": "4990874b9789dd3f0070bc4bfa8917952dbb0d95eca028733c2cf0c8c9011fb3",
+      "lib/websocket.fwp": "2abafa28ab1dff8c66f38960854319f18b78b3db63cb46dd938fb2f1ce1616fc",
+      "scripts/check-primitive-inventory.py": "4bfef417944c1be3828a69f9213b90131b6dddd11a12cadc57fe401ba9b6c54e",
+      "scripts/primitive-inventory.rs": "cc528a8b5135e6fae0d0b6297f8131422205d37c63ac12e134b08dac406a016a"
+    },
+    "rows": [
+      {
+        "file": "lib/autodiff.fwp",
+        "declared": "ad.scope",
+        "symbol": "ad.scope",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: OwnedCallback, callback: Some(Borrowed(0)), aliases: [0, 1] })",
+        "signature": "(a -> b) -> a -> b where Dup[a]"
+      },
+      {
+        "file": "lib/autodiff.fwp",
+        "declared": "ad.scope2",
+        "symbol": "ad.scope2",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: OwnedCallback, callback: Some(Borrowed(0)), aliases: [0, 1, 2] })",
+        "signature": "(a -> b -> c) -> a -> b -> c where Dup[a], Dup[b]"
+      },
+      {
+        "file": "lib/autodiff.fwp",
+        "declared": "ad.tape",
+        "symbol": "ad.tape",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "I64 -> I64"
+      },
+      {
+        "file": "lib/autodiff.fwp",
+        "declared": "ad.push",
+        "symbol": "ad.push",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "(I64, F64, I64, F64) -> I64"
+      },
+      {
+        "file": "lib/autodiff.fwp",
+        "declared": "ad.backward",
+        "symbol": "ad.backward",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "I64 -> Array[I64] -> Array[F64] -> Array[F64]"
+      },
+      {
+        "file": "lib/cli.fwp",
+        "declared": "cli.parse",
+        "symbol": "cli.parse",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "o -> List[String] -> Result[(o, List[String]), String]"
+      },
+      {
+        "file": "lib/cli.fwp",
+        "declared": "cli.help",
+        "symbol": "cli.help",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "o -> String"
+      },
+      {
+        "file": "lib/cli.fwp",
+        "declared": "term.is-tty",
+        "symbol": "term.is-tty",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "I32 -> Bool ! {IO}"
+      },
+      {
+        "file": "lib/cli.fwp",
+        "declared": "term.width",
+        "symbol": "term.width",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "() -> I64 ! {IO}"
+      },
+      {
+        "file": "lib/cli.fwp",
+        "declared": "term.read-secret",
+        "symbol": "term.read-secret",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> Option[String] ! {IO}"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.from-list",
+        "symbol": "array.from-list",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: ArrayOperation { consumed: None }, callback: None, aliases: [0] })",
+        "signature": "List[a] -> Array[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.to-list",
+        "symbol": "array.to-list",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: ArrayOperation { consumed: None }, callback: None, aliases: [0] })",
+        "signature": "Array[a] -> List[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.length",
+        "symbol": "array.length",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "Array[a] -> I64"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.get",
+        "symbol": "array.get",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: ArrayOperation { consumed: None }, callback: None, aliases: [1] })",
+        "signature": "I64 -> Array[a] -> Option[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.set",
+        "symbol": "array.set",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Consume], result: ArrayOperation { consumed: Some(2) }, callback: None, aliases: [1, 2] })",
+        "signature": "I64 -> a -> Array[a] -> Option[Array[a]]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.push",
+        "symbol": "array.push",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Consume], result: ArrayOperation { consumed: Some(1) }, callback: None, aliases: [0, 1] })",
+        "signature": "a -> Array[a] -> Array[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.make",
+        "symbol": "array.make",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: ArrayOperation { consumed: None }, callback: None, aliases: [1] })",
+        "signature": "I64 -> a -> Array[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.generate",
+        "symbol": "array.generate",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: ArrayOperation { consumed: None }, callback: Some(Borrowed(1)), aliases: [1] })",
+        "signature": "I64 -> (I64 -> a ! e) -> Array[a] ! e"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.map",
+        "symbol": "array.map",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: ArrayOperation { consumed: None }, callback: Some(Borrowed(0)), aliases: [0, 1] })",
+        "signature": "(a -> b ! e) -> Array[a] -> Array[b] ! e"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.fold",
+        "symbol": "array.fold",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Consume, Borrow], result: ArrayOperation { consumed: Some(1) }, callback: Some(Borrowed(0)), aliases: [0, 1, 2] })",
+        "signature": "(b -> a -> b ! e) -> b -> Array[a] -> b ! e"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.slice",
+        "symbol": "array.slice",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: ArrayOperation { consumed: None }, callback: None, aliases: [2] })",
+        "signature": "I64 -> I64 -> Array[a] -> Array[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.append",
+        "symbol": "array.append",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: ArrayOperation { consumed: None }, callback: None, aliases: [0, 1] })",
+        "signature": "Array[a] -> Array[a] -> Array[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "array.sort",
+        "symbol": "array.sort",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: ArrayOperation { consumed: None }, callback: None, aliases: [0] })",
+        "signature": "Array[a] -> Array[a] where Ord[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.empty",
+        "symbol": "map.empty",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [], result: Shared, callback: None, aliases: [] })",
+        "signature": "Map[k, v]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.insert",
+        "symbol": "map.insert",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Consume], result: MapOperation { consumed: Some(2) }, callback: None, aliases: [0, 1, 2] })",
+        "signature": "k -> v -> Map[k, v] -> Map[k, v] where Ord[k]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.get",
+        "symbol": "map.get",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: MapOperation { consumed: None }, callback: None, aliases: [1] })",
+        "signature": "k -> Map[k, v] -> Option[v] where Ord[k]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.remove",
+        "symbol": "map.remove",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Consume], result: MapOperation { consumed: Some(1) }, callback: None, aliases: [1] })",
+        "signature": "k -> Map[k, v] -> Map[k, v] where Ord[k]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.contains",
+        "symbol": "map.contains",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "k -> Map[k, v] -> Bool where Ord[k]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.size",
+        "symbol": "map.size",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "Map[k, v] -> I64"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.keys",
+        "symbol": "map.keys",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: MapOperation { consumed: None }, callback: None, aliases: [0] })",
+        "signature": "Map[k, v] -> List[k]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.values",
+        "symbol": "map.values",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: MapOperation { consumed: None }, callback: None, aliases: [0] })",
+        "signature": "Map[k, v] -> List[v]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.to-list",
+        "symbol": "map.to-list",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: MapOperation { consumed: None }, callback: None, aliases: [0] })",
+        "signature": "Map[k, v] -> List[(k, v)]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.from-list",
+        "symbol": "map.from-list",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: MapOperation { consumed: None }, callback: None, aliases: [0] })",
+        "signature": "List[(k, v)] -> Map[k, v] where Ord[k]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.update",
+        "symbol": "map.update",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow, Consume], result: MapOperation { consumed: Some(3) }, callback: Some(Borrowed(1)), aliases: [0, 1, 2, 3] })",
+        "signature": "k -> (v -> v ! e) -> v -> Map[k, v] -> Map[k, v] ! e where Ord[k]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "map.map-values",
+        "symbol": "map.map-values",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: MapOperation { consumed: None }, callback: Some(Borrowed(0)), aliases: [0, 1] })",
+        "signature": "(v -> w ! e) -> Map[k, v] -> Map[k, w] ! e"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "set.empty",
+        "symbol": "set.empty",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [], result: Shared, callback: None, aliases: [] })",
+        "signature": "Set[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "set.insert",
+        "symbol": "set.insert",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Consume], result: MapOperation { consumed: Some(1) }, callback: None, aliases: [0, 1] })",
+        "signature": "a -> Set[a] -> Set[a] where Ord[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "set.remove",
+        "symbol": "set.remove",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Consume], result: MapOperation { consumed: Some(1) }, callback: None, aliases: [1] })",
+        "signature": "a -> Set[a] -> Set[a] where Ord[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "set.contains",
+        "symbol": "set.contains",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "a -> Set[a] -> Bool where Ord[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "set.size",
+        "symbol": "set.size",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "Set[a] -> I64"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "set.to-list",
+        "symbol": "set.to-list",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: MapOperation { consumed: None }, callback: None, aliases: [0] })",
+        "signature": "Set[a] -> List[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "set.from-list",
+        "symbol": "set.from-list",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: MapOperation { consumed: None }, callback: None, aliases: [0] })",
+        "signature": "List[a] -> Set[a] where Ord[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "set.union",
+        "symbol": "set.union",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: MapOperation { consumed: None }, callback: None, aliases: [0, 1] })",
+        "signature": "Set[a] -> Set[a] -> Set[a] where Ord[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "set.intersect",
+        "symbol": "set.intersect",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: MapOperation { consumed: None }, callback: None, aliases: [0, 1] })",
+        "signature": "Set[a] -> Set[a] -> Set[a] where Ord[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "set.diff",
+        "symbol": "set.diff",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: MapOperation { consumed: None }, callback: None, aliases: [0, 1] })",
+        "signature": "Set[a] -> Set[a] -> Set[a] where Ord[a]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "bytes.from-list",
+        "symbol": "bytes.from-list",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "List[U8] -> Bytes"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "bytes.to-list",
+        "symbol": "bytes.to-list",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "Bytes -> List[U8]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "bytes.length",
+        "symbol": "bytes.length",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "Bytes -> I64"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "bytes.get",
+        "symbol": "bytes.get",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "I64 -> Bytes -> Option[U8]"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "bytes.slice",
+        "symbol": "bytes.slice",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "I64 -> I64 -> Bytes -> Bytes"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "bytes.append",
+        "symbol": "bytes.append",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "Bytes -> Bytes -> Bytes"
+      },
+      {
+        "file": "lib/collections.fwp",
+        "declared": "bytes.find",
+        "symbol": "bytes.find",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "Bytes -> Bytes -> Option[I64]"
+      },
+      {
+        "file": "lib/csv.fwp",
+        "declared": "csv.parse-with",
+        "symbol": "csv.parse-with",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> List[List[String]]"
+      },
+      {
+        "file": "lib/csv.fwp",
+        "declared": "csv.decode",
+        "symbol": "csv.decode",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[List[String]] -> Result[List[t], String] where Decode[t]"
+      },
+      {
+        "file": "lib/ffi.fwp",
+        "declared": "mem.alloc",
+        "symbol": "mem.alloc",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "I64 -> Ptr[a] ! {Unsafe}"
+      },
+      {
+        "file": "lib/ffi.fwp",
+        "declared": "mem.free",
+        "symbol": "mem.free",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "Ptr[a] -> () ! {Unsafe}"
+      },
+      {
+        "file": "lib/ffi.fwp",
+        "declared": "mem.string",
+        "symbol": "mem.string",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> Ptr[U8] ! {Unsafe}"
+      },
+      {
+        "file": "lib/ffi.fwp",
+        "declared": "ptr.cast",
+        "symbol": "ptr.cast",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "Ptr[a] -> Ptr[b]"
+      },
+      {
+        "file": "lib/ffi.fwp",
+        "declared": "ptr.at",
+        "symbol": "ptr.at",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "I64 -> Ptr[a] -> Ptr[a] where Numeric[a]"
+      },
+      {
+        "file": "lib/ffi.fwp",
+        "declared": "ptr.read",
+        "symbol": "ptr.read",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "Ptr[a] -> a ! {Unsafe} where Numeric[a]"
+      },
+      {
+        "file": "lib/ffi.fwp",
+        "declared": "ptr.write",
+        "symbol": "ptr.write",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "a -> Ptr[a] -> () ! {Unsafe} where Numeric[a]"
+      },
+      {
+        "file": "lib/ffi.fwp",
+        "declared": "ptr.read-string",
+        "symbol": "ptr.read-string",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "Ptr[a] -> String ! {Unsafe}"
+      },
+      {
+        "file": "lib/ffi.fwp",
+        "declared": "ptr.address",
+        "symbol": "ptr.address",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "Ptr[a] -> U64"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.exists",
+        "symbol": "file.exists",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bool ! {FileIO}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.is-dir",
+        "symbol": "file.is-dir",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bool ! {FileIO}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.info",
+        "symbol": "file.info",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> FileInfo ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.remove",
+        "symbol": "file.remove",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.rename",
+        "symbol": "file.rename",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.append",
+        "symbol": "file.append",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.read-bytes",
+        "symbol": "file.read-bytes",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bytes ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.write-bytes",
+        "symbol": "file.write-bytes",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bytes -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.list",
+        "symbol": "dir.list",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> List[String] ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.create",
+        "symbol": "dir.create",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.create-all",
+        "symbol": "dir.create-all",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.remove",
+        "symbol": "dir.remove",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.metadata",
+        "symbol": "grpc.metadata",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> List[(String, String)] ! {Network}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.set-header",
+        "symbol": "grpc.set-header",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> () ! {Network}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.set-trailer",
+        "symbol": "grpc.set-trailer",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> () ! {Network}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-gzip",
+        "symbol": "grpc.with-gzip",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "(() -> a ! {Network | e}) -> a ! {Network | e}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-response-metadata",
+        "symbol": "grpc.with-response-metadata",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "(() -> a ! {Network | e}) -> (a, List[(String, String)]) ! {Network | e}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.peer-subject",
+        "symbol": "grpc.peer-subject",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> Option[String] ! {Network}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-tls",
+        "symbol": "grpc.with-tls",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "TlsOptions -> (() -> a ! {Network | e}) -> a ! {Network | e}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-metadata",
+        "symbol": "grpc.with-metadata",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[(String, String)] -> (() -> a ! {Network | e}) -> a ! {Network | e}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-deadline",
+        "symbol": "grpc.with-deadline",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> (() -> a ! {Network | e}) -> a ! {Network | e}"
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc._force",
+        "symbol": "grpc._force",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "GrpcCell[a] -> Option[(a, GrpcCell[a])]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.parse-request-head",
+        "symbol": "http.parse-request-head",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Result[(String, String, String, List[(String, String)]), String]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.parse-response-head",
+        "symbol": "http.parse-response-head",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Result[(String, I64, String, List[(String, String)]), String]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.field-ok",
+        "symbol": "http.field-ok",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> Bool"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.content-length",
+        "symbol": "http.content-length",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[(String, String)] -> I64"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.to-hex",
+        "symbol": "int.to-hex",
+        "aliased": true,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "I64 -> String"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.parse-hex",
+        "symbol": "int.parse-hex",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[I64]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip.compress",
+        "symbol": "zlib.gzip",
+        "aliased": true,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "Bytes -> Bytes"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip.decompress-max",
+        "symbol": "zlib.gunzip",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Bytes -> Result[Bytes, String]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "deflate.compress",
+        "symbol": "zlib.deflate",
+        "aliased": true,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "Bytes -> Bytes"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "deflate.decompress-max",
+        "symbol": "zlib.inflate",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Bytes -> Result[Bytes, String]"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip._chunk",
+        "symbol": "zlib.gzip-chunk",
+        "aliased": true,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "Bytes -> Bytes"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip._crc32",
+        "symbol": "zlib.crc32",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Bytes -> I64"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip._end",
+        "symbol": "zlib.gzip-end",
+        "aliased": true,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "I64 -> I64 -> Bytes"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-serve",
+        "symbol": "http2.serve",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> Bytes -> (I64, I64, Duration) -> (H2Stream -> () ! {Async, IO, Network, FileIO}) -> Option[(String, String, List[(String, String)], Bytes)] -> () ! {Async, IO, Network, FileIO}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-request",
+        "symbol": "http2.request",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "H2Stream -> (String, String, List[(String, String)], String, Option[String]) ! {Network}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-body",
+        "symbol": "http2.body",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Duration -> H2Stream -> Result[Bytes, I64] ! {Async, Network}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-respond",
+        "symbol": "http2.respond",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> List[(String, String)] -> Bytes -> Bool -> H2Stream -> Bool ! {Async, Network}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-data",
+        "symbol": "http2.data",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Bool -> H2Stream -> Bool ! {Async, Network}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-send",
+        "symbol": "http2.send",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[Conn] -> (String, String, String, String, List[(String, String)], Bytes) -> (I64, List[(String, String)], Bytes) ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-pooled",
+        "symbol": "http2.pooled",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bool ! {Network}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "write",
+        "symbol": "write",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> () ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "eprint",
+        "symbol": "eprint",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> () ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "ewrite",
+        "symbol": "ewrite",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> () ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "read-line",
+        "symbol": "read-line",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> Option[String] ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "read-all",
+        "symbol": "read-all",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> String ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "read-lines",
+        "symbol": "read-lines",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> List[String] ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "env.get",
+        "symbol": "env.get",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[String] ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "env.vars",
+        "symbol": "env.vars",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> List[(String, String)] ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "env.cwd",
+        "symbol": "env.cwd",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> String ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "time.monotonic",
+        "symbol": "time.monotonic",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> Duration ! {IO}"
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "time.unix",
+        "symbol": "time.unix",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> Duration ! {IO}"
+      },
+      {
+        "file": "lib/json.fwp",
+        "declared": "json.parse",
+        "symbol": "json.parse",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Result[Json, String]"
+      },
+      {
+        "file": "lib/json.fwp",
+        "declared": "json.encode",
+        "symbol": "json.encode",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "Json -> String"
+      },
+      {
+        "file": "lib/json.fwp",
+        "declared": "json.write",
+        "symbol": "json.write",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "a -> String where Encode[a]"
+      },
+      {
+        "file": "lib/json.fwp",
+        "declared": "json.read",
+        "symbol": "json.read",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Result[a, String] where Decode[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "map",
+        "symbol": "map",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshSpine, callback: Some(Borrowed(0)), aliases: [0, 1] })",
+        "signature": "(a -> b ! e) -> List[a] -> List[b] ! e"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "filter",
+        "symbol": "filter",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshSpine, callback: Some(Borrowed(0)), aliases: [1] })",
+        "signature": "(a -> Bool ! e) -> List[a] -> List[a] ! e"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "fold",
+        "symbol": "fold",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Consume, Borrow], result: OwnedAccumulator { argument: 1, runtime: \"fold\" }, callback: Some(Borrowed(0)), aliases: [0, 1, 2] })",
+        "signature": "(b -> a -> b ! e) -> b -> List[a] -> b ! e"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "fold-right",
+        "symbol": "fold-right",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Consume, Borrow], result: OwnedAccumulator { argument: 1, runtime: \"fold_right\" }, callback: Some(Borrowed(0)), aliases: [0, 1, 2] })",
+        "signature": "(a -> b -> b ! e) -> b -> List[a] -> b ! e"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "sort",
+        "symbol": "sort",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: CopiedSpine { runtime: \"sort\", tail: None }, callback: None, aliases: [0] })",
+        "signature": "List[a] -> List[a] where Ord[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "sort-by",
+        "symbol": "sort-by",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: CopiedSpine { runtime: \"sort_by\", tail: None }, callback: Some(Borrowed(0)), aliases: [1] })",
+        "signature": "(a -> k ! e) -> List[a] -> List[a] ! e where Ord[k]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "length",
+        "symbol": "length",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "List[a] -> I64"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "reverse",
+        "symbol": "reverse",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: CopiedSpine { runtime: \"reverse\", tail: None }, callback: None, aliases: [0] })",
+        "signature": "List[a] -> List[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "append",
+        "symbol": "append",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: CopiedSpine { runtime: \"append\", tail: Some(0) }, callback: None, aliases: [0, 1] })",
+        "signature": "List[a] -> List[a] -> List[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "flatten",
+        "symbol": "flatten",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: CopiedSpine { runtime: \"flatten\", tail: None }, callback: None, aliases: [0] })",
+        "signature": "List[List[a]] -> List[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "take",
+        "symbol": "take",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: CopiedSpine { runtime: \"take\", tail: None }, callback: None, aliases: [1] })",
+        "signature": "I64 -> List[a] -> List[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "drop",
+        "symbol": "drop",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: AliasTail { argument: 1 }, callback: None, aliases: [1] })",
+        "signature": "I64 -> List[a] -> List[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "take-while",
+        "symbol": "take-while",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshSpine, callback: Some(Borrowed(0)), aliases: [1] })",
+        "signature": "(a -> Bool ! e) -> List[a] -> List[a] ! e"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "drop-while",
+        "symbol": "drop-while",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: AliasTail { argument: 1 }, callback: Some(Borrowed(0)), aliases: [1] })",
+        "signature": "(a -> Bool ! e) -> List[a] -> List[a] ! e"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "zip",
+        "symbol": "zip",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: CopiedStructure, callback: None, aliases: [0, 1] })",
+        "signature": "List[b] -> List[a] -> List[(a, b)]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "zip-with",
+        "symbol": "zip-with",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: FreshSpine, callback: Some(Borrowed(0)), aliases: [0, 1, 2] })",
+        "signature": "(b -> a -> c ! e) -> List[b] -> List[a] -> List[c] ! e"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "unzip",
+        "symbol": "unzip",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: CopiedStructure, callback: None, aliases: [0] })",
+        "signature": "List[(a, b)] -> (List[a], List[b])"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "range",
+        "symbol": "range",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshSpine, callback: None, aliases: [] })",
+        "signature": "a -> a -> List[a] where Integer[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "repeat",
+        "symbol": "repeat",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: CopiedStructure, callback: None, aliases: [1] })",
+        "signature": "I64 -> a -> List[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "nth",
+        "symbol": "nth",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshOuter, callback: None, aliases: [1] })",
+        "signature": "I64 -> List[a] -> Option[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "find",
+        "symbol": "find",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshOuter, callback: Some(Borrowed(0)), aliases: [1] })",
+        "signature": "(a -> Bool ! e) -> List[a] -> Option[a] ! e"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "index-of",
+        "symbol": "index-of",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshOuter, callback: None, aliases: [] })",
+        "signature": "a -> List[a] -> Option[I64] where Eq[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "unique",
+        "symbol": "unique",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: CopiedSpine { runtime: \"unique\", tail: None }, callback: None, aliases: [0] })",
+        "signature": "List[a] -> List[a] where Ord[a]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "scan",
+        "symbol": "scan",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: FreshSpine, callback: Some(Borrowed(0)), aliases: [0, 1, 2] })",
+        "signature": "(b -> a -> b ! e) -> b -> List[a] -> List[b] ! e"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "chunks",
+        "symbol": "chunks",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: CopiedStructure, callback: None, aliases: [1] })",
+        "signature": "I64 -> List[a] -> List[List[a]]"
+      },
+      {
+        "file": "lib/list.fwp",
+        "declared": "iterate",
+        "symbol": "iterate",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: FreshSpine, callback: Some(Borrowed(1)), aliases: [1, 2] })",
+        "signature": "I64 -> (a -> a ! e) -> a -> List[a] ! e"
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.add",
+        "symbol": "metrics.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> F64 -> () ! {IO}"
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.set",
+        "symbol": "metrics.set",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> F64 -> () ! {IO}"
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.observe",
+        "symbol": "metrics.observe",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> F64 -> () ! {IO}"
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.snapshot",
+        "symbol": "metrics.snapshot",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> List[(String, String, F64)] ! {IO}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.listen",
+        "symbol": "tcp.listen",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Listener ! {Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.local-addr",
+        "symbol": "tcp.local-addr",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> String ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.accept",
+        "symbol": "tcp.accept",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> Conn ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.accept-for",
+        "symbol": "tcp.accept-for",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> Listener -> Option[Conn] ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.stop",
+        "symbol": "tcp.stop",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> () ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.connect",
+        "symbol": "tcp.connect",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Conn ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.read",
+        "symbol": "tcp.read",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Conn -> Bytes ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.read-for",
+        "symbol": "tcp.read-for",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> I64 -> Conn -> Option[Bytes] ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.write",
+        "symbol": "tcp.write",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Conn -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.write-for",
+        "symbol": "tcp.write-for",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.close",
+        "symbol": "tcp.close",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> () ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.peer-addr",
+        "symbol": "tcp.peer-addr",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> String ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.bind",
+        "symbol": "udp.bind",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> UdpSocket ! {Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.local-addr",
+        "symbol": "udp.local-addr",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "UdpSocket -> String ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.send-to",
+        "symbol": "udp.send-to",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bytes -> UdpSocket -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.recv-from",
+        "symbol": "udp.recv-from",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> UdpSocket -> (Bytes, String) ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.close",
+        "symbol": "udp.close",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "UdpSocket -> () ! {Network}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "dns.resolve",
+        "symbol": "dns.resolve",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> List[String] ! {Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "signal.shutdown-requested",
+        "symbol": "signal.shutdown-requested",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "() -> Bool ! {Async}"
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "signal.request-shutdown",
+        "symbol": "signal.request-shutdown",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "() -> () ! {Async}"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.lu-solve",
+        "symbol": "linalg.lu-solve",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Array[F64] -> Array[F64] -> Option[Array[F64]]"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.det",
+        "symbol": "linalg.det",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Array[F64] -> F64"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.inverse",
+        "symbol": "linalg.inverse",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Array[F64] -> Option[Array[F64]]"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.cholesky",
+        "symbol": "linalg.cholesky",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Array[F64] -> Option[Array[F64]]"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.qr",
+        "symbol": "linalg.qr",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> I64 -> Array[F64] -> (Array[F64], Array[F64])"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.cg",
+        "symbol": "linalg.cg",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> F64 -> I64 -> Array[F64] -> Array[F64] -> Array[F64]"
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "list.transpose",
+        "symbol": "list.transpose",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[List[a]] -> List[List[a]]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "syntax.show",
+        "symbol": "syntax.show",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Syntax -> String"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "id",
+        "symbol": "id",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "const",
+        "symbol": "const",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "a -> b -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "flip",
+        "symbol": "flip",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(a -> b -> c ! e) -> b -> a -> c ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "compose",
+        "symbol": "compose",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(a -> b ! e) -> (b -> c ! e) -> a -> c ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "apply",
+        "symbol": "apply",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "a -> (a -> b ! e) -> b ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "fork",
+        "symbol": "fork",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(b -> c -> d ! e) -> (a -> b ! e) -> (a -> c ! e) -> a -> d ! e where Dup[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "both",
+        "symbol": "both",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(a -> b ! e) -> (a -> c ! e) -> a -> (b, c) ! e where Dup[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "dup",
+        "symbol": "dup",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "a -> (a, a) where Dup[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "on",
+        "symbol": "on",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(b -> b -> c ! e) -> (a -> b ! e) -> a -> a -> c ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "uncurry",
+        "symbol": "uncurry",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(a -> b -> c ! e) -> (a, b) -> c ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "curry",
+        "symbol": "curry",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "((a, b) -> c ! e) -> a -> b -> c ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "swap",
+        "symbol": "swap",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(a, b) -> (b, a)"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "first",
+        "symbol": "first",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(a -> c ! e) -> (a, b) -> (c, b) ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "second",
+        "symbol": "second",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(b -> c ! e) -> (a, b) -> (a, c) ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "if",
+        "symbol": "if",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(a -> Bool ! e) -> (a -> b ! e) -> (a -> b ! e) -> a -> b ! e where Dup[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "then2",
+        "symbol": "then2",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(a -> b -> c ! e) -> (c -> d ! e) -> a -> b -> d ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "curry3",
+        "symbol": "curry3",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "((a, b, c) -> d ! e) -> a -> b -> c -> d ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "uncurry3",
+        "symbol": "uncurry3",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(a -> b -> c -> d ! e) -> (a, b, c) -> d ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "tap",
+        "symbol": "tap",
+        "aliased": false,
+        "bucket": "ir_template",
+        "contract": "None",
+        "signature": "(a -> b ! e) -> a -> a ! e where Dup[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "loop",
+        "symbol": "loop",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Consume], result: OwnedAccumulator { argument: 1, runtime: \"loop\" }, callback: Some(Borrowed(0)), aliases: [0, 1] })",
+        "signature": "(s -> Step[s, r] ! e) -> s -> r ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.add",
+        "symbol": "prim.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.sub",
+        "symbol": "prim.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.mul",
+        "symbol": "prim.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.div",
+        "symbol": "prim.div",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.rem",
+        "symbol": "prim.rem",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.neg",
+        "symbol": "prim.neg",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.zero",
+        "symbol": "prim.zero",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.one",
+        "symbol": "prim.one",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.from-int",
+        "symbol": "prim.from-int",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.from-float",
+        "symbol": "prim.from-float",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "F64 -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.trap",
+        "symbol": "prim.trap",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> a"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "wrapping.add",
+        "symbol": "wrapping.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "wrapping.sub",
+        "symbol": "wrapping.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "wrapping.mul",
+        "symbol": "wrapping.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "saturating.add",
+        "symbol": "saturating.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "saturating.sub",
+        "symbol": "saturating.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "saturating.mul",
+        "symbol": "saturating.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "overflowing.add",
+        "symbol": "overflowing.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> (a, Bool) where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "overflowing.sub",
+        "symbol": "overflowing.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> (a, Bool) where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "overflowing.mul",
+        "symbol": "overflowing.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> (a, Bool) where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.add",
+        "symbol": "checked.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> Option[a] where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.sub",
+        "symbol": "checked.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> Option[a] where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.mul",
+        "symbol": "checked.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> Option[a] where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.div",
+        "symbol": "checked.div",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> Option[a] where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.and",
+        "symbol": "bit.and",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.or",
+        "symbol": "bit.or",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.xor",
+        "symbol": "bit.xor",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.not",
+        "symbol": "bit.not",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.shl",
+        "symbol": "bit.shl",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "U32 -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.shr",
+        "symbol": "bit.shr",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "U32 -> a -> a where Integer[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "int.convert",
+        "symbol": "int.convert",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> Option[b] where Integer[a], Integer[b]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "int.to-float",
+        "symbol": "int.to-float",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> b where Integer[a], Float[b]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "float.to-int",
+        "symbol": "float.to-int",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> Option[b] where Float[a], Integer[b]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "float.convert",
+        "symbol": "float.convert",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> b where Float[a], Float[b]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.sqrt",
+        "symbol": "sqrt",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.exp",
+        "symbol": "exp",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.ln",
+        "symbol": "ln",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.sin",
+        "symbol": "sin",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.cos",
+        "symbol": "cos",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.tan",
+        "symbol": "tan",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "pow",
+        "symbol": "pow",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "floor",
+        "symbol": "floor",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "ceil",
+        "symbol": "ceil",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "round",
+        "symbol": "round",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Float[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "abs",
+        "symbol": "abs",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a where Signed[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "eq",
+        "symbol": "eq",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "a -> a -> Bool where Eq[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "ne",
+        "symbol": "ne",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "a -> a -> Bool where Eq[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "lt",
+        "symbol": "lt",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "a -> a -> Bool where Ord[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "le",
+        "symbol": "le",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "a -> a -> Bool where Ord[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "gt",
+        "symbol": "gt",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "a -> a -> Bool where Ord[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "ge",
+        "symbol": "ge",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "a -> a -> Bool where Ord[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "compare",
+        "symbol": "compare",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "a -> a -> Ordering where Ord[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "min",
+        "symbol": "min",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Ord[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "max",
+        "symbol": "max",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> a -> a where Ord[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "hash",
+        "symbol": "hash",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "a -> U64 where Hash[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "not",
+        "symbol": "not",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "Bool -> Bool"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "and",
+        "symbol": "and",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "Bool -> Bool -> Bool"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "or",
+        "symbol": "or",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "Bool -> Bool -> Bool"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "list.flat-map",
+        "symbol": "list.flat-map",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshSpine, callback: Some(Borrowed(0)), aliases: [0, 1] })",
+        "signature": "(a -> List[b] ! e) -> List[a] -> List[b] ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "list.ap",
+        "symbol": "list.ap",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshSpine, callback: None, aliases: [0, 1] })",
+        "signature": "List[a -> b] -> List[a] -> List[b]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "fail",
+        "symbol": "fail",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "x -> a ! {Error[x]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "attempt",
+        "symbol": "attempt",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: OwnedAttempt, callback: Some(Borrowed(0)), aliases: [0, 1] })",
+        "signature": "(a -> b ! {Error[x] | e}) -> a -> Result[b, x] ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "get",
+        "symbol": "get",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: OwnedState, callback: None, aliases: [] })",
+        "signature": "() -> s ! {State[s]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "put",
+        "symbol": "put",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: OwnedState, callback: None, aliases: [] })",
+        "signature": "s -> () ! {State[s]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "modify",
+        "symbol": "modify",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: OwnedState, callback: Some(Borrowed(0)), aliases: [] })",
+        "signature": "(s -> s) -> () ! {State[s]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "run-state",
+        "symbol": "run-state",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: OwnedState, callback: Some(Borrowed(1)), aliases: [0, 1, 2] })",
+        "signature": "s -> (a -> b ! {State[s] | e}) -> a -> (b, s) ! e"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "random.u64",
+        "symbol": "random.u64",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "() -> U64 ! {Random}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "random.f64",
+        "symbol": "random.f64",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "() -> F64 ! {Random}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.open",
+        "symbol": "file.open",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: OwnedResource, callback: None, aliases: [] })",
+        "signature": "String -> File ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.create",
+        "symbol": "file.create",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: OwnedResource, callback: None, aliases: [] })",
+        "signature": "String -> File ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.close",
+        "symbol": "file.close",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "File -> () ! {FileIO}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.read-all",
+        "symbol": "file.read-all",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: OwnedResource, callback: None, aliases: [0] })",
+        "signature": "File -> (String, File) ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.write",
+        "symbol": "file.write",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: OwnedResource, callback: None, aliases: [1] })",
+        "signature": "String -> File -> File ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.with",
+        "symbol": "file.with",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: OwnedResource, callback: Some(Borrowed(1)), aliases: [1] })",
+        "signature": "String -> (File -> (a, File) ! {FileIO, Error[IoError] | e}) -> a ! {FileIO, Error[IoError] | e}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.read",
+        "symbol": "file.read",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.write-new",
+        "symbol": "file.write-new",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> () ! {FileIO, Error[IoError]}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "print",
+        "symbol": "print",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> () ! {IO}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "show",
+        "symbol": "show",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "a -> String where Display[a]"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "args",
+        "symbol": "args",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "() -> List[String] ! {IO}"
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "exit",
+        "symbol": "exit",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I32 -> a ! {IO}"
+      },
+      {
+        "file": "lib/process.fwp",
+        "declared": "process.run-input",
+        "symbol": "process.run-input",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> List[String] -> ProcessOutput ! {Process, Error[IoError]}"
+      },
+      {
+        "file": "lib/process.fwp",
+        "declared": "process.call",
+        "symbol": "process.call",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[String] -> I32 ! {Process, Error[IoError]}"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.splat",
+        "symbol": "simd.splat",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "t -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.from-array",
+        "symbol": "simd.from-array",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Array[t] -> Option[Vec[n, t]] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.add",
+        "symbol": "simd.add",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.sub",
+        "symbol": "simd.sub",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.mul",
+        "symbol": "simd.mul",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.div",
+        "symbol": "simd.div",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.min",
+        "symbol": "simd.min",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.max",
+        "symbol": "simd.max",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]"
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.sum",
+        "symbol": "simd.sum",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Vec[n, t] -> t where Numeric[t]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "trim",
+        "symbol": "trim",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "trim-start",
+        "symbol": "trim-start",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "trim-end",
+        "symbol": "trim-end",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "lower",
+        "symbol": "lower",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "upper",
+        "symbol": "upper",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "concat",
+        "symbol": "concat",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.length",
+        "symbol": "string.length",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> I64"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.byte-length",
+        "symbol": "string.byte-length",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> I64"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.chars",
+        "symbol": "string.chars",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "String -> List[String]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "split",
+        "symbol": "split",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "String -> String -> List[String]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "join",
+        "symbol": "join",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> List[String] -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "lines",
+        "symbol": "lines",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "String -> List[String]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "words",
+        "symbol": "words",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "String -> List[String]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.contains",
+        "symbol": "string.contains",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> String -> Bool"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "starts-with",
+        "symbol": "starts-with",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> String -> Bool"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "ends-with",
+        "symbol": "ends-with",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> String -> Bool"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "replace",
+        "symbol": "replace",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: FreshOrAliasLeaf { argument: 2 }, callback: None, aliases: [2] })",
+        "signature": "String -> String -> String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.repeat",
+        "symbol": "string.repeat",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "I64 -> String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.reverse",
+        "symbol": "string.reverse",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.slice",
+        "symbol": "string.slice",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "I64 -> I64 -> String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.find",
+        "symbol": "string.find",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "String -> String -> Option[I64]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "pad-left",
+        "symbol": "pad-left",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: FreshOrAliasLeaf { argument: 2 }, callback: None, aliases: [2] })",
+        "signature": "I64 -> String -> String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "pad-right",
+        "symbol": "pad-right",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: FreshOrAliasLeaf { argument: 2 }, callback: None, aliases: [2] })",
+        "signature": "I64 -> String -> String -> String"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.codepoints",
+        "symbol": "string.codepoints",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "String -> List[U32]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.from-codepoints",
+        "symbol": "string.from-codepoints",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "List[U32] -> Option[String]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.to-bytes",
+        "symbol": "string.to-bytes",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: AliasLeaf { argument: 0 }, callback: None, aliases: [0] })",
+        "signature": "String -> Bytes"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.from-bytes",
+        "symbol": "string.from-bytes",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "Bytes -> Option[String]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "parse-int",
+        "symbol": "parse-int",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> Option[a] where Integer[a]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "parse-float",
+        "symbol": "parse-float",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "String -> Option[a] where Float[a]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "format",
+        "symbol": "format",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> a -> String where Display[a]"
+      },
+      {
+        "file": "lib/string.fwp",
+        "declared": "string.split-once",
+        "symbol": "string.split-once",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshTree, callback: None, aliases: [] })",
+        "signature": "String -> String -> Option[(String, String)]"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "task.spawn",
+        "symbol": "task.spawn",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: OwnedTask, callback: Some(Retained(0)), aliases: [0] })",
+        "signature": "(() -> a ! {Async, IO, Network, FileIO}) -> Task[a] ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "task.await",
+        "symbol": "task.await",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: OwnedTaskOption, callback: None, aliases: [0] })",
+        "signature": "Task[a] -> Option[a] ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "task.cancel",
+        "symbol": "task.cancel",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "Task[a] -> () ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "task.within",
+        "symbol": "task.within",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: OwnedTaskOption, callback: Some(Retained(1)), aliases: [1] })",
+        "signature": "Duration -> (() -> a ! {Async, IO, Network, FileIO}) -> Option[a] ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "task.sleep",
+        "symbol": "task.sleep",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "Duration -> () ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "task.yield",
+        "symbol": "task.yield",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "() -> () ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "task.deadline",
+        "symbol": "task.deadline",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: AliasArgument { argument: 1 }, callback: None, aliases: [1] })",
+        "signature": "Duration -> a -> a ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "task.cancelled",
+        "symbol": "task.cancelled",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })",
+        "signature": "() -> Bool ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "task.scope",
+        "symbol": "task.scope",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: OwnedCallback, callback: Some(Borrowed(0)), aliases: [0] })",
+        "signature": "(() -> a ! {Async | e}) -> a ! {Async | e}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "channel.make",
+        "symbol": "channel.make",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: ChannelOperation, callback: None, aliases: [] })",
+        "signature": "I64 -> Channel[a] ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "channel.send",
+        "symbol": "channel.send",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: ChannelOperation, callback: None, aliases: [] })",
+        "signature": "Channel[a] -> a -> Bool ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "channel.recv",
+        "symbol": "channel.recv",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: ChannelOperation, callback: None, aliases: [0] })",
+        "signature": "Channel[a] -> Option[a] ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "channel.recv-for",
+        "symbol": "channel.recv-for",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: ChannelOperation, callback: None, aliases: [1] })",
+        "signature": "Duration -> Channel[a] -> Option[a] ! {Async}"
+      },
+      {
+        "file": "lib/task.fwp",
+        "declared": "channel.close",
+        "symbol": "channel.close",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: ChannelOperation, callback: None, aliases: [] })",
+        "signature": "Channel[a] -> () ! {Async}"
+      },
+      {
+        "file": "lib/tensor.fwp",
+        "declared": "device.run",
+        "symbol": "device.run",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> I64 -> Array[I64] -> Array[F64] -> List[Array[F64]] -> Array[F64]"
+      },
+      {
+        "file": "lib/tensor.fwp",
+        "declared": "device.sum",
+        "symbol": "device.sum",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> I64 -> Array[I64] -> Array[F64] -> List[Array[F64]] -> F64"
+      },
+      {
+        "file": "lib/tensor.fwp",
+        "declared": "device.gpu-available",
+        "symbol": "device.gpu-available",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "() -> Bool"
+      },
+      {
+        "file": "lib/tensor.fwp",
+        "declared": "device.gpu-run",
+        "symbol": "device.gpu-run",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> I64 -> Array[F64] -> List[Array[F64]] -> Result[Array[F64], String]"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trit.from-sign",
+        "symbol": "trit.from-sign",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Trit"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trit.to-int",
+        "symbol": "trit.to-int",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Trit -> I64"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.to-int",
+        "symbol": "tint.to-int",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "TInt[n] -> I64"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.of-int",
+        "symbol": "tint.of-int",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Option[TInt[n]]"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.trits",
+        "symbol": "tint.trits",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "TInt[n] -> List[Trit]"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.from-trits",
+        "symbol": "tint.from-trits",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[Trit] -> Option[TInt[n]]"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trits.pack",
+        "symbol": "trits.pack",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "List[Trit] -> Bytes"
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trits.unpack",
+        "symbol": "trits.unpack",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Bytes -> List[Trit]"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls._connect",
+        "symbol": "tls._connect",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Bool -> String -> List[String] -> String -> String -> String -> Conn ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls._listen",
+        "symbol": "tls._listen",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> String -> List[String] -> String -> String -> Listener ! {Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.handshake",
+        "symbol": "tls.handshake",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.alpn",
+        "symbol": "tls.alpn",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> String ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.secure",
+        "symbol": "tls.secure",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> Bool ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.peer-subject",
+        "symbol": "tls.peer-subject",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> Option[String] ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.available",
+        "symbol": "tls.available",
+        "aliased": false,
+        "bucket": "flat_scalar_signature",
+        "contract": "None",
+        "signature": "() -> Bool ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.accept",
+        "symbol": "tcp.accept",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> Conn ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.accept-for",
+        "symbol": "tcp.accept-for",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> Listener -> Option[Conn] ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.local-addr",
+        "symbol": "tcp.local-addr",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> String ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.stop",
+        "symbol": "tcp.stop",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Listener -> () ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.read",
+        "symbol": "tcp.read",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Conn -> Bytes ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.read-for",
+        "symbol": "tcp.read-for",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> I64 -> Conn -> Option[Bytes] ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.write",
+        "symbol": "tcp.write",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> Conn -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.write-for",
+        "symbol": "tcp.write-for",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.close",
+        "symbol": "tcp.close",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> () ! {Network}"
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.peer-addr",
+        "symbol": "tcp.peer-addr",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Conn -> String ! {Network}"
+      },
+      {
+        "file": "lib/url.fwp",
+        "declared": "url.split",
+        "symbol": "url.split",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[(String, String, I64, String, String)]"
+      },
+      {
+        "file": "lib/url.fwp",
+        "declared": "url.encode",
+        "symbol": "url.encode",
+        "aliased": false,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> String"
+      },
+      {
+        "file": "lib/url.fwp",
+        "declared": "url.decode",
+        "symbol": "url.decode",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[String]"
+      },
+      {
+        "file": "lib/url.fwp",
+        "declared": "form.decode",
+        "symbol": "form.decode",
+        "aliased": false,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "String -> Option[String]"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._accept",
+        "symbol": "ws.accept",
+        "aliased": true,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "String -> String"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._key",
+        "symbol": "ws.key",
+        "aliased": true,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "() -> String ! {Network}"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._frame",
+        "symbol": "ws.frame",
+        "aliased": true,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "Bool -> I64 -> Bytes -> Bytes"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._parse",
+        "symbol": "ws.parse",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> I64 -> Bytes -> (I64, Bool, I64, Bool, Bytes)"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._close-payload",
+        "symbol": "ws.close-payload",
+        "aliased": true,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow, Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "I64 -> String -> Bytes"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._close-parse",
+        "symbol": "ws.close-parse",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "Bytes -> (I64, String)"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._deflate",
+        "symbol": "ws.deflate",
+        "aliased": true,
+        "bucket": "contract",
+        "contract": "Some(Contract { arguments: [Borrow], result: FreshLeaf, callback: None, aliases: [] })",
+        "signature": "Bytes -> Bytes"
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._inflate",
+        "symbol": "ws.inflate",
+        "aliased": true,
+        "bucket": "runtime_or_specialization_review",
+        "contract": "None",
+        "signature": "I64 -> Bytes -> (I64, Bytes)"
+      }
+    ],
+    "status": "Expected contract changes verified",
+    "limits": "Source declaration review using actual runtime contracts. Flat scalar signatures do not prove absence of external allocation/state. Remaining declarations require monomorphic wrapper, retention and teardown review, not an assumed number of sharing bugs. Single-line declarations and literal unescaped aliases are asserted for this source snapshot."
+  },
+  "fallbackReport": {
+    "head": "cbf68ea60c3b9439a117ef9d9b28b472f23dc632",
+    "status": "Explicit shared fallback coverage verified; no tracing-free claim",
+    "declarations": 177,
+    "symbols": 167,
+    "rows": [
+      {
+        "file": "lib/cli.fwp",
+        "declared": "cli.parse",
+        "symbol": "cli.parse",
+        "signature": "o -> List[String] -> Result[(o, List[String]), String]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/cli.fwp",
+        "declared": "term.read-secret",
+        "symbol": "term.read-secret",
+        "signature": "() -> Option[String] ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/csv.fwp",
+        "declared": "csv.parse-with",
+        "symbol": "csv.parse-with",
+        "signature": "String -> String -> List[List[String]]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/csv.fwp",
+        "declared": "csv.decode",
+        "symbol": "csv.decode",
+        "signature": "List[List[String]] -> Result[List[t], String] where Decode[t]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.exists",
+        "symbol": "file.exists",
+        "signature": "String -> Bool ! {FileIO}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.is-dir",
+        "symbol": "file.is-dir",
+        "signature": "String -> Bool ! {FileIO}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.info",
+        "symbol": "file.info",
+        "signature": "String -> FileInfo ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.remove",
+        "symbol": "file.remove",
+        "signature": "String -> () ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.rename",
+        "symbol": "file.rename",
+        "signature": "String -> String -> () ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.append",
+        "symbol": "file.append",
+        "signature": "String -> String -> () ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.read-bytes",
+        "symbol": "file.read-bytes",
+        "signature": "String -> Bytes ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "file.write-bytes",
+        "symbol": "file.write-bytes",
+        "signature": "String -> Bytes -> () ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.list",
+        "symbol": "dir.list",
+        "signature": "String -> List[String] ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.create",
+        "symbol": "dir.create",
+        "signature": "String -> () ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.create-all",
+        "symbol": "dir.create-all",
+        "signature": "String -> () ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/fs.fwp",
+        "declared": "dir.remove",
+        "symbol": "dir.remove",
+        "signature": "String -> () ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.metadata",
+        "symbol": "grpc.metadata",
+        "signature": "() -> List[(String, String)] ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.set-header",
+        "symbol": "grpc.set-header",
+        "signature": "String -> String -> () ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.set-trailer",
+        "symbol": "grpc.set-trailer",
+        "signature": "String -> String -> () ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-gzip",
+        "symbol": "grpc.with-gzip",
+        "signature": "(() -> a ! {Network | e}) -> a ! {Network | e}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-response-metadata",
+        "symbol": "grpc.with-response-metadata",
+        "signature": "(() -> a ! {Network | e}) -> (a, List[(String, String)]) ! {Network | e}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.peer-subject",
+        "symbol": "grpc.peer-subject",
+        "signature": "() -> Option[String] ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-tls",
+        "symbol": "grpc.with-tls",
+        "signature": "TlsOptions -> (() -> a ! {Network | e}) -> a ! {Network | e}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-metadata",
+        "symbol": "grpc.with-metadata",
+        "signature": "List[(String, String)] -> (() -> a ! {Network | e}) -> a ! {Network | e}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc.with-deadline",
+        "symbol": "grpc.with-deadline",
+        "signature": "Duration -> (() -> a ! {Network | e}) -> a ! {Network | e}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/grpc.fwp",
+        "declared": "grpc._force",
+        "symbol": "grpc._force",
+        "signature": "GrpcCell[a] -> Option[(a, GrpcCell[a])]",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.parse-request-head",
+        "symbol": "http.parse-request-head",
+        "signature": "Bytes -> Result[(String, String, String, List[(String, String)]), String]",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.parse-response-head",
+        "symbol": "http.parse-response-head",
+        "signature": "Bytes -> Result[(String, I64, String, List[(String, String)]), String]",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.field-ok",
+        "symbol": "http.field-ok",
+        "signature": "String -> String -> Bool",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.content-length",
+        "symbol": "http.content-length",
+        "signature": "List[(String, String)] -> I64",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http.parse-hex",
+        "symbol": "int.parse-hex",
+        "signature": "String -> Option[I64]",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip.decompress-max",
+        "symbol": "zlib.gunzip",
+        "signature": "I64 -> Bytes -> Result[Bytes, String]",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "deflate.decompress-max",
+        "symbol": "zlib.inflate",
+        "signature": "I64 -> Bytes -> Result[Bytes, String]",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "gzip._crc32",
+        "symbol": "zlib.crc32",
+        "signature": "I64 -> Bytes -> I64",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-serve",
+        "symbol": "http2.serve",
+        "signature": "Conn -> Bytes -> (I64, I64, Duration) -> (H2Stream -> () ! {Async, IO, Network, FileIO}) -> Option[(String, String, List[(String, String)], Bytes)] -> () ! {Async, IO, Network, FileIO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-request",
+        "symbol": "http2.request",
+        "signature": "H2Stream -> (String, String, List[(String, String)], String, Option[String]) ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-body",
+        "symbol": "http2.body",
+        "signature": "I64 -> Duration -> H2Stream -> Result[Bytes, I64] ! {Async, Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-respond",
+        "symbol": "http2.respond",
+        "signature": "I64 -> List[(String, String)] -> Bytes -> Bool -> H2Stream -> Bool ! {Async, Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-data",
+        "symbol": "http2.data",
+        "signature": "Bytes -> Bool -> H2Stream -> Bool ! {Async, Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-send",
+        "symbol": "http2.send",
+        "signature": "String -> Option[Conn] -> (String, String, String, String, List[(String, String)], Bytes) -> (I64, List[(String, String)], Bytes) ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/http.fwp",
+        "declared": "http._h2-pooled",
+        "symbol": "http2.pooled",
+        "signature": "String -> Bool ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "read-line",
+        "symbol": "read-line",
+        "signature": "() -> Option[String] ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "read-all",
+        "symbol": "read-all",
+        "signature": "() -> String ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "read-lines",
+        "symbol": "read-lines",
+        "signature": "() -> List[String] ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "env.get",
+        "symbol": "env.get",
+        "signature": "String -> Option[String] ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "env.vars",
+        "symbol": "env.vars",
+        "signature": "() -> List[(String, String)] ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "env.cwd",
+        "symbol": "env.cwd",
+        "signature": "() -> String ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "time.monotonic",
+        "symbol": "time.monotonic",
+        "signature": "() -> Duration ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/io.fwp",
+        "declared": "time.unix",
+        "symbol": "time.unix",
+        "signature": "() -> Duration ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/json.fwp",
+        "declared": "json.parse",
+        "symbol": "json.parse",
+        "signature": "String -> Result[Json, String]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/json.fwp",
+        "declared": "json.read",
+        "symbol": "json.read",
+        "signature": "String -> Result[a, String] where Decode[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.add",
+        "symbol": "metrics.add",
+        "signature": "String -> F64 -> () ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.set",
+        "symbol": "metrics.set",
+        "signature": "String -> F64 -> () ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.observe",
+        "symbol": "metrics.observe",
+        "signature": "String -> F64 -> () ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/log.fwp",
+        "declared": "metrics.snapshot",
+        "symbol": "metrics.snapshot",
+        "signature": "() -> List[(String, String, F64)] ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.listen",
+        "symbol": "tcp.listen",
+        "signature": "String -> Listener ! {Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.local-addr",
+        "symbol": "tcp.local-addr",
+        "signature": "Listener -> String ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.accept",
+        "symbol": "tcp.accept",
+        "signature": "Listener -> Conn ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.accept-for",
+        "symbol": "tcp.accept-for",
+        "signature": "Duration -> Listener -> Option[Conn] ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.stop",
+        "symbol": "tcp.stop",
+        "signature": "Listener -> () ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.connect",
+        "symbol": "tcp.connect",
+        "signature": "String -> Conn ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.read",
+        "symbol": "tcp.read",
+        "signature": "I64 -> Conn -> Bytes ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.read-for",
+        "symbol": "tcp.read-for",
+        "signature": "Duration -> I64 -> Conn -> Option[Bytes] ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.write",
+        "symbol": "tcp.write",
+        "signature": "Bytes -> Conn -> () ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.write-for",
+        "symbol": "tcp.write-for",
+        "signature": "Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.close",
+        "symbol": "tcp.close",
+        "signature": "Conn -> () ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "tcp.peer-addr",
+        "symbol": "tcp.peer-addr",
+        "signature": "Conn -> String ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.bind",
+        "symbol": "udp.bind",
+        "signature": "String -> UdpSocket ! {Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.local-addr",
+        "symbol": "udp.local-addr",
+        "signature": "UdpSocket -> String ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.send-to",
+        "symbol": "udp.send-to",
+        "signature": "String -> Bytes -> UdpSocket -> () ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.recv-from",
+        "symbol": "udp.recv-from",
+        "signature": "I64 -> UdpSocket -> (Bytes, String) ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "udp.close",
+        "symbol": "udp.close",
+        "signature": "UdpSocket -> () ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/net.fwp",
+        "declared": "dns.resolve",
+        "symbol": "dns.resolve",
+        "signature": "String -> List[String] ! {Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.lu-solve",
+        "symbol": "linalg.lu-solve",
+        "signature": "I64 -> Array[F64] -> Array[F64] -> Option[Array[F64]]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.det",
+        "symbol": "linalg.det",
+        "signature": "I64 -> Array[F64] -> F64",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.inverse",
+        "symbol": "linalg.inverse",
+        "signature": "I64 -> Array[F64] -> Option[Array[F64]]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.cholesky",
+        "symbol": "linalg.cholesky",
+        "signature": "I64 -> Array[F64] -> Option[Array[F64]]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.qr",
+        "symbol": "linalg.qr",
+        "signature": "I64 -> I64 -> Array[F64] -> (Array[F64], Array[F64])",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "linalg.cg",
+        "symbol": "linalg.cg",
+        "signature": "I64 -> F64 -> I64 -> Array[F64] -> Array[F64] -> Array[F64]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/numeric.fwp",
+        "declared": "list.transpose",
+        "symbol": "list.transpose",
+        "signature": "List[List[a]] -> List[List[a]]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "syntax.show",
+        "symbol": "syntax.show",
+        "signature": "Syntax -> String",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.add",
+        "symbol": "prim.add",
+        "signature": "a -> a -> a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.sub",
+        "symbol": "prim.sub",
+        "signature": "a -> a -> a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.mul",
+        "symbol": "prim.mul",
+        "signature": "a -> a -> a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.div",
+        "symbol": "prim.div",
+        "signature": "a -> a -> a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.rem",
+        "symbol": "prim.rem",
+        "signature": "a -> a -> a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.neg",
+        "symbol": "prim.neg",
+        "signature": "a -> a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.zero",
+        "symbol": "prim.zero",
+        "signature": "a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.one",
+        "symbol": "prim.one",
+        "signature": "a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.from-int",
+        "symbol": "prim.from-int",
+        "signature": "I64 -> a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.from-float",
+        "symbol": "prim.from-float",
+        "signature": "F64 -> a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.trap",
+        "symbol": "prim.trap",
+        "signature": "String -> a",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "wrapping.add",
+        "symbol": "wrapping.add",
+        "signature": "a -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "wrapping.sub",
+        "symbol": "wrapping.sub",
+        "signature": "a -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "wrapping.mul",
+        "symbol": "wrapping.mul",
+        "signature": "a -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "saturating.add",
+        "symbol": "saturating.add",
+        "signature": "a -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "saturating.sub",
+        "symbol": "saturating.sub",
+        "signature": "a -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "saturating.mul",
+        "symbol": "saturating.mul",
+        "signature": "a -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "overflowing.add",
+        "symbol": "overflowing.add",
+        "signature": "a -> a -> (a, Bool) where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "overflowing.sub",
+        "symbol": "overflowing.sub",
+        "signature": "a -> a -> (a, Bool) where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "overflowing.mul",
+        "symbol": "overflowing.mul",
+        "signature": "a -> a -> (a, Bool) where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.add",
+        "symbol": "checked.add",
+        "signature": "a -> a -> Option[a] where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.sub",
+        "symbol": "checked.sub",
+        "signature": "a -> a -> Option[a] where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.mul",
+        "symbol": "checked.mul",
+        "signature": "a -> a -> Option[a] where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "checked.div",
+        "symbol": "checked.div",
+        "signature": "a -> a -> Option[a] where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.and",
+        "symbol": "bit.and",
+        "signature": "a -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.or",
+        "symbol": "bit.or",
+        "signature": "a -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.xor",
+        "symbol": "bit.xor",
+        "signature": "a -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.not",
+        "symbol": "bit.not",
+        "signature": "a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.shl",
+        "symbol": "bit.shl",
+        "signature": "U32 -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "bit.shr",
+        "symbol": "bit.shr",
+        "signature": "U32 -> a -> a where Integer[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "int.convert",
+        "symbol": "int.convert",
+        "signature": "a -> Option[b] where Integer[a], Integer[b]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "int.to-float",
+        "symbol": "int.to-float",
+        "signature": "a -> b where Integer[a], Float[b]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "float.to-int",
+        "symbol": "float.to-int",
+        "signature": "a -> Option[b] where Float[a], Integer[b]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "float.convert",
+        "symbol": "float.convert",
+        "signature": "a -> b where Float[a], Float[b]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.sqrt",
+        "symbol": "sqrt",
+        "signature": "a -> a where Float[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.exp",
+        "symbol": "exp",
+        "signature": "a -> a where Float[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.ln",
+        "symbol": "ln",
+        "signature": "a -> a where Float[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.sin",
+        "symbol": "sin",
+        "signature": "a -> a where Float[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.cos",
+        "symbol": "cos",
+        "signature": "a -> a where Float[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "prim.tan",
+        "symbol": "tan",
+        "signature": "a -> a where Float[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "pow",
+        "symbol": "pow",
+        "signature": "a -> a -> a where Float[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "floor",
+        "symbol": "floor",
+        "signature": "a -> a where Float[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "ceil",
+        "symbol": "ceil",
+        "signature": "a -> a where Float[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "round",
+        "symbol": "round",
+        "signature": "a -> a where Float[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "abs",
+        "symbol": "abs",
+        "signature": "a -> a where Signed[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "min",
+        "symbol": "min",
+        "signature": "a -> a -> a where Ord[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "max",
+        "symbol": "max",
+        "signature": "a -> a -> a where Ord[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "hash",
+        "symbol": "hash",
+        "signature": "a -> U64 where Hash[a]",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.read",
+        "symbol": "file.read",
+        "signature": "String -> String ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "file.write-new",
+        "symbol": "file.write-new",
+        "signature": "String -> String -> () ! {FileIO, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "args",
+        "symbol": "args",
+        "signature": "() -> List[String] ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/prelude.fwp",
+        "declared": "exit",
+        "symbol": "exit",
+        "signature": "I32 -> a ! {IO}",
+        "classification": "shared_fallback",
+        "policy": "reconstruction",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/process.fwp",
+        "declared": "process.run-input",
+        "symbol": "process.run-input",
+        "signature": "String -> List[String] -> ProcessOutput ! {Process, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/process.fwp",
+        "declared": "process.call",
+        "symbol": "process.call",
+        "signature": "List[String] -> I32 ! {Process, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.splat",
+        "symbol": "simd.splat",
+        "signature": "t -> Vec[n, t] where Numeric[t]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.from-array",
+        "symbol": "simd.from-array",
+        "signature": "Array[t] -> Option[Vec[n, t]] where Numeric[t]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.add",
+        "symbol": "simd.add",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.sub",
+        "symbol": "simd.sub",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.mul",
+        "symbol": "simd.mul",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.div",
+        "symbol": "simd.div",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.min",
+        "symbol": "simd.min",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.max",
+        "symbol": "simd.max",
+        "signature": "Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/simd.fwp",
+        "declared": "simd.sum",
+        "symbol": "simd.sum",
+        "signature": "Vec[n, t] -> t where Numeric[t]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tensor.fwp",
+        "declared": "device.run",
+        "symbol": "device.run",
+        "signature": "I64 -> I64 -> Array[I64] -> Array[F64] -> List[Array[F64]] -> Array[F64]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tensor.fwp",
+        "declared": "device.sum",
+        "symbol": "device.sum",
+        "signature": "I64 -> I64 -> Array[I64] -> Array[F64] -> List[Array[F64]] -> F64",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tensor.fwp",
+        "declared": "device.gpu-run",
+        "symbol": "device.gpu-run",
+        "signature": "String -> I64 -> Array[F64] -> List[Array[F64]] -> Result[Array[F64], String]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trit.from-sign",
+        "symbol": "trit.from-sign",
+        "signature": "I64 -> Trit",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trit.to-int",
+        "symbol": "trit.to-int",
+        "signature": "Trit -> I64",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.to-int",
+        "symbol": "tint.to-int",
+        "signature": "TInt[n] -> I64",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.of-int",
+        "symbol": "tint.of-int",
+        "signature": "I64 -> Option[TInt[n]]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.trits",
+        "symbol": "tint.trits",
+        "signature": "TInt[n] -> List[Trit]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "tint.from-trits",
+        "symbol": "tint.from-trits",
+        "signature": "List[Trit] -> Option[TInt[n]]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trits.pack",
+        "symbol": "trits.pack",
+        "signature": "List[Trit] -> Bytes",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/ternary.fwp",
+        "declared": "trits.unpack",
+        "symbol": "trits.unpack",
+        "signature": "I64 -> Bytes -> List[Trit]",
+        "classification": "shared_fallback",
+        "policy": "numeric_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls._connect",
+        "symbol": "tls._connect",
+        "signature": "String -> Bool -> String -> List[String] -> String -> String -> String -> Conn ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls._listen",
+        "symbol": "tls._listen",
+        "signature": "String -> String -> List[String] -> String -> String -> Listener ! {Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.handshake",
+        "symbol": "tls.handshake",
+        "signature": "Conn -> () ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.alpn",
+        "symbol": "tls.alpn",
+        "signature": "Conn -> String ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.secure",
+        "symbol": "tls.secure",
+        "signature": "Conn -> Bool ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.peer-subject",
+        "symbol": "tls.peer-subject",
+        "signature": "Conn -> Option[String] ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.accept",
+        "symbol": "tcp.accept",
+        "signature": "Listener -> Conn ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.accept-for",
+        "symbol": "tcp.accept-for",
+        "signature": "Duration -> Listener -> Option[Conn] ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.local-addr",
+        "symbol": "tcp.local-addr",
+        "signature": "Listener -> String ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.stop",
+        "symbol": "tcp.stop",
+        "signature": "Listener -> () ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.read",
+        "symbol": "tcp.read",
+        "signature": "I64 -> Conn -> Bytes ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.read-for",
+        "symbol": "tcp.read-for",
+        "signature": "Duration -> I64 -> Conn -> Option[Bytes] ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.write",
+        "symbol": "tcp.write",
+        "signature": "Bytes -> Conn -> () ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.write-for",
+        "symbol": "tcp.write-for",
+        "signature": "Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.close",
+        "symbol": "tcp.close",
+        "signature": "Conn -> () ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/tls.fwp",
+        "declared": "tls.peer-addr",
+        "symbol": "tcp.peer-addr",
+        "signature": "Conn -> String ! {Network}",
+        "classification": "shared_fallback",
+        "policy": "retained_runtime",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/url.fwp",
+        "declared": "url.split",
+        "symbol": "url.split",
+        "signature": "String -> Option[(String, String, I64, String, String)]",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/url.fwp",
+        "declared": "url.decode",
+        "symbol": "url.decode",
+        "signature": "String -> Option[String]",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/url.fwp",
+        "declared": "form.decode",
+        "symbol": "form.decode",
+        "signature": "String -> Option[String]",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._parse",
+        "symbol": "ws.parse",
+        "signature": "I64 -> I64 -> Bytes -> (I64, Bool, I64, Bool, Bytes)",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._close-parse",
+        "symbol": "ws.close-parse",
+        "signature": "Bytes -> (I64, String)",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      },
+      {
+        "file": "lib/websocket.fwp",
+        "declared": "ws._inflate",
+        "symbol": "ws.inflate",
+        "signature": "I64 -> Bytes -> (I64, Bytes)",
+        "classification": "shared_fallback",
+        "policy": "scalar_or_leaf",
+        "arguments": "Pointer-bearing arguments share; scalar words remain uncounted.",
+        "result": "No fresh/alias/consume contract established; runtime-compatible shared result.",
+        "callback": "No borrowed or counted-retained callback contract established."
+      }
+    ],
+    "policies": {
+      "reconstruction": {
+        "retention": "Pointer-bearing inputs are promoted to shared graphs; result may reconstruct aggregates or alias input.",
+        "teardown": "Managed graphs remain tracing-owned until unreachable; partial managed construction is reclaimed by tracing. C scratch requires separate runtime cleanup.",
+        "eligibility": "Requires tracing; no deterministic graph or partial-construction ownership claim."
+      },
+      "retained_runtime": {
+        "retention": "Callbacks, cached values and contextual inputs may outlive calls; complete reachable graphs remain shared.",
+        "teardown": "Runtime completion/close/scoped restoration handles external storage where verified; managed captured/result graphs require tracing after runtime roots disappear.",
+        "eligibility": "Requires tracing; retained contexts and cycles need separate proofs before tracing-free eligibility."
+      },
+      "scalar_or_leaf": {
+        "retention": "Unknown contract retains conservative sharing for pointer-bearing inputs; scalar words are not reference-counted.",
+        "teardown": "Scalar results require no managed destruction; any fresh/aliased leaf or wrapper remains tracing-owned.",
+        "eligibility": "Requires tracing at this boundary until its actual monomorphic result and retention are proved."
+      },
+      "numeric_runtime": {
+        "retention": "Descriptor-based arrays, numeric wrappers and kernel inputs retain unknown-boundary sharing. Scalar results alone do not prove payload or backing-storage ownership.",
+        "teardown": "Managed results/backing graphs require tracing; explicit tape/device/external storage must follow its separately verified runtime lifetime.",
+        "eligibility": "Requires tracing; natural-width representation and view owners remain phase3 tasks."
+      }
+    },
+    "cyclePolicy": "Channel close preserves queued values; explicit draining breaks the verified counted cycle. Unreachable shared cycles require tracing. No automatic cycle reclamation claimed.",
+    "inventorySha256": "1707856b0960187793678240aa7ba436a6035bebe35fbaaad312a2148e6800f6",
+    "reviewSha256": "513bfbd1cea5988c4d54578db9b8bcb258a3529718e2271577bf3911347c2fd2",
+    "sourceHashes": {
+      "src/aot.rs": "e68fa7d18f066aa85938fffae183bab6fb5deef5367b21d59be8c0b59d55260f",
+      "src/ast.rs": "24b9a16480da5817ebce3fa66033ae2f30cc5d77b6e8ed64a3459784d12614c0",
+      "src/asyncify.rs": "837ae68939520ce4b4dd7d9959c68d7bf22840c70786ab748176b464c162326a",
+      "src/cgen.rs": "5cb9f0212c713a7f5ad257cab50ab512bfe9e2b49afdb014f92cd1b76776ca74",
+      "src/cli.rs": "38a47f4f1a0adf06525918ded42e36b2bd483c6ec9b083691f08c2da0a59cc04",
+      "src/cli_gen.rs": "ad9d5c41d92327e2dfcbe64920febf3aa5b89095ee2fcf2c6a2c6eb0e8f76a59",
+      "src/csv.rs": "d7b4e4e6d790a96c59060188171cf931ab773bdb48a4c86d90ebbd4f35dcddab",
+      "src/diag.rs": "73fa709be411699a00ba78c312dbaa4684637877fcd09f1abb8a934314a350c4",
+      "src/driver.rs": "15a60b137dd27ad1493b89f2edd31f72d67ba34879a4f459447c533357994ad5",
+      "src/env.rs": "6a11cb2af4d154d6e12e491d7c2aad0b63dbd108f148a55168bac4e0c0a9eaf0",
+      "src/escape.rs": "4653928c3ead819248fd5df280e3c2c1ce1906130c05ff953b3b27469a1276e4",
+      "src/exec.rs": "77232f300f12d7082958b684a2e2dc9751e8005e1f3e1c696e73504951125ef6",
+      "src/exhaust.rs": "974f72270de2b54c08a57f1bbdfec4cf1298b661f02311c58945519de9048b1f",
+      "src/ffi.rs": "d01193c6634c699747769c072bca6cfcdf9b3a166b0f24fea622f5178ebbdf0f",
+      "src/ffi_interp.rs": "636843db3813024f57d84e92af8a44063cdb9f3469318ce98a2ca670861cebd9",
+      "src/fiber.rs": "02804a5560f6bf3a046d9b8f7b43c79b1d6c255b6d7d2c2888bf90a9f10b65d8",
+      "src/fmt.rs": "ce9e70df247a90ef3a04b3062151a489ebb00d6954207a99b02adf78a8a42250",
+      "src/fuse.rs": "a72be2481dc6cd1d1510d71bbb2913521ce1c462d73d26e9febfea958a8226ba",
+      "src/grpc.rs": "b606fd7af8f4a58e78494e3d478212610eed7971be40ef2771bc37c5e10daee2",
+      "src/gzip.rs": "dc81f00686690cf51e2a3c306730efa72580c37024c694636ead46f74439bf94",
+      "src/h2.rs": "5d665bfccb762f7d47badbfa49e12b9ace395cd25f9bfb32146d50ebb0fe9bc5",
+      "src/h2web.rs": "91e7d512b8a5cda636fefe47e5885900de9b3e92ac952b19fe4b56d2d84b015b",
+      "src/infer.rs": "af785407667998d40a7cde40c2d662f1c8763ed8fd4489a26a7d7e2f29f40840",
+      "src/interp.rs": "dd743604f59ca7b32116a49a7ce435ddeed1f3c82939413794bf145b122dd787",
+      "src/ir.rs": "52980b69a4aac8ec0d92eaf4e479df377d041e514df82578663209ff3ea874ec",
+      "src/json.rs": "07b0e6a9bbda65f081c932d71e4b9d661f6749749b4279d47628d81f49146a4d",
+      "src/jsontype.rs": "ea6040d476eaacf8cbe29e44dd13ae311ba5dba5f010ecd848555619ccb9d7e3",
+      "src/lexer.rs": "ff7435822de017724ce7bcf8ca2bfb698fd41d8b83620a9fdec0aa2f6a203a03",
+      "src/lib.rs": "d38fb7119bd3e82dc1541a5a4763cb028585d4dc90b59c0734c59b7e61c211f7",
+      "src/linalg.rs": "472ae03674aedfc14aaecf9801ef75907be37bc1046eec7b0a758e7da4473dcb",
+      "src/lint.rs": "7eeb22864fe256fa1f65721cd382da78703aeac1e5fe09d33d759f7814700598",
+      "src/lsp.rs": "b9d85f43ca3f7fc5643a6f0034f65dc6cf2bf42a8a4184ee91f2965f06f3e648",
+      "src/macros.rs": "09fc7d538b923ac286bf6bff44a6ad8ff80948cd02bb98058c93e4303ef5e590",
+      "src/main.rs": "7e27b743f79a62c690c11498f38470a2c0e39b823416d64afc3f7fe765d001ba",
+      "src/mcp.rs": "482d6f39f59ac2302a1b6479b801d3dcf9691def8f8a9dac694e3c3ac4b87393",
+      "src/mono.rs": "e5f6b1d76808a31f964518e899bb4850bd4c72d2b27d14583ab7059eb4efb3fd",
+      "src/numerics.rs": "a4588cf6bd5a23d85e98bc54461eecf5d19cdc32a0504ac896eaf6dd0a99a7b1",
+      "src/openapi.rs": "89efa3f9ee4ba8b74250a84e5657ffd70ad707b808687068331e215a3f2b19d2",
+      "src/openapi_import.rs": "4127deeb84c72d5b39aa76d7a29416960b4ef36b3687cac2e7239f77f22b561e",
+      "src/opt.rs": "02260a296837a8825edd1773c025b14c317304a1f4ad1fd6cef4d60ff2dc222d",
+      "src/ownership.rs": "af9dc0ac3e30ce641c6f03dc67c9608da3631c4d3e3aa80ea97d2333d9a4fced",
+      "src/parser.rs": "6dd3d5d82148178cb75a735180ac7fd100add10aed2665d4e9ce151a6a04602c",
+      "src/pretty.rs": "54018a351dc0f4aba052a5667059f563b214403216de2b93020d9d809a3790f9",
+      "src/prims_std.rs": "3c925536ee49947a9672829af87da21401a252702d409184a83e8b5713a07ee3",
+      "src/proto.rs": "c4ff3e2bede6d93bb1ab829127e4bb0902c84f9374ea073504e63b8ad1089024",
+      "src/protobuf.rs": "e260d7ee10df7fb5d59ac7054ca24555eedb96dfc80912a31a7777944863ee11",
+      "src/rc.rs": "7ea40cd4f1512d93c9b9aaf0531865b5b72f673d5fd98f0385faf96216e26415",
+      "src/resource.rs": "6e84008a267c9d9b7603eb77613c1ee42c36655e40f81fe4ad2d27de9fdc3347",
+      "src/rest.rs": "a7c3e2218de4dc03f0aa7727b6ef60a978d48175c9ef29d7a9764795df421a54",
+      "src/rpc.rs": "9528e5c024e9dc3c7c717c1a8c0db6b69cf54605bf89c27bf63c01e40db8cb25",
+      "src/sched.rs": "fc789d02e9965e14f8854b301041068634df2194fbafcbfbcc3ab806670d7247",
+      "src/services.rs": "a8ff497822703c75acf67b11a5ee127e7454519ae42181845361de57baa2cb4d",
+      "src/solve.rs": "81769d9d9e2a0d39a4560e15f85455ea0433f5e3920d9d465ee1026ba4027240",
+      "src/stdgen.rs": "6f758475d9dcfafb9cf0f3e6a21c2f88108283bf56e6c6fc83a21b98dae4fbf7",
+      "src/swagger.rs": "01002e3212fe0da1da99b39bb4d950a90161f1738fd0cbf55f9c0389feb948a6",
+      "src/syntax.rs": "147a0d87b69c5aad70fd8d16acc1cb0598ce4f970a322a10fa26bc1cd023bc8b",
+      "src/sys.rs": "b919140397be47c4536d4f85b6bd08cab84242883d61520e4563f008c11df420",
+      "src/textio.rs": "5b330f569e168554248960e3896a0f0bb7c694361ec1e87d6e9db68a2c669349",
+      "src/tls.rs": "4bf521b539467582014c8f609f4bbde0f2a5f957133352f1b6475c61ad7f5e05",
+      "src/transport.rs": "df364bfdd9e17afd10581b21f423dd4cca7f67197380c0ae5473e4133e730766",
+      "src/types.rs": "516a6dc499929ef501b45a07b24fe34db127ae8541a49790f852fff1451d4892",
+      "src/value.rs": "e7a136a50242f905827b41289dcdcbf9c1a4399d47dc84ec6124e598cc3b86bb",
+      "src/web.rs": "3af11b27f0cbb92ab93e40f81a334f363e4ffd3aa3547686f815f7a792a60e16",
+      "src/yaml.rs": "b4770a3d1582f304217096d740881d0a8ba86ae36edd24a922b1d1c1a02bcbaf",
+      "runtime/fwp_rt.c": "af1b387be75b0cce9fdd87d1a3ab230a3f64c70e650bac12d3aea57041ce95fc",
+      "runtime/fwp_rt_exec.c": "868f6e267b8a45b899f6a743d51d2b86972d2fa051aeb3ce0daa8a25cf616419",
+      "runtime/fwp_rt_gc.c": "31841a745a14f494fbc88be8d23e89fa9656e718eb3a6d6f1a21f6b3ba7400d2",
+      "runtime/fwp_rt_grpc.c": "6bc445d8b86ccd978062fb5d498e39f5c2306b93557df0a23cf4fe151acac5d8",
+      "runtime/fwp_rt_h2.c": "ff7132fabacfd66ebc00654ee05d273ed222da5316d285ee2446a18c766bb14d",
+      "runtime/fwp_rt_http2.c": "e578a481080f2cdbdb0db2816dfc6d5b7cec9cf4daf38a479b38e6729a5b3126",
+      "runtime/fwp_rt_json.c": "0cbcacb962729e2717f2fd64460d33f31b53962c3aa694ba23c38e060f6ebe8c",
+      "runtime/fwp_rt_kernel.c": "1a7319ebe3eb5f213f73b68516f4781f42ece070eeadfd119220e2618399eb2a",
+      "runtime/fwp_rt_num.c": "75f800d3ab2ca2149b45b3981c0285960aa171130e56c6c59e59452ea0357c8b",
+      "runtime/fwp_rt_ops.c": "e88fb8f309d7cd3b9fa8a6a199599419b19f648c7537251983b2a73a25924948",
+      "runtime/fwp_rt_pipe.c": "c13cc1ca1502a156f062e564e5c20860dfab2efbf6662096391bf51bb965a458",
+      "runtime/fwp_rt_prims.c": "964cfe7f42f01c64cca7af557bd8bd6aa7a17718b646b58a3c984b2a6a88d737",
+      "runtime/fwp_rt_static.c": "d0bed2896eaa05d4bd295ffdbfd62200a1709f262516819d3cfc5199c79c9e29",
+      "runtime/fwp_rt_sys.c": "9fa195fdf417b9d39d447dfb058cb86940b1e67117484c4739b4ea0df628e0a3",
+      "runtime/fwp_rt_task.c": "1798431e098079b2aa89ff936def415844cf055a6476617f08e52b9118e18ce7",
+      "runtime/fwp_rt_tls.c": "9e18c7224df6e3257da62e98a35bd9ff09ab86dd4575e306ec5970c70a60d33f",
+      "runtime/fwp_rt_web.c": "f1f28e5d45999414b0fc17c12d3101efe567ca44bbe2da9ae7810279fdce4a6a",
+      "runtime/wasm/longjmp.S": "da6692c52286e77ff5d757c30f6399fadb10180d4a835bc9afa95dafa35f5bf0",
+      "runtime/wasm/sjlj.c": "adaaa1f60d844002107ccae218af1ca30ea7f8d5a395d1c7b9ae4f576be2ad84",
+      "lib/autodiff.fwp": "a18e4435f97e516e2243d0c0c76bb92b9d83c43840d0a4125469902311c55f7b",
+      "lib/cli.fwp": "ca0c8256005a9557180480a0aa9cf96cdb03b19230b7e7f388306d9077c92103",
+      "lib/collections.fwp": "700682626edb42bc19afb441e7f28aa9a9f8baf4f4052c024f987d2d59637d9e",
+      "lib/csv.fwp": "26f4768b602e317e1b700d2f3c0defdf9df25600320add1a44153bd506d27ae1",
+      "lib/ffi.fwp": "e1a2f416e8dd8cbf6641cf7a26f5d184d21c7fa9ec2243e0b84eb087caf1b238",
+      "lib/fs.fwp": "f41e15624be10f47491959c8aab877e1e3300ed9a1f07a211802b49da9caf537",
+      "lib/grpc.fwp": "2c55a1003d3195eeb3fff9e849d956d078036f296fdc08bbdfa35b2f650ce619",
+      "lib/http.fwp": "ee867225d5d3354e6600ab82639f98751f04e48a366b9c132deae875c94e9ecc",
+      "lib/io.fwp": "1ad0bb42fb1676fb13759c5cd8b346a601b07ba419f8fa4b8c6048112e893a95",
+      "lib/iter.fwp": "a24d9e99a7e5a1c8b2749d743086d61d1bdbbcf5a45464ce7a6ebe33ce527450",
+      "lib/json.fwp": "c7c13137fff0ccfe8b84317a4dc41f0f8ae17b357e7fffe8849f46fea10c8ba5",
+      "lib/list.fwp": "64495637c34358febfb4b7a9cb97da43114761f6344109af4e02468542daf77e",
+      "lib/log.fwp": "89464a1419ddf60433210ba732a7b5153ff7e554945be618372abaa4b0e2011b",
+      "lib/mcp.fwp": "e7244666d4e3cf4768ab9885e019d63b7472ca7531bcfe6511b32daccabadd49",
+      "lib/net.fwp": "7802ed49cb0ca5e0b786302379aee6f66d9968495edb683373d50ef6651d7cd1",
+      "lib/numeric.fwp": "cea08e12e86617e70831e9301933b7bf11aa0601d35eb3f0c108e2801e5260ec",
+      "lib/option.fwp": "38d9568efc00e29b3932717d58ad79dad82432fdd5ea342b1262d906ccf9f1a2",
+      "lib/prelude.fwp": "59add3f6ad6c1b42547d211d4be3a0866d581d1cc7e88bc32b27b823ccd0a7e3",
+      "lib/process.fwp": "31751348e1120c68696957d4fbbb6759a7ed256ea37007b200ef70e32dfbc96a",
+      "lib/rest.fwp": "23f0b663a4fdb66db921b2f96ce4afa140f5fb15263a15e6b1fe07ee97d4bf4a",
+      "lib/simd.fwp": "4edcace9d0521f57db6012e8f472c58ab24b53d2fa899620b2cda88ba8f49511",
+      "lib/string.fwp": "98d07feb51abea11253bf9c8cc3d0d8a6ef130f268182fd00e588ffa686f438a",
+      "lib/task.fwp": "2765605c0c6b871c78b852d3df7f90f12ee7357bd556df5ef5a36e3817417b53",
+      "lib/tensor.fwp": "865d9e3639866264a803109bcb945ff5e5c63264b371964d70e42e67191abf34",
+      "lib/ternary.fwp": "e166100893b4b2fce3a3cd4d76e35c12ddbab2695a2ab92a1a5154da1265aa63",
+      "lib/tls.fwp": "58cdcbdb683f535c50b1ed0f1d98ff34f970a8770188752314f627569c6cd5d2",
+      "lib/url.fwp": "4990874b9789dd3f0070bc4bfa8917952dbb0d95eca028733c2cf0c8c9011fb3",
+      "lib/websocket.fwp": "2abafa28ab1dff8c66f38960854319f18b78b3db63cb46dd938fb2f1ce1616fc",
+      "scripts/check-primitive-inventory.py": "4bfef417944c1be3828a69f9213b90131b6dddd11a12cadc57fe401ba9b6c54e",
+      "scripts/primitive-inventory.rs": "cc528a8b5135e6fae0d0b6297f8131422205d37c63ac12e134b08dac406a016a"
+    }
+  },
+  "status": "Phase2 accepted source coverage verified; phase3 may proceed",
+  "limits": "Tracing remains required for explicit shared fallbacks and unreachable cycles; no tracing-free or unmeasured performance claim"
+}
+```

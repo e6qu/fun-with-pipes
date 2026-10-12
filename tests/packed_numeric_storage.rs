@@ -139,3 +139,27 @@ int main(void) {{
         }
     }
 }
+
+#[test]
+fn binary_decode_accepts_empty_records_and_checks_counts_before_allocation() {
+    let scratch = Scratch::new("decode");
+    for packing in ["0", "1"] {
+        let source = emitted(&scratch, "numeric_layout_baseline.fwp", "step", packing)
+            .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)")
+            + include_str!("fixtures/protocol_count_probe.c");
+        for opt in ["-O1", "-O2"] {
+            let output = native_probe(&scratch, &format!("decode-{packing}"), &source, opt, "1");
+            assert_eq!(output.status.code(), Some(0), "{packing} {opt}: {}", String::from_utf8_lossy(&output.stderr));
+            if packing == "1" {
+                for (name, old, new, expected) in [
+                    ("empty-wire", "if(fwp_wire_empty_inner(elem,0))return !unique || *count<=1;", "(void)unique;", 154),
+                    ("count-bound", "*count>(SIZE_MAX-sizeof(fwp_arr))/sizeof(V)", "0", 155),
+                ] {
+                    assert!(source.contains(old));
+                    let output = native_probe(&scratch, name, &source.replace(old,new), opt, "1");
+                    assert_eq!(output.status.code(), Some(expected), "{name} {opt}: {}", String::from_utf8_lossy(&output.stderr));
+                }
+            }
+        }
+    }
+}

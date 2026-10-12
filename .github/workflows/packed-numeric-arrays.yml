@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, macos-15, macos-15-intel]
+        runner: [ubuntu-latest]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     env:
@@ -38,15 +38,15 @@ jobs:
           FWP_NUMERIC_LAYOUT_ARTIFACTS: ${{ runner.temp }}/numeric-layout-baseline
         run: |
           mkdir -p "$FWP_NUMERIC_LAYOUT_ARTIFACTS"
-          rustfmt --edition 2021 src/cgen.rs tests/packed_numeric_storage.rs tests/array_size_limits.rs tests/wasm.rs
+          cargo fmt --all
           cp src/cgen.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/cgen.formatted.rs"
           cp tests/packed_numeric_storage.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/packed_numeric_storage.formatted.rs"
           cp tests/array_size_limits.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/array_size_limits.formatted.rs"
           cp tests/wasm.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/wasm.formatted.rs"
-          cargo clippy --lib -- -D warnings
+          cargo clippy --all-targets -- -D warnings
           cargo test --lib
       - name: Original ownership and allocation boundary controls
-        run: cargo test --test array_element_ownership --test array_size_limits --test kernel_stack_bounds --test device_bounds --test worker_boxing_ownership --test worker_preparation_ownership --test numerics --test golden_check --test packed_numeric_storage --no-fail-fast -- --nocapture
+        run: cargo test --test array_element_ownership --test array_size_limits --test kernel_stack_bounds --test device_bounds --test worker_boxing_ownership --test worker_preparation_ownership --test numerics --test golden_check --test packed_numeric_storage --test protocol --no-fail-fast -- --nocapture
       - name: Actual wasm32 count boundaries
         if: runner.os == 'Linux'
         env:
@@ -59,6 +59,10 @@ jobs:
         run: |
           python3 scripts/measure-packed-numeric-arrays.py
           python3 scripts/measure-packed-array-memory.py
+      - name: Export the formatted production bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/finalize-numeric-storage.py
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -69,3 +73,8 @@ jobs:
         with:
           name: numeric-layout-controls-${{ matrix.runner }}
           path: ${{ runner.temp }}/numeric-layout-baseline/
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: numeric-storage-finalization
+          path: numeric-storage-finalization/

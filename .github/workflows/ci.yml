@@ -148,6 +148,7 @@ jobs:
       - name: test
         env:
           FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"
+          FWP_REQUIRE_WASI_COUNTS: "1"
         run: cargo test --all-targets --no-fail-fast
       - name: Preserve failed native golden binaries and C
         if: failure()
