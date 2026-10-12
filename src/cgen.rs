@@ -824,6 +824,27 @@ fn mentions(ft: &MT, t: &MT) -> bool {
 /// from all candidates down). A function that may return a value it was
 /// given keeps returning it as it is.
 fn variant_returns(prog: &Program, abis: &mut [Option<Abi>]) {
+    // Typed bindings preserve ownership context after inlining. Follow their
+    // value origins so an alias of a freshly produced variant keeps the same
+    // return ABI; a value supplied by the caller is still not a candidate.
+    fn produces(e: &Expr, m: usize, cand: &[Option<usize>], known: &std::collections::HashSet<Local>) -> bool {
+        match e {
+            Expr::Construct(..) => true,
+            Expr::Call(id, _) => cand[*id] == Some(m),
+            Expr::Local(l) => known.contains(l),
+            Expr::Let(l, value, body) => {
+                let mut known = known.clone();
+                if produces(value, m, cand, &known) { known.insert(*l); }
+                else { known.remove(l); }
+                produces(body, m, cand, &known)
+            }
+            Expr::Match(_, arms) => arms.iter().all(|(_, body)| produces(body, m, cand, known)),
+            Expr::Dup(_, body) | Expr::Drop(_, body) | Expr::ResourceRegion { body, .. } => {
+                produces(body, m, cand, known)
+            }
+            _ => false,
+        }
+    }
     let mut cand: Vec<Option<usize>> = prog
         .funcs
         .iter()
@@ -841,13 +862,7 @@ fn variant_returns(prog: &Program, abis: &mut [Option<Abi>]) {
             let (Some(m), Body::Expr(body)) = (cand[id], &f.body) else {
                 continue;
             };
-            let mut ts = Vec::new();
-            tails(body, &mut ts);
-            let ok = ts.iter().all(|t| match t {
-                Expr::Construct(..) => true,
-                Expr::Call(g, _) => cand[*g] == Some(m),
-                _ => false,
-            });
+            let ok = produces(body, m, &cand, &std::collections::HashSet::new());
             if !ok {
                 cand[id] = None;
                 changed = true;
@@ -2952,7 +2967,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     }
                 }
                 let local_ty = self.locals[*l as usize].clone();
-                if self.unboxed_variant(v, &local_ty) == Some(m) && variant_uses(b, *l, true) {
+                let constructed = matches!(&**v, Expr::Construct(..))
+                    && small_variant(self.g.prog, &local_ty) == Some(m);
+                if (constructed || self.unboxed_variant(v, &local_ty) == Some(m))
+                    && variant_uses(b, *l, true)
+                {
                     let (tag, fields) = self.expr_variant(v, m, &local_ty);
                     let u = self.fresh();
                     self.line(&format!(
