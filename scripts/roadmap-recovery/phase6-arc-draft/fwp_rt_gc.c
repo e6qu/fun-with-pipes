@@ -62,6 +62,10 @@
 #define FWP_GC 1
 #endif
 
+#if defined(FWP_ARC_ONLY) && !FWP_GC
+#error "ARC requires the native counted allocator; WebAssembly is not eligible"
+#endif
+
 #if !FWP_GC
 
 static char *fwp_heap_cur = 0, *fwp_heap_end = 0;

@@ -1,0 +1,5 @@
+ARC golden corpus: rejected programs are not execution support
+executed	any_sized	status=Some(0)	return-ledger=true
+rejected	array_in_place	"fwp build: --gc arc: `map.empty`: primitive `map.empty` returns an uncounted owner\n"
+rejected	autodiff_reverse	"fwp build: --gc arc: `ad.push`: primitive `ad.push` has no tracing-free lifetime policy\n"
+executed	basics	status=Some(0)	return-ledger=true

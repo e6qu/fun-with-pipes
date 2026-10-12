@@ -6,14 +6,15 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `d00d306d1bac3d731f19769300e659b48cf7c020` passes audit38227215868.
+checkpoint `6489ec4a701fe35ffda631b2612be892323a98c4` passes audit38230219937.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies702 targets/48528910 bytes. Reports are retained in
-/private/tmp/fwp-verified-scalar-unwind-restoration. The next checkpoint keeps the active recovery map compact. Superseded helper
-snapshots remain in this verified immutable checkpoint and its ancestors;
-restore that head explicitly when historical source is needed. Current work
+verifies397 targets/34857977 bytes. Reports are retained in
+/private/tmp/fwp-verified-current-ownership-restoration. The active map is compact.
+The previous complete snapshot d00d306d1bac3d731f19769300e659b48cf7c020
+(audit38227215868,702 targets/48528910 bytes) retains superseded helpers and
+historical source. Restore that immutable head explicitly if they are needed. Current work
 uses the designated current-map.json, not an old publisher's next action.
 Never rerun completed publishers. Phases1–3 are accepted; phases4–6 remain unfinished.
 
@@ -117,21 +118,25 @@ omission, library and actual WASI controls pass. C/Rust comparison reports are
 in docs/measurements/numerical-kernels-2026-10-12.json. Timings are descriptive;
 prior failing preparations and repairs are archived in history.
 
-PR #127 is open at d19fef9bf070cf435edb892663f6f388b337f0e7 on
-numerical-kernels-and-workspaces, based on accepted main3a458236. CI38225479910
-and roadmap_docs38225479939 are the current production gates. Docs, bench and both macOS GC jobs pass. ARM regular macOS fails the original
+PR #127 is open at8eb13370945b491cced1263ced290192e903acbb on
+numerical-kernels-and-workspaces, based on accepted main3a458236. Current gates:
+CI38231014878 running and roadmap_docs38231014937 passing. Repair publication:
+/private/tmp/fwp-scalar-reuse-production-update.json.
+The previous head d19fef9 had passing docs, bench and both macOS GC jobs. Its ARM regular macOS failed the original
 unique_arrays_are_written_in_place control: push allocates38149.4MiB with or
-without reuse. Linux/Intel were still running. This head cannot merge.
+without reuse. The remaining superseded jobs were cancelled after repair publication; no
+results from that failed/cancelled head count toward the new gate.
 The scalar-field borrowing optimization incorrectly holds a parent through
 an operation even when the borrowed field is an immediate scalar; consuming
 its array field then duplicates an owner and prevents in-place writes.
 Repair branch ownership-evidence-borrowed-scalar-reuse at
-70d04387f475cb3fc37ac047aebbc20dfa8c1750 runs38229871625 on all three targets.
+70d04387f475cb3fc37ac047aebbc20dfa8c1750 passes38229871625 on all three targets. Identical formatted source/proof:
+/private/tmp/fwp-scalar-borrow-reuse-evidence.
 Only reference-valued fields extend parent borrowing; scalar field evaluation
 finishes before a later consuming argument. Preserve the original thresholds.
 Source map: /private/tmp/fwp-scalar-borrow-reuse-draft/files.json.
-Publish the formatted repair after focused validation, then require all seven
-results again for the new production head. Failure log:
+The formatted repair and manual evidence workflow regression are published;
+require all seven results again for the new production head. Failure log:
 /private/tmp/fwp-pr127-macos-arm-failure.log. The superseded initial-head CI38222106138 was cancelled after
 repairing the loop reclamation test's boxed-only instrumentation. Its shared
 state control now marks typed pointer fields in direct flat entries as shared;
@@ -171,7 +176,8 @@ actual uninstrumented disassembly: /private/tmp/fwp-loop-ownership-platform-evid
 and retain formatted sources/measurements before preparing the next PR.
 Assembly still reloads writable descriptors and dispatches fixed element widths.
 Current c600a9343283c975be018ba59c40c7d0068d161e makes generated descriptors
-const;38229158359 passes Linux and ARM, Intel remains running. Source map:
+const;38229158359 passes all three targets. Reports and assembly are retained
+in /private/tmp/fwp-const-descriptors-platform-evidence. Source map:
 /private/tmp/fwp-phase5-const-descriptors-draft/files.json. Carry the production
 scalar-borrow fix into this compiler before its final bundle validation; the
 phase5-compatible RC source is fwp-scalar-borrow-reuse-draft/rc-phase5.rs.
@@ -179,7 +185,7 @@ phase5-compatible RC source is fwp-scalar-borrow-reuse-draft/rc-phase5.rs.
 ## Phase6 preparation
 
 Independent branch ownership-evidence-tracing-free at
-20adf795b58e55d052a86ce81dc587e45bef2370, runner38229919586 pending,
+75981271fe74b7a7dec2bc94ea1e8e57a7420286, awaiting runner validation,
 adds explicit --gc arc/tracing build selection. ARC checks monomorphic value
 shapes and primitive ownership contracts; unsupported opaque/mutable graphs,
 retained callbacks, raw pointers, raw AD tape lifetimes, foreign/remote and executable-protocol/library
@@ -187,16 +193,32 @@ boundaries diagnose instead of selecting tracing. The first supported target is
 native main programs. Counted immutable escapes and scoped File owners must
 reclaim physically. Collector implementation is excluded in ARC builds;
 conflicting GC/reuse-debug settings diagnose. A counted-to-uncounted promotion
-traps as an internal contract violation. This mode is not yet validated support.
+traps as an internal contract violation. Linux20adf795 passes38229919586. Extended85e2ead3 passes all three targets
+in38230592270: immutable escapes, File ownership, cycle-type rejection,
+missing-free/forced-collection controls, actual binary symbols/disassembly and
+existing closure/unwind/AD regressions. This remains preparation, not merged support.
 The native tests compare a raw interpreter with arrays/views, escaping closures
 and scoped files, check charged storage at return, and deliberately omit freeing.
 Initial f1a748 failed clippy for redundant diagnostic borrows; ff325009 passes
 compiler checks but rejects synthesized Step shapes;6c2344 admits Step and
 fails the ledger test's global rather than main-thread instrumentation anchor.
-Current20adf795 scopes that anchor, rejects unproved AD token lifetimes and
-includes the scalar-borrow production repair. Retain these as failed runs;
-none is an ARC acceptance gate. Draft source map:
-/private/tmp/fwp-phase6-arc-draft/files.json plus fwp-arc-ledger-fix-files.json.
+Head20adf795 scopes that anchor, rejects unproved AD token lifetimes and
+includes the scalar-borrow production repair. Head0ab3d491 passes all three jobs in38231696023 and combines all
+numerical/AD/loop controls and benchmarks with ARC checks on the three platforms,
+adding native static-memory and explicit foreign/deployment rejection controls.
+Its export workflow is fwp-phase6-arc-draft/complete-preparation.yml. The three earlier
+failed preparations remain failures; none supplies an ARC acceptance gate. Broader eligibility head82ca8bb5 rejects boxed I128/U128, which lack counted owners,
+and user native declarations without checked signatures. Its new golden corpus
+passes compiler checks but fails38233842841 on all targets: case_of_case leaves
+16 charged bytes in format's managed rendering temporary. Head75981271 renders
+directly into one private output buffer and registers its recoverable-trap cleanup.
+The corpus now reports every semantic/reclamation failure in one run; it still
+fails if any mismatch remains and requires real exit codes. Source/proof:
+/private/tmp/fwp-phase6-arc-draft/format-files.json and fwp-arc-format-publication.json.
+Failure C/report: /private/tmp/fwp-arc-corpus-failure. This repair is unverified.
+Draft source map:
+/private/tmp/fwp-phase6-arc-draft/files.json, fwp-arc-ledger-fix-files.json,
+fwp-arc-platform-files.json and fwp-phase6-arc-draft/complete-files.json.
 Fix all failures;
 do not broaden eligibility without physical lifetime evidence. Source was
 prepared from exact accepted runtime/IR blobs plus the current phase5 compiler.

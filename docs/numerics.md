@@ -257,8 +257,18 @@ with allocator metadata excluded from charged bytes. Reserved virtual address
 space and process RSS are separate metrics. Shared-runner timing is descriptive;
 CI asserts exact results and stable allocation properties.
 
-The fused array kernel allocates no intermediates but still retains/releases
-its carried array once per element. Matrix multiplication allocates one output;
+The retained phase4 preparation allocates no array intermediates but still
+retains/releases its carried array once per element. Matrix multiplication allocates one output;
 the benchmark's public generic input boundary also builds two Matrix records.
 These remaining costs are explicit targets for phase5. Neither zero intermediate
 allocations nor vector instructions alone establish C/Rust speed parity.
+
+Phase5 preparation gives flat loop fields independent owners and removes
+per-element array retain/release pairs. Unwind scopes remain around fallible
+operations; concrete scalar reads and F32/F64 arithmetic need none. Generated
+type descriptors are read-only, allowing fixed element-width dispatch to be
+removed. Raw floating-point order and bounds/trap behavior remain unchanged.
+Measurements and full production acceptance for this later delivery belong to
+the handoff; a lower instruction/count total alone is not a timing guarantee.
+The checked ARC subset currently excludes raw reverse-mode tape lifetimes;
+normal native autodiff continues to use the scoped bounded workspace above.

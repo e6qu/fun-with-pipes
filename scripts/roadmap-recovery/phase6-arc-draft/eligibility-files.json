@@ -1,0 +1,8 @@
+{
+  "src/arc.rs": "/private/tmp/fwp-phase6-arc-draft/arc.rs",
+  "src/ir.rs": "/private/tmp/fwp-phase6-arc-draft/ir.rs",
+  "src/mono.rs": "/private/tmp/fwp-phase6-arc-draft/mono.rs",
+  "tests/arc_execution.rs": "/private/tmp/fwp-phase6-arc-draft/arc_execution.rs",
+  "tests/arc_corpus.rs": "/private/tmp/fwp-phase6-arc-draft/arc_corpus.rs",
+  ".github/workflows/tracing-free-preparation.yml": "/private/tmp/fwp-phase6-arc-draft/complete-preparation.yml"
+}
