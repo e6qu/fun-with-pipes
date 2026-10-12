@@ -2880,9 +2880,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
             {
                 let element = self.lookup_value_type(*id).unwrap();
                 let values = self.args(args);
-                let pending = self.begin_call(e as *const Expr);
-                let (tag, value) = if matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "map.get")
-                {
+                let map_lookup = matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "map.get");
+                // A bounds-checked scalar array read cannot allocate or unwind.
+                // Map comparisons and counted result duplication still can.
+                let pending = if map_lookup {
+                    self.begin_call(e as *const Expr)
+                } else {
+                    None
+                };
+                let (tag, value) = if map_lookup {
                     let key = self.g.prog.funcs[*id].locals[0].clone();
                     let descriptor = self.g.desc(&key);
                     let found = self.fresh();
