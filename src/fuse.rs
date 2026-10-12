@@ -1074,7 +1074,7 @@ impl Fuser<'_> {
             outer
                 .iter()
                 .enumerate()
-                .map(|(i, l)| ((i + capture_start as usize).to_string(), self.locals[*l as usize].clone())),
+                .map(|(i, l)| ((i + capture_start).to_string(), self.locals[*l as usize].clone())),
         );
         MT::sort_fields(&mut fields);
         let state_ty = MT::Record(fields);
