@@ -1017,7 +1017,7 @@ impl NativeNumber {
         }
     }
 
-    fn from_word(self, v: &str) -> String {
+    fn decode_word(self, v: &str) -> String {
         match self {
             Self::F32 => format!("fwp_f32({v})"),
             Self::F64 => format!("fwp_f64({v})"),
@@ -1054,9 +1054,9 @@ impl Abi {
             .iter().map(|(_, t)| NativeNumber::of(t)).collect()
     }
 
-    fn args_from_words(&self, prog: &Program, id: FuncId, words: Vec<String>) -> Vec<String> {
+    fn args_decode_words(&self, prog: &Program, id: FuncId, words: Vec<String>) -> Vec<String> {
         words.into_iter().zip(self.param_numbers(prog, id))
-            .map(|(v, n)| n.map_or_else(|| v.clone(), |n| n.from_word(&v))).collect()
+            .map(|(v, n)| n.map_or_else(|| v.clone(), |n| n.decode_word(&v))).collect()
     }
 
     fn result_words(&self, prog: &Program, id: FuncId, result: &str) -> Vec<String> {
@@ -2486,7 +2486,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 None => out.push(self.arg(g, j, a)),
             }
         }
-        abi.args_from_words(self.g.prog, g, out)
+        abi.args_decode_words(self.g.prog, g, out)
     }
 
     /// In a loop's step, a field of the state kept as its own fields: its
@@ -6679,7 +6679,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             (Some(n), _) => {
                 let fs = fg.expr_fields(e, n);
                 let values: Vec<_> = fs.into_iter().zip(abi.result_numbers(fg.g.prog, id))
-                    .map(|(v, n)| n.map_or_else(|| v.clone(), |n| n.from_word(&v))).collect();
+                    .map(|(v, n)| n.map_or_else(|| v.clone(), |n| n.decode_word(&v))).collect();
                 format!("(fwp_wr{id}){{{}}}", values.join(", "))
             }
             (None, Some(m)) => {
@@ -6689,7 +6689,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             }
             (None, None) => {
                 let v = fg.expr(e);
-                abi.scalar_result(fg.g.prog, id).map_or_else(|| v.clone(), |n| n.from_word(&v))
+                abi.scalar_result(fg.g.prog, id).map_or_else(|| v.clone(), |n| n.decode_word(&v))
             },
         };
         out.push_str(&fg.out);
@@ -6703,7 +6703,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 None => args.push(format!("l{}", i)),
             }
         }
-        let args = abi.args_from_words(self.prog, id, args);
+        let args = abi.args_decode_words(self.prog, id, args);
         let call = format!("w{}({})", id, args.join(", "));
         // The wrapper keeps boxed arguments, while the worker consumes
         // duplicated fields and other arguments. Protect originals before
