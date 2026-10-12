@@ -1,0 +1,18 @@
+{
+  "head": "0b627e92af625ff759412c75393ee1d900de4039",
+  "previous": "e6ed082517a1a1afd3c52af71f3d4a8df6a912a7",
+  "tree": "33c35c22e4bf79bc21a1b93ba8ed8c9d2c5297f3",
+  "branch": "ownership-evidence-numeric-array-fusion",
+  "files": {
+    "src/fuse.rs": "3416cffc218dbfb80152d3038889ee5c428c295b49b74684a07e15dc295f89cc",
+    "src/cgen.rs": "0c98848ea255e9ac1924ce76b7b1888b3a2ec7cd58ed54ad2eeaffed825ad3fd",
+    "runtime/fwp_rt_kernel.c": "fb3f25fc816b222437e16a130f67f100c4a8aa611909845e8ccb426858d5071c",
+    "src/numerics.rs": "2f05cca34027955a4724c1e5fbc14ce4d6eb76e7db683b4c67e305a61ccae3c6",
+    "tests/autodiff_capacity_bounds.rs": "5d0ef34d15779c4e69b1a4d7eefcdaf136b4cc11993ffb23e4751ff9238f465e",
+    "tests/fixtures/autodiff_capacity_probe.c": "0cd9604ee9a98c337494dfa928d7d2732c2cf4ab1c9f9280dd264a51b8fe8aea",
+    ".github/workflows/numeric-array-fusion-preparation.yml": "aa0348fe7f20a72f192f5cc80c191cbc5d6d43cfb4f7f0fcd4273d2f240b1afa",
+    "scripts/measure-numeric-array-fusion.py": "364eb98a26cb1b727ef29e0d0ac6f53681ed90f5cd366e2ea46dd6343d1a120c",
+    "tests/fixtures/array_fusion_allocation_probe.c": "4911f063565c1fd0035acdecf55cf0ab87e1ac36c08256d06426d66d4961622b",
+    "tests/numeric_array_fusion.rs": "38835d3050abb712f96bab57ffb595ea392da86a23d72f962ab832e19a26a1ed"
+  }
+}

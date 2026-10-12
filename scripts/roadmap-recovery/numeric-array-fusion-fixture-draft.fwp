@@ -1,5 +1,5 @@
 export reduce64 : Array[F64] -> F64
-reduce64 = array.map (mul 3.0) | array.map (add 1.0) | array.fold add 0.0
+reduce64 = array.map (mul 3.0) | array.map (add 1.0) | array.fold add -0.0
 export reduce32 : Array[F32] -> F32
 reduce32 = array.map (mul 3.0f32) | array.map (add 1.0f32) | array.fold add 0.0f32
 export count8 : Array[I8] -> I64

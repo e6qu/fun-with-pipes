@@ -1,0 +1,10 @@
+{
+  "head": "05699d49dff5a71c7b9fdaa4241b73d6d17e4d9f",
+  "previous": "b8199fc953c46142c9db01248e7a4a92273f6778",
+  "tree": "c69522841325d291827793960174f383e5d8cb0d",
+  "branch": "ownership-evidence-numeric-array-fusion",
+  "files": {
+    "src/fuse.rs": "3efa24a4b218e134a33e15aba03a0c183e0defb671154e2293beadcdc141fac2",
+    "src/cgen.rs": "c6a6fb2f2f179fafafc10e02988c85ace75f384192b38082625dd3458c2f0c2c"
+  }
+}

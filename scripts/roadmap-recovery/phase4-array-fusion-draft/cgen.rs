@@ -2724,6 +2724,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
         f.ty.params(f.arity as usize).1.clone()
     }
 
+    fn scalar_array_get(&self, id: FuncId) -> Option<MT> {
+        let function = &self.g.prog.funcs[id];
+        if function.arity != 2 || !matches!(&function.body, Body::Prim(symbol) if symbol == "array.get") { return None; }
+        match &function.locals[1] {
+            MT::Con(name, elements) if name == "std::Array" && elements.len() == 1 && scalar(&elements[0]).is_some() => Some(elements[0].clone()),
+            _ => None,
+        }
+    }
+
     /// The size of the struct a variant `e` of type `ty` gives without
     /// being built: every tail of `e` builds a constructor or calls a
     /// worker returning one (`Abi::vret`), and at least one is not a
@@ -2756,6 +2765,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     Some(fields)
                 }
                 Expr::Construct(_, xs) => Some(!xs.is_empty()),
+                Expr::Call(id, args) if m == 1 && args.len() == 2 && fg.scalar_array_get(*id).is_some() => Some(true),
                 Expr::Call(id, _) if fg.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m) => {
                     Some(true)
                 }
@@ -2785,6 +2795,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Local(l) if self.vlocals.contains_key(l) => {
                 let u = self.vlocals[l].0.clone();
                 parts(&u)
+            }
+            Expr::Call(id, args) if m == 1 && args.len() == 2 && self.scalar_array_get(*id).is_some() => {
+                let element = self.scalar_array_get(*id).unwrap();
+                let descriptor = self.g.desc(&element);
+                let values = self.args(args);
+                let pending = self.begin_call(e as *const Expr);
+                let tag = self.bind(format!("(V)((int64_t){index} >= 0 && (uint64_t){index} < fwp_array_len({array}))", index=values[0], array=values[1]));
+                let value = self.bind(format!("{tag} ? fwp_array_load({array}, (size_t){index}, {descriptor}) : 0", index=values[0], array=values[1]));
+                self.line(&format!("FWP_KEEP_ALIVE({});", values[1]));
+                self.end_call(pending);
+                (tag, vec![value])
             }
             Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m) => {
                 let abi = self.g.abis[*id].clone().unwrap();
@@ -4295,6 +4316,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         self.g.used_closures[g] = true;
         if sym == "loop" && n == 0 {
+            if let Some(Some(width)) = loop_shape(&self.g.prog.funcs[g]) {
+                let flat = record_fields(&self.g.prog.shapes, &self.g.prog.funcs[g].locals[0])
+                    .is_some_and(|fields| fields.iter().all(|(_, ty)| record_fields(&self.g.prog.shapes, ty).is_none()));
+                if flat && self.unboxed(&args[1]) == Some(width) {
+                    if !self.g.loops.iter().any(|(step, _)| *step == g) { self.g.loops.push((g, Some(width))); }
+                    let fields = self.expr_fields(&args[1], width);
+                    return Some(format!("fwp_loop_fields{g}({})", fields.join(", ")));
+                }
+            }
             let s = self.expr(&args[1]);
             if let Some(shape) = loop_shape(&self.g.prog.funcs[g]) {
                 if !self.g.loops.iter().any(|(step, _)| *step == g) {
@@ -4799,10 +4829,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         };
         let f = &self.g.prog.funcs[*id];
-        if args.len() != 2 { return None; }
+        if args.len() != 2 {
+            return None;
+        }
         let array_element = match (&f.body, &f.locals[1]) {
-            (Body::Prim(s), MT::Con(n, elements)) if s == "array.get" && n == "std::Array"
-                && elements.len() == 1 && scalar(&elements[0]).is_some() => Some(elements[0].clone()),
+            (Body::Prim(s), MT::Con(n, elements))
+                if s == "array.get"
+                    && n == "std::Array"
+                    && elements.len() == 1
+                    && scalar(&elements[0]).is_some() =>
+            {
+                Some(elements[0].clone())
+            }
             _ => None,
         };
         if array_element.is_none() && !matches!(&f.body, Body::Prim(s) if s == "map.get") {
@@ -4817,7 +4855,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if !shapes {
             return None;
         }
-        let descriptor = array_element.clone().unwrap_or_else(|| f.ty.params(2).0[0].clone());
+        let descriptor = array_element
+            .clone()
+            .unwrap_or_else(|| f.ty.params(2).0[0].clone());
         let kd = self.g.desc(&descriptor);
         let mut e = scrut;
         while let Expr::Let(l, v, b) = e {
@@ -4829,23 +4869,27 @@ impl<'g, 'p> FnGen<'g, 'p> {
         let (found, at, v) = (self.fresh(), self.fresh(), self.fresh());
         if array_element.is_some() {
             self.line(&format!("int {found} = (int64_t){index} >= 0 && (uint64_t){index} < fwp_array_len({array});", index=xs[0], array=xs[1]));
-            self.line(&format!("V {v} = {found} ? fwp_array_load({array}, (size_t){index}, {kd}) : 0;", array=xs[1], index=xs[0]));
+            self.line(&format!(
+                "V {v} = {found} ? fwp_array_load({array}, (size_t){index}, {kd}) : 0;",
+                array = xs[1],
+                index = xs[0]
+            ));
         } else {
-        self.line(&format!(
-            "int {found}; uint64_t {at} = fwp_map_find({m}, {k}, {kd}, &{found});",
-            found = found,
-            at = at,
-            m = xs[1],
-            k = xs[0],
-            kd = kd
-        ));
-        self.line(&format!(
-            "V {v} = {found} ? MAP({m})->d[2 * {at} + 1] : 0;",
-            v = v,
-            found = found,
-            m = xs[1],
-            at = at
-        ));
+            self.line(&format!(
+                "int {found}; uint64_t {at} = fwp_map_find({m}, {k}, {kd}, &{found});",
+                found = found,
+                at = at,
+                m = xs[1],
+                k = xs[0],
+                kd = kd
+            ));
+            self.line(&format!(
+                "V {v} = {found} ? MAP({m})->d[2 * {at} + 1] : 0;",
+                v = v,
+                found = found,
+                m = xs[1],
+                at = at
+            ));
         }
         let value_type = array_element.or_else(|| match &f.locals[1] {
             MT::Con(name, fields) if name == "std::Map" && fields.len() == 2 => {
@@ -6019,6 +6063,11 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             root_fences = root_fences,
             tick = tick
         );
+        if record.is_some() && slots.iter().all(|(_, width)| width.is_none()) {
+            let parameters = (0..n).map(|i| format!("V a{i}")).collect::<Vec<_>>().join(", ");
+            let initial = (0..n).map(|i| format!("a{i}")).collect::<Vec<_>>().join(", ");
+            let _ = write!(out, "static V fwp_loop_fields{step}({parameters}) {{\n    V st[{n}] = {{{initial}}}, nx[{n}] = {{0}}, out = 0;\n    {protect}\n    for (;;) {{\n        {save}{tick}\n        {transfer}\n        int done = fs{step}(st, nx, &out);\n{root_fences}        if (done) {{ {finish} return out; }}\n        for (int i = 0; i < {n}; i++) st[i] = nx[i];\n    }}\n}}\n");
+        }
         out
     }
 
@@ -8254,6 +8303,12 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     for (step, _) in &g.loops {
         let _ = writeln!(out, "static V fwp_loop{}(V s);", step);
+        if let Some(fields) = record_fields(&prog.shapes, &prog.funcs[*step].locals[0]) {
+            if fields.iter().all(|(_, ty)| record_fields(&prog.shapes, ty).is_none()) {
+                let parameters = (0..fields.len()).map(|i| format!("V a{i}")).collect::<Vec<_>>().join(", ");
+                let _ = writeln!(out, "static V fwp_loop_fields{step}({parameters});");
+            }
+        }
     }
     if g.reuse {
         for (id, _) in prog

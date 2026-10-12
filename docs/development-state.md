@@ -6,11 +6,14 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `b61cde67f467fc67d672b1d0efd3c0cf59a3acad` passes audit38200778577.
+checkpoint `593553e47efa314b9c2b5df1803d9620caa7d693` passes audit38207907474.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies134 targets/4544302 bytes. Never rerun completed publishers. Phase2 is accepted; phases3–6 remain unfinished.
+verifies201 targets/9603759 bytes. Reports are retained in
+/private/tmp/fwp-verified-current-numeric-restoration. On recovery, run the
+bounded restore-numeric-finalization-archive.py after restoring temporary
+sources to reconstruct the verified gzip export from its retained base64 text. Never rerun completed publishers. Phase2 is accepted; phases3–6 remain unfinished.
 
 ## Execution contract
 
@@ -168,7 +171,8 @@ This focused finalization is not the six-job production merge gate.
 
 Production PR126 is open at916263e7c07443bccd4f87e764ca0c3f33dc664e on
 numeric-storage-and-worker-abi. Roadmap documentation38207662006 passes;
-current CI38207662016 is running. Superseded head8d244fed has the failures below.
+current CI38207662016 passes bench, regular ARM macOS and both dedicated GC
+stress jobs. Linux and regular Intel macOS remain running. Superseded head8d244fed has the failures below.
 CI38202824347 passes bench and both dedicated GC stress jobs, but Linux and
 regular ARM macOS fail three older generated-C probes. Regular Intel is still
 running. The probes assumed a one-argument array constructor, the previous
@@ -258,13 +262,43 @@ and bounded reusable AD workspaces with reentrancy/unwind controls. Source
 inspection also found unchecked tape capacity multiplication on wasm32 and
 realloc pointer replacement on failure; add bounded allocator fault/overflow
 controls before changing those paths. They are tasks to fix in the next coherent
-numerics bundle, not reasons to stop the roadmap. Numeric Array fusion prototype b8199fc953c46142c9db01248e7a4a92273f6778 is
-on ownership-evidence-numeric-array-fusion. Its runner must check compiler
-invariants, raw/native behavior and complete allocation counters before it is
-considered verified. Source drafts are retained under fwp-phase4-array-fusion-draft.
-Initial fusion runner38207566637 passes compiler invariants and raw/native
-fixture semantics, but fails its strict allocation control: generated scalar
-Array.get still boxes Option results and initial nested state boxes remain.
-Fix those allocations without weakening the control. No phase4 support is
-accepted. Source inspection confirms record-cell reuse
-only accepts record/ADT shapes, excluding numeric array storage.
+numerics bundle, not reasons to stop the roadmap. Numeric Array fusion c0281d6401a147fcbd70470be3aad91801187f8b passes focused
+Linux runner38209247194. Direct flat loop arguments and scalar Array.get
+variant fields remove all managed requests after constructing129/257-element
+inputs, versus two intermediate arrays without fusion. The initial report's
+compiler metadata printed clang although compilation used default cc; its
+actual version was not captured. compiler-metadata-correction.json preserves
+that limitation. Subsequent runners select/query clang explicitly.
+
+Stronger controls60ba62771157b5281bf19e6f21d53a7216ff2c79 pass Linux
+runner38210787637: effect/checked-trap order, recursive-callback rejection,
+finite bits, arithmetic NaN classification, reclamation and AD allocator
+omission controls. Exact NaN payloads remain in evidence; arithmetic payloads
+follow existing compiler choices, while copies/storage/protocol/ABI retain
+exact bit contracts. Early fixtures omitted rec and an undeclared JSON crate;
+those test defects are fixed using the existing fwp JSON parser. Initial
+arithmetic NaN payload equality was overconstrained; retain actual results and
+the LLVM-backed contract in ownership/reference docs, not a new canonicalization.
+
+Current preparatione166e1d67a11b2d9a3825f6de2936db5543b51ee on
+ownership-evidence-numeric-array-fusion passes Linux runner38211872588.
+Its single512-KiB bounded native AD workspace cache passes cold/warm profiles,
+return/trap/cancellation, registry reentrancy and shutdown controls. The prior
+2f run passed workspace controls but failed the fusion signed-zero control:
+the updated fixture was missing from the publication map. Including that
+fixture repairs the failure; no semantic assertion was removed. Formatted
+source and reports are retained in fwp-numeric-fusion-workspace-evidence.
+Original physical-free omission probes explicitly run with FWP_AD_WORKSPACE=0;
+new cache controls run both settings. Matching interpreter tape size bounds
+pass. A Rust workspace cache, blocked matrix path, actual wasm32 AD capacity
+case and broader C/Rust memory/performance comparisons remain required.
+Native workspace reuse and phase4 support are not yet accepted. Source drafts
+are in fwp-phase4-ad-workspace-draft; receipts and preparation helpers are in
+/private/tmp. No next production PR is open while PR126 remains unmerged.
+
+After all PR126 gates pass, merge-numeric-storage.py checks signed one-line
+squash/tree parity; publish-accepted-numeric-source-audit.py then audits the
+actual main source, inventory/fallback coverage and every exact-head gate.
+These audit helpers are prepared, not executed. Phase3 is unfinished until
+that actual merged-source acceptance passes. Record all further failures and
+fix them; continue phases4–6 automatically.

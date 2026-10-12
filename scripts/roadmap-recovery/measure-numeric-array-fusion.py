@@ -7,7 +7,7 @@ env=dict(os.environ);env.pop('FWP_NO_OPT',None)
 def execute(args,environment=env):return subprocess.run(args,env=environment,capture_output=True)
 def run(*args,environment=env):
  p=execute(args,environment)
- if p.returncode:raise RuntimeError(str(args)+'\n'+p.stderr.decode(errors='replace'))
+ if p.returncode:raise RuntimeError(str(args)+' status='+str(p.returncode)+'\n'+p.stdout.decode(errors='replace')+'\n'+p.stderr.decode(errors='replace'))
  return p.stdout
 run('cargo','build','--bin','fwp')
 fwp=ROOT/'target/debug/fwp';fixture=ROOT/'tests/fixtures/numeric_array_fusion.fwp'
@@ -36,5 +36,13 @@ for mode in ['0','1']:
   reports[binary.name]=json.loads(data);(OUT/(binary.name+'.json')).write_bytes(data)
  command=['otool','-tvV',str(binary)] if platform.system()=='Darwin' else ['objdump','-d',str(binary)]
  (OUT/('production-'+mode+'.asm')).write_bytes(run(*command))
-report=dict(head=os.environ['GITHUB_SHA'],hardware=run('uname','-a').decode(),compiler=run('clang','--version').decode(),optimization=['-O1','-O2'],results=reports,hashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.iterdir() if p.is_file()},scope='Equivalent source and inputs, only Array fusion differs. Complete managed API allocation counters include initializer fast paths and exclude GC page overhead. No timing or whole-process memory claim.')
+def arithmetic_result(case):
+ word=int(case['resultBits'],16)
+ nan=(word & 0x7ff0000000000000)==0x7ff0000000000000 and (word & 0xfffffffffffff)!=0
+ if nan:assert word & (1<<51), 'Quiet input NaNs must produce quiet results'
+ return case['elements'], 'quiet-nan' if nan else case['resultBits']
+for opt in ['-O1','-O2']:
+ baseline=reports['measured-0'+opt]['cases'];fused=reports['measured-1'+opt]['cases']
+ assert list(map(arithmetic_result,baseline))==list(map(arithmetic_result,fused)), 'Finite bits or arithmetic NaN classification differ'
+report=dict(head=os.environ['GITHUB_SHA'],hardware=run('uname','-a').decode(),compiler=run(os.environ.get('CC','cc'),'--version').decode(),optimization=['-O1','-O2'],results=reports,hashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.iterdir() if p.is_file()},scope='Equivalent source and inputs, only Array fusion differs. Complete managed API allocation counters include initializer fast paths and exclude GC page overhead. No timing or whole-process memory claim.')
 (OUT/'comparison.json').write_text(json.dumps(report,indent=2)+'\n');print('Array numeric fusion semantics and zero managed-allocation controls passed')
