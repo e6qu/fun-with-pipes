@@ -3260,5 +3260,85 @@
   "evidenceHashes": {
     "numericalDownload": "73f2458292ddcd05a2f4f6b097bdd16ec4903ae6025e15dfd0b31c1080151396",
     "arcDownload": "e21c49586e79430b8b6e2184d99a6cb177c8afe2a90f0fc6011ef15a8d5c6849"
+  },
+  "aggregateReturnFollowup": {
+    "head": "11f9bb7555b000bbd2a16f03dd46741f14075953",
+    "run": 38255456223,
+    "downloadSha256": "d844fd2fc1e779c3ca474fe24af0e90709d4a3ea8ac84834b3abf08e24a542be",
+    "scope": "Original variant allocation thresholds are unchanged. All three platforms pass wide-record alias allocation and owned-string/effect comparisons against the raw interpreter, tracing GC/reuse verification and checked ARC. All prior ARC corpus executions and physical reclamation/binary controls remain. These are regression controls, not new numerical timings.",
+    "platforms": {
+      "macos-15-intel": {
+        "allocatedMiB": {
+          "0": 24.3,
+          "1": 0.0
+        },
+        "artifact": 11750647406,
+        "archiveSha256": "cc88d6845da622144817c18f1e56f9113c5850ea9b3a0d2cbcd84645052a3623",
+        "formattedSourceHashes": {
+          "source/cgen.rs": "4a5a377cb9601aa2b672ec58737592aee04fb0e574fdb4600a010fe3b9a53294",
+          "source/wide_alias.fwp": "f7e85f0af45d64197f1c9efc14915c1030106b2fa0f344d0a5ae16cb13c123f1",
+          "source/stack.rs": "b0adaf20412105afe2503b5987c0669709b954290fccbdc082719dec2307e853"
+        },
+        "corpusSummary": "total=71 executed=21 rejected=47 compile-errors=3",
+        "corpusSha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a",
+        "nativeAssemblyHashes": {
+          "arc/arrays-0-dynamic.asm": "43ff02c36351ea681f7774d436c4d71390af2d1a555333fad08aca8614bef440",
+          "arc/arrays-1-dynamic.asm": "3c5d08be70cd93342ef7551269d6d2cfc49ffabe33e87340056820c4ee36db7f",
+          "arc/arrays-1-static.asm": "319798a751a0643218d7286f94c0449dace74e89e89b84bbcb3959e1e3ec04a5",
+          "arc/closures-0-dynamic.asm": "603b3a7511072205679b387757c531eb3afc5abd5735e22cc410c08a4aed9adc",
+          "arc/closures-1-dynamic.asm": "d2fd9d2338bd9e15930ef31b41bd96892a74fe6707234f3cb70d251267a3c621",
+          "arc/files-0-dynamic.asm": "03e1a491af17a69b1e1a7d9abce55f201589ba27e32fabaae1e6e10987181d5c",
+          "arc/files-1-dynamic.asm": "7b527a9928a368688e9a9c9476b0b4f08e79a63453b34ad42c27eee1b0d0e7db"
+        }
+      },
+      "ubuntu-latest": {
+        "allocatedMiB": {
+          "0": 24.3,
+          "1": 0.0
+        },
+        "artifact": 11749643203,
+        "archiveSha256": "3fbe274b44a2b04a9fdabd94c6038ba18a5fa24f97dc2eba1d7e6e81cb3fa886",
+        "formattedSourceHashes": {
+          "source/cgen.rs": "4a5a377cb9601aa2b672ec58737592aee04fb0e574fdb4600a010fe3b9a53294",
+          "source/stack.rs": "b0adaf20412105afe2503b5987c0669709b954290fccbdc082719dec2307e853",
+          "source/wide_alias.fwp": "f7e85f0af45d64197f1c9efc14915c1030106b2fa0f344d0a5ae16cb13c123f1"
+        },
+        "corpusSummary": "total=71 executed=21 rejected=47 compile-errors=3",
+        "corpusSha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a",
+        "nativeAssemblyHashes": {
+          "arc/arrays-0-dynamic.asm": "cc2c300f5884ec4bb2e63c8ad09caceb163b51b5e7142412e19e139ed58bd084",
+          "arc/arrays-1-dynamic.asm": "d83c5264f77aa81705d83d70cda5d5033d6f1560e8d3f86295b7d10981029c50",
+          "arc/arrays-1-static.asm": "9faab5279c58e9c4fe0b5fa6eab8918a4c72bba0ca80999571cf9fb51b43383c",
+          "arc/closures-0-dynamic.asm": "f9c88c1fdcef431c39de6ba2a3f1349bad5ac29278b04c005638c0e7410a6238",
+          "arc/closures-1-dynamic.asm": "01b941027a131897313a376e41ed39a04b926ba2edf824423f07ca2f57b8d31b",
+          "arc/files-0-dynamic.asm": "61bcd568a3980df17faacdc25986f843aa0b8f54c717a7e9161cf53d1cef4046",
+          "arc/files-1-dynamic.asm": "0ad0609d180ddca6991a539b9adfdd91198f518fee9c2087bbade31e0aa7528e"
+        }
+      },
+      "macos-15": {
+        "allocatedMiB": {
+          "0": 24.3,
+          "1": 0.0
+        },
+        "artifact": 11749558187,
+        "archiveSha256": "470cdeb8d88eb33df683c6ae702279f94acbc76c17f33570f7b14d5550cf60cf",
+        "formattedSourceHashes": {
+          "source/cgen.rs": "4a5a377cb9601aa2b672ec58737592aee04fb0e574fdb4600a010fe3b9a53294",
+          "source/stack.rs": "b0adaf20412105afe2503b5987c0669709b954290fccbdc082719dec2307e853",
+          "source/wide_alias.fwp": "f7e85f0af45d64197f1c9efc14915c1030106b2fa0f344d0a5ae16cb13c123f1"
+        },
+        "corpusSummary": "total=71 executed=21 rejected=47 compile-errors=3",
+        "corpusSha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a",
+        "nativeAssemblyHashes": {
+          "arc/arrays-0-dynamic.asm": "5c93a1e2b432736ea1c3573b067192727366567e8e20e8c8ce1e7ee844ad5e50",
+          "arc/arrays-1-dynamic.asm": "59185279d6f879dd4ce94b63065bef84023478cff41c760e6d7b9f1e65f48dc6",
+          "arc/arrays-1-static.asm": "3a6be05a7ed258cbee39f3f06ebe5f75ef3c8329e907e621b4cee28afa0e42ca",
+          "arc/closures-0-dynamic.asm": "95035d329261e049e4a9684312784653d5bae3ac14f60cd2183de124046802d7",
+          "arc/closures-1-dynamic.asm": "092cd1b37b5e8e0316bea463fd4fa093cba65f6dd34d4342363f0fb31128bb9a",
+          "arc/files-0-dynamic.asm": "a46cc31afbf0b1cea7dd500d1d65c9d5218be65d5951d0cc14579daa78b0e50e",
+          "arc/files-1-dynamic.asm": "99b51d9d1688af06e2c46e24bce45c77ab114e89e7a1a962e6681e80e1dff9fa"
+        }
+      }
+    }
   }
 }

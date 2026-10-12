@@ -58,7 +58,7 @@ actual merged-source acceptance. The scalar-borrow repair preserves in-place
 container updates. The handoff records exact source and evidence hashes.
 Checked ARC execution remains in preparation until phase6 meets its criteria.
 
-Deliver phases5–6 together: independently owned loop fields, reduced unwind
+PR #128 delivers phases5–6 together: independently owned loop fields, reduced unwind
 bookkeeping, immutable descriptors, retained measurements, and checked native
 ARC eligibility with physical-reclamation and binary controls. Keep each phase's
 acceptance explicit even when sharing one production PR and full CI run.

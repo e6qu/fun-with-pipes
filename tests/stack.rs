@@ -89,6 +89,82 @@ fn wide_records_are_returned_without_allocating() {
     assert!(mib < 1.0, "{} MiB", mib);
 }
 
+/// Inlining `const` preserves the constructed record's typed binding. That
+/// ownership context must not hide its origin from the return ABI analysis.
+#[test]
+fn wide_record_aliases_are_returned_without_allocating() {
+    if !native_cc() {
+        return;
+    }
+    let dir = TempDir::new("wide-alias");
+    let mib = allocated(&dir, "wide_alias", "FWP_STACK", "1", "60003000000\n");
+    assert!(mib < 1.0, "wide record alias allocated {mib} MiB");
+}
+
+/// Returning fields through aliases must preserve owned children and the
+/// intervening effect, with both native memory modes agreeing with raw IR.
+#[test]
+fn record_return_aliases_preserve_owners_and_effects() {
+    if !native_cc() {
+        return;
+    }
+    let dir = TempDir::new("owned-return-alias");
+    let src = dir.0.join("owned.fwp");
+    std::fs::write(&src, r#"
+rec alias : String -> (String, String, String, String, String, String) ! {IO}
+alias = make { 0 = id, 1 = concat "a", 2 = concat "b", 3 = concat "c", 4 = concat "d", 5 = concat "e" }
+    | fork const id (const "effect" | print)
+main = range 1 17 | map (flip string.repeat "seed" | alias) | echo
+"#).unwrap();
+    let expected = Command::new(fwp())
+        .args(["run", "--interp"])
+        .arg(&src)
+        .env("FWP_NO_OPT", "1")
+        .output()
+        .unwrap();
+    assert!(
+        expected.status.success(),
+        "{}",
+        String::from_utf8_lossy(&expected.stderr)
+    );
+    for mode in ["tracing", "arc"] {
+        for (opt, stack) in [("-O1", "0"), ("-O2", "1")] {
+            let exe = dir.0.join(format!("owned-{mode}-{stack}"));
+            let build = Command::new(fwp())
+                .arg("build")
+                .arg(&src)
+                .args(["--gc", mode, opt, "-o"])
+                .arg(&exe)
+                .env("FWP_STACK", stack)
+                .output()
+                .unwrap();
+            assert!(
+                build.status.success(),
+                "{}",
+                String::from_utf8_lossy(&build.stderr)
+            );
+            let env = if mode == "tracing" {
+                vec![
+                    ("FWP_GC_STRESS", "1"),
+                    ("FWP_GC_VERIFY", "1"),
+                    ("FWP_REUSE_VERIFY", "1"),
+                ]
+            } else {
+                vec![]
+            };
+            let actual = run(&exe, &dir.0, b"", &env);
+            assert_eq!(
+                actual.status.code(),
+                expected.status.code(),
+                "{mode}/{opt}: {}",
+                String::from_utf8_lossy(&actual.stderr)
+            );
+            assert_eq!(actual.stdout, expected.stdout, "{mode}/{opt}");
+            assert_eq!(actual.stderr, expected.stderr, "{mode}/{opt}");
+        }
+    }
+}
+
 /// What `tests/stack/<name>.fwp`, compiled with `var` set to `value`,
 /// allocates (MiB), checking that it prints `expected`.
 fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) -> f64 {
@@ -105,6 +181,7 @@ fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) 
     assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
     let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
     assert_eq!(String::from_utf8_lossy(&o.stdout), expected);
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
     let err = String::from_utf8_lossy(&o.stderr);
     let mib = err
         .split(" MiB allocated")

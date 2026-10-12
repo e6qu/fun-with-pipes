@@ -31,7 +31,7 @@ the queue is empty. A sender that finds the channel full waits, which propagates
 backpressure.
 
 A queued value can contain the channel itself. Closing alone does not break
-that reference cycle. The prepared ownership implementation verifies explicit
+that reference cycle. The counted ownership implementation verifies explicit
 draining and typed destruction; automatic reclamation of unreachable cycles
 remains an open requirement in [the ownership plan](ownership.md).
 
