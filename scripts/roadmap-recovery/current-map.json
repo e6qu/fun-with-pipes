@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "publisher": "scripts/roadmap-recovery/publish-numerics-workspace-recovery.py",
-  "scope": "Verified Linux numerics preparation, current production gates and actual-source audit helpers; earlier checkpoints retain historical assembly"
+  "publisher": "scripts/roadmap-recovery/publish-repaired-workspace-recovery.py",
+  "scope": "Current verified preparation and exact draft source snapshots; root docs supply live links"
 }
