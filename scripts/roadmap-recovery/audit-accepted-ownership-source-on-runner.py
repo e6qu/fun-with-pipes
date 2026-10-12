@@ -1,4 +1,4 @@
-"""Audit actual merged numeric source and exact-head CI without rebuilding it."""
+"""Audit actual merged ownership source and exact-head CI without rebuilding it."""
 from pathlib import Path
 import argparse,hashlib,json,os,subprocess
 assert os.environ.get('GITHUB_ACTIONS')=='true'

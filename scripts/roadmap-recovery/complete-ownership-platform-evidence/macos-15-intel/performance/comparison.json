@@ -1,0 +1,1061 @@
+{
+  "head": "350500f2cbbfccbde57dbd85e9fb855e13088e7d",
+  "hardware": {
+    "uname": "Darwin sat12-jr310-737ce2d9-2eb7-4f29-8e79-01b5c52478f8-12DD08BE9391.local 24.6.0 Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64 x86_64\n",
+    "machine": "x86_64",
+    "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n"
+  },
+  "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+  "rustCompiler": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "buildCommands": [
+    [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "-DPROFILE=0",
+      "/Users/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/numerical_bench.c",
+      "-o",
+      "array-fusion-evidence/performance/c-timing"
+    ],
+    [
+      "rustc",
+      "--edition=2021",
+      "-C",
+      "opt-level=2",
+      "/Users/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/numerical_bench.rs",
+      "-o",
+      "array-fusion-evidence/performance/rust-timing"
+    ],
+    [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "-DPROFILE=0",
+      "-DMATRIX_BENCH=0",
+      "array-fusion-evidence/performance/array-timing.c",
+      "-o",
+      "array-fusion-evidence/performance/fwp-array-timing",
+      "-lm",
+      "-lpthread"
+    ],
+    [
+      "otool",
+      "-tvV",
+      "array-fusion-evidence/performance/fwp-array-timing"
+    ],
+    [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "-DPROFILE=0",
+      "-DMATRIX_BENCH=1",
+      "array-fusion-evidence/performance/matrix-timing.c",
+      "-o",
+      "array-fusion-evidence/performance/fwp-matrix-timing",
+      "-lm",
+      "-lpthread"
+    ],
+    [
+      "otool",
+      "-tvV",
+      "array-fusion-evidence/performance/fwp-matrix-timing"
+    ],
+    [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "-DPROFILE=1",
+      "/Users/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/numerical_bench.c",
+      "-o",
+      "array-fusion-evidence/performance/c-profile"
+    ],
+    [
+      "rustc",
+      "--edition=2021",
+      "-C",
+      "opt-level=2",
+      "--cfg",
+      "memory_profile",
+      "/Users/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/numerical_bench.rs",
+      "-o",
+      "array-fusion-evidence/performance/rust-profile"
+    ],
+    [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "-DPROFILE=1",
+      "-DMATRIX_BENCH=0",
+      "array-fusion-evidence/performance/array-profile.c",
+      "-o",
+      "array-fusion-evidence/performance/fwp-array-profile",
+      "-lm",
+      "-lpthread"
+    ],
+    [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "-DPROFILE=1",
+      "-DMATRIX_BENCH=1",
+      "array-fusion-evidence/performance/matrix-profile.c",
+      "-o",
+      "array-fusion-evidence/performance/fwp-matrix-profile",
+      "-lm",
+      "-lpthread"
+    ]
+  ],
+  "workloads": {
+    "array": {
+      "elements": 65537,
+      "rounds": 8,
+      "samples": 5,
+      "kernelScope": "Consumes the existing input and releases it; input allocation/fill excluded, ownership cost included."
+    },
+    "matrix": {
+      "rows": 65,
+      "inner": 67,
+      "columns": 63,
+      "tile": 32,
+      "rounds": 8,
+      "samples": 5,
+      "kernelScope": "Multiply/accumulate only, after output allocation and zeroing; input construction and all cleanup are in allocation-inclusive time."
+    }
+  },
+  "results": {
+    "array-c-timing": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 2435000,
+          "kernelNs": 850000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 2265000,
+          "kernelNs": 845000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 2248000,
+          "kernelNs": 844000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 2308000,
+          "kernelNs": 881000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 2347000,
+          "kernelNs": 895000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        }
+      ],
+      "peakProcessRssBytes": 1081344,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": false,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/c-timing",
+        "array"
+      ]
+    },
+    "array-rust-timing": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 1645272,
+          "kernelNs": 570830,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1354314,
+          "kernelNs": 567161,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1423059,
+          "kernelNs": 574360,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1413033,
+          "kernelNs": 576038,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1339812,
+          "kernelNs": 567015,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        }
+      ],
+      "peakProcessRssBytes": 1187840,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": false,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/rust-timing",
+        "array"
+      ]
+    },
+    "array-fwp-timing": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 3245000,
+          "kernelNs": 1389000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 0,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 0,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 589824,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 2749000,
+          "kernelNs": 1261000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 0,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 0,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 589824,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 2772000,
+          "kernelNs": 1263000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 0,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 0,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 589824,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 2736000,
+          "kernelNs": 1263000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 0,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 0,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 589824,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 2749000,
+          "kernelNs": 1264000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 0,
+          "requestedBytes": 0,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 0,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 0,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 589824,
+          "reservedVirtualBytes": 73593323520
+        }
+      ],
+      "peakProcessRssBytes": 1146880,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": false,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/fwp-array-timing"
+      ]
+    },
+    "matrix-c-timing": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 2001000,
+          "kernelNs": 1706000,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1894000,
+          "kernelNs": 1646000,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1877000,
+          "kernelNs": 1631000,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1913000,
+          "kernelNs": 1661000,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1862000,
+          "kernelNs": 1623000,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        }
+      ],
+      "peakProcessRssBytes": 663552,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": false,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/c-timing",
+        "matrix"
+      ]
+    },
+    "matrix-rust-timing": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 1179423,
+          "kernelNs": 988040,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1050390,
+          "kernelNs": 915589,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1073421,
+          "kernelNs": 938387,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1050517,
+          "kernelNs": 915718,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        },
+        {
+          "allocationInclusiveNs": 1047444,
+          "kernelNs": 914010,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 0
+        }
+      ],
+      "peakProcessRssBytes": 765952,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": false,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/rust-timing",
+        "matrix"
+      ]
+    },
+    "matrix-fwp-timing": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 5855000,
+          "kernelNs": 5434000,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 0,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 0,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 262144,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 5600000,
+          "kernelNs": 5289000,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 0,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 0,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 262144,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 5637000,
+          "kernelNs": 5328000,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 0,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 0,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 262144,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 5762000,
+          "kernelNs": 5377000,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 0,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 0,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 262144,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 5619000,
+          "kernelNs": 5297000,
+          "hash": "b86150bb9769c123",
+          "requests": 0,
+          "requestedBytes": 0,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 0,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 0,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 262144,
+          "reservedVirtualBytes": 73593323520
+        }
+      ],
+      "peakProcessRssBytes": 724992,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": false,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/fwp-matrix-timing"
+      ]
+    },
+    "array-c-profile": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 2576000,
+          "kernelNs": 914000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194368,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 524296
+        },
+        {
+          "allocationInclusiveNs": 2339000,
+          "kernelNs": 840000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194368,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 524296
+        },
+        {
+          "allocationInclusiveNs": 2390000,
+          "kernelNs": 894000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194368,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 524296
+        },
+        {
+          "allocationInclusiveNs": 2437000,
+          "kernelNs": 943000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194368,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 524296
+        },
+        {
+          "allocationInclusiveNs": 2365000,
+          "kernelNs": 886000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194368,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 524296
+        }
+      ],
+      "peakProcessRssBytes": 1089536,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": true,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/c-profile",
+        "array"
+      ]
+    },
+    "array-rust-profile": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 1646301,
+          "kernelNs": 566785,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194368,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 524296
+        },
+        {
+          "allocationInclusiveNs": 1416645,
+          "kernelNs": 575642,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194368,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 524296
+        },
+        {
+          "allocationInclusiveNs": 1404978,
+          "kernelNs": 567175,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194368,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 524296
+        },
+        {
+          "allocationInclusiveNs": 1391406,
+          "kernelNs": 577940,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194368,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 524296
+        },
+        {
+          "allocationInclusiveNs": 1339082,
+          "kernelNs": 563626,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194368,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 524296
+        }
+      ],
+      "peakProcessRssBytes": 1187840,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": true,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/rust-profile",
+        "array"
+      ]
+    },
+    "array-fwp-profile": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 3036000,
+          "kernelNs": 1283000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194432,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 524304,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 8,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 589824,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 2695000,
+          "kernelNs": 1261000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194432,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 524304,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 8,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 589824,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 2666000,
+          "kernelNs": 1256000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194432,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 524304,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 8,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 589824,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 2706000,
+          "kernelNs": 1271000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194432,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 524304,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 8,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 589824,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 2673000,
+          "kernelNs": 1254000,
+          "hash": "9a7bfa7aaf8e51e3",
+          "requests": 8,
+          "requestedBytes": 4194432,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 524304,
+          "retains": 0,
+          "nonlastReleases": 0,
+          "releaseChecks": 8,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 589824,
+          "reservedVirtualBytes": 73593323520
+        }
+      ],
+      "peakProcessRssBytes": 1146880,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": true,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/fwp-array-profile"
+      ]
+    },
+    "matrix-c-profile": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 1986000,
+          "kernelNs": 1615000,
+          "hash": "b86150bb9769c123",
+          "requests": 24,
+          "requestedBytes": 810944,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 101368
+        },
+        {
+          "allocationInclusiveNs": 1870000,
+          "kernelNs": 1621000,
+          "hash": "b86150bb9769c123",
+          "requests": 24,
+          "requestedBytes": 810944,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 101368
+        },
+        {
+          "allocationInclusiveNs": 1858000,
+          "kernelNs": 1610000,
+          "hash": "b86150bb9769c123",
+          "requests": 24,
+          "requestedBytes": 810944,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 101368
+        },
+        {
+          "allocationInclusiveNs": 1878000,
+          "kernelNs": 1625000,
+          "hash": "b86150bb9769c123",
+          "requests": 24,
+          "requestedBytes": 810944,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 101368
+        },
+        {
+          "allocationInclusiveNs": 1868000,
+          "kernelNs": 1616000,
+          "hash": "b86150bb9769c123",
+          "requests": 24,
+          "requestedBytes": 810944,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 101368
+        }
+      ],
+      "peakProcessRssBytes": 671744,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": true,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/c-profile",
+        "matrix"
+      ]
+    },
+    "matrix-rust-profile": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 1117061,
+          "kernelNs": 938616,
+          "hash": "b86150bb9769c123",
+          "requests": 24,
+          "requestedBytes": 810944,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 101368
+        },
+        {
+          "allocationInclusiveNs": 1108728,
+          "kernelNs": 959630,
+          "hash": "b86150bb9769c123",
+          "requests": 24,
+          "requestedBytes": 810944,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 101368
+        },
+        {
+          "allocationInclusiveNs": 1083468,
+          "kernelNs": 951722,
+          "hash": "b86150bb9769c123",
+          "requests": 24,
+          "requestedBytes": 810944,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 101368
+        },
+        {
+          "allocationInclusiveNs": 1075404,
+          "kernelNs": 944161,
+          "hash": "b86150bb9769c123",
+          "requests": 24,
+          "requestedBytes": 810944,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 101368
+        },
+        {
+          "allocationInclusiveNs": 1072440,
+          "kernelNs": 942298,
+          "hash": "b86150bb9769c123",
+          "requests": 24,
+          "requestedBytes": 810944,
+          "livePayloadBytes": 0,
+          "peakPayloadBytes": 101368
+        }
+      ],
+      "peakProcessRssBytes": 765952,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": true,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/rust-profile",
+        "matrix"
+      ]
+    },
+    "matrix-fwp-profile": {
+      "samples": [
+        {
+          "allocationInclusiveNs": 5758000,
+          "kernelNs": 5281000,
+          "hash": "b86150bb9769c123",
+          "requests": 40,
+          "requestedBytes": 811648,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 101392,
+          "retains": 24,
+          "nonlastReleases": 24,
+          "releaseChecks": 56,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 262144,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 5549000,
+          "kernelNs": 5269000,
+          "hash": "b86150bb9769c123",
+          "requests": 40,
+          "requestedBytes": 811648,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 101392,
+          "retains": 24,
+          "nonlastReleases": 24,
+          "releaseChecks": 56,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 262144,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 5509000,
+          "kernelNs": 5228000,
+          "hash": "b86150bb9769c123",
+          "requests": 40,
+          "requestedBytes": 811648,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 101392,
+          "retains": 24,
+          "nonlastReleases": 24,
+          "releaseChecks": 56,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 262144,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 5509000,
+          "kernelNs": 5229000,
+          "hash": "b86150bb9769c123",
+          "requests": 40,
+          "requestedBytes": 811648,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 101392,
+          "retains": 24,
+          "nonlastReleases": 24,
+          "releaseChecks": 56,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 262144,
+          "reservedVirtualBytes": 73593323520
+        },
+        {
+          "allocationInclusiveNs": 5538000,
+          "kernelNs": 5237000,
+          "hash": "b86150bb9769c123",
+          "requests": 40,
+          "requestedBytes": 811648,
+          "liveChargedBytes": 0,
+          "peakChargedBytes": 101392,
+          "retains": 24,
+          "nonlastReleases": 24,
+          "releaseChecks": 56,
+          "collections": 0,
+          "collectionPauseSeconds": 0.0,
+          "chunkHighWaterBytes": 262144,
+          "reservedVirtualBytes": 73593323520
+        }
+      ],
+      "peakProcessRssBytes": 716800,
+      "environment": {
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "profileInstrumented": true,
+      "invocation": [
+        "/usr/bin/time",
+        "-l",
+        "array-fusion-evidence/performance/fwp-matrix-profile"
+      ]
+    }
+  },
+  "summary": {
+    "array-c-timing": {
+      "medianAllocationInclusiveNs": 2308000,
+      "medianKernelNs": 850000,
+      "peakProcessRssBytes": 1081344
+    },
+    "array-rust-timing": {
+      "medianAllocationInclusiveNs": 1413033,
+      "medianKernelNs": 570830,
+      "peakProcessRssBytes": 1187840
+    },
+    "array-fwp-timing": {
+      "medianAllocationInclusiveNs": 2749000,
+      "medianKernelNs": 1263000,
+      "peakProcessRssBytes": 1146880
+    },
+    "matrix-c-timing": {
+      "medianAllocationInclusiveNs": 1894000,
+      "medianKernelNs": 1646000,
+      "peakProcessRssBytes": 663552
+    },
+    "matrix-rust-timing": {
+      "medianAllocationInclusiveNs": 1050517,
+      "medianKernelNs": 915718,
+      "peakProcessRssBytes": 765952
+    },
+    "matrix-fwp-timing": {
+      "medianAllocationInclusiveNs": 5637000,
+      "medianKernelNs": 5328000,
+      "peakProcessRssBytes": 724992
+    }
+  },
+  "sourceHashes": {
+    "tests/fixtures/numerical_bench.c": "c51ab3916a9ca900c68da1b4806e38beed77215f7d17101e9059e9e95ec691f8",
+    "tests/fixtures/numerical_bench.rs": "77a4cbeecaf2ce430da436b2da431eb952255af3bc1f73287153c9ca6ffc641d",
+    "tests/fixtures/numerical_bench_native.c": "6675b40d7931a4b1f5bcc944e8d83bf4dfc4ad627a5a7dd01fc10497b3a018b5",
+    "array-fusion-evidence/performance/matrix-profile.c": "60152d8a5bddfd9ab657b2380131c1054cb21c51419cd2ca7c05f00a93db240b",
+    "array-fusion-evidence/performance/array-profile.c": "216c4159254498ea037c711d9ad296142fadde1a942e1c79550bdfae8d966fe4",
+    "array-fusion-evidence/performance/matrix-timing.c": "9cd23e4ea6b8e86596ed27cac261f5bf63f03a8c987eb52693937d62127b9fd3",
+    "array-fusion-evidence/performance/array-timing.c": "a93ffbe5d73475ff8627cca4bade900a57a7e8f55a7b1dc2a7db76ca282030df"
+  },
+  "scope": "Identical dimensions, inputs, ordered arithmetic and result hashes. Timings use separate uninstrumented binaries; instrumented profile timings are not compared. C/Rust memory is allocator-requested payload. Native charged bytes include allocator size classes, exclude metadata, and are sampled at proven allocation peaks with no collections. Peak process RSS comes from each executable independently. No shared-runner timing threshold is asserted."
+}

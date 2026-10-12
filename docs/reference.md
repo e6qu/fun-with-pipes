@@ -433,7 +433,7 @@ Rust's `String::from_utf8_lossy` does. Strings are therefore always valid
 UTF-8. Strings in the binary pipe protocol must be valid UTF-8 and are
 rejected otherwise.
 
-### Static memory
+### Checked reference counting
 
 The prepared `--gc arc` mode checks eligibility and reclaims supported immutable
 values and scoped File owners by reference counts. It supports native main
@@ -442,6 +442,8 @@ protocol entry points, libraries and services. It requires normal counted
 freeing; tracing stress/verification and reuse poisoning are incompatible.
 The [ownership contract](ownership.md#checked-arc-delivery) and
 [handoff](development-state.md) record coverage and production acceptance.
+
+### Static memory
 
 `fwp build --memory static` builds a native executable that maps all the
 memory it will use when it starts, in one populated mapping, and asks the

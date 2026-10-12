@@ -6,13 +6,13 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `b489b06c0cf47e203064666105452260d9c9d940` passes audit38240335790.
+checkpoint `50d2ee568e006b106886efdfd4f69ca66d72cf97` passes audit38242884940.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies368 targets/36541095 bytes. Reports are retained in
-/private/tmp/fwp-verified-final-ownership-restoration. The active map retains current
-ARC/format drafts, phase4 acceptance and complete ec866d57 platform evidence.
+verifies389 targets/36999908 bytes. Reports are retained in
+/private/tmp/fwp-verified-type-context-restoration. The active map retains current
+ARC/type repairs, failure IR, phase4 acceptance and complete ec866d57 platform evidence.
 Older phase4 and standalone phase5 artifact payloads remain in parent checkpoints;
 the current map retains their receipts and current delivery helpers. Prior snapshot79dbf674 failed because
 its descriptor omitted version=1; the current repair passes actual restoration.
@@ -95,8 +95,8 @@ Latest disk observation:56,620,208KiB available, about54.0GiB; last local target
 check, broad doc audit, rebase or fast-forward ran. Only source edits and bounded
 remote metadata publication/downloads ran serially at low priority.
 
-Protect all11 authoritative docs before any guarded main fast-forward:
-CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md,
+Protect all12 authoritative docs before any guarded main fast-forward:
+AGENTS.md, CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md,
 docs/ownership.md, docs/primitive-ownership.md, docs/roadmap-queue.md,
 docs/roadmap-history.md, docs/reference.md, docs/concurrency.md, docs/numerics.md.
 Actual pre-acceptance hashed backup: /private/tmp/fwp-main-docs-remote-pre123.
@@ -137,7 +137,11 @@ Earlier preparation and instrumentation repairs are preserved in history.
 ## Phase6 preparation
 
 Current branch ownership-evidence-tracing-free:
-350500f2cbbfccbde57dbd85e9fb855e13088e7d, run38242709162 pending.
+350500f2cbbfccbde57dbd85e9fb855e13088e7d passes all three complete jobs
+in38242709162. Each platform executes all21 named ARC corpus cases, reports
+47 eligibility rejections and verifies3 expected compiler errors (71 total).
+Each retains seven actual native disassemblies. Original numerical, autodiff,
+reuse, exceptional cleanup and equivalent C/Rust controls pass.
 Explicit --gc arc checks native-main monomorphic types, native declaration
 provenance and primitive ownership contracts after ownership lowering.
 Unproved mutable/cyclic graphs, raw tape/pointers, boxed I128/U128, custom native
@@ -159,7 +163,7 @@ artifact proof are fwp-lowered-arc-linux-corpus.txt and its -proof.json.
 Head2d4bf66a registers synthesized Step variant fields where fusion creates
 them and adds a permanent named regression for all21 prior executions. Linux
 and ARM in38242127912 restore the three fused cases but fail on comptime;
-Intel was superseded. Retained counted IR identifies an inlined compile-time
+Intel was superseded; run38242127912 is completed/cancelled, not a passing gate. Retained counted IR identifies an inlined compile-time
 record whose parameter type was discarded. Current350500f2 preserves typed
 bindings for aggregate constants as well as constructed aggregates. The full
 three-platform workflow is restored; temporary IR diagnostics are removed.
@@ -169,16 +173,28 @@ post-lowering check and all21 named eligibility controls before acceptance.
 
 ## Final delivery procedure
 
-After all three current preparation jobs pass, retain both artifact families with
-fwp-download-complete-ownership-platform.py and fwp-download-complete-arc-platform.py.
-These must target the latest successful head before use. The first verifies identical formatted source; the second retains actual ARC
-binaries' disassembly and the complete corpus classification. These helpers are
-prepared, not completed. Build the final measurement report from actual artifacts.
+Both artifact downloads are complete and hash-verified:
+/private/tmp/fwp-complete-ownership-platform-evidence and
+/private/tmp/fwp-complete-arc-platform-evidence. Formatted source agrees on all
+three platforms. fwp-download-complete-ownership-platform.py,
+fwp-download-complete-arc-platform.py and fwp-write-ownership-measurements.py
+are completed; do not rerun them. The retained report is
+docs/measurements/ownership-and-arc-2026-10-12.json. The production publisher also removes the redundant
+Step-by-name eligibility exception after verifying all imported source hashes.
+This explicit eligibility-only delta must pass the full production matrix; the
+preparation measurements retain their original head and are not relabeled. The report separates existing-mode numerical measurements from explicit ARC
+semantic/reclamation and binary controls; timings are descriptive.
 The source map fwp-ownership-production-files.json and publisher
 fwp-publish-ownership-production.py target checked-arc-and-loop-ownership, based
 on accepted main59af498c. They preserve original reuse and ownership controls.
 Include AGENTS.md along with the11 other live docs; do not revert its new explicit
-design constraints. This next PR bundles phases5–6. It is not yet published.
+design constraints. PR #128 bundles phases5–6 and is open at
+82d552c48663c28d05543313fa91e05b8c327b14 on checked-arc-and-loop-ownership.
+Production publisher fwp-publish-ownership-production.py is completed; do not
+rerun it. Receipt: fwp-ownership-production-publication.json.
+Roadmap documentation38244684891 passes; all six jobs in CI38244684931 remain
+pending. The production source removes the Step-by-name exception, requiring
+the registered ordinary variant contract. This delta needs the current-head gates.
 Require all six exact-head jobs and roadmap_docs before fwp-merge-ownership-bundle.py.
 Then run the prepared ownership merged-source audit publisher/downloader and
 update the plan to Done only after actual acceptance. Keep final source support

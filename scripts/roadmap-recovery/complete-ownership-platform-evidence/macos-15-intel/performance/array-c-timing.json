@@ -1,0 +1,62 @@
+{
+  "samples": [
+    {
+      "allocationInclusiveNs": 2435000,
+      "kernelNs": 850000,
+      "hash": "9a7bfa7aaf8e51e3",
+      "requests": 0,
+      "requestedBytes": 0,
+      "livePayloadBytes": 0,
+      "peakPayloadBytes": 0
+    },
+    {
+      "allocationInclusiveNs": 2265000,
+      "kernelNs": 845000,
+      "hash": "9a7bfa7aaf8e51e3",
+      "requests": 0,
+      "requestedBytes": 0,
+      "livePayloadBytes": 0,
+      "peakPayloadBytes": 0
+    },
+    {
+      "allocationInclusiveNs": 2248000,
+      "kernelNs": 844000,
+      "hash": "9a7bfa7aaf8e51e3",
+      "requests": 0,
+      "requestedBytes": 0,
+      "livePayloadBytes": 0,
+      "peakPayloadBytes": 0
+    },
+    {
+      "allocationInclusiveNs": 2308000,
+      "kernelNs": 881000,
+      "hash": "9a7bfa7aaf8e51e3",
+      "requests": 0,
+      "requestedBytes": 0,
+      "livePayloadBytes": 0,
+      "peakPayloadBytes": 0
+    },
+    {
+      "allocationInclusiveNs": 2347000,
+      "kernelNs": 895000,
+      "hash": "9a7bfa7aaf8e51e3",
+      "requests": 0,
+      "requestedBytes": 0,
+      "livePayloadBytes": 0,
+      "peakPayloadBytes": 0
+    }
+  ],
+  "peakProcessRssBytes": 1081344,
+  "environment": {
+    "FWP_GC_STRESS": "0",
+    "FWP_GC_VERIFY": "0",
+    "FWP_REUSE_VERIFY": "0"
+  },
+  "profileInstrumented": false,
+  "invocation": [
+    "/usr/bin/time",
+    "-l",
+    "array-fusion-evidence/performance/c-timing",
+    "array"
+  ]
+}

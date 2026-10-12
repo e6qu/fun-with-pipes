@@ -1,4 +1,4 @@
-"""Require all current-head gates and verify a one-line numerical squash."""
+"""Require all current-head gates and verify a one-line ownership squash."""
 from pathlib import Path
 import hashlib,json,subprocess
 REPO='repos/e6qu/fun-with-pipes';BRANCH='checked-arc-and-loop-ownership'

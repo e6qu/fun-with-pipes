@@ -386,7 +386,12 @@ remain available in tracing-mode builds; they do not establish ARC eligibility.
 
 ARC eligibility also rejects boxed I128/U128 until their representation has counted
 owners. User native declarations cannot acquire a checked signature merely by
-naming a standard primitive. The golden corpus compares each eligible program
-with the raw interpreter and checks charged storage on normal return; rejected
-programs are listed separately. Current format-temporary reclamation work and
-its failures remain preparation, as recorded in the handoff.
+naming a standard primitive. Eligibility checks the locals introduced by ownership
+lowering as well as source-derived types. Fusion registers synthesized variant
+fields, and inlining retains types for constructed and compile-time aggregates.
+The golden corpus checks semantics and charged storage on normal return and
+requires previously eligible programs to stay eligible. It uses the raw
+interpreter except for the original deep non-tail recursion case, which retains
+its optimized-interpreter/golden oracle and adds a bounded raw-interpreter copy.
+Rejections and expected front-end errors are listed separately from executions.
+The handoff records the current preparation and production gates.

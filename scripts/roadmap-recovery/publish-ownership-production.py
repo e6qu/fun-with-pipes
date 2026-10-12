@@ -25,6 +25,14 @@ for name,value in files.items():
  if name.startswith(('src/','runtime/')) or (name.startswith('tests/') and len(Path(name).parts)==2):assert digest==canonical[Path(name).name],name
  elif name=='tests/fixtures/array_fusion_allocation_probe.c':assert digest==fixture['sha256']
  else:assert name=='.github/workflows/numerics.yml'
+# Step is an ordinary declared variant now that fusion registers its fields.
+# This reviewed eligibility-only delta is covered by the production matrix;
+# the retained preparation measurements describe their recorded source head.
+old = ' | "std::Step"'
+assert files['src/arc.rs'].count(old) == 1
+files['src/arc.rs'] = files['src/arc.rs'].replace(old, '')
+reviewed_delta = dict(path='src/arc.rs', removedBuiltinException='std::Step',
+    validation='Requires all six exact-head production jobs; preparation evidence retains its original head')
 DOCS=['AGENTS.md','CONTRIBUTING.md','PLAN.md','docs/design.md','docs/development-state.md','docs/ownership.md','docs/primitive-ownership.md','docs/roadmap-queue.md','docs/roadmap-history.md','docs/reference.md','docs/concurrency.md','docs/numerics.md']
 for name in DOCS+['docs/measurements/numerical-kernels-2026-10-12.json','docs/measurements/ownership-and-arc-2026-10-12.json']:files[name]=(ROOT/name).read_text()
 parent=api('/git/commits/'+BASE);before=api('/git/trees/'+parent['tree']['sha']+'?recursive=1');assert not before['truncated'];prior={x['path']:(x['sha'],x['mode'],x['type']) for x in before['tree'] if x['type']!='tree'}
@@ -47,7 +55,7 @@ for name,value in files.items():
 assert len(SUBJECT)<=80 and '\n' not in SUBJECT
 commit=api('/git/commits',dict(message=SUBJECT,tree=tree,parents=[BASE]));assert commit['message']==SUBJECT and [p['sha'] for p in commit['parents']]==[BASE]
 ref=api('/git/refs',dict(ref='refs/heads/'+BRANCH,sha=commit['sha']));assert ref['object']['sha']==commit['sha']
-body="""Numerical loops retained carried owners and performed avoidable unwind and descriptor dispatch work. This bundle gives loop fields independent owners, removes scopes from proven nontrapping scalar operations, and makes generated descriptors immutable. Inlining preserves constructed and compile-time aggregate parameter types so stack containers release their children. Fusion registers its synthesized Step variants for typed ownership lowering. Formatting writes directly into one buffer, removing managed rendering temporaries.
+body="""Numerical loops retained carried owners and performed avoidable unwind and descriptor dispatch work. This bundle gives loop fields independent owners, removes scopes from proven nontrapping scalar operations, and makes generated descriptors immutable. Inlining preserves constructed and compile-time aggregate parameter types so stack containers release their children. Fusion registers its synthesized Step variants for typed ownership lowering. Step uses the ordinary variant contract instead of a name-based eligibility exception. Formatting writes directly into one buffer, removing managed rendering temporaries.
 
 An explicit native `--gc arc` mode checks monomorphic types, native declaration provenance and primitive ownership boundaries. Admitted immutable graphs and scoped File values reclaim through counts; the collector body is excluded. Unproved cyclic/mutable graphs, raw tape/pointer owners, boxed I128/U128, custom native declarations and unsupported deployment boundaries diagnose without switching memory mode. Pipe syntax and existing tracing mode remain available.
 
@@ -55,4 +63,4 @@ Validation covers Linux, ARM and Intel macOS: original numerical/AD ownership an
 
 Full six-job CI and roadmap documentation must pass at this PR head before squash. The final merged-source audit is required before marking phases5–6 complete."""
 pr=api('/pulls',dict(title=SUBJECT,head=BRANCH,base='main',body=body,draft=False))
-RECEIPT.write_text(json.dumps(dict(head=commit['sha'],base=BASE,tree=tree,branch=BRANCH,pr=pr['number'],url=pr['html_url'],preparationHead=proof['head'],preparationRun=proof['run'],files={k:hashlib.sha256(v.encode()).hexdigest() for k,v in files.items()},docs=DOCS),indent=2)+'\n');print(pr['html_url'],commit['sha'])
+RECEIPT.write_text(json.dumps(dict(head=commit['sha'],base=BASE,tree=tree,branch=BRANCH,pr=pr['number'],url=pr['html_url'],preparationHead=proof['head'],preparationRun=proof['run'],reviewedSourceDelta=reviewed_delta,files={k:hashlib.sha256(v.encode()).hexdigest() for k,v in files.items()},docs=DOCS),indent=2)+'\n');print(pr['html_url'],commit['sha'])

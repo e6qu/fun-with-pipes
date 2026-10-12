@@ -1,0 +1,62 @@
+{
+  "samples": [
+    {
+      "allocationInclusiveNs": 818459,
+      "kernelNs": 538166,
+      "hash": "9a7bfa7aaf8e51e3",
+      "requests": 8,
+      "requestedBytes": 4194368,
+      "livePayloadBytes": 0,
+      "peakPayloadBytes": 524296
+    },
+    {
+      "allocationInclusiveNs": 738208,
+      "kernelNs": 531586,
+      "hash": "9a7bfa7aaf8e51e3",
+      "requests": 8,
+      "requestedBytes": 4194368,
+      "livePayloadBytes": 0,
+      "peakPayloadBytes": 524296
+    },
+    {
+      "allocationInclusiveNs": 744958,
+      "kernelNs": 537626,
+      "hash": "9a7bfa7aaf8e51e3",
+      "requests": 8,
+      "requestedBytes": 4194368,
+      "livePayloadBytes": 0,
+      "peakPayloadBytes": 524296
+    },
+    {
+      "allocationInclusiveNs": 754125,
+      "kernelNs": 535376,
+      "hash": "9a7bfa7aaf8e51e3",
+      "requests": 8,
+      "requestedBytes": 4194368,
+      "livePayloadBytes": 0,
+      "peakPayloadBytes": 524296
+    },
+    {
+      "allocationInclusiveNs": 747375,
+      "kernelNs": 533501,
+      "hash": "9a7bfa7aaf8e51e3",
+      "requests": 8,
+      "requestedBytes": 4194368,
+      "livePayloadBytes": 0,
+      "peakPayloadBytes": 524296
+    }
+  ],
+  "peakProcessRssBytes": 1982464,
+  "environment": {
+    "FWP_GC_STRESS": "0",
+    "FWP_GC_VERIFY": "0",
+    "FWP_REUSE_VERIFY": "0"
+  },
+  "profileInstrumented": true,
+  "invocation": [
+    "/usr/bin/time",
+    "-l",
+    "array-fusion-evidence/performance/rust-profile",
+    "array"
+  ]
+}

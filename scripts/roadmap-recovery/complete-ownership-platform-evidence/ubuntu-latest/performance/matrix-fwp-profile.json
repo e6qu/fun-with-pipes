@@ -1,0 +1,96 @@
+{
+  "samples": [
+    {
+      "allocationInclusiveNs": 991904,
+      "kernelNs": 627639,
+      "hash": "b86150bb9769c123",
+      "requests": 40,
+      "requestedBytes": 811648,
+      "liveChargedBytes": 0,
+      "peakChargedBytes": 101392,
+      "retains": 24,
+      "nonlastReleases": 24,
+      "releaseChecks": 56,
+      "collections": 0,
+      "collectionPauseSeconds": 0.0,
+      "chunkHighWaterBytes": 262144,
+      "reservedVirtualBytes": 73593323520
+    },
+    {
+      "allocationInclusiveNs": 754236,
+      "kernelNs": 588938,
+      "hash": "b86150bb9769c123",
+      "requests": 40,
+      "requestedBytes": 811648,
+      "liveChargedBytes": 0,
+      "peakChargedBytes": 101392,
+      "retains": 24,
+      "nonlastReleases": 24,
+      "releaseChecks": 56,
+      "collections": 0,
+      "collectionPauseSeconds": 0.0,
+      "chunkHighWaterBytes": 262144,
+      "reservedVirtualBytes": 73593323520
+    },
+    {
+      "allocationInclusiveNs": 863054,
+      "kernelNs": 684494,
+      "hash": "b86150bb9769c123",
+      "requests": 40,
+      "requestedBytes": 811648,
+      "liveChargedBytes": 0,
+      "peakChargedBytes": 101392,
+      "retains": 24,
+      "nonlastReleases": 24,
+      "releaseChecks": 56,
+      "collections": 0,
+      "collectionPauseSeconds": 0.0,
+      "chunkHighWaterBytes": 262144,
+      "reservedVirtualBytes": 73593323520
+    },
+    {
+      "allocationInclusiveNs": 758695,
+      "kernelNs": 597198,
+      "hash": "b86150bb9769c123",
+      "requests": 40,
+      "requestedBytes": 811648,
+      "liveChargedBytes": 0,
+      "peakChargedBytes": 101392,
+      "retains": 24,
+      "nonlastReleases": 24,
+      "releaseChecks": 56,
+      "collections": 0,
+      "collectionPauseSeconds": 0.0,
+      "chunkHighWaterBytes": 262144,
+      "reservedVirtualBytes": 73593323520
+    },
+    {
+      "allocationInclusiveNs": 772040,
+      "kernelNs": 586052,
+      "hash": "b86150bb9769c123",
+      "requests": 40,
+      "requestedBytes": 811648,
+      "liveChargedBytes": 0,
+      "peakChargedBytes": 101392,
+      "retains": 24,
+      "nonlastReleases": 24,
+      "releaseChecks": 56,
+      "collections": 0,
+      "collectionPauseSeconds": 0.0,
+      "chunkHighWaterBytes": 262144,
+      "reservedVirtualBytes": 73593323520
+    }
+  ],
+  "peakProcessRssBytes": 4493312,
+  "environment": {
+    "FWP_GC_STRESS": "0",
+    "FWP_GC_VERIFY": "0",
+    "FWP_REUSE_VERIFY": "0"
+  },
+  "profileInstrumented": true,
+  "invocation": [
+    "/usr/bin/time",
+    "-v",
+    "array-fusion-evidence/performance/fwp-matrix-profile"
+  ]
+}

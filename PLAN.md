@@ -31,8 +31,7 @@ Preserve tacit, curried, data-last pipes, immutable values, tracked effects,
 checked arithmetic and observable evaluation/trap order. Infer ordinary types
 strongly; retain explicit generic signatures and compile-time specialization.
 Avoid needless wrappers and fallbacks, magic, and unnecessary implicit behavior
-or defaults. Register spills
-are ordinary lowering; protocol-defined alternatives are peers. Keep necessary
+or defaults. Register spills are ordinary lowering; protocol-defined alternatives are peers. Keep necessary
 representation choices and limits explicit and justified.
 Prefer internal ownership over new language syntax. Compare the interpreter
 and native semantics; optimizer oracles must use `FWP_NO_OPT=1` explicitly.
@@ -59,7 +58,7 @@ actual merged-source acceptance. The scalar-borrow repair preserves in-place
 container updates. The handoff records exact source and evidence hashes.
 Checked ARC execution remains in preparation until phase6 meets its criteria.
 
-Deliver phases5–6 together: independently owned loop fields, reduced unwind
+PR #128 delivers phases5–6 together: independently owned loop fields, reduced unwind
 bookkeeping, immutable descriptors, retained measurements, and checked native
 ARC eligibility with physical-reclamation and binary controls. Keep each phase's
 acceptance explicit even when sharing one production PR and full CI run.
