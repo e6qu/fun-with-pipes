@@ -23,3 +23,5 @@ jobs:
         run: python3 scripts/check-roadmap.py
       - name: Local guard sampling integration checks
         run: python3 scripts/test-local-guard.py
+      - name: macOS test partition coverage and failure propagation
+        run: python3 scripts/test-macos-test-shards.py

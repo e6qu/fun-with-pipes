@@ -93,3 +93,7 @@ Nine programs and their tutorial excerpts are updated. Focused formatting,
 type checks, 36 original/revised interpreter/native executions, constant-function
 examples and the existing README consistency test pass with the available local
 compiler. Full checks of the PR source belong on CI; see the handoff for status.
+Two Intel CI attempts exceeded the job deadline without assertion failures.
+Divide ordinary integration targets between the existing regular and GC jobs
+on each macOS architecture, retaining every target and the separate stress run.
+Validate partition coverage and require all six jobs at the revised PR head.

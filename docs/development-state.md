@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-12. The implementation roadmap and final documentation are
+Updated 2026-10-13. The implementation roadmap and final documentation are
 complete and merged. A new user-requested examples follow-up is active below.
 Read [PLAN](../PLAN.md),
 [design](design.md) and [ownership](ownership.md) for the accepted scope.
@@ -157,11 +157,57 @@ source. All commands ran serially through `python3 scripts/local-guard.py`:
   6.18 seconds elapsed). The audit checks 44 doc link sets and 106 immutable
   preparation pairs/tags; there are no remaining ownership delivery rows.
 
-## Next action
+The user also asked about reducing parentheses. The expressions are already
+tacit; meaningful named stages and existing combinators reduce nesting without
+implicit lifting or a new pipe meaning. `is-long = string.length | gt 3` followed
+by `count-long = count is-long` has no parentheses. A named `count-word` callback
+reduces the stateful version to `run-state 0 (each count-word) | .1`. Both variants
+produce 2 in the raw interpreter via the guarded temporary probe
+`/private/tmp/fwp-less-nested-count.fwp` (0.35 seconds CPU, 0.71 elapsed). This
+was a discussion and focused probe; the published examples were not changed
+again or their CI restarted. The effects tutorial deliberately demonstrates state.
 
-Publish the examples PR and require all six exact-head CI jobs plus
-roadmap_docs before any squash merge. Record the actual PR/head and runs when
-available; local checks do not substitute for the current-source CI gate.
+## CI repair and next action
+
+PR #130 is open: https://github.com/e6qu/fun-with-pipes/pull/130.
+Published examples head: `7c0dca31cb1f30433bfab2ee2bf473b322a54861`.
+Roadmap_docs 38291067649 and five platform jobs in CI 38291067651 pass at
+that head. Regular Intel macOS exceeded the 90-minute limit twice: jobs
+114951015867 and 114985528618. Neither attempt reports failed assertions;
+all four examples/tutorial checks passed in both. The retry also timed out
+while continuing through passing suites. These cancellations are not passing
+gates. Logs are /private/tmp/fwp-pr130-intel-final.log and
+/private/tmp/fwp-pr130-intel-retry.log. Completed suites in the first attempt
+took about 38% longer than the preceding passing Intel run.
+
+The CI repair splits ordinary integration targets between the two existing
+macOS jobs per architecture, using sorted Cargo target names at alternating
+indices. The regular job includes unit/example/benchmark targets; the GC job
+retains its separate exact stress test before its ordinary shard. All six job
+names, test concurrency and 90-minute limits remain unchanged. Both shards
+exclude only the separately executed stress test. Failure artifacts now cover
+ordinary goldens in either job; an ordinary shard still runs after a stress
+failure. Partition tests check complete, disjoint coverage, stable assignment,
+rejection of unknown targets and propagation of test failures.
+
+The guarded real Cargo metadata audit confirms 170 integration targets,
+85 in each shard, with no overlap or omitted targets. Previous passing Intel
+suite times total 2280.12 seconds for regular and 1758.92 seconds for gc,
+excluding setup, builds and the separate stress run. These are historical
+inputs, not a measured duration or passing gate for the new layout. Inventory:
+/private/tmp/fwp-pr130-macos-shard-inventory.json. No local build was run.
+
+Focused validation passes with
+`python3 scripts/local-guard.py python3 -B -`: the driver runs
+`python3 -B scripts/test-macos-test-shards.py` (three tests),
+`python3 scripts/check-roadmap.py` (44 doc link sets, 106 immutable pairs/tags,
+zero live ownership rows) and `git diff --check`, serially. Sampled CPU is
+0.31 seconds; elapsed time is 2.65 seconds. No full local build or test gate ran.
+
+Next: commit and push the CI repair, then require all six jobs and the
+documentation audit at the revised head. Earlier-head successes do not satisfy that gate. Squash with subject
+`Clarify tacit examples and balance macOS test coverage` and an empty body,
+with no trailers. Local checks do not substitute for CI.
 The completed implementation roadmap and its verified recovery snapshot remain
 accepted. Do not reopen archived preparations. Windows, new deployment interfaces
 and a new backend remain deferred.

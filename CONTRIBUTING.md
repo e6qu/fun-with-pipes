@@ -75,9 +75,15 @@ Rust print different results.
 All six exact-head production jobs and the roadmap documentation audit are
 required before merging: Linux, bench, regular macOS arm64/x86-64 and separate
 GC stress jobs on both macOS architectures.
-Regular macOS runs exclude only `golden_programs_under_gc_stress`; each
-dedicated stress job runs exactly that test. Their union is the full native
-test gate with OpenSSL.
+For each macOS architecture, the two jobs split the integration targets using
+`scripts/run-macos-test-shard.py`: sorted Cargo target names alternate between
+the `regular` and `gc` shards. The regular job also runs unit, example and
+benchmark targets. Both shards exclude `golden_programs_under_gc_stress`; the
+GC job runs that test separately, once, before its ordinary shard. Together
+they cover the full native test gate with OpenSSL within the existing
+90-minute job budgets. New integration targets join the partition automatically;
+unknown target kinds fail explicitly. The documentation job checks partition
+coverage and failure propagation. Neither macOS job alone is a complete gate.
 Optional-tool skips are not platform coverage. Some older memory suites
 still require Linux `/proc` or `strace`; Darwin-specific regressions in
 `tests/macos.rs` assert that collection is armed and really runs, rather

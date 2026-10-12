@@ -49,8 +49,8 @@ jobs:
         run: cargo fmt --all -- --check
       - name: clippy
         run: cargo clippy --all-targets -- -D warnings
-      - name: test (GC stress golden suite runs in macos_gc)
-        run: cargo test --all-targets --no-fail-fast -- --skip golden_programs_under_gc_stress
+      - name: Regular macOS test shard
+        run: python3 scripts/run-macos-test-shard.py --shard regular
       - name: Preserve failed native golden binaries and C
         if: failure()
         run: |
@@ -62,9 +62,9 @@ jobs:
           name: golden-failures-${{ matrix.runner }}
           path: ${{ runner.temp }}/golden-failures/
 
-  # The stress golden suite took 57 minutes on Intel, leaving the serial
-  # integration test binaries unable to finish within the 90-minute gate.
-  # Both jobs are required per architecture; together they run the full suite.
+  # Split the integration targets between the two existing macOS jobs.
+  # Both shards exclude the stress test; this job runs it separately once.
+  # Their union retains the full suite within the existing job budgets.
   macos_gc:
     strategy:
       fail-fast: false
@@ -92,11 +92,14 @@ jobs:
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: Full GC stress and verification golden suite
         run: cargo test --test gc golden_programs_under_gc_stress -- --exact --nocapture
-      - name: Preserve failed GC stress binaries, C and statuses
+      - name: Second macOS test shard
+        if: ${{ !cancelled() }}
+        run: python3 scripts/run-macos-test-shard.py --shard gc
+      - name: Preserve failed native and GC stress binaries, C and statuses
         if: failure()
         run: |
           mkdir -p "$RUNNER_TEMP/gc-golden-failures"
-          find "${TMPDIR:-/tmp}" -maxdepth 1 -type f -name 'fwp-golden-gc-*' -exec cp {} "$RUNNER_TEMP/gc-golden-failures/" ";"
+          find "${TMPDIR:-/tmp}" -maxdepth 1 -type f -name 'fwp-golden-*' -exec cp {} "$RUNNER_TEMP/gc-golden-failures/" ";"
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
