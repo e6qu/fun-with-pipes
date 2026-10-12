@@ -1,0 +1,144 @@
+{
+  "ubuntu-latest-metadata": {
+    "artifact": {
+      "id": 11723029897,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMzAyOTg5Nw==",
+      "name": "numeric-layout-metadata-ubuntu-latest",
+      "size_in_bytes": 4161,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11723029897",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11723029897/zip",
+      "expired": false,
+      "digest": "sha256:04c9c365cb862e1e19039a0fd263469752eda58d0d91e2913afb6c6346d448bc",
+      "created_at": "2026-10-12T02:29:09Z",
+      "updated_at": "2026-10-12T02:29:09Z",
+      "expires_at": "2027-01-10T02:28:08Z",
+      "workflow_run": {
+        "id": 38195896907,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-typed-worker-abi",
+        "head_sha": "9fe843746e9dd9a7ebf890caaa58a5b656a46076"
+      }
+    },
+    "archiveSha256": "04c9c365cb862e1e19039a0fd263469752eda58d0d91e2913afb6c6346d448bc"
+  },
+  "ubuntu-latest-controls": {
+    "artifact": {
+      "id": 11723536771,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMzUzNjc3MQ==",
+      "name": "numeric-layout-controls-ubuntu-latest",
+      "size_in_bytes": 4371235,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11723536771",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11723536771/zip",
+      "expired": false,
+      "digest": "sha256:a740d2d96d24fff05b2ad419808a214ea1859a971f4ead6d8b0472002c8e4923",
+      "created_at": "2026-10-12T02:29:11Z",
+      "updated_at": "2026-10-12T02:29:11Z",
+      "expires_at": "2027-01-10T02:28:08Z",
+      "workflow_run": {
+        "id": 38195896907,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-typed-worker-abi",
+        "head_sha": "9fe843746e9dd9a7ebf890caaa58a5b656a46076"
+      }
+    },
+    "archiveSha256": "a740d2d96d24fff05b2ad419808a214ea1859a971f4ead6d8b0472002c8e4923"
+  },
+  "macos-15-metadata": {
+    "artifact": {
+      "id": 11723621637,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMzYyMTYzNw==",
+      "name": "numeric-layout-metadata-macos-15",
+      "size_in_bytes": 4297,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11723621637",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11723621637/zip",
+      "expired": false,
+      "digest": "sha256:30d613a8289222783021275d644e5f398114fb148bfb8436384e9b351767e1fc",
+      "created_at": "2026-10-12T02:29:57Z",
+      "updated_at": "2026-10-12T02:29:57Z",
+      "expires_at": "2027-01-10T02:28:08Z",
+      "workflow_run": {
+        "id": 38195896907,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-typed-worker-abi",
+        "head_sha": "9fe843746e9dd9a7ebf890caaa58a5b656a46076"
+      }
+    },
+    "archiveSha256": "30d613a8289222783021275d644e5f398114fb148bfb8436384e9b351767e1fc"
+  },
+  "macos-15-controls": {
+    "artifact": {
+      "id": 11723656474,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMzY1NjQ3NA==",
+      "name": "numeric-layout-controls-macos-15",
+      "size_in_bytes": 2629733,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11723656474",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11723656474/zip",
+      "expired": false,
+      "digest": "sha256:aeffbec3074435e89a57eb74898a6dc7b8d7800e627afdcc9f414b8cb42af89f",
+      "created_at": "2026-10-12T02:29:59Z",
+      "updated_at": "2026-10-12T02:29:59Z",
+      "expires_at": "2027-01-10T02:28:08Z",
+      "workflow_run": {
+        "id": 38195896907,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-typed-worker-abi",
+        "head_sha": "9fe843746e9dd9a7ebf890caaa58a5b656a46076"
+      }
+    },
+    "archiveSha256": "aeffbec3074435e89a57eb74898a6dc7b8d7800e627afdcc9f414b8cb42af89f"
+  },
+  "macos-15-intel-metadata": {
+    "artifact": {
+      "id": 11723023529,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMzAyMzUyOQ==",
+      "name": "numeric-layout-metadata-macos-15-intel",
+      "size_in_bytes": 4296,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11723023529",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11723023529/zip",
+      "expired": false,
+      "digest": "sha256:93472f13e19ef34753c2a43f0b8c7e002cccb5a2659ba978d0d24279d1748e54",
+      "created_at": "2026-10-12T02:30:57Z",
+      "updated_at": "2026-10-12T02:30:57Z",
+      "expires_at": "2027-01-10T02:28:08Z",
+      "workflow_run": {
+        "id": 38195896907,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-typed-worker-abi",
+        "head_sha": "9fe843746e9dd9a7ebf890caaa58a5b656a46076"
+      }
+    },
+    "archiveSha256": "93472f13e19ef34753c2a43f0b8c7e002cccb5a2659ba978d0d24279d1748e54"
+  },
+  "macos-15-intel-controls": {
+    "artifact": {
+      "id": 11724210011,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyNDIxMDAxMQ==",
+      "name": "numeric-layout-controls-macos-15-intel",
+      "size_in_bytes": 2700158,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11724210011",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11724210011/zip",
+      "expired": false,
+      "digest": "sha256:58bc30b797ebdbc440b9c85bfdcdbfd3040eaf47caaa337d79550bcf90e5f4a2",
+      "created_at": "2026-10-12T02:30:59Z",
+      "updated_at": "2026-10-12T02:30:59Z",
+      "expires_at": "2027-01-10T02:28:08Z",
+      "workflow_run": {
+        "id": 38195896907,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-typed-worker-abi",
+        "head_sha": "9fe843746e9dd9a7ebf890caaa58a5b656a46076"
+      }
+    },
+    "archiveSha256": "58bc30b797ebdbc440b9c85bfdcdbfd3040eaf47caaa337d79550bcf90e5f4a2"
+  },
+  "run": 38195896907,
+  "driver": "9fe843746e9dd9a7ebf890caaa58a5b656a46076",
+  "source": "cbf68ea60c3b9439a117ef9d9b28b472f23dc632",
+  "scope": "Reports, source and diagnostic disassembly only; no binaries or local compiler execution"
+}

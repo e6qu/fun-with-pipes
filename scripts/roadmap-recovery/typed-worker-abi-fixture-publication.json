@@ -1,0 +1,9 @@
+{
+  "head": "33d003d5be6f011dca328fadf3b7533e0a7af48f",
+  "previous": "ea40144501a491abe46d3a287d62bf0d40f788cb",
+  "branch": "ownership-evidence-typed-worker-abi",
+  "tree": "86f69810b330365c3e3b1eff3a3b3f40bee924f8",
+  "files": {
+    "tests/fixtures/numeric_layout_baseline.fwp": "85ed14dc2bacb952ad8e1f5e29a4d88b3e442c4daae6f2849303b89042cafe40"
+  }
+}

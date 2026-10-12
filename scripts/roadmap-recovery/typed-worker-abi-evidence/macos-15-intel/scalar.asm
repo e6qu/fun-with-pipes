@@ -1,0 +1,11405 @@
+/Users/runner/work/_temp/numeric-layout-baseline/scalar-diagnostic:
+(__TEXT,__text) section
+_fwp_ctx_swap:
+0000000100000630	pushq	%rbp
+0000000100000631	pushq	%rbx
+0000000100000632	pushq	%r12
+0000000100000634	pushq	%r13
+0000000100000636	pushq	%r14
+0000000100000638	pushq	%r15
+000000010000063a	subq	$0x8, %rsp
+000000010000063e	stmxcsr	(%rsp)
+0000000100000642	fnstcw	0x4(%rsp)
+0000000100000646	movq	%rsp, (%rdi)
+0000000100000649	movq	%rsi, %rsp
+000000010000064c	ldmxcsr	(%rsp)
+0000000100000650	fldcw	0x4(%rsp)
+0000000100000654	addq	$0x8, %rsp
+0000000100000658	popq	%r15
+000000010000065a	popq	%r14
+000000010000065c	popq	%r13
+000000010000065e	popq	%r12
+0000000100000660	popq	%rbx
+0000000100000661	popq	%rbp
+0000000100000662	retq
+0000000100000663	nopw	%cs:(%rax,%rax)
+_original_main:
+0000000100000670	pushq	%rbp
+0000000100000671	movq	%rsp, %rbp
+0000000100000674	pushq	%r14
+0000000100000676	pushq	%rbx
+0000000100000677	subq	$0x60, %rsp
+000000010000067b	movq	0xc9a6(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100000682	movq	(%rax), %rax
+0000000100000685	movq	%rax, -0x18(%rbp)
+0000000100000689	leaq	_fwp_fn_table(%rip), %rax
+0000000100000690	movq	%rax, _fwp_fns(%rip)
+0000000100000697	movq	0xc9a2(%rip), %r14              ## literal pool symbol address: ___stdoutp
+000000010000069e	movq	(%r14), %rax
+00000001000006a1	movq	%rax, _fwp_prog_out(%rip)
+00000001000006a8	movl	%edi, _fwp_argc(%rip)
+00000001000006ae	movq	%rsi, _fwp_argv(%rip)
+00000001000006b5	leaq	_fwp_start_time(%rip), %rsi
+00000001000006bc	movl	$0x6, %edi
+00000001000006c1	callq	0x10000aa02                     ## symbol stub for: _clock_gettime
+00000001000006c6	callq	_fwp_seed_rng
+00000001000006cb	movq	(%r14), %rdi
+00000001000006ce	movl	$0x10000, %ecx                  ## imm = 0x10000
+00000001000006d3	xorl	%esi, %esi
+00000001000006d5	xorl	%edx, %edx
+00000001000006d7	callq	0x10000aab0                     ## symbol stub for: _setvbuf
+00000001000006dc	movl	$0x1, %esi
+00000001000006e1	movl	$0xd, %edi
+00000001000006e6	callq	0x10000aac2                     ## symbol stub for: _signal
+00000001000006eb	leaq	-0x58(%rbp), %rbx
+00000001000006ef	movq	%rbx, %rdi
+00000001000006f2	callq	0x10000aa86                     ## symbol stub for: _pthread_attr_init
+00000001000006f7	movq	_fwp_main_stack(%rip), %rsi
+00000001000006fe	movq	%rbx, %rdi
+0000000100000701	callq	0x10000aa8c                     ## symbol stub for: _pthread_attr_setstacksize
+0000000100000706	leaq	_fwp_main_thread(%rip), %rdx
+000000010000070d	leaq	-0x60(%rbp), %rdi
+0000000100000711	movq	%rbx, %rsi
+0000000100000714	xorl	%ecx, %ecx
+0000000100000716	callq	0x10000aa92                     ## symbol stub for: _pthread_create
+000000010000071b	testl	%eax, %eax
+000000010000071d	je	0x10000075b
+000000010000071f	leaq	-0x70(%rbp), %rsi
+0000000100000723	movl	$0x3, %edi
+0000000100000728	callq	0x10000aa44                     ## symbol stub for: _getrlimit
+000000010000072d	movq	-0x70(%rbp), %rcx
+0000000100000731	movabsq	$0x7fffffffffffffff, %rdx       ## imm = 0x7FFFFFFFFFFFFFFF
+000000010000073b	cmpq	%rdx, %rcx
+000000010000073e	movl	$0x800000, %edx                 ## imm = 0x800000
+0000000100000743	cmoveq	%rdx, %rcx
+0000000100000747	testl	%eax, %eax
+0000000100000749	cmovneq	%rdx, %rcx
+000000010000074d	movq	%rcx, _fwp_main_stack(%rip)
+0000000100000754	callq	_fwp_main_thread
+0000000100000759	jmp	0x100000766
+000000010000075b	movq	-0x60(%rbp), %rdi
+000000010000075f	xorl	%esi, %esi
+0000000100000761	callq	0x10000aa98                     ## symbol stub for: _pthread_join
+0000000100000766	movq	(%r14), %rdi
+0000000100000769	callq	0x10000aa0e                     ## symbol stub for: _fflush
+000000010000076e	movl	_fwp_exit_code(%rip), %eax
+0000000100000774	movq	0xc8ad(%rip), %rcx              ## literal pool symbol address: ___stack_chk_guard
+000000010000077b	movq	(%rcx), %rcx
+000000010000077e	cmpq	-0x18(%rbp), %rcx
+0000000100000782	jne	0x10000078d
+0000000100000784	addq	$0x60, %rsp
+0000000100000788	popq	%rbx
+0000000100000789	popq	%r14
+000000010000078b	popq	%rbp
+000000010000078c	retq
+000000010000078d	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100000792	nopw	%cs:(%rax,%rax)
+_fwp_seed_rng:
+00000001000007a0	pushq	%rbp
+00000001000007a1	movq	%rsp, %rbp
+00000001000007a4	pushq	%rbx
+00000001000007a5	subq	$0x18, %rsp
+00000001000007a9	leaq	0xa8e9(%rip), %rdi              ## literal pool for: "FWP_SEED"
+00000001000007b0	callq	0x10000aa3e                     ## symbol stub for: _getenv
+00000001000007b5	testq	%rax, %rax
+00000001000007b8	je	0x1000007dc
+00000001000007ba	movq	%rax, %rbx
+00000001000007bd	cmpb	$0x0, (%rax)
+00000001000007c0	je	0x1000007dc
+00000001000007c2	leaq	-0x10(%rbp), %rsi
+00000001000007c6	movq	%rbx, %rdi
+00000001000007c9	movl	$0xa, %edx
+00000001000007ce	callq	0x10000ab04                     ## symbol stub for: _strtoull
+00000001000007d3	movq	-0x10(%rbp), %rax
+00000001000007d7	cmpb	$0x0, (%rax)
+00000001000007da	je	0x1000007ee
+00000001000007dc	leaq	-0x20(%rbp), %rsi
+00000001000007e0	xorl	%edi, %edi
+00000001000007e2	callq	0x10000aa02                     ## symbol stub for: _clock_gettime
+00000001000007e7	addq	$0x18, %rsp
+00000001000007eb	popq	%rbx
+00000001000007ec	popq	%rbp
+00000001000007ed	retq
+00000001000007ee	movzbl	(%rbx), %eax
+00000001000007f1	cmpl	$0x2d, %eax
+00000001000007f4	je	0x1000007dc
+00000001000007f6	cmpl	$0x2b, %eax
+00000001000007f9	je	0x1000007dc
+00000001000007fb	jmp	0x1000007e7
+00000001000007fd	nopl	(%rax)
+_fwp_main_thread:
+0000000100000800	pushq	%rbp
+0000000100000801	movq	%rsp, %rbp
+0000000100000804	movq	%rbp, %rdi
+0000000100000807	callq	_fwp_gc_start
+000000010000080c	movq	_fwp_main_stack(%rip), %rdi
+0000000100000813	callq	_fwp_stack_guard_init
+0000000100000818	movq	0xcdb1(%rip), %rax
+000000010000081f	movq	%rax, 0xf2ba(%rip)
+0000000100000826	movaps	_exec_scripts(%rip), %xmm0
+000000010000082d	movaps	%xmm0, _fwp_cli_scripts(%rip)
+0000000100000834	leaq	_exec_man(%rip), %rax
+000000010000083b	movq	%rax, _fwp_cli_man(%rip)
+0000000100000842	movb	$0x1, _fwp_cli_single(%rip)
+0000000100000849	movl	_fwp_argc(%rip), %edi
+000000010000084f	movq	_fwp_argv(%rip), %rsi
+0000000100000856	callq	_fwp_exec
+000000010000085b	movl	%eax, _fwp_exit_code(%rip)
+0000000100000861	movq	0xc7d8(%rip), %rax              ## literal pool symbol address: ___stdoutp
+0000000100000868	movq	(%rax), %rdi
+000000010000086b	callq	0x10000aa0e                     ## symbol stub for: _fflush
+0000000100000870	xorl	%eax, %eax
+0000000100000872	popq	%rbp
+0000000100000873	retq
+0000000100000874	nopw	%cs:(%rax,%rax)
+_main:
+0000000100000880	pushq	%rbp
+0000000100000881	movq	%rsp, %rbp
+0000000100000884	pushq	%rbx
+0000000100000885	pushq	%rax
+0000000100000886	movq	%rbp, %rdi
+0000000100000889	callq	_fwp_gc_start
+000000010000088e	leaq	_fwp_fn_table(%rip), %rax
+0000000100000895	movq	%rax, _fwp_fns(%rip)
+000000010000089c	movsd	0xa27c(%rip), %xmm0
+00000001000008a4	callq	_fwp_from_f64
+00000001000008a9	movq	%rax, %rdi
+00000001000008ac	callq	_f4
+00000001000008b1	movq	%rax, %rbx
+00000001000008b4	movsd	0xa26c(%rip), %xmm0
+00000001000008bc	callq	_fwp_from_f64
+00000001000008c1	movq	%rax, %rcx
+00000001000008c4	movl	$0x81, %eax
+00000001000008c9	cmpq	%rcx, %rbx
+00000001000008cc	jne	0x1000008dc
+00000001000008ce	leaq	0xa5cb(%rip), %rdi              ## literal pool for: "{\"returnWordBytes\":8}"
+00000001000008d5	callq	0x10000aa9e                     ## symbol stub for: _puts
+00000001000008da	xorl	%eax, %eax
+00000001000008dc	addq	$0x8, %rsp
+00000001000008e0	popq	%rbx
+00000001000008e1	popq	%rbp
+00000001000008e2	retq
+00000001000008e3	nopw	%cs:(%rax,%rax)
+_fwp_gc_start:
+00000001000008f0	pushq	%rbp
+00000001000008f1	movq	%rsp, %rbp
+00000001000008f4	pushq	%rbx
+00000001000008f5	pushq	%rax
+00000001000008f6	movq	%rdi, %rbx
+00000001000008f9	cmpl	$0x0, 0xe6f4(%rip)
+0000000100000900	jne	0x100000907
+0000000100000902	callq	_fwp_gc_init
+0000000100000907	movq	%rbx, 0xe782(%rip)
+000000010000090e	callq	_fwp_gc_find_data
+0000000100000913	cmpl	$0x0, 0xe6de(%rip)
+000000010000091a	setne	%cl
+000000010000091d	cmpl	$0x0, 0xe874(%rip)
+0000000100000924	setg	%al
+0000000100000927	andb	%cl, %al
+0000000100000929	movzbl	%al, %ecx
+000000010000092c	movl	%ecx, 0xe6ca(%rip)
+0000000100000932	cmpl	$0x0, 0xe6cb(%rip)
+0000000100000939	je	0x100000951
+000000010000093b	leaq	_fwp_gc_report(%rip), %rdi
+0000000100000942	callq	0x10000a9f0                     ## symbol stub for: _atexit
+0000000100000947	cmpl	$0x0, 0xe6ae(%rip)
+000000010000094e	setne	%al
+0000000100000951	testb	%al, %al
+0000000100000953	je	0x100000998
+0000000100000955	cmpq	$0x0, 0xe6cb(%rip)
+000000010000095d	je	0x100000998
+000000010000095f	movq	0xe8b2(%rip), %rax
+0000000100000966	subq	_fwp_gc(%rip), %rax
+000000010000096d	cvtsi2sd	%rax, %xmm0
+0000000100000972	addsd	0xe876(%rip), %xmm0
+000000010000097a	movsd	%xmm0, 0xe86e(%rip)
+0000000100000982	movq	$0x0, 0xe88b(%rip)
+000000010000098d	movq	$0x0, _fwp_gc(%rip)
+0000000100000998	addq	$0x8, %rsp
+000000010000099c	popq	%rbx
+000000010000099d	popq	%rbp
+000000010000099e	retq
+000000010000099f	nop
+_f4:
+00000001000009a0	pushq	%rbp
+00000001000009a1	movq	%rsp, %rbp
+00000001000009a4	callq	_fwp_f64
+00000001000009a9	callq	_w4
+00000001000009ae	popq	%rbp
+00000001000009af	jmp	_fwp_from_f64
+00000001000009b4	nopw	%cs:(%rax,%rax)
+_fwp_from_f64:
+00000001000009c0	pushq	%rbp
+00000001000009c1	movq	%rsp, %rbp
+00000001000009c4	movq	%xmm0, %rax
+00000001000009c9	popq	%rbp
+00000001000009ca	retq
+00000001000009cb	nopl	(%rax,%rax)
+_e0:
+00000001000009d0	pushq	%rbp
+00000001000009d1	movq	%rsp, %rbp
+00000001000009d4	movq	(%rdi), %rdi
+00000001000009d7	callq	_f0
+00000001000009dc	movq	%rax, %rdi
+00000001000009df	popq	%rbp
+00000001000009e0	jmp	_fwp_rc_shared
+00000001000009e5	nopw	%cs:(%rax,%rax)
+_e1:
+00000001000009f0	pushq	%rbp
+00000001000009f1	movq	%rsp, %rbp
+00000001000009f4	movq	(%rdi), %rdi
+00000001000009f7	callq	_f1
+00000001000009fc	movq	%rax, %rdi
+00000001000009ff	popq	%rbp
+0000000100000a00	jmp	_fwp_rc_shared
+0000000100000a05	nopw	%cs:(%rax,%rax)
+_e2:
+0000000100000a10	pushq	%rbp
+0000000100000a11	movq	%rsp, %rbp
+0000000100000a14	movq	(%rdi), %rdi
+0000000100000a17	callq	_f2
+0000000100000a1c	movq	%rax, %rdi
+0000000100000a1f	popq	%rbp
+0000000100000a20	jmp	_fwp_rc_shared
+0000000100000a25	nopw	%cs:(%rax,%rax)
+_e3:
+0000000100000a30	pushq	%rbp
+0000000100000a31	movq	%rsp, %rbp
+0000000100000a34	movq	(%rdi), %rdi
+0000000100000a37	callq	_f3
+0000000100000a3c	movq	%rax, %rdi
+0000000100000a3f	popq	%rbp
+0000000100000a40	jmp	_fwp_rc_shared
+0000000100000a45	nopw	%cs:(%rax,%rax)
+_e4:
+0000000100000a50	pushq	%rbp
+0000000100000a51	movq	%rsp, %rbp
+0000000100000a54	movq	(%rdi), %rdi
+0000000100000a57	callq	_f4
+0000000100000a5c	movq	%rax, %rdi
+0000000100000a5f	popq	%rbp
+0000000100000a60	jmp	_fwp_rc_shared
+0000000100000a65	nopw	%cs:(%rax,%rax)
+_e6:
+0000000100000a70	pushq	%rbp
+0000000100000a71	movq	%rsp, %rbp
+0000000100000a74	movq	(%rdi), %rax
+0000000100000a77	movq	0x8(%rdi), %rsi
+0000000100000a7b	movq	%rax, %rdi
+0000000100000a7e	callq	_f6
+0000000100000a83	movq	%rax, %rdi
+0000000100000a86	popq	%rbp
+0000000100000a87	jmp	_fwp_rc_shared
+0000000100000a8c	nopl	(%rax)
+_e10:
+0000000100000a90	pushq	%rbp
+0000000100000a91	movq	%rsp, %rbp
+0000000100000a94	movq	(%rdi), %rdi
+0000000100000a97	callq	_f10
+0000000100000a9c	movq	%rax, %rdi
+0000000100000a9f	popq	%rbp
+0000000100000aa0	jmp	_fwp_rc_shared
+0000000100000aa5	nopw	%cs:(%rax,%rax)
+_e12:
+0000000100000ab0	pushq	%rbp
+0000000100000ab1	movq	%rsp, %rbp
+0000000100000ab4	movq	(%rdi), %rax
+0000000100000ab7	movq	0x8(%rdi), %rsi
+0000000100000abb	movq	%rax, %rdi
+0000000100000abe	callq	_f24
+0000000100000ac3	movq	%rax, %rdi
+0000000100000ac6	popq	%rbp
+0000000100000ac7	jmp	_fwp_rc_shared
+0000000100000acc	nopl	(%rax)
+_e14:
+0000000100000ad0	pushq	%rbp
+0000000100000ad1	movq	%rsp, %rbp
+0000000100000ad4	movq	(%rdi), %rax
+0000000100000ad7	movq	0x8(%rdi), %rsi
+0000000100000adb	movq	%rax, %rdi
+0000000100000ade	callq	_f24
+0000000100000ae3	movq	%rax, %rdi
+0000000100000ae6	popq	%rbp
+0000000100000ae7	jmp	_fwp_rc_shared
+0000000100000aec	nopl	(%rax)
+_e16:
+0000000100000af0	pushq	%rbp
+0000000100000af1	movq	%rsp, %rbp
+0000000100000af4	movq	(%rdi), %rax
+0000000100000af7	movq	0x8(%rdi), %rsi
+0000000100000afb	movq	%rax, %rdi
+0000000100000afe	callq	_f24
+0000000100000b03	movq	%rax, %rdi
+0000000100000b06	popq	%rbp
+0000000100000b07	jmp	_fwp_rc_shared
+0000000100000b0c	nopl	(%rax)
+_e18:
+0000000100000b10	pushq	%rbp
+0000000100000b11	movq	%rsp, %rbp
+0000000100000b14	movq	(%rdi), %rax
+0000000100000b17	movq	0x8(%rdi), %rsi
+0000000100000b1b	movq	%rax, %rdi
+0000000100000b1e	callq	_f24
+0000000100000b23	movq	%rax, %rdi
+0000000100000b26	popq	%rbp
+0000000100000b27	jmp	_fwp_rc_shared
+0000000100000b2c	nopl	(%rax)
+_e20:
+0000000100000b30	pushq	%rbp
+0000000100000b31	movq	%rsp, %rbp
+0000000100000b34	movq	(%rdi), %rax
+0000000100000b37	movq	0x8(%rdi), %rsi
+0000000100000b3b	movq	%rax, %rdi
+0000000100000b3e	callq	_f24
+0000000100000b43	movq	%rax, %rdi
+0000000100000b46	popq	%rbp
+0000000100000b47	jmp	_fwp_rc_shared
+0000000100000b4c	nopl	(%rax)
+_e22:
+0000000100000b50	pushq	%rbp
+0000000100000b51	movq	%rsp, %rbp
+0000000100000b54	movq	(%rdi), %rax
+0000000100000b57	movq	0x8(%rdi), %rsi
+0000000100000b5b	movq	%rax, %rdi
+0000000100000b5e	callq	_f24
+0000000100000b63	movq	%rax, %rdi
+0000000100000b66	popq	%rbp
+0000000100000b67	jmp	_fwp_rc_shared
+0000000100000b6c	nopl	(%rax)
+_e24:
+0000000100000b70	pushq	%rbp
+0000000100000b71	movq	%rsp, %rbp
+0000000100000b74	movq	(%rdi), %rax
+0000000100000b77	movq	0x8(%rdi), %rsi
+0000000100000b7b	movq	%rax, %rdi
+0000000100000b7e	callq	_f24
+0000000100000b83	movq	%rax, %rdi
+0000000100000b86	popq	%rbp
+0000000100000b87	jmp	_fwp_rc_shared
+0000000100000b8c	nopl	(%rax)
+_e26:
+0000000100000b90	pushq	%rbp
+0000000100000b91	movq	%rsp, %rbp
+0000000100000b94	movq	(%rdi), %rax
+0000000100000b97	movq	0x8(%rdi), %rsi
+0000000100000b9b	movq	%rax, %rdi
+0000000100000b9e	callq	_f24
+0000000100000ba3	movq	%rax, %rdi
+0000000100000ba6	popq	%rbp
+0000000100000ba7	jmp	_fwp_rc_shared
+0000000100000bac	nopl	(%rax)
+_fwp_rc_shared:
+0000000100000bb0	pushq	%rbp
+0000000100000bb1	movq	%rsp, %rbp
+0000000100000bb4	pushq	%rbx
+0000000100000bb5	pushq	%rax
+0000000100000bb6	movq	%rdi, %rbx
+0000000100000bb9	callq	_fwp_rc_share
+0000000100000bbe	movq	%rbx, %rax
+0000000100000bc1	addq	$0x8, %rsp
+0000000100000bc5	popq	%rbx
+0000000100000bc6	popq	%rbp
+0000000100000bc7	retq
+0000000100000bc8	nopl	(%rax,%rax)
+_f0:
+0000000100000bd0	pushq	%rbp
+0000000100000bd1	movq	%rsp, %rbp
+0000000100000bd4	pushq	%rbx
+0000000100000bd5	subq	$0x38, %rsp
+0000000100000bd9	movq	0xc448(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100000be0	movq	(%rax), %rax
+0000000100000be3	movq	%rax, -0x10(%rbp)
+0000000100000be7	callq	_fwp_f64
+0000000100000bec	leaq	-0x40(%rbp), %rdi
+0000000100000bf0	callq	_w0
+0000000100000bf5	movsd	-0x40(%rbp), %xmm0
+0000000100000bfa	callq	_fwp_from_f64
+0000000100000bff	movq	%rax, -0x28(%rbp)
+0000000100000c03	movsd	-0x38(%rbp), %xmm0
+0000000100000c08	callq	_fwp_from_f64
+0000000100000c0d	movq	%rax, -0x20(%rbp)
+0000000100000c11	movsd	-0x30(%rbp), %xmm0
+0000000100000c16	callq	_fwp_from_f64
+0000000100000c1b	movq	%rax, -0x18(%rbp)
+0000000100000c1f	leaq	-0x28(%rbp), %rsi
+0000000100000c23	movl	$0x3, %edi
+0000000100000c28	callq	_fwp_record
+0000000100000c2d	movq	%rax, %rbx
+0000000100000c30	movq	%rax, %rdi
+0000000100000c33	callq	_fwp_rc_fresh
+0000000100000c38	movq	0xc3e9(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100000c3f	movq	(%rax), %rax
+0000000100000c42	cmpq	-0x10(%rbp), %rax
+0000000100000c46	jne	0x100000c52
+0000000100000c48	movq	%rbx, %rax
+0000000100000c4b	addq	$0x38, %rsp
+0000000100000c4f	popq	%rbx
+0000000100000c50	popq	%rbp
+0000000100000c51	retq
+0000000100000c52	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100000c57	nopw	(%rax,%rax)
+_fwp_rc_share:
+0000000100000c60	pushq	%rbp
+0000000100000c61	movq	%rsp, %rbp
+0000000100000c64	pushq	%r15
+0000000100000c66	pushq	%r14
+0000000100000c68	pushq	%r13
+0000000100000c6a	pushq	%r12
+0000000100000c6c	pushq	%rbx
+0000000100000c6d	subq	$0x208, %rsp                    ## imm = 0x208
+0000000100000c74	movq	%rdi, %rbx
+0000000100000c77	movq	0xc3aa(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100000c7e	movq	(%rax), %rax
+0000000100000c81	movq	%rax, -0x30(%rbp)
+0000000100000c85	callq	_fwp_rc_slot
+0000000100000c8a	testq	%rax, %rax
+0000000100000c8d	je	0x100000d91
+0000000100000c93	cmpb	$0x0, (%rax)
+0000000100000c96	je	0x100000d91
+0000000100000c9c	movq	%rax, %rdi
+0000000100000c9f	callq	_fwp_rc_clear_slot
+0000000100000ca4	movq	%rbx, -0x230(%rbp)
+0000000100000cab	movl	$0x1, %r14d
+0000000100000cb1	jmp	0x100000cc9
+0000000100000cb3	nopw	%cs:(%rax,%rax)
+0000000100000cc0	testq	%r14, %r14
+0000000100000cc3	je	0x100000d91
+0000000100000cc9	movq	-0x238(%rbp,%r14,8), %r15
+0000000100000cd1	decq	%r14
+0000000100000cd4	movq	%r15, %rdi
+0000000100000cd7	subq	0xe35a(%rip), %rdi
+0000000100000cde	shrq	$0x10, %rdi
+0000000100000ce2	movq	0xe397(%rip), %rax
+0000000100000ce9	imulq	$0x1228, %rdi, %rcx             ## imm = 0x1228
+0000000100000cf0	cmpb	$0x1, 0x1(%rax,%rcx)
+0000000100000cf5	je	0x100000cc0
+0000000100000cf7	addq	%rcx, %rax
+0000000100000cfa	movzbl	(%rax), %ecx
+0000000100000cfd	cmpb	$0x2, %cl
+0000000100000d00	jne	0x100000d10
+0000000100000d02	movq	0x18(%rax), %r12
+0000000100000d06	jmp	0x100000d35
+0000000100000d08	nopl	(%rax,%rax)
+0000000100000d10	movl	0x8(%rax), %r12d
+0000000100000d14	cmpb	$0x1, %cl
+0000000100000d17	jne	0x100000d35
+0000000100000d19	movzwl	%r15w, %ecx
+0000000100000d1d	movl	0x20(%rax), %r15d
+0000000100000d21	imulq	%rcx, %r15
+0000000100000d25	shrq	$0x20, %r15
+0000000100000d29	callq	_fwp_gc_chunk_addr
+0000000100000d2e	imulq	%r12, %r15
+0000000100000d32	addq	%rax, %r15
+0000000100000d35	cmpq	$0x8, %r12
+0000000100000d39	jb	0x100000cc0
+0000000100000d3b	shrq	$0x3, %r12
+0000000100000d3f	xorl	%r13d, %r13d
+0000000100000d42	jmp	0x100000d5c
+0000000100000d44	movq	%rbx, %rdi
+0000000100000d47	callq	_fwp_rc_share
+0000000100000d4c	nopl	(%rax)
+0000000100000d50	incq	%r13
+0000000100000d53	cmpq	%r13, %r12
+0000000100000d56	je	0x100000cc0
+0000000100000d5c	movq	(%r15,%r13,8), %rbx
+0000000100000d60	movq	%rbx, %rdi
+0000000100000d63	callq	_fwp_rc_slot
+0000000100000d68	testq	%rax, %rax
+0000000100000d6b	je	0x100000d50
+0000000100000d6d	cmpb	$0x0, (%rax)
+0000000100000d70	je	0x100000d50
+0000000100000d72	cmpq	$0x3f, %r14
+0000000100000d76	ja	0x100000d44
+0000000100000d78	movq	%rax, %rdi
+0000000100000d7b	callq	_fwp_rc_clear_slot
+0000000100000d80	movq	(%r15,%r13,8), %rax
+0000000100000d84	movq	%rax, -0x230(%rbp,%r14,8)
+0000000100000d8c	incq	%r14
+0000000100000d8f	jmp	0x100000d50
+0000000100000d91	movq	0xc290(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100000d98	movq	(%rax), %rax
+0000000100000d9b	cmpq	-0x30(%rbp), %rax
+0000000100000d9f	jne	0x100000db3
+0000000100000da1	addq	$0x208, %rsp                    ## imm = 0x208
+0000000100000da8	popq	%rbx
+0000000100000da9	popq	%r12
+0000000100000dab	popq	%r13
+0000000100000dad	popq	%r14
+0000000100000daf	popq	%r15
+0000000100000db1	popq	%rbp
+0000000100000db2	retq
+0000000100000db3	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100000db8	nopl	(%rax,%rax)
+_fwp_rc_slot:
+0000000100000dc0	subq	0xe271(%rip), %rdi
+0000000100000dc7	movq	0xe292(%rip), %rax
+0000000100000dce	shlq	$0x10, %rax
+0000000100000dd2	cmpq	%rax, %rdi
+0000000100000dd5	jae	0x100000e16
+0000000100000dd7	pushq	%rbp
+0000000100000dd8	movq	%rsp, %rbp
+0000000100000ddb	movq	0xe29e(%rip), %rcx
+0000000100000de2	movq	%rdi, %rax
+0000000100000de5	shrq	$0x10, %rax
+0000000100000de9	imulq	$0x1228, %rax, %rdx             ## imm = 0x1228
+0000000100000df0	leaq	(%rcx,%rdx), %rax
+0000000100000df4	movzbl	(%rcx,%rdx), %ecx
+0000000100000df8	cmpb	$0x2, %cl
+0000000100000dfb	setne	%dl
+0000000100000dfe	andq	$0xffff, %rdi                   ## imm = 0xFFFF
+0000000100000e05	setne	%sil
+0000000100000e09	orb	%dl, %sil
+0000000100000e0c	jne	0x100000e19
+0000000100000e0e	addq	$0x228, %rax                    ## imm = 0x228
+0000000100000e14	popq	%rbp
+0000000100000e15	retq
+0000000100000e16	xorl	%eax, %eax
+0000000100000e18	retq
+0000000100000e19	cmpb	$0x1, %cl
+0000000100000e1c	jne	0x100000e34
+0000000100000e1e	movl	0x20(%rax), %ecx
+0000000100000e21	imulq	%rcx, %rdi
+0000000100000e25	shrq	$0x20, %rdi
+0000000100000e29	addq	%rdi, %rax
+0000000100000e2c	addq	$0x228, %rax                    ## imm = 0x228
+0000000100000e32	popq	%rbp
+0000000100000e33	retq
+0000000100000e34	xorl	%eax, %eax
+0000000100000e36	popq	%rbp
+0000000100000e37	retq
+0000000100000e38	nopl	(%rax,%rax)
+_fwp_rc_clear_slot:
+0000000100000e40	cmpb	$-0x1, (%rdi)
+0000000100000e43	je	0x100000e49
+0000000100000e45	movb	$0x0, (%rdi)
+0000000100000e48	retq
+0000000100000e49	pushq	%rbp
+0000000100000e4a	movq	%rsp, %rbp
+0000000100000e4d	pushq	%rbx
+0000000100000e4e	pushq	%rax
+0000000100000e4f	movq	%rdi, %rbx
+0000000100000e52	callq	_fwp_rc_forget_slot
+0000000100000e57	movq	%rbx, %rdi
+0000000100000e5a	addq	$0x8, %rsp
+0000000100000e5e	popq	%rbx
+0000000100000e5f	popq	%rbp
+0000000100000e60	movb	$0x0, (%rdi)
+0000000100000e63	retq
+0000000100000e64	nopw	%cs:(%rax,%rax)
+_fwp_gc_chunk_addr:
+0000000100000e70	pushq	%rbp
+0000000100000e71	movq	%rsp, %rbp
+0000000100000e74	movq	%rdi, %rax
+0000000100000e77	shlq	$0x10, %rax
+0000000100000e7b	addq	0xe1b6(%rip), %rax
+0000000100000e82	popq	%rbp
+0000000100000e83	retq
+0000000100000e84	nopw	%cs:(%rax,%rax)
+_fwp_rc_forget_slot:
+0000000100000e90	pushq	%rbp
+0000000100000e91	movq	%rsp, %rbp
+0000000100000e94	cmpb	$-0x1, (%rdi)
+0000000100000e97	je	0x100000e9b
+0000000100000e99	popq	%rbp
+0000000100000e9a	retq
+0000000100000e9b	callq	_fwp_rc_wide_link
+0000000100000ea0	movq	(%rax), %rdi
+0000000100000ea3	testq	%rdi, %rdi
+0000000100000ea6	je	0x100000ebd
+0000000100000ea8	movq	0x10(%rdi), %rcx
+0000000100000eac	movq	%rcx, (%rax)
+0000000100000eaf	callq	0x10000aa32                     ## symbol stub for: _free
+0000000100000eb4	decq	0xeb65(%rip)
+0000000100000ebb	popq	%rbp
+0000000100000ebc	retq
+0000000100000ebd	leaq	0xa07d(%rip), %rdi              ## literal pool for: "internal: missing wide reference count"
+0000000100000ec4	callq	_fwp_trap
+0000000100000ec9	nopl	(%rax)
+_fwp_rc_wide_link:
+0000000100000ed0	movq	%rdi, %rax
+0000000100000ed3	shrq	$0x11, %rax
+0000000100000ed7	xorl	%edi, %eax
+0000000100000ed9	movl	%eax, %ecx
+0000000100000edb	shrl	$0x9, %ecx
+0000000100000ede	xorl	%eax, %ecx
+0000000100000ee0	movzbl	%cl, %ecx
+0000000100000ee3	leaq	_fwp_gc(%rip), %rdx
+0000000100000eea	leaq	(%rdx,%rcx,8), %rax
+0000000100000eee	addq	$0x1218, %rax                   ## imm = 0x1218
+0000000100000ef4	movq	0x1218(%rdx,%rcx,8), %rcx
+0000000100000efc	testq	%rcx, %rcx
+0000000100000eff	je	0x100000f26
+0000000100000f01	pushq	%rbp
+0000000100000f02	movq	%rsp, %rbp
+0000000100000f05	cmpq	%rdi, (%rcx)
+0000000100000f08	je	0x100000f25
+0000000100000f0a	nopw	(%rax,%rax)
+0000000100000f10	movq	%rcx, %rax
+0000000100000f13	movq	0x10(%rcx), %rcx
+0000000100000f17	testq	%rcx, %rcx
+0000000100000f1a	je	0x100000f21
+0000000100000f1c	cmpq	%rdi, (%rcx)
+0000000100000f1f	jne	0x100000f10
+0000000100000f21	addq	$0x10, %rax
+0000000100000f25	popq	%rbp
+0000000100000f26	retq
+0000000100000f27	nopw	(%rax,%rax)
+_fwp_trap:
+0000000100000f30	pushq	%rbp
+0000000100000f31	movq	%rsp, %rbp
+0000000100000f34	pushq	%rbx
+0000000100000f35	pushq	%rax
+0000000100000f36	movq	%rdi, %rbx
+0000000100000f39	callq	_fwp_flush
+0000000100000f3e	movq	0xc0eb(%rip), %rax              ## literal pool symbol address: ___stderrp
+0000000100000f45	movq	(%rax), %rdi
+0000000100000f48	leaq	0xa019(%rip), %rsi              ## literal pool for: "fwp: trap: %s\n"
+0000000100000f4f	movq	%rbx, %rdx
+0000000100000f52	xorl	%eax, %eax
+0000000100000f54	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+0000000100000f59	movl	$0x65, %edi
+0000000100000f5e	callq	0x10000aa08                     ## symbol stub for: _exit
+0000000100000f63	nopw	%cs:(%rax,%rax)
+_fwp_flush:
+0000000100000f70	pushq	%rbp
+0000000100000f71	movq	%rsp, %rbp
+0000000100000f74	movq	_fwp_prog_out(%rip), %rdi
+0000000100000f7b	testq	%rdi, %rdi
+0000000100000f7e	je	0x100000f85
+0000000100000f80	callq	0x10000aa0e                     ## symbol stub for: _fflush
+0000000100000f85	movq	0xc0b4(%rip), %rax              ## literal pool symbol address: ___stdoutp
+0000000100000f8c	movq	(%rax), %rdi
+0000000100000f8f	popq	%rbp
+0000000100000f90	jmp	0x10000aa0e                     ## symbol stub for: _fflush
+0000000100000f95	nopw	%cs:(%rax,%rax)
+_w0:
+0000000100000fa0	pushq	%rbp
+0000000100000fa1	movq	%rsp, %rbp
+0000000100000fa4	pushq	%rbx
+0000000100000fa5	pushq	%rax
+0000000100000fa6	movq	%rdi, %rbx
+0000000100000fa9	callq	_fwp_from_f64
+0000000100000fae	movq	%rax, %rdi
+0000000100000fb1	callq	_fwp_f64
+0000000100000fb6	movsd	%xmm0, (%rbx)
+0000000100000fba	movsd	%xmm0, 0x8(%rbx)
+0000000100000fbf	movsd	%xmm0, 0x10(%rbx)
+0000000100000fc4	movq	%rbx, %rax
+0000000100000fc7	addq	$0x8, %rsp
+0000000100000fcb	popq	%rbx
+0000000100000fcc	popq	%rbp
+0000000100000fcd	retq
+0000000100000fce	nop
+_fwp_f64:
+0000000100000fd0	pushq	%rbp
+0000000100000fd1	movq	%rsp, %rbp
+0000000100000fd4	movq	%rdi, %xmm0
+0000000100000fd9	popq	%rbp
+0000000100000fda	retq
+0000000100000fdb	nopl	(%rax,%rax)
+_fwp_rc_fresh:
+0000000100000fe0	pushq	%rbp
+0000000100000fe1	movq	%rsp, %rbp
+0000000100000fe4	pushq	%r14
+0000000100000fe6	pushq	%rbx
+0000000100000fe7	movq	%rdi, %rbx
+0000000100000fea	callq	_fwp_rc_slot
+0000000100000fef	testq	%rax, %rax
+0000000100000ff2	je	0x100000ffc
+0000000100000ff4	cmpb	$-0x1, (%rax)
+0000000100000ff7	je	0x100001004
+0000000100000ff9	movb	$0x1, (%rax)
+0000000100000ffc	movq	%rbx, %rax
+0000000100000fff	popq	%rbx
+0000000100001000	popq	%r14
+0000000100001002	popq	%rbp
+0000000100001003	retq
+0000000100001004	movq	%rax, %rdi
+0000000100001007	movq	%rax, %r14
+000000010000100a	callq	_fwp_rc_forget_slot
+000000010000100f	movq	%r14, %rax
+0000000100001012	jmp	0x100000ff9
+0000000100001014	nopw	%cs:(%rax,%rax)
+_fwp_record:
+0000000100001020	pushq	%rbp
+0000000100001021	movq	%rsp, %rbp
+0000000100001024	testl	%edi, %edi
+0000000100001026	je	0x100001035
+0000000100001028	movq	%rsi, %rdx
+000000010000102b	movl	%edi, %esi
+000000010000102d	xorl	%edi, %edi
+000000010000102f	popq	%rbp
+0000000100001030	jmp	_fwp_data
+0000000100001035	xorl	%eax, %eax
+0000000100001037	popq	%rbp
+0000000100001038	retq
+0000000100001039	nopl	(%rax)
+_fwp_data:
+0000000100001040	pushq	%rbp
+0000000100001041	movq	%rsp, %rbp
+0000000100001044	pushq	%r15
+0000000100001046	pushq	%r14
+0000000100001048	pushq	%r12
+000000010000104a	pushq	%rbx
+000000010000104b	movl	%edi, %r14d
+000000010000104e	testl	%esi, %esi
+0000000100001050	je	0x1000010f2
+0000000100001056	movq	%rdx, %rbx
+0000000100001059	movl	%esi, %r15d
+000000010000105c	leaq	0x8(,%r15,8), %rdi
+0000000100001064	movl	%esi, %r12d
+0000000100001067	callq	_fwp_alloc_init
+000000010000106c	movl	%r14d, (%rax)
+000000010000106f	movl	%r12d, 0x4(%rax)
+0000000100001073	cmpl	$0x7, %r12d
+0000000100001077	jbe	0x100001089
+0000000100001079	movq	%rax, %rcx
+000000010000107c	subq	%rbx, %rcx
+000000010000107f	addq	$0x8, %rcx
+0000000100001083	cmpq	$0x20, %rcx
+0000000100001087	jae	0x1000010f7
+0000000100001089	xorl	%ecx, %ecx
+000000010000108b	movq	%r15, %rsi
+000000010000108e	movq	%rcx, %rdx
+0000000100001091	andq	$0x3, %rsi
+0000000100001095	je	0x1000010b1
+0000000100001097	movq	%rcx, %rdx
+000000010000109a	nopw	(%rax,%rax)
+00000001000010a0	movq	(%rbx,%rdx,8), %rdi
+00000001000010a4	movq	%rdi, 0x8(%rax,%rdx,8)
+00000001000010a9	incq	%rdx
+00000001000010ac	decq	%rsi
+00000001000010af	jne	0x1000010a0
+00000001000010b1	subq	%r15, %rcx
+00000001000010b4	cmpq	$-0x4, %rcx
+00000001000010b8	ja	0x100001135
+00000001000010ba	nopw	(%rax,%rax)
+00000001000010c0	movq	(%rbx,%rdx,8), %rcx
+00000001000010c4	movq	%rcx, 0x8(%rax,%rdx,8)
+00000001000010c9	movq	0x8(%rbx,%rdx,8), %rcx
+00000001000010ce	movq	%rcx, 0x10(%rax,%rdx,8)
+00000001000010d3	movq	0x10(%rbx,%rdx,8), %rcx
+00000001000010d8	movq	%rcx, 0x18(%rax,%rdx,8)
+00000001000010dd	movq	0x18(%rbx,%rdx,8), %rcx
+00000001000010e2	movq	%rcx, 0x20(%rax,%rdx,8)
+00000001000010e7	addq	$0x4, %rdx
+00000001000010eb	cmpq	%rdx, %r15
+00000001000010ee	jne	0x1000010c0
+00000001000010f0	jmp	0x100001135
+00000001000010f2	movl	%r14d, %eax
+00000001000010f5	jmp	0x100001135
+00000001000010f7	movl	%r15d, %ecx
+00000001000010fa	andl	$-0x4, %ecx
+00000001000010fd	leaq	(,%r15,8), %rdx
+0000000100001105	andq	$-0x20, %rdx
+0000000100001109	xorl	%esi, %esi
+000000010000110b	nopl	(%rax,%rax)
+0000000100001110	movups	(%rbx,%rsi), %xmm0
+0000000100001114	movups	0x10(%rbx,%rsi), %xmm1
+0000000100001119	movups	%xmm0, 0x8(%rax,%rsi)
+000000010000111e	movups	%xmm1, 0x18(%rax,%rsi)
+0000000100001123	addq	$0x20, %rsi
+0000000100001127	cmpq	%rsi, %rdx
+000000010000112a	jne	0x100001110
+000000010000112c	cmpl	%r15d, %ecx
+000000010000112f	jne	0x10000108b
+0000000100001135	popq	%rbx
+0000000100001136	popq	%r12
+0000000100001138	popq	%r14
+000000010000113a	popq	%r15
+000000010000113c	popq	%rbp
+000000010000113d	retq
+000000010000113e	nop
+_fwp_alloc_init:
+0000000100001140	pushq	%rbp
+0000000100001141	movq	%rsp, %rbp
+0000000100001144	pushq	%rbx
+0000000100001145	pushq	%rax
+0000000100001146	movq	%rdi, %rsi
+0000000100001149	cmpq	$0x4000, %rdi                   ## imm = 0x4000
+0000000100001150	ja	0x1000011f7
+0000000100001156	leaq	0xf(%rsi), %rax
+000000010000115a	shrq	$0x4, %rax
+000000010000115e	leaq	_fwp_gc(%rip), %rdx
+0000000100001165	movzbl	0xbe8(%rax,%rdx), %edi
+000000010000116d	movl	0xb48(%rdx,%rdi,4), %eax
+0000000100001174	movq	_fwp_gc(%rip), %rcx
+000000010000117b	movq	%rcx, %r8
+000000010000117e	subq	%rax, %r8
+0000000100001181	movq	%r8, _fwp_gc(%rip)
+0000000100001188	js	0x1000011f0
+000000010000118a	leaq	(%rdi,%rdi,2), %rdi
+000000010000118e	leaq	(%rdx,%rdi,8), %rdx
+0000000100001192	addq	$0x8, %rdx
+0000000100001196	movq	(%rdx), %rbx
+0000000100001199	testq	%rbx, %rbx
+000000010000119c	je	0x1000011d3
+000000010000119e	movq	(%rbx), %rcx
+00000001000011a1	notq	%rcx
+00000001000011a4	movq	%rcx, (%rdx)
+00000001000011a7	andl	$0x7ff8, %esi                   ## imm = 0x7FF8
+00000001000011ad	cmpq	%rax, %rsi
+00000001000011b0	jae	0x1000011c9
+00000001000011b2	leaq	(%rbx,%rsi), %rdi
+00000001000011b6	notq	%rsi
+00000001000011b9	addq	%rax, %rsi
+00000001000011bc	andq	$-0x8, %rsi
+00000001000011c0	addq	$0x8, %rsi
+00000001000011c4	callq	0x10000a9ba                     ## symbol stub for: ___bzero
+00000001000011c9	movq	%rbx, %rax
+00000001000011cc	addq	$0x8, %rsp
+00000001000011d0	popq	%rbx
+00000001000011d1	popq	%rbp
+00000001000011d2	retq
+00000001000011d3	movq	0x8(%rdx), %rbx
+00000001000011d7	movq	0x10(%rdx), %rdi
+00000001000011db	subq	%rbx, %rdi
+00000001000011de	cmpq	%rax, %rdi
+00000001000011e1	jb	0x1000011f0
+00000001000011e3	leaq	(%rbx,%rax), %rdi
+00000001000011e7	movq	%rdi, 0x8(%rdx)
+00000001000011eb	testq	%rbx, %rbx
+00000001000011ee	jne	0x1000011a7
+00000001000011f0	movq	%rcx, _fwp_gc(%rip)
+00000001000011f7	movq	%rsi, %rdi
+00000001000011fa	xorl	%esi, %esi
+00000001000011fc	addq	$0x8, %rsp
+0000000100001200	popq	%rbx
+0000000100001201	popq	%rbp
+0000000100001202	jmp	_fwp_gc_alloc
+0000000100001207	nopw	(%rax,%rax)
+_fwp_gc_alloc:
+0000000100001210	pushq	%rbp
+0000000100001211	movq	%rsp, %rbp
+0000000100001214	pushq	%rbx
+0000000100001215	pushq	%rax
+0000000100001216	cmpq	$0x4000, %rdi                   ## imm = 0x4000
+000000010000121d	ja	0x10000128f
+000000010000121f	leaq	0xf(%rdi), %rax
+0000000100001223	shrq	$0x4, %rax
+0000000100001227	leaq	_fwp_gc(%rip), %rcx
+000000010000122e	movzbl	0xbe8(%rax,%rcx), %edx
+0000000100001236	movl	0xb48(%rcx,%rdx,4), %eax
+000000010000123d	subq	%rax, _fwp_gc(%rip)
+0000000100001244	js	0x10000128f
+0000000100001246	movl	%esi, %r8d
+0000000100001249	imulq	$0x3c0, %r8, %r8                ## imm = 0x3C0
+0000000100001250	addq	%r8, %rcx
+0000000100001253	leaq	(%rdx,%rdx,2), %rdx
+0000000100001257	leaq	(%rcx,%rdx,8), %rcx
+000000010000125b	addq	$0x8, %rcx
+000000010000125f	movq	(%rcx), %rbx
+0000000100001262	testq	%rbx, %rbx
+0000000100001265	je	0x10000127f
+0000000100001267	movq	(%rbx), %rdx
+000000010000126a	notq	%rdx
+000000010000126d	movq	%rdx, (%rcx)
+0000000100001270	cmpl	$0x1, %esi
+0000000100001273	cmoveq	%rdi, %rax
+0000000100001277	movq	%rbx, %rdi
+000000010000127a	movq	%rax, %rsi
+000000010000127d	jmp	0x1000012af
+000000010000127f	movq	0x8(%rcx), %rbx
+0000000100001283	movq	0x10(%rcx), %rdx
+0000000100001287	subq	%rbx, %rdx
+000000010000128a	cmpq	%rax, %rdx
+000000010000128d	jae	0x10000129a
+000000010000128f	addq	$0x8, %rsp
+0000000100001293	popq	%rbx
+0000000100001294	popq	%rbp
+0000000100001295	jmp	_fwp_gc_alloc_slow
+000000010000129a	leaq	(%rbx,%rax), %rdx
+000000010000129e	movq	%rdx, 0x8(%rcx)
+00000001000012a2	cmpl	$0x1, %esi
+00000001000012a5	cmovneq	%rax, %rdi
+00000001000012a9	movq	%rdi, %rsi
+00000001000012ac	movq	%rbx, %rdi
+00000001000012af	callq	0x10000a9ba                     ## symbol stub for: ___bzero
+00000001000012b4	movq	%rbx, %rax
+00000001000012b7	addq	$0x8, %rsp
+00000001000012bb	popq	%rbx
+00000001000012bc	popq	%rbp
+00000001000012bd	retq
+00000001000012be	nop
+_fwp_gc_alloc_slow:
+00000001000012c0	pushq	%rbp
+00000001000012c1	movq	%rsp, %rbp
+00000001000012c4	pushq	%r15
+00000001000012c6	pushq	%r14
+00000001000012c8	pushq	%r13
+00000001000012ca	pushq	%r12
+00000001000012cc	pushq	%rbx
+00000001000012cd	pushq	%rax
+00000001000012ce	movl	%esi, %r14d
+00000001000012d1	movq	%rdi, %rbx
+00000001000012d4	cmpl	$0x0, 0xdd19(%rip)
+00000001000012db	je	0x1000012ff
+00000001000012dd	cmpq	$0x4001, %rbx                   ## imm = 0x4001
+00000001000012e4	jb	0x10000130d
+00000001000012e6	movq	%rbx, %rdi
+00000001000012e9	movl	%r14d, %esi
+00000001000012ec	addq	$0x8, %rsp
+00000001000012f0	popq	%rbx
+00000001000012f1	popq	%r12
+00000001000012f3	popq	%r13
+00000001000012f5	popq	%r14
+00000001000012f7	popq	%r15
+00000001000012f9	popq	%rbp
+00000001000012fa	jmp	_fwp_gc_alloc_big
+00000001000012ff	callq	_fwp_gc_init
+0000000100001304	cmpq	$0x4001, %rbx                   ## imm = 0x4001
+000000010000130b	jae	0x1000012e6
+000000010000130d	leaq	0xf(%rbx), %rax
+0000000100001311	shrq	$0x4, %rax
+0000000100001315	leaq	_fwp_gc(%rip), %r12
+000000010000131c	movzbl	0xbe8(%rax,%r12), %r13d
+0000000100001325	movl	0xb48(%r12,%r13,4), %r15d
+000000010000132d	cmpq	$0x0, _fwp_gc(%rip)
+0000000100001335	jns	0x10000133c
+0000000100001337	callq	_fwp_gc_spent
+000000010000133c	movl	%r14d, %eax
+000000010000133f	imulq	$0x3c0, %rax, %rax              ## imm = 0x3C0
+0000000100001346	addq	%rax, %r12
+0000000100001349	leaq	(,%r13,2), %rax
+0000000100001351	addq	%r13, %rax
+0000000100001354	leaq	(%r12,%rax,8), %rdi
+0000000100001358	addq	$0x8, %rdi
+000000010000135c	movq	0x8(%r12,%rax,8), %r12
+0000000100001361	testq	%r12, %r12
+0000000100001364	je	0x100001372
+0000000100001366	movq	(%r12), %rax
+000000010000136a	notq	%rax
+000000010000136d	movq	%rax, (%rdi)
+0000000100001370	jmp	0x10000139a
+0000000100001372	movq	0x8(%rdi), %r12
+0000000100001376	movq	0x10(%rdi), %rax
+000000010000137a	subq	%r12, %rax
+000000010000137d	cmpq	%r15, %rax
+0000000100001380	jae	0x100001392
+0000000100001382	movl	%r13d, %esi
+0000000100001385	movl	%r14d, %edx
+0000000100001388	callq	_fwp_gc_refill
+000000010000138d	movq	%rax, %r12
+0000000100001390	jmp	0x10000139a
+0000000100001392	leaq	(%r12,%r15), %rax
+0000000100001396	movq	%rax, 0x8(%rdi)
+000000010000139a	cmpl	$0x1, %r14d
+000000010000139e	cmoveq	%rbx, %r15
+00000001000013a2	movq	%r12, %rdi
+00000001000013a5	movq	%r15, %rsi
+00000001000013a8	callq	0x10000a9ba                     ## symbol stub for: ___bzero
+00000001000013ad	movq	%r12, %rax
+00000001000013b0	addq	$0x8, %rsp
+00000001000013b4	popq	%rbx
+00000001000013b5	popq	%r12
+00000001000013b7	popq	%r13
+00000001000013b9	popq	%r14
+00000001000013bb	popq	%r15
+00000001000013bd	popq	%rbp
+00000001000013be	retq
+00000001000013bf	nop
+_fwp_gc_init:
+00000001000013c0	pushq	%rbp
+00000001000013c1	movq	%rsp, %rbp
+00000001000013c4	pushq	%r14
+00000001000013c6	pushq	%rbx
+00000001000013c7	subq	$0x10, %rsp
+00000001000013cb	movl	$0x1, 0xdc1f(%rip)
+00000001000013d5	movaps	0x9784(%rip), %xmm0
+00000001000013dc	movups	%xmm0, 0xd76d(%rip)
+00000001000013e3	movaps	0x9786(%rip), %xmm0
+00000001000013ea	movups	%xmm0, 0xd76f(%rip)
+00000001000013f1	movaps	0x9788(%rip), %xmm0
+00000001000013f8	movups	%xmm0, 0xd771(%rip)
+00000001000013ff	movaps	0x978a(%rip), %xmm0
+0000000100001406	movups	%xmm0, 0xd773(%rip)
+000000010000140d	movaps	0x978c(%rip), %xmm0
+0000000100001414	movups	%xmm0, 0xd775(%rip)
+000000010000141b	movaps	0x978e(%rip), %xmm0
+0000000100001422	movups	%xmm0, 0xd777(%rip)
+0000000100001429	movaps	0x9790(%rip), %xmm0
+0000000100001430	movups	%xmm0, 0xd779(%rip)
+0000000100001437	movaps	0x9792(%rip), %xmm0
+000000010000143e	movups	%xmm0, 0xd77b(%rip)
+0000000100001445	movaps	0x9794(%rip), %xmm0
+000000010000144c	movups	%xmm0, 0xd77d(%rip)
+0000000100001453	movaps	0x9796(%rip), %xmm0
+000000010000145a	movups	%xmm0, 0xd77f(%rip)
+0000000100001461	xorl	%ecx, %ecx
+0000000100001463	leaq	_fwp_gc(%rip), %rax
+000000010000146a	xorl	%edx, %edx
+000000010000146c	nopl	(%rax)
+0000000100001470	movl	%edx, %esi
+0000000100001472	shll	$0x4, %esi
+0000000100001475	decq	%rcx
+0000000100001478	movq	%rcx, %rdi
+000000010000147b	nopl	(%rax,%rax)
+0000000100001480	movq	%rdi, %rcx
+0000000100001483	incq	%rdi
+0000000100001486	cmpl	0xb4c(%rax,%rcx,4), %esi
+000000010000148d	ja	0x100001480
+000000010000148f	movb	%dil, 0xbe8(%rdx,%rax)
+0000000100001497	cmpq	$0x400, %rdx                    ## imm = 0x400
+000000010000149e	je	0x1000014cd
+00000001000014a0	movq	%rdx, %rsi
+00000001000014a3	orq	$0x1, %rsi
+00000001000014a7	movl	%esi, %edi
+00000001000014a9	shll	$0x4, %edi
+00000001000014ac	nopl	(%rax)
+00000001000014b0	movq	%rcx, %r8
+00000001000014b3	incq	%rcx
+00000001000014b6	cmpl	0xb4c(%rax,%r8,4), %edi
+00000001000014be	ja	0x1000014b0
+00000001000014c0	movb	%cl, 0xbe8(%rsi,%rax)
+00000001000014c7	addq	$0x2, %rdx
+00000001000014cb	jmp	0x100001470
+00000001000014cd	movabsq	$0x1000000000, %rax             ## imm = 0x1000000000
+00000001000014d7	movq	%rax, -0x18(%rbp)
+00000001000014db	leaq	-0x18(%rbp), %rdi
+00000001000014df	callq	_fwp_gc_reserve
+00000001000014e4	testq	%rax, %rax
+00000001000014e7	je	0x10000169b
+00000001000014ed	movq	%rax, 0xdb4c(%rip)
+00000001000014f4	movq	-0x18(%rbp), %rcx
+00000001000014f8	leaq	0x10000(%rcx), %rdx
+00000001000014ff	movq	%rdx, 0xdb42(%rip)
+0000000100001506	addq	$0xffff, %rax                   ## imm = 0xFFFF
+000000010000150c	andq	$-0x10000, %rax                 ## imm = 0xFFFF0000
+0000000100001512	movq	%rax, 0xdb1f(%rip)
+0000000100001519	shrq	$0x10, %rcx
+000000010000151d	movq	%rcx, 0xdb34(%rip)
+0000000100001524	imulq	$0x1228, %rcx, %rsi             ## imm = 0x1228
+000000010000152b	movq	%rsi, 0xdb56(%rip)
+0000000100001532	xorl	%edi, %edi
+0000000100001534	xorl	%edx, %edx
+0000000100001536	movl	$0x1042, %ecx                   ## imm = 0x1042
+000000010000153b	movl	$0xffffffff, %r8d               ## imm = 0xFFFFFFFF
+0000000100001541	xorl	%r9d, %r9d
+0000000100001544	callq	0x10000aa74                     ## symbol stub for: _mmap
+0000000100001549	cmpq	$-0x1, %rax
+000000010000154d	je	0x10000169b
+0000000100001553	movq	%rax, 0xdb26(%rip)
+000000010000155a	leaq	0x9a16(%rip), %rdi              ## literal pool for: "FWP_GC"
+0000000100001561	callq	0x10000aa3e                     ## symbol stub for: _getenv
+0000000100001566	movl	$0x1, %r14d
+000000010000156c	testq	%rax, %rax
+000000010000156f	je	0x10000159c
+0000000100001571	movq	%rax, %rbx
+0000000100001574	leaq	0x9a03(%rip), %rsi              ## literal pool for: "off"
+000000010000157b	movq	%rax, %rdi
+000000010000157e	callq	0x10000aada                     ## symbol stub for: _strcmp
+0000000100001583	testl	%eax, %eax
+0000000100001585	je	0x100001599
+0000000100001587	cmpb	$0x30, (%rbx)
+000000010000158a	jne	0x10000159c
+000000010000158c	xorl	%r14d, %r14d
+000000010000158f	cmpb	$0x0, 0x1(%rbx)
+0000000100001593	setne	%r14b
+0000000100001597	jmp	0x10000159c
+0000000100001599	xorl	%r14d, %r14d
+000000010000159c	movl	%r14d, 0xda55(%rip)
+00000001000015a3	leaq	0x99da(%rip), %rdi              ## literal pool for: "FWP_GC_STATS"
+00000001000015aa	callq	0x10000aa3e                     ## symbol stub for: _getenv
+00000001000015af	testq	%rax, %rax
+00000001000015b2	je	0x1000015cb
+00000001000015b4	movzbl	(%rax), %ecx
+00000001000015b7	testl	%ecx, %ecx
+00000001000015b9	je	0x1000015d4
+00000001000015bb	cmpl	$0x30, %ecx
+00000001000015be	jne	0x1000015cf
+00000001000015c0	xorl	%ecx, %ecx
+00000001000015c2	cmpb	$0x0, 0x1(%rax)
+00000001000015c6	setne	%cl
+00000001000015c9	jmp	0x1000015d4
+00000001000015cb	xorl	%ecx, %ecx
+00000001000015cd	jmp	0x1000015d4
+00000001000015cf	movl	$0x1, %ecx
+00000001000015d4	movl	%ecx, 0xda2a(%rip)
+00000001000015da	leaq	0x9996(%rip), %rdi              ## literal pool for: "FWP_GC"
+00000001000015e1	callq	0x10000aa3e                     ## symbol stub for: _getenv
+00000001000015e6	testq	%rax, %rax
+00000001000015e9	je	0x100001603
+00000001000015eb	leaq	0x999f(%rip), %rsi              ## literal pool for: "full"
+00000001000015f2	movq	%rax, %rdi
+00000001000015f5	callq	0x10000aada                     ## symbol stub for: _strcmp
+00000001000015fa	xorl	%ecx, %ecx
+00000001000015fc	testl	%eax, %eax
+00000001000015fe	setne	%cl
+0000000100001601	jmp	0x100001608
+0000000100001603	movl	$0x1, %ecx
+0000000100001608	movl	%ecx, 0xd9fa(%rip)
+000000010000160e	movl	$0x1, 0xd9f8(%rip)
+0000000100001618	leaq	0x9977(%rip), %rdi              ## literal pool for: "FWP_GC_VERIFY"
+000000010000161f	callq	0x10000aa3e                     ## symbol stub for: _getenv
+0000000100001624	testq	%rax, %rax
+0000000100001627	je	0x100001640
+0000000100001629	movzbl	(%rax), %ecx
+000000010000162c	testl	%ecx, %ecx
+000000010000162e	je	0x100001649
+0000000100001630	cmpl	$0x30, %ecx
+0000000100001633	jne	0x100001644
+0000000100001635	xorl	%ecx, %ecx
+0000000100001637	cmpb	$0x0, 0x1(%rax)
+000000010000163b	setne	%cl
+000000010000163e	jmp	0x100001649
+0000000100001640	xorl	%ecx, %ecx
+0000000100001642	jmp	0x100001649
+0000000100001644	movl	$0x1, %ecx
+0000000100001649	movl	%ecx, 0xd9bd(%rip)
+000000010000164f	leaq	0x994e(%rip), %rdi              ## literal pool for: "FWP_GC_STRESS"
+0000000100001656	callq	0x10000aa3e                     ## symbol stub for: _getenv
+000000010000165b	testq	%rax, %rax
+000000010000165e	je	0x10000166a
+0000000100001660	movq	%rax, %rdi
+0000000100001663	callq	0x10000a9fc                     ## symbol stub for: _atol
+0000000100001668	jmp	0x10000166c
+000000010000166a	xorl	%eax, %eax
+000000010000166c	xorl	%ecx, %ecx
+000000010000166e	testq	%rax, %rax
+0000000100001671	cmovgq	%rax, %rcx
+0000000100001675	movq	%rcx, 0xd9ac(%rip)
+000000010000167c	movq	$0x800000, 0xdb91(%rip)         ## imm = 0x800000
+0000000100001687	movq	$0x800000, _fwp_gc(%rip)        ## imm = 0x800000
+0000000100001692	addq	$0x10, %rsp
+0000000100001696	popq	%rbx
+0000000100001697	popq	%r14
+0000000100001699	popq	%rbp
+000000010000169a	retq
+000000010000169b	callq	_fwp_gc_oom
+_fwp_gc_alloc_big:
+00000001000016a0	pushq	%rbp
+00000001000016a1	movq	%rsp, %rbp
+00000001000016a4	pushq	%r15
+00000001000016a6	pushq	%r14
+00000001000016a8	pushq	%r13
+00000001000016aa	pushq	%r12
+00000001000016ac	pushq	%rbx
+00000001000016ad	pushq	%rax
+00000001000016ae	movabsq	$0x4000000000000001, %rax       ## imm = 0x4000000000000001
+00000001000016b8	cmpq	%rax, %rdi
+00000001000016bb	jae	0x100001832
+00000001000016c1	movl	%esi, %r12d
+00000001000016c4	movq	%rdi, %rbx
+00000001000016c7	subq	%rdi, _fwp_gc(%rip)
+00000001000016ce	jns	0x1000016d5
+00000001000016d0	callq	_fwp_gc_spent
+00000001000016d5	leaq	0xffff(%rbx), %r15
+00000001000016dc	shrq	$0x10, %r15
+00000001000016e0	movq	%r15, %rdi
+00000001000016e3	callq	_fwp_gc_chunks
+00000001000016e8	movq	%rax, %r14
+00000001000016eb	movq	0xd98e(%rip), %rax
+00000001000016f2	imulq	$0x1228, %r14, %r13             ## imm = 0x1228
+00000001000016f9	movb	$0x2, (%rax,%r13)
+00000001000016fe	movb	%r12b, 0x1(%rax,%r13)
+0000000100001703	movw	$0x100, 0x3(%rax,%r13)          ## imm = 0x100
+000000010000170b	movl	%r15d, 0x10(%rax,%r13)
+0000000100001710	movq	%rbx, 0x18(%rax,%r13)
+0000000100001715	leaq	(%rax,%r13), %rdi
+0000000100001719	addq	$0x228, %rdi                    ## imm = 0x228
+0000000100001720	callq	_fwp_rc_clear_slot
+0000000100001725	cmpq	$0x10001, %rbx                  ## imm = 0x10001
+000000010000172c	jb	0x10000180a
+0000000100001732	movq	0xd947(%rip), %rax
+0000000100001739	cmpq	$0x3, %r15
+000000010000173d	movl	$0x2, %edi
+0000000100001742	cmovaeq	%r15, %rdi
+0000000100001746	leaq	-0x1(%rdi), %rdx
+000000010000174a	addq	$-0x2, %rdi
+000000010000174e	movl	%edx, %ecx
+0000000100001750	andl	$0x3, %ecx
+0000000100001753	movl	$0x1, %esi
+0000000100001758	cmpq	$0x3, %rdi
+000000010000175c	jb	0x1000017d3
+000000010000175e	leaq	(%rax,%r13), %rdi
+0000000100001762	addq	$0x48b0, %rdi                   ## imm = 0x48B0
+0000000100001769	andq	$-0x4, %rdx
+000000010000176d	negq	%rdx
+0000000100001770	movb	$0x3, -0x3688(%rdi)
+0000000100001777	movb	$0x1, -0x3684(%rdi)
+000000010000177e	movl	%r14d, -0x3678(%rdi)
+0000000100001785	movb	$0x3, -0x2460(%rdi)
+000000010000178c	movb	$0x1, -0x245c(%rdi)
+0000000100001793	movl	%r14d, -0x2450(%rdi)
+000000010000179a	movb	$0x3, -0x1238(%rdi)
+00000001000017a1	movb	$0x1, -0x1234(%rdi)
+00000001000017a8	movl	%r14d, -0x1228(%rdi)
+00000001000017af	movb	$0x3, -0x10(%rdi)
+00000001000017b3	movb	$0x1, -0xc(%rdi)
+00000001000017b7	movl	%r14d, (%rdi)
+00000001000017ba	addq	$0x48a0, %rdi                   ## imm = 0x48A0
+00000001000017c1	leaq	(%rdx,%rsi), %r8
+00000001000017c5	addq	$0x4, %r8
+00000001000017c9	addq	$0x4, %rsi
+00000001000017cd	cmpq	$0x1, %r8
+00000001000017d1	jne	0x100001770
+00000001000017d3	testq	%rcx, %rcx
+00000001000017d6	je	0x10000180a
+00000001000017d8	imulq	$0x1228, %rsi, %rdx             ## imm = 0x1228
+00000001000017df	addq	%rdx, %r13
+00000001000017e2	addq	%r13, %rax
+00000001000017e5	imulq	$0x1228, %rcx, %rcx             ## imm = 0x1228
+00000001000017ec	xorl	%edx, %edx
+00000001000017ee	nop
+00000001000017f0	movb	$0x3, (%rax,%rdx)
+00000001000017f4	movb	$0x1, 0x4(%rax,%rdx)
+00000001000017f9	movl	%r14d, 0x10(%rax,%rdx)
+00000001000017fe	addq	$0x1228, %rdx                   ## imm = 0x1228
+0000000100001805	cmpq	%rdx, %rcx
+0000000100001808	jne	0x1000017f0
+000000010000180a	movq	%r14, %rdi
+000000010000180d	callq	_fwp_gc_chunk_addr
+0000000100001812	movq	%rax, %r14
+0000000100001815	movq	%rax, %rdi
+0000000100001818	movq	%rbx, %rsi
+000000010000181b	callq	0x10000a9ba                     ## symbol stub for: ___bzero
+0000000100001820	movq	%r14, %rax
+0000000100001823	addq	$0x8, %rsp
+0000000100001827	popq	%rbx
+0000000100001828	popq	%r12
+000000010000182a	popq	%r13
+000000010000182c	popq	%r14
+000000010000182e	popq	%r15
+0000000100001830	popq	%rbp
+0000000100001831	retq
+0000000100001832	callq	_fwp_gc_oom
+0000000100001837	nopw	(%rax,%rax)
+_fwp_gc_spent:
+0000000100001840	pushq	%rbp
+0000000100001841	movq	%rsp, %rbp
+0000000100001844	cmpl	$0x0, 0xd7a9(%rip)
+000000010000184b	jne	0x100001852
+000000010000184d	callq	_fwp_gc_init
+0000000100001852	movl	0xd7a4(%rip), %ecx
+0000000100001858	testl	%ecx, %ecx
+000000010000185a	setne	%dl
+000000010000185d	movq	0xd7c4(%rip), %rax
+0000000100001864	testq	%rax, %rax
+0000000100001867	setne	%sil
+000000010000186b	andb	%dl, %sil
+000000010000186e	cmpb	$0x1, %sil
+0000000100001872	jne	0x1000018d5
+0000000100001874	movq	0xd7b5(%rip), %rcx
+000000010000187b	incq	%rcx
+000000010000187e	movq	%rcx, 0xd7ab(%rip)
+0000000100001885	cmpq	%rax, %rcx
+0000000100001888	jl	0x10000189a
+000000010000188a	movq	$0x0, 0xd79b(%rip)
+0000000100001895	callq	_fwp_gc_collect
+000000010000189a	movq	0xd977(%rip), %rax
+00000001000018a1	subq	_fwp_gc(%rip), %rax
+00000001000018a8	cvtsi2sd	%rax, %xmm0
+00000001000018ad	addsd	0xd93b(%rip), %xmm0
+00000001000018b5	movsd	%xmm0, 0xd933(%rip)
+00000001000018bd	movq	$0x0, 0xd950(%rip)
+00000001000018c8	movq	$0x0, _fwp_gc(%rip)
+00000001000018d3	popq	%rbp
+00000001000018d4	retq
+00000001000018d5	testl	%ecx, %ecx
+00000001000018d7	je	0x1000018df
+00000001000018d9	popq	%rbp
+00000001000018da	jmp	_fwp_gc_collect
+00000001000018df	movq	0xd932(%rip), %rax
+00000001000018e6	subq	_fwp_gc(%rip), %rax
+00000001000018ed	cvtsi2sd	%rax, %xmm0
+00000001000018f2	addsd	0xd8f6(%rip), %xmm0
+00000001000018fa	movsd	%xmm0, 0xd8ee(%rip)
+0000000100001902	movq	$0x800000, 0xd90b(%rip)         ## imm = 0x800000
+000000010000190d	movq	$0x800000, _fwp_gc(%rip)        ## imm = 0x800000
+0000000100001918	popq	%rbp
+0000000100001919	retq
+000000010000191a	nopw	(%rax,%rax)
+_fwp_gc_refill:
+0000000100001920	pushq	%rbp
+0000000100001921	movq	%rsp, %rbp
+0000000100001924	pushq	%r15
+0000000100001926	pushq	%r14
+0000000100001928	pushq	%r13
+000000010000192a	pushq	%r12
+000000010000192c	pushq	%rbx
+000000010000192d	pushq	%rax
+000000010000192e	movl	%edx, %r12d
+0000000100001931	movl	%esi, %r13d
+0000000100001934	movq	%rdi, %rbx
+0000000100001937	movl	$0x1, %edi
+000000010000193c	callq	_fwp_gc_chunks
+0000000100001941	movq	%rax, %r15
+0000000100001944	leaq	_fwp_gc(%rip), %rax
+000000010000194b	movq	0xd72e(%rip), %rsi
+0000000100001952	imulq	$0x1228, %r15, %rdi             ## imm = 0x1228
+0000000100001959	leaq	(%rsi,%rdi), %r14
+000000010000195d	movb	$0x1, (%rsi,%rdi)
+0000000100001961	movb	%r12b, 0x1(%rsi,%rdi)
+0000000100001966	movb	%r13b, 0x2(%rsi,%rdi)
+000000010000196b	movb	$0x1, 0x4(%rsi,%rdi)
+0000000100001970	movl	%r13d, %ecx
+0000000100001973	movl	0xb48(%rax,%rcx,4), %ecx
+000000010000197a	movl	%ecx, 0x8(%rsi,%rdi)
+000000010000197e	movl	$0x10000, %eax                  ## imm = 0x10000
+0000000100001983	xorl	%edx, %edx
+0000000100001985	divl	%ecx
+0000000100001987	movl	%eax, 0xc(%rsi,%rdi)
+000000010000198b	movl	$0xffffffff, %eax               ## imm = 0xFFFFFFFF
+0000000100001990	addq	%rcx, %rax
+0000000100001993	btq	$0x20, %rax
+0000000100001998	jae	0x1000019a1
+000000010000199a	xorl	%edx, %edx
+000000010000199c	divq	%rcx
+000000010000199f	jmp	0x1000019a5
+00000001000019a1	xorl	%edx, %edx
+00000001000019a3	divl	%ecx
+00000001000019a5	movl	%eax, 0x20(%r14)
+00000001000019a9	movq	%r14, %rdi
+00000001000019ac	callq	_fwp_rc_clear_chunk
+00000001000019b1	movq	%r15, %rdi
+00000001000019b4	callq	_fwp_gc_chunk_addr
+00000001000019b9	cmpl	$0x0, 0xd64c(%rip)
+00000001000019c0	je	0x1000019d5
+00000001000019c2	movl	$0x10000, %esi                  ## imm = 0x10000
+00000001000019c7	movq	%rax, %rdi
+00000001000019ca	movq	%rax, %r15
+00000001000019cd	callq	0x10000a9ba                     ## symbol stub for: ___bzero
+00000001000019d2	movq	%r15, %rax
+00000001000019d5	movl	0x8(%r14), %ecx
+00000001000019d9	leaq	(%rax,%rcx), %rdx
+00000001000019dd	movq	%rdx, 0x8(%rbx)
+00000001000019e1	movl	0xc(%r14), %edx
+00000001000019e5	imulq	%rcx, %rdx
+00000001000019e9	addq	%rax, %rdx
+00000001000019ec	movq	%rdx, 0x10(%rbx)
+00000001000019f0	addq	$0x8, %rsp
+00000001000019f4	popq	%rbx
+00000001000019f5	popq	%r12
+00000001000019f7	popq	%r13
+00000001000019f9	popq	%r14
+00000001000019fb	popq	%r15
+00000001000019fd	popq	%rbp
+00000001000019fe	retq
+00000001000019ff	nop
+_fwp_gc_reserve:
+0000000100001a00	pushq	%rbp
+0000000100001a01	movq	%rsp, %rbp
+0000000100001a04	pushq	%r14
+0000000100001a06	pushq	%rbx
+0000000100001a07	movq	(%rdi), %r14
+0000000100001a0a	cmpq	$0x10000000, %r14               ## imm = 0x10000000
+0000000100001a11	jb	0x100001a57
+0000000100001a13	movq	%rdi, %rbx
+0000000100001a16	nopw	%cs:(%rax,%rax)
+0000000100001a20	leaq	0x10000(%r14), %rsi
+0000000100001a27	xorl	%edi, %edi
+0000000100001a29	xorl	%edx, %edx
+0000000100001a2b	movl	$0x1042, %ecx                   ## imm = 0x1042
+0000000100001a30	movl	$0xffffffff, %r8d               ## imm = 0xFFFFFFFF
+0000000100001a36	xorl	%r9d, %r9d
+0000000100001a39	callq	0x10000aa74                     ## symbol stub for: _mmap
+0000000100001a3e	cmpq	$-0x1, %rax
+0000000100001a42	jne	0x100001a5b
+0000000100001a44	movq	%r14, %rax
+0000000100001a47	shrq	$0x2, %rax
+0000000100001a4b	cmpq	$0x3fffffff, %r14               ## imm = 0x3FFFFFFF
+0000000100001a52	movq	%rax, %r14
+0000000100001a55	ja	0x100001a20
+0000000100001a57	xorl	%eax, %eax
+0000000100001a59	jmp	0x100001a5e
+0000000100001a5b	movq	%r14, (%rbx)
+0000000100001a5e	popq	%rbx
+0000000100001a5f	popq	%r14
+0000000100001a61	popq	%rbp
+0000000100001a62	retq
+0000000100001a63	nopw	%cs:(%rax,%rax)
+_fwp_gc_oom:
+0000000100001a70	pushq	%rbp
+0000000100001a71	movq	%rsp, %rbp
+0000000100001a74	movq	0xb5b5(%rip), %rax              ## literal pool symbol address: ___stderrp
+0000000100001a7b	movq	(%rax), %rcx
+0000000100001a7e	leaq	0x952d(%rip), %rdi              ## literal pool for: "fwp: out of memory\n"
+0000000100001a85	movl	$0x13, %esi
+0000000100001a8a	movl	$0x1, %edx
+0000000100001a8f	callq	0x10000aa38                     ## symbol stub for: _fwrite
+0000000100001a94	movl	$0x66, %edi
+0000000100001a99	callq	0x10000aa08                     ## symbol stub for: _exit
+0000000100001a9e	nop
+_fwp_gc_chunks:
+0000000100001aa0	pushq	%rbp
+0000000100001aa1	movq	%rsp, %rbp
+0000000100001aa4	pushq	%r14
+0000000100001aa6	pushq	%rbx
+0000000100001aa7	movq	%rdi, %rbx
+0000000100001aaa	xorl	%edx, %edx
+0000000100001aac	cmpq	$0x1, %rdi
+0000000100001ab0	setne	%dl
+0000000100001ab3	leaq	_fwp_gc(%rip), %rcx
+0000000100001aba	movq	0x1068(%rcx,%rdx,8), %rax
+0000000100001ac2	movq	0xd597(%rip), %r14
+0000000100001ac9	movq	%rax, %rdi
+0000000100001acc	subq	%r14, %rdi
+0000000100001acf	jae	0x100001b2f
+0000000100001ad1	leaq	0x1068(,%rdx,8), %rsi
+0000000100001ad9	imulq	$0x1228, %rax, %r8              ## imm = 0x1228
+0000000100001ae0	addq	0xd599(%rip), %r8
+0000000100001ae7	xorl	%edx, %edx
+0000000100001ae9	xorl	%r9d, %r9d
+0000000100001aec	jmp	0x100001b02
+0000000100001aee	nop
+0000000100001af0	xorl	%r9d, %r9d
+0000000100001af3	decq	%rdx
+0000000100001af6	addq	$0x1228, %r8                    ## imm = 0x1228
+0000000100001afd	cmpq	%rdx, %rdi
+0000000100001b00	je	0x100001b32
+0000000100001b02	cmpb	$0x0, (%r8)
+0000000100001b06	jne	0x100001af0
+0000000100001b08	incq	%r9
+0000000100001b0b	cmpq	%rbx, %r9
+0000000100001b0e	jne	0x100001af3
+0000000100001b10	incq	%rax
+0000000100001b13	movq	%rax, %rdi
+0000000100001b16	subq	%rdx, %rdi
+0000000100001b19	movq	%rdi, (%rsi,%rcx)
+0000000100001b1d	subq	%rbx, 0xd6c4(%rip)
+0000000100001b24	subq	%rbx, %rax
+0000000100001b27	subq	%rdx, %rax
+0000000100001b2a	movq	%rax, %r14
+0000000100001b2d	jmp	0x100001b62
+0000000100001b2f	xorl	%r9d, %r9d
+0000000100001b32	subq	%r9, %r14
+0000000100001b35	subq	%r9, 0xd6ac(%rip)
+0000000100001b3c	addq	%r14, %rbx
+0000000100001b3f	movq	%rbx, %rdi
+0000000100001b42	callq	_fwp_gc_commit
+0000000100001b47	movq	%rbx, 0xd512(%rip)
+0000000100001b4e	shlq	$0x10, %rbx
+0000000100001b52	cmpq	0xd4f7(%rip), %rbx
+0000000100001b59	jbe	0x100001b62
+0000000100001b5b	movq	%rbx, 0xd4ee(%rip)
+0000000100001b62	movq	%r14, %rax
+0000000100001b65	popq	%rbx
+0000000100001b66	popq	%r14
+0000000100001b68	popq	%rbp
+0000000100001b69	retq
+0000000100001b6a	nopw	(%rax,%rax)
+_fwp_gc_commit:
+0000000100001b70	pushq	%rbp
+0000000100001b71	movq	%rsp, %rbp
+0000000100001b74	pushq	%rbx
+0000000100001b75	pushq	%rax
+0000000100001b76	movq	%rdi, %rbx
+0000000100001b79	movq	0xd4e8(%rip), %rdi
+0000000100001b80	cmpq	%rbx, %rdi
+0000000100001b83	jae	0x100001c18
+0000000100001b89	movq	0xd4c8(%rip), %rax
+0000000100001b90	cmpq	%rbx, %rax
+0000000100001b93	jb	0x100001c1f
+0000000100001b99	addq	$0x40, %rbx
+0000000100001b9d	cmpq	%rax, %rbx
+0000000100001ba0	cmovaeq	%rax, %rbx
+0000000100001ba4	movq	%rbx, %rsi
+0000000100001ba7	subq	%rdi, %rsi
+0000000100001baa	shlq	$0x10, %rdi
+0000000100001bae	addq	0xd483(%rip), %rdi
+0000000100001bb5	shlq	$0x10, %rsi
+0000000100001bb9	movl	$0x3, %edx
+0000000100001bbe	callq	0x10000aa7a                     ## symbol stub for: _mprotect
+0000000100001bc3	testl	%eax, %eax
+0000000100001bc5	jne	0x100001c1f
+0000000100001bc7	movl	$0x1d, %edi
+0000000100001bcc	callq	0x10000ab0a                     ## symbol stub for: _sysconf
+0000000100001bd1	movq	0xd4a8(%rip), %rcx
+0000000100001bd8	imulq	$0x1228, 0xd485(%rip), %rdi     ## imm = 0x1228
+0000000100001be3	addq	%rcx, %rdi
+0000000100001be6	imulq	$0x1228, %rbx, %rdx             ## imm = 0x1228
+0000000100001bed	addq	%rcx, %rdx
+0000000100001bf0	leaq	(%rax,%rdx), %rsi
+0000000100001bf4	decq	%rsi
+0000000100001bf7	negq	%rax
+0000000100001bfa	andq	%rax, %rdi
+0000000100001bfd	andq	%rax, %rsi
+0000000100001c00	subq	%rdi, %rsi
+0000000100001c03	movl	$0x3, %edx
+0000000100001c08	callq	0x10000aa7a                     ## symbol stub for: _mprotect
+0000000100001c0d	testl	%eax, %eax
+0000000100001c0f	jne	0x100001c1f
+0000000100001c11	movq	%rbx, 0xd450(%rip)
+0000000100001c18	addq	$0x8, %rsp
+0000000100001c1c	popq	%rbx
+0000000100001c1d	popq	%rbp
+0000000100001c1e	retq
+0000000100001c1f	callq	_fwp_gc_oom
+0000000100001c24	nopw	%cs:(%rax,%rax)
+_fwp_gc_collect:
+0000000100001c30	pushq	%rbp
+0000000100001c31	movq	%rsp, %rbp
+0000000100001c34	pushq	%r15
+0000000100001c36	pushq	%r14
+0000000100001c38	pushq	%r13
+0000000100001c3a	pushq	%r12
+0000000100001c3c	pushq	%rbx
+0000000100001c3d	subq	$0xc8, %rsp
+0000000100001c44	movq	0xb3dd(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100001c4b	movq	(%rax), %rax
+0000000100001c4e	movq	%rax, -0x30(%rbp)
+0000000100001c52	cmpl	$0x0, 0xd3a7(%rip)
+0000000100001c59	jne	0x100001e6e
+0000000100001c5f	movl	$0x1, 0xd397(%rip)
+0000000100001c69	leaq	-0xf0(%rbp), %rsi
+0000000100001c70	movl	$0x6, %edi
+0000000100001c75	callq	0x10000aa02                     ## symbol stub for: _clock_gettime
+0000000100001c7a	movq	0xd597(%rip), %rax
+0000000100001c81	subq	_fwp_gc(%rip), %rax
+0000000100001c88	cvtsi2sd	%rax, %xmm0
+0000000100001c8d	addsd	0xd55b(%rip), %xmm0
+0000000100001c95	movsd	%xmm0, 0xd553(%rip)
+0000000100001c9d	cmpl	$0x0, 0xd364(%rip)
+0000000100001ca4	sete	%al
+0000000100001ca7	cmpl	$0x0, 0xd362(%rip)
+0000000100001cae	setne	%bl
+0000000100001cb1	orb	%al, %bl
+0000000100001cb3	cmpb	$0x1, %bl
+0000000100001cb6	jne	0x100001cf6
+0000000100001cb8	callq	_fwp_gc_clear_marks
+0000000100001cbd	leaq	-0xd0(%rbp), %rdi
+0000000100001cc4	callq	0x10000aaaa                     ## symbol stub for: _setjmp
+0000000100001cc9	movq	$0x0, 0xd534(%rip)
+0000000100001cd4	callq	_fwp_gc_mark_all
+0000000100001cd9	callq	_fwp_gc_finalize
+0000000100001cde	callq	_fwp_gc_sweep
+0000000100001ce3	movq	0xd4f6(%rip), %rax
+0000000100001cea	incq	%rax
+0000000100001ced	movq	%rax, 0xd4ec(%rip)
+0000000100001cf4	jmp	0x100001d47
+0000000100001cf6	leaq	-0xd0(%rbp), %rdi
+0000000100001cfd	callq	0x10000aaaa                     ## symbol stub for: _setjmp
+0000000100001d02	movq	$0x0, 0xd4fb(%rip)
+0000000100001d0d	callq	_fwp_gc_mark_all
+0000000100001d12	callq	_fwp_gc_scan_old_filled
+0000000100001d17	cmpl	$0x0, 0xd2ee(%rip)
+0000000100001d1e	je	0x100001d25
+0000000100001d20	callq	_fwp_gc_verify_minor
+0000000100001d25	callq	_fwp_gc_finalize
+0000000100001d2a	callq	_fwp_gc_sweep
+0000000100001d2f	movq	0xd4aa(%rip), %rax
+0000000100001d36	incq	%rax
+0000000100001d39	movq	%rax, 0xd4a0(%rip)
+0000000100001d40	incq	0xd2d9(%rip)
+0000000100001d47	movq	%rax, %rcx
+0000000100001d4a	movq	0xd47f(%rip), %rax
+0000000100001d51	cmpq	0xd480(%rip), %rax
+0000000100001d58	jbe	0x100001d61
+0000000100001d5a	movq	%rax, 0xd477(%rip)
+0000000100001d61	testb	%bl, %bl
+0000000100001d63	je	0x100001d70
+0000000100001d65	movq	%rax, 0xd2ac(%rip)
+0000000100001d6c	xorl	%edx, %edx
+0000000100001d6e	jmp	0x100001d9d
+0000000100001d70	movq	0xd2a1(%rip), %rdx
+0000000100001d77	movq	%rdx, %rsi
+0000000100001d7a	shrq	%rsi
+0000000100001d7d	addq	%rdx, %rsi
+0000000100001d80	cmpq	$0x1000001, %rsi                ## imm = 0x1000001
+0000000100001d87	movl	$0x1000000, %edx                ## imm = 0x1000000
+0000000100001d8c	cmovaeq	%rsi, %rdx
+0000000100001d90	xorl	%esi, %esi
+0000000100001d92	cmpq	%rdx, %rax
+0000000100001d95	seta	%dl
+0000000100001d98	movb	%dl, %sil
+0000000100001d9b	movl	%esi, %edx
+0000000100001d9d	testb	$0x7, %cl
+0000000100001da0	movl	$0x1, %ecx
+0000000100001da5	cmovnel	%edx, %ecx
+0000000100001da8	cmpq	$0x0, 0xd278(%rip)
+0000000100001db0	cmovel	%edx, %ecx
+0000000100001db3	movl	%ecx, 0xd257(%rip)
+0000000100001db9	cmpl	$0x0, 0xd248(%rip)
+0000000100001dc0	sete	%cl
+0000000100001dc3	shlq	%cl, %rax
+0000000100001dc6	cvttsd2si	0xd439(%rip), %rcx
+0000000100001dcf	addq	%rax, %rcx
+0000000100001dd2	cmpq	$0x800001, %rcx                 ## imm = 0x800001
+0000000100001dd9	movl	$0x800000, %eax                 ## imm = 0x800000
+0000000100001dde	cmovgeq	%rcx, %rax
+0000000100001de2	movq	%rax, 0xd42f(%rip)
+0000000100001de9	movq	%rax, _fwp_gc(%rip)
+0000000100001df0	leaq	-0xe0(%rbp), %rsi
+0000000100001df7	movl	$0x6, %edi
+0000000100001dfc	callq	0x10000aa02                     ## symbol stub for: _clock_gettime
+0000000100001e01	movq	-0xe0(%rbp), %rax
+0000000100001e08	movq	-0xd8(%rbp), %rcx
+0000000100001e0f	subq	-0xf0(%rbp), %rax
+0000000100001e16	cvtsi2sd	%rax, %xmm1
+0000000100001e1b	mulsd	0x8d0d(%rip), %xmm1
+0000000100001e23	subq	-0xe8(%rbp), %rcx
+0000000100001e2a	xorps	%xmm0, %xmm0
+0000000100001e2d	cvtsi2sd	%rcx, %xmm0
+0000000100001e32	divsd	0x8cfe(%rip), %xmm0
+0000000100001e3a	addsd	%xmm1, %xmm0
+0000000100001e3e	movsd	0xd3b2(%rip), %xmm1
+0000000100001e46	addsd	%xmm0, %xmm1
+0000000100001e4a	movsd	%xmm1, 0xd3a6(%rip)
+0000000100001e52	ucomisd	0xd3a6(%rip), %xmm0
+0000000100001e5a	jbe	0x100001e64
+0000000100001e5c	movsd	%xmm0, 0xd39c(%rip)
+0000000100001e64	movl	$0x0, 0xd192(%rip)
+0000000100001e6e	movq	0xb1b3(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100001e75	movq	(%rax), %rax
+0000000100001e78	cmpq	-0x30(%rbp), %rax
+0000000100001e7c	jne	0x100001e90
+0000000100001e7e	addq	$0xc8, %rsp
+0000000100001e85	popq	%rbx
+0000000100001e86	popq	%r12
+0000000100001e88	popq	%r13
+0000000100001e8a	popq	%r14
+0000000100001e8c	popq	%r15
+0000000100001e8e	popq	%rbp
+0000000100001e8f	retq
+0000000100001e90	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100001e95	nopw	%cs:(%rax,%rax)
+_fwp_gc_clear_marks:
+0000000100001ea0	movq	0xd1b9(%rip), %rax
+0000000100001ea7	testq	%rax, %rax
+0000000100001eaa	je	0x100001f20
+0000000100001eac	pushq	%rbp
+0000000100001ead	movq	%rsp, %rbp
+0000000100001eb0	pushq	%r14
+0000000100001eb2	pushq	%rbx
+0000000100001eb3	movq	0xd1c6(%rip), %rcx
+0000000100001eba	xorl	%ebx, %ebx
+0000000100001ebc	xorl	%r14d, %r14d
+0000000100001ebf	jmp	0x100001ee4
+0000000100001ec1	nopw	%cs:(%rax,%rax)
+0000000100001ed0	movb	$0x0, 0x3(%rcx,%rbx)
+0000000100001ed5	incq	%r14
+0000000100001ed8	addq	$0x1228, %rbx                   ## imm = 0x1228
+0000000100001edf	cmpq	%rax, %r14
+0000000100001ee2	jae	0x100001f1c
+0000000100001ee4	movzbl	(%rcx,%rbx), %edx
+0000000100001ee8	cmpl	$0x2, %edx
+0000000100001eeb	je	0x100001ed0
+0000000100001eed	cmpl	$0x1, %edx
+0000000100001ef0	jne	0x100001ed5
+0000000100001ef2	leaq	(%rcx,%rbx), %rdi
+0000000100001ef6	addq	$0x28, %rdi
+0000000100001efa	movl	0xc(%rcx,%rbx), %esi
+0000000100001efe	addl	$0x3f, %esi
+0000000100001f01	shrl	$0x3, %esi
+0000000100001f04	andl	$-0x8, %esi
+0000000100001f07	callq	0x10000a9ba                     ## symbol stub for: ___bzero
+0000000100001f0c	movq	0xd16d(%rip), %rcx
+0000000100001f13	movq	0xd146(%rip), %rax
+0000000100001f1a	jmp	0x100001ed5
+0000000100001f1c	popq	%rbx
+0000000100001f1d	popq	%r14
+0000000100001f1f	popq	%rbp
+0000000100001f20	retq
+0000000100001f21	nopw	%cs:(%rax,%rax)
+_fwp_gc_mark_all:
+0000000100001f30	pushq	%rbp
+0000000100001f31	movq	%rsp, %rbp
+0000000100001f34	callq	_fwp_gc_sp
+0000000100001f39	movq	%rax, %rdi
+0000000100001f3c	callq	_fwp_gc_scan_stacks
+0000000100001f41	callq	_fwp_gc_drain
+0000000100001f46	callq	_fwp_gc_scan_data
+0000000100001f4b	popq	%rbp
+0000000100001f4c	jmp	_fwp_gc_drain
+0000000100001f51	nopw	%cs:(%rax,%rax)
+_fwp_gc_scan_old_filled:
+0000000100001f60	cmpq	$0x0, 0xd0f8(%rip)
+0000000100001f68	je	_fwp_gc_drain
+0000000100001f6e	pushq	%rbp
+0000000100001f6f	movq	%rsp, %rbp
+0000000100001f72	pushq	%r15
+0000000100001f74	pushq	%r14
+0000000100001f76	pushq	%r13
+0000000100001f78	pushq	%r12
+0000000100001f7a	pushq	%rbx
+0000000100001f7b	subq	$0x18, %rsp
+0000000100001f7f	xorl	%eax, %eax
+0000000100001f81	jmp	0x100001fa4
+0000000100001f83	nopw	%cs:(%rax,%rax)
+0000000100001f90	movq	-0x30(%rbp), %rax
+0000000100001f94	incq	%rax
+0000000100001f97	cmpq	0xd0c2(%rip), %rax
+0000000100001f9e	jae	0x100002079
+0000000100001fa4	movq	0xd0d5(%rip), %r15
+0000000100001fab	movq	%rax, -0x30(%rbp)
+0000000100001faf	imulq	$0x1228, %rax, %rax             ## imm = 0x1228
+0000000100001fb6	cmpb	$0x2, 0x1(%r15,%rax)
+0000000100001fbc	jne	0x100001f90
+0000000100001fbe	addq	%rax, %r15
+0000000100001fc1	movzbl	(%r15), %eax
+0000000100001fc5	cmpl	$0x2, %eax
+0000000100001fc8	je	0x100002054
+0000000100001fce	cmpl	$0x1, %eax
+0000000100001fd1	jne	0x100001f90
+0000000100001fd3	movq	-0x30(%rbp), %rdi
+0000000100001fd7	callq	_fwp_gc_chunk_addr
+0000000100001fdc	movq	%rax, %r14
+0000000100001fdf	movl	0xc(%r15), %eax
+0000000100001fe3	addl	$0x3f, %eax
+0000000100001fe6	movq	%rax, -0x38(%rbp)
+0000000100001fea	cmpl	$0x40, %eax
+0000000100001fed	jb	0x100001f90
+0000000100001fef	movq	-0x38(%rbp), %rax
+0000000100001ff3	shrl	$0x6, %eax
+0000000100001ff6	movq	%rax, -0x38(%rbp)
+0000000100001ffa	xorl	%eax, %eax
+0000000100001ffc	jmp	0x10000200d
+0000000100001ffe	nop
+0000000100002000	movq	-0x40(%rbp), %rax
+0000000100002004	incq	%rax
+0000000100002007	cmpq	-0x38(%rbp), %rax
+000000010000200b	je	0x100001f90
+000000010000200d	movq	%rax, -0x40(%rbp)
+0000000100002011	movq	0x28(%r15,%rax,8), %r12
+0000000100002016	testq	%r12, %r12
+0000000100002019	je	0x100002000
+000000010000201b	movq	-0x40(%rbp), %r13
+000000010000201f	shlq	$0x6, %r13
+0000000100002023	nopw	%cs:(%rax,%rax)
+0000000100002030	tzcntq	%r12, %rdi
+0000000100002035	orq	%r13, %rdi
+0000000100002038	leaq	-0x1(%r12), %rbx
+000000010000203d	movl	0x8(%r15), %esi
+0000000100002041	imulq	%rsi, %rdi
+0000000100002045	addq	%r14, %rdi
+0000000100002048	callq	_fwp_gc_push
+000000010000204d	andq	%rbx, %r12
+0000000100002050	jne	0x100002030
+0000000100002052	jmp	0x100002000
+0000000100002054	cmpb	$0x0, 0x3(%r15)
+0000000100002059	je	0x100001f90
+000000010000205f	movq	-0x30(%rbp), %rdi
+0000000100002063	callq	_fwp_gc_chunk_addr
+0000000100002068	movq	0x18(%r15), %rsi
+000000010000206c	movq	%rax, %rdi
+000000010000206f	callq	_fwp_gc_push
+0000000100002074	jmp	0x100001f90
+0000000100002079	addq	$0x18, %rsp
+000000010000207d	popq	%rbx
+000000010000207e	popq	%r12
+0000000100002080	popq	%r13
+0000000100002082	popq	%r14
+0000000100002084	popq	%r15
+0000000100002086	popq	%rbp
+0000000100002087	jmp	_fwp_gc_drain
+000000010000208c	nopl	(%rax)
+_fwp_gc_verify_minor:
+0000000100002090	pushq	%rbp
+0000000100002091	movq	%rsp, %rbp
+0000000100002094	pushq	%r15
+0000000100002096	pushq	%r14
+0000000100002098	pushq	%r13
+000000010000209a	pushq	%r12
+000000010000209c	pushq	%rbx
+000000010000209d	subq	$0x48, %rsp
+00000001000020a1	movq	0xcfb8(%rip), %rbx
+00000001000020a8	movq	%rbx, %rdi
+00000001000020ab	shlq	$0x9, %rdi
+00000001000020af	callq	0x10000aa5c                     ## symbol stub for: _malloc
+00000001000020b4	movq	%rax, %r13
+00000001000020b7	cmpq	$0x1, %rbx
+00000001000020bb	movq	%rbx, -0x30(%rbp)
+00000001000020bf	movq	%rbx, %rdi
+00000001000020c2	adcq	$0x0, %rdi
+00000001000020c6	movq	%rdi, -0x48(%rbp)
+00000001000020ca	callq	0x10000aa5c                     ## symbol stub for: _malloc
+00000001000020cf	testq	%r13, %r13
+00000001000020d2	je	0x10000241c
+00000001000020d8	movq	%rax, %r15
+00000001000020db	testq	%rax, %rax
+00000001000020de	je	0x10000241c
+00000001000020e4	movq	-0x30(%rbp), %rax
+00000001000020e8	testq	%rax, %rax
+00000001000020eb	je	0x10000210a
+00000001000020ed	movq	%r13, -0x40(%rbp)
+00000001000020f1	movq	0xcf88(%rip), %rcx
+00000001000020f8	cmpq	$0x1, %rax
+00000001000020fc	movq	%rcx, -0x38(%rbp)
+0000000100002100	jne	0x100002132
+0000000100002102	xorl	%r12d, %r12d
+0000000100002105	jmp	0x1000021a5
+000000010000210a	callq	_fwp_gc_clear_marks
+000000010000210f	callq	_fwp_gc_mark_all
+0000000100002114	movq	%r13, %rdi
+0000000100002117	callq	0x10000aa32                     ## symbol stub for: _free
+000000010000211c	movq	%r15, %rdi
+000000010000211f	addq	$0x48, %rsp
+0000000100002123	popq	%rbx
+0000000100002124	popq	%r12
+0000000100002126	popq	%r13
+0000000100002128	popq	%r14
+000000010000212a	popq	%r15
+000000010000212c	popq	%rbp
+000000010000212d	jmp	0x10000aa32                     ## symbol stub for: _free
+0000000100002132	movq	%rax, %r13
+0000000100002135	andq	$-0x2, %r13
+0000000100002139	movq	-0x40(%rbp), %rax
+000000010000213d	leaq	0x200(%rax), %rbx
+0000000100002144	leaq	0x1250(%rcx), %r14
+000000010000214b	xorl	%r12d, %r12d
+000000010000214e	nop
+0000000100002150	leaq	-0x200(%rbx), %rdi
+0000000100002157	leaq	-0x1228(%r14), %rsi
+000000010000215e	movl	$0x200, %edx                    ## imm = 0x200
+0000000100002163	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+0000000100002168	movzbl	-0x124d(%r14), %eax
+0000000100002170	movb	%al, (%r15,%r12)
+0000000100002174	movl	$0x200, %edx                    ## imm = 0x200
+0000000100002179	movq	%rbx, %rdi
+000000010000217c	movq	%r14, %rsi
+000000010000217f	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+0000000100002184	movzbl	-0x25(%r14), %eax
+0000000100002189	movb	%al, 0x1(%r15,%r12)
+000000010000218e	addq	$0x2, %r12
+0000000100002192	addq	$0x400, %rbx                    ## imm = 0x400
+0000000100002199	addq	$0x2450, %r14                   ## imm = 0x2450
+00000001000021a0	cmpq	%r12, %r13
+00000001000021a3	jne	0x100002150
+00000001000021a5	testb	$0x1, -0x30(%rbp)
+00000001000021a9	movq	-0x40(%rbp), %r13
+00000001000021ad	je	0x1000021e0
+00000001000021af	movq	%r12, %rdi
+00000001000021b2	shlq	$0x9, %rdi
+00000001000021b6	addq	%r13, %rdi
+00000001000021b9	imulq	$0x1228, %r12, %rbx             ## imm = 0x1228
+00000001000021c0	movq	-0x38(%rbp), %r14
+00000001000021c4	leaq	(%r14,%rbx), %rsi
+00000001000021c8	addq	$0x28, %rsi
+00000001000021cc	movl	$0x200, %edx                    ## imm = 0x200
+00000001000021d1	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+00000001000021d6	movzbl	0x3(%r14,%rbx), %eax
+00000001000021dc	movb	%al, (%r15,%r12)
+00000001000021e0	callq	_fwp_gc_clear_marks
+00000001000021e5	callq	_fwp_gc_mark_all
+00000001000021ea	movq	0xce8f(%rip), %rax
+00000001000021f1	leaq	0x28(%rax), %rcx
+00000001000021f5	movq	%r13, %rdx
+00000001000021f8	xorl	%edi, %edi
+00000001000021fa	movq	-0x30(%rbp), %r8
+00000001000021fe	jmp	0x10000222a
+0000000100002200	testq	%r10, %r10
+0000000100002203	movq	-0x30(%rbp), %r8
+0000000100002207	jne	0x1000022b8
+000000010000220d	nopl	(%rax)
+0000000100002210	incq	%rdi
+0000000100002213	addq	$0x200, %rdx                    ## imm = 0x200
+000000010000221a	addq	$0x1228, %rcx                   ## imm = 0x1228
+0000000100002221	cmpq	%r8, %rdi
+0000000100002224	je	0x100002114
+000000010000222a	imulq	$0x1228, %rdi, %rsi             ## imm = 0x1228
+0000000100002231	leaq	(%rax,%rsi), %rbx
+0000000100002235	movzbl	(%rax,%rsi), %r14d
+000000010000223a	cmpl	$0x2, %r14d
+000000010000223e	je	0x1000022a0
+0000000100002240	cmpl	$0x1, %r14d
+0000000100002244	jne	0x100002210
+0000000100002246	movl	0xc(%rbx), %esi
+0000000100002249	addl	$0x3f, %esi
+000000010000224c	cmpl	$0x40, %esi
+000000010000224f	jb	0x100002210
+0000000100002251	shrl	$0x6, %esi
+0000000100002254	xorl	%r8d, %r8d
+0000000100002257	xorl	%r12d, %r12d
+000000010000225a	xorl	%r9d, %r9d
+000000010000225d	nopl	(%rax)
+0000000100002260	movq	(%rdx,%r9,8), %r10
+0000000100002264	notq	%r10
+0000000100002267	andq	(%rcx,%r9,8), %r10
+000000010000226b	movq	%r12, %r11
+000000010000226e	tzcntq	%r10, %r12
+0000000100002273	addq	%r8, %r12
+0000000100002276	testq	%r10, %r10
+0000000100002279	cmoveq	%r11, %r12
+000000010000227d	incq	%r9
+0000000100002280	cmpq	%rsi, %r9
+0000000100002283	jae	0x100002200
+0000000100002289	addq	$0x40, %r8
+000000010000228d	testq	%r10, %r10
+0000000100002290	je	0x100002260
+0000000100002292	jmp	0x100002200
+0000000100002297	nopw	(%rax,%rax)
+00000001000022a0	cmpb	$0x0, 0x3(%rbx)
+00000001000022a4	je	0x100002210
+00000001000022aa	cmpb	$0x0, (%r15,%rdi)
+00000001000022af	jne	0x100002210
+00000001000022b5	xorl	%r12d, %r12d
+00000001000022b8	callq	_fwp_gc_chunk_addr
+00000001000022bd	movl	0x8(%rbx), %ecx
+00000001000022c0	movq	%rcx, %r8
+00000001000022c3	imulq	%rcx, %r12
+00000001000022c7	addq	%rax, %r12
+00000001000022ca	cmpb	$0x1, %r14b
+00000001000022ce	je	0x1000022d4
+00000001000022d0	movq	0x18(%rbx), %r8
+00000001000022d4	movq	0xad55(%rip), %rax              ## literal pool symbol address: ___stderrp
+00000001000022db	movq	(%rax), %rdi
+00000001000022de	movzbl	0x1(%rbx), %ecx
+00000001000022e2	leaq	0x8cdd(%rip), %rsi              ## literal pool for: "fwp gc verify: a minor collection missed the reachable object at %p (kind %d, %zu bytes)\n"
+00000001000022e9	movq	%r12, %rdx
+00000001000022ec	movq	%r8, %rbx
+00000001000022ef	xorl	%eax, %eax
+00000001000022f1	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+00000001000022f6	addq	%r12, %rbx
+00000001000022f9	movq	%rbx, -0x30(%rbp)
+00000001000022fd	xorl	%eax, %eax
+00000001000022ff	jmp	0x100002321
+0000000100002301	nopw	%cs:(%rax,%rax)
+0000000100002310	movq	-0x38(%rbp), %rax
+0000000100002314	incq	%rax
+0000000100002317	cmpq	-0x48(%rbp), %rax
+000000010000231b	je	0x100002417
+0000000100002321	movq	0xcd58(%rip), %r13
+0000000100002328	movq	%rax, -0x38(%rbp)
+000000010000232c	imulq	$0x1228, %rax, %rax             ## imm = 0x1228
+0000000100002333	cmpb	$0x1, (%r13,%rax)
+0000000100002339	jne	0x100002310
+000000010000233b	addq	%rax, %r13
+000000010000233e	cmpb	$0x1, 0x1(%r13)
+0000000100002343	je	0x100002310
+0000000100002345	movl	0xc(%r13), %ebx
+0000000100002349	testl	%ebx, %ebx
+000000010000234b	je	0x100002310
+000000010000234d	movq	-0x38(%rbp), %rax
+0000000100002351	shlq	$0x9, %rax
+0000000100002355	addq	-0x40(%rbp), %rax
+0000000100002359	movq	%rax, -0x50(%rbp)
+000000010000235d	xorl	%r15d, %r15d
+0000000100002360	jmp	0x10000237e
+0000000100002362	nopw	%cs:(%rax,%rax)
+0000000100002370	movl	0xc(%r13), %ebx
+0000000100002374	incq	%r15
+0000000100002377	movl	%ebx, %eax
+0000000100002379	cmpq	%rax, %r15
+000000010000237c	jae	0x100002310
+000000010000237e	movq	%r15, %rax
+0000000100002381	shrq	$0x6, %rax
+0000000100002385	movq	-0x50(%rbp), %rcx
+0000000100002389	movq	(%rcx,%rax,8), %rax
+000000010000238d	btq	%r15, %rax
+0000000100002391	jae	0x100002374
+0000000100002393	movq	-0x38(%rbp), %rdi
+0000000100002397	callq	_fwp_gc_chunk_addr
+000000010000239c	movl	0x8(%r13), %r8d
+00000001000023a0	cmpq	$0x8, %r8
+00000001000023a4	jb	0x100002374
+00000001000023a6	movq	%rax, %r14
+00000001000023a9	movq	%r8, %rax
+00000001000023ac	imulq	%r15, %rax
+00000001000023b0	addq	%rax, %r14
+00000001000023b3	xorl	%ebx, %ebx
+00000001000023b5	jmp	0x1000023ce
+00000001000023b7	nopw	(%rax,%rax)
+00000001000023c0	incq	%rbx
+00000001000023c3	movl	%r8d, %eax
+00000001000023c6	shrl	$0x3, %eax
+00000001000023c9	cmpq	%rax, %rbx
+00000001000023cc	jae	0x100002370
+00000001000023ce	movq	(%r14,%rbx,8), %rax
+00000001000023d2	cmpq	%r12, %rax
+00000001000023d5	jb	0x1000023c0
+00000001000023d7	cmpq	-0x30(%rbp), %rax
+00000001000023db	jae	0x1000023c0
+00000001000023dd	movq	0xac4c(%rip), %rax              ## literal pool symbol address: ___stderrp
+00000001000023e4	movq	(%rax), %rdi
+00000001000023e7	movzbl	0x1(%r13), %ecx
+00000001000023ec	movups	(%r14), %xmm0
+00000001000023f0	movq	0x10(%r14), %rax
+00000001000023f4	movq	%rax, 0x10(%rsp)
+00000001000023f9	movups	%xmm0, (%rsp)
+00000001000023fd	leaq	0x8c1c(%rip), %rsi              ## literal pool for: "  from the old object at %p (kind %d, %u bytes), word %zu; its first words %lx %lx %lx\n"
+0000000100002404	movq	%r14, %rdx
+0000000100002407	movq	%rbx, %r9
+000000010000240a	xorl	%eax, %eax
+000000010000240c	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+0000000100002411	movl	0x8(%r13), %r8d
+0000000100002415	jmp	0x1000023c0
+0000000100002417	callq	0x10000a9ea                     ## symbol stub for: _abort
+000000010000241c	callq	_fwp_gc_oom
+0000000100002421	nopw	%cs:(%rax,%rax)
+_fwp_gc_finalize:
+0000000100002430	pushq	%rbp
+0000000100002431	movq	%rsp, %rbp
+0000000100002434	pushq	%r15
+0000000100002436	pushq	%r14
+0000000100002438	pushq	%r13
+000000010000243a	pushq	%r12
+000000010000243c	pushq	%rbx
+000000010000243d	pushq	%rax
+000000010000243e	movq	0xcd7b(%rip), %r15
+0000000100002445	testq	%r15, %r15
+0000000100002448	je	0x1000024b6
+000000010000244a	movq	0xcd67(%rip), %r12
+0000000100002451	xorl	%r14d, %r14d
+0000000100002454	jmp	0x100002497
+0000000100002456	nopw	%cs:(%rax,%rax)
+0000000100002460	addq	%r12, %r13
+0000000100002463	movq	0x8(%r13), %rax
+0000000100002467	decq	%r15
+000000010000246a	movq	%r15, 0xcd4f(%rip)
+0000000100002471	shlq	$0x4, %r15
+0000000100002475	movups	(%r12,%r15), %xmm0
+000000010000247a	movups	%xmm0, (%r13)
+000000010000247f	movq	%rbx, %rdi
+0000000100002482	callq	*%rax
+0000000100002484	movq	0xcd2d(%rip), %r12
+000000010000248b	movq	0xcd2e(%rip), %r15
+0000000100002492	cmpq	%r15, %r14
+0000000100002495	jae	0x1000024b6
+0000000100002497	movq	%r14, %r13
+000000010000249a	shlq	$0x4, %r13
+000000010000249e	movq	(%r12,%r13), %rbx
+00000001000024a2	movq	%rbx, %rdi
+00000001000024a5	callq	_fwp_gc_marked
+00000001000024aa	testl	%eax, %eax
+00000001000024ac	je	0x100002460
+00000001000024ae	incq	%r14
+00000001000024b1	cmpq	%r15, %r14
+00000001000024b4	jb	0x100002497
+00000001000024b6	addq	$0x8, %rsp
+00000001000024ba	popq	%rbx
+00000001000024bb	popq	%r12
+00000001000024bd	popq	%r13
+00000001000024bf	popq	%r14
+00000001000024c1	popq	%r15
+00000001000024c3	popq	%rbp
+00000001000024c4	retq
+00000001000024c5	nopw	%cs:(%rax,%rax)
+_fwp_gc_sweep:
+00000001000024d0	pushq	%rbp
+00000001000024d1	movq	%rsp, %rbp
+00000001000024d4	pushq	%r15
+00000001000024d6	pushq	%r14
+00000001000024d8	pushq	%r13
+00000001000024da	pushq	%r12
+00000001000024dc	pushq	%rbx
+00000001000024dd	subq	$0x28, %rsp
+00000001000024e1	leaq	0xbb28(%rip), %rdi
+00000001000024e8	movl	$0xb40, %esi                    ## imm = 0xB40
+00000001000024ed	callq	0x10000a9ba                     ## symbol stub for: ___bzero
+00000001000024f2	cmpq	$0x0, 0xcb66(%rip)
+00000001000024fa	je	0x100002952
+0000000100002500	movq	$0x0, -0x30(%rbp)
+0000000100002508	movabsq	$0x5555555555555555, %r8        ## imm = 0x5555555555555555
+0000000100002512	movabsq	$0x3333333333333333, %r9        ## imm = 0x3333333333333333
+000000010000251c	movabsq	$0xf0f0f0f0f0f0f0f, %r10        ## imm = 0xF0F0F0F0F0F0F0F
+0000000100002526	movabsq	$0x101010101010101, %r11        ## imm = 0x101010101010101
+0000000100002530	movdqa	0x86c8(%rip), %xmm6
+0000000100002538	movdqa	0x86d0(%rip), %xmm7
+0000000100002540	pxor	%xmm8, %xmm8
+0000000100002545	xorl	%r15d, %r15d
+0000000100002548	xorl	%ecx, %ecx
+000000010000254a	jmp	0x100002566
+000000010000254c	nopl	(%rax)
+0000000100002550	incq	%r15
+0000000100002553	incq	%rcx
+0000000100002556	movq	0xcb03(%rip), %rax
+000000010000255d	cmpq	%rax, %rcx
+0000000100002560	jae	0x10000295f
+0000000100002566	movq	0xcb13(%rip), %r13
+000000010000256d	imulq	$0x1228, %rcx, %r12             ## imm = 0x1228
+0000000100002574	movzbl	(%r13,%r12), %eax
+000000010000257a	testl	%eax, %eax
+000000010000257c	je	0x100002550
+000000010000257e	leaq	(%r12,%r13), %r14
+0000000100002582	cmpl	$0x1, %eax
+0000000100002585	je	0x1000025c0
+0000000100002587	cmpl	$0x2, %eax
+000000010000258a	jne	0x100002553
+000000010000258c	movq	%r15, %rbx
+000000010000258f	movl	0x10(%r14), %r15d
+0000000100002593	cmpb	$0x0, 0x3(%r14)
+0000000100002598	je	0x1000025f2
+000000010000259a	movq	-0x30(%rbp), %rax
+000000010000259e	addq	0x18(%r14), %rax
+00000001000025a2	movq	%rax, -0x30(%rbp)
+00000001000025a6	addq	%r15, %rcx
+00000001000025a9	decq	%rcx
+00000001000025ac	movq	%rbx, %r15
+00000001000025af	jmp	0x100002553
+00000001000025b1	nopw	%cs:(%rax,%rax)
+00000001000025c0	movq	%rcx, -0x38(%rbp)
+00000001000025c4	movq	%r15, -0x40(%rbp)
+00000001000025c8	movl	0xc(%r14), %r15d
+00000001000025cc	testq	%r15, %r15
+00000001000025cf	je	0x10000283b
+00000001000025d5	leaq	0x3f(%r15), %rdx
+00000001000025d9	movq	%rdx, %rax
+00000001000025dc	shrq	$0x6, %rax
+00000001000025e0	cmpl	$0xc0, %r15d
+00000001000025e7	ja	0x100002662
+00000001000025e9	xorl	%edx, %edx
+00000001000025eb	xorl	%ecx, %ecx
+00000001000025ed	jmp	0x100002710
+00000001000025f2	movq	%rcx, %r13
+00000001000025f5	addq	$0x228, %r14                    ## imm = 0x228
+00000001000025fc	movq	%r14, %rdi
+00000001000025ff	callq	_fwp_rc_clear_slot
+0000000100002604	pxor	%xmm8, %xmm8
+0000000100002609	movdqa	0x85ff(%rip), %xmm7
+0000000100002611	movdqa	0x85e7(%rip), %xmm6
+0000000100002619	movabsq	$0x101010101010101, %r11        ## imm = 0x101010101010101
+0000000100002623	movabsq	$0xf0f0f0f0f0f0f0f, %r10        ## imm = 0xF0F0F0F0F0F0F0F
+000000010000262d	movabsq	$0x3333333333333333, %r9        ## imm = 0x3333333333333333
+0000000100002637	movabsq	$0x5555555555555555, %r8        ## imm = 0x5555555555555555
+0000000100002641	testq	%r15, %r15
+0000000100002644	je	0x100002940
+000000010000264a	movq	0xca2f(%rip), %rax
+0000000100002651	cmpl	$0x4, %r15d
+0000000100002655	jae	0x1000028c9
+000000010000265b	xorl	%ecx, %ecx
+000000010000265d	jmp	0x100002908
+0000000100002662	movl	%eax, %ecx
+0000000100002664	andl	$-0x4, %ecx
+0000000100002667	leaq	(%r12,%r13), %rsi
+000000010000266b	addq	$0x38, %rsi
+000000010000266f	shrq	$0x3, %rdx
+0000000100002673	andl	$-0x20, %edx
+0000000100002676	pxor	%xmm0, %xmm0
+000000010000267a	xorl	%edi, %edi
+000000010000267c	pxor	%xmm1, %xmm1
+0000000100002680	movdqu	-0x10(%rsi,%rdi), %xmm2
+0000000100002686	movdqu	(%rsi,%rdi), %xmm3
+000000010000268b	movdqa	%xmm2, %xmm4
+000000010000268f	pand	%xmm6, %xmm4
+0000000100002693	movdqa	%xmm7, %xmm5
+0000000100002697	pshufb	%xmm4, %xmm5
+000000010000269c	psrlw	$0x4, %xmm2
+00000001000026a1	pand	%xmm6, %xmm2
+00000001000026a5	movdqa	%xmm7, %xmm4
+00000001000026a9	pshufb	%xmm2, %xmm4
+00000001000026ae	paddb	%xmm5, %xmm4
+00000001000026b2	psadbw	%xmm8, %xmm4
+00000001000026b7	paddq	%xmm4, %xmm0
+00000001000026bb	movdqa	%xmm3, %xmm2
+00000001000026bf	pand	%xmm6, %xmm2
+00000001000026c3	movdqa	%xmm7, %xmm4
+00000001000026c7	pshufb	%xmm2, %xmm4
+00000001000026cc	psrlw	$0x4, %xmm3
+00000001000026d1	pand	%xmm6, %xmm3
+00000001000026d5	movdqa	%xmm7, %xmm2
+00000001000026d9	pshufb	%xmm3, %xmm2
+00000001000026de	paddb	%xmm4, %xmm2
+00000001000026e2	psadbw	%xmm8, %xmm2
+00000001000026e7	paddq	%xmm2, %xmm1
+00000001000026eb	addq	$0x20, %rdi
+00000001000026ef	cmpq	%rdi, %rdx
+00000001000026f2	jne	0x100002680
+00000001000026f4	paddq	%xmm0, %xmm1
+00000001000026f8	pshufd	$0xee, %xmm1, %xmm0             ## xmm0 = xmm1[2,3,2,3]
+00000001000026fd	paddq	%xmm1, %xmm0
+0000000100002701	movq	%xmm0, %rdx
+0000000100002706	cmpl	%ecx, %eax
+0000000100002708	je	0x100002751
+000000010000270a	nopw	(%rax,%rax)
+0000000100002710	movq	0x28(%r14,%rcx,8), %rsi
+0000000100002715	movq	%rsi, %rdi
+0000000100002718	shrq	%rdi
+000000010000271b	andq	%r8, %rdi
+000000010000271e	subq	%rdi, %rsi
+0000000100002721	movq	%rsi, %rdi
+0000000100002724	andq	%r9, %rdi
+0000000100002727	shrq	$0x2, %rsi
+000000010000272b	andq	%r9, %rsi
+000000010000272e	addq	%rdi, %rsi
+0000000100002731	movq	%rsi, %rdi
+0000000100002734	shrq	$0x4, %rdi
+0000000100002738	addq	%rsi, %rdi
+000000010000273b	andq	%r10, %rdi
+000000010000273e	imulq	%r11, %rdi
+0000000100002742	shrq	$0x38, %rdi
+0000000100002746	addq	%rdi, %rdx
+0000000100002749	incq	%rcx
+000000010000274c	cmpq	%rcx, %rax
+000000010000274f	jne	0x100002710
+0000000100002751	testq	%rdx, %rdx
+0000000100002754	je	0x10000283b
+000000010000275a	movl	0x8(%r14), %eax
+000000010000275e	imulq	%rax, %rdx
+0000000100002762	addq	%rdx, -0x30(%rbp)
+0000000100002766	movzbl	0x1(%r14), %eax
+000000010000276b	movzbl	0x2(%r14), %ecx
+0000000100002770	imulq	$0x3c0, %rax, %rax              ## imm = 0x3C0
+0000000100002777	leaq	_fwp_gc(%rip), %rdx
+000000010000277e	addq	%rdx, %rax
+0000000100002781	leaq	(%rcx,%rcx,2), %rcx
+0000000100002785	leaq	(%rax,%rcx,8), %rbx
+0000000100002789	addq	$0x8, %rbx
+000000010000278d	movq	-0x38(%rbp), %rdi
+0000000100002791	callq	_fwp_gc_chunk_addr
+0000000100002796	pxor	%xmm8, %xmm8
+000000010000279b	movdqa	0x846d(%rip), %xmm7
+00000001000027a3	movdqa	0x8455(%rip), %xmm6
+00000001000027ab	movq	%rax, -0x48(%rbp)
+00000001000027af	addq	%r15, %r12
+00000001000027b2	addq	%r13, %r12
+00000001000027b5	addq	$0x227, %r12                    ## imm = 0x227
+00000001000027bc	decq	%r15
+00000001000027bf	jmp	0x100002807
+00000001000027c1	nopw	%cs:(%rax,%rax)
+00000001000027d0	movq	%r12, %rdi
+00000001000027d3	callq	_fwp_rc_clear_slot
+00000001000027d8	movq	(%rbx), %rax
+00000001000027db	notq	%rax
+00000001000027de	movq	%rax, (%r13)
+00000001000027e2	movq	%r13, (%rbx)
+00000001000027e5	movdqa	0x8413(%rip), %xmm6
+00000001000027ed	movdqa	0x841b(%rip), %xmm7
+00000001000027f5	pxor	%xmm8, %xmm8
+00000001000027fa	decq	%r12
+00000001000027fd	addq	$-0x1, %r15
+0000000100002801	jae	0x100002894
+0000000100002807	movq	%r15, %rax
+000000010000280a	shrq	$0x6, %rax
+000000010000280e	movq	0x28(%r14,%rax,8), %rax
+0000000100002813	btq	%r15, %rax
+0000000100002817	jb	0x1000027fa
+0000000100002819	movl	0x8(%r14), %esi
+000000010000281d	movq	%r15, %r13
+0000000100002820	imulq	%rsi, %r13
+0000000100002824	addq	-0x48(%rbp), %r13
+0000000100002828	cmpl	$0x0, 0xc7dd(%rip)
+000000010000282f	je	0x1000027d0
+0000000100002831	movq	%r13, %rdi
+0000000100002834	callq	0x10000a9ba                     ## symbol stub for: ___bzero
+0000000100002839	jmp	0x1000027d0
+000000010000283b	movq	%r14, %rdi
+000000010000283e	callq	_fwp_rc_clear_chunk
+0000000100002843	pxor	%xmm8, %xmm8
+0000000100002848	movdqa	0x83c0(%rip), %xmm7
+0000000100002850	movdqa	0x83a8(%rip), %xmm6
+0000000100002858	movabsq	$0x101010101010101, %r11        ## imm = 0x101010101010101
+0000000100002862	movabsq	$0xf0f0f0f0f0f0f0f, %r10        ## imm = 0xF0F0F0F0F0F0F0F
+000000010000286c	movabsq	$0x3333333333333333, %r9        ## imm = 0x3333333333333333
+0000000100002876	movabsq	$0x5555555555555555, %r8        ## imm = 0x5555555555555555
+0000000100002880	movb	$0x0, (%r14)
+0000000100002884	movq	-0x40(%rbp), %r15
+0000000100002888	incq	%r15
+000000010000288b	movq	-0x38(%rbp), %rcx
+000000010000288f	jmp	0x100002553
+0000000100002894	movq	-0x40(%rbp), %r15
+0000000100002898	movabsq	$0x5555555555555555, %r8        ## imm = 0x5555555555555555
+00000001000028a2	movabsq	$0x3333333333333333, %r9        ## imm = 0x3333333333333333
+00000001000028ac	movabsq	$0xf0f0f0f0f0f0f0f, %r10        ## imm = 0xF0F0F0F0F0F0F0F
+00000001000028b6	movabsq	$0x101010101010101, %r11        ## imm = 0x101010101010101
+00000001000028c0	movq	-0x38(%rbp), %rcx
+00000001000028c4	jmp	0x100002553
+00000001000028c9	leaq	(%rax,%r12), %rdx
+00000001000028cd	movl	%r15d, %esi
+00000001000028d0	andl	$-0x4, %esi
+00000001000028d3	xorl	%ecx, %ecx
+00000001000028d5	nopw	%cs:(%rax,%rax)
+00000001000028e0	movb	$0x0, (%rdx)
+00000001000028e3	movb	$0x0, 0x1228(%rdx)
+00000001000028ea	movb	$0x0, 0x2450(%rdx)
+00000001000028f1	movb	$0x0, 0x3678(%rdx)
+00000001000028f8	addq	$0x4, %rcx
+00000001000028fc	addq	$0x48a0, %rdx                   ## imm = 0x48A0
+0000000100002903	cmpq	%rcx, %rsi
+0000000100002906	jne	0x1000028e0
+0000000100002908	movl	%r15d, %edx
+000000010000290b	andl	$0x3, %edx
+000000010000290e	je	0x100002940
+0000000100002910	imulq	$0x1228, %rcx, %rcx             ## imm = 0x1228
+0000000100002917	addq	%r12, %rcx
+000000010000291a	addq	%rcx, %rax
+000000010000291d	imulq	$0x1228, %rdx, %rcx             ## imm = 0x1228
+0000000100002924	xorl	%edx, %edx
+0000000100002926	nopw	%cs:(%rax,%rax)
+0000000100002930	movb	$0x0, (%rax,%rdx)
+0000000100002934	addq	$0x1228, %rdx                   ## imm = 0x1228
+000000010000293b	cmpq	%rdx, %rcx
+000000010000293e	jne	0x100002930
+0000000100002940	addq	%r15, %rbx
+0000000100002943	leaq	(%r15,%r13), %rcx
+0000000100002947	decq	%rcx
+000000010000294a	movq	%rbx, %r15
+000000010000294d	jmp	0x100002553
+0000000100002952	xorl	%r15d, %r15d
+0000000100002955	movq	$0x0, -0x30(%rbp)
+000000010000295d	xorl	%eax, %eax
+000000010000295f	movq	-0x30(%rbp), %rdx
+0000000100002963	movq	%rdx, 0xc866(%rip)
+000000010000296a	movq	%r15, 0xc877(%rip)
+0000000100002971	cmpq	$0x1000001, %rdx                ## imm = 0x1000001
+0000000100002978	movl	$0x1000000, %ecx                ## imm = 0x1000000
+000000010000297d	cmovaeq	%rdx, %rcx
+0000000100002981	shrq	$0x10, %rcx
+0000000100002985	pxor	%xmm0, %xmm0
+0000000100002989	movdqu	%xmm0, 0xc6df(%rip)
+0000000100002991	subq	%rcx, %r15
+0000000100002994	jbe	0x100002a9e
+000000010000299a	testq	%rax, %rax
+000000010000299d	je	0x100002a9e
+00000001000029a3	testq	%r15, %r15
+00000001000029a6	je	0x100002a9e
+00000001000029ac	movq	0xc6cd(%rip), %rcx
+00000001000029b3	nopw	%cs:(%rax,%rax)
+00000001000029c0	leaq	-0x1(%rax), %rbx
+00000001000029c4	imulq	$0x1228, %rbx, %rdx             ## imm = 0x1228
+00000001000029cb	cmpb	$0x0, (%rcx,%rdx)
+00000001000029cf	jne	0x100002a8d
+00000001000029d5	addq	%rcx, %rdx
+00000001000029d8	movq	%r15, %rdi
+00000001000029db	decq	%r15
+00000001000029de	cmpb	$0x0, 0x4(%rdx)
+00000001000029e2	je	0x100002a8d
+00000001000029e8	movb	$0x0, 0x4(%rdx)
+00000001000029ec	movl	$0x1, %r14d
+00000001000029f2	testq	%rbx, %rbx
+00000001000029f5	je	0x100002a6a
+00000001000029f7	testq	%r15, %r15
+00000001000029fa	je	0x100002a6a
+00000001000029fc	movl	$0x2, %edx
+0000000100002a01	subq	%rax, %rdx
+0000000100002a04	imulq	$0x1228, %rax, %rax             ## imm = 0x1228
+0000000100002a0b	addq	%rax, %rcx
+0000000100002a0e	addq	$-0x244c, %rcx                  ## imm = 0xDBB4
+0000000100002a15	movl	$0x2, %esi
+0000000100002a1a	subq	%rdi, %rsi
+0000000100002a1d	movl	$0x1, %eax
+0000000100002a22	nopw	%cs:(%rax,%rax)
+0000000100002a30	cmpb	$0x0, -0x4(%rcx)
+0000000100002a34	jne	0x100002a67
+0000000100002a36	cmpb	$0x0, (%rcx)
+0000000100002a39	je	0x100002a67
+0000000100002a3b	decq	%rbx
+0000000100002a3e	leaq	(%rdx,%rax), %rdi
+0000000100002a42	decq	%r15
+0000000100002a45	movb	$0x0, (%rcx)
+0000000100002a48	leaq	0x1(%rax), %r14
+0000000100002a4c	cmpq	$0x1, %rdi
+0000000100002a50	je	0x100002a6a
+0000000100002a52	addq	%rsi, %rax
+0000000100002a55	addq	$-0x1228, %rcx                  ## imm = 0xEDD8
+0000000100002a5c	cmpq	$0x1, %rax
+0000000100002a60	movq	%r14, %rax
+0000000100002a63	jne	0x100002a30
+0000000100002a65	jmp	0x100002a6a
+0000000100002a67	movq	%rax, %r14
+0000000100002a6a	movq	%rbx, %rdi
+0000000100002a6d	callq	_fwp_gc_chunk_addr
+0000000100002a72	shlq	$0x10, %r14
+0000000100002a76	movq	%rax, %rdi
+0000000100002a79	movq	%r14, %rsi
+0000000100002a7c	movl	$0x4, %edx
+0000000100002a81	callq	0x10000aa56                     ## symbol stub for: _madvise
+0000000100002a86	movq	0xc5f3(%rip), %rcx
+0000000100002a8d	movq	%rbx, %rax
+0000000100002a90	testq	%rbx, %rbx
+0000000100002a93	je	0x100002a9e
+0000000100002a95	testq	%r15, %r15
+0000000100002a98	jne	0x1000029c0
+0000000100002a9e	addq	$0x28, %rsp
+0000000100002aa2	popq	%rbx
+0000000100002aa3	popq	%r12
+0000000100002aa5	popq	%r13
+0000000100002aa7	popq	%r14
+0000000100002aa9	popq	%r15
+0000000100002aab	popq	%rbp
+0000000100002aac	retq
+0000000100002aad	nopl	(%rax)
+_fwp_gc_scan_stacks:
+0000000100002ab0	pushq	%rbp
+0000000100002ab1	movq	%rsp, %rbp
+0000000100002ab4	movq	0xc5d5(%rip), %rsi
+0000000100002abb	popq	%rbp
+0000000100002abc	jmp	_fwp_gc_scan_root
+0000000100002ac1	nopw	%cs:(%rax,%rax)
+_fwp_gc_sp:
+0000000100002ad0	pushq	%rbp
+0000000100002ad1	movq	%rsp, %rbp
+0000000100002ad4	movq	%rbp, %rax
+0000000100002ad7	popq	%rbp
+0000000100002ad8	retq
+0000000100002ad9	nopl	(%rax)
+_fwp_gc_drain:
+0000000100002ae0	movq	0xc6c1(%rip), %rax
+0000000100002ae7	testq	%rax, %rax
+0000000100002aea	je	0x100002b25
+0000000100002aec	pushq	%rbp
+0000000100002aed	movq	%rsp, %rbp
+0000000100002af0	movq	0xc6a9(%rip), %rcx
+0000000100002af7	decq	%rax
+0000000100002afa	movq	%rax, 0xc6a7(%rip)
+0000000100002b01	shlq	$0x4, %rax
+0000000100002b05	movq	(%rcx,%rax), %rdi
+0000000100002b09	movq	0x8(%rcx,%rax), %rsi
+0000000100002b0e	addq	%rdi, %rsi
+0000000100002b11	xorl	%edx, %edx
+0000000100002b13	callq	_fwp_gc_scan
+0000000100002b18	movq	0xc689(%rip), %rax
+0000000100002b1f	testq	%rax, %rax
+0000000100002b22	jne	0x100002af0
+0000000100002b24	popq	%rbp
+0000000100002b25	retq
+0000000100002b26	nopw	%cs:(%rax,%rax)
+_fwp_gc_scan_data:
+0000000100002b30	cmpl	$0x0, 0xc661(%rip)
+0000000100002b37	jle	0x100002be3
+0000000100002b3d	pushq	%rbp
+0000000100002b3e	movq	%rsp, %rbp
+0000000100002b41	pushq	%r15
+0000000100002b43	pushq	%r14
+0000000100002b45	pushq	%r13
+0000000100002b47	pushq	%r12
+0000000100002b49	pushq	%rbx
+0000000100002b4a	pushq	%rax
+0000000100002b4b	leaq	0xc54e(%rip), %r12
+0000000100002b52	xorl	%r13d, %r13d
+0000000100002b55	leaq	_fwp_gc(%rip), %rbx
+0000000100002b5c	leaq	0x1a20(%rbx), %r14
+0000000100002b63	jmp	0x100002b8d
+0000000100002b65	nopw	%cs:(%rax,%rax)
+0000000100002b70	movq	%r15, %rsi
+0000000100002b73	xorl	%edx, %edx
+0000000100002b75	callq	_fwp_gc_scan
+0000000100002b7a	incq	%r13
+0000000100002b7d	movslq	0xc614(%rip), %rax
+0000000100002b84	addq	$0x10, %r12
+0000000100002b88	cmpq	%rax, %r13
+0000000100002b8b	jge	0x100002bd5
+0000000100002b8d	movq	-0x8(%r12), %rdi
+0000000100002b92	movq	(%r12), %rax
+0000000100002b96	xorps	%xmm0, %xmm0
+0000000100002b99	cvtsi2sd	%rax, %xmm0
+0000000100002b9e	addsd	0x1200(%rbx), %xmm0
+0000000100002ba6	leaq	(%rdi,%rax), %r15
+0000000100002baa	cmpq	%rbx, %rdi
+0000000100002bad	seta	%al
+0000000100002bb0	movsd	%xmm0, 0x1200(%rbx)
+0000000100002bb8	cmpq	%r14, %r15
+0000000100002bbb	setb	%cl
+0000000100002bbe	orb	%al, %cl
+0000000100002bc0	jne	0x100002b70
+0000000100002bc2	movq	%rbx, %rsi
+0000000100002bc5	xorl	%edx, %edx
+0000000100002bc7	callq	_fwp_gc_scan
+0000000100002bcc	leaq	_fwp_reuse_verify(%rip), %rdi
+0000000100002bd3	jmp	0x100002b70
+0000000100002bd5	addq	$0x8, %rsp
+0000000100002bd9	popq	%rbx
+0000000100002bda	popq	%r12
+0000000100002bdc	popq	%r13
+0000000100002bde	popq	%r14
+0000000100002be0	popq	%r15
+0000000100002be2	popq	%rbp
+0000000100002be3	retq
+0000000100002be4	nopw	%cs:(%rax,%rax)
+_fwp_gc_scan_root:
+0000000100002bf0	pushq	%rbp
+0000000100002bf1	movq	%rsp, %rbp
+0000000100002bf4	testq	%rdi, %rdi
+0000000100002bf7	sete	%cl
+0000000100002bfa	movq	%rsi, %rax
+0000000100002bfd	subq	%rdi, %rax
+0000000100002c00	setbe	%dl
+0000000100002c03	orb	%cl, %dl
+0000000100002c05	jne	0x100002c27
+0000000100002c07	cvtsi2sd	%rax, %xmm0
+0000000100002c0c	addsd	0xc5f4(%rip), %xmm0
+0000000100002c14	movsd	%xmm0, 0xc5ec(%rip)
+0000000100002c1c	movl	$0x1, %edx
+0000000100002c21	popq	%rbp
+0000000100002c22	jmp	_fwp_gc_scan
+0000000100002c27	popq	%rbp
+0000000100002c28	retq
+0000000100002c29	nopl	(%rax)
+_fwp_gc_scan:
+0000000100002c30	pushq	%rbp
+0000000100002c31	movq	%rsp, %rbp
+0000000100002c34	pushq	%r15
+0000000100002c36	pushq	%r14
+0000000100002c38	pushq	%r13
+0000000100002c3a	pushq	%r12
+0000000100002c3c	pushq	%rbx
+0000000100002c3d	pushq	%rax
+0000000100002c3e	movl	%edx, -0x2c(%rbp)
+0000000100002c41	movq	%rdi, %r15
+0000000100002c44	addq	$0x7, %r15
+0000000100002c48	andq	$-0x8, %r15
+0000000100002c4c	leaq	0x8(%r15), %rax
+0000000100002c50	cmpq	%rsi, %rax
+0000000100002c53	jbe	0x100002c64
+0000000100002c55	addq	$0x8, %rsp
+0000000100002c59	popq	%rbx
+0000000100002c5a	popq	%r12
+0000000100002c5c	popq	%r13
+0000000100002c5e	popq	%r14
+0000000100002c60	popq	%r15
+0000000100002c62	popq	%rbp
+0000000100002c63	retq
+0000000100002c64	movq	%rsi, %r14
+0000000100002c67	movq	0xc3ca(%rip), %r13
+0000000100002c6e	movq	0xc3eb(%rip), %rbx
+0000000100002c75	shlq	$0x10, %rbx
+0000000100002c79	jmp	0x100002ca9
+0000000100002c7b	nopl	(%rax,%rax)
+0000000100002c80	movq	%r12, %rdi
+0000000100002c83	callq	_fwp_gc_mark
+0000000100002c88	cmpl	$0x0, -0x2c(%rbp)
+0000000100002c8c	je	0x100002c99
+0000000100002c8e	decq	%r12
+0000000100002c91	movq	%r12, %rdi
+0000000100002c94	callq	_fwp_gc_mark
+0000000100002c99	leaq	0x8(%r15), %rax
+0000000100002c9d	addq	$0x10, %r15
+0000000100002ca1	cmpq	%r14, %r15
+0000000100002ca4	movq	%rax, %r15
+0000000100002ca7	ja	0x100002c55
+0000000100002ca9	movq	(%r15), %r12
+0000000100002cac	movq	%r12, %rax
+0000000100002caf	subq	%r13, %rax
+0000000100002cb2	cmpq	%rbx, %rax
+0000000100002cb5	jb	0x100002c80
+0000000100002cb7	cmpl	$0x0, -0x2c(%rbp)
+0000000100002cbb	je	0x100002c99
+0000000100002cbd	cmpq	%rbx, %rax
+0000000100002cc0	je	0x100002c8e
+0000000100002cc2	jmp	0x100002c99
+0000000100002cc4	nopw	%cs:(%rax,%rax)
+_fwp_gc_mark:
+0000000100002cd0	pushq	%rbp
+0000000100002cd1	movq	%rsp, %rbp
+0000000100002cd4	pushq	%r14
+0000000100002cd6	pushq	%rbx
+0000000100002cd7	subq	$0x10, %rsp
+0000000100002cdb	movq	%rdi, %r14
+0000000100002cde	leaq	-0x18(%rbp), %rsi
+0000000100002ce2	callq	_fwp_gc_chunk_of
+0000000100002ce7	testq	%rax, %rax
+0000000100002cea	je	0x100002d88
+0000000100002cf0	movzbl	(%rax), %ecx
+0000000100002cf3	cmpl	$0x3, %ecx
+0000000100002cf6	je	0x100002d63
+0000000100002cf8	cmpl	$0x2, %ecx
+0000000100002cfb	je	0x100002d78
+0000000100002cfd	cmpl	$0x1, %ecx
+0000000100002d00	jne	0x100002d88
+0000000100002d06	movl	0x8(%rax), %ebx
+0000000100002d09	movzwl	%r14w, %ecx
+0000000100002d0d	movq	%rax, %rsi
+0000000100002d10	movl	%ecx, %eax
+0000000100002d12	xorl	%edx, %edx
+0000000100002d14	divl	%ebx
+0000000100002d16	movl	%eax, %r14d
+0000000100002d19	cmpl	0xc(%rsi), %eax
+0000000100002d1c	jae	0x100002d88
+0000000100002d1e	movq	%rsi, %rax
+0000000100002d21	movl	$0x1, %edx
+0000000100002d26	movl	%r14d, %ecx
+0000000100002d29	shlq	%cl, %rdx
+0000000100002d2c	movl	%r14d, %ecx
+0000000100002d2f	shrl	$0x6, %ecx
+0000000100002d32	movq	0x28(%rsi,%rcx,8), %rsi
+0000000100002d37	btq	%r14, %rsi
+0000000100002d3b	jb	0x100002d88
+0000000100002d3d	orq	%rdx, %rsi
+0000000100002d40	movq	%rsi, 0x28(%rax,%rcx,8)
+0000000100002d45	cmpb	$0x1, 0x1(%rax)
+0000000100002d49	je	0x100002d88
+0000000100002d4b	movq	-0x18(%rbp), %rdi
+0000000100002d4f	callq	_fwp_gc_chunk_addr
+0000000100002d54	imulq	%rbx, %r14
+0000000100002d58	addq	%rax, %r14
+0000000100002d5b	movq	%r14, %rdi
+0000000100002d5e	movq	%rbx, %rsi
+0000000100002d61	jmp	0x100002da4
+0000000100002d63	movl	0x10(%rax), %eax
+0000000100002d66	movq	%rax, -0x18(%rbp)
+0000000100002d6a	imulq	$0x1228, %rax, %rax             ## imm = 0x1228
+0000000100002d71	addq	0xc308(%rip), %rax
+0000000100002d78	cmpb	$0x0, 0x3(%rax)
+0000000100002d7c	jne	0x100002d88
+0000000100002d7e	movb	$0x1, 0x3(%rax)
+0000000100002d82	cmpb	$0x1, 0x1(%rax)
+0000000100002d86	jne	0x100002d91
+0000000100002d88	addq	$0x10, %rsp
+0000000100002d8c	popq	%rbx
+0000000100002d8d	popq	%r14
+0000000100002d8f	popq	%rbp
+0000000100002d90	retq
+0000000100002d91	movq	-0x18(%rbp), %rdi
+0000000100002d95	movq	%rax, %rbx
+0000000100002d98	callq	_fwp_gc_chunk_addr
+0000000100002d9d	movq	0x18(%rbx), %rsi
+0000000100002da1	movq	%rax, %rdi
+0000000100002da4	addq	$0x10, %rsp
+0000000100002da8	popq	%rbx
+0000000100002da9	popq	%r14
+0000000100002dab	popq	%rbp
+0000000100002dac	jmp	_fwp_gc_push
+0000000100002db1	nopw	%cs:(%rax,%rax)
+_fwp_gc_chunk_of:
+0000000100002dc0	pushq	%rbp
+0000000100002dc1	movq	%rsp, %rbp
+0000000100002dc4	subq	0xc26d(%rip), %rdi
+0000000100002dcb	movq	0xc28e(%rip), %rax
+0000000100002dd2	shlq	$0x10, %rax
+0000000100002dd6	cmpq	%rax, %rdi
+0000000100002dd9	jae	0x100002df2
+0000000100002ddb	shrq	$0x10, %rdi
+0000000100002ddf	movq	%rdi, (%rsi)
+0000000100002de2	imulq	$0x1228, %rdi, %rax             ## imm = 0x1228
+0000000100002de9	addq	0xc290(%rip), %rax
+0000000100002df0	popq	%rbp
+0000000100002df1	retq
+0000000100002df2	xorl	%eax, %eax
+0000000100002df4	popq	%rbp
+0000000100002df5	retq
+0000000100002df6	nopw	%cs:(%rax,%rax)
+_fwp_gc_push:
+0000000100002e00	pushq	%rbp
+0000000100002e01	movq	%rsp, %rbp
+0000000100002e04	pushq	%r14
+0000000100002e06	pushq	%rbx
+0000000100002e07	movq	%rsi, %rbx
+0000000100002e0a	movq	%rdi, %r14
+0000000100002e0d	movq	0xc394(%rip), %rcx
+0000000100002e14	movq	0xc385(%rip), %rax
+0000000100002e1b	cmpq	0xc38e(%rip), %rcx
+0000000100002e22	jne	0x100002e5a
+0000000100002e24	leaq	(%rcx,%rcx), %rdx
+0000000100002e28	testq	%rcx, %rcx
+0000000100002e2b	movl	$0x1000, %esi                   ## imm = 0x1000
+0000000100002e30	cmovneq	%rdx, %rsi
+0000000100002e34	movq	%rsi, 0xc375(%rip)
+0000000100002e3b	shlq	$0x4, %rsi
+0000000100002e3f	movq	%rax, %rdi
+0000000100002e42	callq	0x10000aaa4                     ## symbol stub for: _realloc
+0000000100002e47	movq	%rax, 0xc352(%rip)
+0000000100002e4e	testq	%rax, %rax
+0000000100002e51	je	0x100002e79
+0000000100002e53	movq	0xc34e(%rip), %rcx
+0000000100002e5a	movq	%rcx, %rdx
+0000000100002e5d	shlq	$0x4, %rdx
+0000000100002e61	movq	%r14, (%rax,%rdx)
+0000000100002e65	movq	%rbx, 0x8(%rax,%rdx)
+0000000100002e6a	incq	%rcx
+0000000100002e6d	movq	%rcx, 0xc334(%rip)
+0000000100002e74	popq	%rbx
+0000000100002e75	popq	%r14
+0000000100002e77	popq	%rbp
+0000000100002e78	retq
+0000000100002e79	callq	_fwp_gc_oom
+0000000100002e7e	nop
+_fwp_gc_marked:
+0000000100002e80	pushq	%rbp
+0000000100002e81	movq	%rsp, %rbp
+0000000100002e84	pushq	%rbx
+0000000100002e85	pushq	%rax
+0000000100002e86	movq	%rdi, %rbx
+0000000100002e89	leaq	-0x10(%rbp), %rsi
+0000000100002e8d	callq	_fwp_gc_chunk_of
+0000000100002e92	testq	%rax, %rax
+0000000100002e95	je	0x100002ecd
+0000000100002e97	movzbl	(%rax), %ecx
+0000000100002e9a	cmpb	$0x3, %cl
+0000000100002e9d	jne	0x100002eb8
+0000000100002e9f	movq	0xc1da(%rip), %rcx
+0000000100002ea6	movl	0x10(%rax), %eax
+0000000100002ea9	imulq	$0x1228, %rax, %rdx             ## imm = 0x1228
+0000000100002eb0	leaq	(%rcx,%rdx), %rax
+0000000100002eb4	movzbl	(%rcx,%rdx), %ecx
+0000000100002eb8	cmpb	$0x1, %cl
+0000000100002ebb	je	0x100002ed4
+0000000100002ebd	movzbl	%cl, %edx
+0000000100002ec0	xorl	%ecx, %ecx
+0000000100002ec2	cmpl	$0x2, %edx
+0000000100002ec5	jne	0x100002efa
+0000000100002ec7	movzbl	0x3(%rax), %ecx
+0000000100002ecb	jmp	0x100002efa
+0000000100002ecd	movl	$0x1, %ecx
+0000000100002ed2	jmp	0x100002efa
+0000000100002ed4	movzwl	%bx, %ecx
+0000000100002ed7	movq	%rax, %rsi
+0000000100002eda	movl	%ecx, %eax
+0000000100002edc	xorl	%edx, %edx
+0000000100002ede	divl	0x8(%rsi)
+0000000100002ee1	movl	%eax, %ecx
+0000000100002ee3	shrl	$0x3, %ecx
+0000000100002ee6	andl	$0x1ff8, %ecx                   ## imm = 0x1FF8
+0000000100002eec	movq	0x28(%rsi,%rcx), %rdx
+0000000100002ef1	xorl	%ecx, %ecx
+0000000100002ef3	btq	%rax, %rdx
+0000000100002ef7	setb	%cl
+0000000100002efa	movl	%ecx, %eax
+0000000100002efc	addq	$0x8, %rsp
+0000000100002f00	popq	%rbx
+0000000100002f01	popq	%rbp
+0000000100002f02	retq
+0000000100002f03	nopw	%cs:(%rax,%rax)
+_fwp_rc_clear_chunk:
+0000000100002f10	pushq	%rbp
+0000000100002f11	movq	%rsp, %rbp
+0000000100002f14	pushq	%r15
+0000000100002f16	pushq	%r14
+0000000100002f18	pushq	%rbx
+0000000100002f19	pushq	%rax
+0000000100002f1a	movq	%rdi, %rbx
+0000000100002f1d	cmpq	$0x0, 0xcafb(%rip)
+0000000100002f25	je	0x100002f5e
+0000000100002f27	leaq	0x228(%rbx), %r14
+0000000100002f2e	xorl	%r15d, %r15d
+0000000100002f31	jmp	0x100002f4c
+0000000100002f33	nopw	%cs:(%rax,%rax)
+0000000100002f40	incq	%r15
+0000000100002f43	cmpq	$0x1000, %r15                   ## imm = 0x1000
+0000000100002f4a	je	0x100002f5e
+0000000100002f4c	cmpb	$-0x1, (%r14,%r15)
+0000000100002f51	jne	0x100002f40
+0000000100002f53	leaq	(%r14,%r15), %rdi
+0000000100002f57	callq	_fwp_rc_forget_slot
+0000000100002f5c	jmp	0x100002f40
+0000000100002f5e	addq	$0x228, %rbx                    ## imm = 0x228
+0000000100002f65	movl	$0x1000, %esi                   ## imm = 0x1000
+0000000100002f6a	movq	%rbx, %rdi
+0000000100002f6d	addq	$0x8, %rsp
+0000000100002f71	popq	%rbx
+0000000100002f72	popq	%r14
+0000000100002f74	popq	%r15
+0000000100002f76	popq	%rbp
+0000000100002f77	jmp	0x10000a9ba                     ## symbol stub for: ___bzero
+0000000100002f7c	nopl	(%rax)
+_f1:
+0000000100002f80	pushq	%rbp
+0000000100002f81	movq	%rsp, %rbp
+0000000100002f84	pushq	%rbx
+0000000100002f85	subq	$0x38, %rsp
+0000000100002f89	movq	0xa098(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100002f90	movq	(%rax), %rax
+0000000100002f93	movq	%rax, -0x10(%rbp)
+0000000100002f97	callq	_fwp_f32
+0000000100002f9c	callq	_w1
+0000000100002fa1	movaps	%xmm0, -0x40(%rbp)
+0000000100002fa5	movss	%xmm1, -0x2c(%rbp)
+0000000100002faa	callq	_fwp_from_f32
+0000000100002faf	movq	%rax, -0x28(%rbp)
+0000000100002fb3	movshdup	-0x40(%rbp), %xmm0              ## xmm0 = mem[1,1,3,3]
+0000000100002fb8	callq	_fwp_from_f32
+0000000100002fbd	movq	%rax, -0x20(%rbp)
+0000000100002fc1	movss	-0x2c(%rbp), %xmm0
+0000000100002fc6	callq	_fwp_from_f32
+0000000100002fcb	movq	%rax, -0x18(%rbp)
+0000000100002fcf	leaq	-0x28(%rbp), %rsi
+0000000100002fd3	movl	$0x3, %edi
+0000000100002fd8	callq	_fwp_record
+0000000100002fdd	movq	%rax, %rbx
+0000000100002fe0	movq	%rax, %rdi
+0000000100002fe3	callq	_fwp_rc_fresh
+0000000100002fe8	movq	0xa039(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100002fef	movq	(%rax), %rax
+0000000100002ff2	cmpq	-0x10(%rbp), %rax
+0000000100002ff6	jne	0x100003002
+0000000100002ff8	movq	%rbx, %rax
+0000000100002ffb	addq	$0x38, %rsp
+0000000100002fff	popq	%rbx
+0000000100003000	popq	%rbp
+0000000100003001	retq
+0000000100003002	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100003007	nopw	(%rax,%rax)
+_w1:
+0000000100003010	pushq	%rbp
+0000000100003011	movq	%rsp, %rbp
+0000000100003014	callq	_fwp_from_f32
+0000000100003019	movq	%rax, %rdi
+000000010000301c	callq	_fwp_f32
+0000000100003021	movaps	%xmm0, %xmm1
+0000000100003024	movsldup	%xmm0, %xmm0                    ## xmm0 = xmm0[0,0,2,2]
+0000000100003028	popq	%rbp
+0000000100003029	retq
+000000010000302a	nopw	(%rax,%rax)
+_fwp_f32:
+0000000100003030	pushq	%rbp
+0000000100003031	movq	%rsp, %rbp
+0000000100003034	movd	%edi, %xmm0
+0000000100003038	popq	%rbp
+0000000100003039	retq
+000000010000303a	nopw	(%rax,%rax)
+_fwp_from_f32:
+0000000100003040	pushq	%rbp
+0000000100003041	movq	%rsp, %rbp
+0000000100003044	movd	%xmm0, %eax
+0000000100003048	popq	%rbp
+0000000100003049	retq
+000000010000304a	nopw	(%rax,%rax)
+_f2:
+0000000100003050	pushq	%rbp
+0000000100003051	movq	%rsp, %rbp
+0000000100003054	pushq	%r15
+0000000100003056	pushq	%r14
+0000000100003058	pushq	%r13
+000000010000305a	pushq	%r12
+000000010000305c	pushq	%rbx
+000000010000305d	subq	$0xf8, %rsp
+0000000100003064	movq	%rdi, %rsi
+0000000100003067	movq	0x9fba(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+000000010000306e	movq	(%rax), %rax
+0000000100003071	movq	%rax, -0x30(%rbp)
+0000000100003075	leaq	-0x108(%rbp), %rdi
+000000010000307c	callq	_w2
+0000000100003081	movq	-0x108(%rbp), %rax
+0000000100003088	movq	%rax, -0x88(%rbp)
+000000010000308f	movq	-0x100(%rbp), %rcx
+0000000100003096	movq	%rcx, -0x80(%rbp)
+000000010000309a	movq	%rax, -0xc8(%rbp)
+00000001000030a1	movq	%rcx, -0xc0(%rbp)
+00000001000030a8	movq	-0xf8(%rbp), %rax
+00000001000030af	movq	%rax, -0x78(%rbp)
+00000001000030b3	movq	%rax, -0xb8(%rbp)
+00000001000030ba	movq	-0xf0(%rbp), %r13
+00000001000030c1	movq	%r13, -0xb0(%rbp)
+00000001000030c8	movq	-0xe8(%rbp), %r14
+00000001000030cf	movq	%r14, -0xa8(%rbp)
+00000001000030d6	movq	-0xe0(%rbp), %rbx
+00000001000030dd	movq	%rbx, -0xa0(%rbp)
+00000001000030e4	movq	-0xd8(%rbp), %r15
+00000001000030eb	movq	%r15, -0x98(%rbp)
+00000001000030f2	movq	-0xd0(%rbp), %r12
+00000001000030f9	movq	%r12, -0x90(%rbp)
+0000000100003100	leaq	_fwp_owner_release7(%rip), %rsi
+0000000100003107	leaq	-0x120(%rbp), %rdi
+000000010000310e	leaq	-0xc8(%rbp), %rdx
+0000000100003115	callq	_fwp_cleanup_push
+000000010000311a	movq	-0x88(%rbp), %rax
+0000000100003121	movq	%rax, -0x70(%rbp)
+0000000100003125	movq	-0x80(%rbp), %rax
+0000000100003129	movq	%rax, -0x68(%rbp)
+000000010000312d	movq	-0x78(%rbp), %rax
+0000000100003131	movq	%rax, -0x60(%rbp)
+0000000100003135	movq	%r13, -0x58(%rbp)
+0000000100003139	movq	%r14, -0x50(%rbp)
+000000010000313d	movq	%rbx, -0x48(%rbp)
+0000000100003141	movq	%r15, -0x40(%rbp)
+0000000100003145	movq	%r12, -0x38(%rbp)
+0000000100003149	leaq	-0x70(%rbp), %rsi
+000000010000314d	movl	$0x8, %edi
+0000000100003152	callq	_fwp_record
+0000000100003157	movq	%rax, %rbx
+000000010000315a	movq	%rax, %rdi
+000000010000315d	callq	_fwp_rc_fresh
+0000000100003162	leaq	-0x120(%rbp), %rdi
+0000000100003169	callq	_fwp_cleanup_pop
+000000010000316e	movq	0x9eb3(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100003175	movq	(%rax), %rax
+0000000100003178	cmpq	-0x30(%rbp), %rax
+000000010000317c	jne	0x100003193
+000000010000317e	movq	%rbx, %rax
+0000000100003181	addq	$0xf8, %rsp
+0000000100003188	popq	%rbx
+0000000100003189	popq	%r12
+000000010000318b	popq	%r13
+000000010000318d	popq	%r14
+000000010000318f	popq	%r15
+0000000100003191	popq	%rbp
+0000000100003192	retq
+0000000100003193	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100003198	nopl	(%rax,%rax)
+_w2:
+00000001000031a0	pushq	%rbp
+00000001000031a1	movq	%rsp, %rbp
+00000001000031a4	pushq	%r15
+00000001000031a6	pushq	%r14
+00000001000031a8	pushq	%r13
+00000001000031aa	pushq	%r12
+00000001000031ac	pushq	%rbx
+00000001000031ad	subq	$0x1c8, %rsp                    ## imm = 0x1C8
+00000001000031b4	movq	%rsi, %rbx
+00000001000031b7	movq	%rdi, -0x68(%rbp)
+00000001000031bb	movq	%rsi, %rdi
+00000001000031be	movq	$-0x80, %rsi
+00000001000031c5	callq	_f24
+00000001000031ca	movq	%rax, -0x70(%rbp)
+00000001000031ce	movq	%rax, %r14
+00000001000031d1	leaq	_fwp_owner_release0(%rip), %rsi
+00000001000031d8	leaq	-0x1f0(%rbp), %r12
+00000001000031df	leaq	-0x70(%rbp), %rdx
+00000001000031e3	movq	%r12, %rdi
+00000001000031e6	callq	_fwp_cleanup_push
+00000001000031eb	movl	$0xff, %esi
+00000001000031f0	movq	%rbx, %rdi
+00000001000031f3	callq	_f24
+00000001000031f8	movq	%rax, %r13
+00000001000031fb	movq	%r12, %rdi
+00000001000031fe	callq	_fwp_cleanup_pop
+0000000100003203	movq	%r14, -0x80(%rbp)
+0000000100003207	movq	%r13, -0x78(%rbp)
+000000010000320b	movq	%r13, -0x38(%rbp)
+000000010000320f	leaq	_fwp_owner_release1(%rip), %rsi
+0000000100003216	leaq	-0x1d8(%rbp), %r15
+000000010000321d	leaq	-0x80(%rbp), %rdx
+0000000100003221	movq	%r15, %rdi
+0000000100003224	callq	_fwp_cleanup_push
+0000000100003229	movq	%rbx, %rdi
+000000010000322c	movq	$-0x8000, %rsi                  ## imm = 0x8000
+0000000100003233	callq	_f24
+0000000100003238	movq	%rax, %r12
+000000010000323b	movq	%r15, %rdi
+000000010000323e	callq	_fwp_cleanup_pop
+0000000100003243	movq	%r14, -0x98(%rbp)
+000000010000324a	movq	%r14, %r15
+000000010000324d	movq	%r14, -0x30(%rbp)
+0000000100003251	movq	%r13, -0x90(%rbp)
+0000000100003258	movq	%r12, %r13
+000000010000325b	movq	%r12, -0x50(%rbp)
+000000010000325f	movq	%r12, -0x88(%rbp)
+0000000100003266	leaq	_fwp_owner_release2(%rip), %rsi
+000000010000326d	leaq	-0x1c0(%rbp), %r12
+0000000100003274	leaq	-0x98(%rbp), %rdx
+000000010000327b	movq	%r12, %rdi
+000000010000327e	callq	_fwp_cleanup_push
+0000000100003283	movl	$0xffff, %esi                   ## imm = 0xFFFF
+0000000100003288	movq	%rbx, %rdi
+000000010000328b	callq	_f24
+0000000100003290	movq	%rax, %r14
+0000000100003293	movq	%rax, -0x40(%rbp)
+0000000100003297	movq	%r12, %rdi
+000000010000329a	callq	_fwp_cleanup_pop
+000000010000329f	movq	%r15, -0xb8(%rbp)
+00000001000032a6	movq	-0x38(%rbp), %r12
+00000001000032aa	movq	%r12, -0xb0(%rbp)
+00000001000032b1	movq	%r13, -0xa8(%rbp)
+00000001000032b8	movq	%r14, -0xa0(%rbp)
+00000001000032bf	leaq	_fwp_owner_release3(%rip), %rsi
+00000001000032c6	leaq	-0x1a8(%rbp), %r14
+00000001000032cd	leaq	-0xb8(%rbp), %rdx
+00000001000032d4	movq	%r14, %rdi
+00000001000032d7	callq	_fwp_cleanup_push
+00000001000032dc	movq	%rbx, -0x58(%rbp)
+00000001000032e0	movq	%rbx, %rdi
+00000001000032e3	movq	$-0x80000000, %rsi              ## imm = 0x80000000
+00000001000032ea	callq	_f24
+00000001000032ef	movq	%rax, %r15
+00000001000032f2	movq	%rax, -0x48(%rbp)
+00000001000032f6	movq	%r14, %rdi
+00000001000032f9	callq	_fwp_cleanup_pop
+00000001000032fe	movq	-0x30(%rbp), %r14
+0000000100003302	movq	%r14, -0xe0(%rbp)
+0000000100003309	movq	%r12, -0xd8(%rbp)
+0000000100003310	movq	%r13, -0xd0(%rbp)
+0000000100003317	movq	-0x40(%rbp), %r12
+000000010000331b	movq	%r12, -0xc8(%rbp)
+0000000100003322	movq	%r15, -0xc0(%rbp)
+0000000100003329	leaq	_fwp_owner_release4(%rip), %rsi
+0000000100003330	leaq	-0x190(%rbp), %r15
+0000000100003337	leaq	-0xe0(%rbp), %rdx
+000000010000333e	movq	%r15, %rdi
+0000000100003341	callq	_fwp_cleanup_push
+0000000100003346	movl	$0x80000000, %eax               ## imm = 0x80000000
+000000010000334b	leaq	0x7fffffff(%rax), %rsi
+0000000100003352	movq	%rbx, %rdi
+0000000100003355	callq	_f24
+000000010000335a	movq	%rax, -0x60(%rbp)
+000000010000335e	movq	%r15, %rdi
+0000000100003361	callq	_fwp_cleanup_pop
+0000000100003366	movq	%r14, -0x110(%rbp)
+000000010000336d	movq	-0x38(%rbp), %r13
+0000000100003371	movq	%r13, -0x108(%rbp)
+0000000100003378	movq	-0x50(%rbp), %r15
+000000010000337c	movq	%r15, -0x100(%rbp)
+0000000100003383	movq	%r12, -0xf8(%rbp)
+000000010000338a	movq	-0x48(%rbp), %rbx
+000000010000338e	movq	%rbx, -0xf0(%rbp)
+0000000100003395	movq	-0x60(%rbp), %r12
+0000000100003399	movq	%r12, -0xe8(%rbp)
+00000001000033a0	leaq	_fwp_owner_release5(%rip), %rsi
+00000001000033a7	leaq	-0x178(%rbp), %rdi
+00000001000033ae	leaq	-0x110(%rbp), %rdx
+00000001000033b5	callq	_fwp_cleanup_push
+00000001000033ba	movl	$0x80000000, %esi               ## imm = 0x80000000
+00000001000033bf	movq	-0x58(%rbp), %rdi
+00000001000033c3	callq	_f24
+00000001000033c8	movq	%rax, %r14
+00000001000033cb	leaq	-0x178(%rbp), %rdi
+00000001000033d2	callq	_fwp_cleanup_pop
+00000001000033d7	movq	-0x30(%rbp), %rax
+00000001000033db	movq	%rax, -0x148(%rbp)
+00000001000033e2	movq	%r13, -0x140(%rbp)
+00000001000033e9	movq	%r15, -0x138(%rbp)
+00000001000033f0	movq	-0x40(%rbp), %r15
+00000001000033f4	movq	%r15, -0x130(%rbp)
+00000001000033fb	movq	%rbx, -0x128(%rbp)
+0000000100003402	movq	%r12, -0x120(%rbp)
+0000000100003409	movq	%r14, -0x118(%rbp)
+0000000100003410	leaq	_fwp_owner_release6(%rip), %rsi
+0000000100003417	leaq	-0x160(%rbp), %rdi
+000000010000341e	leaq	-0x148(%rbp), %rdx
+0000000100003425	callq	_fwp_cleanup_push
+000000010000342a	movabsq	$-0x8000000000000000, %rsi      ## imm = 0x8000000000000000
+0000000100003434	movq	-0x58(%rbp), %rdi
+0000000100003438	callq	_f24
+000000010000343d	movq	%rax, %rbx
+0000000100003440	leaq	-0x160(%rbp), %rdi
+0000000100003447	callq	_fwp_cleanup_pop
+000000010000344c	movq	-0x68(%rbp), %rax
+0000000100003450	movq	-0x30(%rbp), %rcx
+0000000100003454	movq	%rcx, (%rax)
+0000000100003457	movq	%r13, 0x8(%rax)
+000000010000345b	movq	-0x50(%rbp), %rcx
+000000010000345f	movq	%rcx, 0x10(%rax)
+0000000100003463	movq	%r15, 0x18(%rax)
+0000000100003467	movq	-0x48(%rbp), %rcx
+000000010000346b	movq	%rcx, 0x20(%rax)
+000000010000346f	movq	%r12, 0x28(%rax)
+0000000100003473	movq	%r14, 0x30(%rax)
+0000000100003477	movq	%rbx, 0x38(%rax)
+000000010000347b	addq	$0x1c8, %rsp                    ## imm = 0x1C8
+0000000100003482	popq	%rbx
+0000000100003483	popq	%r12
+0000000100003485	popq	%r13
+0000000100003487	popq	%r14
+0000000100003489	popq	%r15
+000000010000348b	popq	%rbp
+000000010000348c	retq
+000000010000348d	nopl	(%rax)
+_fwp_cleanup_push:
+0000000100003490	pushq	%rbp
+0000000100003491	movq	%rsp, %rbp
+0000000100003494	movq	_fwp_cleanups(%rip), %rax
+000000010000349b	movq	%rax, (%rdi)
+000000010000349e	movq	%rsi, 0x8(%rdi)
+00000001000034a2	movq	%rdx, 0x10(%rdi)
+00000001000034a6	movq	%rdi, _fwp_cleanups(%rip)
+00000001000034ad	popq	%rbp
+00000001000034ae	retq
+00000001000034af	nop
+_fwp_owner_release7:
+00000001000034b0	pushq	%rbp
+00000001000034b1	movq	%rsp, %rbp
+00000001000034b4	pushq	%rbx
+00000001000034b5	pushq	%rax
+00000001000034b6	movq	%rdi, %rbx
+00000001000034b9	movq	(%rdi), %rdi
+00000001000034bc	callq	_fwp_drop7
+00000001000034c1	movq	0x8(%rbx), %rdi
+00000001000034c5	callq	_fwp_drop7
+00000001000034ca	movq	0x10(%rbx), %rdi
+00000001000034ce	callq	_fwp_drop7
+00000001000034d3	movq	0x18(%rbx), %rdi
+00000001000034d7	callq	_fwp_drop7
+00000001000034dc	movq	0x20(%rbx), %rdi
+00000001000034e0	callq	_fwp_drop7
+00000001000034e5	movq	0x28(%rbx), %rdi
+00000001000034e9	callq	_fwp_drop7
+00000001000034ee	movq	0x30(%rbx), %rdi
+00000001000034f2	callq	_fwp_drop7
+00000001000034f7	movq	0x38(%rbx), %rdi
+00000001000034fb	addq	$0x8, %rsp
+00000001000034ff	popq	%rbx
+0000000100003500	popq	%rbp
+0000000100003501	jmp	_fwp_drop7
+0000000100003506	nopw	%cs:(%rax,%rax)
+_fwp_cleanup_pop:
+0000000100003510	cmpq	%rdi, _fwp_cleanups(%rip)
+0000000100003517	jne	0x100003524
+0000000100003519	movq	(%rdi), %rax
+000000010000351c	movq	%rax, _fwp_cleanups(%rip)
+0000000100003523	retq
+0000000100003524	pushq	%rbp
+0000000100003525	movq	%rsp, %rbp
+0000000100003528	callq	0x10000a9ea                     ## symbol stub for: _abort
+000000010000352d	nopl	(%rax)
+_f24:
+0000000100003530	pushq	%rbp
+0000000100003531	movq	%rsp, %rbp
+0000000100003534	popq	%rbp
+0000000100003535	jmp	_fwp_p_array_make_typed
+000000010000353a	nopw	(%rax,%rax)
+_fwp_owner_release0:
+0000000100003540	pushq	%rbp
+0000000100003541	movq	%rsp, %rbp
+0000000100003544	movq	(%rdi), %rdi
+0000000100003547	popq	%rbp
+0000000100003548	jmp	_fwp_drop7
+000000010000354d	nopl	(%rax)
+_fwp_owner_release1:
+0000000100003550	pushq	%rbp
+0000000100003551	movq	%rsp, %rbp
+0000000100003554	pushq	%rbx
+0000000100003555	pushq	%rax
+0000000100003556	movq	%rdi, %rbx
+0000000100003559	movq	(%rdi), %rdi
+000000010000355c	callq	_fwp_drop7
+0000000100003561	movq	0x8(%rbx), %rdi
+0000000100003565	addq	$0x8, %rsp
+0000000100003569	popq	%rbx
+000000010000356a	popq	%rbp
+000000010000356b	jmp	_fwp_drop7
+_fwp_owner_release2:
+0000000100003570	pushq	%rbp
+0000000100003571	movq	%rsp, %rbp
+0000000100003574	pushq	%rbx
+0000000100003575	pushq	%rax
+0000000100003576	movq	%rdi, %rbx
+0000000100003579	movq	(%rdi), %rdi
+000000010000357c	callq	_fwp_drop7
+0000000100003581	movq	0x8(%rbx), %rdi
+0000000100003585	callq	_fwp_drop7
+000000010000358a	movq	0x10(%rbx), %rdi
+000000010000358e	addq	$0x8, %rsp
+0000000100003592	popq	%rbx
+0000000100003593	popq	%rbp
+0000000100003594	jmp	_fwp_drop7
+0000000100003599	nopl	(%rax)
+_fwp_owner_release3:
+00000001000035a0	pushq	%rbp
+00000001000035a1	movq	%rsp, %rbp
+00000001000035a4	pushq	%rbx
+00000001000035a5	pushq	%rax
+00000001000035a6	movq	%rdi, %rbx
+00000001000035a9	movq	(%rdi), %rdi
+00000001000035ac	callq	_fwp_drop7
+00000001000035b1	movq	0x8(%rbx), %rdi
+00000001000035b5	callq	_fwp_drop7
+00000001000035ba	movq	0x10(%rbx), %rdi
+00000001000035be	callq	_fwp_drop7
+00000001000035c3	movq	0x18(%rbx), %rdi
+00000001000035c7	addq	$0x8, %rsp
+00000001000035cb	popq	%rbx
+00000001000035cc	popq	%rbp
+00000001000035cd	jmp	_fwp_drop7
+00000001000035d2	nopw	%cs:(%rax,%rax)
+_fwp_owner_release4:
+00000001000035e0	pushq	%rbp
+00000001000035e1	movq	%rsp, %rbp
+00000001000035e4	pushq	%rbx
+00000001000035e5	pushq	%rax
+00000001000035e6	movq	%rdi, %rbx
+00000001000035e9	movq	(%rdi), %rdi
+00000001000035ec	callq	_fwp_drop7
+00000001000035f1	movq	0x8(%rbx), %rdi
+00000001000035f5	callq	_fwp_drop7
+00000001000035fa	movq	0x10(%rbx), %rdi
+00000001000035fe	callq	_fwp_drop7
+0000000100003603	movq	0x18(%rbx), %rdi
+0000000100003607	callq	_fwp_drop7
+000000010000360c	movq	0x20(%rbx), %rdi
+0000000100003610	addq	$0x8, %rsp
+0000000100003614	popq	%rbx
+0000000100003615	popq	%rbp
+0000000100003616	jmp	_fwp_drop7
+000000010000361b	nopl	(%rax,%rax)
+_fwp_owner_release5:
+0000000100003620	pushq	%rbp
+0000000100003621	movq	%rsp, %rbp
+0000000100003624	pushq	%rbx
+0000000100003625	pushq	%rax
+0000000100003626	movq	%rdi, %rbx
+0000000100003629	movq	(%rdi), %rdi
+000000010000362c	callq	_fwp_drop7
+0000000100003631	movq	0x8(%rbx), %rdi
+0000000100003635	callq	_fwp_drop7
+000000010000363a	movq	0x10(%rbx), %rdi
+000000010000363e	callq	_fwp_drop7
+0000000100003643	movq	0x18(%rbx), %rdi
+0000000100003647	callq	_fwp_drop7
+000000010000364c	movq	0x20(%rbx), %rdi
+0000000100003650	callq	_fwp_drop7
+0000000100003655	movq	0x28(%rbx), %rdi
+0000000100003659	addq	$0x8, %rsp
+000000010000365d	popq	%rbx
+000000010000365e	popq	%rbp
+000000010000365f	jmp	_fwp_drop7
+0000000100003664	nopw	%cs:(%rax,%rax)
+_fwp_owner_release6:
+0000000100003670	pushq	%rbp
+0000000100003671	movq	%rsp, %rbp
+0000000100003674	pushq	%rbx
+0000000100003675	pushq	%rax
+0000000100003676	movq	%rdi, %rbx
+0000000100003679	movq	(%rdi), %rdi
+000000010000367c	callq	_fwp_drop7
+0000000100003681	movq	0x8(%rbx), %rdi
+0000000100003685	callq	_fwp_drop7
+000000010000368a	movq	0x10(%rbx), %rdi
+000000010000368e	callq	_fwp_drop7
+0000000100003693	movq	0x18(%rbx), %rdi
+0000000100003697	callq	_fwp_drop7
+000000010000369c	movq	0x20(%rbx), %rdi
+00000001000036a0	callq	_fwp_drop7
+00000001000036a5	movq	0x28(%rbx), %rdi
+00000001000036a9	callq	_fwp_drop7
+00000001000036ae	movq	0x30(%rbx), %rdi
+00000001000036b2	addq	$0x8, %rsp
+00000001000036b6	popq	%rbx
+00000001000036b7	popq	%rbp
+00000001000036b8	jmp	_fwp_drop7
+00000001000036bd	nopl	(%rax)
+_fwp_p_array_make_typed:
+00000001000036c0	pushq	%rbp
+00000001000036c1	movq	%rsp, %rbp
+00000001000036c4	pushq	%r14
+00000001000036c6	pushq	%rbx
+00000001000036c7	movq	%rsi, %rbx
+00000001000036ca	callq	_fwp_count_arg
+00000001000036cf	movq	%rax, %r14
+00000001000036d2	movq	%rax, %rdi
+00000001000036d5	callq	_fwp_array_typed_new
+00000001000036da	testq	%r14, %r14
+00000001000036dd	je	0x100003724
+00000001000036df	cmpq	$0x3, %r14
+00000001000036e3	ja	0x1000036e9
+00000001000036e5	xorl	%ecx, %ecx
+00000001000036e7	jmp	0x100003717
+00000001000036e9	movq	%r14, %rcx
+00000001000036ec	andq	$-0x4, %rcx
+00000001000036f0	movq	%rbx, %xmm0
+00000001000036f5	pshufd	$0x44, %xmm0, %xmm0             ## xmm0 = xmm0[0,1,0,1]
+00000001000036fa	xorl	%edx, %edx
+00000001000036fc	nopl	(%rax)
+0000000100003700	movdqu	%xmm0, 0x8(%rax,%rdx,8)
+0000000100003706	movdqu	%xmm0, 0x18(%rax,%rdx,8)
+000000010000370c	addq	$0x4, %rdx
+0000000100003710	cmpq	%rdx, %rcx
+0000000100003713	jne	0x100003700
+0000000100003715	jmp	0x10000371f
+0000000100003717	movq	%rbx, 0x8(%rax,%rcx,8)
+000000010000371c	incq	%rcx
+000000010000371f	cmpq	%rcx, %r14
+0000000100003722	jne	0x100003717
+0000000100003724	popq	%rbx
+0000000100003725	popq	%r14
+0000000100003727	popq	%rbp
+0000000100003728	retq
+0000000100003729	nopl	(%rax)
+_fwp_count_arg:
+0000000100003730	pushq	%rbp
+0000000100003731	movq	%rsp, %rbp
+0000000100003734	xorl	%eax, %eax
+0000000100003736	testq	%rdi, %rdi
+0000000100003739	cmovgq	%rdi, %rax
+000000010000373d	popq	%rbp
+000000010000373e	retq
+000000010000373f	nop
+_fwp_array_typed_new:
+0000000100003740	pushq	%rbp
+0000000100003741	movq	%rsp, %rbp
+0000000100003744	movabsq	$0x1fffffffffffffff, %rax       ## imm = 0x1FFFFFFFFFFFFFFF
+000000010000374e	cmpq	%rax, %rdi
+0000000100003751	jae	0x100003761
+0000000100003753	callq	_fwp_arr_new
+0000000100003758	movq	%rax, %rdi
+000000010000375b	popq	%rbp
+000000010000375c	jmp	_fwp_rc_fresh
+0000000100003761	leaq	0x7910(%rip), %rdi              ## literal pool for: "array too large"
+0000000100003768	callq	_fwp_trap
+000000010000376d	nopl	(%rax)
+_fwp_arr_new:
+0000000100003770	pushq	%rbp
+0000000100003771	movq	%rsp, %rbp
+0000000100003774	pushq	%rbx
+0000000100003775	pushq	%rax
+0000000100003776	movabsq	$0x1fffffffffffffff, %rax       ## imm = 0x1FFFFFFFFFFFFFFF
+0000000100003780	cmpq	%rax, %rdi
+0000000100003783	jae	0x10000379f
+0000000100003785	movq	%rdi, %rbx
+0000000100003788	leaq	0x8(,%rdi,8), %rdi
+0000000100003790	callq	_fwp_alloc
+0000000100003795	movq	%rbx, (%rax)
+0000000100003798	addq	$0x8, %rsp
+000000010000379c	popq	%rbx
+000000010000379d	popq	%rbp
+000000010000379e	retq
+000000010000379f	leaq	0x78d2(%rip), %rdi              ## literal pool for: "array too large"
+00000001000037a6	callq	_fwp_trap
+00000001000037ab	nopl	(%rax,%rax)
+_fwp_alloc:
+00000001000037b0	pushq	%rbp
+00000001000037b1	movq	%rsp, %rbp
+00000001000037b4	movl	$0x2, %esi
+00000001000037b9	popq	%rbp
+00000001000037ba	jmp	_fwp_gc_alloc
+00000001000037bf	nop
+_fwp_drop7:
+00000001000037c0	pushq	%rbp
+00000001000037c1	movq	%rsp, %rbp
+00000001000037c4	pushq	%rbx
+00000001000037c5	pushq	%rax
+00000001000037c6	movq	%rdi, %rbx
+00000001000037c9	callq	_fwp_rc_release_last
+00000001000037ce	testl	%eax, %eax
+00000001000037d0	je	0x1000037e0
+00000001000037d2	movq	%rbx, %rdi
+00000001000037d5	addq	$0x8, %rsp
+00000001000037d9	popq	%rbx
+00000001000037da	popq	%rbp
+00000001000037db	jmp	_fwp_rc_free_arr
+00000001000037e0	addq	$0x8, %rsp
+00000001000037e4	popq	%rbx
+00000001000037e5	popq	%rbp
+00000001000037e6	retq
+00000001000037e7	nopw	(%rax,%rax)
+_fwp_rc_release_last:
+00000001000037f0	pushq	%rbp
+00000001000037f1	movq	%rsp, %rbp
+00000001000037f4	callq	_fwp_rc_slot
+00000001000037f9	movq	%rax, %rdi
+00000001000037fc	xorl	%eax, %eax
+00000001000037fe	testq	%rdi, %rdi
+0000000100003801	je	0x10000381d
+0000000100003803	movzbl	(%rdi), %eax
+0000000100003806	testl	%eax, %eax
+0000000100003808	je	0x10000381d
+000000010000380a	cmpl	$0x1, %eax
+000000010000380d	jne	0x100003816
+000000010000380f	movl	$0x1, %eax
+0000000100003814	popq	%rbp
+0000000100003815	retq
+0000000100003816	callq	_fwp_rc_drop_slot
+000000010000381b	xorl	%eax, %eax
+000000010000381d	popq	%rbp
+000000010000381e	retq
+000000010000381f	nop
+_fwp_rc_free_arr:
+0000000100003820	pushq	%rbp
+0000000100003821	movq	%rsp, %rbp
+0000000100003824	pushq	%r14
+0000000100003826	pushq	%rbx
+0000000100003827	movq	%rdi, %rbx
+000000010000382a	callq	_fwp_rc_last
+000000010000382f	testl	%eax, %eax
+0000000100003831	je	0x1000038b7
+0000000100003837	movl	_fwp_reuse_verify(%rip), %ecx
+000000010000383d	testl	%ecx, %ecx
+000000010000383f	js	0x10000384e
+0000000100003841	testl	%ecx, %ecx
+0000000100003843	je	0x100003889
+0000000100003845	movq	$0x0, (%rbx)
+000000010000384c	jmp	0x1000038b7
+000000010000384e	leaq	0x7833(%rip), %rdi              ## literal pool for: "FWP_REUSE_VERIFY"
+0000000100003855	callq	0x10000aa3e                     ## symbol stub for: _getenv
+000000010000385a	testq	%rax, %rax
+000000010000385d	je	0x100003876
+000000010000385f	movzbl	(%rax), %ecx
+0000000100003862	testl	%ecx, %ecx
+0000000100003864	je	0x10000387f
+0000000100003866	cmpl	$0x30, %ecx
+0000000100003869	jne	0x10000387a
+000000010000386b	xorl	%ecx, %ecx
+000000010000386d	cmpb	$0x0, 0x1(%rax)
+0000000100003871	setne	%cl
+0000000100003874	jmp	0x10000387f
+0000000100003876	xorl	%ecx, %ecx
+0000000100003878	jmp	0x10000387f
+000000010000387a	movl	$0x1, %ecx
+000000010000387f	movl	%ecx, _fwp_reuse_verify(%rip)
+0000000100003885	testl	%ecx, %ecx
+0000000100003887	jne	0x100003845
+0000000100003889	movq	_fwp_gc(%rip), %r14
+0000000100003890	movq	%rbx, %rdi
+0000000100003893	callq	_fwp_mem_free
+0000000100003898	movq	_fwp_gc(%rip), %rax
+000000010000389f	subq	%r14, %rax
+00000001000038a2	cvtsi2sd	%rax, %xmm0
+00000001000038a7	addsd	0xb961(%rip), %xmm0
+00000001000038af	movsd	%xmm0, 0xb959(%rip)
+00000001000038b7	popq	%rbx
+00000001000038b8	popq	%r14
+00000001000038ba	popq	%rbp
+00000001000038bb	retq
+00000001000038bc	nopl	(%rax)
+_fwp_rc_drop_slot:
+00000001000038c0	pushq	%rbp
+00000001000038c1	movq	%rsp, %rbp
+00000001000038c4	movzbl	(%rdi), %eax
+00000001000038c7	cmpb	$-0x1, %al
+00000001000038c9	je	0x1000038d5
+00000001000038cb	cmpb	$0x2, %al
+00000001000038cd	jb	0x1000038d3
+00000001000038cf	decb	%al
+00000001000038d1	movb	%al, (%rdi)
+00000001000038d3	popq	%rbp
+00000001000038d4	retq
+00000001000038d5	popq	%rbp
+00000001000038d6	jmp	_fwp_rc_wide_drop
+00000001000038db	nopl	(%rax,%rax)
+_fwp_rc_wide_drop:
+00000001000038e0	pushq	%rbp
+00000001000038e1	movq	%rsp, %rbp
+00000001000038e4	pushq	%rbx
+00000001000038e5	pushq	%rax
+00000001000038e6	movq	%rdi, %rbx
+00000001000038e9	callq	_fwp_rc_wide_link
+00000001000038ee	movq	(%rax), %rax
+00000001000038f1	testq	%rax, %rax
+00000001000038f4	je	0x10000391c
+00000001000038f6	movq	0x8(%rax), %rcx
+00000001000038fa	decq	%rcx
+00000001000038fd	movq	%rcx, 0x8(%rax)
+0000000100003901	cmpq	$0xfe, %rcx
+0000000100003908	jne	0x100003915
+000000010000390a	movq	%rbx, %rdi
+000000010000390d	callq	_fwp_rc_forget_slot
+0000000100003912	movb	$-0x2, (%rbx)
+0000000100003915	addq	$0x8, %rsp
+0000000100003919	popq	%rbx
+000000010000391a	popq	%rbp
+000000010000391b	retq
+000000010000391c	leaq	0x761e(%rip), %rdi              ## literal pool for: "internal: missing wide reference count"
+0000000100003923	callq	_fwp_trap
+0000000100003928	nopl	(%rax,%rax)
+_fwp_rc_last:
+0000000100003930	pushq	%rbp
+0000000100003931	movq	%rsp, %rbp
+0000000100003934	callq	_fwp_rc_slot
+0000000100003939	testq	%rax, %rax
+000000010000393c	je	0x10000394b
+000000010000393e	movq	%rax, %rcx
+0000000100003941	xorl	%eax, %eax
+0000000100003943	cmpb	$0x1, (%rcx)
+0000000100003946	sete	%al
+0000000100003949	popq	%rbp
+000000010000394a	retq
+000000010000394b	xorl	%eax, %eax
+000000010000394d	popq	%rbp
+000000010000394e	retq
+000000010000394f	nop
+_fwp_mem_free:
+0000000100003950	testq	%rdi, %rdi
+0000000100003953	je	0x100003b21
+0000000100003959	pushq	%rbp
+000000010000395a	movq	%rsp, %rbp
+000000010000395d	pushq	%r15
+000000010000395f	pushq	%r14
+0000000100003961	pushq	%rbx
+0000000100003962	pushq	%rax
+0000000100003963	movq	%rdi, %r15
+0000000100003966	leaq	-0x20(%rbp), %rsi
+000000010000396a	callq	_fwp_gc_chunk_of
+000000010000396f	testq	%rax, %rax
+0000000100003972	je	0x100003b17
+0000000100003978	movq	%rax, %r14
+000000010000397b	movzbl	(%rax), %eax
+000000010000397e	cmpl	$0x2, %eax
+0000000100003981	je	0x100003a1b
+0000000100003987	cmpl	$0x1, %eax
+000000010000398a	jne	0x100003b17
+0000000100003990	movzbl	0x1(%r14), %eax
+0000000100003995	movzbl	0x2(%r14), %ecx
+000000010000399a	imulq	$0x3c0, %rax, %rax              ## imm = 0x3C0
+00000001000039a1	leaq	_fwp_gc(%rip), %rsi
+00000001000039a8	addq	%rax, %rsi
+00000001000039ab	leaq	(%rcx,%rcx,2), %rdi
+00000001000039af	movzwl	%r15w, %eax
+00000001000039b3	xorl	%edx, %edx
+00000001000039b5	divl	0x8(%r14)
+00000001000039b9	movq	$-0x2, %rdx
+00000001000039c0	movl	%eax, %ecx
+00000001000039c2	rolq	%cl, %rdx
+00000001000039c5	leaq	(%rsi,%rdi,8), %rbx
+00000001000039c9	addq	$0x8, %rbx
+00000001000039cd	leaq	(%r14,%rax), %rdi
+00000001000039d1	addq	$0x228, %rdi                    ## imm = 0x228
+00000001000039d8	shrl	$0x3, %eax
+00000001000039db	andl	$0x1ff8, %eax                   ## imm = 0x1FF8
+00000001000039e0	andq	%rdx, 0x28(%r14,%rax)
+00000001000039e5	callq	_fwp_rc_clear_slot
+00000001000039ea	cmpl	$0x0, 0xb61b(%rip)
+00000001000039f1	je	0x1000039ff
+00000001000039f3	movl	0x8(%r14), %esi
+00000001000039f7	movq	%r15, %rdi
+00000001000039fa	callq	0x10000a9ba                     ## symbol stub for: ___bzero
+00000001000039ff	movq	(%rbx), %rax
+0000000100003a02	notq	%rax
+0000000100003a05	movq	%rax, (%r15)
+0000000100003a08	movq	%r15, (%rbx)
+0000000100003a0b	movl	0x8(%r14), %eax
+0000000100003a0f	addq	%rax, _fwp_gc(%rip)
+0000000100003a16	jmp	0x100003b17
+0000000100003a1b	movq	-0x20(%rbp), %rbx
+0000000100003a1f	movq	%rbx, %rdi
+0000000100003a22	callq	_fwp_gc_chunk_addr
+0000000100003a27	cmpq	%r15, %rax
+0000000100003a2a	jne	0x100003b17
+0000000100003a30	movq	0x18(%r14), %rax
+0000000100003a34	addq	%rax, _fwp_gc(%rip)
+0000000100003a3b	movb	$0x0, 0x3(%r14)
+0000000100003a40	movq	%r14, %rdi
+0000000100003a43	addq	$0x228, %rdi                    ## imm = 0x228
+0000000100003a4a	callq	_fwp_rc_clear_slot
+0000000100003a4f	movl	0x10(%r14), %eax
+0000000100003a53	testq	%rax, %rax
+0000000100003a56	je	0x100003af0
+0000000100003a5c	movq	0xb61d(%rip), %rcx
+0000000100003a63	imulq	$0x1228, %rbx, %rsi             ## imm = 0x1228
+0000000100003a6a	movl	%eax, %edx
+0000000100003a6c	andl	$0x3, %edx
+0000000100003a6f	cmpl	$0x4, %eax
+0000000100003a72	jae	0x100003a78
+0000000100003a74	xorl	%edi, %edi
+0000000100003a76	jmp	0x100003abc
+0000000100003a78	leaq	(%rcx,%rsi), %r8
+0000000100003a7c	movl	%eax, %r9d
+0000000100003a7f	andl	$-0x4, %r9d
+0000000100003a83	xorl	%edi, %edi
+0000000100003a85	nopw	%cs:(%rax,%rax)
+0000000100003a90	movb	$0x0, (%r8)
+0000000100003a94	movb	$0x0, 0x1228(%r8)
+0000000100003a9c	movb	$0x0, 0x2450(%r8)
+0000000100003aa4	movb	$0x0, 0x3678(%r8)
+0000000100003aac	addq	$0x4, %rdi
+0000000100003ab0	addq	$0x48a0, %r8                    ## imm = 0x48A0
+0000000100003ab7	cmpq	%rdi, %r9
+0000000100003aba	jne	0x100003a90
+0000000100003abc	testq	%rdx, %rdx
+0000000100003abf	je	0x100003af0
+0000000100003ac1	imulq	$0x1228, %rdi, %rdi             ## imm = 0x1228
+0000000100003ac8	addq	%rsi, %rdi
+0000000100003acb	addq	%rdi, %rcx
+0000000100003ace	imulq	$0x1228, %rdx, %rdx             ## imm = 0x1228
+0000000100003ad5	xorl	%esi, %esi
+0000000100003ad7	nopw	(%rax,%rax)
+0000000100003ae0	movb	$0x0, (%rcx,%rsi)
+0000000100003ae4	addq	$0x1228, %rsi                   ## imm = 0x1228
+0000000100003aeb	cmpq	%rsi, %rdx
+0000000100003aee	jne	0x100003ae0
+0000000100003af0	addq	%rax, 0xb6f1(%rip)
+0000000100003af7	cmpq	0xb57a(%rip), %rbx
+0000000100003afe	jae	0x100003b07
+0000000100003b00	movq	%rbx, 0xb571(%rip)
+0000000100003b07	cmpq	0xb562(%rip), %rbx
+0000000100003b0e	jae	0x100003b17
+0000000100003b10	movq	%rbx, 0xb559(%rip)
+0000000100003b17	addq	$0x8, %rsp
+0000000100003b1b	popq	%rbx
+0000000100003b1c	popq	%r14
+0000000100003b1e	popq	%r15
+0000000100003b20	popq	%rbp
+0000000100003b21	retq
+0000000100003b22	nopw	%cs:(%rax,%rax)
+_f3:
+0000000100003b30	pushq	%rbp
+0000000100003b31	movq	%rsp, %rbp
+0000000100003b34	pushq	%rbx
+0000000100003b35	subq	$0x38, %rsp
+0000000100003b39	movq	0x94e8(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100003b40	movq	(%rax), %rax
+0000000100003b43	movq	%rax, -0x10(%rbp)
+0000000100003b47	callq	_fwp_f64
+0000000100003b4c	leaq	-0x40(%rbp), %rdi
+0000000100003b50	callq	_w3
+0000000100003b55	movsd	-0x40(%rbp), %xmm0
+0000000100003b5a	callq	_fwp_from_f64
+0000000100003b5f	movq	%rax, -0x28(%rbp)
+0000000100003b63	movsd	-0x38(%rbp), %xmm0
+0000000100003b68	callq	_fwp_from_f64
+0000000100003b6d	movq	%rax, -0x20(%rbp)
+0000000100003b71	movsd	-0x30(%rbp), %xmm0
+0000000100003b76	callq	_fwp_from_f64
+0000000100003b7b	movq	%rax, -0x18(%rbp)
+0000000100003b7f	leaq	-0x28(%rbp), %rsi
+0000000100003b83	movl	$0x3, %edi
+0000000100003b88	callq	_fwp_record
+0000000100003b8d	movq	%rax, %rbx
+0000000100003b90	movq	%rax, %rdi
+0000000100003b93	callq	_fwp_rc_fresh
+0000000100003b98	movq	0x9489(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100003b9f	movq	(%rax), %rax
+0000000100003ba2	cmpq	-0x10(%rbp), %rax
+0000000100003ba6	jne	0x100003bb2
+0000000100003ba8	movq	%rbx, %rax
+0000000100003bab	addq	$0x38, %rsp
+0000000100003baf	popq	%rbx
+0000000100003bb0	popq	%rbp
+0000000100003bb1	retq
+0000000100003bb2	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100003bb7	nopw	(%rax,%rax)
+_w3:
+0000000100003bc0	pushq	%rbp
+0000000100003bc1	movq	%rsp, %rbp
+0000000100003bc4	pushq	%r15
+0000000100003bc6	pushq	%r14
+0000000100003bc8	pushq	%r12
+0000000100003bca	pushq	%rbx
+0000000100003bcb	movq	%rdi, %rbx
+0000000100003bce	callq	_fwp_from_f64
+0000000100003bd3	movq	%rax, %r14
+0000000100003bd6	movabsq	$0x3fd0000000000000, %rdi       ## imm = 0x3FD0000000000000
+0000000100003be0	movq	%rax, %rsi
+0000000100003be3	callq	_f6
+0000000100003be8	movq	%rax, %r15
+0000000100003beb	movq	%r14, %rdi
+0000000100003bee	callq	_f10
+0000000100003bf3	movq	%rax, %r12
+0000000100003bf6	movq	%r14, %rdi
+0000000100003bf9	callq	_fwp_f64
+0000000100003bfe	movsd	%xmm0, (%rbx)
+0000000100003c02	movq	%r15, %rdi
+0000000100003c05	callq	_fwp_f64
+0000000100003c0a	movsd	%xmm0, 0x8(%rbx)
+0000000100003c0f	movq	%r12, %rdi
+0000000100003c12	callq	_fwp_f64
+0000000100003c17	movsd	%xmm0, 0x10(%rbx)
+0000000100003c1c	movq	%rbx, %rax
+0000000100003c1f	popq	%rbx
+0000000100003c20	popq	%r12
+0000000100003c22	popq	%r14
+0000000100003c24	popq	%r15
+0000000100003c26	popq	%rbp
+0000000100003c27	retq
+0000000100003c28	nopl	(%rax,%rax)
+_f6:
+0000000100003c30	pushq	%rbp
+0000000100003c31	movq	%rsp, %rbp
+0000000100003c34	pushq	%rbx
+0000000100003c35	pushq	%rax
+0000000100003c36	movq	%rdi, %rbx
+0000000100003c39	movq	%rsi, %rdi
+0000000100003c3c	callq	_fwp_f64
+0000000100003c41	movsd	%xmm0, -0x10(%rbp)
+0000000100003c46	movq	%rbx, %rdi
+0000000100003c49	callq	_fwp_f64
+0000000100003c4e	addsd	-0x10(%rbp), %xmm0
+0000000100003c53	addq	$0x8, %rsp
+0000000100003c57	popq	%rbx
+0000000100003c58	popq	%rbp
+0000000100003c59	jmp	_fwp_from_f64
+0000000100003c5e	nop
+_f10:
+0000000100003c60	pushq	%rbp
+0000000100003c61	movq	%rsp, %rbp
+0000000100003c64	callq	_fwp_f64
+0000000100003c69	xorps	0x6fb0(%rip), %xmm0
+0000000100003c70	popq	%rbp
+0000000100003c71	jmp	_fwp_from_f64
+0000000100003c76	nopw	%cs:(%rax,%rax)
+_fwp_stack_guard_init:
+0000000100003c80	pushq	%rbp
+0000000100003c81	movq	%rsp, %rbp
+0000000100003c84	pushq	%rbx
+0000000100003c85	subq	$0x38, %rsp
+0000000100003c89	leaq	-0x9(%rbp), %rax
+0000000100003c8d	movq	%rax, _fwp_main_stack_top(%rip)
+0000000100003c94	movq	%rdi, _fwp_main_stack_size(%rip)
+0000000100003c9b	leaq	_fwp_stack_guard_init.alt(%rip), %rax
+0000000100003ca2	movq	%rax, -0x38(%rbp)
+0000000100003ca6	movq	$0x10000, -0x30(%rbp)           ## imm = 0x10000
+0000000100003cae	movl	$0x0, -0x28(%rbp)
+0000000100003cb5	leaq	-0x38(%rbp), %rdi
+0000000100003cb9	xorl	%esi, %esi
+0000000100003cbb	callq	0x10000aabc                     ## symbol stub for: _sigaltstack
+0000000100003cc0	testl	%eax, %eax
+0000000100003cc2	jne	0x100003cff
+0000000100003cc4	leaq	_fwp_segv(%rip), %rax
+0000000100003ccb	movq	%rax, -0x20(%rbp)
+0000000100003ccf	movabsq	$0x4100000000, %rax             ## imm = 0x4100000000
+0000000100003cd9	movq	%rax, -0x18(%rbp)
+0000000100003cdd	leaq	-0x20(%rbp), %rbx
+0000000100003ce1	movl	$0xb, %edi
+0000000100003ce6	movq	%rbx, %rsi
+0000000100003ce9	xorl	%edx, %edx
+0000000100003ceb	callq	0x10000aab6                     ## symbol stub for: _sigaction
+0000000100003cf0	movl	$0xa, %edi
+0000000100003cf5	movq	%rbx, %rsi
+0000000100003cf8	xorl	%edx, %edx
+0000000100003cfa	callq	0x10000aab6                     ## symbol stub for: _sigaction
+0000000100003cff	addq	$0x38, %rsp
+0000000100003d03	popq	%rbx
+0000000100003d04	popq	%rbp
+0000000100003d05	retq
+0000000100003d06	nopw	%cs:(%rax,%rax)
+_fwp_exec:
+0000000100003d10	pushq	%rbp
+0000000100003d11	movq	%rsp, %rbp
+0000000100003d14	pushq	%r15
+0000000100003d16	pushq	%r14
+0000000100003d18	pushq	%r13
+0000000100003d1a	pushq	%r12
+0000000100003d1c	pushq	%rbx
+0000000100003d1d	subq	$0x168, %rsp                    ## imm = 0x168
+0000000100003d24	movq	%rsi, %r14
+0000000100003d27	movl	%edi, %r13d
+0000000100003d2a	movq	0x92f7(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100003d31	movq	(%rax), %rax
+0000000100003d34	movq	%rax, -0x30(%rbp)
+0000000100003d38	leal	-0x1(%r13), %ebx
+0000000100003d3c	cmpb	$0x1, _fwp_cli_single(%rip)
+0000000100003d43	jne	0x100003d5b
+0000000100003d45	leaq	0x8(%r14), %rsi
+0000000100003d49	movl	%ebx, %edi
+0000000100003d4b	callq	_fwp_generated
+0000000100003d50	movl	%eax, %r12d
+0000000100003d53	testl	%eax, %eax
+0000000100003d55	jns	0x100003e91
+0000000100003d5b	movl	%ebx, -0x174(%rbp)
+0000000100003d61	movslq	%r13d, %rdi
+0000000100003d64	shlq	$0x3, %rdi
+0000000100003d68	movq	%rdi, -0x190(%rbp)
+0000000100003d6f	callq	_fwp_alloc
+0000000100003d74	movq	%rax, -0x160(%rbp)
+0000000100003d7b	cmpl	$0x2, %r13d
+0000000100003d7f	jl	0x100003dbf
+0000000100003d81	movq	%r14, %r12
+0000000100003d84	movl	-0x174(%rbp), %ebx
+0000000100003d8a	xorl	%r15d, %r15d
+0000000100003d8d	nopl	(%rax)
+0000000100003d90	leaq	0x1(%r15), %r14
+0000000100003d94	movq	0x8(%r12,%r15,8), %r13
+0000000100003d99	movq	%r13, %rdi
+0000000100003d9c	callq	0x10000aae6                     ## symbol stub for: _strlen
+0000000100003da1	movq	%r13, %rdi
+0000000100003da4	movq	%rax, %rsi
+0000000100003da7	callq	_fwp_str_lossy
+0000000100003dac	movq	-0x160(%rbp), %rcx
+0000000100003db3	movq	%rax, (%rcx,%r15,8)
+0000000100003db7	movq	%r14, %r15
+0000000100003dba	cmpq	%r14, %rbx
+0000000100003dbd	jne	0x100003d90
+0000000100003dbf	movl	$0x8, %edi
+0000000100003dc4	callq	_fwp_alloc
+0000000100003dc9	movl	$0x1, %edi
+0000000100003dce	callq	_fwp_alloc_leaf
+0000000100003dd3	movq	-0x190(%rbp), %rdi
+0000000100003dda	callq	_fwp_alloc
+0000000100003ddf	movq	%rax, %r14
+0000000100003de2	leaq	-0x184(%rbp), %rcx
+0000000100003de9	movl	-0x174(%rbp), %edi
+0000000100003def	movq	-0x160(%rbp), %rsi
+0000000100003df6	movq	%rax, %rdx
+0000000100003df9	callq	_fwp_cli_parse
+0000000100003dfe	cmpl	$0x2, %eax
+0000000100003e01	je	0x100003e2b
+0000000100003e03	cmpl	$0x1, %eax
+0000000100003e06	jne	0x100003e5b
+0000000100003e08	movq	0x9231(%rip), %rbx              ## literal pool symbol address: ___stdoutp
+0000000100003e0f	movq	(%rbx), %rsi
+0000000100003e12	leaq	0x7de7(%rip), %rdi              ## literal pool for: "usage: scalar <F64>\n\narguments:\n  <F64>  or one per line of standard input\n\noptions:\n  -h, --help  show this help\n"
+0000000100003e19	callq	0x10000aa26                     ## symbol stub for: _fputs
+0000000100003e1e	movq	(%rbx), %rdi
+0000000100003e21	callq	0x10000aa0e                     ## symbol stub for: _fflush
+0000000100003e26	xorl	%r12d, %r12d
+0000000100003e29	jmp	0x100003e91
+0000000100003e2b	leaq	0x7aa7(%rip), %rdi              ## literal pool for: "%.*s %s\n"
+0000000100003e32	leaq	0x7097(%rip), %rdx              ## literal pool for: "scalar"
+0000000100003e39	xorl	%r12d, %r12d
+0000000100003e3c	movl	$0x6, %esi
+0000000100003e41	xorl	%ecx, %ecx
+0000000100003e43	xorl	%eax, %eax
+0000000100003e45	callq	0x10000aa80                     ## symbol stub for: _printf
+0000000100003e4a	movq	0x91ef(%rip), %rax              ## literal pool symbol address: ___stdoutp
+0000000100003e51	movq	(%rax), %rdi
+0000000100003e54	callq	0x10000aa0e                     ## symbol stub for: _fflush
+0000000100003e59	jmp	0x100003e91
+0000000100003e5b	movl	$0x10, %edi
+0000000100003e60	callq	_fwp_alloc
+0000000100003e65	movq	%rax, %rbx
+0000000100003e68	movl	$0x0, -0x178(%rbp)
+0000000100003e72	movl	-0x184(%rbp), %esi
+0000000100003e78	leaq	-0x178(%rbp), %rcx
+0000000100003e7f	movq	%r14, %rdi
+0000000100003e82	movq	%rax, %rdx
+0000000100003e85	callq	_fwp_bind_positional
+0000000100003e8a	movl	%eax, %r12d
+0000000100003e8d	testl	%eax, %eax
+0000000100003e8f	je	0x100003eba
+0000000100003e91	movq	0x9190(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100003e98	movq	(%rax), %rax
+0000000100003e9b	cmpq	-0x30(%rbp), %rax
+0000000100003e9f	jne	0x100004472
+0000000100003ea5	movl	%r12d, %eax
+0000000100003ea8	addq	$0x168, %rsp                    ## imm = 0x168
+0000000100003eaf	popq	%rbx
+0000000100003eb0	popq	%r12
+0000000100003eb2	popq	%r13
+0000000100003eb4	popq	%r14
+0000000100003eb6	popq	%r15
+0000000100003eb8	popq	%rbp
+0000000100003eb9	retq
+0000000100003eba	leaq	0x7a21(%rip), %rdi              ## literal pool for: "FWP_OUT"
+0000000100003ec1	callq	0x10000aa3e                     ## symbol stub for: _getenv
+0000000100003ec6	testq	%rax, %rax
+0000000100003ec9	je	0x100003ef2
+0000000100003ecb	leaq	0x7a18(%rip), %rsi              ## literal pool for: "bin"
+0000000100003ed2	movq	%rax, %rdi
+0000000100003ed5	callq	0x10000aada                     ## symbol stub for: _strcmp
+0000000100003eda	xorl	%ecx, %ecx
+0000000100003edc	testl	%eax, %eax
+0000000100003ede	sete	%cl
+0000000100003ee1	movl	%ecx, _fwp_exec_binary_out(%rip)
+0000000100003ee7	jne	0x100003f0f
+0000000100003ee9	movq	0x9140(%rip), %rax              ## literal pool symbol address: ___stderrp
+0000000100003ef0	jmp	0x100003f16
+0000000100003ef2	movl	$0x0, _fwp_exec_binary_out(%rip)
+0000000100003efc	movq	0x913d(%rip), %rax              ## literal pool symbol address: ___stdoutp
+0000000100003f03	movq	(%rax), %rax
+0000000100003f06	movq	%rax, _fwp_prog_out(%rip)
+0000000100003f0d	jmp	0x100003f38
+0000000100003f0f	movq	0x912a(%rip), %rax              ## literal pool symbol address: ___stdoutp
+0000000100003f16	movq	(%rax), %rax
+0000000100003f19	movq	%rax, _fwp_prog_out(%rip)
+0000000100003f20	jne	0x100003f38
+0000000100003f22	leaq	_exec_out_header0(%rip), %rdi
+0000000100003f29	movl	$0x30, %esi
+0000000100003f2e	callq	_fwp_pipe_write
+0000000100003f33	callq	_fwp_pipe_flush
+0000000100003f38	movl	$0x0, -0x164(%rbp)
+0000000100003f42	cmpl	$0x0, -0x178(%rbp)
+0000000100003f49	je	0x100004143
+0000000100003f4f	movq	0x90e2(%rip), %r14              ## literal pool symbol address: ___stdinp
+0000000100003f56	movq	(%r14), %rdi
+0000000100003f59	movl	$0x100000, %ecx                 ## imm = 0x100000
+0000000100003f5e	xorl	%esi, %esi
+0000000100003f60	xorl	%edx, %edx
+0000000100003f62	callq	0x10000aab0                     ## symbol stub for: _setvbuf
+0000000100003f67	movq	(%r14), %rcx
+0000000100003f6a	leaq	_fwp_in_pend(%rip), %rdi
+0000000100003f71	movl	$0x1, %esi
+0000000100003f76	movl	$0x4, %edx
+0000000100003f7b	callq	0x10000aa2c                     ## symbol stub for: _fread
+0000000100003f80	movl	%eax, _fwp_in_npend(%rip)
+0000000100003f86	movl	$0x0, _fwp_in_ppos(%rip)
+0000000100003f90	movb	$0x1, %r13b
+0000000100003f93	cmpl	$0x4, %eax
+0000000100003f96	jne	0x100003fa8
+0000000100003f98	cmpl	$0x31505746, _fwp_in_pend(%rip) ## imm = 0x31505746
+0000000100003fa2	je	0x100004184
+0000000100003fa8	pxor	%xmm0, %xmm0
+0000000100003fac	movdqa	%xmm0, -0x130(%rbp)
+0000000100003fb4	movq	$0x0, -0x120(%rbp)
+0000000100003fbf	xorl	%r14d, %r14d
+0000000100003fc2	testb	%r13b, %r13b
+0000000100003fc5	jne	0x10000409a
+0000000100003fcb	movl	$0x1, %esi
+0000000100003fd0	leaq	-0x170(%rbp), %rdi
+0000000100003fd7	callq	_fwp_read_exact
+0000000100003fdc	testl	%eax, %eax
+0000000100003fde	je	0x1000041ef
+0000000100003fe4	movl	$0x4, %esi
+0000000100003fe9	leaq	-0x16f(%rbp), %rdi
+0000000100003ff0	callq	_fwp_read_exact
+0000000100003ff5	testl	%eax, %eax
+0000000100003ff7	je	0x10000427e
+0000000100003ffd	movq	%r14, -0x160(%rbp)
+0000000100004004	movq	%rbx, %r14
+0000000100004007	movl	%r13d, %ebx
+000000010000400a	movl	-0x16f(%rbp), %r13d
+0000000100004011	leaq	0x1(%r13), %rdi
+0000000100004015	callq	_fwp_alloc_leaf
+000000010000401a	movq	%rax, %r15
+000000010000401d	testq	%r13, %r13
+0000000100004020	je	0x100004035
+0000000100004022	movq	%r15, %rdi
+0000000100004025	movq	%r13, %rsi
+0000000100004028	callq	_fwp_read_exact
+000000010000402d	testl	%eax, %eax
+000000010000402f	je	0x100004277
+0000000100004035	movzbl	-0x170(%rbp), %r12d
+000000010000403d	testl	%r12d, %r12d
+0000000100004040	je	0x100004230
+0000000100004046	cmpl	$0x2, %r12d
+000000010000404a	je	0x100004239
+0000000100004050	movq	%r15, -0x150(%rbp)
+0000000100004057	movq	%r13, -0x148(%rbp)
+000000010000405e	movq	$0x0, -0x140(%rbp)
+0000000100004069	leaq	-0x150(%rbp), %rdi
+0000000100004070	leaq	_d0(%rip), %rsi
+0000000100004077	leaq	-0x180(%rbp), %rdx
+000000010000407e	callq	_fwp_decode
+0000000100004083	testl	%eax, %eax
+0000000100004085	je	0x100004249
+000000010000408b	movl	%ebx, %r13d
+000000010000408e	movq	%r14, %rbx
+0000000100004091	movq	-0x160(%rbp), %r14
+0000000100004098	jmp	0x1000040f3
+000000010000409a	leaq	-0x130(%rbp), %rdi
+00000001000040a1	callq	_fwp_read_text_line
+00000001000040a6	movq	-0x130(%rbp), %r14
+00000001000040ad	testl	%eax, %eax
+00000001000040af	je	0x1000041ef
+00000001000040b5	testq	%r14, %r14
+00000001000040b8	movq	%r14, %rdi
+00000001000040bb	leaq	0x78c8(%rip), %rax              ## literal pool for: ""
+00000001000040c2	cmoveq	%rax, %rdi
+00000001000040c6	movq	-0x128(%rbp), %rsi
+00000001000040cd	callq	_fwp_str_lossy
+00000001000040d2	movq	%rax, %r15
+00000001000040d5	leaq	0x8(%rax), %r12
+00000001000040d9	movq	(%rax), %rsi
+00000001000040dc	movq	%r12, %rdi
+00000001000040df	leaq	-0x180(%rbp), %rdx
+00000001000040e6	callq	_fwp_parse_text
+00000001000040eb	testl	%eax, %eax
+00000001000040ed	je	0x100004202
+00000001000040f3	movq	-0x180(%rbp), %rax
+00000001000040fa	movq	%rax, (%rbx)
+00000001000040fd	movq	%rbx, %rdi
+0000000100004100	leaq	-0x164(%rbp), %rsi
+0000000100004107	callq	_fwp_exec_call
+000000010000410c	movq	%rax, %r15
+000000010000410f	movq	_fwp_prog_out(%rip), %rdi
+0000000100004116	callq	0x10000aa0e                     ## symbol stub for: _fflush
+000000010000411b	cmpl	$0x0, -0x164(%rbp)
+0000000100004122	jne	0x1000041f7
+0000000100004128	movq	%r15, %rdi
+000000010000412b	callq	_fwp_emit_result
+0000000100004130	callq	_fwp_pipe_flush
+0000000100004135	testb	%r13b, %r13b
+0000000100004138	je	0x100003fcb
+000000010000413e	jmp	0x10000409a
+0000000100004143	leaq	-0x164(%rbp), %rsi
+000000010000414a	movq	%rbx, %rdi
+000000010000414d	callq	_fwp_exec_call
+0000000100004152	movq	%rax, %rbx
+0000000100004155	movq	_fwp_prog_out(%rip), %rdi
+000000010000415c	callq	0x10000aa0e                     ## symbol stub for: _fflush
+0000000100004161	movl	$0x1, %r12d
+0000000100004167	cmpl	$0x0, -0x164(%rbp)
+000000010000416e	jne	0x1000042b2
+0000000100004174	movq	%rbx, %rdi
+0000000100004177	callq	_fwp_emit_result
+000000010000417c	xorl	%r12d, %r12d
+000000010000417f	jmp	0x1000042b2
+0000000100004184	movl	$0x4, _fwp_in_ppos(%rip)
+000000010000418e	leaq	-0x151(%rbp), %rdi
+0000000100004195	movl	$0x1, %esi
+000000010000419a	callq	_fwp_read_exact
+000000010000419f	testl	%eax, %eax
+00000001000041a1	je	0x10000440c
+00000001000041a7	leaq	-0x180(%rbp), %rdi
+00000001000041ae	callq	_fwp_stdin_leb
+00000001000041b3	cmpl	$0x1, %eax
+00000001000041b6	jne	0x100004408
+00000001000041bc	movq	-0x180(%rbp), %rax
+00000001000041c3	cmpq	$0x40, %rax
+00000001000041c7	movl	$0x40, %ecx
+00000001000041cc	cmovbq	%rax, %rcx
+00000001000041d0	movq	%rcx, -0x160(%rbp)
+00000001000041d7	testq	%rax, %rax
+00000001000041da	je	0x100004358
+00000001000041e0	xorl	%r14d, %r14d
+00000001000041e3	leaq	-0x130(%rbp), %r15
+00000001000041ea	jmp	0x100004306
+00000001000041ef	xorl	%r12d, %r12d
+00000001000041f2	jmp	0x1000042a3
+00000001000041f7	movl	$0x1, %r12d
+00000001000041fd	jmp	0x1000042a3
+0000000100004202	movq	0x8e27(%rip), %rax              ## literal pool symbol address: ___stderrp
+0000000100004209	movq	(%rax), %rdi
+000000010000420c	movl	(%r15), %ecx
+000000010000420f	leaq	0x7775(%rip), %rsi              ## literal pool for: "%s: cannot parse input `%.*s` as %s\n"
+0000000100004216	leaq	0x6cb3(%rip), %rdx              ## literal pool for: "scalar"
+000000010000421d	leaq	0x7a4f(%rip), %r9               ## literal pool for: "F64"
+0000000100004224	movq	%r12, %r8
+0000000100004227	xorl	%eax, %eax
+0000000100004229	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+000000010000422e	jmp	0x10000429d
+0000000100004230	movq	-0x160(%rbp), %r14
+0000000100004237	jmp	0x1000042a3
+0000000100004239	leaq	0x771f(%rip), %rsi              ## literal pool for: "%s: bad switch frame\n"
+0000000100004240	movq	-0x160(%rbp), %r14
+0000000100004247	jmp	0x100004285
+0000000100004249	movq	0x8de0(%rip), %rax              ## literal pool symbol address: ___stderrp
+0000000100004250	movq	(%rax), %rdi
+0000000100004253	leaq	0x771b(%rip), %rsi              ## literal pool for: "%s: malformed value\n"
+000000010000425a	leaq	0x6c6f(%rip), %rdx              ## literal pool for: "scalar"
+0000000100004261	xorl	%eax, %eax
+0000000100004263	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+0000000100004268	movl	$0x3, %r12d
+000000010000426e	movq	-0x160(%rbp), %r14
+0000000100004275	jmp	0x1000042a3
+0000000100004277	movq	-0x160(%rbp), %r14
+000000010000427e	leaq	0x76c5(%rip), %rsi              ## literal pool for: "%s: truncated frame\n"
+0000000100004285	movq	0x8da4(%rip), %rax              ## literal pool symbol address: ___stderrp
+000000010000428c	movq	(%rax), %rdi
+000000010000428f	leaq	0x6c3a(%rip), %rdx              ## literal pool for: "scalar"
+0000000100004296	xorl	%eax, %eax
+0000000100004298	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+000000010000429d	movl	$0x3, %r12d
+00000001000042a3	xorl	%edi, %edi
+00000001000042a5	callq	_fwp_mem_free
+00000001000042aa	movq	%r14, %rdi
+00000001000042ad	callq	0x10000aa32                     ## symbol stub for: _free
+00000001000042b2	cmpl	$0x0, _fwp_exec_binary_out(%rip)
+00000001000042b9	je	0x100003e4a
+00000001000042bf	leaq	_fwp_exec.end(%rip), %rdi
+00000001000042c6	movl	$0x5, %esi
+00000001000042cb	callq	_fwp_pipe_write
+00000001000042d0	callq	_fwp_pipe_flush
+00000001000042d5	jmp	0x100003e4a
+00000001000042da	movl	$0x6, %esi
+00000001000042df	movq	%r15, %rdi
+00000001000042e2	callq	_fwp_read_exact
+00000001000042e7	testl	%eax, %eax
+00000001000042e9	je	0x10000440c
+00000001000042ef	movq	$0x0, -0x170(%rbp)
+00000001000042fa	incq	%r14
+00000001000042fd	cmpq	-0x160(%rbp), %r14
+0000000100004304	je	0x100004358
+0000000100004306	leaq	-0x170(%rbp), %rdi
+000000010000430d	callq	_fwp_stdin_name_len
+0000000100004312	cmpl	$0x1, %eax
+0000000100004315	jne	0x100004408
+000000010000431b	movq	-0x170(%rbp), %r13
+0000000100004322	testq	%r13, %r13
+0000000100004325	je	0x1000042ef
+0000000100004327	cmpq	$0x6, %r13
+000000010000432b	je	0x1000042da
+000000010000432d	cmpq	$0x100, %r13                    ## imm = 0x100
+0000000100004334	movl	$0x100, %r12d                   ## imm = 0x100
+000000010000433a	cmovbq	%r13, %r12
+000000010000433e	movq	%r15, %rdi
+0000000100004341	movq	%r12, %rsi
+0000000100004344	callq	_fwp_read_exact
+0000000100004349	testl	%eax, %eax
+000000010000434b	je	0x10000440c
+0000000100004351	subq	%r12, %r13
+0000000100004354	jne	0x10000432d
+0000000100004356	jmp	0x1000042ef
+0000000100004358	leaq	-0x150(%rbp), %rdi
+000000010000435f	movl	$0x10, %esi
+0000000100004364	callq	_fwp_read_exact
+0000000100004369	testl	%eax, %eax
+000000010000436b	je	0x10000440c
+0000000100004371	leaq	-0x170(%rbp), %rdi
+0000000100004378	callq	_fwp_stdin_name_len
+000000010000437d	cmpl	$0x1, %eax
+0000000100004380	jne	0x100004408
+0000000100004386	movq	-0x170(%rbp), %r15
+000000010000438d	leaq	0x1(%r15), %rdi
+0000000100004391	callq	_fwp_alloc_leaf
+0000000100004396	movq	%rax, %r14
+0000000100004399	testq	%r15, %r15
+000000010000439c	je	0x1000043ad
+000000010000439e	movq	%r14, %rdi
+00000001000043a1	movq	%r15, %rsi
+00000001000043a4	callq	_fwp_read_exact
+00000001000043a9	testl	%eax, %eax
+00000001000043ab	je	0x10000440c
+00000001000043ad	movb	$0x0, (%r14,%r15)
+00000001000043b2	movzbl	-0x151(%rbp), %ecx
+00000001000043b9	cmpl	$0x1, %ecx
+00000001000043bc	jne	0x100004449
+00000001000043c2	movdqa	-0x150(%rbp), %xmm0
+00000001000043ca	pxor	0x685e(%rip), %xmm0
+00000001000043d2	ptest	%xmm0, %xmm0
+00000001000043d7	je	0x10000446a
+00000001000043dd	movq	0x8c4c(%rip), %rax              ## literal pool symbol address: ___stderrp
+00000001000043e4	movq	(%rax), %rdi
+00000001000043e7	leaq	0x752a(%rip), %rsi              ## literal pool for: "%s: input type mismatch: expected `%s`, got `%s`\n"
+00000001000043ee	leaq	0x6adb(%rip), %rdx              ## literal pool for: "scalar"
+00000001000043f5	leaq	0x7877(%rip), %rcx              ## literal pool for: "F64"
+00000001000043fc	movq	%r14, %r8
+00000001000043ff	xorl	%eax, %eax
+0000000100004401	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+0000000100004406	jmp	0x10000442b
+0000000100004408	testl	%eax, %eax
+000000010000440a	js	0x100004436
+000000010000440c	movq	0x8c1d(%rip), %rax              ## literal pool symbol address: ___stderrp
+0000000100004413	movq	(%rax), %rdi
+0000000100004416	leaq	0x75a3(%rip), %rsi              ## literal pool for: "%s: truncated header\n"
+000000010000441d	leaq	0x6aac(%rip), %rdx              ## literal pool for: "scalar"
+0000000100004424	xorl	%eax, %eax
+0000000100004426	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+000000010000442b	movl	$0x3, %r12d
+0000000100004431	jmp	0x100003e91
+0000000100004436	movq	0x8bf3(%rip), %rax              ## literal pool symbol address: ___stderrp
+000000010000443d	movq	(%rax), %rdi
+0000000100004440	leaq	0x7569(%rip), %rsi              ## literal pool for: "%s: bad header\n"
+0000000100004447	jmp	0x10000441d
+0000000100004449	movq	0x8be0(%rip), %rax              ## literal pool symbol address: ___stderrp
+0000000100004450	movq	(%rax), %rdi
+0000000100004453	leaq	0x7499(%rip), %rsi              ## literal pool for: "%s: unsupported protocol version %d\n"
+000000010000445a	leaq	0x6a6f(%rip), %rdx              ## literal pool for: "scalar"
+0000000100004461	xorl	%eax, %eax
+0000000100004463	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+0000000100004468	jmp	0x10000442b
+000000010000446a	xorl	%r13d, %r13d
+000000010000446d	jmp	0x100003fa8
+0000000100004472	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100004477	nopw	(%rax,%rax)
+_fwp_segv:
+0000000100004480	pushq	%rbp
+0000000100004481	movq	%rsp, %rbp
+0000000100004484	pushq	%rbx
+0000000100004485	pushq	%rax
+0000000100004486	movq	_fwp_main_stack_top(%rip), %rdx
+000000010000448d	testq	%rdx, %rdx
+0000000100004490	je	0x1000044bb
+0000000100004492	movq	0x18(%rsi), %rax
+0000000100004496	subq	_fwp_main_stack_size(%rip), %rdx
+000000010000449d	leaq	-0x100000(%rdx), %rsi
+00000001000044a4	addq	$0x100000, %rdx                 ## imm = 0x100000
+00000001000044ab	movl	%edi, %ebx
+00000001000044ad	movq	%rax, %rdi
+00000001000044b0	callq	_fwp_near
+00000001000044b5	movl	%ebx, %edi
+00000001000044b7	testl	%eax, %eax
+00000001000044b9	jne	0x1000044c8
+00000001000044bb	xorl	%esi, %esi
+00000001000044bd	addq	$0x8, %rsp
+00000001000044c1	popq	%rbx
+00000001000044c2	popq	%rbp
+00000001000044c3	jmp	0x10000aac2                     ## symbol stub for: _signal
+00000001000044c8	callq	_fwp_flush
+00000001000044cd	leaq	_fwp_segv.msg(%rip), %rsi
+00000001000044d4	movl	$0x1a, %edx
+00000001000044d9	movl	$0x2, %edi
+00000001000044de	callq	0x10000ab16                     ## symbol stub for: _write
+00000001000044e3	movl	$0x65, %edi
+00000001000044e8	callq	0x10000a9e4                     ## symbol stub for: __exit
+00000001000044ed	nopl	(%rax)
+_fwp_near:
+00000001000044f0	pushq	%rbp
+00000001000044f1	movq	%rsp, %rbp
+00000001000044f4	cmpq	%rsi, %rdi
+00000001000044f7	setae	%al
+00000001000044fa	cmpq	%rdx, %rdi
+00000001000044fd	setb	%cl
+0000000100004500	andb	%al, %cl
+0000000100004502	movzbl	%cl, %eax
+0000000100004505	popq	%rbp
+0000000100004506	retq
+0000000100004507	nopw	(%rax,%rax)
+_fwp_generated:
+0000000100004510	pushq	%rbp
+0000000100004511	movq	%rsp, %rbp
+0000000100004514	pushq	%r15
+0000000100004516	pushq	%r14
+0000000100004518	pushq	%r12
+000000010000451a	pushq	%rbx
+000000010000451b	movl	$0xffffffff, %ebx               ## imm = 0xFFFFFFFF
+0000000100004520	testl	%edi, %edi
+0000000100004522	jle	0x100004584
+0000000100004524	movl	%edi, %r12d
+0000000100004527	movq	%rsi, %r15
+000000010000452a	movq	(%rsi), %r14
+000000010000452d	leaq	0x74a2(%rip), %rsi              ## literal pool for: "--man"
+0000000100004534	movq	%r14, %rdi
+0000000100004537	callq	0x10000aada                     ## symbol stub for: _strcmp
+000000010000453c	testl	%eax, %eax
+000000010000453e	je	0x10000456c
+0000000100004540	leaq	0x7495(%rip), %rsi              ## literal pool for: "--completions"
+0000000100004547	movl	$0xd, %edx
+000000010000454c	movq	%r14, %rdi
+000000010000454f	callq	0x10000aaec                     ## symbol stub for: _strncmp
+0000000100004554	testl	%eax, %eax
+0000000100004556	jne	0x100004584
+0000000100004558	movzbl	0xd(%r14), %eax
+000000010000455d	testl	%eax, %eax
+000000010000455f	je	0x10000458f
+0000000100004561	cmpl	$0x3d, %eax
+0000000100004564	jne	0x100004584
+0000000100004566	addq	$0xe, %r14
+000000010000456a	jmp	0x1000045bf
+000000010000456c	movq	_fwp_cli_man(%rip), %rdi
+0000000100004573	movq	0x8ac6(%rip), %rax              ## literal pool symbol address: ___stdoutp
+000000010000457a	movq	(%rax), %rsi
+000000010000457d	callq	0x10000aa26                     ## symbol stub for: _fputs
+0000000100004582	xorl	%ebx, %ebx
+0000000100004584	movl	%ebx, %eax
+0000000100004586	popq	%rbx
+0000000100004587	popq	%r12
+0000000100004589	popq	%r14
+000000010000458b	popq	%r15
+000000010000458d	popq	%rbp
+000000010000458e	retq
+000000010000458f	cmpl	$0x1, %r12d
+0000000100004593	jne	0x1000045bb
+0000000100004595	movq	0x8a94(%rip), %rax              ## literal pool symbol address: ___stderrp
+000000010000459c	movq	(%rax), %rdi
+000000010000459f	leaq	0x7444(%rip), %rsi              ## literal pool for: "%s: option `--completions` needs a value (bash, zsh or fish)\n"
+00000001000045a6	leaq	0x6923(%rip), %rdx              ## literal pool for: "scalar"
+00000001000045ad	xorl	%eax, %eax
+00000001000045af	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+00000001000045b4	movl	$0x2, %ebx
+00000001000045b9	jmp	0x100004584
+00000001000045bb	movq	0x8(%r15), %r14
+00000001000045bf	leaq	0x7462(%rip), %rsi              ## literal pool for: "bash"
+00000001000045c6	movq	%r14, %rdi
+00000001000045c9	callq	0x10000aada                     ## symbol stub for: _strcmp
+00000001000045ce	xorl	%ebx, %ebx
+00000001000045d0	testl	%eax, %eax
+00000001000045d2	je	0x10000463a
+00000001000045d4	leaq	0x7452(%rip), %rsi              ## literal pool for: "zsh"
+00000001000045db	movq	%r14, %rdi
+00000001000045de	callq	0x10000aada                     ## symbol stub for: _strcmp
+00000001000045e3	testl	%eax, %eax
+00000001000045e5	je	0x10000463e
+00000001000045e7	leaq	0x7443(%rip), %rsi              ## literal pool for: "fish"
+00000001000045ee	movq	%r14, %rdi
+00000001000045f1	callq	0x10000aada                     ## symbol stub for: _strcmp
+00000001000045f6	testl	%eax, %eax
+00000001000045f8	je	0x100004645
+00000001000045fa	movq	%r14, %rdi
+00000001000045fd	callq	0x10000aae6                     ## symbol stub for: _strlen
+0000000100004602	movq	%r14, %rdi
+0000000100004605	movq	%rax, %rsi
+0000000100004608	callq	_fwp_str_lossy
+000000010000460d	movq	0x8a1c(%rip), %rcx              ## literal pool symbol address: ___stderrp
+0000000100004614	movq	(%rcx), %rdi
+0000000100004617	leaq	0x8(%rax), %rcx
+000000010000461b	leaq	0x7414(%rip), %rsi              ## literal pool for: "%s: unknown shell `%s` (bash, zsh or fish)\n"
+0000000100004622	leaq	0x68a7(%rip), %rdx              ## literal pool for: "scalar"
+0000000100004629	xorl	%eax, %eax
+000000010000462b	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+0000000100004630	movl	$0x2, %ebx
+0000000100004635	jmp	0x100004584
+000000010000463a	xorl	%eax, %eax
+000000010000463c	jmp	0x10000464a
+000000010000463e	movl	$0x1, %eax
+0000000100004643	jmp	0x10000464a
+0000000100004645	movl	$0x2, %eax
+000000010000464a	leaq	_fwp_cli_scripts(%rip), %rcx
+0000000100004651	movq	(%rcx,%rax,8), %rdi
+0000000100004655	movq	0x89e4(%rip), %rax              ## literal pool symbol address: ___stdoutp
+000000010000465c	movq	(%rax), %rsi
+000000010000465f	callq	0x10000aa26                     ## symbol stub for: _fputs
+0000000100004664	jmp	0x100004584
+0000000100004669	nopl	(%rax)
+_fwp_str_lossy:
+0000000100004670	pushq	%rbp
+0000000100004671	movq	%rsp, %rbp
+0000000100004674	pushq	%r15
+0000000100004676	pushq	%r14
+0000000100004678	pushq	%r13
+000000010000467a	pushq	%r12
+000000010000467c	pushq	%rbx
+000000010000467d	subq	$0x18, %rsp
+0000000100004681	movq	%rsi, %rbx
+0000000100004684	movq	%rdi, %r14
+0000000100004687	callq	_fwp_valid_utf8
+000000010000468c	testl	%eax, %eax
+000000010000468e	je	0x1000046a9
+0000000100004690	movq	%r14, %rdi
+0000000100004693	movq	%rbx, %rsi
+0000000100004696	addq	$0x18, %rsp
+000000010000469a	popq	%rbx
+000000010000469b	popq	%r12
+000000010000469d	popq	%r13
+000000010000469f	popq	%r14
+00000001000046a1	popq	%r15
+00000001000046a3	popq	%rbp
+00000001000046a4	jmp	_fwp_str_new
+00000001000046a9	xorps	%xmm0, %xmm0
+00000001000046ac	movaps	%xmm0, -0x40(%rbp)
+00000001000046b0	movq	$0x0, -0x30(%rbp)
+00000001000046b8	testq	%rbx, %rbx
+00000001000046bb	je	0x100004845
+00000001000046c1	xorl	%r13d, %r13d
+00000001000046c4	leaq	-0x40(%rbp), %r15
+00000001000046c8	jmp	0x1000046eb
+00000001000046ca	nopw	(%rax,%rax)
+00000001000046d0	movq	%r15, %rdi
+00000001000046d3	leaq	0x7388(%rip), %rsi              ## literal pool for: "\357\277\275"
+00000001000046da	callq	_buf_puts
+00000001000046df	movq	%r12, %r13
+00000001000046e2	cmpq	%rbx, %r12
+00000001000046e5	jae	0x100004845
+00000001000046eb	movzbl	(%r14,%r13), %eax
+00000001000046f0	testb	%al, %al
+00000001000046f2	js	0x100004710
+00000001000046f4	movsbl	%al, %esi
+00000001000046f7	movq	%r15, %rdi
+00000001000046fa	callq	_buf_putc
+00000001000046ff	incq	%r13
+0000000100004702	movq	%r13, %r12
+0000000100004705	jmp	0x1000046df
+0000000100004707	nopw	(%rax,%rax)
+0000000100004710	leal	0x20(%rax), %ecx
+0000000100004713	cmpb	$-0x1f, %cl
+0000000100004716	ja	0x10000474c
+0000000100004718	movl	%eax, %edx
+000000010000471a	andb	$-0x10, %dl
+000000010000471d	cmpb	$-0x20, %dl
+0000000100004720	jne	0x100004801
+0000000100004726	cmpb	$-0x20, %al
+0000000100004728	sete	%sil
+000000010000472c	shlb	$0x5, %sil
+0000000100004730	orb	$-0x80, %sil
+0000000100004734	xorl	%edi, %edi
+0000000100004736	cmpb	$-0x13, %al
+0000000100004738	setne	%dil
+000000010000473c	shll	$0x5, %edi
+000000010000473f	orl	$0x9f, %edi
+0000000100004745	movl	$0x2, %eax
+000000010000474a	jmp	0x100004759
+000000010000474c	movl	$0xbf, %edi
+0000000100004751	movb	$-0x80, %sil
+0000000100004754	movl	$0x1, %eax
+0000000100004759	xorl	%edx, %edx
+000000010000475b	leaq	0x1(%r13), %r12
+000000010000475f	cmpq	%rbx, %r12
+0000000100004762	jae	0x1000046d0
+0000000100004768	movzbl	(%r14,%r12), %r8d
+000000010000476d	cmpb	%sil, %r8b
+0000000100004770	jb	0x1000046d0
+0000000100004776	cmpl	%r8d, %edi
+0000000100004779	jb	0x1000046d0
+000000010000477f	cmpb	$-0x1e, %cl
+0000000100004782	setae	%sil
+0000000100004786	leaq	0x2(%r13), %r12
+000000010000478a	cmpq	%rbx, %r12
+000000010000478d	setae	%dil
+0000000100004791	movl	$0x1, %ecx
+0000000100004796	orb	%sil, %dil
+0000000100004799	jne	0x1000047e2
+000000010000479b	movzbl	(%r14,%r12), %esi
+00000001000047a0	andb	$-0x40, %sil
+00000001000047a4	negb	%sil
+00000001000047a7	jno	0x1000047e2
+00000001000047a9	leaq	0x3(%r13), %r12
+00000001000047ad	cmpq	%rbx, %r12
+00000001000047b0	setae	%sil
+00000001000047b4	xorb	$0x1, %dl
+00000001000047b7	movl	$0x2, %ecx
+00000001000047bc	orb	%sil, %dl
+00000001000047bf	jne	0x1000047e2
+00000001000047c1	movzbl	0x3(%r14,%r13), %esi
+00000001000047c7	andb	$-0x40, %sil
+00000001000047cb	xorl	%ecx, %ecx
+00000001000047cd	cmpb	$-0x80, %sil
+00000001000047d1	sete	%dl
+00000001000047d4	negb	%sil
+00000001000047d7	jno	0x1000047dd
+00000001000047d9	leaq	0x4(%r13), %r12
+00000001000047dd	movb	%dl, %cl
+00000001000047df	orl	$0x2, %ecx
+00000001000047e2	cmpl	%eax, %ecx
+00000001000047e4	jne	0x1000046d0
+00000001000047ea	leaq	(%r14,%r13), %rsi
+00000001000047ee	movq	%r12, %rdx
+00000001000047f1	subq	%r13, %rdx
+00000001000047f4	movq	%r15, %rdi
+00000001000047f7	callq	_buf_put
+00000001000047fc	jmp	0x1000046df
+0000000100004801	leal	0x10(%rax), %edx
+0000000100004804	cmpb	$0x4, %dl
+0000000100004807	ja	0x100004831
+0000000100004809	cmpb	$-0x10, %al
+000000010000480b	sete	%sil
+000000010000480f	movl	$0x8f, %edi
+0000000100004814	cmpb	$-0xc, %al
+0000000100004816	je	0x10000481d
+0000000100004818	movl	$0xbf, %edi
+000000010000481d	shlb	$0x4, %sil
+0000000100004821	orb	$-0x80, %sil
+0000000100004825	movl	$0x3, %eax
+000000010000482a	movb	$0x1, %dl
+000000010000482c	jmp	0x10000475b
+0000000100004831	movq	%r15, %rdi
+0000000100004834	leaq	0x7227(%rip), %rsi              ## literal pool for: "\357\277\275"
+000000010000483b	callq	_buf_puts
+0000000100004840	jmp	0x1000046ff
+0000000100004845	leaq	-0x40(%rbp), %rdi
+0000000100004849	callq	_buf_to_str
+000000010000484e	addq	$0x18, %rsp
+0000000100004852	popq	%rbx
+0000000100004853	popq	%r12
+0000000100004855	popq	%r13
+0000000100004857	popq	%r14
+0000000100004859	popq	%r15
+000000010000485b	popq	%rbp
+000000010000485c	retq
+000000010000485d	nopl	(%rax)
+_fwp_alloc_leaf:
+0000000100004860	pushq	%rbp
+0000000100004861	movq	%rsp, %rbp
+0000000100004864	movl	$0x1, %esi
+0000000100004869	popq	%rbp
+000000010000486a	jmp	_fwp_gc_alloc
+000000010000486f	nop
+_fwp_cli_parse:
+0000000100004870	movl	$0x0, (%rcx)
+0000000100004876	testl	%edi, %edi
+0000000100004878	jle	0x1000049ec
+000000010000487e	pushq	%rbp
+000000010000487f	movq	%rsp, %rbp
+0000000100004882	pushq	%r15
+0000000100004884	pushq	%r14
+0000000100004886	pushq	%r13
+0000000100004888	pushq	%r12
+000000010000488a	pushq	%rbx
+000000010000488b	subq	$0x38, %rsp
+000000010000488f	movl	%edi, %r8d
+0000000100004892	movq	%r8, %r9
+0000000100004895	negq	%r9
+0000000100004898	movb	$0x1, %r13b
+000000010000489b	xorl	%ebx, %ebx
+000000010000489d	movl	$0x1, %r15d
+00000001000048a3	xorl	%r10d, %r10d
+00000001000048a6	movq	%rcx, -0x50(%rbp)
+00000001000048aa	movq	%rdx, -0x48(%rbp)
+00000001000048ae	movq	%rsi, -0x40(%rbp)
+00000001000048b2	movq	%r8, -0x38(%rbp)
+00000001000048b6	movq	%r9, -0x30(%rbp)
+00000001000048ba	nopw	(%rax,%rax)
+00000001000048c0	movq	-0x8(%rsi,%r15,8), %r14
+00000001000048c5	testl	%r10d, %r10d
+00000001000048c8	jne	0x100004910
+00000001000048ca	movq	(%r14), %r12
+00000001000048cd	cmpq	$0x2, %r12
+00000001000048d1	jb	0x100004910
+00000001000048d3	leaq	0x8(%r14), %rdi
+00000001000048d7	cmpb	$0x2d, (%rdi)
+00000001000048da	jne	0x100004910
+00000001000048dc	movl	%r10d, -0x58(%rbp)
+00000001000048e0	callq	_fwp_is_number_arg
+00000001000048e5	movl	-0x58(%rbp), %r10d
+00000001000048e9	movq	-0x30(%rbp), %r9
+00000001000048ed	movq	-0x38(%rbp), %r8
+00000001000048f1	movq	-0x40(%rbp), %rsi
+00000001000048f5	movq	-0x48(%rbp), %rdx
+00000001000048f9	movq	-0x50(%rbp), %rcx
+00000001000048fd	testl	%eax, %eax
+00000001000048ff	je	0x10000493a
+0000000100004901	nopw	%cs:(%rax,%rax)
+0000000100004910	movslq	%ebx, %rax
+0000000100004913	leal	0x1(%rbx), %edi
+0000000100004916	movl	%edi, (%rcx)
+0000000100004918	movq	%r14, (%rdx,%rax,8)
+000000010000491c	movl	%edi, %ebx
+000000010000491e	cmpq	%r8, %r15
+0000000100004921	setb	%r13b
+0000000100004925	leaq	(%r9,%r15), %rax
+0000000100004929	incq	%rax
+000000010000492c	incq	%r15
+000000010000492f	cmpq	$0x1, %rax
+0000000100004933	jne	0x1000048c0
+0000000100004935	jmp	0x1000049d6
+000000010000493a	movzbl	0x9(%r14), %eax
+000000010000493f	cmpq	$0x2, %r12
+0000000100004943	jne	0x100004958
+0000000100004945	movl	$0x1, %r10d
+000000010000494b	cmpb	$0x2d, %al
+000000010000494d	je	0x10000491e
+000000010000494f	xorl	%r10d, %r10d
+0000000100004952	cmpb	$0x68, %al
+0000000100004954	jne	0x100004910
+0000000100004956	jmp	0x1000049d6
+0000000100004958	xorl	%r10d, %r10d
+000000010000495b	cmpb	$0x2d, %al
+000000010000495d	jne	0x100004910
+000000010000495f	leaq	0xa(%r14), %rdi
+0000000100004963	movq	%rdi, -0x58(%rbp)
+0000000100004967	addq	$-0x2, %r12
+000000010000496b	movl	$0x3d, %esi
+0000000100004970	movq	%r12, %rdx
+0000000100004973	callq	0x10000aa62                     ## symbol stub for: _memchr
+0000000100004978	movq	-0x58(%rbp), %rdx
+000000010000497c	movq	%rax, %rcx
+000000010000497f	subq	%rdx, %rcx
+0000000100004982	testq	%rax, %rax
+0000000100004985	cmoveq	%r12, %rcx
+0000000100004989	xorq	$0x4, %rcx
+000000010000498d	orq	%rax, %rcx
+0000000100004990	jne	0x1000049ba
+0000000100004992	cmpl	$0x706c6568, (%rdx)             ## imm = 0x706C6568
+0000000100004998	movq	-0x50(%rbp), %rcx
+000000010000499c	movq	-0x48(%rbp), %rdx
+00000001000049a0	movq	-0x40(%rbp), %rsi
+00000001000049a4	movq	-0x38(%rbp), %r8
+00000001000049a8	movq	-0x30(%rbp), %r9
+00000001000049ac	movl	$0x0, %r10d
+00000001000049b2	jne	0x100004910
+00000001000049b8	jmp	0x1000049d6
+00000001000049ba	movq	-0x50(%rbp), %rcx
+00000001000049be	movq	-0x48(%rbp), %rdx
+00000001000049c2	movq	-0x40(%rbp), %rsi
+00000001000049c6	movq	-0x38(%rbp), %r8
+00000001000049ca	movq	-0x30(%rbp), %r9
+00000001000049ce	xorl	%r10d, %r10d
+00000001000049d1	jmp	0x100004910
+00000001000049d6	movzbl	%r13b, %eax
+00000001000049da	andl	$0x1, %eax
+00000001000049dd	addq	$0x38, %rsp
+00000001000049e1	popq	%rbx
+00000001000049e2	popq	%r12
+00000001000049e4	popq	%r13
+00000001000049e6	popq	%r14
+00000001000049e8	popq	%r15
+00000001000049ea	popq	%rbp
+00000001000049eb	retq
+00000001000049ec	xorl	%eax, %eax
+00000001000049ee	retq
+00000001000049ef	nop
+_fwp_usage_error:
+00000001000049f0	pushq	%rbp
+00000001000049f1	movq	%rsp, %rbp
+00000001000049f4	movq	0x8635(%rip), %rax              ## literal pool symbol address: ___stderrp
+00000001000049fb	movq	(%rax), %rdi
+00000001000049fe	leaq	0x70a5(%rip), %rsi              ## literal pool for: "%s\n"
+0000000100004a05	leaq	0x71a1(%rip), %rdx              ## literal pool for: "usage: scalar <F64>\n  (the last argument may instead be given as records on stdin)"
+0000000100004a0c	xorl	%eax, %eax
+0000000100004a0e	popq	%rbp
+0000000100004a0f	jmp	0x10000aa1a                     ## symbol stub for: _fprintf
+0000000100004a14	nopw	%cs:(%rax,%rax)
+_fwp_parse_text:
+0000000100004a20	pushq	%rbp
+0000000100004a21	movq	%rsp, %rbp
+0000000100004a24	subq	$0x20, %rsp
+0000000100004a28	movq	%rdx, %rcx
+0000000100004a2b	movq	%rdi, -0x18(%rbp)
+0000000100004a2f	movq	%rsi, -0x10(%rbp)
+0000000100004a33	movq	$0x0, -0x8(%rbp)
+0000000100004a3b	leaq	_d0(%rip), %rsi
+0000000100004a42	leaq	-0x18(%rbp), %rdi
+0000000100004a46	movl	$0x1, %edx
+0000000100004a4b	callq	_tp_value
+0000000100004a50	testl	%eax, %eax
+0000000100004a52	je	0x100004a6c
+0000000100004a54	leaq	-0x18(%rbp), %rdi
+0000000100004a58	callq	_tp_ws
+0000000100004a5d	movq	-0x8(%rbp), %rcx
+0000000100004a61	xorl	%eax, %eax
+0000000100004a63	cmpq	-0x10(%rbp), %rcx
+0000000100004a67	sete	%al
+0000000100004a6a	jmp	0x100004a6e
+0000000100004a6c	xorl	%eax, %eax
+0000000100004a6e	addq	$0x20, %rsp
+0000000100004a72	popq	%rbp
+0000000100004a73	retq
+0000000100004a74	nopw	%cs:(%rax,%rax)
+_fwp_parse_arg:
+0000000100004a80	pushq	%rbp
+0000000100004a81	movq	%rsp, %rbp
+0000000100004a84	pushq	%r14
+0000000100004a86	pushq	%rbx
+0000000100004a87	subq	$0x10, %rsp
+0000000100004a8b	movl	%edi, %ebx
+0000000100004a8d	movq	(%rsi), %rax
+0000000100004a90	leaq	0x8(%rsi), %rdi
+0000000100004a94	leaq	-0x18(%rbp), %rcx
+0000000100004a98	movq	%rax, %rsi
+0000000100004a9b	callq	_fwp_cli_value
+0000000100004aa0	movl	$0x1, %r14d
+0000000100004aa6	testl	%eax, %eax
+0000000100004aa8	jne	0x100004ad8
+0000000100004aaa	movq	0x857f(%rip), %rax              ## literal pool symbol address: ___stderrp
+0000000100004ab1	movq	(%rax), %rdi
+0000000100004ab4	incl	%ebx
+0000000100004ab6	movq	-0x18(%rbp), %r8
+0000000100004aba	addq	$0x8, %r8
+0000000100004abe	leaq	0x7045(%rip), %rsi              ## literal pool for: "%s: argument %d: %s\n"
+0000000100004ac5	leaq	0x6404(%rip), %rdx              ## literal pool for: "scalar"
+0000000100004acc	xorl	%r14d, %r14d
+0000000100004acf	movl	%ebx, %ecx
+0000000100004ad1	xorl	%eax, %eax
+0000000100004ad3	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+0000000100004ad8	movl	%r14d, %eax
+0000000100004adb	addq	$0x10, %rsp
+0000000100004adf	popq	%rbx
+0000000100004ae0	popq	%r14
+0000000100004ae2	popq	%rbp
+0000000100004ae3	retq
+0000000100004ae4	nopw	%cs:(%rax,%rax)
+_fwp_bind_positional:
+0000000100004af0	pushq	%rbp
+0000000100004af1	movq	%rsp, %rbp
+0000000100004af4	xorl	%eax, %eax
+0000000100004af6	testl	%esi, %esi
+0000000100004af8	setle	%al
+0000000100004afb	movl	%eax, (%rcx)
+0000000100004afd	cmpl	$0x1, %esi
+0000000100004b00	jbe	0x100004b0e
+0000000100004b02	callq	_fwp_usage_error
+0000000100004b07	movl	$0x2, %eax
+0000000100004b0c	popq	%rbp
+0000000100004b0d	retq
+0000000100004b0e	xorl	%eax, %eax
+0000000100004b10	cmpl	$0x1, %esi
+0000000100004b13	jne	0x100004b0c
+0000000100004b15	movq	(%rdi), %rsi
+0000000100004b18	xorl	%edi, %edi
+0000000100004b1a	callq	_fwp_parse_arg
+0000000100004b1f	movl	%eax, %ecx
+0000000100004b21	xorl	%eax, %eax
+0000000100004b23	testl	%ecx, %ecx
+0000000100004b25	sete	%al
+0000000100004b28	addl	%eax, %eax
+0000000100004b2a	popq	%rbp
+0000000100004b2b	retq
+0000000100004b2c	nopl	(%rax)
+_fwp_pipe_write:
+0000000100004b30	pushq	%rbp
+0000000100004b31	movq	%rsp, %rbp
+0000000100004b34	movq	%rsi, %rdx
+0000000100004b37	movq	0x8502(%rip), %rax              ## literal pool symbol address: ___stdoutp
+0000000100004b3e	movq	(%rax), %rcx
+0000000100004b41	movl	$0x1, %esi
+0000000100004b46	popq	%rbp
+0000000100004b47	jmp	0x10000aa38                     ## symbol stub for: _fwrite
+0000000100004b4c	nopl	(%rax)
+_fwp_pipe_flush:
+0000000100004b50	pushq	%rbp
+0000000100004b51	movq	%rsp, %rbp
+0000000100004b54	movq	0x84e5(%rip), %rax              ## literal pool symbol address: ___stdoutp
+0000000100004b5b	movq	(%rax), %rdi
+0000000100004b5e	popq	%rbp
+0000000100004b5f	jmp	0x10000aa0e                     ## symbol stub for: _fflush
+0000000100004b64	nopw	%cs:(%rax,%rax)
+_fwp_exec_call:
+0000000100004b70	pushq	%rbp
+0000000100004b71	movq	%rsp, %rbp
+0000000100004b74	pushq	%r14
+0000000100004b76	pushq	%rbx
+0000000100004b77	subq	$0xc0, %rsp
+0000000100004b7e	movq	%rsi, %rbx
+0000000100004b81	movq	%rdi, %r14
+0000000100004b84	movq	_fwp_handlers(%rip), %rax
+0000000100004b8b	movq	%rax, -0x38(%rbp)
+0000000100004b8f	movq	$0x0, -0x20(%rbp)
+0000000100004b97	movq	_fwp_cleanups(%rip), %rax
+0000000100004b9e	movq	%rax, -0x18(%rbp)
+0000000100004ba2	leaq	-0xd0(%rbp), %rdi
+0000000100004ba9	movq	%rdi, _fwp_handlers(%rip)
+0000000100004bb0	callq	0x10000aaaa                     ## symbol stub for: _setjmp
+0000000100004bb5	testl	%eax, %eax
+0000000100004bb7	je	0x100004bdf
+0000000100004bb9	movq	-0x38(%rbp), %rax
+0000000100004bbd	movq	%rax, _fwp_handlers(%rip)
+0000000100004bc4	callq	_fwp_flush
+0000000100004bc9	movq	-0x30(%rbp), %rdi
+0000000100004bcd	movq	-0x28(%rbp), %rsi
+0000000100004bd1	callq	_fwp_exec_error
+0000000100004bd6	movl	$0x1, %ecx
+0000000100004bdb	xorl	%eax, %eax
+0000000100004bdd	jmp	0x100004bfc
+0000000100004bdf	callq	_fwp_pap
+0000000100004be4	movq	%rax, %rdi
+0000000100004be7	movq	%r14, %rsi
+0000000100004bea	callq	_fwp_apply
+0000000100004bef	movq	-0x38(%rbp), %rcx
+0000000100004bf3	movq	%rcx, _fwp_handlers(%rip)
+0000000100004bfa	xorl	%ecx, %ecx
+0000000100004bfc	movl	%ecx, (%rbx)
+0000000100004bfe	addq	$0xc0, %rsp
+0000000100004c05	popq	%rbx
+0000000100004c06	popq	%r14
+0000000100004c08	popq	%rbp
+0000000100004c09	retq
+0000000100004c0a	nopw	(%rax,%rax)
+_fwp_emit_result:
+0000000100004c10	pushq	%rbp
+0000000100004c11	movq	%rsp, %rbp
+0000000100004c14	popq	%rbp
+0000000100004c15	jmp	_fwp_emit
+0000000100004c1a	nopw	(%rax,%rax)
+_fwp_read_exact:
+0000000100004c20	pushq	%rbp
+0000000100004c21	movq	%rsp, %rbp
+0000000100004c24	pushq	%r15
+0000000100004c26	pushq	%r14
+0000000100004c28	pushq	%rbx
+0000000100004c29	pushq	%rax
+0000000100004c2a	movq	%rsi, %rbx
+0000000100004c2d	movq	%rdi, %r14
+0000000100004c30	movl	_fwp_in_npend(%rip), %eax
+0000000100004c36	movl	_fwp_in_ppos(%rip), %ecx
+0000000100004c3c	testq	%rsi, %rsi
+0000000100004c3f	setne	%dl
+0000000100004c42	cmpl	%eax, %ecx
+0000000100004c44	setl	%sil
+0000000100004c48	testb	%sil, %dl
+0000000100004c4b	je	0x100004cba
+0000000100004c4d	cltq
+0000000100004c4f	movslq	%ecx, %rsi
+0000000100004c52	movq	%rsi, %rdx
+0000000100004c55	notq	%rdx
+0000000100004c58	addq	%rax, %rdx
+0000000100004c5b	leaq	-0x1(%rbx), %rcx
+0000000100004c5f	cmpq	%rcx, %rdx
+0000000100004c62	cmovaeq	%rcx, %rdx
+0000000100004c66	incq	%rdx
+0000000100004c69	cmpq	$0x1f, %rdx
+0000000100004c6d	jbe	0x100004c85
+0000000100004c6f	leaq	_fwp_in_pend(%rip), %rdi
+0000000100004c76	movq	%r14, %r8
+0000000100004c79	subq	%rsi, %r8
+0000000100004c7c	subq	%rdi, %r8
+0000000100004c7f	cmpq	$0x20, %r8
+0000000100004c83	jae	0x100004cbf
+0000000100004c85	xorl	%r15d, %r15d
+0000000100004c88	movq	%rsi, %rcx
+0000000100004c8b	leaq	_fwp_in_pend(%rip), %rdx
+0000000100004c92	nopw	%cs:(%rax,%rax)
+0000000100004ca0	movzbl	(%rcx,%rdx), %esi
+0000000100004ca4	incq	%rcx
+0000000100004ca7	movb	%sil, (%r14,%r15)
+0000000100004cab	incq	%r15
+0000000100004cae	cmpq	%rbx, %r15
+0000000100004cb1	jae	0x100004d02
+0000000100004cb3	cmpq	%rax, %rcx
+0000000100004cb6	jl	0x100004ca0
+0000000100004cb8	jmp	0x100004d02
+0000000100004cba	xorl	%r15d, %r15d
+0000000100004cbd	jmp	0x100004d10
+0000000100004cbf	movq	%rdx, %r15
+0000000100004cc2	andq	$-0x20, %r15
+0000000100004cc6	leaq	(%r15,%rsi), %rcx
+0000000100004cca	addq	%rdi, %rsi
+0000000100004ccd	addq	$0x10, %rsi
+0000000100004cd1	xorl	%edi, %edi
+0000000100004cd3	nopw	%cs:(%rax,%rax)
+0000000100004ce0	movups	-0x10(%rsi,%rdi), %xmm0
+0000000100004ce5	movups	(%rsi,%rdi), %xmm1
+0000000100004ce9	movups	%xmm0, (%r14,%rdi)
+0000000100004cee	movups	%xmm1, 0x10(%r14,%rdi)
+0000000100004cf4	addq	$0x20, %rdi
+0000000100004cf8	cmpq	%rdi, %r15
+0000000100004cfb	jne	0x100004ce0
+0000000100004cfd	cmpq	%r15, %rdx
+0000000100004d00	jne	0x100004c8b
+0000000100004d02	movl	%ecx, _fwp_in_ppos(%rip)
+0000000100004d08	nopl	(%rax,%rax)
+0000000100004d10	movq	%rbx, %rsi
+0000000100004d13	subq	%r15, %rsi
+0000000100004d16	jbe	0x100004d2d
+0000000100004d18	leaq	(%r14,%r15), %rdi
+0000000100004d1c	callq	_fwp_pipe_read
+0000000100004d21	addq	%rax, %r15
+0000000100004d24	testq	%rax, %rax
+0000000100004d27	jne	0x100004d10
+0000000100004d29	xorl	%eax, %eax
+0000000100004d2b	jmp	0x100004d32
+0000000100004d2d	movl	$0x1, %eax
+0000000100004d32	addq	$0x8, %rsp
+0000000100004d36	popq	%rbx
+0000000100004d37	popq	%r14
+0000000100004d39	popq	%r15
+0000000100004d3b	popq	%rbp
+0000000100004d3c	retq
+0000000100004d3d	nopl	(%rax)
+_fwp_stdin_leb:
+0000000100004d40	pushq	%rbp
+0000000100004d41	movq	%rsp, %rbp
+0000000100004d44	pushq	%r15
+0000000100004d46	pushq	%r14
+0000000100004d48	pushq	%rbx
+0000000100004d49	pushq	%rax
+0000000100004d4a	movq	%rdi, %rbx
+0000000100004d4d	movq	$0x0, (%rdi)
+0000000100004d54	movq	$-0x7, %r14
+0000000100004d5b	leaq	-0x19(%rbp), %r15
+0000000100004d5f	nop
+0000000100004d60	movl	$0x1, %esi
+0000000100004d65	movq	%r15, %rdi
+0000000100004d68	callq	_fwp_read_exact
+0000000100004d6d	testl	%eax, %eax
+0000000100004d6f	je	0x100004dab
+0000000100004d71	cmpq	$0x38, %r14
+0000000100004d75	setne	%cl
+0000000100004d78	movzbl	-0x19(%rbp), %eax
+0000000100004d7c	testb	$0x7e, %al
+0000000100004d7e	sete	%dl
+0000000100004d81	orb	%cl, %dl
+0000000100004d83	je	0x100004da4
+0000000100004d85	addq	$0x7, %r14
+0000000100004d89	movzbl	%al, %eax
+0000000100004d8c	movl	%eax, %edx
+0000000100004d8e	andl	$0x7f, %edx
+0000000100004d91	movl	%r14d, %ecx
+0000000100004d94	shlq	%cl, %rdx
+0000000100004d97	orq	%rdx, (%rbx)
+0000000100004d9a	testb	%al, %al
+0000000100004d9c	jns	0x100004daf
+0000000100004d9e	cmpq	$0x38, %r14
+0000000100004da2	jbe	0x100004d60
+0000000100004da4	movl	$0xffffffff, %eax               ## imm = 0xFFFFFFFF
+0000000100004da9	jmp	0x100004db4
+0000000100004dab	xorl	%eax, %eax
+0000000100004dad	jmp	0x100004db4
+0000000100004daf	movl	$0x1, %eax
+0000000100004db4	addq	$0x8, %rsp
+0000000100004db8	popq	%rbx
+0000000100004db9	popq	%r14
+0000000100004dbb	popq	%r15
+0000000100004dbd	popq	%rbp
+0000000100004dbe	retq
+0000000100004dbf	nop
+_fwp_stdin_name_len:
+0000000100004dc0	pushq	%rbp
+0000000100004dc1	movq	%rsp, %rbp
+0000000100004dc4	pushq	%rbx
+0000000100004dc5	pushq	%rax
+0000000100004dc6	movq	%rdi, %rbx
+0000000100004dc9	callq	_fwp_stdin_leb
+0000000100004dce	cmpl	$0x1, %eax
+0000000100004dd1	jne	0x100004de1
+0000000100004dd3	movl	$0xffffffff, %ecx               ## imm = 0xFFFFFFFF
+0000000100004dd8	cmpq	$0x100000, (%rbx)               ## imm = 0x100000
+0000000100004ddf	ja	0x100004de3
+0000000100004de1	movl	%eax, %ecx
+0000000100004de3	movl	%ecx, %eax
+0000000100004de5	addq	$0x8, %rsp
+0000000100004de9	popq	%rbx
+0000000100004dea	popq	%rbp
+0000000100004deb	retq
+0000000100004dec	nopl	(%rax)
+_fwp_decode:
+0000000100004df0	pushq	%rbp
+0000000100004df1	movq	%rsp, %rbp
+0000000100004df4	pushq	%r15
+0000000100004df6	pushq	%r14
+0000000100004df8	pushq	%r13
+0000000100004dfa	pushq	%r12
+0000000100004dfc	pushq	%rbx
+0000000100004dfd	subq	$0x38, %rsp
+0000000100004e01	movl	(%rsi), %eax
+0000000100004e03	xorl	%r14d, %r14d
+0000000100004e06	cmpq	$0x15, %rax
+0000000100004e0a	ja	0x100004e51
+0000000100004e0c	movq	%rdx, %rbx
+0000000100004e0f	movq	%rsi, %r12
+0000000100004e12	movq	%rdi, %r15
+0000000100004e15	leaq	0x400(%rip), %rcx
+0000000100004e1c	movslq	(%rcx,%rax,4), %rdx
+0000000100004e20	addq	%rcx, %rdx
+0000000100004e23	jmpq	*%rdx
+0000000100004e25	xorl	%ecx, %ecx
+0000000100004e27	cmpl	$0xa, %eax
+0000000100004e2a	setne	%cl
+0000000100004e2d	leal	0x4(,%rcx,4), %esi
+0000000100004e34	leaq	-0x30(%rbp), %rdx
+0000000100004e38	movq	%r15, %rdi
+0000000100004e3b	callq	_rd_le
+0000000100004e40	testl	%eax, %eax
+0000000100004e42	je	0x100004e51
+0000000100004e44	movq	-0x30(%rbp), %rax
+0000000100004e48	movq	%rax, (%rbx)
+0000000100004e4b	movl	$0x1, %r14d
+0000000100004e51	movl	%r14d, %eax
+0000000100004e54	addq	$0x38, %rsp
+0000000100004e58	popq	%rbx
+0000000100004e59	popq	%r12
+0000000100004e5b	popq	%r13
+0000000100004e5d	popq	%r14
+0000000100004e5f	popq	%r15
+0000000100004e61	popq	%rbp
+0000000100004e62	retq
+0000000100004e63	leaq	-0x30(%rbp), %rsi
+0000000100004e67	movq	%r15, %rdi
+0000000100004e6a	callq	_rd_leb
+0000000100004e6f	xorl	%r14d, %r14d
+0000000100004e72	testl	%eax, %eax
+0000000100004e74	je	0x100004e51
+0000000100004e76	movq	-0x30(%rbp), %r13
+0000000100004e7a	cmpq	0x8(%r15), %r13
+0000000100004e7e	ja	0x100004e51
+0000000100004e80	leaq	-0x48(%rbp), %rdx
+0000000100004e84	movq	%r15, %rdi
+0000000100004e87	movq	%r13, %rsi
+0000000100004e8a	callq	_rd_take
+0000000100004e8f	testl	%eax, %eax
+0000000100004e91	je	0x100004e51
+0000000100004e93	movq	%rbx, %r15
+0000000100004e96	cmpl	$0xc, (%r12)
+0000000100004e9b	movq	-0x48(%rbp), %rbx
+0000000100004e9f	jne	0x100004eb0
+0000000100004ea1	movq	%rbx, %rdi
+0000000100004ea4	movq	%r13, %rsi
+0000000100004ea7	callq	_fwp_valid_utf8
+0000000100004eac	testl	%eax, %eax
+0000000100004eae	je	0x100004e51
+0000000100004eb0	movq	%rbx, %rdi
+0000000100004eb3	movq	%r13, %rsi
+0000000100004eb6	callq	_fwp_str_new
+0000000100004ebb	movq	%rax, (%r15)
+0000000100004ebe	jmp	0x100004e4b
+0000000100004ec0	leaq	-0x30(%rbp), %rdx
+0000000100004ec4	movq	%r15, %rdi
+0000000100004ec7	movl	$0x1, %esi
+0000000100004ecc	callq	_rd_le
+0000000100004ed1	testl	%eax, %eax
+0000000100004ed3	je	0x100004e51
+0000000100004ed9	movsbq	-0x30(%rbp), %rax
+0000000100004ede	jmp	0x100004e48
+0000000100004ee3	leaq	-0x30(%rbp), %rdx
+0000000100004ee7	movq	%r15, %rdi
+0000000100004eea	movl	$0x8, %esi
+0000000100004eef	callq	_rd_le
+0000000100004ef4	xorl	%r14d, %r14d
+0000000100004ef7	testl	%eax, %eax
+0000000100004ef9	je	0x100004e51
+0000000100004eff	leaq	-0x48(%rbp), %rdx
+0000000100004f03	movq	%r15, %rdi
+0000000100004f06	movl	$0x8, %esi
+0000000100004f0b	callq	_rd_le
+0000000100004f10	testl	%eax, %eax
+0000000100004f12	je	0x100004e51
+0000000100004f18	movq	-0x48(%rbp), %rsi
+0000000100004f1c	movq	-0x30(%rbp), %rdi
+0000000100004f20	cmpl	$0x4, (%r12)
+0000000100004f25	jne	0x1000051f2
+0000000100004f2b	callq	_fwp_box_i128
+0000000100004f30	jmp	0x100004e48
+0000000100004f35	leaq	-0x30(%rbp), %rsi
+0000000100004f39	movq	%r15, %rdi
+0000000100004f3c	callq	_rd_leb
+0000000100004f41	testl	%eax, %eax
+0000000100004f43	je	0x100004e51
+0000000100004f49	movq	%rbx, -0x38(%rbp)
+0000000100004f4d	movq	-0x30(%rbp), %rbx
+0000000100004f51	cmpq	0x8(%r15), %rbx
+0000000100004f55	ja	0x100004e51
+0000000100004f5b	leaq	_fwp_empty_map(%rip), %r14
+0000000100004f62	testq	%rbx, %rbx
+0000000100004f65	je	0x1000051fc
+0000000100004f6b	leaq	-0x48(%rbp), %r13
+0000000100004f6f	jmp	0x100004f90
+0000000100004f71	xorl	%esi, %esi
+0000000100004f73	movq	-0x48(%rbp), %rdi
+0000000100004f77	movq	0x38(%r12), %rcx
+0000000100004f7c	movq	%r14, %rdx
+0000000100004f7f	callq	_fwp_p_map_insert
+0000000100004f84	movq	%rax, %r14
+0000000100004f87	decq	%rbx
+0000000100004f8a	je	0x1000051fc
+0000000100004f90	movq	$0x0, -0x60(%rbp)
+0000000100004f98	movq	0x38(%r12), %rsi
+0000000100004f9d	movq	%r15, %rdi
+0000000100004fa0	movq	%r13, %rdx
+0000000100004fa3	callq	_fwp_decode
+0000000100004fa8	testl	%eax, %eax
+0000000100004faa	je	0x100005214
+0000000100004fb0	cmpl	$0x12, (%r12)
+0000000100004fb5	jne	0x100004f71
+0000000100004fb7	movq	0x40(%r12), %rsi
+0000000100004fbc	movq	%r15, %rdi
+0000000100004fbf	leaq	-0x60(%rbp), %rdx
+0000000100004fc3	callq	_fwp_decode
+0000000100004fc8	testl	%eax, %eax
+0000000100004fca	je	0x100005214
+0000000100004fd0	movq	-0x60(%rbp), %rsi
+0000000100004fd4	jmp	0x100004f73
+0000000100004fd6	leaq	-0x30(%rbp), %rsi
+0000000100004fda	movq	%r15, %rdi
+0000000100004fdd	callq	_rd_leb
+0000000100004fe2	testl	%eax, %eax
+0000000100004fe4	je	0x100004e51
+0000000100004fea	movq	-0x30(%rbp), %r13
+0000000100004fee	cmpq	0x8(%r15), %r13
+0000000100004ff2	ja	0x100004e51
+0000000100004ff8	movq	%rbx, -0x38(%rbp)
+0000000100004ffc	leaq	0x8(,%r13,8), %rdi
+0000000100005004	callq	_fwp_alloc
+0000000100005009	movq	%rax, -0x50(%rbp)
+000000010000500d	movq	%r13, -0x40(%rbp)
+0000000100005011	testq	%r13, %r13
+0000000100005014	je	0x100005041
+0000000100005016	movq	-0x50(%rbp), %rbx
+000000010000501a	movq	-0x40(%rbp), %r13
+000000010000501e	nop
+0000000100005020	movq	0x38(%r12), %rsi
+0000000100005025	movq	%r15, %rdi
+0000000100005028	movq	%rbx, %rdx
+000000010000502b	callq	_fwp_decode
+0000000100005030	testl	%eax, %eax
+0000000100005032	je	0x100004e51
+0000000100005038	addq	$0x8, %rbx
+000000010000503c	decq	%r13
+000000010000503f	jne	0x100005020
+0000000100005041	movq	-0x50(%rbp), %rdi
+0000000100005045	movq	-0x40(%rbp), %rsi
+0000000100005049	callq	_fwp_list_from
+000000010000504e	cmpl	$0x11, (%r12)
+0000000100005053	jne	0x100005107
+0000000100005059	movq	%rax, %rdi
+000000010000505c	callq	_fwp_p_array_from_list
+0000000100005061	jmp	0x100005107
+0000000100005066	leaq	-0x30(%rbp), %rsi
+000000010000506a	movq	%r15, %rdi
+000000010000506d	callq	_rd_leb
+0000000100005072	testl	%eax, %eax
+0000000100005074	je	0x100004e51
+000000010000507a	movq	%rbx, -0x38(%rbp)
+000000010000507e	movq	-0x30(%rbp), %r13
+0000000100005082	movslq	0x10(%r12), %rax
+0000000100005087	cmpq	%rax, %r13
+000000010000508a	jae	0x100004e51
+0000000100005090	movq	0x28(%r12), %rax
+0000000100005095	movslq	(%rax,%r13,4), %rbx
+0000000100005099	leaq	0x8(,%rbx,8), %rdi
+00000001000050a1	callq	_fwp_alloc
+00000001000050a6	movq	%rax, -0x40(%rbp)
+00000001000050aa	movq	%rbx, -0x58(%rbp)
+00000001000050ae	testq	%rbx, %rbx
+00000001000050b1	jle	0x1000050f7
+00000001000050b3	movq	-0x58(%rbp), %rax
+00000001000050b7	leaq	(,%rax,8), %rax
+00000001000050bf	movq	%rax, -0x50(%rbp)
+00000001000050c3	xorl	%r14d, %r14d
+00000001000050c6	xorl	%ebx, %ebx
+00000001000050c8	movq	0x30(%r12), %rax
+00000001000050cd	movq	(%rax,%r13,8), %rax
+00000001000050d1	movq	(%rax,%rbx), %rsi
+00000001000050d5	movq	-0x40(%rbp), %rax
+00000001000050d9	leaq	(%rax,%rbx), %rdx
+00000001000050dd	movq	%r15, %rdi
+00000001000050e0	callq	_fwp_decode
+00000001000050e5	testl	%eax, %eax
+00000001000050e7	je	0x100004e51
+00000001000050ed	addq	$0x8, %rbx
+00000001000050f1	cmpq	%rbx, -0x50(%rbp)
+00000001000050f5	jne	0x1000050c8
+00000001000050f7	movl	%r13d, %edi
+00000001000050fa	movq	-0x58(%rbp), %rsi
+00000001000050fe	movq	-0x40(%rbp), %rdx
+0000000100005102	callq	_fwp_data
+0000000100005107	movq	-0x38(%rbp), %rcx
+000000010000510b	movq	%rax, (%rcx)
+000000010000510e	jmp	0x100004e4b
+0000000100005113	movl	$0x1, %esi
+0000000100005118	jmp	0x100004e34
+000000010000511d	movl	$0x2, %esi
+0000000100005122	jmp	0x100004e34
+0000000100005127	leaq	-0x30(%rbp), %rdx
+000000010000512b	movq	%r15, %rdi
+000000010000512e	movl	$0x2, %esi
+0000000100005133	callq	_rd_le
+0000000100005138	testl	%eax, %eax
+000000010000513a	je	0x100004e51
+0000000100005140	movswq	-0x30(%rbp), %rax
+0000000100005145	jmp	0x100004e48
+000000010000514a	leaq	-0x30(%rbp), %rdx
+000000010000514e	movq	%r15, %rdi
+0000000100005151	movl	$0x4, %esi
+0000000100005156	callq	_rd_le
+000000010000515b	testl	%eax, %eax
+000000010000515d	je	0x100004e51
+0000000100005163	movslq	-0x30(%rbp), %rax
+0000000100005167	jmp	0x100004e48
+000000010000516c	movl	$0x4, %esi
+0000000100005171	jmp	0x100004e34
+0000000100005176	movslq	0x10(%r12), %rdi
+000000010000517b	testq	%rdi, %rdi
+000000010000517e	je	0x100005208
+0000000100005184	shlq	$0x3, %rdi
+0000000100005188	callq	_fwp_alloc
+000000010000518d	movl	0x10(%r12), %edi
+0000000100005192	testl	%edi, %edi
+0000000100005194	jle	0x1000051e5
+0000000100005196	movq	%rbx, -0x38(%rbp)
+000000010000519a	xorl	%r14d, %r14d
+000000010000519d	movq	%rax, -0x40(%rbp)
+00000001000051a1	movq	%rax, %r13
+00000001000051a4	xorl	%ebx, %ebx
+00000001000051a6	nopw	%cs:(%rax,%rax)
+00000001000051b0	movq	0x20(%r12), %rax
+00000001000051b5	movq	(%rax,%rbx,8), %rsi
+00000001000051b9	movq	%r15, %rdi
+00000001000051bc	movq	%r13, %rdx
+00000001000051bf	callq	_fwp_decode
+00000001000051c4	testl	%eax, %eax
+00000001000051c6	je	0x100004e51
+00000001000051cc	incq	%rbx
+00000001000051cf	movslq	0x10(%r12), %rdi
+00000001000051d4	addq	$0x8, %r13
+00000001000051d8	cmpq	%rdi, %rbx
+00000001000051db	jl	0x1000051b0
+00000001000051dd	movq	-0x38(%rbp), %rbx
+00000001000051e1	movq	-0x40(%rbp), %rax
+00000001000051e5	movq	%rax, %rsi
+00000001000051e8	callq	_fwp_record
+00000001000051ed	jmp	0x100004e48
+00000001000051f2	callq	_fwp_box_i128
+00000001000051f7	jmp	0x100004e48
+00000001000051fc	movq	-0x38(%rbp), %rax
+0000000100005200	movq	%r14, (%rax)
+0000000100005203	jmp	0x100004e4b
+0000000100005208	movq	$0x0, (%rbx)
+000000010000520f	jmp	0x100004e4b
+0000000100005214	xorl	%r14d, %r14d
+0000000100005217	jmp	0x100004e51
+000000010000521c	movsb	(%rsi), %es:(%rdi)
+000000010000521d	cld
+000000010000521e	.byte 0xff #bad opcode
+000000010000521f	decl	(%rbx)
+0000000100005221	.byte 0xff #bad opcode
+0000000100005222	.byte 0xff #bad opcode
+0000000100005223	ljmpl	*(%rsi)
+0000000100005225	.byte 0xff #bad opcode
+0000000100005226	.byte 0xff #bad opcode
+0000000100005227	decl	(%rcx)
+0000000100005229	cld
+000000010000522a	.byte 0xff #bad opcode
+000000010000522b	incl	%edi
+000000010000522d	cld
+000000010000522e	.byte 0xff #bad opcode
+000000010000522f	pushq	%rdi
+0000000100005231	.byte 0xfe #bad opcode
+0000000100005232	.byte 0xff #bad opcode
+0000000100005233	incl	(%rcx)
+0000000100005235	.byte 0xff #bad opcode
+0000000100005236	.byte 0xff #bad opcode
+0000000100005237	callq	*-0x1(%rax)
+000000010000523a	.byte 0xff #bad opcode
+000000010000523b	decl	(%rcx)
+000000010000523d	cld
+000000010000523e	.byte 0xff #bad opcode
+000000010000523f	incl	%edi
+0000000100005241	cld
+0000000100005242	.byte 0xff #bad opcode
+0000000100005243	decl	(%rcx)
+0000000100005245	cld
+0000000100005246	.byte 0xff #bad opcode
+0000000100005247	decl	(%rcx)
+0000000100005249	cld
+000000010000524a	.byte 0xff #bad opcode
+000000010000524b	incl	-0x4(%rdi)
+000000010000524e	.byte 0xff #bad opcode
+000000010000524f	incl	-0x4(%rdi)
+0000000100005252	.byte 0xff #bad opcode
+0000000100005253	decl	-0x2(%rdx)
+0000000100005256	.byte 0xff #bad opcode
+0000000100005257	.byte 0xff #bad opcode
+0000000100005258	movl	$0x5afffffd, %edx               ## imm = 0x5AFFFFFD
+000000010000525d	.byte 0xff #bad opcode
+000000010000525e	.byte 0xff #bad opcode
+000000010000525f	.byte 0xff #bad opcode
+0000000100005260	movl	$0x19fffffd, %edx               ## imm = 0x19FFFFFD
+0000000100005265	std
+0000000100005266	.byte 0xff #bad opcode
+0000000100005267	lcalll	*(%rcx)
+0000000100005269	std
+000000010000526a	.byte 0xff #bad opcode
+000000010000526b	decl	(%rcx)
+000000010000526d	cld
+000000010000526e	.byte 0xff #bad opcode
+000000010000526f	jmpq	*0x6666ffff(%rsp,%rdi,8)
+0000000100005276	nopw	%cs:(%rax,%rax)
+_fwp_read_text_line:
+0000000100005280	pushq	%rbp
+0000000100005281	movq	%rsp, %rbp
+0000000100005284	pushq	%rbx
+0000000100005285	pushq	%rax
+0000000100005286	movq	%rdi, %rbx
+0000000100005289	movq	$0x0, 0x8(%rdi)
+0000000100005291	callq	_fwp_getc
+0000000100005296	cmpl	$-0x1, %eax
+0000000100005299	je	0x1000052ef
+000000010000529b	nopl	(%rax,%rax)
+00000001000052a0	cmpl	$0xa, %eax
+00000001000052a3	je	0x1000052bf
+00000001000052a5	movsbl	%al, %esi
+00000001000052a8	movq	%rbx, %rdi
+00000001000052ab	callq	_buf_putc
+00000001000052b0	callq	_fwp_getc
+00000001000052b5	cmpl	$-0x1, %eax
+00000001000052b8	jne	0x1000052a0
+00000001000052ba	movq	(%rbx), %rax
+00000001000052bd	jmp	0x1000052db
+00000001000052bf	movq	(%rbx), %rax
+00000001000052c2	movq	0x8(%rbx), %rcx
+00000001000052c6	testq	%rcx, %rcx
+00000001000052c9	je	0x1000052db
+00000001000052cb	cmpb	$0xd, -0x1(%rax,%rcx)
+00000001000052d0	jne	0x1000052e4
+00000001000052d2	decq	%rcx
+00000001000052d5	movq	%rcx, 0x8(%rbx)
+00000001000052d9	jmp	0x1000052e0
+00000001000052db	testq	%rax, %rax
+00000001000052de	je	0x1000052e8
+00000001000052e0	movq	0x8(%rbx), %rcx
+00000001000052e4	movb	$0x0, (%rax,%rcx)
+00000001000052e8	movl	$0x1, %eax
+00000001000052ed	jmp	0x1000052f1
+00000001000052ef	xorl	%eax, %eax
+00000001000052f1	addq	$0x8, %rsp
+00000001000052f5	popq	%rbx
+00000001000052f6	popq	%rbp
+00000001000052f7	retq
+00000001000052f8	nopl	(%rax,%rax)
+_fwp_mem_realloc:
+0000000100005300	pushq	%rbp
+0000000100005301	movq	%rsp, %rbp
+0000000100005304	pushq	%r15
+0000000100005306	pushq	%r14
+0000000100005308	pushq	%rbx
+0000000100005309	pushq	%rax
+000000010000530a	movq	%rdx, %r14
+000000010000530d	movq	%rsi, %r15
+0000000100005310	movq	%rdi, %rbx
+0000000100005313	movq	%rdx, %rdi
+0000000100005316	callq	_fwp_alloc
+000000010000531b	testq	%rbx, %rbx
+000000010000531e	je	0x100005343
+0000000100005320	cmpq	%r14, %r15
+0000000100005323	cmovbq	%r15, %r14
+0000000100005327	movq	%rax, %rdi
+000000010000532a	movq	%rbx, %rsi
+000000010000532d	movq	%r14, %rdx
+0000000100005330	movq	%rax, %r14
+0000000100005333	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+0000000100005338	movq	%rbx, %rdi
+000000010000533b	callq	_fwp_mem_free
+0000000100005340	movq	%r14, %rax
+0000000100005343	addq	$0x8, %rsp
+0000000100005347	popq	%rbx
+0000000100005348	popq	%r14
+000000010000534a	popq	%r15
+000000010000534c	popq	%rbp
+000000010000534d	retq
+000000010000534e	nop
+_fwp_list_from:
+0000000100005350	pushq	%rbp
+0000000100005351	movq	%rsp, %rbp
+0000000100005354	pushq	%r14
+0000000100005356	pushq	%rbx
+0000000100005357	movq	%rdi, %rbx
+000000010000535a	testq	%rsi, %rsi
+000000010000535d	je	0x100005384
+000000010000535f	movq	%rsi, %r14
+0000000100005362	xorl	%eax, %eax
+0000000100005364	nopw	%cs:(%rax,%rax)
+0000000100005370	movq	-0x8(%rbx,%r14,8), %rdi
+0000000100005375	movq	%rax, %rsi
+0000000100005378	callq	_fwp_cons
+000000010000537d	decq	%r14
+0000000100005380	jne	0x100005370
+0000000100005382	jmp	0x100005386
+0000000100005384	xorl	%eax, %eax
+0000000100005386	popq	%rbx
+0000000100005387	popq	%r14
+0000000100005389	popq	%rbp
+000000010000538a	retq
+000000010000538b	nopl	(%rax,%rax)
+_fwp_valid_utf8:
+0000000100005390	testq	%rsi, %rsi
+0000000100005393	je	0x1000054f2
+0000000100005399	pushq	%rbp
+000000010000539a	movq	%rsp, %rbp
+000000010000539d	pushq	%rbx
+000000010000539e	xorl	%ecx, %ecx
+00000001000053a0	jmp	0x1000053bc
+00000001000053a2	nopw	%cs:(%rax,%rax)
+00000001000053b0	incq	%rcx
+00000001000053b3	cmpq	%rsi, %rcx
+00000001000053b6	jae	0x1000054ea
+00000001000053bc	movzbl	(%rdi,%rcx), %r10d
+00000001000053c1	testb	%r10b, %r10b
+00000001000053c4	jns	0x1000053b0
+00000001000053c6	leal	0x3e(%r10), %eax
+00000001000053ca	cmpb	$0x1e, %al
+00000001000053cc	jae	0x1000053e0
+00000001000053ce	movl	$0x80, %edx
+00000001000053d3	movl	$0x1, %eax
+00000001000053d8	movl	$0x1f, %r8d
+00000001000053de	jmp	0x100005417
+00000001000053e0	movl	%r10d, %eax
+00000001000053e3	andb	$-0x10, %al
+00000001000053e5	cmpb	$-0x20, %al
+00000001000053e7	jne	0x1000053fb
+00000001000053e9	movl	$0x800, %edx                    ## imm = 0x800
+00000001000053ee	movl	$0x2, %eax
+00000001000053f3	movl	$0xf, %r8d
+00000001000053f9	jmp	0x100005417
+00000001000053fb	leal	0x10(%r10), %eax
+00000001000053ff	cmpb	$0x4, %al
+0000000100005401	ja	0x1000054f8
+0000000100005407	movl	$0x10000, %edx                  ## imm = 0x10000
+000000010000540c	movl	$0x3, %eax
+0000000100005411	movl	$0x7, %r8d
+0000000100005417	movl	%eax, %r9d
+000000010000541a	leaq	(%rcx,%r9), %r11
+000000010000541e	xorl	%eax, %eax
+0000000100005420	cmpq	%rsi, %r11
+0000000100005423	jae	0x1000054ef
+0000000100005429	movzbl	0x1(%rdi,%rcx), %r11d
+000000010000542f	movl	%r11d, %ebx
+0000000100005432	andl	$-0x40, %ebx
+0000000100005435	cmpl	$0x80, %ebx
+000000010000543b	jne	0x1000054ef
+0000000100005441	andl	%r10d, %r8d
+0000000100005444	leal	0x1(%r9), %ebx
+0000000100005448	movl	%r8d, %r10d
+000000010000544b	shll	$0x6, %r10d
+000000010000544f	andl	$0x3f, %r11d
+0000000100005453	orl	%r10d, %r11d
+0000000100005456	cmpl	$0x2, %ebx
+0000000100005459	jne	0x100005467
+000000010000545b	movl	%r11d, %ebx
+000000010000545e	cmpl	%edx, %ebx
+0000000100005460	jae	0x1000054c2
+0000000100005462	jmp	0x1000054ef
+0000000100005467	movzbl	0x2(%rdi,%rcx), %r8d
+000000010000546d	movl	%r8d, %r10d
+0000000100005470	andl	$-0x40, %r10d
+0000000100005474	cmpl	$0x80, %r10d
+000000010000547b	jne	0x1000054ef
+000000010000547d	movl	%r11d, %r10d
+0000000100005480	shll	$0x6, %r10d
+0000000100005484	andl	$0x3f, %r8d
+0000000100005488	orl	%r10d, %r8d
+000000010000548b	cmpl	$0x3, %ebx
+000000010000548e	jne	0x10000549c
+0000000100005490	movl	%r8d, %ebx
+0000000100005493	movl	%r11d, %r8d
+0000000100005496	cmpl	%edx, %ebx
+0000000100005498	jae	0x1000054c2
+000000010000549a	jmp	0x1000054ef
+000000010000549c	movzbl	0x3(%rdi,%rcx), %ebx
+00000001000054a1	movl	%ebx, %r10d
+00000001000054a4	andl	$-0x40, %r10d
+00000001000054a8	cmpl	$0x80, %r10d
+00000001000054af	jne	0x1000054ef
+00000001000054b1	movl	%r8d, %r10d
+00000001000054b4	shll	$0x6, %r10d
+00000001000054b8	andl	$0x3f, %ebx
+00000001000054bb	orl	%r10d, %ebx
+00000001000054be	cmpl	%edx, %ebx
+00000001000054c0	jb	0x1000054ef
+00000001000054c2	cmpl	$0x10ffff, %r10d                ## imm = 0x10FFFF
+00000001000054c9	ja	0x1000054ef
+00000001000054cb	andl	$0x7fe0, %r8d                   ## imm = 0x7FE0
+00000001000054d2	cmpl	$0x360, %r8d                    ## imm = 0x360
+00000001000054d9	je	0x1000054ef
+00000001000054db	addq	%r9, %rcx
+00000001000054de	incq	%rcx
+00000001000054e1	cmpq	%rsi, %rcx
+00000001000054e4	jb	0x1000053bc
+00000001000054ea	movl	$0x1, %eax
+00000001000054ef	popq	%rbx
+00000001000054f0	popq	%rbp
+00000001000054f1	retq
+00000001000054f2	movl	$0x1, %eax
+00000001000054f7	retq
+00000001000054f8	xorl	%eax, %eax
+00000001000054fa	jmp	0x1000054ef
+00000001000054fc	nopl	(%rax)
+_fwp_str_new:
+0000000100005500	pushq	%rbp
+0000000100005501	movq	%rsp, %rbp
+0000000100005504	pushq	%r15
+0000000100005506	pushq	%r14
+0000000100005508	pushq	%rbx
+0000000100005509	pushq	%rax
+000000010000550a	movq	%rsi, %rbx
+000000010000550d	movq	%rdi, %r14
+0000000100005510	leaq	0x9(%rsi), %rdi
+0000000100005514	callq	_fwp_alloc_leaf
+0000000100005519	movq	%rax, %r15
+000000010000551c	movq	%rbx, (%rax)
+000000010000551f	leaq	0x8(%rax), %rdi
+0000000100005523	movq	%r14, %rsi
+0000000100005526	movq	%rbx, %rdx
+0000000100005529	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+000000010000552e	movb	$0x0, 0x8(%r15,%rbx)
+0000000100005534	movq	%r15, %rax
+0000000100005537	addq	$0x8, %rsp
+000000010000553b	popq	%rbx
+000000010000553c	popq	%r14
+000000010000553e	popq	%r15
+0000000100005540	popq	%rbp
+0000000100005541	retq
+0000000100005542	nopw	%cs:(%rax,%rax)
+_buf_putc:
+0000000100005550	pushq	%rbp
+0000000100005551	movq	%rsp, %rbp
+0000000100005554	subq	$0x10, %rsp
+0000000100005558	movb	%sil, -0x1(%rbp)
+000000010000555c	leaq	-0x1(%rbp), %rsi
+0000000100005560	movl	$0x1, %edx
+0000000100005565	callq	_buf_put
+000000010000556a	addq	$0x10, %rsp
+000000010000556e	popq	%rbp
+000000010000556f	retq
+_buf_puts:
+0000000100005570	pushq	%rbp
+0000000100005571	movq	%rsp, %rbp
+0000000100005574	pushq	%r14
+0000000100005576	pushq	%rbx
+0000000100005577	movq	%rsi, %rbx
+000000010000557a	movq	%rdi, %r14
+000000010000557d	movq	%rsi, %rdi
+0000000100005580	callq	0x10000aae6                     ## symbol stub for: _strlen
+0000000100005585	movq	%r14, %rdi
+0000000100005588	movq	%rbx, %rsi
+000000010000558b	movq	%rax, %rdx
+000000010000558e	popq	%rbx
+000000010000558f	popq	%r14
+0000000100005591	popq	%rbp
+0000000100005592	jmp	_buf_put
+0000000100005597	nopw	(%rax,%rax)
+_buf_put:
+00000001000055a0	pushq	%rbp
+00000001000055a1	movq	%rsp, %rbp
+00000001000055a4	pushq	%r15
+00000001000055a6	pushq	%r14
+00000001000055a8	pushq	%rbx
+00000001000055a9	pushq	%rax
+00000001000055aa	movq	%rdx, %rbx
+00000001000055ad	movq	%rsi, %r14
+00000001000055b0	movq	%rdi, %r15
+00000001000055b3	movq	%rdx, %rsi
+00000001000055b6	callq	_buf_grow
+00000001000055bb	movq	(%r15), %rdi
+00000001000055be	addq	0x8(%r15), %rdi
+00000001000055c2	movq	%r14, %rsi
+00000001000055c5	movq	%rbx, %rdx
+00000001000055c8	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+00000001000055cd	addq	0x8(%r15), %rbx
+00000001000055d1	movq	%rbx, 0x8(%r15)
+00000001000055d5	movq	(%r15), %rax
+00000001000055d8	movb	$0x0, (%rax,%rbx)
+00000001000055dc	addq	$0x8, %rsp
+00000001000055e0	popq	%rbx
+00000001000055e1	popq	%r14
+00000001000055e3	popq	%r15
+00000001000055e5	popq	%rbp
+00000001000055e6	retq
+00000001000055e7	nopw	(%rax,%rax)
+_buf_to_str:
+00000001000055f0	pushq	%rbp
+00000001000055f1	movq	%rsp, %rbp
+00000001000055f4	pushq	%r14
+00000001000055f6	pushq	%rbx
+00000001000055f7	movq	%rdi, %rbx
+00000001000055fa	movq	(%rdi), %rax
+00000001000055fd	movq	0x8(%rdi), %rsi
+0000000100005601	testq	%rax, %rax
+0000000100005604	leaq	0x637f(%rip), %rdi              ## literal pool for: ""
+000000010000560b	cmovneq	%rax, %rdi
+000000010000560f	callq	_fwp_str_new
+0000000100005614	movq	%rax, %r14
+0000000100005617	movq	(%rbx), %rdi
+000000010000561a	callq	0x10000aa32                     ## symbol stub for: _free
+000000010000561f	movq	%r14, %rax
+0000000100005622	popq	%rbx
+0000000100005623	popq	%r14
+0000000100005625	popq	%rbp
+0000000100005626	retq
+0000000100005627	nopw	(%rax,%rax)
+_buf_grow:
+0000000100005630	pushq	%rbp
+0000000100005631	movq	%rsp, %rbp
+0000000100005634	pushq	%r14
+0000000100005636	pushq	%rbx
+0000000100005637	movq	0x8(%rdi), %rax
+000000010000563b	cmpq	$-0x1, %rax
+000000010000563f	je	0x1000056ae
+0000000100005641	movq	$-0x2, %rcx
+0000000100005648	subq	%rax, %rcx
+000000010000564b	cmpq	%rsi, %rcx
+000000010000564e	jb	0x1000056ae
+0000000100005650	movq	%rdi, %rbx
+0000000100005653	addq	%rsi, %rax
+0000000100005656	incq	%rax
+0000000100005659	movq	0x10(%rdi), %rcx
+000000010000565d	cmpq	%rcx, %rax
+0000000100005660	jbe	0x1000056a9
+0000000100005662	testq	%rcx, %rcx
+0000000100005665	movl	$0x40, %r14d
+000000010000566b	cmovneq	%rcx, %r14
+000000010000566f	cmpq	%rax, %r14
+0000000100005672	jae	0x100005692
+0000000100005674	nopw	%cs:(%rax,%rax)
+0000000100005680	testq	%r14, %r14
+0000000100005683	js	0x10000568f
+0000000100005685	addq	%r14, %r14
+0000000100005688	cmpq	%rax, %r14
+000000010000568b	jb	0x100005680
+000000010000568d	jmp	0x100005692
+000000010000568f	movq	%rax, %r14
+0000000100005692	movq	(%rbx), %rdi
+0000000100005695	movq	%r14, %rsi
+0000000100005698	callq	0x10000aaa4                     ## symbol stub for: _realloc
+000000010000569d	testq	%rax, %rax
+00000001000056a0	je	0x1000056ae
+00000001000056a2	movq	%rax, (%rbx)
+00000001000056a5	movq	%r14, 0x10(%rbx)
+00000001000056a9	popq	%rbx
+00000001000056aa	popq	%r14
+00000001000056ac	popq	%rbp
+00000001000056ad	retq
+00000001000056ae	movq	0x797b(%rip), %rax              ## literal pool symbol address: ___stderrp
+00000001000056b5	movq	(%rax), %rcx
+00000001000056b8	leaq	0x58f3(%rip), %rdi              ## literal pool for: "fwp: out of memory\n"
+00000001000056bf	movl	$0x13, %esi
+00000001000056c4	movl	$0x1, %edx
+00000001000056c9	callq	0x10000aa38                     ## symbol stub for: _fwrite
+00000001000056ce	movl	$0x66, %edi
+00000001000056d3	callq	0x10000aa08                     ## symbol stub for: _exit
+00000001000056d8	nopl	(%rax,%rax)
+_fwp_is_number_arg:
+00000001000056e0	pushq	%rbp
+00000001000056e1	movq	%rsp, %rbp
+00000001000056e4	xorl	%eax, %eax
+00000001000056e6	cmpb	$0x2d, (%rdi)
+00000001000056e9	jne	0x100005704
+00000001000056eb	movzbl	0x1(%rdi), %ecx
+00000001000056ef	leal	-0x30(%rcx), %edx
+00000001000056f2	movl	$0x1, %eax
+00000001000056f7	cmpb	$0xa, %dl
+00000001000056fa	jb	0x100005704
+00000001000056fc	xorl	%eax, %eax
+00000001000056fe	cmpb	$0x2e, %cl
+0000000100005701	sete	%al
+0000000100005704	popq	%rbp
+0000000100005705	retq
+0000000100005706	nopw	%cs:(%rax,%rax)
+_fwp_strf:
+0000000100005710	pushq	%rbp
+0000000100005711	movq	%rsp, %rbp
+0000000100005714	pushq	%r15
+0000000100005716	pushq	%r14
+0000000100005718	pushq	%r13
+000000010000571a	pushq	%r12
+000000010000571c	pushq	%rbx
+000000010000571d	subq	$0xd8, %rsp
+0000000100005724	movq	%rdi, %rbx
+0000000100005727	movq	%rsi, -0xf8(%rbp)
+000000010000572e	movq	%rdx, -0xf0(%rbp)
+0000000100005735	movq	%rcx, -0xe8(%rbp)
+000000010000573c	movq	%r8, -0xe0(%rbp)
+0000000100005743	movq	%r9, -0xd8(%rbp)
+000000010000574a	testb	%al, %al
+000000010000574c	je	0x10000577d
+000000010000574e	movaps	%xmm0, -0xd0(%rbp)
+0000000100005755	movaps	%xmm1, -0xc0(%rbp)
+000000010000575c	movaps	%xmm2, -0xb0(%rbp)
+0000000100005763	movaps	%xmm3, -0xa0(%rbp)
+000000010000576a	movaps	%xmm4, -0x90(%rbp)
+0000000100005771	movaps	%xmm5, -0x80(%rbp)
+0000000100005775	movaps	%xmm6, -0x70(%rbp)
+0000000100005779	movaps	%xmm7, -0x60(%rbp)
+000000010000577d	movq	0x78a4(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100005784	movq	(%rax), %rax
+0000000100005787	movq	%rax, -0x30(%rbp)
+000000010000578b	leaq	-0x100(%rbp), %rax
+0000000100005792	movq	%rax, -0x40(%rbp)
+0000000100005796	leaq	0x10(%rbp), %rax
+000000010000579a	movq	%rax, -0x48(%rbp)
+000000010000579e	movabsq	$0x3000000008, %r14             ## imm = 0x3000000008
+00000001000057a8	movq	%r14, -0x50(%rbp)
+00000001000057ac	leaq	-0x50(%rbp), %rcx
+00000001000057b0	xorl	%edi, %edi
+00000001000057b2	xorl	%esi, %esi
+00000001000057b4	movq	%rbx, %rdx
+00000001000057b7	callq	0x10000ab10                     ## symbol stub for: _vsnprintf
+00000001000057bc	movslq	%eax, %r15
+00000001000057bf	leaq	0x1(%r15), %r12
+00000001000057c3	movq	%r12, %rdi
+00000001000057c6	callq	_fwp_alloc_leaf
+00000001000057cb	movq	%rax, %r13
+00000001000057ce	movq	%r14, -0x50(%rbp)
+00000001000057d2	leaq	0x10(%rbp), %rax
+00000001000057d6	movq	%rax, -0x48(%rbp)
+00000001000057da	leaq	-0x100(%rbp), %rax
+00000001000057e1	movq	%rax, -0x40(%rbp)
+00000001000057e5	movq	%r13, %rdi
+00000001000057e8	movq	%r12, %rsi
+00000001000057eb	movq	%rbx, %rdx
+00000001000057ee	leaq	-0x50(%rbp), %rcx
+00000001000057f2	callq	0x10000ab10                     ## symbol stub for: _vsnprintf
+00000001000057f7	movq	%r13, %rdi
+00000001000057fa	movq	%r15, %rsi
+00000001000057fd	callq	_fwp_str_new
+0000000100005802	movq	0x781f(%rip), %rcx              ## literal pool symbol address: ___stack_chk_guard
+0000000100005809	movq	(%rcx), %rcx
+000000010000580c	cmpq	-0x30(%rbp), %rcx
+0000000100005810	jne	0x100005824
+0000000100005812	addq	$0xd8, %rsp
+0000000100005819	popq	%rbx
+000000010000581a	popq	%r12
+000000010000581c	popq	%r13
+000000010000581e	popq	%r14
+0000000100005820	popq	%r15
+0000000100005822	popq	%rbp
+0000000100005823	retq
+0000000100005824	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100005829	nopl	(%rax)
+_fwp_cli_value:
+0000000100005830	pushq	%rbp
+0000000100005831	movq	%rsp, %rbp
+0000000100005834	pushq	%r15
+0000000100005836	pushq	%r14
+0000000100005838	pushq	%r13
+000000010000583a	pushq	%r12
+000000010000583c	pushq	%rbx
+000000010000583d	subq	$0x68, %rsp
+0000000100005841	movq	%rcx, %r14
+0000000100005844	movq	%rdx, %rbx
+0000000100005847	movq	%rsi, %r13
+000000010000584a	movq	%rdi, %r12
+000000010000584d	callq	_fwp_is_enum
+0000000100005852	testl	%eax, %eax
+0000000100005854	je	0x100005943
+000000010000585a	movq	%rbx, -0x70(%rbp)
+000000010000585e	xorps	%xmm0, %xmm0
+0000000100005861	movaps	%xmm0, -0x90(%rbp)
+0000000100005868	movq	$0x0, -0x80(%rbp)
+0000000100005870	movaps	%xmm0, -0x50(%rbp)
+0000000100005874	movq	$0x0, -0x40(%rbp)
+000000010000587c	leaq	-0x90(%rbp), %rdi
+0000000100005883	movq	%r12, %rsi
+0000000100005886	movq	%r13, %rdx
+0000000100005889	callq	_fwp_loose
+000000010000588e	movq	-0x88(%rbp), %rbx
+0000000100005895	testq	%rbx, %rbx
+0000000100005898	setne	%al
+000000010000589b	cmpl	$0x0, 0xa19e(%rip)
+00000001000058a2	movq	-0x90(%rbp), %rcx
+00000001000058a9	movq	%rcx, -0x30(%rbp)
+00000001000058ad	setg	%cl
+00000001000058b0	andb	%al, %cl
+00000001000058b2	cmpb	$0x1, %cl
+00000001000058b5	jne	0x10000596a
+00000001000058bb	movq	%r13, -0x58(%rbp)
+00000001000058bf	movq	%r12, -0x60(%rbp)
+00000001000058c3	movq	%r14, -0x68(%rbp)
+00000001000058c7	movl	$0xffffffff, %r15d              ## imm = 0xFFFFFFFF
+00000001000058cd	xorl	%r13d, %r13d
+00000001000058d0	leaq	-0x50(%rbp), %r12
+00000001000058d4	nopw	%cs:(%rax,%rax)
+00000001000058e0	movq	0xa161(%rip), %rax
+00000001000058e7	movq	(%rax,%r13,8), %r14
+00000001000058eb	movq	%r14, %rdi
+00000001000058ee	callq	0x10000aae6                     ## symbol stub for: _strlen
+00000001000058f3	movq	%r12, %rdi
+00000001000058f6	movq	%r14, %rsi
+00000001000058f9	movq	%rax, %rdx
+00000001000058fc	callq	_fwp_loose
+0000000100005901	cmpq	%rbx, -0x48(%rbp)
+0000000100005905	jne	0x10000591d
+0000000100005907	movq	-0x50(%rbp), %rdi
+000000010000590b	movq	-0x30(%rbp), %rsi
+000000010000590f	movq	%rbx, %rdx
+0000000100005912	callq	0x10000aa68                     ## symbol stub for: _memcmp
+0000000100005917	testl	%eax, %eax
+0000000100005919	cmovel	%r13d, %r15d
+000000010000591d	incq	%r13
+0000000100005920	movslq	0xa119(%rip), %rax
+0000000100005927	cmpq	%rax, %r13
+000000010000592a	jge	0x100005931
+000000010000592c	testl	%r15d, %r15d
+000000010000592f	js	0x1000058e0
+0000000100005931	movq	-0x50(%rbp), %rbx
+0000000100005935	movq	-0x68(%rbp), %r14
+0000000100005939	movq	-0x60(%rbp), %r12
+000000010000593d	movq	-0x58(%rbp), %r13
+0000000100005941	jmp	0x100005972
+0000000100005943	movq	%r12, %rdi
+0000000100005946	movq	%r13, %rsi
+0000000100005949	movq	%rbx, %rdx
+000000010000594c	callq	_fwp_parse_text
+0000000100005951	movl	$0x1, %ebx
+0000000100005956	testl	%eax, %eax
+0000000100005958	jne	0x1000059bb
+000000010000595a	leaq	0x6127(%rip), %rdi              ## literal pool for: "cannot parse `%.*s` as %s"
+0000000100005961	leaq	0x630b(%rip), %rcx              ## literal pool for: "F64"
+0000000100005968	jmp	0x1000059a9
+000000010000596a	movl	$0xffffffff, %r15d              ## imm = 0xFFFFFFFF
+0000000100005970	xorl	%ebx, %ebx
+0000000100005972	movq	-0x30(%rbp), %rdi
+0000000100005976	callq	0x10000aa32                     ## symbol stub for: _free
+000000010000597b	movq	%rbx, %rdi
+000000010000597e	callq	0x10000aa32                     ## symbol stub for: _free
+0000000100005983	testl	%r15d, %r15d
+0000000100005986	js	0x100005999
+0000000100005988	movl	%r15d, %eax
+000000010000598b	movq	-0x70(%rbp), %rcx
+000000010000598f	movq	%rax, (%rcx)
+0000000100005992	movl	$0x1, %ebx
+0000000100005997	jmp	0x1000059bb
+0000000100005999	callq	_fwp_choices
+000000010000599e	leaq	0x8(%rax), %rcx
+00000001000059a2	leaq	0x60c7(%rip), %rdi              ## literal pool for: "`%.*s` is not one of %s"
+00000001000059a9	xorl	%ebx, %ebx
+00000001000059ab	movl	%r13d, %esi
+00000001000059ae	movq	%r12, %rdx
+00000001000059b1	xorl	%eax, %eax
+00000001000059b3	callq	_fwp_strf
+00000001000059b8	movq	%rax, (%r14)
+00000001000059bb	movl	%ebx, %eax
+00000001000059bd	addq	$0x68, %rsp
+00000001000059c1	popq	%rbx
+00000001000059c2	popq	%r12
+00000001000059c4	popq	%r13
+00000001000059c6	popq	%r14
+00000001000059c8	popq	%r15
+00000001000059ca	popq	%rbp
+00000001000059cb	retq
+00000001000059cc	nopl	(%rax)
+_fwp_cons:
+00000001000059d0	pushq	%rbp
+00000001000059d1	movq	%rsp, %rbp
+00000001000059d4	subq	$0x20, %rsp
+00000001000059d8	movq	0x7649(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+00000001000059df	movq	(%rax), %rax
+00000001000059e2	movq	%rax, -0x8(%rbp)
+00000001000059e6	movq	%rdi, -0x20(%rbp)
+00000001000059ea	movq	%rsi, -0x18(%rbp)
+00000001000059ee	leaq	-0x20(%rbp), %rdx
+00000001000059f2	movl	$0x1, %edi
+00000001000059f7	movl	$0x2, %esi
+00000001000059fc	callq	_fwp_data
+0000000100005a01	movq	0x7620(%rip), %rcx              ## literal pool symbol address: ___stack_chk_guard
+0000000100005a08	movq	(%rcx), %rcx
+0000000100005a0b	cmpq	-0x8(%rbp), %rcx
+0000000100005a0f	jne	0x100005a17
+0000000100005a11	addq	$0x20, %rsp
+0000000100005a15	popq	%rbp
+0000000100005a16	retq
+0000000100005a17	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100005a1c	nopl	(%rax)
+_fwp_is_enum:
+0000000100005a20	pushq	%rbp
+0000000100005a21	movq	%rsp, %rbp
+0000000100005a24	pushq	%rbx
+0000000100005a25	pushq	%rax
+0000000100005a26	cmpl	$0xe, _d0(%rip)
+0000000100005a2d	setne	%cl
+0000000100005a30	movl	0xa00a(%rip), %ebx
+0000000100005a36	testl	%ebx, %ebx
+0000000100005a38	sete	%dl
+0000000100005a3b	xorl	%eax, %eax
+0000000100005a3d	orb	%cl, %dl
+0000000100005a3f	jne	0x100005aa1
+0000000100005a41	movq	0x9ff0(%rip), %rdi
+0000000100005a48	testq	%rdi, %rdi
+0000000100005a4b	je	0x100005a61
+0000000100005a4d	leaq	0x604e(%rip), %rsi              ## literal pool for: "Bool"
+0000000100005a54	callq	0x10000aada                     ## symbol stub for: _strcmp
+0000000100005a59	movl	%eax, %ecx
+0000000100005a5b	xorl	%eax, %eax
+0000000100005a5d	testl	%ecx, %ecx
+0000000100005a5f	je	0x100005aa1
+0000000100005a61	movl	%ebx, %ecx
+0000000100005a63	testl	%ecx, %ecx
+0000000100005a65	jle	0x100005a9c
+0000000100005a67	movq	0x9fea(%rip), %rdx
+0000000100005a6e	cmpl	$0x0, (%rdx)
+0000000100005a71	jne	0x100005aa1
+0000000100005a73	movl	$0x1, %eax
+0000000100005a78	nopl	(%rax,%rax)
+0000000100005a80	movq	%rax, %rsi
+0000000100005a83	cmpq	%rax, %rcx
+0000000100005a86	je	0x100005a92
+0000000100005a88	leaq	0x1(%rsi), %rax
+0000000100005a8c	cmpl	$0x0, (%rdx,%rsi,4)
+0000000100005a90	je	0x100005a80
+0000000100005a92	xorl	%eax, %eax
+0000000100005a94	cmpq	%rcx, %rsi
+0000000100005a97	setae	%al
+0000000100005a9a	jmp	0x100005aa1
+0000000100005a9c	movl	$0x1, %eax
+0000000100005aa1	addq	$0x8, %rsp
+0000000100005aa5	popq	%rbx
+0000000100005aa6	popq	%rbp
+0000000100005aa7	retq
+0000000100005aa8	nopl	(%rax,%rax)
+_fwp_loose:
+0000000100005ab0	movq	$0x0, 0x8(%rdi)
+0000000100005ab8	testq	%rdx, %rdx
+0000000100005abb	je	0x100005b1d
+0000000100005abd	pushq	%rbp
+0000000100005abe	movq	%rsp, %rbp
+0000000100005ac1	pushq	%r15
+0000000100005ac3	pushq	%r14
+0000000100005ac5	pushq	%r12
+0000000100005ac7	pushq	%rbx
+0000000100005ac8	movq	%rdx, %rbx
+0000000100005acb	movq	%rsi, %r14
+0000000100005ace	movq	%rdi, %r15
+0000000100005ad1	xorl	%r12d, %r12d
+0000000100005ad4	jmp	0x100005ae8
+0000000100005ad6	nopw	%cs:(%rax,%rax)
+0000000100005ae0	incq	%r12
+0000000100005ae3	cmpq	%r12, %rbx
+0000000100005ae6	je	0x100005b15
+0000000100005ae8	movzbl	(%r14,%r12), %eax
+0000000100005aed	cmpl	$0x2d, %eax
+0000000100005af0	je	0x100005ae0
+0000000100005af2	cmpl	$0x5f, %eax
+0000000100005af5	je	0x100005ae0
+0000000100005af7	leal	-0x41(%rax), %ecx
+0000000100005afa	movzbl	%al, %edx
+0000000100005afd	orb	$0x20, %al
+0000000100005aff	cmpb	$0x1a, %cl
+0000000100005b02	movzbl	%al, %eax
+0000000100005b05	cmovael	%edx, %eax
+0000000100005b08	movsbl	%al, %esi
+0000000100005b0b	movq	%r15, %rdi
+0000000100005b0e	callq	_buf_putc
+0000000100005b13	jmp	0x100005ae0
+0000000100005b15	popq	%rbx
+0000000100005b16	popq	%r12
+0000000100005b18	popq	%r14
+0000000100005b1a	popq	%r15
+0000000100005b1c	popq	%rbp
+0000000100005b1d	retq
+0000000100005b1e	nop
+_fwp_choices:
+0000000100005b20	pushq	%rbp
+0000000100005b21	movq	%rsp, %rbp
+0000000100005b24	pushq	%r15
+0000000100005b26	pushq	%r14
+0000000100005b28	pushq	%rbx
+0000000100005b29	subq	$0x18, %rsp
+0000000100005b2d	xorps	%xmm0, %xmm0
+0000000100005b30	movaps	%xmm0, -0x30(%rbp)
+0000000100005b34	movq	$0x0, -0x20(%rbp)
+0000000100005b3c	cmpl	$0x0, 0x9efd(%rip)
+0000000100005b43	jle	0x100005bad
+0000000100005b45	movq	0x9efc(%rip), %rax
+0000000100005b4c	movq	(%rax), %rsi
+0000000100005b4f	leaq	-0x30(%rbp), %rdi
+0000000100005b53	callq	_fwp_kebab
+0000000100005b58	cmpl	$0x2, 0x9ee1(%rip)
+0000000100005b5f	jl	0x100005bad
+0000000100005b61	movl	$0x1, %r15d
+0000000100005b67	leaq	0x5f39(%rip), %rbx              ## literal pool for: ", "
+0000000100005b6e	leaq	-0x30(%rbp), %r14
+0000000100005b72	nopw	%cs:(%rax,%rax)
+0000000100005b80	movq	%r14, %rdi
+0000000100005b83	movq	%rbx, %rsi
+0000000100005b86	callq	_buf_puts
+0000000100005b8b	movq	0x9eb6(%rip), %rax
+0000000100005b92	movq	(%rax,%r15,8), %rsi
+0000000100005b96	movq	%r14, %rdi
+0000000100005b99	callq	_fwp_kebab
+0000000100005b9e	incq	%r15
+0000000100005ba1	movslq	0x9e98(%rip), %rax
+0000000100005ba8	cmpq	%rax, %r15
+0000000100005bab	jl	0x100005b80
+0000000100005bad	leaq	-0x30(%rbp), %rdi
+0000000100005bb1	callq	_buf_to_str
+0000000100005bb6	addq	$0x18, %rsp
+0000000100005bba	popq	%rbx
+0000000100005bbb	popq	%r14
+0000000100005bbd	popq	%r15
+0000000100005bbf	popq	%rbp
+0000000100005bc0	retq
+0000000100005bc1	nopw	%cs:(%rax,%rax)
+_fwp_kebab:
+0000000100005bd0	pushq	%rbp
+0000000100005bd1	movq	%rsp, %rbp
+0000000100005bd4	pushq	%r15
+0000000100005bd6	pushq	%r14
+0000000100005bd8	pushq	%rbx
+0000000100005bd9	pushq	%rax
+0000000100005bda	movzbl	(%rsi), %r15d
+0000000100005bde	testb	%r15b, %r15b
+0000000100005be1	je	0x100005c4f
+0000000100005be3	movq	%rsi, %rbx
+0000000100005be6	movq	%rdi, %r14
+0000000100005be9	incq	%rbx
+0000000100005bec	xorl	%eax, %eax
+0000000100005bee	jmp	0x100005c21
+0000000100005bf0	movsbl	%r15b, %esi
+0000000100005bf4	movq	%r14, %rdi
+0000000100005bf7	callq	_buf_putc
+0000000100005bfc	leal	-0x61(%r15), %eax
+0000000100005c00	cmpb	$0x1a, %al
+0000000100005c02	setb	%al
+0000000100005c05	addb	$-0x30, %r15b
+0000000100005c09	cmpb	$0xa, %r15b
+0000000100005c0d	setb	%cl
+0000000100005c10	orb	%al, %cl
+0000000100005c12	movzbl	%cl, %eax
+0000000100005c15	movzbl	(%rbx), %r15d
+0000000100005c19	incq	%rbx
+0000000100005c1c	testb	%r15b, %r15b
+0000000100005c1f	je	0x100005c4f
+0000000100005c21	leal	-0x41(%r15), %ecx
+0000000100005c25	cmpb	$0x19, %cl
+0000000100005c28	ja	0x100005bf0
+0000000100005c2a	testl	%eax, %eax
+0000000100005c2c	je	0x100005c3b
+0000000100005c2e	movq	%r14, %rdi
+0000000100005c31	movl	$0x2d, %esi
+0000000100005c36	callq	_buf_putc
+0000000100005c3b	orb	$0x20, %r15b
+0000000100005c3f	movsbl	%r15b, %esi
+0000000100005c43	movq	%r14, %rdi
+0000000100005c46	callq	_buf_putc
+0000000100005c4b	xorl	%eax, %eax
+0000000100005c4d	jmp	0x100005c15
+0000000100005c4f	addq	$0x8, %rsp
+0000000100005c53	popq	%rbx
+0000000100005c54	popq	%r14
+0000000100005c56	popq	%r15
+0000000100005c58	popq	%rbp
+0000000100005c59	retq
+0000000100005c5a	nopw	(%rax,%rax)
+_tp_value:
+0000000100005c60	pushq	%rbp
+0000000100005c61	movq	%rsp, %rbp
+0000000100005c64	pushq	%r15
+0000000100005c66	pushq	%r14
+0000000100005c68	pushq	%r13
+0000000100005c6a	pushq	%r12
+0000000100005c6c	pushq	%rbx
+0000000100005c6d	subq	$0x1b8, %rsp                    ## imm = 0x1B8
+0000000100005c74	movq	%rcx, %r15
+0000000100005c77	movq	%rsi, %r14
+0000000100005c7a	movq	%rdi, %r13
+0000000100005c7d	movq	0x73a4(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100005c84	movq	(%rax), %rax
+0000000100005c87	movq	%rax, -0x30(%rbp)
+0000000100005c8b	testl	%edx, %edx
+0000000100005c8d	je	0x100005cda
+0000000100005c8f	cmpl	$0xc, (%r14)
+0000000100005c93	jne	0x100005cda
+0000000100005c95	movq	0x8(%r13), %rbx
+0000000100005c99	movq	0x10(%r13), %rax
+0000000100005c9d	movq	(%r13), %r14
+0000000100005ca1	addq	%rax, %r14
+0000000100005ca4	subq	%rax, %rbx
+0000000100005ca7	movq	%r14, %rdi
+0000000100005caa	movq	%rbx, %rsi
+0000000100005cad	callq	_fwp_valid_utf8
+0000000100005cb2	testl	%eax, %eax
+0000000100005cb4	je	0x1000065dd
+0000000100005cba	movq	%r14, %rdi
+0000000100005cbd	movq	%rbx, %rsi
+0000000100005cc0	callq	_fwp_str_new
+0000000100005cc5	movq	%rax, (%r15)
+0000000100005cc8	movq	0x8(%r13), %rax
+0000000100005ccc	movq	%rax, 0x10(%r13)
+0000000100005cd0	movl	$0x1, %ebx
+0000000100005cd5	jmp	0x1000065df
+0000000100005cda	movl	%edx, %r12d
+0000000100005cdd	movq	%r13, %rdi
+0000000100005ce0	callq	_tp_ws
+0000000100005ce5	movl	(%r14), %eax
+0000000100005ce8	xorl	%ebx, %ebx
+0000000100005cea	cmpq	$0x15, %rax
+0000000100005cee	ja	0x1000065df
+0000000100005cf4	leaq	0x9f1(%rip), %rcx
+0000000100005cfb	movslq	(%rcx,%rax,4), %rdx
+0000000100005cff	addq	%rcx, %rdx
+0000000100005d02	jmpq	*%rdx
+0000000100005d04	movq	0x731d(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100005d0b	movq	(%rax), %rax
+0000000100005d0e	cmpq	-0x30(%rbp), %rax
+0000000100005d12	jne	0x1000066e7
+0000000100005d18	movq	%r13, %rdi
+0000000100005d1b	movq	%r14, %rsi
+0000000100005d1e	movq	%r15, %rdx
+0000000100005d21	addq	$0x1b8, %rsp                    ## imm = 0x1B8
+0000000100005d28	popq	%rbx
+0000000100005d29	popq	%r12
+0000000100005d2b	popq	%r13
+0000000100005d2d	popq	%r14
+0000000100005d2f	popq	%r15
+0000000100005d31	popq	%rbp
+0000000100005d32	jmp	_tp_int
+0000000100005d37	movups	0x38(%r14), %xmm0
+0000000100005d3c	movaps	%xmm0, -0x130(%rbp)
+0000000100005d43	xorl	%ecx, %ecx
+0000000100005d45	cmpl	$0x13, %eax
+0000000100005d48	sete	%cl
+0000000100005d4b	xorps	%xmm0, %xmm0
+0000000100005d4e	movaps	%xmm0, -0x120(%rbp)
+0000000100005d55	movq	$0x0, -0x110(%rbp)
+0000000100005d60	movl	%ecx, -0x108(%rbp)
+0000000100005d66	leaq	0x5d57(%rip), %rax              ## literal pool for: "set"
+0000000100005d6d	leaq	0x5d54(%rip), %rsi              ## literal pool for: "map"
+0000000100005d74	cmoveq	%rax, %rsi
+0000000100005d78	movq	%r13, %rdi
+0000000100005d7b	callq	_tp_eat
+0000000100005d80	xorl	%ebx, %ebx
+0000000100005d82	testl	%eax, %eax
+0000000100005d84	je	0x1000065df
+0000000100005d8a	leaq	0x5d3b(%rip), %rsi              ## literal pool for: "{"
+0000000100005d91	leaq	0x5d36(%rip), %rdx              ## literal pool for: "}"
+0000000100005d98	leaq	_tp_kv_item(%rip), %rcx
+0000000100005d9f	leaq	-0x130(%rbp), %r8
+0000000100005da6	movq	%r13, %rdi
+0000000100005da9	callq	_tp_list_of
+0000000100005dae	testl	%eax, %eax
+0000000100005db0	je	0x1000061e0
+0000000100005db6	cmpq	$0x0, -0x118(%rbp)
+0000000100005dbe	je	0x1000063f1
+0000000100005dc4	leaq	_fwp_empty_map(%rip), %rax
+0000000100005dcb	xorl	%ebx, %ebx
+0000000100005dcd	nopl	(%rax)
+0000000100005dd0	movq	-0x120(%rbp), %rcx
+0000000100005dd7	movq	(%rcx,%rbx,8), %rdi
+0000000100005ddb	movq	0x8(%rcx,%rbx,8), %rsi
+0000000100005de0	movq	0x38(%r14), %rcx
+0000000100005de4	movq	%rax, %rdx
+0000000100005de7	callq	_fwp_p_map_insert
+0000000100005dec	addq	$0x2, %rbx
+0000000100005df0	cmpq	-0x118(%rbp), %rbx
+0000000100005df7	jb	0x100005dd0
+0000000100005df9	jmp	0x1000063f8
+0000000100005dfe	xorps	%xmm0, %xmm0
+0000000100005e01	movups	%xmm0, -0x118(%rbp)
+0000000100005e08	movups	%xmm0, -0x128(%rbp)
+0000000100005e0f	movq	$0x0, -0x108(%rbp)
+0000000100005e1a	movq	0x38(%r14), %rcx
+0000000100005e1e	movq	%rcx, -0x130(%rbp)
+0000000100005e25	cmpl	$0x11, %eax
+0000000100005e28	jne	0x100005e41
+0000000100005e2a	leaq	0x5c8d(%rip), %rsi              ## literal pool for: "array"
+0000000100005e31	movq	%r13, %rdi
+0000000100005e34	callq	_tp_eat
+0000000100005e39	testl	%eax, %eax
+0000000100005e3b	je	0x1000065dd
+0000000100005e41	leaq	0x5c6c(%rip), %rsi              ## literal pool for: "["
+0000000100005e48	leaq	0x5c67(%rip), %rdx              ## literal pool for: "]"
+0000000100005e4f	leaq	_tp_elem_item(%rip), %rcx
+0000000100005e56	leaq	-0x130(%rbp), %r8
+0000000100005e5d	movq	%r13, %rdi
+0000000100005e60	callq	_tp_list_of
+0000000100005e65	movq	-0x120(%rbp), %rdi
+0000000100005e6c	testl	%eax, %eax
+0000000100005e6e	je	0x1000061f1
+0000000100005e74	movq	-0x118(%rbp), %rsi
+0000000100005e7b	callq	_fwp_list_from
+0000000100005e80	movq	%rax, %rbx
+0000000100005e83	movq	-0x120(%rbp), %rdi
+0000000100005e8a	callq	_fwp_mem_free
+0000000100005e8f	cmpl	$0x11, (%r14)
+0000000100005e93	jne	0x1000060ab
+0000000100005e99	movq	%rbx, %rdi
+0000000100005e9c	callq	_fwp_p_array_from_list
+0000000100005ea1	movq	%rax, (%r15)
+0000000100005ea4	jmp	0x100005cd0
+0000000100005ea9	movq	0x7178(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100005eb0	movq	(%rax), %rax
+0000000100005eb3	cmpq	-0x30(%rbp), %rax
+0000000100005eb7	jne	0x1000066e7
+0000000100005ebd	movq	%r13, %rdi
+0000000100005ec0	movq	%r14, %rsi
+0000000100005ec3	movq	%r15, %rdx
+0000000100005ec6	addq	$0x1b8, %rsp                    ## imm = 0x1B8
+0000000100005ecd	popq	%rbx
+0000000100005ece	popq	%r12
+0000000100005ed0	popq	%r13
+0000000100005ed2	popq	%r14
+0000000100005ed4	popq	%r15
+0000000100005ed6	popq	%rbp
+0000000100005ed7	jmp	_tp_float
+0000000100005edc	testl	%r12d, %r12d
+0000000100005edf	jne	0x100005c95
+0000000100005ee5	movq	0x713c(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100005eec	movq	(%rax), %rax
+0000000100005eef	cmpq	-0x30(%rbp), %rax
+0000000100005ef3	jne	0x1000066e7
+0000000100005ef9	movq	%r13, %rdi
+0000000100005efc	movq	%r15, %rsi
+0000000100005eff	addq	$0x1b8, %rsp                    ## imm = 0x1B8
+0000000100005f06	popq	%rbx
+0000000100005f07	popq	%r12
+0000000100005f09	popq	%r13
+0000000100005f0b	popq	%r14
+0000000100005f0d	popq	%r15
+0000000100005f0f	popq	%rbp
+0000000100005f10	jmp	_tp_quoted
+0000000100005f15	xorps	%xmm0, %xmm0
+0000000100005f18	movaps	%xmm0, -0x110(%rbp)
+0000000100005f1f	movaps	%xmm0, -0x120(%rbp)
+0000000100005f26	movaps	%xmm0, -0x130(%rbp)
+0000000100005f2d	leaq	0x5b7a(%rip), %rsi              ## literal pool for: "bytes"
+0000000100005f34	movq	%r13, %rdi
+0000000100005f37	callq	_tp_eat
+0000000100005f3c	xorl	%ebx, %ebx
+0000000100005f3e	testl	%eax, %eax
+0000000100005f40	je	0x1000061fb
+0000000100005f46	leaq	0x5b67(%rip), %rsi              ## literal pool for: "["
+0000000100005f4d	leaq	0x5b62(%rip), %rdx              ## literal pool for: "]"
+0000000100005f54	leaq	_tp_byte_item(%rip), %rcx
+0000000100005f5b	leaq	-0x130(%rbp), %r8
+0000000100005f62	movq	%r13, %rdi
+0000000100005f65	callq	_tp_list_of
+0000000100005f6a	testl	%eax, %eax
+0000000100005f6c	je	0x1000061e0
+0000000100005f72	xorps	%xmm0, %xmm0
+0000000100005f75	movaps	%xmm0, -0x1b0(%rbp)
+0000000100005f7c	movq	$0x0, -0x1a0(%rbp)
+0000000100005f87	cmpq	$0x0, -0x118(%rbp)
+0000000100005f8f	je	0x100005fc0
+0000000100005f91	xorl	%r14d, %r14d
+0000000100005f94	leaq	-0x1b0(%rbp), %rbx
+0000000100005f9b	nopl	(%rax,%rax)
+0000000100005fa0	movq	-0x120(%rbp), %rax
+0000000100005fa7	movsbl	(%rax,%r14,8), %esi
+0000000100005fac	movq	%rbx, %rdi
+0000000100005faf	callq	_buf_putc
+0000000100005fb4	incq	%r14
+0000000100005fb7	cmpq	-0x118(%rbp), %r14
+0000000100005fbe	jb	0x100005fa0
+0000000100005fc0	movq	-0x120(%rbp), %rdi
+0000000100005fc7	callq	_fwp_mem_free
+0000000100005fcc	leaq	-0x1b0(%rbp), %rdi
+0000000100005fd3	callq	_buf_to_str
+0000000100005fd8	movq	%rax, (%r15)
+0000000100005fdb	jmp	0x100005cd0
+0000000100005fe0	leaq	-0x130(%rbp), %rsi
+0000000100005fe7	movl	$0x100, %edx                    ## imm = 0x100
+0000000100005fec	movq	%r13, %rdi
+0000000100005fef	callq	_tp_token
+0000000100005ff4	xorl	%ebx, %ebx
+0000000100005ff6	cmpq	$0x2, %rax
+0000000100005ffa	jb	0x1000065df
+0000000100006000	cmpb	$0x30, -0x130(%rbp)
+0000000100006007	jne	0x1000065df
+000000010000600d	cmpb	$0x74, -0x12f(%rbp)
+0000000100006014	jne	0x1000065df
+000000010000601a	leaq	-0x2(%rax), %rcx
+000000010000601e	movslq	0x48(%r14), %rdx
+0000000100006022	cmpq	%rdx, %rcx
+0000000100006025	ja	0x1000065df
+000000010000602b	cmpq	$0x3, %rax
+000000010000602f	jb	0x100006639
+0000000100006035	movl	$0x2, %edx
+000000010000603a	xorl	%ecx, %ecx
+000000010000603c	jmp	0x1000061b6
+0000000100006041	leaq	-0x130(%rbp), %rsi
+0000000100006048	movl	$0x10, %edx
+000000010000604d	movq	%r13, %rdi
+0000000100006050	callq	_tp_token
+0000000100006055	movzwl	-0x130(%rbp), %eax
+000000010000605c	movl	%eax, %ecx
+000000010000605e	xorl	$0x312b, %ecx                   ## imm = 0x312B
+0000000100006064	movzbl	-0x12e(%rbp), %edx
+000000010000606b	orw	%cx, %dx
+000000010000606e	sete	%cl
+0000000100006071	cmpw	$0x31, %ax
+0000000100006075	sete	%dl
+0000000100006078	orb	%cl, %dl
+000000010000607a	movl	$0x1, %ebx
+000000010000607f	jne	0x1000060ab
+0000000100006081	xorl	%ebx, %ebx
+0000000100006083	cmpw	$0x30, %ax
+0000000100006087	je	0x1000060ab
+0000000100006089	movl	$0x312d, %eax                   ## imm = 0x312D
+000000010000608e	xorl	-0x130(%rbp), %eax
+0000000100006094	movzbl	-0x12e(%rbp), %ecx
+000000010000609b	orw	%ax, %cx
+000000010000609e	jne	0x1000065df
+00000001000060a4	movq	$-0x1, %rbx
+00000001000060ab	movq	%rbx, (%r15)
+00000001000060ae	jmp	0x100005cd0
+00000001000060b3	movq	0x8(%r14), %rdi
+00000001000060b7	testq	%rdi, %rdi
+00000001000060ba	je	0x100006207
+00000001000060c0	leaq	0x5a09(%rip), %rsi              ## literal pool for: "Duration"
+00000001000060c7	callq	0x10000aada                     ## symbol stub for: _strcmp
+00000001000060cc	testl	%eax, %eax
+00000001000060ce	je	0x1000064af
+00000001000060d4	movq	%r13, %rdi
+00000001000060d7	callq	_tp_ws
+00000001000060dc	movq	%r14, -0x1c8(%rbp)
+00000001000060e3	movq	0x8(%r14), %r12
+00000001000060e7	movq	%r12, %rdi
+00000001000060ea	callq	0x10000aae6                     ## symbol stub for: _strlen
+00000001000060ef	movq	%rax, %rbx
+00000001000060f2	movq	0x8(%r13), %rax
+00000001000060f6	movq	%r13, -0x1c0(%rbp)
+00000001000060fd	movq	0x10(%r13), %r14
+0000000100006101	subq	%r14, %rax
+0000000100006104	cmpq	%rbx, %rax
+0000000100006107	jb	0x10000633c
+000000010000610d	movq	-0x1c0(%rbp), %rax
+0000000100006114	movq	(%rax), %rdi
+0000000100006117	addq	%r14, %rdi
+000000010000611a	movq	%r12, %rsi
+000000010000611d	movq	%rbx, %rdx
+0000000100006120	callq	0x10000aa68                     ## symbol stub for: _memcmp
+0000000100006125	testl	%eax, %eax
+0000000100006127	jne	0x10000633c
+000000010000612d	addq	%rbx, %r14
+0000000100006130	movq	-0x1c0(%rbp), %rax
+0000000100006137	movq	%r14, 0x10(%rax)
+000000010000613b	jmp	0x10000633c
+0000000100006140	movq	%r15, -0x1d8(%rbp)
+0000000100006147	leaq	-0x130(%rbp), %rsi
+000000010000614e	movq	%r13, -0x1c0(%rbp)
+0000000100006155	movq	%r13, %rdi
+0000000100006158	callq	_tp_ident
+000000010000615d	movslq	0x10(%r14), %rbx
+0000000100006161	testq	%rbx, %rbx
+0000000100006164	movq	%r14, -0x1c8(%rbp)
+000000010000616b	jle	0x100006377
+0000000100006171	movq	0x18(%r14), %r14
+0000000100006175	movl	$0xffffffff, %r13d              ## imm = 0xFFFFFFFF
+000000010000617b	xorl	%r15d, %r15d
+000000010000617e	nop
+0000000100006180	movq	(%r14,%r15,8), %rdi
+0000000100006184	leaq	-0x130(%rbp), %rsi
+000000010000618b	callq	0x10000aada                     ## symbol stub for: _strcmp
+0000000100006190	testl	%eax, %eax
+0000000100006192	cmovel	%r15d, %r13d
+0000000100006196	incq	%r15
+0000000100006199	cmpq	%r15, %rbx
+000000010000619c	jne	0x100006180
+000000010000619e	jmp	0x10000637d
+00000001000061a3	leaq	(%rcx,%rcx,2), %rcx
+00000001000061a7	decq	%rcx
+00000001000061aa	incq	%rdx
+00000001000061ad	cmpq	%rdx, %rax
+00000001000061b0	je	0x10000663b
+00000001000061b6	movzbl	-0x130(%rbp,%rdx), %esi
+00000001000061be	cmpl	$0x30, %esi
+00000001000061c1	je	0x1000061da
+00000001000061c3	cmpl	$0x2d, %esi
+00000001000061c6	je	0x1000061a3
+00000001000061c8	cmpl	$0x2b, %esi
+00000001000061cb	jne	0x1000065dd
+00000001000061d1	leaq	(%rcx,%rcx,2), %rcx
+00000001000061d5	incq	%rcx
+00000001000061d8	jmp	0x1000061aa
+00000001000061da	leaq	(%rcx,%rcx,2), %rcx
+00000001000061de	jmp	0x1000061aa
+00000001000061e0	movq	-0x120(%rbp), %rdi
+00000001000061e7	callq	_fwp_mem_free
+00000001000061ec	jmp	0x1000065df
+00000001000061f1	callq	_fwp_mem_free
+00000001000061f6	jmp	0x1000065dd
+00000001000061fb	xorl	%edi, %edi
+00000001000061fd	callq	_fwp_mem_free
+0000000100006202	jmp	0x1000065df
+0000000100006207	movslq	0x10(%r14), %rdi
+000000010000620b	testq	%rdi, %rdi
+000000010000620e	je	0x100006607
+0000000100006214	movq	%r13, -0x1c0(%rbp)
+000000010000621b	movq	%r14, -0x1c8(%rbp)
+0000000100006222	cmpl	$0x0, 0x48(%r14)
+0000000100006227	je	0x10000633c
+000000010000622d	shlq	$0x3, %rdi
+0000000100006231	callq	_fwp_alloc
+0000000100006236	movq	%rax, %r14
+0000000100006239	leaq	0x58aa(%rip), %rsi              ## literal pool for: "("
+0000000100006240	movq	-0x1c0(%rbp), %rdi
+0000000100006247	callq	_tp_eat
+000000010000624c	testl	%eax, %eax
+000000010000624e	je	0x1000065df
+0000000100006254	movq	%r14, -0x1d0(%rbp)
+000000010000625b	movq	-0x1c8(%rbp), %r13
+0000000100006262	cmpl	$0x0, 0x10(%r13)
+0000000100006267	jle	0x100006304
+000000010000626d	movq	0x20(%r13), %rax
+0000000100006271	movq	(%rax), %rsi
+0000000100006274	movq	-0x1c0(%rbp), %rdi
+000000010000627b	xorl	%edx, %edx
+000000010000627d	movq	-0x1d0(%rbp), %rcx
+0000000100006284	callq	_tp_value
+0000000100006289	testl	%eax, %eax
+000000010000628b	je	0x1000065dd
+0000000100006291	cmpl	$0x2, 0x10(%r13)
+0000000100006296	jl	0x100006304
+0000000100006298	movq	-0x1d0(%rbp), %r14
+000000010000629f	addq	$0x8, %r14
+00000001000062a3	movl	$0x1, %r12d
+00000001000062a9	movq	%r14, -0x1d8(%rbp)
+00000001000062b0	movq	-0x1c0(%rbp), %r14
+00000001000062b7	movq	%r14, %rdi
+00000001000062ba	leaq	0x582d(%rip), %rsi              ## literal pool for: ","
+00000001000062c1	callq	_tp_eat
+00000001000062c6	testl	%eax, %eax
+00000001000062c8	je	0x1000065dd
+00000001000062ce	movq	0x20(%r13), %rax
+00000001000062d2	movq	(%rax,%r12,8), %rsi
+00000001000062d6	xorl	%ebx, %ebx
+00000001000062d8	movq	%r14, %rdi
+00000001000062db	xorl	%edx, %edx
+00000001000062dd	movq	-0x1d8(%rbp), %r14
+00000001000062e4	movq	%r14, %rcx
+00000001000062e7	callq	_tp_value
+00000001000062ec	testl	%eax, %eax
+00000001000062ee	je	0x1000065df
+00000001000062f4	incq	%r12
+00000001000062f7	movslq	0x10(%r13), %rax
+00000001000062fb	addq	$0x8, %r14
+00000001000062ff	cmpq	%rax, %r12
+0000000100006302	jl	0x1000062a9
+0000000100006304	leaq	0x57e1(%rip), %rsi              ## literal pool for: ")"
+000000010000630b	movq	-0x1c0(%rbp), %rdi
+0000000100006312	callq	_tp_eat
+0000000100006317	movl	$0x0, %ebx
+000000010000631c	testl	%eax, %eax
+000000010000631e	je	0x1000065df
+0000000100006324	movl	0x10(%r13), %edi
+0000000100006328	movq	-0x1d0(%rbp), %rsi
+000000010000632f	callq	_fwp_record
+0000000100006334	movq	%rax, (%r15)
+0000000100006337	jmp	0x100005cd0
+000000010000633c	movq	0x6ce5(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100006343	movq	(%rax), %rax
+0000000100006346	cmpq	-0x30(%rbp), %rax
+000000010000634a	movq	-0x1c8(%rbp), %rsi
+0000000100006351	movq	-0x1c0(%rbp), %rdi
+0000000100006358	jne	0x1000066e7
+000000010000635e	movq	%r15, %rdx
+0000000100006361	addq	$0x1b8, %rsp                    ## imm = 0x1B8
+0000000100006368	popq	%rbx
+0000000100006369	popq	%r12
+000000010000636b	popq	%r13
+000000010000636d	popq	%r14
+000000010000636f	popq	%r15
+0000000100006371	popq	%rbp
+0000000100006372	jmp	_tp_record_body
+0000000100006377	movl	$0xffffffff, %r13d              ## imm = 0xFFFFFFFF
+000000010000637d	testl	%r12d, %r12d
+0000000100006380	je	0x10000640f
+0000000100006386	testl	%r13d, %r13d
+0000000100006389	movq	-0x1c8(%rbp), %r14
+0000000100006390	jns	0x100006416
+0000000100006396	movq	0x8(%r14), %rdi
+000000010000639a	xorl	%ebx, %ebx
+000000010000639c	testq	%rdi, %rdi
+000000010000639f	je	0x1000065df
+00000001000063a5	leaq	0x56f6(%rip), %rsi              ## literal pool for: "Bool"
+00000001000063ac	callq	0x10000aada                     ## symbol stub for: _strcmp
+00000001000063b1	testl	%eax, %eax
+00000001000063b3	jne	0x1000065df
+00000001000063b9	movl	-0x130(%rbp), %eax
+00000001000063bf	movl	%eax, %ecx
+00000001000063c1	xorl	$0x65757274, %ecx               ## imm = 0x65757274
+00000001000063c7	movzbl	-0x12c(%rbp), %edx
+00000001000063ce	orl	%ecx, %edx
+00000001000063d0	movl	$0x1, %ecx
+00000001000063d5	cmovel	%ecx, %r13d
+00000001000063d9	xorl	$0x736c6166, %eax               ## imm = 0x736C6166
+00000001000063de	movzwl	-0x12c(%rbp), %ecx
+00000001000063e5	xorl	$0x65, %ecx
+00000001000063e8	orl	%eax, %ecx
+00000001000063ea	jne	0x100006416
+00000001000063ec	xorl	%r13d, %r13d
+00000001000063ef	jmp	0x10000641f
+00000001000063f1	leaq	_fwp_empty_map(%rip), %rax
+00000001000063f8	movq	-0x120(%rbp), %rdi
+00000001000063ff	movq	%rax, %rbx
+0000000100006402	callq	_fwp_mem_free
+0000000100006407	movq	%rbx, (%r15)
+000000010000640a	jmp	0x100005cd0
+000000010000640f	movq	-0x1c8(%rbp), %r14
+0000000100006416	testl	%r13d, %r13d
+0000000100006419	js	0x1000065dd
+000000010000641f	movq	0x28(%r14), %rax
+0000000100006423	movl	%r13d, %r13d
+0000000100006426	movslq	(%rax,%r13,4), %rbx
+000000010000642a	leaq	0x8(,%rbx,8), %rdi
+0000000100006432	callq	_fwp_alloc
+0000000100006437	movq	%rax, %r12
+000000010000643a	movq	%rbx, -0x1d0(%rbp)
+0000000100006441	testq	%rbx, %rbx
+0000000100006444	jle	0x10000648e
+0000000100006446	movq	-0x1d0(%rbp), %rax
+000000010000644d	leaq	(,%rax,8), %r14
+0000000100006455	xorl	%ebx, %ebx
+0000000100006457	xorl	%r15d, %r15d
+000000010000645a	movq	-0x1c8(%rbp), %rax
+0000000100006461	movq	0x30(%rax), %rax
+0000000100006465	movq	(%rax,%r13,8), %rax
+0000000100006469	movq	(%rax,%r15), %rsi
+000000010000646d	leaq	(%r12,%r15), %rdx
+0000000100006471	movq	-0x1c0(%rbp), %rdi
+0000000100006478	callq	_tp_atom
+000000010000647d	testl	%eax, %eax
+000000010000647f	je	0x1000065df
+0000000100006485	addq	$0x8, %r15
+0000000100006489	cmpq	%r15, %r14
+000000010000648c	jne	0x10000645a
+000000010000648e	movl	%r13d, %edi
+0000000100006491	movq	-0x1d0(%rbp), %rsi
+0000000100006498	movq	%r12, %rdx
+000000010000649b	callq	_fwp_data
+00000001000064a0	movq	-0x1d8(%rbp), %rcx
+00000001000064a7	movq	%rax, (%rcx)
+00000001000064aa	jmp	0x100005cd0
+00000001000064af	movq	%r15, -0x1d8(%rbp)
+00000001000064b6	leaq	-0x130(%rbp), %rsi
+00000001000064bd	movl	$0x80, %edx
+00000001000064c2	movq	%r13, %rdi
+00000001000064c5	callq	_tp_token
+00000001000064ca	movq	%rax, %r15
+00000001000064cd	leaq	(%rax,%rbp), %r12
+00000001000064d1	addq	$-0x130, %r12                   ## imm = 0xFED0
+00000001000064d8	movl	$0x8, %r14d
+00000001000064de	jmp	0x1000064ee
+00000001000064e0	addq	$0x10, %r14
+00000001000064e4	cmpq	$0x68, %r14
+00000001000064e8	je	0x1000065dd
+00000001000064ee	leaq	_tp_value.units(%rip), %rax
+00000001000064f5	movq	-0x8(%r14,%rax), %r13
+00000001000064fa	movq	%r13, %rdi
+00000001000064fd	callq	0x10000aae6                     ## symbol stub for: _strlen
+0000000100006502	movq	%r15, %rbx
+0000000100006505	subq	%rax, %rbx
+0000000100006508	jbe	0x1000064e0
+000000010000650a	movq	%r12, %rdi
+000000010000650d	subq	%rax, %rdi
+0000000100006510	movq	%r13, %rsi
+0000000100006513	callq	0x10000aada                     ## symbol stub for: _strcmp
+0000000100006518	testl	%eax, %eax
+000000010000651a	jne	0x1000064e0
+000000010000651c	movl	$0x80, %ecx
+0000000100006521	leaq	-0x1b0(%rbp), %r13
+0000000100006528	movq	%r13, %rdi
+000000010000652b	leaq	-0x130(%rbp), %rsi
+0000000100006532	movq	%rbx, %rdx
+0000000100006535	callq	0x10000a9c6                     ## symbol stub for: ___memcpy_chk
+000000010000653a	movb	$0x0, -0x1b0(%rbp,%rbx)
+0000000100006542	movq	%r13, %rdi
+0000000100006545	movq	%rbx, %rsi
+0000000100006548	callq	_fwp_valid_int
+000000010000654d	testl	%eax, %eax
+000000010000654f	je	0x1000064e0
+0000000100006551	movzbl	-0x1b0(%rbp), %esi
+0000000100006558	leal	-0x2b(%rsi), %ecx
+000000010000655b	xorl	%eax, %eax
+000000010000655d	testb	$-0x3, %cl
+0000000100006560	sete	%al
+0000000100006563	movzbl	-0x1b0(%rbp,%rax), %r10d
+000000010000656c	xorl	%ebx, %ebx
+000000010000656e	testb	%r10b, %r10b
+0000000100006571	je	0x100006643
+0000000100006577	leaq	-0x1b0(%rbp), %rcx
+000000010000657e	addq	%rax, %rcx
+0000000100006581	incq	%rcx
+0000000100006584	xorl	%eax, %eax
+0000000100006586	movl	$0xa, %edi
+000000010000658b	movabsq	$-0x8000000000000000, %r9       ## imm = 0x8000000000000000
+0000000100006595	xorl	%r8d, %r8d
+0000000100006598	movq	-0x1d8(%rbp), %r15
+000000010000659f	mulq	%rdi
+00000001000065a2	leaq	(%r8,%r8,4), %r8
+00000001000065a6	leaq	(%rdx,%r8,2), %rdx
+00000001000065aa	movsbl	%r10b, %r8d
+00000001000065ae	addl	$-0x30, %r8d
+00000001000065b2	movslq	%r8d, %r10
+00000001000065b5	movq	%r10, %r8
+00000001000065b8	sarq	$0x3f, %r8
+00000001000065bc	addq	%r10, %rax
+00000001000065bf	adcq	%rdx, %r8
+00000001000065c2	cmpq	%rax, %r9
+00000001000065c5	movl	$0x0, %edx
+00000001000065ca	sbbq	%r8, %rdx
+00000001000065cd	jl	0x1000065dd
+00000001000065cf	movzbl	(%rcx), %r10d
+00000001000065d3	incq	%rcx
+00000001000065d6	testb	%r10b, %r10b
+00000001000065d9	jne	0x10000659f
+00000001000065db	jmp	0x10000664f
+00000001000065dd	xorl	%ebx, %ebx
+00000001000065df	movq	0x6a42(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+00000001000065e6	movq	(%rax), %rax
+00000001000065e9	cmpq	-0x30(%rbp), %rax
+00000001000065ed	jne	0x1000066e7
+00000001000065f3	movl	%ebx, %eax
+00000001000065f5	addq	$0x1b8, %rsp                    ## imm = 0x1B8
+00000001000065fc	popq	%rbx
+00000001000065fd	popq	%r12
+00000001000065ff	popq	%r13
+0000000100006601	popq	%r14
+0000000100006603	popq	%r15
+0000000100006605	popq	%rbp
+0000000100006606	retq
+0000000100006607	leaq	0x54dc(%rip), %rsi              ## literal pool for: "("
+000000010000660e	movq	%r13, %rdi
+0000000100006611	callq	_tp_eat
+0000000100006616	testl	%eax, %eax
+0000000100006618	je	0x1000065df
+000000010000661a	leaq	0x54cb(%rip), %rsi              ## literal pool for: ")"
+0000000100006621	movq	%r13, %rdi
+0000000100006624	callq	_tp_eat
+0000000100006629	testl	%eax, %eax
+000000010000662b	je	0x1000065df
+000000010000662d	movq	$0x0, (%r15)
+0000000100006634	jmp	0x100005cd0
+0000000100006639	xorl	%ecx, %ecx
+000000010000663b	movq	%rcx, (%r15)
+000000010000663e	jmp	0x100005cd0
+0000000100006643	xorl	%eax, %eax
+0000000100006645	xorl	%r8d, %r8d
+0000000100006648	movq	-0x1d8(%rbp), %r15
+000000010000664f	movq	%rax, %rcx
+0000000100006652	negq	%rcx
+0000000100006655	movl	$0x0, %edi
+000000010000665a	sbbq	%r8, %rdi
+000000010000665d	cmpb	$0x2d, %sil
+0000000100006661	cmovneq	%r8, %rdi
+0000000100006665	cmovneq	%rax, %rcx
+0000000100006669	movabsq	$0x7fffffffffffffff, %rax       ## imm = 0x7FFFFFFFFFFFFFFF
+0000000100006673	cmpq	%rcx, %rax
+0000000100006676	movl	$0x0, %eax
+000000010000667b	sbbq	%rdi, %rax
+000000010000667e	jl	0x1000065df
+0000000100006684	leaq	_tp_value.units(%rip), %rax
+000000010000668b	movq	(%r14,%rax), %rsi
+000000010000668f	movq	%rcx, %rax
+0000000100006692	mulq	%rsi
+0000000100006695	imulq	%rsi, %rdi
+0000000100006699	sarq	$0x3f, %rsi
+000000010000669d	imulq	%rcx, %rsi
+00000001000066a1	addq	%rdx, %rsi
+00000001000066a4	addq	%rsi, %rdi
+00000001000066a7	movabsq	$-0x8000000000000000, %rcx      ## imm = 0x8000000000000000
+00000001000066b1	addq	%rax, %rcx
+00000001000066b4	adcq	$-0x1, %rdi
+00000001000066b8	cmpq	$-0x1, %rdi
+00000001000066bc	jne	0x1000065df
+00000001000066c2	movq	%rax, -0x1b8(%rbp)
+00000001000066c9	movl	$0x1, %ebx
+00000001000066ce	leaq	-0x1b8(%rbp), %rsi
+00000001000066d5	movl	$0x1, %edi
+00000001000066da	callq	_fwp_record
+00000001000066df	movq	%rax, (%r15)
+00000001000066e2	jmp	0x1000065df
+00000001000066e7	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+00000001000066ec	sbbb	%dh, %dh
+00000001000066ee	.byte 0xff #bad opcode
+00000001000066ef	lcalll	*(%rax)
+00000001000066f1	idivb	%bh
+00000001000066f3	lcalll	*(%rax)
+00000001000066f5	idivb	%bh
+00000001000066f7	lcalll	*(%rax)
+00000001000066f9	idivb	%bh
+00000001000066fb	lcalll	*(%rax)
+00000001000066fd	idivb	%bh
+00000001000066ff	lcalll	*(%rax)
+0000000100006701	idivb	%bh
+0000000100006703	lcalll	*(%rax)
+0000000100006705	idivb	%bh
+0000000100006707	lcalll	*(%rax)
+0000000100006709	idivb	%bh
+000000010000670b	lcalll	*(%rax)
+000000010000670d	idivb	%bh
+000000010000670f	lcalll	*(%rax)
+0000000100006711	idivb	%bh
+0000000100006713	.byte 0xff #bad opcode
+0000000100006714	movl	$0xbdfffff7, %ebp               ## imm = 0xBDFFFFF7
+0000000100006719	idivl	%edi
+000000010000671b	pushq	%rax
+000000010000671d	idivl	%edi
+000000010000671f	ljmpl	*(%rcx)
+0000000100006721	clc
+0000000100006722	.byte 0xff #bad opcode
+0000000100006723	callq	*-0x1(%rdx,%rdi,8)
+0000000100006727	callq	*(%rdx)
+0000000100006729	idivl	%edi
+000000010000672b	incl	%edi
+000000010000672d	stc
+000000010000672e	.byte 0xff #bad opcode
+000000010000672f	callq	*(%rdx)
+0000000100006731	idivl	%edi
+0000000100006733	decl	-0xa(%rbx)
+0000000100006736	.byte 0xff #bad opcode
+0000000100006737	decl	-0xa(%rbx)
+000000010000673a	.byte 0xff #bad opcode
+000000010000673b	pushq	%rsp
+000000010000673d	clc
+000000010000673e	.byte 0xff #bad opcode
+000000010000673f	callq	*-0x7(%rbp)
+0000000100006742	.byte 0xff #bad opcode
+0000000100006743	jmpq	*0x66(%rsi)
+0000000100006746	nopw	%cs:(%rax,%rax)
+_tp_ws:
+0000000100006750	movq	0x8(%rdi), %rax
+0000000100006754	movq	0x10(%rdi), %rcx
+0000000100006758	cmpq	%rax, %rcx
+000000010000675b	jae	0x1000067a7
+000000010000675d	pushq	%rbp
+000000010000675e	movq	%rsp, %rbp
+0000000100006761	movq	(%rdi), %rdx
+0000000100006764	negq	%rax
+0000000100006767	incq	%rcx
+000000010000676a	movabsq	$0x100002600, %rsi              ## imm = 0x100002600
+0000000100006774	nopw	%cs:(%rax,%rax)
+0000000100006780	movzbl	-0x1(%rdx,%rcx), %r8d
+0000000100006786	cmpq	$0x20, %r8
+000000010000678a	ja	0x1000067a6
+000000010000678c	btq	%r8, %rsi
+0000000100006790	jae	0x1000067a6
+0000000100006792	movq	%rcx, 0x10(%rdi)
+0000000100006796	leaq	(%rax,%rcx), %r8
+000000010000679a	incq	%r8
+000000010000679d	incq	%rcx
+00000001000067a0	cmpq	$0x1, %r8
+00000001000067a4	jne	0x100006780
+00000001000067a6	popq	%rbp
+00000001000067a7	retq
+00000001000067a8	nopl	(%rax,%rax)
+_tp_int:
+00000001000067b0	pushq	%rbp
+00000001000067b1	movq	%rsp, %rbp
+00000001000067b4	pushq	%r15
+00000001000067b6	pushq	%r14
+00000001000067b8	pushq	%rbx
+00000001000067b9	subq	$0x88, %rsp
+00000001000067c0	movq	%rdx, %rbx
+00000001000067c3	movq	%rsi, %r15
+00000001000067c6	movq	0x685b(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+00000001000067cd	movq	(%rax), %rax
+00000001000067d0	movq	%rax, -0x20(%rbp)
+00000001000067d4	leaq	-0xa0(%rbp), %rsi
+00000001000067db	movl	$0x80, %edx
+00000001000067e0	callq	_tp_token
+00000001000067e5	xorl	%r14d, %r14d
+00000001000067e8	cmpq	$0x7f, %rax
+00000001000067ec	ja	0x10000681b
+00000001000067ee	leaq	-0xa0(%rbp), %rdi
+00000001000067f5	callq	_fwp_cstr
+00000001000067fa	movl	(%r15), %esi
+00000001000067fd	movl	0x48(%r15), %edx
+0000000100006801	movq	%rax, %rdi
+0000000100006804	callq	_fwp_p_parse_int
+0000000100006809	testq	%rax, %rax
+000000010000680c	je	0x10000681b
+000000010000680e	movq	0x8(%rax), %rax
+0000000100006812	movq	%rax, (%rbx)
+0000000100006815	movl	$0x1, %r14d
+000000010000681b	movq	0x6806(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100006822	movq	(%rax), %rax
+0000000100006825	cmpq	-0x20(%rbp), %rax
+0000000100006829	jne	0x10000683c
+000000010000682b	movl	%r14d, %eax
+000000010000682e	addq	$0x88, %rsp
+0000000100006835	popq	%rbx
+0000000100006836	popq	%r14
+0000000100006838	popq	%r15
+000000010000683a	popq	%rbp
+000000010000683b	retq
+000000010000683c	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100006841	nopw	%cs:(%rax,%rax)
+_tp_float:
+0000000100006850	pushq	%rbp
+0000000100006851	movq	%rsp, %rbp
+0000000100006854	pushq	%r14
+0000000100006856	pushq	%rbx
+0000000100006857	subq	$0x90, %rsp
+000000010000685e	movq	%rdx, %rbx
+0000000100006861	movq	%rsi, %r14
+0000000100006864	movq	0x67bd(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+000000010000686b	movq	(%rax), %rax
+000000010000686e	movq	%rax, -0x18(%rbp)
+0000000100006872	leaq	-0xa0(%rbp), %rsi
+0000000100006879	movl	$0x80, %edx
+000000010000687e	callq	_tp_token
+0000000100006883	xorl	%ecx, %ecx
+0000000100006885	cmpq	$0x7f, %rax
+0000000100006889	ja	0x100006927
+000000010000688f	movl	-0xa0(%rbp), %ecx
+0000000100006895	cmpl	$0x666e69, %ecx                 ## imm = 0x666E69
+000000010000689b	jne	0x1000068a7
+000000010000689d	movsd	0x429b(%rip), %xmm0
+00000001000068a5	jmp	0x100006917
+00000001000068a7	movl	$0x666e692d, %edx               ## imm = 0x666E692D
+00000001000068ac	xorl	-0xa0(%rbp), %edx
+00000001000068b2	movzbl	-0x9c(%rbp), %esi
+00000001000068b9	orl	%edx, %esi
+00000001000068bb	je	0x1000068cf
+00000001000068bd	cmpl	$0x4e614e, %ecx                 ## imm = 0x4E614E
+00000001000068c3	jne	0x1000068d9
+00000001000068c5	movsd	0x4283(%rip), %xmm0
+00000001000068cd	jmp	0x100006917
+00000001000068cf	movsd	0x4271(%rip), %xmm0
+00000001000068d7	jmp	0x100006917
+00000001000068d9	leaq	-0xa0(%rbp), %rdi
+00000001000068e0	movq	%rax, %rsi
+00000001000068e3	callq	_fwp_valid_float
+00000001000068e8	xorl	%ecx, %ecx
+00000001000068ea	testl	%eax, %eax
+00000001000068ec	je	0x100006927
+00000001000068ee	cmpl	$0xa, (%r14)
+00000001000068f2	jne	0x100006909
+00000001000068f4	leaq	-0xa0(%rbp), %rdi
+00000001000068fb	xorl	%esi, %esi
+00000001000068fd	callq	0x10000aafe                     ## symbol stub for: _strtof
+0000000100006902	callq	_fwp_from_f32
+0000000100006907	jmp	0x10000691f
+0000000100006909	leaq	-0xa0(%rbp), %rdi
+0000000100006910	xorl	%esi, %esi
+0000000100006912	callq	0x10000aaf8                     ## symbol stub for: _strtod
+0000000100006917	movl	(%r14), %edi
+000000010000691a	callq	_fwp_float_of
+000000010000691f	movq	%rax, (%rbx)
+0000000100006922	movl	$0x1, %ecx
+0000000100006927	movq	0x66fa(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+000000010000692e	movq	(%rax), %rax
+0000000100006931	cmpq	-0x18(%rbp), %rax
+0000000100006935	jne	0x100006945
+0000000100006937	movl	%ecx, %eax
+0000000100006939	addq	$0x90, %rsp
+0000000100006940	popq	%rbx
+0000000100006941	popq	%r14
+0000000100006943	popq	%rbp
+0000000100006944	retq
+0000000100006945	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+000000010000694a	nopw	(%rax,%rax)
+_tp_quoted:
+0000000100006950	pushq	%rbp
+0000000100006951	movq	%rsp, %rbp
+0000000100006954	pushq	%r15
+0000000100006956	pushq	%r14
+0000000100006958	pushq	%r13
+000000010000695a	pushq	%r12
+000000010000695c	pushq	%rbx
+000000010000695d	subq	$0x38, %rsp
+0000000100006961	movq	%rsi, %r15
+0000000100006964	movq	%rdi, %r13
+0000000100006967	callq	_tp_ws
+000000010000696c	movq	0x8(%r13), %r12
+0000000100006970	movq	0x10(%r13), %r9
+0000000100006974	xorl	%ebx, %ebx
+0000000100006976	cmpq	%r12, %r9
+0000000100006979	jae	0x100006bbc
+000000010000697f	movq	(%r13), %rax
+0000000100006983	cmpb	$0x22, (%rax,%r9)
+0000000100006988	jne	0x100006bbc
+000000010000698e	incq	%r9
+0000000100006991	movq	%r9, 0x10(%r13)
+0000000100006995	xorps	%xmm0, %xmm0
+0000000100006998	movaps	%xmm0, -0x40(%rbp)
+000000010000699c	movq	$0x0, -0x30(%rbp)
+00000001000069a4	xorl	%ebx, %ebx
+00000001000069a6	cmpq	%r12, %r9
+00000001000069a9	jae	0x100006b6b
+00000001000069af	nop
+00000001000069b0	movq	(%r13), %rax
+00000001000069b4	leaq	0x1(%r9), %rdx
+00000001000069b8	movq	%rdx, 0x10(%r13)
+00000001000069bc	movzbl	(%rax,%r9), %ecx
+00000001000069c1	cmpl	$0x5c, %ecx
+00000001000069c4	je	0x1000069f0
+00000001000069c6	cmpl	$0x22, %ecx
+00000001000069c9	je	0x100006b8c
+00000001000069cf	movsbl	%cl, %esi
+00000001000069d2	leaq	-0x40(%rbp), %rdi
+00000001000069d6	callq	_buf_putc
+00000001000069db	movq	0x8(%r13), %r12
+00000001000069df	movq	0x10(%r13), %r9
+00000001000069e3	cmpq	%r12, %r9
+00000001000069e6	jb	0x1000069b0
+00000001000069e8	jmp	0x100006b81
+00000001000069ed	nopl	(%rax)
+00000001000069f0	cmpq	%r12, %rdx
+00000001000069f3	jae	0x100006b74
+00000001000069f9	leaq	0x2(%r9), %rcx
+00000001000069fd	movq	%rcx, 0x10(%r13)
+0000000100006a01	movzbl	0x1(%rax,%r9), %edx
+0000000100006a07	leal	-0x5c(%rdx), %esi
+0000000100006a0a	cmpl	$0x19, %esi
+0000000100006a0d	ja	0x100006a2a
+0000000100006a0f	leaq	0x1be(%rip), %rdi
+0000000100006a16	movslq	(%rdi,%rsi,4), %rdx
+0000000100006a1a	addq	%rdi, %rdx
+0000000100006a1d	jmpq	*%rdx
+0000000100006a1f	leaq	-0x40(%rbp), %rdi
+0000000100006a23	movl	$0x5c, %esi
+0000000100006a28	jmp	0x1000069d6
+0000000100006a2a	cmpl	$0x22, %edx
+0000000100006a2d	je	0x100006b0e
+0000000100006a33	cmpl	$0x30, %edx
+0000000100006a36	jne	0x100006b74
+0000000100006a3c	leaq	-0x40(%rbp), %rdi
+0000000100006a40	xorl	%esi, %esi
+0000000100006a42	jmp	0x1000069d6
+0000000100006a44	leaq	-0x40(%rbp), %rdi
+0000000100006a48	movl	$0x9, %esi
+0000000100006a4d	jmp	0x1000069d6
+0000000100006a4f	leaq	-0x40(%rbp), %rdi
+0000000100006a53	movl	$0xd, %esi
+0000000100006a58	jmp	0x1000069d6
+0000000100006a5d	leaq	-0x40(%rbp), %rdi
+0000000100006a61	movl	$0xa, %esi
+0000000100006a66	jmp	0x1000069d6
+0000000100006a6b	cmpq	%r12, %rcx
+0000000100006a6e	jae	0x100006b74
+0000000100006a74	cmpb	$0x7b, (%rax,%rcx)
+0000000100006a78	jne	0x100006b74
+0000000100006a7e	movq	%r15, -0x58(%rbp)
+0000000100006a82	movq	%r9, -0x48(%rbp)
+0000000100006a86	leaq	0x3(%r9), %rcx
+0000000100006a8a	movq	%r13, -0x50(%rbp)
+0000000100006a8e	movq	%rcx, 0x10(%r13)
+0000000100006a92	cmpq	%r12, %rcx
+0000000100006a95	jae	0x100006b74
+0000000100006a9b	movq	-0x48(%rbp), %rdx
+0000000100006a9f	leaq	0x4(%rdx), %rcx
+0000000100006aa3	movq	%rcx, -0x60(%rbp)
+0000000100006aa7	leaq	(%rax,%rdx), %rsi
+0000000100006aab	addq	$0x3, %rsi
+0000000100006aaf	subq	%rdx, %r12
+0000000100006ab2	addq	$-0x3, %r12
+0000000100006ab6	xorl	%ebx, %ebx
+0000000100006ab8	xorl	%r13d, %r13d
+0000000100006abb	nopl	(%rax,%rax)
+0000000100006ac0	movq	%rsi, %r14
+0000000100006ac3	movzbl	(%rsi,%rbx), %r15d
+0000000100006ac8	movzbl	%r15b, %edi
+0000000100006acc	callq	0x10000aa50                     ## symbol stub for: _isxdigit
+0000000100006ad1	testl	%eax, %eax
+0000000100006ad3	je	0x100006b1c
+0000000100006ad5	movq	-0x60(%rbp), %rax
+0000000100006ad9	addq	%rbx, %rax
+0000000100006adc	movq	-0x50(%rbp), %rcx
+0000000100006ae0	movq	%rax, 0x10(%rcx)
+0000000100006ae4	movq	%r14, %rsi
+0000000100006ae7	movsbl	(%r14,%rbx), %eax
+0000000100006aec	shll	$0x4, %r13d
+0000000100006af0	leal	-0x30(%rax), %ecx
+0000000100006af3	movl	%eax, %edx
+0000000100006af5	orl	$0x20, %edx
+0000000100006af8	addl	$-0x57, %edx
+0000000100006afb	cmpl	$0x3a, %eax
+0000000100006afe	cmovll	%ecx, %edx
+0000000100006b01	addl	%edx, %r13d
+0000000100006b04	incq	%rbx
+0000000100006b07	cmpq	%rbx, %r12
+0000000100006b0a	jne	0x100006ac0
+0000000100006b0c	jmp	0x100006b74
+0000000100006b0e	leaq	-0x40(%rbp), %rdi
+0000000100006b12	movl	$0x22, %esi
+0000000100006b17	jmp	0x1000069d6
+0000000100006b1c	testl	%ebx, %ebx
+0000000100006b1e	je	0x100006b74
+0000000100006b20	cmpb	$0x7d, %r15b
+0000000100006b24	jne	0x100006b74
+0000000100006b26	cmpl	$0x10ffff, %r13d                ## imm = 0x10FFFF
+0000000100006b2d	ja	0x100006b74
+0000000100006b2f	movl	%r13d, %eax
+0000000100006b32	andl	$0x1ff800, %eax                 ## imm = 0x1FF800
+0000000100006b37	cmpl	$0xd800, %eax                   ## imm = 0xD800
+0000000100006b3c	je	0x100006b74
+0000000100006b3e	movq	-0x48(%rbp), %rax
+0000000100006b42	addq	%rbx, %rax
+0000000100006b45	addq	$0x4, %rax
+0000000100006b49	movq	-0x50(%rbp), %rcx
+0000000100006b4d	movq	%rax, 0x10(%rcx)
+0000000100006b51	leaq	-0x40(%rbp), %rdi
+0000000100006b55	movl	%r13d, %esi
+0000000100006b58	movq	%rcx, %r13
+0000000100006b5b	callq	_fwp_utf8_put
+0000000100006b60	xorl	%ebx, %ebx
+0000000100006b62	movq	-0x58(%rbp), %r15
+0000000100006b66	jmp	0x1000069db
+0000000100006b6b	xorl	%edi, %edi
+0000000100006b6d	callq	0x10000aa32                     ## symbol stub for: _free
+0000000100006b72	jmp	0x100006bbc
+0000000100006b74	movq	-0x40(%rbp), %rdi
+0000000100006b78	callq	0x10000aa32                     ## symbol stub for: _free
+0000000100006b7d	xorl	%ebx, %ebx
+0000000100006b7f	jmp	0x100006bbc
+0000000100006b81	movq	-0x40(%rbp), %rdi
+0000000100006b85	callq	0x10000aa32                     ## symbol stub for: _free
+0000000100006b8a	jmp	0x100006bbc
+0000000100006b8c	movq	-0x40(%rbp), %rbx
+0000000100006b90	movq	-0x38(%rbp), %rsi
+0000000100006b94	testq	%rbx, %rbx
+0000000100006b97	leaq	0x4dec(%rip), %rdi              ## literal pool for: ""
+0000000100006b9e	cmovneq	%rbx, %rdi
+0000000100006ba2	callq	_fwp_valid_utf8
+0000000100006ba7	testl	%eax, %eax
+0000000100006ba9	je	0x100006bcd
+0000000100006bab	leaq	-0x40(%rbp), %rdi
+0000000100006baf	callq	_buf_to_str
+0000000100006bb4	movq	%rax, (%r15)
+0000000100006bb7	movl	$0x1, %ebx
+0000000100006bbc	movl	%ebx, %eax
+0000000100006bbe	addq	$0x38, %rsp
+0000000100006bc2	popq	%rbx
+0000000100006bc3	popq	%r12
+0000000100006bc5	popq	%r13
+0000000100006bc7	popq	%r14
+0000000100006bc9	popq	%r15
+0000000100006bcb	popq	%rbp
+0000000100006bcc	retq
+0000000100006bcd	movq	%rbx, %rdi
+0000000100006bd0	jmp	0x100006b78
+0000000100006bd2	nop
+0000000100006bd4	.byte 0x4b #bad opcode
+0000000100006bd5	.byte 0xfe #bad opcode
+0000000100006bd6	.byte 0xff #bad opcode
+0000000100006bd7	jmpq	*-0x5f000001(%rax)
+0000000100006bdd	.byte 0xff #bad opcode
+0000000100006bde	.byte 0xff #bad opcode
+0000000100006bdf	jmpq	*-0x5f000001(%rax)
+0000000100006be5	.byte 0xff #bad opcode
+0000000100006be6	.byte 0xff #bad opcode
+0000000100006be7	jmpq	*-0x5f000001(%rax)
+0000000100006bed	.byte 0xff #bad opcode
+0000000100006bee	.byte 0xff #bad opcode
+0000000100006bef	jmpq	*-0x5f000001(%rax)
+0000000100006bf5	.byte 0xff #bad opcode
+0000000100006bf6	.byte 0xff #bad opcode
+0000000100006bf7	jmpq	*-0x5f000001(%rax)
+0000000100006bfd	.byte 0xff #bad opcode
+0000000100006bfe	.byte 0xff #bad opcode
+0000000100006bff	jmpq	*-0x5f000001(%rax)
+0000000100006c05	.byte 0xff #bad opcode
+0000000100006c06	.byte 0xff #bad opcode
+0000000100006c07	jmpq	*-0x5f000001(%rax)
+0000000100006c0d	.byte 0xff #bad opcode
+0000000100006c0e	.byte 0xff #bad opcode
+0000000100006c0f	jmpq	*-0x5f000001(%rax)
+0000000100006c15	.byte 0xff #bad opcode
+0000000100006c16	.byte 0xff #bad opcode
+0000000100006c17	jmpq	*-0x76000001(%rax)
+0000000100006c1d	.byte 0xfe #bad opcode
+0000000100006c1e	.byte 0xff #bad opcode
+0000000100006c1f	jmpq	*-0x5f000001(%rax)
+0000000100006c25	.byte 0xff #bad opcode
+0000000100006c26	.byte 0xff #bad opcode
+0000000100006c27	jmpq	*0x7bffffff(%rax)
+0000000100006c2d	.byte 0xfe #bad opcode
+0000000100006c2e	.byte 0xff #bad opcode
+0000000100006c2f	jmpq	*0x70ffffff(%rax)
+0000000100006c35	.byte 0xfe #bad opcode
+0000000100006c36	.byte 0xff #bad opcode
+0000000100006c37	callq	*0xffffffe(%rdi)
+0000000100006c3d	.byte 0x1f #bad opcode
+0000000100006c3e	addb	%dl, 0x48(%rbp)
+0000000100006c42	movl	%esp, %ebp
+0000000100006c44	pushq	%r15
+0000000100006c46	pushq	%r14
+0000000100006c48	pushq	%r12
+0000000100006c4a	pushq	%rbx
+0000000100006c4b	movq	%rsi, %r15
+0000000100006c4e	movq	%rdi, %rbx
+0000000100006c51	callq	_tp_ws
+0000000100006c56	movq	%r15, %rdi
+0000000100006c59	callq	0x10000aae6                     ## symbol stub for: _strlen
+0000000100006c5e	movq	0x8(%rbx), %rcx
+0000000100006c62	movq	0x10(%rbx), %r12
+0000000100006c66	subq	%r12, %rcx
+0000000100006c69	xorl	%r14d, %r14d
+0000000100006c6c	cmpq	%rax, %rcx
+0000000100006c6f	jb	0x100006c96
+0000000100006c71	movq	(%rbx), %rdi
+0000000100006c74	addq	%r12, %rdi
+0000000100006c77	movq	%r15, %rsi
+0000000100006c7a	movq	%rax, %r15
+0000000100006c7d	movq	%rax, %rdx
+0000000100006c80	callq	0x10000aa68                     ## symbol stub for: _memcmp
+0000000100006c85	testl	%eax, %eax
+0000000100006c87	jne	0x100006c96
+0000000100006c89	addq	%r15, %r12
+0000000100006c8c	movq	%r12, 0x10(%rbx)
+0000000100006c90	movl	$0x1, %r14d
+0000000100006c96	movl	%r14d, %eax
+0000000100006c99	popq	%rbx
+0000000100006c9a	popq	%r12
+0000000100006c9c	popq	%r14
+0000000100006c9e	popq	%r15
+0000000100006ca0	popq	%rbp
+0000000100006ca1	retq
+0000000100006ca2	nopw	%cs:(%rax,%rax)
+_tp_list_of:
+0000000100006cb0	pushq	%rbp
+0000000100006cb1	movq	%rsp, %rbp
+0000000100006cb4	pushq	%r15
+0000000100006cb6	pushq	%r14
+0000000100006cb8	pushq	%r13
+0000000100006cba	pushq	%r12
+0000000100006cbc	pushq	%rbx
+0000000100006cbd	pushq	%rax
+0000000100006cbe	movq	%r8, %r14
+0000000100006cc1	movq	%rcx, %r15
+0000000100006cc4	movq	%rdx, %r12
+0000000100006cc7	movq	%rdi, %r13
+0000000100006cca	callq	_tp_eat
+0000000100006ccf	xorl	%ebx, %ebx
+0000000100006cd1	testl	%eax, %eax
+0000000100006cd3	je	0x100006ce9
+0000000100006cd5	movq	%r13, %rdi
+0000000100006cd8	movq	%r12, %rsi
+0000000100006cdb	callq	_tp_eat
+0000000100006ce0	testl	%eax, %eax
+0000000100006ce2	je	0x100006d22
+0000000100006ce4	movl	$0x1, %ebx
+0000000100006ce9	movl	%ebx, %eax
+0000000100006ceb	addq	$0x8, %rsp
+0000000100006cef	popq	%rbx
+0000000100006cf0	popq	%r12
+0000000100006cf2	popq	%r13
+0000000100006cf4	popq	%r14
+0000000100006cf6	popq	%r15
+0000000100006cf8	popq	%rbp
+0000000100006cf9	retq
+0000000100006cfa	nopw	(%rax,%rax)
+0000000100006d00	movq	%r13, %rdi
+0000000100006d03	movq	%r12, %rsi
+0000000100006d06	callq	_tp_eat
+0000000100006d0b	testl	%eax, %eax
+0000000100006d0d	jne	0x100006ce4
+0000000100006d0f	movq	%r13, %rdi
+0000000100006d12	leaq	0x4dd5(%rip), %rsi              ## literal pool for: ","
+0000000100006d19	callq	_tp_eat
+0000000100006d1e	testl	%eax, %eax
+0000000100006d20	je	0x100006ce9
+0000000100006d22	movq	%r13, %rdi
+0000000100006d25	movq	%r14, %rsi
+0000000100006d28	callq	*%r15
+0000000100006d2b	testl	%eax, %eax
+0000000100006d2d	jne	0x100006d00
+0000000100006d2f	jmp	0x100006ce9
+0000000100006d31	nopw	%cs:(%rax,%rax)
+_tp_byte_item:
+0000000100006d40	pushq	%rbp
+0000000100006d41	movq	%rsp, %rbp
+0000000100006d44	pushq	%rbx
+0000000100006d45	pushq	%rax
+0000000100006d46	movq	%rsi, %rbx
+0000000100006d49	leaq	_tp_byte_item.u8d(%rip), %rsi
+0000000100006d50	leaq	-0x10(%rbp), %rdx
+0000000100006d54	callq	_tp_int
+0000000100006d59	testl	%eax, %eax
+0000000100006d5b	je	0x100006d70
+0000000100006d5d	movq	-0x10(%rbp), %rsi
+0000000100006d61	movq	%rbx, %rdi
+0000000100006d64	callq	_tp_push
+0000000100006d69	movl	$0x1, %eax
+0000000100006d6e	jmp	0x100006d72
+0000000100006d70	xorl	%eax, %eax
+0000000100006d72	addq	$0x8, %rsp
+0000000100006d76	popq	%rbx
+0000000100006d77	popq	%rbp
+0000000100006d78	retq
+0000000100006d79	nopl	(%rax)
+_tp_token:
+0000000100006d80	pushq	%rbp
+0000000100006d81	movq	%rsp, %rbp
+0000000100006d84	pushq	%r15
+0000000100006d86	pushq	%r14
+0000000100006d88	pushq	%r13
+0000000100006d8a	pushq	%r12
+0000000100006d8c	pushq	%rbx
+0000000100006d8d	subq	$0x18, %rsp
+0000000100006d91	movq	%rdx, -0x30(%rbp)
+0000000100006d95	movq	%rsi, -0x38(%rbp)
+0000000100006d99	movq	%rdi, %rbx
+0000000100006d9c	callq	_tp_ws
+0000000100006da1	movq	0x10(%rbx), %r15
+0000000100006da5	movq	(%rbx), %r12
+0000000100006da8	movq	0x8(%rbx), %r13
+0000000100006dac	movq	%r15, %r14
+0000000100006daf	cmpq	%r13, %r15
+0000000100006db2	jae	0x100006ddd
+0000000100006db4	movq	%r15, %r14
+0000000100006db7	nopw	(%rax,%rax)
+0000000100006dc0	movsbl	(%r12,%r14), %edi
+0000000100006dc5	callq	_tp_is_delim
+0000000100006dca	testl	%eax, %eax
+0000000100006dcc	jne	0x100006ddd
+0000000100006dce	incq	%r14
+0000000100006dd1	movq	%r14, 0x10(%rbx)
+0000000100006dd5	cmpq	%r14, %r13
+0000000100006dd8	jne	0x100006dc0
+0000000100006dda	movq	%r13, %r14
+0000000100006ddd	subq	%r15, %r14
+0000000100006de0	movq	-0x30(%rbp), %rax
+0000000100006de4	leaq	-0x1(%rax), %r13
+0000000100006de8	cmpq	%rax, %r14
+0000000100006deb	cmovbq	%r14, %r13
+0000000100006def	addq	%r15, %r12
+0000000100006df2	movq	-0x38(%rbp), %r14
+0000000100006df6	movq	%r14, %rdi
+0000000100006df9	movq	%r12, %rsi
+0000000100006dfc	movq	%r13, %rdx
+0000000100006dff	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+0000000100006e04	movb	$0x0, (%r14,%r13)
+0000000100006e09	movq	0x10(%rbx), %rax
+0000000100006e0d	subq	%r15, %rax
+0000000100006e10	addq	$0x18, %rsp
+0000000100006e14	popq	%rbx
+0000000100006e15	popq	%r12
+0000000100006e17	popq	%r13
+0000000100006e19	popq	%r14
+0000000100006e1b	popq	%r15
+0000000100006e1d	popq	%rbp
+0000000100006e1e	retq
+0000000100006e1f	nop
+_tp_elem_item:
+0000000100006e20	pushq	%rbp
+0000000100006e21	movq	%rsp, %rbp
+0000000100006e24	pushq	%r14
+0000000100006e26	pushq	%rbx
+0000000100006e27	subq	$0x10, %rsp
+0000000100006e2b	movq	%rsi, %rbx
+0000000100006e2e	movq	(%rsi), %rsi
+0000000100006e31	xorl	%r14d, %r14d
+0000000100006e34	leaq	-0x18(%rbp), %rcx
+0000000100006e38	xorl	%edx, %edx
+0000000100006e3a	callq	_tp_value
+0000000100006e3f	testl	%eax, %eax
+0000000100006e41	je	0x100006e55
+0000000100006e43	movq	-0x18(%rbp), %rsi
+0000000100006e47	movq	%rbx, %rdi
+0000000100006e4a	callq	_tp_push
+0000000100006e4f	movl	$0x1, %r14d
+0000000100006e55	movl	%r14d, %eax
+0000000100006e58	addq	$0x10, %rsp
+0000000100006e5c	popq	%rbx
+0000000100006e5d	popq	%r14
+0000000100006e5f	popq	%rbp
+0000000100006e60	retq
+0000000100006e61	nopw	%cs:(%rax,%rax)
+_fwp_p_array_from_list:
+0000000100006e70	pushq	%rbp
+0000000100006e71	movq	%rsp, %rbp
+0000000100006e74	pushq	%r14
+0000000100006e76	pushq	%rbx
+0000000100006e77	movq	%rdi, %rbx
+0000000100006e7a	callq	_fwp_list_len
+0000000100006e7f	movq	%rax, %r14
+0000000100006e82	movq	%rax, %rdi
+0000000100006e85	callq	_fwp_arr_new
+0000000100006e8a	testq	%r14, %r14
+0000000100006e8d	je	0x100006f14
+0000000100006e93	movl	%r14d, %ecx
+0000000100006e96	andl	$0x3, %ecx
+0000000100006e99	cmpq	$0x4, %r14
+0000000100006e9d	jae	0x100006ea3
+0000000100006e9f	xorl	%edx, %edx
+0000000100006ea1	jmp	0x100006eed
+0000000100006ea3	andq	$-0x4, %r14
+0000000100006ea7	xorl	%edx, %edx
+0000000100006ea9	nopl	(%rax)
+0000000100006eb0	movq	0x8(%rbx), %rsi
+0000000100006eb4	movq	%rsi, 0x8(%rax,%rdx,8)
+0000000100006eb9	movq	0x10(%rbx), %rsi
+0000000100006ebd	movq	0x8(%rsi), %rdi
+0000000100006ec1	movq	%rdi, 0x10(%rax,%rdx,8)
+0000000100006ec6	movq	0x10(%rsi), %rsi
+0000000100006eca	movq	0x8(%rsi), %rdi
+0000000100006ece	movq	%rdi, 0x18(%rax,%rdx,8)
+0000000100006ed3	movq	0x10(%rsi), %rsi
+0000000100006ed7	movq	0x8(%rsi), %rdi
+0000000100006edb	movq	%rdi, 0x20(%rax,%rdx,8)
+0000000100006ee0	movq	0x10(%rsi), %rbx
+0000000100006ee4	addq	$0x4, %rdx
+0000000100006ee8	cmpq	%rdx, %r14
+0000000100006eeb	jne	0x100006eb0
+0000000100006eed	testq	%rcx, %rcx
+0000000100006ef0	je	0x100006f14
+0000000100006ef2	leaq	(%rax,%rdx,8), %rdx
+0000000100006ef6	addq	$0x8, %rdx
+0000000100006efa	xorl	%esi, %esi
+0000000100006efc	nopl	(%rax)
+0000000100006f00	movq	0x8(%rbx), %rdi
+0000000100006f04	movq	%rdi, (%rdx,%rsi,8)
+0000000100006f08	movq	0x10(%rbx), %rbx
+0000000100006f0c	incq	%rsi
+0000000100006f0f	cmpq	%rsi, %rcx
+0000000100006f12	jne	0x100006f00
+0000000100006f14	popq	%rbx
+0000000100006f15	popq	%r14
+0000000100006f17	popq	%rbp
+0000000100006f18	retq
+0000000100006f19	nopl	(%rax)
+_tp_kv_item:
+0000000100006f20	pushq	%rbp
+0000000100006f21	movq	%rsp, %rbp
+0000000100006f24	pushq	%r15
+0000000100006f26	pushq	%r14
+0000000100006f28	pushq	%rbx
+0000000100006f29	subq	$0x18, %rsp
+0000000100006f2d	movq	%rsi, %rbx
+0000000100006f30	movq	%rdi, %r15
+0000000100006f33	movq	$0x0, -0x20(%rbp)
+0000000100006f3b	movq	(%rsi), %rsi
+0000000100006f3e	xorl	%r14d, %r14d
+0000000100006f41	leaq	-0x28(%rbp), %rcx
+0000000100006f45	xorl	%edx, %edx
+0000000100006f47	callq	_tp_value
+0000000100006f4c	testl	%eax, %eax
+0000000100006f4e	je	0x100006f76
+0000000100006f50	xorl	%r14d, %r14d
+0000000100006f53	cmpl	$0x0, 0x28(%rbx)
+0000000100006f57	je	0x100006f84
+0000000100006f59	movq	-0x28(%rbp), %rsi
+0000000100006f5d	movq	%rbx, %rdi
+0000000100006f60	callq	_tp_push
+0000000100006f65	movq	%rbx, %rdi
+0000000100006f68	movq	%r14, %rsi
+0000000100006f6b	callq	_tp_push
+0000000100006f70	movl	$0x1, %r14d
+0000000100006f76	movl	%r14d, %eax
+0000000100006f79	addq	$0x18, %rsp
+0000000100006f7d	popq	%rbx
+0000000100006f7e	popq	%r14
+0000000100006f80	popq	%r15
+0000000100006f82	popq	%rbp
+0000000100006f83	retq
+0000000100006f84	leaq	0x4b7b(%rip), %rsi              ## literal pool for: ":"
+0000000100006f8b	movq	%r15, %rdi
+0000000100006f8e	callq	_tp_eat
+0000000100006f93	testl	%eax, %eax
+0000000100006f95	je	0x100006f76
+0000000100006f97	movq	0x8(%rbx), %rsi
+0000000100006f9b	xorl	%r14d, %r14d
+0000000100006f9e	leaq	-0x20(%rbp), %rcx
+0000000100006fa2	movq	%r15, %rdi
+0000000100006fa5	xorl	%edx, %edx
+0000000100006fa7	callq	_tp_value
+0000000100006fac	testl	%eax, %eax
+0000000100006fae	je	0x100006f76
+0000000100006fb0	movq	-0x20(%rbp), %r14
+0000000100006fb4	jmp	0x100006f59
+0000000100006fb6	nopw	%cs:(%rax,%rax)
+_fwp_p_map_insert:
+0000000100006fc0	pushq	%rbp
+0000000100006fc1	movq	%rsp, %rbp
+0000000100006fc4	pushq	%r15
+0000000100006fc6	pushq	%r14
+0000000100006fc8	pushq	%r13
+0000000100006fca	pushq	%r12
+0000000100006fcc	pushq	%rbx
+0000000100006fcd	subq	$0x28, %rsp
+0000000100006fd1	movq	%rdx, %r14
+0000000100006fd4	movq	%rsi, -0x38(%rbp)
+0000000100006fd8	movq	%rdi, %rsi
+0000000100006fdb	leaq	-0x2c(%rbp), %rax
+0000000100006fdf	movq	%rdx, %rdi
+0000000100006fe2	movq	%rsi, -0x40(%rbp)
+0000000100006fe6	movq	%rcx, %rdx
+0000000100006fe9	movq	%rax, %rcx
+0000000100006fec	callq	_fwp_map_find
+0000000100006ff1	movq	%rax, %r13
+0000000100006ff4	movq	(%r14), %r15
+0000000100006ff7	movl	-0x2c(%rbp), %r12d
+0000000100006ffb	xorl	%edi, %edi
+0000000100006ffd	testl	%r12d, %r12d
+0000000100007000	sete	%dil
+0000000100007004	addq	%r15, %rdi
+0000000100007007	callq	_fwp_map_alloc
+000000010000700c	movq	%rax, -0x48(%rbp)
+0000000100007010	leaq	0x8(%rax), %rbx
+0000000100007014	addq	$0x8, %r14
+0000000100007018	testl	%r12d, %r12d
+000000010000701b	je	0x10000703e
+000000010000701d	shlq	$0x4, %r15
+0000000100007021	movq	%rbx, %rdi
+0000000100007024	movq	%r14, %rsi
+0000000100007027	movq	%r15, %rdx
+000000010000702a	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+000000010000702f	shlq	$0x4, %r13
+0000000100007033	movq	-0x38(%rbp), %rax
+0000000100007037	movq	%rax, 0x8(%rbx,%r13)
+000000010000703c	jmp	0x100007081
+000000010000703e	movq	%r13, %r12
+0000000100007041	shlq	$0x4, %r12
+0000000100007045	movq	%rbx, %rdi
+0000000100007048	movq	%r14, %rsi
+000000010000704b	movq	%r12, %rdx
+000000010000704e	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+0000000100007053	movq	-0x40(%rbp), %rax
+0000000100007057	movq	%rax, (%rbx,%r12)
+000000010000705b	movq	-0x38(%rbp), %rax
+000000010000705f	movq	%rax, 0x8(%rbx,%r12)
+0000000100007064	leaq	(%rbx,%r12), %rdi
+0000000100007068	addq	$0x10, %rdi
+000000010000706c	addq	%r14, %r12
+000000010000706f	subq	%r13, %r15
+0000000100007072	shlq	$0x4, %r15
+0000000100007076	movq	%r12, %rsi
+0000000100007079	movq	%r15, %rdx
+000000010000707c	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+0000000100007081	movq	-0x48(%rbp), %rax
+0000000100007085	addq	$0x28, %rsp
+0000000100007089	popq	%rbx
+000000010000708a	popq	%r12
+000000010000708c	popq	%r13
+000000010000708e	popq	%r14
+0000000100007090	popq	%r15
+0000000100007092	popq	%rbp
+0000000100007093	retq
+0000000100007094	nopw	%cs:(%rax,%rax)
+_fwp_valid_int:
+00000001000070a0	pushq	%rbp
+00000001000070a1	movq	%rsp, %rbp
+00000001000070a4	xorl	%eax, %eax
+00000001000070a6	testq	%rsi, %rsi
+00000001000070a9	je	0x1000070d9
+00000001000070ab	movzbl	(%rdi), %edx
+00000001000070ae	addb	$-0x2b, %dl
+00000001000070b1	xorl	%ecx, %ecx
+00000001000070b3	testb	$-0x3, %dl
+00000001000070b6	sete	%cl
+00000001000070b9	cmpq	%rsi, %rcx
+00000001000070bc	je	0x1000070d9
+00000001000070be	jae	0x1000070d4
+00000001000070c0	movzbl	(%rdi,%rcx), %edx
+00000001000070c4	addb	$-0x3a, %dl
+00000001000070c7	cmpb	$-0xb, %dl
+00000001000070ca	jbe	0x1000070d9
+00000001000070cc	incq	%rcx
+00000001000070cf	cmpq	%rcx, %rsi
+00000001000070d2	jne	0x1000070c0
+00000001000070d4	movl	$0x1, %eax
+00000001000070d9	popq	%rbp
+00000001000070da	retq
+00000001000070db	nopl	(%rax,%rax)
+_tp_record_body:
+00000001000070e0	pushq	%rbp
+00000001000070e1	movq	%rsp, %rbp
+00000001000070e4	pushq	%r15
+00000001000070e6	pushq	%r14
+00000001000070e8	pushq	%r13
+00000001000070ea	pushq	%r12
+00000001000070ec	pushq	%rbx
+00000001000070ed	subq	$0x138, %rsp                    ## imm = 0x138
+00000001000070f4	movq	%rdx, %rbx
+00000001000070f7	movq	%rsi, %r13
+00000001000070fa	movq	%rdi, %r15
+00000001000070fd	movq	0x5f24(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100007104	movq	(%rax), %rax
+0000000100007107	movq	%rax, -0x30(%rbp)
+000000010000710b	movslq	0x10(%rsi), %rax
+000000010000710f	leaq	0x8(,%rax,8), %rdi
+0000000100007117	callq	_fwp_alloc
+000000010000711c	movq	%rax, %r14
+000000010000711f	movslq	0x10(%r13), %rdi
+0000000100007123	incq	%rdi
+0000000100007126	callq	_fwp_alloc_leaf
+000000010000712b	movq	%rax, %r12
+000000010000712e	movslq	0x10(%r13), %rsi
+0000000100007132	incq	%rsi
+0000000100007135	movq	%rax, %rdi
+0000000100007138	callq	0x10000a9ba                     ## symbol stub for: ___bzero
+000000010000713d	leaq	0x4988(%rip), %rsi              ## literal pool for: "{"
+0000000100007144	movq	%r15, %rdi
+0000000100007147	callq	_tp_eat
+000000010000714c	xorl	%ecx, %ecx
+000000010000714e	testl	%eax, %eax
+0000000100007150	je	0x1000072ae
+0000000100007156	leaq	0x4971(%rip), %rsi              ## literal pool for: "}"
+000000010000715d	movq	%r15, %rdi
+0000000100007160	callq	_tp_eat
+0000000100007165	testl	%eax, %eax
+0000000100007167	je	0x1000071a8
+0000000100007169	movslq	0x10(%r13), %rdi
+000000010000716d	testq	%rdi, %rdi
+0000000100007170	jle	0x100007193
+0000000100007172	xorl	%ecx, %ecx
+0000000100007174	xorl	%eax, %eax
+0000000100007176	nopw	%cs:(%rax,%rax)
+0000000100007180	cmpb	$0x0, (%r12,%rax)
+0000000100007185	je	0x1000072ae
+000000010000718b	incq	%rax
+000000010000718e	cmpq	%rax, %rdi
+0000000100007191	jne	0x100007180
+0000000100007193	movq	%r14, %rsi
+0000000100007196	callq	_fwp_record
+000000010000719b	movq	%rax, (%rbx)
+000000010000719e	movl	$0x1, %ecx
+00000001000071a3	jmp	0x1000072ae
+00000001000071a8	movq	%r14, -0x138(%rbp)
+00000001000071af	movq	%rbx, -0x140(%rbp)
+00000001000071b6	leaq	-0x130(%rbp), %rsi
+00000001000071bd	movq	%r15, %rdi
+00000001000071c0	callq	_tp_ident
+00000001000071c5	movl	0x10(%r13), %eax
+00000001000071c9	testl	%eax, %eax
+00000001000071cb	jle	0x1000072ac
+00000001000071d1	leaq	-0x130(%rbp), %r14
+00000001000071d8	movq	%r12, -0x158(%rbp)
+00000001000071df	movq	%r13, -0x150(%rbp)
+00000001000071e6	movq	%r15, -0x148(%rbp)
+00000001000071ed	nopl	(%rax)
+00000001000071f0	movq	0x18(%r13), %r13
+00000001000071f4	movl	%eax, %r15d
+00000001000071f7	movl	$0xffffffff, %ebx               ## imm = 0xFFFFFFFF
+00000001000071fc	xorl	%r12d, %r12d
+00000001000071ff	nop
+0000000100007200	movq	(%r13,%r12,8), %rdi
+0000000100007205	movq	%r14, %rsi
+0000000100007208	callq	0x10000aada                     ## symbol stub for: _strcmp
+000000010000720d	testl	%eax, %eax
+000000010000720f	cmovel	%r12d, %ebx
+0000000100007213	incq	%r12
+0000000100007216	cmpq	%r12, %r15
+0000000100007219	jne	0x100007200
+000000010000721b	testl	%ebx, %ebx
+000000010000721d	movq	-0x158(%rbp), %r12
+0000000100007224	movq	-0x150(%rbp), %r13
+000000010000722b	movq	-0x148(%rbp), %r15
+0000000100007232	js	0x1000072ac
+0000000100007234	movq	%r15, %rdi
+0000000100007237	leaq	0x48ca(%rip), %rsi              ## literal pool for: "="
+000000010000723e	callq	_tp_eat
+0000000100007243	testl	%eax, %eax
+0000000100007245	je	0x1000072ac
+0000000100007247	movq	0x20(%r13), %rax
+000000010000724b	movl	%ebx, %ebx
+000000010000724d	movq	(%rax,%rbx,8), %rsi
+0000000100007251	movq	-0x138(%rbp), %rax
+0000000100007258	leaq	(%rax,%rbx,8), %rcx
+000000010000725c	movq	%r15, %rdi
+000000010000725f	xorl	%edx, %edx
+0000000100007261	callq	_tp_value
+0000000100007266	testl	%eax, %eax
+0000000100007268	je	0x1000072ac
+000000010000726a	movb	$0x1, (%r12,%rbx)
+000000010000726f	movq	%r15, %rdi
+0000000100007272	leaq	0x4855(%rip), %rsi              ## literal pool for: "}"
+0000000100007279	callq	_tp_eat
+000000010000727e	testl	%eax, %eax
+0000000100007280	jne	0x1000072d2
+0000000100007282	movq	%r15, %rdi
+0000000100007285	leaq	0x4862(%rip), %rsi              ## literal pool for: ","
+000000010000728c	callq	_tp_eat
+0000000100007291	testl	%eax, %eax
+0000000100007293	je	0x1000072ac
+0000000100007295	movq	%r15, %rdi
+0000000100007298	movq	%r14, %rsi
+000000010000729b	callq	_tp_ident
+00000001000072a0	movl	0x10(%r13), %eax
+00000001000072a4	testl	%eax, %eax
+00000001000072a6	jg	0x1000071f0
+00000001000072ac	xorl	%ecx, %ecx
+00000001000072ae	movq	0x5d73(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+00000001000072b5	movq	(%rax), %rax
+00000001000072b8	cmpq	-0x30(%rbp), %rax
+00000001000072bc	jne	0x1000072e5
+00000001000072be	movl	%ecx, %eax
+00000001000072c0	addq	$0x138, %rsp                    ## imm = 0x138
+00000001000072c7	popq	%rbx
+00000001000072c8	popq	%r12
+00000001000072ca	popq	%r13
+00000001000072cc	popq	%r14
+00000001000072ce	popq	%r15
+00000001000072d0	popq	%rbp
+00000001000072d1	retq
+00000001000072d2	movq	-0x140(%rbp), %rbx
+00000001000072d9	movq	-0x138(%rbp), %r14
+00000001000072e0	jmp	0x100007169
+00000001000072e5	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+00000001000072ea	nopw	(%rax,%rax)
+_tp_ident:
+00000001000072f0	pushq	%rbp
+00000001000072f1	movq	%rsp, %rbp
+00000001000072f4	pushq	%r14
+00000001000072f6	pushq	%rbx
+00000001000072f7	movq	%rsi, %rbx
+00000001000072fa	movq	%rdi, %r14
+00000001000072fd	callq	_tp_ws
+0000000100007302	movq	0x10(%r14), %rax
+0000000100007306	movq	(%r14), %rsi
+0000000100007309	movq	0x8(%r14), %rdx
+000000010000730d	movq	%rax, %rcx
+0000000100007310	cmpq	%rdx, %rax
+0000000100007313	jae	0x100007375
+0000000100007315	movabsq	$0x4000000000003, %rdi          ## imm = 0x4000000000003
+000000010000731f	movq	%rax, %rcx
+0000000100007322	jmp	0x10000733c
+0000000100007324	nopw	%cs:(%rax,%rax)
+0000000100007330	incq	%rcx
+0000000100007333	movq	%rcx, 0x10(%r14)
+0000000100007337	cmpq	%rcx, %rdx
+000000010000733a	je	0x100007372
+000000010000733c	movzbl	(%rsi,%rcx), %r8d
+0000000100007341	leal	-0x30(%r8), %r9d
+0000000100007345	cmpb	$0xa, %r9b
+0000000100007349	jb	0x100007330
+000000010000734b	movl	%r8d, %r9d
+000000010000734e	andb	$-0x21, %r9b
+0000000100007352	addb	$-0x41, %r9b
+0000000100007356	cmpb	$0x1a, %r9b
+000000010000735a	jb	0x100007330
+000000010000735c	movzbl	%r8b, %r8d
+0000000100007360	addl	$-0x2d, %r8d
+0000000100007364	cmpl	$0x32, %r8d
+0000000100007368	ja	0x100007375
+000000010000736a	btq	%r8, %rdi
+000000010000736e	jb	0x100007330
+0000000100007370	jmp	0x100007375
+0000000100007372	movq	%rdx, %rcx
+0000000100007375	subq	%rax, %rcx
+0000000100007378	cmpq	$0xff, %rcx
+000000010000737f	movl	$0xff, %r14d
+0000000100007385	cmovbq	%rcx, %r14
+0000000100007389	addq	%rax, %rsi
+000000010000738c	movq	%rbx, %rdi
+000000010000738f	movq	%r14, %rdx
+0000000100007392	callq	0x10000aa6e                     ## symbol stub for: _memcpy
+0000000100007397	movb	$0x0, (%rbx,%r14)
+000000010000739c	popq	%rbx
+000000010000739d	popq	%r14
+000000010000739f	popq	%rbp
+00000001000073a0	retq
+00000001000073a1	nopw	%cs:(%rax,%rax)
+_tp_atom:
+00000001000073b0	pushq	%rbp
+00000001000073b1	movq	%rsp, %rbp
+00000001000073b4	pushq	%r15
+00000001000073b6	pushq	%r14
+00000001000073b8	pushq	%rbx
+00000001000073b9	pushq	%rax
+00000001000073ba	movq	%rdx, %r14
+00000001000073bd	movq	%rsi, %r15
+00000001000073c0	movq	%rdi, %rbx
+00000001000073c3	callq	_tp_ws
+00000001000073c8	cmpl	$0x10, (%r15)
+00000001000073cc	jne	0x1000073d5
+00000001000073ce	cmpq	$0x0, 0x8(%r15)
+00000001000073d3	je	0x100007440
+00000001000073d5	xorl	%eax, %eax
+00000001000073d7	movq	0x10(%rbx), %rcx
+00000001000073db	cmpq	0x8(%rbx), %rcx
+00000001000073df	jae	0x1000073f2
+00000001000073e1	movq	(%rbx), %rdx
+00000001000073e4	cmpb	$0x28, (%rdx,%rcx)
+00000001000073e8	setne	%dl
+00000001000073eb	orb	%al, %dl
+00000001000073ed	testb	$0x1, %dl
+00000001000073f0	je	0x10000740c
+00000001000073f2	movq	%rbx, %rdi
+00000001000073f5	movq	%r15, %rsi
+00000001000073f8	xorl	%edx, %edx
+00000001000073fa	movq	%r14, %rcx
+00000001000073fd	addq	$0x8, %rsp
+0000000100007401	popq	%rbx
+0000000100007402	popq	%r14
+0000000100007404	popq	%r15
+0000000100007406	popq	%rbp
+0000000100007407	jmp	_tp_value
+000000010000740c	incq	%rcx
+000000010000740f	movq	%rcx, 0x10(%rbx)
+0000000100007413	movq	%rbx, %rdi
+0000000100007416	movq	%r15, %rsi
+0000000100007419	xorl	%edx, %edx
+000000010000741b	movq	%r14, %rcx
+000000010000741e	callq	_tp_value
+0000000100007423	testl	%eax, %eax
+0000000100007425	je	0x100007451
+0000000100007427	leaq	0x46be(%rip), %rsi              ## literal pool for: ")"
+000000010000742e	movq	%rbx, %rdi
+0000000100007431	addq	$0x8, %rsp
+0000000100007435	popq	%rbx
+0000000100007436	popq	%r14
+0000000100007438	popq	%r15
+000000010000743a	popq	%rbp
+000000010000743b	jmp	_tp_eat
+0000000100007440	cmpl	$0x0, 0x10(%r15)
+0000000100007445	je	0x10000745e
+0000000100007447	cmpl	$0x0, 0x48(%r15)
+000000010000744c	setne	%al
+000000010000744f	jmp	0x1000073d7
+0000000100007451	xorl	%eax, %eax
+0000000100007453	addq	$0x8, %rsp
+0000000100007457	popq	%rbx
+0000000100007458	popq	%r14
+000000010000745a	popq	%r15
+000000010000745c	popq	%rbp
+000000010000745d	retq
+000000010000745e	movb	$0x1, %al
+0000000100007460	jmp	0x1000073d7
+0000000100007465	nopw	%cs:(%rax,%rax)
+_fwp_cstr:
+0000000100007470	pushq	%rbp
+0000000100007471	movq	%rsp, %rbp
+0000000100007474	pushq	%rbx
+0000000100007475	pushq	%rax
+0000000100007476	movq	%rdi, %rbx
+0000000100007479	callq	0x10000aae6                     ## symbol stub for: _strlen
+000000010000747e	movq	%rbx, %rdi
+0000000100007481	movq	%rax, %rsi
+0000000100007484	addq	$0x8, %rsp
+0000000100007488	popq	%rbx
+0000000100007489	popq	%rbp
+000000010000748a	jmp	_fwp_str_new
+000000010000748f	nop
+_fwp_p_parse_int:
+0000000100007490	pushq	%rbp
+0000000100007491	movq	%rsp, %rbp
+0000000100007494	pushq	%r15
+0000000100007496	pushq	%r14
+0000000100007498	pushq	%r13
+000000010000749a	pushq	%r12
+000000010000749c	pushq	%rbx
+000000010000749d	subq	$0x18, %rsp
+00000001000074a1	movl	%edx, %r14d
+00000001000074a4	movl	%esi, %ebx
+00000001000074a6	movq	%rdi, %r15
+00000001000074a9	movq	(%rdi), %r12
+00000001000074ac	addq	$0x8, %r15
+00000001000074b0	movq	%r15, %rdi
+00000001000074b3	movq	%r12, %rsi
+00000001000074b6	callq	_fwp_valid_int
+00000001000074bb	testl	%eax, %eax
+00000001000074bd	je	0x1000075d7
+00000001000074c3	movl	%ebx, -0x34(%rbp)
+00000001000074c6	movzbl	(%r15), %eax
+00000001000074ca	xorl	%edi, %edi
+00000001000074cc	cmpb	$0x2d, %al
+00000001000074ce	sete	%cl
+00000001000074d1	cmpb	$0x2b, %al
+00000001000074d3	sete	%al
+00000001000074d6	orb	%cl, %al
+00000001000074d8	movzbl	%al, %r13d
+00000001000074dc	cmpq	%r13, %r12
+00000001000074df	jbe	0x1000075ae
+00000001000074e5	movb	%cl, -0x29(%rbp)
+00000001000074e8	movl	%r14d, -0x30(%rbp)
+00000001000074ec	movabsq	$-0x3333333333333333, %r14      ## imm = 0xCCCCCCCCCCCCCCCD
+00000001000074f6	movabsq	$-0x3333333333333334, %r11      ## imm = 0xCCCCCCCCCCCCCCCC
+0000000100007500	xorl	%esi, %esi
+0000000100007502	xorl	%ebx, %ebx
+0000000100007504	nopw	%cs:(%rax,%rax)
+0000000100007510	movq	%rbx, %rdi
+0000000100007513	movq	%rsi, %r8
+0000000100007516	movq	%rsi, %rax
+0000000100007519	movl	$0xa, %ecx
+000000010000751e	mulq	%rcx
+0000000100007521	leaq	(%rbx,%rbx,4), %rcx
+0000000100007525	leaq	(%rdx,%rcx,2), %rcx
+0000000100007529	movsbl	(%r15,%r13), %edx
+000000010000752e	addl	$-0x30, %edx
+0000000100007531	movslq	%edx, %rdx
+0000000100007534	movq	%rdx, %rbx
+0000000100007537	sarq	$0x3f, %rbx
+000000010000753b	movq	%rax, %rsi
+000000010000753e	addq	%rdx, %rsi
+0000000100007541	adcq	%rcx, %rbx
+0000000100007544	movq	%rbx, %r9
+0000000100007547	shldq	$0x3f, %rsi, %r9
+000000010000754c	movq	%rbx, %rcx
+000000010000754f	shrq	%rcx
+0000000100007552	movq	%r9, %r10
+0000000100007555	addq	%rcx, %r10
+0000000100007558	adcq	$0x0, %r10
+000000010000755c	movq	%r10, %rax
+000000010000755f	mulq	%r14
+0000000100007562	shrq	$0x2, %rdx
+0000000100007566	leaq	(%rdx,%rdx,4), %rax
+000000010000756a	subq	%rax, %r10
+000000010000756d	subq	%r10, %r9
+0000000100007570	sbbq	$0x0, %rcx
+0000000100007574	movq	%r9, %r10
+0000000100007577	imulq	%r11, %r10
+000000010000757b	movq	%r9, %rax
+000000010000757e	mulq	%r14
+0000000100007581	addq	%r10, %rdx
+0000000100007584	imulq	%r14, %rcx
+0000000100007588	addq	%rdx, %rcx
+000000010000758b	xorq	%rdi, %rcx
+000000010000758e	xorq	%r8, %rax
+0000000100007591	orq	%rcx, %rax
+0000000100007594	jne	0x1000075d7
+0000000100007596	incq	%r13
+0000000100007599	cmpq	%r13, %r12
+000000010000759c	jne	0x100007510
+00000001000075a2	movl	-0x30(%rbp), %r14d
+00000001000075a6	xorl	%edi, %edi
+00000001000075a8	movzbl	-0x29(%rbp), %ecx
+00000001000075ac	jmp	0x1000075b2
+00000001000075ae	xorl	%esi, %esi
+00000001000075b0	xorl	%ebx, %ebx
+00000001000075b2	movb	%cl, %dil
+00000001000075b5	leaq	-0x40(%rbp), %r9
+00000001000075b9	movq	%rbx, %rdx
+00000001000075bc	movl	-0x34(%rbp), %ecx
+00000001000075bf	movl	%r14d, %r8d
+00000001000075c2	callq	_fwp_int_in_range
+00000001000075c7	testq	%rax, %rax
+00000001000075ca	je	0x1000075d7
+00000001000075cc	movq	-0x40(%rbp), %rdi
+00000001000075d0	callq	_fwp_some
+00000001000075d5	jmp	0x1000075d9
+00000001000075d7	xorl	%eax, %eax
+00000001000075d9	addq	$0x18, %rsp
+00000001000075dd	popq	%rbx
+00000001000075de	popq	%r12
+00000001000075e0	popq	%r13
+00000001000075e2	popq	%r14
+00000001000075e4	popq	%r15
+00000001000075e6	popq	%rbp
+00000001000075e7	retq
+00000001000075e8	nopl	(%rax,%rax)
+_fwp_int_in_range:
+00000001000075f0	pushq	%rbp
+00000001000075f1	movq	%rsp, %rbp
+00000001000075f4	pushq	%rbx
+00000001000075f5	pushq	%rax
+00000001000075f6	cmpl	$0x9, %ecx
+00000001000075f9	jne	0x100007625
+00000001000075fb	testl	%edi, %edi
+00000001000075fd	setne	%al
+0000000100007600	movq	%rsi, %rcx
+0000000100007603	orq	%rdx, %rcx
+0000000100007606	setne	%cl
+0000000100007609	testb	%cl, %al
+000000010000760b	jne	0x100007651
+000000010000760d	movq	%rsi, %rdi
+0000000100007610	movq	%rdx, %rsi
+0000000100007613	movq	%r9, %rbx
+0000000100007616	callq	_fwp_box_i128
+000000010000761b	movq	%rax, (%rbx)
+000000010000761e	movl	$0x1, %eax
+0000000100007623	jmp	0x100007653
+0000000100007625	movq	%rsi, %rax
+0000000100007628	negq	%rax
+000000010000762b	movabsq	$-0x8000000000000000, %rax      ## imm = 0x8000000000000000
+0000000100007635	movq	%rax, %r10
+0000000100007638	sbbq	%rdx, %r10
+000000010000763b	jb	0x100007651
+000000010000763d	testl	%edi, %edi
+000000010000763f	sete	%r10b
+0000000100007643	xorq	%rdx, %rax
+0000000100007646	orq	%rsi, %rax
+0000000100007649	sete	%al
+000000010000764c	testb	%al, %r10b
+000000010000764f	je	0x10000765a
+0000000100007651	xorl	%eax, %eax
+0000000100007653	addq	$0x8, %rsp
+0000000100007657	popq	%rbx
+0000000100007658	popq	%rbp
+0000000100007659	retq
+000000010000765a	xorl	%eax, %eax
+000000010000765c	movq	%rsi, %r10
+000000010000765f	negq	%r10
+0000000100007662	sbbq	%rdx, %rax
+0000000100007665	testl	%edi, %edi
+0000000100007667	cmoveq	%rsi, %r10
+000000010000766b	cmoveq	%rdx, %rax
+000000010000766f	movq	%r10, %rdi
+0000000100007672	movq	%rax, %rsi
+0000000100007675	movl	%ecx, %edx
+0000000100007677	movl	%r8d, %ecx
+000000010000767a	movq	%r9, %r8
+000000010000767d	callq	_fwp_int_fits
+0000000100007682	movl	%eax, %eax
+0000000100007684	jmp	0x100007653
+0000000100007686	nopw	%cs:(%rax,%rax)
+_fwp_some:
+0000000100007690	pushq	%rbp
+0000000100007691	movq	%rsp, %rbp
+0000000100007694	subq	$0x10, %rsp
+0000000100007698	movq	%rdi, -0x8(%rbp)
+000000010000769c	leaq	-0x8(%rbp), %rdx
+00000001000076a0	movl	$0x1, %edi
+00000001000076a5	movl	$0x1, %esi
+00000001000076aa	callq	_fwp_data
+00000001000076af	addq	$0x10, %rsp
+00000001000076b3	popq	%rbp
+00000001000076b4	retq
+00000001000076b5	nopw	%cs:(%rax,%rax)
+_fwp_box_i128:
+00000001000076c0	pushq	%rbp
+00000001000076c1	movq	%rsp, %rbp
+00000001000076c4	pushq	%r14
+00000001000076c6	pushq	%rbx
+00000001000076c7	movq	%rsi, %rbx
+00000001000076ca	movq	%rdi, %r14
+00000001000076cd	movl	$0x10, %edi
+00000001000076d2	callq	_fwp_alloc_leaf
+00000001000076d7	movq	%rbx, 0x8(%rax)
+00000001000076db	movq	%r14, (%rax)
+00000001000076de	popq	%rbx
+00000001000076df	popq	%r14
+00000001000076e1	popq	%rbp
+00000001000076e2	retq
+00000001000076e3	nopw	%cs:(%rax,%rax)
+_fwp_int_fits:
+00000001000076f0	pushq	%rbp
+00000001000076f1	movq	%rsp, %rbp
+00000001000076f4	pushq	%r15
+00000001000076f6	pushq	%r14
+00000001000076f8	pushq	%rbx
+00000001000076f9	pushq	%rax
+00000001000076fa	xorl	%eax, %eax
+00000001000076fc	cmpl	$0x14, %edx
+00000001000076ff	ja	0x100007829
+0000000100007705	movl	%edx, %edx
+0000000100007707	leaq	0x126(%rip), %r9
+000000010000770e	movslq	(%r9,%rdx,4), %rdx
+0000000100007712	addq	%r9, %rdx
+0000000100007715	jmpq	*%rdx
+0000000100007717	movq	%rdi, %rcx
+000000010000771a	addq	$-0x80, %rcx
+000000010000771e	adcq	$-0x1, %rsi
+0000000100007722	cmpq	$-0x100, %rcx
+0000000100007729	jmp	0x10000776c
+000000010000772b	movq	%rdi, %rcx
+000000010000772e	addq	$-0x80000000, %rcx              ## imm = 0x80000000
+0000000100007735	adcq	$-0x1, %rsi
+0000000100007739	movabsq	$-0x100000000, %rdx             ## imm = 0xFFFFFFFF00000000
+0000000100007743	cmpq	%rdx, %rcx
+0000000100007746	jmp	0x10000776c
+0000000100007748	testq	%rsi, %rsi
+000000010000774b	sets	%cl
+000000010000774e	xorl	%eax, %eax
+0000000100007750	movl	$0xff, %edx
+0000000100007755	jmp	0x100007797
+0000000100007757	movq	%rdi, %rcx
+000000010000775a	addq	$-0x8000, %rcx                  ## imm = 0x8000
+0000000100007761	adcq	$-0x1, %rsi
+0000000100007765	cmpq	$-0x10000, %rcx                 ## imm = 0xFFFF0000
+000000010000776c	sbbq	$-0x1, %rsi
+0000000100007770	jae	0x100007821
+0000000100007776	jmp	0x100007829
+000000010000777b	testq	%rsi, %rsi
+000000010000777e	sets	%cl
+0000000100007781	xorl	%eax, %eax
+0000000100007783	movl	$0xffff, %edx                   ## imm = 0xFFFF
+0000000100007788	jmp	0x100007797
+000000010000778a	testq	%rsi, %rsi
+000000010000778d	sets	%cl
+0000000100007790	xorl	%eax, %eax
+0000000100007792	movl	$0xffffffff, %edx               ## imm = 0xFFFFFFFF
+0000000100007797	cmpq	%rdi, %rdx
+000000010000779a	movl	$0x0, %edx
+000000010000779f	sbbq	%rsi, %rdx
+00000001000077a2	setl	%dl
+00000001000077a5	jmp	0x10000781d
+00000001000077a7	movabsq	$-0x8000000000000000, %rcx      ## imm = 0x8000000000000000
+00000001000077b1	addq	%rdi, %rcx
+00000001000077b4	adcq	$-0x1, %rsi
+00000001000077b8	cmpq	$-0x1, %rsi
+00000001000077bc	je	0x100007821
+00000001000077be	jmp	0x100007829
+00000001000077c0	movq	%r8, %rbx
+00000001000077c3	callq	_fwp_box_i128
+00000001000077c8	movq	%rbx, %r8
+00000001000077cb	movq	%rax, %rdi
+00000001000077ce	jmp	0x100007821
+00000001000077d0	movq	%rdi, %rbx
+00000001000077d3	movl	%ecx, %edi
+00000001000077d5	movq	%r8, %r14
+00000001000077d8	movq	%rsi, %r15
+00000001000077db	callq	_fwp_tint_max
+00000001000077e0	movq	%rbx, %rdi
+00000001000077e3	movq	%r14, %r8
+00000001000077e6	movq	%rax, %rcx
+00000001000077e9	cmpq	%rbx, %rax
+00000001000077ec	movq	%rdx, %rax
+00000001000077ef	sbbq	%r15, %rax
+00000001000077f2	setl	%sil
+00000001000077f6	xorl	%eax, %eax
+00000001000077f8	negq	%rcx
+00000001000077fb	movl	$0x0, %r9d
+0000000100007801	sbbq	%rdx, %r9
+0000000100007804	cmpq	%rcx, %rbx
+0000000100007807	sbbq	%r9, %r15
+000000010000780a	setl	%cl
+000000010000780d	orb	%sil, %cl
+0000000100007810	je	0x100007821
+0000000100007812	jmp	0x100007829
+0000000100007814	testq	%rsi, %rsi
+0000000100007817	sets	%cl
+000000010000781a	setg	%dl
+000000010000781d	orb	%cl, %dl
+000000010000781f	jne	0x100007829
+0000000100007821	movq	%rdi, (%r8)
+0000000100007824	movl	$0x1, %eax
+0000000100007829	addq	$0x8, %rsp
+000000010000782d	popq	%rbx
+000000010000782e	popq	%r14
+0000000100007830	popq	%r15
+0000000100007832	popq	%rbp
+0000000100007833	retq
+0000000100007834	jrcxz	0x100007834
+0000000100007836	.byte 0xff #bad opcode
+0000000100007837	jmpq	*(%rbx)
+0000000100007839	.byte 0xff #bad opcode
+000000010000783a	.byte 0xff #bad opcode
+000000010000783b	pushq	%rdi
+000000010000783d	.byte 0xfe #bad opcode
+000000010000783e	.byte 0xff #bad opcode
+000000010000783f	pushq	-0x1(%rbx)
+0000000100007842	.byte 0xff #bad opcode
+0000000100007843	decl	-0xeb0001(%rdi,%rdi,8)
+000000010000784a	.byte 0xff #bad opcode
+000000010000784b	incl	-0x1(%rdi)
+000000010000784e	.byte 0xff #bad opcode
+000000010000784f	callq	*-0x1(%rsi)
+0000000100007852	.byte 0xff #bad opcode
+0000000100007853	jmpq	*%rax
+0000000100007855	.byte 0xff #bad opcode
+0000000100007856	.byte 0xff #bad opcode
+0000000100007857	pushq	%rbp
+0000000100007859	.byte 0xff #bad opcode
+000000010000785a	.byte 0xff #bad opcode
+000000010000785b	pushq	%rbp
+000000010000785d	.byte 0xff #bad opcode
+000000010000785e	.byte 0xff #bad opcode
+000000010000785f	pushq	%rbp
+0000000100007861	.byte 0xff #bad opcode
+0000000100007862	.byte 0xff #bad opcode
+0000000100007863	pushq	%rbp
+0000000100007865	.byte 0xff #bad opcode
+0000000100007866	.byte 0xff #bad opcode
+0000000100007867	pushq	%rbp
+0000000100007869	.byte 0xff #bad opcode
+000000010000786a	.byte 0xff #bad opcode
+000000010000786b	pushq	%rbp
+000000010000786d	.byte 0xff #bad opcode
+000000010000786e	.byte 0xff #bad opcode
+000000010000786f	pushq	%rbp
+0000000100007871	.byte 0xff #bad opcode
+0000000100007872	.byte 0xff #bad opcode
+0000000100007873	pushq	%rbp
+0000000100007875	.byte 0xff #bad opcode
+0000000100007876	.byte 0xff #bad opcode
+0000000100007877	pushq	%rbp
+0000000100007879	.byte 0xff #bad opcode
+000000010000787a	.byte 0xff #bad opcode
+000000010000787b	pushq	%rbp
+000000010000787d	.byte 0xff #bad opcode
+000000010000787e	.byte 0xff #bad opcode
+000000010000787f	pushq	%rbp
+0000000100007881	.byte 0xff #bad opcode
+0000000100007882	.byte 0xff #bad opcode
+0000000100007883	lcalll	*0x1f0fffff(%rdi,%rdi,8)
+000000010000788a	testb	%al, (%rax)
+000000010000788c	addb	%al, (%rax)
+000000010000788e	addb	%al, (%rax)
+_fwp_tint_max:
+0000000100007890	pushq	%rbp
+0000000100007891	movq	%rsp, %rbp
+0000000100007894	testl	%edi, %edi
+0000000100007896	jle	0x1000078bf
+0000000100007898	leal	-0x1(%rdi), %eax
+000000010000789b	cmpl	$0x4f, %eax
+000000010000789e	movl	$0x4f, %r8d
+00000001000078a4	cmovbl	%eax, %r8d
+00000001000078a8	incl	%r8d
+00000001000078ab	movl	%r8d, %esi
+00000001000078ae	andl	$0x7, %esi
+00000001000078b1	cmpl	$0x8, %edi
+00000001000078b4	jae	0x1000078c5
+00000001000078b6	movl	$0x1, %eax
+00000001000078bb	xorl	%ecx, %ecx
+00000001000078bd	jmp	0x1000078f3
+00000001000078bf	xorl	%eax, %eax
+00000001000078c1	xorl	%ecx, %ecx
+00000001000078c3	jmp	0x10000792f
+00000001000078c5	andl	$0xf8, %r8d
+00000001000078cc	movl	$0x1, %eax
+00000001000078d1	xorl	%ecx, %ecx
+00000001000078d3	movl	$0x19a1, %edi                   ## imm = 0x19A1
+00000001000078d8	nopl	(%rax,%rax)
+00000001000078e0	mulq	%rdi
+00000001000078e3	imulq	$0x19a1, %rcx, %rcx             ## imm = 0x19A1
+00000001000078ea	addq	%rdx, %rcx
+00000001000078ed	addl	$-0x8, %r8d
+00000001000078f1	jne	0x1000078e0
+00000001000078f3	testl	%esi, %esi
+00000001000078f5	je	0x10000790e
+00000001000078f7	movl	$0x3, %edi
+00000001000078fc	nopl	(%rax)
+0000000100007900	mulq	%rdi
+0000000100007903	leaq	(%rcx,%rcx,2), %rcx
+0000000100007907	addq	%rdx, %rcx
+000000010000790a	decl	%esi
+000000010000790c	jne	0x100007900
+000000010000790e	addq	$-0x1, %rax
+0000000100007912	adcq	$-0x1, %rcx
+0000000100007916	movq	%rcx, %rdx
+0000000100007919	shrq	$0x3f, %rdx
+000000010000791d	addq	%rax, %rdx
+0000000100007920	movq	%rdx, %rax
+0000000100007923	adcq	$0x0, %rcx
+0000000100007927	shrdq	$0x1, %rcx, %rax
+000000010000792c	sarq	%rcx
+000000010000792f	movq	%rcx, %rdx
+0000000100007932	popq	%rbp
+0000000100007933	retq
+0000000100007934	nopw	%cs:(%rax,%rax)
+_fwp_valid_float:
+0000000100007940	pushq	%rbp
+0000000100007941	movq	%rsp, %rbp
+0000000100007944	testq	%rsi, %rsi
+0000000100007947	je	0x100007957
+0000000100007949	movzbl	(%rdi), %eax
+000000010000794c	addb	$-0x2b, %al
+000000010000794e	xorl	%edx, %edx
+0000000100007950	testb	$-0x3, %al
+0000000100007952	sete	%dl
+0000000100007955	jmp	0x100007959
+0000000100007957	xorl	%edx, %edx
+0000000100007959	movb	$0x1, %r9b
+000000010000795c	movq	%rdx, %r8
+000000010000795f	cmpq	%rsi, %rdx
+0000000100007962	jae	0x10000798d
+0000000100007964	nopw	%cs:(%rax,%rax)
+0000000100007970	movzbl	(%rdi,%r8), %eax
+0000000100007975	leal	-0x30(%rax), %ecx
+0000000100007978	cmpb	$0x9, %cl
+000000010000797b	ja	0x100007992
+000000010000797d	incq	%r8
+0000000100007980	cmpq	%r8, %rsi
+0000000100007983	jne	0x100007970
+0000000100007985	movq	%rsi, %r8
+0000000100007988	movq	%rsi, %rcx
+000000010000798b	jmp	0x1000079c5
+000000010000798d	movq	%rdx, %rcx
+0000000100007990	jmp	0x1000079c5
+0000000100007992	cmpb	$0x2e, %al
+0000000100007994	jne	0x1000079c2
+0000000100007996	leaq	0x1(%r8), %rcx
+000000010000799a	cmpq	%rsi, %rcx
+000000010000799d	jae	0x1000079b5
+000000010000799f	nop
+00000001000079a0	movzbl	(%rdi,%rcx), %eax
+00000001000079a4	addb	$-0x30, %al
+00000001000079a6	cmpb	$0x9, %al
+00000001000079a8	ja	0x1000079b5
+00000001000079aa	incq	%rcx
+00000001000079ad	cmpq	%rsi, %rcx
+00000001000079b0	jb	0x1000079a0
+00000001000079b2	movq	%rsi, %rcx
+00000001000079b5	leaq	-0x1(%rcx), %rax
+00000001000079b9	cmpq	%r8, %rax
+00000001000079bc	sete	%r9b
+00000001000079c0	jmp	0x1000079c5
+00000001000079c2	movq	%r8, %rcx
+00000001000079c5	xorl	%eax, %eax
+00000001000079c7	cmpq	%rdx, %r8
+00000001000079ca	jne	0x1000079d3
+00000001000079cc	testb	%r9b, %r9b
+00000001000079cf	je	0x1000079d3
+00000001000079d1	popq	%rbp
+00000001000079d2	retq
+00000001000079d3	cmpq	%rsi, %rcx
+00000001000079d6	jae	0x100007a2f
+00000001000079d8	movzbl	(%rdi,%rcx), %edx
+00000001000079dc	orl	$0x20, %edx
+00000001000079df	cmpl	$0x65, %edx
+00000001000079e2	jne	0x100007a2f
+00000001000079e4	leaq	0x1(%rcx), %rdx
+00000001000079e8	cmpq	%rsi, %rdx
+00000001000079eb	jae	0x100007a05
+00000001000079ed	movzbl	(%rdi,%rdx), %r8d
+00000001000079f2	cmpl	$0x2d, %r8d
+00000001000079f6	je	0x1000079fe
+00000001000079f8	cmpl	$0x2b, %r8d
+00000001000079fc	jne	0x100007a05
+00000001000079fe	addq	$0x2, %rcx
+0000000100007a02	movq	%rcx, %rdx
+0000000100007a05	cmpq	%rsi, %rdx
+0000000100007a08	jae	0x1000079d1
+0000000100007a0a	movq	%rdx, %rcx
+0000000100007a0d	nopl	(%rax)
+0000000100007a10	movzbl	(%rdi,%rcx), %r8d
+0000000100007a15	addb	$-0x30, %r8b
+0000000100007a19	cmpb	$0x9, %r8b
+0000000100007a1d	ja	0x100007a2a
+0000000100007a1f	incq	%rcx
+0000000100007a22	cmpq	%rcx, %rsi
+0000000100007a25	jne	0x100007a10
+0000000100007a27	movq	%rsi, %rcx
+0000000100007a2a	cmpq	%rdx, %rcx
+0000000100007a2d	je	0x1000079d1
+0000000100007a2f	xorl	%eax, %eax
+0000000100007a31	cmpq	%rsi, %rcx
+0000000100007a34	sete	%al
+0000000100007a37	popq	%rbp
+0000000100007a38	retq
+0000000100007a39	nopl	(%rax)
+_fwp_float_of:
+0000000100007a40	pushq	%rbp
+0000000100007a41	movq	%rsp, %rbp
+0000000100007a44	cmpl	$0xa, %edi
+0000000100007a47	jne	0x100007a53
+0000000100007a49	cvtsd2ss	%xmm0, %xmm0
+0000000100007a4d	popq	%rbp
+0000000100007a4e	jmp	_fwp_from_f32
+0000000100007a53	popq	%rbp
+0000000100007a54	jmp	_fwp_from_f64
+0000000100007a59	nopl	(%rax)
+_fwp_utf8_put:
+0000000100007a60	pushq	%rbp
+0000000100007a61	movq	%rsp, %rbp
+0000000100007a64	subq	$0x10, %rsp
+0000000100007a68	cmpl	$0x7f, %esi
+0000000100007a6b	ja	0x100007a7b
+0000000100007a6d	movb	%sil, -0x4(%rbp)
+0000000100007a71	movl	$0x1, %edx
+0000000100007a76	jmp	0x100007b18
+0000000100007a7b	movl	%esi, %eax
+0000000100007a7d	cmpl	$0x7ff, %esi                    ## imm = 0x7FF
+0000000100007a83	ja	0x100007aa0
+0000000100007a85	shrl	$0x6, %eax
+0000000100007a88	orb	$-0x40, %al
+0000000100007a8a	movb	%al, -0x4(%rbp)
+0000000100007a8d	andb	$0x3f, %sil
+0000000100007a91	orb	$-0x80, %sil
+0000000100007a95	movb	%sil, -0x3(%rbp)
+0000000100007a99	movl	$0x2, %edx
+0000000100007a9e	jmp	0x100007b18
+0000000100007aa0	cmpl	$0xffff, %esi                   ## imm = 0xFFFF
+0000000100007aa6	ja	0x100007acf
+0000000100007aa8	shrl	$0xc, %eax
+0000000100007aab	orb	$-0x20, %al
+0000000100007aad	movb	%al, -0x4(%rbp)
+0000000100007ab0	movl	%esi, %eax
+0000000100007ab2	shrl	$0x6, %eax
+0000000100007ab5	andb	$0x3f, %al
+0000000100007ab7	orb	$-0x80, %al
+0000000100007ab9	movb	%al, -0x3(%rbp)
+0000000100007abc	andb	$0x3f, %sil
+0000000100007ac0	orb	$-0x80, %sil
+0000000100007ac4	movb	%sil, -0x2(%rbp)
+0000000100007ac8	movl	$0x3, %edx
+0000000100007acd	jmp	0x100007b18
+0000000100007acf	shrl	$0x12, %eax
+0000000100007ad2	movl	%esi, %ecx
+0000000100007ad4	shrl	$0xc, %ecx
+0000000100007ad7	andb	$0x3f, %cl
+0000000100007ada	movl	%esi, %edx
+0000000100007adc	shrl	$0x6, %edx
+0000000100007adf	movd	%eax, %xmm0
+0000000100007ae3	movzbl	%cl, %eax
+0000000100007ae6	pinsrb	$0x1, %eax, %xmm0
+0000000100007aec	andb	$0x3f, %dl
+0000000100007aef	movzbl	%dl, %eax
+0000000100007af2	pinsrb	$0x2, %eax, %xmm0
+0000000100007af8	andb	$0x3f, %sil
+0000000100007afc	movzbl	%sil, %eax
+0000000100007b00	pinsrb	$0x3, %eax, %xmm0
+0000000100007b06	por	0x3132(%rip), %xmm0
+0000000100007b0e	movd	%xmm0, -0x4(%rbp)
+0000000100007b13	movl	$0x4, %edx
+0000000100007b18	leaq	-0x4(%rbp), %rsi
+0000000100007b1c	callq	_buf_put
+0000000100007b21	addq	$0x10, %rsp
+0000000100007b25	popq	%rbp
+0000000100007b26	retq
+0000000100007b27	nopw	(%rax,%rax)
+_tp_push:
+0000000100007b30	pushq	%rbp
+0000000100007b31	movq	%rsp, %rbp
+0000000100007b34	pushq	%r14
+0000000100007b36	pushq	%rbx
+0000000100007b37	movq	%rsi, %rbx
+0000000100007b3a	movq	%rdi, %r14
+0000000100007b3d	movq	0x18(%rdi), %rsi
+0000000100007b41	cmpq	0x20(%rdi), %rsi
+0000000100007b45	jne	0x100007b76
+0000000100007b47	leaq	(%rsi,%rsi), %rax
+0000000100007b4b	testq	%rsi, %rsi
+0000000100007b4e	movl	$0x8, %edx
+0000000100007b53	cmovneq	%rax, %rdx
+0000000100007b57	movq	%rdx, 0x20(%r14)
+0000000100007b5b	movq	0x10(%r14), %rdi
+0000000100007b5f	shlq	$0x3, %rsi
+0000000100007b63	shlq	$0x3, %rdx
+0000000100007b67	callq	_fwp_mem_realloc
+0000000100007b6c	movq	%rax, 0x10(%r14)
+0000000100007b70	movq	0x18(%r14), %rsi
+0000000100007b74	jmp	0x100007b7a
+0000000100007b76	movq	0x10(%r14), %rax
+0000000100007b7a	leaq	0x1(%rsi), %rcx
+0000000100007b7e	movq	%rcx, 0x18(%r14)
+0000000100007b82	movq	%rbx, (%rax,%rsi,8)
+0000000100007b86	popq	%rbx
+0000000100007b87	popq	%r14
+0000000100007b89	popq	%rbp
+0000000100007b8a	retq
+0000000100007b8b	nopl	(%rax,%rax)
+_tp_is_delim:
+0000000100007b90	pushq	%rbp
+0000000100007b91	movq	%rsp, %rbp
+0000000100007b94	movl	$0x1, %eax
+0000000100007b99	cmpl	$0x2c, %edi
+0000000100007b9c	ja	0x100007bb2
+0000000100007b9e	movl	%edi, %ecx
+0000000100007ba0	movabsq	$0x130100002600, %rdx           ## imm = 0x130100002600
+0000000100007baa	btq	%rcx, %rdx
+0000000100007bae	jae	0x100007bb2
+0000000100007bb0	popq	%rbp
+0000000100007bb1	retq
+0000000100007bb2	cmpl	$0x5d, %edi
+0000000100007bb5	je	0x100007bb0
+0000000100007bb7	cmpl	$0x7d, %edi
+0000000100007bba	je	0x100007bb0
+0000000100007bbc	xorl	%eax, %eax
+0000000100007bbe	cmpb	$0x3a, %dil
+0000000100007bc2	sete	%al
+0000000100007bc5	popq	%rbp
+0000000100007bc6	retq
+0000000100007bc7	nopw	(%rax,%rax)
+_fwp_list_len:
+0000000100007bd0	testq	%rdi, %rdi
+0000000100007bd3	je	0x100007bee
+0000000100007bd5	pushq	%rbp
+0000000100007bd6	movq	%rsp, %rbp
+0000000100007bd9	xorl	%eax, %eax
+0000000100007bdb	nopl	(%rax,%rax)
+0000000100007be0	incq	%rax
+0000000100007be3	movq	0x10(%rdi), %rdi
+0000000100007be7	testq	%rdi, %rdi
+0000000100007bea	jne	0x100007be0
+0000000100007bec	popq	%rbp
+0000000100007bed	retq
+0000000100007bee	xorl	%eax, %eax
+0000000100007bf0	retq
+0000000100007bf1	nopw	%cs:(%rax,%rax)
+_fwp_map_find:
+0000000100007c00	pushq	%rbp
+0000000100007c01	movq	%rsp, %rbp
+0000000100007c04	pushq	%r15
+0000000100007c06	pushq	%r14
+0000000100007c08	pushq	%r13
+0000000100007c0a	pushq	%r12
+0000000100007c0c	pushq	%rbx
+0000000100007c0d	subq	$0x18, %rsp
+0000000100007c11	movq	%rsi, %r14
+0000000100007c14	movq	%rdi, %r15
+0000000100007c17	movq	(%rdi), %rbx
+0000000100007c1a	movq	%rdx, -0x38(%rbp)
+0000000100007c1e	movl	(%rdx), %eax
+0000000100007c20	cmpl	$0x4, %eax
+0000000100007c23	jb	0x100007c7e
+0000000100007c25	addl	$-0x5, %eax
+0000000100007c28	cmpl	$0x4, %eax
+0000000100007c2b	jae	0x100007cda
+0000000100007c31	testq	%rbx, %rbx
+0000000100007c34	je	0x100007d38
+0000000100007c3a	xorl	%esi, %esi
+0000000100007c3c	movabsq	$0x1ffffffffffffffe, %rax       ## imm = 0x1FFFFFFFFFFFFFFE
+0000000100007c46	jmp	0x100007c58
+0000000100007c48	nopl	(%rax,%rax)
+0000000100007c50	movq	%r12, %rbx
+0000000100007c53	cmpq	%rbx, %rsi
+0000000100007c56	jae	0x100007ccc
+0000000100007c58	leaq	(%rsi,%rbx), %rdx
+0000000100007c5c	movq	%rdx, %r12
+0000000100007c5f	shrq	%r12
+0000000100007c62	andq	%rax, %rdx
+0000000100007c65	movq	0x8(%r15,%rdx,8), %rdx
+0000000100007c6a	cmpq	%r14, %rdx
+0000000100007c6d	je	0x100007cd3
+0000000100007c6f	jae	0x100007c50
+0000000100007c71	incq	%r12
+0000000100007c74	movq	%r12, %rsi
+0000000100007c77	cmpq	%rbx, %rsi
+0000000100007c7a	jb	0x100007c58
+0000000100007c7c	jmp	0x100007ccc
+0000000100007c7e	testq	%rbx, %rbx
+0000000100007c81	je	0x100007d38
+0000000100007c87	xorl	%esi, %esi
+0000000100007c89	movabsq	$0x1ffffffffffffffe, %rax       ## imm = 0x1FFFFFFFFFFFFFFE
+0000000100007c93	jmp	0x100007ca8
+0000000100007c95	nopw	%cs:(%rax,%rax)
+0000000100007ca0	movq	%r12, %rbx
+0000000100007ca3	cmpq	%rbx, %rsi
+0000000100007ca6	jae	0x100007ccc
+0000000100007ca8	leaq	(%rsi,%rbx), %rdx
+0000000100007cac	movq	%rdx, %r12
+0000000100007caf	shrq	%r12
+0000000100007cb2	andq	%rax, %rdx
+0000000100007cb5	movq	0x8(%r15,%rdx,8), %rdx
+0000000100007cba	cmpq	%r14, %rdx
+0000000100007cbd	je	0x100007cd3
+0000000100007cbf	jge	0x100007ca0
+0000000100007cc1	incq	%r12
+0000000100007cc4	movq	%r12, %rsi
+0000000100007cc7	cmpq	%rbx, %rsi
+0000000100007cca	jb	0x100007ca8
+0000000100007ccc	xorl	%eax, %eax
+0000000100007cce	movq	%rsi, %r12
+0000000100007cd1	jmp	0x100007d3d
+0000000100007cd3	movl	$0x1, %eax
+0000000100007cd8	jmp	0x100007d3d
+0000000100007cda	testq	%rbx, %rbx
+0000000100007cdd	je	0x100007d38
+0000000100007cdf	movq	%rcx, -0x30(%rbp)
+0000000100007ce3	xorl	%r13d, %r13d
+0000000100007ce6	jmp	0x100007cf8
+0000000100007ce8	nopl	(%rax,%rax)
+0000000100007cf0	movq	%r12, %rbx
+0000000100007cf3	cmpq	%rbx, %r13
+0000000100007cf6	jae	0x100007d31
+0000000100007cf8	leaq	(%rbx,%r13), %rax
+0000000100007cfc	movq	%rax, %r12
+0000000100007cff	shrq	%r12
+0000000100007d02	movabsq	$0x1ffffffffffffffe, %rcx       ## imm = 0x1FFFFFFFFFFFFFFE
+0000000100007d0c	andq	%rcx, %rax
+0000000100007d0f	movq	0x8(%r15,%rax,8), %rdi
+0000000100007d14	movq	%r14, %rsi
+0000000100007d17	movq	-0x38(%rbp), %rdx
+0000000100007d1b	callq	_fwp_cmp
+0000000100007d20	testl	%eax, %eax
+0000000100007d22	je	0x100007d51
+0000000100007d24	jns	0x100007cf0
+0000000100007d26	incq	%r12
+0000000100007d29	movq	%r12, %r13
+0000000100007d2c	cmpq	%rbx, %r13
+0000000100007d2f	jb	0x100007cf8
+0000000100007d31	xorl	%eax, %eax
+0000000100007d33	movq	%r13, %r12
+0000000100007d36	jmp	0x100007d56
+0000000100007d38	xorl	%eax, %eax
+0000000100007d3a	xorl	%r12d, %r12d
+0000000100007d3d	movl	%eax, (%rcx)
+0000000100007d3f	movq	%r12, %rax
+0000000100007d42	addq	$0x18, %rsp
+0000000100007d46	popq	%rbx
+0000000100007d47	popq	%r12
+0000000100007d49	popq	%r13
+0000000100007d4b	popq	%r14
+0000000100007d4d	popq	%r15
+0000000100007d4f	popq	%rbp
+0000000100007d50	retq
+0000000100007d51	movl	$0x1, %eax
+0000000100007d56	movq	-0x30(%rbp), %rcx
+0000000100007d5a	jmp	0x100007d3d
+0000000100007d5c	nopl	(%rax)
+_fwp_map_alloc:
+0000000100007d60	pushq	%rbp
+0000000100007d61	movq	%rsp, %rbp
+0000000100007d64	pushq	%rbx
+0000000100007d65	pushq	%rax
+0000000100007d66	movq	%rdi, %rbx
+0000000100007d69	shlq	$0x4, %rdi
+0000000100007d6d	orq	$0x8, %rdi
+0000000100007d71	callq	_fwp_alloc
+0000000100007d76	movq	%rbx, (%rax)
+0000000100007d79	addq	$0x8, %rsp
+0000000100007d7d	popq	%rbx
+0000000100007d7e	popq	%rbp
+0000000100007d7f	retq
+_fwp_cmp:
+0000000100007d80	pushq	%rbp
+0000000100007d81	movq	%rsp, %rbp
+0000000100007d84	pushq	%r15
+0000000100007d86	pushq	%r14
+0000000100007d88	pushq	%r13
+0000000100007d8a	pushq	%r12
+0000000100007d8c	pushq	%rbx
+0000000100007d8d	subq	$0x28, %rsp
+0000000100007d91	movq	%rsi, %rbx
+0000000100007d94	movq	%rdi, %r14
+0000000100007d97	movl	(%rdx), %r13d
+0000000100007d9a	cmpq	$0x15, %r13
+0000000100007d9e	ja	0x100007dc2
+0000000100007da0	leaq	0x37d(%rip), %rax
+0000000100007da7	movslq	(%rax,%r13,4), %rcx
+0000000100007dab	addq	%rax, %rcx
+0000000100007dae	jmpq	*%rcx
+0000000100007db0	xorl	%ecx, %ecx
+0000000100007db2	cmpq	%rbx, %r14
+0000000100007db5	setg	%cl
+0000000100007db8	movl	$0xffffffff, %eax               ## imm = 0xFFFFFFFF
+0000000100007dbd	cmovgel	%ecx, %eax
+0000000100007dc0	jmp	0x100007dd2
+0000000100007dc2	xorl	%ecx, %ecx
+0000000100007dc4	cmpq	%rbx, %r14
+0000000100007dc7	seta	%cl
+0000000100007dca	movl	$0xffffffff, %eax               ## imm = 0xFFFFFFFF
+0000000100007dcf	cmovael	%ecx, %eax
+0000000100007dd2	addq	$0x28, %rsp
+0000000100007dd6	popq	%rbx
+0000000100007dd7	popq	%r12
+0000000100007dd9	popq	%r13
+0000000100007ddb	popq	%r14
+0000000100007ddd	popq	%r15
+0000000100007ddf	popq	%rbp
+0000000100007de0	retq
+0000000100007de1	movq	(%r14), %r15
+0000000100007de4	movq	(%rbx), %r12
+0000000100007de7	addq	$0x8, %r14
+0000000100007deb	addq	$0x8, %rbx
+0000000100007def	cmpq	%r12, %r15
+0000000100007df2	movq	%r12, %rdx
+0000000100007df5	cmovbq	%r15, %rdx
+0000000100007df9	movq	%r14, %rdi
+0000000100007dfc	movq	%rbx, %rsi
+0000000100007dff	callq	0x10000aa68                     ## symbol stub for: _memcmp
+0000000100007e04	testl	%eax, %eax
+0000000100007e06	je	0x1000080ca
+0000000100007e0c	sarl	$0x1f, %eax
+0000000100007e0f	orl	$0x1, %eax
+0000000100007e12	jmp	0x100007dd2
+0000000100007e14	movq	%rdx, -0x30(%rbp)
+0000000100007e18	movq	(%r14), %rax
+0000000100007e1b	movq	(%rbx), %r12
+0000000100007e1e	cmpq	%r12, %rax
+0000000100007e21	movq	%r12, -0x40(%rbp)
+0000000100007e25	movq	%rax, -0x48(%rbp)
+0000000100007e29	cmovbq	%rax, %r12
+0000000100007e2d	testq	%r12, %r12
+0000000100007e30	je	0x100007e98
+0000000100007e32	movq	-0x30(%rbp), %rax
+0000000100007e36	movq	0x38(%rax), %rax
+0000000100007e3a	movq	%rax, -0x38(%rbp)
+0000000100007e3e	movl	$0x10, %r15d
+0000000100007e44	jmp	0x100007e59
+0000000100007e46	nopw	%cs:(%rax,%rax)
+0000000100007e50	addq	$0x10, %r15
+0000000100007e54	decq	%r12
+0000000100007e57	je	0x100007e98
+0000000100007e59	movq	-0x8(%r14,%r15), %rdi
+0000000100007e5e	movq	-0x8(%rbx,%r15), %rsi
+0000000100007e63	movq	-0x38(%rbp), %rdx
+0000000100007e67	callq	_fwp_cmp
+0000000100007e6c	testl	%eax, %eax
+0000000100007e6e	jne	0x100007dd2
+0000000100007e74	cmpl	$0x12, %r13d
+0000000100007e78	jne	0x100007e50
+0000000100007e7a	movq	(%r14,%r15), %rdi
+0000000100007e7e	movq	(%rbx,%r15), %rsi
+0000000100007e82	movq	-0x30(%rbp), %rax
+0000000100007e86	movq	0x40(%rax), %rdx
+0000000100007e8a	callq	_fwp_cmp
+0000000100007e8f	testl	%eax, %eax
+0000000100007e91	je	0x100007e50
+0000000100007e93	jmp	0x100007dd2
+0000000100007e98	xorl	%ecx, %ecx
+0000000100007e9a	movq	-0x40(%rbp), %rax
+0000000100007e9e	cmpq	%rax, -0x48(%rbp)
+0000000100007ea2	jmp	0x100007dc7
+0000000100007ea7	movq	%r14, %rdi
+0000000100007eaa	callq	_fwp_u128
+0000000100007eaf	movq	%rax, %r15
+0000000100007eb2	movq	%rdx, %r14
+0000000100007eb5	movq	%rbx, %rdi
+0000000100007eb8	callq	_fwp_u128
+0000000100007ebd	movq	%rax, %rcx
+0000000100007ec0	movl	$0xffffffff, %eax               ## imm = 0xFFFFFFFF
+0000000100007ec5	cmpq	%rcx, %r15
+0000000100007ec8	movq	%r14, %rsi
+0000000100007ecb	sbbq	%rdx, %rsi
+0000000100007ece	jb	0x100007dd2
+0000000100007ed4	cmpq	%r15, %rcx
+0000000100007ed7	sbbq	%r14, %rdx
+0000000100007eda	setb	%al
+0000000100007edd	movzbl	%al, %eax
+0000000100007ee0	jmp	0x100007dd2
+0000000100007ee5	movq	%r14, %rdi
+0000000100007ee8	callq	_fwp_f32
+0000000100007eed	callq	_fwp_total_key32
+0000000100007ef2	movl	%eax, %r14d
+0000000100007ef5	movq	%rbx, %rdi
+0000000100007ef8	callq	_fwp_f32
+0000000100007efd	callq	_fwp_total_key32
+0000000100007f02	movl	%eax, %ecx
+0000000100007f04	movl	$0xffffffff, %eax               ## imm = 0xFFFFFFFF
+0000000100007f09	cmpl	%ecx, %r14d
+0000000100007f0c	jl	0x100007dd2
+0000000100007f12	jmp	0x100007f42
+0000000100007f14	movq	%r14, %rdi
+0000000100007f17	callq	_fwp_f64
+0000000100007f1c	callq	_fwp_total_key64
+0000000100007f21	movq	%rax, %r14
+0000000100007f24	movq	%rbx, %rdi
+0000000100007f27	callq	_fwp_f64
+0000000100007f2c	callq	_fwp_total_key64
+0000000100007f31	movq	%rax, %rcx
+0000000100007f34	movl	$0xffffffff, %eax               ## imm = 0xFFFFFFFF
+0000000100007f39	cmpq	%rcx, %r14
+0000000100007f3c	jl	0x100007dd2
+0000000100007f42	setg	%al
+0000000100007f45	movzbl	%al, %eax
+0000000100007f48	jmp	0x100007dd2
+0000000100007f4d	movq	%r14, %rdi
+0000000100007f50	callq	_fwp_u128
+0000000100007f55	movq	%rax, %r15
+0000000100007f58	movq	%rdx, %r14
+0000000100007f5b	movq	%rbx, %rdi
+0000000100007f5e	callq	_fwp_u128
+0000000100007f63	movq	%rax, %rcx
+0000000100007f66	movl	$0xffffffff, %eax               ## imm = 0xFFFFFFFF
+0000000100007f6b	cmpq	%rcx, %r15
+0000000100007f6e	movq	%r14, %rsi
+0000000100007f71	sbbq	%rdx, %rsi
+0000000100007f74	jl	0x100007dd2
+0000000100007f7a	cmpq	%r15, %rcx
+0000000100007f7d	sbbq	%r14, %rdx
+0000000100007f80	setl	%al
+0000000100007f83	movzbl	%al, %eax
+0000000100007f86	jmp	0x100007dd2
+0000000100007f8b	testq	%r14, %r14
+0000000100007f8e	sete	%al
+0000000100007f91	testq	%rbx, %rbx
+0000000100007f94	sete	%cl
+0000000100007f97	orb	%al, %cl
+0000000100007f99	je	0x1000080db
+0000000100007f9f	testq	%rbx, %rbx
+0000000100007fa2	setne	%cl
+0000000100007fa5	orb	%al, %cl
+0000000100007fa7	xorb	$0x1, %cl
+0000000100007faa	movzbl	%cl, %ecx
+0000000100007fad	testb	%al, %al
+0000000100007faf	movl	$0xffffffff, %eax               ## imm = 0xFFFFFFFF
+0000000100007fb4	cmovel	%ecx, %eax
+0000000100007fb7	testq	%rbx, %rbx
+0000000100007fba	cmovel	%ecx, %eax
+0000000100007fbd	jmp	0x100007dd2
+0000000100007fc2	movslq	0x10(%rdx), %r15
+0000000100007fc6	testq	%r15, %r15
+0000000100007fc9	jle	0x1000080d4
+0000000100007fcf	movq	0x20(%rdx), %r12
+0000000100007fd3	xorl	%r13d, %r13d
+0000000100007fd6	nopw	%cs:(%rax,%rax)
+0000000100007fe0	movq	0x8(%r14,%r13,8), %rdi
+0000000100007fe5	movq	0x8(%rbx,%r13,8), %rsi
+0000000100007fea	movq	(%r12,%r13,8), %rdx
+0000000100007fee	callq	_fwp_cmp
+0000000100007ff3	testl	%eax, %eax
+0000000100007ff5	jne	0x100007dd2
+0000000100007ffb	incq	%r13
+0000000100007ffe	xorl	%eax, %eax
+0000000100008000	cmpq	%r13, %r15
+0000000100008003	jne	0x100007fe0
+0000000100008005	jmp	0x100007dd2
+000000010000800a	movq	(%r14), %rax
+000000010000800d	movq	(%rbx), %r13
+0000000100008010	cmpq	%r13, %rax
+0000000100008013	movq	%r13, -0x30(%rbp)
+0000000100008017	movq	%rax, -0x38(%rbp)
+000000010000801b	cmovbq	%rax, %r13
+000000010000801f	testq	%r13, %r13
+0000000100008022	je	0x100008052
+0000000100008024	movq	0x38(%rdx), %r15
+0000000100008028	xorl	%r12d, %r12d
+000000010000802b	nopl	(%rax,%rax)
+0000000100008030	movq	0x8(%r14,%r12,8), %rdi
+0000000100008035	movq	0x8(%rbx,%r12,8), %rsi
+000000010000803a	movq	%r15, %rdx
+000000010000803d	callq	_fwp_cmp
+0000000100008042	testl	%eax, %eax
+0000000100008044	jne	0x100007dd2
+000000010000804a	incq	%r12
+000000010000804d	cmpq	%r12, %r13
+0000000100008050	jne	0x100008030
+0000000100008052	xorl	%ecx, %ecx
+0000000100008054	movq	-0x30(%rbp), %rax
+0000000100008058	cmpq	%rax, -0x38(%rbp)
+000000010000805c	jmp	0x100007dc7
+0000000100008061	movq	%rdx, %r15
+0000000100008064	movq	%r14, %rdi
+0000000100008067	callq	_fwp_tag
+000000010000806c	movl	%eax, %r12d
+000000010000806f	movq	%rbx, %rdi
+0000000100008072	callq	_fwp_tag
+0000000100008077	cmpl	%eax, %r12d
+000000010000807a	jne	0x100008116
+0000000100008080	movq	%r15, %rdx
+0000000100008083	movq	0x28(%r15), %rcx
+0000000100008087	movl	%r12d, %eax
+000000010000808a	movslq	(%rcx,%rax,4), %r15
+000000010000808e	testq	%r15, %r15
+0000000100008091	jle	0x1000080d4
+0000000100008093	movq	0x30(%rdx), %rcx
+0000000100008097	movq	(%rcx,%rax,8), %r12
+000000010000809b	xorl	%r13d, %r13d
+000000010000809e	nop
+00000001000080a0	movq	0x8(%r14,%r13,8), %rdi
+00000001000080a5	movq	0x8(%rbx,%r13,8), %rsi
+00000001000080aa	movq	(%r12,%r13,8), %rdx
+00000001000080ae	callq	_fwp_cmp
+00000001000080b3	testl	%eax, %eax
+00000001000080b5	jne	0x100007dd2
+00000001000080bb	incq	%r13
+00000001000080be	xorl	%eax, %eax
+00000001000080c0	cmpq	%r13, %r15
+00000001000080c3	jne	0x1000080a0
+00000001000080c5	jmp	0x100007dd2
+00000001000080ca	xorl	%ecx, %ecx
+00000001000080cc	cmpq	%r12, %r15
+00000001000080cf	jmp	0x100007dc7
+00000001000080d4	xorl	%eax, %eax
+00000001000080d6	jmp	0x100007dd2
+00000001000080db	movq	0x38(%rdx), %r15
+00000001000080df	nop
+00000001000080e0	movq	0x8(%r14), %rdi
+00000001000080e4	movq	0x8(%rbx), %rsi
+00000001000080e8	movq	%r15, %rdx
+00000001000080eb	callq	_fwp_cmp
+00000001000080f0	testl	%eax, %eax
+00000001000080f2	jne	0x100007dd2
+00000001000080f8	movq	0x10(%r14), %r14
+00000001000080fc	movq	0x10(%rbx), %rbx
+0000000100008100	testq	%r14, %r14
+0000000100008103	sete	%al
+0000000100008106	je	0x100007f9f
+000000010000810c	testq	%rbx, %rbx
+000000010000810f	jne	0x1000080e0
+0000000100008111	jmp	0x100007f9f
+0000000100008116	seta	%al
+0000000100008119	movzbl	%al, %ecx
+000000010000811c	jmp	0x100007dca
+0000000100008121	nopl	(%rax)
+0000000100008124	.byte 0x8c #bad opcode
+0000000100008125	cld
+0000000100008126	.byte 0xff #bad opcode
+0000000100008127	decl	-0x3730001(%rsp,%rdi,8)
+000000010000812e	.byte 0xff #bad opcode
+000000010000812f	decl	-0x1d60001(%rsp,%rdi,8)
+0000000100008136	.byte 0xff #bad opcode
+0000000100008137	lcalll	*-0x61000004(%rsi)
+000000010000813d	cld
+000000010000813e	.byte 0xff #bad opcode
+000000010000813f	lcalll	*-0x61000004(%rsi)
+0000000100008145	cld
+0000000100008146	.byte 0xff #bad opcode
+0000000100008147	incl	-0x3e000003(%rbx)
+000000010000814d	std
+000000010000814e	.byte 0xff #bad opcode
+000000010000814f	pushq	%rax
+0000000100008151	std
+0000000100008152	.byte 0xff #bad opcode
+0000000100008153	.byte 0xff #bad opcode
+0000000100008154	movl	$0xbdfffffc, %ebp               ## imm = 0xBDFFFFFC
+0000000100008159	cld
+000000010000815a	.byte 0xff #bad opcode
+000000010000815b	.byte 0xff #bad opcode
+000000010000815c	cmpl	$0x67ffffff, %eax               ## imm = 0x67FFFFFF
+0000000100008161	.byte 0xfe #bad opcode
+0000000100008162	.byte 0xff #bad opcode
+0000000100008163	lcalll	*-0x19000002(%rsi)
+0000000100008169	.byte 0xfe #bad opcode
+000000010000816a	.byte 0xff #bad opcode
+000000010000816b	pushq	%rax
+000000010000816d	cld
+000000010000816e	.byte 0xff #bad opcode
+000000010000816f	pushq	%rax
+0000000100008171	cld
+0000000100008172	.byte 0xff #bad opcode
+0000000100008173	decl	-0x3730001(%rsp,%rdi,8)
+000000010000817a	.byte 0xff #bad opcode
+000000010000817b	decl	(%rdi)
+000000010000817d	.byte 0x1f #bad opcode
+000000010000817e	addb	%dl, 0x48(%rbp)
+0000000100008182	movl	%esp, %ebp
+0000000100008184	movq	(%rdi), %rax
+0000000100008187	movq	0x8(%rdi), %rdx
+000000010000818b	popq	%rbp
+000000010000818c	retq
+000000010000818d	nopl	(%rax)
+_fwp_total_key32:
+0000000100008190	pushq	%rbp
+0000000100008191	movq	%rsp, %rbp
+0000000100008194	movd	%xmm0, %ecx
+0000000100008198	movl	%ecx, %eax
+000000010000819a	sarl	$0x1f, %eax
+000000010000819d	shrl	%eax
+000000010000819f	xorl	%ecx, %eax
+00000001000081a1	popq	%rbp
+00000001000081a2	retq
+00000001000081a3	nopw	%cs:(%rax,%rax)
+_fwp_total_key64:
+00000001000081b0	pushq	%rbp
+00000001000081b1	movq	%rsp, %rbp
+00000001000081b4	movq	%xmm0, %rcx
+00000001000081b9	movq	%rcx, %rax
+00000001000081bc	sarq	$0x3f, %rax
+00000001000081c0	shrq	%rax
+00000001000081c3	xorq	%rcx, %rax
+00000001000081c6	popq	%rbp
+00000001000081c7	retq
+00000001000081c8	nopl	(%rax,%rax)
+_fwp_tag:
+00000001000081d0	movq	%rdi, %rax
+00000001000081d3	cmpq	$0xfff, %rdi                    ## imm = 0xFFF
+00000001000081da	jbe	0x1000081e3
+00000001000081dc	pushq	%rbp
+00000001000081dd	movq	%rsp, %rbp
+00000001000081e0	movl	(%rax), %eax
+00000001000081e2	popq	%rbp
+00000001000081e3	retq
+00000001000081e4	nopw	%cs:(%rax,%rax)
+_fwp_apply:
+00000001000081f0	pushq	%rbp
+00000001000081f1	movq	%rsp, %rbp
+00000001000081f4	pushq	%r15
+00000001000081f6	pushq	%r14
+00000001000081f8	pushq	%r13
+00000001000081fa	pushq	%r12
+00000001000081fc	pushq	%rbx
+00000001000081fd	subq	$0x28, %rsp
+0000000100008201	movq	%rsi, %rbx
+0000000100008204	movq	%rdi, %r15
+0000000100008207	movq	0x4e1a(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+000000010000820e	movq	(%rax), %rax
+0000000100008211	movq	%rax, -0x30(%rbp)
+0000000100008215	movl	$0x1, %edx
+000000010000821a	jmp	0x10000823a
+000000010000821c	nopl	(%rax)
+0000000100008220	leaq	(%rbx,%r14,8), %rbx
+0000000100008224	xorl	%ecx, %ecx
+0000000100008226	movq	%rax, %r15
+0000000100008229	movq	-0x48(%rbp), %r14
+000000010000822d	movq	-0x50(%rbp), %rsp
+0000000100008231	cmpl	$0x1, %ecx
+0000000100008234	je	0x10000864b
+000000010000823a	movq	_fwp_fns(%rip), %rax
+0000000100008241	movl	(%r15), %ecx
+0000000100008244	movl	0x4(%r15), %r12d
+0000000100008248	shlq	$0x5, %rcx
+000000010000824c	leaq	(%rax,%rcx), %rsi
+0000000100008250	movl	(%rax,%rcx), %r13d
+0000000100008254	testq	%r12, %r12
+0000000100008257	jne	0x100008290
+0000000100008259	leal	-0x1(%r13), %eax
+000000010000825d	cmpl	%edx, %eax
+000000010000825f	jae	0x100008290
+0000000100008261	movq	%rdx, %r15
+0000000100008264	movq	%rbx, %rdi
+0000000100008267	callq	*0x8(%rsi)
+000000010000826a	movq	%r15, %rdx
+000000010000826d	movq	%rax, %r15
+0000000100008270	cmpl	%r13d, %edx
+0000000100008273	je	0x100008648
+0000000100008279	leaq	(%rbx,%r13,8), %rbx
+000000010000827d	subl	%r13d, %edx
+0000000100008280	movl	$0x3, %ecx
+0000000100008285	cmpl	$0x1, %ecx
+0000000100008288	jne	0x10000823a
+000000010000828a	jmp	0x10000864b
+000000010000828f	nop
+0000000100008290	movq	%r14, -0x48(%rbp)
+0000000100008294	movq	%rdx, -0x40(%rbp)
+0000000100008298	leal	(%r12,%rdx), %r14d
+000000010000829c	cmpl	%r13d, %r14d
+000000010000829f	jb	0x1000084cd
+00000001000082a5	movq	%rsp, -0x50(%rbp)
+00000001000082a9	cmpl	$0x2, %r13d
+00000001000082ad	movl	$0x1, %eax
+00000001000082b2	movl	%r13d, -0x34(%rbp)
+00000001000082b6	cmovael	%r13d, %eax
+00000001000082ba	shlq	$0x3, %rax
+00000001000082be	movq	%rsi, %r14
+00000001000082c1	callq	0x10000a9b4                     ## symbol stub for: ____chkstk_darwin
+00000001000082c6	movq	%r14, %r9
+00000001000082c9	addq	$0xf, %rax
+00000001000082cd	andq	$-0x10, %rax
+00000001000082d1	subq	%rax, %rsp
+00000001000082d4	movq	%rsp, %rdi
+00000001000082d7	testq	%r12, %r12
+00000001000082da	je	0x1000083b0
+00000001000082e0	cmpl	$0x3, %r12d
+00000001000082e4	jbe	0x1000082f6
+00000001000082e6	movq	%rdi, %rax
+00000001000082e9	subq	%r15, %rax
+00000001000082ec	addq	$-0x8, %rax
+00000001000082f0	cmpq	$0x20, %rax
+00000001000082f4	jae	0x100008362
+00000001000082f6	xorl	%eax, %eax
+00000001000082f8	movq	%r12, %rdx
+00000001000082fb	movq	%rax, %rcx
+00000001000082fe	andq	$0x3, %rdx
+0000000100008302	je	0x100008321
+0000000100008304	movq	%rax, %rcx
+0000000100008307	nopw	(%rax,%rax)
+0000000100008310	movq	0x8(%r15,%rcx,8), %rsi
+0000000100008315	movq	%rsi, (%rdi,%rcx,8)
+0000000100008319	incq	%rcx
+000000010000831c	decq	%rdx
+000000010000831f	jne	0x100008310
+0000000100008321	subq	%r12, %rax
+0000000100008324	cmpq	$-0x4, %rax
+0000000100008328	ja	0x1000083b0
+000000010000832e	nop
+0000000100008330	movq	0x8(%r15,%rcx,8), %rax
+0000000100008335	movq	%rax, (%rdi,%rcx,8)
+0000000100008339	movq	0x10(%r15,%rcx,8), %rax
+000000010000833e	movq	%rax, 0x8(%rdi,%rcx,8)
+0000000100008343	movq	0x18(%r15,%rcx,8), %rax
+0000000100008348	movq	%rax, 0x10(%rdi,%rcx,8)
+000000010000834d	movq	0x20(%r15,%rcx,8), %rax
+0000000100008352	movq	%rax, 0x18(%rdi,%rcx,8)
+0000000100008357	addq	$0x4, %rcx
+000000010000835b	cmpq	%rcx, %r12
+000000010000835e	jne	0x100008330
+0000000100008360	jmp	0x1000083b0
+0000000100008362	movl	%r12d, %eax
+0000000100008365	andl	$-0x4, %eax
+0000000100008368	leaq	(,%r12,8), %rcx
+0000000100008370	andq	$-0x20, %rcx
+0000000100008374	xorl	%edx, %edx
+0000000100008376	nopw	%cs:(%rax,%rax)
+0000000100008380	movups	0x8(%r15,%rdx), %xmm0
+0000000100008386	movups	0x18(%r15,%rdx), %xmm1
+000000010000838c	movaps	%xmm0, (%rdi,%rdx)
+0000000100008390	movaps	%xmm1, 0x10(%rdi,%rdx)
+0000000100008395	addq	$0x20, %rdx
+0000000100008399	cmpq	%rdx, %rcx
+000000010000839c	jne	0x100008380
+000000010000839e	cmpl	%r12d, %eax
+00000001000083a1	jne	0x1000082f8
+00000001000083a7	nopw	(%rax,%rax)
+00000001000083b0	movl	-0x34(%rbp), %r10d
+00000001000083b4	subl	%r12d, %r10d
+00000001000083b7	movl	%r10d, %r14d
+00000001000083ba	cmpl	%r12d, %r13d
+00000001000083bd	je	0x100008442
+00000001000083c3	cmpl	$0xd, %r10d
+00000001000083c7	ja	0x100008467
+00000001000083cd	xorl	%eax, %eax
+00000001000083cf	movq	%r14, %rdx
+00000001000083d2	movq	%rax, %rcx
+00000001000083d5	andq	$0x3, %rdx
+00000001000083d9	je	0x1000083f4
+00000001000083db	movq	%rax, %rcx
+00000001000083de	nop
+00000001000083e0	movq	(%rbx,%rcx,8), %rsi
+00000001000083e4	leal	(%r12,%rcx), %r8d
+00000001000083e8	movq	%rsi, (%rdi,%r8,8)
+00000001000083ec	incq	%rcx
+00000001000083ef	decq	%rdx
+00000001000083f2	jne	0x1000083e0
+00000001000083f4	subq	%r14, %rax
+00000001000083f7	cmpq	$-0x4, %rax
+00000001000083fb	ja	0x100008442
+00000001000083fd	nopl	(%rax)
+0000000100008400	movq	(%rbx,%rcx,8), %rax
+0000000100008404	leal	(%r12,%rcx), %edx
+0000000100008408	movq	%rax, (%rdi,%rdx,8)
+000000010000840c	movq	0x8(%rbx,%rcx,8), %rax
+0000000100008411	leal	(%r12,%rcx), %edx
+0000000100008415	incl	%edx
+0000000100008417	movq	%rax, (%rdi,%rdx,8)
+000000010000841b	movq	0x10(%rbx,%rcx,8), %rax
+0000000100008420	leal	0x2(%r12,%rcx), %edx
+0000000100008425	movq	%rax, (%rdi,%rdx,8)
+0000000100008429	movq	0x18(%rbx,%rcx,8), %rax
+000000010000842e	leal	(%r12,%rcx), %edx
+0000000100008432	addl	$0x3, %edx
+0000000100008435	movq	%rax, (%rdi,%rdx,8)
+0000000100008439	addq	$0x4, %rcx
+000000010000843d	cmpq	%rcx, %r14
+0000000100008440	jne	0x100008400
+0000000100008442	movl	%r10d, %r12d
+0000000100008445	callq	*0x8(%r9)
+0000000100008449	movl	$0x1, %ecx
+000000010000844e	movq	-0x40(%rbp), %rsi
+0000000100008452	movl	%esi, %edx
+0000000100008454	subl	%r12d, %edx
+0000000100008457	jne	0x100008220
+000000010000845d	movl	%esi, %edx
+000000010000845f	movq	%rax, %r14
+0000000100008462	jmp	0x10000822d
+0000000100008467	leaq	-0x1(%r14), %rax
+000000010000846b	movl	%eax, %ecx
+000000010000846d	addl	%r12d, %ecx
+0000000100008470	jb	0x1000083cd
+0000000100008476	shrq	$0x20, %rax
+000000010000847a	movl	$0x0, %eax
+000000010000847f	jne	0x1000083cf
+0000000100008485	leaq	(%rdi,%r12,8), %rax
+0000000100008489	subq	%rbx, %rax
+000000010000848c	cmpq	$0x20, %rax
+0000000100008490	jb	0x1000083cd
+0000000100008496	movl	%r14d, %eax
+0000000100008499	andl	$-0x4, %eax
+000000010000849c	xorl	%ecx, %ecx
+000000010000849e	nop
+00000001000084a0	movups	(%rbx,%rcx,8), %xmm0
+00000001000084a4	movups	0x10(%rbx,%rcx,8), %xmm1
+00000001000084a9	leal	(%r12,%rcx), %edx
+00000001000084ad	movups	%xmm0, (%rdi,%rdx,8)
+00000001000084b1	movups	%xmm1, 0x10(%rdi,%rdx,8)
+00000001000084b6	addq	$0x4, %rcx
+00000001000084ba	cmpq	%rcx, %rax
+00000001000084bd	jne	0x1000084a0
+00000001000084bf	cmpl	%r14d, %eax
+00000001000084c2	jne	0x1000083cf
+00000001000084c8	jmp	0x100008442
+00000001000084cd	movl	%r14d, %eax
+00000001000084d0	leaq	0x8(,%rax,8), %rdi
+00000001000084d8	callq	_fwp_alloc
+00000001000084dd	movl	(%r15), %ecx
+00000001000084e0	movl	%ecx, (%rax)
+00000001000084e2	movl	%r14d, 0x4(%rax)
+00000001000084e6	movq	%rax, %r14
+00000001000084e9	testq	%r12, %r12
+00000001000084ec	movq	-0x40(%rbp), %rdi
+00000001000084f0	je	0x1000085b1
+00000001000084f6	xorl	%eax, %eax
+00000001000084f8	cmpl	$0x6, %r12d
+00000001000084fc	jb	0x100008546
+00000001000084fe	movq	%r14, %rcx
+0000000100008501	subq	%r15, %rcx
+0000000100008504	cmpq	$0x1f, %rcx
+0000000100008508	jbe	0x100008546
+000000010000850a	movl	%r12d, %eax
+000000010000850d	andl	$-0x4, %eax
+0000000100008510	leaq	(,%r12,8), %rcx
+0000000100008518	andq	$-0x20, %rcx
+000000010000851c	xorl	%edx, %edx
+000000010000851e	nop
+0000000100008520	movups	0x8(%r15,%rdx), %xmm0
+0000000100008526	movups	0x18(%r15,%rdx), %xmm1
+000000010000852c	movups	%xmm0, 0x8(%r14,%rdx)
+0000000100008532	movups	%xmm1, 0x18(%r14,%rdx)
+0000000100008538	addq	$0x20, %rdx
+000000010000853c	cmpq	%rdx, %rcx
+000000010000853f	jne	0x100008520
+0000000100008541	cmpl	%r12d, %eax
+0000000100008544	je	0x1000085b1
+0000000100008546	movq	%r12, %rdx
+0000000100008549	movq	%rax, %rcx
+000000010000854c	andq	$0x3, %rdx
+0000000100008550	je	0x100008572
+0000000100008552	movq	%rax, %rcx
+0000000100008555	nopw	%cs:(%rax,%rax)
+0000000100008560	movq	0x8(%r15,%rcx,8), %rsi
+0000000100008565	movq	%rsi, 0x8(%r14,%rcx,8)
+000000010000856a	incq	%rcx
+000000010000856d	decq	%rdx
+0000000100008570	jne	0x100008560
+0000000100008572	subq	%r12, %rax
+0000000100008575	cmpq	$-0x4, %rax
+0000000100008579	ja	0x1000085b1
+000000010000857b	nopl	(%rax,%rax)
+0000000100008580	movq	0x8(%r15,%rcx,8), %rax
+0000000100008585	movq	%rax, 0x8(%r14,%rcx,8)
+000000010000858a	movq	0x10(%r15,%rcx,8), %rax
+000000010000858f	movq	%rax, 0x10(%r14,%rcx,8)
+0000000100008594	movq	0x18(%r15,%rcx,8), %rax
+0000000100008599	movq	%rax, 0x18(%r14,%rcx,8)
+000000010000859e	movq	0x20(%r15,%rcx,8), %rax
+00000001000085a3	movq	%rax, 0x20(%r14,%rcx,8)
+00000001000085a8	addq	$0x4, %rcx
+00000001000085ac	cmpq	%rcx, %r12
+00000001000085af	jne	0x100008580
+00000001000085b1	testl	%edi, %edi
+00000001000085b3	je	0x10000864b
+00000001000085b9	movl	%edi, %eax
+00000001000085bb	cmpl	$0x13, %edi
+00000001000085be	ja	0x100008671
+00000001000085c4	xorl	%ecx, %ecx
+00000001000085c6	movq	%rax, %rsi
+00000001000085c9	movq	%rcx, %rdx
+00000001000085cc	andq	$0x3, %rsi
+00000001000085d0	je	0x1000085f5
+00000001000085d2	movq	%rcx, %rdx
+00000001000085d5	nopw	%cs:(%rax,%rax)
+00000001000085e0	movq	(%rbx,%rdx,8), %rdi
+00000001000085e4	leal	(%r12,%rdx), %r8d
+00000001000085e8	movq	%rdi, 0x8(%r14,%r8,8)
+00000001000085ed	incq	%rdx
+00000001000085f0	decq	%rsi
+00000001000085f3	jne	0x1000085e0
+00000001000085f5	subq	%rax, %rcx
+00000001000085f8	cmpq	$-0x4, %rcx
+00000001000085fc	ja	0x10000864b
+00000001000085fe	nop
+0000000100008600	movq	(%rbx,%rdx,8), %rcx
+0000000100008604	leal	(%r12,%rdx), %esi
+0000000100008608	movq	%rcx, 0x8(%r14,%rsi,8)
+000000010000860d	movq	0x8(%rbx,%rdx,8), %rcx
+0000000100008612	leal	(%r12,%rdx), %esi
+0000000100008616	incl	%esi
+0000000100008618	movq	%rcx, 0x8(%r14,%rsi,8)
+000000010000861d	movq	0x10(%rbx,%rdx,8), %rcx
+0000000100008622	leal	0x2(%r12,%rdx), %esi
+0000000100008627	movq	%rcx, 0x8(%r14,%rsi,8)
+000000010000862c	movq	0x18(%rbx,%rdx,8), %rcx
+0000000100008631	leal	(%r12,%rdx), %esi
+0000000100008635	addl	$0x3, %esi
+0000000100008638	movq	%rcx, 0x8(%r14,%rsi,8)
+000000010000863d	addq	$0x4, %rdx
+0000000100008641	cmpq	%rdx, %rax
+0000000100008644	jne	0x100008600
+0000000100008646	jmp	0x10000864b
+0000000100008648	movq	%r15, %r14
+000000010000864b	movq	0x49d6(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008652	movq	(%rax), %rax
+0000000100008655	cmpq	-0x30(%rbp), %rax
+0000000100008659	jne	0x1000086df
+000000010000865f	movq	%r14, %rax
+0000000100008662	leaq	-0x28(%rbp), %rsp
+0000000100008666	popq	%rbx
+0000000100008667	popq	%r12
+0000000100008669	popq	%r13
+000000010000866b	popq	%r14
+000000010000866d	popq	%r15
+000000010000866f	popq	%rbp
+0000000100008670	retq
+0000000100008671	leaq	-0x1(%rax), %rdx
+0000000100008675	xorl	%ecx, %ecx
+0000000100008677	movl	%edx, %esi
+0000000100008679	addl	%r12d, %esi
+000000010000867c	jb	0x1000085c6
+0000000100008682	shrq	$0x20, %rdx
+0000000100008686	jne	0x1000085c6
+000000010000868c	leaq	(%r14,%r12,8), %rcx
+0000000100008690	subq	%rbx, %rcx
+0000000100008693	addq	$0x8, %rcx
+0000000100008697	cmpq	$0x20, %rcx
+000000010000869b	jb	0x1000085c4
+00000001000086a1	movl	%eax, %ecx
+00000001000086a3	andl	$-0x4, %ecx
+00000001000086a6	xorl	%edx, %edx
+00000001000086a8	nopl	(%rax,%rax)
+00000001000086b0	movups	(%rbx,%rdx,8), %xmm0
+00000001000086b4	movups	0x10(%rbx,%rdx,8), %xmm1
+00000001000086b9	leal	(%r12,%rdx), %esi
+00000001000086bd	movups	%xmm0, 0x8(%r14,%rsi,8)
+00000001000086c3	movups	%xmm1, 0x18(%r14,%rsi,8)
+00000001000086c9	addq	$0x4, %rdx
+00000001000086cd	cmpq	%rdx, %rcx
+00000001000086d0	jne	0x1000086b0
+00000001000086d2	cmpl	%eax, %ecx
+00000001000086d4	jne	0x1000085c6
+00000001000086da	jmp	0x10000864b
+00000001000086df	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+00000001000086e4	nopw	%cs:(%rax,%rax)
+_fwp_pap:
+00000001000086f0	pushq	%rbp
+00000001000086f1	movq	%rsp, %rbp
+00000001000086f4	movl	$0x8, %edi
+00000001000086f9	callq	_fwp_alloc
+00000001000086fe	movq	$0x4, (%rax)
+0000000100008705	popq	%rbp
+0000000100008706	retq
+0000000100008707	nopw	(%rax,%rax)
+_fwp_exec_error:
+0000000100008710	pushq	%rbp
+0000000100008711	movq	%rsp, %rbp
+0000000100008714	pushq	%r15
+0000000100008716	pushq	%r14
+0000000100008718	pushq	%rbx
+0000000100008719	pushq	%rax
+000000010000871a	movq	%rsi, %rbx
+000000010000871d	movq	%rdi, %r14
+0000000100008720	callq	_fwp_pipe_flush
+0000000100008725	movq	0x4904(%rip), %r15              ## literal pool symbol address: ___stderrp
+000000010000872c	movq	(%r15), %rdi
+000000010000872f	leaq	0x33e9(%rip), %rsi              ## literal pool for: "%s: "
+0000000100008736	leaq	0x2793(%rip), %rdx              ## literal pool for: "scalar"
+000000010000873d	xorl	%eax, %eax
+000000010000873f	callq	0x10000aa1a                     ## symbol stub for: _fprintf
+0000000100008744	cmpl	$0x10, (%rbx)
+0000000100008747	jne	0x100008782
+0000000100008749	movq	0x8(%rbx), %rdi
+000000010000874d	testq	%rdi, %rdi
+0000000100008750	je	0x100008782
+0000000100008752	leaq	0x33cb(%rip), %rsi              ## literal pool for: "IoError"
+0000000100008759	callq	0x10000aada                     ## symbol stub for: _strcmp
+000000010000875e	testl	%eax, %eax
+0000000100008760	jne	0x100008782
+0000000100008762	cmpl	$0x2, 0x10(%rbx)
+0000000100008766	jne	0x100008782
+0000000100008768	movq	0x10(%r14), %rdi
+000000010000876c	movq	(%rdi), %rdx
+000000010000876f	addq	$0x8, %rdi
+0000000100008773	movq	(%r15), %rcx
+0000000100008776	movl	$0x1, %esi
+000000010000877b	callq	0x10000aa38                     ## symbol stub for: _fwrite
+0000000100008780	jmp	0x100008790
+0000000100008782	movq	(%r15), %rdx
+0000000100008785	movq	%r14, %rdi
+0000000100008788	movq	%rbx, %rsi
+000000010000878b	callq	_fwp_display_top
+0000000100008790	movq	(%r15), %rsi
+0000000100008793	movl	$0xa, %edi
+0000000100008798	addq	$0x8, %rsp
+000000010000879c	popq	%rbx
+000000010000879d	popq	%r14
+000000010000879f	popq	%r15
+00000001000087a1	popq	%rbp
+00000001000087a2	jmp	0x10000aa20                     ## symbol stub for: _fputc
+00000001000087a7	nopw	(%rax,%rax)
+_fwp_display_top:
+00000001000087b0	pushq	%rbp
+00000001000087b1	movq	%rsp, %rbp
+00000001000087b4	pushq	%rbx
+00000001000087b5	subq	$0x18, %rsp
+00000001000087b9	movq	%rdx, %rbx
+00000001000087bc	movq	%rsi, %rdx
+00000001000087bf	movq	%rdi, %rsi
+00000001000087c2	xorps	%xmm0, %xmm0
+00000001000087c5	movaps	%xmm0, -0x20(%rbp)
+00000001000087c9	movq	$0x0, -0x10(%rbp)
+00000001000087d1	leaq	-0x20(%rbp), %rdi
+00000001000087d5	movl	$0x1, %ecx
+00000001000087da	callq	_fwp_write
+00000001000087df	movq	-0x20(%rbp), %rdi
+00000001000087e3	testq	%rdi, %rdi
+00000001000087e6	je	0x1000087ff
+00000001000087e8	movq	-0x18(%rbp), %rdx
+00000001000087ec	movl	$0x1, %esi
+00000001000087f1	movq	%rbx, %rcx
+00000001000087f4	callq	0x10000aa38                     ## symbol stub for: _fwrite
+00000001000087f9	movq	-0x20(%rbp), %rdi
+00000001000087fd	jmp	0x100008801
+00000001000087ff	xorl	%edi, %edi
+0000000100008801	callq	0x10000aa32                     ## symbol stub for: _free
+0000000100008806	addq	$0x18, %rsp
+000000010000880a	popq	%rbx
+000000010000880b	popq	%rbp
+000000010000880c	retq
+000000010000880d	nopl	(%rax)
+_fwp_write:
+0000000100008810	pushq	%rbp
+0000000100008811	movq	%rsp, %rbp
+0000000100008814	pushq	%r15
+0000000100008816	pushq	%r14
+0000000100008818	pushq	%r13
+000000010000881a	pushq	%r12
+000000010000881c	pushq	%rbx
+000000010000881d	subq	$0x228, %rsp                    ## imm = 0x228
+0000000100008824	movq	%rdi, -0x238(%rbp)
+000000010000882b	movq	0x47f6(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008832	movq	(%rax), %rax
+0000000100008835	movq	%rax, -0x30(%rbp)
+0000000100008839	movl	(%rdx), %eax
+000000010000883b	cmpq	$0x19, %rax
+000000010000883f	ja	0x100008e58
+0000000100008845	movq	%rdx, %r13
+0000000100008848	movq	%rsi, %r15
+000000010000884b	leaq	0x852(%rip), %rdx
+0000000100008852	movslq	(%rdx,%rax,4), %rsi
+0000000100008856	addq	%rdx, %rsi
+0000000100008859	movq	%r13, -0x240(%rbp)
+0000000100008860	jmpq	*%rsi
+0000000100008862	leaq	0x32c3(%rip), %rdx              ## literal pool for: "%lld"
+0000000100008869	jmp	0x100008872
+000000010000886b	leaq	0x32bf(%rip), %rdx              ## literal pool for: "%llu"
+0000000100008872	movq	%r15, %rcx
+0000000100008875	leaq	-0x230(%rbp), %r15
+000000010000887c	movl	$0x200, %esi                    ## imm = 0x200
+0000000100008881	movq	%r15, %rdi
+0000000100008884	xorl	%eax, %eax
+0000000100008886	callq	0x10000aac8                     ## symbol stub for: _snprintf
+000000010000888b	movq	-0x238(%rbp), %rdi
+0000000100008892	movq	%r15, %rsi
+0000000100008895	jmp	0x100008e53
+000000010000889a	cmpl	$0x13, %eax
+000000010000889d	leaq	0x32be(%rip), %rax              ## literal pool for: "set{"
+00000001000088a4	leaq	0x32bc(%rip), %rsi              ## literal pool for: "map{"
+00000001000088ab	cmoveq	%rax, %rsi
+00000001000088af	movq	-0x238(%rbp), %rdi
+00000001000088b6	callq	_buf_puts
+00000001000088bb	cmpq	$0x0, (%r15)
+00000001000088bf	je	0x1000089a3
+00000001000088c5	movq	-0x240(%rbp), %r14
+00000001000088cc	movq	0x38(%r14), %rdx
+00000001000088d0	movq	0x8(%r15), %rsi
+00000001000088d4	movq	-0x238(%rbp), %rbx
+00000001000088db	movq	%rbx, %rdi
+00000001000088de	xorl	%ecx, %ecx
+00000001000088e0	callq	_fwp_write
+00000001000088e5	cmpl	$0x12, (%r14)
+00000001000088e9	jne	0x10000890c
+00000001000088eb	leaq	0x327a(%rip), %rsi              ## literal pool for: ": "
+00000001000088f2	movq	%rbx, %rdi
+00000001000088f5	callq	_buf_puts
+00000001000088fa	movq	0x10(%r15), %rsi
+00000001000088fe	movq	0x40(%r14), %rdx
+0000000100008902	movq	%rbx, %rdi
+0000000100008905	xorl	%ecx, %ecx
+0000000100008907	callq	_fwp_write
+000000010000890c	cmpq	$0x2, (%r15)
+0000000100008910	jb	0x1000089a3
+0000000100008916	leaq	0x20(%r15), %rbx
+000000010000891a	movl	$0x1, %r14d
+0000000100008920	movq	-0x240(%rbp), %r12
+0000000100008927	jmp	0x100008940
+0000000100008929	nopl	(%rax)
+0000000100008930	incq	%r14
+0000000100008933	addq	$0x10, %rbx
+0000000100008937	movq	%r13, %r15
+000000010000893a	cmpq	(%r13), %r14
+000000010000893e	jae	0x1000089a3
+0000000100008940	movq	%r15, %r13
+0000000100008943	movq	-0x238(%rbp), %r15
+000000010000894a	movq	%r15, %rdi
+000000010000894d	leaq	0x3153(%rip), %rsi              ## literal pool for: ", "
+0000000100008954	callq	_buf_puts
+0000000100008959	movq	-0x8(%rbx), %rsi
+000000010000895d	movq	0x38(%r12), %rdx
+0000000100008962	movq	%r15, %rdi
+0000000100008965	xorl	%ecx, %ecx
+0000000100008967	callq	_fwp_write
+000000010000896c	cmpl	$0x12, (%r12)
+0000000100008971	jne	0x100008930
+0000000100008973	movq	-0x238(%rbp), %r15
+000000010000897a	movq	%r15, %rdi
+000000010000897d	leaq	0x31e8(%rip), %rsi              ## literal pool for: ": "
+0000000100008984	callq	_buf_puts
+0000000100008989	movq	(%rbx), %rsi
+000000010000898c	movq	-0x240(%rbp), %rax
+0000000100008993	movq	0x40(%rax), %rdx
+0000000100008997	movq	%r15, %rdi
+000000010000899a	xorl	%ecx, %ecx
+000000010000899c	callq	_fwp_write
+00000001000089a1	jmp	0x100008930
+00000001000089a3	movq	0x467e(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+00000001000089aa	movq	(%rax), %rax
+00000001000089ad	cmpq	-0x30(%rbp), %rax
+00000001000089b1	movq	-0x238(%rbp), %rdi
+00000001000089b8	jne	0x10000909f
+00000001000089be	movl	$0x7d, %esi
+00000001000089c3	jmp	0x100009024
+00000001000089c8	movq	0x8(%r13), %r12
+00000001000089cc	testq	%r12, %r12
+00000001000089cf	je	0x100008efc
+00000001000089d5	leaq	0x30f4(%rip), %rsi              ## literal pool for: "Duration"
+00000001000089dc	movq	%r12, %rdi
+00000001000089df	callq	0x10000aada                     ## symbol stub for: _strcmp
+00000001000089e4	testl	%eax, %eax
+00000001000089e6	je	0x10000905d
+00000001000089ec	leaq	0x10(%r13), %rbx
+00000001000089f0	movq	-0x238(%rbp), %r14
+00000001000089f7	movq	%r14, %rdi
+00000001000089fa	movq	%r12, %rsi
+00000001000089fd	callq	_buf_puts
+0000000100008a02	movq	%r14, %rdi
+0000000100008a05	movl	$0x20, %esi
+0000000100008a0a	callq	_buf_putc
+0000000100008a0f	xorl	%r13d, %r13d
+0000000100008a12	jmp	0x100008f1b
+0000000100008a17	movq	%r15, %rdi
+0000000100008a1a	callq	_fwp_tag
+0000000100008a1f	movq	0x18(%r13), %rcx
+0000000100008a23	movl	%eax, %ebx
+0000000100008a25	movq	(%rcx,%rbx,8), %rsi
+0000000100008a29	movq	-0x238(%rbp), %rdi
+0000000100008a30	callq	_buf_puts
+0000000100008a35	movq	0x28(%r13), %rax
+0000000100008a39	cmpl	$0x0, (%rax,%rbx,4)
+0000000100008a3d	jle	0x100008e58
+0000000100008a43	movq	%rbx, %rcx
+0000000100008a46	xorl	%ebx, %ebx
+0000000100008a48	movq	%r15, -0x248(%rbp)
+0000000100008a4f	jmp	0x100008a95
+0000000100008a51	nopw	%cs:(%rax,%rax)
+0000000100008a60	movq	%r15, %rdi
+0000000100008a63	movq	%r12, %rsi
+0000000100008a66	movq	%r13, %rdx
+0000000100008a69	xorl	%ecx, %ecx
+0000000100008a6b	callq	_fwp_write
+0000000100008a70	incq	%rbx
+0000000100008a73	movq	-0x240(%rbp), %r13
+0000000100008a7a	movq	0x28(%r13), %rax
+0000000100008a7e	movq	%r14, %rcx
+0000000100008a81	movslq	(%rax,%r14,4), %rax
+0000000100008a85	cmpq	%rax, %rbx
+0000000100008a88	movq	-0x248(%rbp), %r15
+0000000100008a8f	jge	0x100008e58
+0000000100008a95	movq	0x8(%r15,%rbx,8), %r12
+0000000100008a9a	movq	0x30(%r13), %rax
+0000000100008a9e	movq	%rcx, %r14
+0000000100008aa1	movq	(%rax,%rcx,8), %rax
+0000000100008aa5	movq	(%rax,%rbx,8), %r13
+0000000100008aa9	movq	-0x238(%rbp), %r15
+0000000100008ab0	movq	%r15, %rdi
+0000000100008ab3	movl	$0x20, %esi
+0000000100008ab8	callq	_buf_putc
+0000000100008abd	movq	%r12, %rdi
+0000000100008ac0	movq	%r13, %rsi
+0000000100008ac3	callq	_fwp_needs_parens
+0000000100008ac8	testl	%eax, %eax
+0000000100008aca	je	0x100008a60
+0000000100008acc	movq	%r15, %rdi
+0000000100008acf	movl	$0x28, %esi
+0000000100008ad4	callq	_buf_putc
+0000000100008ad9	movq	%r15, %rdi
+0000000100008adc	movq	%r12, %rsi
+0000000100008adf	movq	%r13, %rdx
+0000000100008ae2	xorl	%ecx, %ecx
+0000000100008ae4	callq	_fwp_write
+0000000100008ae9	movq	%r15, %rdi
+0000000100008aec	movl	$0x29, %esi
+0000000100008af1	callq	_buf_putc
+0000000100008af6	jmp	0x100008a70
+0000000100008afb	movq	%r15, %rdi
+0000000100008afe	callq	_fwp_f64
+0000000100008b03	leaq	-0x230(%rbp), %r14
+0000000100008b0a	movq	%r14, %rdi
+0000000100008b0d	callq	_fwp_fmt_f64
+0000000100008b12	jmp	0x100008e49
+0000000100008b17	movq	-0x238(%rbp), %rbx
+0000000100008b1e	movq	%rbx, %rdi
+0000000100008b21	movl	$0x3c, %esi
+0000000100008b26	callq	_buf_putc
+0000000100008b2b	movq	0x8(%r13), %rsi
+0000000100008b2f	movq	%rbx, %rdi
+0000000100008b32	jmp	0x100008ed6
+0000000100008b37	movq	0x44ea(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008b3e	movq	(%rax), %rax
+0000000100008b41	cmpq	-0x30(%rbp), %rax
+0000000100008b45	movq	-0x238(%rbp), %rdi
+0000000100008b4c	jne	0x10000909f
+0000000100008b52	leaq	0x2fe8(%rip), %rsi              ## literal pool for: "<opaque>"
+0000000100008b59	jmp	0x100008ea0
+0000000100008b5e	leaq	0x8(%r15), %rsi
+0000000100008b62	movq	(%r15), %rdx
+0000000100008b65	movq	0x44bc(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008b6c	movq	(%rax), %rax
+0000000100008b6f	testl	%ecx, %ecx
+0000000100008b71	je	0x10000903a
+0000000100008b77	cmpq	-0x30(%rbp), %rax
+0000000100008b7b	movq	-0x238(%rbp), %rdi
+0000000100008b82	jne	0x10000909f
+0000000100008b88	addq	$0x228, %rsp                    ## imm = 0x228
+0000000100008b8f	popq	%rbx
+0000000100008b90	popq	%r12
+0000000100008b92	popq	%r13
+0000000100008b94	popq	%r14
+0000000100008b96	popq	%r15
+0000000100008b98	popq	%rbp
+0000000100008b99	jmp	_buf_put
+0000000100008b9e	movq	%r15, %rdi
+0000000100008ba1	callq	_fwp_u128
+0000000100008ba6	leaq	-0x230(%rbp), %r14
+0000000100008bad	movq	%r14, %rdi
+0000000100008bb0	movq	%rax, %rsi
+0000000100008bb3	callq	_fwp_fmt_u128
+0000000100008bb8	jmp	0x100008e49
+0000000100008bbd	movq	%r15, %rdi
+0000000100008bc0	callq	_fwp_u128
+0000000100008bc5	leaq	-0x230(%rbp), %r14
+0000000100008bcc	movq	%r14, %rdi
+0000000100008bcf	movq	%rax, %rsi
+0000000100008bd2	callq	_fwp_fmt_i128
+0000000100008bd7	jmp	0x100008e49
+0000000100008bdc	movq	-0x238(%rbp), %r12
+0000000100008be3	movq	%r12, %rdi
+0000000100008be6	movl	$0x5b, %esi
+0000000100008beb	callq	_buf_putc
+0000000100008bf0	testq	%r15, %r15
+0000000100008bf3	je	0x100008c46
+0000000100008bf5	movq	0x38(%r13), %rdx
+0000000100008bf9	movq	0x8(%r15), %rsi
+0000000100008bfd	movq	%r12, %rdi
+0000000100008c00	xorl	%ecx, %ecx
+0000000100008c02	callq	_fwp_write
+0000000100008c07	movq	0x10(%r15), %rbx
+0000000100008c0b	testq	%rbx, %rbx
+0000000100008c0e	je	0x100008c46
+0000000100008c10	leaq	0x2e90(%rip), %r14              ## literal pool for: ", "
+0000000100008c17	nopw	(%rax,%rax)
+0000000100008c20	movq	%r12, %rdi
+0000000100008c23	movq	%r14, %rsi
+0000000100008c26	callq	_buf_puts
+0000000100008c2b	movq	0x8(%rbx), %rsi
+0000000100008c2f	movq	0x38(%r13), %rdx
+0000000100008c33	movq	%r12, %rdi
+0000000100008c36	xorl	%ecx, %ecx
+0000000100008c38	callq	_fwp_write
+0000000100008c3d	movq	0x10(%rbx), %rbx
+0000000100008c41	testq	%rbx, %rbx
+0000000100008c44	jne	0x100008c20
+0000000100008c46	movq	0x43db(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008c4d	movq	(%rax), %rax
+0000000100008c50	cmpq	-0x30(%rbp), %rax
+0000000100008c54	jne	0x10000909f
+0000000100008c5a	movq	%r12, %rdi
+0000000100008c5d	jmp	0x100008e28
+0000000100008c62	movl	0x48(%r13), %edx
+0000000100008c66	movq	0x43bb(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008c6d	movq	(%rax), %rax
+0000000100008c70	cmpq	-0x30(%rbp), %rax
+0000000100008c74	movq	-0x238(%rbp), %rdi
+0000000100008c7b	jne	0x10000909f
+0000000100008c81	movq	%r15, %rsi
+0000000100008c84	addq	$0x228, %rsp                    ## imm = 0x228
+0000000100008c8b	popq	%rbx
+0000000100008c8c	popq	%r12
+0000000100008c8e	popq	%r13
+0000000100008c90	popq	%r14
+0000000100008c92	popq	%r15
+0000000100008c94	popq	%rbp
+0000000100008c95	jmp	_fwp_trits
+0000000100008c9a	cmpq	$-0x1, %r15
+0000000100008c9e	leaq	0x2e16(%rip), %rax              ## literal pool for: "-1"
+0000000100008ca5	leaq	0x22d6(%rip), %rcx              ## literal pool for: "0"
+0000000100008cac	cmoveq	%rax, %rcx
+0000000100008cb0	cmpq	$0x1, %r15
+0000000100008cb4	leaq	0x2dfd(%rip), %rsi              ## literal pool for: "+1"
+0000000100008cbb	cmovneq	%rcx, %rsi
+0000000100008cbf	movq	0x4362(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008cc6	movq	(%rax), %rax
+0000000100008cc9	cmpq	-0x30(%rbp), %rax
+0000000100008ccd	movq	-0x238(%rbp), %rdi
+0000000100008cd4	je	0x100008ea0
+0000000100008cda	jmp	0x10000909f
+0000000100008cdf	leaq	0x2e75(%rip), %rsi              ## literal pool for: "array["
+0000000100008ce6	movq	-0x238(%rbp), %r14
+0000000100008ced	movq	%r14, %rdi
+0000000100008cf0	callq	_buf_puts
+0000000100008cf5	cmpq	$0x0, (%r15)
+0000000100008cf9	je	0x100008e11
+0000000100008cff	movq	0x38(%r13), %rdx
+0000000100008d03	movq	0x8(%r15), %rsi
+0000000100008d07	movq	%r14, %rdi
+0000000100008d0a	xorl	%ecx, %ecx
+0000000100008d0c	callq	_fwp_write
+0000000100008d11	cmpq	$0x2, (%r15)
+0000000100008d15	jb	0x100008e11
+0000000100008d1b	movl	$0x1, %ebx
+0000000100008d20	leaq	0x2d80(%rip), %r12              ## literal pool for: ", "
+0000000100008d27	nopw	(%rax,%rax)
+0000000100008d30	movq	%r14, %rdi
+0000000100008d33	movq	%r12, %rsi
+0000000100008d36	callq	_buf_puts
+0000000100008d3b	movq	0x8(%r15,%rbx,8), %rsi
+0000000100008d40	movq	0x38(%r13), %rdx
+0000000100008d44	movq	%r14, %rdi
+0000000100008d47	xorl	%ecx, %ecx
+0000000100008d49	callq	_fwp_write
+0000000100008d4e	incq	%rbx
+0000000100008d51	cmpq	(%r15), %rbx
+0000000100008d54	jb	0x100008d30
+0000000100008d56	jmp	0x100008e11
+0000000100008d5b	leaq	0x2def(%rip), %rsi              ## literal pool for: "bytes["
+0000000100008d62	movq	-0x238(%rbp), %r14
+0000000100008d69	movq	%r14, %rdi
+0000000100008d6c	callq	_buf_puts
+0000000100008d71	cmpq	$0x0, (%r15)
+0000000100008d75	je	0x100008e11
+0000000100008d7b	movzbl	0x8(%r15), %ecx
+0000000100008d80	leaq	0x2dd1(%rip), %rdx              ## literal pool for: "%u"
+0000000100008d87	leaq	-0x230(%rbp), %rbx
+0000000100008d8e	movl	$0x200, %esi                    ## imm = 0x200
+0000000100008d93	movq	%rbx, %rdi
+0000000100008d96	xorl	%eax, %eax
+0000000100008d98	callq	0x10000aac8                     ## symbol stub for: _snprintf
+0000000100008d9d	movq	%r14, %rdi
+0000000100008da0	movq	%rbx, %rsi
+0000000100008da3	callq	_buf_puts
+0000000100008da8	cmpq	$0x2, (%r15)
+0000000100008dac	jb	0x100008e11
+0000000100008dae	movl	$0x9, %ebx
+0000000100008db3	leaq	0x2d9e(%rip), %r12              ## literal pool for: "%u"
+0000000100008dba	leaq	-0x230(%rbp), %r13
+0000000100008dc1	nopw	%cs:(%rax,%rax)
+0000000100008dd0	movq	%r14, %rdi
+0000000100008dd3	leaq	0x2ccd(%rip), %rsi              ## literal pool for: ", "
+0000000100008dda	callq	_buf_puts
+0000000100008ddf	movzbl	(%r15,%rbx), %ecx
+0000000100008de4	movl	$0x200, %esi                    ## imm = 0x200
+0000000100008de9	movq	%r13, %rdi
+0000000100008dec	movq	%r12, %rdx
+0000000100008def	xorl	%eax, %eax
+0000000100008df1	callq	0x10000aac8                     ## symbol stub for: _snprintf
+0000000100008df6	movq	%r14, %rdi
+0000000100008df9	movq	%r13, %rsi
+0000000100008dfc	callq	_buf_puts
+0000000100008e01	leaq	0x1(%rbx), %rax
+0000000100008e05	addq	$-0x7, %rbx
+0000000100008e09	cmpq	(%r15), %rbx
+0000000100008e0c	movq	%rax, %rbx
+0000000100008e0f	jb	0x100008dd0
+0000000100008e11	movq	0x4210(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008e18	movq	(%rax), %rax
+0000000100008e1b	cmpq	-0x30(%rbp), %rax
+0000000100008e1f	jne	0x10000909f
+0000000100008e25	movq	%r14, %rdi
+0000000100008e28	movl	$0x5d, %esi
+0000000100008e2d	jmp	0x100009024
+0000000100008e32	movq	%r15, %rdi
+0000000100008e35	callq	_fwp_f32
+0000000100008e3a	leaq	-0x230(%rbp), %r14
+0000000100008e41	movq	%r14, %rdi
+0000000100008e44	callq	_fwp_fmt_f32
+0000000100008e49	movq	-0x238(%rbp), %rdi
+0000000100008e50	movq	%r14, %rsi
+0000000100008e53	callq	_buf_puts
+0000000100008e58	movq	0x41c9(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008e5f	movq	(%rax), %rax
+0000000100008e62	cmpq	-0x30(%rbp), %rax
+0000000100008e66	jne	0x10000909f
+0000000100008e6c	addq	$0x228, %rsp                    ## imm = 0x228
+0000000100008e73	popq	%rbx
+0000000100008e74	popq	%r12
+0000000100008e76	popq	%r13
+0000000100008e78	popq	%r14
+0000000100008e7a	popq	%r15
+0000000100008e7c	popq	%rbp
+0000000100008e7d	retq
+0000000100008e7e	movq	0x41a3(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008e85	movq	(%rax), %rax
+0000000100008e88	cmpq	-0x30(%rbp), %rax
+0000000100008e8c	movq	-0x238(%rbp), %rdi
+0000000100008e93	jne	0x10000909f
+0000000100008e99	leaq	0x2c96(%rip), %rsi              ## literal pool for: "<function>"
+0000000100008ea0	addq	$0x228, %rsp                    ## imm = 0x228
+0000000100008ea7	popq	%rbx
+0000000100008ea8	popq	%r12
+0000000100008eaa	popq	%r13
+0000000100008eac	popq	%r14
+0000000100008eae	popq	%r15
+0000000100008eb0	popq	%rbp
+0000000100008eb1	jmp	_buf_puts
+0000000100008eb6	leaq	0x2c8d(%rip), %rsi              ## literal pool for: "<file "
+0000000100008ebd	movq	-0x238(%rbp), %rbx
+0000000100008ec4	movq	%rbx, %rdi
+0000000100008ec7	callq	_buf_puts
+0000000100008ecc	addq	$0x10, %r15
+0000000100008ed0	movq	%rbx, %rdi
+0000000100008ed3	movq	%r15, %rsi
+0000000100008ed6	callq	_buf_puts
+0000000100008edb	movq	0x4146(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100008ee2	movq	(%rax), %rax
+0000000100008ee5	cmpq	-0x30(%rbp), %rax
+0000000100008ee9	jne	0x10000909f
+0000000100008eef	movq	%rbx, %rdi
+0000000100008ef2	movl	$0x3e, %esi
+0000000100008ef7	jmp	0x100009024
+0000000100008efc	cmpl	$0x0, 0x10(%r13)
+0000000100008f01	je	0x10000907c
+0000000100008f07	leaq	0x10(%r13), %rbx
+0000000100008f0b	cmpl	$0x0, 0x48(%r13)
+0000000100008f10	setne	%r13b
+0000000100008f14	movq	-0x238(%rbp), %r14
+0000000100008f1b	testb	%r13b, %r13b
+0000000100008f1e	movl	$0x28, %eax
+0000000100008f23	movl	$0x7b, %esi
+0000000100008f28	cmovnel	%eax, %esi
+0000000100008f2b	movq	%r14, %rdi
+0000000100008f2e	callq	_buf_putc
+0000000100008f33	cmpl	$0x0, (%rbx)
+0000000100008f36	jle	0x100009001
+0000000100008f3c	testb	%r13b, %r13b
+0000000100008f3f	jne	0x100008f66
+0000000100008f41	movq	-0x240(%rbp), %rax
+0000000100008f48	movq	0x18(%rax), %rax
+0000000100008f4c	movq	(%rax), %rsi
+0000000100008f4f	movq	%r14, %rdi
+0000000100008f52	callq	_buf_puts
+0000000100008f57	leaq	0x2c14(%rip), %rsi              ## literal pool for: " = "
+0000000100008f5e	movq	%r14, %rdi
+0000000100008f61	callq	_buf_puts
+0000000100008f66	movq	0x8(%r15), %rsi
+0000000100008f6a	movq	-0x240(%rbp), %rbx
+0000000100008f71	movq	0x20(%rbx), %rax
+0000000100008f75	movq	(%rax), %rdx
+0000000100008f78	movq	%r14, %rdi
+0000000100008f7b	xorl	%ecx, %ecx
+0000000100008f7d	callq	_fwp_write
+0000000100008f82	cmpl	$0x2, 0x10(%rbx)
+0000000100008f86	jl	0x100009001
+0000000100008f88	movl	$0x1, %ebx
+0000000100008f8d	movq	-0x240(%rbp), %r12
+0000000100008f94	jmp	0x100008fc5
+0000000100008f96	nopw	%cs:(%rax,%rax)
+0000000100008fa0	movq	0x8(%r15,%rbx,8), %rsi
+0000000100008fa5	movq	0x20(%r12), %rax
+0000000100008faa	movq	(%rax,%rbx,8), %rdx
+0000000100008fae	movq	%r14, %rdi
+0000000100008fb1	xorl	%ecx, %ecx
+0000000100008fb3	callq	_fwp_write
+0000000100008fb8	incq	%rbx
+0000000100008fbb	movslq	0x10(%r12), %rax
+0000000100008fc0	cmpq	%rax, %rbx
+0000000100008fc3	jge	0x100009001
+0000000100008fc5	movq	%r14, %rdi
+0000000100008fc8	leaq	0x2ad8(%rip), %rsi              ## literal pool for: ", "
+0000000100008fcf	callq	_buf_puts
+0000000100008fd4	testb	%r13b, %r13b
+0000000100008fd7	jne	0x100008fa0
+0000000100008fd9	movq	-0x240(%rbp), %rax
+0000000100008fe0	movq	0x18(%rax), %rax
+0000000100008fe4	movq	(%rax,%rbx,8), %rsi
+0000000100008fe8	movq	%r14, %rdi
+0000000100008feb	callq	_buf_puts
+0000000100008ff0	movq	%r14, %rdi
+0000000100008ff3	leaq	0x2b78(%rip), %rsi              ## literal pool for: " = "
+0000000100008ffa	callq	_buf_puts
+0000000100008fff	jmp	0x100008fa0
+0000000100009001	testb	%r13b, %r13b
+0000000100009004	movl	$0x29, %eax
+0000000100009009	movl	$0x7d, %esi
+000000010000900e	cmovnel	%eax, %esi
+0000000100009011	movq	0x4010(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100009018	movq	(%rax), %rax
+000000010000901b	cmpq	-0x30(%rbp), %rax
+000000010000901f	jne	0x10000909f
+0000000100009021	movq	%r14, %rdi
+0000000100009024	addq	$0x228, %rsp                    ## imm = 0x228
+000000010000902b	popq	%rbx
+000000010000902c	popq	%r12
+000000010000902e	popq	%r13
+0000000100009030	popq	%r14
+0000000100009032	popq	%r15
+0000000100009034	popq	%rbp
+0000000100009035	jmp	_buf_putc
+000000010000903a	cmpq	-0x30(%rbp), %rax
+000000010000903e	movq	-0x238(%rbp), %rdi
+0000000100009045	jne	0x10000909f
+0000000100009047	addq	$0x228, %rsp                    ## imm = 0x228
+000000010000904e	popq	%rbx
+000000010000904f	popq	%r12
+0000000100009051	popq	%r13
+0000000100009053	popq	%r14
+0000000100009055	popq	%r15
+0000000100009057	popq	%rbp
+0000000100009058	jmp	_fwp_escape
+000000010000905d	movq	0x8(%r15), %rsi
+0000000100009061	movq	%rsi, %rdx
+0000000100009064	sarq	$0x3f, %rdx
+0000000100009068	leaq	-0x230(%rbp), %r14
+000000010000906f	movq	%r14, %rdi
+0000000100009072	callq	_fwp_fmt_duration
+0000000100009077	jmp	0x100008e49
+000000010000907c	movq	0x3fa5(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100009083	movq	(%rax), %rax
+0000000100009086	cmpq	-0x30(%rbp), %rax
+000000010000908a	movq	-0x238(%rbp), %rdi
+0000000100009091	jne	0x10000909f
+0000000100009093	leaq	0x2ad5(%rip), %rsi              ## literal pool for: "()"
+000000010000909a	jmp	0x100008ea0
+000000010000909f	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+00000001000090a4	movl	$0xbefffff7, %esi               ## imm = 0xBEFFFFF7
+00000001000090a9	idivl	%edi
+00000001000090ab	.byte 0xff #bad opcode
+00000001000090ac	movl	$0xbefffff7, %esi               ## imm = 0xBEFFFFF7
+00000001000090b1	idivl	%edi
+00000001000090b3	lcalll	*(%rcx)
+00000001000090b5	sti
+00000001000090b6	.byte 0xff #bad opcode
+00000001000090b7	incl	%edi
+00000001000090b9	idivl	%edi
+00000001000090bb	incl	%edi
+00000001000090bd	idivl	%edi
+00000001000090bf	incl	%edi
+00000001000090c1	idivl	%edi
+00000001000090c3	incl	%edi
+00000001000090c5	idivl	%edi
+00000001000090c7	.byte 0xff #bad opcode
+00000001000090c8	cli
+00000001000090c9	cli
+00000001000090ca	.byte 0xff #bad opcode
+00000001000090cb	decl	0x57fffffd(%rsi)
+00000001000090d1	cli
+00000001000090d2	.byte 0xff #bad opcode
+00000001000090d3	.byte 0xff #bad opcode
+00000001000090d4	movl	$0xb7fffffa, %edx               ## imm = 0xB7FFFFFA
+00000001000090d9	cld
+00000001000090da	.byte 0xff #bad opcode
+00000001000090db	pushq	-0x7(%rbx)
+00000001000090de	.byte 0xff #bad opcode
+00000001000090df	.byte 0xff #bad opcode
+00000001000090e0	cmpb	%bh, %bl
+00000001000090e2	.byte 0xff #bad opcode
+00000001000090e3	jmpq	*(%rcx,%rdi,8)
+00000001000090e6	.byte 0xff #bad opcode
+00000001000090e7	.byte 0xff #bad opcode
+00000001000090e8	cmpl	%esp, %edi
+00000001000090ea	.byte 0xff #bad opcode
+00000001000090eb	pushq	%rsi
+00000001000090ed	idivl	%edi
+00000001000090ef	pushq	%rsi
+00000001000090f1	idivl	%edi
+00000001000090f3	.byte 0xff #bad opcode
+00000001000090f4	movl	$0xf6fffffb, %esi               ## imm = 0xF6FFFFFB
+00000001000090f9	sti
+00000001000090fa	.byte 0xff #bad opcode
+00000001000090fb	.byte 0xff #bad opcode
+00000001000090fc	.byte 0xda #bad opcode
+00000001000090fd	std
+00000001000090fe	.byte 0xff #bad opcode
+00000001000090ff	callq	*(%rdx)
+0000000100009101	.byte 0xfe #bad opcode
+0000000100009102	.byte 0xff #bad opcode
+0000000100009103	callq	*0x73fffffa(%rbx)
+0000000100009109	cli
+000000010000910a	.byte 0xff #bad opcode
+000000010000910b	decl	(%rdi)
+000000010000910d	.byte 0x1f #bad opcode
+000000010000910e	addb	%dl, 0x48(%rbp)
+0000000100009112	movl	%esp, %ebp
+0000000100009114	testq	%rdx, %rdx
+0000000100009117	js	0x10000911f
+0000000100009119	popq	%rbp
+000000010000911a	jmp	_fwp_fmt_u128
+000000010000911f	movb	$0x2d, (%rdi)
+0000000100009122	incq	%rdi
+0000000100009125	xorl	%eax, %eax
+0000000100009127	negq	%rsi
+000000010000912a	sbbq	%rdx, %rax
+000000010000912d	movq	%rax, %rdx
+0000000100009130	popq	%rbp
+0000000100009131	jmp	_fwp_fmt_u128
+0000000100009136	nopw	%cs:(%rax,%rax)
+_fwp_fmt_u128:
+0000000100009140	pushq	%rbp
+0000000100009141	movq	%rsp, %rbp
+0000000100009144	pushq	%r14
+0000000100009146	pushq	%rbx
+0000000100009147	subq	$0x50, %rsp
+000000010000914b	movq	0x3ed6(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100009152	movq	(%rax), %rax
+0000000100009155	movq	%rax, -0x18(%rbp)
+0000000100009159	movq	%rsi, %rax
+000000010000915c	orq	%rdx, %rax
+000000010000915f	je	0x10000920c
+0000000100009165	movq	%rdx, %rcx
+0000000100009168	xorl	%r10d, %r10d
+000000010000916b	movabsq	$-0x3333333333333333, %r11      ## imm = 0xCCCCCCCCCCCCCCCD
+0000000100009175	movabsq	$-0x3333333333333334, %rbx      ## imm = 0xCCCCCCCCCCCCCCCC
+000000010000917f	movq	%rdx, %r14
+0000000100009182	nopw	%cs:(%rax,%rax)
+0000000100009190	movq	%rcx, %r8
+0000000100009193	shldq	$0x3f, %rsi, %r8
+0000000100009198	shrq	%r14
+000000010000919b	movq	%r8, %r9
+000000010000919e	addq	%r14, %r9
+00000001000091a1	adcq	$0x0, %r9
+00000001000091a5	movq	%r9, %rax
+00000001000091a8	mulq	%r11
+00000001000091ab	shrq	$0x2, %rdx
+00000001000091af	leaq	(%rdx,%rdx,4), %rax
+00000001000091b3	subq	%rax, %r9
+00000001000091b6	subq	%r9, %r8
+00000001000091b9	sbbq	$0x0, %r14
+00000001000091bd	movq	%r8, %r9
+00000001000091c0	imulq	%rbx, %r9
+00000001000091c4	movq	%r8, %rax
+00000001000091c7	mulq	%r11
+00000001000091ca	addq	%r9, %rdx
+00000001000091cd	imulq	%r11, %r14
+00000001000091d1	addq	%rdx, %r14
+00000001000091d4	movq	%rax, %rdx
+00000001000091d7	addq	%rax, %rdx
+00000001000091da	leaq	(%rdx,%rdx,4), %rdx
+00000001000091de	movl	%esi, %r8d
+00000001000091e1	subl	%edx, %r8d
+00000001000091e4	orb	$0x30, %r8b
+00000001000091e8	movb	%r8b, -0x60(%rbp,%r10)
+00000001000091ed	incq	%r10
+00000001000091f0	cmpq	$0xa, %rsi
+00000001000091f4	sbbq	$0x0, %rcx
+00000001000091f8	movq	%rax, %rsi
+00000001000091fb	movq	%r14, %rcx
+00000001000091fe	jae	0x100009190
+0000000100009200	testl	%r10d, %r10d
+0000000100009203	jg	0x100009216
+0000000100009205	xorl	%eax, %eax
+0000000100009207	jmp	0x1000092f2
+000000010000920c	movb	$0x30, -0x60(%rbp)
+0000000100009210	movl	$0x1, %r10d
+0000000100009216	movl	%r10d, %eax
+0000000100009219	cmpq	$0x8, %rax
+000000010000921d	jae	0x100009229
+000000010000921f	xorl	%ecx, %ecx
+0000000100009221	movq	%rax, %rdx
+0000000100009224	jmp	0x1000092d2
+0000000100009229	cmpl	$0x20, %eax
+000000010000922c	jae	0x100009232
+000000010000922e	xorl	%ecx, %ecx
+0000000100009230	jmp	0x100009288
+0000000100009232	movl	%r10d, %edx
+0000000100009235	andl	$0x1f, %edx
+0000000100009238	movq	%rax, %rcx
+000000010000923b	subq	%rdx, %rcx
+000000010000923e	leaq	0x10(%rdi), %rsi
+0000000100009242	movdqa	0x1a06(%rip), %xmm0
+000000010000924a	movq	%rax, %r8
+000000010000924d	nopl	(%rax)
+0000000100009250	movdqu	-0x80(%rbp,%r8), %xmm1
+0000000100009257	movdqu	-0x70(%rbp,%r8), %xmm2
+000000010000925e	pshufb	%xmm0, %xmm2
+0000000100009263	pshufb	%xmm0, %xmm1
+0000000100009268	movdqu	%xmm2, -0x10(%rsi)
+000000010000926d	movdqu	%xmm1, (%rsi)
+0000000100009271	addq	$-0x20, %r8
+0000000100009275	addq	$0x20, %rsi
+0000000100009279	cmpq	%r8, %rdx
+000000010000927c	jne	0x100009250
+000000010000927e	testq	%rdx, %rdx
+0000000100009281	je	0x1000092f2
+0000000100009283	cmpl	$0x7, %edx
+0000000100009286	jbe	0x1000092d2
+0000000100009288	movq	%rcx, %rsi
+000000010000928b	movl	%r10d, %edx
+000000010000928e	andl	$0x7, %edx
+0000000100009291	movq	%rax, %rcx
+0000000100009294	subq	%rdx, %rcx
+0000000100009297	movq	%rax, %r8
+000000010000929a	subq	%rsi, %r8
+000000010000929d	addq	%rdi, %rsi
+00000001000092a0	movq	0x19b8(%rip), %xmm0
+00000001000092a8	nopl	(%rax,%rax)
+00000001000092b0	movq	-0x68(%rbp,%r8), %xmm1
+00000001000092b7	pshufb	%xmm0, %xmm1
+00000001000092bc	movq	%xmm1, (%rsi)
+00000001000092c0	addq	$-0x8, %r8
+00000001000092c4	addq	$0x8, %rsi
+00000001000092c8	cmpq	%r8, %rdx
+00000001000092cb	jne	0x1000092b0
+00000001000092cd	testq	%rdx, %rdx
+00000001000092d0	je	0x1000092f2
+00000001000092d2	leaq	-0x60(%rbp), %rsi
+00000001000092d6	addq	%rsi, %rdx
+00000001000092d9	decq	%rdx
+00000001000092dc	nopl	(%rax)
+00000001000092e0	movzbl	(%rdx), %esi
+00000001000092e3	movb	%sil, (%rdi,%rcx)
+00000001000092e7	incq	%rcx
+00000001000092ea	decq	%rdx
+00000001000092ed	cmpq	%rcx, %rax
+00000001000092f0	jne	0x1000092e0
+00000001000092f2	movb	$0x0, (%rdi,%rax)
+00000001000092f6	movq	0x3d2b(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+00000001000092fd	movq	(%rax), %rax
+0000000100009300	cmpq	-0x18(%rbp), %rax
+0000000100009304	jne	0x10000930f
+0000000100009306	addq	$0x50, %rsp
+000000010000930a	popq	%rbx
+000000010000930b	popq	%r14
+000000010000930d	popq	%rbp
+000000010000930e	retq
+000000010000930f	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100009314	nopw	%cs:(%rax,%rax)
+_fwp_fmt_f32:
+0000000100009320	pushq	%rbp
+0000000100009321	movq	%rsp, %rbp
+0000000100009324	pushq	%rbx
+0000000100009325	subq	$0x18, %rsp
+0000000100009329	movq	%rdi, %rbx
+000000010000932c	ucomiss	%xmm0, %xmm0
+000000010000932f	jp	0x1000094fe
+0000000100009335	movaps	%xmm0, %xmm1
+0000000100009338	movd	%xmm0, %eax
+000000010000933c	andl	$0x7fffffff, %eax               ## imm = 0x7FFFFFFF
+0000000100009341	cmpl	$0x7f800000, %eax               ## imm = 0x7F800000
+0000000100009346	je	0x1000094d8
+000000010000934c	xorps	%xmm0, %xmm0
+000000010000934f	cvtss2sd	%xmm1, %xmm0
+0000000100009353	movq	%rbx, %rdi
+0000000100009356	movsd	%xmm0, -0x18(%rbp)
+000000010000935b	movl	$0x1, %esi
+0000000100009360	movss	%xmm1, -0xc(%rbp)
+0000000100009365	callq	_fwp_format_g
+000000010000936a	movq	%rbx, %rdi
+000000010000936d	xorl	%esi, %esi
+000000010000936f	callq	0x10000aafe                     ## symbol stub for: _strtof
+0000000100009374	ucomiss	-0xc(%rbp), %xmm0
+0000000100009378	jne	0x100009380
+000000010000937a	jnp	0x1000094ca
+0000000100009380	movq	%rbx, %rdi
+0000000100009383	movsd	-0x18(%rbp), %xmm0
+0000000100009388	movl	$0x2, %esi
+000000010000938d	callq	_fwp_format_g
+0000000100009392	movq	%rbx, %rdi
+0000000100009395	xorl	%esi, %esi
+0000000100009397	callq	0x10000aafe                     ## symbol stub for: _strtof
+000000010000939c	ucomiss	-0xc(%rbp), %xmm0
+00000001000093a0	jne	0x1000093a8
+00000001000093a2	jnp	0x1000094ca
+00000001000093a8	movq	%rbx, %rdi
+00000001000093ab	movsd	-0x18(%rbp), %xmm0
+00000001000093b0	movl	$0x3, %esi
+00000001000093b5	callq	_fwp_format_g
+00000001000093ba	movq	%rbx, %rdi
+00000001000093bd	xorl	%esi, %esi
+00000001000093bf	callq	0x10000aafe                     ## symbol stub for: _strtof
+00000001000093c4	ucomiss	-0xc(%rbp), %xmm0
+00000001000093c8	jne	0x1000093d0
+00000001000093ca	jnp	0x1000094ca
+00000001000093d0	movq	%rbx, %rdi
+00000001000093d3	movsd	-0x18(%rbp), %xmm0
+00000001000093d8	movl	$0x4, %esi
+00000001000093dd	callq	_fwp_format_g
+00000001000093e2	movq	%rbx, %rdi
+00000001000093e5	xorl	%esi, %esi
+00000001000093e7	callq	0x10000aafe                     ## symbol stub for: _strtof
+00000001000093ec	ucomiss	-0xc(%rbp), %xmm0
+00000001000093f0	jne	0x1000093f8
+00000001000093f2	jnp	0x1000094ca
+00000001000093f8	movq	%rbx, %rdi
+00000001000093fb	movsd	-0x18(%rbp), %xmm0
+0000000100009400	movl	$0x5, %esi
+0000000100009405	callq	_fwp_format_g
+000000010000940a	movq	%rbx, %rdi
+000000010000940d	xorl	%esi, %esi
+000000010000940f	callq	0x10000aafe                     ## symbol stub for: _strtof
+0000000100009414	ucomiss	-0xc(%rbp), %xmm0
+0000000100009418	jne	0x100009420
+000000010000941a	jnp	0x1000094ca
+0000000100009420	movq	%rbx, %rdi
+0000000100009423	movsd	-0x18(%rbp), %xmm0
+0000000100009428	movl	$0x6, %esi
+000000010000942d	callq	_fwp_format_g
+0000000100009432	movq	%rbx, %rdi
+0000000100009435	xorl	%esi, %esi
+0000000100009437	callq	0x10000aafe                     ## symbol stub for: _strtof
+000000010000943c	ucomiss	-0xc(%rbp), %xmm0
+0000000100009440	jne	0x100009448
+0000000100009442	jnp	0x1000094ca
+0000000100009448	movq	%rbx, %rdi
+000000010000944b	movsd	-0x18(%rbp), %xmm0
+0000000100009450	movl	$0x7, %esi
+0000000100009455	callq	_fwp_format_g
+000000010000945a	movq	%rbx, %rdi
+000000010000945d	xorl	%esi, %esi
+000000010000945f	callq	0x10000aafe                     ## symbol stub for: _strtof
+0000000100009464	ucomiss	-0xc(%rbp), %xmm0
+0000000100009468	jne	0x10000946c
+000000010000946a	jnp	0x1000094ca
+000000010000946c	movq	%rbx, %rdi
+000000010000946f	movsd	-0x18(%rbp), %xmm0
+0000000100009474	movl	$0x8, %esi
+0000000100009479	callq	_fwp_format_g
+000000010000947e	movq	%rbx, %rdi
+0000000100009481	xorl	%esi, %esi
+0000000100009483	callq	0x10000aafe                     ## symbol stub for: _strtof
+0000000100009488	movss	-0xc(%rbp), %xmm1
+000000010000948d	ucomiss	%xmm1, %xmm0
+0000000100009490	jne	0x100009494
+0000000100009492	jnp	0x1000094ca
+0000000100009494	movq	%rbx, %rdi
+0000000100009497	movsd	-0x18(%rbp), %xmm0
+000000010000949c	movl	$0x9, %esi
+00000001000094a1	callq	_fwp_format_g
+00000001000094a6	movq	%rbx, %rdi
+00000001000094a9	xorl	%esi, %esi
+00000001000094ab	callq	0x10000aafe                     ## symbol stub for: _strtof
+00000001000094b0	ucomiss	-0xc(%rbp), %xmm0
+00000001000094b4	jne	0x1000094b8
+00000001000094b6	jnp	0x1000094ca
+00000001000094b8	movq	%rbx, %rdi
+00000001000094bb	movsd	-0x18(%rbp), %xmm0
+00000001000094c0	movl	$0x9, %esi
+00000001000094c5	callq	_fwp_format_g
+00000001000094ca	movq	%rbx, %rdi
+00000001000094cd	addq	$0x18, %rsp
+00000001000094d1	popq	%rbx
+00000001000094d2	popq	%rbp
+00000001000094d3	jmp	_fwp_finish_float
+00000001000094d8	xorps	%xmm0, %xmm0
+00000001000094db	ucomiss	%xmm0, %xmm1
+00000001000094de	leaq	0x2611(%rip), %rax              ## literal pool for: "inf"
+00000001000094e5	leaq	0x260e(%rip), %rsi              ## literal pool for: "-inf"
+00000001000094ec	cmovaq	%rax, %rsi
+00000001000094f0	movq	%rbx, %rdi
+00000001000094f3	addq	$0x18, %rsp
+00000001000094f7	popq	%rbx
+00000001000094f8	popq	%rbp
+00000001000094f9	jmp	0x10000aae0                     ## symbol stub for: _strcpy
+00000001000094fe	movl	$0x4e614e, (%rbx)               ## imm = 0x4E614E
+0000000100009504	addq	$0x18, %rsp
+0000000100009508	popq	%rbx
+0000000100009509	popq	%rbp
+000000010000950a	retq
+000000010000950b	nopl	(%rax,%rax)
+_fwp_fmt_f64:
+0000000100009510	pushq	%rbp
+0000000100009511	movq	%rsp, %rbp
+0000000100009514	pushq	%r14
+0000000100009516	pushq	%rbx
+0000000100009517	subq	$0x10, %rsp
+000000010000951b	movq	%rdi, %rbx
+000000010000951e	ucomisd	%xmm0, %xmm0
+0000000100009522	jp	0x1000095da
+0000000100009528	movapd	%xmm0, %xmm1
+000000010000952c	movq	%xmm0, %rax
+0000000100009531	movabsq	$0x7fffffffffffffff, %rcx       ## imm = 0x7FFFFFFFFFFFFFFF
+000000010000953b	andq	%rax, %rcx
+000000010000953e	movabsq	$0x7ff0000000000000, %rax       ## imm = 0x7FF0000000000000
+0000000100009548	cmpq	%rax, %rcx
+000000010000954b	je	0x1000095b0
+000000010000954d	movl	$0x1, %r14d
+0000000100009553	movsd	%xmm1, -0x18(%rbp)
+0000000100009558	nopl	(%rax,%rax)
+0000000100009560	movq	%rbx, %rdi
+0000000100009563	movapd	%xmm1, %xmm0
+0000000100009567	movl	%r14d, %esi
+000000010000956a	callq	_fwp_format_g
+000000010000956f	movq	%rbx, %rdi
+0000000100009572	xorl	%esi, %esi
+0000000100009574	callq	0x10000aaf8                     ## symbol stub for: _strtod
+0000000100009579	movsd	-0x18(%rbp), %xmm1
+000000010000957e	ucomisd	%xmm1, %xmm0
+0000000100009582	jne	0x100009586
+0000000100009584	jnp	0x1000095a0
+0000000100009586	incl	%r14d
+0000000100009589	cmpl	$0x12, %r14d
+000000010000958d	jne	0x100009560
+000000010000958f	movq	%rbx, %rdi
+0000000100009592	movapd	%xmm1, %xmm0
+0000000100009596	movl	$0x11, %esi
+000000010000959b	callq	_fwp_format_g
+00000001000095a0	movq	%rbx, %rdi
+00000001000095a3	addq	$0x10, %rsp
+00000001000095a7	popq	%rbx
+00000001000095a8	popq	%r14
+00000001000095aa	popq	%rbp
+00000001000095ab	jmp	_fwp_finish_float
+00000001000095b0	xorpd	%xmm0, %xmm0
+00000001000095b4	ucomisd	%xmm0, %xmm1
+00000001000095b8	leaq	0x2537(%rip), %rax              ## literal pool for: "inf"
+00000001000095bf	leaq	0x2534(%rip), %rsi              ## literal pool for: "-inf"
+00000001000095c6	cmovaq	%rax, %rsi
+00000001000095ca	movq	%rbx, %rdi
+00000001000095cd	addq	$0x10, %rsp
+00000001000095d1	popq	%rbx
+00000001000095d2	popq	%r14
+00000001000095d4	popq	%rbp
+00000001000095d5	jmp	0x10000aae0                     ## symbol stub for: _strcpy
+00000001000095da	movl	$0x4e614e, (%rbx)               ## imm = 0x4E614E
+00000001000095e0	addq	$0x10, %rsp
+00000001000095e4	popq	%rbx
+00000001000095e5	popq	%r14
+00000001000095e7	popq	%rbp
+00000001000095e8	retq
+00000001000095e9	nopl	(%rax)
+_fwp_trits:
+00000001000095f0	pushq	%rbp
+00000001000095f1	movq	%rsp, %rbp
+00000001000095f4	pushq	%r15
+00000001000095f6	pushq	%r14
+00000001000095f8	pushq	%r12
+00000001000095fa	pushq	%rbx
+00000001000095fb	movl	%edx, %r15d
+00000001000095fe	movq	%rsi, %r14
+0000000100009601	movq	%rdi, %rbx
+0000000100009604	movslq	%edx, %r12
+0000000100009607	leaq	0x3(%r12), %rdi
+000000010000960c	callq	_fwp_alloc_leaf
+0000000100009611	movq	%rax, %rsi
+0000000100009614	movw	$0x7430, (%rax)                 ## imm = 0x7430
+0000000100009619	testl	%r12d, %r12d
+000000010000961c	jle	0x1000096bb
+0000000100009622	movl	%r15d, %ecx
+0000000100009625	leaq	(%rcx,%rsi), %rdi
+0000000100009629	incq	%rdi
+000000010000962c	negq	%rcx
+000000010000962f	xorl	%r8d, %r8d
+0000000100009632	movabsq	$0x5555555555555556, %r9        ## imm = 0x5555555555555556
+000000010000963c	jmp	0x10000966c
+000000010000963e	nop
+0000000100009640	movb	$0x30, %r11b
+0000000100009643	movb	%r11b, (%rdi,%r8)
+0000000100009647	testq	%rdx, %rdx
+000000010000964a	setne	%dl
+000000010000964d	testq	%r14, %r14
+0000000100009650	sets	%r11b
+0000000100009654	andb	%dl, %r11b
+0000000100009657	movzbl	%r11b, %edx
+000000010000965b	subq	%rdx, %rax
+000000010000965e	addq	%r10, %rax
+0000000100009661	decq	%r8
+0000000100009664	movq	%rax, %r14
+0000000100009667	cmpq	%r8, %rcx
+000000010000966a	je	0x1000096bb
+000000010000966c	movq	%r14, %rax
+000000010000966f	imulq	%r9
+0000000100009672	movq	%rdx, %rax
+0000000100009675	shrq	$0x3f, %rax
+0000000100009679	addq	%rdx, %rax
+000000010000967c	leaq	(%rax,%rax,2), %r10
+0000000100009680	movq	%r14, %rdx
+0000000100009683	subq	%r10, %rdx
+0000000100009686	negq	%r10
+0000000100009689	addq	%r14, %r10
+000000010000968c	addq	$0x3, %r10
+0000000100009690	cmpq	$-0x3, %rdx
+0000000100009694	cmovbq	%rdx, %r10
+0000000100009698	testq	%r10, %r10
+000000010000969b	je	0x100009640
+000000010000969d	cmpq	$0x1, %r10
+00000001000096a1	jne	0x1000096b0
+00000001000096a3	movb	$0x2b, %r11b
+00000001000096a6	xorl	%r10d, %r10d
+00000001000096a9	jmp	0x100009643
+00000001000096ab	nopl	(%rax,%rax)
+00000001000096b0	movb	$0x2d, %r11b
+00000001000096b3	movl	$0x1, %r10d
+00000001000096b9	jmp	0x100009643
+00000001000096bb	movb	$0x0, 0x2(%rsi,%r12)
+00000001000096c1	movq	%rbx, %rdi
+00000001000096c4	popq	%rbx
+00000001000096c5	popq	%r12
+00000001000096c7	popq	%r14
+00000001000096c9	popq	%r15
+00000001000096cb	popq	%rbp
+00000001000096cc	jmp	_buf_puts
+00000001000096d1	nopw	%cs:(%rax,%rax)
+_fwp_escape:
+00000001000096e0	pushq	%rbp
+00000001000096e1	movq	%rsp, %rbp
+00000001000096e4	pushq	%r15
+00000001000096e6	pushq	%r14
+00000001000096e8	pushq	%r13
+00000001000096ea	pushq	%r12
+00000001000096ec	pushq	%rbx
+00000001000096ed	subq	$0x18, %rsp
+00000001000096f1	movq	%rdx, %r14
+00000001000096f4	movq	%rsi, %r15
+00000001000096f7	movq	%rdi, %rbx
+00000001000096fa	movq	0x3927(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100009701	movq	(%rax), %rax
+0000000100009704	movq	%rax, -0x30(%rbp)
+0000000100009708	movl	$0x22, %esi
+000000010000970d	callq	_buf_putc
+0000000100009712	testq	%r14, %r14
+0000000100009715	je	0x1000097f2
+000000010000971b	leaq	0x102(%rip), %r12
+0000000100009722	xorl	%r13d, %r13d
+0000000100009725	jmp	0x100009751
+0000000100009727	movq	%rbx, %rdi
+000000010000972a	leaq	0x2468(%rip), %rsi              ## literal pool for: "\\r"
+0000000100009731	nopw	%cs:(%rax,%rax)
+0000000100009740	callq	_buf_puts
+0000000100009745	incq	%r13
+0000000100009748	cmpq	%r13, %r14
+000000010000974b	je	0x1000097f2
+0000000100009751	movzbl	(%r15,%r13), %ecx
+0000000100009756	leal	-0x9(%rcx), %eax
+0000000100009759	cmpl	$0x19, %eax
+000000010000975c	ja	0x100009780
+000000010000975e	movslq	(%r12,%rax,4), %rax
+0000000100009762	addq	%r12, %rax
+0000000100009765	jmpq	*%rax
+0000000100009767	movq	%rbx, %rdi
+000000010000976a	leaq	0x2425(%rip), %rsi              ## literal pool for: "\\t"
+0000000100009771	jmp	0x100009740
+0000000100009773	nopw	%cs:(%rax,%rax)
+0000000100009780	cmpl	$0x5c, %ecx
+0000000100009783	jne	0x100009791
+0000000100009785	movq	%rbx, %rdi
+0000000100009788	leaq	0x2401(%rip), %rsi              ## literal pool for: "\\\\"
+000000010000978f	jmp	0x100009740
+0000000100009791	cmpb	$0x20, %cl
+0000000100009794	setae	%al
+0000000100009797	cmpl	$0x7f, %ecx
+000000010000979a	setne	%dl
+000000010000979d	testb	%dl, %al
+000000010000979f	jne	0x1000097e2
+00000001000097a1	movl	$0x10, %esi
+00000001000097a6	leaq	-0x40(%rbp), %rdi
+00000001000097aa	leaq	0x23eb(%rip), %rdx              ## literal pool for: "\\u{%x}"
+00000001000097b1	xorl	%eax, %eax
+00000001000097b3	callq	0x10000aac8                     ## symbol stub for: _snprintf
+00000001000097b8	movq	%rbx, %rdi
+00000001000097bb	leaq	-0x40(%rbp), %rsi
+00000001000097bf	jmp	0x100009740
+00000001000097c4	movq	%rbx, %rdi
+00000001000097c7	leaq	0x23bf(%rip), %rsi              ## literal pool for: "\\\""
+00000001000097ce	jmp	0x100009740
+00000001000097d3	movq	%rbx, %rdi
+00000001000097d6	leaq	0x23b6(%rip), %rsi              ## literal pool for: "\\n"
+00000001000097dd	jmp	0x100009740
+00000001000097e2	movsbl	%cl, %esi
+00000001000097e5	movq	%rbx, %rdi
+00000001000097e8	callq	_buf_putc
+00000001000097ed	jmp	0x100009745
+00000001000097f2	movq	0x382f(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+00000001000097f9	movq	(%rax), %rax
+00000001000097fc	cmpq	-0x30(%rbp), %rax
+0000000100009800	jne	0x10000981d
+0000000100009802	movq	%rbx, %rdi
+0000000100009805	movl	$0x22, %esi
+000000010000980a	addq	$0x18, %rsp
+000000010000980e	popq	%rbx
+000000010000980f	popq	%r12
+0000000100009811	popq	%r13
+0000000100009813	popq	%r14
+0000000100009815	popq	%r15
+0000000100009817	popq	%rbp
+0000000100009818	jmp	_buf_putc
+000000010000981d	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100009822	nop
+0000000100009824	.byte 0x43 #bad opcode
+0000000100009825	.byte 0xff #bad opcode
+0000000100009826	.byte 0xff #bad opcode
+0000000100009827	ljmpl	*0x6dffffff(%rdi)
+000000010000982d	.byte 0xff #bad opcode
+000000010000982e	.byte 0xff #bad opcode
+000000010000982f	ljmpl	*-0x1(%rbp)
+0000000100009832	.byte 0xff #bad opcode
+0000000100009833	incl	(%rbx)
+0000000100009835	.byte 0xff #bad opcode
+0000000100009836	.byte 0xff #bad opcode
+0000000100009837	ljmpl	*-0x1(%rbp)
+000000010000983a	.byte 0xff #bad opcode
+000000010000983b	ljmpl	*-0x1(%rbp)
+000000010000983e	.byte 0xff #bad opcode
+000000010000983f	ljmpl	*-0x1(%rbp)
+0000000100009842	.byte 0xff #bad opcode
+0000000100009843	ljmpl	*-0x1(%rbp)
+0000000100009846	.byte 0xff #bad opcode
+0000000100009847	ljmpl	*-0x1(%rbp)
+000000010000984a	.byte 0xff #bad opcode
+000000010000984b	ljmpl	*-0x1(%rbp)
+000000010000984e	.byte 0xff #bad opcode
+000000010000984f	ljmpl	*-0x1(%rbp)
+0000000100009852	.byte 0xff #bad opcode
+0000000100009853	ljmpl	*-0x1(%rbp)
+0000000100009856	.byte 0xff #bad opcode
+0000000100009857	ljmpl	*-0x1(%rbp)
+000000010000985a	.byte 0xff #bad opcode
+000000010000985b	ljmpl	*-0x1(%rbp)
+000000010000985e	.byte 0xff #bad opcode
+000000010000985f	ljmpl	*-0x1(%rbp)
+0000000100009862	.byte 0xff #bad opcode
+0000000100009863	ljmpl	*-0x1(%rbp)
+0000000100009866	.byte 0xff #bad opcode
+0000000100009867	ljmpl	*-0x1(%rbp)
+000000010000986a	.byte 0xff #bad opcode
+000000010000986b	ljmpl	*-0x1(%rbp)
+000000010000986e	.byte 0xff #bad opcode
+000000010000986f	ljmpl	*-0x1(%rbp)
+0000000100009872	.byte 0xff #bad opcode
+0000000100009873	ljmpl	*-0x1(%rbp)
+0000000100009876	.byte 0xff #bad opcode
+0000000100009877	ljmpl	*-0x1(%rbp)
+000000010000987a	.byte 0xff #bad opcode
+000000010000987b	ljmpl	*-0x1(%rbp)
+000000010000987e	.byte 0xff #bad opcode
+000000010000987f	ljmpl	*-0x1(%rbp)
+0000000100009882	.byte 0xff #bad opcode
+0000000100009883	ljmpl	*-0x1(%rbp)
+0000000100009886	.byte 0xff #bad opcode
+0000000100009887	jmpq	*0xfffffff(%rax)
+000000010000988d	.byte 0x1f #bad opcode
+000000010000988e	addb	%dl, 0x48(%rbp)
+0000000100009892	movl	%esp, %ebp
+0000000100009894	pushq	%r15
+0000000100009896	pushq	%r14
+0000000100009898	pushq	%rbx
+0000000100009899	subq	$0x48, %rsp
+000000010000989d	movq	%rdx, %r8
+00000001000098a0	movq	%rdi, %rbx
+00000001000098a3	movq	0x377e(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+00000001000098aa	movq	(%rax), %rax
+00000001000098ad	movq	%rax, -0x20(%rbp)
+00000001000098b1	movq	%rsi, %rax
+00000001000098b4	orq	%rdx, %rax
+00000001000098b7	je	0x100009ad8
+00000001000098bd	movabsq	$0xd2fe1d625c23f1d, %rcx        ## imm = 0xD2FE1D625C23F1D
+00000001000098c7	movabsq	$0x1c52799e4f3b10d, %rdi        ## imm = 0x1C52799E4F3B10D
+00000001000098d1	movq	%rsi, %rax
+00000001000098d4	mulq	%rdi
+00000001000098d7	imulq	%rsi, %rcx
+00000001000098db	addq	%rcx, %rdx
+00000001000098de	imulq	%r8, %rdi
+00000001000098e2	addq	%rdx, %rdi
+00000001000098e5	movabsq	$0x6baf6aa35234a000, %rcx       ## imm = 0x6BAF6AA35234A000
+00000001000098ef	addq	%rax, %rcx
+00000001000098f2	movabsq	$0x4e2fff937, %rax              ## imm = 0x4E2FFF937
+00000001000098fc	adcq	%rdi, %rax
+00000001000098ff	movq	%rax, %rdx
+0000000100009902	shrdq	$0xd, %rcx, %rdx
+0000000100009907	shldq	$0x33, %rcx, %rax
+000000010000990c	movabsq	$-0x6c89450955cadcb5, %rcx      ## imm = 0x9376BAF6AA35234B
+0000000100009916	cmpq	%rcx, %rax
+0000000100009919	sbbq	$0x4e2fff, %rdx                 ## imm = 0x4E2FFF
+0000000100009920	jb	0x100009b00
+0000000100009926	movabsq	$-0x3a31c473c99e4d4d, %rcx      ## imm = 0xC5CE3B8C3661B2B3
+0000000100009930	movabsq	$0x1a8d52046a475fc3, %rdi       ## imm = 0x1A8D52046A475FC3
+000000010000993a	movq	%rsi, %rax
+000000010000993d	mulq	%rdi
+0000000100009940	imulq	%rsi, %rcx
+0000000100009944	addq	%rcx, %rdx
+0000000100009947	imulq	%r8, %rdi
+000000010000994b	addq	%rdx, %rdi
+000000010000994e	movabsq	$0x4f473f91d116a800, %rcx       ## imm = 0x4F473F91D116A800
+0000000100009958	addq	%rax, %rcx
+000000010000995b	movabsq	$0x494cff9a3f, %rax             ## imm = 0x494CFF9A3F
+0000000100009965	adcq	%rdi, %rax
+0000000100009968	movq	%rax, %rdx
+000000010000996b	shrdq	$0xb, %rcx, %rdx
+0000000100009970	shldq	$0x35, %rcx, %rax
+0000000100009975	movabsq	$-0x702c2e301b8bba55, %rcx      ## imm = 0x8FD3D1CFE47445AB
+000000010000997f	cmpq	%rcx, %rax
+0000000100009982	sbbq	$0x12533fe6, %rdx               ## imm = 0x12533FE6
+0000000100009989	jb	0x100009b13
+000000010000998f	movabsq	$-0x68ea82c8d0468782, %rcx      ## imm = 0x97157D372FB9787E
+0000000100009999	imulq	%rsi, %rcx
+000000010000999d	movabsq	$-0x71b831bdc5d16393, %rdi      ## imm = 0x8E47CE423A2E9C6D
+00000001000099a7	movq	%rsi, %rax
+00000001000099aa	mulq	%rdi
+00000001000099ad	addq	%rcx, %rdx
+00000001000099b0	imulq	%r8, %rdi
+00000001000099b4	addq	%rdx, %rdi
+00000001000099b7	movabsq	$-0x5ad34674bfabba00, %rcx      ## imm = 0xA52CB98B40544600
+00000001000099c1	addq	%rax, %rcx
+00000001000099c4	movabsq	$0x44b82fa09b5, %rax            ## imm = 0x44B82FA09B5
+00000001000099ce	adcq	%rdi, %rax
+00000001000099d1	movq	%rax, %rdx
+00000001000099d4	shrdq	$0x9, %rcx, %rdx
+00000001000099d9	shldq	$0x37, %rcx, %rax
+00000001000099de	movabsq	$-0x4a5ad34674bfabb9, %rcx      ## imm = 0xB5A52CB98B405447
+00000001000099e8	cmpq	%rcx, %rax
+00000001000099eb	movabsq	$0x44b82fa09, %rax              ## imm = 0x44B82FA09
+00000001000099f5	sbbq	%rax, %rdx
+00000001000099f8	jb	0x100009b26
+00000001000099fe	movabsq	$-0x3a81dc0db2702a35, %rcx      ## imm = 0xC57E23F24D8FD5CB
+0000000100009a08	imulq	%rsi, %rcx
+0000000100009a0c	movabsq	$0x790fb65668c26139, %rdi       ## imm = 0x790FB65668C26139
+0000000100009a16	movq	%rsi, %rax
+0000000100009a19	mulq	%rdi
+0000000100009a1c	addq	%rcx, %rdx
+0000000100009a1f	imulq	%r8, %rdi
+0000000100009a23	addq	%rdx, %rdi
+0000000100009a26	movabsq	$-0x5929670196d8f500, %rcx      ## imm = 0xA6D698FE69270B00
+0000000100009a30	addq	%rax, %rcx
+0000000100009a33	movabsq	$0x218def416bdb1, %rax          ## imm = 0x218DEF416BDB1
+0000000100009a3d	adcq	%rdi, %rax
+0000000100009a40	movq	%rax, %rdx
+0000000100009a43	shrdq	$0x6, %rcx, %rdx
+0000000100009a48	shldq	$0x3a, %rcx, %rax
+0000000100009a4d	movabsq	$-0x72c94b380cb6c7a7, %rcx      ## imm = 0x8D36B4C7F3493859
+0000000100009a57	cmpq	%rcx, %rax
+0000000100009a5a	movabsq	$0x10c6f7a0b5ed, %rax           ## imm = 0x10C6F7A0B5ED
+0000000100009a64	sbbq	%rax, %rdx
+0000000100009a67	jb	0x100009b34
+0000000100009a6d	movabsq	$0x6e978d4fdf3b645a, %rcx       ## imm = 0x6E978D4FDF3B645A
+0000000100009a77	imulq	%rsi, %rcx
+0000000100009a7b	movabsq	$0x1cac083126e978d5, %rdi       ## imm = 0x1CAC083126E978D5
+0000000100009a85	movq	%rsi, %rax
+0000000100009a88	mulq	%rdi
+0000000100009a8b	addq	%rcx, %rdx
+0000000100009a8e	imulq	%r8, %rdi
+0000000100009a92	addq	%rdx, %rdi
+0000000100009a95	movabsq	$0x76c8b43958106248, %rcx       ## imm = 0x76C8B43958106248
+0000000100009a9f	addq	%rax, %rcx
+0000000100009aa2	movabsq	$0x10624dd2f1a9fbe, %rax        ## imm = 0x10624DD2F1A9FBE
+0000000100009aac	adcq	%rdi, %rax
+0000000100009aaf	movq	%rax, %rdx
+0000000100009ab2	shrdq	$0x3, %rcx, %rdx
+0000000100009ab7	shldq	$0x3d, %rcx, %rax
+0000000100009abc	movabsq	$-0x624dd2f1a9fbe76d, %rcx      ## imm = 0x9DB22D0E56041893
+0000000100009ac6	cmpq	%rcx, %rax
+0000000100009ac9	movabsq	$0x4189374bc6a7ef, %rax         ## imm = 0x4189374BC6A7EF
+0000000100009ad3	sbbq	%rax, %rdx
+0000000100009ad6	jb	0x100009b42
+0000000100009ad8	leaq	-0x60(%rbp), %r14
+0000000100009adc	movq	%r14, %rdi
+0000000100009adf	movq	%r8, %rdx
+0000000100009ae2	callq	_fwp_fmt_i128
+0000000100009ae7	leaq	0x20ba(%rip), %rsi              ## literal pool for: "%sns"
+0000000100009aee	movq	%rbx, %rdi
+0000000100009af1	movq	%r14, %rdx
+0000000100009af4	xorl	%eax, %eax
+0000000100009af6	callq	0x10000aace                     ## symbol stub for: _sprintf
+0000000100009afb	jmp	0x100009b81
+0000000100009b00	movabsq	$0x34630b8a000, %rdx            ## imm = 0x34630B8A000
+0000000100009b0a	leaq	_fwp_fmt_duration.units(%rip), %r15
+0000000100009b11	jmp	0x100009b4e
+0000000100009b13	movabsq	$0xdf8475800, %rdx              ## imm = 0xDF8475800
+0000000100009b1d	leaq	0x3b8c(%rip), %r15
+0000000100009b24	jmp	0x100009b4e
+0000000100009b26	movl	$0x3b9aca00, %edx               ## imm = 0x3B9ACA00
+0000000100009b2b	leaq	0x3b8e(%rip), %r15
+0000000100009b32	jmp	0x100009b4e
+0000000100009b34	movl	$0xf4240, %edx                  ## imm = 0xF4240
+0000000100009b39	leaq	0x3b90(%rip), %r15
+0000000100009b40	jmp	0x100009b4e
+0000000100009b42	movl	$0x3e8, %edx                    ## imm = 0x3E8
+0000000100009b47	leaq	0x3b92(%rip), %r15
+0000000100009b4e	xorl	%ecx, %ecx
+0000000100009b50	movq	%rsi, %rdi
+0000000100009b53	movq	%r8, %rsi
+0000000100009b56	callq	0x10000a9c0                     ## symbol stub for: ___divti3
+0000000100009b5b	leaq	-0x60(%rbp), %r14
+0000000100009b5f	movq	%r14, %rdi
+0000000100009b62	movq	%rax, %rsi
+0000000100009b65	callq	_fwp_fmt_i128
+0000000100009b6a	movq	(%r15), %rcx
+0000000100009b6d	leaq	0x202f(%rip), %rsi              ## literal pool for: "%s%s"
+0000000100009b74	movq	%rbx, %rdi
+0000000100009b77	movq	%r14, %rdx
+0000000100009b7a	xorl	%eax, %eax
+0000000100009b7c	callq	0x10000aace                     ## symbol stub for: _sprintf
+0000000100009b81	movq	0x34a0(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100009b88	movq	(%rax), %rax
+0000000100009b8b	cmpq	-0x20(%rbp), %rax
+0000000100009b8f	jne	0x100009b9c
+0000000100009b91	addq	$0x48, %rsp
+0000000100009b95	popq	%rbx
+0000000100009b96	popq	%r14
+0000000100009b98	popq	%r15
+0000000100009b9a	popq	%rbp
+0000000100009b9b	retq
+0000000100009b9c	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100009ba1	nopw	%cs:(%rax,%rax)
+_fwp_needs_parens:
+0000000100009bb0	movl	(%rsi), %eax
+0000000100009bb2	cmpl	$0x10, %eax
+0000000100009bb5	je	0x100009bcd
+0000000100009bb7	cmpl	$0xe, %eax
+0000000100009bba	jne	_fwp_is_negative
+0000000100009bc0	xorl	%eax, %eax
+0000000100009bc2	cmpq	$0x1000, %rdi                   ## imm = 0x1000
+0000000100009bc9	setae	%al
+0000000100009bcc	retq
+0000000100009bcd	movq	0x8(%rsi), %rax
+0000000100009bd1	testq	%rax, %rax
+0000000100009bd4	je	_fwp_is_negative
+0000000100009bda	pushq	%rbp
+0000000100009bdb	movq	%rsp, %rbp
+0000000100009bde	leaq	0x1eeb(%rip), %rsi              ## literal pool for: "Duration"
+0000000100009be5	movq	%rax, %rdi
+0000000100009be8	callq	0x10000aada                     ## symbol stub for: _strcmp
+0000000100009bed	movl	%eax, %ecx
+0000000100009bef	xorl	%eax, %eax
+0000000100009bf1	testl	%ecx, %ecx
+0000000100009bf3	setne	%al
+0000000100009bf6	popq	%rbp
+0000000100009bf7	retq
+0000000100009bf8	nopl	(%rax,%rax)
+_fwp_format_g:
+0000000100009c00	pushq	%rbp
+0000000100009c01	movq	%rsp, %rbp
+0000000100009c04	pushq	%r15
+0000000100009c06	pushq	%r14
+0000000100009c08	pushq	%r13
+0000000100009c0a	pushq	%r12
+0000000100009c0c	pushq	%rbx
+0000000100009c0d	subq	$0x98, %rsp
+0000000100009c14	movl	%esi, %r12d
+0000000100009c17	movq	%rdi, %rbx
+0000000100009c1a	movq	0x3407(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100009c21	movq	(%rax), %rax
+0000000100009c24	movq	%rax, -0x30(%rbp)
+0000000100009c28	decl	%r12d
+0000000100009c2b	leaq	0x1f44(%rip), %rdx              ## literal pool for: "%.*e"
+0000000100009c32	leaq	-0x70(%rbp), %r13
+0000000100009c36	movl	$0x40, %esi
+0000000100009c3b	movq	%r13, %rdi
+0000000100009c3e	movl	%r12d, %ecx
+0000000100009c41	movsd	%xmm0, -0xb8(%rbp)
+0000000100009c49	movb	$0x1, %al
+0000000100009c4b	callq	0x10000aac8                     ## symbol stub for: _snprintf
+0000000100009c50	movq	%r13, %rdi
+0000000100009c53	movl	$0x65, %esi
+0000000100009c58	callq	0x10000aad4                     ## symbol stub for: _strchr
+0000000100009c5d	movq	%rax, %r15
+0000000100009c60	leaq	0x1(%rax), %rdi
+0000000100009c64	callq	0x10000a9f6                     ## symbol stub for: _atoi
+0000000100009c69	movl	%eax, %r14d
+0000000100009c6c	leal	-0x11(%r14), %eax
+0000000100009c70	cmpl	$-0x17, %eax
+0000000100009c73	ja	0x100009cde
+0000000100009c75	subq	%r13, %r15
+0000000100009c78	leaq	-0xb0(%rbp), %r12
+0000000100009c7f	movl	$0x40, %ecx
+0000000100009c84	movq	%r12, %rdi
+0000000100009c87	movq	%r13, %rsi
+0000000100009c8a	movq	%r15, %rdx
+0000000100009c8d	callq	0x10000a9c6                     ## symbol stub for: ___memcpy_chk
+0000000100009c92	movb	$0x0, -0xb0(%rbp,%r15)
+0000000100009c9b	movq	%r12, %rdi
+0000000100009c9e	movl	$0x2e, %esi
+0000000100009ca3	callq	0x10000aad4                     ## symbol stub for: _strchr
+0000000100009ca8	testq	%rax, %rax
+0000000100009cab	sete	%al
+0000000100009cae	testq	%r15, %r15
+0000000100009cb1	sete	%cl
+0000000100009cb4	orb	%al, %cl
+0000000100009cb6	jne	0x100009d56
+0000000100009cbc	nopl	(%rax)
+0000000100009cc0	movzbl	-0xb1(%rbp,%r15), %eax
+0000000100009cc9	cmpl	$0x30, %eax
+0000000100009ccc	jne	0x100009d48
+0000000100009cce	movb	$0x0, -0xb1(%rbp,%r15)
+0000000100009cd7	decq	%r15
+0000000100009cda	jne	0x100009cc0
+0000000100009cdc	jmp	0x100009d56
+0000000100009cde	subl	%r14d, %r12d
+0000000100009ce1	xorl	%ecx, %ecx
+0000000100009ce3	testl	%r12d, %r12d
+0000000100009ce6	cmovgl	%r12d, %ecx
+0000000100009cea	leaq	0x1e94(%rip), %rdx              ## literal pool for: "%.*f"
+0000000100009cf1	movl	$0x190, %esi                    ## imm = 0x190
+0000000100009cf6	movq	%rbx, %rdi
+0000000100009cf9	movsd	-0xb8(%rbp), %xmm0
+0000000100009d01	movb	$0x1, %al
+0000000100009d03	callq	0x10000aac8                     ## symbol stub for: _snprintf
+0000000100009d08	movq	%rbx, %rdi
+0000000100009d0b	callq	0x10000aae6                     ## symbol stub for: _strlen
+0000000100009d10	movq	%rax, %r14
+0000000100009d13	movq	%rbx, %rdi
+0000000100009d16	movl	$0x2e, %esi
+0000000100009d1b	callq	0x10000aad4                     ## symbol stub for: _strchr
+0000000100009d20	testq	%rax, %rax
+0000000100009d23	sete	%al
+0000000100009d26	testq	%r14, %r14
+0000000100009d29	sete	%cl
+0000000100009d2c	orb	%al, %cl
+0000000100009d2e	jne	0x100009d8b
+0000000100009d30	movzbl	-0x1(%rbx,%r14), %eax
+0000000100009d36	cmpl	$0x30, %eax
+0000000100009d39	jne	0x100009dad
+0000000100009d3b	movb	$0x0, -0x1(%rbx,%r14)
+0000000100009d41	decq	%r14
+0000000100009d44	jne	0x100009d30
+0000000100009d46	jmp	0x100009d8b
+0000000100009d48	cmpl	$0x2e, %eax
+0000000100009d4b	jne	0x100009d56
+0000000100009d4d	movb	$0x0, -0xb1(%rbp,%r15)
+0000000100009d56	movl	%r14d, %eax
+0000000100009d59	shrl	$0x1f, %eax
+0000000100009d5c	leal	0x2b(,%rax,2), %r8d
+0000000100009d64	movl	%r14d, %r9d
+0000000100009d67	negl	%r9d
+0000000100009d6a	cmovsl	%r14d, %r9d
+0000000100009d6e	leaq	0x1e06(%rip), %rdx              ## literal pool for: "%se%c%02d"
+0000000100009d75	leaq	-0xb0(%rbp), %rcx
+0000000100009d7c	movl	$0x190, %esi                    ## imm = 0x190
+0000000100009d81	movq	%rbx, %rdi
+0000000100009d84	xorl	%eax, %eax
+0000000100009d86	callq	0x10000aac8                     ## symbol stub for: _snprintf
+0000000100009d8b	movq	0x3296(%rip), %rax              ## literal pool symbol address: ___stack_chk_guard
+0000000100009d92	movq	(%rax), %rax
+0000000100009d95	cmpq	-0x30(%rbp), %rax
+0000000100009d99	jne	0x100009dba
+0000000100009d9b	addq	$0x98, %rsp
+0000000100009da2	popq	%rbx
+0000000100009da3	popq	%r12
+0000000100009da5	popq	%r13
+0000000100009da7	popq	%r14
+0000000100009da9	popq	%r15
+0000000100009dab	popq	%rbp
+0000000100009dac	retq
+0000000100009dad	cmpl	$0x2e, %eax
+0000000100009db0	jne	0x100009d8b
+0000000100009db2	movb	$0x0, -0x1(%rbx,%r14)
+0000000100009db8	jmp	0x100009d8b
+0000000100009dba	callq	0x10000a9cc                     ## symbol stub for: ___stack_chk_fail
+0000000100009dbf	nop
+_fwp_finish_float:
+0000000100009dc0	pushq	%rbp
+0000000100009dc1	movq	%rsp, %rbp
+0000000100009dc4	pushq	%rbx
+0000000100009dc5	pushq	%rax
+0000000100009dc6	movq	%rdi, %rbx
+0000000100009dc9	movl	$0x2e, %esi
+0000000100009dce	callq	0x10000aad4                     ## symbol stub for: _strchr
+0000000100009dd3	testq	%rax, %rax
+0000000100009dd6	jne	0x100009e25
+0000000100009dd8	movq	%rbx, %rdi
+0000000100009ddb	movl	$0x65, %esi
+0000000100009de0	callq	0x10000aad4                     ## symbol stub for: _strchr
+0000000100009de5	testq	%rax, %rax
+0000000100009de8	jne	0x100009e25
+0000000100009dea	leaq	0x1d05(%rip), %rsi              ## literal pool for: "inf"
+0000000100009df1	movq	%rbx, %rdi
+0000000100009df4	callq	0x10000aaf2                     ## symbol stub for: _strstr
+0000000100009df9	testq	%rax, %rax
+0000000100009dfc	jne	0x100009e25
+0000000100009dfe	leaq	0x1cfa(%rip), %rsi              ## literal pool for: "NaN"
+0000000100009e05	movq	%rbx, %rdi
+0000000100009e08	callq	0x10000aaf2                     ## symbol stub for: _strstr
+0000000100009e0d	testq	%rax, %rax
+0000000100009e10	jne	0x100009e25
+0000000100009e12	movq	%rbx, %rdi
+0000000100009e15	callq	0x10000aae6                     ## symbol stub for: _strlen
+0000000100009e1a	movw	$0x302e, (%rbx,%rax)            ## imm = 0x302E
+0000000100009e20	movb	$0x0, 0x2(%rbx,%rax)
+0000000100009e25	addq	$0x8, %rsp
+0000000100009e29	popq	%rbx
+0000000100009e2a	popq	%rbp
+0000000100009e2b	retq
+0000000100009e2c	nopl	(%rax)
+_fwp_is_negative:
+0000000100009e30	pushq	%rbp
+0000000100009e31	movq	%rsp, %rbp
+0000000100009e34	movl	(%rsi), %ecx
+0000000100009e36	xorl	%eax, %eax
+0000000100009e38	cmpq	$0xb, %rcx
+0000000100009e3c	ja	0x100009e54
+0000000100009e3e	leaq	0x37(%rip), %rdx
+0000000100009e45	movslq	(%rdx,%rcx,4), %rcx
+0000000100009e49	addq	%rdx, %rcx
+0000000100009e4c	jmpq	*%rcx
+0000000100009e4e	shrq	$0x3f, %rdi
+0000000100009e52	movl	%edi, %eax
+0000000100009e54	popq	%rbp
+0000000100009e55	retq
+0000000100009e56	callq	_fwp_f32
+0000000100009e5b	movmskps	%xmm0, %eax
+0000000100009e5e	jmp	0x100009e69
+0000000100009e60	callq	_fwp_f64
+0000000100009e65	movmskpd	%xmm0, %eax
+0000000100009e69	andl	$0x1, %eax
+0000000100009e6c	popq	%rbp
+0000000100009e6d	retq
+0000000100009e6e	callq	_fwp_u128
+0000000100009e73	movq	%rdx, %rax
+0000000100009e76	shrq	$0x3f, %rax
+0000000100009e7a	popq	%rbp
+0000000100009e7b	retq
+0000000100009e7c	sarb	%cl, %bh
+0000000100009e7e	.byte 0xff #bad opcode
+0000000100009e7f	callq	*%rdx
+0000000100009e81	.byte 0xff #bad opcode
+0000000100009e82	.byte 0xff #bad opcode
+0000000100009e83	callq	*%rdx
+0000000100009e85	.byte 0xff #bad opcode
+0000000100009e86	.byte 0xff #bad opcode
+0000000100009e87	callq	*%rdx
+0000000100009e89	.byte 0xff #bad opcode
+0000000100009e8a	.byte 0xff #bad opcode
+0000000100009e8b	pushq	%rdx
+0000000100009e8d	.byte 0xff #bad opcode
+0000000100009e8e	.byte 0xff #bad opcode
+0000000100009e8f	.byte 0xff #bad opcode
+0000000100009e90	fdivr	%st(7), %st
+0000000100009e92	.byte 0xff #bad opcode
+0000000100009e93	.byte 0xff #bad opcode
+0000000100009e94	fdivr	%st(7), %st
+0000000100009e96	.byte 0xff #bad opcode
+0000000100009e97	.byte 0xff #bad opcode
+0000000100009e98	fdivr	%st(7), %st
+0000000100009e9a	.byte 0xff #bad opcode
+0000000100009e9b	.byte 0xff #bad opcode
+0000000100009e9c	fdivr	%st(7), %st
+0000000100009e9e	.byte 0xff #bad opcode
+0000000100009e9f	.byte 0xff #bad opcode
+0000000100009ea0	fdivr	%st(7), %st
+0000000100009ea2	.byte 0xff #bad opcode
+0000000100009ea3	.byte 0xff #bad opcode
+0000000100009ea4	.byte 0xda #bad opcode
+0000000100009ea5	.byte 0xff #bad opcode
+0000000100009ea6	.byte 0xff #bad opcode
+0000000100009ea7	jmpq	*%rsp
+0000000100009ea9	.byte 0xff #bad opcode
+0000000100009eaa	.byte 0xff #bad opcode
+0000000100009eab	decl	(%rdi)
+0000000100009ead	.byte 0x1f #bad opcode
+0000000100009eae	addb	%dl, 0x48(%rbp)
+0000000100009eb2	movl	%esp, %ebp
+0000000100009eb4	pushq	%rbx
+0000000100009eb5	subq	$0x28, %rsp
+0000000100009eb9	movq	%rdi, %rax
+0000000100009ebc	cmpl	$0x0, _fwp_exec_binary_out(%rip)
+0000000100009ec3	je	0x100009f1c
+0000000100009ec5	xorps	%xmm0, %xmm0
+0000000100009ec8	movaps	%xmm0, -0x30(%rbp)
+0000000100009ecc	movq	$0x0, -0x20(%rbp)
+0000000100009ed4	leaq	_d0(%rip), %rdx
+0000000100009edb	leaq	-0x30(%rbp), %rdi
+0000000100009edf	movq	%rax, %rsi
+0000000100009ee2	callq	_fwp_encode
+0000000100009ee7	movb	$0x1, -0xd(%rbp)
+0000000100009eeb	movl	-0x28(%rbp), %eax
+0000000100009eee	movl	%eax, -0xc(%rbp)
+0000000100009ef1	leaq	-0xd(%rbp), %rdi
+0000000100009ef5	movl	$0x5, %esi
+0000000100009efa	callq	_fwp_pipe_write
+0000000100009eff	movq	-0x28(%rbp), %rsi
+0000000100009f03	testq	%rsi, %rsi
+0000000100009f06	je	0x100009f11
+0000000100009f08	movq	-0x30(%rbp), %rdi
+0000000100009f0c	callq	_fwp_pipe_write
+0000000100009f11	movq	-0x30(%rbp), %rdi
+0000000100009f15	callq	0x10000aa32                     ## symbol stub for: _free
+0000000100009f1a	jmp	0x100009f38
+0000000100009f1c	cmpl	$0x10, _d0(%rip)
+0000000100009f23	jne	0x100009f3f
+0000000100009f25	cmpl	$0x0, 0x5b14(%rip)
+0000000100009f2c	jne	0x100009f3f
+0000000100009f2e	cmpq	$0x0, 0x5b02(%rip)
+0000000100009f36	jne	0x100009f3f
+0000000100009f38	addq	$0x28, %rsp
+0000000100009f3c	popq	%rbx
+0000000100009f3d	popq	%rbp
+0000000100009f3e	retq
+0000000100009f3f	movq	0x30fa(%rip), %rbx              ## literal pool symbol address: ___stdoutp
+0000000100009f46	movq	(%rbx), %rdx
+0000000100009f49	leaq	_d0(%rip), %rsi
+0000000100009f50	movq	%rax, %rdi
+0000000100009f53	callq	_fwp_display_top
+0000000100009f58	movq	(%rbx), %rsi
+0000000100009f5b	movl	$0xa, %edi
+0000000100009f60	addq	$0x28, %rsp
+0000000100009f64	popq	%rbx
+0000000100009f65	popq	%rbp
+0000000100009f66	jmp	0x10000aa20                     ## symbol stub for: _fputc
+0000000100009f6b	nopl	(%rax,%rax)
+_fwp_encode:
+0000000100009f70	pushq	%rbp
+0000000100009f71	movq	%rsp, %rbp
+0000000100009f74	pushq	%r15
+0000000100009f76	pushq	%r14
+0000000100009f78	pushq	%r13
+0000000100009f7a	pushq	%r12
+0000000100009f7c	pushq	%rbx
+0000000100009f7d	pushq	%rax
+0000000100009f7e	movl	(%rdx), %eax
+0000000100009f80	cmpq	$0x15, %rax
+0000000100009f84	ja	0x10000a1a9
+0000000100009f8a	movq	%rdx, %r15
+0000000100009f8d	movq	%rsi, %r14
+0000000100009f90	movq	%rdi, %rbx
+0000000100009f93	leaq	0x21e(%rip), %rcx
+0000000100009f9a	movslq	(%rcx,%rax,4), %rax
+0000000100009f9e	addq	%rcx, %rax
+0000000100009fa1	jmpq	*%rax
+0000000100009fa3	movq	%rbx, %rdi
+0000000100009fa6	movq	%r14, %rsi
+0000000100009fa9	movl	$0x1, %edx
+0000000100009fae	jmp	0x10000a125
+0000000100009fb3	movq	%rbx, %rdi
+0000000100009fb6	movq	%r14, %rsi
+0000000100009fb9	movl	$0x4, %edx
+0000000100009fbe	jmp	0x10000a125
+0000000100009fc3	movq	(%r14), %rsi
+0000000100009fc6	movq	%rbx, %rdi
+0000000100009fc9	callq	_fwp_leb128
+0000000100009fce	movq	(%r14), %rdx
+0000000100009fd1	addq	$0x8, %r14
+0000000100009fd5	movq	%rbx, %rdi
+0000000100009fd8	movq	%r14, %rsi
+0000000100009fdb	addq	$0x8, %rsp
+0000000100009fdf	popq	%rbx
+0000000100009fe0	popq	%r12
+0000000100009fe2	popq	%r13
+0000000100009fe4	popq	%r14
+0000000100009fe6	popq	%r15
+0000000100009fe8	popq	%rbp
+0000000100009fe9	jmp	_buf_put
+0000000100009fee	movq	%rbx, %rdi
+0000000100009ff1	movq	%r14, %rsi
+0000000100009ff4	movl	$0x2, %edx
+0000000100009ff9	jmp	0x10000a125
+0000000100009ffe	movq	(%r14), %rsi
+000000010000a001	movq	%rbx, %rdi
+000000010000a004	callq	_fwp_leb128
+000000010000a009	cmpq	$0x0, (%r14)
+000000010000a00d	je	0x10000a1a9
+000000010000a013	leaq	0x10(%r14), %r12
+000000010000a017	xorl	%r13d, %r13d
+000000010000a01a	jmp	0x10000a030
+000000010000a01c	nopl	(%rax)
+000000010000a020	incq	%r13
+000000010000a023	addq	$0x10, %r12
+000000010000a027	cmpq	(%r14), %r13
+000000010000a02a	jae	0x10000a1a9
+000000010000a030	movq	-0x8(%r12), %rsi
+000000010000a035	movq	0x38(%r15), %rdx
+000000010000a039	movq	%rbx, %rdi
+000000010000a03c	callq	_fwp_encode
+000000010000a041	cmpl	$0x12, (%r15)
+000000010000a045	jne	0x10000a020
+000000010000a047	movq	(%r12), %rsi
+000000010000a04b	movq	0x40(%r15), %rdx
+000000010000a04f	movq	%rbx, %rdi
+000000010000a052	callq	_fwp_encode
+000000010000a057	jmp	0x10000a020
+000000010000a059	movq	%r14, %rdi
+000000010000a05c	callq	_fwp_tag
+000000010000a061	movl	%eax, %r12d
+000000010000a064	movq	%rbx, %rdi
+000000010000a067	movq	%r12, %rsi
+000000010000a06a	callq	_fwp_leb128
+000000010000a06f	movq	0x28(%r15), %rax
+000000010000a073	cmpl	$0x0, (%rax,%r12,4)
+000000010000a078	jle	0x10000a1a9
+000000010000a07e	xorl	%r13d, %r13d
+000000010000a081	nopw	%cs:(%rax,%rax)
+000000010000a090	movq	0x8(%r14,%r13,8), %rsi
+000000010000a095	movq	0x30(%r15), %rax
+000000010000a099	movq	(%rax,%r12,8), %rax
+000000010000a09d	movq	(%rax,%r13,8), %rdx
+000000010000a0a1	movq	%rbx, %rdi
+000000010000a0a4	callq	_fwp_encode
+000000010000a0a9	incq	%r13
+000000010000a0ac	movq	0x28(%r15), %rax
+000000010000a0b0	movslq	(%rax,%r12,4), %rax
+000000010000a0b4	cmpq	%rax, %r13
+000000010000a0b7	jl	0x10000a090
+000000010000a0b9	jmp	0x10000a1a9
+000000010000a0be	movq	%r14, %rdi
+000000010000a0c1	callq	_fwp_u128
+000000010000a0c6	jmp	0x10000a107
+000000010000a0c8	movq	%r14, %rdi
+000000010000a0cb	callq	_fwp_list_len
+000000010000a0d0	movq	%rbx, %rdi
+000000010000a0d3	movq	%rax, %rsi
+000000010000a0d6	callq	_fwp_leb128
+000000010000a0db	nopl	(%rax,%rax)
+000000010000a0e0	testq	%r14, %r14
+000000010000a0e3	je	0x10000a1a9
+000000010000a0e9	movq	0x8(%r14), %rsi
+000000010000a0ed	movq	0x38(%r15), %rdx
+000000010000a0f1	movq	%rbx, %rdi
+000000010000a0f4	callq	_fwp_encode
+000000010000a0f9	movq	0x10(%r14), %r14
+000000010000a0fd	jmp	0x10000a0e0
+000000010000a0ff	movq	%r14, %rdi
+000000010000a102	callq	_fwp_u128
+000000010000a107	movq	%rdx, %r14
+000000010000a10a	movq	%rbx, %rdi
+000000010000a10d	movq	%rax, %rsi
+000000010000a110	movl	$0x8, %edx
+000000010000a115	callq	_fwp_le
+000000010000a11a	movq	%rbx, %rdi
+000000010000a11d	movq	%r14, %rsi
+000000010000a120	movl	$0x8, %edx
+000000010000a125	addq	$0x8, %rsp
+000000010000a129	popq	%rbx
+000000010000a12a	popq	%r12
+000000010000a12c	popq	%r13
+000000010000a12e	popq	%r14
+000000010000a130	popq	%r15
+000000010000a132	popq	%rbp
+000000010000a133	jmp	_fwp_le
+000000010000a138	cmpl	$0x0, 0x10(%r15)
+000000010000a13d	jle	0x10000a1a9
+000000010000a13f	xorl	%r12d, %r12d
+000000010000a142	nopw	%cs:(%rax,%rax)
+000000010000a150	movq	0x8(%r14,%r12,8), %rsi
+000000010000a155	movq	0x20(%r15), %rax
+000000010000a159	movq	(%rax,%r12,8), %rdx
+000000010000a15d	movq	%rbx, %rdi
+000000010000a160	callq	_fwp_encode
+000000010000a165	incq	%r12
+000000010000a168	movslq	0x10(%r15), %rax
+000000010000a16c	cmpq	%rax, %r12
+000000010000a16f	jl	0x10000a150
+000000010000a171	jmp	0x10000a1a9
+000000010000a173	movq	(%r14), %rsi
+000000010000a176	movq	%rbx, %rdi
+000000010000a179	callq	_fwp_leb128
+000000010000a17e	cmpq	$0x0, (%r14)
+000000010000a182	je	0x10000a1a9
+000000010000a184	xorl	%r12d, %r12d
+000000010000a187	nopw	(%rax,%rax)
+000000010000a190	movq	0x8(%r14,%r12,8), %rsi
+000000010000a195	movq	0x38(%r15), %rdx
+000000010000a199	movq	%rbx, %rdi
+000000010000a19c	callq	_fwp_encode
+000000010000a1a1	incq	%r12
+000000010000a1a4	cmpq	(%r14), %r12
+000000010000a1a7	jb	0x10000a190
+000000010000a1a9	addq	$0x8, %rsp
+000000010000a1ad	popq	%rbx
+000000010000a1ae	popq	%r12
+000000010000a1b0	popq	%r13
+000000010000a1b2	popq	%r14
+000000010000a1b4	popq	%r15
+000000010000a1b6	popq	%rbp
+000000010000a1b7	retq
+000000010000a1b8	jmp	0x10000a1b7
+000000010000a1ba	.byte 0xff #bad opcode
+000000010000a1bb	pushq	(%rsi)
+000000010000a1bd	.byte 0xfe #bad opcode
+000000010000a1be	.byte 0xff #bad opcode
+000000010000a1bf	.byte 0xff #bad opcode
+000000010000a1c0	sti
+000000010000a1c1	std
+000000010000a1c2	.byte 0xff #bad opcode
+000000010000a1c3	jmpq	*-0x1(%rdx)
+000000010000a1c6	.byte 0xff #bad opcode
+000000010000a1c7	incl	(%rsi)
+000000010000a1c9	.byte 0xff #bad opcode
+000000010000a1ca	.byte 0xff #bad opcode
+000000010000a1cb	.byte 0xff #bad opcode
+000000010000a1cc	jmp	0x10000a1cb
+000000010000a1ce	.byte 0xff #bad opcode
+000000010000a1cf	pushq	(%rsi)
+000000010000a1d1	.byte 0xfe #bad opcode
+000000010000a1d2	.byte 0xff #bad opcode
+000000010000a1d3	.byte 0xff #bad opcode
+000000010000a1d4	sti
+000000010000a1d5	std
+000000010000a1d6	.byte 0xff #bad opcode
+000000010000a1d7	jmpq	*-0x1(%rdx)
+000000010000a1da	.byte 0xff #bad opcode
+000000010000a1db	incl	-0x1(%rdi)
+000000010000a1de	.byte 0xff #bad opcode
+000000010000a1df	.byte 0xff #bad opcode
+000000010000a1e0	sti
+000000010000a1e1	std
+000000010000a1e2	.byte 0xff #bad opcode
+000000010000a1e3	jmpq	*-0x1(%rdx)
+000000010000a1e6	.byte 0xff #bad opcode
+000000010000a1e7	decl	(%rbx)
+000000010000a1e9	.byte 0xfe #bad opcode
+000000010000a1ea	.byte 0xff #bad opcode
+000000010000a1eb	decl	(%rbx)
+000000010000a1ed	.byte 0xfe #bad opcode
+000000010000a1ee	.byte 0xff #bad opcode
+000000010000a1ef	jmpq	*0x10fffffe(%rcx)
+000000010000a1f5	.byte 0xff #bad opcode
+000000010000a1f6	.byte 0xff #bad opcode
+000000010000a1f7	incl	-0x44000001(%rax)
+000000010000a1fd	.byte 0xff #bad opcode
+000000010000a1fe	.byte 0xff #bad opcode
+000000010000a1ff	incl	-0x2(%rsi)
+000000010000a202	.byte 0xff #bad opcode
+000000010000a203	incl	-0x2(%rsi)
+000000010000a206	.byte 0xff #bad opcode
+000000010000a207	jmpq	*-0x1(%rdx)
+000000010000a20a	.byte 0xff #bad opcode
+000000010000a20b	.byte 0xff #bad opcode
+000000010000a20c	jmp	0x10000a20b
+000000010000a20e	.byte 0xff #bad opcode
+000000010000a20f	incl	0x55417ed2(%rbp)
+000000010000a215	movq	%rsp, %rbp
+000000010000a218	pushq	%r15
+000000010000a21a	pushq	%r14
+000000010000a21c	pushq	%r12
+000000010000a21e	pushq	%rbx
+000000010000a21f	movq	%rsi, %rbx
+000000010000a222	movq	%rdi, %r14
+000000010000a225	movl	%edx, %r12d
+000000010000a228	shlq	$0x3, %r12
+000000010000a22c	xorl	%r15d, %r15d
+000000010000a22f	nop
+000000010000a230	movq	%rbx, %rax
+000000010000a233	movl	%r15d, %ecx
+000000010000a236	shrq	%cl, %rax
+000000010000a239	movsbl	%al, %esi
+000000010000a23c	movq	%r14, %rdi
+000000010000a23f	callq	_buf_putc
+000000010000a244	addq	$0x8, %r15
+000000010000a248	cmpq	%r15, %r12
+000000010000a24b	jne	0x10000a230
+000000010000a24d	popq	%rbx
+000000010000a24e	popq	%r12
+000000010000a250	popq	%r14
+000000010000a252	popq	%r15
+000000010000a254	popq	%rbp
+000000010000a255	retq
+000000010000a256	nopw	%cs:(%rax,%rax)
+_fwp_leb128:
+000000010000a260	pushq	%rbp
+000000010000a261	movq	%rsp, %rbp
+000000010000a264	pushq	%r15
+000000010000a266	pushq	%r14
+000000010000a268	pushq	%rbx
+000000010000a269	pushq	%rax
+000000010000a26a	movq	%rsi, %r14
+000000010000a26d	movq	%rdi, %rbx
+000000010000a270	cmpq	$0x80, %rsi
+000000010000a277	jae	0x10000a27e
+000000010000a279	movq	%r14, %r15
+000000010000a27c	jmp	0x10000a2b0
+000000010000a27e	movq	%r14, %r15
+000000010000a281	nopw	%cs:(%rax,%rax)
+000000010000a290	shrq	$0x7, %r15
+000000010000a294	movl	%r14d, %eax
+000000010000a297	orb	$-0x80, %al
+000000010000a299	movsbl	%al, %esi
+000000010000a29c	movq	%rbx, %rdi
+000000010000a29f	callq	_buf_putc
+000000010000a2a4	cmpq	$0x3fff, %r14                   ## imm = 0x3FFF
+000000010000a2ab	movq	%r15, %r14
+000000010000a2ae	ja	0x10000a290
+000000010000a2b0	movsbl	%r15b, %esi
+000000010000a2b4	movq	%rbx, %rdi
+000000010000a2b7	addq	$0x8, %rsp
+000000010000a2bb	popq	%rbx
+000000010000a2bc	popq	%r14
+000000010000a2be	popq	%r15
+000000010000a2c0	popq	%rbp
+000000010000a2c1	jmp	_buf_putc
+000000010000a2c6	nopw	%cs:(%rax,%rax)
+_fwp_pipe_read:
+000000010000a2d0	pushq	%rbp
+000000010000a2d1	movq	%rsp, %rbp
+000000010000a2d4	movq	%rsi, %rdx
+000000010000a2d7	movq	0x2d5a(%rip), %rax              ## literal pool symbol address: ___stdinp
+000000010000a2de	movq	(%rax), %rcx
+000000010000a2e1	movl	$0x1, %esi
+000000010000a2e6	popq	%rbp
+000000010000a2e7	jmp	0x10000aa2c                     ## symbol stub for: _fread
+000000010000a2ec	nopl	(%rax)
+_rd_le:
+000000010000a2f0	pushq	%rbp
+000000010000a2f1	movq	%rsp, %rbp
+000000010000a2f4	pushq	%r15
+000000010000a2f6	pushq	%r14
+000000010000a2f8	pushq	%rbx
+000000010000a2f9	pushq	%rax
+000000010000a2fa	movq	%rdx, %rbx
+000000010000a2fd	movl	%esi, %r15d
+000000010000a300	movl	%esi, %r14d
+000000010000a303	leaq	-0x20(%rbp), %rdx
+000000010000a307	movq	%r14, %rsi
+000000010000a30a	callq	_rd_take
+000000010000a30f	testl	%eax, %eax
+000000010000a311	je	0x10000a38c
+000000010000a313	movq	$0x0, (%rbx)
+000000010000a31a	movl	$0x1, %eax
+000000010000a31f	testl	%r15d, %r15d
+000000010000a322	jle	0x10000a56b
+000000010000a328	movq	-0x20(%rbp), %rsi
+000000010000a32c	cmpl	$0x8, %r15d
+000000010000a330	jb	0x10000a34e
+000000010000a332	leaq	(%rsi,%r14), %rcx
+000000010000a336	cmpq	%rbx, %rcx
+000000010000a339	seta	%cl
+000000010000a33c	leaq	0x8(%rbx), %rdx
+000000010000a340	cmpq	%rdx, %rsi
+000000010000a343	setb	%dl
+000000010000a346	testb	%dl, %cl
+000000010000a348	je	0x10000a408
+000000010000a34e	xorl	%edx, %edx
+000000010000a350	xorl	%r8d, %r8d
+000000010000a353	movq	%r14, %r9
+000000010000a356	andq	$0x3, %r9
+000000010000a35a	je	0x10000a393
+000000010000a35c	leaq	(,%rdx,8), %rcx
+000000010000a364	movq	%rdx, %rdi
+000000010000a367	nopw	(%rax,%rax)
+000000010000a370	movzbl	(%rsi,%rdi), %r10d
+000000010000a375	shlq	%cl, %r10
+000000010000a378	orq	%r10, %r8
+000000010000a37b	movq	%r8, (%rbx)
+000000010000a37e	incq	%rdi
+000000010000a381	addq	$0x8, %rcx
+000000010000a385	decq	%r9
+000000010000a388	jne	0x10000a370
+000000010000a38a	jmp	0x10000a396
+000000010000a38c	xorl	%eax, %eax
+000000010000a38e	jmp	0x10000a56b
+000000010000a393	movq	%rdx, %rdi
+000000010000a396	subq	%r14, %rdx
+000000010000a399	cmpq	$-0x4, %rdx
+000000010000a39d	ja	0x10000a56b
+000000010000a3a3	leaq	(,%rdi,8), %rdx
+000000010000a3ab	nopl	(%rax,%rax)
+000000010000a3b0	movzbl	(%rsi,%rdi), %r9d
+000000010000a3b5	movl	%edx, %ecx
+000000010000a3b7	shlq	%cl, %r9
+000000010000a3ba	orq	%r8, %r9
+000000010000a3bd	movq	%r9, (%rbx)
+000000010000a3c0	movzbl	0x1(%rsi,%rdi), %r8d
+000000010000a3c6	leal	0x8(%rdx), %ecx
+000000010000a3c9	shlq	%cl, %r8
+000000010000a3cc	orq	%r9, %r8
+000000010000a3cf	movq	%r8, (%rbx)
+000000010000a3d2	movzbl	0x2(%rsi,%rdi), %r9d
+000000010000a3d8	leal	0x10(%rdx), %ecx
+000000010000a3db	shlq	%cl, %r9
+000000010000a3de	orq	%r8, %r9
+000000010000a3e1	movq	%r9, (%rbx)
+000000010000a3e4	movzbl	0x3(%rsi,%rdi), %r8d
+000000010000a3ea	leal	0x18(%rdx), %ecx
+000000010000a3ed	shlq	%cl, %r8
+000000010000a3f0	orq	%r9, %r8
+000000010000a3f3	movq	%r8, (%rbx)
+000000010000a3f6	addq	$0x4, %rdi
+000000010000a3fa	addq	$0x20, %rdx
+000000010000a3fe	cmpq	%rdi, %r14
+000000010000a401	jne	0x10000a3b0
+000000010000a403	jmp	0x10000a56b
+000000010000a408	movl	%r14d, %edx
+000000010000a40b	andl	$0x7ffffff8, %edx               ## imm = 0x7FFFFFF8
+000000010000a411	pxor	%xmm0, %xmm0
+000000010000a415	pmovsxbq	0x8c2(%rip), %xmm1
+000000010000a41e	pmovsxbq	0x8bb(%rip), %xmm2
+000000010000a427	pmovsxbq	0x8b4(%rip), %xmm3
+000000010000a430	pmovsxbq	0x8ad(%rip), %xmm4
+000000010000a439	xorl	%ecx, %ecx
+000000010000a43b	pmovsxbq	0x8a4(%rip), %xmm6
+000000010000a444	pxor	%xmm5, %xmm5
+000000010000a448	pxor	%xmm8, %xmm8
+000000010000a44d	pxor	%xmm7, %xmm7
+000000010000a451	nopw	%cs:(%rax,%rax)
+000000010000a460	pmovzxbq	(%rsi,%rcx), %xmm9
+000000010000a467	pmovzxbq	0x6(%rsi,%rcx), %xmm10
+000000010000a46f	movdqa	%xmm1, %xmm11
+000000010000a474	psllq	$0x3, %xmm11
+000000010000a47a	movdqa	%xmm10, %xmm12
+000000010000a47f	psllq	%xmm11, %xmm12
+000000010000a484	pshufd	$0xee, %xmm11, %xmm11           ## xmm11 = xmm11[2,3,2,3]
+000000010000a48a	psllq	%xmm11, %xmm10
+000000010000a48f	pmovzxbq	0x4(%rsi,%rcx), %xmm11
+000000010000a497	pblendw	$0xf, %xmm12, %xmm10            ## xmm10 = xmm12[0,1,2,3],xmm10[4,5,6,7]
+000000010000a49e	movdqa	%xmm2, %xmm12
+000000010000a4a3	psllq	$0x3, %xmm12
+000000010000a4a9	por	%xmm10, %xmm7
+000000010000a4ae	movdqa	%xmm11, %xmm10
+000000010000a4b3	psllq	%xmm12, %xmm10
+000000010000a4b8	pshufd	$0xee, %xmm12, %xmm12           ## xmm12 = xmm12[2,3,2,3]
+000000010000a4be	psllq	%xmm12, %xmm11
+000000010000a4c3	pmovzxbq	0x2(%rsi,%rcx), %xmm12
+000000010000a4cb	pblendw	$0xf, %xmm10, %xmm11            ## xmm11 = xmm10[0,1,2,3],xmm11[4,5,6,7]
+000000010000a4d2	movdqa	%xmm3, %xmm10
+000000010000a4d7	psllq	$0x3, %xmm10
+000000010000a4dd	por	%xmm11, %xmm8
+000000010000a4e2	movdqa	%xmm12, %xmm11
+000000010000a4e7	psllq	%xmm10, %xmm11
+000000010000a4ec	pshufd	$0xee, %xmm10, %xmm10           ## xmm10 = xmm10[2,3,2,3]
+000000010000a4f2	psllq	%xmm10, %xmm12
+000000010000a4f7	movdqa	%xmm4, %xmm10
+000000010000a4fc	psllq	$0x3, %xmm10
+000000010000a502	pblendw	$0xf, %xmm11, %xmm12            ## xmm12 = xmm11[0,1,2,3],xmm12[4,5,6,7]
+000000010000a509	movdqa	%xmm9, %xmm11
+000000010000a50e	psllq	%xmm10, %xmm11
+000000010000a513	por	%xmm12, %xmm5
+000000010000a518	pshufd	$0xee, %xmm10, %xmm10           ## xmm10 = xmm10[2,3,2,3]
+000000010000a51e	psllq	%xmm10, %xmm9
+000000010000a523	pblendw	$0xf, %xmm11, %xmm9             ## xmm9 = xmm11[0,1,2,3],xmm9[4,5,6,7]
+000000010000a52a	por	%xmm9, %xmm0
+000000010000a52f	addq	$0x8, %rcx
+000000010000a533	paddq	%xmm6, %xmm4
+000000010000a537	paddq	%xmm6, %xmm3
+000000010000a53b	paddq	%xmm6, %xmm2
+000000010000a53f	paddq	%xmm6, %xmm1
+000000010000a543	cmpq	%rcx, %rdx
+000000010000a546	jne	0x10000a460
+000000010000a54c	por	%xmm8, %xmm0
+000000010000a551	por	%xmm7, %xmm5
+000000010000a555	por	%xmm0, %xmm5
+000000010000a559	pshufd	$0xee, %xmm5, %xmm0             ## xmm0 = xmm5[2,3,2,3]
+000000010000a55e	por	%xmm5, %xmm0
+000000010000a562	movq	%xmm0, (%rbx)
+000000010000a566	cmpl	%r14d, %edx
+000000010000a569	jne	0x10000a576
+000000010000a56b	addq	$0x8, %rsp
+000000010000a56f	popq	%rbx
+000000010000a570	popq	%r14
+000000010000a572	popq	%r15
+000000010000a574	popq	%rbp
+000000010000a575	retq
+000000010000a576	movq	%xmm0, %r8
+000000010000a57b	jmp	0x10000a353
+_rd_leb:
+000000010000a580	pushq	%rbp
+000000010000a581	movq	%rsp, %rbp
+000000010000a584	pushq	%r15
+000000010000a586	pushq	%r14
+000000010000a588	pushq	%r12
+000000010000a58a	pushq	%rbx
+000000010000a58b	subq	$0x10, %rsp
+000000010000a58f	movq	%rsi, %rbx
+000000010000a592	movq	%rdi, %r14
+000000010000a595	movq	$0x0, (%rsi)
+000000010000a59c	movq	$-0x7, %r15
+000000010000a5a3	leaq	-0x28(%rbp), %r12
+000000010000a5a7	nopw	(%rax,%rax)
+000000010000a5b0	movl	$0x1, %esi
+000000010000a5b5	movq	%r14, %rdi
+000000010000a5b8	movq	%r12, %rdx
+000000010000a5bb	callq	_rd_take
+000000010000a5c0	testl	%eax, %eax
+000000010000a5c2	je	0x10000a5fc
+000000010000a5c4	cmpq	$0x38, %r15
+000000010000a5c8	setne	%dl
+000000010000a5cb	movq	-0x28(%rbp), %rax
+000000010000a5cf	movzbl	(%rax), %ecx
+000000010000a5d2	testb	$0x7e, %cl
+000000010000a5d5	sete	%sil
+000000010000a5d9	orb	%dl, %sil
+000000010000a5dc	je	0x10000a5fc
+000000010000a5de	addq	$0x7, %r15
+000000010000a5e2	movzbl	%cl, %edx
+000000010000a5e5	andl	$0x7f, %edx
+000000010000a5e8	movl	%r15d, %ecx
+000000010000a5eb	shlq	%cl, %rdx
+000000010000a5ee	orq	%rdx, (%rbx)
+000000010000a5f1	cmpb	$0x0, (%rax)
+000000010000a5f4	jns	0x10000a600
+000000010000a5f6	cmpq	$0x38, %r15
+000000010000a5fa	jbe	0x10000a5b0
+000000010000a5fc	xorl	%eax, %eax
+000000010000a5fe	jmp	0x10000a605
+000000010000a600	movl	$0x1, %eax
+000000010000a605	addq	$0x10, %rsp
+000000010000a609	popq	%rbx
+000000010000a60a	popq	%r12
+000000010000a60c	popq	%r14
+000000010000a60e	popq	%r15
+000000010000a610	popq	%rbp
+000000010000a611	retq
+000000010000a612	nopw	%cs:(%rax,%rax)
+_rd_take:
+000000010000a620	pushq	%rbp
+000000010000a621	movq	%rsp, %rbp
+000000010000a624	movq	0x8(%rdi), %r8
+000000010000a628	movq	0x10(%rdi), %rcx
+000000010000a62c	subq	%rcx, %r8
+000000010000a62f	xorl	%eax, %eax
+000000010000a631	cmpq	%rsi, %r8
+000000010000a634	jb	0x10000a64b
+000000010000a636	movq	(%rdi), %rax
+000000010000a639	addq	%rcx, %rax
+000000010000a63c	movq	%rax, (%rdx)
+000000010000a63f	addq	%rcx, %rsi
+000000010000a642	movq	%rsi, 0x10(%rdi)
+000000010000a646	movl	$0x1, %eax
+000000010000a64b	popq	%rbp
+000000010000a64c	retq
+000000010000a64d	nopl	(%rax)
+_fwp_getc:
+000000010000a650	pushq	%rbp
+000000010000a651	movq	%rsp, %rbp
+000000010000a654	movslq	_fwp_in_ppos(%rip), %rax
+000000010000a65b	cmpl	_fwp_in_npend(%rip), %eax
+000000010000a661	jge	0x10000a679
+000000010000a663	leal	0x1(%rax), %ecx
+000000010000a666	movl	%ecx, _fwp_in_ppos(%rip)
+000000010000a66c	leaq	_fwp_in_pend(%rip), %rcx
+000000010000a673	movzbl	(%rax,%rcx), %eax
+000000010000a677	popq	%rbp
+000000010000a678	retq
+000000010000a679	movq	0x29b8(%rip), %rax              ## literal pool symbol address: ___stdinp
+000000010000a680	movq	(%rax), %rdi
+000000010000a683	popq	%rbp
+000000010000a684	jmp	0x10000aa14                     ## symbol stub for: _fgetc
+000000010000a689	nopl	(%rax)
+_fwp_gc_find_data:
+000000010000a690	pushq	%rbp
+000000010000a691	movq	%rsp, %rbp
+000000010000a694	pushq	%r15
+000000010000a696	pushq	%r14
+000000010000a698	pushq	%r12
+000000010000a69a	pushq	%rbx
+000000010000a69b	callq	0x10000a9de                     ## symbol stub for: __dyld_image_count
+000000010000a6a0	testl	%eax, %eax
+000000010000a6a2	je	0x10000a7b0
+000000010000a6a8	xorl	%ebx, %ebx
+000000010000a6aa	leaq	_fwp_gc(%rip), %r14
+000000010000a6b1	movl	$0x1, %r15d
+000000010000a6b7	jmp	0x10000a6df
+000000010000a6b9	testl	%esi, %esi
+000000010000a6bb	jne	0x10000a74d
+000000010000a6c1	nopw	%cs:(%rax,%rax)
+000000010000a6d0	incl	%ebx
+000000010000a6d2	callq	0x10000a9de                     ## symbol stub for: __dyld_image_count
+000000010000a6d7	cmpl	%eax, %ebx
+000000010000a6d9	jae	0x10000a7b0
+000000010000a6df	movl	%ebx, %edi
+000000010000a6e1	callq	0x10000a9d2                     ## symbol stub for: __dyld_get_image_header
+000000010000a6e6	testq	%rax, %rax
+000000010000a6e9	je	0x10000a6d0
+000000010000a6eb	cmpl	$0xfeedfacf, (%rax)             ## imm = 0xFEEDFACF
+000000010000a6f1	jne	0x10000a6d0
+000000010000a6f3	movl	%ebx, %edi
+000000010000a6f5	movq	%rax, %r12
+000000010000a6f8	callq	0x10000a9d8                     ## symbol stub for: __dyld_get_image_vmaddr_slide
+000000010000a6fd	movl	0x10(%r12), %edx
+000000010000a702	testl	%edx, %edx
+000000010000a704	je	0x10000a6d0
+000000010000a706	movq	%r12, %rcx
+000000010000a709	addq	$0x20, %rcx
+000000010000a70d	xorl	%esi, %esi
+000000010000a70f	movl	%edx, %edi
+000000010000a711	movq	%rcx, %r8
+000000010000a714	jmp	0x10000a72b
+000000010000a716	nopw	%cs:(%rax,%rax)
+000000010000a720	movl	0x4(%r8), %r9d
+000000010000a724	addq	%r9, %r8
+000000010000a727	decl	%edi
+000000010000a729	je	0x10000a6b9
+000000010000a72b	cmpl	$0x19, (%r8)
+000000010000a72f	jne	0x10000a720
+000000010000a731	movq	0x18(%r8), %r9
+000000010000a735	addq	%rax, %r9
+000000010000a738	cmpq	%r14, %r9
+000000010000a73b	ja	0x10000a720
+000000010000a73d	movq	%r14, %r10
+000000010000a740	subq	%r9, %r10
+000000010000a743	cmpq	0x20(%r8), %r10
+000000010000a747	cmovbl	%r15d, %esi
+000000010000a74b	jmp	0x10000a720
+000000010000a74d	movl	0x4a45(%rip), %esi
+000000010000a753	jmp	0x10000a76a
+000000010000a755	nopw	%cs:(%rax,%rax)
+000000010000a760	movl	0x4(%rcx), %edi
+000000010000a763	addq	%rdi, %rcx
+000000010000a766	decl	%edx
+000000010000a768	je	0x10000a7b0
+000000010000a76a	cmpl	$0x19, (%rcx)
+000000010000a76d	jne	0x10000a760
+000000010000a76f	movl	0x3c(%rcx), %edi
+000000010000a772	notl	%edi
+000000010000a774	testb	$0x3, %dil
+000000010000a778	jne	0x10000a760
+000000010000a77a	movq	0x20(%rcx), %rdi
+000000010000a77e	testq	%rdi, %rdi
+000000010000a781	je	0x10000a760
+000000010000a783	cmpl	$0x10, %esi
+000000010000a786	je	0x10000a7b9
+000000010000a788	movq	0x18(%rcx), %r8
+000000010000a78c	addq	%rax, %r8
+000000010000a78f	movslq	%esi, %r9
+000000010000a792	shlq	$0x4, %r9
+000000010000a796	movq	%r8, 0x1090(%r9,%r14)
+000000010000a79e	incl	%esi
+000000010000a7a0	movl	%esi, 0x49f2(%rip)
+000000010000a7a6	movq	%rdi, 0x1098(%r9,%r14)
+000000010000a7ae	jmp	0x10000a760
+000000010000a7b0	popq	%rbx
+000000010000a7b1	popq	%r12
+000000010000a7b3	popq	%r14
+000000010000a7b5	popq	%r15
+000000010000a7b7	popq	%rbp
+000000010000a7b8	retq
+000000010000a7b9	leaq	0x14b7(%rip), %rdi              ## literal pool for: "too many program data segments for the collector"
+000000010000a7c0	callq	_fwp_trap
+000000010000a7c5	nopw	%cs:(%rax,%rax)
+_fwp_gc_report:
+000000010000a7d0	pushq	%rbp
+000000010000a7d1	movq	%rsp, %rbp
+000000010000a7d4	pushq	%r15
+000000010000a7d6	pushq	%r14
+000000010000a7d8	pushq	%rbx
+000000010000a7d9	subq	$0x58, %rsp
+000000010000a7dd	movq	0x4a34(%rip), %rax
+000000010000a7e4	movq	_fwp_gc(%rip), %rcx
+000000010000a7eb	subq	%rcx, %rax
+000000010000a7ee	cvtsi2sd	%rax, %xmm1
+000000010000a7f3	addsd	0x49f5(%rip), %xmm1
+000000010000a7fb	movsd	%xmm1, 0x49ed(%rip)
+000000010000a803	movq	%rcx, 0x4a0e(%rip)
+000000010000a80a	movq	0x281f(%rip), %rax              ## literal pool symbol address: ___stderrp
+000000010000a811	movq	(%rax), %r15
+000000010000a814	movq	0x49c5(%rip), %rbx
+000000010000a81b	movq	0x47fe(%rip), %r14
+000000010000a822	movsd	0x49e6(%rip), %xmm2
+000000010000a82a	addsd	%xmm2, %xmm1
+000000010000a82e	movsd	0x322(%rip), %xmm0
+000000010000a836	mulsd	%xmm0, %xmm1
+000000010000a83a	movsd	%xmm1, -0x38(%rbp)
+000000010000a83f	mulsd	%xmm0, %xmm2
+000000010000a843	movsd	%xmm2, -0x30(%rbp)
+000000010000a848	movsd	0x4800(%rip), %xmm1
+000000010000a850	movsd	0x468(%rip), %xmm2
+000000010000a858	unpcklps	%xmm2, %xmm1                    ## xmm1 = xmm1[0],xmm2[0],xmm1[1],xmm2[1]
+000000010000a85b	movapd	0x46d(%rip), %xmm3
+000000010000a863	subpd	%xmm3, %xmm1
+000000010000a867	movapd	%xmm1, %xmm4
+000000010000a86b	unpckhpd	%xmm1, %xmm4                    ## xmm4 = xmm4[1],xmm1[1]
+000000010000a86f	addsd	%xmm1, %xmm4
+000000010000a873	mulsd	%xmm0, %xmm4
+000000010000a877	movapd	%xmm4, -0x70(%rbp)
+000000010000a87c	movsd	0x494c(%rip), %xmm1
+000000010000a884	unpcklps	%xmm2, %xmm1                    ## xmm1 = xmm1[0],xmm2[0],xmm1[1],xmm2[1]
+000000010000a887	subpd	%xmm3, %xmm1
+000000010000a88b	movapd	%xmm1, %xmm4
+000000010000a88f	unpckhpd	%xmm1, %xmm4                    ## xmm4 = xmm4[1],xmm1[1]
+000000010000a893	addsd	%xmm1, %xmm4
+000000010000a897	mulsd	%xmm0, %xmm4
+000000010000a89b	movapd	%xmm4, -0x60(%rbp)
+000000010000a8a0	movsd	0x4930(%rip), %xmm1
+000000010000a8a8	unpcklps	%xmm2, %xmm1                    ## xmm1 = xmm1[0],xmm2[0],xmm1[1],xmm2[1]
+000000010000a8ab	subpd	%xmm3, %xmm1
+000000010000a8af	movapd	%xmm1, %xmm2
+000000010000a8b3	unpckhpd	%xmm1, %xmm2                    ## xmm2 = xmm2[1],xmm1[1]
+000000010000a8b7	addsd	%xmm1, %xmm2
+000000010000a8bb	mulsd	%xmm0, %xmm2
+000000010000a8bf	movapd	%xmm2, -0x50(%rbp)
+000000010000a8c4	movsd	0x492c(%rip), %xmm0
+000000010000a8cc	movsd	%xmm0, -0x28(%rbp)
+000000010000a8d1	movsd	0x4927(%rip), %xmm0
+000000010000a8d9	movsd	%xmm0, -0x20(%rbp)
+000000010000a8de	callq	_fwp_gc_status_kb
+000000010000a8e3	cmpl	$0x0, 0x4712(%rip)
+000000010000a8ea	leaq	0x1466(%rip), %rcx              ## literal pool for: " (collection off)"
+000000010000a8f1	leaq	0x1092(%rip), %r9               ## literal pool for: ""
+000000010000a8f8	cmoveq	%rcx, %r9
+000000010000a8fc	leaq	0x13a5(%rip), %rsi              ## literal pool for: "fwp gc: %zu collections (%zu minor), %.1f MiB allocated (%.1f MiB freed by counts), heap %.1f MiB, live %.1f MiB (peak %.1f), pauses %.1f ms (max %.2f ms), max RSS %ld KiB%s\n"
+000000010000a903	movq	%r15, %rdi
+000000010000a906	movq	%rbx, %rdx
+000000010000a909	movq	%r14, %rcx
+000000010000a90c	movsd	-0x38(%rbp), %xmm0
+000000010000a911	movsd	-0x30(%rbp), %xmm1
+000000010000a916	movaps	-0x70(%rbp), %xmm2
+000000010000a91a	movaps	-0x60(%rbp), %xmm3
+000000010000a91e	movaps	-0x50(%rbp), %xmm4
+000000010000a922	movsd	-0x28(%rbp), %xmm5
+000000010000a927	movsd	-0x20(%rbp), %xmm6
+000000010000a92c	movq	%rax, %r8
+000000010000a92f	movb	$0x7, %al
+000000010000a931	addq	$0x58, %rsp
+000000010000a935	popq	%rbx
+000000010000a936	popq	%r14
+000000010000a938	popq	%r15
+000000010000a93a	popq	%rbp
+000000010000a93b	jmp	0x10000aa1a                     ## symbol stub for: _fprintf
+_fwp_gc_status_kb:
+000000010000a940	pushq	%rbp
+000000010000a941	movq	%rsp, %rbp
+000000010000a944	subq	$0x90, %rsp
+000000010000a94b	leaq	-0x90(%rbp), %rsi
+000000010000a952	xorl	%edi, %edi
+000000010000a954	callq	0x10000aa4a                     ## symbol stub for: _getrusage
+000000010000a959	movl	%eax, %ecx
+000000010000a95b	movq	$-0x1, %rax
+000000010000a962	testl	%ecx, %ecx
+000000010000a964	jne	0x10000a97c
+000000010000a966	movq	-0x70(%rbp), %rcx
+000000010000a96a	leaq	0x3ff(%rcx), %rax
+000000010000a971	testq	%rcx, %rcx
+000000010000a974	cmovnsq	%rcx, %rax
+000000010000a978	sarq	$0xa, %rax
+000000010000a97c	addq	$0x90, %rsp
+000000010000a983	popq	%rbp
+000000010000a984	retq
+000000010000a985	nopw	%cs:(%rax,%rax)
+_w4:
+000000010000a990	pushq	%rbp
+000000010000a991	movq	%rsp, %rbp
+000000010000a994	callq	_fwp_from_f64
+000000010000a999	movabsq	$0x3fc0000000000000, %rdi       ## imm = 0x3FC0000000000000
+000000010000a9a3	movq	%rax, %rsi
+000000010000a9a6	callq	_f6
+000000010000a9ab	movq	%rax, %rdi
+000000010000a9ae	popq	%rbp
+000000010000a9af	jmp	_fwp_f64

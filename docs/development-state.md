@@ -6,11 +6,11 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `688aa92caf2cfac9db9166d523882f734bbefec0` passes audit38190497358.
+checkpoint `162952070773bca2abf0f6dce089f3089dedbb27` passes audit38195043195.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies479 targets/14446001 bytes. Never rerun completed publishers. Phase2 is accepted; phases3–6 remain unfinished.
+verifies559 targets/30385213 bytes. Never rerun completed publishers. Phase2 is accepted; phases3–6 remain unfinished.
 
 ## Execution contract
 
@@ -90,6 +90,35 @@ Initial views will cover only pointer-free numeric arrays. Pointer-bearing and
 resource arrays retain copied slices until their disposal-order contracts are
 proved. Views must retain backing owners, mask tagged lengths consistently,
 avoid unsafe in-place updates and measure backing retention, not just headers.
+
+## Active typed-worker preparation
+
+Branch ownership-evidence-typed-worker-abi is at9fe843746e9dd9a7ebf890caaa58a5b656a46076.
+Runner38195896907 passes Linux and both Macs. This is
+preparation only: main remains accepted PR125. Worker parameters/results use
+native scalar C types and record fields, with V bridges for closures/runtime
+boundaries. Exact F32/F64 signed-zero/quiet/signaling-NaN payloads, original
+record stdout/stderr/trap status and diagnostic machine code are checked.
+Actual diagnostic ARM assembly returns the three-F64 record in d0/d1/d2;
+the scalar boundary uses d0. Intel retains caller storage for the24-byte record.
+Diagnostic no-inline helper calls are separate from production performance.
+The next integrated run will also retain ordinary optimized assembly.
+Arrays retain their word layout in this preparation. No full production gate
+or performance acceptance is claimed. Fix all remaining failures before bundling.
+Initial4da head failed a receiver naming lint; ea401 fixture used invalid make
+syntax. The33d harness incorrectly expected a successful exit from the original
+record fixture, whose division-by-zero trap is intentional. Preserve its golden
+output and exit101; the9fe harness compares all observable results.
+Source drafts: fwp-prepare-typed-worker-abi.py, fwp-typed-worker-abi-cgen-draft.rs,
+fwp-measure-typed-worker-abi.py and corresponding publication receipts/logs.
+
+Packed access helper preparation retains the8-byte owning header, uses external
+element descriptors and byte-copy loads/stores with signed extension. Numeric
+views use a tagged length and retain backing owners. This helper draft is not
+integrated or compiled: fwp-packed-array-helpers-draft.c. All producers,
+consumers, SIMD, serialization, constants and drop paths must agree on layout
+before any packed representation is accepted. Actual accepted source manifest:
+fwp-numeric-representation-accepted-source-manifest.json.
 
 ## Next concrete action
 

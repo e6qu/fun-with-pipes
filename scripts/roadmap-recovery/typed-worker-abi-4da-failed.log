@@ -1,0 +1,95 @@
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	﻿2026-10-12T02:20:30.1117060Z ##[group]Run mkdir -p "$FWP_NUMERIC_LAYOUT_ARTIFACTS"
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1117480Z ^[[36;1mmkdir -p "$FWP_NUMERIC_LAYOUT_ARTIFACTS"^[[0m
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1117750Z ^[[36;1mrustfmt --edition 2021 src/cgen.rs^[[0m
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1118080Z ^[[36;1mcp src/cgen.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/cgen.formatted.rs"^[[0m
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1118430Z ^[[36;1mcargo clippy --lib -- -D warnings^[[0m
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1118940Z ^[[36;1mcargo test --lib^[[0m
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1119240Z ^[[36;1mpython3 scripts/measure-typed-worker-abi.py^[[0m
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1156740Z shell: /bin/bash -e {0}
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1156970Z env:
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1157130Z   CC: clang
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1157290Z   CARGO_BUILD_JOBS: 2
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1157460Z   CARGO_INCREMENTAL: 0
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1157890Z   CARGO_PROFILE_DEV_DEBUG: 0
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1158110Z   CARGO_HOME: /Users/runner/.cargo
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1158330Z   CARGO_TERM_COLOR: always
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1158560Z   FWP_OPENSSL_DIR: /opt/homebrew/opt/openssl@3
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1159000Z   FWP_NUMERIC_LAYOUT_ARTIFACTS: /Users/runner/work/_temp/numeric-layout-baseline
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.1159360Z ##[endgroup]
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:30.6681000Z ^[[1m^[[92m    Checking^[[0m fwp v0.1.0 (/Users/runner/work/fun-with-pipes/fun-with-pipes)
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9696970Z ^[[1m^[[91merror^[[0m^[[1m: methods called `from_*` usually take no `self`^[[0m
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9701070Z     ^[[1m^[[94m--> ^[[0msrc/cgen.rs:1022:18
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9702300Z      ^[[1m^[[94m|^[[0m
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9703310Z ^[[1m^[[94m1022^[[0m ^[[1m^[[94m|^[[0m     fn from_word(self, v: &str) -> String {
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9725480Z      ^[[1m^[[94m|^[[0m                  ^[[1m^[[91m^^^^^[[0m
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9768900Z      ^[[1m^[[94m|^[[0m
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9769540Z      ^[[1m^[[94m= ^[[0m^[[1mhelp^[[0m: consider choosing a less ambiguous name
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9770530Z      ^[[1m^[[94m= ^[[0m^[[1mhelp^[[0m: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#wrong_self_convention
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9776920Z      ^[[1m^[[94m= ^[[0m^[[1mnote^[[0m: `-D clippy::wrong-self-convention` implied by `-D warnings`
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9777700Z      ^[[1m^[[94m= ^[[0m^[[1mhelp^[[0m: to override `-D warnings` add `#[allow(clippy::wrong_self_convention)]`
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:36.9778130Z 
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:37.4732840Z ^[[1m^[[91merror^[[0m: could not compile `fwp` (lib) due to 1 previous error
+baseline (macos-15)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:37.4776450Z ##[error]Process completed with exit code 101.
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	﻿2026-10-12T02:20:15.4942502Z ##[group]Run mkdir -p "$FWP_NUMERIC_LAYOUT_ARTIFACTS"
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.4943030Z ^[[36;1mmkdir -p "$FWP_NUMERIC_LAYOUT_ARTIFACTS"^[[0m
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.4943430Z ^[[36;1mrustfmt --edition 2021 src/cgen.rs^[[0m
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.4943878Z ^[[36;1mcp src/cgen.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/cgen.formatted.rs"^[[0m
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.4944342Z ^[[36;1mcargo clippy --lib -- -D warnings^[[0m
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.4944678Z ^[[36;1mcargo test --lib^[[0m
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.4945024Z ^[[36;1mpython3 scripts/measure-typed-worker-abi.py^[[0m
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.5008365Z shell: /usr/bin/bash -e {0}
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.5008700Z env:
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.5008941Z   CC: clang
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.5024738Z   CARGO_BUILD_JOBS: 2
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.5025117Z   CARGO_INCREMENTAL: 0
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.5025428Z   CARGO_PROFILE_DEV_DEBUG: 0
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.5025749Z   CARGO_HOME: /home/runner/.cargo
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.5026074Z   CARGO_TERM_COLOR: always
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.5026524Z   FWP_NUMERIC_LAYOUT_ARTIFACTS: /home/runner/work/_temp/numeric-layout-baseline
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:15.5027069Z ##[endgroup]
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:16.3067199Z ^[[1m^[[92m    Checking^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.8997025Z ^[[1m^[[91merror^[[0m^[[1m: methods called `from_*` usually take no `self`^[[0m
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.8997785Z     ^[[1m^[[94m--> ^[[0msrc/cgen.rs:1022:18
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.8998199Z      ^[[1m^[[94m|^[[0m
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.8998703Z ^[[1m^[[94m1022^[[0m ^[[1m^[[94m|^[[0m     fn from_word(self, v: &str) -> String {
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.8999309Z      ^[[1m^[[94m|^[[0m                  ^[[1m^[[91m^^^^^[[0m
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.8999702Z      ^[[1m^[[94m|^[[0m
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.9000139Z      ^[[1m^[[94m= ^[[0m^[[1mhelp^[[0m: consider choosing a less ambiguous name
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.9001426Z      ^[[1m^[[94m= ^[[0m^[[1mhelp^[[0m: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#wrong_self_convention
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.9006831Z      ^[[1m^[[94m= ^[[0m^[[1mnote^[[0m: `-D clippy::wrong-self-convention` implied by `-D warnings`
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.9007775Z      ^[[1m^[[94m= ^[[0m^[[1mhelp^[[0m: to override `-D warnings` add `#[allow(clippy::wrong_self_convention)]`
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:21.9008200Z 
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:23.6152072Z ^[[1m^[[91merror^[[0m: could not compile `fwp` (lib) due to 1 previous error
+baseline (ubuntu-latest)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:20:23.6205600Z ##[error]Process completed with exit code 101.
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	﻿2026-10-12T02:21:19.8265600Z ##[group]Run mkdir -p "$FWP_NUMERIC_LAYOUT_ARTIFACTS"
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8266930Z ^[[36;1mmkdir -p "$FWP_NUMERIC_LAYOUT_ARTIFACTS"^[[0m
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8267870Z ^[[36;1mrustfmt --edition 2021 src/cgen.rs^[[0m
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8269100Z ^[[36;1mcp src/cgen.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/cgen.formatted.rs"^[[0m
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8270190Z ^[[36;1mcargo clippy --lib -- -D warnings^[[0m
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8270940Z ^[[36;1mcargo test --lib^[[0m
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8271660Z ^[[36;1mpython3 scripts/measure-typed-worker-abi.py^[[0m
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8361260Z shell: /bin/bash -e {0}
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8361880Z env:
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8362340Z   CC: clang
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8362860Z   CARGO_BUILD_JOBS: 2
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8363410Z   CARGO_INCREMENTAL: 0
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8363990Z   CARGO_PROFILE_DEV_DEBUG: 0
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8364810Z   CARGO_HOME: /Users/runner/.cargo
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8366200Z   CARGO_TERM_COLOR: always
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8366840Z   FWP_OPENSSL_DIR: /usr/local/opt/openssl@3
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8368010Z   FWP_NUMERIC_LAYOUT_ARTIFACTS: /Users/runner/work/_temp/numeric-layout-baseline
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:19.8369040Z ##[endgroup]
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:20.9582530Z ^[[1m^[[92m    Checking^[[0m fwp v0.1.0 (/Users/runner/work/fun-with-pipes/fun-with-pipes)
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:42.3822990Z ^[[1m^[[91merror^[[0m^[[1m: methods called `from_*` usually take no `self`^[[0m
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:42.4322630Z     ^[[1m^[[94m--> ^[[0msrc/cgen.rs:1022:18
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:42.5327650Z      ^[[1m^[[94m|^[[0m
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:42.5803930Z ^[[1m^[[94m1022^[[0m ^[[1m^[[94m|^[[0m     fn from_word(self, v: &str) -> String {
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:42.7820170Z      ^[[1m^[[94m|^[[0m                  ^[[1m^[[91m^^^^^[[0m
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:42.8823690Z      ^[[1m^[[94m|^[[0m
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:42.9826160Z      ^[[1m^[[94m= ^[[0m^[[1mhelp^[[0m: consider choosing a less ambiguous name
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:43.0832460Z      ^[[1m^[[94m= ^[[0m^[[1mhelp^[[0m: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#wrong_self_convention
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:43.1147620Z      ^[[1m^[[94m= ^[[0m^[[1mnote^[[0m: `-D clippy::wrong-self-convention` implied by `-D warnings`
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:43.1433900Z      ^[[1m^[[94m= ^[[0m^[[1mhelp^[[0m: to override `-D warnings` add `#[allow(clippy::wrong_self_convention)]`
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:43.1564300Z 
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:44.9275420Z ^[[1m^[[91merror^[[0m: could not compile `fwp` (lib) due to 1 previous error
+baseline (macos-15-intel)	Current bytes, original semantics and diagnostic ABI	2026-10-12T02:21:44.9378810Z ##[error]Process completed with exit code 101.

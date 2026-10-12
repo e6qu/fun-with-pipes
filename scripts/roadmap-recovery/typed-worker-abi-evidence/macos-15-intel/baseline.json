@@ -1,0 +1,209 @@
+{
+  "head": "cbf68ea60c3b9439a117ef9d9b28b472f23dc632",
+  "driver": "9fe843746e9dd9a7ebf890caaa58a5b656a46076",
+  "hardware": "Darwin iad01-dz251-2f4dba58-d8d1-483a-a1e8-a2eef3f49271-7237CFAA7FBC.local 24.6.0 Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64 x86_64\n",
+  "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+  "rust": "rustc 1.99.0 (b940084d7 2026-09-28)\n",
+  "productionOptimization": [
+    "-O1",
+    "-O2"
+  ],
+  "diagnosticExtraFlags": [
+    "-fno-inline"
+  ],
+  "results": {
+    "-O1": {
+      "headerBytes": 8,
+      "payloadOffset": 8,
+      "wordBytes": 8,
+      "wordAlignment": 8,
+      "arrays": [
+        {
+          "type": "I8",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "ffffffffffffff80",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "U8",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "00000000000000ff",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "I16",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "ffffffffffff8000",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "U16",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "000000000000ffff",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "I32",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "ffffffff80000000",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "U32",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "00000000ffffffff",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "F32",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "0000000080000000",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "F64",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "8000000000000000",
+          "storageRequestBytes": 2064
+        }
+      ]
+    },
+    "-O2": {
+      "headerBytes": 8,
+      "payloadOffset": 8,
+      "wordBytes": 8,
+      "wordAlignment": 8,
+      "arrays": [
+        {
+          "type": "I8",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "ffffffffffffff80",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "U8",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "00000000000000ff",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "I16",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "ffffffffffff8000",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "U16",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "000000000000ffff",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "I32",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "ffffffff80000000",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "U32",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "00000000ffffffff",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "F32",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "0000000080000000",
+          "storageRequestBytes": 2064
+        },
+        {
+          "type": "F64",
+          "length": 257,
+          "elementBytes": 8,
+          "firstWord": "8000000000000000",
+          "storageRequestBytes": 2064
+        }
+      ]
+    }
+  },
+  "abiResults": {
+    "floats": {
+      "structBytes": 24,
+      "fieldBytes": 8
+    },
+    "scalar": {
+      "returnWordBytes": 8
+    }
+  },
+  "hashes": {
+    "floats.symbols": "b0c2f4bc3ff229e5a2f602512a030bb04c6c2a4e68d665298d493b9849a0a630",
+    "bytes-O2.json": "4780ec86dfab055957595352885ab0791b8a836dfd8d94da0dd74da19f3bf9eb",
+    "diagnostic-cc": "9b4cad838af0ecf9723474d837578ad576d79fa5a62b94d0c756d1a28964994f",
+    "baseline.bytes.c": "531b14ee178b99797be625f4e6ce6a9499eb98e9f95c2d099100e5f67e136517",
+    "bits32-O2": "a5ab78aabd1e3a5d1cb8f1bbb24808451b6deea859e0b5de857d22621a2bf65a",
+    "bits32.symbols": "4971304dacfd00ad8849b05f595ea61c49f73976522dde6313bdc2667d043393",
+    "original-O1": "c05a50ca2833581c91fa9822524f8c3c17253451d7e59c47212c63eb66464215",
+    "records.original.out": "946e11a9f5f8109c92a64436f4266239525080bdd0cff3aaa08a82e02428a8a6",
+    "floats.original.c": "614d3b9a17ad81e6520701f36ad033eabb3a2f8c42b6c12b3078f6293092be1d",
+    "bits32-diagnostic": "b964d33767cc4df76b456b832da5f967a377b858760d4f507ac6085e53052173",
+    "bytes-O1": "f1f331594f78a1fb75a386bbeb7d0b994ae418c14783e84f8371a309553c2a62",
+    "scalar.bytes.c": "2589af8c640b4965c825deefe07154a3b730a60a6b55e2f5f6b64bc79e3e7bf2",
+    "original-O2.stdout": "d928330e4ca1cceeff05d5a1e15e758dc95597332e788295135b46ff6b00b5b3",
+    "cgen.formatted.rs": "73233d8fe0f4b34ac25aadc772054d18fd21b11e8559c20ca5a2388104fdabce",
+    "bits64.symbols": "ccce1b0057cb9fa18391615469af381b4e6ba075f54b0c178b2172b1ed0a9b0b",
+    "bits64-O1": "a86a7b3415339af35a4f05ec1246caa27bb7ed751bd7e2cad79ab875c717f139",
+    "records-0-O1": "0244e92861b0b4dfa3d6e5a4a53da1946e56eaa0c247ea32c70f217e06eeca69",
+    "scalar-production": "f0b01328c6ac3e6ab25c5973ec0ac791a67681021313cfb30ab96348ce6f51bc",
+    "bits32.original.c": "59b4c418e1c7eaddbfa969e1a71e1cef2bb43ddb3c2d82305019a05a28f657d1",
+    "floats-diagnostic": "c1a1e146f282e7f30afba3b98b7a532111396f20e17bcd104650062d61248109",
+    "records-1-O1": "a91fbc5b9a2ab8e0f596d02e61ae5a9a3729cc88359e33c2d677af27d8929b87",
+    "bits32.asm": "2f0defdaebceb06d8a47f7dc4a0ce05da1d7a5f451db48612b8dd57621b1ddd1",
+    "abi-diagnostic.symbols": "97d60d4e10123f80cca5515755ff5ec93ca1300ae551516d223b40e84389d817",
+    "scalar-signature": "26fa662abb4f201963180188202d24ff801ae2f768625cd817b512689400d75b",
+    "floats-production": "5b847324aed427b88145f9bbc05a3c266e897cd9460a998b2f7b599f1b76b273",
+    "floats.bytes.c": "3bfd418c5698f0414d504c28b3310366f00e22bf4f4dca933575f50e414d1d57",
+    "bits64.original.c": "cab3beb7f4c35032978d46e92b914a9a2aff015809a170b0ab2794cb81570a23",
+    "baseline.original.c": "22cbb6f3fffa28411d4388f191d1a007f1451f5ada1f956e779dda99a0760e10",
+    "compile": "47f4f2355bc02cb5f4ced06afbae234911a8f02dabf9256934baff5da7ee5c03",
+    "bits32-O1": "f001254ed1ca276321cc805343ecea28f0fb43f035c4355d812eeed2f04d6368",
+    "abi-diagnostic.asm": "c4331961c6a5e795d6baf70d54d56726432e452fa771e183f5c215b9c9c0f643",
+    "bits32.bytes.c": "04a91c209303c155156440ce291db7e0969f591e90934d76361759686d7a9004",
+    "scalar.signature.c": "ee39fd5f83a2346a22a38b16b19672073541d14fffc69b6e3ce8b1d1c9f83aad",
+    "scalar-diagnostic": "6a150c2df15e35b92129be303bfdb62f61b4a47f51f2391a47d64a8b1e3699cb",
+    "original-O2": "53b8e25ba28f5252deea035cef9f9e4dd18d8215ecf367d9f12333bc1626dd17",
+    "abi-diagnostic": "b99b46de949c87ffbc587dc62fc249c3b1c386e19951f555f030168218cca762",
+    "bytes-O2": "b869201687b646ffbf4c957b153fda80b4922bf83bbe943e1572bd99c2c39221",
+    "compile.rs": "12c3a73fbf3fd45ee9046f76ea8310c822fa02dcf6471eb9a5480c3a93af7701",
+    "scalar.symbols": "63c98d5d0468ae2545fccafed86df294c4bdead0cabfdc977356aab4ed0db2fc",
+    "bits64-diagnostic": "88e2a29ad0ff6e8456414b80dcec512261ac72f43432591b1ef3f2c01d70a607",
+    "scalar.asm": "7355784b758b8c98a7ac43597b7f645ba4b332dca3859f6f9c98cf1dde6030a4",
+    "bits64.bytes.c": "8cd26c609ae16446b27ffd5b7133811921134ae5fee7abb49b9e93f2633e2ddc",
+    "raw.stdout": "d928330e4ca1cceeff05d5a1e15e758dc95597332e788295135b46ff6b00b5b3",
+    "bits64-O2": "6573f23058895064b484e6f4790a0eadff660656827a1ea99a6a2a496c2d6602",
+    "floats.asm": "c287d3e3f4b640cb9ba47e3e00ff47251589a2718e20a03108774c7ef366a381",
+    "records-0-O2": "946c1e3b8004f3944a58bb2e9a2bd08f1e633c6896d470511996cd12f3b5d170",
+    "original-O1.stdout": "d928330e4ca1cceeff05d5a1e15e758dc95597332e788295135b46ff6b00b5b3",
+    "scalar.original.c": "244a7adfaea643b3fed249df8b935eb13bb5a05d6cc092260de14fb88d14ed84",
+    "records-1-O2": "38fd3c5f95d5be93d3d02721904bac33b95e410c78bd070c00639091e32dfa0f",
+    "bits64.asm": "c07b0c74d5e16020fdae680afeaacdae71ff8335f111e72c987d18499dec9099",
+    "floats.json": "366ff6800350c84f9dccde899e356a95dc00ce4b8f4ed268b8660843cb1fcb32",
+    "scalar.json": "8a6f9ee852956c885abca959ad78abd5382fb693a8a984506078ca0e7a0dbe0e",
+    "bytes-O1.json": "4780ec86dfab055957595352885ab0791b8a836dfd8d94da0dd74da19f3bf9eb"
+  },
+  "limits": "Typed scalar/aggregate worker ABI with exact-bit, original record goldens, raw/native and GC/reuse controls. Arrays retain their word layout in this preparation. storageRequestBytes is header plus payload size, not libc usable size or complete allocation/live-memory accounting. Diagnostic assembly is separate; no timing, packed-layout, wider-format, or tracing-free claim."
+}

@@ -1,0 +1,9 @@
+{
+  "head": "ea40144501a491abe46d3a287d62bf0d40f788cb",
+  "previous": "4da9d3cea68d260488578c729fa5f8f1b87574d0",
+  "branch": "ownership-evidence-typed-worker-abi",
+  "tree": "953be203c9be85db3037d712ddf6ba6e4bb651b3",
+  "files": {
+    "src/cgen.rs": "c8226db51df79086650befa64ff4a0173b7acf601f7d34cb62f8592cf0d3fa97"
+  }
+}

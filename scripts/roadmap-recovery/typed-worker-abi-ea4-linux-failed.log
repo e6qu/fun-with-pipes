@@ -1,0 +1,1398 @@
+﻿2026-10-12T02:22:38.7752712Z Current runner version: '2.337.0'
+2026-10-12T02:22:38.7777568Z ##[group]Runner Image Provisioner
+2026-10-12T02:22:38.7778612Z Hosted Compute Agent
+2026-10-12T02:22:38.7779258Z Version: 20261002.596
+2026-10-12T02:22:38.7779895Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-12T02:22:38.7780732Z Build Date: 2026-10-02T22:28:27Z
+2026-10-12T02:22:38.7781464Z Worker ID: {3a6a8077-1bdd-4571-be0b-e6787b1f9fa0}
+2026-10-12T02:22:38.7782232Z Region: eastus
+2026-10-12T02:22:38.7782796Z Cloud: Azure
+2026-10-12T02:22:38.7783326Z ##[endgroup]
+2026-10-12T02:22:38.7784875Z ##[group]Operating System
+2026-10-12T02:22:38.7785572Z Ubuntu
+2026-10-12T02:22:38.7786255Z 24.04.5
+2026-10-12T02:22:38.7786800Z LTS
+2026-10-12T02:22:38.7787585Z ##[endgroup]
+2026-10-12T02:22:38.7788944Z ##[group]Runner Image
+2026-10-12T02:22:38.7789742Z Image: ubuntu-24.04
+2026-10-12T02:22:38.7790407Z Version: 20261004.327.1
+2026-10-12T02:22:38.7791691Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-12T02:22:38.7793317Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+2026-10-12T02:22:38.7794324Z ##[endgroup]
+2026-10-12T02:22:38.7795551Z ##[group]GITHUB_TOKEN Permissions
+2026-10-12T02:22:38.7797961Z Contents: read
+2026-10-12T02:22:38.7798728Z Metadata: read
+2026-10-12T02:22:38.7799344Z ##[endgroup]
+2026-10-12T02:22:38.7801633Z Secret source: Actions
+2026-10-12T02:22:38.7802748Z Cache mode: write
+2026-10-12T02:22:38.7803654Z Prepare workflow directory
+2026-10-12T02:22:38.8197178Z Prepare all required actions
+2026-10-12T02:22:38.8246257Z Getting action download info
+2026-10-12T02:22:39.0105808Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-12T02:22:39.1079439Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:686976e191b89faba57d3206551f0f330d8cb249)
+2026-10-12T02:22:39.1873409Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-12T02:22:39.4841142Z Complete job name: baseline (ubuntu-latest)
+2026-10-12T02:22:39.5608724Z ##[group]Run actions/checkout@v7
+2026-10-12T02:22:39.5609652Z with:
+2026-10-12T02:22:39.5610089Z   fetch-depth: 0
+2026-10-12T02:22:39.5610557Z   repository: e6qu/fun-with-pipes
+2026-10-12T02:22:39.5614156Z   token: ***
+2026-10-12T02:22:39.5614595Z   ssh-strict: true
+2026-10-12T02:22:39.5615036Z   ssh-user: git
+2026-10-12T02:22:39.5615493Z   persist-credentials: true
+2026-10-12T02:22:39.5615979Z   clean: true
+2026-10-12T02:22:39.5616426Z   sparse-checkout-cone-mode: true
+2026-10-12T02:22:39.5616944Z   fetch-tags: false
+2026-10-12T02:22:39.5617586Z   show-progress: true
+2026-10-12T02:22:39.5618042Z   lfs: false
+2026-10-12T02:22:39.5618448Z   submodules: false
+2026-10-12T02:22:39.5618897Z   set-safe-directory: true
+2026-10-12T02:22:39.5619395Z   allow-unsafe-pr-checkout: false
+2026-10-12T02:22:39.5620160Z env:
+2026-10-12T02:22:39.5620563Z   CC: clang
+2026-10-12T02:22:39.5620979Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:39.5621445Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:39.5621941Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:39.5622433Z ##[endgroup]
+2026-10-12T02:22:39.6661031Z Syncing repository: e6qu/fun-with-pipes
+2026-10-12T02:22:39.6663901Z ##[group]Getting Git version info
+2026-10-12T02:22:39.6665301Z Working directory is '/home/runner/work/fun-with-pipes/fun-with-pipes'
+2026-10-12T02:22:39.6667580Z [command]/usr/bin/git version
+2026-10-12T02:22:39.6769327Z git version 2.55.0
+2026-10-12T02:22:39.6785144Z ##[endgroup]
+2026-10-12T02:22:39.6793352Z Temporarily overriding HOME='/home/runner/work/_temp/31775eaa-33c4-4451-9dc2-5a10dae469ca' before making global git config changes
+2026-10-12T02:22:39.6795795Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-12T02:22:39.6798671Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/fun-with-pipes/fun-with-pipes
+2026-10-12T02:22:39.6850060Z Deleting the contents of '/home/runner/work/fun-with-pipes/fun-with-pipes'
+2026-10-12T02:22:39.6854369Z ##[group]Determining repository object format
+2026-10-12T02:22:39.6856546Z ##[endgroup]
+2026-10-12T02:22:39.6858649Z ##[group]Initializing the repository
+2026-10-12T02:22:39.6861731Z [command]/usr/bin/git init /home/runner/work/fun-with-pipes/fun-with-pipes
+2026-10-12T02:22:39.6979009Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-12T02:22:39.6980401Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-12T02:22:39.6981349Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-12T02:22:39.6982088Z hint: call:
+2026-10-12T02:22:39.6982501Z hint:
+2026-10-12T02:22:39.6983035Z hint: 	git config --global init.defaultBranch <name>
+2026-10-12T02:22:39.6983659Z hint:
+2026-10-12T02:22:39.6984255Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-12T02:22:39.6985190Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-12T02:22:39.6985943Z hint:
+2026-10-12T02:22:39.6986374Z hint: 	git branch -m <name>
+2026-10-12T02:22:39.6986856Z hint:
+2026-10-12T02:22:39.6987760Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-12T02:22:39.6993750Z Initialized empty Git repository in /home/runner/work/fun-with-pipes/fun-with-pipes/.git/
+2026-10-12T02:22:39.7004777Z [command]/usr/bin/git remote add origin https://github.com/e6qu/fun-with-pipes
+2026-10-12T02:22:39.7060317Z ##[endgroup]
+2026-10-12T02:22:39.7061676Z ##[group]Disabling automatic garbage collection
+2026-10-12T02:22:39.7065549Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-12T02:22:39.7098552Z ##[endgroup]
+2026-10-12T02:22:39.7099813Z ##[group]Setting up auth
+2026-10-12T02:22:39.7100722Z Removing SSH command configuration
+2026-10-12T02:22:39.7104372Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-12T02:22:39.7141332Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-12T02:22:39.7544613Z Removing HTTP extra header
+2026-10-12T02:22:39.7551891Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-12T02:22:39.7591994Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-12T02:22:39.7846203Z Removing includeIf entries pointing to credentials config files
+2026-10-12T02:22:39.7849979Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-12T02:22:39.7887230Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-12T02:22:39.8146383Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-d5b29ce4-62ec-49b5-a15f-3254c09564a8.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-12T02:22:39.8195304Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git.path /home/runner/work/_temp/git-credentials-d5b29ce4-62ec-49b5-a15f-3254c09564a8.config
+2026-10-12T02:22:39.8235402Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-d5b29ce4-62ec-49b5-a15f-3254c09564a8.config
+2026-10-12T02:22:39.8276589Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-d5b29ce4-62ec-49b5-a15f-3254c09564a8.config
+2026-10-12T02:22:39.8313220Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-d5b29ce4-62ec-49b5-a15f-3254c09564a8.config
+2026-10-12T02:22:39.8346647Z ##[endgroup]
+2026-10-12T02:22:39.8348010Z ##[group]Fetching the repository
+2026-10-12T02:22:39.8354789Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-12T02:22:42.0473448Z From https://github.com/e6qu/fun-with-pipes
+2026-10-12T02:22:42.0476670Z  * [new branch]      claude/trusting-galileo-xgg1bl -> origin/claude/trusting-galileo-xgg1bl
+2026-10-12T02:22:42.0479635Z  * [new branch]      fix-grpc-tls-pool-identity -> origin/fix-grpc-tls-pool-identity
+2026-10-12T02:22:42.0482061Z  * [new branch]      fix-http2-body-bounds   -> origin/fix-http2-body-bounds
+2026-10-12T02:22:42.0488473Z  * [new branch]      fix-local-guard-sampling -> origin/fix-local-guard-sampling
+2026-10-12T02:22:42.0490328Z  * [new branch]      inference-call-effects  -> origin/inference-call-effects
+2026-10-12T02:22:42.0492220Z  * [new branch]      macos-portability       -> origin/macos-portability
+2026-10-12T02:22:42.0493511Z  * [new branch]      main                    -> origin/main
+2026-10-12T02:22:42.0494600Z  * [new branch]      ownership-accepted-phase2-audit -> origin/ownership-accepted-phase2-audit
+2026-10-12T02:22:42.0495852Z  * [new branch]      ownership-argument-preparation -> origin/ownership-argument-preparation
+2026-10-12T02:22:42.0496960Z  * [new branch]      ownership-array-elements -> origin/ownership-array-elements
+2026-10-12T02:22:42.0499031Z  * [new branch]      ownership-borrowed-callbacks -> origin/ownership-borrowed-callbacks
+2026-10-12T02:22:42.0501192Z  * [new branch]      ownership-caf-cache     -> origin/ownership-caf-cache
+2026-10-12T02:22:42.0502773Z  * [new branch]      ownership-call-liveness -> origin/ownership-call-liveness
+2026-10-12T02:22:42.0505335Z  * [new branch]      ownership-channel-cycle-lifetimes -> origin/ownership-channel-cycle-lifetimes
+2026-10-12T02:22:42.0508350Z  * [new branch]      ownership-channel-queues -> origin/ownership-channel-queues
+2026-10-12T02:22:42.0510690Z  * [new branch]      ownership-ci-probe-repairs -> origin/ownership-ci-probe-repairs
+2026-10-12T02:22:42.0513870Z  * [new branch]      ownership-closure-cleanup -> origin/ownership-closure-cleanup
+2026-10-12T02:22:42.0516017Z  * [new branch]      ownership-closures      -> origin/ownership-closures
+2026-10-12T02:22:42.0518394Z  * [new branch]      ownership-compiler-task-bundle -> origin/ownership-compiler-task-bundle
+2026-10-12T02:22:42.0520743Z  * [new branch]      ownership-connect-cancellation -> origin/ownership-connect-cancellation
+2026-10-12T02:22:42.0523219Z  * [new branch]      ownership-constructor-types -> origin/ownership-constructor-types
+2026-10-12T02:22:42.0525529Z  * [new branch]      ownership-constructor-unwind -> origin/ownership-constructor-unwind
+2026-10-12T02:22:42.0527756Z  * [new branch]      ownership-contracts     -> origin/ownership-contracts
+2026-10-12T02:22:42.0529934Z  * [new branch]      ownership-evidence-ad-scope-direct -> origin/ownership-evidence-ad-scope-direct
+2026-10-12T02:22:42.0532988Z  * [new branch]      ownership-evidence-allocation-counters-complete -> origin/ownership-evidence-allocation-counters-complete
+2026-10-12T02:22:42.0535945Z  * [new branch]      ownership-evidence-argument-preparation -> origin/ownership-evidence-argument-preparation
+2026-10-12T02:22:42.0537927Z  * [new branch]      ownership-evidence-array-size-limits -> origin/ownership-evidence-array-size-limits
+2026-10-12T02:22:42.0539580Z  * [new branch]      ownership-evidence-autodiff-allocations -> origin/ownership-evidence-autodiff-allocations
+2026-10-12T02:22:42.0541283Z  * [new branch]      ownership-evidence-autodiff-scopes -> origin/ownership-evidence-autodiff-scopes
+2026-10-12T02:22:42.0616455Z  * [new branch]      ownership-evidence-autodiff-tapes -> origin/ownership-evidence-autodiff-tapes
+2026-10-12T02:22:42.0619630Z  * [new branch]      ownership-evidence-caf-layout -> origin/ownership-evidence-caf-layout
+2026-10-12T02:22:42.0622173Z  * [new branch]      ownership-evidence-call-liveness -> origin/ownership-evidence-call-liveness
+2026-10-12T02:22:42.0625328Z  * [new branch]      ownership-evidence-codec-artifact-copy -> origin/ownership-evidence-codec-artifact-copy
+2026-10-12T02:22:42.0628616Z  * [new branch]      ownership-evidence-constructor-layout -> origin/ownership-evidence-constructor-layout
+2026-10-12T02:22:42.0631533Z  * [new branch]      ownership-evidence-conversion-layout -> origin/ownership-evidence-conversion-layout
+2026-10-12T02:22:42.0634495Z  * [new branch]      ownership-evidence-conversion-preparation -> origin/ownership-evidence-conversion-preparation
+2026-10-12T02:22:42.0636330Z  * [new branch]      ownership-evidence-device-output-bounds -> origin/ownership-evidence-device-output-bounds
+2026-10-12T02:22:42.0638268Z  * [new branch]      ownership-evidence-devices-crash -> origin/ownership-evidence-devices-crash
+2026-10-12T02:22:42.0639785Z  * [new branch]      ownership-evidence-effects-context -> origin/ownership-evidence-effects-context
+2026-10-12T02:22:42.0641272Z  * [new branch]      ownership-evidence-effects-crash -> origin/ownership-evidence-effects-crash
+2026-10-12T02:22:42.0642832Z  * [new branch]      ownership-evidence-external-lifetimes -> origin/ownership-evidence-external-lifetimes
+2026-10-12T02:22:42.0644536Z  * [new branch]      ownership-evidence-field-context-layout -> origin/ownership-evidence-field-context-layout
+2026-10-12T02:22:42.0646037Z  * [new branch]      ownership-evidence-file-frames -> origin/ownership-evidence-file-frames
+2026-10-12T02:22:42.0647615Z  * [new branch]      ownership-evidence-fold-unwind -> origin/ownership-evidence-fold-unwind
+2026-10-12T02:22:42.0649064Z  * [new branch]      ownership-evidence-full-ownership -> origin/ownership-evidence-full-ownership
+2026-10-12T02:22:42.0650738Z  * [new branch]      ownership-evidence-function-argument-effects -> origin/ownership-evidence-function-argument-effects
+2026-10-12T02:22:42.0652511Z  * [new branch]      ownership-evidence-gc-build-diagnostics -> origin/ownership-evidence-gc-build-diagnostics
+2026-10-12T02:22:42.0654289Z  * [new branch]      ownership-evidence-grpc-addresses -> origin/ownership-evidence-grpc-addresses
+2026-10-12T02:22:42.0655740Z  * [new branch]      ownership-evidence-grpc-client -> origin/ownership-evidence-grpc-client
+2026-10-12T02:22:42.0657207Z  * [new branch]      ownership-evidence-grpc-environment -> origin/ownership-evidence-grpc-environment
+2026-10-12T02:22:42.0659340Z  * [new branch]      ownership-evidence-grpc-layout -> origin/ownership-evidence-grpc-layout
+2026-10-12T02:22:42.0661960Z  * [new branch]      ownership-evidence-grpc-packed -> origin/ownership-evidence-grpc-packed
+2026-10-12T02:22:42.0664463Z  * [new branch]      ownership-evidence-grpc-serving -> origin/ownership-evidence-grpc-serving
+2026-10-12T02:22:42.0666977Z  * [new branch]      ownership-evidence-grpc-storage -> origin/ownership-evidence-grpc-storage
+2026-10-12T02:22:42.0669846Z  * [new branch]      ownership-evidence-guard-sampling -> origin/ownership-evidence-guard-sampling
+2026-10-12T02:22:42.0672491Z  * [new branch]      ownership-evidence-http2-intel -> origin/ownership-evidence-http2-intel
+2026-10-12T02:22:42.0674896Z  * [new branch]      ownership-evidence-http2-roots -> origin/ownership-evidence-http2-roots
+2026-10-12T02:22:42.0677702Z  * [new branch]      ownership-evidence-inline-caf-layout -> origin/ownership-evidence-inline-caf-layout
+2026-10-12T02:22:42.0680473Z  * [new branch]      ownership-evidence-kernel-stack-bounds -> origin/ownership-evidence-kernel-stack-bounds
+2026-10-12T02:22:42.0682869Z  * [new branch]      ownership-evidence-library-runtime -> origin/ownership-evidence-library-runtime
+2026-10-12T02:22:42.0684714Z  * [new branch]      ownership-evidence-list-allocations-complete -> origin/ownership-evidence-list-allocations-complete
+2026-10-12T02:22:42.0686560Z  * [new branch]      ownership-evidence-list-applicative -> origin/ownership-evidence-list-applicative
+2026-10-12T02:22:42.0688537Z  * [new branch]      ownership-evidence-loop-layout -> origin/ownership-evidence-loop-layout
+2026-10-12T02:22:42.0690273Z  * [new branch]      ownership-evidence-map-set -> origin/ownership-evidence-map-set
+2026-10-12T02:22:42.0692566Z  * [new branch]      ownership-evidence-map-unwind -> origin/ownership-evidence-map-unwind
+2026-10-12T02:22:42.0694451Z  * [new branch]      ownership-evidence-match-context-layout -> origin/ownership-evidence-match-context-layout
+2026-10-12T02:22:42.0696326Z  * [new branch]      ownership-evidence-numeric-layout-baseline -> origin/ownership-evidence-numeric-layout-baseline
+2026-10-12T02:22:42.0698460Z  * [new branch]      ownership-evidence-old-reclamation -> origin/ownership-evidence-old-reclamation
+2026-10-12T02:22:42.0700174Z  * [new branch]      ownership-evidence-phase2-exit-review -> origin/ownership-evidence-phase2-exit-review
+2026-10-12T02:22:42.0702911Z  * [new branch]      ownership-evidence-primitive-inventory -> origin/ownership-evidence-primitive-inventory
+2026-10-12T02:22:42.0706064Z  * [new branch]      ownership-evidence-record-context -> origin/ownership-evidence-record-context
+2026-10-12T02:22:42.0710000Z  * [new branch]      ownership-evidence-record-conversion-layout -> origin/ownership-evidence-record-conversion-layout
+2026-10-12T02:22:42.0713742Z  * [new branch]      ownership-evidence-record-update-layout -> origin/ownership-evidence-record-update-layout
+2026-10-12T02:22:42.0717533Z  * [new branch]      ownership-evidence-resource-frames -> origin/ownership-evidence-resource-frames
+2026-10-12T02:22:42.0720429Z  * [new branch]      ownership-evidence-resource-holders -> origin/ownership-evidence-resource-holders
+2026-10-12T02:22:42.0723158Z  * [new branch]      ownership-evidence-retain-layout -> origin/ownership-evidence-retain-layout
+2026-10-12T02:22:42.0725805Z  * [new branch]      ownership-evidence-reuse-tokens -> origin/ownership-evidence-reuse-tokens
+2026-10-12T02:22:42.0727696Z  * [new branch]      ownership-evidence-runtime-call -> origin/ownership-evidence-runtime-call
+2026-10-12T02:22:42.0729348Z  * [new branch]      ownership-evidence-selection-unwind -> origin/ownership-evidence-selection-unwind
+2026-10-12T02:22:42.0731268Z  * [new branch]      ownership-evidence-serializer-leaves -> origin/ownership-evidence-serializer-leaves
+2026-10-12T02:22:42.0733044Z  * [new branch]      ownership-evidence-structural-buffer -> origin/ownership-evidence-structural-buffer
+2026-10-12T02:22:42.0735461Z  * [new branch]      ownership-evidence-task-boundaries -> origin/ownership-evidence-task-boundaries
+2026-10-12T02:22:42.0738094Z  * [new branch]      ownership-evidence-task-runtime -> origin/ownership-evidence-task-runtime
+2026-10-12T02:22:42.0739675Z  * [new branch]      ownership-evidence-tls-listeners -> origin/ownership-evidence-tls-listeners
+2026-10-12T02:22:42.0741194Z  * [new branch]      ownership-evidence-tls-workers -> origin/ownership-evidence-tls-workers
+2026-10-12T02:22:42.0742656Z  * [new branch]      ownership-evidence-typed-state -> origin/ownership-evidence-typed-state
+2026-10-12T02:22:42.0744411Z  * [new branch]      ownership-evidence-typed-state-allocations -> origin/ownership-evidence-typed-state-allocations
+2026-10-12T02:22:42.0746544Z  * [new branch]      ownership-evidence-typed-state-allocations-complete -> origin/ownership-evidence-typed-state-allocations-complete
+2026-10-12T02:22:42.0748830Z  * [new branch]      ownership-evidence-typed-worker-abi -> origin/ownership-evidence-typed-worker-abi
+2026-10-12T02:22:42.0750437Z  * [new branch]      ownership-evidence-unwind-runtime -> origin/ownership-evidence-unwind-runtime
+2026-10-12T02:22:42.0752100Z  * [new branch]      ownership-evidence-variant-alias-layout -> origin/ownership-evidence-variant-alias-layout
+2026-10-12T02:22:42.0753733Z  * [new branch]      ownership-evidence-wasi-disposal -> origin/ownership-evidence-wasi-disposal
+2026-10-12T02:22:42.0755249Z  * [new branch]      ownership-evidence-wasm-resources -> origin/ownership-evidence-wasm-resources
+2026-10-12T02:22:42.0756877Z  * [new branch]      ownership-evidence-worker-preparation -> origin/ownership-evidence-worker-preparation
+2026-10-12T02:22:42.0758909Z  * [new branch]      ownership-evidence-zip-unwind -> origin/ownership-evidence-zip-unwind
+2026-10-12T02:22:42.0760392Z  * [new branch]      ownership-exit-and-buffer-bundle -> origin/ownership-exit-and-buffer-bundle
+2026-10-12T02:22:42.0761870Z  * [new branch]      ownership-ffi-pointer-arithmetic -> origin/ownership-ffi-pointer-arithmetic
+2026-10-12T02:22:42.0763198Z  * [new branch]      ownership-field-context -> origin/ownership-field-context
+2026-10-12T02:22:42.0764424Z  * [new branch]      ownership-file-construction -> origin/ownership-file-construction
+2026-10-12T02:22:42.0765929Z  * [new branch]      ownership-file-construction-disposal -> origin/ownership-file-construction-disposal
+2026-10-12T02:22:42.0768045Z  * [new branch]      ownership-file-discard  -> origin/ownership-file-discard
+2026-10-12T02:22:42.0770539Z  * [new branch]      ownership-file-inline-path -> origin/ownership-file-inline-path
+2026-10-12T02:22:42.0773029Z  * [new branch]      ownership-file-io-errors -> origin/ownership-file-io-errors
+2026-10-12T02:22:42.0775715Z  * [new branch]      ownership-file-runtime-boundaries -> origin/ownership-file-runtime-boundaries
+2026-10-12T02:22:42.0778920Z  * [new branch]      ownership-file-runtime-owners -> origin/ownership-file-runtime-owners
+2026-10-12T02:22:42.0781868Z  * [new branch]      ownership-file-storage-disposal -> origin/ownership-file-storage-disposal
+2026-10-12T02:22:42.0784402Z  * [new branch]      ownership-file-write-visibility -> origin/ownership-file-write-visibility
+2026-10-12T02:22:42.0786721Z  * [new branch]      ownership-filter-callbacks -> origin/ownership-filter-callbacks
+2026-10-12T02:22:42.0789272Z  * [new branch]      ownership-fold-transfers -> origin/ownership-fold-transfers
+2026-10-12T02:22:42.0790886Z  * [new branch]      ownership-fold-unwind   -> origin/ownership-fold-unwind
+2026-10-12T02:22:42.0792275Z  * [new branch]      ownership-grpc-canonical-encoding -> origin/ownership-grpc-canonical-encoding
+2026-10-12T02:22:42.0793836Z  * [new branch]      ownership-grpc-capture-resources -> origin/ownership-grpc-capture-resources
+2026-10-12T02:22:42.0795668Z  * [new branch]      ownership-grpc-client-failure-text -> origin/ownership-grpc-client-failure-text
+2026-10-12T02:22:42.0797199Z  * [new branch]      ownership-grpc-client-receive -> origin/ownership-grpc-client-receive
+2026-10-12T02:22:42.0799673Z  * [new branch]      ownership-grpc-client-requests -> origin/ownership-grpc-client-requests
+2026-10-12T02:22:42.0801908Z  * [new branch]      ownership-grpc-connect-cleanup -> origin/ownership-grpc-connect-cleanup
+2026-10-12T02:22:42.0803397Z  * [new branch]      ownership-grpc-connect-startup -> origin/ownership-grpc-connect-startup
+2026-10-12T02:22:42.0804933Z  * [new branch]      ownership-grpc-connection-addresses -> origin/ownership-grpc-connection-addresses
+2026-10-12T02:22:42.0806485Z  * [new branch]      ownership-grpc-context-resources -> origin/ownership-grpc-context-resources
+2026-10-12T02:22:42.0808368Z  * [new branch]      ownership-grpc-context-restore -> origin/ownership-grpc-context-restore
+2026-10-12T02:22:42.0809877Z  * [new branch]      ownership-grpc-environment-cache -> origin/ownership-grpc-environment-cache
+2026-10-12T02:22:42.0811298Z  * [new branch]      ownership-grpc-force-cleanup -> origin/ownership-grpc-force-cleanup
+2026-10-12T02:22:42.0813741Z  * [new branch]      ownership-grpc-packed-options -> origin/ownership-grpc-packed-options
+2026-10-12T02:22:42.0816567Z  * [new branch]      ownership-grpc-peer-completion -> origin/ownership-grpc-peer-completion
+2026-10-12T02:22:42.0819688Z  * [new branch]      ownership-grpc-receive-cleanup -> origin/ownership-grpc-receive-cleanup
+2026-10-12T02:22:42.0822494Z  * [new branch]      ownership-grpc-render-cleanup -> origin/ownership-grpc-render-cleanup
+2026-10-12T02:22:42.0825201Z  * [new branch]      ownership-grpc-request-encoding -> origin/ownership-grpc-request-encoding
+2026-10-12T02:22:42.0828057Z  * [new branch]      ownership-grpc-response-encoding -> origin/ownership-grpc-response-encoding
+2026-10-12T02:22:42.0830729Z  * [new branch]      ownership-grpc-send-cleanup -> origin/ownership-grpc-send-cleanup
+2026-10-12T02:22:42.0833205Z  * [new branch]      ownership-grpc-server-cleanup -> origin/ownership-grpc-server-cleanup
+2026-10-12T02:22:42.0834679Z  * [new branch]      ownership-grpc-status-cleanup -> origin/ownership-grpc-status-cleanup
+2026-10-12T02:22:42.0836044Z  * [new branch]      ownership-http2-body-roots -> origin/ownership-http2-body-roots
+2026-10-12T02:22:42.0837721Z  * [new branch]      ownership-http2-peer-cleanup -> origin/ownership-http2-peer-cleanup
+2026-10-12T02:22:42.0839028Z  * [new branch]      ownership-inline-caf    -> origin/ownership-inline-caf
+2026-10-12T02:22:42.0840277Z  * [new branch]      ownership-interpreter-opencl -> origin/ownership-interpreter-opencl
+2026-10-12T02:22:42.0841889Z  * [new branch]      ownership-leaves        -> origin/ownership-leaves
+2026-10-12T02:22:42.0843885Z  * [new branch]      ownership-library-inputs -> origin/ownership-library-inputs
+2026-10-12T02:22:42.0845372Z  * [new branch]      ownership-library-resource-bundle -> origin/ownership-library-resource-bundle
+2026-10-12T02:22:42.0846812Z  * [new branch]      ownership-library-resources -> origin/ownership-library-resources
+2026-10-12T02:22:42.0848376Z  * [new branch]      ownership-library-results -> origin/ownership-library-results
+2026-10-12T02:22:42.0849603Z  * [new branch]      ownership-library-unload -> origin/ownership-library-unload
+2026-10-12T02:22:42.0850766Z  * [new branch]      ownership-list-copies   -> origin/ownership-list-copies
+2026-10-12T02:22:42.0851935Z  * [new branch]      ownership-list-generation -> origin/ownership-list-generation
+2026-10-12T02:22:42.0853123Z  * [new branch]      ownership-list-options  -> origin/ownership-list-options
+2026-10-12T02:22:42.0854245Z  * [new branch]      ownership-list-order    -> origin/ownership-list-order
+2026-10-12T02:22:42.0855346Z  * [new branch]      ownership-list-prefix   -> origin/ownership-list-prefix
+2026-10-12T02:22:42.0856713Z  * [new branch]      ownership-list-structure -> origin/ownership-list-structure
+2026-10-12T02:22:42.0858301Z  * [new branch]      ownership-loop-preparation -> origin/ownership-loop-preparation
+2026-10-12T02:22:42.0859515Z  * [new branch]      ownership-loop-state    -> origin/ownership-loop-state
+2026-10-12T02:22:42.0860647Z  * [new branch]      ownership-loop-unwind   -> origin/ownership-loop-unwind
+2026-10-12T02:22:42.0861782Z  * [new branch]      ownership-map-callbacks -> origin/ownership-map-callbacks
+2026-10-12T02:22:42.0862988Z  * [new branch]      ownership-map-set-elements -> origin/ownership-map-set-elements
+2026-10-12T02:22:42.0864162Z  * [new branch]      ownership-map-unwind    -> origin/ownership-map-unwind
+2026-10-12T02:22:42.0865285Z  * [new branch]      ownership-match-context -> origin/ownership-match-context
+2026-10-12T02:22:42.0866559Z  * [new branch]      ownership-match-scrutinee-types -> origin/ownership-match-scrutinee-types
+2026-10-12T02:22:42.0868204Z  * [new branch]      ownership-nested-loop-boxing -> origin/ownership-nested-loop-boxing
+2026-10-12T02:22:42.0869627Z  * [new branch]      ownership-nominal-source-context -> origin/ownership-nominal-source-context
+2026-10-12T02:22:42.0870965Z  * [new branch]      ownership-old-reclamation -> origin/ownership-old-reclamation
+2026-10-12T02:22:42.0872156Z  * [new branch]      ownership-opencl-lifetime -> origin/ownership-opencl-lifetime
+2026-10-12T02:22:42.0873523Z  * [new branch]      ownership-phase2-exit-finalization -> origin/ownership-phase2-exit-finalization
+2026-10-12T02:22:42.0875002Z  * [new branch]      ownership-pr124-combined-repair -> origin/ownership-pr124-combined-repair
+2026-10-12T02:22:42.0876414Z  * [new branch]      ownership-pr124-final-ownership -> origin/ownership-pr124-final-ownership
+2026-10-12T02:22:42.0877990Z  * [new branch]      ownership-record-conversion -> origin/ownership-record-conversion
+2026-10-12T02:22:42.0879194Z  * [new branch]      ownership-record-update -> origin/ownership-record-update
+2026-10-12T02:22:42.0880775Z  * [new branch]      ownership-resource-frame-binding-kinds -> origin/ownership-resource-frame-binding-kinds
+2026-10-12T02:22:42.0882315Z  * [new branch]      ownership-resource-frame-fields -> origin/ownership-resource-frame-fields
+2026-10-12T02:22:42.0883753Z  * [new branch]      ownership-resource-frame-variants -> origin/ownership-resource-frame-variants
+2026-10-12T02:22:42.0885092Z  * [new branch]      ownership-resource-frames -> origin/ownership-resource-frames
+2026-10-12T02:22:42.0886484Z  * [new branch]      ownership-resource-network-bundle -> origin/ownership-resource-network-bundle
+2026-10-12T02:22:42.0888315Z  * [new branch]      ownership-resource-record-binding-kinds -> origin/ownership-resource-record-binding-kinds
+2026-10-12T02:22:42.0889728Z  * [new branch]      ownership-reuse-tokens  -> origin/ownership-reuse-tokens
+2026-10-12T02:22:42.0890822Z  * [new branch]      ownership-right-fold    -> origin/ownership-right-fold
+2026-10-12T02:22:42.0892050Z  * [new branch]      ownership-roadmap-finalization -> origin/ownership-roadmap-finalization
+2026-10-12T02:22:42.0893433Z  * [new branch]      ownership-roadmap-preparation -> origin/ownership-roadmap-preparation
+2026-10-12T02:22:42.0894795Z  * [new branch]      ownership-runtime-call-cleanup -> origin/ownership-runtime-call-cleanup
+2026-10-12T02:22:42.0896097Z  * [new branch]      ownership-selection-unwind -> origin/ownership-selection-unwind
+2026-10-12T02:22:42.0897581Z  * [new branch]      ownership-sort-callbacks -> origin/ownership-sort-callbacks
+2026-10-12T02:22:42.0898788Z  * [new branch]      ownership-stack-arguments -> origin/ownership-stack-arguments
+2026-10-12T02:22:42.0899964Z  * [new branch]      ownership-state-sequences -> origin/ownership-state-sequences
+2026-10-12T02:22:42.0901142Z  * [new branch]      ownership-task-boundaries -> origin/ownership-task-boundaries
+2026-10-12T02:22:42.0902278Z  * [new branch]      ownership-task-handles  -> origin/ownership-task-handles
+2026-10-12T02:22:42.0903371Z  * [new branch]      ownership-task-scope    -> origin/ownership-task-scope
+2026-10-12T02:22:42.0904610Z  * [new branch]      ownership-task-thunks   -> origin/ownership-task-thunks
+2026-10-12T02:22:42.0905706Z  * [new branch]      ownership-task-within   -> origin/ownership-task-within
+2026-10-12T02:22:42.0906844Z  * [new branch]      ownership-temporary-types -> origin/ownership-temporary-types
+2026-10-12T02:22:42.0908375Z  * [new branch]      ownership-text-results  -> origin/ownership-text-results
+2026-10-12T02:22:42.0909515Z  * [new branch]      ownership-tls-alpn-roots -> origin/ownership-tls-alpn-roots
+2026-10-12T02:22:42.0910732Z  * [new branch]      ownership-tls-cache-failures -> origin/ownership-tls-cache-failures
+2026-10-12T02:22:42.0911940Z  * [new branch]      ownership-tls-listeners -> origin/ownership-tls-listeners
+2026-10-12T02:22:42.0913101Z  * [new branch]      ownership-tls-peer-subject -> origin/ownership-tls-peer-subject
+2026-10-12T02:22:42.0914405Z  * [new branch]      ownership-tls-wire-preparation -> origin/ownership-tls-wire-preparation
+2026-10-12T02:22:42.0915802Z  * [new branch]      ownership-unboxed-worker-locals -> origin/ownership-unboxed-worker-locals
+2026-10-12T02:22:42.0917083Z  * [new branch]      ownership-unwind-runtime -> origin/ownership-unwind-runtime
+2026-10-12T02:22:42.0918496Z  * [new branch]      ownership-variant-alias -> origin/ownership-variant-alias
+2026-10-12T02:22:42.0919713Z  * [new branch]      ownership-variant-conversion -> origin/ownership-variant-conversion
+2026-10-12T02:22:42.0921036Z  * [new branch]      ownership-variant-preparation -> origin/ownership-variant-preparation
+2026-10-12T02:22:42.0922356Z  * [new branch]      ownership-wasm-count-disposal -> origin/ownership-wasm-count-disposal
+2026-10-12T02:22:42.0923689Z  * [new branch]      ownership-wasm-resource-counts -> origin/ownership-wasm-resource-counts
+2026-10-12T02:22:42.0924903Z  * [new branch]      ownership-wide-counts   -> origin/ownership-wide-counts
+2026-10-12T02:22:42.0926000Z  * [new branch]      ownership-worker-boxing -> origin/ownership-worker-boxing
+2026-10-12T02:22:42.0927661Z  * [new branch]      ownership-worker-preparation -> origin/ownership-worker-preparation
+2026-10-12T02:22:42.0928909Z  * [new branch]      ownership-zip-callbacks -> origin/ownership-zip-callbacks
+2026-10-12T02:22:42.0930005Z  * [new branch]      ownership-zip-unwind    -> origin/ownership-zip-unwind
+2026-10-12T02:22:42.0931193Z  * [new branch]      roadmap/handoff-pr123-20261011 -> origin/roadmap/handoff-pr123-20261011
+2026-10-12T02:22:42.0932638Z  * [new tag]         roadmap/bundle-054-063-tested-9664d0607d16 -> roadmap/bundle-054-063-tested-9664d0607d16
+2026-10-12T02:22:42.0934247Z  * [new tag]         roadmap/bundle-054-073-candidate-ed442426ff6e -> roadmap/bundle-054-073-candidate-ed442426ff6e
+2026-10-12T02:22:42.0935851Z  * [new tag]         roadmap/evidence-conversion-0bb9762dd41b -> roadmap/evidence-conversion-0bb9762dd41b
+2026-10-12T02:22:42.0937628Z  * [new tag]         roadmap/evidence-conversion-3a9fcb512a37 -> roadmap/evidence-conversion-3a9fcb512a37
+2026-10-12T02:22:42.0939227Z  * [new tag]         roadmap/evidence-conversion-edabbc24e57d -> roadmap/evidence-conversion-edabbc24e57d
+2026-10-12T02:22:42.0940683Z  * [new tag]         roadmap/evidence-file-4a448ea21e5c -> roadmap/evidence-file-4a448ea21e5c
+2026-10-12T02:22:42.0941987Z  * [new tag]         roadmap/evidence-file-c5665d026228 -> roadmap/evidence-file-c5665d026228
+2026-10-12T02:22:42.0943377Z  * [new tag]         roadmap/evidence-holders-372375a15557 -> roadmap/evidence-holders-372375a15557
+2026-10-12T02:22:42.0944808Z  * [new tag]         roadmap/evidence-holders-3f0c430477bf -> roadmap/evidence-holders-3f0c430477bf
+2026-10-12T02:22:42.0946153Z  * [new tag]         roadmap/evidence-map-3389a9730a8e -> roadmap/evidence-map-3389a9730a8e
+2026-10-12T02:22:42.0947650Z  * [new tag]         roadmap/evidence-map-5c24e0d34ea3 -> roadmap/evidence-map-5c24e0d34ea3
+2026-10-12T02:22:42.0949117Z  * [new tag]         roadmap/evidence-preparation-1ac6dc99fde5 -> roadmap/evidence-preparation-1ac6dc99fde5
+2026-10-12T02:22:42.0950999Z  * [new tag]         roadmap/evidence-record-update-layout-7249699c8f38 -> roadmap/evidence-record-update-layout-7249699c8f38
+2026-10-12T02:22:42.0952613Z  * [new tag]         roadmap/evidence-reuse-25fc86811242 -> roadmap/evidence-reuse-25fc86811242
+2026-10-12T02:22:42.0953939Z  * [new tag]         roadmap/evidence-reuse-3d6102af3bff -> roadmap/evidence-reuse-3d6102af3bff
+2026-10-12T02:22:42.0955266Z  * [new tag]         roadmap/evidence-reuse-5d111b28b81f -> roadmap/evidence-reuse-5d111b28b81f
+2026-10-12T02:22:42.0956621Z  * [new tag]         roadmap/evidence-runtime-223416054406 -> roadmap/evidence-runtime-223416054406
+2026-10-12T02:22:42.0958274Z  * [new tag]         roadmap/evidence-runtime-ae907d63e277 -> roadmap/evidence-runtime-ae907d63e277
+2026-10-12T02:22:42.0959692Z  * [new tag]         roadmap/evidence-serving-3aca5cf20d77 -> roadmap/evidence-serving-3aca5cf20d77
+2026-10-12T02:22:42.0961090Z  * [new tag]         roadmap/evidence-serving-5fd8e12bd82a -> roadmap/evidence-serving-5fd8e12bd82a
+2026-10-12T02:22:42.0962503Z  * [new tag]         roadmap/evidence-storage-e5bbfd84736f -> roadmap/evidence-storage-e5bbfd84736f
+2026-10-12T02:22:42.0963902Z  * [new tag]         roadmap/evidence-storage-fb9e59fef93e -> roadmap/evidence-storage-fb9e59fef93e
+2026-10-12T02:22:42.0965239Z  * [new tag]         roadmap/evidence-task-329e8db14077 -> roadmap/evidence-task-329e8db14077
+2026-10-12T02:22:42.0966528Z  * [new tag]         roadmap/evidence-task-7dfe64894b1d -> roadmap/evidence-task-7dfe64894b1d
+2026-10-12T02:22:42.0968032Z  * [new tag]         roadmap/evidence-wasi-24e7e57103f8 -> roadmap/evidence-wasi-24e7e57103f8
+2026-10-12T02:22:42.0969327Z  * [new tag]         roadmap/evidence-wasi-dc731c19e001 -> roadmap/evidence-wasi-dc731c19e001
+2026-10-12T02:22:42.0970451Z  * [new tag]         roadmap/preparation-007 -> roadmap/preparation-007
+2026-10-12T02:22:42.0971415Z  * [new tag]         roadmap/preparation-008 -> roadmap/preparation-008
+2026-10-12T02:22:42.0972535Z  * [new tag]         roadmap/preparation-009 -> roadmap/preparation-009
+2026-10-12T02:22:42.0973498Z  * [new tag]         roadmap/preparation-010 -> roadmap/preparation-010
+2026-10-12T02:22:42.0974450Z  * [new tag]         roadmap/preparation-011 -> roadmap/preparation-011
+2026-10-12T02:22:42.0975398Z  * [new tag]         roadmap/preparation-012 -> roadmap/preparation-012
+2026-10-12T02:22:42.0976334Z  * [new tag]         roadmap/preparation-013 -> roadmap/preparation-013
+2026-10-12T02:22:42.0977540Z  * [new tag]         roadmap/preparation-014 -> roadmap/preparation-014
+2026-10-12T02:22:42.0978547Z  * [new tag]         roadmap/preparation-015 -> roadmap/preparation-015
+2026-10-12T02:22:42.0979499Z  * [new tag]         roadmap/preparation-016 -> roadmap/preparation-016
+2026-10-12T02:22:42.0980440Z  * [new tag]         roadmap/preparation-017 -> roadmap/preparation-017
+2026-10-12T02:22:42.0981391Z  * [new tag]         roadmap/preparation-018 -> roadmap/preparation-018
+2026-10-12T02:22:42.0982342Z  * [new tag]         roadmap/preparation-019 -> roadmap/preparation-019
+2026-10-12T02:22:42.0983285Z  * [new tag]         roadmap/preparation-020 -> roadmap/preparation-020
+2026-10-12T02:22:42.0984238Z  * [new tag]         roadmap/preparation-021 -> roadmap/preparation-021
+2026-10-12T02:22:42.0985199Z  * [new tag]         roadmap/preparation-022 -> roadmap/preparation-022
+2026-10-12T02:22:42.0986131Z  * [new tag]         roadmap/preparation-023 -> roadmap/preparation-023
+2026-10-12T02:22:42.0987074Z  * [new tag]         roadmap/preparation-024 -> roadmap/preparation-024
+2026-10-12T02:22:42.0988415Z  * [new tag]         roadmap/preparation-025 -> roadmap/preparation-025
+2026-10-12T02:22:42.0989370Z  * [new tag]         roadmap/preparation-026 -> roadmap/preparation-026
+2026-10-12T02:22:42.0990307Z  * [new tag]         roadmap/preparation-027 -> roadmap/preparation-027
+2026-10-12T02:22:42.0991253Z  * [new tag]         roadmap/preparation-028 -> roadmap/preparation-028
+2026-10-12T02:22:42.0992193Z  * [new tag]         roadmap/preparation-029 -> roadmap/preparation-029
+2026-10-12T02:22:42.0993345Z  * [new tag]         roadmap/preparation-030 -> roadmap/preparation-030
+2026-10-12T02:22:42.0994301Z  * [new tag]         roadmap/preparation-031 -> roadmap/preparation-031
+2026-10-12T02:22:42.0995246Z  * [new tag]         roadmap/preparation-032 -> roadmap/preparation-032
+2026-10-12T02:22:42.0996182Z  * [new tag]         roadmap/preparation-033 -> roadmap/preparation-033
+2026-10-12T02:22:42.0997119Z  * [new tag]         roadmap/preparation-034 -> roadmap/preparation-034
+2026-10-12T02:22:42.0998400Z  * [new tag]         roadmap/preparation-035 -> roadmap/preparation-035
+2026-10-12T02:22:42.0999411Z  * [new tag]         roadmap/preparation-036 -> roadmap/preparation-036
+2026-10-12T02:22:42.1000353Z  * [new tag]         roadmap/preparation-037 -> roadmap/preparation-037
+2026-10-12T02:22:42.1001299Z  * [new tag]         roadmap/preparation-038 -> roadmap/preparation-038
+2026-10-12T02:22:42.1002230Z  * [new tag]         roadmap/preparation-039 -> roadmap/preparation-039
+2026-10-12T02:22:42.1003186Z  * [new tag]         roadmap/preparation-040 -> roadmap/preparation-040
+2026-10-12T02:22:42.1004127Z  * [new tag]         roadmap/preparation-041 -> roadmap/preparation-041
+2026-10-12T02:22:42.1005071Z  * [new tag]         roadmap/preparation-042 -> roadmap/preparation-042
+2026-10-12T02:22:42.1006006Z  * [new tag]         roadmap/preparation-043 -> roadmap/preparation-043
+2026-10-12T02:22:42.1006945Z  * [new tag]         roadmap/preparation-044 -> roadmap/preparation-044
+2026-10-12T02:22:42.1008120Z  * [new tag]         roadmap/preparation-045 -> roadmap/preparation-045
+2026-10-12T02:22:42.1009071Z  * [new tag]         roadmap/preparation-046 -> roadmap/preparation-046
+2026-10-12T02:22:42.1010013Z  * [new tag]         roadmap/preparation-047 -> roadmap/preparation-047
+2026-10-12T02:22:42.1010961Z  * [new tag]         roadmap/preparation-048 -> roadmap/preparation-048
+2026-10-12T02:22:42.1011904Z  * [new tag]         roadmap/preparation-049 -> roadmap/preparation-049
+2026-10-12T02:22:42.1013016Z  * [new tag]         roadmap/preparation-050 -> roadmap/preparation-050
+2026-10-12T02:22:42.1013964Z  * [new tag]         roadmap/preparation-051 -> roadmap/preparation-051
+2026-10-12T02:22:42.1014908Z  * [new tag]         roadmap/preparation-052 -> roadmap/preparation-052
+2026-10-12T02:22:42.1015844Z  * [new tag]         roadmap/preparation-053 -> roadmap/preparation-053
+2026-10-12T02:22:42.1016805Z  * [new tag]         roadmap/preparation-054 -> roadmap/preparation-054
+2026-10-12T02:22:42.1017979Z  * [new tag]         roadmap/preparation-055 -> roadmap/preparation-055
+2026-10-12T02:22:42.1018929Z  * [new tag]         roadmap/preparation-056 -> roadmap/preparation-056
+2026-10-12T02:22:42.1019890Z  * [new tag]         roadmap/preparation-057 -> roadmap/preparation-057
+2026-10-12T02:22:42.1020838Z  * [new tag]         roadmap/preparation-058 -> roadmap/preparation-058
+2026-10-12T02:22:42.1021797Z  * [new tag]         roadmap/preparation-059 -> roadmap/preparation-059
+2026-10-12T02:22:42.1022754Z  * [new tag]         roadmap/preparation-060 -> roadmap/preparation-060
+2026-10-12T02:22:42.1023690Z  * [new tag]         roadmap/preparation-061 -> roadmap/preparation-061
+2026-10-12T02:22:42.1024646Z  * [new tag]         roadmap/preparation-062 -> roadmap/preparation-062
+2026-10-12T02:22:42.1025587Z  * [new tag]         roadmap/preparation-063 -> roadmap/preparation-063
+2026-10-12T02:22:42.1026524Z  * [new tag]         roadmap/preparation-064 -> roadmap/preparation-064
+2026-10-12T02:22:42.1027728Z  * [new tag]         roadmap/preparation-065 -> roadmap/preparation-065
+2026-10-12T02:22:42.1028702Z  * [new tag]         roadmap/preparation-066 -> roadmap/preparation-066
+2026-10-12T02:22:42.1029645Z  * [new tag]         roadmap/preparation-067 -> roadmap/preparation-067
+2026-10-12T02:22:42.1030582Z  * [new tag]         roadmap/preparation-068 -> roadmap/preparation-068
+2026-10-12T02:22:42.1031516Z  * [new tag]         roadmap/preparation-069 -> roadmap/preparation-069
+2026-10-12T02:22:42.1032625Z  * [new tag]         roadmap/preparation-070 -> roadmap/preparation-070
+2026-10-12T02:22:42.1033595Z  * [new tag]         roadmap/preparation-071 -> roadmap/preparation-071
+2026-10-12T02:22:42.1034538Z  * [new tag]         roadmap/preparation-072 -> roadmap/preparation-072
+2026-10-12T02:22:42.1035474Z  * [new tag]         roadmap/preparation-073 -> roadmap/preparation-073
+2026-10-12T02:22:42.1036410Z  * [new tag]         roadmap/preparation-074 -> roadmap/preparation-074
+2026-10-12T02:22:42.1037575Z  * [new tag]         roadmap/preparation-075 -> roadmap/preparation-075
+2026-10-12T02:22:42.1038548Z  * [new tag]         roadmap/preparation-076 -> roadmap/preparation-076
+2026-10-12T02:22:42.1039498Z  * [new tag]         roadmap/preparation-077 -> roadmap/preparation-077
+2026-10-12T02:22:42.1040448Z  * [new tag]         roadmap/preparation-078 -> roadmap/preparation-078
+2026-10-12T02:22:42.1041390Z  * [new tag]         roadmap/preparation-079 -> roadmap/preparation-079
+2026-10-12T02:22:42.1042367Z  * [new tag]         roadmap/preparation-080 -> roadmap/preparation-080
+2026-10-12T02:22:42.1043347Z  * [new tag]         roadmap/preparation-081 -> roadmap/preparation-081
+2026-10-12T02:22:42.1044288Z  * [new tag]         roadmap/preparation-082 -> roadmap/preparation-082
+2026-10-12T02:22:42.1045222Z  * [new tag]         roadmap/preparation-083 -> roadmap/preparation-083
+2026-10-12T02:22:42.1046161Z  * [new tag]         roadmap/preparation-084 -> roadmap/preparation-084
+2026-10-12T02:22:42.1047102Z  * [new tag]         roadmap/preparation-085 -> roadmap/preparation-085
+2026-10-12T02:22:42.1048284Z  * [new tag]         roadmap/preparation-086 -> roadmap/preparation-086
+2026-10-12T02:22:42.1049221Z  * [new tag]         roadmap/preparation-087 -> roadmap/preparation-087
+2026-10-12T02:22:42.1050158Z  * [new tag]         roadmap/preparation-088 -> roadmap/preparation-088
+2026-10-12T02:22:42.1051092Z  * [new tag]         roadmap/preparation-089 -> roadmap/preparation-089
+2026-10-12T02:22:42.1052192Z  * [new tag]         roadmap/preparation-090 -> roadmap/preparation-090
+2026-10-12T02:22:42.1053126Z  * [new tag]         roadmap/preparation-091 -> roadmap/preparation-091
+2026-10-12T02:22:42.1054056Z  * [new tag]         roadmap/preparation-092 -> roadmap/preparation-092
+2026-10-12T02:22:42.1054992Z  * [new tag]         roadmap/preparation-093 -> roadmap/preparation-093
+2026-10-12T02:22:42.1055939Z  * [new tag]         roadmap/preparation-094 -> roadmap/preparation-094
+2026-10-12T02:22:42.1056869Z  * [new tag]         roadmap/preparation-095 -> roadmap/preparation-095
+2026-10-12T02:22:42.1058051Z  * [new tag]         roadmap/preparation-096 -> roadmap/preparation-096
+2026-10-12T02:22:42.1058993Z  * [new tag]         roadmap/preparation-097 -> roadmap/preparation-097
+2026-10-12T02:22:42.1059929Z  * [new tag]         roadmap/preparation-098 -> roadmap/preparation-098
+2026-10-12T02:22:42.1060854Z  * [new tag]         roadmap/preparation-099 -> roadmap/preparation-099
+2026-10-12T02:22:42.1061783Z  * [new tag]         roadmap/preparation-100 -> roadmap/preparation-100
+2026-10-12T02:22:42.1062735Z  * [new tag]         roadmap/preparation-101 -> roadmap/preparation-101
+2026-10-12T02:22:42.1063686Z  * [new tag]         roadmap/preparation-102 -> roadmap/preparation-102
+2026-10-12T02:22:42.1064617Z  * [new tag]         roadmap/preparation-103 -> roadmap/preparation-103
+2026-10-12T02:22:42.1065550Z  * [new tag]         roadmap/preparation-104 -> roadmap/preparation-104
+2026-10-12T02:22:42.1066487Z  * [new tag]         roadmap/preparation-105 -> roadmap/preparation-105
+2026-10-12T02:22:42.1067668Z  * [new tag]         roadmap/preparation-106 -> roadmap/preparation-106
+2026-10-12T02:22:42.1068633Z  * [new tag]         roadmap/preparation-107 -> roadmap/preparation-107
+2026-10-12T02:22:42.1069572Z  * [new tag]         roadmap/preparation-108 -> roadmap/preparation-108
+2026-10-12T02:22:42.1070513Z  * [new tag]         roadmap/preparation-109 -> roadmap/preparation-109
+2026-10-12T02:22:42.1071451Z  * [new tag]         roadmap/preparation-110 -> roadmap/preparation-110
+2026-10-12T02:22:42.1072541Z  * [new tag]         roadmap/preparation-111 -> roadmap/preparation-111
+2026-10-12T02:22:42.1073494Z  * [new tag]         roadmap/preparation-112 -> roadmap/preparation-112
+2026-10-12T02:22:42.1074581Z  * [new tag]         roadmap/revision-023-495411d33f60 -> roadmap/revision-023-495411d33f60
+2026-10-12T02:22:42.1075800Z  * [new tag]         roadmap/revision-024-1741ab5fa64e -> roadmap/revision-024-1741ab5fa64e
+2026-10-12T02:22:42.1077021Z  * [new tag]         roadmap/revision-025-6421c025b3d5 -> roadmap/revision-025-6421c025b3d5
+2026-10-12T02:22:42.1078505Z  * [new tag]         roadmap/revision-026-0a7203f5c559 -> roadmap/revision-026-0a7203f5c559
+2026-10-12T02:22:42.1079737Z  * [new tag]         roadmap/revision-026-bb77c078354f -> roadmap/revision-026-bb77c078354f
+2026-10-12T02:22:42.1080964Z  * [new tag]         roadmap/revision-026-cc297e6b31c9 -> roadmap/revision-026-cc297e6b31c9
+2026-10-12T02:22:42.1082198Z  * [new tag]         roadmap/revision-027-2a2458b93d6c -> roadmap/revision-027-2a2458b93d6c
+2026-10-12T02:22:42.1083437Z  * [new tag]         roadmap/revision-027-71c2405dd0e0 -> roadmap/revision-027-71c2405dd0e0
+2026-10-12T02:22:42.1084649Z  * [new tag]         roadmap/revision-027-7a550b724047 -> roadmap/revision-027-7a550b724047
+2026-10-12T02:22:42.1085868Z  * [new tag]         roadmap/revision-027-9c1b5a861b15 -> roadmap/revision-027-9c1b5a861b15
+2026-10-12T02:22:42.1087082Z  * [new tag]         roadmap/revision-027-c4eb75e82882 -> roadmap/revision-027-c4eb75e82882
+2026-10-12T02:22:42.1088678Z  * [new tag]         roadmap/revision-028-131ec8ebdd06 -> roadmap/revision-028-131ec8ebdd06
+2026-10-12T02:22:42.1089969Z  * [new tag]         roadmap/revision-028-2ec80614a045 -> roadmap/revision-028-2ec80614a045
+2026-10-12T02:22:42.1091254Z  * [new tag]         roadmap/revision-028-3e7ab59e89c3 -> roadmap/revision-028-3e7ab59e89c3
+2026-10-12T02:22:42.1092545Z  * [new tag]         roadmap/revision-028-7cfbe030d3de -> roadmap/revision-028-7cfbe030d3de
+2026-10-12T02:22:42.1093975Z  * [new tag]         roadmap/revision-028-b5f44e80462c -> roadmap/revision-028-b5f44e80462c
+2026-10-12T02:22:42.1095189Z  * [new tag]         roadmap/revision-028-e06c447336ae -> roadmap/revision-028-e06c447336ae
+2026-10-12T02:22:42.1096397Z  * [new tag]         roadmap/revision-028-fbb3bc84847b -> roadmap/revision-028-fbb3bc84847b
+2026-10-12T02:22:42.1097893Z  * [new tag]         roadmap/revision-029-25eda7b24ef5 -> roadmap/revision-029-25eda7b24ef5
+2026-10-12T02:22:42.1099127Z  * [new tag]         roadmap/revision-029-4147e018d2e0 -> roadmap/revision-029-4147e018d2e0
+2026-10-12T02:22:42.1100338Z  * [new tag]         roadmap/revision-029-4c7d5ba45082 -> roadmap/revision-029-4c7d5ba45082
+2026-10-12T02:22:42.1101545Z  * [new tag]         roadmap/revision-029-78ed19ff401a -> roadmap/revision-029-78ed19ff401a
+2026-10-12T02:22:42.1102744Z  * [new tag]         roadmap/revision-029-84ef5480f493 -> roadmap/revision-029-84ef5480f493
+2026-10-12T02:22:42.1103968Z  * [new tag]         roadmap/revision-029-b8633382f4a6 -> roadmap/revision-029-b8633382f4a6
+2026-10-12T02:22:42.1105209Z  * [new tag]         roadmap/revision-030-244dd2a578af -> roadmap/revision-030-244dd2a578af
+2026-10-12T02:22:42.1106421Z  * [new tag]         roadmap/revision-030-398503f0938a -> roadmap/revision-030-398503f0938a
+2026-10-12T02:22:42.1107883Z  * [new tag]         roadmap/revision-030-9979e9fd1a27 -> roadmap/revision-030-9979e9fd1a27
+2026-10-12T02:22:42.1109114Z  * [new tag]         roadmap/revision-030-a17f240c9341 -> roadmap/revision-030-a17f240c9341
+2026-10-12T02:22:42.1110348Z  * [new tag]         roadmap/revision-030-c0afce27ff2e -> roadmap/revision-030-c0afce27ff2e
+2026-10-12T02:22:42.1111568Z  * [new tag]         roadmap/revision-030-c17d4a693b32 -> roadmap/revision-030-c17d4a693b32
+2026-10-12T02:22:42.1112779Z  * [new tag]         roadmap/revision-030-ca33d3141a96 -> roadmap/revision-030-ca33d3141a96
+2026-10-12T02:22:42.1113977Z  * [new tag]         roadmap/revision-031-47776e738c26 -> roadmap/revision-031-47776e738c26
+2026-10-12T02:22:42.1115342Z  * [new tag]         roadmap/revision-031-5d411a886b73 -> roadmap/revision-031-5d411a886b73
+2026-10-12T02:22:42.1116576Z  * [new tag]         roadmap/revision-031-687ae106193b -> roadmap/revision-031-687ae106193b
+2026-10-12T02:22:42.1118041Z  * [new tag]         roadmap/revision-031-6a0913896eb7 -> roadmap/revision-031-6a0913896eb7
+2026-10-12T02:22:42.1119251Z  * [new tag]         roadmap/revision-031-9ee50f37c5b9 -> roadmap/revision-031-9ee50f37c5b9
+2026-10-12T02:22:42.1120463Z  * [new tag]         roadmap/revision-031-a282f630c790 -> roadmap/revision-031-a282f630c790
+2026-10-12T02:22:42.1121671Z  * [new tag]         roadmap/revision-031-eadec76e75e7 -> roadmap/revision-031-eadec76e75e7
+2026-10-12T02:22:42.1122878Z  * [new tag]         roadmap/revision-031-ff84318a416d -> roadmap/revision-031-ff84318a416d
+2026-10-12T02:22:42.1124102Z  * [new tag]         roadmap/revision-032-1523161a7314 -> roadmap/revision-032-1523161a7314
+2026-10-12T02:22:42.1125339Z  * [new tag]         roadmap/revision-032-1e8d1e34bc78 -> roadmap/revision-032-1e8d1e34bc78
+2026-10-12T02:22:42.1126553Z  * [new tag]         roadmap/revision-032-270525b5bb9a -> roadmap/revision-032-270525b5bb9a
+2026-10-12T02:22:42.1127973Z  * [new tag]         roadmap/revision-032-459287698745 -> roadmap/revision-032-459287698745
+2026-10-12T02:22:42.1129175Z  * [new tag]         roadmap/revision-032-72ab8ee42df1 -> roadmap/revision-032-72ab8ee42df1
+2026-10-12T02:22:42.1130390Z  * [new tag]         roadmap/revision-032-952b906059c6 -> roadmap/revision-032-952b906059c6
+2026-10-12T02:22:42.1131591Z  * [new tag]         roadmap/revision-032-9aed23988b19 -> roadmap/revision-032-9aed23988b19
+2026-10-12T02:22:42.1132792Z  * [new tag]         roadmap/revision-032-a8e662267bbc -> roadmap/revision-032-a8e662267bbc
+2026-10-12T02:22:42.1133991Z  * [new tag]         roadmap/revision-032-c434692ccb6f -> roadmap/revision-032-c434692ccb6f
+2026-10-12T02:22:42.1135216Z  * [new tag]         roadmap/revision-032-f3585147985d -> roadmap/revision-032-f3585147985d
+2026-10-12T02:22:42.1136635Z  * [new tag]         roadmap/revision-033-09892c4d61ad -> roadmap/revision-033-09892c4d61ad
+2026-10-12T02:22:42.1138071Z  * [new tag]         roadmap/revision-033-0ec280e18416 -> roadmap/revision-033-0ec280e18416
+2026-10-12T02:22:42.1139262Z  * [new tag]         roadmap/revision-033-527f84d405b7 -> roadmap/revision-033-527f84d405b7
+2026-10-12T02:22:42.1140451Z  * [new tag]         roadmap/revision-033-b16195bcebf3 -> roadmap/revision-033-b16195bcebf3
+2026-10-12T02:22:42.1141662Z  * [new tag]         roadmap/revision-033-c37df3b0520c -> roadmap/revision-033-c37df3b0520c
+2026-10-12T02:22:42.1142857Z  * [new tag]         roadmap/revision-033-c65514a8e6d4 -> roadmap/revision-033-c65514a8e6d4
+2026-10-12T02:22:42.1144118Z  * [new tag]         roadmap/revision-033-ce5a51c330f3 -> roadmap/revision-033-ce5a51c330f3
+2026-10-12T02:22:42.1145314Z  * [new tag]         roadmap/revision-033-d098b98ad87a -> roadmap/revision-033-d098b98ad87a
+2026-10-12T02:22:42.1146519Z  * [new tag]         roadmap/revision-033-dc9bfd5e626b -> roadmap/revision-033-dc9bfd5e626b
+2026-10-12T02:22:42.1147990Z  * [new tag]         roadmap/revision-033-e83800d9ac44 -> roadmap/revision-033-e83800d9ac44
+2026-10-12T02:22:42.1149193Z  * [new tag]         roadmap/revision-034-734d3383addf -> roadmap/revision-034-734d3383addf
+2026-10-12T02:22:42.1150388Z  * [new tag]         roadmap/revision-034-804e6a0cf9f3 -> roadmap/revision-034-804e6a0cf9f3
+2026-10-12T02:22:42.1151587Z  * [new tag]         roadmap/revision-034-819fd83c48e2 -> roadmap/revision-034-819fd83c48e2
+2026-10-12T02:22:42.1152780Z  * [new tag]         roadmap/revision-034-926eb241633d -> roadmap/revision-034-926eb241633d
+2026-10-12T02:22:42.1153982Z  * [new tag]         roadmap/revision-034-9f56744c4eb7 -> roadmap/revision-034-9f56744c4eb7
+2026-10-12T02:22:42.1155188Z  * [new tag]         roadmap/revision-034-ada6a3a62df1 -> roadmap/revision-034-ada6a3a62df1
+2026-10-12T02:22:42.1156393Z  * [new tag]         roadmap/revision-034-d3e1f6d4ed04 -> roadmap/revision-034-d3e1f6d4ed04
+2026-10-12T02:22:42.1158098Z  * [new tag]         roadmap/revision-034-dcf18f01c2fb -> roadmap/revision-034-dcf18f01c2fb
+2026-10-12T02:22:42.1159370Z  * [new tag]         roadmap/revision-035-1a01dd91bcfd -> roadmap/revision-035-1a01dd91bcfd
+2026-10-12T02:22:42.1160580Z  * [new tag]         roadmap/revision-035-26375deb676e -> roadmap/revision-035-26375deb676e
+2026-10-12T02:22:42.1161775Z  * [new tag]         roadmap/revision-035-432a3332c4f7 -> roadmap/revision-035-432a3332c4f7
+2026-10-12T02:22:42.1162966Z  * [new tag]         roadmap/revision-035-646cca038ed8 -> roadmap/revision-035-646cca038ed8
+2026-10-12T02:22:42.1164155Z  * [new tag]         roadmap/revision-035-82f58d851b73 -> roadmap/revision-035-82f58d851b73
+2026-10-12T02:22:42.1165345Z  * [new tag]         roadmap/revision-035-bbd74db2977a -> roadmap/revision-035-bbd74db2977a
+2026-10-12T02:22:42.1166541Z  * [new tag]         roadmap/revision-035-be0032a15ee3 -> roadmap/revision-035-be0032a15ee3
+2026-10-12T02:22:42.1167943Z  * [new tag]         roadmap/revision-036-0584ab3ac77b -> roadmap/revision-036-0584ab3ac77b
+2026-10-12T02:22:42.1169145Z  * [new tag]         roadmap/revision-036-2a9293881eab -> roadmap/revision-036-2a9293881eab
+2026-10-12T02:22:42.1170343Z  * [new tag]         roadmap/revision-036-6032ecffcb7d -> roadmap/revision-036-6032ecffcb7d
+2026-10-12T02:22:42.1171533Z  * [new tag]         roadmap/revision-036-928c619289bd -> roadmap/revision-036-928c619289bd
+2026-10-12T02:22:42.1172736Z  * [new tag]         roadmap/revision-036-bbdcc69fe735 -> roadmap/revision-036-bbdcc69fe735
+2026-10-12T02:22:42.1173942Z  * [new tag]         roadmap/revision-036-bcd3b392050b -> roadmap/revision-036-bcd3b392050b
+2026-10-12T02:22:42.1175136Z  * [new tag]         roadmap/revision-036-df5862861e71 -> roadmap/revision-036-df5862861e71
+2026-10-12T02:22:42.1176331Z  * [new tag]         roadmap/revision-036-e171da5957fd -> roadmap/revision-036-e171da5957fd
+2026-10-12T02:22:42.1177639Z  * [new tag]         roadmap/revision-037-3b6bf091127c -> roadmap/revision-037-3b6bf091127c
+2026-10-12T02:22:42.1179010Z  * [new tag]         roadmap/revision-037-3bd34dafb62f -> roadmap/revision-037-3bd34dafb62f
+2026-10-12T02:22:42.1180204Z  * [new tag]         roadmap/revision-037-7de346c56ec4 -> roadmap/revision-037-7de346c56ec4
+2026-10-12T02:22:42.1181401Z  * [new tag]         roadmap/revision-037-8c4e9ffd71a5 -> roadmap/revision-037-8c4e9ffd71a5
+2026-10-12T02:22:42.1182592Z  * [new tag]         roadmap/revision-037-ba9f0f293ac8 -> roadmap/revision-037-ba9f0f293ac8
+2026-10-12T02:22:42.1183781Z  * [new tag]         roadmap/revision-037-c830f4d3175e -> roadmap/revision-037-c830f4d3175e
+2026-10-12T02:22:42.1184968Z  * [new tag]         roadmap/revision-038-032a764c1d33 -> roadmap/revision-038-032a764c1d33
+2026-10-12T02:22:42.1186158Z  * [new tag]         roadmap/revision-038-2a45666b37a1 -> roadmap/revision-038-2a45666b37a1
+2026-10-12T02:22:42.1187512Z  * [new tag]         roadmap/revision-038-4289528c436b -> roadmap/revision-038-4289528c436b
+2026-10-12T02:22:42.1188956Z  * [new tag]         roadmap/revision-038-61c5f8e91cc5 -> roadmap/revision-038-61c5f8e91cc5
+2026-10-12T02:22:42.1190165Z  * [new tag]         roadmap/revision-038-7ae78137d444 -> roadmap/revision-038-7ae78137d444
+2026-10-12T02:22:42.1191365Z  * [new tag]         roadmap/revision-038-cff61cd0898d -> roadmap/revision-038-cff61cd0898d
+2026-10-12T02:22:42.1192558Z  * [new tag]         roadmap/revision-039-5a72ba8763e4 -> roadmap/revision-039-5a72ba8763e4
+2026-10-12T02:22:42.1193753Z  * [new tag]         roadmap/revision-039-7d617f68cac0 -> roadmap/revision-039-7d617f68cac0
+2026-10-12T02:22:42.1194956Z  * [new tag]         roadmap/revision-039-a5ac41b405dd -> roadmap/revision-039-a5ac41b405dd
+2026-10-12T02:22:42.1196159Z  * [new tag]         roadmap/revision-039-d98205af88df -> roadmap/revision-039-d98205af88df
+2026-10-12T02:22:42.1197507Z  * [new tag]         roadmap/revision-039-dd8444579ed0 -> roadmap/revision-039-dd8444579ed0
+2026-10-12T02:22:42.1198706Z  * [new tag]         roadmap/revision-039-f0049c4aabe0 -> roadmap/revision-039-f0049c4aabe0
+2026-10-12T02:22:42.1200111Z  * [new tag]         roadmap/revision-040-1654263ed38e -> roadmap/revision-040-1654263ed38e
+2026-10-12T02:22:42.1201315Z  * [new tag]         roadmap/revision-040-5376d4a1f4ed -> roadmap/revision-040-5376d4a1f4ed
+2026-10-12T02:22:42.1202518Z  * [new tag]         roadmap/revision-040-5ebcb2d6b0e2 -> roadmap/revision-040-5ebcb2d6b0e2
+2026-10-12T02:22:42.1203712Z  * [new tag]         roadmap/revision-040-c90fe5a9d170 -> roadmap/revision-040-c90fe5a9d170
+2026-10-12T02:22:42.1204925Z  * [new tag]         roadmap/revision-040-cccbe406449f -> roadmap/revision-040-cccbe406449f
+2026-10-12T02:22:42.1206128Z  * [new tag]         roadmap/revision-040-dd6c405c77eb -> roadmap/revision-040-dd6c405c77eb
+2026-10-12T02:22:42.1207460Z  * [new tag]         roadmap/revision-041-172912b7b1c6 -> roadmap/revision-041-172912b7b1c6
+2026-10-12T02:22:42.1208660Z  * [new tag]         roadmap/revision-041-3956d5cadd86 -> roadmap/revision-041-3956d5cadd86
+2026-10-12T02:22:42.1209865Z  * [new tag]         roadmap/revision-041-67e37717ecf2 -> roadmap/revision-041-67e37717ecf2
+2026-10-12T02:22:42.1211052Z  * [new tag]         roadmap/revision-041-9033d9f1072e -> roadmap/revision-041-9033d9f1072e
+2026-10-12T02:22:42.1212242Z  * [new tag]         roadmap/revision-041-a59952364e22 -> roadmap/revision-041-a59952364e22
+2026-10-12T02:22:42.1213444Z  * [new tag]         roadmap/revision-041-cca935846750 -> roadmap/revision-041-cca935846750
+2026-10-12T02:22:42.1214649Z  * [new tag]         roadmap/revision-042-00b9d0901485 -> roadmap/revision-042-00b9d0901485
+2026-10-12T02:22:42.1215840Z  * [new tag]         roadmap/revision-042-2b61f8cad333 -> roadmap/revision-042-2b61f8cad333
+2026-10-12T02:22:42.1217039Z  * [new tag]         roadmap/revision-042-4ea62b69a2c4 -> roadmap/revision-042-4ea62b69a2c4
+2026-10-12T02:22:42.1218358Z  * [new tag]         roadmap/revision-042-5522a2ceb038 -> roadmap/revision-042-5522a2ceb038
+2026-10-12T02:22:42.1219561Z  * [new tag]         roadmap/revision-042-cd2c8fa4251a -> roadmap/revision-042-cd2c8fa4251a
+2026-10-12T02:22:42.1220920Z  * [new tag]         roadmap/revision-042-f22b5b587de6 -> roadmap/revision-042-f22b5b587de6
+2026-10-12T02:22:42.1222128Z  * [new tag]         roadmap/revision-043-095776b5633b -> roadmap/revision-043-095776b5633b
+2026-10-12T02:22:42.1223317Z  * [new tag]         roadmap/revision-043-1ea65661b77d -> roadmap/revision-043-1ea65661b77d
+2026-10-12T02:22:42.1224509Z  * [new tag]         roadmap/revision-043-3df2c9d86059 -> roadmap/revision-043-3df2c9d86059
+2026-10-12T02:22:42.1225697Z  * [new tag]         roadmap/revision-043-6b809877a1ac -> roadmap/revision-043-6b809877a1ac
+2026-10-12T02:22:42.1226888Z  * [new tag]         roadmap/revision-043-8c7450568632 -> roadmap/revision-043-8c7450568632
+2026-10-12T02:22:42.1228436Z  * [new tag]         roadmap/revision-043-b42bfee265ac -> roadmap/revision-043-b42bfee265ac
+2026-10-12T02:22:42.1229653Z  * [new tag]         roadmap/revision-043-e2f944c256b6 -> roadmap/revision-043-e2f944c256b6
+2026-10-12T02:22:42.1230891Z  * [new tag]         roadmap/revision-043-ffbbcf9d5119 -> roadmap/revision-043-ffbbcf9d5119
+2026-10-12T02:22:42.1232095Z  * [new tag]         roadmap/revision-044-36e970682a29 -> roadmap/revision-044-36e970682a29
+2026-10-12T02:22:42.1233284Z  * [new tag]         roadmap/revision-044-5e436e6ee6f5 -> roadmap/revision-044-5e436e6ee6f5
+2026-10-12T02:22:42.1234477Z  * [new tag]         roadmap/revision-044-610fd745b973 -> roadmap/revision-044-610fd745b973
+2026-10-12T02:22:42.1235663Z  * [new tag]         roadmap/revision-044-7d004381178f -> roadmap/revision-044-7d004381178f
+2026-10-12T02:22:42.1236852Z  * [new tag]         roadmap/revision-044-8ebfe6f5d701 -> roadmap/revision-044-8ebfe6f5d701
+2026-10-12T02:22:42.1238219Z  * [new tag]         roadmap/revision-044-b31400d03ac7 -> roadmap/revision-044-b31400d03ac7
+2026-10-12T02:22:42.1239426Z  * [new tag]         roadmap/revision-045-09ec9a65afdc -> roadmap/revision-045-09ec9a65afdc
+2026-10-12T02:22:42.1240647Z  * [new tag]         roadmap/revision-045-0b00524a0a03 -> roadmap/revision-045-0b00524a0a03
+2026-10-12T02:22:42.1242006Z  * [new tag]         roadmap/revision-045-321cc3146089 -> roadmap/revision-045-321cc3146089
+2026-10-12T02:22:42.1243276Z  * [new tag]         roadmap/revision-045-44e720054249 -> roadmap/revision-045-44e720054249
+2026-10-12T02:22:42.1244469Z  * [new tag]         roadmap/revision-045-e73b5b8e7ac7 -> roadmap/revision-045-e73b5b8e7ac7
+2026-10-12T02:22:42.1245659Z  * [new tag]         roadmap/revision-045-f82fa2325d62 -> roadmap/revision-045-f82fa2325d62
+2026-10-12T02:22:42.1246853Z  * [new tag]         roadmap/revision-046-3a87da04a671 -> roadmap/revision-046-3a87da04a671
+2026-10-12T02:22:42.1248221Z  * [new tag]         roadmap/revision-046-3ee4f29b8493 -> roadmap/revision-046-3ee4f29b8493
+2026-10-12T02:22:42.1249424Z  * [new tag]         roadmap/revision-046-6d01e927c086 -> roadmap/revision-046-6d01e927c086
+2026-10-12T02:22:42.1250619Z  * [new tag]         roadmap/revision-046-ae8933d991cb -> roadmap/revision-046-ae8933d991cb
+2026-10-12T02:22:42.1251843Z  * [new tag]         roadmap/revision-046-d71a2aea284c -> roadmap/revision-046-d71a2aea284c
+2026-10-12T02:22:42.1253035Z  * [new tag]         roadmap/revision-046-f2262f94ada4 -> roadmap/revision-046-f2262f94ada4
+2026-10-12T02:22:42.1254231Z  * [new tag]         roadmap/revision-047-404970bff753 -> roadmap/revision-047-404970bff753
+2026-10-12T02:22:42.1255419Z  * [new tag]         roadmap/revision-047-4f75498ad664 -> roadmap/revision-047-4f75498ad664
+2026-10-12T02:22:42.1256626Z  * [new tag]         roadmap/revision-047-5f9a8bb2403b -> roadmap/revision-047-5f9a8bb2403b
+2026-10-12T02:22:42.1257937Z  * [new tag]         roadmap/revision-047-762cc824fa08 -> roadmap/revision-047-762cc824fa08
+2026-10-12T02:22:42.1259127Z  * [new tag]         roadmap/revision-047-7e507e993e58 -> roadmap/revision-047-7e507e993e58
+2026-10-12T02:22:42.1260318Z  * [new tag]         roadmap/revision-047-fcfa8fb2d296 -> roadmap/revision-047-fcfa8fb2d296
+2026-10-12T02:22:42.1261656Z  * [new tag]         roadmap/revision-048-3b142abc5f93 -> roadmap/revision-048-3b142abc5f93
+2026-10-12T02:22:42.1262852Z  * [new tag]         roadmap/revision-048-3dd5219cb896 -> roadmap/revision-048-3dd5219cb896
+2026-10-12T02:22:42.1264044Z  * [new tag]         roadmap/revision-048-af073c78c443 -> roadmap/revision-048-af073c78c443
+2026-10-12T02:22:42.1265234Z  * [new tag]         roadmap/revision-048-be475bda31dc -> roadmap/revision-048-be475bda31dc
+2026-10-12T02:22:42.1266426Z  * [new tag]         roadmap/revision-048-ece7166b7a79 -> roadmap/revision-048-ece7166b7a79
+2026-10-12T02:22:42.1267949Z  * [new tag]         roadmap/revision-048-ee6016f60507 -> roadmap/revision-048-ee6016f60507
+2026-10-12T02:22:42.1269168Z  * [new tag]         roadmap/revision-049-2c14070a6347 -> roadmap/revision-049-2c14070a6347
+2026-10-12T02:22:42.1270368Z  * [new tag]         roadmap/revision-049-3f0e25fb2cc7 -> roadmap/revision-049-3f0e25fb2cc7
+2026-10-12T02:22:42.1271558Z  * [new tag]         roadmap/revision-049-427076c60d2c -> roadmap/revision-049-427076c60d2c
+2026-10-12T02:22:42.1272773Z  * [new tag]         roadmap/revision-049-49b7aa5a0c07 -> roadmap/revision-049-49b7aa5a0c07
+2026-10-12T02:22:42.1273961Z  * [new tag]         roadmap/revision-049-4ab664827244 -> roadmap/revision-049-4ab664827244
+2026-10-12T02:22:42.1275151Z  * [new tag]         roadmap/revision-049-ec9a4133a2c1 -> roadmap/revision-049-ec9a4133a2c1
+2026-10-12T02:22:42.1276344Z  * [new tag]         roadmap/revision-050-1b5fb056fa00 -> roadmap/revision-050-1b5fb056fa00
+2026-10-12T02:22:42.1277659Z  * [new tag]         roadmap/revision-050-68a2e5f1358e -> roadmap/revision-050-68a2e5f1358e
+2026-10-12T02:22:42.1278854Z  * [new tag]         roadmap/revision-050-91b625c60cb9 -> roadmap/revision-050-91b625c60cb9
+2026-10-12T02:22:42.1280072Z  * [new tag]         roadmap/revision-050-aa181f8f2c3a -> roadmap/revision-050-aa181f8f2c3a
+2026-10-12T02:22:42.1281262Z  * [new tag]         roadmap/revision-050-f35dd8c34ea4 -> roadmap/revision-050-f35dd8c34ea4
+2026-10-12T02:22:42.1282602Z  * [new tag]         roadmap/revision-051-245a0a24370e -> roadmap/revision-051-245a0a24370e
+2026-10-12T02:22:42.1283812Z  * [new tag]         roadmap/revision-051-28de1794f39f -> roadmap/revision-051-28de1794f39f
+2026-10-12T02:22:42.1284996Z  * [new tag]         roadmap/revision-051-511721920cca -> roadmap/revision-051-511721920cca
+2026-10-12T02:22:42.1286174Z  * [new tag]         roadmap/revision-051-935554ad52c1 -> roadmap/revision-051-935554ad52c1
+2026-10-12T02:22:42.1287487Z  * [new tag]         roadmap/revision-051-bb1e6b94fcfd -> roadmap/revision-051-bb1e6b94fcfd
+2026-10-12T02:22:42.1288705Z  * [new tag]         roadmap/revision-052-4b6a2cb08da5 -> roadmap/revision-052-4b6a2cb08da5
+2026-10-12T02:22:42.1289901Z  * [new tag]         roadmap/revision-052-8eab3e41f8ba -> roadmap/revision-052-8eab3e41f8ba
+2026-10-12T02:22:42.1291098Z  * [new tag]         roadmap/revision-052-bc6b763b3bf3 -> roadmap/revision-052-bc6b763b3bf3
+2026-10-12T02:22:42.1292294Z  * [new tag]         roadmap/revision-052-cb32c2cea9bb -> roadmap/revision-052-cb32c2cea9bb
+2026-10-12T02:22:42.1293513Z  * [new tag]         roadmap/revision-052-fe8ed51eb078 -> roadmap/revision-052-fe8ed51eb078
+2026-10-12T02:22:42.1294702Z  * [new tag]         roadmap/revision-053-310031a5596b -> roadmap/revision-053-310031a5596b
+2026-10-12T02:22:42.1295886Z  * [new tag]         roadmap/revision-053-40252d18e97e -> roadmap/revision-053-40252d18e97e
+2026-10-12T02:22:42.1297065Z  * [new tag]         roadmap/revision-053-69bc96667a52 -> roadmap/revision-053-69bc96667a52
+2026-10-12T02:22:42.1298402Z  * [new tag]         roadmap/revision-053-a30c1829d0d0 -> roadmap/revision-053-a30c1829d0d0
+2026-10-12T02:22:42.1299611Z  * [new tag]         roadmap/revision-053-ccbf2957f351 -> roadmap/revision-053-ccbf2957f351
+2026-10-12T02:22:42.1300812Z  * [new tag]         roadmap/revision-054-82f32b2cde03 -> roadmap/revision-054-82f32b2cde03
+2026-10-12T02:22:42.1301998Z  * [new tag]         roadmap/revision-054-9d87a3774363 -> roadmap/revision-054-9d87a3774363
+2026-10-12T02:22:42.1303339Z  * [new tag]         roadmap/revision-054-f4d3784f4657 -> roadmap/revision-054-f4d3784f4657
+2026-10-12T02:22:42.1304540Z  * [new tag]         roadmap/revision-054-f53cccc88d45 -> roadmap/revision-054-f53cccc88d45
+2026-10-12T02:22:42.1305751Z  * [new tag]         roadmap/revision-054-ff3bfedf26cd -> roadmap/revision-054-ff3bfedf26cd
+2026-10-12T02:22:42.1306945Z  * [new tag]         roadmap/revision-055-067d547b3bfd -> roadmap/revision-055-067d547b3bfd
+2026-10-12T02:22:42.1308525Z  * [new tag]         roadmap/revision-055-625ac7793f84 -> roadmap/revision-055-625ac7793f84
+2026-10-12T02:22:42.1309739Z  * [new tag]         roadmap/revision-055-825dfbfeb23f -> roadmap/revision-055-825dfbfeb23f
+2026-10-12T02:22:42.1310930Z  * [new tag]         roadmap/revision-055-b0a593982767 -> roadmap/revision-055-b0a593982767
+2026-10-12T02:22:42.1312130Z  * [new tag]         roadmap/revision-055-f240ecd56f3b -> roadmap/revision-055-f240ecd56f3b
+2026-10-12T02:22:42.1313327Z  * [new tag]         roadmap/revision-056-0d30f4e3da51 -> roadmap/revision-056-0d30f4e3da51
+2026-10-12T02:22:42.1314528Z  * [new tag]         roadmap/revision-056-400d11c0b317 -> roadmap/revision-056-400d11c0b317
+2026-10-12T02:22:42.1315710Z  * [new tag]         roadmap/revision-056-878b25aad627 -> roadmap/revision-056-878b25aad627
+2026-10-12T02:22:42.1316913Z  * [new tag]         roadmap/revision-056-ac6de597fddc -> roadmap/revision-056-ac6de597fddc
+2026-10-12T02:22:42.1318453Z  * [new tag]         roadmap/revision-056-ac74568b0113 -> roadmap/revision-056-ac74568b0113
+2026-10-12T02:22:42.1319660Z  * [new tag]         roadmap/revision-057-47992a27c193 -> roadmap/revision-057-47992a27c193
+2026-10-12T02:22:42.1320846Z  * [new tag]         roadmap/revision-057-4ae80b641da1 -> roadmap/revision-057-4ae80b641da1
+2026-10-12T02:22:42.1322037Z  * [new tag]         roadmap/revision-057-5b6e65f365d6 -> roadmap/revision-057-5b6e65f365d6
+2026-10-12T02:22:42.1323226Z  * [new tag]         roadmap/revision-057-9dc98a72cac1 -> roadmap/revision-057-9dc98a72cac1
+2026-10-12T02:22:42.1324580Z  * [new tag]         roadmap/revision-057-fde35253a744 -> roadmap/revision-057-fde35253a744
+2026-10-12T02:22:42.1325784Z  * [new tag]         roadmap/revision-058-00013d55d078 -> roadmap/revision-058-00013d55d078
+2026-10-12T02:22:42.1326970Z  * [new tag]         roadmap/revision-058-013b07eac021 -> roadmap/revision-058-013b07eac021
+2026-10-12T02:22:42.1328336Z  * [new tag]         roadmap/revision-058-a5ebb52578e3 -> roadmap/revision-058-a5ebb52578e3
+2026-10-12T02:22:42.1329545Z  * [new tag]         roadmap/revision-058-e9bddcdc78b7 -> roadmap/revision-058-e9bddcdc78b7
+2026-10-12T02:22:42.1330737Z  * [new tag]         roadmap/revision-059-2184aa897572 -> roadmap/revision-059-2184aa897572
+2026-10-12T02:22:42.1331925Z  * [new tag]         roadmap/revision-059-64fc39f9738e -> roadmap/revision-059-64fc39f9738e
+2026-10-12T02:22:42.1333116Z  * [new tag]         roadmap/revision-059-838cf5dee220 -> roadmap/revision-059-838cf5dee220
+2026-10-12T02:22:42.1334302Z  * [new tag]         roadmap/revision-059-99b769bff921 -> roadmap/revision-059-99b769bff921
+2026-10-12T02:22:42.1335510Z  * [new tag]         roadmap/revision-060-aa8dfb3a703e -> roadmap/revision-060-aa8dfb3a703e
+2026-10-12T02:22:42.1336721Z  * [new tag]         roadmap/revision-060-ac17bf61276c -> roadmap/revision-060-ac17bf61276c
+2026-10-12T02:22:42.1338045Z  * [new tag]         roadmap/revision-060-b2b3e2d73da8 -> roadmap/revision-060-b2b3e2d73da8
+2026-10-12T02:22:42.1339246Z  * [new tag]         roadmap/revision-060-d56a24e48d7e -> roadmap/revision-060-d56a24e48d7e
+2026-10-12T02:22:42.1340440Z  * [new tag]         roadmap/revision-061-044ceae9f0c5 -> roadmap/revision-061-044ceae9f0c5
+2026-10-12T02:22:42.1341629Z  * [new tag]         roadmap/revision-061-15ed94b82b00 -> roadmap/revision-061-15ed94b82b00
+2026-10-12T02:22:42.1342818Z  * [new tag]         roadmap/revision-061-91f9a30742f9 -> roadmap/revision-061-91f9a30742f9
+2026-10-12T02:22:42.1344053Z  * [new tag]         roadmap/revision-061-c299edbc33eb -> roadmap/revision-061-c299edbc33eb
+2026-10-12T02:22:42.1345408Z  * [new tag]         roadmap/revision-062-004eccb1f092 -> roadmap/revision-062-004eccb1f092
+2026-10-12T02:22:42.1346607Z  * [new tag]         roadmap/revision-062-0ba865002ace -> roadmap/revision-062-0ba865002ace
+2026-10-12T02:22:42.1347981Z  * [new tag]         roadmap/revision-062-0be508308064 -> roadmap/revision-062-0be508308064
+2026-10-12T02:22:42.1349182Z  * [new tag]         roadmap/revision-062-c61df653dfb2 -> roadmap/revision-062-c61df653dfb2
+2026-10-12T02:22:42.1350380Z  * [new tag]         roadmap/revision-063-52bc4e64547b -> roadmap/revision-063-52bc4e64547b
+2026-10-12T02:22:42.1351559Z  * [new tag]         roadmap/revision-063-66e80d399e65 -> roadmap/revision-063-66e80d399e65
+2026-10-12T02:22:42.1352744Z  * [new tag]         roadmap/revision-063-d0e29ddbf182 -> roadmap/revision-063-d0e29ddbf182
+2026-10-12T02:22:42.1353942Z  * [new tag]         roadmap/revision-063-f1915b15033e -> roadmap/revision-063-f1915b15033e
+2026-10-12T02:22:42.1355132Z  * [new tag]         roadmap/revision-064-04811432dc3d -> roadmap/revision-064-04811432dc3d
+2026-10-12T02:22:42.1356346Z  * [new tag]         roadmap/revision-064-446d60c378dc -> roadmap/revision-064-446d60c378dc
+2026-10-12T02:22:42.1357802Z  * [new tag]         roadmap/revision-064-ae05b2bfc32c -> roadmap/revision-064-ae05b2bfc32c
+2026-10-12T02:22:42.1359061Z  * [new tag]         roadmap/revision-064-d364e70df274 -> roadmap/revision-064-d364e70df274
+2026-10-12T02:22:42.1360269Z  * [new tag]         roadmap/revision-065-2ba7084abe25 -> roadmap/revision-065-2ba7084abe25
+2026-10-12T02:22:42.1361462Z  * [new tag]         roadmap/revision-065-46f7f4b17226 -> roadmap/revision-065-46f7f4b17226
+2026-10-12T02:22:42.1362659Z  * [new tag]         roadmap/revision-065-60b03078c3cd -> roadmap/revision-065-60b03078c3cd
+2026-10-12T02:22:42.1363845Z  * [new tag]         roadmap/revision-065-886f8b0083c9 -> roadmap/revision-065-886f8b0083c9
+2026-10-12T02:22:42.1365031Z  * [new tag]         roadmap/revision-065-98f5c04f6260 -> roadmap/revision-065-98f5c04f6260
+2026-10-12T02:22:42.1366402Z  * [new tag]         roadmap/revision-066-b728cf5f2adb -> roadmap/revision-066-b728cf5f2adb
+2026-10-12T02:22:42.1367760Z  * [new tag]         roadmap/revision-066-bde11299c626 -> roadmap/revision-066-bde11299c626
+2026-10-12T02:22:42.1368966Z  * [new tag]         roadmap/revision-066-cfe905046796 -> roadmap/revision-066-cfe905046796
+2026-10-12T02:22:42.1370159Z  * [new tag]         roadmap/revision-066-d8b4e2407fb1 -> roadmap/revision-066-d8b4e2407fb1
+2026-10-12T02:22:42.1371344Z  * [new tag]         roadmap/revision-066-ec16c6630686 -> roadmap/revision-066-ec16c6630686
+2026-10-12T02:22:42.1372546Z  * [new tag]         roadmap/revision-067-221d8fa6ffcc -> roadmap/revision-067-221d8fa6ffcc
+2026-10-12T02:22:42.1373729Z  * [new tag]         roadmap/revision-067-22b95b0ddb74 -> roadmap/revision-067-22b95b0ddb74
+2026-10-12T02:22:42.1374923Z  * [new tag]         roadmap/revision-067-bbde0fa9c254 -> roadmap/revision-067-bbde0fa9c254
+2026-10-12T02:22:42.1376128Z  * [new tag]         roadmap/revision-067-f7a0bd2eba93 -> roadmap/revision-067-f7a0bd2eba93
+2026-10-12T02:22:42.1377486Z  * [new tag]         roadmap/revision-067-ff4e98c6979e -> roadmap/revision-067-ff4e98c6979e
+2026-10-12T02:22:42.1378689Z  * [new tag]         roadmap/revision-068-3135b0d66ba3 -> roadmap/revision-068-3135b0d66ba3
+2026-10-12T02:22:42.1379884Z  * [new tag]         roadmap/revision-068-351b21daafbb -> roadmap/revision-068-351b21daafbb
+2026-10-12T02:22:42.1381083Z  * [new tag]         roadmap/revision-068-4f37224b0f6f -> roadmap/revision-068-4f37224b0f6f
+2026-10-12T02:22:42.1382271Z  * [new tag]         roadmap/revision-068-7d8ab6719e55 -> roadmap/revision-068-7d8ab6719e55
+2026-10-12T02:22:42.1383464Z  * [new tag]         roadmap/revision-068-933deb78f600 -> roadmap/revision-068-933deb78f600
+2026-10-12T02:22:42.1384657Z  * [new tag]         roadmap/revision-069-04d75ff8a0e1 -> roadmap/revision-069-04d75ff8a0e1
+2026-10-12T02:22:42.1385848Z  * [new tag]         roadmap/revision-069-17d47b91a8f6 -> roadmap/revision-069-17d47b91a8f6
+2026-10-12T02:22:42.1387183Z  * [new tag]         roadmap/revision-069-7047b100dbbe -> roadmap/revision-069-7047b100dbbe
+2026-10-12T02:22:42.1388551Z  * [new tag]         roadmap/revision-069-821e6c1baaef -> roadmap/revision-069-821e6c1baaef
+2026-10-12T02:22:42.1389745Z  * [new tag]         roadmap/revision-069-925724e0994d -> roadmap/revision-069-925724e0994d
+2026-10-12T02:22:42.1390929Z  * [new tag]         roadmap/revision-070-0d09a61aaab7 -> roadmap/revision-070-0d09a61aaab7
+2026-10-12T02:22:42.1392112Z  * [new tag]         roadmap/revision-070-3d10c5dd387d -> roadmap/revision-070-3d10c5dd387d
+2026-10-12T02:22:42.1393296Z  * [new tag]         roadmap/revision-070-41a76ee080e5 -> roadmap/revision-070-41a76ee080e5
+2026-10-12T02:22:42.1394488Z  * [new tag]         roadmap/revision-070-823b86c74a68 -> roadmap/revision-070-823b86c74a68
+2026-10-12T02:22:42.1395672Z  * [new tag]         roadmap/revision-070-fa6e27813f3d -> roadmap/revision-070-fa6e27813f3d
+2026-10-12T02:22:42.1396869Z  * [new tag]         roadmap/revision-071-55a6b0c6c7c5 -> roadmap/revision-071-55a6b0c6c7c5
+2026-10-12T02:22:42.1398397Z  * [new tag]         roadmap/revision-071-6fdf20ca82a9 -> roadmap/revision-071-6fdf20ca82a9
+2026-10-12T02:22:42.1399613Z  * [new tag]         roadmap/revision-071-8a061cb9b8ab -> roadmap/revision-071-8a061cb9b8ab
+2026-10-12T02:22:42.1400811Z  * [new tag]         roadmap/revision-071-8c332516937b -> roadmap/revision-071-8c332516937b
+2026-10-12T02:22:42.1402009Z  * [new tag]         roadmap/revision-071-de6667643951 -> roadmap/revision-071-de6667643951
+2026-10-12T02:22:42.1403189Z  * [new tag]         roadmap/revision-072-2990083331a2 -> roadmap/revision-072-2990083331a2
+2026-10-12T02:22:42.1404397Z  * [new tag]         roadmap/revision-072-4aeff2223e3f -> roadmap/revision-072-4aeff2223e3f
+2026-10-12T02:22:42.1405592Z  * [new tag]         roadmap/revision-072-54d816de6a93 -> roadmap/revision-072-54d816de6a93
+2026-10-12T02:22:42.1406788Z  * [new tag]         roadmap/revision-072-82e51ba8ea16 -> roadmap/revision-072-82e51ba8ea16
+2026-10-12T02:22:42.1408344Z  * [new tag]         roadmap/revision-072-d4611644084a -> roadmap/revision-072-d4611644084a
+2026-10-12T02:22:42.1409571Z  * [new tag]         roadmap/revision-073-006aba78f1f5 -> roadmap/revision-073-006aba78f1f5
+2026-10-12T02:22:42.1410767Z  * [new tag]         roadmap/revision-073-3c87e1f63b51 -> roadmap/revision-073-3c87e1f63b51
+2026-10-12T02:22:42.1411956Z  * [new tag]         roadmap/revision-073-3dc1c36adbad -> roadmap/revision-073-3dc1c36adbad
+2026-10-12T02:22:42.1413149Z  * [new tag]         roadmap/revision-073-c5bc20fc095b -> roadmap/revision-073-c5bc20fc095b
+2026-10-12T02:22:42.1414344Z  * [new tag]         roadmap/revision-073-e3bfb67a9244 -> roadmap/revision-073-e3bfb67a9244
+2026-10-12T02:22:42.1415541Z  * [new tag]         roadmap/revision-074-38d83189cedb -> roadmap/revision-074-38d83189cedb
+2026-10-12T02:22:42.1416733Z  * [new tag]         roadmap/revision-074-4155bc9fce74 -> roadmap/revision-074-4155bc9fce74
+2026-10-12T02:22:42.1418070Z  * [new tag]         roadmap/revision-074-4b5da4aa946a -> roadmap/revision-074-4b5da4aa946a
+2026-10-12T02:22:42.1419274Z  * [new tag]         roadmap/revision-074-d3fa39b37c83 -> roadmap/revision-074-d3fa39b37c83
+2026-10-12T02:22:42.1420471Z  * [new tag]         roadmap/revision-074-ddbee893478e -> roadmap/revision-074-ddbee893478e
+2026-10-12T02:22:42.1421668Z  * [new tag]         roadmap/revision-075-4b8202419941 -> roadmap/revision-075-4b8202419941
+2026-10-12T02:22:42.1422841Z  * [new tag]         roadmap/revision-075-5179067d6635 -> roadmap/revision-075-5179067d6635
+2026-10-12T02:22:42.1424021Z  * [new tag]         roadmap/revision-075-db3bcf0da8d6 -> roadmap/revision-075-db3bcf0da8d6
+2026-10-12T02:22:42.1425216Z  * [new tag]         roadmap/revision-075-ef04da0f3049 -> roadmap/revision-075-ef04da0f3049
+2026-10-12T02:22:42.1426402Z  * [new tag]         roadmap/revision-075-f7b57915dd7a -> roadmap/revision-075-f7b57915dd7a
+2026-10-12T02:22:42.1427730Z  * [new tag]         roadmap/revision-076-4c6618c4eb91 -> roadmap/revision-076-4c6618c4eb91
+2026-10-12T02:22:42.1429075Z  * [new tag]         roadmap/revision-076-b4860bf2c392 -> roadmap/revision-076-b4860bf2c392
+2026-10-12T02:22:42.1430265Z  * [new tag]         roadmap/revision-076-b5aee4eb6e95 -> roadmap/revision-076-b5aee4eb6e95
+2026-10-12T02:22:42.1431455Z  * [new tag]         roadmap/revision-076-da4acc398637 -> roadmap/revision-076-da4acc398637
+2026-10-12T02:22:42.1432642Z  * [new tag]         roadmap/revision-076-f0034b6ab7c1 -> roadmap/revision-076-f0034b6ab7c1
+2026-10-12T02:22:42.1433827Z  * [new tag]         roadmap/revision-077-231568d07731 -> roadmap/revision-077-231568d07731
+2026-10-12T02:22:42.1434993Z  * [new tag]         roadmap/revision-077-295b0da5c1f0 -> roadmap/revision-077-295b0da5c1f0
+2026-10-12T02:22:42.1436187Z  * [new tag]         roadmap/revision-077-8a2d845523c5 -> roadmap/revision-077-8a2d845523c5
+2026-10-12T02:22:42.1437500Z  * [new tag]         roadmap/revision-077-8d4ba07d6def -> roadmap/revision-077-8d4ba07d6def
+2026-10-12T02:22:42.1438713Z  * [new tag]         roadmap/revision-077-b4482c259c1e -> roadmap/revision-077-b4482c259c1e
+2026-10-12T02:22:42.1439900Z  * [new tag]         roadmap/revision-078-1a5f5ba98a32 -> roadmap/revision-078-1a5f5ba98a32
+2026-10-12T02:22:42.1441082Z  * [new tag]         roadmap/revision-078-43773a07a269 -> roadmap/revision-078-43773a07a269
+2026-10-12T02:22:42.1442271Z  * [new tag]         roadmap/revision-078-9609b73ef5ed -> roadmap/revision-078-9609b73ef5ed
+2026-10-12T02:22:42.1443490Z  * [new tag]         roadmap/revision-078-c7ba897d8d9c -> roadmap/revision-078-c7ba897d8d9c
+2026-10-12T02:22:42.1444685Z  * [new tag]         roadmap/revision-078-e037bc5a06dc -> roadmap/revision-078-e037bc5a06dc
+2026-10-12T02:22:42.1445873Z  * [new tag]         roadmap/revision-079-35c2aeb2923e -> roadmap/revision-079-35c2aeb2923e
+2026-10-12T02:22:42.1447057Z  * [new tag]         roadmap/revision-079-76374abb1077 -> roadmap/revision-079-76374abb1077
+2026-10-12T02:22:42.1448357Z  * [new tag]         roadmap/revision-079-8053dc693a13 -> roadmap/revision-079-8053dc693a13
+2026-10-12T02:22:42.1449692Z  * [new tag]         roadmap/revision-079-d6eabb576bd2 -> roadmap/revision-079-d6eabb576bd2
+2026-10-12T02:22:42.1450904Z  * [new tag]         roadmap/revision-079-ec96643bfe26 -> roadmap/revision-079-ec96643bfe26
+2026-10-12T02:22:42.1452089Z  * [new tag]         roadmap/revision-080-0ea8a1c94115 -> roadmap/revision-080-0ea8a1c94115
+2026-10-12T02:22:42.1453279Z  * [new tag]         roadmap/revision-080-143444f5c43e -> roadmap/revision-080-143444f5c43e
+2026-10-12T02:22:42.1454462Z  * [new tag]         roadmap/revision-080-19ed00f179a3 -> roadmap/revision-080-19ed00f179a3
+2026-10-12T02:22:42.1455650Z  * [new tag]         roadmap/revision-080-8454a97667bb -> roadmap/revision-080-8454a97667bb
+2026-10-12T02:22:42.1456822Z  * [new tag]         roadmap/revision-080-e7d3882b67ae -> roadmap/revision-080-e7d3882b67ae
+2026-10-12T02:22:42.1458139Z  * [new tag]         roadmap/revision-081-2fffa57d369d -> roadmap/revision-081-2fffa57d369d
+2026-10-12T02:22:42.1459365Z  * [new tag]         roadmap/revision-081-5a4d180478bb -> roadmap/revision-081-5a4d180478bb
+2026-10-12T02:22:42.1460552Z  * [new tag]         roadmap/revision-081-c4110b410f56 -> roadmap/revision-081-c4110b410f56
+2026-10-12T02:22:42.1461734Z  * [new tag]         roadmap/revision-081-d39b6145cb55 -> roadmap/revision-081-d39b6145cb55
+2026-10-12T02:22:42.1462924Z  * [new tag]         roadmap/revision-081-faac017dc60d -> roadmap/revision-081-faac017dc60d
+2026-10-12T02:22:42.1464107Z  * [new tag]         roadmap/revision-082-06c93eff77af -> roadmap/revision-082-06c93eff77af
+2026-10-12T02:22:42.1465287Z  * [new tag]         roadmap/revision-082-1dc8cfe230fc -> roadmap/revision-082-1dc8cfe230fc
+2026-10-12T02:22:42.1466467Z  * [new tag]         roadmap/revision-082-47abf911f844 -> roadmap/revision-082-47abf911f844
+2026-10-12T02:22:42.1467794Z  * [new tag]         roadmap/revision-082-af8561c68820 -> roadmap/revision-082-af8561c68820
+2026-10-12T02:22:42.1468990Z  * [new tag]         roadmap/revision-082-c6cbacac0db9 -> roadmap/revision-082-c6cbacac0db9
+2026-10-12T02:22:42.1470364Z  * [new tag]         roadmap/revision-083-06215746caae -> roadmap/revision-083-06215746caae
+2026-10-12T02:22:42.1471538Z  * [new tag]         roadmap/revision-083-53440f785f65 -> roadmap/revision-083-53440f785f65
+2026-10-12T02:22:42.1472717Z  * [new tag]         roadmap/revision-083-6d3fcd7444ad -> roadmap/revision-083-6d3fcd7444ad
+2026-10-12T02:22:42.1473902Z  * [new tag]         roadmap/revision-083-8bf7da674bb5 -> roadmap/revision-083-8bf7da674bb5
+2026-10-12T02:22:42.1475087Z  * [new tag]         roadmap/revision-083-ed1091ff988c -> roadmap/revision-083-ed1091ff988c
+2026-10-12T02:22:42.1476275Z  * [new tag]         roadmap/revision-083-f3c9ee4ec354 -> roadmap/revision-083-f3c9ee4ec354
+2026-10-12T02:22:42.1477600Z  * [new tag]         roadmap/revision-084-073a20c8d7ef -> roadmap/revision-084-073a20c8d7ef
+2026-10-12T02:22:42.1478803Z  * [new tag]         roadmap/revision-084-26f529e6ba91 -> roadmap/revision-084-26f529e6ba91
+2026-10-12T02:22:42.1479994Z  * [new tag]         roadmap/revision-084-2f67969e9985 -> roadmap/revision-084-2f67969e9985
+2026-10-12T02:22:42.1481176Z  * [new tag]         roadmap/revision-084-9a4fb29ee416 -> roadmap/revision-084-9a4fb29ee416
+2026-10-12T02:22:42.1482354Z  * [new tag]         roadmap/revision-084-d2936a008fd2 -> roadmap/revision-084-d2936a008fd2
+2026-10-12T02:22:42.1483525Z  * [new tag]         roadmap/revision-085-1236f09a1d85 -> roadmap/revision-085-1236f09a1d85
+2026-10-12T02:22:42.1484699Z  * [new tag]         roadmap/revision-085-719905a41225 -> roadmap/revision-085-719905a41225
+2026-10-12T02:22:42.1485884Z  * [new tag]         roadmap/revision-085-97dca7626158 -> roadmap/revision-085-97dca7626158
+2026-10-12T02:22:42.1487068Z  * [new tag]         roadmap/revision-085-b7e0cc99cf22 -> roadmap/revision-085-b7e0cc99cf22
+2026-10-12T02:22:42.1488379Z  * [new tag]         roadmap/revision-085-c0263af654c4 -> roadmap/revision-085-c0263af654c4
+2026-10-12T02:22:42.1489563Z  * [new tag]         roadmap/revision-086-5915ac0607ac -> roadmap/revision-086-5915ac0607ac
+2026-10-12T02:22:42.1490876Z  * [new tag]         roadmap/revision-086-807afa9962aa -> roadmap/revision-086-807afa9962aa
+2026-10-12T02:22:42.1492076Z  * [new tag]         roadmap/revision-086-8ebd4cbcc3ba -> roadmap/revision-086-8ebd4cbcc3ba
+2026-10-12T02:22:42.1493261Z  * [new tag]         roadmap/revision-086-d0e41c87e547 -> roadmap/revision-086-d0e41c87e547
+2026-10-12T02:22:42.1494446Z  * [new tag]         roadmap/revision-086-f5a017db54da -> roadmap/revision-086-f5a017db54da
+2026-10-12T02:22:42.1495620Z  * [new tag]         roadmap/revision-087-08beb7c2bc23 -> roadmap/revision-087-08beb7c2bc23
+2026-10-12T02:22:42.1515106Z  * [new tag]         roadmap/revision-087-67f022e93858 -> roadmap/revision-087-67f022e93858
+2026-10-12T02:22:42.1516548Z  * [new tag]         roadmap/revision-087-69f606200622 -> roadmap/revision-087-69f606200622
+2026-10-12T02:22:42.1518021Z  * [new tag]         roadmap/revision-087-b83d77ce5da8 -> roadmap/revision-087-b83d77ce5da8
+2026-10-12T02:22:42.1519291Z  * [new tag]         roadmap/revision-087-f08611023cec -> roadmap/revision-087-f08611023cec
+2026-10-12T02:22:42.1520526Z  * [new tag]         roadmap/revision-088-acce7492f8d3 -> roadmap/revision-088-acce7492f8d3
+2026-10-12T02:22:42.1521775Z  * [new tag]         roadmap/revision-088-b2d374878677 -> roadmap/revision-088-b2d374878677
+2026-10-12T02:22:42.1523001Z  * [new tag]         roadmap/revision-088-e15c6fc1f0c3 -> roadmap/revision-088-e15c6fc1f0c3
+2026-10-12T02:22:42.1524226Z  * [new tag]         roadmap/revision-088-e91dcb307c61 -> roadmap/revision-088-e91dcb307c61
+2026-10-12T02:22:42.1525434Z  * [new tag]         roadmap/revision-088-f194c55d4351 -> roadmap/revision-088-f194c55d4351
+2026-10-12T02:22:42.1526638Z  * [new tag]         roadmap/revision-089-177a08a204d7 -> roadmap/revision-089-177a08a204d7
+2026-10-12T02:22:42.1527987Z  * [new tag]         roadmap/revision-089-3b72f38e6814 -> roadmap/revision-089-3b72f38e6814
+2026-10-12T02:22:42.1529340Z  * [new tag]         roadmap/revision-089-59c59a882d67 -> roadmap/revision-089-59c59a882d67
+2026-10-12T02:22:42.1531601Z  * [new tag]         roadmap/revision-089-9d8a6fb2a7df -> roadmap/revision-089-9d8a6fb2a7df
+2026-10-12T02:22:42.1533514Z  * [new tag]         roadmap/revision-089-c2c14e491c30 -> roadmap/revision-089-c2c14e491c30
+2026-10-12T02:22:42.1535783Z  * [new tag]         roadmap/revision-089-d29dda936dff -> roadmap/revision-089-d29dda936dff
+2026-10-12T02:22:42.1538259Z  * [new tag]         roadmap/revision-089-f45a7dbbd33d -> roadmap/revision-089-f45a7dbbd33d
+2026-10-12T02:22:42.1540410Z  * [new tag]         roadmap/revision-090-1b4be82fe9b6 -> roadmap/revision-090-1b4be82fe9b6
+2026-10-12T02:22:42.1542492Z  * [new tag]         roadmap/revision-090-6f310b5483a8 -> roadmap/revision-090-6f310b5483a8
+2026-10-12T02:22:42.1544685Z  * [new tag]         roadmap/revision-090-71d875caed41 -> roadmap/revision-090-71d875caed41
+2026-10-12T02:22:42.1546422Z  * [new tag]         roadmap/revision-090-7f2d4f4ffd46 -> roadmap/revision-090-7f2d4f4ffd46
+2026-10-12T02:22:42.1547973Z  * [new tag]         roadmap/revision-090-9c2787630b7f -> roadmap/revision-090-9c2787630b7f
+2026-10-12T02:22:42.1549446Z  * [new tag]         roadmap/revision-090-c80d278dd53d -> roadmap/revision-090-c80d278dd53d
+2026-10-12T02:22:42.1551113Z  * [new tag]         roadmap/revision-090-fb5765a9ec36 -> roadmap/revision-090-fb5765a9ec36
+2026-10-12T02:22:42.1552309Z  * [new tag]         roadmap/revision-091-05f1a8841609 -> roadmap/revision-091-05f1a8841609
+2026-10-12T02:22:42.1553559Z  * [new tag]         roadmap/revision-091-16edf14e0b94 -> roadmap/revision-091-16edf14e0b94
+2026-10-12T02:22:42.1555185Z  * [new tag]         roadmap/revision-091-36ea28337198 -> roadmap/revision-091-36ea28337198
+2026-10-12T02:22:42.1556419Z  * [new tag]         roadmap/revision-091-3c268c34d15b -> roadmap/revision-091-3c268c34d15b
+2026-10-12T02:22:42.1557914Z  * [new tag]         roadmap/revision-091-8a06d5df63ee -> roadmap/revision-091-8a06d5df63ee
+2026-10-12T02:22:42.1559161Z  * [new tag]         roadmap/revision-091-9900cc0d5229 -> roadmap/revision-091-9900cc0d5229
+2026-10-12T02:22:42.1560608Z  * [new tag]         roadmap/revision-091-dee3f126a131 -> roadmap/revision-091-dee3f126a131
+2026-10-12T02:22:42.1561843Z  * [new tag]         roadmap/revision-092-09751c8c65ac -> roadmap/revision-092-09751c8c65ac
+2026-10-12T02:22:42.1563115Z  * [new tag]         roadmap/revision-092-307010912bf9 -> roadmap/revision-092-307010912bf9
+2026-10-12T02:22:42.1564449Z  * [new tag]         roadmap/revision-092-52433827539e -> roadmap/revision-092-52433827539e
+2026-10-12T02:22:42.1565636Z  * [new tag]         roadmap/revision-092-5b15ee436b69 -> roadmap/revision-092-5b15ee436b69
+2026-10-12T02:22:42.1566828Z  * [new tag]         roadmap/revision-092-84b6d877fa9b -> roadmap/revision-092-84b6d877fa9b
+2026-10-12T02:22:42.1568292Z  * [new tag]         roadmap/revision-092-ac6e5cc39ac5 -> roadmap/revision-092-ac6e5cc39ac5
+2026-10-12T02:22:42.1569499Z  * [new tag]         roadmap/revision-092-e89105300eb3 -> roadmap/revision-092-e89105300eb3
+2026-10-12T02:22:42.1570708Z  * [new tag]         roadmap/revision-093-8d35ee99bd23 -> roadmap/revision-093-8d35ee99bd23
+2026-10-12T02:22:42.1571891Z  * [new tag]         roadmap/revision-093-a36f5538df30 -> roadmap/revision-093-a36f5538df30
+2026-10-12T02:22:42.1573073Z  * [new tag]         roadmap/revision-093-a92c951fa6d9 -> roadmap/revision-093-a92c951fa6d9
+2026-10-12T02:22:42.1574258Z  * [new tag]         roadmap/revision-093-aa2a5aa9a912 -> roadmap/revision-093-aa2a5aa9a912
+2026-10-12T02:22:42.1575462Z  * [new tag]         roadmap/revision-093-e7408fee761a -> roadmap/revision-093-e7408fee761a
+2026-10-12T02:22:42.1576646Z  * [new tag]         roadmap/revision-093-f1a357fb78da -> roadmap/revision-093-f1a357fb78da
+2026-10-12T02:22:42.1578152Z  * [new tag]         roadmap/revision-093-fec93c5ec707 -> roadmap/revision-093-fec93c5ec707
+2026-10-12T02:22:42.1579372Z  * [new tag]         roadmap/revision-094-01de4770d750 -> roadmap/revision-094-01de4770d750
+2026-10-12T02:22:42.1580776Z  * [new tag]         roadmap/revision-094-4907857412c2 -> roadmap/revision-094-4907857412c2
+2026-10-12T02:22:42.1581984Z  * [new tag]         roadmap/revision-094-7c94141a1a9a -> roadmap/revision-094-7c94141a1a9a
+2026-10-12T02:22:42.1583186Z  * [new tag]         roadmap/revision-094-8bd9e78743ab -> roadmap/revision-094-8bd9e78743ab
+2026-10-12T02:22:42.1584394Z  * [new tag]         roadmap/revision-094-d1f35d6121a4 -> roadmap/revision-094-d1f35d6121a4
+2026-10-12T02:22:42.1585589Z  * [new tag]         roadmap/revision-094-df82d27c917b -> roadmap/revision-094-df82d27c917b
+2026-10-12T02:22:42.1586775Z  * [new tag]         roadmap/revision-094-e783dfc73c6a -> roadmap/revision-094-e783dfc73c6a
+2026-10-12T02:22:42.1588264Z  * [new tag]         roadmap/revision-095-1e5a5b4f4fb3 -> roadmap/revision-095-1e5a5b4f4fb3
+2026-10-12T02:22:42.1589453Z  * [new tag]         roadmap/revision-095-279f9f73e3f3 -> roadmap/revision-095-279f9f73e3f3
+2026-10-12T02:22:42.1590637Z  * [new tag]         roadmap/revision-095-6a4ceee25582 -> roadmap/revision-095-6a4ceee25582
+2026-10-12T02:22:42.1591857Z  * [new tag]         roadmap/revision-095-6b82bc5b8b2f -> roadmap/revision-095-6b82bc5b8b2f
+2026-10-12T02:22:42.1593050Z  * [new tag]         roadmap/revision-095-6e5d43aee3e7 -> roadmap/revision-095-6e5d43aee3e7
+2026-10-12T02:22:42.1594254Z  * [new tag]         roadmap/revision-095-a4481338b05a -> roadmap/revision-095-a4481338b05a
+2026-10-12T02:22:42.1595438Z  * [new tag]         roadmap/revision-095-ab5723156bca -> roadmap/revision-095-ab5723156bca
+2026-10-12T02:22:42.1596886Z  * [new tag]         roadmap/revision-096-05d8c33dc305 -> roadmap/revision-096-05d8c33dc305
+2026-10-12T02:22:42.1598881Z  * [new tag]         roadmap/revision-096-2471ba8194d9 -> roadmap/revision-096-2471ba8194d9
+2026-10-12T02:22:42.1600362Z  * [new tag]         roadmap/revision-096-8302c3468190 -> roadmap/revision-096-8302c3468190
+2026-10-12T02:22:42.1601566Z  * [new tag]         roadmap/revision-096-8aa292c5a24a -> roadmap/revision-096-8aa292c5a24a
+2026-10-12T02:22:42.1603211Z  * [new tag]         roadmap/revision-096-bc69035d8c0f -> roadmap/revision-096-bc69035d8c0f
+2026-10-12T02:22:42.1605236Z  * [new tag]         roadmap/revision-096-d94a2784952d -> roadmap/revision-096-d94a2784952d
+2026-10-12T02:22:42.1606470Z  * [new tag]         roadmap/revision-096-ea79bdee1191 -> roadmap/revision-096-ea79bdee1191
+2026-10-12T02:22:42.1608196Z  * [new tag]         roadmap/revision-097-080be7e655e3 -> roadmap/revision-097-080be7e655e3
+2026-10-12T02:22:42.1609420Z  * [new tag]         roadmap/revision-097-0aac7d0311f4 -> roadmap/revision-097-0aac7d0311f4
+2026-10-12T02:22:42.1610610Z  * [new tag]         roadmap/revision-097-25838578a6bf -> roadmap/revision-097-25838578a6bf
+2026-10-12T02:22:42.1611793Z  * [new tag]         roadmap/revision-097-351073f7254d -> roadmap/revision-097-351073f7254d
+2026-10-12T02:22:42.1613120Z  * [new tag]         roadmap/revision-097-671ada6ec85d -> roadmap/revision-097-671ada6ec85d
+2026-10-12T02:22:42.1616103Z  * [new tag]         roadmap/revision-097-9330eab6253e -> roadmap/revision-097-9330eab6253e
+2026-10-12T02:22:42.1618995Z  * [new tag]         roadmap/revision-097-bf2371572323 -> roadmap/revision-097-bf2371572323
+2026-10-12T02:22:42.1621976Z  * [new tag]         roadmap/revision-098-1f6f668eff38 -> roadmap/revision-098-1f6f668eff38
+2026-10-12T02:22:42.1624358Z  * [new tag]         roadmap/revision-098-663ef599a438 -> roadmap/revision-098-663ef599a438
+2026-10-12T02:22:42.1626556Z  * [new tag]         roadmap/revision-098-6bddc3977352 -> roadmap/revision-098-6bddc3977352
+2026-10-12T02:22:42.1629110Z  * [new tag]         roadmap/revision-098-6e2236f73519 -> roadmap/revision-098-6e2236f73519
+2026-10-12T02:22:42.1630399Z  * [new tag]         roadmap/revision-098-ae4ef94a5afb -> roadmap/revision-098-ae4ef94a5afb
+2026-10-12T02:22:42.1631644Z  * [new tag]         roadmap/revision-098-b7d41363523d -> roadmap/revision-098-b7d41363523d
+2026-10-12T02:22:42.1632843Z  * [new tag]         roadmap/revision-098-b82589474d2a -> roadmap/revision-098-b82589474d2a
+2026-10-12T02:22:42.1634290Z  * [new tag]         roadmap/revision-099-3c67663986c7 -> roadmap/revision-099-3c67663986c7
+2026-10-12T02:22:42.1635507Z  * [new tag]         roadmap/revision-099-4114b709fb4b -> roadmap/revision-099-4114b709fb4b
+2026-10-12T02:22:42.1636707Z  * [new tag]         roadmap/revision-099-4872607fc02f -> roadmap/revision-099-4872607fc02f
+2026-10-12T02:22:42.1638379Z  * [new tag]         roadmap/revision-099-96f523dfad9e -> roadmap/revision-099-96f523dfad9e
+2026-10-12T02:22:42.1640537Z  * [new tag]         roadmap/revision-099-af556a1cf605 -> roadmap/revision-099-af556a1cf605
+2026-10-12T02:22:42.1642660Z  * [new tag]         roadmap/revision-099-b0d7d1b7d2a9 -> roadmap/revision-099-b0d7d1b7d2a9
+2026-10-12T02:22:42.1644863Z  * [new tag]         roadmap/revision-099-eb5ae0a4a4c2 -> roadmap/revision-099-eb5ae0a4a4c2
+2026-10-12T02:22:42.1646110Z  * [new tag]         roadmap/revision-100-3883d1abaccc -> roadmap/revision-100-3883d1abaccc
+2026-10-12T02:22:42.1647645Z  * [new tag]         roadmap/revision-100-3bec687cea7d -> roadmap/revision-100-3bec687cea7d
+2026-10-12T02:22:42.1649409Z  * [new tag]         roadmap/revision-100-61a0def48b7d -> roadmap/revision-100-61a0def48b7d
+2026-10-12T02:22:42.1650907Z  * [new tag]         roadmap/revision-100-7fe3282b1413 -> roadmap/revision-100-7fe3282b1413
+2026-10-12T02:22:42.1652644Z  * [new tag]         roadmap/revision-100-a3d88c0b8f3d -> roadmap/revision-100-a3d88c0b8f3d
+2026-10-12T02:22:42.1653880Z  * [new tag]         roadmap/revision-100-b44f53c9a60f -> roadmap/revision-100-b44f53c9a60f
+2026-10-12T02:22:42.1655534Z  * [new tag]         roadmap/revision-100-e6ae6c83dc46 -> roadmap/revision-100-e6ae6c83dc46
+2026-10-12T02:22:42.1656887Z  * [new tag]         roadmap/revision-101-2339ff08e421 -> roadmap/revision-101-2339ff08e421
+2026-10-12T02:22:42.1659038Z  * [new tag]         roadmap/revision-101-2ac08dea923a -> roadmap/revision-101-2ac08dea923a
+2026-10-12T02:22:42.1660801Z  * [new tag]         roadmap/revision-101-9bdd82863c39 -> roadmap/revision-101-9bdd82863c39
+2026-10-12T02:22:42.1662749Z  * [new tag]         roadmap/revision-101-b1c6a68771c7 -> roadmap/revision-101-b1c6a68771c7
+2026-10-12T02:22:42.1664102Z  * [new tag]         roadmap/revision-101-c05384110969 -> roadmap/revision-101-c05384110969
+2026-10-12T02:22:42.1665349Z  * [new tag]         roadmap/revision-101-c6b5ad8c827c -> roadmap/revision-101-c6b5ad8c827c
+2026-10-12T02:22:42.1666648Z  * [new tag]         roadmap/revision-101-e0db0123a16c -> roadmap/revision-101-e0db0123a16c
+2026-10-12T02:22:42.1668188Z  * [new tag]         roadmap/revision-102-04e8557ca5e8 -> roadmap/revision-102-04e8557ca5e8
+2026-10-12T02:22:42.1669503Z  * [new tag]         roadmap/revision-102-222e199ca735 -> roadmap/revision-102-222e199ca735
+2026-10-12T02:22:42.1670829Z  * [new tag]         roadmap/revision-102-33661b298f96 -> roadmap/revision-102-33661b298f96
+2026-10-12T02:22:42.1672110Z  * [new tag]         roadmap/revision-102-488801a9f2f7 -> roadmap/revision-102-488801a9f2f7
+2026-10-12T02:22:42.1673533Z  * [new tag]         roadmap/revision-102-4c58f019e707 -> roadmap/revision-102-4c58f019e707
+2026-10-12T02:22:42.1674871Z  * [new tag]         roadmap/revision-102-5f4c3b2423ac -> roadmap/revision-102-5f4c3b2423ac
+2026-10-12T02:22:42.1676268Z  * [new tag]         roadmap/revision-102-7931f680a003 -> roadmap/revision-102-7931f680a003
+2026-10-12T02:22:42.1677887Z  * [new tag]         roadmap/revision-102-7e011508db02 -> roadmap/revision-102-7e011508db02
+2026-10-12T02:22:42.1679228Z  * [new tag]         roadmap/revision-103-32c500ef4444 -> roadmap/revision-103-32c500ef4444
+2026-10-12T02:22:42.1680536Z  * [new tag]         roadmap/revision-103-38e1e7ab8048 -> roadmap/revision-103-38e1e7ab8048
+2026-10-12T02:22:42.1681844Z  * [new tag]         roadmap/revision-103-6f1f030dfcce -> roadmap/revision-103-6f1f030dfcce
+2026-10-12T02:22:42.1683154Z  * [new tag]         roadmap/revision-103-8ccdd092478c -> roadmap/revision-103-8ccdd092478c
+2026-10-12T02:22:42.1684517Z  * [new tag]         roadmap/revision-103-b7961a14d5dd -> roadmap/revision-103-b7961a14d5dd
+2026-10-12T02:22:42.1685975Z  * [new tag]         roadmap/revision-103-c48864ce7231 -> roadmap/revision-103-c48864ce7231
+2026-10-12T02:22:42.1687200Z  * [new tag]         roadmap/revision-103-e25cebbd8ac3 -> roadmap/revision-103-e25cebbd8ac3
+2026-10-12T02:22:42.1689096Z  * [new tag]         roadmap/revision-104-392a5721e544 -> roadmap/revision-104-392a5721e544
+2026-10-12T02:22:42.1691190Z  * [new tag]         roadmap/revision-104-54cffe881e1f -> roadmap/revision-104-54cffe881e1f
+2026-10-12T02:22:42.1692439Z  * [new tag]         roadmap/revision-104-8bf114c615fe -> roadmap/revision-104-8bf114c615fe
+2026-10-12T02:22:42.1693624Z  * [new tag]         roadmap/revision-104-9f6e7092f00c -> roadmap/revision-104-9f6e7092f00c
+2026-10-12T02:22:42.1694808Z  * [new tag]         roadmap/revision-104-ac9558374a4d -> roadmap/revision-104-ac9558374a4d
+2026-10-12T02:22:42.1695997Z  * [new tag]         roadmap/revision-104-b244d5f7c423 -> roadmap/revision-104-b244d5f7c423
+2026-10-12T02:22:42.1697206Z  * [new tag]         roadmap/revision-104-f0384f82c63e -> roadmap/revision-104-f0384f82c63e
+2026-10-12T02:22:42.1698830Z  * [new tag]         roadmap/revision-105-2711a516ee34 -> roadmap/revision-105-2711a516ee34
+2026-10-12T02:22:42.1700052Z  * [new tag]         roadmap/revision-105-4d4cbacd0a78 -> roadmap/revision-105-4d4cbacd0a78
+2026-10-12T02:22:42.1701236Z  * [new tag]         roadmap/revision-105-96174aaaf6be -> roadmap/revision-105-96174aaaf6be
+2026-10-12T02:22:42.1702412Z  * [new tag]         roadmap/revision-105-a8ed839d69f5 -> roadmap/revision-105-a8ed839d69f5
+2026-10-12T02:22:42.1703595Z  * [new tag]         roadmap/revision-105-c07c37877b47 -> roadmap/revision-105-c07c37877b47
+2026-10-12T02:22:42.1704786Z  * [new tag]         roadmap/revision-105-c7db1b368da0 -> roadmap/revision-105-c7db1b368da0
+2026-10-12T02:22:42.1705967Z  * [new tag]         roadmap/revision-105-cb20833c018f -> roadmap/revision-105-cb20833c018f
+2026-10-12T02:22:42.1708183Z  * [new tag]         roadmap/revision-106-06b87f3c83af -> roadmap/revision-106-06b87f3c83af
+2026-10-12T02:22:42.1710532Z  * [new tag]         roadmap/revision-106-29104d944907 -> roadmap/revision-106-29104d944907
+2026-10-12T02:22:42.1712686Z  * [new tag]         roadmap/revision-106-43757843a1b3 -> roadmap/revision-106-43757843a1b3
+2026-10-12T02:22:42.1714783Z  * [new tag]         roadmap/revision-106-7a89dd017ae4 -> roadmap/revision-106-7a89dd017ae4
+2026-10-12T02:22:42.1716813Z  * [new tag]         roadmap/revision-106-8c53b11ae1d0 -> roadmap/revision-106-8c53b11ae1d0
+2026-10-12T02:22:42.1719027Z  * [new tag]         roadmap/revision-106-911fcf78c5c9 -> roadmap/revision-106-911fcf78c5c9
+2026-10-12T02:22:42.1721041Z  * [new tag]         roadmap/revision-107-090422d2f330 -> roadmap/revision-107-090422d2f330
+2026-10-12T02:22:42.1723094Z  * [new tag]         roadmap/revision-107-c34c313ccfb0 -> roadmap/revision-107-c34c313ccfb0
+2026-10-12T02:22:42.1725042Z  * [new tag]         roadmap/revision-107-d4b360f6cc71 -> roadmap/revision-107-d4b360f6cc71
+2026-10-12T02:22:42.1727024Z  * [new tag]         roadmap/revision-107-e36c9af3743f -> roadmap/revision-107-e36c9af3743f
+2026-10-12T02:22:42.1729320Z  * [new tag]         roadmap/revision-107-ea18e54f0eee -> roadmap/revision-107-ea18e54f0eee
+2026-10-12T02:22:42.1731359Z  * [new tag]         roadmap/revision-107-f63fbe1de7c0 -> roadmap/revision-107-f63fbe1de7c0
+2026-10-12T02:22:42.1733470Z  * [new tag]         roadmap/revision-108-1362d3a239bc -> roadmap/revision-108-1362d3a239bc
+2026-10-12T02:22:42.1735514Z  * [new tag]         roadmap/revision-108-36ad63424530 -> roadmap/revision-108-36ad63424530
+2026-10-12T02:22:42.1737863Z  * [new tag]         roadmap/revision-108-52668c476b2a -> roadmap/revision-108-52668c476b2a
+2026-10-12T02:22:42.1739989Z  * [new tag]         roadmap/revision-108-8f66e28763b4 -> roadmap/revision-108-8f66e28763b4
+2026-10-12T02:22:42.1742163Z  * [new tag]         roadmap/revision-108-cd31bd02464f -> roadmap/revision-108-cd31bd02464f
+2026-10-12T02:22:42.1744580Z  * [new tag]         roadmap/revision-108-edac8c6a96dc -> roadmap/revision-108-edac8c6a96dc
+2026-10-12T02:22:42.1746109Z  * [new tag]         roadmap/revision-109-1c471fb6b348 -> roadmap/revision-109-1c471fb6b348
+2026-10-12T02:22:42.1747597Z  * [new tag]         roadmap/revision-109-5a6b79b7a008 -> roadmap/revision-109-5a6b79b7a008
+2026-10-12T02:22:42.1748870Z  * [new tag]         roadmap/revision-109-6b206eae08ec -> roadmap/revision-109-6b206eae08ec
+2026-10-12T02:22:42.1750073Z  * [new tag]         roadmap/revision-109-95c74a9b4b45 -> roadmap/revision-109-95c74a9b4b45
+2026-10-12T02:22:42.1751262Z  * [new tag]         roadmap/revision-109-cf14552bdba5 -> roadmap/revision-109-cf14552bdba5
+2026-10-12T02:22:42.1752452Z  * [new tag]         roadmap/revision-109-d178d86dca2b -> roadmap/revision-109-d178d86dca2b
+2026-10-12T02:22:42.1753643Z  * [new tag]         roadmap/revision-110-09ec98b12c5d -> roadmap/revision-110-09ec98b12c5d
+2026-10-12T02:22:42.1754839Z  * [new tag]         roadmap/revision-110-0caead68a6c3 -> roadmap/revision-110-0caead68a6c3
+2026-10-12T02:22:42.1756039Z  * [new tag]         roadmap/revision-110-393456e6e5ca -> roadmap/revision-110-393456e6e5ca
+2026-10-12T02:22:42.1757227Z  * [new tag]         roadmap/revision-110-66d7d93e57f5 -> roadmap/revision-110-66d7d93e57f5
+2026-10-12T02:22:42.1758688Z  * [new tag]         roadmap/revision-110-6f4bfba80ef3 -> roadmap/revision-110-6f4bfba80ef3
+2026-10-12T02:22:42.1759894Z  * [new tag]         roadmap/revision-110-93d088fb187d -> roadmap/revision-110-93d088fb187d
+2026-10-12T02:22:42.1761068Z  * [new tag]         roadmap/revision-111-2bd17608388d -> roadmap/revision-111-2bd17608388d
+2026-10-12T02:22:42.1762252Z  * [new tag]         roadmap/revision-111-4fd2d1895385 -> roadmap/revision-111-4fd2d1895385
+2026-10-12T02:22:42.1763421Z  * [new tag]         roadmap/revision-111-73e37788e5c6 -> roadmap/revision-111-73e37788e5c6
+2026-10-12T02:22:42.1764607Z  * [new tag]         roadmap/revision-111-a4f347499f19 -> roadmap/revision-111-a4f347499f19
+2026-10-12T02:22:42.1765792Z  * [new tag]         roadmap/revision-111-a7d089cc5153 -> roadmap/revision-111-a7d089cc5153
+2026-10-12T02:22:42.1767126Z  * [new tag]         roadmap/revision-111-b2350957e6ff -> roadmap/revision-111-b2350957e6ff
+2026-10-12T02:22:42.1768591Z  * [new tag]         roadmap/revision-112-0da68ea8cdb1 -> roadmap/revision-112-0da68ea8cdb1
+2026-10-12T02:22:42.1769774Z  * [new tag]         roadmap/revision-112-12a2f3a988b2 -> roadmap/revision-112-12a2f3a988b2
+2026-10-12T02:22:42.1770943Z  * [new tag]         roadmap/revision-112-215d7badbd49 -> roadmap/revision-112-215d7badbd49
+2026-10-12T02:22:42.1772105Z  * [new tag]         roadmap/revision-112-762117573367 -> roadmap/revision-112-762117573367
+2026-10-12T02:22:42.1773260Z  * [new tag]         roadmap/revision-112-93783d4ffda4 -> roadmap/revision-112-93783d4ffda4
+2026-10-12T02:22:42.1774439Z  * [new tag]         roadmap/revision-112-996d5ee4ef4f -> roadmap/revision-112-996d5ee4ef4f
+2026-10-12T02:22:42.1775804Z  * [new tag]         roadmap/revision-evidence-full-3a97905ca980 -> roadmap/revision-evidence-full-3a97905ca980
+2026-10-12T02:22:42.1777936Z  * [new tag]         roadmap/revision-evidence-retain-layout-6b1713dd5310 -> roadmap/revision-evidence-retain-layout-6b1713dd5310
+2026-10-12T02:22:42.1779675Z  * [new tag]         roadmap/revision-guard-063f4ca97292 -> roadmap/revision-guard-063f4ca97292
+2026-10-12T02:22:42.1781911Z [command]/usr/bin/git branch --list --remote origin/ownership-evidence-typed-worker-abi
+2026-10-12T02:22:42.1782907Z   origin/ownership-evidence-typed-worker-abi
+2026-10-12T02:22:42.1784449Z [command]/usr/bin/git rev-parse refs/remotes/origin/ownership-evidence-typed-worker-abi
+2026-10-12T02:22:42.1785402Z ea40144501a491abe46d3a287d62bf0d40f788cb
+2026-10-12T02:22:42.1786839Z ##[endgroup]
+2026-10-12T02:22:42.1787856Z ##[group]Determining the checkout info
+2026-10-12T02:22:42.1788751Z ##[endgroup]
+2026-10-12T02:22:42.1789257Z [command]/usr/bin/git sparse-checkout disable
+2026-10-12T02:22:42.1790720Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-12T02:22:42.1792627Z ##[group]Checking out the ref
+2026-10-12T02:22:42.1793980Z [command]/usr/bin/git checkout --progress --force -B ownership-evidence-typed-worker-abi refs/remotes/origin/ownership-evidence-typed-worker-abi
+2026-10-12T02:22:42.1795545Z Switched to a new branch 'ownership-evidence-typed-worker-abi'
+2026-10-12T02:22:42.1796802Z branch 'ownership-evidence-typed-worker-abi' set up to track 'origin/ownership-evidence-typed-worker-abi'.
+2026-10-12T02:22:42.1799122Z ##[endgroup]
+2026-10-12T02:22:42.1800186Z [command]/usr/bin/git log -1 --format=%H
+2026-10-12T02:22:42.1800817Z ea40144501a491abe46d3a287d62bf0d40f788cb
+2026-10-12T02:22:42.2201845Z ##[group]Run dtolnay/rust-toolchain@stable
+2026-10-12T02:22:42.2202518Z with:
+2026-10-12T02:22:42.2202944Z   toolchain: stable
+2026-10-12T02:22:42.2203393Z env:
+2026-10-12T02:22:42.2203788Z   CC: clang
+2026-10-12T02:22:42.2204211Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.2204680Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.2205162Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.2205686Z ##[endgroup]
+2026-10-12T02:22:42.2280075Z ##[start-action display=Parse toolchain version;id=__dtolnay_rust-toolchain.parse]
+2026-10-12T02:22:42.2345155Z ##[group]Run if [[ -z $toolchain ]]; then
+2026-10-12T02:22:42.2345918Z [36;1mif [[ -z $toolchain ]]; then[0m
+2026-10-12T02:22:42.2347051Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+2026-10-12T02:22:42.2348785Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+2026-10-12T02:22:42.2349467Z [36;1m  exit 1[0m
+2026-10-12T02:22:42.2350236Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+2026-10-12T02:22:42.2351135Z [36;1m  if [[ Linux == macOS ]]; then[0m
+2026-10-12T02:22:42.2352280Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-10-12T02:22:42.2353405Z [36;1m  else[0m
+2026-10-12T02:22:42.2354278Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-10-12T02:22:42.2355303Z [36;1m  fi[0m
+2026-10-12T02:22:42.2355941Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+2026-10-12T02:22:42.2357092Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+2026-10-12T02:22:42.2358314Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+2026-10-12T02:22:42.2359467Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+2026-10-12T02:22:42.2360557Z [36;1melse[0m
+2026-10-12T02:22:42.2360983Z [36;1m  delimiter=EOF[0m
+2026-10-12T02:22:42.2361643Z [36;1m  while [[ $toolchain == *$delimiter* ]]; do delimiter+=_; done[0m
+2026-10-12T02:22:42.2362744Z [36;1m  printf 'toolchain<<%s\n%s\n%s\n' "$delimiter" "$toolchain" "$delimiter" >> $GITHUB_OUTPUT[0m
+2026-10-12T02:22:42.2363683Z [36;1mfi[0m
+2026-10-12T02:22:42.2646213Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.2647035Z env:
+2026-10-12T02:22:42.2647740Z   CC: clang
+2026-10-12T02:22:42.2648242Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.2648748Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.2649264Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.2649814Z   toolchain: stable
+2026-10-12T02:22:42.2650287Z ##[endgroup]
+2026-10-12T02:22:42.2793599Z ##[end-action id=__dtolnay_rust-toolchain.parse;outcome=success;conclusion=success;duration_ms=51]
+2026-10-12T02:22:42.2800359Z ##[start-action display=Set $CARGO_HOME;id=__dtolnay_rust-toolchain.__run]
+2026-10-12T02:22:42.2842439Z ##[group]Run echo CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV
+2026-10-12T02:22:42.2843521Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+2026-10-12T02:22:42.2901708Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.2902446Z env:
+2026-10-12T02:22:42.2902848Z   CC: clang
+2026-10-12T02:22:42.2903448Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.2903920Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.2904402Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.2904919Z ##[endgroup]
+2026-10-12T02:22:42.2997952Z ##[end-action id=__dtolnay_rust-toolchain.__run;outcome=success;conclusion=success;duration_ms=19]
+2026-10-12T02:22:42.3002074Z ##[start-action display=Install rustup if needed;id=__dtolnay_rust-toolchain.__run_2]
+2026-10-12T02:22:42.3040051Z ##[group]Run if ! command -v rustup &>/dev/null; then
+2026-10-12T02:22:42.3040827Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+2026-10-12T02:22:42.3042615Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+2026-10-12T02:22:42.3044229Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+2026-10-12T02:22:42.3044854Z [36;1mfi[0m
+2026-10-12T02:22:42.3102696Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.3103442Z env:
+2026-10-12T02:22:42.3103841Z   CC: clang
+2026-10-12T02:22:42.3104268Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.3104733Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.3105212Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.3105740Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:22:42.3106277Z ##[endgroup]
+2026-10-12T02:22:42.3201072Z ##[end-action id=__dtolnay_rust-toolchain.__run_2;outcome=success;conclusion=success;duration_ms=19]
+2026-10-12T02:22:42.3205034Z ##[start-action display=Install rustup if needed on windows;id=__dtolnay_rust-toolchain.__run_3]
+2026-10-12T02:22:42.3214729Z ##[end-action id=__dtolnay_rust-toolchain.__run_3;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-10-12T02:22:42.3231619Z ##[start-action display=rustup toolchain install stable;id=__dtolnay_rust-toolchain.__run_4]
+2026-10-12T02:22:42.3260128Z ##[group]Run set -f  # split targets and components on commas and whitespace, without glob expansion
+2026-10-12T02:22:42.3261571Z [36;1mset -f  # split targets and components on commas and whitespace, without glob expansion[0m
+2026-10-12T02:22:42.3262539Z [36;1mflags=()[0m
+2026-10-12T02:22:42.3263128Z [36;1mfor t in ${targets//,/ }; do flags+=(--target "$t"); done[0m
+2026-10-12T02:22:42.3264047Z [36;1mfor c in ${components//,/ }; do flags+=(--component "$c"); done[0m
+2026-10-12T02:22:42.3265141Z [36;1mif [[ $toolchain == nightly && -n $components ]]; then flags+=(--allow-downgrade); fi[0m
+2026-10-12T02:22:42.3266061Z [36;1mlog=$(mktemp)[0m
+2026-10-12T02:22:42.3266560Z [36;1mtrap 'rm -f "$log"' EXIT[0m
+2026-10-12T02:22:42.3267139Z [36;1mfor attempt in 1 2 3 4 5; do[0m
+2026-10-12T02:22:42.3268732Z [36;1m  if rustup toolchain install "$toolchain" "${flags[@]}" --profile minimal --no-self-update --force-non-host 2>&1 | tee "$log"; then[0m
+2026-10-12T02:22:42.3270000Z [36;1m    break[0m
+2026-10-12T02:22:42.3270441Z [36;1m  else[0m
+2026-10-12T02:22:42.3270875Z [36;1m    status=$?[0m
+2026-10-12T02:22:42.3271337Z [36;1m  fi[0m
+2026-10-12T02:22:42.3271957Z [36;1m  if [[ $attempt == 5 ]] || ! grep -Fq 'checksum failed for ' "$log" \[0m
+2026-10-12T02:22:42.3273168Z [36;1m      || ! grep -Fq 'this is likely due to an ongoing update of the official release server' "$log"; then[0m
+2026-10-12T02:22:42.3274202Z [36;1m    exit "$status"[0m
+2026-10-12T02:22:42.3274702Z [36;1m  fi[0m
+2026-10-12T02:22:42.3275597Z [36;1m  echo "Retrying rustup toolchain install in 30 seconds (retry $attempt of 4)" >&2[0m
+2026-10-12T02:22:42.3276631Z [36;1m  sleep 30[0m
+2026-10-12T02:22:42.3332580Z [36;1mdone[0m
+2026-10-12T02:22:42.3398850Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.3399601Z env:
+2026-10-12T02:22:42.3399997Z   CC: clang
+2026-10-12T02:22:42.3400409Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.3400880Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.3401360Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.3401900Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:22:42.3402433Z   toolchain: stable
+2026-10-12T02:22:42.3403056Z   targets: 
+2026-10-12T02:22:42.3403466Z   components: 
+2026-10-12T02:22:42.3403907Z   RUSTUP_PERMIT_COPY_RENAME: 1
+2026-10-12T02:22:42.3404421Z ##[endgroup]
+2026-10-12T02:22:42.5303192Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+2026-10-12T02:22:42.6073061Z 
+2026-10-12T02:22:42.6151310Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.0 (b940084d7 2026-09-28)
+2026-10-12T02:22:42.6152491Z 
+2026-10-12T02:22:42.6201253Z ##[end-action id=__dtolnay_rust-toolchain.__run_4;outcome=success;conclusion=success;duration_ms=296]
+2026-10-12T02:22:42.6212158Z ##[start-action display=rustup default stable;id=__dtolnay_rust-toolchain.__run_5]
+2026-10-12T02:22:42.6259768Z ##[group]Run rustup default "$toolchain" --force-non-host
+2026-10-12T02:22:42.6261742Z [36;1mrustup default "$toolchain" --force-non-host[0m
+2026-10-12T02:22:42.6328181Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.6329925Z env:
+2026-10-12T02:22:42.6330951Z   CC: clang
+2026-10-12T02:22:42.6332079Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.6333256Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.6334415Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.6335683Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:22:42.6336962Z   toolchain: stable
+2026-10-12T02:22:42.6338292Z ##[endgroup]
+2026-10-12T02:22:42.6474743Z info: using existing install for stable-x86_64-unknown-linux-gnu
+2026-10-12T02:22:42.6483116Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+2026-10-12T02:22:42.6484585Z 
+2026-10-12T02:22:42.6557733Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.0 (b940084d7 2026-09-28)
+2026-10-12T02:22:42.6560153Z 
+2026-10-12T02:22:42.6591227Z ##[end-action id=__dtolnay_rust-toolchain.__run_5;outcome=success;conclusion=success;duration_ms=37]
+2026-10-12T02:22:42.6600237Z ##[start-action display=Create cachekey;id=__dtolnay_rust-toolchain.rustc-version]
+2026-10-12T02:22:42.6646477Z ##[group]Run DATE=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')
+2026-10-12T02:22:42.6650515Z [36;1mDATE=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+2026-10-12T02:22:42.6653555Z [36;1mHASH=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+2026-10-12T02:22:42.6655816Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+2026-10-12T02:22:42.6717662Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.6719125Z env:
+2026-10-12T02:22:42.6719923Z   CC: clang
+2026-10-12T02:22:42.6720796Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.6721762Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.6722757Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.6723848Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:22:42.6724948Z   toolchain: stable
+2026-10-12T02:22:42.6725853Z ##[endgroup]
+2026-10-12T02:22:42.7112440Z ##[end-action id=__dtolnay_rust-toolchain.rustc-version;outcome=success;conclusion=success;duration_ms=50]
+2026-10-12T02:22:42.7120596Z ##[start-action display=Disable incremental compilation;id=__dtolnay_rust-toolchain.__run_6]
+2026-10-12T02:22:42.7164987Z ##[group]Run if [ -z "${CARGO_INCREMENTAL+set}" ]; then
+2026-10-12T02:22:42.7166511Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+2026-10-12T02:22:42.7168375Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+2026-10-12T02:22:42.7169664Z [36;1mfi[0m
+2026-10-12T02:22:42.7231049Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.7232473Z env:
+2026-10-12T02:22:42.7233284Z   CC: clang
+2026-10-12T02:22:42.7234146Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.7235119Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.7236114Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.7237207Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:22:42.7238597Z ##[endgroup]
+2026-10-12T02:22:42.7343738Z ##[end-action id=__dtolnay_rust-toolchain.__run_6;outcome=success;conclusion=success;duration_ms=22]
+2026-10-12T02:22:42.7351192Z ##[start-action display=Enable colors in Cargo output;id=__dtolnay_rust-toolchain.__run_7]
+2026-10-12T02:22:42.7394531Z ##[group]Run if [ -z "${CARGO_TERM_COLOR+set}" ]; then
+2026-10-12T02:22:42.7396019Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+2026-10-12T02:22:42.7397764Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+2026-10-12T02:22:42.7399092Z [36;1mfi[0m
+2026-10-12T02:22:42.7458532Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.7459950Z env:
+2026-10-12T02:22:42.7460735Z   CC: clang
+2026-10-12T02:22:42.7461742Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.7462713Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.7464258Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.7465382Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:22:42.7466454Z ##[endgroup]
+2026-10-12T02:22:42.7571941Z ##[end-action id=__dtolnay_rust-toolchain.__run_7;outcome=success;conclusion=success;duration_ms=21]
+2026-10-12T02:22:42.7580315Z ##[start-action display=Enable Cargo sparse registry;id=__dtolnay_rust-toolchain.__run_8]
+2026-10-12T02:22:42.7624687Z ##[group]Run # implemented in 1.66, stabilized in 1.68, made default in 1.70
+2026-10-12T02:22:42.7626747Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+2026-10-12T02:22:42.7629878Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+2026-10-12T02:22:42.7632952Z [36;1m  if rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+2026-10-12T02:22:42.7635439Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-10-12T02:22:42.7637935Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+2026-10-12T02:22:42.7640113Z [36;1m  elif rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+2026-10-12T02:22:42.7642549Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-10-12T02:22:42.7644754Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+2026-10-12T02:22:42.7646252Z [36;1m  fi[0m
+2026-10-12T02:22:42.7647107Z [36;1mfi[0m
+2026-10-12T02:22:42.7706477Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.7708113Z env:
+2026-10-12T02:22:42.7708899Z   CC: clang
+2026-10-12T02:22:42.7709728Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.7710682Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.7711641Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.7712710Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:22:42.7713801Z   CARGO_TERM_COLOR: always
+2026-10-12T02:22:42.7714788Z   toolchain: stable
+2026-10-12T02:22:42.7715726Z ##[endgroup]
+2026-10-12T02:22:42.8079743Z ##[end-action id=__dtolnay_rust-toolchain.__run_8;outcome=success;conclusion=success;duration_ms=49]
+2026-10-12T02:22:42.8089020Z ##[start-action display=Work around spurious network errors in curl 8.0;id=__dtolnay_rust-toolchain.__run_9]
+2026-10-12T02:22:42.8132925Z ##[group]Run # https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation
+2026-10-12T02:22:42.8135775Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+2026-10-12T02:22:42.8138436Z [36;1mif rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+2026-10-12T02:22:42.8140363Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+2026-10-12T02:22:42.8141665Z [36;1mfi[0m
+2026-10-12T02:22:42.8204616Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.8205933Z env:
+2026-10-12T02:22:42.8206691Z   CC: clang
+2026-10-12T02:22:42.8207676Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.8208587Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.8209519Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.8210529Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:22:42.8211603Z   CARGO_TERM_COLOR: always
+2026-10-12T02:22:42.8212561Z   toolchain: stable
+2026-10-12T02:22:42.8213591Z ##[endgroup]
+2026-10-12T02:22:42.8438597Z ##[end-action id=__dtolnay_rust-toolchain.__run_9;outcome=success;conclusion=success;duration_ms=34]
+2026-10-12T02:22:42.8448218Z ##[start-action display=rustc +stable --version --verbose;id=__dtolnay_rust-toolchain.__run_10]
+2026-10-12T02:22:42.8489283Z ##[group]Run rustc +"$toolchain" --version --verbose
+2026-10-12T02:22:42.8490651Z [36;1mrustc +"$toolchain" --version --verbose[0m
+2026-10-12T02:22:42.8552454Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T02:22:42.8553753Z env:
+2026-10-12T02:22:42.8554668Z   CC: clang
+2026-10-12T02:22:42.8555457Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.8556331Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.8557548Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.8558561Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:22:42.8559585Z   CARGO_TERM_COLOR: always
+2026-10-12T02:22:42.8560509Z   toolchain: stable
+2026-10-12T02:22:42.8561345Z ##[endgroup]
+2026-10-12T02:22:42.8753960Z rustc 1.99.0 (b940084d7 2026-09-28)
+2026-10-12T02:22:42.8755786Z binary: rustc
+2026-10-12T02:22:42.8757032Z commit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4
+2026-10-12T02:22:42.8758638Z commit-date: 2026-09-28
+2026-10-12T02:22:42.8759614Z host: x86_64-unknown-linux-gnu
+2026-10-12T02:22:42.8760608Z release: 1.99.0
+2026-10-12T02:22:42.8761494Z LLVM version: 23.1.1
+2026-10-12T02:22:42.8781276Z ##[end-action id=__dtolnay_rust-toolchain.__run_10;outcome=success;conclusion=success;duration_ms=33]
+2026-10-12T02:22:42.8896733Z ##[group]Run mkdir -p "$FWP_NUMERIC_LAYOUT_ARTIFACTS"
+2026-10-12T02:22:42.8898445Z [36;1mmkdir -p "$FWP_NUMERIC_LAYOUT_ARTIFACTS"[0m
+2026-10-12T02:22:42.8899719Z [36;1mrustfmt --edition 2021 src/cgen.rs[0m
+2026-10-12T02:22:42.8901201Z [36;1mcp src/cgen.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/cgen.formatted.rs"[0m
+2026-10-12T02:22:42.8902732Z [36;1mcargo clippy --lib -- -D warnings[0m
+2026-10-12T02:22:42.8903868Z [36;1mcargo test --lib[0m
+2026-10-12T02:22:42.8904992Z [36;1mpython3 scripts/measure-typed-worker-abi.py[0m
+2026-10-12T02:22:42.8966092Z shell: /usr/bin/bash -e {0}
+2026-10-12T02:22:42.8967075Z env:
+2026-10-12T02:22:42.8968081Z   CC: clang
+2026-10-12T02:22:42.8968867Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:22:42.8969786Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:22:42.8970891Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:22:42.8971886Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:22:42.8972915Z   CARGO_TERM_COLOR: always
+2026-10-12T02:22:42.8974387Z   FWP_NUMERIC_LAYOUT_ARTIFACTS: /home/runner/work/_temp/numeric-layout-baseline
+2026-10-12T02:22:42.8975925Z ##[endgroup]
+2026-10-12T02:22:43.7479503Z [1m[92m    Checking[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+2026-10-12T02:22:50.6603238Z [1m[92m    Finished[0m `dev` profile [unoptimized] target(s) in 7.14s
+2026-10-12T02:22:50.7052037Z [1m[92m   Compiling[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+2026-10-12T02:22:58.6832758Z [1m[92m    Finished[0m `test` profile [unoptimized] target(s) in 8.01s
+2026-10-12T02:22:58.6839211Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/fwp-cbe53280e50fe968)
+2026-10-12T02:22:58.6852685Z 
+2026-10-12T02:22:58.6853031Z running 71 tests
+2026-10-12T02:22:58.6862608Z test cli::tests::field_comments ... ok
+2026-10-12T02:22:58.6863417Z test cli::tests::names ... ok
+2026-10-12T02:22:58.6863956Z test csv::tests::quoting ... ok
+2026-10-12T02:22:58.6864462Z test escape::tests::applying_a_closure_does_not_let_it_escape ... ok
+2026-10-12T02:22:58.6879014Z test escape::tests::reading_fields_does_not_escape ... ok
+2026-10-12T02:22:58.6879989Z test escape::tests::counts_around_an_argument_are_seen_through ... ok
+2026-10-12T02:22:58.6880946Z test escape::tests::match_aliases_are_followed ... ok
+2026-10-12T02:22:58.6881779Z test escape::tests::passing_on_follows_the_callee ... ok
+2026-10-12T02:22:58.6882569Z test escape::tests::returning_or_storing_escapes ... ok
+2026-10-12T02:22:58.6903546Z test fmt::tests::comments_and_blank_lines ... ok
+2026-10-12T02:22:58.6904906Z test grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool ... ok
+2026-10-12T02:22:58.6905922Z test fmt::tests::spelling_and_ambiguities ... ok
+2026-10-12T02:22:58.6906601Z test grpc::web::tests::sha1_and_accept ... ok
+2026-10-12T02:22:58.6907246Z test fmt::tests::layout ... ok
+2026-10-12T02:22:58.6908065Z test grpc::web::tests::zlib_round_trip ... ok
+2026-10-12T02:22:58.6908770Z test gzip::tests::chunks_make_one_stream ... ok
+2026-10-12T02:22:58.6910823Z test grpc::web::tests::websocket_messages_deflate_and_inflate ... ok
+2026-10-12T02:22:58.6928502Z test gzip::tests::crc ... ok
+2026-10-12T02:22:58.6931809Z test gzip::tests::reads_other_encoders ... ok
+2026-10-12T02:22:58.6958405Z test gzip::tests::rejects_bad_data ... ok
+2026-10-12T02:22:58.6959499Z test grpc::web::tests::frames_round_trip ... ok
+2026-10-12T02:22:58.6969427Z test jsontype::tests::base64_round_trip ... ok
+2026-10-12T02:22:58.6979572Z test jsontype::tests::durations ... ok
+2026-10-12T02:22:58.6981178Z test jsontype::tests::exact_integers ... ok
+2026-10-12T02:22:58.6983790Z test lexer::tests::hyphen_vs_negative ... ok
+2026-10-12T02:22:58.6984806Z test lexer::tests::idents_and_selectors ... ok
+2026-10-12T02:22:58.6985488Z test lexer::tests::layout_flags ... ok
+2026-10-12T02:22:58.7009443Z test lexer::tests::numbers ... ok
+2026-10-12T02:22:58.7011399Z test lexer::tests::strings_comments_macros ... ok
+2026-10-12T02:22:58.7040034Z test numerics::tape_validation_tests::invalid_nodes_preserve_push_state_and_consume_backward_tapes ... ok
+2026-10-12T02:22:58.7049928Z test numerics::tape_validation_tests::scoped_callbacks_release_only_their_live_tapes ... ok
+2026-10-12T02:22:58.7055290Z test ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts ... ok
+2026-10-12T02:22:58.7057792Z test rc::tests::a_borrowed_argument_lives_until_the_operation ... ok
+2026-10-12T02:22:58.7059960Z test rc::tests::a_match_dups_the_fields_an_arm_keeps_and_drops_the_rest ... ok
+2026-10-12T02:22:58.7062633Z test rc::tests::a_parameter_returned_is_moved ... ok
+2026-10-12T02:22:58.7064697Z test rc::tests::a_parameter_used_twice_is_duplicated_once ... ok
+2026-10-12T02:22:58.7066022Z test rc::tests::an_unused_parameter_is_dropped ... ok
+2026-10-12T02:22:58.7069268Z test rc::tests::borrowed_pattern_values_are_not_unwind_owners ... ok
+2026-10-12T02:22:58.7070684Z test rc::tests::call_liveness_distinguishes_borrows_transfers_and_duplicate_owners ... ok
+2026-10-12T02:22:58.7072328Z test rc::tests::constructors_transfer_fields_and_keep_other_caller_owners ... ok
+2026-10-12T02:22:58.7073911Z test rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners ... ok
+2026-10-12T02:22:58.7076288Z test rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types ... ok
+2026-10-12T02:22:58.7079209Z test rc::tests::earlier_caf_owner_remains_owned_during_a_final_scalar_call ... ok
+2026-10-12T02:22:58.7081553Z test rc::tests::earlier_consumed_arguments_remain_owned_during_later_calls ... ok
+2026-10-12T02:22:58.7084492Z test rc::tests::earlier_duplicate_remains_owned_during_the_final_call ... ok
+2026-10-12T02:22:58.7086658Z test rc::tests::earlier_owner_remains_owned_during_a_final_scalar_call ... ok
+2026-10-12T02:22:58.7089195Z test rc::tests::matched_value_conversion_keeps_remaining_caller_owners ... ok
+2026-10-12T02:22:58.7091551Z test rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape ... ok
+2026-10-12T02:22:58.7093407Z test rc::tests::original_resource_parameters_enter_the_frame_before_dead_drops ... ok
+2026-10-12T02:22:58.7095764Z test rc::tests::parts_keep_their_order ... ok
+2026-10-12T02:22:58.7099029Z test rc::tests::retain_liveness_excludes_the_unfinished_extra_reference ... ok
+2026-10-12T02:22:58.7100463Z test rc::tests::scalars_are_not_counted ... ok
+2026-10-12T02:22:58.7101796Z test rc::tests::the_checker_rejects_mistakes ... ok
+2026-10-12T02:22:58.7103990Z test rc::tests::uninitialized_region_bindings_are_not_entry_owners ... ok
+2026-10-12T02:22:58.7105532Z test rc::tests::update_liveness_keeps_the_borrowed_base_and_remaining_owners ... ok
+2026-10-12T02:22:58.7110407Z test resource::tests::fusion_preserves_resource_stage_frames_even_with_pure_bodies ... ok
+2026-10-12T02:22:58.7112126Z test resource::tests::nominal_recursive_resource_graphs_and_nonowning_arrows ... ok
+2026-10-12T02:22:58.7113841Z test resource::tests::owner_metadata_rejects_missing_duplicate_and_scalar_slots ... ok
+2026-10-12T02:22:58.7117665Z test swagger::tests::converts_a_document ... ok
+2026-10-12T02:22:58.7121431Z test value::tests::floats_round_trip_shortest ... ok
+2026-10-12T02:22:58.7122362Z test value::tests::trits ... ok
+2026-10-12T02:22:58.7123843Z test yaml::tests::anchors ... ok
+2026-10-12T02:22:58.7125879Z test yaml::tests::block_collections ... ok
+2026-10-12T02:22:58.7128080Z test yaml::tests::block_scalars ... ok
+2026-10-12T02:22:58.7129248Z test yaml::tests::errors ... ok
+2026-10-12T02:22:58.7130586Z test yaml::tests::flow_over_lines ... ok
+2026-10-12T02:22:58.7138883Z test yaml::tests::reads_what_openapi_writes ... ok
+2026-10-12T02:22:58.7141659Z test yaml::tests::scalars ... ok
+2026-10-12T02:22:58.7154249Z test gzip::tests::round_trip ... ok
+2026-10-12T02:22:58.8066356Z test gzip::tests::others_read_ours ... ok
+2026-10-12T02:23:02.7413278Z test grpc::web::tests::body_bounds_and_error_order_agree_with_native ... ok
+2026-10-12T02:23:02.7413886Z 
+2026-10-12T02:23:02.7414314Z test result: ok. 71 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.06s
+2026-10-12T02:23:02.7415430Z 
+2026-10-12T02:23:11.9875040Z Traceback (most recent call last):
+2026-10-12T02:23:11.9876157Z   File "/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/measure-typed-worker-abi.py", line 17, in <module>
+2026-10-12T02:23:11.9877825Z     fwp=ROOT/'target/debug/fwp';reference=run(str(fwp),'run','--interp',str(fixture),environment=dict(env,FWP_NO_OPT='1'))
+2026-10-12T02:23:11.9878868Z                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-12T02:23:11.9879862Z   File "/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/measure-typed-worker-abi.py", line 14, in run
+2026-10-12T02:23:11.9881029Z     if p.returncode:raise RuntimeError(str(argv)+'\n'+p.stderr.decode(errors='replace'))
+2026-10-12T02:23:11.9881793Z                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-12T02:23:11.9883118Z RuntimeError: ('/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp', 'run', '--interp', '/home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/numeric_layout_baseline.fwp')
+2026-10-12T02:23:11.9884824Z /home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/numeric_layout_baseline.fwp:2:15: error: expected `{`, found `(`
+2026-10-12T02:23:11.9885753Z 2 | bits64 = make (id, id, id)
+2026-10-12T02:23:11.9886120Z   |               ^
+2026-10-12T02:23:11.9886938Z /home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/numeric_layout_baseline.fwp:5:15: error: expected `{`, found `(`
+2026-10-12T02:23:11.9888073Z 5 | bits32 = make (id, id, id)
+2026-10-12T02:23:11.9888437Z   |               ^
+2026-10-12T02:23:11.9888619Z 
+2026-10-12T02:23:12.0028046Z ##[error]Process completed with exit code 1.
+2026-10-12T02:23:12.0129718Z ##[group]Run actions/upload-artifact@v7
+2026-10-12T02:23:12.0130029Z with:
+2026-10-12T02:23:12.0130270Z   name: numeric-layout-metadata-ubuntu-latest
+2026-10-12T02:23:12.0130660Z   path: /home/runner/work/_temp/numeric-layout-baseline/*.json
+2026-10-12T02:23:12.0131016Z   if-no-files-found: warn
+2026-10-12T02:23:12.0131256Z   compression-level: 6
+2026-10-12T02:23:12.0131469Z   overwrite: false
+2026-10-12T02:23:12.0131682Z   include-hidden-files: false
+2026-10-12T02:23:12.0131916Z   archive: true
+2026-10-12T02:23:12.0132105Z env:
+2026-10-12T02:23:12.0132280Z   CC: clang
+2026-10-12T02:23:12.0132473Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:23:12.0132681Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:23:12.0132898Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:23:12.0133140Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:23:12.0133581Z   CARGO_TERM_COLOR: always
+2026-10-12T02:23:12.0133804Z ##[endgroup]
+2026-10-12T02:23:12.1533131Z ##[warning]No files were found with the provided path: /home/runner/work/_temp/numeric-layout-baseline/*.json. No artifacts will be uploaded.
+2026-10-12T02:23:12.1713131Z ##[group]Run actions/upload-artifact@v7
+2026-10-12T02:23:12.1713454Z with:
+2026-10-12T02:23:12.1713701Z   name: numeric-layout-controls-ubuntu-latest
+2026-10-12T02:23:12.1714073Z   path: /home/runner/work/_temp/numeric-layout-baseline/
+2026-10-12T02:23:12.1714404Z   if-no-files-found: warn
+2026-10-12T02:23:12.1714639Z   compression-level: 6
+2026-10-12T02:23:12.1714858Z   overwrite: false
+2026-10-12T02:23:12.1715072Z   include-hidden-files: false
+2026-10-12T02:23:12.1715312Z   archive: true
+2026-10-12T02:23:12.1715505Z env:
+2026-10-12T02:23:12.1715679Z   CC: clang
+2026-10-12T02:23:12.1715867Z   CARGO_BUILD_JOBS: 2
+2026-10-12T02:23:12.1716084Z   CARGO_INCREMENTAL: 0
+2026-10-12T02:23:12.1716303Z   CARGO_PROFILE_DEV_DEBUG: 0
+2026-10-12T02:23:12.1716560Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T02:23:12.1716817Z   CARGO_TERM_COLOR: always
+2026-10-12T02:23:12.1717037Z ##[endgroup]
+2026-10-12T02:23:12.3165392Z With the provided path, there will be 1 file uploaded
+2026-10-12T02:23:12.3178670Z Artifact name is valid!
+2026-10-12T02:23:12.3179278Z Root directory input is valid!
+2026-10-12T02:23:12.5264732Z Uploading artifact: numeric-layout-controls-ubuntu-latest.zip
+2026-10-12T02:23:12.5310467Z Beginning upload of artifact content to blob storage
+2026-10-12T02:23:12.6054701Z Uploaded bytes 80894
+2026-10-12T02:23:12.6175458Z Finished uploading artifact content to blob storage!
+2026-10-12T02:23:12.6177047Z SHA256 digest of uploaded artifact is d319f0dbcac7bcc014c3a30fe1515a2dd0fa97c76acac7ff082430e61002329a
+2026-10-12T02:23:12.6178549Z Finalizing artifact upload
+2026-10-12T02:23:12.8618149Z Artifact numeric-layout-controls-ubuntu-latest successfully finalized. Artifact ID 11722738706
+2026-10-12T02:23:12.8619633Z Artifact numeric-layout-controls-ubuntu-latest has been successfully uploaded! Final size is 80894 bytes. Artifact ID is 11722738706
+2026-10-12T02:23:12.8624387Z Artifact download URL: https://github.com/e6qu/fun-with-pipes/actions/runs/38195536844/artifacts/11722738706
+2026-10-12T02:23:12.8841542Z Post job cleanup.
+2026-10-12T02:23:12.9748017Z [command]/usr/bin/git version
+2026-10-12T02:23:12.9782402Z git version 2.55.0
+2026-10-12T02:23:12.9825890Z Temporarily overriding HOME='/home/runner/work/_temp/6d210fdd-579d-43f2-9bc4-2236bfb62443' before making global git config changes
+2026-10-12T02:23:12.9827669Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-12T02:23:12.9858572Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/fun-with-pipes/fun-with-pipes
+2026-10-12T02:23:12.9880701Z Removing SSH command configuration
+2026-10-12T02:23:12.9888275Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-12T02:23:12.9931106Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-12T02:23:13.0181738Z Removing HTTP extra header
+2026-10-12T02:23:13.0187018Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-12T02:23:13.0224000Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-12T02:23:13.0477010Z Removing includeIf entries pointing to credentials config files
+2026-10-12T02:23:13.0484238Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-12T02:23:13.0518767Z includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git.path
+2026-10-12T02:23:13.0520075Z includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git/worktrees/*.path
+2026-10-12T02:23:13.0521673Z includeif.gitdir:/github/workspace/.git.path
+2026-10-12T02:23:13.0522570Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-12T02:23:13.0530068Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git.path
+2026-10-12T02:23:13.0559263Z /home/runner/work/_temp/git-credentials-d5b29ce4-62ec-49b5-a15f-3254c09564a8.config
+2026-10-12T02:23:13.0570844Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-d5b29ce4\-62ec\-49b5\-a15f\-3254c09564a8\.config
+2026-10-12T02:23:13.0612630Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git/worktrees/*.path
+2026-10-12T02:23:13.0652245Z /home/runner/work/_temp/git-credentials-d5b29ce4-62ec-49b5-a15f-3254c09564a8.config
+2026-10-12T02:23:13.0677666Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-d5b29ce4\-62ec\-49b5\-a15f\-3254c09564a8\.config
+2026-10-12T02:23:13.0718686Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-12T02:23:13.0745002Z /github/runner_temp/git-credentials-d5b29ce4-62ec-49b5-a15f-3254c09564a8.config
+2026-10-12T02:23:13.0752686Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-d5b29ce4\-62ec\-49b5\-a15f\-3254c09564a8\.config
+2026-10-12T02:23:13.0818874Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-12T02:23:13.0831136Z /github/runner_temp/git-credentials-d5b29ce4-62ec-49b5-a15f-3254c09564a8.config
+2026-10-12T02:23:13.0835479Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-d5b29ce4\-62ec\-49b5\-a15f\-3254c09564a8\.config
+2026-10-12T02:23:13.0894113Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-12T02:23:13.1143327Z Removing credentials config '/home/runner/work/_temp/git-credentials-d5b29ce4-62ec-49b5-a15f-3254c09564a8.config'
+2026-10-12T02:23:13.1313610Z Cleaning up orphan processes
