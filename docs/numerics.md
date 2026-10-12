@@ -89,13 +89,13 @@ forward mode).
 Reverse mode needs the tape's memory, 24 bytes per operation; there is no
 checkpointing.
 
-The PR124 candidate registers detached tape buffers and adjoints for cleanup
+Accepted PR124 registers detached tape buffers and adjoints for cleanup
 through normal return, mixed-tape errors, recoverable traps and cancellation.
 It preserves consumption of the selected tape before output validation.
 Token validation checks live tape identity and node bounds; slots retire after
 generation32767 so old tokens cannot identify a later tape after wrap.
 Interpreter/native and deliberate omission controls pass on Linux and both Macs.
-Final production acceptance remains in [the handoff](development-state.md).
+Verified production acceptance is recorded in [the handoff](development-state.md).
 
 Internal ad.scope/ad.scope2 release tapes when callbacks fail before backward.
 Native scopes use stack owners and stable slot links in each task's cleanup chain;
@@ -228,8 +228,8 @@ slow delegation once. They exposed a33→40 calls/720→872 bytes regression per
 gradient in the first scoped wrapper. Direct borrowed arguments through internal
 ad.scope/ad.scope2 and projection inside the grad callback restore33 calls/720
 bytes, matching the baseline on4096 equivalent O1/O2 calls across Linux and
-ARM/Intel macOS. The combined candidate Linux profiles also pass. Public grad/vjp
+ARM/Intel macOS. The accepted combined Linux profiles also pass. Public grad/vjp
 signatures stay intact; borrowed scoped inputs require Dup, and affine File
 rejection, input aliases and tape cleanup controls pass. [The handoff](development-state.md)
-records exact candidates and final production gates. No timing gain or tracing-free
+records measured source identities and passing production gates. No timing gain or tracing-free
 support is established, and earlier partial counters do not prove allocation parity.

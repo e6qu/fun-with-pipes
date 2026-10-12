@@ -83,13 +83,13 @@ still require Linux `/proc` or `strace`; Darwin-specific regressions in
 `tests/macos.rs` assert that collection is armed and really runs, rather
 than accepting a stress variable with collection disabled.
 
-The prepared resource/network bundle adds an exact-head primitive inventory
+The accepted resource/network bundle runs an exact-head primitive inventory
 before the regular Linux and ARM/Intel macOS gates. Its standalone Rust reader
 uses the actual ownership module; the Python audit compares declarations with
 the immutable prepared112 baseline and preserves observed rows on failure.
 Run it through the local guard when its limits permit, or on GitHub:
 `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /tmp/fwp-inventory.json`.
-These files remain prepared until that bundle is accepted. Inventory agreement
+Inventory agreement
 does not substitute for runtime alias/unwind controls or full CI.
 
 ## Rules the code follows

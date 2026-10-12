@@ -249,9 +249,9 @@ static void fwp_write(fwp_buf *b, V v, const fwp_desc *d, int top) {
     }
     case K_ARRAY: {
         buf_puts(b, "array[");
-        for (uint64_t i = 0; i < ARR(v)->len; i++) {
+        for (uint64_t i = 0; i < fwp_array_len(v); i++) {
             if (i) buf_puts(b, ", ");
-            fwp_write(b, ARR(v)->d[i], d->elem, 0);
+            fwp_write(b, fwp_array_load(v, i, d->elem), d->elem, 0);
         }
         buf_putc(b, ']');
         return;
@@ -394,9 +394,9 @@ static int fwp_cmp(V a, V b, const fwp_desc *d) {
             b = OBJ(b)->f[1];
         }
     case K_ARRAY: {
-        uint64_t la = ARR(a)->len, lb = ARR(b)->len;
+        uint64_t la = fwp_array_len(a), lb = fwp_array_len(b);
         for (uint64_t i = 0; i < la && i < lb; i++) {
-            int c = fwp_cmp(ARR(a)->d[i], ARR(b)->d[i], d->elem);
+            int c = fwp_cmp(fwp_array_load(a, i, d->elem), fwp_array_load(b, i, d->elem), d->elem);
             if (c) return c;
         }
         return CMP(la, lb);
@@ -446,9 +446,9 @@ static int fwp_eq(V a, V b, const fwp_desc *d) {
             b = OBJ(b)->f[1];
         }
     case K_ARRAY:
-        if (ARR(a)->len != ARR(b)->len) return 0;
-        for (uint64_t i = 0; i < ARR(a)->len; i++)
-            if (!fwp_eq(ARR(a)->d[i], ARR(b)->d[i], d->elem)) return 0;
+        if (fwp_array_len(a) != fwp_array_len(b)) return 0;
+        for (uint64_t i = 0; i < fwp_array_len(a); i++)
+            if (!fwp_eq(fwp_array_load(a, i, d->elem), fwp_array_load(b, i, d->elem), d->elem)) return 0;
         return 1;
     case K_RECORD:
         for (int i = 0; i < d->n; i++)
@@ -517,8 +517,8 @@ static void fwp_encode(fwp_buf *b, V v, const fwp_desc *d) {
         return;
     }
     case K_ARRAY:
-        fwp_leb128(b, ARR(v)->len);
-        for (uint64_t i = 0; i < ARR(v)->len; i++) fwp_encode(b, ARR(v)->d[i], d->elem);
+        fwp_leb128(b, fwp_array_len(v));
+        for (uint64_t i = 0; i < fwp_array_len(v); i++) fwp_encode(b, fwp_array_load(v, i, d->elem), d->elem);
         return;
     case K_MAP: case K_SET:
         fwp_leb128(b, MAP(v)->len);

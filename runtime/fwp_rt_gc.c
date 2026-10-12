@@ -866,7 +866,7 @@ static void fwp_rc_free_arr(V v) {
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
     }
     if (fwp_reuse_verify) {
-        ARR(v)->len = 0;
+        memset((void *)(uintptr_t)v, 0, sizeof(uint64_t));
         return;
     }
     intptr_t before = fwp_gc.budget;
@@ -1745,4 +1745,21 @@ static V fwp_apply_borrowed_prefix(V f, uint32_t n, V *args, uint32_t owned_pref
 
 static V fwp_apply_borrowed(V f, uint32_t n, V *args) {
     return fwp_apply_borrowed_prefix(f, n, args, 0);
+}
+
+/* Numeric arrays may use pointer-free leaf slots. Keep generic reuse's
+ * scanned-slot restriction so record constructors cannot acquire leaf storage. */
+static inline size_t fwp_array_capacity(V v, const fwp_desc *elem) {
+    if (fwp_array_is_view(v)) return 0;
+    size_t capacity = fwp_rc_capacity(v);
+    if (capacity || !fwp_array_numeric(elem)) return capacity;
+#if FWP_GC
+    uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
+    if (off >= fwp_gc.top << GC_SHIFT) return 0;
+    gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
+    if (m->type == GC_SMALL && m->leaf == 1 && (off & (GC_CHUNK - 1)) % m->slot == 0) return m->slot;
+#else
+    (void)v;
+#endif
+    return 0;
 }

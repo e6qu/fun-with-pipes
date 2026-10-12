@@ -1,6 +1,59 @@
 //! Array limits agree before allocation and preserve callback/argument trap order.
 use std::path::PathBuf;
 use std::process::{Command, Output};
+
+#[test]
+fn packed_array_constructor_preserves_the_checked_count_boundary() {
+    let directory = std::env::temp_dir().join(format!("fwp-packed-size-{}", std::process::id()));
+    std::fs::create_dir(&directory).unwrap();
+    let source = include_str!("../runtime/fwp_rt.c");
+    let start = source
+        .find("static V fwp_array_new_packed(size_t n, const fwp_desc *elem) {")
+        .unwrap();
+    let end = start + source[start..].find("\n}").unwrap() + 2;
+    let constructor = &source[start..end];
+    let condition = "n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)";
+    assert_eq!(constructor.matches(condition).count(), 1);
+    for opt in ["-O1", "-O2"] {
+        for (label, code) in [
+            ("checked", constructor.to_string()),
+            ("omitted", constructor.replace(condition, "0")),
+        ] {
+            let cfile = directory.join(format!("{label}{}.c", &opt[1..]));
+            let executable = cfile.with_extension("bin");
+            let probe = include_str!("fixtures/packed_array_size_probe.c")
+                .replace("/* ARRAY_CONSTRUCTOR */", &code);
+            std::fs::write(&cfile, &probe).unwrap();
+            checked(
+                Command::new(std::env::var_os("CC").unwrap_or_else(|| "cc".into()))
+                    .args(["-std=c11", opt, "-fsanitize=address,undefined"])
+                    .arg(&cfile)
+                    .arg("-o")
+                    .arg(&executable),
+            );
+            for width in [1, 2, 4, 8] {
+                let output = Command::new(&executable)
+                    .arg(width.to_string())
+                    .output()
+                    .unwrap();
+                let expected = if label == "checked" {
+                    1
+                } else if width == 8 {
+                    129
+                } else {
+                    130
+                };
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{label} {opt} width={width}: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+            }
+        }
+    }
+    std::fs::remove_dir_all(directory).unwrap();
+}
 fn checked(command: &mut Command) -> Output {
     let output = command.output().unwrap();
     assert!(

@@ -6,12 +6,11 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `a627bcfae3b1994004da28ff5f7166bad709d221` passes audit38189357799.
+checkpoint `b61cde67f467fc67d672b1d0efd3c0cf59a3acad` passes audit38200778577.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies395 targets/9594149 bytes. Never rerun completed publishers. Phases2–6
-remain unfinished.
+verifies134 targets/4544302 bytes. Never rerun completed publishers. Phase2 is accepted; phases3–6 remain unfinished.
 
 ## Execution contract
 
@@ -41,125 +40,151 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is `3598a675b5bd9ad2e22ac17d42a27a89ea74fdeb` (PR #124). Frozen head `3aae99bfa705e26babc2cf251b0e583dfd95cf38` passes all six
-jobs in CI38184549852 and roadmap_docs38184549850 before match-head squash
-at 2026-10-12T00:52:11Z. Subject `Own resource and State lifetimes and preserve inferred effects` has 62 characters,
-one line and no body/trailers/attribution. One parent `b4285fc177b3ae7afaf195e5ebd7115cc77b815c` and complete
-tree `28ae0e5cea7fa5948683adb39a035ed40fb9b226` match the tested head. Raw signed payload:
-fwp-pr124-signed-payload.txt. All11 docs were backed up before these acceptance
-edits in /private/tmp/fwp-main-docs-remote-pre124. Local main remains `68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4`;
-no local fast-forward or compiled check ran while free disk is below64GiB.
+Main is `cbf68ea60c3b9439a117ef9d9b28b472f23dc632` (PR #125). Exact head
+`37e94c1efa1bb99e955d026b8dde46dfe632e972` passes all six jobs in CI38190218968 and roadmap_docs38190218974
+before squash at 2026-10-12T02:13:11Z. The one-line subject `Check ownership fallbacks and allocation boundaries`
+has 51 characters and no body, trailers or attribution.
+One parent `3598a675b5bd9ad2e22ac17d42a27a89ea74fdeb` and complete tree `07fe7b60a473f8c5ae6b7aede7678ff7fb17906a` are verified
+against the signed commit payload and tested tree. Actual merged-source
+acceptance passes runner38194948983 at driverc65aee1c1e5324107972a106c7e95220d55bf9ea.
+Reports are retained in /private/tmp/fwp-accepted-phase2-source. Local main stays
+68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4; no local compiled checks or fast-forward ran.
 
-Queue33 and35–112 are accepted;34 is a verified duplicate. PR124 accepts resource
-and network owners, compiler/cache/effect repairs, scoped AD and list/closure
-lifetimes, typed State and14 fresh codec leaves, plus codec fixture-copy repair. Borrowed scoped inputs require
-Dup; affine File rejection, type snapshots, actual WASI and all original nonlocal
-exit/omission controls pass. Public Pipe and grad/vjp signatures remain unchanged.
-Raw buffers still require mem.free; unknown reconstruction and retained contexts
-keep tracing. Fake OpenCL tests do not establish GPU hardware support.
+## Current verified coverage
 
-## Current verified bundle evidence
+Phase2 is complete for the documented compatibility model. All375 declarations
+are inventoried:168 contracts,19 IR combinators,11 flat signatures and177
+explicit fallback declarations covering167 runtime symbols. The actual merged
+source verifies argument/result/callback, retention, teardown and cycle policies.
+Tracing remains required for unmodeled graphs and unreachable shared cycles;
+this acceptance does not establish tracing-free execution.
 
-Accepted strict inventory:375 declarations/365 symbols,40 aliases,168 contracts,
-19 IR combinators,11 flat signatures and177 review declarations/167 symbols.
-Complete counters include initializer fast paths and count slow delegation once.
-Independent Linux/ARM/Intel and final combined Linux profiles pass. Scoped grad
-matches33 calls/720 requested bytes per gradient. State4096-call profiles reduce
-managed calls16384→12288 and requested bytes272212→206676, with counted freed
-bytes0→262144. List2048-call profiles retain43008 calls/965374 bytes and raise
-counted freed bytes65536→917504. These are workload-specific results, without
-a timing or tracing-free claim. Earlier partial counter reports remain archived.
+Buffer growth/allocation failure, array sizes, bump initialization/alignment,
+kernel stack and constant decoding, and device output/workspace bounds pass
+original semantic, binary, sanitizer, omission, GC and reuse controls. Interpreter
+and native paths preserve checked arithmetic and observable validation/trap order.
+Node24 CI actions and current documentation pass final production gates.
+Earlier resource/State/AD allocation profiles and immutable queue anchors stay
+in history; no new timing or GPU hardware claim follows.
 
 ## Remaining ownership deliveries
 
-All immutable preparation rows74–112 are delivered; their contracts, heads and
-original checks are archived in history. Queue anchors remain unchanged.
-Next: rebase the passing finite fallback audit, checked buffer/array/bump allocation and
-kernel stack/constant decoding and device allocation fixes with current CI actions onto the actual PR124 squash, preserve all11 current docs, publish one focused
-ownership exit PR and require its six exact-head jobs and roadmap_docs. Confirm
-actual merged-source coverage before marking phase2 complete. Then implement
-natural-width numeric storage and views, followed by phases4–6. No numeric
-representation or tracing-free acceptance is established yet.
+Queue33 and35–112 are accepted;34 is a verified duplicate. No resource ownership
+preparation remains open. Phase6 still requires tracing-free eligibility and a
+supported cycle policy; retain explicit compatibility fallbacks until then.
 
-## Next bundle preparation
+## Numeric representation baseline
 
-The177 remaining declarations have an explicit shared-fallback review draft at
-/private/tmp/fwp-phase2-explicit-fallback-review-draft.json. It records argument,
-result, callback, retention, teardown and cycle policies across18 families.
-Three-platform review38180899508 passes at167d769deaa28fae9b361ba4e9fa33b443d1a79c
-on ownership-evidence-phase2-exit-review: actual inventory, compiler fallback
-rules and the buffer controls agree. PR124 is accepted; the next final full
-production matrix and merged-source audit remain required; this does not establish tracing-free eligibility.
-Validate the actual accepted inventory and compiler wrappers before phase2 exit.
-Verifier and three-platform workflow drafts: fwp-check-explicit-fallback-review-draft.py
-and fwp-phase2-exit-review-evidence.yml. No phase2 exit claim is established. Publication receipt:
-fwp-phase2-exit-review-publication.json.
+Three-platform runner38191886880 passes at2592570aa44b8dc41674238c405e19b33b7e9550
+with native source37e94c1, whose full tree matches accepted PR125. Each257-element
+I8/U8/I16/U16/I32/U32/F32/F64 array requests2064 header/payload bytes: an8-byte
+header and8-byte elements. Exact signed/unsigned extension and negative-zero
+bits pass. Diagnostic no-inline assembly shows three-F64 record workers return
+through caller storage on both Macs; scalar V bridges use integer words.
+This records representation and ABI, without a timing or total-live-memory claim.
+Source, byte controls and assembly remain in fwp-numeric-layout-baseline-evidence.
+Initial workflow26814b6 failed validation before jobs; moving runner.temp from
+job env to step env fixed it. The final2592570 head passes all three jobs.
 
-The boy scout audit found structural buffer addition/doubling overflow and
-unchecked realloc failure in the exact1aadb runtime/fwp_rt_ops.c. Draft repair
-preserves malloc/free storage and exits102 on overflow/allocation failure.
-Runner-only branch ownership-evidence-structural-buffer publishes
-c95d970c8c300cf3b342847ee60f7fd052294f28; runner38180514117 passes Linux and both Macs. Tests cover
-ordinary growth/data preservation, addition overflow, capacity overflow and
-allocation failure at O1/O2 with ASan/UBSan, plus three deliberate omission
-variants. Drafts: fwp-structural-buffer-{draft.c,test.rs,probe.c,patch.json}.
-Deliver it with the finite ownership exit review in the next coherent bundle.
+Initial views will cover only pointer-free numeric arrays. Pointer-bearing and
+resource arrays retain copied slices until their disposal-order contracts are
+proved. Views must retain backing owners, mask tagged lengths consistently,
+avoid unsafe in-place updates and measure backing retention, not just headers.
 
-Array-limit candidate296ea83b45bb153c2b86d1df68e05c799013b2eb on
-ownership-evidence-array-size-limits passes all three jobs in38182446407.
-Central constructor multiplication, matching interpreter make/generate limits,
-bump alignment overflow and nonnull empty initialization are checked. Five
-raw/native cases preserve oversized make/generate traps, argument trap order
-and negative counts at O1/O2 with reuse on/off and real GC/reuse verification.
-ASan/UBSan constructor/bump omission controls,71 library units, all golden type
-snapshots and eight effect tests pass. Proof: fwp-array-size-passing-proof.json.
-Earlierd8/b42 failed a missing native forward declaration; a2 passed all C/unit/
-effect/snapshot controls but the new semantic fixture expected1 rather than the
-established trap status101. The final head corrects that fixture and makes the
-initialization omission's null-address arithmetic defined. No control was removed.
-Logs: fwp-array-size-d8-failed.log and fwp-array-size-a2-linux-failed.log.
-Include this passing repair in the same phase2 exit bundle; final full gates still
-apply. Drafts: fwp-array-size-{runtime-draft.c,interpreter-draft.rs,gc-draft.c,
-test.rs,probe.c}; fwp-bump-size-probe.c.
+## Active numeric representation bundle
 
-Completed acceptance: fwp-record-pr124-remote-acceptance.py backed up11 docs
-and archived39 live/primitive rows after exact-head squash/raw-payload proof.
-It streamlined obsolete design/resource notes into history. Do not rerun it. fwp-finalize-phase2-exit-on-runner.py and
-fwp-publish-phase2-exit-finalization.py require the actual PR124 squash and passing
-finite review. That finalizer pins the passing296ea83 array/bump source
-and passing kernel/device sources and all three verified preflight jobs.
-It preserves original controls and exports one ownership exit/allocation bundle and fresh docs for the next full matrix.
+Typed worker preparation9fe843746e9dd9a7ebf890caaa58a5b656a46076 passes all three
+jobs in38195896907. Exact floating payloads and original record trap/ownership
+semantics pass. ARM diagnostic assembly returns the three-F64 record in
+FP registers d0/d1/d2; Intel uses caller storage for that24-byte result.
+Diagnostic no-inline calls are separate from production performance; integrated
+controls retain ordinary optimized scalar/record assembly too.
 
-Numeric design preparation reads30 blob-verified files at d5ae8c and maps108
-direct array references in seven runtime files. Current arrays have8-byte
-headers and V-word payloads; F32 values use low32-bit encoding. Draft layout
-alternatives and producer/consumer, view-owner and ABI requirements are in
-fwp-numeric-representation-design-preparation.json. This is source review, not
-a representation implementation or compiled evidence. Complete phase2 before
-changing numeric representation.
+Packed branch ownership-evidence-packed-numeric-arrays is now at
+21117f4971e838cf3ccfcf8aa001be804d16bc44; runner38200555737 passes all three platforms.
+Previous1432b969b0ed1f780ffced363cc646e569bc4869 passes all three platforms in
+38199430982, including packed bytes, original ownership/bounds controls, bit
+bridges, view retention/reclamation and allocator-counter omission controls.
+Reports, actual optimized assembly and hashes are retained in
+/private/tmp/fwp-packed-representation-evidence. Preparation checks do not
+establish full production or phase3 acceptance; main remains PR125.
 
-Kernel candidate d240231c5dd33e83ecdd5bf3df06715a0e279768 passes all three
-platform jobs in38186836622. It guards empty-stack pointer formation and reads
-F64 constant V words through the existing memcpy bit decoder. Extracted actual
-kernels pass O1/O2 sanitizers with first leaf/constant operations, lengths
-0/1/7/127/256, nonzero offsets, exact bytes and sentinels. Omitted stack guards
-and constant decoders fail their controls. Original parallel/missing-OpenCL
-tests pass against FWP_NO_OPT=1; the benchmark remains ignored, with no timing
-or GPU hardware claim. Proof: fwp-kernel-constant-bits-passing-proof.json.
+The8-byte header remains; descriptor-directed I8/U8, I16/U16, I32/U32 and F32
+payloads use1/2/4-byte elements. I64/U64/F64 remain8 bytes. Pointer-bearing
+slices stay copies. Numeric leaf capacity permits array reuse while generic
+record reuse keeps its scanned-slot restriction. Kernel constants now load
+bits with memcpy from both word and actual double-backed storage, preserving
+negative-zero/NaN payloads without effective-type aliasing.
 
-Device candidate6ee21a54dee1029178b28291d60dd31dd179a7a7 on
-ownership-evidence-device-output-bounds checks positive output counts before
-multiplication/allocation, preserving malformed code and input-length trap order
-and releasing the temporary input table. Workspace limits follow input validation
-in both implementations. All three jobs in38188567610 pass; proof: fwp-device-bounds-passing-proof.json. Previous
-857 candidate passed both Macs; Linux38188246198 found LeakSanitizer changed
-deliberate omission exits because the sentinel left small probe allocations alive.
-The repaired sentinel records omitted bounds/cleanup before freeing its own
-allocations; leak detection remains enabled. Original raw/O1/O2/GC/reuse and
-omission controls remain. The passing candidate is ready for inclusion in the next coherent
-bundle; its final production gates remain required. Receipts: fwp-device-bounds-publication.json and
-fwp-device-bounds-control-cleanup-publication.json; diagnostic log:
-fwp-device-bounds-857-linux-failed.log.
+The143 measurements exposed whole-backing retention for tiny slices. The211
+refinement copies slices with payload at most the24-byte view header or less
+than one quarter of the original backing length; larger numeric slices retain
+flat backing owners. Permanent packed_numeric_storage tests cover exact bytes,
+alignment, raw/native immutable operations, typed float payloads, complete
+allocation counters, last-owner release, nested views and small-copy release.
+Packed constructor omission controls exercise widths1/2/4/8. Actual wasm32
+count controls must run on Linux and preserve callback/argument trap order.
+Positive counts saturate at SIZE_MAX before allocation and slice/take bounds.
+All211 refinements pass actual runner controls on all three platforms.
+
+The94d first integration repeated helper insertion, causing C redefinitions.
+The3b original scalar-array probe parsed the descriptor as a release function;
+b66 corrected its lookup while preserving address-shaped scalar-bit controls.
+Both earlier failures are retained; b66 and143 pass all three platforms.
+Source generation starts from a stable typed core and a verified formatted ABI
+source; publish repairs only with an exact branch lease.
+
+Current sources and receipts: fwp-packed-array-runtime-draft,
+fwp-packed-array-original-controls, fwp-packed-array-permanent-controls-publication.json,
+fwp-packed-numeric-storage-test-draft.rs, fwp-packed-wasm-test-draft.rs and
+fwp-packed-array-size-test-draft.rs. Measurement helpers preserve independent
+omission controls and original golden traps. Accepted source provenance is in
+fwp-numeric-representation-accepted-source-manifest.json.
+
+Recovery current-map.json designates the active safe map rather than selecting
+an obsolete map by entry count. The209 runner validates restoration of all111
+temporary targets without executing helpers or the compiler. Historical source,
+assembly and completed proofs remain in immutable checkpoints. A56-MiB inline
+tree request failed without changing the branch; publication now reuses blobs
+and bounds incremental requests. Checkpointb61cde67f467fc67d672b1d0efd3c0cf59a3acad passes audit38200778577
+and retains211 sources plus143 reports; bounded restoration metadata is verified.
+Current finalization and protocol refinements need the next checkpoint.
+
+## Final bundle refinements
+
+Finalization6bf6b1f2a5fb661d180403c22bf5d18ffede5c39 passes Linux runner38201574707:
+formatting, all-target clippy, library and original focused controls, permanent
+storage/ABI/view tests, actual wasm32 counts, protocol tests, primitive/fallback
+coverage and roadmap docs. Runner-formatted production source hashes and reports
+are retained in /private/tmp/fwp-numeric-storage-finalization-export.
+
+Adjacent protocol repairs accept valid zero-byte record collections and check
+allocation/count limits before construction. Rust lengths and constructor tags
+are checked before narrowing to usize. Native array decoding writes directly
+into packed destination storage; its complete allocator control requires one
+request, without a word scratch buffer or intermediate list nodes. Truncated
+numeric payloads, huge counts and omission controls pass under O1/O2 GC stress.
+This focused finalization is not the six-job production merge gate.
+
+Next publish numeric-storage-and-worker-abi from the formatted export onto
+accepted PR125, with current docs. Keep one production PR open; require all six
+exact-head jobs and roadmap_docs before the authorized one-line squash. Verify
+raw message, one parent, complete-tree parity and actual merged-source acceptance.
+Then deliver phases4–6. Windows/new deployment/backends remain deferred.
+
+## Next concrete action
+
+Deliver phase3 in one coherent representation/ABI bundle: descriptor-directed
+naturally packed narrow numeric arrays, checked views retaining their backing
+owners, and typed scalar/aggregate worker layouts with ordinary V bridges.
+Start from the actual accepted main above; preserve Pipe semantics and all
+existing generic, callback, ownership and exceptional controls. Prove exact
+bytes, alignment, immutable update behavior, serialization/hash/FFI compatibility
+and actual ARM/Intel ABI assembly before performance claims. Source preparation:
+fwp-numeric-representation-design-preparation.json and its verified source
+manifest. The accepted snapshot is current. Finish pending permanent controls,
+then export one formatted production bundle onto accepted PR125.
+Finish phases3–6 with full exact-head gates and one-line squash messages.
 
 ## Local checks and recovery
 
@@ -186,30 +211,14 @@ Immutable tags, remote source heads and retained receipt hashes survive temporar
 file loss. Never treat an earlier head, skipped check or source snapshot as a
 passing production gate.
 
-The cancelled d5 Linux log independently confirms the same codec source-copy
-failure; retained Linux/Intel logs reveal no other completed test failure before
-cancellation. Cancelled jobs supply no passing evidence. A Node20 action-runtime
-deprecation warning was also encountered. Verified official checkout/upload v7
-manifests use Node24. A source-only action-version patch is prepared for the next
-phase2 exit bundle; job definitions, checks and artifact inputs remain intact.
-Node24 checkout/uploads pass the three-platform preflights; full production
-gates remain required. Recipe:
-fwp-node24-actions-patch.json; preparation: fwp-node24-actions-preparation.json.
-Finalization driver83f240569685274589bc1a003f2f444b0dd79e94 on
-ownership-phase2-exit-finalization uses the accepted3598a675 base and includes
-all passing buffer/array/kernel/device candidates and this action patch. Its
-combined runner controls, formatting, library tests and exact-source audit are
-pending. Export native changes after PASS; refresh current root docs before
-opening the one production PR, then require its exact full gates. The accepted-source phase2 audit remains a source-only draft until the
-finite review bundle is merged and its exact source is checked.
-
-Recovery checkpoint f7290c8827f641d8f9cdc9928f1c68a59954e61a passes
-audit38188292080. The bounded immutable archive path actually restores395
-temporary targets (9594149 bytes) on a disposable GitHub runner, verifying all
-source hashes. Helpers and compiler were not executed. Only bounded reports
-were downloaded into fwp-verified-archive-recovery-restoration; no local restore
-ran. Node24 checkout/upload pass there and in all three kernel preflights.
-Keep finalization metadata separate from binary control artifacts.
+Recovery checkpoint688aa92caf2cfac9db9166d523882f734bbefec0 passes
+audit38190497358: links, ancestry, subjects, helper syntax and actual immutable
+archive restoration all pass. All479 temporary targets/14446001 bytes have
+verified hashes. Protected backups keep exact original bytes under snapshot
+source names; the restorer selects only complete safe maps containing their
+own publisher. Metadata is in fwp-verified-complete-recovery-restoration. No
+helper or compiler was executed by restoration and no local restore ran.
+Earlier failed audits and their repairs are archived in history.
 
 The duplicate main full matrix38189663885 was cancelled after all seven
 pre-merge gates and complete-tree parity were proved. This is duplicate-run
@@ -218,18 +227,10 @@ Prepared merge-phase2-exit.py, publish-accepted-phase2-audit.py,
 download-accepted-phase2-audit.py and record-accepted-phase2.py require actual
 passing final gates and the accepted-source audit before advancing phase3.
 
-Recovery audit38189929028 at42c1aa913f8ba370b29068c7edbb2803ce47871b
-found that copied backup Markdown was being checked as live documentation,
-so its original relative links no longer resolve inside the backup directory.
-Preserve the original bytes under snapshot source names and remove duplicate
-live Markdown paths on the recovery branch; then rerun that audit. Production
-source/combined validation is independent and passes38189708217.
-
-Combined ownership exit preparation passes runner38189708217 at driver83f240569685274589bc1a003f2f444b0dd79e94.
-Native export 07fb6f72f7a0b4309057f89209250ca573d7103e has tree30a0ccea090697165713d2411ed75f3f0aa03a35 on the actual
-PR124 squash. All original allocation, sanitizer, raw/native, codec, type,
-format/library/docs, inventory and finite fallback controls pass together.
-Current root docs are refreshed before opening the production PR; this update
-changes documentation only. Query ownership-exit-and-buffer-bundle for its
-current tip and require all six exact-head jobs and roadmap_docs before squash.
-Phase2 stays open until the actual merged-source audit passes.
+Numeric design source:30 blob-verified files at frozen PR125 head37e94c1 in
+fwp-numeric-representation-phase2-candidate-source. The design preparation
+records descriptor-directed packed payloads, backing-owner views, leaf versus
+scanned allocation and typed worker ABI bridges. Source review also corrects
+the old four-field register claim in the future unboxed-record fixture; actual
+placement follows target ABI. These are source-only plans/drafts. Finish PR125
+and its actual merged-source phase2 audit before implementation.
