@@ -22,8 +22,12 @@ jobs:
           cargo fmt --all
           cargo clippy --all-targets -- -D warnings
           cargo test --lib
-          cargo test --test blocked_matrix
+          cargo test --no-fail-fast --test blocked_matrix --test numeric_array_fusion
 
+      - name: Retain permanent allocation evidence
+        run: python3 scripts/summarize-numeric-array-fusion.py
+      - name: Equivalent C and Rust numerical workloads
+        run: python3 scripts/measure-numerical-kernels.py
       - name: Export formatted source
         if: always()
         run: |
@@ -41,3 +45,6 @@ jobs:
             array-fusion-evidence/*.c
             array-fusion-evidence/*.asm
             array-fusion-evidence/workspaces/*.json
+            array-fusion-evidence/performance/*.json
+            array-fusion-evidence/performance/*.txt
+            array-fusion-evidence/performance/*.c
