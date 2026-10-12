@@ -4,6 +4,7 @@ on:
     branches: [ownership-accepted-phase2-audit]
 permissions:
   contents: read
+  actions: read
 jobs:
   accepted_source:
     runs-on: ubuntu-latest

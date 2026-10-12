@@ -68,8 +68,8 @@ Production head is `3aae99bfa705e26babc2cf251b0e583dfd95cf38`, complete tree
 verified ownership export: the default artifact directory is a separate
 subdirectory and the source bytes are checked after copying. Both default and
 explicit artifact paths pass on Linux/ARM/Intel in38184029472 at647d45ca45a76f46aaa22d0901d7fd3ea7949220.
-Full CI38184549852 passes bench, ARM regular and both GC jobs; Linux and
-Intel regular remain running. Roadmap_docs38184549850 passes at the
+Full CI38184549852 passes Linux, bench, ARM regular and both GC jobs;
+Intel regular remains running. Roadmap_docs38184549850 passes at the
 repaired head. Require all seven exact-head gates before squash.
 Receipt: fwp-codec-copy-production-publication.json. The earlier d5 full matrix
 38180852377 fails regular ARM because copying the fixture onto itself empties
@@ -286,13 +286,13 @@ Device candidate6ee21a54dee1029178b28291d60dd31dd179a7a7 on
 ownership-evidence-device-output-bounds checks positive output counts before
 multiplication/allocation, preserving malformed code and input-length trap order
 and releasing the temporary input table. Workspace limits follow input validation
-in both implementations. All three jobs in38188567610 are pending. Previous
+in both implementations. All three jobs in38188567610 pass; proof: fwp-device-bounds-passing-proof.json. Previous
 857 candidate passed both Macs; Linux38188246198 found LeakSanitizer changed
 deliberate omission exits because the sentinel left small probe allocations alive.
 The repaired sentinel records omitted bounds/cleanup before freeing its own
 allocations; leak detection remains enabled. Original raw/O1/O2/GC/reuse and
-omission controls remain. Proof remains required before inclusion in the next
-bundle. Receipts: fwp-device-bounds-publication.json and
+omission controls remain. The passing candidate is ready for inclusion in the next coherent
+bundle; its final production gates remain required. Receipts: fwp-device-bounds-publication.json and
 fwp-device-bounds-control-cleanup-publication.json; diagnostic log:
 fwp-device-bounds-857-linux-failed.log.
 
