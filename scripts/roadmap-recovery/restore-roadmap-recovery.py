@@ -45,7 +45,7 @@ def blob(name):
 
 maps=[]
 for publisher in sorted(entries):
-    if publisher.startswith('scripts/roadmap-recovery/publish-') and publisher.endswith('-checkpoint.py'):
+    if publisher.startswith('scripts/roadmap-recovery/publish-') and publisher.endswith('.py'):
         source=blob(publisher).decode()
         module=ast.parse(source)
         assignments=[node for node in module.body if isinstance(node,ast.Assign)
@@ -57,6 +57,8 @@ for publisher in sorted(entries):
             and Path(v).resolve().is_relative_to(Path('/private/tmp').resolve()) for k,v in values.items()):
             continue
         mapping=list(values.items())
+        if not all(name in entries and entries[name]['type']=='blob' for name,_ in mapping):
+            continue
         if not any(name==publisher for name,_ in mapping):
             continue
         maps.append((len(mapping),publisher,mapping))

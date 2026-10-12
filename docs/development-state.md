@@ -244,3 +244,15 @@ updates. Require all six current-head jobs and docs before merge-phase2-exit.py;
 then run the accepted-source audit and record its actual proof before phase3.
 Receipts: phase2-exit-finalization-export/publication.json,
 fwp-phase2-exit-docs-publication.json and fwp-pr125-publication.json.
+
+Recovery audit38190316575 atc1d0b8b04a7c4f97526056ed9780f3aba05555e9
+passes links/ancestry/subjects, but restoration selected an older map because
+the repair publisher lacked the checkpoint suffix. The restorer now considers
+all publish Python files with safe literal maps, requires every mapped blob to
+exist and requires a self entry before selecting the largest map. Verify this
+refinement with actual runner restoration before marking recovery verified.
+
+Numeric source preparation now also retains30 blob-verified files at frozen
+PR125 head37e94c1 in fwp-numeric-representation-phase2-candidate-source. This is
+source preparation only; full gates and actual merged-source phase2 acceptance
+remain required before representation implementation.

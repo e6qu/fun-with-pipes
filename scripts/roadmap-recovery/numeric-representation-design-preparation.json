@@ -521,5 +521,7 @@
       "alignment": "The eight-byte owning header provides natural alignment up to eight bytes, not guaranteed sixteen-byte SIMD alignment. Use checked unaligned accesses or explicit stronger allocation/layout proof for vector loads.",
       "measuredSpace": "Record requested bytes, actual allocation class, live/count/freed bytes and retained backing size. Header and size-class rounding can change the realized density gain; views can retain more backing memory than their own size suggests."
     }
-  }
+  },
+  "candidateSourceManifest": "/private/tmp/fwp-numeric-representation-phase2-candidate-source/manifest.json",
+  "candidateSourceStatus": "Frozen PR125 source verified by Git blob hash; full gates and actual phase2 acceptance still pending"
 }
