@@ -1,0 +1,16 @@
+{
+  "head": "592a5953b8351e67fe30ca637426007f8763b5a4",
+  "duplicateCI": {
+    "id": 38284763467,
+    "status": "completed",
+    "conclusion": "cancelled",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38284763467"
+  },
+  "mainDocs": {
+    "id": 38284763414,
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38284763414"
+  },
+  "basis": "All six exact PR-head jobs and roadmap docs passed before merge; complete squash tree matches tested head. Duplicate cancellation is not a passing gate."
+}

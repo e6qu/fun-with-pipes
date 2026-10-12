@@ -1,0 +1,16 @@
+{
+  "sha": "592a5953b8351e67fe30ca637426007f8763b5a4",
+  "acceptedHead": "bedbf8a1fe22127567305eb17be5efa3bc4366e7",
+  "tree": "fa17c2b3a29effe8876f0bb9ccf92a94144a05aa",
+  "parents": [
+    "7350a5566fa991c89916ea67ab693c2a0bba9327"
+  ],
+  "pr": 129,
+  "mergedAt": "2026-10-12T17:31:17Z",
+  "subject": "Record completed roadmap and accepted ownership evidence",
+  "message": "Record completed roadmap and accepted ownership evidence",
+  "characters": 56,
+  "rawPayloadSha256": "1452b267ebbb6da63774ca7f78f792933f184d6d99e125a625490d55b2788a27",
+  "verification": "GitHub verified signed commit payload",
+  "stage": "Final documentation squash and complete-tree parity verified; implementation is unchanged from accepted PR128 source"
+}

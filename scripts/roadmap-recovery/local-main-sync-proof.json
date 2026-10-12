@@ -1,0 +1,100 @@
+{
+  "before": "68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4",
+  "head": "592a5953b8351e67fe30ca637426007f8763b5a4",
+  "tree": "fa17c2b3a29effe8876f0bb9ccf92a94144a05aa",
+  "backup": "/private/tmp/fwp-local-before-final-main",
+  "preservedFiles": {
+    "AGENTS.md": {
+      "status": " M",
+      "sha256": "24087524a5590832803a7f10f6b3544e867269cb00908b15d6f015b90643591e",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "CONTRIBUTING.md": {
+      "status": " M",
+      "sha256": "7a00b334e94f203e209666fabe36a85ddd049bdd6f8d09195cbbd683f2ad2ead",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "PLAN.md": {
+      "status": " M",
+      "sha256": "f1f5ca2641003677c01812247f7af8e4bb43fa026867b650cea622e8949c2d1a",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "docs/concurrency.md": {
+      "status": " M",
+      "sha256": "38109f6b0a299157550e7394cb5458cc023660a80de384b821db5ae92ccf5906",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "docs/design.md": {
+      "status": " M",
+      "sha256": "c63bf41c330e95993ff2446644ec1437065a3fd003588e68cefe45c9ca7c9fec",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "docs/development-state.md": {
+      "status": " M",
+      "sha256": "5a0738d69c6b36f1e4a0effa8767aba00e29c7fcacb1de9ad8a707670f1ed468",
+      "mode": 420,
+      "sameAsAccepted": false
+    },
+    "docs/numerics.md": {
+      "status": " M",
+      "sha256": "7fd0db574d15639449d58e470042c6776f903fa79e44fac016f31bc0484fa00c",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "docs/ownership.md": {
+      "status": " M",
+      "sha256": "fe463f39cf108e5622c0df59b1b07063f7f2635253cedc9a0b4ca9b781971a77",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "docs/primitive-ownership.md": {
+      "status": " M",
+      "sha256": "cb3842d411ae21cb1512225b93092b2208489235f43d5c65155b4cc52c6afb95",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "docs/reference.md": {
+      "status": " M",
+      "sha256": "9bddcf98f219a102456c9bfc6cd5ae7b3a63a84cf8f234ebd34c3db497e237ec",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "docs/roadmap-history.md": {
+      "status": " M",
+      "sha256": "19f7164aa6133b747a73993b53eb9dbaf68e90a815619be0db4456d6260a96cc",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "docs/roadmap-queue.md": {
+      "status": " M",
+      "sha256": "46cd62e56271b10a6756a1b59dd2a4c6e62f878ad4188bb00fcadf5c0e4e0d18",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "scripts/check-roadmap.py": {
+      "status": " M",
+      "sha256": "8316fc018dec55860af366f57a7d2db66f95e607e3c816fe92c850a24a9aaa70",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "docs/measurements/numerical-kernels-2026-10-12.json": {
+      "status": "??",
+      "sha256": "c9f2bce067002c770bdc0321fb4310079d923403dac86355869afe55ba5916cf",
+      "mode": 420,
+      "sameAsAccepted": true
+    },
+    "docs/measurements/ownership-and-arc-2026-10-12.json": {
+      "status": "??",
+      "sha256": "6dd5f6eb2b1daa13623be8645c33cd8208098b2573eb92761d0ce53586a59886",
+      "mode": 420,
+      "sameAsAccepted": true
+    }
+  },
+  "status": " M docs/development-state.md\n",
+  "scope": "Guarded fast-forward to the verified final squash; every prior local file and mode preserved. No local build or full test gate ran."
+}

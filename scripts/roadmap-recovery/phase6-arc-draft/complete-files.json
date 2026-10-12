@@ -1,5 +1,0 @@
-{
-  "tests/arc_execution.rs": "/private/tmp/fwp-phase6-arc-draft/arc_execution.rs",
-  "runtime/fwp_rt_gc.c": "/private/tmp/fwp-phase6-arc-draft/fwp_rt_gc.c",
-  ".github/workflows/tracing-free-preparation.yml": "/private/tmp/fwp-phase6-arc-draft/complete-preparation.yml"
-}

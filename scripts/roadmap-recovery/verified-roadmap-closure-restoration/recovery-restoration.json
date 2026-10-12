@@ -1,0 +1,2079 @@
+{
+  "head": "0ec03c1540b81c4fdf8b7b7aaf826716e427664d",
+  "tree": "50380be9c596a293d29791a50baa501b3eb85547",
+  "restored": {
+    "/private/tmp/fwp-accepted-numeric-source/phase3-acceptance.json": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source/phase3-acceptance.json",
+      "sha256": "513b3af8a806610357f055c5e25ac6a9164c997c42bd1bfda77168c99d351212"
+    },
+    "/private/tmp/fwp-accepted-numeric-source/download.json": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source/download.json",
+      "sha256": "a3dd70a1337e217e0c393c07841c112ce2a2d21c890e75365d09eb8a60f4529b"
+    },
+    "/private/tmp/fwp-accepted-numeric-source/fallback-review.json": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source/fallback-review.json",
+      "sha256": "4ff74f58b1a0f2f8460bc22841357b34edd89766b688367ea575b716adc504b3"
+    },
+    "/private/tmp/fwp-accepted-numeric-source/signed-payload.txt": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source/signed-payload.txt",
+      "sha256": "f5d37a16eccd32b5ec40408102684ca5009e436fdc8a55c345e1b8d6a1aca921"
+    },
+    "/private/tmp/fwp-accepted-numeric-source/inventory.json": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source/inventory.json",
+      "sha256": "5ce466dfab733c893e76bc538588cac7493a64c8b7caa51a48ab0d1b40dbb7ea"
+    },
+    "/private/tmp/fwp-verified-scalar-unwind-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-scalar-unwind-restoration/recovery-restoration.json",
+      "sha256": "5dc7bf400139bcb7383a3dd9f494577f661ff90cfc62d7d98f8ce150a373b047"
+    },
+    "/private/tmp/fwp-verified-scalar-unwind-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-scalar-unwind-restoration/validation.json",
+      "sha256": "d414af1c0736b48100b52e8d5e154743b69e06c9d1be35e8a6b147044f39854b"
+    },
+    "/private/tmp/fwp-verified-scalar-unwind-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-scalar-unwind-restoration/proof.json",
+      "sha256": "7957e3b4230b3e34b594ebfbea528575ff5433dc36065e5761ef35d3e0666cfb"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/preparation.yml": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/preparation.yml",
+      "sha256": "e79ee0c28d9ae0a73eaba3a0b69580002dbc2b5454733122cfff3459b499ef48"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/fwp_rt_gc.c": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/fwp_rt_gc.c",
+      "sha256": "c560cc2459fc75fa569772c8b2203dd21cf5e4c345b2a7ef5461895828829fbd"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/lib.rs": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/lib.rs",
+      "sha256": "eedc9d1a0f1a503e197caef11af7a538e404f6d9f13d74f2e238dd783d376af7"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/files.json": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/files.json",
+      "sha256": "bc21aa9f6691917ec6b35ad264e3054c1b3668a09582b9d2940acc145d1f9a7a"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/main.rs": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/main.rs",
+      "sha256": "84c9da5087ea748ed8da09431cc16877a82ef8d2866f3ee6e24f5c38cb880380"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/arc.rs": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/arc.rs",
+      "sha256": "71ecdb0a1d4afa4b946e1a07266fd4de256361610123ebbe9133662dd555449b"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/arc_execution.rs": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/arc_execution.rs",
+      "sha256": "f8a5b36005359a6dacbf1b6c4a5e74c3a2fe1eecbdb18a2ed13590e5fbc105e2"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/cgen.rs": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/cgen.rs",
+      "sha256": "22daf9d796729840992d20fa55283b523cffaa294bb6e00742292f9976589783"
+    },
+    "/private/tmp/fwp-scalar-borrow-reuse-draft/preparation.yml": {
+      "source": "scripts/roadmap-recovery/scalar-borrow-reuse-draft/preparation.yml",
+      "sha256": "1ed16a78d2862091db1c8ad7ece3906c0ea96be3d270e479fc44bb773cd6f2e5"
+    },
+    "/private/tmp/fwp-scalar-borrow-reuse-draft/rc.rs": {
+      "source": "scripts/roadmap-recovery/scalar-borrow-reuse-draft/rc.rs",
+      "sha256": "7e846f6ca4f89d9ec6efc37a0b5aec3696407af81ba4c314e7de2f5e9e4e7e12"
+    },
+    "/private/tmp/fwp-scalar-borrow-reuse-draft/branch.json": {
+      "source": "scripts/roadmap-recovery/scalar-borrow-reuse-draft/branch.json",
+      "sha256": "a421f9e130104968994421745f57aa5c8c2532a046cf356e515e848b20c97958"
+    },
+    "/private/tmp/fwp-scalar-borrow-reuse-draft/rc-phase5.rs": {
+      "source": "scripts/roadmap-recovery/scalar-borrow-reuse-draft/rc-phase5.rs",
+      "sha256": "c12da391d5a124d423f769241ceda010ecae66c8e5034c1fca83b617e4689004"
+    },
+    "/private/tmp/fwp-scalar-borrow-reuse-draft/files.json": {
+      "source": "scripts/roadmap-recovery/scalar-borrow-reuse-draft/files.json",
+      "sha256": "146f52d3e00dc6eaa51e2ef7cdda87f3c68a928acbddbf8830a497c1d3f5578b"
+    },
+    "/private/tmp/fwp-phase5-const-descriptors-draft/files.json": {
+      "source": "scripts/roadmap-recovery/phase5-const-descriptors-draft/files.json",
+      "sha256": "9bc4c0390938b39af8621026279bc5123188ba41c6129e25824252e35b0d1163"
+    },
+    "/private/tmp/fwp-phase5-const-descriptors-draft/cgen.rs": {
+      "source": "scripts/roadmap-recovery/phase5-const-descriptors-draft/cgen.rs",
+      "sha256": "a7385fe37d35899e920f2281ac9f4ff21b33d4d8d0cb828483b20bb6d27dd270"
+    },
+    "/private/tmp/fwp-phase5-lookup-unwind-draft/preparation.yml": {
+      "source": "scripts/roadmap-recovery/phase5-lookup-unwind-draft/preparation.yml",
+      "sha256": "0f52997622c1d73a0b81a16089ab485fed61f3c048ad924846367777fdf35070"
+    },
+    "/private/tmp/fwp-phase5-lookup-unwind-draft/array_fusion_allocation_probe.c": {
+      "source": "scripts/roadmap-recovery/phase5-lookup-unwind-draft/array_fusion_allocation_probe.c",
+      "sha256": "39fbe1164fd7b388987a292836ee7aa8a52ff4265f769c3afd1340f4eb25f4eb"
+    },
+    "/private/tmp/fwp-phase5-lookup-unwind-draft/files.json": {
+      "source": "scripts/roadmap-recovery/phase5-lookup-unwind-draft/files.json",
+      "sha256": "69509c0db953636c3f3a80eb47e290430d2d2be622f287dacb8df556c446448d"
+    },
+    "/private/tmp/fwp-phase5-lookup-unwind-draft/cgen.rs": {
+      "source": "scripts/roadmap-recovery/phase5-lookup-unwind-draft/cgen.rs",
+      "sha256": "cec20abdc5184c13240bc3d69be5dd401ab64b1bad59c6178e2289835b0876af"
+    },
+    "/private/tmp/fwp-phase5-scalar-unwind-draft/preparation.yml": {
+      "source": "scripts/roadmap-recovery/phase5-scalar-unwind-draft/preparation.yml",
+      "sha256": "0ea4fa01142e2f49166213fb6abaed67e5246b90fac4179dcf6fe99ad3ab27b5"
+    },
+    "/private/tmp/fwp-phase5-scalar-unwind-draft/numeric_array_fusion.rs": {
+      "source": "scripts/roadmap-recovery/phase5-scalar-unwind-draft/numeric_array_fusion.rs",
+      "sha256": "bcccbb856a81e85e3131aa4a5866355ea7487c4968d381b935501003b5d7b703"
+    },
+    "/private/tmp/fwp-phase5-scalar-unwind-draft/array_fusion_allocation_probe.c": {
+      "source": "scripts/roadmap-recovery/phase5-scalar-unwind-draft/array_fusion_allocation_probe.c",
+      "sha256": "12bcb5adaf6788b881cd4ae0b0d4e136fc83ca7d4d4f83031286a6b94c4bf4b8"
+    },
+    "/private/tmp/fwp-phase5-scalar-unwind-draft/files.json": {
+      "source": "scripts/roadmap-recovery/phase5-scalar-unwind-draft/files.json",
+      "sha256": "306ea5507544a9f13be94057bf4c8495542334557533531380752219ca7919ff"
+    },
+    "/private/tmp/fwp-phase5-scalar-unwind-draft/cgen.rs": {
+      "source": "scripts/roadmap-recovery/phase5-scalar-unwind-draft/cgen.rs",
+      "sha256": "c97523547cc44df93ccce744c77c80e8ca37e4d2b1b9371ee3b5e272c103b65c"
+    },
+    "/private/tmp/fwp-loop-ownership-platform-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/loop-ownership-platform-evidence/download.json",
+      "sha256": "dbb65b11cf50e7ccbe4b497932962538056aa4e9857a279f138fc481d12161db"
+    },
+    "/private/tmp/fwp-tracing-free-source/manifest.json": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/manifest.json",
+      "sha256": "8267a3ef78235d3e2a63d30498fda7b4250df1ac437a379270d03fce5cfb2d8b"
+    },
+    "/private/tmp/fwp-tracing-free-source/runtime/fwp_rt_gc.c": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/runtime/fwp_rt_gc.c",
+      "sha256": "3458a76c9326f543376b3afb1a9a540b3be1fc81ca0fcafca331f2e30b7e425d"
+    },
+    "/private/tmp/fwp-tracing-free-source/runtime/fwp_rt.c": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/runtime/fwp_rt.c",
+      "sha256": "4f6e70a6265c4bcf8cbcd28cb897940d6a77c37de0e6e4772a7084bfa64ec97e"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/aot.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/aot.rs",
+      "sha256": "e68fa7d18f066aa85938fffae183bab6fb5deef5367b21d59be8c0b59d55260f"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/ir.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/ir.rs",
+      "sha256": "52980b69a4aac8ec0d92eaf4e479df377d041e514df82578663209ff3ea874ec"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/rc.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/rc.rs",
+      "sha256": "7ea40cd4f1512d93c9b9aaf0531865b5b72f673d5fd98f0385faf96216e26415"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/lib.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/lib.rs",
+      "sha256": "d38fb7119bd3e82dc1541a5a4763cb028585d4dc90b59c0734c59b7e61c211f7"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/ownership.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/ownership.rs",
+      "sha256": "af9dc0ac3e30ce641c6f03dc67c9608da3631c4d3e3aa80ea97d2333d9a4fced"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/escape.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/escape.rs",
+      "sha256": "4653928c3ead819248fd5df280e3c2c1ce1906130c05ff953b3b27469a1276e4"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/main.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/main.rs",
+      "sha256": "7e27b743f79a62c690c11498f38470a2c0e39b823416d64afc3f7fe765d001ba"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/rc.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/rc.rs",
+      "sha256": "56c1c8e79ec738adf4bb41a1990c249bf43728f581f904a794c91ce3f99bd7ac"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/download.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/download.json",
+      "sha256": "dc86927bfccb44922993cf1737733addef0268b7ac15f0aef956174ac73bdc5c"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/fallback-review.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/fallback-review.json",
+      "sha256": "50305e0903c23102bc191d74df1ad636b04abdff15e8f1cf91692ebb6304e86f"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/inventory.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/inventory.json",
+      "sha256": "9950d62ee121a54ef0b8f6d54976be34a74d7a3d9b21e131514f03298662ec3c"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/loop_ownership.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/loop_ownership.rs",
+      "sha256": "1ade12fe2d5c8fd605abbbbe4724293a79b2bbf8628e1ef7cf9e3737030edb7d"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/cgen.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/cgen.rs",
+      "sha256": "aac952a274d9d4540ccb25df36b63a61b5719d17726967909e75a519c5634531"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/download.json",
+      "sha256": "d96dc1a08d7f2051cf9a179830d78c02d8d6b8c048878619253e17105d04048d"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/sha256.json": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/sha256.json",
+      "sha256": "da78153f9c67f3ac9911cc7dd9eed4de5c045c86136449dddbe9fb79b7c49b74"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/CONTRIBUTING.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/CONTRIBUTING.md.source",
+      "sha256": "542f28742abdf5e0d50923b7a037f932522e159ad43f7b0adabe9ff7291501b2"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/PLAN.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/PLAN.md.source",
+      "sha256": "5031a94332e3cfdc57c8d4929338ee02c7b11e4dc4b242c5a457ab6b0cd365e4"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/docs/reference.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/docs/reference.md.source",
+      "sha256": "eecf2528ba81ec96608cb2ba323f0acb93ca278ac4fed2a4c999e35cfac04d8c"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/docs/roadmap-queue.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/docs/roadmap-queue.md.source",
+      "sha256": "59d56ef27ed59c7995468477a3de49e5a29c044748f29b65778831226b137321"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/docs/roadmap-history.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/docs/roadmap-history.md.source",
+      "sha256": "555c0d31ca3364b85d86a8e1d0fc515f30c63284db253ea3a49fec1289d7bf97"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/docs/numerics.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/docs/numerics.md.source",
+      "sha256": "9bd75db8a915632f3481e7e9dcb7d2d345d08d39db26114f5f80cb9e61f42a44"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/docs/primitive-ownership.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/docs/primitive-ownership.md.source",
+      "sha256": "156881f8143903f7f42189d7ea2c95a086f5949d703d42654addcb585ce64578"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/docs/development-state.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/docs/development-state.md.source",
+      "sha256": "dc939d71820a701df14c83cc95ee3c766004dd5a1a6b55c1e2da70dfaeb0e83f"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/docs/ownership.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/docs/ownership.md.source",
+      "sha256": "b3cd92cbc9dd995587988fb89fe789ebdcf67d3bd4d74dcb5bb857cc8eac3bb0"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/docs/design.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/docs/design.md.source",
+      "sha256": "5e907e0c384eff308357a1ba29e44f2d8aaf3370efb9eab9aca9d6dda22cf315"
+    },
+    "/private/tmp/fwp-main-docs-remote-pre123/docs/concurrency.md": {
+      "source": "scripts/roadmap-recovery/main-docs-remote-pre123/docs/concurrency.md.source",
+      "sha256": "a14cc48731fff6340993abcd979fd9d864dc04d3760d6d678afd9d34359fa960"
+    },
+    "/private/tmp/fwp-restore-roadmap-recovery.py": {
+      "source": "scripts/roadmap-recovery/restore-roadmap-recovery.py",
+      "sha256": "00a9a0b33a7ed5def075b832dc307edd59441ee44de7de856554a1da7a427b95"
+    },
+    "/private/tmp/fwp-validate-restoration-on-runner.py": {
+      "source": "scripts/roadmap-recovery/validate-restoration-on-runner.py",
+      "sha256": "77829762cdcd492c4719f8967c4bdc67f2f006df0e24692cc82f15395ab53776"
+    },
+    "/private/tmp/fwp-publish-source-preparation-update.py": {
+      "source": "scripts/roadmap-recovery/publish-source-preparation-update.py",
+      "sha256": "47de978dac239a54de68cbbf3f9de9632ec7f2a90de954f71915d77458811d3c"
+    },
+    "/private/tmp/fwp-numerical-production-publication.json": {
+      "source": "scripts/roadmap-recovery/numerical-production-publication.json",
+      "sha256": "9193d58c0e3ee761a8a128427809b30acc20c2161453d5f475ed98e1f749f023"
+    },
+    "/private/tmp/fwp-numerical-production-initial-publication.json": {
+      "source": "scripts/roadmap-recovery/numerical-production-initial-publication.json",
+      "sha256": "01e190cb9a978dda14030d60bf4e1c60b6234820cf5659eadbd88c8699a9366e"
+    },
+    "/private/tmp/fwp-numerical-production-files.json": {
+      "source": "scripts/roadmap-recovery/numerical-production-files.json",
+      "sha256": "f815f73459512204ba4f6a661fd448ad8b7ee23e0cf8ea59c2461f42fb32c019"
+    },
+    "/private/tmp/fwp-numerical-loop-control-production-update.json": {
+      "source": "scripts/roadmap-recovery/numerical-loop-control-production-update.json",
+      "sha256": "f48f3aee060f2df75b440ae7fc424a3462aaa74125bc2d19339a0010cc160ff5"
+    },
+    "/private/tmp/fwp-merge-numerical-kernels.py": {
+      "source": "scripts/roadmap-recovery/merge-numerical-kernels.py",
+      "sha256": "e1c0392da27296500b0bfdb274081b46d78dbf6b8a87757497748efe4f277a75"
+    },
+    "/private/tmp/fwp-audit-accepted-numerical-source-on-runner.py": {
+      "source": "scripts/roadmap-recovery/audit-accepted-numerical-source-on-runner.py",
+      "sha256": "7196e35cc6f9fccc14be47a9fe76bf6910402271cbe82b7ddef27bfb32f8fa91"
+    },
+    "/private/tmp/fwp-publish-accepted-numerical-source-audit.py": {
+      "source": "scripts/roadmap-recovery/publish-accepted-numerical-source-audit.py",
+      "sha256": "d535d8578062243bb50b7adf1b94c0ae5de8da70d1dab73ec01d7b36982c28a5"
+    },
+    "/private/tmp/fwp-download-accepted-numerical-source.py": {
+      "source": "scripts/roadmap-recovery/download-accepted-numerical-source.py",
+      "sha256": "808ba7872a541445991684ae0325407173ed3ffa09026ccce53b4ac3e46db193"
+    },
+    "/private/tmp/fwp-numeric-storage-merge-proof.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-merge-proof.json",
+      "sha256": "54356639bb292baddd793ef950665dab4bb74335021ea717cc9974ecd212820c"
+    },
+    "/private/tmp/fwp-numeric-storage-final-gate-proof.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-final-gate-proof.json",
+      "sha256": "9d5250aa1dc01c1a07f31fad8d76c57767b9d8a9cf959924608b7c55136e0cf8"
+    },
+    "/private/tmp/fwp-numeric-storage-signed-payload.txt": {
+      "source": "scripts/roadmap-recovery/numeric-storage-signed-payload.txt",
+      "sha256": "f5d37a16eccd32b5ec40408102684ca5009e436fdc8a55c345e1b8d6a1aca921"
+    },
+    "/private/tmp/fwp-download-loop-ownership-platform.py": {
+      "source": "scripts/roadmap-recovery/download-loop-ownership-platform.py",
+      "sha256": "896c3ffda286edd248c77d77a373ba3c97d20a3fc215dccadff9ffa3d24a9d74"
+    },
+    "/private/tmp/fwp-download-numerical-platform.py": {
+      "source": "scripts/roadmap-recovery/download-numerical-platform.py",
+      "sha256": "0fecceeef74a0e1e8b1defc5c3e75b2f61b1f0b5214460737ad76e4c8df29862"
+    },
+    "/private/tmp/fwp-measure-numerical-kernels.py": {
+      "source": "scripts/roadmap-recovery/measure-numerical-kernels.py",
+      "sha256": "a253fa1d0fdb7de68de3d6b08d16921487d59feb3029ad3e553b7244d93670a1"
+    },
+    "/private/tmp/fwp-summarize-numeric-array-fusion.py": {
+      "source": "scripts/roadmap-recovery/summarize-numeric-array-fusion.py",
+      "sha256": "6a6a52fc169749f0a6eddb2daa7c75e85ebccf99d8226a9eaa850015f91f2ba4"
+    },
+    "/private/tmp/fwp-fetch-scalar-unwind-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-scalar-unwind-restoration.py",
+      "sha256": "60c93d0fbe74a0bd40be7d25b9c503d4f809f98e19eeff3bf49684c30bbfbfe9"
+    },
+    "/private/tmp/fwp-scalar-unwind-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/scalar-unwind-recovery-checkpoint.json",
+      "sha256": "3165347389a94e98f615e6b28e3f0c10cc08c380c255b210b8dcf4c84e4063a2"
+    },
+    "/private/tmp/fwp-scalar-unwind-publication.json": {
+      "source": "scripts/roadmap-recovery/scalar-unwind-publication.json",
+      "sha256": "4b9d479176b686ddd605c1914821d134a9b0f9af4cbc20c6ffe3475b35e98028"
+    },
+    "/private/tmp/fwp-lookup-unwind-publication.json": {
+      "source": "scripts/roadmap-recovery/lookup-unwind-publication.json",
+      "sha256": "4aaf768e05f34e132e24d8e53a93f38c7d1a7c4ec50feafe967180dd8edf0bca"
+    },
+    "/private/tmp/fwp-const-descriptors-publication.json": {
+      "source": "scripts/roadmap-recovery/const-descriptors-publication.json",
+      "sha256": "50c21783939b423f8d0dee16846d353fae7c574b53549c07d8cbb4d1cbd90c3c"
+    },
+    "/private/tmp/fwp-arc-preparation-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-preparation-publication.json",
+      "sha256": "98fe3a3d088afe4104a149caf4d4d24b2dcde01b96d37c8cd949cfc22987fe46"
+    },
+    "/private/tmp/fwp-arc-checker-fix-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-checker-fix-publication.json",
+      "sha256": "e18668041380ec111bafbfd6c2a47dbd22d40af765541e437c8757a989cdf1d1"
+    },
+    "/private/tmp/fwp-arc-step-descriptor-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-step-descriptor-publication.json",
+      "sha256": "680a1830cc57ae7632a3a13483effc318950974264406c688657dcda685f1cb1"
+    },
+    "/private/tmp/fwp-arc-ledger-fix-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-ledger-fix-publication.json",
+      "sha256": "b0033383d96c574f61bbe7c139749d4b6039a71d36ec3b9342734008cbb1f7fe"
+    },
+    "/private/tmp/fwp-arc-ledger-fix-files.json": {
+      "source": "scripts/roadmap-recovery/arc-ledger-fix-files.json",
+      "sha256": "34018858b1ffe585171853e2b5bdf0c7ee9c76dd2434a2abb6d95a2590d641ff"
+    },
+    "/private/tmp/fwp-scalar-borrow-reuse-publication.json": {
+      "source": "scripts/roadmap-recovery/scalar-borrow-reuse-publication.json",
+      "sha256": "c9f4f2092952fa1ca78a0b7fc2fe135af1e9e0bc5a08ae92eb3ae73172267523"
+    },
+    "/private/tmp/fwp-pr127-macos-arm-failure.log": {
+      "source": "scripts/roadmap-recovery/pr127-macos-arm-failure.log",
+      "sha256": "e33ea728ca5fe0bd9a580a432eeebc4d530449223ba968288c43e8c8e1e650a6"
+    },
+    "/private/tmp/fwp-arc-initial-failure.log": {
+      "source": "scripts/roadmap-recovery/arc-initial-failure.log",
+      "sha256": "3dae8f9bdac60f7c1c20b9f5bb06717467f5eba40fb639b44e947870c52f25c1"
+    },
+    "/private/tmp/fwp-arc-first-native-failure.log": {
+      "source": "scripts/roadmap-recovery/arc-first-native-failure.log",
+      "sha256": "7c8d25941037fc7bf0a587f8864a2d08fb06faf712093263e786f4110a8912a9"
+    },
+    "/private/tmp/fwp-arc-step-native-failure.log": {
+      "source": "scripts/roadmap-recovery/arc-step-native-failure.log",
+      "sha256": "710610ecc3c900e22b9b0749b1ae091ee139877a5afd73d18f819acf9dae3c90"
+    },
+    "/private/tmp/fwp-numerical-production-workflow-with-loops.yml": {
+      "source": "scripts/roadmap-recovery/numerical-production-workflow-with-loops.yml",
+      "sha256": "7ca745d03b325d9a57788e7bb9ede309330ce67555ddb4b4483211647604fd5e"
+    },
+    "/private/tmp/fwp-roadmap-closure-map.json": {
+      "source": "scripts/roadmap-recovery/current-map.json",
+      "sha256": "9b984f5768fc0bdc4f346a1ae7dfe0984b7ad7300f0307b6461071f679e25c5b"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/format-files.json": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/format-files.json",
+      "sha256": "e7791e8650a854e90586f31254425fcc853a9c64e23cd4bd8b0932cd958c79bd"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/ir.rs": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/ir.rs",
+      "sha256": "ee43937e51156a4fef7d243ab13ffe44c1bbad3cbe189c3622334c0aea46d604"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/arc_corpus.rs": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/arc_corpus.rs",
+      "sha256": "1007384e80dda9beef6ad588179a1d2bb32879412adceb372b5a220aac8f1c35"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/complete-files.json": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/complete-files.json",
+      "sha256": "03eb176b62c083f4e4e11eb16f81fbe0b9b7bcf9e17518bbdbf2e48682110937"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/mono.rs": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/mono.rs",
+      "sha256": "42b306467f9af6d5391d7352dc633eb733630c9b4d3e02d35173b82a5c732231"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/eligibility-files.json": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/eligibility-files.json",
+      "sha256": "0b29b652507fc226fd6ad7fff1068c432a6188cafde5d980f23917204bd1892e"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/complete-preparation.yml": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/complete-preparation.yml",
+      "sha256": "0c0d9aae81d1949d704446ed9a1771df9b9c1caa6f6cbbf081daffd2e9bda6ff"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/fwp_rt_prims.c": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/fwp_rt_prims.c",
+      "sha256": "0da930d1ba4699953795bf917ea3cabd7be1e39e5077e173d4fcb3409d1df5bd"
+    },
+    "/private/tmp/fwp-scalar-borrow-reuse-evidence/rc.rs": {
+      "source": "scripts/roadmap-recovery/scalar-borrow-reuse-evidence/rc.rs",
+      "sha256": "7e846f6ca4f89d9ec6efc37a0b5aec3696407af81ba4c314e7de2f5e9e4e7e12"
+    },
+    "/private/tmp/fwp-scalar-borrow-reuse-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/scalar-borrow-reuse-evidence/download.json",
+      "sha256": "34e27aa19810ae4bce86d25c98c2abe5b3090dce8a441b17fc1f224936cf3aec"
+    },
+    "/private/tmp/fwp-const-descriptors-platform-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/const-descriptors-platform-evidence/download.json",
+      "sha256": "6e14a8d829d237db5232218122a297d27c23292e7b87082e4fde0d859b2c3b5a"
+    },
+    "/private/tmp/fwp-arc-platform-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/arc-platform-evidence/download.json",
+      "sha256": "2cacb512cdbe099304297eb5b46ba32692cc26af78c478d07070c145821f69f7"
+    },
+    "/private/tmp/fwp-arc-corpus-failure/corpus-failed-case_of_case.c": {
+      "source": "scripts/roadmap-recovery/arc-corpus-failure/corpus-failed-case_of_case.c",
+      "sha256": "73fe7daf1da3ea2db8bbff42c9040303993ad5c932e940479441d19ecdbd4dab"
+    },
+    "/private/tmp/fwp-arc-corpus-failure/corpus.txt": {
+      "source": "scripts/roadmap-recovery/arc-corpus-failure/corpus.txt",
+      "sha256": "d7827bd55cac6c358846b567390b11afc67eac87d547cdf851f9dc0ac73ea853"
+    },
+    "/private/tmp/fwp-verified-current-ownership-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-current-ownership-restoration/recovery-restoration.json",
+      "sha256": "cebd13c73d2a4e07e1912174c2e2b06bc42793619c5579c86fefc7c8ab325907"
+    },
+    "/private/tmp/fwp-verified-current-ownership-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-current-ownership-restoration/validation.json",
+      "sha256": "bc199ad555fcc7fc3c4aef8505cbdefe394c6d93049ed9981a8a25eb724f06b5"
+    },
+    "/private/tmp/fwp-verified-current-ownership-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-current-ownership-restoration/proof.json",
+      "sha256": "ab6ba7e8740c8a59feed61523bae2c5dbbfeda6d48ac04bf780e6b6941b35a87"
+    },
+    "/private/tmp/fwp-arc-eligibility-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-eligibility-publication.json",
+      "sha256": "7a715f6f25d155cd849dc707dad14aec676be89e4ac81978e59bf4bc095d5c54"
+    },
+    "/private/tmp/fwp-arc-format-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-format-publication.json",
+      "sha256": "aa04ba3f9dd742ff4e1d39ebafc6e4e95b6adfb640756205ff0e9ad48781bc0d"
+    },
+    "/private/tmp/fwp-complete-ownership-publication.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-publication.json",
+      "sha256": "2207bf5ebc8e06f93d8bb17288d0af6668a69567e0aac99bca1acfcc6207c03a"
+    },
+    "/private/tmp/fwp-scalar-reuse-production-update.json": {
+      "source": "scripts/roadmap-recovery/scalar-reuse-production-update.json",
+      "sha256": "48ec8080294702108b4e624eddc0a93d79cd65789d963a0399a03b281c76ff3a"
+    },
+    "/private/tmp/fwp-numerical-production-workflow-with-reuse.yml": {
+      "source": "scripts/roadmap-recovery/numerical-production-workflow-with-reuse.yml",
+      "sha256": "4e3c78709a455c9b968c8b112bca7a4c47e3909a19625ad6906bba911032aadf"
+    },
+    "/private/tmp/fwp-pr127-superseded-reuse-ci.json": {
+      "source": "scripts/roadmap-recovery/pr127-superseded-reuse-ci.json",
+      "sha256": "c1fde554dd686708244d72c6a0780c1e1e78fe569c754ff14ceabc35ad93f842"
+    },
+    "/private/tmp/fwp-current-ownership-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/current-ownership-recovery-checkpoint.json",
+      "sha256": "859de449981395961d534fa5638de920d1f717fd81f587e9b8e33cbb978c6868"
+    },
+    "/private/tmp/fwp-arc-eligibility-failure.log": {
+      "source": "scripts/roadmap-recovery/arc-eligibility-failure.log",
+      "sha256": "799096da82a756672bc0bbdb29847141f6a78598a3aed9c045ca44cab6384b1b"
+    },
+    "/private/tmp/fwp-download-const-descriptors-platform.py": {
+      "source": "scripts/roadmap-recovery/download-const-descriptors-platform.py",
+      "sha256": "dd1612314098b5563b0857c1a285a4cd282e28c8bb58853513e3823a30c4d244"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/opt.rs": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/opt.rs",
+      "sha256": "f25a4f6400c8d7b210c5a526dd63eadb12d45e9ae6c3e744907e7b5a673b4372"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/typed-aggregate-files.json": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/typed-aggregate-files.json",
+      "sha256": "5273f31b06adcb5dfc0a960d24b7c9fa7b1eb5ee452490954cd607d030b6b735"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/corpus-diagnostics-files.json": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/corpus-diagnostics-files.json",
+      "sha256": "ddd15f4b5a50c1d0619b86006357cf90bef297baf5c5d6c8304157ee6578a9e4"
+    },
+    "/private/tmp/fwp-arc-full-corpus-failure/corpus.txt": {
+      "source": "scripts/roadmap-recovery/arc-full-corpus-failure/corpus.txt",
+      "sha256": "aa28418516c45b0288fe194053ac28e0d27bb100945d6e97047ff57618fe6d11"
+    },
+    "/private/tmp/fwp-arc-full-corpus-failure/corpus-failed-traits.c": {
+      "source": "scripts/roadmap-recovery/arc-full-corpus-failure/corpus-failed-traits.c",
+      "sha256": "5d9a787c6a820e99a469f6aa866db07ba69e915f1953e492e9dc3d005b43cecb"
+    },
+    "/private/tmp/fwp-arc-full-corpus-failure/corpus-failed-optimizer.c": {
+      "source": "scripts/roadmap-recovery/arc-full-corpus-failure/corpus-failed-optimizer.c",
+      "sha256": "c44b444c96776003d2b671c7e821a57e0112c50b3348973cad8d1b1031897a7c"
+    },
+    "/private/tmp/fwp-verified-arc-corpus-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-arc-corpus-restoration/recovery-restoration.json",
+      "sha256": "54e4f3f0e5425621190eb73c96f3e4633723c32722056c3e049c5846e1d748cb"
+    },
+    "/private/tmp/fwp-verified-arc-corpus-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-arc-corpus-restoration/validation.json",
+      "sha256": "6cf11be8f1bafa90f2c5b85dcd2a857e4e9888967fa9dc741526436393c359f9"
+    },
+    "/private/tmp/fwp-verified-arc-corpus-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-arc-corpus-restoration/proof.json",
+      "sha256": "55d39c6850f34f88227f771912174226deb8bc95c5791f7cb9535d0610c8a77c"
+    },
+    "/private/tmp/fwp-arc-typed-aggregate-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-typed-aggregate-publication.json",
+      "sha256": "0e13ca09ff25c61703d5b74892845e721a982d4933ef11e41231dd1f39f27c35"
+    },
+    "/private/tmp/fwp-arc-corpus-diagnostics-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-corpus-diagnostics-publication.json",
+      "sha256": "bb0095776f8470a7921e2c1151ee18f7034080715bf9ba248a282ffd09f4bbf6"
+    },
+    "/private/tmp/fwp-arc-traits-diagnostic-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-traits-diagnostic-publication.json",
+      "sha256": "cf7de70b2d088ed90681f1ac1811408a0c513b7829bc5fc674c1655cdb63c9a5"
+    },
+    "/private/tmp/fwp-arc-traits-diagnostic.c": {
+      "source": "scripts/roadmap-recovery/arc-traits-diagnostic.c",
+      "sha256": "a22e8680ba614d2ea0ccd83c4538915d2ff77a1224cad0a9512f21bce4f7b102"
+    },
+    "/private/tmp/fwp-arc-traits-diagnostic.yml": {
+      "source": "scripts/roadmap-recovery/arc-traits-diagnostic.yml",
+      "sha256": "75239c73df9348ad682d50b9ec876aa1bfc91e9e648f7020dc68f49f4d498e57"
+    },
+    "/private/tmp/fwp-arc-traits-diagnostic.log": {
+      "source": "scripts/roadmap-recovery/arc-traits-diagnostic.log",
+      "sha256": "88a7c556c5c86cd79aa3c9d05c6f385ba4e33197e9cf5ec0db8f1bdc4f8ee36e"
+    },
+    "/private/tmp/fwp-arc-corpus-diagnostics-linux-failure.log": {
+      "source": "scripts/roadmap-recovery/arc-corpus-diagnostics-linux-failure.log",
+      "sha256": "f4a6fc478ef1aff9ab28c9bc8c27c50b9b11754e237d5f3310b9d8fca749128d"
+    },
+    "/private/tmp/fwp-arc-format-linux-failure.log": {
+      "source": "scripts/roadmap-recovery/arc-format-linux-failure.log",
+      "sha256": "3716eb95a68a5870a2e521aa574dc31be2fc1441035862d83805ec2fa07bad38"
+    },
+    "/private/tmp/fwp-arc-format-corpus.txt": {
+      "source": "scripts/roadmap-recovery/arc-format-corpus.txt",
+      "sha256": "8c07f4c5c287a337327e3761f4092e905fe971aa53d67f413942e99d57a56d3c"
+    },
+    "/private/tmp/fwp-arc-corpus-recovery-repair.json": {
+      "source": "scripts/roadmap-recovery/arc-corpus-recovery-repair.json",
+      "sha256": "fbec70817f2cf2958841ae4e9eb1cbf25dbfd2bcacd3a04176a40909fff0088e"
+    },
+    "/private/tmp/fwp-arc-corpus-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/arc-corpus-recovery-checkpoint.json",
+      "sha256": "68c12d48fe3c264a9b78eab3c760b68db3f11c2b4ca2c546c4f237057ec9fa3e"
+    },
+    "/private/tmp/fwp-fetch-arc-corpus-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-arc-corpus-restoration.py",
+      "sha256": "3ab2ecee32bbb2d9fda98f171a8693729afc2b79b49c86d6d6b7849e56e964fb"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/lowered-eligibility-files.json": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/lowered-eligibility-files.json",
+      "sha256": "00f0f695c2093cd40a0cb2b1695d03d0fb36079c3b6a05c643a47330d1b77b1d"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-baseline/download.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-baseline/download.json",
+      "sha256": "12a9669875d358f3c9017b65634760c47bf8430859a68081e78fc6c61e6a3d44"
+    },
+    "/private/tmp/fwp-complete-arc-platform-baseline/download.json": {
+      "source": "scripts/roadmap-recovery/complete-arc-platform-baseline/download.json",
+      "sha256": "49bac485e5e14aa4aebfe4bb02b82af4c45cca0f7b935b7af6d9ffe8f366bf18"
+    },
+    "/private/tmp/fwp-complete-arc-platform-baseline/macos-15-intel/corpus.txt": {
+      "source": "scripts/roadmap-recovery/complete-arc-platform-baseline/macos-15-intel/corpus.txt",
+      "sha256": "8ecf6a605b546140cb6fcb8a7f3a467332bb56c4a50aff1aa0588ef7e41aad7f"
+    },
+    "/private/tmp/fwp-complete-arc-platform-baseline/macos-15/corpus.txt": {
+      "source": "scripts/roadmap-recovery/complete-arc-platform-baseline/macos-15/corpus.txt",
+      "sha256": "8ecf6a605b546140cb6fcb8a7f3a467332bb56c4a50aff1aa0588ef7e41aad7f"
+    },
+    "/private/tmp/fwp-complete-arc-platform-baseline/ubuntu-latest/corpus.txt": {
+      "source": "scripts/roadmap-recovery/complete-arc-platform-baseline/ubuntu-latest/corpus.txt",
+      "sha256": "8ecf6a605b546140cb6fcb8a7f3a467332bb56c4a50aff1aa0588ef7e41aad7f"
+    },
+    "/private/tmp/fwp-accepted-numerical-source/phase4-acceptance.json": {
+      "source": "scripts/roadmap-recovery/accepted-numerical-source/phase4-acceptance.json",
+      "sha256": "6406d83cb6ca09baec829792374146e77dc04f64998e57119a31a288cd34b4cd"
+    },
+    "/private/tmp/fwp-accepted-numerical-source/download.json": {
+      "source": "scripts/roadmap-recovery/accepted-numerical-source/download.json",
+      "sha256": "c12c3799040bf1e959ceb20516340979dea33f210d34fce6f6c038d7a40ecd69"
+    },
+    "/private/tmp/fwp-accepted-numerical-source/fallback-review.json": {
+      "source": "scripts/roadmap-recovery/accepted-numerical-source/fallback-review.json",
+      "sha256": "c440c3b0e4dd2a2d07e714b40455a2f8679931aa5f5c93a1aac7db1bdfd710e9"
+    },
+    "/private/tmp/fwp-accepted-numerical-source/signed-payload.txt": {
+      "source": "scripts/roadmap-recovery/accepted-numerical-source/signed-payload.txt",
+      "sha256": "9d56af9315e11d9e48b6359b0981795cb4a3cb078abc06105fd9d312ff4fbd9e"
+    },
+    "/private/tmp/fwp-accepted-numerical-source/inventory.json": {
+      "source": "scripts/roadmap-recovery/accepted-numerical-source/inventory.json",
+      "sha256": "324ae1cfa3daaa0e3c7962ea2ac3ebe53ed7f821fd93228ca808fd491bbe9ba3"
+    },
+    "/private/tmp/fwp-verified-typed-aggregate-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-typed-aggregate-restoration/recovery-restoration.json",
+      "sha256": "73c9798ed12243872b7e11a8e1810b254fd95ca94bdf5cc49c3262f17947af8a"
+    },
+    "/private/tmp/fwp-verified-typed-aggregate-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-typed-aggregate-restoration/validation.json",
+      "sha256": "19dcf806a723415d3bff4ba319da76bebe442daf04357af8ee43f95b0bac136e"
+    },
+    "/private/tmp/fwp-verified-typed-aggregate-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-typed-aggregate-restoration/proof.json",
+      "sha256": "3aef9da61583b3eaaeb86e04a193f4653dacff0cc28dbc097496c5c7a6ecda2f"
+    },
+    "/private/tmp/fwp-ownership-production-draft/numerics.yml": {
+      "source": "scripts/roadmap-recovery/ownership-production-draft/numerics.yml",
+      "sha256": "7b494d56f0ab6b29a5d30325ddc4122fd0469568d1e0b4d949f24c223d0deb04"
+    },
+    "/private/tmp/fwp-ownership-production-draft/array_fusion_allocation_probe.c": {
+      "source": "scripts/roadmap-recovery/ownership-production-draft/array_fusion_allocation_probe.c",
+      "sha256": "39fbe1164fd7b388987a292836ee7aa8a52ff4265f769c3afd1340f4eb25f4eb"
+    },
+    "/private/tmp/fwp-ownership-production-draft/fixture-source.json": {
+      "source": "scripts/roadmap-recovery/ownership-production-draft/fixture-source.json",
+      "sha256": "05d20e718555ab9f941a251585148dd12760e45bc7db757409475f9b7ab06054"
+    },
+    "/private/tmp/fwp-arc-lowered-eligibility-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-lowered-eligibility-publication.json",
+      "sha256": "019a358350d13c462f0f64f318938e26ae85372e4f7661141849e612b923f67a"
+    },
+    "/private/tmp/fwp-numerical-merge-proof.json": {
+      "source": "scripts/roadmap-recovery/numerical-merge-proof.json",
+      "sha256": "533fd5eee1dd3d5ae58c0eb9545be3226370f4337d6b6f803709d1c461319a67"
+    },
+    "/private/tmp/fwp-numerical-final-gate-proof.json": {
+      "source": "scripts/roadmap-recovery/numerical-final-gate-proof.json",
+      "sha256": "bcd679699c6507a0d3623246da8fc44d9d564a026fde585d2271ee7dcd7b7f8e"
+    },
+    "/private/tmp/fwp-numerical-signed-payload.txt": {
+      "source": "scripts/roadmap-recovery/numerical-signed-payload.txt",
+      "sha256": "9d56af9315e11d9e48b6359b0981795cb4a3cb078abc06105fd9d312ff4fbd9e"
+    },
+    "/private/tmp/fwp-accepted-numerical-source-audit-publication.json": {
+      "source": "scripts/roadmap-recovery/accepted-numerical-source-audit-publication.json",
+      "sha256": "97c663856318356ee118d6db1962d3bb30c004fdb6c130331343ad6b1db3bcde"
+    },
+    "/private/tmp/fwp-main127-duplicate-ci-status.json": {
+      "source": "scripts/roadmap-recovery/main127-duplicate-ci-status.json",
+      "sha256": "ca13d258fcad2a2b0824d41e1a30396edb616bccc123b88b7a78528ed15ed02b"
+    },
+    "/private/tmp/fwp-ownership-production-files.json": {
+      "source": "scripts/roadmap-recovery/ownership-production-files.json",
+      "sha256": "d2c238b623ef45e1a06b836562d2b65f237df90e60021fa5049c4d0649367b0f"
+    },
+    "/private/tmp/fwp-publish-ownership-production.py": {
+      "source": "scripts/roadmap-recovery/publish-ownership-production.py",
+      "sha256": "f3764358f155e33e954b4aadb692279b495907b467219b746b20214096679abc"
+    },
+    "/private/tmp/fwp-merge-ownership-bundle.py": {
+      "source": "scripts/roadmap-recovery/merge-ownership-bundle.py",
+      "sha256": "9f858f872933ebcd5739ca0dcc0a04d650465f499a27b1624cc315ae6ff7900c"
+    },
+    "/private/tmp/fwp-audit-accepted-ownership-source-on-runner.py": {
+      "source": "scripts/roadmap-recovery/audit-accepted-ownership-source-on-runner.py",
+      "sha256": "063d887ebe5b5dcfba08ef0933e18759e77dbcae643e66a982eca91e6569c4c7"
+    },
+    "/private/tmp/fwp-publish-accepted-ownership-source-audit.py": {
+      "source": "scripts/roadmap-recovery/publish-accepted-ownership-source-audit.py",
+      "sha256": "0b0258e98223fcfa94ecaec00089cbdcdcd29b2588a9555e1c202260c024c3c3"
+    },
+    "/private/tmp/fwp-download-accepted-ownership-source.py": {
+      "source": "scripts/roadmap-recovery/download-accepted-ownership-source.py",
+      "sha256": "9af5dce8b42573d9720775db383648aee4d45629ce890b256ca19dbb28e71b80"
+    },
+    "/private/tmp/fwp-download-complete-ownership-platform.py": {
+      "source": "scripts/roadmap-recovery/download-complete-ownership-platform.py",
+      "sha256": "691a861fac410885af35bb3b0efc1800a5575c15624f51c665dc20c17e96e6d3"
+    },
+    "/private/tmp/fwp-download-complete-arc-platform.py": {
+      "source": "scripts/roadmap-recovery/download-complete-arc-platform.py",
+      "sha256": "a2ce55706dae20f600c1ebe90a4fe609329cd2c0194841b9b8777019bf9f34b0"
+    },
+    "/private/tmp/fwp-download-complete-ownership-baseline.py": {
+      "source": "scripts/roadmap-recovery/download-complete-ownership-baseline.py",
+      "sha256": "235134171b4853cfc0fa7574696d4f9f735d4c251c41a159362c6cba5b2f3aec"
+    },
+    "/private/tmp/fwp-download-complete-arc-baseline.py": {
+      "source": "scripts/roadmap-recovery/download-complete-arc-baseline.py",
+      "sha256": "2b5b993f37d6385d497c3f349f463fbc1e005395be1ab4c552c38dcaa610819a"
+    },
+    "/private/tmp/fwp-write-ownership-measurements.py": {
+      "source": "scripts/roadmap-recovery/write-ownership-measurements.py",
+      "sha256": "020cec500df831f51b143c77bf62b2a1fbd6e830821055f96a58ae5547974393"
+    },
+    "/private/tmp/fwp-fetch-typed-aggregate-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-typed-aggregate-restoration.py",
+      "sha256": "8888dddc6fc5ff9ae174e3546c007d043bc65394e445e6d10af7d46529b863d4"
+    },
+    "/private/tmp/fwp-typed-aggregate-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/typed-aggregate-recovery-checkpoint.json",
+      "sha256": "d983df83fcee1fcbc72d909e2c3c419a3fa499a9130dfbfecf284f477ca378ab"
+    },
+    "/private/tmp/fwp-publish-final-ownership-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-final-ownership-recovery.py",
+      "sha256": "76ea6161f637619a5e2eb970221909554df550efe7c8f80863046b778d2929a5"
+    },
+    "/private/tmp/fwp-publish-type-context-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-type-context-recovery.py",
+      "sha256": "47940f62427e42683609303fcb725eae7d4b8d57bb560bb2159ceeab4e6d5705"
+    },
+    "/private/tmp/fwp-final-ownership-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/final-ownership-recovery-checkpoint.json",
+      "sha256": "f39139476520852f166041d3e7434895f467d066c96a61f8d2535fb571145b87"
+    },
+    "/private/tmp/fwp-fetch-final-ownership-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-final-ownership-restoration.py",
+      "sha256": "02ee22c7e849f200f81bb9cebad5b7ed4f4e6d3df88792f90fd2ac1d4fca5a58"
+    },
+    "/private/tmp/fwp-arc-step-types-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-step-types-publication.json",
+      "sha256": "e48f974402888f734272157bc9fcbf8024bc7ebe6af6203faaf0362aaad2544c"
+    },
+    "/private/tmp/fwp-arc-constant-types-publication.json": {
+      "source": "scripts/roadmap-recovery/arc-constant-types-publication.json",
+      "sha256": "ba20a601df20364119581981c8a0a8de0cd7a19c13186b9ca4fdbee64ba78080"
+    },
+    "/private/tmp/fwp-lowered-arc-linux-corpus.txt": {
+      "source": "scripts/roadmap-recovery/lowered-arc-linux-corpus.txt",
+      "sha256": "843dc712d1064137d4138b5b046687f609cb57d7a9f171f75071610460d6e1bf"
+    },
+    "/private/tmp/fwp-lowered-arc-linux-corpus-proof.json": {
+      "source": "scripts/roadmap-recovery/lowered-arc-linux-corpus-proof.json",
+      "sha256": "b975725328c993d876966febab1afd2d8eb47a3bd729dd20672c276f5dcae35c"
+    },
+    "/private/tmp/fwp-verified-final-ownership-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-final-ownership-restoration/recovery-restoration.json",
+      "sha256": "e635874821c61358f6d5b44a62f0670298e5c0793e11073cb5b8f5650cff5ba7"
+    },
+    "/private/tmp/fwp-verified-final-ownership-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-final-ownership-restoration/validation.json",
+      "sha256": "7585e7d38f7cef2981f0c9d785c52cca866048dc96835173ed5f2c2f6832ac46"
+    },
+    "/private/tmp/fwp-verified-final-ownership-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-final-ownership-restoration/proof.json",
+      "sha256": "23f069d4a8f9cd4aac5e5a4033e7e6fe6d53b3e2660f31597fe08ed5f57bbd40"
+    },
+    "/private/tmp/fwp-arc-step-type-failure/types-comptime.txt": {
+      "source": "scripts/roadmap-recovery/arc-step-type-failure/types-comptime.txt",
+      "sha256": "b21f967ebf51b353f055430073b2f1d2b5086dfbe63472d4901d08c25ac3b69a"
+    },
+    "/private/tmp/fwp-arc-step-type-failure/corpus.txt": {
+      "source": "scripts/roadmap-recovery/arc-step-type-failure/corpus.txt",
+      "sha256": "8e9a6179c48da20430f731d0a5727163a8d9dec525426622c990f9428c09dff9"
+    },
+    "/private/tmp/fwp-arc-step-type-failure/types-basics.txt": {
+      "source": "scripts/roadmap-recovery/arc-step-type-failure/types-basics.txt",
+      "sha256": "88a2beb10b4d1a8a49a7aa70ea34ce43b34ef77b09da516df63453b6fc1e639f"
+    },
+    "/private/tmp/fwp-arc-step-type-failure/linux.log": {
+      "source": "scripts/roadmap-recovery/arc-step-type-failure/linux.log",
+      "sha256": "86e6ecb5abdcb261115b97e22820d4a706e445d0382685a0d16e7a508e9aa751"
+    },
+    "/private/tmp/fwp-arc-step-type-failure/types-fusion_lists.txt": {
+      "source": "scripts/roadmap-recovery/arc-step-type-failure/types-fusion_lists.txt",
+      "sha256": "40544cb92a606b428db3de9e1be366496060b229654854e51fa9bd1c17fb4388"
+    },
+    "/private/tmp/fwp-arc-step-type-failure/types-fusion_iter.txt": {
+      "source": "scripts/roadmap-recovery/arc-step-type-failure/types-fusion_iter.txt",
+      "sha256": "c94459b152035c9f7cb3e18258074b20f17976e02796877beaa1c0155d0a4c01"
+    },
+    "/private/tmp/fwp-arc-step-type-failure/proof.json": {
+      "source": "scripts/roadmap-recovery/arc-step-type-failure/proof.json",
+      "sha256": "7c769a51d396a3d5e69cfa5e1c6428d1134868aa3660039c38386647346d2111"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/fuse.rs": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/fuse.rs",
+      "sha256": "6da37ccd886b82038c9c00477ec1928c4e48050f49136dc658e562f1daa52740"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/type-context-files.json": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/type-context-files.json",
+      "sha256": "530f8e1b9ce498de2bc1105042f5af9880b8226af5391dd483418948ac669039"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/type-context-preparation.yml": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/type-context-preparation.yml",
+      "sha256": "2e1c9473fa18b60a00567236cd1d7e9bf1ed799d434d77c74f2505fcd5c9a7a6"
+    },
+    "/private/tmp/fwp-phase6-arc-draft/constant-types-files.json": {
+      "source": "scripts/roadmap-recovery/phase6-arc-draft/constant-types-files.json",
+      "sha256": "aa9f080399a086732f01fd50f796ea3797de21843fa59ca30e152371518f9dd7"
+    },
+    "/private/tmp/fwp-publish-pr128-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-pr128-recovery.py",
+      "sha256": "bf3d80766b1e1e0171fef9ff450cc91a09d7d637e6d103eab33bf1f94f7ad7f2"
+    },
+    "/private/tmp/fwp-type-context-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/type-context-recovery-checkpoint.json",
+      "sha256": "e6fc4cf75bc7985bbac05557cd1a72e3a85f1e0f630a64ad8bdfc998e11793b9"
+    },
+    "/private/tmp/fwp-fetch-type-context-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-type-context-restoration.py",
+      "sha256": "0e02cfea8a8eb0bb76220acb32c6c8e52fe7caecc7e865b1cf93cde64009a211"
+    },
+    "/private/tmp/fwp-ownership-production-publication.json": {
+      "source": "scripts/roadmap-recovery/ownership-production-publication.json",
+      "sha256": "5cf80197b73a29029899bb4cd2f2e1306dfabb568021b3c87bf3a309ad1a7135"
+    },
+    "/private/tmp/fwp-verified-type-context-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-type-context-restoration/recovery-restoration.json",
+      "sha256": "6dc26d86800e68a9ae6d88f9ba7eabbdcd972ace294111b7a18d109e9a37bf88"
+    },
+    "/private/tmp/fwp-verified-type-context-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-type-context-restoration/validation.json",
+      "sha256": "4c4f08caaba95907b3b9356e442de31fe618b58e769fd74a90e68976780506e8"
+    },
+    "/private/tmp/fwp-verified-type-context-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-type-context-restoration/proof.json",
+      "sha256": "ca7e1ba7f23647c5154b0b1de9a6fdfa642fdec0f7f4f1c1ff3e9a1c50951ffd"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/download.json",
+      "sha256": "73f2458292ddcd05a2f4f6b097bdd16ec4903ae6025e15dfd0b31c1080151396"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/permanent-1-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/permanent-1-O1.json",
+      "sha256": "d683fc4db0975983eaabcc384a1b202f11da3d9c57b757f3e5d9145c26423bfa"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/matrix-0-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/matrix-0-O2.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/matrix-1-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/matrix-1-O2.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/permanent-0-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/permanent-0-O1.json",
+      "sha256": "3e283f462084bd33e57df56d3306af1b23469e065eddb7757bb8066d247ae8e1"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/comparison.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/comparison.json",
+      "sha256": "f6802f20a4f4c848284e3d98d139035edbb45b4c2a08c57edfa07ad1bb36caf5"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/permanent-0-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/permanent-0-O2.json",
+      "sha256": "3e283f462084bd33e57df56d3306af1b23469e065eddb7757bb8066d247ae8e1"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/matrix-1-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/matrix-1-O1.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/matrix-0-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/matrix-0-O1.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/permanent-1-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/permanent-1-O2.json",
+      "sha256": "4a248ef8b47b2ba028313de92b0ca4d5ca6bc6b5fa0c70999a92946188c2f53a"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/permanent-1-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/permanent-1-O1.json",
+      "sha256": "4a248ef8b47b2ba028313de92b0ca4d5ca6bc6b5fa0c70999a92946188c2f53a"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/matrix-0-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/matrix-0-O2.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/matrix-1-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/matrix-1-O2.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/permanent-0-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/permanent-0-O1.json",
+      "sha256": "3e283f462084bd33e57df56d3306af1b23469e065eddb7757bb8066d247ae8e1"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/comparison.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/comparison.json",
+      "sha256": "9d98c7653b1f932491573d76e26c688e963c94d0d1b91a27eaf4037c3c73dff6"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/permanent-0-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/permanent-0-O2.json",
+      "sha256": "3e283f462084bd33e57df56d3306af1b23469e065eddb7757bb8066d247ae8e1"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/matrix-1-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/matrix-1-O1.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/matrix-0-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/matrix-0-O1.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/permanent-1-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/permanent-1-O2.json",
+      "sha256": "4a248ef8b47b2ba028313de92b0ca4d5ca6bc6b5fa0c70999a92946188c2f53a"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/matrix-measured-0.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/matrix-measured-0.c",
+      "sha256": "167411ad109d5a1d16ebce0def46872356718f3081ecfa84009471ddc60d1589"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/permanent-1-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/permanent-1-O1.json",
+      "sha256": "d683fc4db0975983eaabcc384a1b202f11da3d9c57b757f3e5d9145c26423bfa"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/matrix-original-0.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/matrix-original-0.c",
+      "sha256": "0261f4c933c88417e8ed1ef0ced0cf5b798c53b10524121bb0edce033ca86361"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/production-0.asm": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/production-0.asm",
+      "sha256": "42c1cfcdefdec0165c2d3e792b7fa1d613b0c611642a4af82506bbbbb8ae36dc"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/production-1.asm": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/production-1.asm",
+      "sha256": "5752a03fbe489c3b31a1c93757b0536770e013907dfe875df12c763676cb9a7a"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/matrix-0-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/matrix-0-O2.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/matrix-1-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/matrix-1-O2.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/permanent-0-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/permanent-0-O1.json",
+      "sha256": "3e283f462084bd33e57df56d3306af1b23469e065eddb7757bb8066d247ae8e1"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/original-1.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/original-1.c",
+      "sha256": "e0b6e0ea2774f5c7318366c7debfbf6fe523aedc10ed7227a94726b9be9e1bfb"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/comparison.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/comparison.json",
+      "sha256": "aed8ea48c1b4a6bda452fdb8b036bc8faa17e7fd23259c52f7cb1018b57458d1"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/measured-1.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/measured-1.c",
+      "sha256": "8f38a98c5a505e09459ebd1b257408d9b050c359a1b29dff34f493c7b09841c5"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/original-0.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/original-0.c",
+      "sha256": "204d144546e19d5a888d134ce89d6b4a1cbc3174dd23dc2fd6adcfd91e1626f4"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/measured-0.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/measured-0.c",
+      "sha256": "bedc939ac4c12780650d2a768537744ea09754a54cd3125d5b5a1a685db3b4c4"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/permanent-0-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/permanent-0-O2.json",
+      "sha256": "3e283f462084bd33e57df56d3306af1b23469e065eddb7757bb8066d247ae8e1"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/matrix-measured-1.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/matrix-measured-1.c",
+      "sha256": "4550f54937917aca4e66c526b2f8b5ecf8f748b52a33ce8fb046daa6af43d0ef"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/matrix-original-1.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/matrix-original-1.c",
+      "sha256": "dd7bc829cb844e3902836c4d0726199936286bc2f508a7234ce745b5d5239334"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/matrix-1-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/matrix-1-O1.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/matrix-0-O1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/matrix-0-O1.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/permanent-1-O2.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/permanent-1-O2.json",
+      "sha256": "4a248ef8b47b2ba028313de92b0ca4d5ca6bc6b5fa0c70999a92946188c2f53a"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/autodiff_library.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/autodiff_library.rs",
+      "sha256": "03b51f5a997e7774c4abd794a48ce2505eaeedfbe5607543019df544ecc2c9a1"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/opt.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/opt.rs",
+      "sha256": "2f9666e8c98dd85156bb55a44cee68872607c6d18718b6839b0dfe62f161a18c"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/ir.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/ir.rs",
+      "sha256": "ee43937e51156a4fef7d243ab13ffe44c1bbad3cbe189c3622334c0aea46d604"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/arc_corpus.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/arc_corpus.rs",
+      "sha256": "14b7d5e38980a4747adf4f71232cb524a791d1f44bbd85339b09f29b374b4e91"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/fwp_rt_gc.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/fwp_rt_gc.c",
+      "sha256": "c560cc2459fc75fa569772c8b2203dd21cf5e4c345b2a7ef5461895828829fbd"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/ad_tape_scopes.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/ad_tape_scopes.rs",
+      "sha256": "033708cb0a1fdc33bffa3a7afdcc9a22a7e1f5bb9cad724786261e4521dd08f4"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/rc.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/rc.rs",
+      "sha256": "c12da391d5a124d423f769241ceda010ecae66c8e5034c1fca83b617e4689004"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/lib.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/lib.rs",
+      "sha256": "eedc9d1a0f1a503e197caef11af7a538e404f6d9f13d74f2e238dd783d376af7"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/numeric_array_fusion.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/numeric_array_fusion.rs",
+      "sha256": "bcccbb856a81e85e3131aa4a5866355ea7487c4968d381b935501003b5d7b703"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/ownership.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/ownership.rs",
+      "sha256": "6393eefa68cc9c931726e589b0f9eae3e36c44c88981d3ad23ff4e56a7b32273"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/mono.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/mono.rs",
+      "sha256": "921f475764cd7745ecff13592db210dbd10fe8bbd963dc75391e5be244e15467"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/fuse.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/fuse.rs",
+      "sha256": "f897bfab7369e754e6d3a2447ef5236a5ffc5ddaee6ddde920f1a2d2e304e285"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/numerics.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/numerics.rs",
+      "sha256": "eaa35e92ed162bdc79cf038884a109366e914b43f3aaa2ca186244c9d86598a9"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/fwp_rt_kernel.c",
+      "sha256": "53aa534ef189066a1f208c693ec71153baf5a31401a2dcb74b080d3ef3acd630"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/main.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/main.rs",
+      "sha256": "09583b3ceb25317143860838dc8ba9bb9de64ad22fb0265f7a291b263d7d91d9"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/arc.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/arc.rs",
+      "sha256": "0c57b7a6334d5023950f185d2d746a737638fcce88ee4f646a13445217286fa5"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/ad_tape_ownership.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/ad_tape_ownership.rs",
+      "sha256": "8cd662bc040f1dbce4819a2598ba3267acde4bed50f6b1d36e2608504227deab"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/autodiff_capacity_bounds.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/autodiff_capacity_bounds.rs",
+      "sha256": "ec0d768a145dc93c6f8cdc7069926e6b0debc4b0d2652b190d5727c756a7d45d"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/arc_execution.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/arc_execution.rs",
+      "sha256": "5ea2696354650c51b23604dc44383a98d0a613afd4a7c1899bcca42c98f032eb"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/fwp_rt_prims.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/fwp_rt_prims.c",
+      "sha256": "0da930d1ba4699953795bf917ea3cabd7be1e39e5077e173d4fcb3409d1df5bd"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/loop_ownership.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/loop_ownership.rs",
+      "sha256": "1ade12fe2d5c8fd605abbbbe4724293a79b2bbf8628e1ef7cf9e3737030edb7d"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/wasm.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/wasm.rs",
+      "sha256": "1089b048e8beda7c148a795c5d040a48a4075d827a4783c5e7ca0f616f23935b"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/blocked_matrix.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/blocked_matrix.rs",
+      "sha256": "5b6e8f252d9651cf1e94bad9705bc56b2eee832cc134c95b2c11978e971476f3"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/cgen.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/cgen.rs",
+      "sha256": "e59c3cb1e815c136fc40632cb7fe263aabdb23828038452434f1eca06e1949d9"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/autodiff_workspace.rs": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/source/autodiff_workspace.rs",
+      "sha256": "5eec560585a4c17e0b163ddc5bf8a0d9f4fd7be582178b1f7f8a14d69bb4f2c8"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/workspaces/native-O2-cache1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/workspaces/native-O2-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/workspaces/native-O2-cache0.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/workspaces/native-O2-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/workspaces/native-O1-cache0.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/workspaces/native-O1-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/workspaces/native-O1-cache1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/workspaces/native-O1-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-fwp-timing.json",
+      "sha256": "9d4fc8f336e0588c7b7a96ceae64d1c43c510626a29533463d5619cb68959489"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-fwp-timing.json",
+      "sha256": "8a8c9a472922ccec063180e5714d69e63b31334379377cbfb485c6ac9bcdfc79"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-fwp-profile.json",
+      "sha256": "6ac4bc993d5a391e4faad1be4c4976de5c6a682d90f8ef9ff08e11e17238ba23"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-fwp-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-fwp-timing-process.txt",
+      "sha256": "2d07ed173f8f2a1f902f5a2d9f52ea036e47c1b2cc5a68b82846548cc8f4eaa5"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-profile.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-profile.c",
+      "sha256": "60152d8a5bddfd9ab657b2380131c1054cb21c51419cd2ca7c05f00a93db240b"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-fwp-profile.json",
+      "sha256": "60986aae181f4a5c37ece2ea6f6096fde9355c72b5192b11ad073486c14ad87b"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-c-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-c-profile-process.txt",
+      "sha256": "f5b828ed4c1cfff104cd6e1c510c21afc6bda2a0009009f02eb9024fe961f8f2"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-c-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-c-profile.json",
+      "sha256": "91cdbdbc1a8ef3d88ae8a56ecb098bb5638308ca05fa8a9e322691f709836151"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-c-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-c-timing.json",
+      "sha256": "0ff76a9978384f26cfe751399a1c7b249ed20db5eb9cd3051120588810f23c72"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-profile.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-profile.c",
+      "sha256": "216c4159254498ea037c711d9ad296142fadde1a942e1c79550bdfae8d966fe4"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-rust-timing.json",
+      "sha256": "9b5475677ec997ad6458921589429aec05e5787e484de68b36a2158802d7cf60"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-rust-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-rust-timing-process.txt",
+      "sha256": "ac0e5e91c9971582e2d701d76dd3b367d9ecf0df72026fd0e75c1f6a168748f1"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-rust-timing.json",
+      "sha256": "f986b68cb7f9f39c4e6c8453aec782849ace947882ea6d440d4f902ca52fea0d"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/comparison.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/comparison.json",
+      "sha256": "8db3b49f919350747588b8d8e25b3e770eb1ec6d9d8c8977f61b245b60e9c0d5"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-rust-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-rust-timing-process.txt",
+      "sha256": "45e5a1b0b64c5f7ecb7610ca38fac1a0476d8dfecdf5b8cd2dec59f1a24ce90a"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-c-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-c-timing.json",
+      "sha256": "afcb9199d06b5ce6a95bf8e1fbb6831391224261bbd1a5aa67c5afa461c2f7da"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-rust-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-rust-profile-process.txt",
+      "sha256": "c629581fd5ece6632691f975001c974793f7ca1e3f5cda2a71e44ec9a372f6df"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-timing.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-timing.c",
+      "sha256": "9cd23e4ea6b8e86596ed27cac261f5bf63f03a8c987eb52693937d62127b9fd3"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-timing.asm": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-timing.asm",
+      "sha256": "dc0cb4d0b9a0c9293f88b2384c4b6fd6c741cfad46b995fdbd9feabef81ec194"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-fwp-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-fwp-profile-process.txt",
+      "sha256": "3ea87782ca4ce2275189c1d5aa8b8ef8e70731a1700a329247f2571e8f2dbace"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-c-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-c-profile-process.txt",
+      "sha256": "65ddddc635f51a6a2b09b8a9dd2346c7f6c413be3b29bb6e83e1c0e6817f6433"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-fwp-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-fwp-profile-process.txt",
+      "sha256": "32f142b5bf33a0124d899417d6d9a6d33d20c4ad85be34a50401d53aec02f2e6"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-rust-profile.json",
+      "sha256": "c73037d8be3858f1e83346f17667afddbcdeae153ca22fde4dedb217ef94685a"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-fwp-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-fwp-timing-process.txt",
+      "sha256": "aeffde1d04b514d59b6ebe33fa13c3cc3b122ef8d1a89f80ac70481ef80a80e0"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-rust-profile.json",
+      "sha256": "90430060c6d5ecdf533c0b78b1bf59d853d9b5cc34648237bf4f5589496fe3fd"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-c-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-c-profile.json",
+      "sha256": "2e991df6c8cee93e6fc89e3a8bc6014c7e1717b1bc5793b7ba7c3d5896f0b105"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-c-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-c-timing-process.txt",
+      "sha256": "89af5f109e93cb5f5d94ab27d2f5b7f0cf48971aac0e542628fd6792bdf65ddb"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-c-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/matrix-c-timing-process.txt",
+      "sha256": "8fab648f235167b22d54b6477179642856364def1562849ee3adb5b500685c57"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-rust-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-rust-profile-process.txt",
+      "sha256": "d62e2a6bc22efe01d049ceb5a6d499178e15c22e926896ded02d8b7046cdefc0"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-timing.asm": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-timing.asm",
+      "sha256": "719caeeba5024066a43a07da7e6aa25efbc9d54427a76bf9341359847ae1bc98"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/performance/array-timing.c": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/ubuntu-latest/performance/array-timing.c",
+      "sha256": "a93ffbe5d73475ff8627cca4bade900a57a7e8f55a7b1dc2a7db76ca282030df"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/workspaces/native-O2-cache1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/workspaces/native-O2-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/workspaces/native-O2-cache0.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/workspaces/native-O2-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/workspaces/native-O1-cache0.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/workspaces/native-O1-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/workspaces/native-O1-cache1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/workspaces/native-O1-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-fwp-timing.json",
+      "sha256": "2daa2ba3fae80a26b6137be96315ce508579aa3d78d1ff3b35f3bae6c6424761"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-fwp-timing.json",
+      "sha256": "4626e6e720f7f1c6f02edc7c8f984bcfe59b67169e71d6edff4793b5787bff70"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-fwp-profile.json",
+      "sha256": "7ed5dcce7779544a7610205c7b58138bba1615317167c11e56bc50b4c7abfab7"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-fwp-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-fwp-timing-process.txt",
+      "sha256": "e526e8e657b796247f3babe7d9367a5055a880bf29677bd4dd3762dfb0217a72"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-fwp-profile.json",
+      "sha256": "8a10bebc8f2bd7e47e4963b89a9f5b9648c77cdee2ccb1840a746f7f8e985975"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-c-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-c-profile-process.txt",
+      "sha256": "9c8ef674dbce80dcca84eaa5ac90924898353bef6538a16b68ef888409521178"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-c-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-c-profile.json",
+      "sha256": "a7030fc591ea5a65d801939c2a7018d0af657da591a1615d99865bf934ffc187"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-c-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-c-timing.json",
+      "sha256": "e47a8da3282ad1a3309715621e3f2ba3c8e37c8fca53fbeef10f78d4712daffa"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-rust-timing.json",
+      "sha256": "c2fd7f68202f8b731eb3e4c02c9a2c452f98f3df8e3c2aaa18b3f40a614f0363"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-rust-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-rust-timing-process.txt",
+      "sha256": "2441881b553379fb037bf56cdeae1dc873816cb656ad5204d2850968fb9c252a"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-rust-timing.json",
+      "sha256": "7e8371dc23855a37e11441ff6cc839ecbc75d7e0ed672d9da33e1c4e39794943"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/comparison.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/comparison.json",
+      "sha256": "d5451585af017fb158846e815178174223e2bfd6c1a69ecb1a9d9ef814f13b00"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-rust-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-rust-timing-process.txt",
+      "sha256": "bd9f26f83d6bacdc6743ba3917b5370dfd5430e10284d81050a292a0d06a8199"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-c-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-c-timing.json",
+      "sha256": "8345b9997fabbc5fa694463750c8e88e9dfda99d0dbfdd2c0dbddcf800ab40f4"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-rust-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-rust-profile-process.txt",
+      "sha256": "f4a99cedd4fa9a9c34642d7ee355f4de085ae66a16af4b135e6092f3fc098ab3"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-timing.asm": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-timing.asm",
+      "sha256": "f584564cd2d68de8825cc9367bfbb280a6fd5b6e0b950fe4da03679b93b747c7"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-fwp-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-fwp-profile-process.txt",
+      "sha256": "93e9172d1a806bd528adae555451c315005391767ff3634c7259abf4f76dea8e"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-c-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-c-profile-process.txt",
+      "sha256": "1dcf0f5d84b76b1298db489ec309e14868d7004b0288dc563bbd4cd05c67e29e"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-fwp-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-fwp-profile-process.txt",
+      "sha256": "188e8a05e6aa3d9a41ae479d4d1580f9c2fc395ff96633e0723bedad48aa2132"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-rust-profile.json",
+      "sha256": "d4e85869f3b429ac8410df40c1584042f418707f115b8c1ebd57776be366ec79"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-fwp-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-fwp-timing-process.txt",
+      "sha256": "da90b560dceadca79cff292a3dc478c6d713ce4450eebf1d44a66919c858f752"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-rust-profile.json",
+      "sha256": "7ebe9c34a791e3f7ac995c353887f7ecb4f33b26be7ceadccc34bc85d2ee98ef"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-c-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-c-profile.json",
+      "sha256": "29089860c79e7894be5637d5a750d2da66f43229d378f4da3fa2b6b924b49b60"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-c-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-c-timing-process.txt",
+      "sha256": "3ad9dcd522e974608dcd5848dbd499a9ada89b33a2a8793125c0135c2ca23eda"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/matrix-c-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/matrix-c-timing-process.txt",
+      "sha256": "f41a74581b23c669f0f9d0081c23914241ecc6f940824cedd4905630dd45547c"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-rust-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-rust-profile-process.txt",
+      "sha256": "66f574f907a6e50bd169e5138ceda1670b8946ed68963506c7e6568a9d50ada8"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15/performance/array-timing.asm": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15/performance/array-timing.asm",
+      "sha256": "4c17792c2ecacb2718b29615714d1312d868d9ae030953eaf23e8e9dcd80b07b"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/workspaces/native-O2-cache1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/workspaces/native-O2-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/workspaces/native-O2-cache0.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/workspaces/native-O2-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/workspaces/native-O1-cache0.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/workspaces/native-O1-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/workspaces/native-O1-cache1.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/workspaces/native-O1-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-fwp-timing.json",
+      "sha256": "29aadfa8b3af4cef77d1dec059c18a5bdcf42f7fcce2f8093884dfa8ec0c81c8"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-fwp-timing.json",
+      "sha256": "624ea00ce7be184496317460f83b82171071ec95aaa8d6e686a2be7d24d600e3"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-fwp-profile.json",
+      "sha256": "c07f0c4db133f3ce3dabe8809195082f69f43bcc2a049215fa216f4eab502f9d"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-fwp-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-fwp-timing-process.txt",
+      "sha256": "ec393d2e6fd6fa05f0d20e13d999616edb684d8bcb7715e09edac67fea57c5ff"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-fwp-profile.json",
+      "sha256": "29e3315485cc49e5adf541d16d7c13b08828e59632008d250fb9f275c7f504ad"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-c-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-c-profile-process.txt",
+      "sha256": "c905c14f94cf39b4ceec3dc970e670d2ad3176e090ba36d59bbbbc915f8cf922"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-c-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-c-profile.json",
+      "sha256": "9fbefbe0b9124d919b4806a9c39b79c74cbbbb952cbb3fd360a6c450cb92a8b7"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-c-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-c-timing.json",
+      "sha256": "58e235d5ff160d22bb598de80c414a264194f98ba7319f2fd3ecd0dff5db8219"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-rust-timing.json",
+      "sha256": "f5d063b2e739f6da8ebecd8f5a2d3fba104c31af16c9b79d57061911bf88fd75"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-rust-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-rust-timing-process.txt",
+      "sha256": "6455cbe27b79e6ffaf80431d3652378fece6510580ebb4d098a46caeb2c4878f"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-rust-timing.json",
+      "sha256": "85411e4159557c6536764cc3663d5bddc45e10f84c7630a66593a7949e59e74f"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/comparison.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/comparison.json",
+      "sha256": "f0ed871bc7701b778767599a53daf9d1374f6698320b5f868b9e1ebe78dbf810"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-rust-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-rust-timing-process.txt",
+      "sha256": "f6bc3d15025385201a55693dbca1d63b2e6373c1d973bcd64552bd590ee1b349"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-c-timing.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-c-timing.json",
+      "sha256": "6f5df6f0a78d7fa733e99fe2c2b718c7f8edfe60abe7d01fc00c509423ff187f"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-rust-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-rust-profile-process.txt",
+      "sha256": "f6bc3d15025385201a55693dbca1d63b2e6373c1d973bcd64552bd590ee1b349"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-timing.asm": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-timing.asm",
+      "sha256": "9fcedc2521c2018be7993118ecc0d75cf8b972c660f2640a990a656997604eaf"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-fwp-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-fwp-profile-process.txt",
+      "sha256": "ec393d2e6fd6fa05f0d20e13d999616edb684d8bcb7715e09edac67fea57c5ff"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-c-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-c-profile-process.txt",
+      "sha256": "40b32e189964b51960d38674f86ca48c802871d0c449090f470ed047ed46874b"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-fwp-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-fwp-profile-process.txt",
+      "sha256": "7ba41bb68ebec2b5c13e5355645fa70245603c29739694b645d97ce20f59059d"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-rust-profile.json",
+      "sha256": "a18f632d8004cb7053288ea7cd7903fe58e135fa83ed225119fef4922da8a5db"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-fwp-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-fwp-timing-process.txt",
+      "sha256": "b52ba73fc0d53ec8d8291a2cbfdf9001ae855dc023ead0f24677026b86227447"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-rust-profile.json",
+      "sha256": "bef32218712ec457ee0ecca9377363f00d2defe41984283cf51d43503e9ca690"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-c-profile.json": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-c-profile.json",
+      "sha256": "65d4b2adcae416919bf5aea02d17bba71ad8dd5a3b20246972583ec8e4418495"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-c-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-c-timing-process.txt",
+      "sha256": "4755e36429bbe527966d3ea00d5da8ddafdc8e5d9735fcacac2b9b6af87ceba7"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/matrix-c-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/matrix-c-timing-process.txt",
+      "sha256": "41db126835a6b5c18e9da41087cc9229dc6e6d39ddcf4b8f768a1c751f6cd191"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-rust-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-rust-profile-process.txt",
+      "sha256": "6455cbe27b79e6ffaf80431d3652378fece6510580ebb4d098a46caeb2c4878f"
+    },
+    "/private/tmp/fwp-complete-ownership-platform-evidence/macos-15-intel/performance/array-timing.asm": {
+      "source": "scripts/roadmap-recovery/complete-ownership-platform-evidence/macos-15-intel/performance/array-timing.asm",
+      "sha256": "57866e9c8cc923c3e4e569c78550c5ea07e835f55a8c454f6acf08c8cfa0e551"
+    },
+    "/private/tmp/fwp-complete-arc-platform-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/complete-arc-platform-evidence/download.json",
+      "sha256": "e21c49586e79430b8b6e2184d99a6cb177c8afe2a90f0fc6011ef15a8d5c6849"
+    },
+    "/private/tmp/fwp-complete-arc-platform-evidence/macos-15-intel/corpus.txt": {
+      "source": "scripts/roadmap-recovery/complete-arc-platform-evidence/macos-15-intel/corpus.txt",
+      "sha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a"
+    },
+    "/private/tmp/fwp-complete-arc-platform-evidence/macos-15/corpus.txt": {
+      "source": "scripts/roadmap-recovery/complete-arc-platform-evidence/macos-15/corpus.txt",
+      "sha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a"
+    },
+    "/private/tmp/fwp-complete-arc-platform-evidence/ubuntu-latest/corpus.txt": {
+      "source": "scripts/roadmap-recovery/complete-arc-platform-evidence/ubuntu-latest/corpus.txt",
+      "sha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a"
+    },
+    "/private/tmp/fwp-pr128-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/pr128-recovery-checkpoint.json",
+      "sha256": "d776c44b5a729fa0418869ae7c5716c96988781485db6ae774cf4d50720a42de"
+    },
+    "/private/tmp/fwp-fetch-pr128-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-pr128-restoration.py",
+      "sha256": "e6cc25054a8c0292e5a698dce93df145218474b26df46c602e576af8ecdbbc78"
+    },
+    "/private/tmp/fwp-close-roadmap-docs.py": {
+      "source": "scripts/roadmap-recovery/close-roadmap-docs.py",
+      "sha256": "c500259ee5403f8c2203322d372752a1c418bd6cddcf3919a6b673a4f38ca3b5"
+    },
+    "/private/tmp/fwp-publish-roadmap-closure.py": {
+      "source": "scripts/roadmap-recovery/publish-roadmap-closure.py",
+      "sha256": "926f42f48436b0f01ab8ed40e95cee38867b52989907e70bf1d2f555685ead3a"
+    },
+    "/private/tmp/fwp-merge-roadmap-closure.py": {
+      "source": "scripts/roadmap-recovery/merge-roadmap-closure.py",
+      "sha256": "30ff6e003e55215e5c6bda482068fcf94ff6bec82738ac30003ecf38aab6ddf2"
+    },
+    "/private/tmp/fwp-pr128-arm-failure.log": {
+      "source": "scripts/roadmap-recovery/pr128-arm-failure.log",
+      "sha256": "9961abcb0680704d611a5a20b396fccf3f1d1f4fce7903ebf48273826e0881b3"
+    },
+    "/private/tmp/fwp-variant-return-repair-publication.json": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-publication.json",
+      "sha256": "67bec855700e7688bc4ca141465ba83fb7b7743b9a7287463c3ebe81f49e8728"
+    },
+    "/private/tmp/fwp-download-variant-return-repair.py": {
+      "source": "scripts/roadmap-recovery/download-variant-return-repair.py",
+      "sha256": "e5abb7836af902f023af0e8d9663f114e1b624eceb96ffa78557fb60da3802f9"
+    },
+    "/private/tmp/fwp-collect-pr128-initial-failures.py": {
+      "source": "scripts/roadmap-recovery/collect-pr128-initial-failures.py",
+      "sha256": "1e90098610fc81adcdb525d186198825d0195e3631dfa7bf22f97ecc13b82a75"
+    },
+    "/private/tmp/fwp-publish-variant-return-pr-repair.py": {
+      "source": "scripts/roadmap-recovery/publish-variant-return-pr-repair.py",
+      "sha256": "d211c66524bd09def0eac3ee1d4d88be6e51e194395c9d7f4db0fdbdc55b4590"
+    },
+    "/private/tmp/fwp-verified-pr128-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-pr128-restoration/recovery-restoration.json",
+      "sha256": "3d985579819efba801372a24b1bfa071e6c7888152fa38d95018dc52f7111417"
+    },
+    "/private/tmp/fwp-verified-pr128-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-pr128-restoration/validation.json",
+      "sha256": "f40f20b5d19800e8b0b3466568a8288ef5641a624f0b0f2f9e725d35ef81e4a3"
+    },
+    "/private/tmp/fwp-verified-pr128-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-pr128-restoration/proof.json",
+      "sha256": "e8d7b476048f7d79f1686acf1d5f38a30828e1c42c33cb4f8620abae5ca191df"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/preparation.yml": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/preparation.yml",
+      "sha256": "b4c2d6b1d68c67714df95bcb95c1bb24883fefe82211e44e381482967fca4119"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/files.json": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/files.json",
+      "sha256": "7697f012208f50afe5116c26ed5307cc2d0ed01dd96fd20cb4a3d4887dcdb6d0"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/cgen.rs": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/cgen.rs",
+      "sha256": "b056131563e1d3962f7a59fe685f9b71f307624e56cf51c70472505b657644c6"
+    },
+    "/private/tmp/fwp-variant-return-repair-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-evidence/download.json",
+      "sha256": "1f99b7d1f4d34d0ec8b8c7cb92c0c0e5ef659b0343b22f3ac315a5d23e4869db"
+    },
+    "/private/tmp/fwp-variant-return-repair-evidence/ubuntu-latest/arc/corpus.txt": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-evidence/ubuntu-latest/arc/corpus.txt",
+      "sha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a"
+    },
+    "/private/tmp/fwp-variant-return-repair-evidence/macos-15/arc/corpus.txt": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-evidence/macos-15/arc/corpus.txt",
+      "sha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a"
+    },
+    "/private/tmp/fwp-variant-return-repair-evidence/macos-15-intel/arc/corpus.txt": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-evidence/macos-15-intel/arc/corpus.txt",
+      "sha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a"
+    },
+    "/private/tmp/fwp-download-aggregate-return-repair.py": {
+      "source": "scripts/roadmap-recovery/download-aggregate-return-repair.py",
+      "sha256": "54b6f85ab781d050944b3bfd41170672a1821747385c3eb4f239f46a52f6b686"
+    },
+    "/private/tmp/fwp-pr128-initial-ci-failures.json": {
+      "source": "scripts/roadmap-recovery/pr128-initial-ci-failures.json",
+      "sha256": "1fa252292ad0dcbb07fb8442df588f04e324d55e3b9f22da47c161358a488bd3"
+    },
+    "/private/tmp/fwp-aggregate-return-linux-failure.log": {
+      "source": "scripts/roadmap-recovery/aggregate-return-linux-failure.log",
+      "sha256": "1b7c7b028d7dc90db4073b4ae86b4af8a4e3fa98866414afcaeff071e5026748"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-publication.json": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-publication.json",
+      "sha256": "6b1f87ea6a7b13e8cc694d15f9e6a03183a0bdb1c2a2e53e893189e86d4f634d"
+    },
+    "/private/tmp/fwp-wide-return-control-publication.json": {
+      "source": "scripts/roadmap-recovery/wide-return-control-publication.json",
+      "sha256": "89db8d49592f74da047151d9f45de1375de34a45be4be8d6b97bdd9412246557"
+    },
+    "/private/tmp/fwp-wide-origin-inspection-publication.json": {
+      "source": "scripts/roadmap-recovery/wide-origin-inspection-publication.json",
+      "sha256": "50e0899d2df5554a541c3d8548561341e0ce77504fa181f5e55a1493b682d593"
+    },
+    "/private/tmp/fwp-record-field-alias-publication.json": {
+      "source": "scripts/roadmap-recovery/record-field-alias-publication.json",
+      "sha256": "e74f11f6b3a163a45fcbe978ccb20616ecfd1aee4232c31e756d577f47608cec"
+    },
+    "/private/tmp/fwp-owned-record-alias-publication.json": {
+      "source": "scripts/roadmap-recovery/owned-record-alias-publication.json",
+      "sha256": "d89010d96231e3afd7bd1160ff3afe93867c297b73acee8df0ec6a8f333a3040"
+    },
+    "/private/tmp/fwp-owned-record-supported-input-publication.json": {
+      "source": "scripts/roadmap-recovery/owned-record-supported-input-publication.json",
+      "sha256": "b05214a03d398f1f1300285dfe8576faeb88a2a0973fd6658830ac607b9b1adb"
+    },
+    "/private/tmp/fwp-variant-return-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/variant-return-recovery-checkpoint.json",
+      "sha256": "e2a75b564ae3d958aeb136c6d4b923ee66b6f06c295919833d9da6923ba0abed"
+    },
+    "/private/tmp/fwp-fetch-variant-return-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-variant-return-restoration.py",
+      "sha256": "458d4e635b2f2387f78ef925d77dfdf7e6bf94fa3449e688a31908f0d93d3a6e"
+    },
+    "/private/tmp/fwp-pr128-failed-job-114795516120.log": {
+      "source": "scripts/roadmap-recovery/pr128-failed-job-114795516120.log",
+      "sha256": "9961abcb0680704d611a5a20b396fccf3f1d1f4fce7903ebf48273826e0881b3"
+    },
+    "/private/tmp/fwp-pr128-failed-job-114795516125.log": {
+      "source": "scripts/roadmap-recovery/pr128-failed-job-114795516125.log",
+      "sha256": "9edb5b04ae20ee53b0fe4fbd54d778e4dcf5d7e25082971371f9d16dc84ce4a4"
+    },
+    "/private/tmp/fwp-pr128-failed-job-114795516119.log": {
+      "source": "scripts/roadmap-recovery/pr128-failed-job-114795516119.log",
+      "sha256": "b9433a758792ae374c7a7cb00120a44b03b7c30fe5e2349f5f5f0b6eea32f500"
+    },
+    "/private/tmp/fwp-wide-origin-inspection/wide_alias.ir": {
+      "source": "scripts/roadmap-recovery/wide-origin-inspection/wide_alias.ir",
+      "sha256": "91be9ff4c9173eeb4d6ee5fc6d3ef1e473aa8e9d64c3a275a09433b1b76d2d64"
+    },
+    "/private/tmp/fwp-wide-origin-inspection/wide_alias.c": {
+      "source": "scripts/roadmap-recovery/wide-origin-inspection/wide_alias.c",
+      "sha256": "8c13548cda9820a2a4045f01ae35dff61e1d317be80cfbb5a427971b19ff5b7a"
+    },
+    "/private/tmp/fwp-wide-origin-inspection/wide.c": {
+      "source": "scripts/roadmap-recovery/wide-origin-inspection/wide.c",
+      "sha256": "0cd45db428f277286e7147c9d32996ec5a95f4794ac0e7a923faaeb372561582"
+    },
+    "/private/tmp/fwp-wide-origin-inspection/wide.ir": {
+      "source": "scripts/roadmap-recovery/wide-origin-inspection/wide.ir",
+      "sha256": "03a3c9753f1051e67d662feb761bb076083171abf152cde1d0fd041b18a50aa7"
+    },
+    "/private/tmp/fwp-wide-origin-inspection/proof.json": {
+      "source": "scripts/roadmap-recovery/wide-origin-inspection/proof.json",
+      "sha256": "c05d7cc5a4f857dec52019efa25068cb224fdeb82b0261d5723cb24cd48ec29a"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/inspect-files.json": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/inspect-files.json",
+      "sha256": "425e44061323fa52ac5c1bd6d2caca7a14038dbcdc25e322ea03644a315841bd"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/wide-control-files.json": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/wide-control-files.json",
+      "sha256": "228fe86c56cb09ca03604d9a31ebb4104fce063c8ae99f3d4308ba36b1cf2a68"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/aggregate-files.json": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/aggregate-files.json",
+      "sha256": "ab750dc464144dc35beb89ea73ec238e949d29593123e92f9e1cc099bd49857a"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/aggregate-preparation.yml": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/aggregate-preparation.yml",
+      "sha256": "48a3141c8e41025da45392725c356c4d12b2a9bc43a3f03b5983a9cfac3772ea"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/original-stack-sources.json": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/original-stack-sources.json",
+      "sha256": "66e3a8ca02e277f45e7f3223e0ff3209babc7ab33759ecd8325eb980fd513f9f"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/inspect.yml": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/inspect.yml",
+      "sha256": "e97de7e22191387a2c4b6ff615ca48ac84fde43666e4175c318132cdb955ba10"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/stack.rs": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/stack.rs",
+      "sha256": "7229fa3e85a2324364fb2fb49d01f9ad54d222a0e8d3ce5cb876420bbbc205c4"
+    },
+    "/private/tmp/fwp-variant-return-repair-draft/wide_alias.fwp": {
+      "source": "scripts/roadmap-recovery/variant-return-repair-draft/wide_alias.fwp",
+      "sha256": "f7e85f0af45d64197f1c9efc14915c1030106b2fa0f344d0a5ae16cb13c123f1"
+    },
+    "/private/tmp/fwp-verified-variant-return-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-variant-return-restoration/recovery-restoration.json",
+      "sha256": "b3110f9868f0a1258437d75df54be1f0d98442551c3c2d625a241ea29e5068a4"
+    },
+    "/private/tmp/fwp-verified-variant-return-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-variant-return-restoration/validation.json",
+      "sha256": "14d82d83d6fd50da2ca4cb9a22010d156e1e67aa655b9c27074999a5f1e39ac9"
+    },
+    "/private/tmp/fwp-verified-variant-return-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-variant-return-restoration/proof.json",
+      "sha256": "d77d22724acb32c44fd8aeb8b9a5c07783022d8aa07ec8c49596df85f401c8c0"
+    },
+    "/private/tmp/fwp-aggregate-alias-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/aggregate-alias-recovery-checkpoint.json",
+      "sha256": "6de7705aa7b6c0d80bf712c79bfc307a550f926d055b0e33aa7fa91048e9a700"
+    },
+    "/private/tmp/fwp-fetch-aggregate-alias-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-aggregate-alias-restoration.py",
+      "sha256": "15ad1e59b22a11ea842f3085b7aff527a2c5f720918bbd454e82f46c0a41782b"
+    },
+    "/private/tmp/fwp-owned-record-alias-linux-failure.log": {
+      "source": "scripts/roadmap-recovery/owned-record-alias-linux-failure.log",
+      "sha256": "16daf40d659ec1b7ab0c2968424f9f257921c9eaad92aac6034e6e55aac0bf93"
+    },
+    "/private/tmp/fwp-owned-record-effect-publication.json": {
+      "source": "scripts/roadmap-recovery/owned-record-effect-publication.json",
+      "sha256": "3987e6d7a69c855c6f64c1458c2a17a7f29b9ed43a73fabc6bcbb2446a509ed1"
+    },
+    "/private/tmp/fwp-variant-return-pr-repair-publication.json": {
+      "source": "scripts/roadmap-recovery/variant-return-pr-repair-publication.json",
+      "sha256": "78023985df4a0846e3185740f305b431a203de2ce8c4844b19e104d39b318742"
+    },
+    "/private/tmp/fwp-ownership-production-initial-publication.json": {
+      "source": "scripts/roadmap-recovery/ownership-production-initial-publication.json",
+      "sha256": "9bf2401b820c8bf8fb6b033f9864dee4caf01904ec02cb80ae5ac13e611c1e4b"
+    },
+    "/private/tmp/fwp-current-roadmap-check.py": {
+      "source": "scripts/roadmap-recovery/current-roadmap-check.py",
+      "sha256": "8316fc018dec55860af366f57a7d2db66f95e607e3c816fe92c850a24a9aaa70"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/download.json",
+      "sha256": "d844fd2fc1e779c3ca474fe24af0e90709d4a3ea8ac84834b3abf08e24a542be"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/digits-1.stats": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/digits-1.stats",
+      "sha256": "b373754de7710b996d953371a7e49490cea49aa6e31f24f53c73232ac8ad1262"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/wide_alias.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/wide_alias.ir",
+      "sha256": "91be9ff4c9173eeb4d6ee5fc6d3ef1e473aa8e9d64c3a275a09433b1b76d2d64"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/digits-0.stats": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/digits-0.stats",
+      "sha256": "431987676f5b86ad79aa286cb1323a18bbfe9937a649b2191d25160985b38e93"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/digits-1.out": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/digits-1.out",
+      "sha256": "ad5bbf3b284e5c6eded6ecefc338fc79d793302737266ec4606ee27edf7864d8"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/digits-1.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/digits-1.ir",
+      "sha256": "35a423adafa6c7bd227ec36c80b4bb5aa4609c37f2adc087176894f0824dffc0"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/digits-0.out": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/digits-0.out",
+      "sha256": "ad5bbf3b284e5c6eded6ecefc338fc79d793302737266ec4606ee27edf7864d8"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/digits-0.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/digits-0.ir",
+      "sha256": "35a423adafa6c7bd227ec36c80b4bb5aa4609c37f2adc087176894f0824dffc0"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/wide.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/wide.ir",
+      "sha256": "03a3c9753f1051e67d662feb761bb076083171abf152cde1d0fd041b18a50aa7"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/digits-1.stats": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/digits-1.stats",
+      "sha256": "d9c3759d56ed66d74f65c01e4d92ff0a026e95ab569141384e7ba15bf2d51f25"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/wide_alias.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/wide_alias.ir",
+      "sha256": "91be9ff4c9173eeb4d6ee5fc6d3ef1e473aa8e9d64c3a275a09433b1b76d2d64"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/digits-0.stats": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/digits-0.stats",
+      "sha256": "dc3c0ff4424f20ff4737b39115a977fde19f60f014ff7cece96b9df0a4d8daed"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/digits-1.out": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/digits-1.out",
+      "sha256": "ad5bbf3b284e5c6eded6ecefc338fc79d793302737266ec4606ee27edf7864d8"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/digits-1.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/digits-1.ir",
+      "sha256": "35a423adafa6c7bd227ec36c80b4bb5aa4609c37f2adc087176894f0824dffc0"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/digits-0.out": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/digits-0.out",
+      "sha256": "ad5bbf3b284e5c6eded6ecefc338fc79d793302737266ec4606ee27edf7864d8"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/digits-0.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/digits-0.ir",
+      "sha256": "35a423adafa6c7bd227ec36c80b4bb5aa4609c37f2adc087176894f0824dffc0"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/wide.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/wide.ir",
+      "sha256": "03a3c9753f1051e67d662feb761bb076083171abf152cde1d0fd041b18a50aa7"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/digits-1.stats": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/digits-1.stats",
+      "sha256": "b33cd592b98a73b72f83ed1a6afd15c5a27b5b42060375f32707d73a5c321c1b"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/wide_alias.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/wide_alias.ir",
+      "sha256": "91be9ff4c9173eeb4d6ee5fc6d3ef1e473aa8e9d64c3a275a09433b1b76d2d64"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/digits-1.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/digits-1.c",
+      "sha256": "1e301f335b7f7ae284f33e5b368c623c73815015040863721438ce5389fcc146"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/wide_alias.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/wide_alias.c",
+      "sha256": "102f9ad3f1b5d9153a31859732b2c00728fc79c981c50df1c21367fec116d27a"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/digits-0.stats": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/digits-0.stats",
+      "sha256": "55dd9b1160b850a372d27b2895684ce9c4bce3c1d6e79d55254c218a7d2baee3"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/digits-1.out": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/digits-1.out",
+      "sha256": "ad5bbf3b284e5c6eded6ecefc338fc79d793302737266ec4606ee27edf7864d8"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/digits-1.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/digits-1.ir",
+      "sha256": "35a423adafa6c7bd227ec36c80b4bb5aa4609c37f2adc087176894f0824dffc0"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/digits-0.out": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/digits-0.out",
+      "sha256": "ad5bbf3b284e5c6eded6ecefc338fc79d793302737266ec4606ee27edf7864d8"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/digits-0.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/digits-0.c",
+      "sha256": "c3bc773a1cfbd3737f10ae86d877398ce596b645431ead04739b49355752b15c"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/digits-0.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/digits-0.ir",
+      "sha256": "35a423adafa6c7bd227ec36c80b4bb5aa4609c37f2adc087176894f0824dffc0"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/wide.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/wide.c",
+      "sha256": "0cd45db428f277286e7147c9d32996ec5a95f4794ac0e7a923faaeb372561582"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/wide.ir": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/wide.ir",
+      "sha256": "03a3c9753f1051e67d662feb761bb076083171abf152cde1d0fd041b18a50aa7"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/source/stack.rs": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/source/stack.rs",
+      "sha256": "b0adaf20412105afe2503b5987c0669709b954290fccbdc082719dec2307e853"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/source/cgen.rs": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/source/cgen.rs",
+      "sha256": "4a5a377cb9601aa2b672ec58737592aee04fb0e574fdb4600a010fe3b9a53294"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/source/wide_alias.fwp": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/source/wide_alias.fwp",
+      "sha256": "f7e85f0af45d64197f1c9efc14915c1030106b2fa0f344d0a5ae16cb13c123f1"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-1-static.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-1-static.c",
+      "sha256": "d80cdd411e043ca3706ba2f926060ca3b78e8457af778c8c414de5d1f880703f"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-1-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-1-dynamic.asm",
+      "sha256": "d83c5264f77aa81705d83d70cda5d5033d6f1560e8d3f86295b7d10981029c50"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-0-dynamic.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-0-dynamic.c",
+      "sha256": "30ab22cfc48b7c7e53567051bf4419138a98506845ceaf516b2aedce64592484"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/corpus.txt": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/corpus.txt",
+      "sha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/closures-1-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/closures-1-dynamic.asm",
+      "sha256": "01b941027a131897313a376e41ed39a04b926ba2edf824423f07ca2f57b8d31b"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/files-0-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/files-0-dynamic.asm",
+      "sha256": "61bcd568a3980df17faacdc25986f843aa0b8f54c717a7e9161cf53d1cef4046"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-1-static.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-1-static.asm",
+      "sha256": "9faab5279c58e9c4fe0b5fa6eab8918a4c72bba0ca80999571cf9fb51b43383c"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-1-dynamic.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-1-dynamic.c",
+      "sha256": "512a593b59669b1bc4adeffb69857a54c8dbb57f308c8d0d8908c393c3e7c773"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/files-0-dynamic.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/files-0-dynamic.c",
+      "sha256": "1519f71f51bc08524c3a2635276f9d2a06905aba56a0f4685b4a7e3ec777c289"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/closures-0-dynamic.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/closures-0-dynamic.c",
+      "sha256": "1f574574559d7dc6fd4d613a870440bb72537959ff6b074f11293da5104c8cc1"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-0-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/arrays-0-dynamic.asm",
+      "sha256": "cc2c300f5884ec4bb2e63c8ad09caceb163b51b5e7142412e19e139ed58bd084"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/files-1-dynamic.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/files-1-dynamic.c",
+      "sha256": "09876407d5fb265fc9a943ad3ef0716e3c8afa973548af91bc36b0441b810502"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/closures-0-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/closures-0-dynamic.asm",
+      "sha256": "f9c88c1fdcef431c39de6ba2a3f1349bad5ac29278b04c005638c0e7410a6238"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/files-1-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/files-1-dynamic.asm",
+      "sha256": "0ad0609d180ddca6991a539b9adfdd91198f518fee9c2087bbade31e0aa7528e"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/ubuntu-latest/arc/closures-1-dynamic.c": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/ubuntu-latest/arc/closures-1-dynamic.c",
+      "sha256": "cf3564b0eb640278cce48c6f1415546669f9e4e3e25efde515c7409cd3813336"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/source/wide_alias.fwp": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/source/wide_alias.fwp",
+      "sha256": "f7e85f0af45d64197f1c9efc14915c1030106b2fa0f344d0a5ae16cb13c123f1"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/arc/arrays-1-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/arc/arrays-1-dynamic.asm",
+      "sha256": "59185279d6f879dd4ce94b63065bef84023478cff41c760e6d7b9f1e65f48dc6"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/arc/corpus.txt": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/arc/corpus.txt",
+      "sha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/arc/closures-1-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/arc/closures-1-dynamic.asm",
+      "sha256": "092cd1b37b5e8e0316bea463fd4fa093cba65f6dd34d4342363f0fb31128bb9a"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/arc/files-0-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/arc/files-0-dynamic.asm",
+      "sha256": "a46cc31afbf0b1cea7dd500d1d65c9d5218be65d5951d0cc14579daa78b0e50e"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/arc/arrays-1-static.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/arc/arrays-1-static.asm",
+      "sha256": "3a6be05a7ed258cbee39f3f06ebe5f75ef3c8329e907e621b4cee28afa0e42ca"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/arc/arrays-0-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/arc/arrays-0-dynamic.asm",
+      "sha256": "5c93a1e2b432736ea1c3573b067192727366567e8e20e8c8ce1e7ee844ad5e50"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/arc/closures-0-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/arc/closures-0-dynamic.asm",
+      "sha256": "95035d329261e049e4a9684312784653d5bae3ac14f60cd2183de124046802d7"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15/arc/files-1-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15/arc/files-1-dynamic.asm",
+      "sha256": "99b51d9d1688af06e2c46e24bce45c77ab114e89e7a1a962e6681e80e1dff9fa"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/source/wide_alias.fwp": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/source/wide_alias.fwp",
+      "sha256": "f7e85f0af45d64197f1c9efc14915c1030106b2fa0f344d0a5ae16cb13c123f1"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/arc/arrays-1-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/arc/arrays-1-dynamic.asm",
+      "sha256": "3c5d08be70cd93342ef7551269d6d2cfc49ffabe33e87340056820c4ee36db7f"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/arc/corpus.txt": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/arc/corpus.txt",
+      "sha256": "ebc8dbc6d7ae5a6a55a9b1055280fce7140f1a1dac5ac20e43b13022dea1d50a"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/arc/closures-1-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/arc/closures-1-dynamic.asm",
+      "sha256": "d2fd9d2338bd9e15930ef31b41bd96892a74fe6707234f3cb70d251267a3c621"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/arc/files-0-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/arc/files-0-dynamic.asm",
+      "sha256": "03e1a491af17a69b1e1a7d9abce55f201589ba27e32fabaae1e6e10987181d5c"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/arc/arrays-1-static.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/arc/arrays-1-static.asm",
+      "sha256": "319798a751a0643218d7286f94c0449dace74e89e89b84bbcb3959e1e3ec04a5"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/arc/arrays-0-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/arc/arrays-0-dynamic.asm",
+      "sha256": "43ff02c36351ea681f7774d436c4d71390af2d1a555333fad08aca8614bef440"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/arc/closures-0-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/arc/closures-0-dynamic.asm",
+      "sha256": "603b3a7511072205679b387757c531eb3afc5abd5735e22cc410c08a4aed9adc"
+    },
+    "/private/tmp/fwp-aggregate-return-repair-evidence/macos-15-intel/arc/files-1-dynamic.asm": {
+      "source": "scripts/roadmap-recovery/aggregate-return-repair-evidence/macos-15-intel/arc/files-1-dynamic.asm",
+      "sha256": "7b527a9928a368688e9a9c9476b0b4f08e79a63453b34ad42c27eee1b0d0e7db"
+    },
+    "/private/tmp/fwp-repaired-wide-origin/wide_alias.ir": {
+      "source": "scripts/roadmap-recovery/repaired-wide-origin/wide_alias.ir",
+      "sha256": "91be9ff4c9173eeb4d6ee5fc6d3ef1e473aa8e9d64c3a275a09433b1b76d2d64"
+    },
+    "/private/tmp/fwp-repaired-wide-origin/wide_alias.c": {
+      "source": "scripts/roadmap-recovery/repaired-wide-origin/wide_alias.c",
+      "sha256": "102f9ad3f1b5d9153a31859732b2c00728fc79c981c50df1c21367fec116d27a"
+    },
+    "/private/tmp/fwp-repaired-wide-origin/proof.json": {
+      "source": "scripts/roadmap-recovery/repaired-wide-origin/proof.json",
+      "sha256": "87a1fb35ee247b10660de400cd5338346a859977f8b05af25b70230a9bdaf2c5"
+    },
+    "/private/tmp/fwp-verified-aggregate-alias-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-aggregate-alias-restoration/recovery-restoration.json",
+      "sha256": "fc3600a3a09c3c80b7f4f3470cae4beb8e8d04411f059da27f5f7f188c1aeb5d"
+    },
+    "/private/tmp/fwp-verified-aggregate-alias-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-aggregate-alias-restoration/validation.json",
+      "sha256": "0a83b0e211b3ba79e845e77857bf638042e78238b97e929f4a65f51b9a7f0be0"
+    },
+    "/private/tmp/fwp-verified-aggregate-alias-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-aggregate-alias-restoration/proof.json",
+      "sha256": "69267a5a47827af674a6d98fe11c83e5b2afdb4aee148b3ef850f31034be3eb1"
+    },
+    "/private/tmp/fwp-publish-roadmap-closure-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-roadmap-closure-recovery.py",
+      "sha256": "9428ac7dd259df5c4a1b06358b841386a5b79a20ec042324d98212d2269183e3"
+    },
+    "/private/tmp/fwp-production-repair-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/production-repair-recovery-checkpoint.json",
+      "sha256": "28ca0c1f0e065c40053e71fff019127696ac4f51279791d9f4b3e76209ca3808"
+    },
+    "/private/tmp/fwp-fetch-production-repair-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-production-repair-restoration.py",
+      "sha256": "06aeaeed3b97e2ef465f4aee314977f2f5a6a21e255af86c2d0c12f7b2252579"
+    },
+    "/private/tmp/fwp-ownership-merge-proof.json": {
+      "source": "scripts/roadmap-recovery/ownership-merge-proof.json",
+      "sha256": "b0d30d4b808767fc9ff55846e0854e97b780fa8d37f418c7db3f192b5e2f6743"
+    },
+    "/private/tmp/fwp-ownership-final-gate-proof.json": {
+      "source": "scripts/roadmap-recovery/ownership-final-gate-proof.json",
+      "sha256": "6eaed6c1f9ba3f686fda8459a4030b5ddf3bf4070c950aaa9a76992dfe620055"
+    },
+    "/private/tmp/fwp-ownership-signed-payload.txt": {
+      "source": "scripts/roadmap-recovery/ownership-signed-payload.txt",
+      "sha256": "956857f9b21ef3c46037424657016c957000ebe00aabcc4f8a6798ea2cc3ee78"
+    },
+    "/private/tmp/fwp-accepted-ownership-source-audit-publication.json": {
+      "source": "scripts/roadmap-recovery/accepted-ownership-source-audit-publication.json",
+      "sha256": "d457fe68e20510602aae4b2599005aba4e64cae171d82bf5714ee12c18b72f22"
+    },
+    "/private/tmp/fwp-main128-duplicate-ci-status.json": {
+      "source": "scripts/roadmap-recovery/main128-duplicate-ci-status.json",
+      "sha256": "e3b14c05f8e7f4c9a65e6a915c225cc82969ea0bc298cfb41c9e7e2d4084f940"
+    },
+    "/private/tmp/fwp-roadmap-docs-publication.json": {
+      "source": "scripts/roadmap-recovery/roadmap-docs-publication.json",
+      "sha256": "0c2772d9e191d0f00b908a7dc235f169ff8e03f682a1a514c7ddbff11418d55d"
+    },
+    "/private/tmp/fwp-accepted-ownership-source/phase5-6-acceptance.json": {
+      "source": "scripts/roadmap-recovery/accepted-ownership-source/phase5-6-acceptance.json",
+      "sha256": "533041d8fc1d8ef0e75984dae6b40afd604bc1a119bf9ce8a7d0a8800321600d"
+    },
+    "/private/tmp/fwp-accepted-ownership-source/download.json": {
+      "source": "scripts/roadmap-recovery/accepted-ownership-source/download.json",
+      "sha256": "a66a0d9dfc533b1e40d7c90c2653ab5947621d0c31997792309067bb2431db58"
+    },
+    "/private/tmp/fwp-accepted-ownership-source/fallback-review.json": {
+      "source": "scripts/roadmap-recovery/accepted-ownership-source/fallback-review.json",
+      "sha256": "1dd26fdf56c41c399bb8300be1555a7fe95502e186accbe689df622382e19d3d"
+    },
+    "/private/tmp/fwp-accepted-ownership-source/signed-payload.txt": {
+      "source": "scripts/roadmap-recovery/accepted-ownership-source/signed-payload.txt",
+      "sha256": "956857f9b21ef3c46037424657016c957000ebe00aabcc4f8a6798ea2cc3ee78"
+    },
+    "/private/tmp/fwp-accepted-ownership-source/inventory.json": {
+      "source": "scripts/roadmap-recovery/accepted-ownership-source/inventory.json",
+      "sha256": "95989ea3a9b3ebc87c17cf624497a503777573ef4e9f9785d50c59960df0bc88"
+    },
+    "/private/tmp/fwp-verified-production-repair-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-production-repair-restoration/recovery-restoration.json",
+      "sha256": "55b6be77f4fbaf1b78cc461f4048b10c64418de8a5910326d304a254c9de28db"
+    },
+    "/private/tmp/fwp-verified-production-repair-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-production-repair-restoration/validation.json",
+      "sha256": "cc8d3504510e794796071a87597e9669f0221955f4279b390fb846c13697ab5e"
+    },
+    "/private/tmp/fwp-verified-production-repair-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-production-repair-restoration/proof.json",
+      "sha256": "a1cc829d3d6a26d74bb81630027549a9c54bd6a199fb442cfae400a10bdc66de"
+    }
+  },
+  "stage": "Verified published source restored; no helper executed or compiler run"
+}
