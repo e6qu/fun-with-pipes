@@ -240,7 +240,7 @@ support is established, and earlier partial counters do not prove allocation par
 
 ## Numerical kernel measurements
 
-The phase4 preparation compares identical array and matrix computations in C,
+The accepted phase4 measurements compare identical array and matrix computations in C,
 Rust and generated fwp code on Linux and ARM/Intel macOS. The retained
 [measurement record](measurements/numerical-kernels-2026-10-12.json) includes
 source hashes, hardware, compiler versions, build flags, samples, allocations,
@@ -257,7 +257,7 @@ with allocator metadata excluded from charged bytes. Reserved virtual address
 space and process RSS are separate metrics. Shared-runner timing is descriptive;
 CI asserts exact results and stable allocation properties.
 
-The retained phase4 preparation allocates no array intermediates but still
+The accepted phase4 implementation allocates no array intermediates but still
 retains/releases its carried array once per element. Matrix multiplication allocates one output;
 the benchmark's public generic input boundary also builds two Matrix records.
 These remaining costs are explicit targets for phase5. Neither zero intermediate

@@ -1,0 +1,6 @@
+tree 8f5e908c8dc2a0ff60976e204d46260a27f7ee79
+parent 3a4582368f987ddb0233086be50c47995eb4ed3f
+author e6qu <adi11235@gmail.com> 1791801788 +0200
+committer GitHub <noreply@github.com> 1791801788 +0200
+
+Fuse numerical pipelines and reuse autodiff workspaces

@@ -1,0 +1,150 @@
+{
+  "accepted": "59af498c32689dc4928e3681eb90dd453d8e57ce",
+  "tested": "8eb13370945b491cced1263ced290192e903acbb",
+  "tree": "8f5e908c8dc2a0ff60976e204d46260a27f7ee79",
+  "mergedAt": "2026-10-12T10:43:08Z",
+  "gates": {
+    "CI": {
+      "run": 38231014878,
+      "jobs": [
+        {
+          "name": "test",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T10:33:25Z"
+        },
+        {
+          "name": "macos (macos-15-intel)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T10:42:28Z"
+        },
+        {
+          "name": "bench",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T09:40:36Z"
+        },
+        {
+          "name": "macos_gc (macos-15)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T09:51:38Z"
+        },
+        {
+          "name": "macos (macos-15)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T10:20:35Z"
+        },
+        {
+          "name": "macos_gc (macos-15-intel)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T09:59:51Z"
+        }
+      ]
+    },
+    "Roadmap documentation": {
+      "run": 38231014937,
+      "jobs": [
+        {
+          "name": "roadmap_docs",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T09:38:42Z"
+        }
+      ]
+    }
+  },
+  "sourceHashes": {
+    "src/fuse.rs": "beace7fcf58cd85ae5359535fdf3b8edd2e7564bc9f6e1e6e7990496e9feaa3a",
+    "src/cgen.rs": "5e088c55af881fe35aace44ed1a6466d97265ef97cf9b5429b337e4db6f1715b",
+    "runtime/fwp_rt_kernel.c": "53aa534ef189066a1f208c693ec71153baf5a31401a2dcb74b080d3ef3acd630",
+    "src/numerics.rs": "eaa35e92ed162bdc79cf038884a109366e914b43f3aaa2ca186244c9d86598a9",
+    "tests/autodiff_capacity_bounds.rs": "ec0d768a145dc93c6f8cdc7069926e6b0debc4b0d2652b190d5727c756a7d45d",
+    "tests/fixtures/autodiff_capacity_probe.c": "0cd9604ee9a98c337494dfa928d7d2732c2cf4ab1c9f9280dd264a51b8fe8aea",
+    "tests/fixtures/array_fusion_allocation_probe.c": "edd966e7e6c334ca503b965fd878b62bd0e571dc3d996b6e5926dc8beff3831b",
+    "tests/numeric_array_fusion.rs": "cf72309d8b834969796ee4df2aa2bb3b44ee887e8e6742ab6082aea55acaf79e",
+    "tests/ad_tape_ownership.rs": "8cd662bc040f1dbce4819a2598ba3267acde4bed50f6b1d36e2608504227deab",
+    "tests/ad_tape_scopes.rs": "033708cb0a1fdc33bffa3a7afdcc9a22a7e1f5bb9cad724786261e4521dd08f4",
+    "tests/autodiff_workspace.rs": "5eec560585a4c17e0b163ddc5bf8a0d9f4fd7be582178b1f7f8a14d69bb4f2c8",
+    "tests/fixtures/autodiff_workspace_probe.c": "0540bccdd8c1cf8a18b96b262bfc55ecdf58709087951c2c8ca5080b0fef4bd9",
+    "tests/fixtures/numeric_array_fusion.fwp": "0872f3876118c3603e06879ee236245089a349b0e93a764b051aa732072a8897",
+    "tests/autodiff_library.rs": "03b51f5a997e7774c4abd794a48ce2505eaeedfbe5607543019df544ecc2c9a1",
+    "tests/fixtures/autodiff_library_ledger.c": "5d24022b479f8383e21364b8b243afe94a60cc1c728b1f4b9c86085af078ca54",
+    "tests/fixtures/autodiff_library_host.c": "9e379b541410f945ae1f93cfa1af25ae7b37fd47112b7baf9d0bee84f3434d02",
+    "src/mono.rs": "5298db5b257513436c05aad52459a77b4e085167db1582cd049c448653a0d315",
+    "src/ownership.rs": "6393eefa68cc9c931726e589b0f9eae3e36c44c88981d3ad23ff4e56a7b32273",
+    "tests/blocked_matrix.rs": "5b6e8f252d9651cf1e94bad9705bc56b2eee832cc134c95b2c11978e971476f3",
+    "tests/fixtures/blocked_matrix.fwp": "095128f2464ad5bf01e8f8b606649b8be830ba0314509b58310a24ea03cd57d8",
+    "tests/wasm.rs": "1089b048e8beda7c148a795c5d040a48a4075d827a4783c5e7ca0f616f23935b",
+    "scripts/summarize-numeric-array-fusion.py": "6a6a52fc169749f0a6eddb2daa7c75e85ebccf99d8226a9eaa850015f91f2ba4",
+    "tests/fixtures/matrix_allocation_probe.c": "846288501f1f386df991ab2481f55be6d047f4faab87ae647f465e882d0c7d8e",
+    "tests/fixtures/matrix_unwind_probe.c": "4b705eb8a687f16d1ff671b7c4bd7017c0695408243c85e59fb478c50c7b649e",
+    "tests/fixtures/numerical_bench.c": "c51ab3916a9ca900c68da1b4806e38beed77215f7d17101e9059e9e95ec691f8",
+    "tests/fixtures/numerical_bench.rs": "77a4cbeecaf2ce430da436b2da431eb952255af3bc1f73287153c9ca6ffc641d",
+    "tests/fixtures/numerical_bench_native.c": "6675b40d7931a4b1f5bcc944e8d83bf4dfc4ad627a5a7dd01fc10497b3a018b5",
+    "scripts/measure-numerical-kernels.py": "a253fa1d0fdb7de68de3d6b08d16921487d59feb3029ad3e553b7244d93670a1",
+    "src/rc.rs": "7e846f6ca4f89d9ec6efc37a0b5aec3696407af81ba4c314e7de2f5e9e4e7e12",
+    ".github/workflows/numerics.yml": "4e3c78709a455c9b968c8b112bca7a4c47e3909a19625ad6906bba911032aadf",
+    "CONTRIBUTING.md": "7a00b334e94f203e209666fabe36a85ddd049bdd6f8d09195cbbd683f2ad2ead",
+    "PLAN.md": "ff59df7eb9cbbe0000db98625b0b0f1da9921c09f5384598a8683148836c2382",
+    "docs/design.md": "4a3edc3ec419f97cd21b2f7710a30d77e8dc6bdaffd37fef1408b929d5cbbfac",
+    "docs/development-state.md": "75f71e2c72a86af71d6e998b7e7364ee8b30080fe059b2e9d1907dcb88e820fc",
+    "docs/ownership.md": "a6961e94891b33376454fc166617f1a3efdac24e1df7ccb7bafa1c49e6ec0370",
+    "docs/primitive-ownership.md": "75a90b638843d641f479fde8608e40e116eb2e65b98cf3c0b6636f79a4bfff3f",
+    "docs/roadmap-queue.md": "46cd62e56271b10a6756a1b59dd2a4c6e62f878ad4188bb00fcadf5c0e4e0d18",
+    "docs/roadmap-history.md": "9553b5f856c6c61bf7f087d766b4c31c7e119f22ca21e99a369ddebff4256657",
+    "docs/reference.md": "0712f8c736bb2dd302363804aef17f2df4608e4699f8dbfd8797f50592381738",
+    "docs/concurrency.md": "a14cc48731fff6340993abcd979fd9d864dc04d3760d6d678afd9d34359fa960",
+    "docs/numerics.md": "8aba6d9401e43c24596dd91d5e60ab345ffef8a7c962a7186a6b07152e18b208",
+    "docs/measurements/numerical-kernels-2026-10-12.json": "c9f2bce067002c770bdc0321fb4310079d923403dac86355869afe55ba5916cf",
+    "tests/loop_ownership.rs": "1ade12fe2d5c8fd605abbbbe4724293a79b2bbf8628e1ef7cf9e3737030edb7d"
+  },
+  "changedPaths": [
+    ".github/workflows/numerics.yml",
+    "PLAN.md",
+    "docs/design.md",
+    "docs/development-state.md",
+    "docs/measurements/numerical-kernels-2026-10-12.json",
+    "docs/numerics.md",
+    "docs/ownership.md",
+    "docs/reference.md",
+    "docs/roadmap-history.md",
+    "runtime/fwp_rt_kernel.c",
+    "scripts/measure-numerical-kernels.py",
+    "scripts/summarize-numeric-array-fusion.py",
+    "src/cgen.rs",
+    "src/fuse.rs",
+    "src/mono.rs",
+    "src/numerics.rs",
+    "src/ownership.rs",
+    "src/rc.rs",
+    "tests/ad_tape_ownership.rs",
+    "tests/ad_tape_scopes.rs",
+    "tests/autodiff_capacity_bounds.rs",
+    "tests/autodiff_library.rs",
+    "tests/autodiff_workspace.rs",
+    "tests/blocked_matrix.rs",
+    "tests/fixtures/array_fusion_allocation_probe.c",
+    "tests/fixtures/autodiff_capacity_probe.c",
+    "tests/fixtures/autodiff_library_host.c",
+    "tests/fixtures/autodiff_library_ledger.c",
+    "tests/fixtures/autodiff_workspace_probe.c",
+    "tests/fixtures/blocked_matrix.fwp",
+    "tests/fixtures/matrix_allocation_probe.c",
+    "tests/fixtures/matrix_unwind_probe.c",
+    "tests/fixtures/numeric_array_fusion.fwp",
+    "tests/fixtures/numerical_bench.c",
+    "tests/fixtures/numerical_bench.rs",
+    "tests/fixtures/numerical_bench_native.c",
+    "tests/loop_ownership.rs",
+    "tests/numeric_array_fusion.rs",
+    "tests/wasm.rs"
+  ],
+  "signedPayloadSha256": "9d56af9315e11d9e48b6359b0981795cb4a3cb078abc06105fd9d312ff4fbd9e",
+  "subject": "Fuse numerical pipelines and reuse autodiff workspaces",
+  "status": "Actual merged-source phase4 accepted: full tested tree, signed squash and numerical kernel sources verified",
+  "scope": "Fused numeric Arrays, ordered blocked matrix kernels and bounded AD workspaces. Interpreter/native, unwind/cancellation, library unload, WASI bounds and allocation controls are included. C/Rust timings and assembly are descriptive; no tracing-free or general parity claim. Full six-job CI is reused only after complete-tree parity."
+}

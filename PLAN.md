@@ -46,21 +46,20 @@ ownership coverage and a supported cycle policy; rejection never selects tracing
 | 1 | Done: native macOS ARM/Intel support (#74) | Full platform gates; real collection; interpreter/native agreement; explicit unsupported options |
 | 2 | Done: typed ownership and explicit runtime compatibility fallbacks | Accepted merged-source coverage; callback/unwind/resource, alias, GC/reuse and reclamation controls |
 | 3 | Done: natural-width contiguous numeric storage, views, aggregate/scalar ABI and alignment | Narrow elements use natural width; fewer copies/boxes; arm64/x86-64 allocation/assembly evidence; ABI/FFI checks |
-| 4 | In progress: fused numerical loops, blocked matrices, autodiff lifetimes and reusable buffers | Correct gradients and exceptional cleanup; equivalent C/Rust workloads; fixed floating-point behavior by default |
+| 4 | Done: fused numerical loops, blocked matrices, autodiff lifetimes and reusable buffers (#127) | Correct gradients and exceptional cleanup; equivalent C/Rust workloads; fixed floating-point behavior by default |
 | 5 | In preparation: broaden ownership/performance regression evidence | Allocations, live memory, counts and collections alongside timing, hardware/compiler/flags recorded |
 | 6 | In preparation: checked native ARC execution after coverage | Supported programs reclaim without collection, including escapes/runtime boundaries; explicit cycle lifetime policy |
 
 ## Current delivery
 
-Main through PR #126 completes phases1–3. Packed numeric storage, bounded
-owner-retaining views, typed worker ABI and checked count/protocol paths pass
-all six exact-head jobs, documentation and actual merged-source acceptance.
-The handoff records exact source and proof hashes. Checked ARC execution remains in preparation until phase6 meets its criteria.
+Main through PR #127 completes phases1–4. Packed numeric storage and views,
+typed worker ABI, fused numerical kernels, guarded blocked matrices and bounded
+reusable autodiff workspaces pass all six exact-head jobs, documentation and
+actual merged-source acceptance. The scalar-borrow repair preserves in-place
+container updates. The handoff records exact source and evidence hashes.
+Checked ARC execution remains in preparation until phase6 meets its criteria.
 
-PR127 delivers fused numerical loops, guarded blocked matrices and bounded
-reusable autodiff workspaces. Its scalar-borrow repair preserves in-place
-container updates; require the complete current-head CI gate before merging.
-Then deliver phases5–6 together: independently owned loop fields, reduced unwind
+Deliver phases5–6 together: independently owned loop fields, reduced unwind
 bookkeeping, immutable descriptors, retained measurements, and checked native
 ARC eligibility with physical-reclamation and binary controls. Keep each phase's
 acceptance explicit even when sharing one production PR and full CI run.
@@ -76,11 +75,6 @@ repository. Memory changes need actual GC stress/verification and reuse checks.
 Never call skipped, queued, superseded or cancelled runs passing support.
 
 ## Concrete remaining deliveries
-
-For phase4, preserve floating-point evaluation order while fusing eligible loops
-and blocking matrices; retain the existing contraction policy. Reuse autodiff
-workspaces with scoped owners and reentrancy/cancellation controls. Compare
-equivalent C/Rust workloads with source, compiler, hardware and memory metadata.
 
 Phase5 broadens regressions across escapes, callbacks, exceptions, retained
 resources and array/view paths, recording allocation/live/count/collection data

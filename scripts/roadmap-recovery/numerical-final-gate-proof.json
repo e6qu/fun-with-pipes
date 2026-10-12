@@ -1,0 +1,1120 @@
+{
+  "pr": {
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls/127",
+    "id": 4826674398,
+    "node_id": "PR_kwDOU33zxM8AAAABH7E03g",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/pull/127",
+    "diff_url": "https://github.com/e6qu/fun-with-pipes/pull/127.diff",
+    "patch_url": "https://github.com/e6qu/fun-with-pipes/pull/127.patch",
+    "issue_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/127",
+    "number": 127,
+    "state": "open",
+    "locked": false,
+    "title": "Fuse numerical pipelines and reuse autodiff workspaces",
+    "user": {
+      "login": "e6qu",
+      "id": 2966430,
+      "node_id": "MDQ6VXNlcjI5NjY0MzA=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2966430?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/e6qu",
+      "html_url": "https://github.com/e6qu",
+      "followers_url": "https://api.github.com/users/e6qu/followers",
+      "following_url": "https://api.github.com/users/e6qu/following{/other_user}",
+      "gists_url": "https://api.github.com/users/e6qu/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/e6qu/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/e6qu/subscriptions",
+      "organizations_url": "https://api.github.com/users/e6qu/orgs",
+      "repos_url": "https://api.github.com/users/e6qu/repos",
+      "events_url": "https://api.github.com/users/e6qu/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/e6qu/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Numeric Array pipelines allocate intermediate buffers, matrix multiplication repeatedly traverses boxed values, and autodiff rebuilds private tape buffers. This bundle fuses eligible numeric pipelines, specializes valid F64 matrix shapes into ordered blocked loops, and reuses one bounded autodiff workspace. It preserves Pipe syntax, immutable values, checked traps, arithmetic order and cast-shape behavior.\n\nReference-valued borrowed fields retain their parent lifetime without temporary counts. Scalar fields finish evaluation before later consuming arguments, preserving unique array/map updates and their allocation bounds. Lookup lowering keeps original IR nodes, fixing stale loop-tail and unwind metadata. Tape capacity checks precede allocation on native and actual wasm32 targets; scope exit, traps, cancellation and dynamic library unload release private owners.\n\nValidation: the coherent Linux, ARM macOS and Intel macOS preparation passes compiler checks, original AD ownership/scopes, capacity and omission controls, matrix/view aliasing, raw interpreter comparisons and equivalent C/Rust workloads. Measurements include separate uninstrumented timings and disassembly, allocations, reference counts, live memory, collections and hardware/compiler/flag metadata. Stable allocation properties are asserted; timings have no shared-runner threshold. The docs record remaining per-element counting and platform-specific code generation, without claiming C/Rust parity or tracing-free support.\n\nFull six-job production CI and roadmap_docs must pass at the exact PR head before squash.\n",
+    "created_at": "2026-10-12T08:11:49Z",
+    "updated_at": "2026-10-12T09:36:46Z",
+    "closed_at": null,
+    "merged_at": null,
+    "merge_commit_sha": "06fc2ca6cf15fc269ef37a706e804d080904913d",
+    "assignees": [],
+    "requested_reviewers": [],
+    "requested_teams": [],
+    "labels": [],
+    "milestone": null,
+    "draft": false,
+    "commits_url": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls/127/commits",
+    "review_comments_url": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls/127/comments",
+    "review_comment_url": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls/comments{/number}",
+    "comments_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/127/comments",
+    "statuses_url": "https://api.github.com/repos/e6qu/fun-with-pipes/statuses/8eb13370945b491cced1263ced290192e903acbb",
+    "head": {
+      "label": "e6qu:numerical-kernels-and-workspaces",
+      "ref": "numerical-kernels-and-workspaces",
+      "sha": "8eb13370945b491cced1263ced290192e903acbb",
+      "user": {
+        "login": "e6qu",
+        "id": 2966430,
+        "node_id": "MDQ6VXNlcjI5NjY0MzA=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2966430?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/e6qu",
+        "html_url": "https://github.com/e6qu",
+        "followers_url": "https://api.github.com/users/e6qu/followers",
+        "following_url": "https://api.github.com/users/e6qu/following{/other_user}",
+        "gists_url": "https://api.github.com/users/e6qu/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/e6qu/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/e6qu/subscriptions",
+        "organizations_url": "https://api.github.com/users/e6qu/orgs",
+        "repos_url": "https://api.github.com/users/e6qu/repos",
+        "events_url": "https://api.github.com/users/e6qu/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/e6qu/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "repo": {
+        "id": 1400763332,
+        "node_id": "R_kgDOU33zxA",
+        "name": "fun-with-pipes",
+        "full_name": "e6qu/fun-with-pipes",
+        "private": false,
+        "owner": {
+          "login": "e6qu",
+          "id": 2966430,
+          "node_id": "MDQ6VXNlcjI5NjY0MzA=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/2966430?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/e6qu",
+          "html_url": "https://github.com/e6qu",
+          "followers_url": "https://api.github.com/users/e6qu/followers",
+          "following_url": "https://api.github.com/users/e6qu/following{/other_user}",
+          "gists_url": "https://api.github.com/users/e6qu/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/e6qu/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/e6qu/subscriptions",
+          "organizations_url": "https://api.github.com/users/e6qu/orgs",
+          "repos_url": "https://api.github.com/users/e6qu/repos",
+          "events_url": "https://api.github.com/users/e6qu/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/e6qu/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/e6qu/fun-with-pipes",
+        "description": null,
+        "fork": false,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes",
+        "forks_url": "https://api.github.com/repos/e6qu/fun-with-pipes/forks",
+        "keys_url": "https://api.github.com/repos/e6qu/fun-with-pipes/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/e6qu/fun-with-pipes/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/e6qu/fun-with-pipes/teams",
+        "hooks_url": "https://api.github.com/repos/e6qu/fun-with-pipes/hooks",
+        "issue_events_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/e6qu/fun-with-pipes/events",
+        "assignees_url": "https://api.github.com/repos/e6qu/fun-with-pipes/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/e6qu/fun-with-pipes/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/e6qu/fun-with-pipes/tags",
+        "blobs_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/e6qu/fun-with-pipes/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/e6qu/fun-with-pipes/languages",
+        "stargazers_url": "https://api.github.com/repos/e6qu/fun-with-pipes/stargazers",
+        "contributors_url": "https://api.github.com/repos/e6qu/fun-with-pipes/contributors",
+        "subscribers_url": "https://api.github.com/repos/e6qu/fun-with-pipes/subscribers",
+        "subscription_url": "https://api.github.com/repos/e6qu/fun-with-pipes/subscription",
+        "commits_url": "https://api.github.com/repos/e6qu/fun-with-pipes/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/e6qu/fun-with-pipes/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/e6qu/fun-with-pipes/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/e6qu/fun-with-pipes/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/e6qu/fun-with-pipes/merges",
+        "archive_url": "https://api.github.com/repos/e6qu/fun-with-pipes/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/e6qu/fun-with-pipes/downloads",
+        "issues_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/e6qu/fun-with-pipes/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/e6qu/fun-with-pipes/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/e6qu/fun-with-pipes/labels{/name}",
+        "releases_url": "https://api.github.com/repos/e6qu/fun-with-pipes/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/e6qu/fun-with-pipes/deployments",
+        "created_at": "2026-10-01T22:00:36Z",
+        "updated_at": "2026-10-12T06:45:23Z",
+        "pushed_at": "2026-10-12T10:42:09Z",
+        "git_url": "git://github.com/e6qu/fun-with-pipes.git",
+        "ssh_url": "git@github.com:e6qu/fun-with-pipes.git",
+        "clone_url": "https://github.com/e6qu/fun-with-pipes.git",
+        "svn_url": "https://github.com/e6qu/fun-with-pipes",
+        "homepage": null,
+        "size": 21258,
+        "stargazers_count": 0,
+        "watchers_count": 0,
+        "language": "Rust",
+        "has_issues": true,
+        "has_projects": true,
+        "has_downloads": false,
+        "has_wiki": true,
+        "has_pages": false,
+        "has_discussions": false,
+        "forks_count": 0,
+        "mirror_url": null,
+        "archived": false,
+        "disabled": false,
+        "open_issues_count": 1,
+        "license": {
+          "key": "mit",
+          "name": "MIT License",
+          "spdx_id": "MIT",
+          "url": "https://api.github.com/licenses/mit",
+          "node_id": "MDc6TGljZW5zZTEz"
+        },
+        "allow_forking": true,
+        "is_template": false,
+        "web_commit_signoff_required": false,
+        "has_pull_requests": true,
+        "pull_request_creation_policy": "all",
+        "topics": [],
+        "visibility": "public",
+        "forks": 0,
+        "open_issues": 1,
+        "watchers": 0,
+        "default_branch": "main"
+      }
+    },
+    "base": {
+      "label": "e6qu:main",
+      "ref": "main",
+      "sha": "3a4582368f987ddb0233086be50c47995eb4ed3f",
+      "user": {
+        "login": "e6qu",
+        "id": 2966430,
+        "node_id": "MDQ6VXNlcjI5NjY0MzA=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2966430?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/e6qu",
+        "html_url": "https://github.com/e6qu",
+        "followers_url": "https://api.github.com/users/e6qu/followers",
+        "following_url": "https://api.github.com/users/e6qu/following{/other_user}",
+        "gists_url": "https://api.github.com/users/e6qu/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/e6qu/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/e6qu/subscriptions",
+        "organizations_url": "https://api.github.com/users/e6qu/orgs",
+        "repos_url": "https://api.github.com/users/e6qu/repos",
+        "events_url": "https://api.github.com/users/e6qu/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/e6qu/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "repo": {
+        "id": 1400763332,
+        "node_id": "R_kgDOU33zxA",
+        "name": "fun-with-pipes",
+        "full_name": "e6qu/fun-with-pipes",
+        "private": false,
+        "owner": {
+          "login": "e6qu",
+          "id": 2966430,
+          "node_id": "MDQ6VXNlcjI5NjY0MzA=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/2966430?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/e6qu",
+          "html_url": "https://github.com/e6qu",
+          "followers_url": "https://api.github.com/users/e6qu/followers",
+          "following_url": "https://api.github.com/users/e6qu/following{/other_user}",
+          "gists_url": "https://api.github.com/users/e6qu/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/e6qu/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/e6qu/subscriptions",
+          "organizations_url": "https://api.github.com/users/e6qu/orgs",
+          "repos_url": "https://api.github.com/users/e6qu/repos",
+          "events_url": "https://api.github.com/users/e6qu/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/e6qu/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/e6qu/fun-with-pipes",
+        "description": null,
+        "fork": false,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes",
+        "forks_url": "https://api.github.com/repos/e6qu/fun-with-pipes/forks",
+        "keys_url": "https://api.github.com/repos/e6qu/fun-with-pipes/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/e6qu/fun-with-pipes/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/e6qu/fun-with-pipes/teams",
+        "hooks_url": "https://api.github.com/repos/e6qu/fun-with-pipes/hooks",
+        "issue_events_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/e6qu/fun-with-pipes/events",
+        "assignees_url": "https://api.github.com/repos/e6qu/fun-with-pipes/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/e6qu/fun-with-pipes/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/e6qu/fun-with-pipes/tags",
+        "blobs_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/e6qu/fun-with-pipes/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/e6qu/fun-with-pipes/languages",
+        "stargazers_url": "https://api.github.com/repos/e6qu/fun-with-pipes/stargazers",
+        "contributors_url": "https://api.github.com/repos/e6qu/fun-with-pipes/contributors",
+        "subscribers_url": "https://api.github.com/repos/e6qu/fun-with-pipes/subscribers",
+        "subscription_url": "https://api.github.com/repos/e6qu/fun-with-pipes/subscription",
+        "commits_url": "https://api.github.com/repos/e6qu/fun-with-pipes/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/e6qu/fun-with-pipes/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/e6qu/fun-with-pipes/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/e6qu/fun-with-pipes/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/e6qu/fun-with-pipes/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/e6qu/fun-with-pipes/merges",
+        "archive_url": "https://api.github.com/repos/e6qu/fun-with-pipes/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/e6qu/fun-with-pipes/downloads",
+        "issues_url": "https://api.github.com/repos/e6qu/fun-with-pipes/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/e6qu/fun-with-pipes/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/e6qu/fun-with-pipes/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/e6qu/fun-with-pipes/labels{/name}",
+        "releases_url": "https://api.github.com/repos/e6qu/fun-with-pipes/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/e6qu/fun-with-pipes/deployments",
+        "created_at": "2026-10-01T22:00:36Z",
+        "updated_at": "2026-10-12T06:45:23Z",
+        "pushed_at": "2026-10-12T10:42:09Z",
+        "git_url": "git://github.com/e6qu/fun-with-pipes.git",
+        "ssh_url": "git@github.com:e6qu/fun-with-pipes.git",
+        "clone_url": "https://github.com/e6qu/fun-with-pipes.git",
+        "svn_url": "https://github.com/e6qu/fun-with-pipes",
+        "homepage": null,
+        "size": 21258,
+        "stargazers_count": 0,
+        "watchers_count": 0,
+        "language": "Rust",
+        "has_issues": true,
+        "has_projects": true,
+        "has_downloads": false,
+        "has_wiki": true,
+        "has_pages": false,
+        "has_discussions": false,
+        "forks_count": 0,
+        "mirror_url": null,
+        "archived": false,
+        "disabled": false,
+        "open_issues_count": 1,
+        "license": {
+          "key": "mit",
+          "name": "MIT License",
+          "spdx_id": "MIT",
+          "url": "https://api.github.com/licenses/mit",
+          "node_id": "MDc6TGljZW5zZTEz"
+        },
+        "allow_forking": true,
+        "is_template": false,
+        "web_commit_signoff_required": false,
+        "has_pull_requests": true,
+        "pull_request_creation_policy": "all",
+        "topics": [],
+        "visibility": "public",
+        "forks": 0,
+        "open_issues": 1,
+        "watchers": 0,
+        "default_branch": "main"
+      }
+    },
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls/127"
+      },
+      "html": {
+        "href": "https://github.com/e6qu/fun-with-pipes/pull/127"
+      },
+      "issue": {
+        "href": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/127"
+      },
+      "comments": {
+        "href": "https://api.github.com/repos/e6qu/fun-with-pipes/issues/127/comments"
+      },
+      "review_comments": {
+        "href": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls/127/comments"
+      },
+      "review_comment": {
+        "href": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls/comments{/number}"
+      },
+      "commits": {
+        "href": "https://api.github.com/repos/e6qu/fun-with-pipes/pulls/127/commits"
+      },
+      "statuses": {
+        "href": "https://api.github.com/repos/e6qu/fun-with-pipes/statuses/8eb13370945b491cced1263ced290192e903acbb"
+      }
+    },
+    "author_association": "OWNER",
+    "auto_merge": null,
+    "assignee": null,
+    "active_lock_reason": null,
+    "merged": false,
+    "mergeable": true,
+    "rebaseable": true,
+    "mergeable_state": "clean",
+    "merged_by": null,
+    "comments": 0,
+    "review_comments": 0,
+    "maintainer_can_modify": false,
+    "commits": 3,
+    "additions": 6091,
+    "deletions": 431,
+    "changed_files": 39
+  },
+  "gates": {
+    "CI": {
+      "run": 38231014878,
+      "proof": {
+        "conclusion": "success",
+        "headSha": "8eb13370945b491cced1263ced290192e903acbb",
+        "jobs": [
+          {
+            "completedAt": "2026-10-12T10:33:25Z",
+            "conclusion": "success",
+            "databaseId": 114750214527,
+            "name": "test",
+            "startedAt": "2026-10-12T09:39:07Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T09:39:11Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T09:39:08Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:12Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T09:39:11Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:17Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T09:39:12Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:22Z",
+                "conclusion": "success",
+                "name": "Run actions/setup-node@v4",
+                "number": 4,
+                "startedAt": "2026-10-12T09:39:17Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:46Z",
+                "conclusion": "success",
+                "name": "WebAssembly toolchain, OpenSSL headers (TLS)",
+                "number": 5,
+                "startedAt": "2026-10-12T09:39:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:57Z",
+                "conclusion": "success",
+                "name": "aarch64 cross compiler and qemu (tests/cross.rs)",
+                "number": 6,
+                "startedAt": "2026-10-12T09:39:46Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:59Z",
+                "conclusion": "success",
+                "name": "binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)",
+                "number": 7,
+                "startedAt": "2026-10-12T09:39:57Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:40:09Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 8,
+                "startedAt": "2026-10-12T09:39:59Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:40:09Z",
+                "conclusion": "success",
+                "name": "Exact-head primitive contract inventory",
+                "number": 9,
+                "startedAt": "2026-10-12T09:40:09Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:40:11Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 10,
+                "startedAt": "2026-10-12T09:40:09Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:40:13Z",
+                "conclusion": "success",
+                "name": "fmt",
+                "number": 11,
+                "startedAt": "2026-10-12T09:40:11Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:40:22Z",
+                "conclusion": "success",
+                "name": "clippy",
+                "number": 12,
+                "startedAt": "2026-10-12T09:40:13Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:40:27Z",
+                "conclusion": "success",
+                "name": "clippy (WebAssembly build)",
+                "number": 13,
+                "startedAt": "2026-10-12T09:40:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:33:22Z",
+                "conclusion": "success",
+                "name": "test",
+                "number": 14,
+                "startedAt": "2026-10-12T09:40:27Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:33:22Z",
+                "conclusion": "skipped",
+                "name": "Preserve failed native golden binaries and C",
+                "number": 15,
+                "startedAt": "2026-10-12T10:33:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:33:22Z",
+                "conclusion": "skipped",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 16,
+                "startedAt": "2026-10-12T10:33:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:33:22Z",
+                "conclusion": "success",
+                "name": "Post Run actions/setup-node@v4",
+                "number": 31,
+                "startedAt": "2026-10-12T10:33:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:33:23Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 32,
+                "startedAt": "2026-10-12T10:33:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:33:23Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 33,
+                "startedAt": "2026-10-12T10:33:23Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38231014878/job/114750214527"
+          },
+          {
+            "completedAt": "2026-10-12T10:42:28Z",
+            "conclusion": "success",
+            "databaseId": 114750214804,
+            "name": "macos (macos-15-intel)",
+            "startedAt": "2026-10-12T09:37:13Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T09:37:16Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T09:37:13Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:37:19Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T09:37:16Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:37:41Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T09:37:19Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:37:47Z",
+                "conclusion": "success",
+                "name": "OpenSSL 3",
+                "number": 4,
+                "startedAt": "2026-10-12T09:37:41Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:37:54Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 5,
+                "startedAt": "2026-10-12T09:37:47Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:37:56Z",
+                "conclusion": "success",
+                "name": "Exact-head primitive contract inventory",
+                "number": 6,
+                "startedAt": "2026-10-12T09:37:54Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:37:57Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 7,
+                "startedAt": "2026-10-12T09:37:56Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:00Z",
+                "conclusion": "success",
+                "name": "fmt",
+                "number": 8,
+                "startedAt": "2026-10-12T09:37:57Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:39Z",
+                "conclusion": "success",
+                "name": "clippy",
+                "number": 9,
+                "startedAt": "2026-10-12T09:38:00Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:42:22Z",
+                "conclusion": "success",
+                "name": "test (GC stress golden suite runs in macos_gc)",
+                "number": 10,
+                "startedAt": "2026-10-12T09:38:39Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:42:23Z",
+                "conclusion": "skipped",
+                "name": "Preserve failed native golden binaries and C",
+                "number": 11,
+                "startedAt": "2026-10-12T10:42:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:42:23Z",
+                "conclusion": "skipped",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 12,
+                "startedAt": "2026-10-12T10:42:23Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:42:25Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 24,
+                "startedAt": "2026-10-12T10:42:23Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:42:26Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 25,
+                "startedAt": "2026-10-12T10:42:25Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38231014878/job/114750214804"
+          },
+          {
+            "completedAt": "2026-10-12T09:40:36Z",
+            "conclusion": "success",
+            "databaseId": 114750214855,
+            "name": "bench",
+            "startedAt": "2026-10-12T09:39:43Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T09:39:44Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T09:39:43Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:47Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T09:39:44Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:48Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T09:39:47Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:54Z",
+                "conclusion": "success",
+                "name": "OpenSSL headers (TLS)",
+                "number": 4,
+                "startedAt": "2026-10-12T09:39:48Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:59Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 5,
+                "startedAt": "2026-10-12T09:39:54Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:40:34Z",
+                "conclusion": "success",
+                "name": "benchmarks against C and Rust (docs/benchmarks.md)",
+                "number": 6,
+                "startedAt": "2026-10-12T09:39:59Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:40:34Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 12,
+                "startedAt": "2026-10-12T09:40:34Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:40:34Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 13,
+                "startedAt": "2026-10-12T09:40:34Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38231014878/job/114750214855"
+          },
+          {
+            "completedAt": "2026-10-12T09:51:38Z",
+            "conclusion": "success",
+            "databaseId": 114750214859,
+            "name": "macos_gc (macos-15)",
+            "startedAt": "2026-10-12T09:37:59Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T09:38:01Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T09:38:00Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:03Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T09:38:01Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:12Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T09:38:03Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:14Z",
+                "conclusion": "success",
+                "name": "OpenSSL 3",
+                "number": 4,
+                "startedAt": "2026-10-12T09:38:12Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:17Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 5,
+                "startedAt": "2026-10-12T09:38:14Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:51:33Z",
+                "conclusion": "success",
+                "name": "Full GC stress and verification golden suite",
+                "number": 6,
+                "startedAt": "2026-10-12T09:38:17Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:51:33Z",
+                "conclusion": "skipped",
+                "name": "Preserve failed GC stress binaries, C and statuses",
+                "number": 7,
+                "startedAt": "2026-10-12T09:51:33Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:51:33Z",
+                "conclusion": "skipped",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 8,
+                "startedAt": "2026-10-12T09:51:33Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:51:34Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 16,
+                "startedAt": "2026-10-12T09:51:33Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:51:36Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "startedAt": "2026-10-12T09:51:34Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38231014878/job/114750214859"
+          },
+          {
+            "completedAt": "2026-10-12T10:20:35Z",
+            "conclusion": "success",
+            "databaseId": 114750214908,
+            "name": "macos (macos-15)",
+            "startedAt": "2026-10-12T09:38:38Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T09:38:41Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T09:38:40Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:44Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T09:38:41Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:56Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T09:38:44Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:00Z",
+                "conclusion": "success",
+                "name": "OpenSSL 3",
+                "number": 4,
+                "startedAt": "2026-10-12T09:38:56Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:05Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 5,
+                "startedAt": "2026-10-12T09:39:00Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:06Z",
+                "conclusion": "success",
+                "name": "Exact-head primitive contract inventory",
+                "number": 6,
+                "startedAt": "2026-10-12T09:39:05Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:08Z",
+                "conclusion": "success",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 7,
+                "startedAt": "2026-10-12T09:39:06Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:09Z",
+                "conclusion": "success",
+                "name": "fmt",
+                "number": 8,
+                "startedAt": "2026-10-12T09:39:08Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:28Z",
+                "conclusion": "success",
+                "name": "clippy",
+                "number": 9,
+                "startedAt": "2026-10-12T09:39:09Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:20:29Z",
+                "conclusion": "success",
+                "name": "test (GC stress golden suite runs in macos_gc)",
+                "number": 10,
+                "startedAt": "2026-10-12T09:39:28Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:20:29Z",
+                "conclusion": "skipped",
+                "name": "Preserve failed native golden binaries and C",
+                "number": 11,
+                "startedAt": "2026-10-12T10:20:29Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:20:29Z",
+                "conclusion": "skipped",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 12,
+                "startedAt": "2026-10-12T10:20:29Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:20:30Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 24,
+                "startedAt": "2026-10-12T10:20:29Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T10:20:33Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 25,
+                "startedAt": "2026-10-12T10:20:30Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38231014878/job/114750214908"
+          },
+          {
+            "completedAt": "2026-10-12T09:59:51Z",
+            "conclusion": "success",
+            "databaseId": 114750215019,
+            "name": "macos_gc (macos-15-intel)",
+            "startedAt": "2026-10-12T09:38:50Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T09:38:54Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T09:38:51Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:57Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T09:38:54Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:16Z",
+                "conclusion": "success",
+                "name": "Run dtolnay/rust-toolchain@stable",
+                "number": 3,
+                "startedAt": "2026-10-12T09:38:57Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:22Z",
+                "conclusion": "success",
+                "name": "OpenSSL 3",
+                "number": 4,
+                "startedAt": "2026-10-12T09:39:16Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:39:30Z",
+                "conclusion": "success",
+                "name": "Generated standard-library docs preflight",
+                "number": 5,
+                "startedAt": "2026-10-12T09:39:22Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:59:46Z",
+                "conclusion": "success",
+                "name": "Full GC stress and verification golden suite",
+                "number": 6,
+                "startedAt": "2026-10-12T09:39:30Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:59:46Z",
+                "conclusion": "skipped",
+                "name": "Preserve failed GC stress binaries, C and statuses",
+                "number": 7,
+                "startedAt": "2026-10-12T09:59:46Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:59:46Z",
+                "conclusion": "skipped",
+                "name": "Run actions/upload-artifact@v7",
+                "number": 8,
+                "startedAt": "2026-10-12T09:59:46Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:59:48Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 16,
+                "startedAt": "2026-10-12T09:59:46Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:59:49Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "startedAt": "2026-10-12T09:59:48Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38231014878/job/114750215019"
+          }
+        ],
+        "status": "completed"
+      }
+    },
+    "Roadmap documentation": {
+      "run": 38231014937,
+      "proof": {
+        "conclusion": "success",
+        "headSha": "8eb13370945b491cced1263ced290192e903acbb",
+        "jobs": [
+          {
+            "completedAt": "2026-10-12T09:38:42Z",
+            "conclusion": "success",
+            "databaseId": 114750214091,
+            "name": "roadmap_docs",
+            "startedAt": "2026-10-12T09:38:33Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-12T09:38:34Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-12T09:38:33Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:38Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@v7",
+                "number": 2,
+                "startedAt": "2026-10-12T09:38:34Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:39Z",
+                "conclusion": "success",
+                "name": "Retain review heads for preparation references",
+                "number": 3,
+                "startedAt": "2026-10-12T09:38:38Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:39Z",
+                "conclusion": "success",
+                "name": "Documentation, immutable tags and commit messages",
+                "number": 4,
+                "startedAt": "2026-10-12T09:38:39Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:40Z",
+                "conclusion": "success",
+                "name": "Local guard sampling integration checks",
+                "number": 5,
+                "startedAt": "2026-10-12T09:38:39Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:40Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@v7",
+                "number": 10,
+                "startedAt": "2026-10-12T09:38:40Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-12T09:38:41Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 11,
+                "startedAt": "2026-10-12T09:38:40Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38231014937/job/114750214091"
+          }
+        ],
+        "status": "completed"
+      }
+    }
+  }
+}

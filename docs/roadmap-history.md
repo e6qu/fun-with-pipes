@@ -2185,3 +2185,59 @@ in /private/tmp/fwp-const-descriptors-platform-evidence. Source map:
 scalar-borrow fix into this compiler before its final bundle validation; the
 phase5-compatible RC source is fwp-scalar-borrow-reuse-draft/rc-phase5.rs.
 
+
+## Numeric storage acceptance before PR127
+
+Main is `3a4582368f987ddb0233086be50c47995eb4ed3f` (PR #126), merged 2026-10-12T06:45:18Z.
+Exact tested head `916263e7c07443bccd4f87e764ca0c3f33dc664e` passes all six jobs in
+CI38207662016 and roadmap_docs38207662006. Signed squash subject
+`Pack numeric arrays and specialize worker ABI boundaries` is one line, 56 characters,
+with no body or trailers. Its sole parent is `cbf68ea60c3b9439a117ef9d9b28b472f23dc632`;
+complete tree `e3e00f4c134a912e73c33c844a1cac17202e5fb4` matches the tested head.
+Actual merged-source audit38214129076 passes at driverb1b5372e9d7bfffe19361cbb8a2634b33f4f874f.
+Hash-verified reports: /private/tmp/fwp-accepted-numeric-source.
+
+## Phase4 delivery through PR127
+
+Verified preparation b05ba75320db7359b00af53ff0a7e43512d07406 passes all three
+platform jobs in38220639450. Formatted source agrees across Linux/ARM/Intel;
+reports and uninstrumented disassembly are in
+/private/tmp/fwp-numerical-platform-evidence. Array fusion removes intermediate
+allocation; matrix kernels allocate only the output and preserve ordered floating
+arithmetic; AD reuses a bounded512KiB workspace with checked capacities and
+unwind/unload cleanup. Permanent semantic, physical-reclamation, alias/view,
+omission, library and actual WASI controls pass. C/Rust comparison reports are
+in docs/measurements/numerical-kernels-2026-10-12.json. Timings are descriptive;
+prior failing preparations and repairs are archived in history.
+
+Before merge, PR #127 reached head8eb13370945b491cced1263ced290192e903acbb on
+numerical-kernels-and-workspaces, based on accepted main3a458236. Final gates CI38231014878 and roadmap_docs38231014937 pass. Repair publication:
+/private/tmp/fwp-scalar-reuse-production-update.json.
+The previous head d19fef9 had passing docs, bench and both macOS GC jobs. Its ARM regular macOS failed the original
+unique_arrays_are_written_in_place control: push allocates38149.4MiB with or
+without reuse. The remaining superseded jobs were cancelled after repair publication; no
+results from that failed/cancelled head count toward the new gate.
+The scalar-field borrowing optimization incorrectly holds a parent through
+an operation even when the borrowed field is an immediate scalar; consuming
+its array field then duplicates an owner and prevents in-place writes.
+Repair branch ownership-evidence-borrowed-scalar-reuse at
+70d04387f475cb3fc37ac047aebbc20dfa8c1750 passes38229871625 on all three targets. Identical formatted source/proof:
+/private/tmp/fwp-scalar-borrow-reuse-evidence.
+Only reference-valued fields extend parent borrowing; scalar field evaluation
+finishes before a later consuming argument. The original thresholds are unchanged.
+Source map: /private/tmp/fwp-scalar-borrow-reuse-draft/files.json.
+The formatted repair and manual evidence workflow regression are published;
+all seven results subsequently passed for the repaired production head. Failure log:
+/private/tmp/fwp-pr127-macos-arm-failure.log. The superseded initial-head CI38222106138 was cancelled after
+repairing the loop reclamation test's boxed-only instrumentation. Its shared
+state control now marks typed pointer fields in direct flat entries as shared;
+the original reclamation threshold and semantic checks remain unchanged.
+Publication/source hashes: /private/tmp/fwp-numerical-production-publication.json.
+The prepared fwp-merge-numerical-kernels.py requires every gate, supplies an
+explicit single-line subject/empty body and verifies signed squash/tree parity.
+Actual merged-source acceptance subsequently passed in38238135536.
+
+
+PR127 subsequently merged at59af498c after all six exact-head jobs and docs passed.
+Actual merged-source acceptance38238135536 passes. The live handoff records the
+accepted source and directs work to the phases5–6 bundle.

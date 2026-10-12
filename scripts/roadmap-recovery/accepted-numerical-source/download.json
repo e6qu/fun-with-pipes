@@ -1,0 +1,31 @@
+{
+  "run": 38238135536,
+  "driver": "a8483d40c7e4ed95831b39f36d67b3e563dc6f78",
+  "artifact": {
+    "id": 11741349119,
+    "node_id": "MDg6QXJ0aWZhY3QxMTc0MTM0OTExOQ==",
+    "name": "accepted-numerical-kernels-source",
+    "size_in_bytes": 48041,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11741349119",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11741349119/zip",
+    "expired": false,
+    "digest": "sha256:cff0088af50f40cae73f45c885f853af5074e5ee8b85433b03d3816bd79e4555",
+    "created_at": "2026-10-12T10:46:05Z",
+    "updated_at": "2026-10-12T10:46:05Z",
+    "expires_at": "2027-01-10T10:43:43Z",
+    "workflow_run": {
+      "id": 38238135536,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "ownership-evidence-accepted-numerical-kernels",
+      "head_sha": "a8483d40c7e4ed95831b39f36d67b3e563dc6f78"
+    }
+  },
+  "archiveSha256": "cff0088af50f40cae73f45c885f853af5074e5ee8b85433b03d3816bd79e4555",
+  "hashes": {
+    "phase4-acceptance.json": "6406d83cb6ca09baec829792374146e77dc04f64998e57119a31a288cd34b4cd",
+    "inventory.json": "324ae1cfa3daaa0e3c7962ea2ac3ebe53ed7f821fd93228ca808fd491bbe9ba3",
+    "fallback-review.json": "c440c3b0e4dd2a2d07e714b40455a2f8679931aa5f5c93a1aac7db1bdfd710e9",
+    "signed-payload.txt": "9d56af9315e11d9e48b6359b0981795cb4a3cb078abc06105fd9d312ff4fbd9e"
+  }
+}

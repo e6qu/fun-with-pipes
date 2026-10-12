@@ -372,7 +372,8 @@ cover the private buffers separately from the managed result array.
 
 The prepared `fwp build --gc arc` mode admits immutable typed value graphs and
 scoped File owners whose compiler/runtime ownership contracts are established.
-The checker visits monomorphic function/local types and primitive boundaries.
+The checker visits monomorphic function/local types, ownership temporaries and
+primitive boundaries after reference-count insertion.
 Ordinary calls, records, variants, captured functions and numeric containers keep
 their existing Pipe syntax and value semantics. Scalar fields finish evaluation
 before consuming later arguments; reference-valued borrowed fields retain their

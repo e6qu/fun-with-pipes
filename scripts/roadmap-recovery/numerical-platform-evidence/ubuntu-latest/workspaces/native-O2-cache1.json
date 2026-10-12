@@ -1,8 +1,0 @@
-{"profiles":[
-{"leaves":129,"nativeCalls":10,"nativeRequestedBytes":22624,"nativeLiveBytes":16480,"nativePeakBytes":16480,"cachedBytes":16384,"managedCalls":1,"managedRequestedBytes":1040,"gradientHash":"bb635d527ad2a999"},
-{"leaves":129,"nativeCalls":0,"nativeRequestedBytes":0,"nativeLiveBytes":16480,"nativePeakBytes":16480,"cachedBytes":16384,"managedCalls":1,"managedRequestedBytes":1040,"gradientHash":"bb635d527ad2a999"},
-{"leaves":257,"nativeCalls":5,"nativeRequestedBytes":32768,"nativeLiveBytes":32864,"nativePeakBytes":32864,"cachedBytes":32768,"managedCalls":1,"managedRequestedBytes":2064,"gradientHash":"ebf8a9ecfa3c5b99"},
-{"leaves":257,"nativeCalls":0,"nativeRequestedBytes":0,"nativeLiveBytes":32864,"nativePeakBytes":32864,"cachedBytes":32768,"managedCalls":1,"managedRequestedBytes":2064,"gradientHash":"ebf8a9ecfa3c5b99"},
-{"leaves":0,"nativeCalls":0,"nativeRequestedBytes":0,"nativeLiveBytes":32864,"nativePeakBytes":32864,"cachedBytes":32768,"managedCalls":1,"managedRequestedBytes":8,"gradientHash":"14650fb0739d0383"},
-{"leaves":16385,"nativeCalls":9,"nativeRequestedBytes":2883584,"nativeLiveBytes":96,"nativePeakBytes":2097248,"cachedBytes":0,"managedCalls":1,"managedRequestedBytes":131088,"gradientHash":"484089925da5f799"}],
-"cleanup":"bounded owners released after trap, cancellation, reentrancy and shutdown"}
