@@ -263,7 +263,7 @@ enum {
 typedef struct {
     const int64_t *code;
     size_t ncode;
-    const double *consts;
+    const V *consts;
     const double **inputs;
     size_t depth;
 } fwp_kernel;
@@ -280,7 +280,7 @@ static void fwp_kernel_eval(const fwp_kernel *k, size_t start, size_t len, doubl
             sp++;
             break;
         case FWP_K_CONST: {
-            double c = k->consts[ci++], *s = stack + sp * FWP_KCHUNK;
+            double c = fwp_f64(k->consts[ci++]), *s = stack + sp * FWP_KCHUNK;
             for (size_t j = 0; j < len; j++) s[j] = c;
             sp++;
             break;
@@ -428,7 +428,7 @@ static void fwp_kernel_prepare(fwp_kernel *k, V code, V consts, V inputs, size_t
     }
     size_t nin = fwp_list_len(inputs);
     if (sp != 1 || leaves != nin || nconsts != ARR(consts)->len) fwp_trap("device: malformed kernel");
-    k->consts = (const double *)ARR(consts)->d;
+    k->consts = ARR(consts)->d;
     k->depth = depth;
     k->inputs = (const double **)fwp_k_malloc((nin ? nin : 1) * sizeof(double *));
     V xs = inputs;
