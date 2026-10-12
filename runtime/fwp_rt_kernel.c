@@ -856,6 +856,8 @@ static V fwp_p_gpu_run(V src, V nv, V consts, V inputs) {
 #endif
 
 /* F64 matrix fast path: exact shape guards preserve cast/malformed fallback. */
+/* Three 32-by-32 F64 tile payloads occupy 24 KiB. */
+#define FWP_MATRIX_TILE 32
 static V fwp_p_matrix_valid_f64(V b,V a) {
     int64_t m=(int64_t)OBJ(a)->f[2],k=(int64_t)OBJ(a)->f[0];
     int64_t br=(int64_t)OBJ(b)->f[2],n=(int64_t)OBJ(b)->f[0];
@@ -873,12 +875,12 @@ static V fwp_p_matrix_mul_f64(V b,V a) {
     V result=fwp_array_typed_new(m*n,&scalar);
     fwp_cleanup cleanup;fwp_cleanup_push(&cleanup,fwp_matrix_output_release,&result);
     for(size_t z=0;z<m*n;z++)fwp_array_store(result,z,fwp_from_f64(0.0),&scalar);
-    for(size_t ib=0;n && k && ib<m;ib+=32){
-        size_t ie=m-ib<32?m:ib+32;
-        for(size_t kb=0;kb<k;kb+=32){
-            size_t ke=k-kb<32?k:kb+32;FWP_TICK();
-            for(size_t jb=0;jb<n;jb+=32){
-                size_t je=n-jb<32?n:jb+32;
+    for(size_t ib=0;n && k && ib<m;ib+=FWP_MATRIX_TILE){
+        size_t ie=m-ib<FWP_MATRIX_TILE?m:ib+FWP_MATRIX_TILE;
+        for(size_t kb=0;kb<k;kb+=FWP_MATRIX_TILE){
+            size_t ke=k-kb<FWP_MATRIX_TILE?k:kb+FWP_MATRIX_TILE;FWP_TICK();
+            for(size_t jb=0;jb<n;jb+=FWP_MATRIX_TILE){
+                size_t je=n-jb<FWP_MATRIX_TILE?n:jb+FWP_MATRIX_TILE;
                 for(size_t i=ib;i<ie;i++)for(size_t q=kb;q<ke;q++){
                     double x=fwp_f64(fwp_array_load(left,i*k+q,&scalar));
                     for(size_t j=jb;j<je;j++){
