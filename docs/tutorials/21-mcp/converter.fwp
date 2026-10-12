@@ -40,10 +40,10 @@ convert = fork from-celsius .to (fork celsius .from .value)
 # ones a cent more when it does not divide evenly.
 # args: cents people
 export split-bill : I64 -> I64 -> List[I64] ! {Error[String]}
-split-bill = curry (if
-    (.1 | le 0)
-    (const "there must be at least one person" | fail)
-    shares)
+split-bill = curry (tap (.1 | le 0 | match
+        True -> fail "there must be at least one person"
+        False -> ())
+    | shares)
 
 Split = { base: I64, extra: I64 }
 

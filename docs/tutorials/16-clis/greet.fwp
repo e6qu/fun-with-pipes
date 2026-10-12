@@ -6,8 +6,10 @@ Flags = {
 }
 
 greeting : Flags -> List[String] -> String
-greeting = curry (both (.0 | .loud) (.1 | join " " | flip concat "hello, ")
-    | if .0 (.1 | upper) .1)
+greeting =
+    curry (both (.0 | .loud) (.1 | join " " | flip concat "hello, ") | match
+        (True, _) -> upper
+        (False, _) -> id)
 
 main = () | args | cli.parse Flags { loud = False } | match
     Ok _ -> uncurry greeting | print

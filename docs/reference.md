@@ -102,6 +102,14 @@ The meaning of `|` is decided by the type of its left side: application
 for values, left-to-right composition for functions. When the type is not
 yet known, the decision is deferred until it is.
 
+### Constant functions
+
+`const value` is a function that ignores its next argument and returns
+`value`. For example, `[1, 2, 3] | map (const 7)` produces `[7, 7, 7]`.
+The literal `7` is a value, not a callback; values are not implicitly lifted
+to functions. `const (add 1)` returns a function value after ignoring one
+argument. It does not apply `add 1` or defer evaluation of its own argument.
+
 ### Pattern matching
 
 ```

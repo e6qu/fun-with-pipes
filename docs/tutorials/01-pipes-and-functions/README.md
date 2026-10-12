@@ -39,8 +39,29 @@ When a value has to go to several functions, combinators route it:
 | `flip f a b` | `f b a` |
 | `curry` / `uncurry` | convert between two arguments and a pair |
 | `tap f x` | runs `f x` for its effect and returns `x` |
+| `const value x` | ignores `x` and returns `value` |
 
 `average = fork div length sum` reads as "divide the sum by the length".
+
+## Constant functions
+
+`const` builds a function that ignores its input. `const 7` is a function;
+`7` is an integer. For example, `[1, 2, 3] | map (const 7)` produces
+`[7, 7, 7]`: `map` calls the function once for each element. Passing `7`
+directly to `map` is a type error because `map` needs a function.
+
+The name means "constant function"; it does not declare an immutable variable.
+
+The returned value can itself be a function. `const (add 1)` ignores one
+input and returns `add 1`, which still needs its numeric input. This is
+useful when an operation needs a function as data: `const (add 1) | modify`
+is a callback that ignores its input and increments the current state.
+The [effects tutorial](../04-effects/README.md) shows how state is handled.
+
+`const` does not delay evaluation of its argument. In the state callback,
+`add 1` is a pure function value; the effect happens when the callback
+reaches `modify`. Values are never implicitly converted to constant
+functions.
 
 ## The program
 

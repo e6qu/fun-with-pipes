@@ -82,3 +82,14 @@ Keep supported memory-mode boundaries and original Pipe semantics intact.
 Existing tracing-mode features remain available; ARC never switches to tracing
 when eligibility fails. Future coverage or performance work must start from the
 retained measurements and current handoff rather than an archived next action.
+
+## Requested follow-up: tacit examples
+
+Rework examples into left-to-right tacit pipelines where the branch consumes
+only the computed result. Keep `if` where branches need the original input.
+Explain `const` as an explicit constant function, including function-valued
+results and captured pattern arguments; do not introduce implicit lifting.
+Nine programs and their tutorial excerpts are updated. Focused formatting,
+type checks, 36 original/revised interpreter/native executions, constant-function
+examples and the existing README consistency test pass with the available local
+compiler. Full checks of the PR source belong on CI; see the handoff for status.

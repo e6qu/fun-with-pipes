@@ -26,7 +26,9 @@ subtotal : List[(String, I64)] -> I64
 subtotal = map priced | map .cents | sum
 
 discount-for : Bool -> Discount
-discount-for = if id (const (Percent 10)) (const NoDiscount)
+discount-for = match
+    True -> Percent 10
+    False -> NoDiscount
 
 # cents after a discount
 discounted : Discount -> I64 -> I64

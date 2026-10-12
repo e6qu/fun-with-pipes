@@ -2,16 +2,19 @@ parse-age : String -> I64 ! {Error[String]}
 parse-age = parse-int | or-fail "not a number"
 
 check-age : I64 -> I64 ! {Error[String]}
-check-age = if (lt 0) (const "negative" | fail) id
+check-age = tap (lt 0 | match
+    True -> fail "negative"
+    False -> ())
 
 age : String -> I64 ! {Error[String]}
 age = parse-age | check-age
 
 count-long : List[String] -> I64
 count-long =
-    run-state
-        0
-        (each (if (string.length | gt 3) (const (add 1) | modify) (const ())))
+    run-state 0 (each
+        (string.length | gt 3 | match
+            True -> modify (add 1)
+            False -> ()))
     | .1
 
 main = [

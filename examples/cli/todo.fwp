@@ -31,7 +31,12 @@ item = make Item {
 
 line : Item -> String
 line =
-    both (if .done (const "[x] ") (const "[ ] ")) .text | uncurry (flip concat)
+    both
+        (.done | match
+            True -> "[x] "
+            False -> "[ ] ")
+        .text
+    | uncurry (flip concat)
 
 items : Store -> List[Item] ! {FileIO, Error[IoError]}
 items = .file | if file.exists (file.read-lines | map item) (const [])
