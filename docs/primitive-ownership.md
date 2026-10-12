@@ -241,14 +241,14 @@ passed all six production gates and the documentation audit.
 The finite177-declaration/167-symbol fallback review passes against the actual
 merged source. All168 explicit contracts and remaining IR/flat boundaries are
 inventoried. Original preparation and accepted binary/GC/reuse/omission controls
-are retained in history and the immutable queue. Numeric representation and
-tracing-free eligibility remain later work; no blanket no-GC claim is established.
+are retained in history and the immutable queue. Natural-width numeric
+representation is accepted. Checked native ARC has a separate eligibility
+contract in [ownership](ownership.md); no blanket no-GC claim is established.
 
 ## Validation and limits
 
-Merged contracts through #124 passed their exact-head full platform gates.
-PR125 finite coverage and allocation-boundary changes require their final
-exact-head gates and merged-source acceptance. Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
+Merged contracts and the finite coverage review passed their exact-head full
+platform gates and actual merged-source acceptance. Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,
 GC stress/verification and reuse poisoning. The interpreter/native comparison
 includes observable callback and trap order.

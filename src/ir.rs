@@ -364,6 +364,9 @@ pub struct Program {
     /// The canonical names (`std::iter.map`) of instances of the standard
     /// library's iterator functions, which the optimizer recognizes.
     pub std_names: std::collections::BTreeMap<FuncId, String>,
+    /// Source-declared native primitives outside the trusted standard library.
+    /// Their asserted signatures are not sufficient for checked ARC ownership.
+    pub unchecked_native_declarations: std::collections::BTreeSet<String>,
 }
 
 impl crate::value::Shapes for Program {

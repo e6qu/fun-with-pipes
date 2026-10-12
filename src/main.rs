@@ -16,7 +16,7 @@ usage:
   fwp build <file.fwp> [-o out] [--fn name|--cli|--rest] [--emit-c] [-O0|-O1|-O2|-O3]
             [--target native|<arch>-linux|wasm32-wasi|wasm32-browser] [--fat]
             [--static] [--pgo [--pgo-input file] [-- training args...]]
-            [--memory static [--heap S] [--pool S] [--stack S]
+            [--gc arc|tracing] [--memory static [--heap S] [--pool S] [--stack S]
                              [--tasks N] [--task-stack S] [--threads N]]
             [--wasm-async jspi|asyncify]
             [--staticlib|--cdylib] [--link lib-or-source]...
@@ -420,6 +420,7 @@ fn build(args: &[String]) -> ExitCode {
     let mut memory: Option<fwp::cgen::StaticMemory> = None;
     let mut sizes: Vec<(String, String)> = Vec::new();
     let mut static_link = false;
+    let mut arc = false;
     let mut cross: Option<String> = None;
     let mut pgo = false;
     let mut pgo_input: Option<String> = None;
@@ -431,6 +432,23 @@ fn build(args: &[String]) -> ExitCode {
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
+            "--gc" | "--gc=arc" | "--gc=tracing" => {
+                let value = match args[i].split_once('=') {
+                    Some((_, value)) => Some(value.to_string()),
+                    None => {
+                        i += 1;
+                        args.get(i).cloned()
+                    }
+                };
+                arc = match value.as_deref() {
+                    Some("arc") => true,
+                    Some("tracing") => false,
+                    _ => {
+                        eprintln!("fwp build: --gc requires arc or tracing");
+                        return ExitCode::from(2);
+                    }
+                };
+            }
             "--static" => static_link = true,
             "--pgo" => pgo = true,
             "--pgo-input" => {
@@ -610,7 +628,20 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: --static is unavailable on macOS; use ordinary native linking or a Linux cross target");
         return ExitCode::from(2);
     }
+    if arc
+        && (target.is_wasm()
+            || lib.is_some()
+            || cli
+            || rest
+            || mcp
+            || func.is_some()
+            || !services.is_empty())
+    {
+        eprintln!("fwp build: --gc arc currently requires a native main program; executable protocol, library and service boundaries are not yet eligible");
+        return ExitCode::from(2);
+    }
     fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        arc,
         static_link,
         pgo: None,
         cross,
@@ -781,6 +812,7 @@ fn build(args: &[String]) -> ExitCode {
                 &out,
                 &opt,
                 static_link,
+                arc,
                 &pgo_args,
                 pgo_input.as_deref(),
             )
@@ -812,6 +844,7 @@ fn pgo_build(
     out: &std::path::Path,
     opt: &str,
     static_link: bool,
+    arc: bool,
     args: &[String],
     input: Option<&str>,
 ) -> Result<(), String> {
@@ -821,6 +854,7 @@ fn pgo_build(
         let set = |phase| {
             fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
                 static_link,
+                arc,
                 pgo: Some((phase, dir.clone())),
                 cross: None,
             })

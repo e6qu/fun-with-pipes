@@ -85,21 +85,21 @@ impl<'p> Opt<'p> {
         self.funcs[id].arity as usize
     }
 
-    /// Cheap expressions that can be duplicated freely.
+    /// Cheap expressions that can be duplicated without erasing aggregate types.
     fn trivial(&self, e: &Expr) -> bool {
         match e {
             Expr::Local(_) => true,
             // CAF evaluation may allocate or trap and must occur before the
             // callee, even when its argument is unused after inlining.
             Expr::Func(id) => self.arity(*id) > 0,
-            Expr::Const(v) => {
-                !matches!(
-                    v,
-                    crate::value::Value::Data(..)
-                        | crate::value::Value::Record(_)
-                        | crate::value::Value::Array(_)
-                ) || matches!(v, crate::value::Value::Data(_, f) if f.is_empty())
-            }
+            Expr::Const(v) => !matches!(
+                v,
+                crate::value::Value::Data(..)
+                    | crate::value::Value::Record(_)
+                    | crate::value::Value::Array(_)
+                    | crate::value::Value::Map(_)
+                    | crate::value::Value::Closure(_)
+            ),
             _ => false,
         }
     }
@@ -473,7 +473,15 @@ impl<'p> Opt<'p> {
         for (i, a) in args.into_iter().enumerate() {
             let n = uses(&body, i as u32);
             let anchored = matches!(&body, Expr::ResourceRegion { parameters, .. } if parameters.contains(&(i as Local)));
-            if !anchored && (self.trivial(&a) || (n <= 1 && self.pure(&a))) {
+            // An aggregate carries its field/variant types through the callee
+            // parameter. Preserve that existing typed local when substituting
+            // the value would erase the context needed for child ownership.
+            // Compile-time aggregates need that context too; their stored value
+            // does not encode its nominal record/variant or closure type.
+            if !anchored
+                && !builds_object(&a)
+                && (self.trivial(&a) || (!matches!(&a, Expr::Const(_)) && n <= 1 && self.pure(&a)))
+            {
                 subst[i] = Some(a);
             } else {
                 let l = self.fresh(&types[i]);
