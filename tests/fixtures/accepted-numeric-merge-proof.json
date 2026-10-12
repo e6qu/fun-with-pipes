@@ -1,0 +1,16 @@
+{
+  "sha": "3a4582368f987ddb0233086be50c47995eb4ed3f",
+  "acceptedHead": "916263e7c07443bccd4f87e764ca0c3f33dc664e",
+  "tree": "e3e00f4c134a912e73c33c844a1cac17202e5fb4",
+  "parents": [
+    "cbf68ea60c3b9439a117ef9d9b28b472f23dc632"
+  ],
+  "pr": 126,
+  "mergedAt": "2026-10-12T06:45:18Z",
+  "subject": "Pack numeric arrays and specialize worker ABI boundaries",
+  "message": "Pack numeric arrays and specialize worker ABI boundaries",
+  "characters": 56,
+  "rawPayloadSha256": "f5d37a16eccd32b5ec40408102684ca5009e436fdc8a55c345e1b8d6a1aca921",
+  "verification": "GitHub verified signed commit payload",
+  "stage": "Squash verified; actual merged-source phase3 audit remains required"
+}
