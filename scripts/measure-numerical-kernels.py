@@ -41,7 +41,7 @@ for profile in [False,True]:
     'static inline void *fwp_alloc_init(size_t n) {':'static inline void *fwp_alloc_init(size_t n) {\nbench_calls++;bench_bytes+=n;',
     'static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {':'static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {\n        bench_retains++;',
     'static inline void fwp_rc_drop_slot(uint8_t *slot) {':'static inline void fwp_rc_drop_slot(uint8_t *slot) {\nbench_nonlast_releases++;',
-    'static inline int fwp_rc_release_last(V v) {':'static inline int fwp_rc_release_last(V v) {\nbench_release_checks++;',
+    'static inline int fwp_rc_release_last(V v) {\n    uint8_t *c = fwp_rc_slot(v);':'static inline int fwp_rc_release_last(V v) {\n    bench_release_checks++;\n    uint8_t *c = fwp_rc_slot(v);',
    }
    for before,after in changes.items():assert source.count(before)==1,before;source=source.replace(before,after,1)
   path=out/(case+'-'+suffix+'.c');path.write_text(source)
