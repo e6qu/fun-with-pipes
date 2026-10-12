@@ -170,34 +170,56 @@ main = (10000, 0) | loop step | echo
             .env("FWP_STACK", "0"),
     );
     let owned = std::fs::read_to_string(&emitted).unwrap();
-    // Restore only initial-state sharing at generated loop call sites.
-    // The sequence implementations and loop body/cleanup stay identical.
+    // Restore only initial-state sharing, including direct field entries.
+    // Borrowed scalar words are never treated as object addresses. The emitted
+    // entry's lifetime fences identify exactly its pointer-bearing state slots.
     let mut changed = 0;
-    let shared = owned
+    let mut flat_ids = std::collections::BTreeSet::new();
+    let mut shared = owned
         .lines()
         .map(|line| {
-            if let Some(call) = line.find(" = fwp_loop").filter(|call| {
+            if let Some(call) = line.find(" = fwp_loop_fields") {
+                let start = call + " = fwp_loop_fields".len();
+                let end = start + line[start..].find('(').unwrap();
+                let id = &line[start..end];
+                assert!(id.chars().all(|c| c.is_ascii_digit()));
+                flat_ids.insert(id.to_owned());
+                changed += 1;
+                line.to_owned()
+            } else if let Some(call) = line.find(" = fwp_loop").filter(|call| {
                 line[*call + " = fwp_loop".len()..].starts_with(|c: char| c.is_ascii_digit())
             }) {
                 let start = call + line[call..].find('(').unwrap() + 1;
                 let end = line.rfind(");").unwrap();
                 changed += 1;
-                format!(
-                    "{}fwp_rc_shared({}){}",
-                    &line[..start],
-                    &line[start..end],
-                    &line[end..]
-                )
-            } else {
-                line.into()
-            }
+                format!("{}fwp_rc_shared({}){}", &line[..start], &line[start..end], &line[end..])
+            } else { line.to_owned() }
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(
-        changed >= 3,
-        "missing outer/fused loop call sites: {changed}"
-    );
+    let mut shared_fields = 0;
+    for id in &flat_ids {
+        let prefix = format!("static V fwp_loop_fields{id}(");
+        let start = shared.match_indices(&prefix).find_map(|(at, _)| {
+            let end = at + shared[at..].find('\n')?;
+            shared[at..end].ends_with(" {").then_some(at)
+        }).expect("called flat loop entry definition");
+        let end = start + shared[start..].find("\n}\n").unwrap();
+        let body = &shared[start..end];
+        let mut fields = std::collections::BTreeSet::new();
+        for line in body.lines() {
+            if let Some(index) = line.trim().strip_prefix("FWP_KEEP_ALIVE(st[") {
+                let index = index.strip_suffix("]);").expect("state lifetime fence");
+                fields.insert(index.parse::<usize>().unwrap());
+            }
+        }
+        let insertion = start + body.find("    for (;;) {").unwrap();
+        let sharing: String = fields.iter().map(|i| format!("    fwp_rc_share(st[{i}]);\n")).collect();
+        shared_fields += fields.len();
+        shared.insert_str(insertion, &sharing);
+    }
+    assert!(changed >= 3, "missing outer/fused loop call sites: {changed}");
+    assert!(flat_ids.is_empty() || shared_fields > 0, "flat entries had no counted state fields");
     assert_ne!(shared, owned);
     let mut freed = Vec::new();
     for (name, code) in [("shared", &shared), ("owned", &owned)] {
