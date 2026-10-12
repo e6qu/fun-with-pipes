@@ -85,7 +85,7 @@ impl<'p> Opt<'p> {
         self.funcs[id].arity as usize
     }
 
-    /// Cheap expressions that can be duplicated freely.
+    /// Cheap expressions that can be duplicated without erasing aggregate types.
     fn trivial(&self, e: &Expr) -> bool {
         match e {
             Expr::Local(_) => true,
@@ -98,7 +98,9 @@ impl<'p> Opt<'p> {
                     crate::value::Value::Data(..)
                         | crate::value::Value::Record(_)
                         | crate::value::Value::Array(_)
-                ) || matches!(v, crate::value::Value::Data(_, f) if f.is_empty())
+                        | crate::value::Value::Map(_)
+                        | crate::value::Value::Closure(_)
+                )
             }
             _ => false,
         }
@@ -476,7 +478,12 @@ impl<'p> Opt<'p> {
             // An aggregate carries its field/variant types through the callee
             // parameter. Preserve that existing typed local when substituting
             // the value would erase the context needed for child ownership.
-            if !anchored && !builds_object(&a) && (self.trivial(&a) || (n <= 1 && self.pure(&a))) {
+            // Compile-time aggregates need that context too; their stored value
+            // does not encode its nominal record/variant or closure type.
+            if !anchored && !builds_object(&a)
+                && (self.trivial(&a)
+                    || (!matches!(&a, Expr::Const(_)) && n <= 1 && self.pure(&a)))
+            {
                 subst[i] = Some(a);
             } else {
                 let l = self.fresh(&types[i]);
