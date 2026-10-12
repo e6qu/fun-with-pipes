@@ -1,0 +1,190 @@
+{
+  "head": "b05ba75320db7359b00af53ff0a7e43512d07406",
+  "hardware": "Darwin sjc22-bt143-7523b42b-e214-4d08-ae9f-bd1570a95797-422AE6490854.local 24.6.0 Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE arm64\n",
+  "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+  "rustCompiler": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "optimization": [
+    "-O1",
+    "-O2"
+  ],
+  "compilation": "The permanent numeric_array_fusion control invokes fwp::cgen::compile_c with the recorded optimization level; compiler implementation source is included in the export.",
+  "results": {
+    "permanent-0-O1": {
+      "cases": [
+        {
+          "elements": 129,
+          "managedCalls": 2,
+          "managedRequestedBytes": 2080,
+          "freedBytes": 3840,
+          "resultBits": "405f200000000000"
+        },
+        {
+          "elements": 257,
+          "managedCalls": 2,
+          "managedRequestedBytes": 4128,
+          "freedBytes": 7680,
+          "resultBits": "406eb80000000000"
+        },
+        {
+          "elements": 0,
+          "managedCalls": 2,
+          "managedRequestedBytes": 16,
+          "freedBytes": 48,
+          "resultBits": "8000000000000000"
+        },
+        {
+          "elements": 7,
+          "managedCalls": 2,
+          "managedRequestedBytes": 128,
+          "freedBytes": 192,
+          "resultBits": "7ff8000000000001"
+        },
+        {
+          "elements": 1,
+          "managedCalls": 2,
+          "managedRequestedBytes": 32,
+          "freedBytes": 48,
+          "resultBits": "3ff0000000000000"
+        }
+      ]
+    },
+    "permanent-0-O2": {
+      "cases": [
+        {
+          "elements": 129,
+          "managedCalls": 2,
+          "managedRequestedBytes": 2080,
+          "freedBytes": 3840,
+          "resultBits": "405f200000000000"
+        },
+        {
+          "elements": 257,
+          "managedCalls": 2,
+          "managedRequestedBytes": 4128,
+          "freedBytes": 7680,
+          "resultBits": "406eb80000000000"
+        },
+        {
+          "elements": 0,
+          "managedCalls": 2,
+          "managedRequestedBytes": 16,
+          "freedBytes": 48,
+          "resultBits": "8000000000000000"
+        },
+        {
+          "elements": 7,
+          "managedCalls": 2,
+          "managedRequestedBytes": 128,
+          "freedBytes": 192,
+          "resultBits": "7ff8000000000001"
+        },
+        {
+          "elements": 1,
+          "managedCalls": 2,
+          "managedRequestedBytes": 32,
+          "freedBytes": 48,
+          "resultBits": "3ff0000000000000"
+        }
+      ]
+    },
+    "permanent-1-O1": {
+      "cases": [
+        {
+          "elements": 129,
+          "managedCalls": 0,
+          "managedRequestedBytes": 0,
+          "freedBytes": 1280,
+          "resultBits": "405f200000000000"
+        },
+        {
+          "elements": 257,
+          "managedCalls": 0,
+          "managedRequestedBytes": 0,
+          "freedBytes": 2560,
+          "resultBits": "406eb80000000000"
+        },
+        {
+          "elements": 0,
+          "managedCalls": 0,
+          "managedRequestedBytes": 0,
+          "freedBytes": 16,
+          "resultBits": "8000000000000000"
+        },
+        {
+          "elements": 7,
+          "managedCalls": 0,
+          "managedRequestedBytes": 0,
+          "freedBytes": 64,
+          "resultBits": "7ff8000000000001"
+        },
+        {
+          "elements": 1,
+          "managedCalls": 0,
+          "managedRequestedBytes": 0,
+          "freedBytes": 16,
+          "resultBits": "3ff0000000000000"
+        }
+      ]
+    },
+    "permanent-1-O2": {
+      "cases": [
+        {
+          "elements": 129,
+          "managedCalls": 0,
+          "managedRequestedBytes": 0,
+          "freedBytes": 1280,
+          "resultBits": "405f200000000000"
+        },
+        {
+          "elements": 257,
+          "managedCalls": 0,
+          "managedRequestedBytes": 0,
+          "freedBytes": 2560,
+          "resultBits": "406eb80000000000"
+        },
+        {
+          "elements": 0,
+          "managedCalls": 0,
+          "managedRequestedBytes": 0,
+          "freedBytes": 16,
+          "resultBits": "8000000000000000"
+        },
+        {
+          "elements": 7,
+          "managedCalls": 0,
+          "managedRequestedBytes": 0,
+          "freedBytes": 64,
+          "resultBits": "7ff8000000000001"
+        },
+        {
+          "elements": 1,
+          "managedCalls": 0,
+          "managedRequestedBytes": 0,
+          "freedBytes": 16,
+          "resultBits": "3ff0000000000000"
+        }
+      ]
+    }
+  },
+  "hashes": {
+    "matrix-measured-0.c": "b33bafc47fe8b684f4ca553db465242c0a5bef6179d42832b9dd5f54fb0dc0b3",
+    "permanent-1-O1.json": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a",
+    "matrix-original-0.c": "e993dda60970b76af5f27a9225bba005204582bfc7deed40b97a43388d192ae5",
+    "production-0.asm": "25014574504915b205c5d7421879ffa7459281bc7a6f289af908b72301d58a48",
+    "production-1.asm": "5d631af3f5b0d87aa14d4a2deeabe07b9bce51b6136cf9ed42c6661ea1993772",
+    "matrix-0-O2.json": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6",
+    "matrix-1-O2.json": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc",
+    "permanent-0-O1.json": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061",
+    "original-1.c": "c9b4755e0ac8bf491a19f82b6407aa2adeb082fb044b5bd7363bfb0dc2278d88",
+    "measured-1.c": "07559cfde944acea6bf7855aa1a2eaf752089d3f4d484f6aed5c3b3dbc8b5b8b",
+    "original-0.c": "e5ba8a05b43f0e0abe7f633ce1dd4d7ded115d6558723acca85415aed45026bf",
+    "measured-0.c": "bae34f329f2a612fc4653238f370887c928599fbb97e64b5b4234d25a78760e2",
+    "permanent-0-O2.json": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061",
+    "matrix-measured-1.c": "5a855befa4a598e70730b3be82e6d6d0afd7113fa4c2f20afbef546b3f91f11b",
+    "matrix-original-1.c": "6abbc26ec68eb303560913d7232c28c65173e75512b1e3b395da74618f08f56e",
+    "matrix-1-O1.json": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc",
+    "matrix-0-O1.json": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6",
+    "permanent-1-O2.json": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a"
+  },
+  "scope": "Raw interpreter/native semantics, complete managed API allocation counters and actual assembly from the same permanent test binaries. Metadata collection performs no duplicate builds. No timing or process-memory claim."
+}

@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "publisher": "scripts/roadmap-recovery/publish-numerical-lookup-recovery.py",
-  "scope": "Passing three-platform baseline, current borrowed-field and matrix optimization, lookup metadata repair and failure evidence"
+  "publisher": "scripts/roadmap-recovery/publish-pr127-loop-recovery.py",
+  "scope": "PR127 exact source and measurements, pending full gates, independent phase5 loop ownership preparation"
 }

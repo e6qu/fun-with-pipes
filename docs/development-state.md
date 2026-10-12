@@ -6,12 +6,12 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `02445af5d5b590d50df05f67cc0951520186f841` passes audit38219276272.
+checkpoint `36edc683abc938c6a4479150cd0ad2f6dace1f89` passes audit38221212500.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies454 targets/27300063 bytes. Reports are retained in
-/private/tmp/fwp-verified-numerical-benchmark-restoration. On recovery, run the
+verifies477 targets/28332904 bytes. Reports are retained in
+/private/tmp/fwp-verified-numerical-lookup-restoration. On recovery, run the
 bounded restore-numeric-finalization-archive.py after restoring temporary
 sources to reconstruct the verified gzip export from its retained base64 text. Never rerun completed publishers. Phases1–3 are accepted; phases4–6 remain unfinished.
 
@@ -151,15 +151,39 @@ log: fwp-direct-failure-array.c and fwp-numerical-direct-initial-failure.log.
 Current b05ba75320db7359b00af53ff0a7e43512d07406 (38220639450) removes that cloning
 rewrite and uses existing tag/payload variant locals for array/map lookups.
 It adds an owned map-result regression and uninstrumented benchmark disassembly.
-Results are pending. Do not accept the failed head or claim its source verified.
+All three jobs pass. Formatted compiler/test source agrees across all targets;
+reports and uninstrumented disassembly are retained in
+/private/tmp/fwp-numerical-platform-evidence. The array profile now retains and
+releases524296 times for eight65537-element rounds (previously1048600). All
+charged value storage reclaims with zero collections. Matrix requested storage
+is unchanged; direct F64 access removes repeated view/stride checks. Linux
+emits separate SSE multiply/add vector instructions; the measured ARM kernel
+uses scalar floating registers. Timing remains descriptive, with residual costs
+recorded in docs/numerics.md. The failed preceding head remains a failed gate.
 
-Current source is /private/tmp/fwp-phase4-matrix-draft; the latest publication
-mapping is /private/tmp/fwp-numerical-direct-files.json. Finish the combined
-platform checks and inspect measured costs, then export formatted source and
-open one production PR from accepted main. Require all six exact-head jobs plus
-roadmap_docs before squash. Continue phases5–6 after actual merged-source
-acceptance. Fix encountered bugs throughout; CI waiting gates merges, not
-preparation. No phase4 production PR is open yet.
+PR #127 is open at3c56dcb02feefb24a87f82293c234620077426fe on
+numerical-kernels-and-workspaces, based on accepted main3a458236. CI38222106138
+and roadmap_docs38222106323 are the current production gates. Docs, bench and
+ARM GC stress passed; Linux, regular Macs and Intel GC stress were pending.
+Query all seven exact-head results before merging. Publication/source hashes:
+/private/tmp/fwp-numerical-production-publication.json. Formatted sources:
+/private/tmp/fwp-numerical-production-files.json. The prepared merge helper
+fwp-merge-numerical-kernels.py has not run; it requires all gates, supplies an
+explicit single-line subject/empty body and verifies signed squash/tree parity.
+Actual merged-source acceptance remains required after merge.
+
+Separate phase5 preparation: ownership-evidence-flat-loop-owners at
+89ed2a60b5e4996e57b41b1a6b969a45047b8dc6, runner38223290977 pending. Source and
+publication mapping: /private/tmp/fwp-phase5-loop-owners-draft/files.json.
+It gives flat state fields independent ownership parameters before RC, so
+carried arrays can move between iterations without retain/release pairs.
+Permanent controls require zero retains plus input reclamation; existing loop
+unwind/preparation/field controls remain. First head6a0c533 failed compilation
+because a local-index bound used usize instead of the compiler's u32; current
+head fixes that mismatch. No phase5 support is accepted yet. Keep these changes
+separate from PR127, then include them in the next coherent delivery after its
+merge/acceptance. Inspect residual counts and target-dependent vectorization
+without changing arithmetic order. Fix failing checks throughout.
 
 Latest user constraint: avoid needless wrappers, alternate paths, magic and
 implicit defaults. Register spills are ordinary lowering, and protocol-defined

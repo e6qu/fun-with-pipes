@@ -45,12 +45,12 @@ allocations before counting is needed.
 |---|---|---|
 | Scalars and nullary variants | Inline words; no counting | Preserve typed arithmetic and improve native ABI where measured |
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
-| Arrays, maps, sets | Counted where supported; unique updates in place | More precise borrowing/results, typed storage and views |
+| Arrays, maps, sets | Typed counted storage, numeric views and unique updates | Broader borrowing and performance evidence |
 | Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
 | Escaping closures | Compiled dynamic calls own heap closures and typed captures; selected synchronous callbacks borrow | Unmodeled retained callbacks, temporary contexts and exceptional cleanup |
 | Tasks and channels | Counted handles, retained task captures and typed channel queues | Broader runtime boundaries and explicit cycle lifetimes |
-| Networking and external callbacks | Selected C resources own storage; unmodeled value boundaries share | Resource bundle acceptance, retained value ownership and teardown |
-| AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
+| Networking and external callbacks | Accepted resource ownership and teardown; unmodeled value boundaries share | Prove eligibility before allowing tracing-free use |
+| AD tapes/kernel buffers | Scoped numeric owners outside the collected value heap | Bounded capacity reuse and measured numerical optimization |
 
 Native executables still need a generational conservative collector for shared
 values. WebAssembly uses a bump allocator; native libraries do not trace the
@@ -59,32 +59,13 @@ the ownership gap. `--memory static` provisions bounded memory, not static
 lifetimes. None of these is a general collector-free execution guarantee.
 
 
-PR122 merges direct typed variant alias transfer and checked nominal context for
-match/field elimination. CAF caches own typed results, return separate owners,
-and release after task teardown; inlined arguments still evaluate and release
-before the callee. Spawn/deadline callbacks retain captures with rollback;
-scopes protect result/storage through joining and unwind. Counted task handles
-own cached results, and await returns separate owners. Typed channel queues
-retain elements and transfer them on receive; close preserves queued values.
-Explicit draining breaks the tested counted cycle; automatic unreachable-cycle
-reclamation remains unproved. Unmodeled resource boundaries retain compatibility lifetimes.
-
 ## Remaining ownership coverage
 
-Container contracts and comparison-key borrowing are merged. Selected leaves,
-fresh text trees, compiled captures, concrete temporaries and stack children are
-also merged; synchronous map/filter borrow callback inputs and own their fresh
-spines/results. Map callback failure, trap and cancellation now release owned
-results, partial spines and scratch through registered cleanup. sort/unique borrow their input, retain typed selected aliases
-and release scratch after constructing their owned copied result. sort-by
-borrows its callback/input, evaluates keys once in input order, owns typed
-keys/copied results and releases scratch; stable ties remain unchanged.
-repeat retains typed borrowed aliases in owned fresh nodes; range owns its
-fresh nodes. Scalars remain uncounted; boxed128-bit payloads still share.
-Finish remaining primitive/runtime families, including argument/result ownership,
-retention, aliases and exceptional cleanup. The exact prepared queue and current
-verification are in [the handoff](development-state.md). Keep the IR pass and
-code generator on the same contracts.
+Phase2 has a finite accepted inventory of owned and shared boundaries; see
+[ownership coverage](#ownership-coverage). Remaining work is measured optimization
+and the eligibility/cycle policy for optional tracing-free execution. Keep the
+IR pass and code generator on the same contracts; accepting an explicit shared
+boundary does not make its values deterministically reclaimed.
 
 Contracts must distinguish borrowing for the call, consuming a reference,
 retaining a reference beyond the call, returning a fresh owned value, and
@@ -114,7 +95,7 @@ unproved shared cycles retain the tracing fallback.
 ## Phase 2 exit gates
 
 The actual merged-source finite coverage review passes after PR125 acceptance.
-Phase3 must preserve these contracts and explicit fallbacks. The primitive inventory, IR checker and generated
+The accepted representation changes preserve these contracts. The primitive inventory, IR checker and generated
 wrappers must agree on each contract. Record conservative shared boundaries
 explicitly, including their retention and teardown; they remain tracing
 requirements until phase 6 proves eligibility for execution without collection.
@@ -178,27 +159,10 @@ Avoid redundant wrappers or alternate implementations and undocumented implicit
 choices. Give internal resource budgets explicit names, reasons and measured
 limits; compiler optimizations should preserve the same source semantics.
 
-Actual binary/layout baselines are preserved in [history](roadmap-history.md#archived-representation-measurement-detail).
-These are fixture-specific results at prepared source heads; each final delivery
-still needs exact-head CI. They establish representations and allocation
-requests, not production speed, cache behavior or collector-free execution.
-
-| Preparation / platform | Verified representation or allocation difference |
-|---|---|
-| 44 / ARM+Intel | V8, array header8 and element slot8; three-field variant32/align8 |
-| 65 / ARM | Six-I64 worker value48/align8 versus boxed56; return through caller storage |
-| 79 / ARM | Typed frame holder removes one16-byte parent box; File/path allocation remains |
-| 80 / ARM | Inline File header16/align8 versus24; one request16+n+1 versus two requesting24+n+1 |
-| 83 / ARM | Variant holder16/align8; zero parent boxes versus one16-byte box |
-| 111 / ARM+Intel | Packed TLS header64/align8; one request101/8311 for the tested inputs |
-| 112 / ARM+Intel | Connection header272/align8 versus520; short address request278 |
-
-A bounded ARM capacity check measures TLS requested101/8311 as112/8704 malloc
-usable bytes, and connection request278 as320 GC-slot bytes versus640 for an
-allocation of the old520-byte header size in the same allocator. It does not
-execute the old constructor. Metadata, pool reservation, Intel capacity and
-cache/timing effects are excluded or unmeasured; exact evidence is in
-[history](roadmap-history.md#actual-local-grpc-allocator-capacity).
+Historical binary/layout baselines and allocator measurements are preserved in
+[history](roadmap-history.md#archived-representation-measurement-detail). Current
+accepted representations are specified below. Allocation and ABI evidence does
+not by itself establish speed, cache behavior or tracing-free execution.
 
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
@@ -230,16 +194,11 @@ types; new fused gradient kernels need raw interpreter/native order checks.
 
 ### Phase 3 delivery sequence
 
-Keep source array/value types, pipe syntax and wire behavior unchanged. Make
-representation choices after monomorphization, using the concrete element and
-field types; generic/foreign boundaries keep explicit conversion contracts.
-
-| Delivery | Implementation and acceptance |
-|---|---|
-| Natural-width scalar arrays | Checked sizes/strides, suitable payload alignment and typed load/store; preserve aliases, bounds, arithmetic/trap order and pointer-free scanning |
-| Scalar/aggregate ABI | Prefer natural C scalar fields and direct workers where measured; verify arm64/x86-64 integer and floating-point register use, spills, boxing and FFI conversion |
-| Views and reusable backing | Retain backing owners across escapes; unique updates preserve immutable aliases; cover zero-length/subrange/overflow cases and exceptional release |
-| Measured representation gate | Equivalent C/Rust work, allocation-inclusive and kernel-only results, requested/actual bytes and peak live memory; hardware/compiler/flags/assembly recorded |
+This sequence is complete in accepted phase3. Source array/value types, pipe
+syntax and wire behavior remain unchanged. Representation is selected after
+monomorphization from concrete element/field types; generic and foreign
+boundaries retain explicit conversion contracts. Phases4–5 measure numerical
+performance using these representations.
 
 Direct numeric workers use concrete C scalar parameters/results and aggregate
 fields; boxing, closures, callbacks and foreign conversion keep bit-preserving

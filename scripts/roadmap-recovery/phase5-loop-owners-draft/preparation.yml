@@ -1,0 +1,60 @@
+name: Flat loop ownership preparation
+on:
+  push:
+    branches: [ownership-evidence-flat-loop-owners]
+jobs:
+  numeric_fusion:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+      FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: OpenSSL 3
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Format and validate compiler changes
+        run: |
+          cargo fmt --all
+          cargo clippy --all-targets -- -D warnings
+          cargo test --lib
+          cargo test --no-fail-fast --test loop_ownership --test loop_unwind_ownership --test loop_preparation_ownership --test field_context_ownership --test numeric_array_fusion --test blocked_matrix --test retain_unwind_ownership
+      - name: Retain permanent allocation evidence
+        run: python3 scripts/summarize-numeric-array-fusion.py
+      - name: Equivalent C and Rust numerical workloads
+        run: python3 scripts/measure-numerical-kernels.py
+      - name: Export formatted source
+        if: always()
+        run: |
+          mkdir -p array-fusion-evidence/source
+          cp src/rc.rs src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/wasm.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/
+          cp runtime/fwp_rt_kernel.c array-fusion-evidence/source/
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: numeric-array-fusion-evidence-${{ matrix.runner }}
+          path: |
+            array-fusion-evidence/source/*.rs
+            array-fusion-evidence/source/*.c
+            array-fusion-evidence/*.json
+            array-fusion-evidence/*.c
+            array-fusion-evidence/*.asm
+            array-fusion-evidence/workspaces/*.json
+            array-fusion-evidence/performance/*.json
+            array-fusion-evidence/performance/*.txt
+            array-fusion-evidence/performance/*.c
+            array-fusion-evidence/performance/*.asm
