@@ -43,8 +43,8 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
     let mut seen = HashSet::new();
     for f in &prog.funcs {
         let reject = |reason: String| format!("--gc arc: `{}`: {reason}",f.name);
-        value_type(prog,&f.ty,&mut seen).map_err(&reject)?;
-        for ty in &f.locals { value_type(prog,ty,&mut seen).map_err(&reject)?; }
+        value_type(prog,&f.ty,&mut seen).map_err(reject)?;
+        for ty in &f.locals { value_type(prog,ty,&mut seen).map_err(reject)?; }
         let symbol = match &f.body {
             Body::Expr(_) | Body::Ctor(_) => continue,
             Body::ForeignC { .. } | Body::Remote(_) => {
