@@ -4799,7 +4799,13 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         };
         let f = &self.g.prog.funcs[*id];
-        if !matches!(&f.body, Body::Prim(s) if s == "map.get") || args.len() != 2 {
+        if args.len() != 2 { return None; }
+        let array_element = match (&f.body, &f.locals[1]) {
+            (Body::Prim(s), MT::Con(n, elements)) if s == "array.get" && n == "std::Array"
+                && elements.len() == 1 && scalar(&elements[0]).is_some() => Some(elements[0].clone()),
+            _ => None,
+        };
+        if array_element.is_none() && !matches!(&f.body, Body::Prim(s) if s == "map.get") {
             return None;
         }
         let shapes = arms.iter().all(|(p, _)| match p {
@@ -4811,7 +4817,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if !shapes {
             return None;
         }
-        let kd = self.g.desc(&f.ty.params(2).0[0].clone());
+        let descriptor = array_element.clone().unwrap_or_else(|| f.ty.params(2).0[0].clone());
+        let kd = self.g.desc(&descriptor);
         let mut e = scrut;
         while let Expr::Let(l, v, b) = e {
             let x = self.expr(v);
@@ -4820,6 +4827,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         let xs = self.args(args);
         let (found, at, v) = (self.fresh(), self.fresh(), self.fresh());
+        if array_element.is_some() {
+            self.line(&format!("int {found} = (int64_t){index} >= 0 && (uint64_t){index} < fwp_array_len({array});", index=xs[0], array=xs[1]));
+            self.line(&format!("V {v} = {found} ? fwp_array_load({array}, (size_t){index}, {kd}) : 0;", array=xs[1], index=xs[0]));
+        } else {
         self.line(&format!(
             "int {found}; uint64_t {at} = fwp_map_find({m}, {k}, {kd}, &{found});",
             found = found,
@@ -4835,12 +4846,13 @@ impl<'g, 'p> FnGen<'g, 'p> {
             m = xs[1],
             at = at
         ));
-        let value_type = match &f.locals[1] {
+        }
+        let value_type = array_element.or_else(|| match &f.locals[1] {
             MT::Con(name, fields) if name == "std::Map" && fields.len() == 2 => {
                 Some(fields[1].clone())
             }
             _ => None,
-        };
+        });
         let owned_value = self.g.reuse
             && value_type
                 .as_ref()

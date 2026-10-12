@@ -268,7 +268,7 @@ int main(void){
  for(int mode=0;mode<4;mode++)for(int alias=0;alias<2;alias++){
   input=fwp_rc_fresh(fwp_str_new("hello",5));word=fwp_rc_fresh(fwp_str_new("scalar",6));if(alias)fwp_rc_dup(input);
   if(mode==0){V result=f2(input,word);if(result!=input||*fwp_rc_slot(input)!=1+alias)return 1;drop_leaf(result);}
-  if(mode==1){fwp_r2 results=w3(input,word);if(results.f[0]!=input||results.f[1]!=input||*fwp_rc_slot(input)!=2+alias)return 2;drop_leaf(results.f[0]);drop_leaf(results.f[1]);}
+  if(mode==1){fwp_wr3 results=w3(input,word);if(results.f0!=input||results.f1!=input||*fwp_rc_slot(input)!=2+alias)return 2;drop_leaf(results.f0);drop_leaf(results.f1);}
   if(mode==2){
    fwp_trap_recover=recover;fwp_trap_jb=&failure;fwp_trap_cleanup=0;
    if(!setjmp(failure)){(void)f6(input,word);return 3;}fwp_trap_recover=0;fwp_trap_jb=0;

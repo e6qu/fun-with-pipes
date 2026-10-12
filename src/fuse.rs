@@ -212,6 +212,12 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
     }
 }
 
+fn unboxed_numeric(ty: &MT) -> bool {
+    let MT::Con(name, args) = ty else { return false; };
+    args.is_empty() && matches!(name.strip_prefix("std::").unwrap_or(name),
+        "I8" | "I16" | "I32" | "I64" | "ISize" | "U8" | "U16" | "U32" | "U64" | "USize" | "F32" | "F64")
+}
+
 /// A stage of a fused pipeline, outermost first as written in the IR.
 enum Stage {
     Map(Expr),
@@ -223,6 +229,7 @@ enum Producer {
     /// `range a b` at integer type `t`.
     Range(Expr, Expr, MT),
     List(Expr),
+    Array(Expr),
 }
 
 /// A function value `f` applied to `n` more arguments: a known function,
@@ -649,6 +656,8 @@ impl Fuser<'_> {
     fn consumer(&self, id: FuncId, args: &[Expr]) -> Option<&'static str> {
         match (prim_sym(self.funcs, id)?, args.len()) {
             ("fold", 3) => Some("fold"),
+            ("array.fold", 3) if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") => Some("array-fold"),
+            ("array.length", 1) if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") => Some("array-length"),
             ("length", 1) => Some("length"),
             ("find", 2) => Some("find"),
             _ => None,
@@ -748,6 +757,8 @@ impl Fuser<'_> {
         cparams: Vec<MT>,
         result_ty: MT,
     ) -> Option<Expr> {
+        let array = kind.starts_with("array-");
+        let kind = match kind { "array-fold" => "fold", "array-length" => "length", other => other };
         let funcs = self.funcs;
         let list = args.last()?;
         let mut stages = Vec::new();
@@ -755,8 +766,9 @@ impl Fuser<'_> {
         loop {
             match cur {
                 Expr::Call(id, a) if a.len() == 2 => match prim_sym(funcs, *id) {
-                    Some("map") => stages.push(Stage::Map(a[0].clone())),
-                    Some("filter") => stages.push(Stage::Filter(a[0].clone())),
+                    Some("map") if !array => stages.push(Stage::Map(a[0].clone())),
+                    Some("filter") if !array => stages.push(Stage::Filter(a[0].clone())),
+                    Some("array.map") if array => stages.push(Stage::Map(a[0].clone())),
                     _ => break,
                 },
                 _ => break,
@@ -767,6 +779,8 @@ impl Fuser<'_> {
             cur = &a[1];
         }
         let producer = match cur {
+            e if array && !stages.is_empty() => Producer::Array(e.clone()),
+            _ if array => return None,
             Expr::Call(id, a) if a.len() == 2 && prim_sym(funcs, *id) == Some("range") => {
                 let t = funcs[*id].ty.params(2).0[0].clone();
                 match num(&t) {
@@ -804,7 +818,7 @@ impl Fuser<'_> {
         // innermost stage takes
         let prod_ty = match &producer {
             Producer::Range(_, _, t) => t.clone(),
-            Producer::List(e) => match self.ty_in(&self.locals, e) {
+            Producer::List(e) | Producer::Array(e) => match self.ty_in(&self.locals, e) {
                 Some(t) => t,
                 None => {
                     let (id, caps) = fns.last()?;
@@ -813,6 +827,14 @@ impl Fuser<'_> {
                 }
             },
         };
+        if array {
+            if !elem(&prod_ty).is_some_and(|t| unboxed_numeric(&t)) { return None; }
+            for (id, captures) in &fns {
+                let (params, result) = funcs[*id].ty.params(captures.len()+1);
+                if !unboxed_numeric(params.last()?) || !unboxed_numeric(result) { return None; }
+            }
+            if kind == "fold" && (!unboxed_numeric(&cparams[1]) || !unboxed_numeric(&result_ty)) { return None; }
+        }
         // the accumulator: a fold's, a count, the list so far in reverse,
         // or nothing (`find`)
         let (z, acc_ty) = match kind {
@@ -839,6 +861,7 @@ impl Fuser<'_> {
         let (start, end) = match &producer {
             Producer::Range(a, b, t) => (bind(self, a, t), Some(bind(self, b, t))),
             Producer::List(e) => (bind(self, e, &prod_ty), None),
+            Producer::Array(e) => (Expr::Record(vec![Expr::Const(Value::I64(0)), bind(self, e, &prod_ty)]), None),
         };
 
         // the state: position, accumulator, then the outer locals the step
@@ -888,7 +911,7 @@ impl Fuser<'_> {
                 let add = self.prim("prim.add", fun2(t, t, t), 2);
                 (st(0), Expr::Call(add, vec![one, st(0)]), None)
             }
-            Producer::List(_) => {
+            Producer::List(_) | Producer::Array(_) => {
                 let (h, t) = (next(&mut nl), next(&mut nl));
                 (Expr::Local(h), Expr::Local(t), Some((h, t)))
             }
@@ -971,6 +994,21 @@ impl Fuser<'_> {
                     vec![(Pat::Construct(1, vec![]), body), (Pat::Wild, stop)],
                 )
             }
+            Producer::Array(_) => {
+                let (h, t) = cell?;
+                let index_ty = MT::con("std::I64");
+                let element = elem(&prod_ty)?;
+                let option = MT::Con("std::Option".into(), vec![element]);
+                let get = self.prim("array.get", fun2(&index_ty, &prod_ty, &option), 2);
+                let add = self.prim("prim.add", fun2(&index_ty, &index_ty, &index_ty), 2);
+                let position = Expr::Field(Box::new(st(0)), 0);
+                let input = Expr::Field(Box::new(st(0)), 1);
+                let next = Expr::Record(vec![Expr::Call(add, vec![Expr::Const(Value::I64(1)), position.clone()]), input.clone()]);
+                Expr::Match(Box::new(Expr::Call(get, vec![position, input])), vec![
+                    (Pat::Construct(1, vec![Pat::Bind(h)]), Expr::Let(t, Box::new(next), Box::new(body))),
+                    (Pat::Wild, stop),
+                ])
+            }
             Producer::List(_) => {
                 let (h, t) = cell?;
                 Expr::Match(
@@ -985,6 +1023,7 @@ impl Fuser<'_> {
         let pos_ty = match &producer {
             Producer::Range(_, _, t) => t.clone(),
             Producer::List(_) => prod_ty.clone(),
+            Producer::Array(_) => MT::Record(vec![("0".into(), MT::con("std::I64")), ("1".into(), prod_ty.clone())]),
         };
         let mut fields = vec![
             ("0".to_string(), pos_ty.clone()),
@@ -1118,6 +1157,14 @@ fn dummy_args(funcs: &[Func], id: FuncId) -> Vec<Expr> {
 
 /// Fuse the list pipelines of every function.
 pub fn fuse(prog: &mut Program) {
+    let elements: Vec<_> = prog.funcs.iter().flat_map(|f| &f.locals).filter_map(|ty| match ty {
+        MT::Con(name, args) if name == "std::Array" && args.len() == 1 && unboxed_numeric(&args[0]) => Some(args[0].clone()),
+        _ => None,
+    }).collect();
+    for element in elements {
+        prog.shapes.entry(MT::Con("std::Option".into(), vec![element.clone()])).or_insert_with(||
+            TypeShape::Adt(vec![("None".into(), vec![]), ("Some".into(), vec![element])]));
+    }
     let snapshot = prog.funcs.clone();
     let shapes = prog.shapes.clone();
     let std_names = prog.std_names.clone();
