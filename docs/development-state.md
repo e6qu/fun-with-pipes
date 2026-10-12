@@ -217,3 +217,30 @@ avoidance, not a passing main gate. Proof: fwp-main124-duplicate-ci-proof.json.
 Prepared merge-phase2-exit.py, publish-accepted-phase2-audit.py,
 download-accepted-phase2-audit.py and record-accepted-phase2.py require actual
 passing final gates and the accepted-source audit before advancing phase3.
+
+Recovery audit38189929028 at42c1aa913f8ba370b29068c7edbb2803ce47871b
+found that copied backup Markdown was being checked as live documentation,
+so its original relative links no longer resolve inside the backup directory.
+Preserve the original bytes under snapshot source names and remove duplicate
+live Markdown paths on the recovery branch; then rerun that audit. Production
+source/combined validation is independent and passes38189708217.
+
+Combined ownership exit preparation passes runner38189708217 at driver83f240569685274589bc1a003f2f444b0dd79e94.
+Native export 07fb6f72f7a0b4309057f89209250ca573d7103e has tree30a0ccea090697165713d2411ed75f3f0aa03a35 on the actual
+PR124 squash. All original allocation, sanitizer, raw/native, codec, type,
+format/library/docs, inventory and finite fallback controls pass together.
+Current root docs are refreshed before opening the production PR; this update
+changes documentation only. Query ownership-exit-and-buffer-bundle for its
+current tip and require all six exact-head jobs and roadmap_docs before squash.
+Phase2 stays open until the actual merged-source audit passes.
+
+Current delivery is PR[#125](https://github.com/e6qu/fun-with-pipes/pull/125),
+head37e94c1efa1bb99e955d026b8dde46dfe632e972 on the accepted PR124 squash.
+Roadmap_docs38190218974 passes; full CI38190218968 is running. The combined
+runner38189708217 passes at83f240569685274589bc1a003f2f444b0dd79e94;
+exportd5e0386c526c399f4bfe67c171ed44f9c3bc2f05 then documentation-only37e94c1
+preserves the verified native tree. Do not restart this matrix for handoff-only
+updates. Require all six current-head jobs and docs before merge-phase2-exit.py;
+then run the accepted-source audit and record its actual proof before phase3.
+Receipts: phase2-exit-finalization-export/publication.json,
+fwp-phase2-exit-docs-publication.json and fwp-pr125-publication.json.

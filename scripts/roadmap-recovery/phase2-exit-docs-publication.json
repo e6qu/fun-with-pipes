@@ -1,0 +1,19 @@
+{
+  "head": "37e94c1efa1bb99e955d026b8dde46dfe632e972",
+  "previous": "d5e0386c526c399f4bfe67c171ed44f9c3bc2f05",
+  "branch": "ownership-exit-and-buffer-bundle",
+  "tree": "07fe7b60a473f8c5ae6b7aede7678ff7fb17906a",
+  "files": {
+    "CONTRIBUTING.md": "542f28742abdf5e0d50923b7a037f932522e159ad43f7b0adabe9ff7291501b2",
+    "PLAN.md": "2c795c23d1de3f53af253812ba5020101ad5e6686a0e336eea91c167b0007397",
+    "docs/design.md": "a2493d50da74d21ba50bf8659eb2622154ab7843616c8f4d8db5256e8c0f5743",
+    "docs/development-state.md": "da001a7bea84bda0b25fe712527f3f23a0baa47842d3e024f6704b0cd17e608f",
+    "docs/ownership.md": "54e0a73e1e5bc9e62b013b2949129a0c4c2feaee880044c6fe77136064f67746",
+    "docs/primitive-ownership.md": "b8e2425fd494d0e840c8616fc844408d5aec8ac5c888f3c6c324f7d5343fc5aa",
+    "docs/roadmap-queue.md": "5dde27287c6faa7043339ee5fe1525e51b869fe72b0bb873b44eda980f8b7d77",
+    "docs/roadmap-history.md": "c8ab20269ddf8df85353fda1d4e6cfaa835730a6db9da357e2b2db8bce0cb245",
+    "docs/reference.md": "578c74c42fce1ab7155f54d9042cbbe91c722a6f94e8e85df5dd0aa711706c9d",
+    "docs/concurrency.md": "a14cc48731fff6340993abcd979fd9d864dc04d3760d6d678afd9d34359fa960",
+    "docs/numerics.md": "adc47bb9e1a01815986057bf65da140e5abe1ef5ebd1d024e34bca15e32ed605"
+  }
+}

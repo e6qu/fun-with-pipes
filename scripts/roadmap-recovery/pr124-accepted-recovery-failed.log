@@ -1,0 +1,14 @@
+handoff_docs	Check links, preparation ancestry and commit messages	﻿2026-10-12T00:56:29.7443493Z ##[group]Run python3 scripts/check-roadmap.py
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.7444937Z ^[[36;1mpython3 scripts/check-roadmap.py^[[0m
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.7513648Z shell: /usr/bin/bash -e {0}
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.7514714Z ##[endgroup]
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.9089349Z Traceback (most recent call last):
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.9090741Z   File "/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/check-roadmap.py", line 113, in <module>
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.9091919Z     main()
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.9092890Z   File "/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/check-roadmap.py", line 85, in main
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.9093913Z     check_links(name)
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.9094872Z   File "/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/check-roadmap.py", line 40, in check_links
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.9096037Z     assert linked.exists(), (name, target, "missing path")
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.9097036Z            ^^^^^^^^^^^^^^^
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.9098154Z AssertionError: ('scripts/roadmap-recovery/main-docs-remote-pre124/CONTRIBUTING.md', 'AGENTS.md', 'missing path')
+handoff_docs	Check links, preparation ancestry and commit messages	2026-10-12T00:56:29.9240747Z ##[error]Process completed with exit code 1.
