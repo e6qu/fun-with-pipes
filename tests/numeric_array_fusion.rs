@@ -116,10 +116,12 @@ fn numeric_array_fusion_eliminates_intermediates_and_reclaims_inputs() {
             .replace("FUSED", mode);
         assert!(source.contains("static inline void *fwp_gc_alloc(size_t n, int leaf) {"));
         assert!(source.contains("static inline void *fwp_alloc_init(size_t n) {"));
-        let code=source.replace("typedef uint64_t V;","typedef uint64_t V;\nstatic uint64_t measured_calls,measured_bytes,measured_retains;")
+        assert_eq!(source.matches("static void fwp_cleanup_push(fwp_cleanup *c, void (*release)(void *), void *arg) {").count(), 1);
+        let code=source.replace("typedef uint64_t V;","typedef uint64_t V;\nstatic uint64_t measured_calls,measured_bytes,measured_retains,measured_scopes;")
           .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {","static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){measured_calls++;measured_bytes+=n;}")
           .replace("static inline void *fwp_alloc_init(size_t n) {","static inline void *fwp_alloc_init(size_t n) {\nmeasured_calls++;measured_bytes+=n;")
           .replace("static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {", "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {\n        measured_retains++;")
+          .replace("static void fwp_cleanup_push(fwp_cleanup *c, void (*release)(void *), void *arg) {", "static void fwp_cleanup_push(fwp_cleanup *c, void (*release)(void *), void *arg) {\nmeasured_scopes++;")
           .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
         if let Some(destination) = std::env::var_os("FWP_ARRAY_FUSION_ARTIFACTS") {
             let destination = std::path::PathBuf::from(destination);

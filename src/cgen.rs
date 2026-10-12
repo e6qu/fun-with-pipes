@@ -2379,10 +2379,18 @@ fn again_record(e: &Expr) -> Option<Expr> {
 /// This is the same state layout already selected by loop_shape; it avoids
 /// retaining a field merely to move it from the old state to the next state.
 fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
-    let Body::Expr(body) = &f.body else { return None };
-    if f.arity != 1 { return None; }
+    let Body::Expr(body) = &f.body else {
+        return None;
+    };
+    if f.arity != 1 {
+        return None;
+    }
     let fields = record_fields(&prog.shapes, &f.locals[0])?;
-    if fields.is_empty() || fields.iter().any(|(_, ty)| crate::resource::contains_file(&prog.shapes, ty)) {
+    if fields.is_empty()
+        || fields
+            .iter()
+            .any(|(_, ty)| crate::resource::contains_file(&prog.shapes, ty))
+    {
         return None;
     }
     let width = u32::try_from(fields.len()).ok()?;
@@ -2392,8 +2400,17 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
     fn pattern(p: &Pat, width: u32) -> Option<Pat> {
         Some(match p {
             Pat::Bind(l) => Pat::Bind(local(*l, width)?),
-            Pat::Construct(tag, ps) => Pat::Construct(*tag, ps.iter().map(|p| pattern(p, width)).collect::<Option<_>>()?),
-            Pat::Record(ps) => Pat::Record(ps.iter().map(|p| pattern(p, width)).collect::<Option<_>>()?),
+            Pat::Construct(tag, ps) => Pat::Construct(
+                *tag,
+                ps.iter()
+                    .map(|p| pattern(p, width))
+                    .collect::<Option<_>>()?,
+            ),
+            Pat::Record(ps) => Pat::Record(
+                ps.iter()
+                    .map(|p| pattern(p, width))
+                    .collect::<Option<_>>()?,
+            ),
             Pat::Wild | Pat::Lit(_) => p.clone(),
         })
     }
@@ -2402,7 +2419,9 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
         let many = |es: &[Expr]| es.iter().map(one).collect::<Option<Vec<_>>>();
         Some(match e {
             Expr::Field(base, index) if matches!(&**base, Expr::Local(0)) => {
-                if *index >= width { return None; }
+                if *index >= width {
+                    return None;
+                }
                 Expr::Local(*index)
             }
             Expr::Local(l) => Expr::Local(local(*l, width)?),
@@ -2412,9 +2431,24 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
             Expr::Construct(tag, xs) => Expr::Construct(*tag, many(xs)?),
             Expr::Record(xs) => Expr::Record(many(xs)?),
             Expr::Field(base, index) => Expr::Field(Box::new(one(base)?), *index),
-            Expr::SetFields(base, fields) => Expr::SetFields(Box::new(one(base)?), fields.iter().map(|(i, e)| Some((*i, one(e)?))).collect::<Option<_>>()?),
-            Expr::Let(l, value, body) => Expr::Let(local(*l, width)?, Box::new(one(value)?), Box::new(one(body)?)),
-            Expr::Match(value, arms) => Expr::Match(Box::new(one(value)?), arms.iter().map(|(p, b)| Some((pattern(p, width)?, one(b)?))).collect::<Option<_>>()?),
+            Expr::SetFields(base, fields) => Expr::SetFields(
+                Box::new(one(base)?),
+                fields
+                    .iter()
+                    .map(|(i, e)| Some((*i, one(e)?)))
+                    .collect::<Option<_>>()?,
+            ),
+            Expr::Let(l, value, body) => Expr::Let(
+                local(*l, width)?,
+                Box::new(one(value)?),
+                Box::new(one(body)?),
+            ),
+            Expr::Match(value, arms) => Expr::Match(
+                Box::new(one(value)?),
+                arms.iter()
+                    .map(|(p, b)| Some((pattern(p, width)?, one(b)?)))
+                    .collect::<Option<_>>()?,
+            ),
             // Original resource frames retain their established representation.
             // This transformation runs on the source IR, before reference counts.
             Expr::ResourceRegion { .. } | Expr::Dup(..) | Expr::Drop(..) => return None,
@@ -2423,10 +2457,19 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
     let body = rewrite(body, width)?;
     let result = f.ty.params(1).1.clone();
     let params: Vec<MT> = fields.iter().map(|(_, ty)| ty.clone()).collect();
-    let ty = params.iter().rev().fold(result, |ret, p| MT::Fun(Box::new(p.clone()), Box::new(ret)));
+    let ty = params
+        .iter()
+        .rev()
+        .fold(result, |ret, p| MT::Fun(Box::new(p.clone()), Box::new(ret)));
     let mut locals = params;
     locals.extend(f.locals.iter().skip(1).cloned());
-    Some(Func { name: f.name.clone(), arity: width, locals, ty, body: Body::Expr(body) })
+    Some(Func {
+        name: f.name.clone(),
+        arity: width,
+        locals,
+        ty,
+        body: Body::Expr(body),
+    })
 }
 
 fn loop_state_expr(e: &Expr) -> Expr {
@@ -2544,7 +2587,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// In a loop's step, a field of the state kept as its own fields: its
     /// first slot and its number of fields.
     fn state_field(&self, e: &Expr) -> Option<(usize, usize)> {
-        let lg = self.in_loop.as_ref().filter(|lg| lg.record && !lg.unpacked_parameters)?;
+        let lg = self
+            .in_loop
+            .as_ref()
+            .filter(|lg| lg.record && !lg.unpacked_parameters)?;
         match e {
             Expr::Field(r, i) if matches!(**r, Expr::Local(0)) => match lg.slots[*i as usize] {
                 (off, Some(m)) => Some((off, m)),
@@ -3234,7 +3280,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                             .map(|(_, t)| t.clone()),
                     )
                     .collect()
-            } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && !lg.unpacked_parameters && l == 0) {
+            } else if let Some(lg) = self
+                .in_loop
+                .as_ref()
+                .filter(|lg| lg.record && !lg.unpacked_parameters && l == 0)
+            {
                 let mut parts = Vec::new();
                 for ((off, width), (_, t)) in lg
                     .slots
@@ -3756,7 +3806,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if !reuse_enabled() {
             return None;
         }
-        let virtual_state = self.in_loop.as_ref().is_some_and(|lg| lg.record && !lg.unpacked_parameters) && x == 0;
+        let virtual_state = self
+            .in_loop
+            .as_ref()
+            .is_some_and(|lg| lg.record && !lg.unpacked_parameters)
+            && x == 0;
         if self.fields.contains_key(&x)
             || self.vlocals.contains_key(&x)
             || self.stack_children.contains_key(&x)
@@ -4050,7 +4104,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 .cloned()
                 .zip(field_tys(&self.locals[l as usize]))
                 .collect();
-        } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && !lg.unpacked_parameters && l == 0) {
+        } else if let Some(lg) = self
+            .in_loop
+            .as_ref()
+            .filter(|lg| lg.record && !lg.unpacked_parameters && l == 0)
+        {
             for ((off, w), t) in lg.slots.iter().zip(field_tys(&self.locals[0])) {
                 match w {
                     Some(_) => {
@@ -4159,7 +4217,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                             .map(|(_, t)| t.clone()),
                     )
                     .collect()
-            } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && !lg.unpacked_parameters && l == 0) {
+            } else if let Some(lg) = self
+                .in_loop
+                .as_ref()
+                .filter(|lg| lg.record && !lg.unpacked_parameters && l == 0)
+            {
                 let mut parts = Vec::new();
                 for ((off, width), (_, t)) in lg
                     .slots
@@ -4640,7 +4702,24 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if self.g.prog.funcs[id].arity == 0 {
             self.bind_call(key, format!("caf{}()", id))
         } else {
-            let result = self.bind_call(key, format!("f{}({})", id, xs.join(", ")));
+            let f = &self.g.prog.funcs[id];
+            let (params, result_type) = f.ty.params(f.arity as usize);
+            // These concrete primitive bodies only emit floating arithmetic:
+            // no allocation, language trap, callback or cancellation point.
+            // Argument evaluation has already retained its own unwind scopes.
+            let scalar_arithmetic = matches!(
+                (&f.body, f.arity),
+                (Body::Prim(sym), 2) if matches!(sym.as_str(), "prim.add" | "prim.sub" | "prim.mul")
+            ) || matches!((&f.body, f.arity), (Body::Prim(sym), 1) if sym == "prim.neg");
+            let cannot_unwind = scalar_arithmetic
+                && matches!(scalar(result_type), Some(Scalar::F32 | Scalar::F64))
+                && params.iter().all(|ty| *ty == result_type);
+            let call = format!("f{}({})", id, xs.join(", "));
+            let result = if cannot_unwind {
+                self.bind(call)
+            } else {
+                self.bind_call(key, call)
+            };
             self.keep_borrowed_args(id, &xs);
             result
         }
@@ -5931,10 +6010,14 @@ impl<'p> Gen<'p> {
         let mut body_function = f.clone();
         let mut unpacked_parameters = false;
         if self.reuse && record.is_some() && slots.iter().all(|(_, width)| width.is_none()) {
-            if let Some(mut unpacked) = unpack_loop_state(self.uncounted, &self.uncounted.funcs[step]) {
-                let (body, locals) = crate::rc::insert_function(self.uncounted, &unpacked).expect("expression loop step");
+            if let Some(mut unpacked) =
+                unpack_loop_state(self.uncounted, &self.uncounted.funcs[step])
+            {
+                let (body, locals) = crate::rc::insert_function(self.uncounted, &unpacked)
+                    .expect("expression loop step");
                 unpacked.locals = locals;
-                crate::rc::check(self.prog, &unpacked, &body, &unpacked.locals).expect("invalid unpacked loop ownership");
+                crate::rc::check(self.prog, &unpacked, &body, &unpacked.locals)
+                    .expect("invalid unpacked loop ownership");
                 normalized = loop_state_expr(&body);
                 body_function = unpacked;
                 unpacked_parameters = true;
@@ -5962,14 +6045,20 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         } else if record.is_none() {
             out.push_str("    V l0 = st[0];\n");
         }
-        let first_temporary = if unpacked_parameters { body_function.arity } else { 1 };
+        let first_temporary = if unpacked_parameters {
+            body_function.arity
+        } else {
+            1
+        };
         for i in first_temporary..body_function.nlocals() {
             let _ = writeln!(out, "    V l{i} = 0;");
         }
         let live_calls = if self.reuse && self.unwind {
             crate::rc::ownership_liveness(self.prog, &body_function, e, &body_function.locals)
                 .expect("invalid loop ownership before C generation")
-        } else { HashMap::new() };
+        } else {
+            HashMap::new()
+        };
         let mut fg = FnGen {
             live_calls,
             g: self,
