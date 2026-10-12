@@ -1,4 +1,4 @@
 {
   "version": 1,
-  "publisher": "scripts/roadmap-recovery/publish-scalar-unwind-recovery.py"
+  "publisher": "scripts/roadmap-recovery/publish-current-ownership-recovery.py"
 }

@@ -1,5 +1,0 @@
-{
-  "version": 1,
-  "publisher": "scripts/roadmap-recovery/publish-numerical-benchmark-recovery.py",
-  "scope": "Accepted phase3 and current flat matrix, unwind, WASI, AD and numerical benchmark preparation"
-}

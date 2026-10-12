@@ -1,0 +1,9 @@
+{"cases":[
+{"rows":31,"inner":35,"columns":33,"managedCalls":1,"managedRequestedBytes":8192,"freedBytes":20544,"resultHash":"3b5a1dd72a50fef1"},
+{"rows":2,"inner":3,"columns":2,"managedCalls":1,"managedRequestedBytes":40,"freedBytes":192,"resultHash":"3e31c6a086a23133"},
+{"rows":0,"inner":3,"columns":2,"managedCalls":1,"managedRequestedBytes":8,"freedBytes":144,"resultHash":"14650fb0739d0383"},
+{"rows":2,"inner":0,"columns":3,"managedCalls":1,"managedRequestedBytes":56,"freedBytes":96,"resultHash":"6194065bc4001a2b"},
+{"rows":2,"inner":3,"columns":0,"managedCalls":1,"managedRequestedBytes":8,"freedBytes":144,"resultHash":"14650fb0739d0383"},
+{"rows":1,"inner":1,"columns":1,"managedCalls":1,"managedRequestedBytes":16,"freedBytes":96,"resultHash":"44bd2bd473ccf799"},
+{"rows":17,"inner":17,"columns":17,"managedCalls":1,"managedRequestedBytes":2320,"freedBytes":2656,"resultHash":"aa1d846606566819"},
+{"rows":17,"inner":17,"columns":17,"managedCalls":1,"managedRequestedBytes":2320,"freedBytes":5248,"resultHash":"0ee0f46606566819"}]}

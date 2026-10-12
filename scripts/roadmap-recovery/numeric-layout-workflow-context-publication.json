@@ -1,9 +1,0 @@
-{
-  "head": "2592570aa44b8dc41674238c405e19b33b7e9550",
-  "previous": "26814b6f99e496b1547fbeabbe4a2839bf2f9da0",
-  "branch": "ownership-evidence-numeric-layout-baseline",
-  "tree": "a3f0c7fb5235d7c5014f8c9112a48d7db9beea91",
-  "files": {
-    ".github/workflows/numeric-layout-baseline.yml": "b514090c64da0392177a83465de4edb044467f66af83e6db8051b07666ec5706"
-  }
-}

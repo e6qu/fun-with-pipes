@@ -1,6 +1,0 @@
-tree c94ed7f1bbc4e0c1f8f74b2fcbbbbe70e1359b0c
-parent 68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4
-author e6qu <adi11235@gmail.com> 1791740841 +0200
-committer GitHub <noreply@github.com> 1791740841 +0200
-
-Own library file and raw-memory resource lifetimes

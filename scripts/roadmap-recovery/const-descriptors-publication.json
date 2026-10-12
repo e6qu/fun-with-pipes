@@ -1,0 +1,9 @@
+{
+  "head": "c600a9343283c975be018ba59c40c7d0068d161e",
+  "previous": "b3fde38ec477433b0a11a63fcef2f15425bf7cce",
+  "tree": "4afb0e10e796ed18fe7d61dd0c29f3eddf9bbad8",
+  "branch": "ownership-evidence-flat-loop-owners",
+  "files": {
+    "src/cgen.rs": "a7385fe37d35899e920f2281ac9f4ff21b33d4d8d0cb828483b20bb6d27dd270"
+  }
+}

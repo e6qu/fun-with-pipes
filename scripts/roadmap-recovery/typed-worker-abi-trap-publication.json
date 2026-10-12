@@ -1,9 +1,0 @@
-{
-  "head": "9fe843746e9dd9a7ebf890caaa58a5b656a46076",
-  "previous": "33d003d5be6f011dca328fadf3b7533e0a7af48f",
-  "branch": "ownership-evidence-typed-worker-abi",
-  "tree": "add75bb1ac968a3d57ecc88e9233f530bdf69408",
-  "files": {
-    "scripts/measure-typed-worker-abi.py": "660750af409ffde28649998e151da72ab4c4526d107a852c792b842736df0291"
-  }
-}

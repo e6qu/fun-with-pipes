@@ -1,6 +1,0 @@
-tree 28ae0e5cea7fa5948683adb39a035ed40fb9b226
-parent b4285fc177b3ae7afaf195e5ebd7115cc77b815c
-author e6qu <adi11235@gmail.com> 1791766330 +0200
-committer GitHub <noreply@github.com> 1791766330 +0200
-
-Own resource and State lifetimes and preserve inferred effects

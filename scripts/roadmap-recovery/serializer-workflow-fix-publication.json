@@ -1,9 +1,0 @@
-{
-  "head": "b837f55fc91f073ef147455916d704b1ed12c673",
-  "previous": "ff9527f64e5fda735f2b2a7fe6a25d33664994bb",
-  "branch": "ownership-evidence-serializer-leaves",
-  "tree": "a2e63d9160244be46c0b644ba7154f6e28318896",
-  "files": {
-    ".github/workflows/serializer-leaf-evidence.yml": "023a6fb9a3f83c52f9fd641718d631455c7896b4830052239c62f898fdb3b951"
-  }
-}

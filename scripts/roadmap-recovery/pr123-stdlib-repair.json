@@ -1,8 +1,0 @@
-{
-  "previous": "b0ae00d5512df825271970cafcf569f52dbfc0cd",
-  "head": "9e7d0b24610524cf54125c44b47ee07185c0b7c3",
-  "branch": "ownership-library-resource-bundle",
-  "onlyChangedFile": "docs/stdlib.md",
-  "reason": "ARM regular stdlib_doc stale pointer-offset comment",
-  "validation": "All exact-head jobs pending; no old-head passes transferred"
-}

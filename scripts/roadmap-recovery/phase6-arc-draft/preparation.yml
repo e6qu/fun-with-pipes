@@ -1,0 +1,35 @@
+name: Tracing-free ownership preparation
+on:
+  push:
+    branches: [ownership-evidence-tracing-free]
+jobs:
+  arc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_ARC_ARTIFACTS: arc-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format and check compiler
+        run: |
+          cargo fmt --all
+          cargo clippy --all-targets -- -D warnings
+          cargo test --lib
+      - name: Eligibility and actual native ownership
+        run: cargo test --test arc_execution -- --nocapture
+      - name: Preserve formatted implementation
+        if: always()
+        run: |
+          mkdir -p arc-evidence/source
+          cp src/arc.rs src/cgen.rs src/main.rs src/lib.rs tests/arc_execution.rs runtime/fwp_rt_gc.c arc-evidence/source/
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: arc-evidence
+          path: arc-evidence/

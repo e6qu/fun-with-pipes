@@ -1,5 +1,0 @@
-{
-  "run": 38209247194,
-  "head": "c0281d6401a147fcbd70470be3aad91801187f8b",
-  "scope": "Allocation and semantic controls passed, but the report printed clang version while compilation used default cc. Exact compiler version was not captured. Future runners set CC=clang explicitly and query that executable."
-}

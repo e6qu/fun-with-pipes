@@ -6,14 +6,16 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `e8b4f5a14a564fd73d60bfef8c52cc78642b8349` passes audit38223569689.
+checkpoint `d00d306d1bac3d731f19769300e659b48cf7c020` passes audit38227215868.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies597 targets/35125144 bytes. Reports are retained in
-/private/tmp/fwp-verified-pr127-loop-restoration. On recovery, run the
-bounded restore-numeric-finalization-archive.py after restoring temporary
-sources to reconstruct the verified gzip export from its retained base64 text. Never rerun completed publishers. Phases1–3 are accepted; phases4–6 remain unfinished.
+verifies702 targets/48528910 bytes. Reports are retained in
+/private/tmp/fwp-verified-scalar-unwind-restoration. The next checkpoint keeps the active recovery map compact. Superseded helper
+snapshots remain in this verified immutable checkpoint and its ancestors;
+restore that head explicitly when historical source is needed. Current work
+uses the designated current-map.json, not an old publisher's next action.
+Never rerun completed publishers. Phases1–3 are accepted; phases4–6 remain unfinished.
 
 ## Execution contract
 
@@ -78,7 +80,7 @@ workloads are serial, low priority and guarded: sampled aggregate RSS below1GiB,
 target below2GiB, at least64GiB free disk, deadline180 seconds. Stop at limits;
 never raise or bypass them. Use `python3 scripts/local-guard.py COMMAND...` for
 fwp checks. The fun-refactor guard applies to that other repository.
-Latest disk observation:57,358,200KiB available, about54.7GiB; local target
+Latest disk observation:58,623,584KiB available, about55.9GiB; local target
 103,696KiB, about101.3MiB. The64GiB reserve remains unavailable. No local compiled
 check, broad doc audit, rebase or fast-forward ran. Only source edits and bounded
 remote metadata publication/downloads ran serially at low priority.
@@ -104,68 +106,33 @@ instructions are historical; use the current checkpoint and active bundle.
 
 ## Active phase4 bundle
 
-Preparation branch ownership-evidence-numeric-array-fusion has a passing
-Linux bundle3dbcddafe52b77a95f8db600d43d6208d4739b6c in runner38216031833.
-Formatted source/reports: /private/tmp/fwp-matrix-wasi-workspace-evidence.
-Eligible pure Array map/fold/length fusion removes intermediate allocations;
-effect/trap, recursion, exact finite bits and arithmetic NaN controls pass.
-Native/interpreter AD caches are bounded to512KiB. Cold/warm allocation,
-scoped ownership, stale tokens, adjoint zeroing, capacity faults, cancellation,
-reentrancy, normal/nested scopes, library unload and actual wasm32 limits pass.
-The library omission control fails as intended. Matrix ordinary and cast-shape
-products match the raw interpreter under both optimization settings.
-
-Direct matrix dimension/array arguments and output-only allocation pass at
-019580cc1ce07cc3f801e20ab3328c85ab6d8d68 in runner38217572666. Trap and
-cancellation cleanup, deliberately omitted cleanup, internal primitive access
-rejection and raw-interpreter shape controls pass. The kernel allocates exactly
-one output payload; callers retain responsibility for their input owners.
-
-Equivalent C/Rust/generated benchmarks are being validated. Head80b454 in
-runner38218487246 passed compiler and regression checks, then failed its profile
-instrumentation because a function prefix also matched a compile-time stub.
-Head e5de4d3811e2cc77a78612f359db2b93a92b9b88 passes runner38219155681;
-reports and source are retained in /private/tmp/fwp-numerical-benchmark-evidence.
-C/Rust/generated exact result hashes agree. Separate uninstrumented executables
-supply timings; allocation and reference counts, charged live memory and process
-RSS are recorded separately. Eight array rounds make8 managed requests and
-reclaim all charged storage with no collections, but retain/release1048600 times.
-This Linux sample's fwp kernels remain substantially slower than C/Rust. It is
-an optimization baseline, not a claim of parity or general hardware performance.
-Permanent test artifacts now supply allocation metadata without
-rebuilding the same evidence. Historical failed preparation heads are retained;
-none substitutes for a passing production gate.
-
-Combined Linux/ARM/Intel preparation71669990eeadcb77b4fd58e2181d86b78b0b2a2b
-passes all three jobs in38219456851. Per-platform benchmark reports and verified
-receipts are retained in /private/tmp/fwp-numerical-platform-baseline.
-
-Head0e50753158d8a688cb04214d386465645a747cbf (38219862595) passes the new matrix
-shared-view/direct-access controls and the borrowed-parent liveness unit test,
-but fails Array fusion semantics/allocation on Linux and ARM. The borrowing
-change exposes an old lookup rewrite cloning branch IR: address-keyed loop-tail
-and ownership maps then refer to the original nodes. Generated C wrongly boxes
-Step values and returns their addresses as completion flags. Failure source and
-log: fwp-direct-failure-array.c and fwp-numerical-direct-initial-failure.log.
-
-Current b05ba75320db7359b00af53ff0a7e43512d07406 (38220639450) removes that cloning
-rewrite and uses existing tag/payload variant locals for array/map lookups.
-It adds an owned map-result regression and uninstrumented benchmark disassembly.
-All three jobs pass. Formatted compiler/test source agrees across all targets;
-reports and uninstrumented disassembly are retained in
-/private/tmp/fwp-numerical-platform-evidence. The array profile now retains and
-releases524296 times for eight65537-element rounds (previously1048600). All
-charged value storage reclaims with zero collections. Matrix requested storage
-is unchanged; direct F64 access removes repeated view/stride checks. Linux
-emits separate SSE multiply/add vector instructions; the measured ARM kernel
-uses scalar floating registers. Timing remains descriptive, with residual costs
-recorded in docs/numerics.md. The failed preceding head remains a failed gate.
+Verified preparation b05ba75320db7359b00af53ff0a7e43512d07406 passes all three
+platform jobs in38220639450. Formatted source agrees across Linux/ARM/Intel;
+reports and uninstrumented disassembly are in
+/private/tmp/fwp-numerical-platform-evidence. Array fusion removes intermediate
+allocation; matrix kernels allocate only the output and preserve ordered floating
+arithmetic; AD reuses a bounded512KiB workspace with checked capacities and
+unwind/unload cleanup. Permanent semantic, physical-reclamation, alias/view,
+omission, library and actual WASI controls pass. C/Rust comparison reports are
+in docs/measurements/numerical-kernels-2026-10-12.json. Timings are descriptive;
+prior failing preparations and repairs are archived in history.
 
 PR #127 is open at d19fef9bf070cf435edb892663f6f388b337f0e7 on
 numerical-kernels-and-workspaces, based on accepted main3a458236. CI38225479910
-and roadmap_docs38225479939 are the current production gates. Docs and bench
-pass; Linux and both regular/GC macOS pairs are running. Query all seven results
-before merging. The superseded initial-head CI38222106138 was cancelled after
+and roadmap_docs38225479939 are the current production gates. Docs, bench and both macOS GC jobs pass. ARM regular macOS fails the original
+unique_arrays_are_written_in_place control: push allocates38149.4MiB with or
+without reuse. Linux/Intel were still running. This head cannot merge.
+The scalar-field borrowing optimization incorrectly holds a parent through
+an operation even when the borrowed field is an immediate scalar; consuming
+its array field then duplicates an owner and prevents in-place writes.
+Repair branch ownership-evidence-borrowed-scalar-reuse at
+70d04387f475cb3fc37ac047aebbc20dfa8c1750 runs38229871625 on all three targets.
+Only reference-valued fields extend parent borrowing; scalar field evaluation
+finishes before a later consuming argument. Preserve the original thresholds.
+Source map: /private/tmp/fwp-scalar-borrow-reuse-draft/files.json.
+Publish the formatted repair after focused validation, then require all seven
+results again for the new production head. Failure log:
+/private/tmp/fwp-pr127-macos-arm-failure.log. The superseded initial-head CI38222106138 was cancelled after
 repairing the loop reclamation test's boxed-only instrumentation. Its shared
 state control now marks typed pointer fields in direct flat entries as shared;
 the original reclamation threshold and semantic checks remain unchanged.
@@ -187,16 +154,54 @@ zero counts alone do not establish machine-code parity. Sources/assembly:
 it is not an additional native gate. Earlier failed compilation and missed
 flat-entry instrumentation remain failed runs, retained in preparation receipts.
 
-Current preparation0264d036dcac0f16833ea5a6a0996172e6148ecd additionally removes
+Preparation0264d036dcac0f16833ea5a6a0996172e6148ecd passes Linux38226799564 and removes
 unwind registration around concretely typed F32/F64 add/subtract/multiply/negate
 primitive calls. Argument evaluation and checked integer calls retain their
 protection. Permanent instrumentation bounds cleanup registrations per element,
 as well as requiring zero retains/allocations and reclaimed input ownership.
 Actual native tests and benchmarks are restored in the preparation workflow;
-this new head is pending validation. Source map:
+this head passes its native checks. Source map:
 /private/tmp/fwp-phase5-scalar-unwind-draft/files.json. Keep phase5 compiler
-changes separate from PR127 until its merge/acceptance. Then validate the
-coherent ownership/evidence bundle on Linux and both macOS targets before PR.
+changes separate from PR127 until its merge/acceptance. Current b3fde38ec477433b0a11a63fcef2f15425bf7cce additionally removes
+scopes around bounded scalar Array reads; map comparisons/retains remain
+protected. The measured bound retains one checked-index scope per element.
+All three platform jobs pass in38227512382. Verified reports, sources and
+actual uninstrumented disassembly: /private/tmp/fwp-loop-ownership-platform-evidence. Source map:
+/private/tmp/fwp-phase5-lookup-unwind-draft/files.json. Inspect every result
+and retain formatted sources/measurements before preparing the next PR.
+Assembly still reloads writable descriptors and dispatches fixed element widths.
+Current c600a9343283c975be018ba59c40c7d0068d161e makes generated descriptors
+const;38229158359 passes Linux and ARM, Intel remains running. Source map:
+/private/tmp/fwp-phase5-const-descriptors-draft/files.json. Carry the production
+scalar-borrow fix into this compiler before its final bundle validation; the
+phase5-compatible RC source is fwp-scalar-borrow-reuse-draft/rc-phase5.rs.
+
+## Phase6 preparation
+
+Independent branch ownership-evidence-tracing-free at
+20adf795b58e55d052a86ce81dc587e45bef2370, runner38229919586 pending,
+adds explicit --gc arc/tracing build selection. ARC checks monomorphic value
+shapes and primitive ownership contracts; unsupported opaque/mutable graphs,
+retained callbacks, raw pointers, raw AD tape lifetimes, foreign/remote and executable-protocol/library
+boundaries diagnose instead of selecting tracing. The first supported target is
+native main programs. Counted immutable escapes and scoped File owners must
+reclaim physically. Collector implementation is excluded in ARC builds;
+conflicting GC/reuse-debug settings diagnose. A counted-to-uncounted promotion
+traps as an internal contract violation. This mode is not yet validated support.
+The native tests compare a raw interpreter with arrays/views, escaping closures
+and scoped files, check charged storage at return, and deliberately omit freeing.
+Initial f1a748 failed clippy for redundant diagnostic borrows; ff325009 passes
+compiler checks but rejects synthesized Step shapes;6c2344 admits Step and
+fails the ledger test's global rather than main-thread instrumentation anchor.
+Current20adf795 scopes that anchor, rejects unproved AD token lifetimes and
+includes the scalar-borrow production repair. Retain these as failed runs;
+none is an ARC acceptance gate. Draft source map:
+/private/tmp/fwp-phase6-arc-draft/files.json plus fwp-arc-ledger-fix-files.json.
+Fix all failures;
+do not broaden eligibility without physical lifetime evidence. Source was
+prepared from exact accepted runtime/IR blobs plus the current phase5 compiler.
+Once coherent, phases5–6 may share the next production PR and full matrix to
+reduce cycle time, with each phase's criteria checked separately in order.
 
 Latest user constraint: avoid needless wrappers, alternate paths, magic and
 implicit defaults. Register spills are ordinary lowering, and protocol-defined

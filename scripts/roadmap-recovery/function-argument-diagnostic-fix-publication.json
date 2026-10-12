@@ -1,9 +1,0 @@
-{
-  "head": "bbb68321b522f5e732c6988df8b77345967ecd2f",
-  "previous": "69a4ecf12a4c997e2b98854025fd7aefe3c015f8",
-  "branch": "ownership-evidence-function-argument-effects",
-  "tree": "09ec5678a91da79460ac46c2b97730c6561d4ef4",
-  "files": {
-    "src/infer.rs": "5d97e5210a0cb3f3cd188f09399254c7562360c0d64e21bdacc4e390fd9c06de"
-  }
-}

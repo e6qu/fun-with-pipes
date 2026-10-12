@@ -1,0 +1,35 @@
+arc	Eligibility and actual native ownership	﻿2026-10-12T09:22:13.1393416Z ##[group]Run cargo test --test arc_execution -- --nocapture
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1393882Z ^[[36;1mcargo test --test arc_execution -- --nocapture^[[0m
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1460751Z shell: /usr/bin/bash -e {0}
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1461020Z env:
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1461233Z   CC: clang
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1461431Z   CARGO_BUILD_JOBS: 2
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1461649Z   RUST_TEST_THREADS: 2
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1461886Z   FWP_ARC_ARTIFACTS: arc-evidence
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1462147Z   CARGO_HOME: /home/runner/.cargo
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1462392Z   CARGO_INCREMENTAL: 0
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1462611Z   CARGO_TERM_COLOR: always
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1462851Z ##[endgroup]
+arc	Eligibility and actual native ownership	2026-10-12T09:22:13.1729717Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+arc	Eligibility and actual native ownership	2026-10-12T09:22:26.7388125Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized + debuginfo] target(s) in 13.57s
+arc	Eligibility and actual native ownership	2026-10-12T09:22:26.7391978Z ^[[1m^[[92m     Running^[[0m tests/arc_execution.rs (target/debug/deps/arc_execution-7572cd8632ba55a1)
+arc	Eligibility and actual native ownership	2026-10-12T09:22:26.7403154Z 
+arc	Eligibility and actual native ownership	2026-10-12T09:22:26.7403329Z running 2 tests
+arc	Eligibility and actual native ownership	2026-10-12T09:22:28.9088896Z 
+arc	Eligibility and actual native ownership	2026-10-12T09:22:28.9090019Z thread 'arc_programs_match_raw_interpreter_and_reclaim_escaped_values' (3154) panicked at tests/arc_execution.rs:57:13:
+arc	Eligibility and actual native ownership	2026-10-12T09:22:28.9090718Z assertion `left == right` failed
+arc	Eligibility and actual native ownership	2026-10-12T09:22:28.9091003Z   left: 3
+arc	Eligibility and actual native ownership	2026-10-12T09:22:28.9091210Z  right: 1
+arc	Eligibility and actual native ownership	2026-10-12T09:22:28.9091553Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+arc	Eligibility and actual native ownership	2026-10-12T09:22:28.9092527Z test arc_programs_match_raw_interpreter_and_reclaim_escaped_values ... FAILED
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8839879Z test arc_rejects_unproved_runtime_boundaries_and_disabled_counting ... ok
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8840504Z 
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8840644Z failures:
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8840843Z 
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8840947Z failures:
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8841384Z     arc_programs_match_raw_interpreter_and_reclaim_escaped_values
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8841785Z 
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8842098Z test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.14s
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8842480Z 
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8887393Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test arc_execution`
+arc	Eligibility and actual native ownership	2026-10-12T09:22:30.8919118Z ##[error]Process completed with exit code 101.

@@ -1,6 +1,0 @@
-{"cases":[
-{"elements":129,"managedCalls":0,"managedRequestedBytes":0,"retains":0,"freedBytes":1280,"resultBits":"405f200000000000"},
-{"elements":257,"managedCalls":0,"managedRequestedBytes":0,"retains":0,"freedBytes":2560,"resultBits":"406eb80000000000"},
-{"elements":0,"managedCalls":0,"managedRequestedBytes":0,"retains":0,"freedBytes":16,"resultBits":"8000000000000000"},
-{"elements":7,"managedCalls":0,"managedRequestedBytes":0,"retains":0,"freedBytes":64,"resultBits":"7ff8000000000001"},
-{"elements":1,"managedCalls":0,"managedRequestedBytes":0,"retains":0,"freedBytes":16,"resultBits":"3ff0000000000000"}]}

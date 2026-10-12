@@ -1,0 +1,2815 @@
+{
+  "head": "d00d306d1bac3d731f19769300e659b48cf7c020",
+  "tree": "fa3b23640adc0f338d2c3681e8470cd396804e32",
+  "restored": {
+    "/private/tmp/fwp-restore-roadmap-recovery.py": {
+      "source": "scripts/roadmap-recovery/restore-roadmap-recovery.py",
+      "sha256": "00a9a0b33a7ed5def075b832dc307edd59441ee44de7de856554a1da7a427b95"
+    },
+    "/private/tmp/fwp-publish-evidence-update.py": {
+      "source": "scripts/roadmap-recovery/publish-evidence-update.py",
+      "sha256": "2cf4d7b249d38f9c4b3ffa23d962c0a729fb060a6328b86f0c942b4fb55593c7"
+    },
+    "/private/tmp/fwp-measure-list-callback-allocations-complete.py": {
+      "source": "scripts/roadmap-recovery/measure-list-callback-allocations-complete.py",
+      "sha256": "45a51fa967f4f943dd590f4ca307dd55e240006a9b5611d80ca9bdf8b16a7bb8"
+    },
+    "/private/tmp/fwp-numeric-representation-design-preparation.json": {
+      "source": "scripts/roadmap-recovery/numeric-representation-design-preparation.json",
+      "sha256": "24f927fa209f67c3da0ab5c414cfe3b376acf2faa08048e88c3cb36f85711b64"
+    },
+    "/private/tmp/fwp-validate-restoration-on-runner.py": {
+      "source": "scripts/roadmap-recovery/validate-restoration-on-runner.py",
+      "sha256": "77829762cdcd492c4719f8967c4bdc67f2f006df0e24692cc82f15395ab53776"
+    },
+    "/private/tmp/fwp-merge-phase2-exit.py": {
+      "source": "scripts/roadmap-recovery/merge-phase2-exit.py",
+      "sha256": "043c170008787679411c5f6cd09fabc6bf135db2f6ba22f0a1539ecc6bef5ce1"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/manifest.json": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/manifest.json",
+      "sha256": "19c541e64599dc4f6bfbfaa79cb432ef2ad30454081044d969be02d3d31b0b69"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt.c",
+      "sha256": "af1b387be75b0cce9fdd87d1a3ab230a3f64c70e650bac12d3aea57041ce95fc"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_exec.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_exec.c",
+      "sha256": "868f6e267b8a45b899f6a743d51d2b86972d2fa051aeb3ce0daa8a25cf616419"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_gc.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_gc.c",
+      "sha256": "31841a745a14f494fbc88be8d23e89fa9656e718eb3a6d6f1a21f6b3ba7400d2"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_grpc.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_grpc.c",
+      "sha256": "6bc445d8b86ccd978062fb5d498e39f5c2306b93557df0a23cf4fe151acac5d8"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_h2.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_h2.c",
+      "sha256": "ff7132fabacfd66ebc00654ee05d273ed222da5316d285ee2446a18c766bb14d"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_http2.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_http2.c",
+      "sha256": "e578a481080f2cdbdb0db2816dfc6d5b7cec9cf4daf38a479b38e6729a5b3126"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_json.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_json.c",
+      "sha256": "0cbcacb962729e2717f2fd64460d33f31b53962c3aa694ba23c38e060f6ebe8c"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_kernel.c",
+      "sha256": "1a7319ebe3eb5f213f73b68516f4781f42ece070eeadfd119220e2618399eb2a"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_num.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_num.c",
+      "sha256": "75f800d3ab2ca2149b45b3981c0285960aa171130e56c6c59e59452ea0357c8b"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_ops.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_ops.c",
+      "sha256": "e88fb8f309d7cd3b9fa8a6a199599419b19f648c7537251983b2a73a25924948"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_pipe.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_pipe.c",
+      "sha256": "c13cc1ca1502a156f062e564e5c20860dfab2efbf6662096391bf51bb965a458"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_prims.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_prims.c",
+      "sha256": "964cfe7f42f01c64cca7af557bd8bd6aa7a17718b646b58a3c984b2a6a88d737"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_static.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_static.c",
+      "sha256": "d0bed2896eaa05d4bd295ffdbfd62200a1709f262516819d3cfc5199c79c9e29"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_sys.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_sys.c",
+      "sha256": "9fa195fdf417b9d39d447dfb058cb86940b1e67117484c4739b4ea0df628e0a3"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_task.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_task.c",
+      "sha256": "1798431e098079b2aa89ff936def415844cf055a6476617f08e52b9118e18ce7"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_tls.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_tls.c",
+      "sha256": "9e18c7224df6e3257da62e98a35bd9ff09ab86dd4575e306ec5970c70a60d33f"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/fwp_rt_web.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/fwp_rt_web.c",
+      "sha256": "f1f28e5d45999414b0fc17c12d3101efe567ca44bbe2da9ae7810279fdce4a6a"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/runtime/wasm/sjlj.c": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/runtime/wasm/sjlj.c",
+      "sha256": "adaaa1f60d844002107ccae218af1ca30ea7f8d5a395d1c7b9ae4f576be2ad84"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/cgen.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/cgen.rs",
+      "sha256": "5cb9f0212c713a7f5ad257cab50ab512bfe9e2b49afdb014f92cd1b76776ca74"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/ffi.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/ffi.rs",
+      "sha256": "d01193c6634c699747769c072bca6cfcdf9b3a166b0f24fea622f5178ebbdf0f"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/ir.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/ir.rs",
+      "sha256": "52980b69a4aac8ec0d92eaf4e479df377d041e514df82578663209ff3ea874ec"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/json.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/json.rs",
+      "sha256": "07b0e6a9bbda65f081c932d71e4b9d661f6749749b4279d47628d81f49146a4d"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/linalg.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/linalg.rs",
+      "sha256": "472ae03674aedfc14aaecf9801ef75907be37bc1046eec7b0a758e7da4473dcb"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/mono.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/mono.rs",
+      "sha256": "e5f6b1d76808a31f964518e899bb4850bd4c72d2b27d14583ab7059eb4efb3fd"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/numerics.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/numerics.rs",
+      "sha256": "a4588cf6bd5a23d85e98bc54461eecf5d19cdc32a0504ac896eaf6dd0a99a7b1"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/prims_std.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/prims_std.rs",
+      "sha256": "3c925536ee49947a9672829af87da21401a252702d409184a83e8b5713a07ee3"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/proto.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/proto.rs",
+      "sha256": "c4ff3e2bede6d93bb1ab829127e4bb0902c84f9374ea073504e63b8ad1089024"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/rc.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/rc.rs",
+      "sha256": "7ea40cd4f1512d93c9b9aaf0531865b5b72f673d5fd98f0385faf96216e26415"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/types.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/types.rs",
+      "sha256": "516a6dc499929ef501b45a07b24fe34db127ae8541a49790f852fff1451d4892"
+    },
+    "/private/tmp/fwp-numeric-representation-phase2-candidate-source/src/value.rs": {
+      "source": "scripts/roadmap-recovery/numeric-representation-phase2-candidate-source/src/value.rs",
+      "sha256": "e7a136a50242f905827b41289dcdcbf9c1a4399d47dc84ec6124e598cc3b86bb"
+    },
+    "/private/tmp/fwp-numeric-layout-baseline-passing-proof.json": {
+      "source": "scripts/roadmap-recovery/numeric-layout-baseline-passing-proof.json",
+      "sha256": "189bd88ce6ba2e827f5bb9432eaadb05f08b2b6729fe501c80c0e00cf6622bce"
+    },
+    "/private/tmp/fwp-phase2-exit-merge-proof.json": {
+      "source": "scripts/roadmap-recovery/phase2-exit-merge-proof.json",
+      "sha256": "852470d9970a97bbb27905456b8f965921251ce4818e90e01e70b5e3e03e09da"
+    },
+    "/private/tmp/fwp-phase2-exit-final-gate-proof.json": {
+      "source": "scripts/roadmap-recovery/phase2-exit-final-gate-proof.json",
+      "sha256": "36c06228c31df67d6b8ff176b3189951a95f0a11fbf6a0555ebaf3e97c7dfa38"
+    },
+    "/private/tmp/fwp-phase2-exit-signed-payload.txt": {
+      "source": "scripts/roadmap-recovery/phase2-exit-signed-payload.txt",
+      "sha256": "72027555158d90145f8f83d87e87389616e296023c269b97e5e1d96c72fad4f1"
+    },
+    "/private/tmp/fwp-unboxed-records-fixture-draft.fwp": {
+      "source": "scripts/roadmap-recovery/unboxed-records-fixture-draft.fwp",
+      "sha256": "494283d0a4cb8d4cc9ba8f29441d3ed910e4f01794a7b68746aac76177aed305"
+    },
+    "/private/tmp/fwp-numeric-layout-baseline-evidence/proof.json": {
+      "source": "scripts/roadmap-recovery/numeric-layout-baseline-evidence/proof.json",
+      "sha256": "72ba7826c1098fbadb87c773c45eb3a3bc74fa341b7a411bcef2a8b8cb846c71"
+    },
+    "/private/tmp/fwp-numeric-layout-baseline-evidence/macos-15-intel/baseline.json": {
+      "source": "scripts/roadmap-recovery/numeric-layout-baseline-evidence/macos-15-intel/baseline.json",
+      "sha256": "f8299ae5396d1b22bf696968a1daca924db3b798a47160503e28085287594a59"
+    },
+    "/private/tmp/fwp-numeric-layout-baseline-evidence/macos-15/baseline.json": {
+      "source": "scripts/roadmap-recovery/numeric-layout-baseline-evidence/macos-15/baseline.json",
+      "sha256": "a3e13b9edd1df9a6f6135ffdad61e541c8753e326ee827ee53b17b177f19dc94"
+    },
+    "/private/tmp/fwp-numeric-layout-baseline-evidence/ubuntu-latest/baseline.json": {
+      "source": "scripts/roadmap-recovery/numeric-layout-baseline-evidence/ubuntu-latest/baseline.json",
+      "sha256": "a6c90659ff8478e7fd23739bf64fad015c5534aecdd528cc629f8dc9a6c10870"
+    },
+    "/private/tmp/fwp-accepted-phase2-source/download.json": {
+      "source": "scripts/roadmap-recovery/accepted-phase2-source/download.json",
+      "sha256": "59ec350513b45c5ea7767da22848a01da31ec9bf0104afd1b506d7d8a44cea78"
+    },
+    "/private/tmp/fwp-accepted-phase2-source/phase2-acceptance.json": {
+      "source": "scripts/roadmap-recovery/accepted-phase2-source/phase2-acceptance.json",
+      "sha256": "c5c2eae984c8774982b442bfee4cca54efdf9efcc68e55cfd871bfa4a309e84e"
+    },
+    "/private/tmp/fwp-accepted-phase2-source/fallback-review.json": {
+      "source": "scripts/roadmap-recovery/accepted-phase2-source/fallback-review.json",
+      "sha256": "5edad974fb0bc2878047ce5711c7096c14768d5157a7c708ebf1effdfdba86c3"
+    },
+    "/private/tmp/fwp-accepted-phase2-source/signed-payload.txt": {
+      "source": "scripts/roadmap-recovery/accepted-phase2-source/signed-payload.txt",
+      "sha256": "72027555158d90145f8f83d87e87389616e296023c269b97e5e1d96c72fad4f1"
+    },
+    "/private/tmp/fwp-accepted-phase2-source/inventory.json": {
+      "source": "scripts/roadmap-recovery/accepted-phase2-source/inventory.json",
+      "sha256": "1707856b0960187793678240aa7ba436a6035bebe35fbaaad312a2148e6800f6"
+    },
+    "/private/tmp/fwp-typed-worker-abi-fixture.fwp": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-fixture.fwp",
+      "sha256": "85ed14dc2bacb952ad8e1f5e29a4d88b3e442c4daae6f2849303b89042cafe40"
+    },
+    "/private/tmp/fwp-typed-worker-abi-trap-publication.json": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-trap-publication.json",
+      "sha256": "92b5b6e34b4bc4222ec3310deb2127a2abe6c9a5c59d0c1a9b896b26ded277b8"
+    },
+    "/private/tmp/fwp-typed-worker-abi-publication.json": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-publication.json",
+      "sha256": "8738daf322b3d696114925028ecc4605bbfd87aa9e1dc9e067f3a2f6768f7cd0"
+    },
+    "/private/tmp/fwp-typed-worker-abi-decoder-publication.json": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-decoder-publication.json",
+      "sha256": "add7d491e2a5a1d4b5092afe88951e3869230c278c4060329bfd5a953eae1e90"
+    },
+    "/private/tmp/fwp-measure-typed-worker-abi.py": {
+      "source": "scripts/roadmap-recovery/measure-typed-worker-abi.py",
+      "sha256": "d9610366b9f1f6aaf1c92fc748a19558c835b7c7903aeea8bc514bb188cb003a"
+    },
+    "/private/tmp/fwp-typed-worker-abi-fixture-publication.json": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-fixture-publication.json",
+      "sha256": "d191494d4a9df60a55d38d643164a1f8ac991deaaef1a1322fb0da9449bae635"
+    },
+    "/private/tmp/fwp-typed-worker-abi.yml": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi.yml",
+      "sha256": "adccfb81596de699c1efcc854f8ea333085ed60f1b76911e7de8db6a7766e407"
+    },
+    "/private/tmp/fwp-typed-worker-abi-cgen-draft.rs": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-cgen-draft.rs",
+      "sha256": "c8226db51df79086650befa64ff4a0173b7acf601f7d34cb62f8592cf0d3fa97"
+    },
+    "/private/tmp/fwp-prepare-typed-worker-abi.py": {
+      "source": "scripts/roadmap-recovery/prepare-typed-worker-abi.py",
+      "sha256": "2e1367a8542013ab3dc5d8e91cd06aee9b291d2dce92a1b345d72a31d12faf39"
+    },
+    "/private/tmp/fwp-fetch-typed-worker-abi-evidence.py": {
+      "source": "scripts/roadmap-recovery/fetch-typed-worker-abi-evidence.py",
+      "sha256": "804c8fc704f720009d1e1bf7d1b7cd2665d00cdabfea9463b639311d324c08fa"
+    },
+    "/private/tmp/fwp-fetch-verified-phase3-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-verified-phase3-restoration.py",
+      "sha256": "8336c1400cf8e380bdf5dc000dfa334d839a2d3277349343d1a3ac889fd4cd9e"
+    },
+    "/private/tmp/fwp-cancel-duplicate-main125-ci.py": {
+      "source": "scripts/roadmap-recovery/cancel-duplicate-main125-ci.py",
+      "sha256": "006ea59b708983ccda03c04dd629754752e59a76f45690072c9dc54bb4d72fd7"
+    },
+    "/private/tmp/fwp-main125-duplicate-ci-proof.json": {
+      "source": "scripts/roadmap-recovery/main125-duplicate-ci-proof.json",
+      "sha256": "88ef4fae91dfede6b91328f76af4b1b0548b57f821e1d320fe699d0b6e71ad02"
+    },
+    "/private/tmp/fwp-numeric-representation-accepted-source-manifest.json": {
+      "source": "scripts/roadmap-recovery/numeric-representation-accepted-source-manifest.json",
+      "sha256": "2a6b95f903365f9848b948380fa2cb0f7f03dd03a664c552902f8e0a3188ddfd"
+    },
+    "/private/tmp/fwp-typed-worker-abi-evidence/proof.json": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-evidence/proof.json",
+      "sha256": "7426c662269b88c822e23f576e029df6fdd80ad2d6a9954e6d8ee09b28aa1678"
+    },
+    "/private/tmp/fwp-typed-worker-abi-evidence/macos-15-intel/baseline.json": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-evidence/macos-15-intel/baseline.json",
+      "sha256": "a1e362f4c45dd32b44d244cd566aa2d3f87ee1acaba905d38a8b6440d878b4c1"
+    },
+    "/private/tmp/fwp-typed-worker-abi-evidence/macos-15/baseline.json": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-evidence/macos-15/baseline.json",
+      "sha256": "da56f419d57434e8cd7bcad2c4a397d54d70c348ef71f5fcebd259f2df635eee"
+    },
+    "/private/tmp/fwp-typed-worker-abi-evidence/ubuntu-latest/baseline.json": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-evidence/ubuntu-latest/baseline.json",
+      "sha256": "7cb78a0312ef99cf84ac1de5cf84afe819a45df2cfd097c9d23ce31caff1c826"
+    },
+    "/private/tmp/fwp-streamlined-handoff-audit.yml": {
+      "source": "scripts/roadmap-recovery/streamlined-handoff-audit.yml",
+      "sha256": "ca7853e0cc378c95d360a1e387a362711d2ae8a012b1bf335eb499f53baed61b"
+    },
+    "/private/tmp/fwp-typed-numeric-preparation-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/typed-numeric-preparation-checkpoint.json",
+      "sha256": "1d477989aa9811b72f3ed74c88b8126a6cacad271c4827adb366c2c250ac497c"
+    },
+    "/private/tmp/fwp-packed-array-scalar-probe-publication.json": {
+      "source": "scripts/roadmap-recovery/packed-array-scalar-probe-publication.json",
+      "sha256": "8484f908d2f39069e0cce7c36c53eefe2ebff90becd7e8d4a435944312c23666"
+    },
+    "/private/tmp/fwp-packed-array-generation-publication.json": {
+      "source": "scripts/roadmap-recovery/packed-array-generation-publication.json",
+      "sha256": "d802d42ce630aecb6ecf0b039d00a8b9eb5f91aac3aecb756de0be5a550fc3da"
+    },
+    "/private/tmp/fwp-fetch-packed-array-controls.py": {
+      "source": "scripts/roadmap-recovery/fetch-packed-array-controls.py",
+      "sha256": "71b2098dd58c4691a9ae5115eef0d5ad9655ec94d94f3187e51a89504ad7fcb8"
+    },
+    "/private/tmp/fwp-prepare-packed-array-runtime.py": {
+      "source": "scripts/roadmap-recovery/prepare-packed-array-runtime.py",
+      "sha256": "875aef1a46736889e4c95482f1188524d1bf5443b00a8e4c32e612a2ee9e629b"
+    },
+    "/private/tmp/fwp-packed-array-unowned-draft.c": {
+      "source": "scripts/roadmap-recovery/packed-array-unowned-draft.c",
+      "sha256": "d252a735e60205c45231bd58c7b770dba2776b288be5b979da59010850ed882b"
+    },
+    "/private/tmp/fwp-packed-array-element-ownership-draft.rs": {
+      "source": "scripts/roadmap-recovery/packed-array-element-ownership-draft.rs",
+      "sha256": "d36430d69bf00805019100d0a1163d4e06bfa26d18848f4a9b31da4b7e801195"
+    },
+    "/private/tmp/fwp-prepare-packed-array-integration.py": {
+      "source": "scripts/roadmap-recovery/prepare-packed-array-integration.py",
+      "sha256": "ecb2c241dd491606f79e5dcdb09d69bc12a6ca61633c62552533faf01d1298eb"
+    },
+    "/private/tmp/fwp-packed-array-helpers-draft.c": {
+      "source": "scripts/roadmap-recovery/packed-array-helpers-draft.c",
+      "sha256": "903d552b48fcb0072c5795f7f9151c9d4d0f1cb4ea68887197fa713e83719794"
+    },
+    "/private/tmp/fwp-packed-array-typed-core-draft.c": {
+      "source": "scripts/roadmap-recovery/packed-array-typed-core-draft.c",
+      "sha256": "01a9eeac51c05e3cd033f19b48d6bf63e40d051324e0d290176e3992de8251f6"
+    },
+    "/private/tmp/fwp-publish-packed-numeric-arrays.py": {
+      "source": "scripts/roadmap-recovery/publish-packed-numeric-arrays.py",
+      "sha256": "d358a10eab537b31fe992620a6b0542dd74af43ef29a0bfe66fd3e0bbf1835e8"
+    },
+    "/private/tmp/fwp-packed-numeric-arrays-94d-linux-failed.log": {
+      "source": "scripts/roadmap-recovery/packed-numeric-arrays-94d-linux-failed.log",
+      "sha256": "9d9b003eeff7c0d49dc10823f349af1222e8764482742107aa2b493ddfb5de2f"
+    },
+    "/private/tmp/fwp-packed-numeric-arrays-fixture.fwp": {
+      "source": "scripts/roadmap-recovery/packed-numeric-arrays-fixture.fwp",
+      "sha256": "847e850d84c940b137f3a9f6355388cd582a486661df4bfbab3637a9ebd3459b"
+    },
+    "/private/tmp/fwp-measure-packed-numeric-arrays.py": {
+      "source": "scripts/roadmap-recovery/measure-packed-numeric-arrays.py",
+      "sha256": "4e330446e64cd7cff45b2304a580ae524a7ce02ca91153149b98da03a4d4ddbb"
+    },
+    "/private/tmp/fwp-packed-numeric-arrays-publication.json": {
+      "source": "scripts/roadmap-recovery/packed-numeric-arrays-publication.json",
+      "sha256": "8f8995e029df4e8ce86f3a724380d16bdf5df7eff78091068566d1eb38555a8e"
+    },
+    "/private/tmp/fwp-packed-numeric-arrays-3b1-linux-failed.log": {
+      "source": "scripts/roadmap-recovery/packed-numeric-arrays-3b1-linux-failed.log",
+      "sha256": "3e5a1c853a8f7a47771e1002e04386a15ca32da9201e03cd560263364b0a3e1d"
+    },
+    "/private/tmp/fwp-packed-numeric-arrays-api-input.json": {
+      "source": "scripts/roadmap-recovery/packed-numeric-arrays-api-input.json",
+      "sha256": "4bc1dc6cad38c60eaf276d9943cdc11710620e2f6beb36892a37f00b29ad676a"
+    },
+    "/private/tmp/fwp-packed-numeric-arrays.yml": {
+      "source": "scripts/roadmap-recovery/packed-numeric-arrays.yml",
+      "sha256": "b0aba5619bf59c0519a76d32c976df0051239596d988160c7ce1d731913477ba"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/manifest.json": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/manifest.json",
+      "sha256": "808723c18900cf061489b3a7a97f36638c2f304420022fc4dac8425997f0e2b4"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/tests/array_size_limits.rs": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/tests/array_size_limits.rs",
+      "sha256": "b3d55dc878885f431baabcf5436e12b8531e0d913fcf7916732c4fedff20e4c1"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/tests/worker_boxing_ownership.rs": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/tests/worker_boxing_ownership.rs",
+      "sha256": "430ec3f6a205a53438010e01152c8eac00c5c6d9ad1e65add08bee5b2fcc5575"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/tests/worker_preparation_ownership.rs": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/tests/worker_preparation_ownership.rs",
+      "sha256": "e5d211ec1d3d9f67f68692e3bd07602a5d45df56e55d56fca51dcaac4dc9ad9b"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/tests/numerics.rs": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/tests/numerics.rs",
+      "sha256": "6311ca60103549f28ad5301c54dea7dfa96389943302a0aa834586c546e16f98"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/tests/array_element_ownership.rs": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/tests/array_element_ownership.rs",
+      "sha256": "92b5ab450d675a2d7954fab505a91ab5b9ac5161f7e4a80582d748e54e5dc45d"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/tests/kernel_stack_bounds.rs": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/tests/kernel_stack_bounds.rs",
+      "sha256": "8c20505a5aa2677e91311d65c7b199ed58a0b5feedbb6b23f729df2b15cffc77"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/tests/device_bounds.rs": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/tests/device_bounds.rs",
+      "sha256": "48eb32faefaae4d83b0ec66d70fa7d682c4ad2828190d0037a3629211c87eeeb"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/tests/fixtures/kernel_stack_probe.c": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/tests/fixtures/kernel_stack_probe.c",
+      "sha256": "a7afff81550f172fa337c3b676a642473dbc6d907ed875099e9700cad7f10d5c"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/tests/fixtures/array_size_probe.c": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/tests/fixtures/array_size_probe.c",
+      "sha256": "7660add983cb8f51c9757e84dbfb8e2c713794339ded954e77d87303601eb2ec"
+    },
+    "/private/tmp/fwp-packed-array-original-controls/tests/fixtures/device_bounds_probe.c": {
+      "source": "scripts/roadmap-recovery/packed-array-original-controls/tests/fixtures/device_bounds_probe.c",
+      "sha256": "14cecd7865a11ac9276cbb76de1e6dc783a7b71caf48b9c5dee5a3c2bfc2e902"
+    },
+    "/private/tmp/fwp-packed-array-runtime-draft/fwp_rt_gc.c": {
+      "source": "scripts/roadmap-recovery/packed-array-runtime-draft/fwp_rt_gc.c",
+      "sha256": "3458a76c9326f543376b3afb1a9a540b3be1fc81ca0fcafca331f2e30b7e425d"
+    },
+    "/private/tmp/fwp-packed-array-runtime-draft/fwp_rt_ops.c": {
+      "source": "scripts/roadmap-recovery/packed-array-runtime-draft/fwp_rt_ops.c",
+      "sha256": "5a49b59741107a32afc9f14b35dff19588dbb9de17e7eb6debf6f12715b763b3"
+    },
+    "/private/tmp/fwp-packed-array-runtime-draft/fwp_rt_json.c": {
+      "source": "scripts/roadmap-recovery/packed-array-runtime-draft/fwp_rt_json.c",
+      "sha256": "7bc6cdba70e8bf373188e0e83cbf04fe58da6fd1014ee203fc8a25cdfacf4914"
+    },
+    "/private/tmp/fwp-packed-array-runtime-draft/fwp_rt_exec.c": {
+      "source": "scripts/roadmap-recovery/packed-array-runtime-draft/fwp_rt_exec.c",
+      "sha256": "8dbfa9491f4e0e0040b75b48a07f45fdc06dded79092bf6ad35c28f5d9931fcd"
+    },
+    "/private/tmp/fwp-packed-array-runtime-draft/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/packed-array-runtime-draft/fwp_rt_kernel.c",
+      "sha256": "1ba6fdb71c67cc9e4f6b2e393e0566aab9271b60581314c0e8b32dc596c16c2b"
+    },
+    "/private/tmp/fwp-packed-array-runtime-draft/fwp_rt_num.c": {
+      "source": "scripts/roadmap-recovery/packed-array-runtime-draft/fwp_rt_num.c",
+      "sha256": "ff2315ad64d06122ef8731357eaed33a04e640f50229b845730381bf28cbff46"
+    },
+    "/private/tmp/fwp-packed-array-runtime-draft/fwp_rt_prims.c": {
+      "source": "scripts/roadmap-recovery/packed-array-runtime-draft/fwp_rt_prims.c",
+      "sha256": "1c543cc9984d175cdb15fea2fc00f3836bf9e34a7ce4e8c26b98696556246844"
+    },
+    "/private/tmp/fwp-packed-array-runtime-draft/fwp_rt.c": {
+      "source": "scripts/roadmap-recovery/packed-array-runtime-draft/fwp_rt.c",
+      "sha256": "4f6e70a6265c4bcf8cbcd28cb897940d6a77c37de0e6e4772a7084bfa64ec97e"
+    },
+    "/private/tmp/fwp-packed-array-runtime-draft/cgen.rs": {
+      "source": "scripts/roadmap-recovery/packed-array-runtime-draft/cgen.rs",
+      "sha256": "6ef0d7a53c01aac52ad9751ab4340e3b0215c8a71fb98c229a3cfe0717d4f1c4"
+    },
+    "/private/tmp/fwp-typed-worker-abi-evidence/ubuntu-latest/cgen.formatted.rs": {
+      "source": "scripts/roadmap-recovery/typed-worker-abi-evidence/ubuntu-latest/cgen.formatted.rs",
+      "sha256": "73233d8fe0f4b34ac25aadc772054d18fd21b11e8559c20ca5a2388104fdabce"
+    },
+    "/private/tmp/fwp-scalar-unwind-current-map.json": {
+      "source": "scripts/roadmap-recovery/current-map.json",
+      "sha256": "3e60e9db6ac064ea6f0b68e42529e8feff264434f94eefef0d76703c3063bf8d"
+    },
+    "/private/tmp/fwp-publish-packed-controls-recovery-checkpoint.py": {
+      "source": "scripts/roadmap-recovery/publish-packed-controls-recovery-checkpoint.py",
+      "sha256": "69005a2c1b2ad14158ce87cf8b7da8e81f705bd695220f23411bce3aea28f6ca"
+    },
+    "/private/tmp/fwp-packed-array-memory-publication.json": {
+      "source": "scripts/roadmap-recovery/packed-array-memory-publication.json",
+      "sha256": "a8557258608f7a43b799c60d5a03e7604622e042d0d22d42d3d28330332eb580"
+    },
+    "/private/tmp/fwp-packed-array-permanent-controls-publication.json": {
+      "source": "scripts/roadmap-recovery/packed-array-permanent-controls-publication.json",
+      "sha256": "5c8707facb49ed66394e3707ee25ad18e6cecb6480392961b22c965c90157154"
+    },
+    "/private/tmp/fwp-packed-array-memory-probe-draft.c": {
+      "source": "scripts/roadmap-recovery/packed-array-memory-probe-draft.c",
+      "sha256": "07aae45ec0d50f2cf01d2a59ba8ca66abd460c3d9d5361f94f83160e72e0c005"
+    },
+    "/private/tmp/fwp-measure-packed-array-memory.py": {
+      "source": "scripts/roadmap-recovery/measure-packed-array-memory.py",
+      "sha256": "e6ebff301374fdf091007fd70be2b05b0c1e80d05f368654ab52e0675a072307"
+    },
+    "/private/tmp/fwp-packed-kernel-stack-bounds-draft.rs": {
+      "source": "scripts/roadmap-recovery/packed-kernel-stack-bounds-draft.rs",
+      "sha256": "e8dd87d16a0e2b2b46817db465eab32a8715424f8cfca98aa786616454066f99"
+    },
+    "/private/tmp/fwp-packed-kernel-stack-probe-draft.c": {
+      "source": "scripts/roadmap-recovery/packed-kernel-stack-probe-draft.c",
+      "sha256": "dbfa14d954804799226b42c895500f5bb4f9845ab0e3361e0d31236711ce96e0"
+    },
+    "/private/tmp/fwp-packed-numeric-storage-test-draft.rs": {
+      "source": "scripts/roadmap-recovery/packed-numeric-storage-test-draft.rs",
+      "sha256": "eac52d40cfc6bf99bdcf4651e0fd272d068ee6b95536cfb115c7d750ce85c19d"
+    },
+    "/private/tmp/fwp-packed-wasm-test-draft.rs": {
+      "source": "scripts/roadmap-recovery/packed-wasm-test-draft.rs",
+      "sha256": "b11d3b0bf169c7a1bbceb373b050573682f3551280f7af36ff417ed5ed452e9f"
+    },
+    "/private/tmp/fwp-packed-array-size-test-draft.rs": {
+      "source": "scripts/roadmap-recovery/packed-array-size-test-draft.rs",
+      "sha256": "ce0290a268aa1ff4afcdea5359c8b4f3da25ac10863660c36f7ef66669e1b877"
+    },
+    "/private/tmp/fwp-packed-array-size-probe-draft.c": {
+      "source": "scripts/roadmap-recovery/packed-array-size-probe-draft.c",
+      "sha256": "c9eaff3b3e20e3a54e9dff0899ac869b51ac06a41be4dae58e6981a0cb1bd909"
+    },
+    "/private/tmp/fwp-numeric-layout-probe-draft.c": {
+      "source": "scripts/roadmap-recovery/numeric-layout-probe-draft.c",
+      "sha256": "894f2adeb9746adfea76ca3fba377b9638d379bc720061b2db342ba59b770be9"
+    },
+    "/private/tmp/fwp-retain-packed-representation-evidence.py": {
+      "source": "scripts/roadmap-recovery/retain-packed-representation-evidence.py",
+      "sha256": "fce1f779de09414cfd2683194eaaa702c6aefc3a0b1f0766ce16e843643ef302"
+    },
+    "/private/tmp/fwp-fetch-active-numeric-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-active-numeric-restoration.py",
+      "sha256": "db7345785fc7f92d8c87a0ab13f6c6fb9d8cab9081d76ba82f3d79bbff019adb"
+    },
+    "/private/tmp/fwp-packed-representation-evidence/proof.json": {
+      "source": "scripts/roadmap-recovery/packed-representation-evidence/proof.json",
+      "sha256": "5913def2fd1af1cf38aa14099b268df4d133c8c203485513fae4c11eb166441d"
+    },
+    "/private/tmp/fwp-packed-representation-evidence/ubuntu-latest/baseline.json": {
+      "source": "scripts/roadmap-recovery/packed-representation-evidence/ubuntu-latest/baseline.json",
+      "sha256": "2936e116dd1a93331dfc56b9eeb47630f8f13f0af02ac7efb1b27e575918cb9e"
+    },
+    "/private/tmp/fwp-packed-representation-evidence/ubuntu-latest/array-memory/comparison.json": {
+      "source": "scripts/roadmap-recovery/packed-representation-evidence/ubuntu-latest/array-memory/comparison.json",
+      "sha256": "2203e3c376d5125057fe56949f61ce1ce9c26345e2ee5400b60b6a38bb8895d7"
+    },
+    "/private/tmp/fwp-packed-representation-evidence/macos-15/baseline.json": {
+      "source": "scripts/roadmap-recovery/packed-representation-evidence/macos-15/baseline.json",
+      "sha256": "2e5ef741edd1733b3c6ac3d7cc7ef4f4bbb93abd55a8fe74f04edd29d4acca7e"
+    },
+    "/private/tmp/fwp-packed-representation-evidence/macos-15/array-memory/comparison.json": {
+      "source": "scripts/roadmap-recovery/packed-representation-evidence/macos-15/array-memory/comparison.json",
+      "sha256": "55f9814f05c9fdcb7ccc4e69f893b86ca87c08af4b6aed6c721f695fe70c6502"
+    },
+    "/private/tmp/fwp-packed-representation-evidence/macos-15-intel/baseline.json": {
+      "source": "scripts/roadmap-recovery/packed-representation-evidence/macos-15-intel/baseline.json",
+      "sha256": "6e0632d1543ee91873e075f64c6e656d59c4536dd1bc545d78952087487aab2a"
+    },
+    "/private/tmp/fwp-packed-representation-evidence/macos-15-intel/array-memory/comparison.json": {
+      "source": "scripts/roadmap-recovery/packed-representation-evidence/macos-15-intel/array-memory/comparison.json",
+      "sha256": "84815c2b70e049411b67b861fc46acd92745b2695de7753e4b8aeefcd7e6f603"
+    },
+    "/private/tmp/fwp-verified-active-numeric-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-active-numeric-restoration/validation.json",
+      "sha256": "0d5df73ba77e29db630ae67dc6417952f2391d5419eff80dada324447c2728e5"
+    },
+    "/private/tmp/fwp-verified-active-numeric-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-active-numeric-restoration/recovery-restoration.json",
+      "sha256": "a4082b8b31bc3e49c60e89bed8db2b671707e28e7f383d041b8ec490b38edb1b"
+    },
+    "/private/tmp/fwp-verified-active-numeric-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-active-numeric-restoration/proof.json",
+      "sha256": "37306b0b1152ab77069f8f2dc1917b1234df3be8f757930e3e420936932f7f81"
+    },
+    "/private/tmp/fwp-publish-current-numeric-recovery-checkpoint.py": {
+      "source": "scripts/roadmap-recovery/publish-current-numeric-recovery-checkpoint.py",
+      "sha256": "80f329f1a9e31d7940441da3882a60bfa3ea5c3c0032b8f2f06a6874621c80f8"
+    },
+    "/private/tmp/fwp-merge-numeric-storage.py": {
+      "source": "scripts/roadmap-recovery/merge-numeric-storage.py",
+      "sha256": "f0fb4a349ad405058a58c8e6e513fe037ba370011752d2a4841a77e993379e0d"
+    },
+    "/private/tmp/fwp-prepare-protocol-bounds.py": {
+      "source": "scripts/roadmap-recovery/prepare-protocol-bounds.py",
+      "sha256": "ba502d6dcb6b2e43f4af629435be4a95e19057f506f214acd711b27efd2090da"
+    },
+    "/private/tmp/fwp-protocol-empty-wire-draft.c": {
+      "source": "scripts/roadmap-recovery/protocol-empty-wire-draft.c",
+      "sha256": "96f4632bf04c0f913b3f1a18be41ac1a8722f151727ee5dad054ae8e25a25c53"
+    },
+    "/private/tmp/fwp-protocol-count-probe-draft.c": {
+      "source": "scripts/roadmap-recovery/protocol-count-probe-draft.c",
+      "sha256": "f40432c5e6feb8f5121a8b0ccfac63f4e0f01eadfa664a8c68c20238b7c84b33"
+    },
+    "/private/tmp/fwp-finalize-numeric-storage-on-runner.py": {
+      "source": "scripts/roadmap-recovery/finalize-numeric-storage-on-runner.py",
+      "sha256": "b374936be6e071499a03fca2a897d9361a220e43ab114c7681d1824a2248ed60"
+    },
+    "/private/tmp/fwp-download-numeric-storage-finalization.py": {
+      "source": "scripts/roadmap-recovery/download-numeric-storage-finalization.py",
+      "sha256": "a6071982cc30566f298395a2e3df99165a3148571872d4ea67c9997c93a9d200"
+    },
+    "/private/tmp/fwp-publish-numeric-storage-production.py": {
+      "source": "scripts/roadmap-recovery/publish-numeric-storage-production.py",
+      "sha256": "ee07efddff99af4396a7bb09a68b874a7f493a5f4726a2bc43c62903a20f9071"
+    },
+    "/private/tmp/fwp-numeric-storage-production-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-production-publication.json",
+      "sha256": "53e2aad886d8cf7cfa23dee306cc5ccd408c67c905daa7557075ca4494ecd963"
+    },
+    "/private/tmp/fwp-numeric-storage-history-repair-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-history-repair-publication.json",
+      "sha256": "836724925768350fec0ca806214e4701997900dfb83bbb649f69670c3650be39"
+    },
+    "/private/tmp/fwp-numeric-storage-superseded-history-ci.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-superseded-history-ci.json",
+      "sha256": "644a75a893f694cee32b757f01be732ef48e5419c3bad76b5b2db862dee9e496"
+    },
+    "/private/tmp/fwp-fetch-phase4-source.py": {
+      "source": "scripts/roadmap-recovery/fetch-phase4-source.py",
+      "sha256": "48d403c3c36980ab4d706b15769745b95e908647142751f409a1df234d2abb4b"
+    },
+    "/private/tmp/fwp-prepare-numeric-array-fusion.py": {
+      "source": "scripts/roadmap-recovery/prepare-numeric-array-fusion.py",
+      "sha256": "8dc73e2c368c8963a1e95479e6f8f50f1f0f7fdf9df779493437ba2731db2a2c"
+    },
+    "/private/tmp/fwp-numeric-array-fusion-fixture-draft.fwp": {
+      "source": "scripts/roadmap-recovery/numeric-array-fusion-fixture-draft.fwp",
+      "sha256": "0872f3876118c3603e06879ee236245089a349b0e93a764b051aa732072a8897"
+    },
+    "/private/tmp/fwp-array-fusion-allocation-probe-draft.c": {
+      "source": "scripts/roadmap-recovery/array-fusion-allocation-probe-draft.c",
+      "sha256": "edd966e7e6c334ca503b965fd878b62bd0e571dc3d996b6e5926dc8beff3831b"
+    },
+    "/private/tmp/fwp-measure-numeric-array-fusion.py": {
+      "source": "scripts/roadmap-recovery/measure-numeric-array-fusion.py",
+      "sha256": "c09d9ca623df4879bcdc809ece0a2fa77ff52e3e25d47de37ec2a0848cbbe230"
+    },
+    "/private/tmp/fwp-prepare-pr126-probe-repairs.py": {
+      "source": "scripts/roadmap-recovery/prepare-pr126-probe-repairs.py",
+      "sha256": "73213b34938cadbad6823dfc34c556e01b360ad97e0940251bfe8a6c285f1ac1"
+    },
+    "/private/tmp/fwp-pr126-probe-repair.yml": {
+      "source": "scripts/roadmap-recovery/pr126-probe-repair.yml",
+      "sha256": "c86a55f82223307260fcc4af780fe29ddcd7118f814fa43a993a593e951f4ccf"
+    },
+    "/private/tmp/fwp-publish-pr126-probe-preparation.py": {
+      "source": "scripts/roadmap-recovery/publish-pr126-probe-preparation.py",
+      "sha256": "bbb43f1cacafc2cba212a5b456885d68321c2e63eab5bde8ea62a829eb46249c"
+    },
+    "/private/tmp/fwp-pr126-probe-preparation-publication.json": {
+      "source": "scripts/roadmap-recovery/pr126-probe-preparation-publication.json",
+      "sha256": "be5d7ae7c15f83e199f3d5a2beeff890d38db94e40c19736992bcc9fb71fd528"
+    },
+    "/private/tmp/fwp-download-pr126-probe-repairs.py": {
+      "source": "scripts/roadmap-recovery/download-pr126-probe-repairs.py",
+      "sha256": "7119a564a8ba53fd1e685736f356e89ccfd99baa5e5934d836b350ce462bf5a1"
+    },
+    "/private/tmp/fwp-publish-pr126-verified-probe-repairs.py": {
+      "source": "scripts/roadmap-recovery/publish-pr126-verified-probe-repairs.py",
+      "sha256": "d38b5a4b1555dfa6be5d3bb554f48a84dce9af2b03c53c7c4cb222d213698ec2"
+    },
+    "/private/tmp/fwp-pr126-verified-probe-repairs-publication.json": {
+      "source": "scripts/roadmap-recovery/pr126-verified-probe-repairs-publication.json",
+      "sha256": "b684cf5f48ad67f014fa5f6b6fd26d94547fd30f6d19e221cd9dce39f05f938f"
+    },
+    "/private/tmp/fwp-array-fusion-preparation.yml": {
+      "source": "scripts/roadmap-recovery/array-fusion-preparation.yml",
+      "sha256": "aa0348fe7f20a72f192f5cc80c191cbc5d6d43cfb4f7f0fcd4273d2f240b1afa"
+    },
+    "/private/tmp/fwp-publish-numeric-array-fusion-preparation.py": {
+      "source": "scripts/roadmap-recovery/publish-numeric-array-fusion-preparation.py",
+      "sha256": "7e79f1b6d4df8ed5487d896b306be7e8367635a1a7ea0b2c9ad311cb940110c7"
+    },
+    "/private/tmp/fwp-numeric-array-fusion-preparation-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-array-fusion-preparation-publication.json",
+      "sha256": "bc775e0bee23938c215d8fa1ab1d5758b224a170afb3430661bf91008cc94dd0"
+    },
+    "/private/tmp/fwp-download-array-fusion-initial.py": {
+      "source": "scripts/roadmap-recovery/download-array-fusion-initial.py",
+      "sha256": "06b136d86f32df9bd763fde7f1ee610de7bc26f621d73f5cea2fcf310cc87750"
+    },
+    "/private/tmp/fwp-pr126-superseded-probe-ci.json": {
+      "source": "scripts/roadmap-recovery/pr126-superseded-probe-ci.json",
+      "sha256": "101cdde9b09343a674a6241dd7424cd7fcfb5ee62c549a7b4ed242904a0774b0"
+    },
+    "/private/tmp/fwp-restore-numeric-finalization-archive.py": {
+      "source": "scripts/roadmap-recovery/restore-numeric-finalization-archive.py",
+      "sha256": "3c75331a8dbf558c60f6bd3b5ba58953f276a196e9a17150eef5419612803052"
+    },
+    "/private/tmp/fwp-prepare-current-numeric-recovery.py": {
+      "source": "scripts/roadmap-recovery/prepare-current-numeric-recovery.py",
+      "sha256": "00ec30391621879cafcbc8ea489e8f7f5933e9c223748e03914483a1b71bf130"
+    },
+    "/private/tmp/fwp-numeric-storage-finalization-export/production-files.json.gz.base64": {
+      "source": "scripts/roadmap-recovery/numeric-storage-finalization-export/production-files.json.gz.base64",
+      "sha256": "114b86f8c2ac7355044deeb46034f15d04319eb541b7b0674e0e62496c33a331"
+    },
+    "/private/tmp/fwp-numeric-storage-finalization-export/download.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-finalization-export/download.json",
+      "sha256": "725d6e2e9151e0f410bbc89379482a1f6ec99fb1747f813a78cb8ccdeb749bb9"
+    },
+    "/private/tmp/fwp-numeric-storage-finalization-export/finalization.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-finalization-export/finalization.json",
+      "sha256": "1b3ad44820116486c8fcb22eb7208968c3847114c8143eec0af48c39f6070533"
+    },
+    "/private/tmp/fwp-numeric-storage-finalization-export/fallback-review.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-finalization-export/fallback-review.json",
+      "sha256": "0eec2edbbef9a624fbef8bcad5c85c7af02ab5faa79537408ab8a754621543d3"
+    },
+    "/private/tmp/fwp-numeric-storage-finalization-export/inventory.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-finalization-export/inventory.json",
+      "sha256": "39e716db469386d3fb5f3e1cf9a37d6ba66edd524988ddd12092a843e9d3d702"
+    },
+    "/private/tmp/fwp-phase4-source/manifest.json": {
+      "source": "scripts/roadmap-recovery/phase4-source/manifest.json",
+      "sha256": "b42b1e693c1a14de59051ce250b6781d775dde36a39a889f8effe80aa25c70a0"
+    },
+    "/private/tmp/fwp-phase4-source/runtime/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/phase4-source/runtime/fwp_rt_kernel.c",
+      "sha256": "1ba6fdb71c67cc9e4f6b2e393e0566aab9271b60581314c0e8b32dc596c16c2b"
+    },
+    "/private/tmp/fwp-phase4-source/tests/protocol.rs": {
+      "source": "scripts/roadmap-recovery/phase4-source/tests/protocol.rs",
+      "sha256": "0da63c4bb2735820f7060b46264742e16ff89dad1c0fdc1675053e7510826878"
+    },
+    "/private/tmp/fwp-phase4-source/lib/autodiff.fwp": {
+      "source": "scripts/roadmap-recovery/phase4-source/lib/autodiff.fwp",
+      "sha256": "a18e4435f97e516e2243d0c0c76bb92b9d83c43840d0a4125469902311c55f7b"
+    },
+    "/private/tmp/fwp-phase4-source/lib/numeric.fwp": {
+      "source": "scripts/roadmap-recovery/phase4-source/lib/numeric.fwp",
+      "sha256": "cea08e12e86617e70831e9301933b7bf11aa0601d35eb3f0c108e2801e5260ec"
+    },
+    "/private/tmp/fwp-phase4-source/src/opt.rs": {
+      "source": "scripts/roadmap-recovery/phase4-source/src/opt.rs",
+      "sha256": "02260a296837a8825edd1773c025b14c317304a1f4ad1fd6cef4d60ff2dc222d"
+    },
+    "/private/tmp/fwp-phase4-source/src/ir.rs": {
+      "source": "scripts/roadmap-recovery/phase4-source/src/ir.rs",
+      "sha256": "52980b69a4aac8ec0d92eaf4e479df377d041e514df82578663209ff3ea874ec"
+    },
+    "/private/tmp/fwp-phase4-source/src/ownership.rs": {
+      "source": "scripts/roadmap-recovery/phase4-source/src/ownership.rs",
+      "sha256": "af9dc0ac3e30ce641c6f03dc67c9608da3631c4d3e3aa80ea97d2333d9a4fced"
+    },
+    "/private/tmp/fwp-phase4-source/src/fuse.rs": {
+      "source": "scripts/roadmap-recovery/phase4-source/src/fuse.rs",
+      "sha256": "a72be2481dc6cd1d1510d71bbb2913521ce1c462d73d26e9febfea958a8226ba"
+    },
+    "/private/tmp/fwp-phase4-source/src/proto.rs": {
+      "source": "scripts/roadmap-recovery/phase4-source/src/proto.rs",
+      "sha256": "9bae350ca184a5b20fe4dd89a40ae9c15126a2c96f9c287024668ccb23c97e4c"
+    },
+    "/private/tmp/fwp-phase4-source/src/driver.rs": {
+      "source": "scripts/roadmap-recovery/phase4-source/src/driver.rs",
+      "sha256": "15a60b137dd27ad1493b89f2edd31f72d67ba34879a4f459447c533357994ad5"
+    },
+    "/private/tmp/fwp-phase4-source/src/cgen.rs": {
+      "source": "scripts/roadmap-recovery/phase4-source/src/cgen.rs",
+      "sha256": "db3e11a468d1482dbcf1d86a7a22764fc878bd179b562e59bbeb4f2b03871da5"
+    },
+    "/private/tmp/fwp-phase4-array-fusion-draft/fuse.rs": {
+      "source": "scripts/roadmap-recovery/phase4-array-fusion-draft/fuse.rs",
+      "sha256": "3416cffc218dbfb80152d3038889ee5c428c295b49b74684a07e15dc295f89cc"
+    },
+    "/private/tmp/fwp-phase4-array-fusion-draft/cgen.rs": {
+      "source": "scripts/roadmap-recovery/phase4-array-fusion-draft/cgen.rs",
+      "sha256": "0c98848ea255e9ac1924ce76b7b1888b3a2ec7cd58ed54ad2eeaffed825ad3fd"
+    },
+    "/private/tmp/fwp-pr126-probe-repair-export/retain_unwind_ownership.rs": {
+      "source": "scripts/roadmap-recovery/pr126-probe-repair-export/retain_unwind_ownership.rs",
+      "sha256": "5b23f8030de393d9c5726d37752bcbd28ac051e7fe9e1b6a7543807b2aa7efde"
+    },
+    "/private/tmp/fwp-pr126-probe-repair-export/download.json": {
+      "source": "scripts/roadmap-recovery/pr126-probe-repair-export/download.json",
+      "sha256": "84b6f95fd5cd18e075da659e789f26f056e783689cce8ebd3eb813f3e67cc0c3"
+    },
+    "/private/tmp/fwp-pr126-probe-repair-export/unboxed_worker_locals.rs": {
+      "source": "scripts/roadmap-recovery/pr126-probe-repair-export/unboxed_worker_locals.rs",
+      "sha256": "5616a0c499d2d19c362109897ea09a6334ffec745e06269829e08f20b7b420cd"
+    },
+    "/private/tmp/fwp-pr126-probe-repair-export/hashes.txt": {
+      "source": "scripts/roadmap-recovery/pr126-probe-repair-export/hashes.txt",
+      "sha256": "13ee8930e91d225d43658678f3ef1f7e93c7dea7338a5dd7a92734567bca69db"
+    },
+    "/private/tmp/fwp-pr126-probe-repair-export/head.txt": {
+      "source": "scripts/roadmap-recovery/pr126-probe-repair-export/head.txt",
+      "sha256": "80ac02fecfe8d59da1a04b0d480f596486e1e9f2c9fd7972cff189b2d9781ee0"
+    },
+    "/private/tmp/fwp-pr126-probe-repair-export/old_reclamation.rs": {
+      "source": "scripts/roadmap-recovery/pr126-probe-repair-export/old_reclamation.rs",
+      "sha256": "833be818c30f851c35e25ba53654c7e0f6bd758b64d7a683f856b38d3734b3d3"
+    },
+    "/private/tmp/fwp-array-fusion-initial-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-initial-evidence/download.json",
+      "sha256": "079d81c60f725724d1148257556f004952e8418103c01814c3fce5c4d3b527b9"
+    },
+    "/private/tmp/fwp-array-fusion-initial-evidence/original-1.c": {
+      "source": "scripts/roadmap-recovery/array-fusion-initial-evidence/original-1.c",
+      "sha256": "ae1198c7365669c3c954d2f80d58a870536fcecd47015f18daca600f7332ce6e"
+    },
+    "/private/tmp/fwp-array-fusion-initial-evidence/measured-0-O1.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-initial-evidence/measured-0-O1.json",
+      "sha256": "a16b0f1482aa909159259b84b19cf42f4f15cdde467327c41e146874a9f0e363"
+    },
+    "/private/tmp/fwp-array-fusion-initial-evidence/measured-1.c": {
+      "source": "scripts/roadmap-recovery/array-fusion-initial-evidence/measured-1.c",
+      "sha256": "1e7dcf84176ffbd404c82a4b68dfe9a9815d21de098a27da8ebb43c6f1d73dce"
+    },
+    "/private/tmp/fwp-array-fusion-initial-evidence/measured-0-O2.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-initial-evidence/measured-0-O2.json",
+      "sha256": "a16b0f1482aa909159259b84b19cf42f4f15cdde467327c41e146874a9f0e363"
+    },
+    "/private/tmp/fwp-array-fusion-initial-evidence/original-0.c": {
+      "source": "scripts/roadmap-recovery/array-fusion-initial-evidence/original-0.c",
+      "sha256": "079495ef35fa905cb2441b6d32301e7aecd704b568aaf5103efac85ae07b569c"
+    },
+    "/private/tmp/fwp-array-fusion-initial-evidence/measured-0.c": {
+      "source": "scripts/roadmap-recovery/array-fusion-initial-evidence/measured-0.c",
+      "sha256": "23a9dfafd1df056cfdbfc5217a58844ac502d038bc65115f9d1eee402dee3fd6"
+    },
+    "/private/tmp/fwp-array-fusion-initial-evidence/source/fuse.rs": {
+      "source": "scripts/roadmap-recovery/array-fusion-initial-evidence/source/fuse.rs",
+      "sha256": "96318bdd85dc8e2a0d618ba76831c40069d8e9af2f3ba36be28c51afefbc461b"
+    },
+    "/private/tmp/fwp-array-fusion-initial-evidence/source/cgen.rs": {
+      "source": "scripts/roadmap-recovery/array-fusion-initial-evidence/source/cgen.rs",
+      "sha256": "80b243b9f04bf647ec15e6f37142f0d70f77a3f8b448f9ab677d4edcbb8192b2"
+    },
+    "/private/tmp/fwp-verified-packed-controls-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-packed-controls-restoration/recovery-restoration.json",
+      "sha256": "21157c8de79f8eec96d70d7950b9cfaa04be6779d1de0be4ff2dec1b3c80ea03"
+    },
+    "/private/tmp/fwp-verified-packed-controls-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-packed-controls-restoration/validation.json",
+      "sha256": "8af3d85e08f630172b79832ebe9840babea6291d1a2a0aabddefb84297b20406"
+    },
+    "/private/tmp/fwp-verified-packed-controls-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-packed-controls-restoration/proof.json",
+      "sha256": "d7f735e111a6eaddcd9d8f0b824c966864e13ade6834784ad313916dd9894757"
+    },
+    "/private/tmp/fwp-array-fusion-clippy-repair-publication.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-clippy-repair-publication.json",
+      "sha256": "24cd840d8fe68dadb230a4ca8b8f01c8874bc5c63b940b0d67d138cc754a780a"
+    },
+    "/private/tmp/fwp-array-fusion-refinement-files.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-refinement-files.json",
+      "sha256": "47a6b1cae6cbeb7fb5ed9a81a2914fe274693a2a57ba6b096b4140530a940357"
+    },
+    "/private/tmp/fwp-array-fusion-refinement-publication.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-refinement-publication.json",
+      "sha256": "5699f9409875b203abc645cf502e9179533adc538bbf02d4c9cfee2b4b2a8d5a"
+    },
+    "/private/tmp/fwp-array-fusion-unboxed-lookup-publication.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-unboxed-lookup-publication.json",
+      "sha256": "77350540d3c98f634b45b5b77823bc281c14580198e0d1e0a8c4b5521ebaaa34"
+    },
+    "/private/tmp/fwp-array-fusion-workspace-preparation.yml": {
+      "source": "scripts/roadmap-recovery/array-fusion-workspace-preparation.yml",
+      "sha256": "456cf2d3215665ddfccce52f5aa8f1c669e85ccfc51308c1a9814b6f6d5c7472"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/comparison.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/comparison.json",
+      "sha256": "795b05bb67798454765cda3c1be1fa0f58e1420f807b76c35ebb0bec069a7413"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/compiler-metadata-correction.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/compiler-metadata-correction.json",
+      "sha256": "eea169f6b7c052e1d4b7ba120b1b571c13305f240634828423cdda6b970b7d26"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/download.json",
+      "sha256": "67c244202b7d093a9ad899389998dbdb638d7f746d32af9b2d9c0b4370e40121"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/measured-0-O1.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/measured-0-O1.json",
+      "sha256": "a16b0f1482aa909159259b84b19cf42f4f15cdde467327c41e146874a9f0e363"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/measured-0-O2.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/measured-0-O2.json",
+      "sha256": "a16b0f1482aa909159259b84b19cf42f4f15cdde467327c41e146874a9f0e363"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/measured-0.c": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/measured-0.c",
+      "sha256": "f98a9eb0f30fccba1661be1823f4fff9dfbad5d783bed2b92644f9f475833840"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/measured-1-O1.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/measured-1-O1.json",
+      "sha256": "e407e448e24b92039864b73eac42f24bc39222401009e74c98d1f59ebbcd848b"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/measured-1-O2.json": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/measured-1-O2.json",
+      "sha256": "e407e448e24b92039864b73eac42f24bc39222401009e74c98d1f59ebbcd848b"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/measured-1.c": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/measured-1.c",
+      "sha256": "0e3f0a18e6dcfc2ed77f9cb128426e432fe4296c72f0105bb6b1ae6a155de3c6"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/original-0.c": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/original-0.c",
+      "sha256": "5338f2409a70a08d2ba272be21473f89c72bef12d11e32f5d55881e10dc4c4e6"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/original-1.c": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/original-1.c",
+      "sha256": "b287e30085ec36993ed0b12ec3cbff788d0bb535409af5eee494af522d21c517"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/source/autodiff_capacity_bounds.rs": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/source/autodiff_capacity_bounds.rs",
+      "sha256": "22c4bfa2a91180bdee615e9bd90eeb5a87d3c87a730e95b625b9238e1bdbc99a"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/source/cgen.rs": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/source/cgen.rs",
+      "sha256": "d6a41b89695a4d334490c01758b2622c30d8b5d76ba086838cfb419f32fc4158"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/source/fuse.rs": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/source/fuse.rs",
+      "sha256": "3416cffc218dbfb80152d3038889ee5c428c295b49b74684a07e15dc295f89cc"
+    },
+    "/private/tmp/fwp-array-fusion-zero-allocation-evidence/source/numerics.rs": {
+      "source": "scripts/roadmap-recovery/array-fusion-zero-allocation-evidence/source/numerics.rs",
+      "sha256": "2f05cca34027955a4724c1e5fbc14ce4d6eb76e7db683b4c67e305a61ccae3c6"
+    },
+    "/private/tmp/fwp-audit-accepted-numeric-source-on-runner.py": {
+      "source": "scripts/roadmap-recovery/audit-accepted-numeric-source-on-runner.py",
+      "sha256": "c6fb14df7d66c03fc1dcb60408e78b185dd0a4be2b8a81fca6e04ec837497607"
+    },
+    "/private/tmp/fwp-autodiff-capacity-probe-draft.c": {
+      "source": "scripts/roadmap-recovery/autodiff-capacity-probe-draft.c",
+      "sha256": "0cd9604ee9a98c337494dfa928d7d2732c2cf4ab1c9f9280dd264a51b8fe8aea"
+    },
+    "/private/tmp/fwp-autodiff-capacity-test-draft.rs": {
+      "source": "scripts/roadmap-recovery/autodiff-capacity-test-draft.rs",
+      "sha256": "e0b6af662b738e6e753945f67a0dd5e097b434e03205f59c6706b59fe8d19323"
+    },
+    "/private/tmp/fwp-autodiff-workspace-probe-draft.c": {
+      "source": "scripts/roadmap-recovery/autodiff-workspace-probe-draft.c",
+      "sha256": "0540bccdd8c1cf8a18b96b262bfc55ecdf58709087951c2c8ca5080b0fef4bd9"
+    },
+    "/private/tmp/fwp-autodiff-workspace-test-draft.rs": {
+      "source": "scripts/roadmap-recovery/autodiff-workspace-test-draft.rs",
+      "sha256": "e6e1390b9f564a30403af7aa710c106de5428a609ffde4f420cceda25b22c09f"
+    },
+    "/private/tmp/fwp-download-array-fusion-direct-loop.py": {
+      "source": "scripts/roadmap-recovery/download-array-fusion-direct-loop.py",
+      "sha256": "23b7813aed8ee8f994ee546c4d49eb8d55819bdd455850f1473635d98df30300"
+    },
+    "/private/tmp/fwp-download-array-fusion-flat.py": {
+      "source": "scripts/roadmap-recovery/download-array-fusion-flat.py",
+      "sha256": "fa5c8ab08aef6355f73d53cd770f9a2c519a83ecf905bed314485bc112a994e5"
+    },
+    "/private/tmp/fwp-download-array-fusion-zero-allocation.py": {
+      "source": "scripts/roadmap-recovery/download-array-fusion-zero-allocation.py",
+      "sha256": "f27f5485755184d1080ea4ac98f989e5b5c870ffc61a9ee26219594bb8a69567"
+    },
+    "/private/tmp/fwp-download-numeric-fusion-workspace.py": {
+      "source": "scripts/roadmap-recovery/download-numeric-fusion-workspace.py",
+      "sha256": "6511bea0530bb1c461b528ff80a75bb97b185d1a521eadf7076d0c60608627e6"
+    },
+    "/private/tmp/fwp-numeric-array-fusion-test-draft.rs": {
+      "source": "scripts/roadmap-recovery/numeric-array-fusion-test-draft.rs",
+      "sha256": "127026fd4079841cfd1052e3c6b55016b58d8d2cb69c8682522272e97acc1eac"
+    },
+    "/private/tmp/fwp-numeric-fusion-ad-bounds-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-ad-bounds-publication.json",
+      "sha256": "50613cdeb1585d65178a0082e10ed2f6de2c96c7932a8e2429354e9cd2ba6eda"
+    },
+    "/private/tmp/fwp-numeric-fusion-and-ad-bound-files.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-and-ad-bound-files.json",
+      "sha256": "a29944335218577e4fbc1466d8644004422d9c8ee7f7c9030a187ebdb67ad842"
+    },
+    "/private/tmp/fwp-numeric-fusion-bit-diagnostics-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-bit-diagnostics-publication.json",
+      "sha256": "d764b4bebc43483839424f052b03ff71af49821b5c45a1d828dc7faae654e7ba"
+    },
+    "/private/tmp/fwp-numeric-fusion-json-control-repair-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-json-control-repair-publication.json",
+      "sha256": "fc4d18444585dac6d3733c6a5008ed93ed599204e0d945307dc8f335ce1cb626"
+    },
+    "/private/tmp/fwp-numeric-fusion-nan-contract-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-nan-contract-publication.json",
+      "sha256": "19ec542827eb033452b4bac3d9cb1619b1a888793e13964055e9f217a6bdf03d"
+    },
+    "/private/tmp/fwp-numeric-fusion-permanent-controls-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-permanent-controls-publication.json",
+      "sha256": "c01a05f8bb64a9e15db8c9a160da812f64dddf3f0ad18985f92abee4c4cae6aa"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/comparison.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/comparison.json",
+      "sha256": "7c50ee38dbd12af496bedb5bcb458b8d4ba0d073835f84e3f305c133ba15a6d3"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/download.json",
+      "sha256": "da9bd643249fc4c72ef36640fe6e8614f482a79779a68da95ca8b9fff0d35205"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/measured-0-O1.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/measured-0-O1.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/measured-0-O2.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/measured-0-O2.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/measured-0.c": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/measured-0.c",
+      "sha256": "34e534674a39244b03cd1e15b2ea917b72f874d3a016a677df0e99ee752694fc"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/measured-1-O1.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/measured-1-O1.json",
+      "sha256": "962e69f943898bde0c0561063eacad9e8d4f1ddcfba22ae98b4ec12a5eb29366"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/measured-1-O2.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/measured-1-O2.json",
+      "sha256": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/measured-1.c": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/measured-1.c",
+      "sha256": "043e6b4612b3cd554b3b8f9e3e8deb4b01e88134def5057989f2d3f4388b6fb4"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/original-0.c": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/original-0.c",
+      "sha256": "777a740bc3a8f80c64a37d3926721947804984d443b2434b7e1c43f9b63d0154"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/original-1.c": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/original-1.c",
+      "sha256": "03d9314ba094aa281eb8b32ef09d6f96a607dfb77d953ace496182db556d94d6"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/permanent-0-O1.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/permanent-0-O1.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/permanent-0-O2.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/permanent-0-O2.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/permanent-1-O1.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/permanent-1-O1.json",
+      "sha256": "962e69f943898bde0c0561063eacad9e8d4f1ddcfba22ae98b4ec12a5eb29366"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/permanent-1-O2.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/permanent-1-O2.json",
+      "sha256": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/source/ad_tape_ownership.rs": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/source/ad_tape_ownership.rs",
+      "sha256": "8cd662bc040f1dbce4819a2598ba3267acde4bed50f6b1d36e2608504227deab"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/source/ad_tape_scopes.rs": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/source/ad_tape_scopes.rs",
+      "sha256": "033708cb0a1fdc33bffa3a7afdcc9a22a7e1f5bb9cad724786261e4521dd08f4"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/source/autodiff_capacity_bounds.rs": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/source/autodiff_capacity_bounds.rs",
+      "sha256": "ec0d768a145dc93c6f8cdc7069926e6b0debc4b0d2652b190d5727c756a7d45d"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/source/autodiff_workspace.rs": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/source/autodiff_workspace.rs",
+      "sha256": "5eec560585a4c17e0b163ddc5bf8a0d9f4fd7be582178b1f7f8a14d69bb4f2c8"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/source/cgen.rs": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/source/cgen.rs",
+      "sha256": "d6a41b89695a4d334490c01758b2622c30d8b5d76ba086838cfb419f32fc4158"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/source/fuse.rs": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/source/fuse.rs",
+      "sha256": "3416cffc218dbfb80152d3038889ee5c428c295b49b74684a07e15dc295f89cc"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/source/numeric_array_fusion.rs": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/source/numeric_array_fusion.rs",
+      "sha256": "09361a0de4a7a0b7b82e2ce951f899831d925d4a79f4e95f7187d4dbfd4df1cf"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/source/numerics.rs": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/source/numerics.rs",
+      "sha256": "2f05cca34027955a4724c1e5fbc14ce4d6eb76e7db683b4c67e305a61ccae3c6"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/workspaces/native-O1-cache0.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/workspaces/native-O1-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/workspaces/native-O1-cache1.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/workspaces/native-O1-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/workspaces/native-O2-cache0.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/workspaces/native-O2-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-evidence/workspaces/native-O2-cache1.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-evidence/workspaces/native-O2-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-files.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-files.json",
+      "sha256": "04615b7982557eeb617f41aa76f2941735beca7ec740d5a32d6541aef32ff45b"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-fixture-repair-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-fixture-repair-publication.json",
+      "sha256": "dc1e19ef73b538461f53ea58b206fce45c3048e4341eb7f25688d1e1cf94380f"
+    },
+    "/private/tmp/fwp-numeric-fusion-workspace-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-workspace-publication.json",
+      "sha256": "6a45323f1e795017454673b0cf3899c2249f832a48f5f1140ee7d92497a67950"
+    },
+    "/private/tmp/fwp-phase4-ad-draft/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/phase4-ad-draft/fwp_rt_kernel.c",
+      "sha256": "fb3f25fc816b222437e16a130f67f100c4a8aa611909845e8ccb426858d5071c"
+    },
+    "/private/tmp/fwp-phase4-ad-draft/numerics.rs": {
+      "source": "scripts/roadmap-recovery/phase4-ad-draft/numerics.rs",
+      "sha256": "2f05cca34027955a4724c1e5fbc14ce4d6eb76e7db683b4c67e305a61ccae3c6"
+    },
+    "/private/tmp/fwp-phase4-ad-source/manifest.json": {
+      "source": "scripts/roadmap-recovery/phase4-ad-source/manifest.json",
+      "sha256": "d1446e64437535ee5f44afacc552eb6596f9280fda495d2e9724e2377de7eaff"
+    },
+    "/private/tmp/fwp-phase4-ad-source/src/numerics.rs": {
+      "source": "scripts/roadmap-recovery/phase4-ad-source/src/numerics.rs",
+      "sha256": "a4588cf6bd5a23d85e98bc54461eecf5d19cdc32a0504ac896eaf6dd0a99a7b1"
+    },
+    "/private/tmp/fwp-phase4-ad-source/tests/ad_tape_ownership.rs": {
+      "source": "scripts/roadmap-recovery/phase4-ad-source/tests/ad_tape_ownership.rs",
+      "sha256": "10c6d1e369d2aff0e9de18a2e4cb1e1ceeb72c9ceeeff498b72f5217e277a882"
+    },
+    "/private/tmp/fwp-phase4-ad-source/tests/ad_tape_scopes.rs": {
+      "source": "scripts/roadmap-recovery/phase4-ad-source/tests/ad_tape_scopes.rs",
+      "sha256": "7b7db33628704a48462706711c4e28708fdfc95dd3ca8b0740d5b103696872de"
+    },
+    "/private/tmp/fwp-phase4-ad-source/tests/fixtures/ad_scope_probe.c": {
+      "source": "scripts/roadmap-recovery/phase4-ad-source/tests/fixtures/ad_scope_probe.c",
+      "sha256": "4e64c9aa59c773cb82992d24a4576d883b88b1ee325cc904e84fdbfd16151a1b"
+    },
+    "/private/tmp/fwp-phase4-ad-source/tests/fixtures/ad_unwind_probe.c": {
+      "source": "scripts/roadmap-recovery/phase4-ad-source/tests/fixtures/ad_unwind_probe.c",
+      "sha256": "ee104b5fb885e721b0ebcd774948d83ef07384e83db6e561c7a21b7dc14cfb7c"
+    },
+    "/private/tmp/fwp-phase4-ad-workspace-draft/ad_tape_ownership.rs": {
+      "source": "scripts/roadmap-recovery/phase4-ad-workspace-draft/ad_tape_ownership.rs",
+      "sha256": "4d985de7b3c09acb5880305eb49835d59719a9067573de798f90d4fc59ee8c65"
+    },
+    "/private/tmp/fwp-phase4-ad-workspace-draft/ad_tape_scopes.rs": {
+      "source": "scripts/roadmap-recovery/phase4-ad-workspace-draft/ad_tape_scopes.rs",
+      "sha256": "033708cb0a1fdc33bffa3a7afdcc9a22a7e1f5bb9cad724786261e4521dd08f4"
+    },
+    "/private/tmp/fwp-phase4-ad-workspace-draft/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/phase4-ad-workspace-draft/fwp_rt_kernel.c",
+      "sha256": "5481ba281fa7e40174ba3c69450c0a479fc0f896dc6cb0d62c54dcea5358274c"
+    },
+    "/private/tmp/fwp-prepare-autodiff-capacity-bounds.py": {
+      "source": "scripts/roadmap-recovery/prepare-autodiff-capacity-bounds.py",
+      "sha256": "05d2c66d1cf09d976fa66025f2632304d42a15a502662a6e1ae88ba33ae8efff"
+    },
+    "/private/tmp/fwp-prepare-native-autodiff-workspace.py": {
+      "source": "scripts/roadmap-recovery/prepare-native-autodiff-workspace.py",
+      "sha256": "6b4044e617750401e77a9de8cfbf5f7fcfa44f05a4b478d84da7572a1de23210"
+    },
+    "/private/tmp/fwp-prepare-numerics-workspace-recovery.py": {
+      "source": "scripts/roadmap-recovery/prepare-numerics-workspace-recovery.py",
+      "sha256": "f2f8db234f8a39e82301069dcb0cf0d2a9dd47dc56adb30c8091d7d5be4ad241"
+    },
+    "/private/tmp/fwp-publish-accepted-numeric-source-audit.py": {
+      "source": "scripts/roadmap-recovery/publish-accepted-numeric-source-audit.py",
+      "sha256": "e81165a61f74fb3c8f1faf1d876fdd6869357337b1278e7a0714c1f31c996287"
+    },
+    "/private/tmp/fwp-publish-source-preparation-update.py": {
+      "source": "scripts/roadmap-recovery/publish-source-preparation-update.py",
+      "sha256": "47de978dac239a54de68cbbf3f9de9632ec7f2a90de954f71915d77458811d3c"
+    },
+    "/private/tmp/fwp-refine-array-fusion-state-and-match.py": {
+      "source": "scripts/roadmap-recovery/refine-array-fusion-state-and-match.py",
+      "sha256": "42a72d2b2f811f7f471621df6294f7749fa890e74c6d37eb2957006254d90052"
+    },
+    "/private/tmp/fwp-remove-array-fusion-allocation.py": {
+      "source": "scripts/roadmap-recovery/remove-array-fusion-allocation.py",
+      "sha256": "55f821fc639360e2116584a565c7ea284ac844fda25dd59595f80c4643f822a1"
+    },
+    "/private/tmp/fwp-verified-current-numeric-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-current-numeric-restoration/proof.json",
+      "sha256": "c83024a1723ff8f04d3526a1cc6d693e8be7bf9420d64036293a862377c8b69c"
+    },
+    "/private/tmp/fwp-verified-current-numeric-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-current-numeric-restoration/recovery-restoration.json",
+      "sha256": "82e9cbbaa746b97dde096fa4d8565c596d1adcf8e1bc3bf4e88524522a48cf63"
+    },
+    "/private/tmp/fwp-verified-current-numeric-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-current-numeric-restoration/validation.json",
+      "sha256": "7cd563886b6e1c92ad2975780fcd8a9a87aa3707069e8a611fbfd824bb2b643d"
+    },
+    "/private/tmp/fwp-publish-numerics-workspace-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-numerics-workspace-recovery.py",
+      "sha256": "c0a16ec06830f3a2ff5dbbf321248c9bef9685685b10f00794e87677021be6b9"
+    },
+    "/private/tmp/fwp-phase4-ownership.md": {
+      "source": "scripts/roadmap-recovery/phase4-ownership.md.source",
+      "sha256": "f9037b7a0ed69d451eb27c8f484ede2cc63e6752f3312005d66762f63559b176"
+    },
+    "/private/tmp/fwp-phase4-reference.md": {
+      "source": "scripts/roadmap-recovery/phase4-reference.md.source",
+      "sha256": "a92930b6a94f0d50c1080c9cc1ef625c6e6a001faf72cdb5cf6530706faf6f7c"
+    },
+    "/private/tmp/fwp-publish-repaired-workspace-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-repaired-workspace-recovery.py",
+      "sha256": "296f751194e2a85683bce103381f8d9fe2398fb6686218eacbd5f2a2d66a8c91"
+    },
+    "/private/tmp/fwp-repair-workspace-recovery-links.py": {
+      "source": "scripts/roadmap-recovery/repair-workspace-recovery-links.py",
+      "sha256": "1158cc2c8b2ca8f7d89214600ed15ff71ae34dbd408b3d14da85265cdbbffec1"
+    },
+    "/private/tmp/fwp-accepted-numeric-source/download.json": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source/download.json",
+      "sha256": "a3dd70a1337e217e0c393c07841c112ce2a2d21c890e75365d09eb8a60f4529b"
+    },
+    "/private/tmp/fwp-accepted-numeric-source/fallback-review.json": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source/fallback-review.json",
+      "sha256": "4ff74f58b1a0f2f8460bc22841357b34edd89766b688367ea575b716adc504b3"
+    },
+    "/private/tmp/fwp-accepted-numeric-source/inventory.json": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source/inventory.json",
+      "sha256": "5ce466dfab733c893e76bc538588cac7493a64c8b7caa51a48ab0d1b40dbb7ea"
+    },
+    "/private/tmp/fwp-accepted-numeric-source/phase3-acceptance.json": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source/phase3-acceptance.json",
+      "sha256": "513b3af8a806610357f055c5e25ac6a9164c997c42bd1bfda77168c99d351212"
+    },
+    "/private/tmp/fwp-accepted-numeric-source/signed-payload.txt": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source/signed-payload.txt",
+      "sha256": "f5d37a16eccd32b5ec40408102684ca5009e436fdc8a55c345e1b8d6a1aca921"
+    },
+    "/private/tmp/fwp-accepted-numeric-source-audit-publication.json": {
+      "source": "scripts/roadmap-recovery/accepted-numeric-source-audit-publication.json",
+      "sha256": "a283106c28226d9fdd8e8fd27e1403381a8a6d538dcee6ef000a837bfa2b961d"
+    },
+    "/private/tmp/fwp-array-fusion-matrix-preparation.yml": {
+      "source": "scripts/roadmap-recovery/array-fusion-matrix-preparation.yml",
+      "sha256": "7d1a127b3648f7dcb88f5fcc0c9bcc3fc731ef28ee4a9141b98b596901f447b8"
+    },
+    "/private/tmp/fwp-autodiff-library-host-draft.c": {
+      "source": "scripts/roadmap-recovery/autodiff-library-host-draft.c",
+      "sha256": "9e379b541410f945ae1f93cfa1af25ae7b37fd47112b7baf9d0bee84f3434d02"
+    },
+    "/private/tmp/fwp-autodiff-library-ledger-draft.c": {
+      "source": "scripts/roadmap-recovery/autodiff-library-ledger-draft.c",
+      "sha256": "5d24022b479f8383e21364b8b243afe94a60cc1c728b1f4b9c86085af078ca54"
+    },
+    "/private/tmp/fwp-autodiff-library-test-draft.rs": {
+      "source": "scripts/roadmap-recovery/autodiff-library-test-draft.rs",
+      "sha256": "26891040e3218397e5481073386d57293c1f4c0fe6e923e5d3d18714a9221ae2"
+    },
+    "/private/tmp/fwp-blocked-matrix-fixture-draft.fwp": {
+      "source": "scripts/roadmap-recovery/blocked-matrix-fixture-draft.fwp",
+      "sha256": "095128f2464ad5bf01e8f8b606649b8be830ba0314509b58310a24ea03cd57d8"
+    },
+    "/private/tmp/fwp-blocked-matrix-test-draft.rs": {
+      "source": "scripts/roadmap-recovery/blocked-matrix-test-draft.rs",
+      "sha256": "8d105435b6ac346be3fec4a3529a8254e24578f9f0465a662c48e2ffdab219fe"
+    },
+    "/private/tmp/fwp-download-accepted-numeric-source.py": {
+      "source": "scripts/roadmap-recovery/download-accepted-numeric-source.py",
+      "sha256": "4b75043f12fb3c196e43ef7ff84d1f006ae90b57844b5b9e0dc091e7910779c0"
+    },
+    "/private/tmp/fwp-download-rust-numeric-workspace.py": {
+      "source": "scripts/roadmap-recovery/download-rust-numeric-workspace.py",
+      "sha256": "e4d753a95ef55ecd682bc9e7368bbe9c4759c6e1492c121b20e10fe8c97c969d"
+    },
+    "/private/tmp/fwp-fetch-matrix-pass-source.py": {
+      "source": "scripts/roadmap-recovery/fetch-matrix-pass-source.py",
+      "sha256": "6b7df33d3a3f941b1aa91b39d455878771d07a3b1825dc5017d0db7f20df4c1c"
+    },
+    "/private/tmp/fwp-fetch-numerics-workspace-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-numerics-workspace-restoration.py",
+      "sha256": "5c1610830402ad7ac6536ce12756353e8f105f878ab396bb2e2a89514b32786c"
+    },
+    "/private/tmp/fwp-main126-duplicate-ci-status.json": {
+      "source": "scripts/roadmap-recovery/main126-duplicate-ci-status.json",
+      "sha256": "d8424cac1c5eca13dae38820c375bf02935e3cba10c1ef4bdc2ccd35d2e8dcb4"
+    },
+    "/private/tmp/fwp-matrix-interpreter-draft.rs": {
+      "source": "scripts/roadmap-recovery/matrix-interpreter-draft.rs",
+      "sha256": "ccc118378ed2d778cfd92ed07c04be83b0e8b0877caf4096249ecd4958848e75"
+    },
+    "/private/tmp/fwp-matrix-pass-source/manifest.json": {
+      "source": "scripts/roadmap-recovery/matrix-pass-source/manifest.json",
+      "sha256": "d13ffe21fb0a89b775586b3cd744d4ace6a40ea80c29a8a92c441f039ad32f0e"
+    },
+    "/private/tmp/fwp-matrix-pass-source/src/aot.rs": {
+      "source": "scripts/roadmap-recovery/matrix-pass-source/src/aot.rs",
+      "sha256": "e68fa7d18f066aa85938fffae183bab6fb5deef5367b21d59be8c0b59d55260f"
+    },
+    "/private/tmp/fwp-matrix-pass-source/src/mono.rs": {
+      "source": "scripts/roadmap-recovery/matrix-pass-source/src/mono.rs",
+      "sha256": "e5f6b1d76808a31f964518e899bb4850bd4c72d2b27d14583ab7059eb4efb3fd"
+    },
+    "/private/tmp/fwp-matrix-pass-source/src/ownership.rs": {
+      "source": "scripts/roadmap-recovery/matrix-pass-source/src/ownership.rs",
+      "sha256": "af9dc0ac3e30ce641c6f03dc67c9608da3631c4d3e3aa80ea97d2333d9a4fced"
+    },
+    "/private/tmp/fwp-matrix-runtime-draft.c": {
+      "source": "scripts/roadmap-recovery/matrix-runtime-draft.c",
+      "sha256": "d062b4d5ca173adeeaef7f7c9f5f348f2eaca8dabe3ebf2e60a267fc95179b77"
+    },
+    "/private/tmp/fwp-matrix-specialization-draft.rs": {
+      "source": "scripts/roadmap-recovery/matrix-specialization-draft.rs",
+      "sha256": "38637b2ce402b63916b8a9a3e70ba7a86874f3b700d8710640878e300a70a119"
+    },
+    "/private/tmp/fwp-numeric-fusion-library-workspace-files.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-library-workspace-files.json",
+      "sha256": "599a582e998bc41982eabb3e06804b0c1e0f5df94a00ddaf090b4984c2ec6590"
+    },
+    "/private/tmp/fwp-numeric-fusion-library-workspace-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-library-workspace-publication.json",
+      "sha256": "2053077b1b1fdf30fb7da01f0585723ce311be5a133910bf99db63b8fea630ad"
+    },
+    "/private/tmp/fwp-numeric-fusion-matrix-files.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-matrix-files.json",
+      "sha256": "ba663702aae78878636c189818f647225996f2675aa32becf8c2e94a800e63cf"
+    },
+    "/private/tmp/fwp-numeric-fusion-matrix-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-matrix-publication.json",
+      "sha256": "b570372501b4e8981ae46a849e24ccd268661ce8627cf7569ade00dbd05e0d48"
+    },
+    "/private/tmp/fwp-numeric-fusion-rust-workspace-files.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-rust-workspace-files.json",
+      "sha256": "ee46a37c72ef40cd535caf0f7c441d2a4ffa62942dcfbe94eab5c3546f0863ab"
+    },
+    "/private/tmp/fwp-numeric-fusion-rust-workspace-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-rust-workspace-publication.json",
+      "sha256": "a60ee704101cdd48a1f140cdd60fd6268705bf769a955cbc2c16a3ed79714ee8"
+    },
+    "/private/tmp/fwp-numeric-storage-final-gate-proof.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-final-gate-proof.json",
+      "sha256": "9d5250aa1dc01c1a07f31fad8d76c57767b9d8a9cf959924608b7c55136e0cf8"
+    },
+    "/private/tmp/fwp-numeric-storage-merge-proof.json": {
+      "source": "scripts/roadmap-recovery/numeric-storage-merge-proof.json",
+      "sha256": "54356639bb292baddd793ef950665dab4bb74335021ea717cc9974ecd212820c"
+    },
+    "/private/tmp/fwp-numeric-storage-signed-payload.txt": {
+      "source": "scripts/roadmap-recovery/numeric-storage-signed-payload.txt",
+      "sha256": "f5d37a16eccd32b5ec40408102684ca5009e436fdc8a55c345e1b8d6a1aca921"
+    },
+    "/private/tmp/fwp-phase4-ad-workspace-draft/numerics.rs": {
+      "source": "scripts/roadmap-recovery/phase4-ad-workspace-draft/numerics.rs",
+      "sha256": "1a9971e96bb109b046fd053e57a15eaf69637644dca93713c2032b214d052ef1"
+    },
+    "/private/tmp/fwp-phase4-matrix-draft/cgen.rs": {
+      "source": "scripts/roadmap-recovery/phase4-matrix-draft/cgen.rs",
+      "sha256": "6963bf3ed1c024e9f01960f5c32e9f54cc7839f9459d78827d275b22ef55197e"
+    },
+    "/private/tmp/fwp-phase4-matrix-draft/fuse.rs": {
+      "source": "scripts/roadmap-recovery/phase4-matrix-draft/fuse.rs",
+      "sha256": "0286002057ade5b00bf3a1cfffdefd5716062a726ba3d8f2c167cdedbefa87ff"
+    },
+    "/private/tmp/fwp-phase4-matrix-draft/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/phase4-matrix-draft/fwp_rt_kernel.c",
+      "sha256": "53aa534ef189066a1f208c693ec71153baf5a31401a2dcb74b080d3ef3acd630"
+    },
+    "/private/tmp/fwp-phase4-matrix-draft/mono.rs": {
+      "source": "scripts/roadmap-recovery/phase4-matrix-draft/mono.rs",
+      "sha256": "465a162f8447790b2ae40ea1482ccaa176b343986e215e2589b196caef279d14"
+    },
+    "/private/tmp/fwp-phase4-matrix-draft/numerics.rs": {
+      "source": "scripts/roadmap-recovery/phase4-matrix-draft/numerics.rs",
+      "sha256": "5718205c9a0349bb5281369f2a38292cb9cfc1a91ebcf88ec8bec104249a4be0"
+    },
+    "/private/tmp/fwp-phase4-matrix-draft/ownership.rs": {
+      "source": "scripts/roadmap-recovery/phase4-matrix-draft/ownership.rs",
+      "sha256": "6393eefa68cc9c931726e589b0f9eae3e36c44c88981d3ad23ff4e56a7b32273"
+    },
+    "/private/tmp/fwp-prepare-blocked-matrix.py": {
+      "source": "scripts/roadmap-recovery/prepare-blocked-matrix.py",
+      "sha256": "be5b9c16c8989712477ee3275843a7860a60b244fb890b4e2c6247ed3d432aa5"
+    },
+    "/private/tmp/fwp-prepare-phase4-active-recovery.py": {
+      "source": "scripts/roadmap-recovery/prepare-phase4-active-recovery.py",
+      "sha256": "75063c3bd5c0b257bcf9361cf603503d7cfa26ffa7ea456889a4d4f061631e6c"
+    },
+    "/private/tmp/fwp-prepare-rust-autodiff-workspace.py": {
+      "source": "scripts/roadmap-recovery/prepare-rust-autodiff-workspace.py",
+      "sha256": "b6a6ca312af7b298626d66f215867befcb3b6171b7b93b94149b76197a50922b"
+    },
+    "/private/tmp/fwp-prepare-workspace-scope-and-library-cleanup.py": {
+      "source": "scripts/roadmap-recovery/prepare-workspace-scope-and-library-cleanup.py",
+      "sha256": "3036a16479fcc3757ad4ff33e1d44ef9ef5542f22120c2c2d47a8fc17b9c7cd9"
+    },
+    "/private/tmp/fwp-record-accepted-numeric-source.py": {
+      "source": "scripts/roadmap-recovery/record-accepted-numeric-source.py",
+      "sha256": "c9432666078fbea126666ab93cc0fe30ce0533b1517d74ef691c980001406390"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/comparison.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/comparison.json",
+      "sha256": "24e6948432b1be79f1e954fb09b4b9e7723f58304a38d4e95c98d3a4a79944b7"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/download.json",
+      "sha256": "7fe1126b9b7e87c685ac08ce990433054f91be4565e20201d50ed6af0f4d252b"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/measured-0-O1.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/measured-0-O1.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/measured-0-O2.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/measured-0-O2.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/measured-0.c": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/measured-0.c",
+      "sha256": "34e534674a39244b03cd1e15b2ea917b72f874d3a016a677df0e99ee752694fc"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/measured-1-O1.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/measured-1-O1.json",
+      "sha256": "962e69f943898bde0c0561063eacad9e8d4f1ddcfba22ae98b4ec12a5eb29366"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/measured-1-O2.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/measured-1-O2.json",
+      "sha256": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/measured-1.c": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/measured-1.c",
+      "sha256": "043e6b4612b3cd554b3b8f9e3e8deb4b01e88134def5057989f2d3f4388b6fb4"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/original-0.c": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/original-0.c",
+      "sha256": "777a740bc3a8f80c64a37d3926721947804984d443b2434b7e1c43f9b63d0154"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/original-1.c": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/original-1.c",
+      "sha256": "03d9314ba094aa281eb8b32ef09d6f96a607dfb77d953ace496182db556d94d6"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/permanent-0-O1.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/permanent-0-O1.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/permanent-0-O2.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/permanent-0-O2.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/permanent-1-O1.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/permanent-1-O1.json",
+      "sha256": "962e69f943898bde0c0561063eacad9e8d4f1ddcfba22ae98b4ec12a5eb29366"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/permanent-1-O2.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/permanent-1-O2.json",
+      "sha256": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/source/ad_tape_ownership.rs": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/source/ad_tape_ownership.rs",
+      "sha256": "8cd662bc040f1dbce4819a2598ba3267acde4bed50f6b1d36e2608504227deab"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/source/ad_tape_scopes.rs": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/source/ad_tape_scopes.rs",
+      "sha256": "033708cb0a1fdc33bffa3a7afdcc9a22a7e1f5bb9cad724786261e4521dd08f4"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/source/autodiff_capacity_bounds.rs": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/source/autodiff_capacity_bounds.rs",
+      "sha256": "ec0d768a145dc93c6f8cdc7069926e6b0debc4b0d2652b190d5727c756a7d45d"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/source/autodiff_workspace.rs": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/source/autodiff_workspace.rs",
+      "sha256": "5eec560585a4c17e0b163ddc5bf8a0d9f4fd7be582178b1f7f8a14d69bb4f2c8"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/source/cgen.rs": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/source/cgen.rs",
+      "sha256": "d6a41b89695a4d334490c01758b2622c30d8b5d76ba086838cfb419f32fc4158"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/source/fuse.rs": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/source/fuse.rs",
+      "sha256": "3416cffc218dbfb80152d3038889ee5c428c295b49b74684a07e15dc295f89cc"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/source/numeric_array_fusion.rs": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/source/numeric_array_fusion.rs",
+      "sha256": "09361a0de4a7a0b7b82e2ce951f899831d925d4a79f4e95f7187d4dbfd4df1cf"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/source/numerics.rs": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/source/numerics.rs",
+      "sha256": "43d7a0646d4b3e2c9a234a632afc8c4b0c3aeb1bddf0020ea9777f1ac36197ac"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/workspaces/native-O1-cache0.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/workspaces/native-O1-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/workspaces/native-O1-cache1.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/workspaces/native-O1-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/workspaces/native-O2-cache0.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/workspaces/native-O2-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-rust-numeric-workspace-evidence/workspaces/native-O2-cache1.json": {
+      "source": "scripts/roadmap-recovery/rust-numeric-workspace-evidence/workspaces/native-O2-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-verified-numerics-workspace-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-numerics-workspace-restoration/proof.json",
+      "sha256": "3e12d594384ada742bda33ff453e9b583a0685ceaeaf5f559648ebe2875c9740"
+    },
+    "/private/tmp/fwp-verified-numerics-workspace-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-numerics-workspace-restoration/recovery-restoration.json",
+      "sha256": "c120fcc24166ba33beb40a2ac7ba0424129a946690ff55266eca14ac75c805f7"
+    },
+    "/private/tmp/fwp-verified-numerics-workspace-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-numerics-workspace-restoration/validation.json",
+      "sha256": "731a07c695bc0791ae50a5e7e39229889f7fce7de927d4687b107255adf689c0"
+    },
+    "/private/tmp/fwp-workspace-library-initial-failure.log": {
+      "source": "scripts/roadmap-recovery/workspace-library-initial-failure.log",
+      "sha256": "cff1b63d9105199b3eb98db53c7d1e371b61c98373c2ca280ed44f5397433488"
+    },
+    "/private/tmp/fwp-publish-phase4-active-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-phase4-active-recovery.py",
+      "sha256": "2d25856734e607553a485ef438508d2e16a031bf751a5c7aee62722bea9da15b"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/matrix-measured-0.c": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/matrix-measured-0.c",
+      "sha256": "bb2611b2cfdc2876af44d55f941b3bf17f3e231762d77cd5ce1499daf24efcd7"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/matrix-original-0.c": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/matrix-original-0.c",
+      "sha256": "410627cc8f8b0197bfc24c2fa93a0932bc18f19c2d18229a7a1905c14a3b799e"
+    },
+    "/private/tmp/fwp-numeric-fusion-matrix-clippy-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-matrix-clippy-publication.json",
+      "sha256": "21dc108263b205d6f970ff7c3635e876e9df6cf9f8902b19b385948491b95f74"
+    },
+    "/private/tmp/fwp-numeric-fusion-flat-matrix-files.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-flat-matrix-files.json",
+      "sha256": "ef92cd73de3825a663ea01fefd34e6ae845cfdc0b921c31ba6e216152e557f56"
+    },
+    "/private/tmp/fwp-numerical-performance-counter-publication.json": {
+      "source": "scripts/roadmap-recovery/numerical-performance-counter-publication.json",
+      "sha256": "887df5e52745df73e3ad6f261d7a289b5174828f7068a1a683ce5e3c8c2f9427"
+    },
+    "/private/tmp/fwp-numerical-bench-c-draft.c": {
+      "source": "scripts/roadmap-recovery/numerical-bench-c-draft.c",
+      "sha256": "c51ab3916a9ca900c68da1b4806e38beed77215f7d17101e9059e9e95ec691f8"
+    },
+    "/private/tmp/fwp-summarize-numeric-array-fusion.py": {
+      "source": "scripts/roadmap-recovery/summarize-numeric-array-fusion.py",
+      "sha256": "6a6a52fc169749f0a6eddb2daa7c75e85ebccf99d8226a9eaa850015f91f2ba4"
+    },
+    "/private/tmp/fwp-numerical-performance-publication.json": {
+      "source": "scripts/roadmap-recovery/numerical-performance-publication.json",
+      "sha256": "f2a901a1b984848114b269a56e34359663dd5123967cfe8b089fa4cea39303b1"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/mono.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/mono.rs",
+      "sha256": "32a99121c168e5ee66ff200d20abaea71870a128d7396f2e00f536db7b296af8"
+    },
+    "/private/tmp/fwp-verified-phase4-active-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-phase4-active-restoration/recovery-restoration.json",
+      "sha256": "1f601e457a633c2231856ce2c0535948df81a0b70d176bcdfcf6e6d0750360cd"
+    },
+    "/private/tmp/fwp-array-fusion-matrix-wasi-preparation.yml": {
+      "source": "scripts/roadmap-recovery/array-fusion-matrix-wasi-preparation.yml",
+      "sha256": "59f5e8d1f8e0bd375baf1d061fee64b2c2f4ca7a44497faf47f99c7c727341c3"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/fuse.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/fuse.rs",
+      "sha256": "beace7fcf58cd85ae5359535fdf3b8edd2e7564bc9f6e1e6e7990496e9feaa3a"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/workspaces/native-O1-cache0.json": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/workspaces/native-O1-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-blocked-matrix-initial-failure.log": {
+      "source": "scripts/roadmap-recovery/blocked-matrix-initial-failure.log",
+      "sha256": "dc00f6c16567d67a1c5f3b4ec1e1ae3784de76e3831984f11d066de2e0b8590c"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/numeric_array_fusion.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/numeric_array_fusion.rs",
+      "sha256": "22be76867fe70aa08dae99e3be332590a5e22c68d484866b7645066fa91ffe4a"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/original-0.c": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/original-0.c",
+      "sha256": "3b129f5b5cbe484d4b6f53583d6c88ccffecb5e0c186168da392a01bca9d45e4"
+    },
+    "/private/tmp/fwp-numerical-performance-files.json": {
+      "source": "scripts/roadmap-recovery/numerical-performance-files.json",
+      "sha256": "c34f23cc8d791e205a4c035dda6017cfbd2a2fce96f969c15c3cd389bdce0541"
+    },
+    "/private/tmp/fwp-numeric-fusion-matrix-wasi-files.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-matrix-wasi-files.json",
+      "sha256": "5215cbfcb1e249d7c3799cf1337e7639a009fe4a31a538b06f5e3ea40d5a5c93"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/download.json",
+      "sha256": "9c4c8ea7c5f52ca07ffd67298bc1cb6df80ff6e5f2d71c429b027b1601c6de55"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/measured-0.c": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/measured-0.c",
+      "sha256": "2193a2fcc15be8cccb55ba1113d1077897dea79107149b312f93c3664e8e97f1"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/mono.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/mono.rs",
+      "sha256": "5298db5b257513436c05aad52459a77b4e085167db1582cd049c448653a0d315"
+    },
+    "/private/tmp/fwp-verified-phase4-active-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-phase4-active-restoration/proof.json",
+      "sha256": "d96a25f2b017cccfae8e2ab8dfe2e1542d1b28556714f8819c0e27acdb64771d"
+    },
+    "/private/tmp/fwp-numeric-flat-matrix-focused-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-flat-matrix-focused-publication.json",
+      "sha256": "1bad9536627404af81c0e50caaafdaaf017e29847104534fe0e928592e303a98"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/wasm.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/wasm.rs",
+      "sha256": "1089b048e8beda7c148a795c5d040a48a4075d827a4783c5e7ca0f616f23935b"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/permanent-0-O1.json": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/permanent-0-O1.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/wasm.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/wasm.rs",
+      "sha256": "1089b048e8beda7c148a795c5d040a48a4075d827a4783c5e7ca0f616f23935b"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/download.json",
+      "sha256": "c5b15b49f02380c22e53bb5671032005ce3580e73979f019b662e462e157402a"
+    },
+    "/private/tmp/fwp-matrix-unwind-probe-draft.c": {
+      "source": "scripts/roadmap-recovery/matrix-unwind-probe-draft.c",
+      "sha256": "4b705eb8a687f16d1ff671b7c4bd7017c0695408243c85e59fb478c50c7b649e"
+    },
+    "/private/tmp/fwp-matrix-allocation-probe-draft.c": {
+      "source": "scripts/roadmap-recovery/matrix-allocation-probe-draft.c",
+      "sha256": "846288501f1f386df991ab2481f55be6d047f4faab87ae647f465e882d0c7d8e"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/measured-1.c": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/measured-1.c",
+      "sha256": "ea127b1e63a40b8221a84f43204e2d8ed6596252a4089a3c98d7b6561f0c02ea"
+    },
+    "/private/tmp/fwp-fetch-phase4-active-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-phase4-active-restoration.py",
+      "sha256": "26df81e953782f66bec33ec6172409dad64757569f7d4f473f1116cdbd69ef32"
+    },
+    "/private/tmp/fwp-numerical-performance-preparation.yml": {
+      "source": "scripts/roadmap-recovery/numerical-performance-preparation.yml",
+      "sha256": "357ca6fa1b9bf9e1e1c2fac0697afb253d5fc1ef74819e9064f85a89f35ed2cd"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/autodiff_workspace.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/autodiff_workspace.rs",
+      "sha256": "5eec560585a4c17e0b163ddc5bf8a0d9f4fd7be582178b1f7f8a14d69bb4f2c8"
+    },
+    "/private/tmp/fwp-numeric-flat-matrix-focused-files.json": {
+      "source": "scripts/roadmap-recovery/numeric-flat-matrix-focused-files.json",
+      "sha256": "18f7c8c7f3a0a6b66048f80a6e394545cf98f0c80209b1fbf9740bdc61391f3d"
+    },
+    "/private/tmp/fwp-numeric-fusion-matrix-wasi-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-matrix-wasi-publication.json",
+      "sha256": "e156ab86042c5c1cd37e5c68cddca9129b3173e44f0015b07fb9683b0d59973b"
+    },
+    "/private/tmp/fwp-numeric-matrix-unwind-files.json": {
+      "source": "scripts/roadmap-recovery/numeric-matrix-unwind-files.json",
+      "sha256": "df6725c9ae74a03fea73a41e15c301e1a3c9e130d02fa46f5dd8183381c4f2a1"
+    },
+    "/private/tmp/fwp-blocked-matrix-second-failure.log": {
+      "source": "scripts/roadmap-recovery/blocked-matrix-second-failure.log",
+      "sha256": "110995fe6fb91a5b8d734ef9bc52301e1b10d07c9913a6a45fe790b4b530911c"
+    },
+    "/private/tmp/fwp-numerical-bench-rust-draft.rs": {
+      "source": "scripts/roadmap-recovery/numerical-bench-rust-draft.rs",
+      "sha256": "77a4cbeecaf2ce430da436b2da431eb952255af3bc1f73287153c9ca6ffc641d"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/matrix-1-O1.json": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/matrix-1-O1.json",
+      "sha256": "827aaa6db0a3ae51889feea9e0f9f1d6395e93b007dbb417133cdc434277d48b"
+    },
+    "/private/tmp/fwp-autodiff-wasm-test-draft.rs": {
+      "source": "scripts/roadmap-recovery/autodiff-wasm-test-draft.rs",
+      "sha256": "bc8b6c743f1749dfb44d6755dc25bd8f6bd786c1d5a2d8ed7d44c98eda72d0c8"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/matrix-measured-1.c": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/matrix-measured-1.c",
+      "sha256": "40c5d9ff326b76d55e0cc03ff233d60054a6210abcc237df7985d1546e49b506"
+    },
+    "/private/tmp/fwp-numerical-bench-native-draft.c": {
+      "source": "scripts/roadmap-recovery/numerical-bench-native-draft.c",
+      "sha256": "6675b40d7931a4b1f5bcc944e8d83bf4dfc4ad627a5a7dd01fc10497b3a018b5"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/autodiff_library.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/autodiff_library.rs",
+      "sha256": "03b51f5a997e7774c4abd794a48ce2505eaeedfbe5607543019df544ecc2c9a1"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/numeric_array_fusion.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/numeric_array_fusion.rs",
+      "sha256": "22be76867fe70aa08dae99e3be332590a5e22c68d484866b7645066fa91ffe4a"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/cgen.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/cgen.rs",
+      "sha256": "c41a4a7e9f94a5bce76e755fa11904d554824af847fe6cde00693caedfdcd849"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/blocked_matrix.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/blocked_matrix.rs",
+      "sha256": "9931703ee783a4239c330cccacea870a78ecbd3ba5f023689a6ea89186630810"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/matrix-0-O2.json": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/matrix-0-O2.json",
+      "sha256": "a11d462ce4a0b1033f526fd2d0542b69a4ff0a22bf1896b95936a309d0068935"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/fwp_rt_kernel.c",
+      "sha256": "cdbe261226afdcefe453f3aaf3c57b8d96d58a8e70f1129cb7d0a1b0fde46631"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/ad_tape_ownership.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/ad_tape_ownership.rs",
+      "sha256": "8cd662bc040f1dbce4819a2598ba3267acde4bed50f6b1d36e2608504227deab"
+    },
+    "/private/tmp/fwp-numeric-matrix-unwind-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-matrix-unwind-publication.json",
+      "sha256": "276a879ad5277ad0106ab66496a6ea6a4bc746cea10638a2d3ad93d46ce96e8d"
+    },
+    "/private/tmp/fwp-matrix-focused-preparation.yml": {
+      "source": "scripts/roadmap-recovery/matrix-focused-preparation.yml",
+      "sha256": "2e9b6e1beb7dd2d5c70ca7f08a7df01719d2f4cf6930b76e95c687fa0754a0be"
+    },
+    "/private/tmp/fwp-download-matrix-wasi-workspace.py": {
+      "source": "scripts/roadmap-recovery/download-matrix-wasi-workspace.py",
+      "sha256": "cec241431d77b3d77953f225f4266d259ef046a4621a1ec291dd7dddc57a2378"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/ad_tape_scopes.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/ad_tape_scopes.rs",
+      "sha256": "033708cb0a1fdc33bffa3a7afdcc9a22a7e1f5bb9cad724786261e4521dd08f4"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/permanent-0-O2.json": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/permanent-0-O2.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-download-flat-matrix-allocation.py": {
+      "source": "scripts/roadmap-recovery/download-flat-matrix-allocation.py",
+      "sha256": "18635432be8409d32e2e07b7016ec02c00610d5e2a44a50ec88c09e84005fa06"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/matrix-1-O2.json": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/matrix-1-O2.json",
+      "sha256": "827aaa6db0a3ae51889feea9e0f9f1d6395e93b007dbb417133cdc434277d48b"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/autodiff_library.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/autodiff_library.rs",
+      "sha256": "03b51f5a997e7774c4abd794a48ce2505eaeedfbe5607543019df544ecc2c9a1"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/ad_tape_scopes.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/ad_tape_scopes.rs",
+      "sha256": "033708cb0a1fdc33bffa3a7afdcc9a22a7e1f5bb9cad724786261e4521dd08f4"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/production-1.asm": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/production-1.asm",
+      "sha256": "69280244e0141c94b1fcfd5ec2df12ed4c828a5ec83480c4053b40fbfc45f734"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/workspaces/native-O1-cache1.json": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/workspaces/native-O1-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/production-0.asm": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/production-0.asm",
+      "sha256": "d018c9d074b7556ab017b0cc78265b7dc6dc84d47e24b845e31094e94633a269"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/numerics.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/numerics.rs",
+      "sha256": "eaa35e92ed162bdc79cf038884a109366e914b43f3aaa2ca186244c9d86598a9"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/permanent-1-O1.json": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/permanent-1-O1.json",
+      "sha256": "962e69f943898bde0c0561063eacad9e8d4f1ddcfba22ae98b4ec12a5eb29366"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/numerics.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/numerics.rs",
+      "sha256": "092118c23bacc0268e8d81efebeeaf7985de06b478b4d9d26c15fb8006c20480"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/matrix-0-O1.json": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/matrix-0-O1.json",
+      "sha256": "a11d462ce4a0b1033f526fd2d0542b69a4ff0a22bf1896b95936a309d0068935"
+    },
+    "/private/tmp/fwp-numeric-fusion-flat-matrix-publication.json": {
+      "source": "scripts/roadmap-recovery/numeric-fusion-flat-matrix-publication.json",
+      "sha256": "5ba383a8ffbd2b35377c3e6a177900b6df71de660de7f4d3b90e275219a535fe"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/autodiff_workspace.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/autodiff_workspace.rs",
+      "sha256": "5eec560585a4c17e0b163ddc5bf8a0d9f4fd7be582178b1f7f8a14d69bb4f2c8"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/comparison.json": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/comparison.json",
+      "sha256": "fce9825b81bdd8fb2e06df3723fbb888df20917d04008dba3a8333110f28ca18"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/permanent-1-O2.json": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/permanent-1-O2.json",
+      "sha256": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/matrix-original-1.c": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/matrix-original-1.c",
+      "sha256": "03c3500d119a7af4578dd6441e196ebb6e41bf4bd1d29f992b0093e6f9152f3e"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/ownership.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/ownership.rs",
+      "sha256": "7cf31d649530142f96d7bc425fd3f9f660885a97f43357dacff837b6e09db3d3"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/fwp_rt_kernel.c",
+      "sha256": "e2923c888cb381ac99e1f4012d5afe81077867e4dfc030ffe5bdca7f0660ec44"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/workspaces/native-O2-cache1.json": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/workspaces/native-O2-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/cgen.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/cgen.rs",
+      "sha256": "75c00cb1655fc061ea74493aac95c7d87328a00babb836c719bcf428b8345a6d"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/autodiff_capacity_bounds.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/autodiff_capacity_bounds.rs",
+      "sha256": "ec0d768a145dc93c6f8cdc7069926e6b0debc4b0d2652b190d5727c756a7d45d"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/source/fuse.rs": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/source/fuse.rs",
+      "sha256": "30de9fe02d06d3a0fc112ca4a899d3a9f661bbbdc5d03d149f93d80e2d1fda14"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/workspaces/native-O2-cache0.json": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/workspaces/native-O2-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-failure.log": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-failure.log",
+      "sha256": "278a43695194d29b195f5f214265cf0bcc4bb54d15027e66b97be72904d2a165"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/autodiff_capacity_bounds.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/autodiff_capacity_bounds.rs",
+      "sha256": "ec0d768a145dc93c6f8cdc7069926e6b0debc4b0d2652b190d5727c756a7d45d"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/ad_tape_ownership.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/ad_tape_ownership.rs",
+      "sha256": "8cd662bc040f1dbce4819a2598ba3267acde4bed50f6b1d36e2608504227deab"
+    },
+    "/private/tmp/fwp-verified-phase4-active-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-phase4-active-restoration/validation.json",
+      "sha256": "094a1f8496e7217205f47e416aa96f5884e91902987458455235b5b5c991cfa3"
+    },
+    "/private/tmp/fwp-measure-numerical-kernels.py": {
+      "source": "scripts/roadmap-recovery/measure-numerical-kernels.py",
+      "sha256": "a253fa1d0fdb7de68de3d6b08d16921487d59feb3029ad3e553b7244d93670a1"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/ownership.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/ownership.rs",
+      "sha256": "6393eefa68cc9c931726e589b0f9eae3e36c44c88981d3ad23ff4e56a7b32273"
+    },
+    "/private/tmp/fwp-flat-matrix-allocation-evidence/source/blocked_matrix.rs": {
+      "source": "scripts/roadmap-recovery/flat-matrix-allocation-evidence/source/blocked_matrix.rs",
+      "sha256": "33519deb84959e58c9af10290fd202b34d1b8bbdea890bcfae39e8dbbe991ace"
+    },
+    "/private/tmp/fwp-matrix-wasi-workspace-evidence/original-1.c": {
+      "source": "scripts/roadmap-recovery/matrix-wasi-workspace-evidence/original-1.c",
+      "sha256": "2457e93342edf587a35f9b77644c87bbed8836a9a1d1aa97e91a32aad4fcea14"
+    },
+    "/private/tmp/fwp-publish-numerical-benchmark-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-numerical-benchmark-recovery.py",
+      "sha256": "545563a7bd790736a86d138c29521794d7671f31b0d6a7b5bc63d60d2529a65b"
+    },
+    "/private/tmp/fwp-numerical-platform-baseline/download.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-baseline/download.json",
+      "sha256": "54f62a5f84cffb2ae600487e0b09b276f61e87f67eb05bf8dfe399381ce94731"
+    },
+    "/private/tmp/fwp-numerical-platform-baseline/ubuntu-latest.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-baseline/ubuntu-latest.json",
+      "sha256": "a14b4d70a39dc88ffd9ea4f69f83843763d42157b63d8ecbfb0261b442a87f84"
+    },
+    "/private/tmp/fwp-verified-numerical-benchmark-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-numerical-benchmark-restoration/validation.json",
+      "sha256": "ba3ba767b89944e5c3ce2cab5335191e8e1f6bb9f1f4f214d9d94a72e9b26548"
+    },
+    "/private/tmp/fwp-numeric-rc-base.json": {
+      "source": "scripts/roadmap-recovery/numeric-rc-base.json",
+      "sha256": "9ff70b9c7d3ed31000b3ee127dd95d1caca3efa13ef9a5c227e60ae0350a2581"
+    },
+    "/private/tmp/fwp-numerical-direct-initial-failure.log": {
+      "source": "scripts/roadmap-recovery/numerical-direct-initial-failure.log",
+      "sha256": "a240435b9147d315d23391ab1cb741b48293b8e0a91995550a541c9de621c48a"
+    },
+    "/private/tmp/fwp-numerical-benchmark-current-map.json": {
+      "source": "scripts/roadmap-recovery/numerical-benchmark-current-map.json",
+      "sha256": "38a37a402fb76f7e1cde359a9e4fcb11b8fa599fcb02ff4224c3e9a6870a0b8b"
+    },
+    "/private/tmp/fwp-numerical-direct-files.json": {
+      "source": "scripts/roadmap-recovery/numerical-direct-files.json",
+      "sha256": "f483f52319056493dc2309236a288f9c0dc92867ca65905be5cf87128dbdd792"
+    },
+    "/private/tmp/fwp-numerical-platform-publication.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-publication.json",
+      "sha256": "c2dbdfa26cd479a71c3880e8ca4ea65fbfbde8259cfb284ea77f25924a37abcb"
+    },
+    "/private/tmp/fwp-numerical-platform-files.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-files.json",
+      "sha256": "6331cdc4051ed10fc94438cf74091199e3592cd2377fa3861e011d2869656fb9"
+    },
+    "/private/tmp/fwp-phase4-matrix-draft/rc.rs": {
+      "source": "scripts/roadmap-recovery/phase4-matrix-draft/rc.rs",
+      "sha256": "25a5323a7c95314f1bd163102955a8a2a8ea98f65dba29d9a27c93fab7efc3bc"
+    },
+    "/private/tmp/fwp-verified-numerical-benchmark-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-numerical-benchmark-restoration/recovery-restoration.json",
+      "sha256": "0c0355d1722b7ef62bfd5bfc81f4c9000a8a5ef4a533d9e6371986e1646c88c7"
+    },
+    "/private/tmp/fwp-numerical-platform-baseline/macos-15.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-baseline/macos-15.json",
+      "sha256": "a1e2e635b804ddc7c3733ca6e43928b3052404ebe0e0f3f1dacc7792829eca4c"
+    },
+    "/private/tmp/fwp-numerical-benchmark-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/numerical-benchmark-recovery-checkpoint.json",
+      "sha256": "5e83030034de1c9ebca3a2ea0fd676faab614739c657711f773e13d16bf3265e"
+    },
+    "/private/tmp/fwp-direct-failure-source.json": {
+      "source": "scripts/roadmap-recovery/direct-failure-source.json",
+      "sha256": "84c3003bc3d9e1fbbf3857d1cbf930da0bd07eb87ef28f2833c12134e4ded87b"
+    },
+    "/private/tmp/fwp-numerical-platform-preparation.yml": {
+      "source": "scripts/roadmap-recovery/numerical-platform-preparation.yml",
+      "sha256": "aeb3a08ebb4851e7d98843533c7ff010ee06fa13e9af088a0e01236c28ebd991"
+    },
+    "/private/tmp/fwp-numerical-lookup-publication.json": {
+      "source": "scripts/roadmap-recovery/numerical-lookup-publication.json",
+      "sha256": "937eb2d8483035ad73551dd50ccadf7562346e0b5afd8b5b64475d8dc8e8ceb8"
+    },
+    "/private/tmp/fwp-numerical-direct-publication.json": {
+      "source": "scripts/roadmap-recovery/numerical-direct-publication.json",
+      "sha256": "d938916d00e873fa10adbe88e5a62f93438537af7234309a60435ac413bb317c"
+    },
+    "/private/tmp/fwp-verified-numerical-benchmark-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-numerical-benchmark-restoration/proof.json",
+      "sha256": "bd8acc51de2843535c982fa1e22f2078cdb5c9c82435aeaf2a82d1a747ff9a77"
+    },
+    "/private/tmp/fwp-direct-failure-array.c": {
+      "source": "scripts/roadmap-recovery/direct-failure-array.c",
+      "sha256": "44ad12c4841f88cde1bc9396d412899d3f103357afc8fe38619958e180aa286a"
+    },
+    "/private/tmp/fwp-download-numerical-benchmark.py": {
+      "source": "scripts/roadmap-recovery/download-numerical-benchmark.py",
+      "sha256": "686af1f386c32c0f94d0fcdfd112cea2cd8545d19e7d9188a43599e8c8947e82"
+    },
+    "/private/tmp/fwp-fetch-numerical-benchmark-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-numerical-benchmark-restoration.py",
+      "sha256": "42419cd184e05600f21e7ec678af96fcb0994c164b7bbc0d6010ab349641e44f"
+    },
+    "/private/tmp/fwp-numerical-platform-baseline/macos-15-intel.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-baseline/macos-15-intel.json",
+      "sha256": "f0107b7ce5b67634fc0a58a50ca3491ad997c6ff6842792751f9289afa5f4816"
+    },
+    "/private/tmp/fwp-publish-numerical-lookup-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-numerical-lookup-recovery.py",
+      "sha256": "e29bb51b111b9e7847cfcc3ba50f65f6168e3db87fa92b1ca49dec414a015912"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/matrix-timing.asm": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/matrix-timing.asm",
+      "sha256": "34a51fe4ecdf061ff3c97ef34023fb1160cfcc444cccf0f5cdd04c4cc82ca9e4"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/permanent-1-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/permanent-1-O2.json",
+      "sha256": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/download.json",
+      "sha256": "d96dc1a08d7f2051cf9a179830d78c02d8d6b8c048878619253e17105d04048d"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/array-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/array-rust-timing.json",
+      "sha256": "7b61f0a98064d1cd70b83b700fd3d11fa75fa624daa19e1d787354a4dce4cc6a"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/matrix-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/matrix-fwp-profile.json",
+      "sha256": "bb12c9368a0b5c8f2b60930f8e0cea6e6295dd1118fa4873a459d85e86faa45a"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/array-c-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/array-c-timing.json",
+      "sha256": "ccae2cb24a722b458a988291f40394f17248e7591897a14da3d7101dfe9a0221"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/wasm.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/wasm.rs",
+      "sha256": "1089b048e8beda7c148a795c5d040a48a4075d827a4783c5e7ca0f616f23935b"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/array-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/array-rust-timing.json",
+      "sha256": "63b46a15a3ce4dea591e1414c2b6147df251e19446df01e0cf48411a004e6a28"
+    },
+    "/private/tmp/fwp-numerical-production-publication.json": {
+      "source": "scripts/roadmap-recovery/numerical-production-publication.json",
+      "sha256": "758508725463c305b5cfa3b1fae251c3db5a5fc86cfc14c4613ba0341d516ca9"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/array-c-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/array-c-timing.json",
+      "sha256": "ed4dd85bc79ece8209211faa319f79b95a6f84a46b34f99724f9be3624470919"
+    },
+    "/private/tmp/fwp-verified-numerical-lookup-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-numerical-lookup-restoration/proof.json",
+      "sha256": "39ba1f8049544c50e935cbc708ff8d12e8f28f71c2f1783d75cfee8a3c120b59"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/ownership.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/ownership.rs",
+      "sha256": "6393eefa68cc9c931726e589b0f9eae3e36c44c88981d3ad23ff4e56a7b32273"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/array-c-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/array-c-profile.json",
+      "sha256": "1fb3270069febd4756749f17b284f651e2e04ed1d4d16bc626b83109176f9c53"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/comparison.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/comparison.json",
+      "sha256": "0e0c6f9b85b2ce361aa25605ffa56dcb360815697acc8e64c5b1a3830e5dcb4f"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/permanent-0-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/permanent-0-O1.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/matrix-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/matrix-fwp-profile.json",
+      "sha256": "d4b4a85ceb4e2ff3b215555ade3bff79a483463fb28bb941dd58a5f801e2763f"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/array-c-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/array-c-profile.json",
+      "sha256": "6524d1031886c58e3b55e3c32885039e64ba7518cabeb173aca25f86ba127196"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/workspaces/native-O1-cache0.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/workspaces/native-O1-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/permanent-0-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/permanent-0-O1.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/matrix-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/matrix-rust-timing.json",
+      "sha256": "9bf2168b167e8f3f64390620695115e83f60da465c748c364cc17d5dc898f1bd"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/array-c-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/array-c-timing.json",
+      "sha256": "3a02d2961bcfdb5d9796ffca78f723895d9f8569eebe20e6d13ba587e2da4670"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/matrix-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/matrix-rust-profile.json",
+      "sha256": "1c054b5a9500957d120028ed6e275bc2540aa99f9f9383d90a2014538ac06dbd"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/matrix-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/matrix-rust-profile.json",
+      "sha256": "98b54718b4be914e1790f5ce5e228feaba0a7ef7e7b70fdff297ff15508fac06"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/matrix-1-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/matrix-1-O1.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-publish-numerical-production.py": {
+      "source": "scripts/roadmap-recovery/publish-numerical-production.py",
+      "sha256": "071a67d252fab8fbcdffc5f689ee054e93e984557ca46765b52eee0ba4fc1dea"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/workspaces/native-O2-cache1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/workspaces/native-O2-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/permanent-1-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/permanent-1-O2.json",
+      "sha256": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/array-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/array-fwp-timing.json",
+      "sha256": "64728203c352cab2dfc369806aff134e2df6efbb69e8fdbe4223772dcf0b4697"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/matrix-timing.asm": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/matrix-timing.asm",
+      "sha256": "9a64e27f4d632c16dacb485c2e0125ce8ce1ab2e812068f5ed8d66394faf8420"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/array-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/array-fwp-profile.json",
+      "sha256": "adb796f72a183c600bd238cd62f3f1b041c434e7791204e894d4492c179719f0"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/array-timing.asm": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/array-timing.asm",
+      "sha256": "82ff2faec152f3d50a5cba4eda088215ca849dfd465760228ff2e61f0edbbc4e"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/matrix-0-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/matrix-0-O2.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/array-timing.asm": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/array-timing.asm",
+      "sha256": "4a560b3b070e9c0ca3f90f24f5d5bb2d6877a58d1d95b1ef2e3144fad323ee54"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/array-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/array-fwp-timing.json",
+      "sha256": "ff718b705c71c26fb6d3ea3179004dd8913357443c7ec0759f7f1498d4ad3032"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/matrix-0-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/matrix-0-O1.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-numerical-production-files.json": {
+      "source": "scripts/roadmap-recovery/numerical-production-files.json",
+      "sha256": "f815f73459512204ba4f6a661fd448ad8b7ee23e0cf8ea59c2461f42fb32c019"
+    },
+    "/private/tmp/fwp-phase5-loop-owners-draft/preparation.yml": {
+      "source": "scripts/roadmap-recovery/phase5-loop-owners-draft/preparation.yml",
+      "sha256": "dce07804554fd3578cc2d406672647882e5ce26508dca2f4a9bbca083131a470"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/workspaces/native-O2-cache0.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/workspaces/native-O2-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/array-timing.asm": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/array-timing.asm",
+      "sha256": "fcfd509d702bfbc3730f34744a9e90d5bd318db35e1b4ff75f6b58cc049d70f5"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/array-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/array-rust-profile.json",
+      "sha256": "5fc577eaf8d48924b4d80115430b9c27da4788b517234f46bbedc5bac97aeb9c"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/matrix-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/matrix-rust-timing.json",
+      "sha256": "743cf36a84067eff242358d78ae604af8e38e56f98651d35252838a4c3e9c7f7"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/permanent-0-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/permanent-0-O2.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/matrix-1-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/matrix-1-O1.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/workspaces/native-O1-cache1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/workspaces/native-O1-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/matrix-c-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/matrix-c-profile.json",
+      "sha256": "ae1183da01f9180ab589ee134b3af57eebf82ba881db43307fd983c0840db0ff"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/permanent-1-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/permanent-1-O2.json",
+      "sha256": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a"
+    },
+    "/private/tmp/fwp-phase5-loop-owners-draft/array_fusion_allocation_probe.c": {
+      "source": "scripts/roadmap-recovery/phase5-loop-owners-draft/array_fusion_allocation_probe.c",
+      "sha256": "4d09338fe3e7e628bad49170217da60f3c208af6ca7572d1aab49c2da0f31ad6"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/matrix-1-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/matrix-1-O2.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-numerical-production-api.json": {
+      "source": "scripts/roadmap-recovery/numerical-production-api.json",
+      "sha256": "3fd73c6de760963ab57c46ac83e70ecf0cdd0a743ec3103178954d05c0d261e6"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/matrix-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/matrix-fwp-timing.json",
+      "sha256": "eddc1ac75cf605acbce362d3301efbca2e946887402e4ec1aca9c37afa2a4616"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/array-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/array-fwp-profile.json",
+      "sha256": "60ab497bd7e8475acdc8bbbe9d341b0e9d83f964597237516ca5311a917b7a53"
+    },
+    "/private/tmp/fwp-phase5-loop-owners-draft/files.json": {
+      "source": "scripts/roadmap-recovery/phase5-loop-owners-draft/files.json",
+      "sha256": "80500f0a6ca303fe078fc3ae313082f90529b3d8084d46eca1ad12d78a669004"
+    },
+    "/private/tmp/fwp-verified-numerical-lookup-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-numerical-lookup-restoration/validation.json",
+      "sha256": "1a3a76aa31680bc3447e8adb24a2b9995faa655b40d77be40ccc70ec5b75fabb"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/matrix-c-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/matrix-c-timing.json",
+      "sha256": "bbbc1d788c696916aa2746a8f20693e9e603827e329217468044b9a076229d7c"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/matrix-0-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/matrix-0-O2.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/matrix-timing.asm": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/matrix-timing.asm",
+      "sha256": "34cb6235e0c6bdcf558385bc95e401f156e4eea76d4c66a4550c9df6082ce35e"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/workspaces/native-O1-cache1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/workspaces/native-O1-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-flat-loop-owners-publication.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-publication.json",
+      "sha256": "c3a6472d9d709df99954786e8435d4deb630592a28e27293de6d5144da561846"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/matrix-0-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/matrix-0-O1.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/comparison.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/comparison.json",
+      "sha256": "0018c1ca35ffd42685dd20a5ebfaccf2b7f078013123d4ce76b8936d1633ca5f"
+    },
+    "/private/tmp/fwp-phase5-loop-owners-draft/cgen.rs": {
+      "source": "scripts/roadmap-recovery/phase5-loop-owners-draft/cgen.rs",
+      "sha256": "27183fea09380d1de76a44a1ff2dfa3bded2d3fd8458e9e867860a9872bdabcc"
+    },
+    "/private/tmp/fwp-download-numerical-platform.py": {
+      "source": "scripts/roadmap-recovery/download-numerical-platform.py",
+      "sha256": "0fecceeef74a0e1e8b1defc5c3e75b2f61b1f0b5214460737ad76e4c8df29862"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/permanent-1-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/permanent-1-O1.json",
+      "sha256": "8dd0b20336bba6af3e898dcdf6046a62508babbeb48380a255365eaeb358a66a"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/array-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/array-rust-profile.json",
+      "sha256": "45643eb445d2f0fa0b66ce72b64e40a7c1477ca8cbdcf78b27212796a0a80dd0"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/ad_tape_ownership.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/ad_tape_ownership.rs",
+      "sha256": "8cd662bc040f1dbce4819a2598ba3267acde4bed50f6b1d36e2608504227deab"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/matrix-1-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/matrix-1-O1.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/numerics.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/numerics.rs",
+      "sha256": "eaa35e92ed162bdc79cf038884a109366e914b43f3aaa2ca186244c9d86598a9"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/matrix-c-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/matrix-c-timing.json",
+      "sha256": "640421894fb6eb1b4160c66db25bd2014931d6f0364e9483a81ecd4ac05967fb"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/matrix-c-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/matrix-c-profile.json",
+      "sha256": "7ef5fae8435ad92b94464692051d4b1b605d63eace8b537c7d71c4923e203c2a"
+    },
+    "/private/tmp/fwp-numerical-production-workflow.yml": {
+      "source": "scripts/roadmap-recovery/numerical-production-workflow.yml",
+      "sha256": "eb1d862a97089e1332dcf7ed435733003bd0c17d80b8d59c62725f86f44fe663"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/workspaces/native-O2-cache0.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/workspaces/native-O2-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/matrix-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/matrix-fwp-timing.json",
+      "sha256": "1461942728ed396ebb5d6be1f699f46242116a144aacdb24ba3daa8410c46e16"
+    },
+    "/private/tmp/fwp-flat-loop-owners-index-publication.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-index-publication.json",
+      "sha256": "4dee710f2cf3c0a0499a25e488ae6f9d2a0d8d53482f209aee05664eb6e79b0b"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/array-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/array-fwp-profile.json",
+      "sha256": "a06131c34c3695106b5454dcf4d0c0709de7d517da146ac6032eba7f44f78db5"
+    },
+    "/private/tmp/fwp-phase5-loop-owners-draft/rc.rs": {
+      "source": "scripts/roadmap-recovery/phase5-loop-owners-draft/rc.rs",
+      "sha256": "f9ea18ab5400dfbaf6e2ff773d9fe35e3518169e3dbd9ec7a109d8c42168d5c0"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/matrix-c-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/matrix-c-timing.json",
+      "sha256": "550db02a63399173a474285044111e96804453c8d47f8d0eba7d8717a2825a4e"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/ad_tape_scopes.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/ad_tape_scopes.rs",
+      "sha256": "033708cb0a1fdc33bffa3a7afdcc9a22a7e1f5bb9cad724786261e4521dd08f4"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/fwp_rt_kernel.c",
+      "sha256": "53aa534ef189066a1f208c693ec71153baf5a31401a2dcb74b080d3ef3acd630"
+    },
+    "/private/tmp/fwp-verified-numerical-lookup-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-numerical-lookup-restoration/recovery-restoration.json",
+      "sha256": "726ead88891971ed180e81e1bddc6cce88c3b9e4d477727fd5a6c0bc219a2378"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/mono.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/mono.rs",
+      "sha256": "5298db5b257513436c05aad52459a77b4e085167db1582cd049c448653a0d315"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/permanent-0-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/permanent-0-O1.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/matrix-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/matrix-fwp-profile.json",
+      "sha256": "c2b24ec2876f644d80bb0c2c0d20a960bf3e6500e8e2664f2c428bdaa708c73e"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/workspaces/native-O2-cache1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/workspaces/native-O2-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/workspaces/native-O1-cache1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/workspaces/native-O1-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/permanent-1-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/permanent-1-O1.json",
+      "sha256": "962e69f943898bde0c0561063eacad9e8d4f1ddcfba22ae98b4ec12a5eb29366"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/array-c-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/array-c-profile.json",
+      "sha256": "23415e42fdacf658cd152cb19b6faf95f75cd817ffc6181a90af38187c8b23a7"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/autodiff_workspace.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/autodiff_workspace.rs",
+      "sha256": "5eec560585a4c17e0b163ddc5bf8a0d9f4fd7be582178b1f7f8a14d69bb4f2c8"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/array-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/array-fwp-timing.json",
+      "sha256": "166d1e8eee341e7db125edcf62421d2231a38cb25f1f6bbe3a31279801dbf01a"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/autodiff_capacity_bounds.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/autodiff_capacity_bounds.rs",
+      "sha256": "ec0d768a145dc93c6f8cdc7069926e6b0debc4b0d2652b190d5727c756a7d45d"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/comparison.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/comparison.json",
+      "sha256": "13c4127fa6e3717a5921ce393978a637aadde60d83ac29f058aff0bfb0be4351"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/permanent-1-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/permanent-1-O1.json",
+      "sha256": "962e69f943898bde0c0561063eacad9e8d4f1ddcfba22ae98b4ec12a5eb29366"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/matrix-1-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/matrix-1-O2.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/array-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/array-rust-profile.json",
+      "sha256": "29091ae8e025daf5199d819f0bfde34a3a1db088efaf103cb202bdfc6e8e5de1"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/blocked_matrix.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/blocked_matrix.rs",
+      "sha256": "5b6e8f252d9651cf1e94bad9705bc56b2eee832cc134c95b2c11978e971476f3"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/matrix-1-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/matrix-1-O2.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/workspaces/native-O1-cache0.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/workspaces/native-O1-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/comparison.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/comparison.json",
+      "sha256": "729232f40344f1eea10e8ea707ea359397b479e6f117fb5f12122b5ff6839cd7"
+    },
+    "/private/tmp/fwp-merge-numerical-kernels.py": {
+      "source": "scripts/roadmap-recovery/merge-numerical-kernels.py",
+      "sha256": "e1c0392da27296500b0bfdb274081b46d78dbf6b8a87757497748efe4f277a75"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/autodiff_library.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/autodiff_library.rs",
+      "sha256": "03b51f5a997e7774c4abd794a48ce2505eaeedfbe5607543019df544ecc2c9a1"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/workspaces/native-O1-cache0.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/workspaces/native-O1-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/matrix-0-O1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/matrix-0-O1.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/numeric_array_fusion.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/numeric_array_fusion.rs",
+      "sha256": "cf72309d8b834969796ee4df2aa2bb3b44ee887e8e6742ab6082aea55acaf79e"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/comparison.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/comparison.json",
+      "sha256": "ce0bedcb7887f0e1b0fe4caa5bd4d3d82fa90dff9e8614b4c44111e83e1b5923"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/fuse.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/fuse.rs",
+      "sha256": "beace7fcf58cd85ae5359535fdf3b8edd2e7564bc9f6e1e6e7990496e9feaa3a"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/array-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/array-rust-timing.json",
+      "sha256": "c5c297f6b0d3e375b46c1ebc2fdeb4f82c0b2b3e291ba97f5d4d2fc3f2836ea6"
+    },
+    "/private/tmp/fwp-fetch-numerical-lookup-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-numerical-lookup-restoration.py",
+      "sha256": "e48f1bdb8a3e786f8b6b91a5aa7881cacc3ec9b37810a37cc3c4e6e705ac0b21"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/workspaces/native-O2-cache1.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/workspaces/native-O2-cache1.json",
+      "sha256": "c27db1daf7c02ead9bc976b612fb0d8854f9858e97af0d070d5ee2db59e0c5fe"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/workspaces/native-O2-cache0.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/workspaces/native-O2-cache0.json",
+      "sha256": "6b3af168f8e27af7c4d875f037ddb69c0ea3f86a6c377b2ec01394bd4e168e32"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/comparison.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/comparison.json",
+      "sha256": "f8f495892709a4c0e9a3a327ec54a49b97e7057c5b5c5cf5e02cc0997d5c6264"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/rc.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/rc.rs",
+      "sha256": "aec5efd8ca0b8d5f6e1f05f0ca3d68a7e7f0ff181a55b52fd73e8fb31a4af413"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/matrix-0-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/matrix-0-O2.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/matrix-c-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/matrix-c-profile.json",
+      "sha256": "a442127d350d5caeaacfd2a36eda759c565bc09b44ff45c8935ed43f19e9664b"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/performance/matrix-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/performance/matrix-fwp-timing.json",
+      "sha256": "749dadb722e492cac0a39f97ab98ba834109ebe2e431d26415966c0cbdfdcd68"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/source/cgen.rs": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/source/cgen.rs",
+      "sha256": "5e088c55af881fe35aace44ed1a6466d97265ef97cf9b5429b337e4db6f1715b"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15/performance/matrix-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15/performance/matrix-rust-profile.json",
+      "sha256": "7044aac4983dfbe1de8b48dc2d506d4eb4620ed8a1c41bec5d6b64346130bb7e"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/performance/matrix-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/performance/matrix-rust-timing.json",
+      "sha256": "0d8ecfcf0de076f988e4ffc91ed43379076f808d60b394549331d567b1388c5a"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/macos-15-intel/permanent-0-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/macos-15-intel/permanent-0-O2.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-phase5-loop-owners-draft/numeric_array_fusion.rs": {
+      "source": "scripts/roadmap-recovery/phase5-loop-owners-draft/numeric_array_fusion.rs",
+      "sha256": "42983bae7ed71409931d0e952877b8bc9d7f14ad4c2f83673b088f0405336698"
+    },
+    "/private/tmp/fwp-numerical-platform-evidence/ubuntu-latest/permanent-0-O2.json": {
+      "source": "scripts/roadmap-recovery/numerical-platform-evidence/ubuntu-latest/permanent-0-O2.json",
+      "sha256": "34921d9099ad3464564c0109ccb54cc6dba0045cd8d2ba7c99983f035184c061"
+    },
+    "/private/tmp/fwp-publish-pr127-loop-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-pr127-loop-recovery.py",
+      "sha256": "4029d318d7a2cd1b1b380af773990bfff9dc1c989700a1619dfc746999d2a602"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/matrix-measured-0.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/matrix-measured-0.c",
+      "sha256": "b33bafc47fe8b684f4ca553db465242c0a5bef6179d42832b9dd5f54fb0dc0b3"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/permanent-1-O1.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/permanent-1-O1.json",
+      "sha256": "a23aef946cc8b373e1f6526bfd5841ed476e2e4479174c644de9dd6f2767adbd"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/matrix-original-0.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/matrix-original-0.c",
+      "sha256": "e993dda60970b76af5f27a9225bba005204582bfc7deed40b97a43388d192ae5"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/production-0.asm": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/production-0.asm",
+      "sha256": "99d2a056ff381a9f896f39dc2670c042f18ec4fc5d856dc8e514327c912d65c7"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/production-1.asm": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/production-1.asm",
+      "sha256": "6bca1e774c3511f30dc98f37fd00e31bdf005db6073563f2f2fdb908596fe6b7"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/matrix-0-O2.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/matrix-0-O2.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/matrix-1-O2.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/matrix-1-O2.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/permanent-0-O1.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/permanent-0-O1.json",
+      "sha256": "d65a61a76fce9d89ef37a9816036d0646f6f4dd69cd99b2425c70efe04f93892"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/download.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/download.json",
+      "sha256": "9781a74376d5759498d40c6185df2db53b41f46377a8fae5531776b2a7f7909e"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/original-1.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/original-1.c",
+      "sha256": "84ca6a986b823fb3c36d2428d7ab7bc4460add4b42e6e9fad48de768510cfbd2"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/comparison.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/comparison.json",
+      "sha256": "1991f347de7bf9ffc4fd73f05bb0065e57aff3ed4efd520b03689a58b25c4edc"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/measured-1.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/measured-1.c",
+      "sha256": "898e6d0e6972566e3b1e02b5a2bdb78beceb107d8499de2b782cd26a94bac32d"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/original-0.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/original-0.c",
+      "sha256": "e5ba8a05b43f0e0abe7f633ce1dd4d7ded115d6558723acca85415aed45026bf"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/measured-0.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/measured-0.c",
+      "sha256": "823c5ec53f25e498330f9390115364ea8962551e22fd8bdc18fc7486f371720c"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/permanent-0-O2.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/permanent-0-O2.json",
+      "sha256": "d65a61a76fce9d89ef37a9816036d0646f6f4dd69cd99b2425c70efe04f93892"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/matrix-measured-1.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/matrix-measured-1.c",
+      "sha256": "5a855befa4a598e70730b3be82e6d6d0afd7113fa4c2f20afbef546b3f91f11b"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/matrix-original-1.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/matrix-original-1.c",
+      "sha256": "6abbc26ec68eb303560913d7232c28c65173e75512b1e3b395da74618f08f56e"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/matrix-1-O1.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/matrix-1-O1.json",
+      "sha256": "a6e931ce765bbd6fe6c715fad9ef1d7506e7d38440a84d3643e5ae1461725bdc"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/matrix-0-O1.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/matrix-0-O1.json",
+      "sha256": "fd6d9c46620765642da6263a10d3b1596e68faecbcb3b64864740d108569e9b6"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/permanent-1-O2.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/permanent-1-O2.json",
+      "sha256": "ba61d177e5b2806248c479924a3f6c54f9002d243b0a9772ee9790b4849e5016"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/autodiff_library.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/autodiff_library.rs",
+      "sha256": "03b51f5a997e7774c4abd794a48ce2505eaeedfbe5607543019df544ecc2c9a1"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/ad_tape_scopes.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/ad_tape_scopes.rs",
+      "sha256": "033708cb0a1fdc33bffa3a7afdcc9a22a7e1f5bb9cad724786261e4521dd08f4"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/rc.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/rc.rs",
+      "sha256": "56c1c8e79ec738adf4bb41a1990c249bf43728f581f904a794c91ce3f99bd7ac"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/numeric_array_fusion.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/numeric_array_fusion.rs",
+      "sha256": "42983bae7ed71409931d0e952877b8bc9d7f14ad4c2f83673b088f0405336698"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/ownership.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/ownership.rs",
+      "sha256": "6393eefa68cc9c931726e589b0f9eae3e36c44c88981d3ad23ff4e56a7b32273"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/mono.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/mono.rs",
+      "sha256": "5298db5b257513436c05aad52459a77b4e085167db1582cd049c448653a0d315"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/fuse.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/fuse.rs",
+      "sha256": "beace7fcf58cd85ae5359535fdf3b8edd2e7564bc9f6e1e6e7990496e9feaa3a"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/numerics.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/numerics.rs",
+      "sha256": "eaa35e92ed162bdc79cf038884a109366e914b43f3aaa2ca186244c9d86598a9"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/fwp_rt_kernel.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/fwp_rt_kernel.c",
+      "sha256": "53aa534ef189066a1f208c693ec71153baf5a31401a2dcb74b080d3ef3acd630"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/ad_tape_ownership.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/ad_tape_ownership.rs",
+      "sha256": "8cd662bc040f1dbce4819a2598ba3267acde4bed50f6b1d36e2608504227deab"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/autodiff_capacity_bounds.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/autodiff_capacity_bounds.rs",
+      "sha256": "ec0d768a145dc93c6f8cdc7069926e6b0debc4b0d2652b190d5727c756a7d45d"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/wasm.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/wasm.rs",
+      "sha256": "1089b048e8beda7c148a795c5d040a48a4075d827a4783c5e7ca0f616f23935b"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/blocked_matrix.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/blocked_matrix.rs",
+      "sha256": "5b6e8f252d9651cf1e94bad9705bc56b2eee832cc134c95b2c11978e971476f3"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/cgen.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/cgen.rs",
+      "sha256": "aac952a274d9d4540ccb25df36b63a61b5719d17726967909e75a519c5634531"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/source/autodiff_workspace.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/source/autodiff_workspace.rs",
+      "sha256": "5eec560585a4c17e0b163ddc5bf8a0d9f4fd7be582178b1f7f8a14d69bb4f2c8"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-fwp-timing.json",
+      "sha256": "6a378a22373c8807df2fe526d20fa868ac7752a77ef267dd32650161e13c4abc"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-fwp-timing.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-fwp-timing.json",
+      "sha256": "a4419394faf66b3dfb3c2518aa64b29cdeaec90119350e5e61a4a0c1b90a036b"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-fwp-profile.json",
+      "sha256": "f3069011b96655f3fdbb3553455eadbdb60f142b328f36fd10a6f6113f36be3c"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-fwp-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-fwp-timing-process.txt",
+      "sha256": "193c63b2c2062537b7fdf03f99e9bcd8d2063b500141febbf8f6f60d25b167a4"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-profile.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-profile.c",
+      "sha256": "01a4d8d369af2940d45eafbc1f45a1c3b077d91d3f5bd09ee05a2a1380229ad4"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-fwp-profile.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-fwp-profile.json",
+      "sha256": "de524ac4bb1fdac3139511bc291f468d8a22369226b55e08dd11b0352e3fa463"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-c-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-c-profile-process.txt",
+      "sha256": "c563c4e9e341f2b9e289bac3b06e07724900484c03df955046b52a80359e8ac9"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-c-profile.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-c-profile.json",
+      "sha256": "9aebe6335ca87d5ef356598dd2eac1a6a28addcaa34011d9726fb02e848cba82"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-c-timing.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-c-timing.json",
+      "sha256": "169125b59fbf3cabcd174a7340ee7ec2ed47240b33a3d9c35df1f6069a81013b"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-profile.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-profile.c",
+      "sha256": "fe105208e2578f4d56c16143fa76f6246a082a4d8f8e31f33949d9b9d7fe2d89"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-rust-timing.json",
+      "sha256": "2dd957a89808c55f6bbd0a09fef406daf5faef055802323d59043f9d567c47c0"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-rust-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-rust-timing-process.txt",
+      "sha256": "287bd99d4e7baec827719432ce2f290172323459e2a2fd543dc5aab413f19dc3"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-rust-timing.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-rust-timing.json",
+      "sha256": "4578c0b544575dfc7c5763b738e2db6e6cdbaf68d782378392ff9825a1a0fade"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/comparison.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/comparison.json",
+      "sha256": "1f7cc7bf82dac2acf47cb1998693517ebac5790f8821f9537c8e477bf2b1638f"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-rust-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-rust-timing-process.txt",
+      "sha256": "404e2dc150905d7fa432e32313e1bff308f2d40f4cc0b8805b7f603711a57025"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-c-timing.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-c-timing.json",
+      "sha256": "9081e6646bb07fb6c4b54e04cf7c957e0ab2e8ffe01c8cf158af23d454b6cbed"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-rust-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-rust-profile-process.txt",
+      "sha256": "8ee426540cd2a25941107594cd0037bda0d1a57915aeeecfbf85a7edda943793"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-timing.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-timing.c",
+      "sha256": "0484f4de6e056b4f6e1423d12de21169d4c219bd6094cf68229b80564d814a24"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-timing.asm": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-timing.asm",
+      "sha256": "34a51fe4ecdf061ff3c97ef34023fb1160cfcc444cccf0f5cdd04c4cc82ca9e4"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-fwp-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-fwp-profile-process.txt",
+      "sha256": "3a2a8864513581ac62fd77ed9713a589389886fa01a879f884ee95d0651fb432"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-c-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-c-profile-process.txt",
+      "sha256": "46d734c447b0ceacd98e2fb037ff88312e6fa79e113310fdf455f60fe424cd6b"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-fwp-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-fwp-profile-process.txt",
+      "sha256": "d897dd9d4c5d7b8ec031f1d3b5a18ca9052fd7f7c463f3d6900d940ecffcce09"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-rust-profile.json",
+      "sha256": "a82845cdd957591a0645962909613f40a65452d964660cd9244d650d7de58fdf"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-fwp-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-fwp-timing-process.txt",
+      "sha256": "2744906287e258a0778f755faa258567a39ec82cb1fc3068e002f2cb10b9a3cb"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-rust-profile.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-rust-profile.json",
+      "sha256": "91e38d9cca8fffda60ab72ed0f87dcd9fc23b1a26ac4be877e4282e50fb7be30"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-c-profile.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-c-profile.json",
+      "sha256": "e97e55d1c81dec09ff84d39de9843815fd60daa8c3dee62c9284651a85810706"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-c-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-c-timing-process.txt",
+      "sha256": "6fbf6e244904c50c9d751c85bc7d5e298cb35eb3917d654f9b6dc580f10e9a11"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/matrix-c-timing-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/matrix-c-timing-process.txt",
+      "sha256": "aa5d8fb4abc1f1b051d9ee973003d89270e12935d212e7ef16714d85c93e4ce7"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-rust-profile-process.txt": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-rust-profile-process.txt",
+      "sha256": "a0a98ad4180249213cb158a22486a412b9d13eaee8656abfa23bcf3337d54ee5"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-timing.asm": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-timing.asm",
+      "sha256": "5f335d2580774c593820ad3c10f50f52b5facd00a5de6edfe6be30ce6f551d07"
+    },
+    "/private/tmp/fwp-flat-loop-owners-evidence/performance/array-timing.c": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-evidence/performance/array-timing.c",
+      "sha256": "35734876534f58c50f06f8d27adc09b5face84b5ccfdaf01531c02aded5e0f73"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/rc.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/rc.rs",
+      "sha256": "56c1c8e79ec738adf4bb41a1990c249bf43728f581f904a794c91ce3f99bd7ac"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/download.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/download.json",
+      "sha256": "dc86927bfccb44922993cf1737733addef0268b7ac15f0aef956174ac73bdc5c"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/fallback-review.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/fallback-review.json",
+      "sha256": "50305e0903c23102bc191d74df1ad636b04abdff15e8f1cf91692ebb6304e86f"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/inventory.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/inventory.json",
+      "sha256": "9950d62ee121a54ef0b8f6d54976be34a74d7a3d9b21e131514f03298662ec3c"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/loop_ownership.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/loop_ownership.rs",
+      "sha256": "1ade12fe2d5c8fd605abbbbe4724293a79b2bbf8628e1ef7cf9e3737030edb7d"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export/cgen.rs": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export/cgen.rs",
+      "sha256": "aac952a274d9d4540ccb25df36b63a61b5719d17726967909e75a519c5634531"
+    },
+    "/private/tmp/fwp-phase5-scalar-unwind-draft/preparation.yml": {
+      "source": "scripts/roadmap-recovery/phase5-scalar-unwind-draft/preparation.yml",
+      "sha256": "0ea4fa01142e2f49166213fb6abaed67e5246b90fac4179dcf6fe99ad3ab27b5"
+    },
+    "/private/tmp/fwp-phase5-scalar-unwind-draft/numeric_array_fusion.rs": {
+      "source": "scripts/roadmap-recovery/phase5-scalar-unwind-draft/numeric_array_fusion.rs",
+      "sha256": "bcccbb856a81e85e3131aa4a5866355ea7487c4968d381b935501003b5d7b703"
+    },
+    "/private/tmp/fwp-phase5-scalar-unwind-draft/array_fusion_allocation_probe.c": {
+      "source": "scripts/roadmap-recovery/phase5-scalar-unwind-draft/array_fusion_allocation_probe.c",
+      "sha256": "12bcb5adaf6788b881cd4ae0b0d4e136fc83ca7d4d4f83031286a6b94c4bf4b8"
+    },
+    "/private/tmp/fwp-phase5-scalar-unwind-draft/files.json": {
+      "source": "scripts/roadmap-recovery/phase5-scalar-unwind-draft/files.json",
+      "sha256": "306ea5507544a9f13be94057bf4c8495542334557533531380752219ca7919ff"
+    },
+    "/private/tmp/fwp-phase5-scalar-unwind-draft/cgen.rs": {
+      "source": "scripts/roadmap-recovery/phase5-scalar-unwind-draft/cgen.rs",
+      "sha256": "c97523547cc44df93ccce744c77c80e8ca37e4d2b1b9371ee3b5e272c103b65c"
+    },
+    "/private/tmp/fwp-tracing-free-source/manifest.json": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/manifest.json",
+      "sha256": "8267a3ef78235d3e2a63d30498fda7b4250df1ac437a379270d03fce5cfb2d8b"
+    },
+    "/private/tmp/fwp-tracing-free-source/runtime/fwp_rt_gc.c": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/runtime/fwp_rt_gc.c",
+      "sha256": "3458a76c9326f543376b3afb1a9a540b3be1fc81ca0fcafca331f2e30b7e425d"
+    },
+    "/private/tmp/fwp-tracing-free-source/runtime/fwp_rt.c": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/runtime/fwp_rt.c",
+      "sha256": "4f6e70a6265c4bcf8cbcd28cb897940d6a77c37de0e6e4772a7084bfa64ec97e"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/aot.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/aot.rs",
+      "sha256": "e68fa7d18f066aa85938fffae183bab6fb5deef5367b21d59be8c0b59d55260f"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/ir.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/ir.rs",
+      "sha256": "52980b69a4aac8ec0d92eaf4e479df377d041e514df82578663209ff3ea874ec"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/rc.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/rc.rs",
+      "sha256": "7ea40cd4f1512d93c9b9aaf0531865b5b72f673d5fd98f0385faf96216e26415"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/lib.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/lib.rs",
+      "sha256": "d38fb7119bd3e82dc1541a5a4763cb028585d4dc90b59c0734c59b7e61c211f7"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/ownership.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/ownership.rs",
+      "sha256": "af9dc0ac3e30ce641c6f03dc67c9608da3631c4d3e3aa80ea97d2333d9a4fced"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/escape.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/escape.rs",
+      "sha256": "4653928c3ead819248fd5df280e3c2c1ce1906130c05ff953b3b27469a1276e4"
+    },
+    "/private/tmp/fwp-tracing-free-source/src/main.rs": {
+      "source": "scripts/roadmap-recovery/tracing-free-source/src/main.rs",
+      "sha256": "7e27b743f79a62c690c11498f38470a2c0e39b823416d64afc3f7fe765d001ba"
+    },
+    "/private/tmp/fwp-verified-pr127-loop-restoration/recovery-restoration.json": {
+      "source": "scripts/roadmap-recovery/verified-pr127-loop-restoration/recovery-restoration.json",
+      "sha256": "906cef138c2c519cf016fa1101dd585ed9a74e31f810a176b82087ad0db45fdf"
+    },
+    "/private/tmp/fwp-verified-pr127-loop-restoration/validation.json": {
+      "source": "scripts/roadmap-recovery/verified-pr127-loop-restoration/validation.json",
+      "sha256": "b6a667a98bb60efa264bf97d42becff61db902441e2952f4aa0e4c558d26a34b"
+    },
+    "/private/tmp/fwp-verified-pr127-loop-restoration/proof.json": {
+      "source": "scripts/roadmap-recovery/verified-pr127-loop-restoration/proof.json",
+      "sha256": "805d8865e14d485d4e1bb405c3c54c9b9e6344c87d2be0f302e4461efa71dc8e"
+    },
+    "/private/tmp/fwp-scalar-unwind-publication.json": {
+      "source": "scripts/roadmap-recovery/scalar-unwind-publication.json",
+      "sha256": "4b9d479176b686ddd605c1914821d134a9b0f9af4cbc20c6ffe3475b35e98028"
+    },
+    "/private/tmp/fwp-numerical-loop-control-production-update.json": {
+      "source": "scripts/roadmap-recovery/numerical-loop-control-production-update.json",
+      "sha256": "f48f3aee060f2df75b440ae7fc424a3462aaa74125bc2d19339a0010cc160ff5"
+    },
+    "/private/tmp/fwp-flat-loop-owners-control-publication.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-control-publication.json",
+      "sha256": "4109eed0797051256a841d1e595ec97319a51c2a7223db25e8f2293e5a3067bd"
+    },
+    "/private/tmp/fwp-flat-loop-owners-export-publication.json": {
+      "source": "scripts/roadmap-recovery/flat-loop-owners-export-publication.json",
+      "sha256": "9da8f60ae9127ab25ddebbab25cf7abd08ed77e6f5698340aadafa9bd8cc00ee"
+    },
+    "/private/tmp/fwp-numerical-production-initial-publication.json": {
+      "source": "scripts/roadmap-recovery/numerical-production-initial-publication.json",
+      "sha256": "01e190cb9a978dda14030d60bf4e1c60b6234820cf5659eadbd88c8699a9366e"
+    },
+    "/private/tmp/fwp-pr127-loop-recovery-checkpoint.json": {
+      "source": "scripts/roadmap-recovery/pr127-loop-recovery-checkpoint.json",
+      "sha256": "1e4123dfabf5339b824fd305a078cc89c997bea3861eb0a7b39749c177381415"
+    },
+    "/private/tmp/fwp-numerical-production-workflow-with-loops.yml": {
+      "source": "scripts/roadmap-recovery/numerical-production-workflow-with-loops.yml",
+      "sha256": "7ca745d03b325d9a57788e7bb9ede309330ce67555ddb4b4483211647604fd5e"
+    },
+    "/private/tmp/fwp-loop-ownership-current-base.rs": {
+      "source": "scripts/roadmap-recovery/loop-ownership-current-base.rs",
+      "sha256": "8e0f9549283aa7d8617de9cab915045e8db3f19c14756f37726f1487f3ad937d"
+    },
+    "/private/tmp/fwp-loop-ownership-direct-entry-draft.rs": {
+      "source": "scripts/roadmap-recovery/loop-ownership-direct-entry-draft.rs",
+      "sha256": "00c6f72e69efeb7127a83980708e35fa654235978552a8dc76303de4693c4986"
+    },
+    "/private/tmp/fwp-audit-accepted-numerical-source-on-runner.py": {
+      "source": "scripts/roadmap-recovery/audit-accepted-numerical-source-on-runner.py",
+      "sha256": "7196e35cc6f9fccc14be47a9fe76bf6910402271cbe82b7ddef27bfb32f8fa91"
+    },
+    "/private/tmp/fwp-publish-accepted-numerical-source-audit.py": {
+      "source": "scripts/roadmap-recovery/publish-accepted-numerical-source-audit.py",
+      "sha256": "d535d8578062243bb50b7adf1b94c0ae5de8da70d1dab73ec01d7b36982c28a5"
+    },
+    "/private/tmp/fwp-download-accepted-numerical-source.py": {
+      "source": "scripts/roadmap-recovery/download-accepted-numerical-source.py",
+      "sha256": "808ba7872a541445991684ae0325407173ed3ffa09026ccce53b4ac3e46db193"
+    },
+    "/private/tmp/fwp-download-flat-loop-owners.py": {
+      "source": "scripts/roadmap-recovery/download-flat-loop-owners.py",
+      "sha256": "c26a53bbefc42cd0d7c075834456a7da263048f9be8d85b856e47b09f155e7d1"
+    },
+    "/private/tmp/fwp-fetch-pr127-loop-restoration.py": {
+      "source": "scripts/roadmap-recovery/fetch-pr127-loop-restoration.py",
+      "sha256": "04534bac12076bac09dd6347bb6c05d86485a09eed13221c054fc472b3625546"
+    },
+    "/private/tmp/fwp-publish-scalar-unwind-recovery.py": {
+      "source": "scripts/roadmap-recovery/publish-scalar-unwind-recovery.py",
+      "sha256": "41de376e7b643fad5197c897043776c6bcf3c965ed4cfda1c0835e547cb664e8"
+    }
+  },
+  "stage": "Verified published source restored; no helper executed or compiler run"
+}

@@ -1,7 +1,0 @@
-{"cases":[
-{"rows":31,"inner":35,"columns":33,"managedCalls":49305,"managedRequestedBytes":1803232,"freedBytes":1462336,"resultHash":"3b5a1dd72a50fef1"},
-{"rows":2,"inner":3,"columns":2,"managedCalls":111,"managedRequestedBytes":2920,"freedBytes":2240,"resultHash":"3e31c6a086a23133"},
-{"rows":0,"inner":3,"columns":2,"managedCalls":63,"managedRequestedBytes":1576,"freedBytes":1040,"resultHash":"14650fb0739d0383"},
-{"rows":2,"inner":0,"columns":3,"managedCalls":43,"managedRequestedBytes":824,"freedBytes":720,"resultHash":"6194065bc4001a2b"},
-{"rows":2,"inner":3,"columns":0,"managedCalls":39,"managedRequestedBytes":784,"freedBytes":672,"resultHash":"14650fb0739d0383"},
-{"rows":1,"inner":1,"columns":1,"managedCalls":37,"managedRequestedBytes":720,"freedBytes":496,"resultHash":"44bd2bd473ccf799"}]}

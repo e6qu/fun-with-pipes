@@ -1,9 +1,0 @@
-{
-  "head": "296ea83b45bb153c2b86d1df68e05c799013b2eb",
-  "previous": "a2f70639447dcc8e1bb9c0bb808d77cc7d8e7480",
-  "branch": "ownership-evidence-array-size-limits",
-  "tree": "fdd67b56eec5cc05b00063ad4a1ad10a0fcefa93",
-  "files": {
-    "tests/array_size_limits.rs": "836e0711f2390f25bf183afca5b99204e4aa7f7a8637dec5f37244b3c4290a1b"
-  }
-}
