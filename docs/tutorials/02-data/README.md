@@ -35,7 +35,13 @@ area = match
 
 `Circle _ _` has two holes, the centre and the radius. The arm's function
 receives both; `const` discards the centre and keeps the function of the
-radius.
+radius. Here `const` returns a function, not a numeric area: the returned
+function then receives the radius. A `_` captures an argument in this
+language; it does not discard it automatically.
+
+An arm with no holes, such as `True -> "yes"`, directly supplies its result.
+An arm such as `_ -> const "yes"` receives the matched value and explicitly
+ignores it. This is why some arms need `const` and others do not.
 
 Matches must be exhaustive. If a case is missing, the compiler names it.
 

@@ -85,7 +85,8 @@ grep = curry (curry
         | make Outcome {
             output = list.flat-map output,
             status =
-                map (both .search .lines | uncurry hits | length)
-                | sum
-                | if (eq 0) (const 1) (const 0),
+                map (both .search .lines | uncurry hits | length) | sum | match
+                    0 -> 1
+                    # The wildcard supplies the count; const discards it.
+                    _ -> const 0,
         }))

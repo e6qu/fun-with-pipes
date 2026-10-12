@@ -30,7 +30,9 @@ repeated = curry (both
 # Each word is written `--times` times.
 # args: WORDS...
 export say : Options -> List[String] -> String
-say = curry (both (.0 | .upper) (uncurry repeated) | if .0 (.1 | upper) .1)
+say = curry (both (.0 | .upper) (uncurry repeated) | match
+    (True, _) -> upper
+    (False, _) -> id)
 
 # Divide N by D.
 # args: N D

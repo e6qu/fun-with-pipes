@@ -27,7 +27,9 @@ Entry = { ext: String, size: I64 }
 
 entry : String -> Entry ! {FileIO, Error[IoError]}
 entry = make Entry {
-    ext = path.extension | if (eq "") (const "(none)") id,
+    ext = path.extension | match
+        "" -> "(none)"
+        _ -> id,
     size = file.info | .size,
 }
 

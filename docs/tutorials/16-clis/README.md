@@ -172,6 +172,12 @@ export non-blank : String -> Option[String]
 non-blank = if (trim | eq "") (const None) Some
 ```
 
+`if` passes the original string to the selected function. `const None`
+ignores that string and returns `None`; `Some` keeps the original string,
+including its whitespace. Piping through `trim` before branching would
+change the retained text, so this example keeps the predicate inside `if`.
+
+
 ```console
 $ printf 'one\n\n  \ntwo\n' | ./words non-blank
 one
@@ -294,8 +300,10 @@ Flags = {
 }
 
 greeting : Flags -> List[String] -> String
-greeting = curry (both (.0 | .loud) (.1 | join " " | flip concat "hello, ")
-    | if .0 (.1 | upper) .1)
+greeting =
+    curry (both (.0 | .loud) (.1 | join " " | flip concat "hello, ") | match
+        (True, _) -> upper
+        (False, _) -> id)
 
 main = () | args | cli.parse Flags { loud = False } | match
     Ok _ -> uncurry greeting | print
@@ -354,7 +362,9 @@ repeated = curry (both
 # Each word is written `--times` times.
 # args: WORDS...
 export say : Options -> List[String] -> String
-say = curry (both (.0 | .upper) (uncurry repeated) | if .0 (.1 | upper) .1)
+say = curry (both (.0 | .upper) (uncurry repeated) | match
+    (True, _) -> upper
+    (False, _) -> id)
 
 # Divide N by D.
 # args: N D

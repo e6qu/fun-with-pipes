@@ -48,11 +48,9 @@ defaults = { separator = ",", format = Table, rows = 10 }
 
 # The rows of a file, or of standard input.
 read : String -> Option[String] -> List[List[String]] ! {IO, FileIO, Error[IoError]}
-read = curry (both .0 (.1
-        | if
-            option.is-some
-            (option.unwrap-or "" | file.read)
-            (const () | read-all))
+read = curry (both .0 (.1 | match
+        Some _ -> file.read
+        None -> () | read-all)
     | uncurry csv.parse-with)
 
 render : Format -> List[List[String]] -> List[String]
