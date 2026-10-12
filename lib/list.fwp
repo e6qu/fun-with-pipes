@@ -97,6 +97,41 @@ sum = fold add zero
 product : List[a] -> a where Mul[a], One[a]
 product = fold mul one
 
+# Fold left until the callback returns Stop state. Again state continues;
+# exhaustion returns the current state, including the seed for an empty list.
+# Later callbacks are skipped, but the input list is evaluated eagerly.
+fold-until : (s -> a -> Step[s, s] ! e) -> s -> List[a] -> s ! e where Dup[s], Dup[a]
+fold-until = curry3 (both (both .0 .1) .2 | loop list._fold-until-step)
+list._fold-until-step : ((s -> a -> Step[s, s] ! e, s), List[a]) -> Step[((s -> a -> Step[s, s] ! e, s), List[a]), s] ! e where Dup[s], Dup[a]
+list._fold-until-step = match
+    (_, Nil) -> .1 | Stop
+    (_, Cons _ _) ->
+        curry3
+            (both
+                    (both
+                        (.0 | .0)
+                        (both (.0 | .0 | uncurry) (both (.0 | .1) .1)
+                            | uncurry (flip apply)))
+                    .2
+                | match
+                    ((_, Again _), _) -> curry3 (both (both .0 .1) .2 | Again)
+                    ((_, Stop _), _) -> curry3 (.1 | Stop))
+
+# Map left to right while threading explicit state. The callback takes state
+# then element and returns (mapped value, next state). The result is
+# (mapped list, final state); output order matches input order.
+map-accum : (s -> a -> (b, s) ! e) -> s -> List[a] -> (List[b], s) ! e where Dup[s], Dup[a], Dup[b]
+map-accum = curry3 (make {
+    0 = .0 | list._map-accum-step,
+    1 = both (const []) .1,
+    2 = .2,
+} | uncurry3 fold | first reverse)
+list._map-accum-step : (s -> a -> (b, s) ! e) -> (List[b], s) -> a -> (List[b], s) ! e where Dup[s], Dup[a], Dup[b]
+list._map-accum-step = curry3 (both
+        (.1 | .0)
+        (both (.0 | uncurry) (both (.1 | .1) .2) | uncurry (flip apply))
+    | both (both (.1 | .0) .0 | uncurry Cons) (.1 | .1))
+
 test "map" = [1, 2, 3] | map (mul 2) | eq [2, 4, 6]
 test "filter" = [1, 2, 3, 4] | filter (rem 2 | eq 0) | eq [2, 4]
 test "fold" = [1, 2, 3] | fold (flip sub) 10 | eq 4
@@ -153,3 +188,21 @@ test "product" = [2, 3, 4] | product | eq 24
 
 list._test-ints : List[I64] -> List[I64]
 list._test-ints = id
+
+test "fold-until exhaustion" =
+    [1, 2, 3] | fold-until (add | flip compose Again) 0 | eq 6
+test "fold-until empty" =
+    [] | list._test-ints | fold-until (add | flip compose Again) 9 | eq 9
+test "fold-until early stop" =
+    [1, 2, 3, 4]
+    | fold-until (add | flip compose (if (gt 3) Stop Again)) 0
+    | eq 6
+test "map-accum prefix sums" =
+    [1, 2, 3]
+    | map-accum (add | flip compose (both id id)) 0
+    | eq ([1, 3, 6], 6)
+test "map-accum empty" =
+    []
+    | list._test-ints
+    | map-accum (add | flip compose (both id id)) 9
+    | eq ([], 9)

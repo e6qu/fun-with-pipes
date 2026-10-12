@@ -1,0 +1,21 @@
+Person = { name: String, age: I64 }
+
+birthday : Person -> Person
+birthday = make Person { .name, age = .age | add 1 }
+
+identity : Person -> Person
+identity = make Person { .name, .age }
+
+# Field functions retain the existing canonical label evaluation order.
+observe : Person -> {before: (), name: String, after: ()} ! {IO}
+observe = make { before = .age | echo, .name, after = .name | print }
+
+main = [
+    Person { name = "Ada", age = 35 } | both id birthday | echo,
+    Person { name = "Ada", age = 35 } | identity | echo,
+    { name = "Ada", age = 35, secret = "hidden" } | make { .name, .age } | echo,
+    { name = "Ada", address = { city = "London" } }
+    | make { .name, city = .address.city }
+    | echo,
+    Person { name = "Ada", age = 35 } | observe | echo,
+] | ignore

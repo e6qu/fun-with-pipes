@@ -1,0 +1,7 @@
+(Person {age = 35, name = "Ada"}, Person {age = 36, name = "Ada"})
+Person {age = 35, name = "Ada"}
+{age = 35, name = "Ada"}
+{city = "London", name = "Ada"}
+Ada
+35
+{after = (), before = (), name = "Ada"}

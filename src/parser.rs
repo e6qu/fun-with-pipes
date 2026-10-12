@@ -933,19 +933,33 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn fields(&mut self, close: Sym) -> DResult<Vec<(String, Expr)>> {
+    fn fields(&mut self, close: Sym, projection: bool) -> DResult<Vec<(String, Expr)>> {
         let mut fs = Vec::new();
         while !self.at_sym(close) {
-            let name = match self.peek_tok().clone() {
-                Tok::Ident(s) => s,
-                Tok::Int {
-                    mag, neg: false, ..
-                } => mag.to_string(),
-                _ => return self.unexpected("field name"),
+            let sp = self.peek().span;
+            let (name, e) = if projection && matches!(self.peek_tok(), Tok::Selector(_)) {
+                let Tok::Selector(path) = self.bump().tok else {
+                    unreachable!()
+                };
+                if path.len() != 1 || path[0].chars().all(|c| c.is_ascii_digit()) {
+                    return Err(Diagnostic::error(
+                        sp,
+                        "projection shorthand needs one named field; use `name = .path`",
+                    ));
+                }
+                (path[0].clone(), self.mk(sp, ExprKind::Selector(path)))
+            } else {
+                let name = match self.peek_tok().clone() {
+                    Tok::Ident(s) => s,
+                    Tok::Int {
+                        mag, neg: false, ..
+                    } => mag.to_string(),
+                    _ => return self.unexpected("field name"),
+                };
+                self.bump();
+                self.expect_sym(Sym::Eq)?;
+                (name, self.expr()?)
             };
-            let sp = self.bump().span;
-            self.expect_sym(Sym::Eq)?;
-            let e = self.expr()?;
             if fs.iter().any(|(n, _): &(String, Expr)| *n == name) {
                 return Err(Diagnostic::error(sp, format!("duplicate field `{}`", name)));
             }
@@ -980,7 +994,7 @@ impl<'a> Parser<'a> {
             Tok::Upper(s) => {
                 if self.at_sym(Sym::LBrace) && !self.at_boundary_strict() {
                     self.bump();
-                    let fs = self.with_layout(0, |p| p.fields(Sym::RBrace))?;
+                    let fs = self.with_layout(0, |p| p.fields(Sym::RBrace, false))?;
                     ExprKind::NominalRecord(s, fs)
                 } else {
                     ExprKind::Ctor(s)
@@ -1038,7 +1052,7 @@ impl<'a> Parser<'a> {
                 ExprKind::List(items)
             }
             Tok::Sym(Sym::LBrace) => {
-                let fs = self.with_layout(0, |p| p.fields(Sym::RBrace))?;
+                let fs = self.with_layout(0, |p| p.fields(Sym::RBrace, false))?;
                 if fs.is_empty() {
                     ExprKind::Unit
                 } else {
@@ -1047,7 +1061,7 @@ impl<'a> Parser<'a> {
             }
             Tok::Keyword(Kw::With) => {
                 self.expect_sym(Sym::LBrace)?;
-                let fs = self.with_layout(0, |p| p.fields(Sym::RBrace))?;
+                let fs = self.with_layout(0, |p| p.fields(Sym::RBrace, false))?;
                 if fs.is_empty() {
                     return Err(Diagnostic::error(span, "`with` needs at least one field"));
                 }
@@ -1062,7 +1076,7 @@ impl<'a> Parser<'a> {
                     _ => None,
                 };
                 self.expect_sym(Sym::LBrace)?;
-                let fs = self.with_layout(0, |p| p.fields(Sym::RBrace))?;
+                let fs = self.with_layout(0, |p| p.fields(Sym::RBrace, true))?;
                 if fs.is_empty() && nominal.is_none() {
                     return Err(Diagnostic::error(span, "`make` needs at least one field"));
                 }
@@ -1070,7 +1084,7 @@ impl<'a> Parser<'a> {
             }
             Tok::Keyword(Kw::Update) => {
                 self.expect_sym(Sym::LBrace)?;
-                let fs = self.with_layout(0, |p| p.fields(Sym::RBrace))?;
+                let fs = self.with_layout(0, |p| p.fields(Sym::RBrace, false))?;
                 if fs.is_empty() {
                     return Err(Diagnostic::error(span, "`update` needs at least one field"));
                 }

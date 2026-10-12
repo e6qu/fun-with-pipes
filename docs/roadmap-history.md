@@ -2357,3 +2357,164 @@ records this regression follow-up separately.
 Merged7350a5566fa991c89916ea67ab693c2a0bba9327 has tested treefcabfba0e0ca6b7a3e0ef0f7b99792bad7da8381, with all six jobs in CI38256949765, roadmap_docs38256949763 and actual-source audit38268514619 passing. The complete signed message is one line without trailers.
 
 Post-lowering eligibility exposed four lost temporary types at a2500e0f. Head2d4bf66a registered synthesized Step fields and restored three cases; its failed/cancelled run38242127912 identified a compile-time record whose type inlining discarded. Head350500f2 retains aggregate constant types and passes all three complete jobs in38242709162 with21 named ARC executions,47 rejections and3 expected compiler errors per platform. Production removes the Step-by-name exception and passes the full matrix. Failure IR and reports remain in fwp-arc-step-type-failure; final platform artifacts and source acceptance are retained by the designated recovery map. These records supply no new next task.
+
+## Documentation and tacit examples delivery (PRs #129–130)
+
+Archived from the live handoff on 2026-10-13. These completed deliveries and
+validation records do not supply new next actions.
+
+### Final documentation and local workspace
+
+PR #129 is squash-merged at `592a5953b8351e67fe30ca637426007f8763b5a4`.
+Tested head: `bedbf8a1fe22127567305eb17be5efa3bc4366e7`.
+All six jobs in CI 38274773884 and roadmap_docs 38274773721 passed before merge.
+The signed squash message is exactly
+`Record completed roadmap and accepted ownership evidence` (56 characters),
+with no body or trailers. Complete tree `fa17c2b3a29effe8876f0bb9ccf92a94144a05aa`
+matches the tested head. Only documentation differs from accepted PR #128;
+implementation source is unchanged. Main roadmap_docs 38284763414 also passes.
+Duplicate post-merge CI 38284763467 is completed/cancelled; its actual status
+is in fwp-final-main-ci-status.json. Cancellation adds no passing gate. Merge, gate and signed-payload proofs use
+the fwp-roadmap-docs prefix in the recovery snapshot.
+
+Local main was synchronized to the final squash above before the examples branch. Disk recovered to 105.8 GiB free
+before synchronization; target data remained 101.3 MiB. No local workload ran
+below the 64 GiB reserve. The following serial guarded operations passed:
+
+- `python3 scripts/local-guard.py git fetch --no-tags origin main:refs/remotes/origin/main`
+- `python3 scripts/local-guard.py python3 /private/tmp/fwp-prepare-local-main-sync.py`
+- `python3 scripts/local-guard.py python3 /private/tmp/fwp-sync-accepted-main.py`
+
+`python3 scripts/local-guard.py python3 scripts/check-roadmap.py` passes:
+44 doc link sets, 106 immutable queue pairs/tags, zero live delivery rows and
+commit-message checks (0.38 seconds sampled CPU, 3.09 seconds elapsed).
+
+The sync proof and backup manifest preserve all 15 prior local files and modes.
+Every prior file except this live handoff already matched accepted main.
+At that synchronization only the post-merge handoff was modified. Full builds and tests ran on
+GitHub; no local full build or test gate was needed. Use the fwp guard described
+in CONTRIBUTING.md for future local checks, never the other repository's guard.
+
+### Completed follow-up: tacit examples and explicit const
+
+Delivered branch: `examples-tacit-pipelines`, based on accepted main
+`592a5953b8351e67fe30ca637426007f8763b5a4`. The user requested the piped, tacit
+style throughout suitable examples and clear explanations of `const` wherever
+its role is otherwise surprising. This is new work after the completed roadmap.
+
+Nine programs are revised: the effects, CLI and MCP tutorials, pricing, and
+CSV, directory, grep and todo examples. Matching tutorial source blocks are
+updated. Predicate-only branches use piped `match`; validation uses `tap` to
+preserve the input. CSV input matches `Some`/`None` directly. `if` remains where
+it preserves the original input needed by a branch. No language semantics,
+implicit conversions, compiler code, expected tutorial outputs or defaults change.
+
+The first tutorial and reference explain constant functions, values versus
+callbacks, function-valued results and eager argument evaluation. Data and effects
+tutorials explain captured holes and branches; the CLI tutorial explains why
+`const None` discards the original string while `Some` preserves its whitespace.
+
+Focused checks use the existing local compiler, not a rebuild of the current
+source. All commands ran serially through `python3 scripts/local-guard.py`:
+
+- Formatting and type checks for all nine revised programs pass (3.50 seconds
+  sampled CPU, 6.94 seconds elapsed).
+- `/private/tmp/fwp-check-tacit-examples.py` passes 36 executions: original and
+  revised programs, each in raw interpretation (`FWP_NO_OPT=1`) and native mode.
+  Both branches, invalid inputs and CSV file/stdin paths agree on stdout, stderr
+  and exit status (20.17 seconds sampled CPU, 40.44 seconds elapsed). Results:
+  `/private/tmp/fwp-tacit-example-validation/results.json`. An initial temporary
+  harness incorrectly renamed effectful `main`; replacing it fixed that harness
+  error. No example failure remains.
+- `/private/tmp/fwp-check-tacit-docs.py` passes focused formatting, the existing
+  `tutorial_readmes_match_their_programs` test, constant-function examples in
+  both engines and the roadmap documentation audit (1.84 seconds sampled CPU,
+  6.18 seconds elapsed). The audit checks 44 doc link sets and 106 immutable
+  preparation pairs/tags; there are no remaining ownership delivery rows.
+
+The user also asked about reducing parentheses. The expressions are already
+tacit; meaningful named stages and existing combinators reduce nesting without
+implicit lifting or a new pipe meaning. `is-long = string.length | gt 3` followed
+by `count-long = count is-long` has no parentheses. A named `count-word` callback
+reduces the stateful version to `run-state 0 (each count-word) | .1`. Both variants
+produce 2 in the raw interpreter via the guarded temporary probe
+`/private/tmp/fwp-less-nested-count.fwp` (0.35 seconds CPU, 0.71 elapsed). This
+was a discussion and focused probe; the published examples were not changed
+again or their CI restarted. The effects tutorial deliberately demonstrates state.
+
+### Accepted CI repair and final verification
+
+PR #130 is merged: https://github.com/e6qu/fun-with-pipes/pull/130.
+Published examples head: `7c0dca31cb1f30433bfab2ee2bf473b322a54861`.
+Roadmap_docs 38291067649 and five platform jobs in CI 38291067651 pass at
+that head. Regular Intel macOS exceeded the 90-minute limit twice: jobs
+114951015867 and 114985528618. Neither attempt reports failed assertions;
+all four examples/tutorial checks passed in both. The retry also timed out
+while continuing through passing suites. These cancellations are not passing
+gates. Logs are /private/tmp/fwp-pr130-intel-final.log and
+/private/tmp/fwp-pr130-intel-retry.log. Completed suites in the first attempt
+took about 38% longer than the preceding passing Intel run.
+
+The CI repair splits ordinary integration targets between the two existing
+macOS jobs per architecture, using sorted Cargo target names at alternating
+indices. The regular job includes unit/example/benchmark targets; the GC job
+retains its separate exact stress test before its ordinary shard. All six job
+names, test concurrency and 90-minute limits remain unchanged. Both shards
+exclude only the separately executed stress test. Failure artifacts now cover
+ordinary goldens in either job; an ordinary shard still runs after a stress
+failure. Partition tests check complete, disjoint coverage, stable assignment,
+rejection of unknown targets and propagation of test failures.
+
+The guarded real Cargo metadata audit confirms 170 integration targets,
+85 in each shard, with no overlap or omitted targets. Previous passing Intel
+suite times total 2280.12 seconds for regular and 1758.92 seconds for gc,
+excluding setup, builds and the separate stress run. These are historical
+inputs, not a measured duration or passing gate for the new layout. Inventory:
+/private/tmp/fwp-pr130-macos-shard-inventory.json. No local build was run.
+
+Focused validation passes with
+`python3 scripts/local-guard.py python3 -B -`: the driver runs
+`python3 -B scripts/test-macos-test-shards.py` (three tests),
+`python3 scripts/check-roadmap.py` (44 doc link sets, 106 immutable pairs/tags,
+zero live ownership rows) and `git diff --check`, serially. Sampled CPU is
+0.31 seconds; elapsed time is 2.65 seconds. No full local build or test gate ran.
+
+CI repair tested head: `13886787b5b96c195595ad57b3a1f2689c2d7889`.
+All six jobs in CI 38312668875 and roadmap_docs 38312668877 passed before merge.
+Completed logs confirm that each macOS shard actually executed its 85 assigned
+integration targets, covering all 170 once per architecture. Regular jobs also
+ran both unit targets; GC jobs ran their separate exact stress test. Intel jobs
+completed in 44.55 minutes (regular) and 51.53 minutes (GC plus ordinary shard),
+within the unchanged 90-minute budget. These are this run's job durations,
+not a language performance claim.
+
+Guarded `/private/tmp/fwp-verify-macos-shard-execution.py` passed with 0.33 seconds
+sampled CPU and 6.71 seconds elapsed. The temporary log reader initially needed
+GitHub CLI's explicit ANSI-output option and Cargo's source-path mapping for the
+`c-interop/main.rs` target; both reader issues were corrected. No project or CI
+failure remains. Execution proof: /private/tmp/fwp-pr130-shard-execution-proof.json.
+
+Squash: `db10b9fd9849446475a68caaf832f17bfe76ba9e`.
+Complete tree: `efd9d775b616e59074a9efdb0f04fc128f5706e8`, exactly matching the
+tested head. The signed commit has one parent (accepted main #129), and its
+entire message is the single line
+`Clarify tacit examples and balance macOS test coverage`, with no body or trailers.
+The merge verification passed under the guard (0.54 seconds sampled CPU,
+8.82 seconds elapsed). Proofs: /private/tmp/fwp-tacit-examples-final-gates.json
+and /private/tmp/fwp-tacit-examples-merge-proof.json. The PR description records
+both passing runs and the actual execution audit.
+
+Main roadmap_docs 38317942639 passes at the squash commit. Duplicate main CI
+38317942712 is completed/cancelled after complete source-tree parity was
+verified. Ordinary cancellation left jobs running, so force cancellation was
+requested and the final result confirmed. Cancellation is not a passing gate.
+Status: /private/tmp/fwp-pr130-main-ci-status.json.
+
+Local `main` is synchronized to the squash, preserving the live handoff byte
+for byte with a backup. The guarded `/private/tmp/fwp-pr130-sync-main.py`
+passed (0.08 seconds sampled CPU, 1.12 seconds elapsed); its proof is
+/private/tmp/fwp-pr130-local-main-sync.json. Only this post-merge handoff differs
+from accepted main. All implementation, examples and CI changes are published.
+The final guarded documentation/whitespace audit passes: 44 doc link sets,
+106 immutable preparation pairs/tags, zero live ownership delivery rows and
+commit-message checks (0.31 seconds sampled CPU, 2.52 seconds elapsed).

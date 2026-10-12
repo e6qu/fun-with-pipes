@@ -380,6 +380,16 @@ minimum : List[a] -> Option[a] where Ord[a]
 singleton : a -> List[a]
 sum : List[a] -> a where Add[a], Zero[a]
 product : List[a] -> a where Mul[a], One[a]
+
+# Fold left until the callback returns Stop state. Again state continues;
+# exhaustion returns the current state, including the seed for an empty list.
+# Later callbacks are skipped, but the input list is evaluated eagerly.
+fold-until : (s -> a -> Step[s, s] ! e) -> s -> List[a] -> s ! e where Dup[s], Dup[a]
+
+# Map left to right while threading explicit state. The callback takes state
+# then element and returns (mapped value, next state). The result is
+# (mapped list, final state); output order matches input order.
+map-accum : (s -> a -> (b, s) ! e) -> s -> List[a] -> (List[b], s) ! e where Dup[s], Dup[a], Dup[b]
 ```
 
 ## Option and Result
@@ -574,6 +584,17 @@ iter.take : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
 
 # `iter.iterate f x` is x, f x, f (f x), ...
 iter.iterate : (a -> a) -> a -> Iterator[a] where Dup[a]
+
+# Fold left in constant stack space without building a list. The callback
+# takes state then element, and finishes before the next tail is forced.
+iter.fold : (s -> a -> s ! e) -> s -> Iterator[a] -> s ! e where Dup[s], Dup[a]
+
+# Run the callback once per element, in order, without building a list.
+iter.each : (a -> () ! e) -> Iterator[a] -> () ! e where Dup[a]
+
+# Return the first match, or None at the end. Never force the tail after
+# a match. A callback failure also leaves the next tail unforced.
+iter.find : (a -> Bool ! e) -> Iterator[a] -> Option[a] ! e where Dup[a]
 ```
 
 ## Console, environment and time

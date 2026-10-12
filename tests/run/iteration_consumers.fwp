@@ -1,0 +1,62 @@
+# A matching head and a poisonous tail distinguish short-circuiting from
+# accidentally forcing one extra element.
+poison-tail : Iterator[I64]
+poison-tail = Yield 7 (fork Yield (const 1 | div 0) (const (const Done)))
+
+fail-step : I64 -> I64 -> I64 ! {Error[String]}
+fail-step = curry (const "callback failed" | fail)
+
+fail-each : I64 -> () ! {Error[String]}
+fail-each = const "callback failed" | fail
+
+fail-find : I64 -> Bool ! {Error[String]}
+fail-find = const "callback failed" | fail
+
+sum-until : I64 -> I64 -> Step[I64, I64] ! {State[List[I64]]}
+sum-until =
+    curry (tap (.1 | Cons | modify) | uncurry add | if (gt 3) Stop Again)
+
+label : String -> String -> (String, String) ! {State[List[String]]}
+label =
+    curry (tap (.1 | Cons | modify) | both (.1 | upper) (uncurry (flip concat)))
+
+fail-until : I64 -> I64 -> Step[I64, I64] ! {Error[String], State[List[I64]]}
+fail-until = curry (tap (.1 | Cons | modify) | .1 | match
+    2 -> fail "second"
+    _ -> Again)
+
+fail-map : I64 -> I64 -> (I64, I64) ! {Error[String], State[List[I64]]}
+fail-map = curry (tap (.1 | Cons | modify) | .1 | match
+    2 -> fail "second"
+    _ -> both id id)
+
+main = [
+    [1, 2, 3] | iter.from-list | iter.fold (flip sub) 10 | echo,
+    [] | list._test-ints | iter.from-list | iter.fold add 9 | echo,
+    ["a", "b", "c"] | iter.from-list | iter.fold (flip concat) "" | echo,
+    ["a", "b", "c"]
+    | iter.from-list
+    | run-state [] (iter.each (Cons | modify))
+    | echo,
+    [1, 2, 3, 4]
+    | iter.from-list
+    | run-state [] (iter.find (tap (Cons | modify) | gt 2))
+    | echo,
+    [1, 2] | iter.from-list | iter.find (gt 3) | echo,
+    poison-tail | iter.find (eq 7) | echo,
+    poison-tail | attempt (iter.fold fail-step 0) | echo,
+    poison-tail | attempt (iter.each fail-each) | echo,
+    poison-tail | attempt (iter.find fail-find) | echo,
+    [1, 2, 3, 4] | run-state [] (fold-until sum-until 0) | echo,
+    [1, 2, 3] | fold-until (add | flip compose Again) 0 | echo,
+    [1, 2, 3] | fold-until (add | flip compose Stop) 0 | echo,
+    [] | list._test-ints | fold-until (add | flip compose Again) 9 | echo,
+    [1, 2, 3] | map-accum (add | flip compose (both id id)) 0 | echo,
+    ["a", "b", "c"] | run-state [] (map-accum label "seed:") | echo,
+    [] | list._test-ints | map-accum (add | flip compose (both id id)) 9 | echo,
+    [] | list._test-ints | iter.from-list | attempt (iter.each fail-each) | echo,
+    [] | list._test-ints | iter.from-list | attempt (iter.find fail-find) | echo,
+    [1, 2, 3] | run-state [] (attempt (fold-until fail-until 0)) | echo,
+    [1, 2, 3] | run-state [] (attempt (map-accum fail-map 0)) | echo,
+    ["a", "b"] | both id (iter.from-list | iter.fold (flip concat) "") | echo,
+] | ignore

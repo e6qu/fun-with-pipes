@@ -686,8 +686,8 @@ rest.part-as = curry (match
 rest.upload-of : RestPart -> Upload
 rest.upload-of = make Upload {
     filename = .filename | option.unwrap-or "",
-    content-type = .content-type,
-    bytes = .bytes,
+    .content-type,
+    .bytes,
 }
 
 # internal
@@ -1753,8 +1753,8 @@ rest.exchange = rest.request | rest.send
 # them.
 rest.request : RestRequest -> ClientRequest
 rest.request = make ClientRequest {
-    method = .method,
-    url = .url,
+    .method,
+    .url,
     headers = .headers | rest.request-headers,
     body = .body | option.unwrap-or "" | string.to-bytes,
 }
@@ -1800,7 +1800,7 @@ rest.success-body =
         (fork and (.status | ge 200) (.status | lt 300))
         .body
         (make RestError {
-            status = .status,
+            .status,
             message = .body | string.from-bytes | option.unwrap-or "",
         } | fail)
 
@@ -1901,7 +1901,7 @@ rest.part-bytes =
 rest.sent : Result[ClientResponse, IoError] -> ClientResponse ! {Error[RestError]}
 rest.sent = match
     Ok _ -> id
-    Err _ -> make RestError { status = const 0, message = .message } | fail
+    Err _ -> make RestError { status = const 0, .message } | fail
 
 # internal
 rest.decode-response : ClientResponse -> b ! {Error[RestError]} where Decode[b]
@@ -1910,7 +1910,7 @@ rest.decode-response =
         (fork and (.status | ge 200) (.status | lt 300))
         (fork rest.decoded-body .status (.body | rest.body-json | json.read))
         (make RestError {
-            status = .status,
+            .status,
             message = .body | string.from-bytes | option.unwrap-or "",
         } | fail)
 

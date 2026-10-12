@@ -34,7 +34,7 @@ vector.forget = .data | vector.wrap
 
 # hide the size (see `AnyVector`)
 vector.pack : Vector[t, n] -> AnyVector[t]
-vector.pack = make AnyVector { data = .data }
+vector.pack = make AnyVector { .data }
 
 # a packed vector with a size of its own
 vector.unpack : AnyVector[t] -> Vector[t, _]
@@ -253,15 +253,15 @@ matrix._split-columns =
 
 # the same matrix, with sizes the caller names (unchecked)
 matrix.cast : Matrix[t, j, k] -> Matrix[t, m, n]
-matrix.cast = make Matrix { rows = .rows, cols = .cols, data = .data }
+matrix.cast = make Matrix { .rows, .cols, .data }
 
 # hide the sizes (see `AnyMatrix`)
 matrix.pack : Matrix[t, m, n] -> AnyMatrix[t]
-matrix.pack = make AnyMatrix { rows = .rows, cols = .cols, data = .data }
+matrix.pack = make AnyMatrix { .rows, .cols, .data }
 
 # a packed matrix with sizes of its own
 matrix.unpack : AnyMatrix[t] -> Matrix[t, _m, _n]
-matrix.unpack = make Matrix { rows = .rows, cols = .cols, data = .data }
+matrix.unpack = make Matrix { .rows, .cols, .data }
 
 # forget the sizes: the result has sizes of its own
 matrix.forget : Matrix[t, m, n] -> Matrix[t, _m, _n]
@@ -400,8 +400,8 @@ cholesky =
 # a = Q·R with orthonormal columns in Q (m×n) and upper-triangular R (n×n)
 qr : Matrix[F64, m, n] -> (Matrix[F64, m, n], Matrix[F64, n, n])
 qr = make {
-    0 = make Matrix { rows = .rows, cols = .cols, data = qr._raw | .0 },
-    1 = make Matrix { rows = .cols, cols = .cols, data = qr._raw | .1 },
+    0 = make Matrix { .rows, .cols, data = qr._raw | .0 },
+    1 = make Matrix { rows = .cols, .cols, data = qr._raw | .1 },
 }
 
 qr._raw : Matrix[F64, m, n] -> (Array[F64], Array[F64])

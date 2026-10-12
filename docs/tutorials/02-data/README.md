@@ -17,7 +17,9 @@ Shape =
 - `.x` is a function that selects a field, so it fits into pipelines:
   `.x | fork mul id id` squares the `x` coordinate.
 - `make T { f = g, ... }` builds a record of type `T` from functions of
-  the input.
+  the input. `make { .name, .age }` copies those two fields; each shorthand
+  expands to an explicit selector such as `name = .name`. Nested paths need
+  a name, as in `city = .address.city`.
 - `update { f = g }` applies `g` to field `f`.
 - `with { f = v }` replaces the value of a field.
 
