@@ -40,6 +40,11 @@ fn native_probe(scratch: &Scratch, name: &str, source: &str, opt: &str, stress: 
     Command::new(path).env("FWP_GC_STRESS", stress).env("FWP_GC_VERIFY", "1")
         .env("FWP_REUSE_VERIFY", "0").output().unwrap()
 }
+fn instrument_allocators(source: &str) -> String {
+    source.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t measured_calls,measured_bytes;")
+        .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {", "static inline void *fwp_gc_alloc(size_t n, int leaf) {\n    if (leaf != 0) { measured_calls++; measured_bytes+=n; }")
+        .replace("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) {\n    measured_calls++; measured_bytes+=n;")
+}
 
 #[test]
 fn immutable_numeric_operations_agree_with_raw_interpreter() {
@@ -75,9 +80,7 @@ fn views_retain_backing_and_small_copies_release_it_without_collection() {
         let at = source.find("/* Array[I8] */\nstatic void fwp_drop").unwrap();
         let drop = source[at..].split("static void ").nth(1).unwrap().split('(').next().unwrap();
         probe = probe.replace("fARRAY_DROP", drop);
-        source = source.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t measured_calls,measured_bytes;")
-            .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {", "static inline void *fwp_gc_alloc(size_t n, int leaf) {\n    if (leaf != 0) { measured_calls++; measured_bytes+=n; }")
-            .replace("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) {\n    measured_calls++; measured_bytes+=n;")
+        source = instrument_allocators(&source)
             .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
         source.push_str(&probe);
         for opt in ["-O1", "-O2"] {
@@ -136,6 +139,30 @@ int main(void) {{
         for opt in ["-O1", "-O2"] {
             let output = native_probe(&scratch, function, &source, opt, "1");
             assert_eq!(output.status.code(), Some(0), "{function} {opt}: {}", String::from_utf8_lossy(&output.stderr));
+        }
+    }
+}
+
+#[test]
+fn binary_decode_accepts_empty_records_and_checks_counts_before_allocation() {
+    let scratch = Scratch::new("decode");
+    for packing in ["0", "1"] {
+        let source = instrument_allocators(&emitted(&scratch, "numeric_layout_baseline.fwp", "step", packing))
+            .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)")
+            + include_str!("fixtures/protocol_count_probe.c");
+        for opt in ["-O1", "-O2"] {
+            let output = native_probe(&scratch, &format!("decode-{packing}"), &source, opt, "1");
+            assert_eq!(output.status.code(), Some(0), "{packing} {opt}: {}", String::from_utf8_lossy(&output.stderr));
+            if packing == "1" {
+                for (name, old, new, expected) in [
+                    ("empty-wire", "if(fwp_wire_empty_inner(elem,0))return !unique || *count<=1;", "(void)unique;", 154),
+                    ("count-bound", "*count>(SIZE_MAX-sizeof(fwp_arr))/sizeof(V)", "0", 155),
+                ] {
+                    assert!(source.contains(old));
+                    let output = native_probe(&scratch, name, &source.replace(old,new), opt, "1");
+                    assert_eq!(output.status.code(), Some(expected), "{name} {opt}: {}", String::from_utf8_lossy(&output.stderr));
+                }
+            }
         }
     }
 }

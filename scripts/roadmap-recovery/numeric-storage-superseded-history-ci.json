@@ -1,0 +1,738 @@
+{
+  "run": 38202469769,
+  "old": "13577c8862bb6f05e9b5f5550cedf8f181815c36",
+  "current": "8d244fedf2b22c6b3df3d88c4fa15673c8ff28ba",
+  "statusBefore": "in_progress",
+  "conclusionBefore": null,
+  "jobsBefore": [
+    {
+      "id": 114658638979,
+      "run_id": 38202469769,
+      "workflow_name": "CI",
+      "head_branch": "numeric-storage-and-worker-abi",
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/38202469769",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOU33zxM8AAAAasi_8gw",
+      "head_sha": "13577c8862bb6f05e9b5f5550cedf8f181815c36",
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/114658638979",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38202469769/job/114658638979",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-12T04:06:58Z",
+      "started_at": "2026-10-12T04:06:59Z",
+      "completed_at": "2026-10-12T04:07:59Z",
+      "name": "bench",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-12T04:07:00Z",
+          "completed_at": "2026-10-12T04:07:00Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-12T04:07:00Z",
+          "completed_at": "2026-10-12T04:07:01Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-12T04:07:01Z",
+          "completed_at": "2026-10-12T04:07:02Z"
+        },
+        {
+          "name": "OpenSSL headers (TLS)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-12T04:07:02Z",
+          "completed_at": "2026-10-12T04:07:07Z"
+        },
+        {
+          "name": "Generated standard-library docs preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-12T04:07:07Z",
+          "completed_at": "2026-10-12T04:07:08Z"
+        },
+        {
+          "name": "benchmarks against C and Rust (docs/benchmarks.md)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-12T04:07:08Z",
+          "completed_at": "2026-10-12T04:07:58Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-12T04:07:58Z",
+          "completed_at": "2026-10-12T04:07:58Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-12T04:07:58Z",
+          "completed_at": "2026-10-12T04:07:58Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/114658638979",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000307966,
+      "runner_name": "GitHub Actions 1000307966",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 114658639104,
+      "run_id": 38202469769,
+      "workflow_name": "CI",
+      "head_branch": "numeric-storage-and-worker-abi",
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/38202469769",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOU33zxM8AAAAasi_9AA",
+      "head_sha": "13577c8862bb6f05e9b5f5550cedf8f181815c36",
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/114658639104",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38202469769/job/114658639104",
+      "status": "in_progress",
+      "conclusion": null,
+      "created_at": "2026-10-12T04:06:58Z",
+      "started_at": "2026-10-12T04:06:59Z",
+      "completed_at": null,
+      "name": "test",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-12T04:07:00Z",
+          "completed_at": "2026-10-12T04:07:01Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-12T04:07:01Z",
+          "completed_at": "2026-10-12T04:07:02Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-12T04:07:02Z",
+          "completed_at": "2026-10-12T04:07:04Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-12T04:07:04Z",
+          "completed_at": "2026-10-12T04:07:05Z"
+        },
+        {
+          "name": "WebAssembly toolchain, OpenSSL headers (TLS)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-12T04:07:05Z",
+          "completed_at": "2026-10-12T04:07:24Z"
+        },
+        {
+          "name": "aarch64 cross compiler and qemu (tests/cross.rs)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-12T04:07:24Z",
+          "completed_at": "2026-10-12T04:07:34Z"
+        },
+        {
+          "name": "binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-12T04:07:34Z",
+          "completed_at": "2026-10-12T04:07:35Z"
+        },
+        {
+          "name": "Generated standard-library docs preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-12T04:07:35Z",
+          "completed_at": "2026-10-12T04:07:44Z"
+        },
+        {
+          "name": "Exact-head primitive contract inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-12T04:07:44Z",
+          "completed_at": "2026-10-12T04:07:44Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-10-12T04:07:44Z",
+          "completed_at": "2026-10-12T04:07:45Z"
+        },
+        {
+          "name": "fmt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-12T04:07:45Z",
+          "completed_at": "2026-10-12T04:07:48Z"
+        },
+        {
+          "name": "clippy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-12T04:07:48Z",
+          "completed_at": "2026-10-12T04:07:58Z"
+        },
+        {
+          "name": "clippy (WebAssembly build)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-12T04:07:58Z",
+          "completed_at": "2026-10-12T04:08:03Z"
+        },
+        {
+          "name": "test",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 14,
+          "started_at": "2026-10-12T04:08:03Z",
+          "completed_at": null
+        },
+        {
+          "name": "Preserve failed native golden binaries and C",
+          "status": "pending",
+          "conclusion": null,
+          "number": 15,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 16,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 31,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 32,
+          "started_at": null,
+          "completed_at": null
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/114658639104",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000307965,
+      "runner_name": "GitHub Actions 1000307965",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 114658639156,
+      "run_id": 38202469769,
+      "workflow_name": "CI",
+      "head_branch": "numeric-storage-and-worker-abi",
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/38202469769",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOU33zxM8AAAAasi_9NA",
+      "head_sha": "13577c8862bb6f05e9b5f5550cedf8f181815c36",
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/114658639156",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38202469769/job/114658639156",
+      "status": "in_progress",
+      "conclusion": null,
+      "created_at": "2026-10-12T04:06:58Z",
+      "started_at": "2026-10-12T04:07:04Z",
+      "completed_at": null,
+      "name": "macos_gc (macos-15)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-12T04:07:05Z",
+          "completed_at": "2026-10-12T04:07:07Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-12T04:07:07Z",
+          "completed_at": "2026-10-12T04:07:09Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-12T04:07:09Z",
+          "completed_at": "2026-10-12T04:07:18Z"
+        },
+        {
+          "name": "OpenSSL 3",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-12T04:07:18Z",
+          "completed_at": "2026-10-12T04:07:20Z"
+        },
+        {
+          "name": "Generated standard-library docs preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-12T04:07:20Z",
+          "completed_at": "2026-10-12T04:07:23Z"
+        },
+        {
+          "name": "Full GC stress and verification golden suite",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 6,
+          "started_at": "2026-10-12T04:07:23Z",
+          "completed_at": null
+        },
+        {
+          "name": "Preserve failed GC stress binaries, C and statuses",
+          "status": "pending",
+          "conclusion": null,
+          "number": 7,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 8,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 16,
+          "started_at": null,
+          "completed_at": null
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/114658639156",
+      "labels": [
+        "macos-15"
+      ],
+      "runner_id": 1000307967,
+      "runner_name": "GitHub Actions 1000307967",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 114658639195,
+      "run_id": 38202469769,
+      "workflow_name": "CI",
+      "head_branch": "numeric-storage-and-worker-abi",
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/38202469769",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOU33zxM8AAAAasi_9Ww",
+      "head_sha": "13577c8862bb6f05e9b5f5550cedf8f181815c36",
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/114658639195",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38202469769/job/114658639195",
+      "status": "in_progress",
+      "conclusion": null,
+      "created_at": "2026-10-12T04:06:58Z",
+      "started_at": "2026-10-12T04:07:01Z",
+      "completed_at": null,
+      "name": "macos (macos-15-intel)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-12T04:07:02Z",
+          "completed_at": "2026-10-12T04:07:04Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-12T04:07:04Z",
+          "completed_at": "2026-10-12T04:07:07Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-12T04:07:07Z",
+          "completed_at": "2026-10-12T04:07:24Z"
+        },
+        {
+          "name": "OpenSSL 3",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-12T04:07:24Z",
+          "completed_at": "2026-10-12T04:07:28Z"
+        },
+        {
+          "name": "Generated standard-library docs preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-12T04:07:28Z",
+          "completed_at": "2026-10-12T04:07:32Z"
+        },
+        {
+          "name": "Exact-head primitive contract inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-12T04:07:32Z",
+          "completed_at": "2026-10-12T04:07:33Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-12T04:07:33Z",
+          "completed_at": "2026-10-12T04:07:34Z"
+        },
+        {
+          "name": "fmt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-12T04:07:34Z",
+          "completed_at": "2026-10-12T04:07:36Z"
+        },
+        {
+          "name": "clippy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-12T04:07:36Z",
+          "completed_at": "2026-10-12T04:07:57Z"
+        },
+        {
+          "name": "test (GC stress golden suite runs in macos_gc)",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 10,
+          "started_at": "2026-10-12T04:07:57Z",
+          "completed_at": null
+        },
+        {
+          "name": "Preserve failed native golden binaries and C",
+          "status": "pending",
+          "conclusion": null,
+          "number": 11,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 12,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 24,
+          "started_at": null,
+          "completed_at": null
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/114658639195",
+      "labels": [
+        "macos-15-intel"
+      ],
+      "runner_id": 1000307969,
+      "runner_name": "GitHub Actions 1000307969",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 114658639199,
+      "run_id": 38202469769,
+      "workflow_name": "CI",
+      "head_branch": "numeric-storage-and-worker-abi",
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/38202469769",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOU33zxM8AAAAasi_9Xw",
+      "head_sha": "13577c8862bb6f05e9b5f5550cedf8f181815c36",
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/114658639199",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38202469769/job/114658639199",
+      "status": "in_progress",
+      "conclusion": null,
+      "created_at": "2026-10-12T04:06:58Z",
+      "started_at": "2026-10-12T04:07:00Z",
+      "completed_at": null,
+      "name": "macos_gc (macos-15-intel)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-12T04:07:01Z",
+          "completed_at": "2026-10-12T04:07:03Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-12T04:07:03Z",
+          "completed_at": "2026-10-12T04:07:05Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-12T04:07:05Z",
+          "completed_at": "2026-10-12T04:07:16Z"
+        },
+        {
+          "name": "OpenSSL 3",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-12T04:07:16Z",
+          "completed_at": "2026-10-12T04:07:19Z"
+        },
+        {
+          "name": "Generated standard-library docs preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-12T04:07:19Z",
+          "completed_at": "2026-10-12T04:07:23Z"
+        },
+        {
+          "name": "Full GC stress and verification golden suite",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 6,
+          "started_at": "2026-10-12T04:07:23Z",
+          "completed_at": null
+        },
+        {
+          "name": "Preserve failed GC stress binaries, C and statuses",
+          "status": "pending",
+          "conclusion": null,
+          "number": 7,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 8,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 16,
+          "started_at": null,
+          "completed_at": null
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/114658639199",
+      "labels": [
+        "macos-15-intel"
+      ],
+      "runner_id": 1000307968,
+      "runner_name": "GitHub Actions 1000307968",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 114658639253,
+      "run_id": 38202469769,
+      "workflow_name": "CI",
+      "head_branch": "numeric-storage-and-worker-abi",
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/38202469769",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOU33zxM8AAAAasi_9lQ",
+      "head_sha": "13577c8862bb6f05e9b5f5550cedf8f181815c36",
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/114658639253",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38202469769/job/114658639253",
+      "status": "in_progress",
+      "conclusion": null,
+      "created_at": "2026-10-12T04:06:58Z",
+      "started_at": "2026-10-12T04:07:04Z",
+      "completed_at": null,
+      "name": "macos (macos-15)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-12T04:07:05Z",
+          "completed_at": "2026-10-12T04:07:07Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-12T04:07:07Z",
+          "completed_at": "2026-10-12T04:07:09Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-12T04:07:09Z",
+          "completed_at": "2026-10-12T04:07:17Z"
+        },
+        {
+          "name": "OpenSSL 3",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-12T04:07:17Z",
+          "completed_at": "2026-10-12T04:07:20Z"
+        },
+        {
+          "name": "Generated standard-library docs preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-12T04:07:20Z",
+          "completed_at": "2026-10-12T04:07:24Z"
+        },
+        {
+          "name": "Exact-head primitive contract inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-12T04:07:24Z",
+          "completed_at": "2026-10-12T04:07:25Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-12T04:07:25Z",
+          "completed_at": "2026-10-12T04:07:26Z"
+        },
+        {
+          "name": "fmt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-12T04:07:27Z",
+          "completed_at": "2026-10-12T04:07:28Z"
+        },
+        {
+          "name": "clippy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-12T04:07:28Z",
+          "completed_at": "2026-10-12T04:07:42Z"
+        },
+        {
+          "name": "test (GC stress golden suite runs in macos_gc)",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 10,
+          "started_at": "2026-10-12T04:07:42Z",
+          "completed_at": null
+        },
+        {
+          "name": "Preserve failed native golden binaries and C",
+          "status": "pending",
+          "conclusion": null,
+          "number": 11,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 12,
+          "started_at": null,
+          "completed_at": null
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 24,
+          "started_at": null,
+          "completed_at": null
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/114658639253",
+      "labels": [
+        "macos-15"
+      ],
+      "runner_id": 1000307970,
+      "runner_name": "GitHub Actions 1000307970",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ],
+  "scope": "Superseded docs head cancelled to avoid duplicate full native work; cancellation is not a passing gate"
+}

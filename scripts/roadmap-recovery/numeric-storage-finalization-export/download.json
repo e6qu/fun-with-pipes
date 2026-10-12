@@ -1,0 +1,198 @@
+{
+  "run": 38201574707,
+  "driver": "6bf6b1f2a5fb661d180403c22bf5d18ffede5c39",
+  "artifact": {
+    "id": 11726042533,
+    "node_id": "MDg6QXJ0aWZhY3QxMTcyNjA0MjUzMw==",
+    "name": "numeric-storage-finalization",
+    "size_in_bytes": 803749,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11726042533",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11726042533/zip",
+    "expired": false,
+    "digest": "sha256:4e5b59027de41dde25e831f7b4bfec3d1ce09442e55d43fd52dbbe6f02bb686e",
+    "created_at": "2026-10-12T04:00:53Z",
+    "updated_at": "2026-10-12T04:00:53Z",
+    "expires_at": "2027-01-10T03:53:54Z",
+    "workflow_run": {
+      "id": 38201574707,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "ownership-evidence-packed-numeric-arrays",
+      "head_sha": "6bf6b1f2a5fb661d180403c22bf5d18ffede5c39"
+    }
+  },
+  "jobs": [
+    {
+      "id": 114655930982,
+      "run_id": 38201574707,
+      "workflow_name": "Packed numeric array and typed worker controls",
+      "head_branch": "ownership-evidence-packed-numeric-arrays",
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/38201574707",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOU33zxM8AAAAasgaqZg",
+      "head_sha": "6bf6b1f2a5fb661d180403c22bf5d18ffede5c39",
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/114655930982",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38201574707/job/114655930982",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-12T03:53:55Z",
+      "started_at": "2026-10-12T03:53:56Z",
+      "completed_at": "2026-10-12T04:00:54Z",
+      "name": "baseline (ubuntu-latest)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-12T03:53:57Z",
+          "completed_at": "2026-10-12T03:53:58Z"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-12T03:53:58Z",
+          "completed_at": "2026-10-12T03:54:02Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-12T03:54:02Z",
+          "completed_at": "2026-10-12T03:54:02Z"
+        },
+        {
+          "name": "macOS OpenSSL",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 4,
+          "started_at": "2026-10-12T03:54:02Z",
+          "completed_at": "2026-10-12T03:54:02Z"
+        },
+        {
+          "name": "Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-12T03:54:02Z",
+          "completed_at": "2026-10-12T03:54:03Z"
+        },
+        {
+          "name": "Actual wasm32 toolchain",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-12T03:54:03Z",
+          "completed_at": "2026-10-12T03:54:11Z"
+        },
+        {
+          "name": "Current bytes, original semantics and diagnostic ABI",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-12T03:54:11Z",
+          "completed_at": "2026-10-12T03:54:36Z"
+        },
+        {
+          "name": "Original ownership and allocation boundary controls",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-12T03:54:36Z",
+          "completed_at": "2026-10-12T03:59:07Z"
+        },
+        {
+          "name": "Actual wasm32 count boundaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-12T03:59:07Z",
+          "completed_at": "2026-10-12T03:59:27Z"
+        },
+        {
+          "name": "Exact packed bytes and raw native mode comparisons",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-10-12T03:59:27Z",
+          "completed_at": "2026-10-12T04:00:46Z"
+        },
+        {
+          "name": "Export the formatted production bundle",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-12T04:00:46Z",
+          "completed_at": "2026-10-12T04:00:50Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-12T04:00:50Z",
+          "completed_at": "2026-10-12T04:00:50Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-12T04:00:50Z",
+          "completed_at": "2026-10-12T04:00:52Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-12T04:00:52Z",
+          "completed_at": "2026-10-12T04:00:53Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "started_at": "2026-10-12T04:00:53Z",
+          "completed_at": "2026-10-12T04:00:53Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-10-12T04:00:53Z",
+          "completed_at": "2026-10-12T04:00:53Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-10-12T04:00:53Z",
+          "completed_at": "2026-10-12T04:00:53Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/114655930982",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000307963,
+      "runner_name": "GitHub Actions 1000307963",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ],
+  "archiveSha256": "4e5b59027de41dde25e831f7b4bfec3d1ce09442e55d43fd52dbbe6f02bb686e",
+  "hashes": {
+    "finalization.json": "1b3ad44820116486c8fcb22eb7208968c3847114c8143eec0af48c39f6070533",
+    "production-files.json.gz": "f62a489d5fb7fb677b7ac971d35e0f12239b8b657d727053dfdfb6e41401319e",
+    "inventory.json": "39e716db469386d3fb5f3e1cf9a37d6ba66edd524988ddd12092a843e9d3d702",
+    "fallback-review.json": "0eec2edbbef9a624fbef8bcad5c85c7af02ab5faa79537408ab8a754621543d3"
+  },
+  "scope": "Formatted source and reports only; no binaries or local build"
+}

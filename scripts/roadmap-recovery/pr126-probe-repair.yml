@@ -1,0 +1,32 @@
+name: Numeric storage regression probe repairs
+on:
+  push:
+    branches: [ownership-evidence-pr126-probe-repairs]
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format and check regression sources
+        run: |
+          cargo fmt --all
+          cargo clippy --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals -- -D warnings
+      - name: Preserve original reclamation and omission controls
+        run: cargo test --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals -- --nocapture
+      - name: Export formatted regression sources
+        run: |
+          mkdir -p probe-repair-export
+          cp tests/old_reclamation.rs tests/retain_unwind_ownership.rs tests/unboxed_worker_locals.rs probe-repair-export/
+          git rev-parse HEAD > probe-repair-export/head.txt
+          sha256sum probe-repair-export/*.rs > probe-repair-export/hashes.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: numeric-storage-probe-repairs
+          path: probe-repair-export/

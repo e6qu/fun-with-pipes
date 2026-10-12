@@ -31,10 +31,13 @@ The finite review records explicit compatibility fallbacks; [the queue](roadmap-
 | array.generate | borrow count/callback | counted container adopting owned callback results | argument1 borrowed |
 | array.map | borrow callback/array | counted container adopting owned callback results | argument0 borrows typed elements |
 | array.fold | borrow callback/array, consume accumulator | transfers owned accumulator/result | argument0 borrows elements |
-| array.slice; array.sort | borrow arguments | copied storage retaining typed aliases; no backing view | none |
+| array.slice | borrow arguments | numeric backing view or small copy; pointer/resource elements copy retaining typed aliases | none |
+| array.sort | borrow array | copied sorted storage retaining typed aliases | none |
 | array.append | borrow both arrays | copied storage retaining typed aliases | none |
 
-Array destruction releases typed children before outer storage. Scalar fields
+Array destruction releases typed children before outer storage; views release
+their retained backing owner at the last reference. Nested views flatten their
+backing owner, and small slices copy to limit retention. Scalar fields
 are skipped; boxed128-bit payloads retain their compatibility lifetime. Immutable
 updates preserve live aliases. Unmodeled callbacks retain explicit sharing and conservative roots.
 

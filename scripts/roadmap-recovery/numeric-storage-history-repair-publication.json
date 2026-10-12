@@ -1,0 +1,10 @@
+{
+  "head": "8d244fedf2b22c6b3df3d88c4fa15673c8ff28ba",
+  "previous": "13577c8862bb6f05e9b5f5550cedf8f181815c36",
+  "branch": "numeric-storage-and-worker-abi",
+  "tree": "3f276a03c1b702f3a90d169a6df5926d4b232dfe",
+  "files": {
+    "docs/roadmap-history.md": "8a0360555a792d54602881524f755db2a650d620063343f7391c09572f6b85cb",
+    "docs/development-state.md": "ba2b006181db5db718359627bd60fc5c349553740859631f75f7f95083e63ceb"
+  }
+}

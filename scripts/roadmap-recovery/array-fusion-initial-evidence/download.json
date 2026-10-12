@@ -1,0 +1,26 @@
+{
+  "head": "b8199fc953c46142c9db01248e7a4a92273f6778",
+  "run": 38207566637,
+  "artifact": {
+    "id": 11727937965,
+    "node_id": "MDg6QXJ0aWZhY3QxMTcyNzkzNzk2NQ==",
+    "name": "numeric-array-fusion-evidence",
+    "size_in_bytes": 767259,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11727937965",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11727937965/zip",
+    "expired": false,
+    "digest": "sha256:d84a29d7ea5c262997a71512c8f7fe02e5f50ed7c8b128283660c0e24775752b",
+    "created_at": "2026-10-12T05:22:22Z",
+    "updated_at": "2026-10-12T05:22:22Z",
+    "expires_at": "2027-01-10T05:21:14Z",
+    "workflow_run": {
+      "id": 38207566637,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "ownership-evidence-numeric-array-fusion",
+      "head_sha": "b8199fc953c46142c9db01248e7a4a92273f6778"
+    }
+  },
+  "archiveSha256": "d84a29d7ea5c262997a71512c8f7fe02e5f50ed7c8b128283660c0e24775752b",
+  "status": "Failed allocation control; compiler and semantic preparation steps passed"
+}

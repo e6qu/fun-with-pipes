@@ -6,11 +6,11 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `2091ad9bacf33806b8de1cecddf626e667575eef` passes audit38198377356.
+checkpoint `b61cde67f467fc67d672b1d0efd3c0cf59a3acad` passes audit38200778577.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies111 targets/4353268 bytes. Never rerun completed publishers. Phase2 is accepted; phases3–6 remain unfinished.
+verifies134 targets/4544302 bytes. Never rerun completed publishers. Phase2 is accepted; phases3–6 remain unfinished.
 
 ## Execution contract
 
@@ -101,7 +101,7 @@ Diagnostic no-inline calls are separate from production performance; integrated
 controls retain ordinary optimized scalar/record assembly too.
 
 Packed branch ownership-evidence-packed-numeric-arrays is now at
-21117f4971e838cf3ccfcf8aa001be804d16bc44; runner38200555737 is in progress.
+21117f4971e838cf3ccfcf8aa001be804d16bc44; runner38200555737 passes all three platforms.
 Previous1432b969b0ed1f780ffced363cc646e569bc4869 passes all three platforms in
 38199430982, including packed bytes, original ownership/bounds controls, bit
 bridges, view retention/reclamation and allocator-counter omission controls.
@@ -125,7 +125,7 @@ allocation counters, last-owner release, nested views and small-copy release.
 Packed constructor omission controls exercise widths1/2/4/8. Actual wasm32
 count controls must run on Linux and preserve callback/argument trap order.
 Positive counts saturate at SIZE_MAX before allocation and slice/take bounds.
-These211 refinements are pending actual runner outcomes.
+All211 refinements pass actual runner controls on all three platforms.
 
 The94d first integration repeated helper insertion, causing C redefinitions.
 The3b original scalar-array probe parsed the descriptor as a release function;
@@ -146,22 +146,59 @@ an obsolete map by entry count. The209 runner validates restoration of all111
 temporary targets without executing helpers or the compiler. Historical source,
 assembly and completed proofs remain in immutable checkpoints. A56-MiB inline
 tree request failed without changing the branch; publication now reuses blobs
-and bounds incremental requests. Retain the latest211 drafts and reports in the
-next checkpoint before claiming they are durably recoverable.
+and bounds incremental requests. Checkpointb61cde67f467fc67d672b1d0efd3c0cf59a3acad passes audit38200778577
+and retains211 sources plus143 reports; bounded restoration metadata is verified.
+Current finalization and protocol refinements need the next checkpoint.
+
+## Final bundle refinements
+
+Finalization6bf6b1f2a5fb661d180403c22bf5d18ffede5c39 passes Linux runner38201574707:
+formatting, all-target clippy, library and original focused controls, permanent
+storage/ABI/view tests, actual wasm32 counts, protocol tests, primitive/fallback
+coverage and roadmap docs. Runner-formatted production source hashes and reports
+are retained in /private/tmp/fwp-numeric-storage-finalization-export.
+
+Adjacent protocol repairs accept valid zero-byte record collections and check
+allocation/count limits before construction. Rust lengths and constructor tags
+are checked before narrowing to usize. Native array decoding writes directly
+into packed destination storage; its complete allocator control requires one
+request, without a word scratch buffer or intermediate list nodes. Truncated
+numeric payloads, huge counts and omission controls pass under O1/O2 GC stress.
+This focused finalization is not the six-job production merge gate.
+
+Production PR126 is open at916263e7c07443bccd4f87e764ca0c3f33dc664e on
+numeric-storage-and-worker-abi. Roadmap documentation38207662006 passes;
+current CI38207662016 is running. Superseded head8d244fed has the failures below.
+CI38202824347 passes bench and both dedicated GC stress jobs, but Linux and
+regular ARM macOS fail three older generated-C probes. Regular Intel is still
+running. The probes assumed a one-argument array constructor, the previous
+position of the array destructor and fwp_r2 worker results. Focused repair
+f99f0a64e28f780ef61172fbb4b058994e7d89e1 passes runner38207493251, preserving
+all original reclamation, partial-retain unwind, alias and omission controls.
+Runner-formatted repairs are retained in /private/tmp/fwp-pr126-probe-repair-export
+and published to the current PR126 head. All production gates must pass again. Native
+implementation still matches the formatted export; phase3 is not accepted.
+Initial13577c8 docs failed because the archive edit removed the tensor timing
+anchor. The corrected102-KiB index retains383 unique historic heading names,
+selected measurement text and the complete verified b61 snapshot. Superseded
+CI38202469769 was cancelled; it is not a passing gate. Preserve its metadata and
+old docs failure log. Do not change the current PR head merely for status updates;
+keep the live local/recovery handoff current while exact-head gates run.
+
+Require all six current-head jobs and roadmap_docs before squash with the
+explicit subject and empty body. merge-numeric-storage.py verifies those gates,
+raw resulting message, one parent and complete-tree parity. Actual merged-source
+phase3 acceptance remains required after the merge. No new PR is open until then.
+Then deliver phases4–6. Windows/new deployment/backends remain deferred.
 
 ## Next concrete action
 
-Deliver phase3 in one coherent representation/ABI bundle: descriptor-directed
-naturally packed narrow numeric arrays, checked views retaining their backing
-owners, and typed scalar/aggregate worker layouts with ordinary V bridges.
-Start from the actual accepted main above; preserve Pipe semantics and all
-existing generic, callback, ownership and exceptional controls. Prove exact
-bytes, alignment, immutable update behavior, serialization/hash/FFI compatibility
-and actual ARM/Intel ABI assembly before performance claims. Source preparation:
-fwp-numeric-representation-design-preparation.json and its verified source
-manifest. The accepted snapshot is current. Finish pending permanent controls,
-then export one formatted production bundle onto accepted PR125.
-Finish phases3–6 with full exact-head gates and one-line squash messages.
+Monitor CI38207662016 at current head916263e7 and require all six production jobs and roadmap_docs at the repaired head; fix any
+further failures. Then squash with an explicit one-line subject and empty body,
+verify signed commit/tree parity and audit the actual merged source for phase3.
+Continue the independent numeric fusion preparation while CI runs. Open the next
+coherent numerics PR only after PR126 merges; finish phases4–6 without repeating
+already granted publication and merge approval.
 
 ## Local checks and recovery
 
@@ -211,3 +248,23 @@ scanned allocation and typed worker ABI bridges. Source review also corrects
 the old four-field register claim in the future unboxed-record fixture; actual
 placement follows target ABI. These are source-only plans/drafts. Finish PR125
 and its actual merged-source phase2 audit before implementation.
+
+## Prepared next-phase investigation
+
+Phase4 preparation may continue while production CI runs; phase3 is not yet
+accepted. Examine pure Array map/fold fusion, a blocked F64 matrix path retaining
+per-cell floating-point order and generic fallback for malformed/cast shapes,
+and bounded reusable AD workspaces with reentrancy/unwind controls. Source
+inspection also found unchecked tape capacity multiplication on wasm32 and
+realloc pointer replacement on failure; add bounded allocator fault/overflow
+controls before changing those paths. They are tasks to fix in the next coherent
+numerics bundle, not reasons to stop the roadmap. Numeric Array fusion prototype b8199fc953c46142c9db01248e7a4a92273f6778 is
+on ownership-evidence-numeric-array-fusion. Its runner must check compiler
+invariants, raw/native behavior and complete allocation counters before it is
+considered verified. Source drafts are retained under fwp-phase4-array-fusion-draft.
+Initial fusion runner38207566637 passes compiler invariants and raw/native
+fixture semantics, but fails its strict allocation control: generated scalar
+Array.get still boxes Option results and initial nested state boxes remain.
+Fix those allocations without weakening the control. No phase4 support is
+accepted. Source inspection confirms record-cell reuse
+only accepts record/ADT shapes, excluding numeric array storage.

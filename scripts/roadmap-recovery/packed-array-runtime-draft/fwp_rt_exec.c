@@ -392,6 +392,22 @@ static int rd_le(fwp_rd *r, int k, uint64_t *x) {
     return 1;
 }
 
+/* Only records can encode no bytes; constructor tags and counts occupy bytes.
+ * Avoid following a recursive descriptor graph indefinitely. */
+typedef struct fwp_wire_path { const fwp_desc *desc; const struct fwp_wire_path *parent; } fwp_wire_path;
+static int fwp_wire_empty_inner(const fwp_desc *d,const fwp_wire_path *path) {
+    if(!d || d->kind!=K_RECORD)return 0;
+    for(const fwp_wire_path *p=path;p;p=p->parent)if(p->desc==d)return 0;
+    const fwp_wire_path here={d,path};
+    for(int i=0;i<d->n;i++)if(!fwp_wire_empty_inner(d->fields[i],&here))return 0;
+    return 1;
+}
+static int fwp_decode_count(fwp_rd *r,const fwp_desc *elem,int unique,uint64_t *count) {
+    if(!rd_leb(r,count) || *count>(SIZE_MAX-sizeof(fwp_arr))/sizeof(V))return 0;
+    if(fwp_wire_empty_inner(elem,0))return !unique || *count<=1;
+    return *count<=r->n;
+}
+
 static int fwp_decode(fwp_rd *r, const fwp_desc *d, V *out) {
     uint64_t x;
     switch (d->kind) {
@@ -420,15 +436,25 @@ static int fwp_decode(fwp_rd *r, const fwp_desc *d, V *out) {
         return 1;
     }
     case K_LIST: case K_ARRAY: {
-        if (!rd_leb(r, &x) || x > r->n) return 0;
+        if (!fwp_decode_count(r, d->elem, 0, &x)) return 0;
+        if (d->kind == K_ARRAY) {
+            V array = fwp_array_new_packed((size_t)x, d->elem);
+            for (size_t i = 0; i < (size_t)x; i++) {
+                V value;
+                if (!fwp_decode(r, d->elem, &value)) return 0;
+                fwp_array_store(array, i, value, d->elem);
+            }
+            *out = array; FWP_KEEP_ALIVE(array); return 1;
+        }
         V *items = (V *)fwp_alloc((size_t)(x + 1) * sizeof(V));
         for (uint64_t i = 0; i < x; i++) if (!fwp_decode(r, d->elem, &items[i])) return 0;
         V l = fwp_list_from(items, (size_t)x);
-        *out = d->kind == K_ARRAY ? fwp_p_array_from_list_with_elem(l, d->elem) : l;
+        *out = l;
         return 1;
     }
     case K_MAP: case K_SET: {
-        if (!rd_leb(r, &x) || x > r->n) return 0;
+        int empty_values = d->kind == K_SET || fwp_wire_empty_inner(d->elem2, 0);
+        if (!fwp_decode_count(r, d->elem, empty_values, &x) || (!empty_values && x > r->n)) return 0;
         V m = FWP_EMPTY_MAP;
         for (uint64_t i = 0; i < x; i++) {
             V k, v = 0;
