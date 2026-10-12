@@ -430,9 +430,17 @@ impl Pass<'_> {
                 last.insert(*l, i);
             }
         }
-        for (p, mode) in parts.iter().zip(modes) {
-            if let (Mode::Borrow, Expr::Local(l)) = (mode, p) {
-                if owned.contains(l) {
+        for ((p, mode), ty) in parts.iter().zip(modes).zip(&types) {
+            if matches!(mode, Mode::Borrow) && needs_rc(self.shapes, ty) {
+                let owner = match p {
+                    Expr::Local(l) => Some(l),
+                    Expr::Field(base, _) => match &**base {
+                        Expr::Local(l) => Some(l),
+                        _ => None,
+                    },
+                    _ => None,
+                };
+                if let Some(l) = owner.filter(|l| owned.contains(l)) {
                     last.insert(*l, end);
                 }
             }
@@ -482,6 +490,22 @@ impl Pass<'_> {
                         drop_after.push(*l);
                     }
                     xs.push(Expr::Local(*l));
+                }
+                // A direct field read borrows its parent's reference. Keep
+                // that owner through all arguments and the operation; no
+                // temporary retain/release pair is needed for the field.
+                // Scalar fields instead finish evaluation before a later
+                // consuming argument can release the parent or reuse a child.
+                (Mode::Borrow, Expr::Field(base, _))
+                    if !uncounted[i] && matches!(&**base, Expr::Local(_)) =>
+                {
+                    let Expr::Local(l) = &**base else {
+                        unreachable!()
+                    };
+                    if last.get(l) == Some(&end) && !drop_after.contains(l) {
+                        drop_after.push(*l);
+                    }
+                    xs.push(p.clone());
                 }
                 (Mode::Borrow, Expr::Const(_)) => xs.push(p.clone()),
                 (Mode::Borrow, Expr::Func(id)) if self.funcs[*id].arity > 0 => xs.push(p.clone()),
@@ -1104,6 +1128,51 @@ mod tests {
         );
         let p = prog(vec![list()], vec![], body);
         counted(&p);
+    }
+
+    #[test]
+    fn borrowed_field_keeps_parent_through_a_later_consuming_argument() {
+        let record = MT::Record(vec![("items".into(), list())]);
+        let mut p = prog(vec![record.clone()], vec![], Expr::Const(Value::unit()));
+        p.funcs[0].body = Body::Expr(Expr::Call(
+            1,
+            vec![
+                Expr::Field(Box::new(Expr::Local(0)), 0),
+                Expr::Call(2, vec![Expr::Local(0)]),
+            ],
+        ));
+        p.funcs.push(Func {
+            name: "borrow".into(),
+            arity: 2,
+            locals: vec![list(), record.clone()],
+            ty: MT::Fun(
+                Box::new(list()),
+                Box::new(MT::Fun(Box::new(record.clone()), Box::new(list()))),
+            ),
+            body: Body::Prim("borrow-probe".into()),
+        });
+        p.funcs.push(Func {
+            name: "consume".into(),
+            arity: 1,
+            locals: vec![record.clone()],
+            ty: MT::Fun(Box::new(record.clone()), Box::new(record)),
+            body: Body::Expr(Expr::Local(0)),
+        });
+        let (body, locals) = counted(&p);
+        let text = format!("{body:?}");
+        assert_eq!(text.matches("Dup(").count(), 1, "{text}");
+        let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
+        fn borrowed_call(e: &Expr) -> Option<&Expr> {
+            match e {
+                Expr::Call(1, _) => Some(e),
+                Expr::Let(_, value, body) => borrowed_call(value).or_else(|| borrowed_call(body)),
+                Expr::Dup(_, body) | Expr::Drop(_, body) => borrowed_call(body),
+                _ => None,
+            }
+        }
+        let call = borrowed_call(&body).unwrap() as *const Expr;
+        let outer = &calls[&call];
+        assert!(outer.at_entry.contains(&(0, 1)), "{outer:?}");
     }
 
     #[test]

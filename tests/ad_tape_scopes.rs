@@ -99,6 +99,7 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
             for reuse in ["0", "1"] {
                 let output = Command::new(&executable)
+                    .env("FWP_AD_WORKSPACE", "0")
                     .env("FWP_GC_STRESS", "1")
                     .env("FWP_GC_VERIFY", "1")
                     .env("FWP_REUSE_VERIFY", reuse)
@@ -204,6 +205,7 @@ fn scoped_gradient_functions_agree_with_raw_interpreter() {
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
             for reuse in ["0", "1"] {
                 let output = Command::new(&executable)
+                    .env("FWP_AD_WORKSPACE", "0")
                     .env("FWP_GC_STRESS", "1")
                     .env("FWP_GC_VERIFY", "1")
                     .env("FWP_REUSE_VERIFY", reuse)
@@ -292,6 +294,7 @@ main = read-all () | concat "runtime-owned scope input" | make {
         for reuse in ["0", "1"] {
             let output = checked(
                 Command::new(&executable)
+                    .env("FWP_AD_WORKSPACE", "0")
                     .env("FWP_GC_STRESS", "1")
                     .env("FWP_GC_VERIFY", "1")
                     .env("FWP_REUSE_VERIFY", reuse),

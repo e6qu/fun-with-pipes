@@ -212,6 +212,27 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
     }
 }
 
+fn unboxed_numeric(ty: &MT) -> bool {
+    let MT::Con(name, args) = ty else {
+        return false;
+    };
+    args.is_empty()
+        && matches!(
+            name.strip_prefix("std::").unwrap_or(name),
+            "I8" | "I16"
+                | "I32"
+                | "I64"
+                | "ISize"
+                | "U8"
+                | "U16"
+                | "U32"
+                | "U64"
+                | "USize"
+                | "F32"
+                | "F64"
+        )
+}
+
 /// A stage of a fused pipeline, outermost first as written in the IR.
 enum Stage {
     Map(Expr),
@@ -223,6 +244,7 @@ enum Producer {
     /// `range a b` at integer type `t`.
     Range(Expr, Expr, MT),
     List(Expr),
+    Array(Expr),
 }
 
 /// A function value `f` applied to `n` more arguments: a known function,
@@ -649,6 +671,12 @@ impl Fuser<'_> {
     fn consumer(&self, id: FuncId, args: &[Expr]) -> Option<&'static str> {
         match (prim_sym(self.funcs, id)?, args.len()) {
             ("fold", 3) => Some("fold"),
+            ("array.fold", 3) if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") => {
+                Some("array-fold")
+            }
+            ("array.length", 1) if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") => {
+                Some("array-length")
+            }
             ("length", 1) => Some("length"),
             ("find", 2) => Some("find"),
             _ => None,
@@ -748,6 +776,14 @@ impl Fuser<'_> {
         cparams: Vec<MT>,
         result_ty: MT,
     ) -> Option<Expr> {
+        let array = kind.starts_with("array-");
+        let kind = match kind {
+            "array-fold" => "fold",
+            "array-length" => "length",
+            other => other,
+        };
+        let accumulator = if array { 2 } else { 1 };
+        let capture_start = if array { 3 } else { 2 };
         let funcs = self.funcs;
         let list = args.last()?;
         let mut stages = Vec::new();
@@ -755,8 +791,9 @@ impl Fuser<'_> {
         loop {
             match cur {
                 Expr::Call(id, a) if a.len() == 2 => match prim_sym(funcs, *id) {
-                    Some("map") => stages.push(Stage::Map(a[0].clone())),
-                    Some("filter") => stages.push(Stage::Filter(a[0].clone())),
+                    Some("map") if !array => stages.push(Stage::Map(a[0].clone())),
+                    Some("filter") if !array => stages.push(Stage::Filter(a[0].clone())),
+                    Some("array.map") if array => stages.push(Stage::Map(a[0].clone())),
                     _ => break,
                 },
                 _ => break,
@@ -767,6 +804,8 @@ impl Fuser<'_> {
             cur = &a[1];
         }
         let producer = match cur {
+            e if array && !stages.is_empty() => Producer::Array(e.clone()),
+            _ if array => return None,
             Expr::Call(id, a) if a.len() == 2 && prim_sym(funcs, *id) == Some("range") => {
                 let t = funcs[*id].ty.params(2).0[0].clone();
                 match num(&t) {
@@ -804,7 +843,7 @@ impl Fuser<'_> {
         // innermost stage takes
         let prod_ty = match &producer {
             Producer::Range(_, _, t) => t.clone(),
-            Producer::List(e) => match self.ty_in(&self.locals, e) {
+            Producer::List(e) | Producer::Array(e) => match self.ty_in(&self.locals, e) {
                 Some(t) => t,
                 None => {
                     let (id, caps) = fns.last()?;
@@ -813,6 +852,20 @@ impl Fuser<'_> {
                 }
             },
         };
+        if array {
+            if !elem(&prod_ty).is_some_and(|t| unboxed_numeric(&t)) {
+                return None;
+            }
+            for (id, captures) in &fns {
+                let (params, result) = funcs[*id].ty.params(captures.len() + 1);
+                if !unboxed_numeric(params.last()?) || !unboxed_numeric(result) {
+                    return None;
+                }
+            }
+            if kind == "fold" && (!unboxed_numeric(&cparams[1]) || !unboxed_numeric(&result_ty)) {
+                return None;
+            }
+        }
         // the accumulator: a fold's, a count, the list so far in reverse,
         // or nothing (`find`)
         let (z, acc_ty) = match kind {
@@ -839,6 +892,10 @@ impl Fuser<'_> {
         let (start, end) = match &producer {
             Producer::Range(a, b, t) => (bind(self, a, t), Some(bind(self, b, t))),
             Producer::List(e) => (bind(self, e, &prod_ty), None),
+            Producer::Array(e) => (
+                Expr::Record(vec![Expr::Const(Value::I64(0)), bind(self, e, &prod_ty)]),
+                None,
+            ),
         };
 
         // the state: position, accumulator, then the outer locals the step
@@ -854,7 +911,7 @@ impl Fuser<'_> {
                             outer.len() - 1
                         }
                     };
-                    Expr::Field(Box::new(Expr::Local(0)), (i + 2) as u32)
+                    Expr::Field(Box::new(Expr::Local(0)), (i + capture_start) as u32)
                 }
                 _ => e.clone(),
             }
@@ -888,14 +945,18 @@ impl Fuser<'_> {
                 let add = self.prim("prim.add", fun2(t, t, t), 2);
                 (st(0), Expr::Call(add, vec![one, st(0)]), None)
             }
-            Producer::List(_) => {
+            Producer::List(_) | Producer::Array(_) => {
                 let (h, t) = (next(&mut nl), next(&mut nl));
                 (Expr::Local(h), Expr::Local(t), Some((h, t)))
             }
         };
         let again = |pos: &Expr, acc: Expr, n: usize| {
-            let mut fs = vec![pos.clone(), acc];
-            fs.extend((0..n).map(|i| st((i + 2) as u32)));
+            let mut fs = if array {
+                vec![pos.clone(), st(1), acc]
+            } else {
+                vec![pos.clone(), acc]
+            };
+            fs.extend((0..n).map(|i| st((i + capture_start) as u32)));
             Expr::Construct(0, vec![Expr::Record(fs)])
         };
         // the stages innermost first, so build from the end: the element
@@ -915,17 +976,24 @@ impl Fuser<'_> {
         // the element after every stage, into the consumer
         let some = |x: Expr| Expr::Construct(1, vec![Expr::Construct(1, vec![x])]);
         let last = match kind {
-            "fold" => Ok(apply(&mut field, cv.as_ref()?, vec![st(1), x.clone()])),
-            "list" => Ok(Expr::Construct(1, vec![x.clone(), st(1)])),
+            "fold" => Ok(apply(
+                &mut field,
+                cv.as_ref()?,
+                vec![st(accumulator), x.clone()],
+            )),
+            "list" => Ok(Expr::Construct(1, vec![x.clone(), st(accumulator)])),
             "length" => {
                 let i64 = MT::con("std::I64");
                 let add = self.prim("prim.add", fun2(&i64, &i64, &i64), 2);
-                Ok(Expr::Call(add, vec![Expr::Const(Value::I64(1)), st(1)]))
+                Ok(Expr::Call(
+                    add,
+                    vec![Expr::Const(Value::I64(1)), st(accumulator)],
+                ))
             }
             _ => Err(apply(&mut field, cv.as_ref()?, vec![x.clone()])),
         };
         let n = outer.len();
-        let skip = again(&next_pos, st(1), n);
+        let skip = again(&next_pos, st(accumulator), n);
         let mut body = match last {
             Ok(acc) => again(&next_pos, acc, n),
             // `find`: stop with the element it matches
@@ -960,7 +1028,7 @@ impl Fuser<'_> {
             vec![if kind == "find" {
                 Expr::Construct(0, vec![])
             } else {
-                st(1)
+                st(accumulator)
             }],
         );
         let body = match &producer {
@@ -969,6 +1037,27 @@ impl Fuser<'_> {
                 Expr::Match(
                     Box::new(Expr::Call(lt, vec![end.clone()?, st(0)])),
                     vec![(Pat::Construct(1, vec![]), body), (Pat::Wild, stop)],
+                )
+            }
+            Producer::Array(_) => {
+                let (h, t) = cell?;
+                let index_ty = MT::con("std::I64");
+                let element = elem(&prod_ty)?;
+                let option = MT::Con("std::Option".into(), vec![element]);
+                let get = self.prim("array.get", fun2(&index_ty, &prod_ty, &option), 2);
+                let add = self.prim("prim.add", fun2(&index_ty, &index_ty, &index_ty), 2);
+                let position = st(0);
+                let input = st(1);
+                let next = Expr::Call(add, vec![Expr::Const(Value::I64(1)), position.clone()]);
+                Expr::Match(
+                    Box::new(Expr::Call(get, vec![position, input])),
+                    vec![
+                        (
+                            Pat::Construct(1, vec![Pat::Bind(h)]),
+                            Expr::Let(t, Box::new(next), Box::new(body)),
+                        ),
+                        (Pat::Wild, stop),
+                    ],
                 )
             }
             Producer::List(_) => {
@@ -985,17 +1074,23 @@ impl Fuser<'_> {
         let pos_ty = match &producer {
             Producer::Range(_, _, t) => t.clone(),
             Producer::List(_) => prod_ty.clone(),
+            Producer::Array(_) => MT::con("std::I64"),
         };
-        let mut fields = vec![
-            ("0".to_string(), pos_ty.clone()),
-            ("1".to_string(), acc_ty.clone()),
-        ];
-        fields.extend(
-            outer
-                .iter()
-                .enumerate()
-                .map(|(i, l)| ((i + 2).to_string(), self.locals[*l as usize].clone())),
-        );
+        let mut fields = if array {
+            vec![
+                ("0".into(), pos_ty.clone()),
+                ("1".into(), prod_ty.clone()),
+                ("2".into(), acc_ty.clone()),
+            ]
+        } else {
+            vec![("0".into(), pos_ty.clone()), ("1".into(), acc_ty.clone())]
+        };
+        fields.extend(outer.iter().enumerate().map(|(i, l)| {
+            (
+                (i + capture_start).to_string(),
+                self.locals[*l as usize].clone(),
+            )
+        }));
         MT::sort_fields(&mut fields);
         let state_ty = MT::Record(fields);
         // the step's locals: the state, a list's head and tail, the stages'
@@ -1038,7 +1133,15 @@ impl Fuser<'_> {
             ),
             2,
         );
-        let mut init = vec![start, z];
+        let mut init = if array {
+            let Expr::Record(mut positions) = start else {
+                return None;
+            };
+            positions.push(z);
+            positions
+        } else {
+            vec![start, z]
+        };
         init.extend(outer.into_iter().map(Expr::Local));
         let mut out = Expr::Call(loop_id, vec![Expr::Func(step), Expr::Record(init)]);
         if kind == "list" {
@@ -1118,6 +1221,29 @@ fn dummy_args(funcs: &[Func], id: FuncId) -> Vec<Expr> {
 
 /// Fuse the list pipelines of every function.
 pub fn fuse(prog: &mut Program) {
+    let elements: Vec<_> = prog
+        .funcs
+        .iter()
+        .flat_map(|f| &f.locals)
+        .filter_map(|ty| match ty {
+            MT::Con(name, args)
+                if name == "std::Array" && args.len() == 1 && unboxed_numeric(&args[0]) =>
+            {
+                Some(args[0].clone())
+            }
+            _ => None,
+        })
+        .collect();
+    for element in elements {
+        prog.shapes
+            .entry(MT::Con("std::Option".into(), vec![element.clone()]))
+            .or_insert_with(|| {
+                TypeShape::Adt(vec![
+                    ("None".into(), vec![]),
+                    ("Some".into(), vec![element]),
+                ])
+            });
+    }
     let snapshot = prog.funcs.clone();
     let shapes = prog.shapes.clone();
     let std_names = prog.std_names.clone();
@@ -1141,4 +1267,109 @@ pub fn fuse(prog: &mut Program) {
         prog.funcs[id].locals = f.locals;
     }
     prog.funcs.extend(made);
+}
+
+/// Specialize canonical standard F64 products. Overlapping primitive numeric
+/// impls are rejected by inference. Runtime matrix.cast retains its existing
+/// behavior, so incompatible runtime shapes still evaluate the original body.
+pub fn specialize_matrices(prog: &mut Program) {
+    if std::env::var("FWP_MATRIX_BLOCKING").as_deref() == Ok("0") {
+        return;
+    }
+    let candidates: Vec<_> = prog
+        .std_names
+        .iter()
+        .filter(|(_, name)| name.as_str() == "std::matmul")
+        .map(|(id, _)| *id)
+        .collect();
+    let array = MT::Con("std::Array".into(), vec![MT::con("std::F64")]);
+    let integer = MT::con("std::I64");
+    for id in candidates {
+        let f = &prog.funcs[id];
+        if f.arity != 2 {
+            continue;
+        }
+        let (params, result) = f.ty.params(2);
+        let matrix = |ty: &MT| {
+            matches!(ty, MT::Con(name, args) if name == "std::Matrix" && args.first() == Some(&MT::con("std::F64")))
+                && record_fields(&prog.shapes, ty).is_some_and(|fields| {
+                    fields
+                        == [
+                            ("cols".into(), integer.clone()),
+                            ("data".into(), array.clone()),
+                            ("rows".into(), integer.clone()),
+                        ]
+                })
+        };
+        if !params.iter().all(|p| matrix(p)) || !matrix(result) {
+            continue;
+        }
+        let Body::Expr(original) = &f.body else {
+            continue;
+        };
+        let original = original.clone();
+        let valid = prog.funcs.len();
+        let compute = valid + 1;
+        let primitive = |name: &str, locals: Vec<MT>, result: MT| {
+            let ty = locals
+                .iter()
+                .rev()
+                .fold(result, |r, p| MT::Fun(Box::new(p.clone()), Box::new(r)));
+            Func {
+                name: name.into(),
+                arity: locals.len() as u32,
+                locals,
+                ty,
+                body: Body::Prim(name.into()),
+            }
+        };
+        prog.funcs.push(primitive(
+            "matrix._valid-f64",
+            vec![integer.clone(); 4]
+                .into_iter()
+                .chain([array.clone(), array.clone()])
+                .collect(),
+            MT::con("std::Bool"),
+        ));
+        prog.funcs.push(primitive(
+            "matrix._mul-f64",
+            vec![integer.clone(); 3]
+                .into_iter()
+                .chain([array.clone(), array.clone()])
+                .collect(),
+            array.clone(),
+        ));
+        let field = |local, index| Expr::Field(Box::new(Expr::Local(local)), index);
+        // Scalar dimensions and borrowed arrays cross the primitive boundary
+        // directly: no temporary Matrix records are needed for either call.
+        let valid_args = vec![
+            field(1, 2),
+            field(1, 0),
+            field(0, 2),
+            field(0, 0),
+            field(1, 1),
+            field(0, 1),
+        ];
+        let compute_args = vec![
+            field(1, 2),
+            field(1, 0),
+            field(0, 0),
+            field(1, 1),
+            field(0, 1),
+        ];
+        prog.funcs[id].body = Body::Expr(Expr::Match(
+            Box::new(Expr::Call(valid, valid_args)),
+            vec![
+                (
+                    Pat::Construct(1, vec![]),
+                    Expr::Record(vec![
+                        field(0, 0),
+                        Expr::Call(compute, compute_args),
+                        field(1, 2),
+                    ]),
+                ),
+                (Pat::Wild, original),
+            ],
+        ));
+    }
 }

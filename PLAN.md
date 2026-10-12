@@ -30,6 +30,9 @@ not change the phase order or defer a failing check as unrelated.
 Preserve tacit, curried, data-last pipes, immutable values, tracked effects,
 checked arithmetic and observable evaluation/trap order. Infer ordinary types
 strongly; retain explicit generic signatures and compile-time specialization.
+Avoid redundant wrappers, alternate paths and implicit behavior. Register spills
+are ordinary lowering; protocol-defined alternatives are peers. Keep necessary
+representation choices and limits explicit and justified.
 Prefer internal ownership over new language syntax. Compare the interpreter
 and native semantics; optimizer oracles must use `FWP_NO_OPT=1` explicitly.
 
@@ -42,24 +45,23 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 |---|---|---|
 | 1 | Done: native macOS ARM/Intel support (#74) | Full platform gates; real collection; interpreter/native agreement; explicit unsupported options |
 | 2 | Done: typed ownership and explicit runtime compatibility fallbacks | Accepted merged-source coverage; callback/unwind/resource, alias, GC/reuse and reclamation controls |
-| 3 | In progress: natural-width contiguous numeric storage, views, aggregate/scalar ABI and alignment | Narrow elements use natural width; fewer copies/boxes; arm64/x86-64 allocation/assembly evidence; ABI/FFI checks |
-| 4 | Pending: fused numerical loops, blocked matrices, autodiff lifetimes and reusable buffers | Correct gradients and exceptional cleanup; equivalent C/Rust workloads; fixed floating-point behavior by default |
+| 3 | Done: natural-width contiguous numeric storage, views, aggregate/scalar ABI and alignment | Narrow elements use natural width; fewer copies/boxes; arm64/x86-64 allocation/assembly evidence; ABI/FFI checks |
+| 4 | In progress: fused numerical loops, blocked matrices, autodiff lifetimes and reusable buffers | Correct gradients and exceptional cleanup; equivalent C/Rust workloads; fixed floating-point behavior by default |
 | 5 | Pending: broaden ownership/performance regression evidence | Allocations, live memory, counts and collections alongside timing, hardware/compiler/flags recorded |
 | 6 | Pending: optional tracing-free execution after coverage | Supported programs reclaim without collection, including escapes/runtime boundaries; explicit cycle lifetime policy |
 
 ## Current delivery
 
-Main through PR #125 completes phase2's documented ownership model.
-All177 remaining runtime declarations explicitly retain compatibility fallback;
-tracing-free execution remains phase6. Resource and network queue anchors are
-accepted and archived. Checked allocation/kernel boundaries and current CI
-pass the exact final head and actual merged-source audit. The handoff records
-those proofs and the actual base for phase3.
+Main through PR #126 completes phases1–3. Packed numeric storage, bounded
+owner-retaining views, typed worker ABI and checked count/protocol paths pass
+all six exact-head jobs, documentation and actual merged-source acceptance.
+The handoff records exact source and proof hashes. Tracing remains an explicit
+compatibility fallback until phase6 meets its separate criteria.
 
-Next deliver natural-width numeric arrays, checked owner-retaining views and
-typed worker ABI layouts in one coherent bundle. Preserve existing type inference,
-Pipe semantics, ownership and trap order. Then complete phases4–6. Windows,
-new deployment interfaces and a new backend remain deferred.
+Deliver fused numerical loops, guarded blocked matrices and bounded reusable
+autodiff workspaces as one coherent phase4 bundle, preserving type inference,
+Pipe semantics, ownership and floating/trap order. Then complete phases5–6.
+Windows, new deployment interfaces and a new backend remain deferred.
 
 ## Validation limits
 
@@ -71,14 +73,6 @@ repository. Memory changes need actual GC stress/verification and reuse checks.
 Never call skipped, queued, superseded or cancelled runs passing support.
 
 ## Concrete remaining deliveries
-
-For phase3, implement descriptors and typed loads/stores for naturally packed
-I8/U8, I16/U16, I32/U32 and F32 arrays; preserve I64/U64/F64 semantics. Carry
-those descriptors through producers, consumers, copies, equality/hash, text/JSON,
-SIMD and FFI. Views retain their backing storage and enforce bounds and alignment.
-Validate exact bytes, size/alignment and arm64/x86-64 generated assembly,
-including ABI boundaries. Treat F16 and128-bit formats explicitly rather than
-claiming unverified platform support.
 
 For phase4, preserve floating-point evaluation order while fusing eligible loops
 and blocking matrices; retain the existing contraction policy. Reuse autodiff
