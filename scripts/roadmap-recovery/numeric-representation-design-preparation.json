@@ -489,5 +489,13 @@
     "nativeRc": "Small RC slots accept interior words and sharing canonicalizes them, but big-object slots accept only object starts. Physical small frees clear memory and insert a free-list link at the supplied address. Low-bit tagging is unsafe unchanged.",
     "wasmRc": "Resource counts use exact V keys; native slot behavior cannot be assumed on bump/WASM.",
     "preferredExperiment": "Evaluate high length-bit view flag against explicit16-byte metadata header using actual tiny-array/AD overhead and all-width views; choose after phase2 acceptance."
+  },
+  "abiPreparation": {
+    "baseline": "Workers currently use V scalar arguments and field-count keyed structs of V fields. Float bit bridges are valid but do not request natural floating-point call/return classification.",
+    "layouts": "Keep field-count analysis for escape/flattening decisions, add layout IDs keyed by concrete field MT sequence, and retain V bridges for closures, generic runtime calls, ownership checkpoints and foreign wrappers.",
+    "scalars": "Use native C float/double and fixed-width integer scalar worker parameters/results when supported; reconstruct the existing V encoding at the worker body boundary so ordinary typed IR and cleanup continue to agree. Validate exact signed extension and low32 F32 bits.",
+    "records": "Use naturally typed C fields in direct-worker aggregate returns/arguments. Same-count records with different MT fields cannot share a layout. Generated result temporaries, field projections, boxing and variant bridges must carry the right layout.",
+    "assemblyCases": "Inspect F64 pairs and ARM homogeneous3/4-float aggregates versus mixed float/pointer records on both architectures; C ABI rules determine registers. Preserve separate diagnostic flags from production-performance flags.",
+    "acceptance": "Actual sizeof/offsetof/alignment and byte/assembly artifacts, raw/native oracles, ABI/FFI boundaries, exceptional owners and complete allocation/live memory profiles. No register, packing or speed claim from source review alone."
   }
 }

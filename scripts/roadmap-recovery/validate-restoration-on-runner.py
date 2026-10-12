@@ -6,9 +6,10 @@ HEAD=os.environ['GITHUB_SHA'];assert re.fullmatch(r'[0-9a-f]{40}',HEAD)
 ROOT=Path.cwd();OUT=ROOT/'recovery-restoration-evidence';OUT.mkdir(exist_ok=True)
 source=ROOT/'scripts/roadmap-recovery/restore-roadmap-recovery.py'
 module=ast.parse(source.read_text());external=[n for n in ast.walk(module) if isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and isinstance(n.func.value,ast.Name) and n.func.value.id=='subprocess']
-assert len(external)==1 and external[0].func.attr=='check_output'
-command=external[0].args[0];assert isinstance(command,ast.List)
-assert [ast.literal_eval(v) for v in command.elts[:2]]==['gh','api']
+assert len(external)==2 and {call.func.attr for call in external}=={'check_output','Popen'}
+for call in external:
+ command=call.args[0];assert isinstance(command,ast.List)
+ assert [ast.literal_eval(v) for v in command.elts[:2]]==['gh','api']
 # This directory belongs only to this fresh GitHub runner, never a local checkout.
 subprocess.run(['sudo','install','-d','-m','1777','/private/tmp'],check=True)
 r=subprocess.run(['python3',str(source),'--head',HEAD],capture_output=True)

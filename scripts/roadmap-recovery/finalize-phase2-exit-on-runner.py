@@ -6,7 +6,7 @@ assert os.environ.get('GITHUB_ACTIONS')=='true'
 ROOT=Path.cwd();OUT=ROOT/'phase2-exit-evidence';OUT.mkdir(exist_ok=True)
 SOURCE='3aae99bfa705e26babc2cf251b0e583dfd95cf38';PREP='167d769deaa28fae9b361ba4e9fa33b443d1a79c'
 ARRAY='296ea83b45bb153c2b86d1df68e05c799013b2eb'
-KERNEL='28db5471d503763aa27e7da4f60c5ad880ad4183'
+KERNEL='d240231c5dd33e83ecdd5bf3df06715a0e279768'
 DOCS=['CONTRIBUTING.md','PLAN.md','docs/design.md','docs/development-state.md','docs/ownership.md','docs/primitive-ownership.md','docs/roadmap-queue.md','docs/roadmap-history.md','docs/reference.md','docs/concurrency.md','docs/numerics.md']
 ARRAY_FILES=['runtime/fwp_rt.c','runtime/fwp_rt_gc.c','src/prims_std.rs','tests/array_size_limits.rs','tests/fixtures/array_size_probe.c','tests/fixtures/bump_size_probe.c']
 KERNEL_FILES=['runtime/fwp_rt_kernel.c','tests/numerics.rs','tests/kernel_stack_bounds.rs','tests/fixtures/kernel_stack_probe.c']
@@ -21,7 +21,7 @@ array=json.loads(subprocess.check_output(['gh','run','view','38182446407','--jso
 assert array['headSha']==ARRAY and array['status']=='completed' and array['conclusion']=='success'
 assert len(array['jobs'])==3 and {j['name'] for j in array['jobs']}=={'arrays ('+v+')' for v in ['ubuntu-latest','macos-15','macos-15-intel']}
 assert all(j['status']=='completed' and j['conclusion']=='success' for j in array['jobs'])
-kernel=json.loads(subprocess.check_output(['gh','run','view','38185769269','--json','headSha,status,conclusion,jobs'],text=True))
+kernel=json.loads(subprocess.check_output(['gh','run','view','38186836622','--json','headSha,status,conclusion,jobs'],text=True))
 assert kernel['headSha']==KERNEL and kernel['status']=='completed' and kernel['conclusion']=='success'
 assert len(kernel['jobs'])==3 and {j['name'] for j in kernel['jobs']}=={'kernels ('+v+')' for v in ['ubuntu-latest','macos-15','macos-15-intel']}
 assert all(j['status']=='completed' and j['conclusion']=='success' for j in kernel['jobs'])

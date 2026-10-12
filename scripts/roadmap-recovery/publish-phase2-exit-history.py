@@ -37,7 +37,7 @@ assert len(package['commits'])==2
 for key,head,names in [
  ('reviewEvidence','167d769deaa28fae9b361ba4e9fa33b443d1a79c',{'review ('+p+')' for p in ['ubuntu-latest','macos-15','macos-15-intel']}),
  ('arrayEvidence','296ea83b45bb153c2b86d1df68e05c799013b2eb',{'arrays ('+p+')' for p in ['ubuntu-latest','macos-15','macos-15-intel']}),
- ('kernelEvidence','28db5471d503763aa27e7da4f60c5ad880ad4183',{'kernels ('+p+')' for p in ['ubuntu-latest','macos-15','macos-15-intel']})]:
+ ('kernelEvidence','d240231c5dd33e83ecdd5bf3df06715a0e279768',{'kernels ('+p+')' for p in ['ubuntu-latest','macos-15','macos-15-intel']})]:
  r=manifest[key];assert r['headSha']==head and r['status']=='completed' and r['conclusion']=='success'
  assert len(r['jobs'])==3 and {j['name'] for j in r['jobs']}==names
  assert all(j['status']=='completed' and j['conclusion']=='success' for j in r['jobs'])

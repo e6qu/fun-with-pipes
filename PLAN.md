@@ -57,8 +57,8 @@ exit review. [The handoff](docs/development-state.md) records exact heads,
 checks and the next action. PR124 combines the verified resource/State,
 codec, callback-effect and scoped-gradient repairs. Its full matrix exposed a
 codec test that copies its fixture onto itself when the artifact directory is
-unset. Repair and validate both artifact-path modes before rerunning the final
-matrix; preserve the runtime alias/GC controls and current-run diagnostics.
+unset. Both artifact-path modes now pass all three preflights; the repaired exact-head
+full matrix is running. Preserve runtime alias/GC controls and diagnostics.
 
 Phase2 remaining audits cover borrowed metadata roots, reconstructed/untyped
 aggregates, retained contexts, resource disposal and cycles. Verify each boundary
@@ -81,7 +81,7 @@ Never call skipped, queued, superseded or cancelled runs passing support.
 
 Finish phase2 by accepting PR124's combined resource/State, codec and scoped
 gradient work, then the finite177-declaration review with checked structural
-buffer and array/bump allocation boundaries, kernel stack bounds and current
+buffer and array/bump allocation boundaries, kernel stack/constant decoding, device allocation bounds and current
 CI actions in one coherent next bundle.
 Classify each remaining boundary with its argument/result/alias/callback policy
 or explicit tracing fallback, including retained contexts, partial reconstruction

@@ -15,13 +15,21 @@ fn empty_kernel_stack_is_safe_and_omission_is_detected() {
     let artifacts = std::env::var_os("FWP_KERNEL_BOUNDS_ARTIFACTS").map(PathBuf::from).unwrap_or_else(|| directory.join("artifacts"));
     std::fs::create_dir_all(&artifacts).unwrap();
     let template = include_str!("fixtures/kernel_stack_probe.c");
+    let runtime = include_str!("../runtime/fwp_rt.c");
+    let float_start = runtime.find("static inline V fwp_from_f64(").unwrap();
+    let float_end = runtime[float_start..].find("static inline V fwp_from_f32(").unwrap() + float_start;
+    let float_bits = format!("typedef uint64_t V;\n{}", &runtime[float_start..float_end]);
     for optimization in ["-O1", "-O2"] {
-        for omitted in [false, true] {
-            let body = if omitted { kernel.replace(guarded, "stack + (sp - 1) * FWP_KCHUNK") } else { kernel.to_owned() };
+        for omitted in ["none", "stack", "constant"] {
+            let body = match omitted {
+                "stack" => kernel.replace(guarded, "stack + (sp - 1) * FWP_KCHUNK"),
+                "constant" => { assert_eq!(kernel.matches("fwp_f64(k->consts[ci++])").count(), 1); kernel.replace("fwp_f64(k->consts[ci++])", "(double)k->consts[ci++]") },
+                _ => kernel.to_owned(),
+            };
             let label = format!("kernel{optimization}-omit{omitted}");
             let cfile = artifacts.join(format!("{label}.c"));
             let executable = directory.join(&label);
-            std::fs::write(&cfile, template.replace("/* KERNEL */", &body)).unwrap();
+            std::fs::write(&cfile, template.replace("/* KERNEL */", &body).replace("/* FLOAT_BITS */", &float_bits)).unwrap();
             let compiler = Command::new("clang").args(["-std=c11", optimization, "-ffp-contract=off", "-fsanitize=address,undefined,unsigned-integer-overflow", "-fno-sanitize-recover=all"]).arg(&cfile).args(["-lm", "-o"]).arg(&executable).output().unwrap();
             std::fs::write(artifacts.join(format!("{label}.compile.stdout")), &compiler.stdout).unwrap();
             std::fs::write(artifacts.join(format!("{label}.compile.stderr")), &compiler.stderr).unwrap();
@@ -31,9 +39,11 @@ fn empty_kernel_stack_is_safe_and_omission_is_detected() {
             std::fs::write(artifacts.join(format!("{label}.stdout")), &output.stdout).unwrap();
             std::fs::write(artifacts.join(format!("{label}.stderr")), &output.stderr).unwrap();
             std::fs::write(artifacts.join(format!("{label}.status")), format!("{}\n", output.status)).unwrap();
-            if omitted {
+            if omitted == "stack" {
                 assert!(!output.status.success(), "{label} failed to detect empty-stack subtraction");
                 assert!(String::from_utf8_lossy(&output.stderr).contains("unsigned integer overflow"), "{label}: {}", String::from_utf8_lossy(&output.stderr));
+            } else if omitted == "constant" {
+                assert_eq!(output.status.code(), Some(121), "{label}: {}", String::from_utf8_lossy(&output.stderr));
             } else {
                 assert!(output.status.success(), "{label}: {}", String::from_utf8_lossy(&output.stderr));
                 assert_eq!(output.stdout, b"kernel stack controls passed\n");

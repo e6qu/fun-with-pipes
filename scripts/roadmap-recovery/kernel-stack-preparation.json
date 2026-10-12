@@ -2,9 +2,18 @@
   "head": "3aae99bfa705e26babc2cf251b0e583dfd95cf38",
   "nativeSourceHead": "d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0",
   "nativeSourceSha256": "c205d5b43438d36af0b63e40a5aab4669d53dc1747109b3f56e118c84cf186c7",
-  "candidateSha256": "ef08874d18f88b49febabb23008dfdb6094873ca6d7b44811602c2659a20d615",
+  "candidateSha256": "ca03c572ab1211a151d2ba093366e6ca21011c1aef97fca028f8e38fbd3a19be",
   "numericTestBlob": "61186256b9a70ba2c04557bd2dc682b8d99debca",
-  "change": "Avoid forming a pointer before the evaluation stack when sp is zero; retain operation order and force the interpreter oracle to use FWP_NO_OPT=1",
-  "status": "Source-only fix; Linux/ARM/Intel sanitizer and native/interpreter numeric checks required",
-  "sanitizerDocumentation": "https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html"
+  "change": "Avoid forming an empty-stack top pointer; read F64 constants from their V storage with the existing memcpy bit decoder; preserve operation order and explicit raw interpreter oracles",
+  "status": "Constant representation refinement source-reviewed; fresh three-platform controls required",
+  "sanitizerDocumentation": "https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html",
+  "previousGuardEvidence": {
+    "head": "28db5471d503763aa27e7da4f60c5ad880ad4183",
+    "run": 38185769269,
+    "status": "All three platforms pass for earlier stack-guard-only candidate"
+  },
+  "aliasingDocumentation": "https://clang.llvm.org/docs/UsersManual.html#strict-aliasing",
+  "latestVerifiedHead": "d240231c5dd33e83ecdd5bf3df06715a0e279768",
+  "latestVerifiedRun": 38186836622,
+  "latestStatus": "All three platform preflights pass stack guard and constant word-decoding controls"
 }

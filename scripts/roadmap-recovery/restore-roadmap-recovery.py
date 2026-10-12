@@ -1,6 +1,6 @@
 """Restore verified source helpers from the published handoff, without testing."""
 from pathlib import Path
-import argparse,ast,base64,hashlib,json,re,subprocess
+import argparse,ast,hashlib,io,json,re,subprocess,zipfile
 REPO='repos/e6qu/fun-with-pipes'
 BRANCH='roadmap/handoff-pr123-20261011'
 parser=argparse.ArgumentParser(description=__doc__)
@@ -20,12 +20,29 @@ assert len(commit['message'].splitlines())==1 and len(commit['message'])<=80
 tree=api('/git/trees/'+commit['tree']['sha']+'?recursive=1')
 assert not tree['truncated']
 entries={row['path']:row for row in tree['tree']}
+# One bounded source archive replaces hundreds of per-blob API calls.
+archive_command=subprocess.Popen(['gh','api',REPO+'/zipball/'+actual],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+archive_bytes=archive_command.stdout.read(64*1024*1024+1)
+if len(archive_bytes)>64*1024*1024:
+    archive_command.kill();archive_command.wait()
+    raise RuntimeError('Recovery source archive exceeds the 64 MiB bound')
+error=archive_command.stderr.read();assert archive_command.wait()==0,error.decode(errors='replace')
+archive=zipfile.ZipFile(io.BytesIO(archive_bytes));archive_entries={}
+roots=set()
+for item in archive.infolist():
+    if item.is_dir():continue
+    prefix,name=item.filename.split('/',1);roots.add(prefix)
+    assert name not in archive_entries
+    archive_entries[name]=item
+assert len(roots)==1
+
 def blob(name):
     entry=entries[name];assert entry['type']=='blob'
-    data=api('/git/blobs/'+entry['sha']);assert data['encoding']=='base64'
-    raw=base64.b64decode(data['content'])
+    item=archive_entries[name];assert item.file_size<=4*1024*1024
+    raw=archive.read(item);assert len(raw)==item.file_size
     assert hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==entry['sha']
     return raw
+
 maps=[]
 for publisher in sorted(entries):
     if publisher.startswith('scripts/roadmap-recovery/publish-') and publisher.endswith('-checkpoint.py'):

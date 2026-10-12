@@ -1,0 +1,14 @@
+{
+  "head": "857cd5d2ee09f52cef2d6cb9fc33fd904a14d9c6",
+  "base": "d240231c5dd33e83ecdd5bf3df06715a0e279768",
+  "branch": "ownership-evidence-device-output-bounds",
+  "unchangedNativeTree": "86c6fc2182128bc889a32928c2119f1dc9cac419",
+  "sourceHashes": {
+    "runtime/fwp_rt_kernel.c": "1a7319ebe3eb5f213f73b68516f4781f42ece070eeadfd119220e2618399eb2a",
+    "src/numerics.rs": "5e6ca8aa0b716832409ed01a3946949e28e5eb607d8099bbf3ab3dbb94dbda1e",
+    "tests/device_bounds.rs": "e3ea1077dd7a114c6f70f8adb39ed93e2b1dc486a98a46c6822e2bc4c3feef0b",
+    "tests/fixtures/device_bounds_probe.c": "bd770db622c8557e52d2b74a45a02f69448f23a3e053d4cd5b71e4e50eb8c3da",
+    ".github/workflows/device-output-bounds-evidence.yml": "9f4ff304f1f4f87f842df693a66d190040fda7f95bbfc2fc9fa525ea0538aaf0"
+  },
+  "stage": "Device output and workspace guards published; controls pending"
+}

@@ -6,7 +6,7 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `47d71b6598f1e8d08842075f7a9370db89cea213` passes audit38185353180
+checkpoint `d1c7a4f4bd02e50b6465813f2a59f25cdb861b4c` passes audit38186237805
 and retains the latest AD/input and callback diagnostic sources. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
 Git blob hashes using restore-roadmap-recovery.py. Actual runner restoration passes in38185353180:365 temporary targets and
@@ -70,8 +70,8 @@ Production head is `3aae99bfa705e26babc2cf251b0e583dfd95cf38`, complete tree
 verified ownership export: the default artifact directory is a separate
 subdirectory and the source bytes are checked after copying. Both default and
 explicit artifact paths pass on Linux/ARM/Intel in38184029472 at647d45ca45a76f46aaa22d0901d7fd3ea7949220.
-Full CI38184549852 passes bench; Linux and Intel regular and ARM GC run, while
-ARM regular and Intel GC are queued. Roadmap_docs38184549850 passes at the
+Full CI38184549852 passes bench, ARM regular and both GC jobs; Linux and
+Intel regular remain running. Roadmap_docs38184549850 passes at the
 repaired head. Require all seven exact-head gates before squash.
 Receipt: fwp-codec-copy-production-publication.json. The earlier d5 full matrix
 38180852377 fails regular ARM because copying the fixture onto itself empties
@@ -333,3 +333,25 @@ bundle combines this fix with buffer/array/bump bounds and Node24 actions;
 PR124's current head remains frozen. Future finalizer pins all three passing
 kernel jobs and retains array/kernel controls; metadata exports are separate
 from binary artifacts to keep local downloads bounded.
+
+A bounded archive-based recovery refinement is prepared to replace hundreds of
+per-blob API requests with one immutable source archive. Each restored source
+still requires its Git blob hash, temporary-path checks and size limits. The
+original runner restoration proof above remains valid for its tested version;
+the refined restorer and validator require a fresh checkpoint audit before
+claiming that the faster path is verified.
+
+The kernel constant-word refinement at d240231c5dd33e83ecdd5bf3df06715a0e279768
+passes all three platform preflights in38186836622, including exact F64 bytes,
+stack subtraction and omitted decoder controls. Native compiler flags do not
+disable strict aliasing; the candidate reads V words through the existing
+memcpy bit decoder. No timing or new GPU hardware claim follows.
+
+Device allocation guards are prepared at857cd5d2ee09f52cef2d6cb9fc33fd904a14d9c6
+on ownership-evidence-device-output-bounds. Positive output counts are checked
+before multiplication/allocation; malformed code and input-length errors remain
+first, and the temporary input table is released on the new trap. Workspace
+size is checked after input validation in both implementations. Raw-interpreter,
+O1/O2, GC/reuse, bounded allocation and omitted guard/cleanup controls are pending
+on Linux/ARM/Intel. Include only passing candidates in the next finite-review
+bundle; current PR124 remains frozen. Receipt: fwp-device-bounds-publication.json.
