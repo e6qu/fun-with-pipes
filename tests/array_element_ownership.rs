@@ -318,7 +318,11 @@ int main(void) {
                 call.contains("NULL, NULL,"),
                 "scalar set counts elements: {call}"
             );
-            let drop = call.rsplit(", ").next().unwrap().trim_end_matches(')');
+            let mut arguments = call.rsplit(", ");
+            let descriptor = arguments.next().unwrap().trim_end_matches(')');
+            assert!(descriptor.starts_with("&d"), "missing element descriptor: {call}");
+            let drop = arguments.next().unwrap();
+            assert!(drop.starts_with("fwp_drop") || drop == "fwp_rc_drop", "missing array release: {call}");
             probe = probe.replace("DROP_ARRAY", drop);
         }
     }

@@ -34,8 +34,13 @@ jobs:
           cp src/cgen.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/cgen.formatted.rs"
           cargo clippy --lib -- -D warnings
           cargo test --lib
-          cargo test --test array_element_ownership --test array_size_limits --test kernel_stack_bounds --test device_bounds --test worker_boxing_ownership --test worker_preparation_ownership --test numerics --test golden_check --no-fail-fast -- --nocapture
-          python3 scripts/measure-packed-numeric-arrays.py
+      - name: Original ownership and allocation boundary controls
+        run: cargo test --test array_element_ownership --test array_size_limits --test kernel_stack_bounds --test device_bounds --test worker_boxing_ownership --test worker_preparation_ownership --test numerics --test golden_check --no-fail-fast -- --nocapture
+      - name: Exact packed bytes and raw native mode comparisons
+        if: ${{ !cancelled() }}
+        env:
+          FWP_NUMERIC_LAYOUT_ARTIFACTS: ${{ runner.temp }}/numeric-layout-baseline
+        run: python3 scripts/measure-packed-numeric-arrays.py
       - uses: actions/upload-artifact@v7
         if: always()
         with:
