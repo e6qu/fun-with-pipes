@@ -121,7 +121,7 @@ int main(void) {
         .replace("fwp_cleanup_pop(&retaining_cleanup);", "");
     let control = runtime.replacen(retaining, &old, 1);
     let start = emitted
-        .find(&format!("static fwp_r2 w{repeat}(V l0) {{"))
+        .find(&format!("static fwp_wr{repeat} w{repeat}(V l0) {{"))
         .unwrap();
     let end = start + emitted[start..].find("\n}").unwrap() + 2;
     let worker = &emitted[start..end];

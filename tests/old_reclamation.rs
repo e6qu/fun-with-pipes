@@ -56,14 +56,10 @@ main = [
         .lines()
         .find(|line| line.contains("return fwp_p_array_set_typed(l"))
         .expect("missing typed array wrapper");
-    let drop_array = call
-        .split(';')
-        .next()
-        .unwrap()
-        .rsplit(", ")
-        .next()
-        .unwrap()
-        .trim_end_matches(')');
+    let arguments = call.split(';').next().unwrap();
+    let mut arguments = arguments.rsplit(", ");
+    let element = arguments.next().unwrap().trim_end_matches(')');
+    let drop_array = arguments.next().unwrap();
     let mut drop_leaf = None;
     let mut drop_box = None;
     let mut drop_map = None;
@@ -111,7 +107,7 @@ int main(void) {
     capture->fn = 0; capture->n = 1;
     capture->a[0] = fwp_rc_fresh(fwp_cstr("capture"));
     old_roots[3] = fwp_rc_fresh(PTR(capture));
-    old_roots[4] = fwp_array_typed_new(2);
+    old_roots[4] = fwp_array_typed_new(2, ARRAY_ELEMENT);
     ARR(old_roots[4])->d[0] = fwp_rc_fresh(fwp_cstr("array zero"));
     ARR(old_roots[4])->d[1] = fwp_rc_fresh(fwp_cstr("array one"));
     old_roots[5] = fwp_map_typed_new(1);
@@ -164,6 +160,7 @@ int main(void) {
 "#.replace("DROP_LEAF", drop_leaf)
         .replace("DROP_BOX", drop_box.expect("missing actual Box destructor"))
         .replace("DROP_ARRAY", drop_array)
+        .replace("ARRAY_ELEMENT", element)
         .replace("DROP_MAP", drop_map.expect("missing actual Map destructor"));
     let runtime = emitted.replace(
         "int main(int argc, char **argv)",
