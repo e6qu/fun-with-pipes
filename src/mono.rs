@@ -442,7 +442,7 @@ impl<'a> Mono<'a> {
             ty,
             Body::Expr(Expr::Const(Value::unit())),
         );
-        if b.name.starts_with("std::iter.") {
+        if b.name.starts_with("std::iter.") || b.name == "std::matmul" {
             self.prog.std_names.insert(id, b.name.clone());
         }
         self.instances.insert(k, id);
@@ -1307,6 +1307,13 @@ impl<'a> Mono<'a> {
                 abi,
                 variadic,
             } => {
+                if abi != "C" && matches!(symbol.as_str(), "matrix._valid-f64" | "matrix._mul-f64")
+                {
+                    return Err(Diagnostic::error(
+                        e.span,
+                        "matrix specialization primitives are compiler-internal",
+                    ));
+                }
                 let mt = self.node_mt(e.id, s);
                 let id = if abi == "C" {
                     self.c_instance(&inst.target, symbol, *variadic, mt)
@@ -1662,6 +1669,8 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
     crate::resource::preserve_frames(&mut prog);
     check(&prog, "resource frames");
     if std::env::var("FWP_NO_OPT").is_err() {
+        crate::fuse::specialize_matrices(&mut prog);
+        check(&prog, "matrix specialization");
         crate::opt::optimize(&mut prog);
         check(&prog, "optimizing");
         crate::opt::specialize_hofs(&mut prog);

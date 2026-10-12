@@ -28,13 +28,16 @@ typedef struct {
     int live;
     int64_t leaves, len, cap;
     int32_t *pa, *pb;
-    double *da, *db;
+    double *da, *db, *adj;
+    int64_t adjcap;
     fwp_tape_scope *scope;
     int32_t scope_prev, scope_next;
 } fwp_tape;
 
 static fwp_tape *fwp_tapes = 0;
 static int64_t fwp_ntapes = 0;
+static void fwp_tape_retire(fwp_tape *t);
+static void fwp_tape_finish(void);
 
 /* Slot indices remain stable when the tape registry reallocates. */
 static void fwp_tape_unlink_scope(fwp_tape *t) {
@@ -52,10 +55,7 @@ static void fwp_tape_scope_release(void *arg) {
     while (scope->head >= 0) {
         fwp_tape *t = &fwp_tapes[scope->head];
         fwp_tape_unlink_scope(t);
-        t->live = 0;
-        free(t->pa);free(t->pb);free(t->da);free(t->db);
-        t->pa = t->pb = 0;t->da = t->db = 0;
-        t->len = t->cap = t->leaves = 0;
+        fwp_tape_retire(t);
     }
 }
 
@@ -105,16 +105,65 @@ static const char *FWP_AD_INVALID_NODE = "autodiff: invalid node index";
 typedef struct {
     int32_t *pa, *pb;
     double *da, *db, *adj;
+    int64_t cap, adjcap;
 } fwp_tape_buffers;
 
-static void fwp_tape_buffers_release(void *arg) {
-    fwp_tape_buffers *b = (fwp_tape_buffers *)arg;
+/* A single detached owner bounds idle memory even across many tape slots. */
+#define FWP_AD_WORKSPACE_BUDGET ((size_t)512 * 1024)
+static fwp_tape_buffers fwp_tape_workspace;
+static size_t fwp_tape_cached_bytes;
+static int fwp_tape_workspace_enabled(void) {
+    const char *setting = getenv("FWP_AD_WORKSPACE");
+    return !setting || strcmp(setting, "0") != 0;
+}
+static void fwp_tape_buffers_dispose(fwp_tape_buffers *b) {
     free(b->pa);
     free(b->pb);
     free(b->da);
     free(b->db);
     free(b->adj);
+    memset(b, 0, sizeof *b);
 }
+static size_t fwp_tape_workspace_size(const fwp_tape_buffers *b) {
+    if (b->cap < 0 || b->adjcap < 0 || (uint64_t)b->cap > FWP_AD_WORKSPACE_BUDGET / 24) return SIZE_MAX;
+    size_t nodes = (size_t)b->cap * 24;
+    if ((uint64_t)b->adjcap > (FWP_AD_WORKSPACE_BUDGET - nodes) / sizeof(double)) return SIZE_MAX;
+    return nodes + (size_t)b->adjcap * sizeof(double);
+}
+static void fwp_tape_buffers_release(void *arg) {
+    fwp_tape_buffers *b = (fwp_tape_buffers *)arg;
+    size_t bytes = fwp_tape_workspace_size(b);
+    if (fwp_tape_workspace_enabled() && bytes && bytes <= FWP_AD_WORKSPACE_BUDGET) {
+        fwp_tape_buffers_dispose(&fwp_tape_workspace);
+        fwp_tape_workspace = *b;
+        fwp_tape_cached_bytes = bytes;
+        memset(b, 0, sizeof *b);
+    } else fwp_tape_buffers_dispose(b);
+}
+static void fwp_tape_retire(fwp_tape *t) {
+    fwp_tape_buffers buffers = {t->pa, t->pb, t->da, t->db, t->adj, t->cap, t->adjcap};
+    t->pa = t->pb = 0;t->da = t->db = t->adj = 0;
+    t->live = 0;t->len = t->cap = t->leaves = t->adjcap = 0;
+    fwp_tape_buffers_release(&buffers);
+}
+static void fwp_tape_finish(void) {
+    /* Shutdown releases both the bounded cache and unscoped live tapes. */
+    fwp_tape_buffers_dispose(&fwp_tape_workspace);fwp_tape_cached_bytes = 0;
+    for (int64_t i = 0; i < fwp_ntapes; i++) {
+        fwp_tape *t = &fwp_tapes[i];
+        fwp_tape_buffers buffers = {t->pa, t->pb, t->da, t->db, t->adj, t->cap, t->adjcap};
+        fwp_tape_buffers_dispose(&buffers);
+    }
+    free(fwp_tapes);fwp_tapes = 0;fwp_ntapes = 0;
+}
+
+#ifdef FWP_LIBRARY
+/* Private tape buffers have library lifetime, including GC-disabled libraries.
+ * An explicit unload hook avoids keeping a separate process-exit owner. */
+static void __attribute__((destructor)) fwp_tape_library_finish(void) {
+    fwp_tape_finish();
+}
+#endif
 
 static void *fwp_k_malloc(size_t n) {
     void *p = malloc(n ? n : 1);
@@ -133,37 +182,72 @@ static fwp_tape *fwp_tape_of(int64_t id) {
     return &fwp_tapes[slot];
 }
 
+/* Match Rust Vec's byte bound, independently of native pointer width. */
+static int64_t fwp_tape_limit(void) {
+    size_t limit = (size_t)PTRDIFF_MAX / sizeof(double);
+    return limit < (size_t)INT32_MAX ? (int64_t)limit : INT32_MAX;
+}
+
 static void fwp_tape_reserve(fwp_tape *t, int64_t n) {
+    int64_t limit = fwp_tape_limit();
+    if (n < 0 || n > limit) fwp_trap("autodiff: the tape is full");
     if (n <= t->cap) return;
-    int64_t cap = t->cap ? t->cap : 64;
-    while (cap < n) cap *= 2;
-    t->pa = (int32_t *)realloc(t->pa, (size_t)cap * sizeof(int32_t));
-    t->pb = (int32_t *)realloc(t->pb, (size_t)cap * sizeof(int32_t));
-    t->da = (double *)realloc(t->da, (size_t)cap * sizeof(double));
-    t->db = (double *)realloc(t->db, (size_t)cap * sizeof(double));
-    if (!t->pa || !t->pb || !t->da || !t->db) {
-        fprintf(stderr, "fwp: out of memory\n");
-        exit(102);
-    }
+    int64_t cap = t->cap ? t->cap : (limit < 64 ? limit : 64);
+    while (cap < n) cap = cap > limit / 2 ? limit : cap * 2;
+    /* Commit each successful realloc; a failed call still owns the old buffer. */
+    void *next = realloc(t->pa, (size_t)cap * sizeof(int32_t));
+    if (!next) goto oom;
+    t->pa = (int32_t *)next;
+    next = realloc(t->pb, (size_t)cap * sizeof(int32_t));
+    if (!next) goto oom;
+    t->pb = (int32_t *)next;
+    next = realloc(t->da, (size_t)cap * sizeof(double));
+    if (!next) goto oom;
+    t->da = (double *)next;
+    next = realloc(t->db, (size_t)cap * sizeof(double));
+    if (!next) goto oom;
+    t->db = (double *)next;
     t->cap = cap;
+    return;
+oom:
+    fwp_tape_unlink_scope(t);
+    free(t->pa);free(t->pb);free(t->da);free(t->db);free(t->adj);
+    t->pa = t->pb = 0;t->da = t->db = t->adj = 0;
+    t->live = 0;t->len = t->cap = t->leaves = t->adjcap = 0;
+    fprintf(stderr, "fwp: out of memory\n");
+    exit(102);
 }
 
 static V fwp_p_ad_tape(V nv) {
     int64_t n = (int64_t)nv;
-    if (n < 0 || n > INT32_MAX) fwp_trap("autodiff: too many inputs");
+    if (n < 0 || n > fwp_tape_limit()) fwp_trap("autodiff: too many inputs");
+#ifndef FWP_LIBRARY
+    static int registered_finish;
+    if (!registered_finish) {
+        if (atexit(fwp_tape_finish)) { fprintf(stderr, "fwp: out of memory\n");exit(102); }
+        registered_finish = 1;
+    }
+#endif
     int64_t slot = 0;
     while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;
     if (slot == fwp_ntapes) {
         if (fwp_ntapes >= 0xffff) fwp_trap("autodiff: too many grad computations at once");
-        fwp_tapes = (fwp_tape *)realloc(fwp_tapes, (size_t)(fwp_ntapes + 1) * sizeof(fwp_tape));
-        if (!fwp_tapes) {
+        fwp_tape *next = (fwp_tape *)realloc(fwp_tapes, (size_t)(fwp_ntapes + 1) * sizeof(fwp_tape));
+        if (!next) {
             fprintf(stderr, "fwp: out of memory\n");
             exit(102);
         }
+        fwp_tapes = next;
         memset(&fwp_tapes[fwp_ntapes], 0, sizeof(fwp_tape));
         fwp_ntapes++;
     }
     fwp_tape *t = &fwp_tapes[slot];
+    if (fwp_tape_workspace_enabled() && fwp_tape_cached_bytes) {
+        t->pa = fwp_tape_workspace.pa;t->pb = fwp_tape_workspace.pb;
+        t->da = fwp_tape_workspace.da;t->db = fwp_tape_workspace.db;t->adj = fwp_tape_workspace.adj;
+        t->cap = fwp_tape_workspace.cap;t->adjcap = fwp_tape_workspace.adjcap;
+        memset(&fwp_tape_workspace, 0, sizeof fwp_tape_workspace);fwp_tape_cached_bytes = 0;
+    }
     t->gen++;
     t->live = 1;
     t->leaves = n;
@@ -196,7 +280,7 @@ static V fwp_p_ad_push(V tup) {
     int64_t id = ra >> 32;
     fwp_tape *t = fwp_tape_of(id);
     int64_t idx = t->len;
-    if (idx >= INT32_MAX) fwp_trap("autodiff: the tape is full");
+    if (idx >= fwp_tape_limit()) fwp_trap("autodiff: the tape is full");
     if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))
         fwp_trap(FWP_AD_INVALID_NODE);
     fwp_tape_reserve(t, idx + 1);
@@ -216,19 +300,26 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     fwp_tape tp = *t;
     t->live = 0;
     t->pa = t->pb = 0;
-    t->da = t->db = 0;
-    t->len = t->cap = t->leaves = 0;
-    fwp_tape_buffers buffers = {tp.pa, tp.pb, tp.da, tp.db, 0};
+    t->da = t->db = t->adj = 0;
+    t->len = t->cap = t->leaves = t->adjcap = 0;
+    fwp_tape_buffers buffers = {tp.pa, tp.pb, tp.da, tp.db, tp.adj, tp.cap, tp.adjcap};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tape_buffers_release, &buffers);
-    double *adj = (double *)calloc((size_t)(tp.len ? tp.len : 1), sizeof(double));
-    buffers.adj = adj;
+    int64_t needed = tp.len ? tp.len : 1;
+    double *adj = buffers.adj;
+    if (buffers.adjcap < needed) {
+        int64_t capacity = tp.cap > needed ? tp.cap : needed;
+        adj = buffers.adj ? (double *)realloc(buffers.adj, (size_t)capacity * sizeof(double))
+                          : (double *)calloc((size_t)capacity, sizeof(double));
+        if (adj) { buffers.adj = adj;buffers.adjcap = capacity; }
+    }
     if (!adj) {
         fwp_cleanup_pop(&cleanup);
         fwp_tape_buffers_release(&buffers);
         fprintf(stderr, "fwp: out of memory\n");
         exit(102);
     }
+    memset(adj, 0, (size_t)needed * sizeof(double));
     size_t no = fwp_array_len(outs), ns = fwp_array_len(seeds), m = no < ns ? no : ns;
     for (size_t i = 0; i < m; i++) {
         int64_t o = (int64_t)fwp_array_load(outs, i, NULL);
@@ -763,3 +854,47 @@ static V fwp_p_gpu_run(V src, V nv, V consts, V inputs) {
 }
 
 #endif
+
+/* F64 matrix fast path: exact shape guards preserve cast/malformed fallback. */
+/* Three 32-by-32 F64 tile payloads occupy 24 KiB. */
+#define FWP_MATRIX_TILE 32
+static V fwp_p_matrix_valid_f64(V mv,V kv,V brv,V nv,V left,V right) {
+    int64_t m=(int64_t)mv,k=(int64_t)kv,br=(int64_t)brv,n=(int64_t)nv;
+    if(m<0 || k<0 || br!=k || n<0 || (uint64_t)m>SIZE_MAX || (uint64_t)k>SIZE_MAX || (uint64_t)n>SIZE_MAX)return FWP_FALSE;
+    uint64_t rows=(uint64_t)m,inner=(uint64_t)k,cols=(uint64_t)n;
+    uint64_t limit=(SIZE_MAX-sizeof(fwp_arr))/sizeof(V);
+    if((inner && rows>limit/inner) || (cols && inner>limit/cols) || (cols && rows>limit/cols))return FWP_FALSE;
+    return (fwp_array_len(left)==rows*inner && fwp_array_len(right)==inner*cols) ? FWP_TRUE : FWP_FALSE;
+}
+static void fwp_matrix_output_release(void *arg) { fwp_rc_free_arr(*(V *)arg); }
+static V fwp_p_matrix_mul_f64(V mv,V kv,V nv,V left,V right) {
+    /* The compiler calls this only after the shape predicate succeeds. */
+    size_t m=(size_t)mv,k=(size_t)kv,n=(size_t)nv;const fwp_desc scalar={.kind=K_F64};
+    V result=fwp_array_typed_new(m*n,&scalar);
+    fwp_cleanup cleanup;fwp_cleanup_push(&cleanup,fwp_matrix_output_release,&result);
+    /* F64 occupies eight bytes in both packed and word arrays. Resolve views
+     * once, and use memcpy loads to preserve C aliasing and alignment rules.
+     * Only the fresh output is restrict-qualified: inputs may share backing. */
+    const unsigned char *a=fwp_array_data(left),*b=fwp_array_data(right);
+    unsigned char *restrict out=(unsigned char *)(uintptr_t)result+sizeof(fwp_arr);
+    memset(out,0,m*n*sizeof(double));
+    for(size_t ib=0;n && k && ib<m;ib+=FWP_MATRIX_TILE){
+        size_t ie=m-ib<FWP_MATRIX_TILE?m:ib+FWP_MATRIX_TILE;
+        for(size_t kb=0;kb<k;kb+=FWP_MATRIX_TILE){
+            size_t ke=k-kb<FWP_MATRIX_TILE?k:kb+FWP_MATRIX_TILE;FWP_TICK();
+            for(size_t jb=0;jb<n;jb+=FWP_MATRIX_TILE){
+                size_t je=n-jb<FWP_MATRIX_TILE?n:jb+FWP_MATRIX_TILE;
+                for(size_t i=ib;i<ie;i++)for(size_t q=kb;q<ke;q++){
+                    double x;memcpy(&x,a+(i*k+q)*sizeof(double),sizeof x);
+                    for(size_t j=jb;j<je;j++){
+                        double y,prior;memcpy(&y,b+(q*n+j)*sizeof(double),sizeof y);
+                        memcpy(&prior,out+(i*n+j)*sizeof(double),sizeof prior);
+                        double product=x*y,value=product+prior;
+                        memcpy(out+(i*n+j)*sizeof(double),&value,sizeof value);
+                    }
+                }
+            }
+        }
+    }
+    fwp_cleanup_pop(&cleanup);FWP_KEEP_ALIVE(left);FWP_KEEP_ALIVE(right);return result;
+}

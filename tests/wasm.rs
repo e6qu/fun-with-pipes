@@ -484,3 +484,52 @@ fn tasks_with_asyncify() {
     assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
     let _ = std::fs::remove_dir_all(&tmp);
 }
+
+#[test]
+fn autodiff_capacity_bounds_precede_actual_wasm32_allocation() {
+    let ready = available();
+    if std::env::var_os("FWP_REQUIRE_WASI_COUNTS").is_some() {
+        assert!(
+            ready,
+            "WASI autodiff controls require the actual wasm32 toolchain and node"
+        );
+    }
+    if !ready {
+        return;
+    }
+    let tmp = std::env::temp_dir().join(format!("fwp-wasi-ad-capacity-{}", std::process::id()));
+    std::fs::create_dir(&tmp).unwrap();
+    for (label, operation) in [
+        ("byte-bound", "add 268435456"),
+        ("positive-narrowing", "add 4294967296"),
+        ("negative", "sub 1"),
+    ] {
+        let source = tmp.join(format!("{label}.fwp"));
+        std::fs::write(
+            &source,
+            format!("main = read-all () | string.length | {operation} | ad.tape | echo\n"),
+        )
+        .unwrap();
+        for opt in ["-O1", "-O2"] {
+            let wasm = tmp.join(format!("{label}{opt}.wasm"));
+            let build = Command::new(fwp())
+                .args(["build", "--target", "wasm32-wasi", opt])
+                .arg(&source)
+                .arg("-o")
+                .arg(&wasm)
+                .output()
+                .unwrap();
+            assert!(
+                build.status.success(),
+                "{label} {opt}: {}",
+                String::from_utf8_lossy(&build.stderr)
+            );
+            assert_eq!(
+                run_wasi(&wasm, &[]),
+                "--- stderr\nfwp: trap: autodiff: too many inputs\n--- exit 101\n",
+                "{label} {opt}"
+            );
+        }
+    }
+    std::fs::remove_dir_all(tmp).unwrap();
+}

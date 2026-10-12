@@ -342,6 +342,32 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
   timers do not establish an order between independent effects. Use channels
   or awaits when output order matters.
 
+## Numerical specialization
+
+Pure, terminating numeric Array map/fold/length pipelines use a single loop
+when their traps can be interleaved without changing observable behavior.
+The loop starts from flat state fields; scalar array lookups use a tag and
+payload without allocating Some. Record fields passed to borrowing operations
+stay borrowed through their parent owner, including later argument evaluation.
+Lookup lowering preserves original IR nodes because loop tails and unwind
+liveness refer to those nodes.
+
+Canonical F64 matmul checks runtime dimensions and array lengths once. Valid
+shapes use32-element blocked loops over contiguous numeric data, with one fresh
+output and borrowed inputs. Loads/stores preserve C aliasing rules and support
+views and shared backing. Each output accumulates in ascending inner-index order,
+with multiplication followed by addition and contraction disabled. matrix.cast
+can preserve inconsistent runtime fields; those values retain the library's
+existing list/chunk/zip semantics. Compiler-internal matrix primitives cannot be
+called through source foreign declarations.
+
+AD tape capacity is limited before allocation by the signed vertex index and
+native address width. Native and interpreter runtimes may retain one detached
+workspace up to512KiB; oversized buffers are released. Reuse clears adjoints and
+retains generation/token validation. Scope exit, traps, cancellation and library
+unload retire owners. Cold/warm allocation and native/WASI boundary controls
+cover the private buffers separately from the managed result array.
+
 ## Executables and the pipe protocol
 
 Each exported function can be built as its own executable. Arguments fill

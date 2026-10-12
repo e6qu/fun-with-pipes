@@ -6,10 +6,10 @@ run. The library itself is listed in [stdlib.md](stdlib.md) (sections
 and [tutorial 20](tutorials/20-autodiff-and-devices/README.md) introduce
 it.
 
-After runtime ownership reaches its exit gates, [../PLAN.md](../PLAN.md)
-prioritizes typed contiguous numeric storage and views, tape cleanup on
-failure/cancellation and capacity reuse, fused gradient kernels, and blocked
-matrix multiplication.
+Runtime ownership and natural-width numeric storage are accepted. The active
+work in [../PLAN.md](../PLAN.md) is numerical loop fusion, blocked matrix
+multiplication and bounded autodiff workspace reuse, followed by broader
+performance evidence and optional tracing-free execution.
 [ownership.md](ownership.md) records the representation and floating-point
 contract; [development-state.md](development-state.md) records current evidence.
 
@@ -73,7 +73,8 @@ in growable arrays of numbers. A `Rev` value refers to its node as
 on constants records nothing); `ad.backward` seeds the outputs, visits the
 nodes from the last to the first, adds `adjoint × partial` to each parent
 (skipping nodes whose adjoint is zero), returns the adjoints of the inputs
-and frees the tape. The order of these additions is the same in both
+and retires the tape. Its detached capacity may be reused within the bounded
+workspace described below. The order of these additions is the same in both
 backends, so gradients agree bit for bit. Tapes are independent, so
 tasks can differentiate concurrently.
 
@@ -102,8 +103,11 @@ Native scopes use stack owners and stable slot links in each task's cleanup chai
 interpreter scopes use RAII. Borrowed inputs require Dup. Public grad/vjp types
 remain unchanged; direct arguments and projection inside the grad callback avoid
 wrapper allocations. [Allocation validation](#scoped-gradient-allocation-validation)
-records the complete counters and limits. Capacity reuse and gradient kernel
-optimization remain later-phase work; no tracing-free support is claimed.
+records the complete counters and limits. A single detached workspace may retain
+at most 512 KiB of numeric buffers. Reuse zeroes adjoints and preserves stale-token
+checks; oversized capacity is released. FWP_AD_WORKSPACE=0 disables this cache
+for comparison. Native library unload releases both live and cached tape owners.
+No tracing-free support is claimed.
 
 Historical timing samples are preserved in
 [the benchmark history](roadmap-history.md#archived-numerics-timing-samples).
@@ -233,3 +237,28 @@ signatures stay intact; borrowed scoped inputs require Dup, and affine File
 rejection, input aliases and tape cleanup controls pass. [The handoff](development-state.md)
 records measured source identities and passing production gates. No timing gain or tracing-free
 support is established, and earlier partial counters do not prove allocation parity.
+
+## Numerical kernel measurements
+
+The phase4 preparation compares identical array and matrix computations in C,
+Rust and generated fwp code on Linux and ARM/Intel macOS. The retained
+[measurement record](measurements/numerical-kernels-2026-10-12.json) includes
+source hashes, hardware, compiler versions, build flags, samples, allocations,
+reference counts, live memory, collection counts and process RSS. Raw reports
+and uninstrumented disassembly are artifacts of the linked runner execution.
+Run the Numerical kernel evidence workflow manually to regenerate the same
+controls on GitHub runners; no local full benchmark run is required.
+
+Timings use separate uninstrumented binaries. Array kernel time consumes and
+releases an existing input; matrix kernel time excludes output allocation and
+zeroing. Allocation-inclusive time covers construction, computation and cleanup.
+C/Rust report allocator payload; fwp reports requested and charged storage,
+with allocator metadata excluded from charged bytes. Reserved virtual address
+space and process RSS are separate metrics. Shared-runner timing is descriptive;
+CI asserts exact results and stable allocation properties.
+
+The fused array kernel allocates no intermediates but still retains/releases
+its carried array once per element. Matrix multiplication allocates one output;
+the benchmark's public generic input boundary also builds two Matrix records.
+These remaining costs are explicit targets for phase5. Neither zero intermediate
+allocations nor vector instructions alone establish C/Rust speed parity.

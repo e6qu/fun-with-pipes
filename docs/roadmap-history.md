@@ -1780,3 +1780,309 @@ retain stable anchor names; old pending statuses and next actions are superseded
 
 [Archived evidence](https://github.com/e6qu/fun-with-pipes/blob/b61cde67f467fc67d672b1d0efd3c0cf59a3acad/docs/roadmap-history.md#verified-pr125-preparation).
 
+
+
+## Accepted phase3 numeric representation
+
+## Main and next delivery
+
+Main is `cbf68ea60c3b9439a117ef9d9b28b472f23dc632` (PR #125). Exact head
+`37e94c1efa1bb99e955d026b8dde46dfe632e972` passes all six jobs in CI38190218968 and roadmap_docs38190218974
+before squash at 2026-10-12T02:13:11Z. The one-line subject `Check ownership fallbacks and allocation boundaries`
+has 51 characters and no body, trailers or attribution.
+One parent `3598a675b5bd9ad2e22ac17d42a27a89ea74fdeb` and complete tree `07fe7b60a473f8c5ae6b7aede7678ff7fb17906a` are verified
+against the signed commit payload and tested tree. Actual merged-source
+acceptance passes runner38194948983 at driverc65aee1c1e5324107972a106c7e95220d55bf9ea.
+Reports are retained in /private/tmp/fwp-accepted-phase2-source. Local main stays
+68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4; no local compiled checks or fast-forward ran.
+
+## Current verified coverage
+
+Phase2 is complete for the documented compatibility model. All375 declarations
+are inventoried:168 contracts,19 IR combinators,11 flat signatures and177
+explicit fallback declarations covering167 runtime symbols. The actual merged
+source verifies argument/result/callback, retention, teardown and cycle policies.
+Tracing remains required for unmodeled graphs and unreachable shared cycles;
+this acceptance does not establish tracing-free execution.
+
+Buffer growth/allocation failure, array sizes, bump initialization/alignment,
+kernel stack and constant decoding, and device output/workspace bounds pass
+original semantic, binary, sanitizer, omission, GC and reuse controls. Interpreter
+and native paths preserve checked arithmetic and observable validation/trap order.
+Node24 CI actions and current documentation pass final production gates.
+Earlier resource/State/AD allocation profiles and immutable queue anchors stay
+in history; no new timing or GPU hardware claim follows.
+
+## Remaining ownership deliveries
+
+Queue33 and35–112 are accepted;34 is a verified duplicate. No resource ownership
+preparation remains open. Phase6 still requires tracing-free eligibility and a
+supported cycle policy; retain explicit compatibility fallbacks until then.
+
+## Numeric representation baseline
+
+Three-platform runner38191886880 passes at2592570aa44b8dc41674238c405e19b33b7e9550
+with native source37e94c1, whose full tree matches accepted PR125. Each257-element
+I8/U8/I16/U16/I32/U32/F32/F64 array requests2064 header/payload bytes: an8-byte
+header and8-byte elements. Exact signed/unsigned extension and negative-zero
+bits pass. Diagnostic no-inline assembly shows three-F64 record workers return
+through caller storage on both Macs; scalar V bridges use integer words.
+This records representation and ABI, without a timing or total-live-memory claim.
+Source, byte controls and assembly remain in fwp-numeric-layout-baseline-evidence.
+Initial workflow26814b6 failed validation before jobs; moving runner.temp from
+job env to step env fixed it. The final2592570 head passes all three jobs.
+
+Initial views will cover only pointer-free numeric arrays. Pointer-bearing and
+resource arrays retain copied slices until their disposal-order contracts are
+proved. Views must retain backing owners, mask tagged lengths consistently,
+avoid unsafe in-place updates and measure backing retention, not just headers.
+
+## Active numeric representation bundle
+
+Typed worker preparation9fe843746e9dd9a7ebf890caaa58a5b656a46076 passes all three
+jobs in38195896907. Exact floating payloads and original record trap/ownership
+semantics pass. ARM diagnostic assembly returns the three-F64 record in
+FP registers d0/d1/d2; Intel uses caller storage for that24-byte result.
+Diagnostic no-inline calls are separate from production performance; integrated
+controls retain ordinary optimized scalar/record assembly too.
+
+Packed branch ownership-evidence-packed-numeric-arrays is now at
+21117f4971e838cf3ccfcf8aa001be804d16bc44; runner38200555737 passes all three platforms.
+Previous1432b969b0ed1f780ffced363cc646e569bc4869 passes all three platforms in
+38199430982, including packed bytes, original ownership/bounds controls, bit
+bridges, view retention/reclamation and allocator-counter omission controls.
+Reports, actual optimized assembly and hashes are retained in
+/private/tmp/fwp-packed-representation-evidence. Preparation checks do not
+establish full production or phase3 acceptance; main remains PR125.
+
+The8-byte header remains; descriptor-directed I8/U8, I16/U16, I32/U32 and F32
+payloads use1/2/4-byte elements. I64/U64/F64 remain8 bytes. Pointer-bearing
+slices stay copies. Numeric leaf capacity permits array reuse while generic
+record reuse keeps its scanned-slot restriction. Kernel constants now load
+bits with memcpy from both word and actual double-backed storage, preserving
+negative-zero/NaN payloads without effective-type aliasing.
+
+The143 measurements exposed whole-backing retention for tiny slices. The211
+refinement copies slices with payload at most the24-byte view header or less
+than one quarter of the original backing length; larger numeric slices retain
+flat backing owners. Permanent packed_numeric_storage tests cover exact bytes,
+alignment, raw/native immutable operations, typed float payloads, complete
+allocation counters, last-owner release, nested views and small-copy release.
+Packed constructor omission controls exercise widths1/2/4/8. Actual wasm32
+count controls must run on Linux and preserve callback/argument trap order.
+Positive counts saturate at SIZE_MAX before allocation and slice/take bounds.
+All211 refinements pass actual runner controls on all three platforms.
+
+The94d first integration repeated helper insertion, causing C redefinitions.
+The3b original scalar-array probe parsed the descriptor as a release function;
+b66 corrected its lookup while preserving address-shaped scalar-bit controls.
+Both earlier failures are retained; b66 and143 pass all three platforms.
+Source generation starts from a stable typed core and a verified formatted ABI
+source; publish repairs only with an exact branch lease.
+
+Current sources and receipts: fwp-packed-array-runtime-draft,
+fwp-packed-array-original-controls, fwp-packed-array-permanent-controls-publication.json,
+fwp-packed-numeric-storage-test-draft.rs, fwp-packed-wasm-test-draft.rs and
+fwp-packed-array-size-test-draft.rs. Measurement helpers preserve independent
+omission controls and original golden traps. Accepted source provenance is in
+fwp-numeric-representation-accepted-source-manifest.json.
+
+Recovery current-map.json designates the active safe map rather than selecting
+an obsolete map by entry count. The209 runner validates restoration of all111
+temporary targets without executing helpers or the compiler. Historical source,
+assembly and completed proofs remain in immutable checkpoints. A56-MiB inline
+tree request failed without changing the branch; publication now reuses blobs
+and bounds incremental requests. Checkpointb61cde67f467fc67d672b1d0efd3c0cf59a3acad passes audit38200778577
+and retains211 sources plus143 reports; bounded restoration metadata is verified.
+Current finalization and protocol refinements need the next checkpoint.
+
+## Final bundle refinements
+
+Finalization6bf6b1f2a5fb661d180403c22bf5d18ffede5c39 passes Linux runner38201574707:
+formatting, all-target clippy, library and original focused controls, permanent
+storage/ABI/view tests, actual wasm32 counts, protocol tests, primitive/fallback
+coverage and roadmap docs. Runner-formatted production source hashes and reports
+are retained in /private/tmp/fwp-numeric-storage-finalization-export.
+
+Adjacent protocol repairs accept valid zero-byte record collections and check
+allocation/count limits before construction. Rust lengths and constructor tags
+are checked before narrowing to usize. Native array decoding writes directly
+into packed destination storage; its complete allocator control requires one
+request, without a word scratch buffer or intermediate list nodes. Truncated
+numeric payloads, huge counts and omission controls pass under O1/O2 GC stress.
+This focused finalization is not the six-job production merge gate.
+
+Production PR126 is open at916263e7c07443bccd4f87e764ca0c3f33dc664e on
+numeric-storage-and-worker-abi. Roadmap documentation38207662006 passes;
+current CI38207662016 passes bench, regular ARM macOS and both dedicated GC
+stress jobs. Linux and regular Intel macOS remain running. Superseded head8d244fed has the failures below.
+CI38202824347 passes bench and both dedicated GC stress jobs, but Linux and
+regular ARM macOS fail three older generated-C probes. Regular Intel is still
+running. The probes assumed a one-argument array constructor, the previous
+position of the array destructor and fwp_r2 worker results. Focused repair
+f99f0a64e28f780ef61172fbb4b058994e7d89e1 passes runner38207493251, preserving
+all original reclamation, partial-retain unwind, alias and omission controls.
+Runner-formatted repairs are retained in /private/tmp/fwp-pr126-probe-repair-export
+and published to the current PR126 head. All production gates must pass again. Native
+implementation still matches the formatted export; phase3 is not accepted.
+Initial13577c8 docs failed because the archive edit removed the tensor timing
+anchor. The corrected102-KiB index retains383 unique historic heading names,
+selected measurement text and the complete verified b61 snapshot. Superseded
+CI38202469769 was cancelled; it is not a passing gate. Preserve its metadata and
+old docs failure log. Do not change the current PR head merely for status updates;
+keep the live local/recovery handoff current while exact-head gates run.
+
+Require all six current-head jobs and roadmap_docs before squash with the
+explicit subject and empty body. merge-numeric-storage.py verifies those gates,
+raw resulting message, one parent and complete-tree parity. Actual merged-source
+phase3 acceptance remains required after the merge. No new PR is open until then.
+Then deliver phases4–6. Windows/new deployment/backends remain deferred.
+
+## Next concrete action
+
+Monitor CI38207662016 at current head916263e7 and require all six production jobs and roadmap_docs at the repaired head; fix any
+further failures. Then squash with an explicit one-line subject and empty body,
+verify signed commit/tree parity and audit the actual merged source for phase3.
+Continue the independent numeric fusion preparation while CI runs. Open the next
+coherent numerics PR only after PR126 merges; finish phases4–6 without repeating
+already granted publication and merge approval.
+
+
+
+Actual merged-source acceptance:
+
+```json
+{
+  "accepted": "3a4582368f987ddb0233086be50c47995eb4ed3f",
+  "tested": "916263e7c07443bccd4f87e764ca0c3f33dc664e",
+  "tree": "e3e00f4c134a912e73c33c844a1cac17202e5fb4",
+  "mergedAt": "2026-10-12T06:45:18Z",
+  "gates": {
+    "CI": {
+      "run": 38207662016,
+      "jobs": [
+        {
+          "name": "bench",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T05:23:42Z"
+        },
+        {
+          "name": "macos (macos-15)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T05:59:15Z"
+        },
+        {
+          "name": "macos_gc (macos-15)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T05:33:50Z"
+        },
+        {
+          "name": "test",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T06:31:55Z"
+        },
+        {
+          "name": "macos_gc (macos-15-intel)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T05:42:36Z"
+        },
+        {
+          "name": "macos (macos-15-intel)",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T06:34:15Z"
+        }
+      ]
+    },
+    "Roadmap documentation": {
+      "run": 38207662006,
+      "jobs": [
+        {
+          "name": "roadmap_docs",
+          "status": "completed",
+          "conclusion": "success",
+          "completedAt": "2026-10-12T05:22:48Z"
+        }
+      ]
+    }
+  },
+  "sourceHashes": {
+    "src/cgen.rs": "db3e11a468d1482dbcf1d86a7a22764fc878bd179b562e59bbeb4f2b03871da5",
+    "src/proto.rs": "9bae350ca184a5b20fe4dd89a40ae9c15126a2c96f9c287024668ccb23c97e4c",
+    ".github/workflows/ci.yml": "99e8f07d1baf229f0b0dff1572a5d8aadd57c94abc7b7bd0d358d4693224ec2d",
+    "tests/array_element_ownership.rs": "0bd50a3047c7d06662e1ca09ac42cc0b1eb3dd8f7c80b02c970ebffa547f1fbe",
+    "tests/array_size_limits.rs": "2adfccaa902baf8ed20dd672fa30eba5542536fb9420175387d4dc6dac04aabf",
+    "tests/kernel_stack_bounds.rs": "e8dd87d16a0e2b2b46817db465eab32a8715424f8cfca98aa786616454066f99",
+    "tests/fixtures/kernel_stack_probe.c": "dbfa14d954804799226b42c895500f5bb4f9845ab0e3361e0d31236711ce96e0",
+    "tests/packed_numeric_storage.rs": "76dbb534f56b8a475192697279442e47b17e05a154d312ed09c22c2298b4a686",
+    "tests/wasm.rs": "5ceb37dace666ac996640d561278b9a1233b60dc8a5593373a8c2ffd28976ab7",
+    "tests/protocol.rs": "702b2fcbc5a827727e9657a760da17109b6f72cb98b96943759a5ac140a8193b",
+    "tests/fixtures/numeric_layout_baseline.fwp": "85ed14dc2bacb952ad8e1f5e29a4d88b3e442c4daae6f2849303b89042cafe40",
+    "tests/fixtures/packed_numeric_arrays.fwp": "847e850d84c940b137f3a9f6355388cd582a486661df4bfbab3637a9ebd3459b",
+    "tests/fixtures/packed_array_memory_probe.c": "07aae45ec0d50f2cf01d2a59ba8ca66abd460c3d9d5361f94f83160e72e0c005",
+    "tests/fixtures/packed_array_size_probe.c": "c9eaff3b3e20e3a54e9dff0899ac869b51ac06a41be4dae58e6981a0cb1bd909",
+    "tests/fixtures/numeric_layout_probe.c": "894f2adeb9746adfea76ca3fba377b9638d379bc720061b2db342ba59b770be9",
+    "tests/fixtures/protocol_count_probe.c": "f40432c5e6feb8f5121a8b0ccfac63f4e0f01eadfa664a8c68c20238b7c84b33",
+    "tests/run/unboxed_records.fwp": "494283d0a4cb8d4cc9ba8f29441d3ed910e4f01794a7b68746aac76177aed305",
+    "runtime/fwp_rt.c": "4f6e70a6265c4bcf8cbcd28cb897940d6a77c37de0e6e4772a7084bfa64ec97e",
+    "runtime/fwp_rt_gc.c": "3458a76c9326f543376b3afb1a9a540b3be1fc81ca0fcafca331f2e30b7e425d",
+    "runtime/fwp_rt_ops.c": "5a49b59741107a32afc9f14b35dff19588dbb9de17e7eb6debf6f12715b763b3",
+    "runtime/fwp_rt_prims.c": "1c543cc9984d175cdb15fea2fc00f3836bf9e34a7ce4e8c26b98696556246844",
+    "runtime/fwp_rt_num.c": "ff2315ad64d06122ef8731357eaed33a04e640f50229b845730381bf28cbff46",
+    "runtime/fwp_rt_json.c": "7bc6cdba70e8bf373188e0e83cbf04fe58da6fd1014ee203fc8a25cdfacf4914",
+    "runtime/fwp_rt_exec.c": "8dbfa9491f4e0e0040b75b48a07f45fdc06dded79092bf6ad35c28f5d9931fcd",
+    "runtime/fwp_rt_kernel.c": "1ba6fdb71c67cc9e4f6b2e393e0566aab9271b60581314c0e8b32dc596c16c2b",
+    "tests/old_reclamation.rs": "833be818c30f851c35e25ba53654c7e0f6bd758b64d7a683f856b38d3734b3d3",
+    "tests/retain_unwind_ownership.rs": "5b23f8030de393d9c5726d37752bcbd28ac051e7fe9e1b6a7543807b2aa7efde",
+    "tests/unboxed_worker_locals.rs": "5616a0c499d2d19c362109897ea09a6334ffec745e06269829e08f20b7b420cd"
+  },
+  "changedPaths": [
+    ".github/workflows/ci.yml",
+    "CONTRIBUTING.md",
+    "PLAN.md",
+    "docs/design.md",
+    "docs/development-state.md",
+    "docs/numerics.md",
+    "docs/ownership.md",
+    "docs/primitive-ownership.md",
+    "docs/roadmap-history.md",
+    "docs/roadmap-queue.md",
+    "runtime/fwp_rt.c",
+    "runtime/fwp_rt_exec.c",
+    "runtime/fwp_rt_gc.c",
+    "runtime/fwp_rt_json.c",
+    "runtime/fwp_rt_kernel.c",
+    "runtime/fwp_rt_num.c",
+    "runtime/fwp_rt_ops.c",
+    "runtime/fwp_rt_prims.c",
+    "src/cgen.rs",
+    "src/proto.rs",
+    "tests/array_element_ownership.rs",
+    "tests/array_size_limits.rs",
+    "tests/fixtures/kernel_stack_probe.c",
+    "tests/fixtures/numeric_layout_baseline.fwp",
+    "tests/fixtures/numeric_layout_probe.c",
+    "tests/fixtures/packed_array_memory_probe.c",
+    "tests/fixtures/packed_array_size_probe.c",
+    "tests/fixtures/packed_numeric_arrays.fwp",
+    "tests/fixtures/protocol_count_probe.c",
+    "tests/kernel_stack_bounds.rs",
+    "tests/old_reclamation.rs",
+    "tests/packed_numeric_storage.rs",
+    "tests/protocol.rs",
+    "tests/retain_unwind_ownership.rs",
+    "tests/run/unboxed_records.fwp",
+    "tests/unboxed_worker_locals.rs",
+    "tests/wasm.rs"
+  ],
+  "signedPayloadSha256": "f5d37a16eccd32b5ec40408102684ca5009e436fdc8a55c345e1b8d6a1aca921",
+  "subject": "Pack numeric arrays and specialize worker ABI boundaries",
+  "status": "Actual merged-source phase3 accepted: full tested tree, signed squash and numeric storage sources verified",
+  "scope": "Natural narrow storage, owner-retaining numeric views, typed worker boundaries and checked protocol/count paths. Existing F16/BF16/F128 formats and tracing compatibility fallbacks remain explicit. Full six-job CI is reused only after complete-tree parity; no skipped or repeated focused run substitutes for that gate."
+}
+```
