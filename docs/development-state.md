@@ -6,14 +6,14 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `6489ec4a701fe35ffda631b2612be892323a98c4` passes audit38230219937.
+checkpoint `f4470d3149d24b6e4c1b9490d164f9bbe7ceebf5` passes audit38235869024.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies397 targets/34857977 bytes. Reports are retained in
-/private/tmp/fwp-verified-current-ownership-restoration. The active map is compact. New snapshot79dbf674 retained the current drafts but
-failed audit38235606989 because its map descriptor omitted version=1; the
-descriptor repair is pending a passing restoration audit.
+verifies454 targets/46594305 bytes. Reports are retained in
+/private/tmp/fwp-verified-arc-corpus-restoration. The active map retains current
+ARC/format drafts and platform evidence. Prior snapshot79dbf674 failed because
+its descriptor omitted version=1; the current repair passes actual restoration.
 The previous complete snapshot d00d306d1bac3d731f19769300e659b48cf7c020
 (audit38227215868,702 targets/48528910 bytes) retains superseded helpers and
 historical source. Restore that immutable head explicitly if they are needed. Current work
@@ -122,7 +122,8 @@ prior failing preparations and repairs are archived in history.
 
 PR #127 is open at8eb13370945b491cced1263ced290192e903acbb on
 numerical-kernels-and-workspaces, based on accepted main3a458236. Current gates:
-CI38231014878 running and roadmap_docs38231014937 passing. Repair publication:
+CI38231014878 has five passing jobs; Intel regular macOS remains running.
+roadmap_docs38231014937 passes. Repair publication:
 /private/tmp/fwp-scalar-reuse-production-update.json.
 The previous head d19fef9 had passing docs, bench and both macOS GC jobs. Its ARM regular macOS failed the original
 unique_arrays_are_written_in_place control: push allocates38149.4MiB with or
@@ -148,46 +149,23 @@ The prepared fwp-merge-numerical-kernels.py requires every gate, supplies an
 explicit single-line subject/empty body and verifies signed squash/tree parity.
 Actual merged-source acceptance remains required after merge.
 
-Separate phase5 preparation: ownership-evidence-flat-loop-owners. Native head
-7dbeb34cbc0d99c673577fd98c104b13e96e260a passes Linux runner38224092414:
-compiler, loop ownership/unwind/preparation, field and numeric controls. Flat
-state fields become independent ownership parameters before RC insertion,
-allowing carried arrays to move without per-iteration retain/release pairs.
+Separate phase5 preparation: independently owned loop-state fields remove
+per-element retains/releases; typed scalar calls and bounded Array reads avoid
+unnecessary unwind registration; generated immutable descriptors eliminate
+runtime width dispatch in the measured F64 loop. The checked-index scope remains.
+Latest standalone headc600a9343283c975be018ba59c40c7d0068d161e passes all three
+jobs in38229158359. Reports, formatted sources and actual binary disassembly:
+/private/tmp/fwp-const-descriptors-platform-evidence. The current ARC branch also
+contains the scalar-borrow production repair and these phase5 changes.
 Eight65537-element rounds retain/release zero times and reclaim all charged
-storage with zero collections. Uninstrumented timing still trails C/Rust;
-zero counts alone do not establish machine-code parity. Sources/assembly:
-/private/tmp/fwp-flat-loop-owners-evidence. Formatter-only export70bed875 in
-38224748379 verifies unchanged implementation and supplies the PR127 test repair;
-it is not an additional native gate. Earlier failed compilation and missed
-flat-entry instrumentation remain failed runs, retained in preparation receipts.
-
-Preparation0264d036dcac0f16833ea5a6a0996172e6148ecd passes Linux38226799564 and removes
-unwind registration around concretely typed F32/F64 add/subtract/multiply/negate
-primitive calls. Argument evaluation and checked integer calls retain their
-protection. Permanent instrumentation bounds cleanup registrations per element,
-as well as requiring zero retains/allocations and reclaimed input ownership.
-Actual native tests and benchmarks are restored in the preparation workflow;
-this head passes its native checks. Source map:
-/private/tmp/fwp-phase5-scalar-unwind-draft/files.json. Keep phase5 compiler
-changes separate from PR127 until its merge/acceptance. Current b3fde38ec477433b0a11a63fcef2f15425bf7cce additionally removes
-scopes around bounded scalar Array reads; map comparisons/retains remain
-protected. The measured bound retains one checked-index scope per element.
-All three platform jobs pass in38227512382. Verified reports, sources and
-actual uninstrumented disassembly: /private/tmp/fwp-loop-ownership-platform-evidence. Source map:
-/private/tmp/fwp-phase5-lookup-unwind-draft/files.json. Inspect every result
-and retain formatted sources/measurements before preparing the next PR.
-Assembly still reloads writable descriptors and dispatches fixed element widths.
-Current c600a9343283c975be018ba59c40c7d0068d161e makes generated descriptors
-const;38229158359 passes all three targets. Reports and assembly are retained
-in /private/tmp/fwp-const-descriptors-platform-evidence. Source map:
-/private/tmp/fwp-phase5-const-descriptors-draft/files.json. Carry the production
-scalar-borrow fix into this compiler before its final bundle validation; the
-phase5-compatible RC source is fwp-scalar-borrow-reuse-draft/rc-phase5.rs.
+storage with zero collections. Timings vary across shared runners; zero counts
+and smaller dispatch do not establish C/Rust parity or a universal speedup.
+Earlier preparation and instrumentation repairs are preserved in history.
 
 ## Phase6 preparation
 
 Independent branch ownership-evidence-tracing-free at
-75981271fe74b7a7dec2bc94ea1e8e57a7420286, runner38235361753 in progress,
+ec866d572f68e68c746992d55a7f75ff88188644, runner38237738284 queued,
 adds explicit --gc arc/tracing build selection. ARC checks monomorphic value
 shapes and primitive ownership contracts; unsupported opaque/mutable graphs,
 retained callbacks, raw pointers, raw AD tape lifetimes, foreign/remote and executable-protocol/library
@@ -217,7 +195,27 @@ directly into one private output buffer and registers its recoverable-trap clean
 The corpus now reports every semantic/reclamation failure in one run; it still
 fails if any mismatch remains and requires real exit codes. Source/proof:
 /private/tmp/fwp-phase6-arc-draft/format-files.json and fwp-arc-format-publication.json.
-Failure C/report: /private/tmp/fwp-arc-corpus-failure. This repair is unverified.
+Failure C/report: /private/tmp/fwp-arc-corpus-failure. Head75981271 passes case_of_case's
+return ledger, then fails38235361753 because the harness treats intentional err_
+compiler fixtures as unexpected failures. Head74f70ab2 verifies their exact golden
+diagnostics separately and records them as compile-errors, never ARC execution.
+ARC checks now run before the broad numerical suite for earlier failure feedback;
+all prior checks remain required. Head74f70ab2 fails38236264475 after evaluating all70 corpus entries:
+20 executed,47 rejected,3 expected compilation errors. Two executions disagree:
+optimizer exceeds the raw interpreter stack at100000 non-tail calls; traits
+leaves64 charged bytes. This is failure evidence, not20 verified ARC programs.
+The retained-C diagnosis35de2ce17 passes38237086329 and identifies four16-byte
+live cells (Options and a captured function). Inlining substitutes constructed
+aggregates without preserving parameter types, leaving stack-container children
+without typed releases. Headec866d57 preserves the existing typed local during
+inlining. It keeps the original deep recursion native/golden control and adds a
+100-call copy for raw interpreter comparison; no stack limits are increased.
+Source/receipt: fwp-phase6-arc-draft/typed-aggregate-files.json and
+fwp-arc-typed-aggregate-publication.json. Probe/failure evidence:
+/private/tmp/fwp-arc-full-corpus-failure and fwp-arc-traits-diagnostic.log.
+The repair remains unverified.
+Publication: fwp-arc-corpus-diagnostics-publication.json. Partial report:
+/private/tmp/fwp-arc-format-corpus.txt.
 Draft source map:
 /private/tmp/fwp-phase6-arc-draft/files.json, fwp-arc-ledger-fix-files.json,
 fwp-arc-platform-files.json and fwp-phase6-arc-draft/complete-files.json.
@@ -227,8 +225,8 @@ prepared from exact accepted runtime/IR blobs plus the current phase5 compiler.
 Once coherent, phases5–6 may share the next production PR and full matrix to
 reduce cycle time, with each phase's criteria checked separately in order.
 
-Latest user constraint: avoid needless wrappers, alternate paths, magic and
-implicit defaults. Register spills are ordinary lowering, and protocol-defined
+Latest user constraint: avoid needless wrappers and fallbacks, magic, and
+unnecessary implicit behavior or defaults. Register spills are ordinary lowering, and protocol-defined
 options are peers. Runtime matrix.cast preserves fields and may create shape
 mismatches; the specialized path must preserve their existing list/zip behavior.
 The checked shape branch is semantic protection, not an allocation fallback.

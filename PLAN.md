@@ -30,7 +30,8 @@ not change the phase order or defer a failing check as unrelated.
 Preserve tacit, curried, data-last pipes, immutable values, tracked effects,
 checked arithmetic and observable evaluation/trap order. Infer ordinary types
 strongly; retain explicit generic signatures and compile-time specialization.
-Avoid redundant wrappers, alternate paths and implicit behavior. Register spills
+Avoid needless wrappers and fallbacks, magic, and unnecessary implicit behavior
+or defaults. Register spills
 are ordinary lowering; protocol-defined alternatives are peers. Keep necessary
 representation choices and limits explicit and justified.
 Prefer internal ownership over new language syntax. Compare the interpreter

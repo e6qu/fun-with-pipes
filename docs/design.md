@@ -376,7 +376,8 @@ The checker visits monomorphic function/local types and primitive boundaries.
 Ordinary calls, records, variants, captured functions and numeric containers keep
 their existing Pipe syntax and value semantics. Scalar fields finish evaluation
 before consuming later arguments; reference-valued borrowed fields retain their
-parent owner through the operation.
+parent owner through the operation. Inlining retains typed locals for constructed
+aggregate arguments so ownership lowering keeps their child types.
 
 ARC builds require counted ownership and freeing. They exclude the collector
 body and reject incompatible tracing/reuse-poison settings. An attempted

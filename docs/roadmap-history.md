@@ -2146,3 +2146,42 @@ emits separate SSE multiply/add vector instructions; the measured ARM kernel
 uses scalar floating registers. Timing remains descriptive, with residual costs
 recorded in docs/numerics.md. The failed preceding head remains a failed gate.
 
+
+## Loop ownership preparation before the ARC bundle
+
+Separate phase5 preparation: ownership-evidence-flat-loop-owners. Native head
+7dbeb34cbc0d99c673577fd98c104b13e96e260a passes Linux runner38224092414:
+compiler, loop ownership/unwind/preparation, field and numeric controls. Flat
+state fields become independent ownership parameters before RC insertion,
+allowing carried arrays to move without per-iteration retain/release pairs.
+Eight65537-element rounds retain/release zero times and reclaim all charged
+storage with zero collections. Uninstrumented timing still trails C/Rust;
+zero counts alone do not establish machine-code parity. Sources/assembly:
+/private/tmp/fwp-flat-loop-owners-evidence. Formatter-only export70bed875 in
+38224748379 verifies unchanged implementation and supplies the PR127 test repair;
+it is not an additional native gate. Earlier failed compilation and missed
+flat-entry instrumentation remain failed runs, retained in preparation receipts.
+
+Preparation0264d036dcac0f16833ea5a6a0996172e6148ecd passes Linux38226799564 and removes
+unwind registration around concretely typed F32/F64 add/subtract/multiply/negate
+primitive calls. Argument evaluation and checked integer calls retain their
+protection. Permanent instrumentation bounds cleanup registrations per element,
+as well as requiring zero retains/allocations and reclaimed input ownership.
+Actual native tests and benchmarks are restored in the preparation workflow;
+this head passes its native checks. Source map:
+/private/tmp/fwp-phase5-scalar-unwind-draft/files.json. Keep phase5 compiler
+changes separate from PR127 until its merge/acceptance. Current b3fde38ec477433b0a11a63fcef2f15425bf7cce additionally removes
+scopes around bounded scalar Array reads; map comparisons/retains remain
+protected. The measured bound retains one checked-index scope per element.
+All three platform jobs pass in38227512382. Verified reports, sources and
+actual uninstrumented disassembly: /private/tmp/fwp-loop-ownership-platform-evidence. Source map:
+/private/tmp/fwp-phase5-lookup-unwind-draft/files.json. Inspect every result
+and retain formatted sources/measurements before preparing the next PR.
+Assembly still reloads writable descriptors and dispatches fixed element widths.
+Current c600a9343283c975be018ba59c40c7d0068d161e makes generated descriptors
+const;38229158359 passes all three targets. Reports and assembly are retained
+in /private/tmp/fwp-const-descriptors-platform-evidence. Source map:
+/private/tmp/fwp-phase5-const-descriptors-draft/files.json. Carry the production
+scalar-borrow fix into this compiler before its final bundle validation; the
+phase5-compatible RC source is fwp-scalar-borrow-reuse-draft/rc-phase5.rs.
+
