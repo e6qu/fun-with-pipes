@@ -8,8 +8,8 @@ it.
 
 Runtime ownership, natural-width numeric storage, numerical loop fusion,
 blocked matrix multiplication and bounded autodiff workspace reuse are accepted.
-[../PLAN.md](../PLAN.md) tracks the remaining performance evidence and checked
-native ARC delivery.
+[../PLAN.md](../PLAN.md) records the completed roadmap, retained performance
+evidence and checked native ARC scope.
 [ownership.md](ownership.md) records the representation and floating-point
 contract; [development-state.md](development-state.md) records current evidence.
 
@@ -257,14 +257,13 @@ with allocator metadata excluded from charged bytes. Reserved virtual address
 space and process RSS are separate metrics. Shared-runner timing is descriptive;
 CI asserts exact results and stable allocation properties.
 
-The accepted phase4 implementation allocates no array intermediates but still
-retains/releases its carried array once per element. Matrix multiplication allocates one output;
+The current implementation allocates no intermediate arrays and performs no
+per-element retains/releases of its carried array. Matrix multiplication allocates one output;
 the benchmark's public generic input boundary also builds two Matrix records.
-Phase5 targets the per-element counts; the two public-boundary Matrix records
-remain explicit representation costs. Neither zero intermediate
+The two public-boundary Matrix records remain explicit representation costs. Neither zero intermediate
 allocations nor vector instructions alone establish C/Rust speed parity.
 
-Phase5 preparation gives flat loop fields independent owners and removes
+Flat loop fields have independent owners, removing
 per-element array retain/release pairs. Unwind scopes remain around fallible
 operations; concrete scalar reads and F32/F64 arithmetic need none. Generated
 type descriptors are read-only, allowing fixed element-width dispatch to be
@@ -273,8 +272,8 @@ The [ownership measurement record](measurements/ownership-and-arc-2026-10-12.jso
 retains the three-platform results and separates numerical timings from ARC
 execution controls. The handoff records full production acceptance; a lower
 instruction/count total alone is not a timing guarantee.
-Variant-return analysis follows typed constructor aliases so preserving ownership
-context does not reintroduce variant boxes. The ownership report records the
+Aggregate-return and field analysis follow typed constructor aliases across
+intervening bindings, preserving ownership and effects without needless boxes. The ownership report records the
 original allocation controls separately from its earlier timing samples.
 The checked ARC subset currently excludes raw reverse-mode tape lifetimes;
 normal native autodiff continues to use the scoped bounded workspace above.

@@ -31,14 +31,16 @@ Preserve tacit, curried, data-last pipes, immutable values, tracked effects,
 checked arithmetic and observable evaluation/trap order. Infer ordinary types
 strongly; retain explicit generic signatures and compile-time specialization.
 Avoid needless wrappers and fallbacks, magic, and unnecessary implicit behavior
-or defaults. Register spills are ordinary lowering; protocol-defined alternatives are peers. Keep necessary
-representation choices and limits explicit and justified.
+or defaults. Register spills are ordinary lowering; protocol-defined alternatives
+are peers. Keep representation choices and limits explicit and justified.
 Prefer internal ownership over new language syntax. Compare the interpreter
 and native semantics; optimizer oracles must use `FWP_NO_OPT=1` explicitly.
 
 The aim is efficient machine code with few heap allocations, natural numeric
-storage, suitable alignment and effective register/cache use. Tracing is the existing memory mode. The explicit ARC mode requires checked
-ownership coverage and a supported cycle policy; rejection never selects tracing. Prepared branches do not establish merged support.
+storage, suitable alignment and effective register/cache use. Tracing remains
+available. Explicit ARC mode requires checked ownership coverage and a supported
+cycle policy; rejection never selects tracing. Prepared branches do not establish
+merged support.
 
 | Order | Status and work | Acceptance |
 |---|---|---|
@@ -46,23 +48,24 @@ ownership coverage and a supported cycle policy; rejection never selects tracing
 | 2 | Done: typed ownership and explicit runtime compatibility fallbacks | Accepted merged-source coverage; callback/unwind/resource, alias, GC/reuse and reclamation controls |
 | 3 | Done: natural-width contiguous numeric storage, views, aggregate/scalar ABI and alignment | Narrow elements use natural width; fewer copies/boxes; arm64/x86-64 allocation/assembly evidence; ABI/FFI checks |
 | 4 | Done: fused numerical loops, blocked matrices, autodiff lifetimes and reusable buffers (#127) | Correct gradients and exceptional cleanup; equivalent C/Rust workloads; fixed floating-point behavior by default |
-| 5 | In preparation: broaden ownership/performance regression evidence | Allocations, live memory, counts and collections alongside timing, hardware/compiler/flags recorded |
-| 6 | In preparation: checked native ARC execution after coverage | Supported programs reclaim without collection, including escapes/runtime boundaries; explicit cycle lifetime policy |
+| 5 | Done: ownership/performance regression evidence | Allocations, live memory, counts and collections alongside timing, hardware/compiler/flags recorded |
+| 6 | Done: checked native ARC execution for the proved ownership subset | Supported programs reclaim without collection, including escapes/runtime boundaries; explicit cycle lifetime policy |
 
-## Current delivery
+## Completed roadmap
 
-Main through PR #127 completes phases1–4. Packed numeric storage and views,
-typed worker ABI, fused numerical kernels, guarded blocked matrices and bounded
-reusable autodiff workspaces pass all six exact-head jobs, documentation and
-actual merged-source acceptance. The scalar-borrow repair preserves in-place
-container updates. The handoff records exact source and evidence hashes.
-Checked ARC execution remains in preparation until phase6 meets its criteria.
+Phases 1–6 are accepted on main through PR #128. Native macOS ARM/Intel support,
+runtime ownership contracts, packed numeric storage and views, typed aggregate
+ABI, fused numerical kernels, blocked matrices, bounded reusable autodiff
+workspaces, loop ownership improvements and checked native ARC execution pass
+their required gates. The handoff records the tested and merged sources,
+all six jobs, documentation and actual merged-source acceptance.
 
-PR #128 delivers phases5–6 together: independently owned loop fields, reduced unwind
-bookkeeping, immutable descriptors, retained measurements, and checked native
-ARC eligibility with physical-reclamation and binary controls. Keep each phase's
-acceptance explicit even when sharing one production PR and full CI run.
-Windows, new deployment interfaces and a new backend remain deferred.
+ARC support is explicit: admitted immutable graphs and scoped File owners
+reclaim without tracing. Unproved mutable cycles, boxed I128/U128 owners, raw
+reverse-mode tapes/pointers and external/deployment boundaries remain rejected.
+The retained C/Rust comparisons make no universal speedup or parity claim.
+No implementation task remains in this roadmap. Windows, new
+deployment interfaces and a new backend remain outside its scope.
 
 ## Validation limits
 
@@ -73,16 +76,9 @@ do not increase limits. The fun-refactor-specific guard applies to that other
 repository. Memory changes need actual GC stress/verification and reuse checks.
 Never call skipped, queued, superseded or cancelled runs passing support.
 
-## Concrete remaining deliveries
+## Completion boundary
 
-Phase5 broadens regressions across escapes, callbacks, exceptions, retained
-resources and array/view paths, recording allocation/live/count/collection data
-alongside timing and actual uninstrumented assembly. Phase6 checks explicit
-native ARC eligibility: immutable counted graphs and scoped File owners must
-reclaim without tracing. Mutable cyclic runtime types, raw pointers/tape tokens,
-boxed I128/U128 without counted owners, unchecked native declarations,
-unmodeled foreign owners and deployment boundaries outside the proved subset
-must be rejected. Neither disabling collection nor successful process exit
-establishes reclamation. Preserve unsupported-mode diagnostics and prove missing
-frees and forced tracing fail. Review the final source and docs before marking
-these criteria complete.
+Keep supported memory-mode boundaries and original Pipe semantics intact.
+Existing tracing-mode features remain available; ARC never switches to tracing
+when eligibility fails. Future coverage or performance work must start from the
+retained measurements and current handoff rather than an archived next action.

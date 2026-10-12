@@ -102,8 +102,8 @@ boundary; it does not establish tracing-free eligibility.
 Channel close preserves queued values. Explicit drain breaks the tested counted
 cycle, while unreachable shared cycles still need tracing. Preserve callback,
 trap and task ordering when extending contracts. Phase2 verifies this documented
-compatibility model; phase6 must separately prove tracing-free eligibility and
-its cycle policy. Older373-declaration classifications and prepared-only notes
+compatibility model. Checked native ARC separately enforces its proved eligibility
+and cycle policy, rejecting these unproved shared boundaries. Older373-declaration classifications and prepared-only notes
 are archived in history rather than supplying current priorities.
 
 ## Complete runtime sharing
