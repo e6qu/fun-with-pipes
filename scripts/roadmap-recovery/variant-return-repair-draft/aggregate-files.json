@@ -1,0 +1,6 @@
+{
+  "src/cgen.rs": "/tmp/fwp-variant-return-repair-draft/cgen.rs",
+  "tests/stack.rs": "/tmp/fwp-variant-return-repair-draft/stack.rs",
+  "tests/stack/wide_alias.fwp": "/tmp/fwp-variant-return-repair-draft/wide_alias.fwp",
+  ".github/workflows/variant-return-repair.yml": "/tmp/fwp-variant-return-repair-draft/aggregate-preparation.yml"
+}

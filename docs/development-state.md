@@ -6,17 +6,15 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `e17eefa12b345b43f2956a8ffd31c2d277a9aa64` passes audit38244965952.
+checkpoint `8d3681f114d0930849e56de2174d59992739baa5` passes audit38251410699.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
-own commit. restore-roadmap-recovery.py restores temporary paths from a bounded
-immutable archive after verifying Git blob hashes. Its disposable-runner audit
-verifies401 targets/37464368 bytes. Reports are retained in
-/private/tmp/fwp-verified-pr128-restoration. The active map retains the final
-350500f2 platform artifacts, type-repair evidence, PR #128 receipt and all remaining
-delivery helpers. Superseded ec866d57 artifact payloads remain in parent50d2ee56;
-current receipts and corpus classifications remain in the active map.
+own commit. The bounded restoration audit verifies443 targets/39839726 bytes;
+reports are in /private/tmp/fwp-verified-variant-return-restoration.
 Use current-map.json, not a historical publisher's next action. Never rerun
-completed publishers. Phases1–4 are accepted; PR #128 delivers phases5–6.
+completed publishers. The checkpoint retains the initial PR128 failure and
+passing variant repair. New aggregate diagnostics described below still need
+a new recovery snapshot. Superseded payloads remain in immutable parents.
+Phases1–4 are accepted; PR #128 delivers phases5–6.
 
 ## Execution contract
 
@@ -86,7 +84,7 @@ workloads are serial, low priority and guarded: sampled aggregate RSS below1GiB,
 target below2GiB, at least64GiB free disk, deadline180 seconds. Stop at limits;
 never raise or bypass them. Use `python3 scripts/local-guard.py COMMAND...` for
 fwp checks. The fun-refactor guard applies to that other repository.
-Latest disk observation:56,620,208KiB available, about54.0GiB; last local target
+Latest disk observation:57,937,032KiB available, about55.3GiB; last local target
 103,696KiB, about101.3MiB. The64GiB reserve remains unavailable. No local compiled
 check, broad doc audit, rebase or fast-forward ran. Only source edits and bounded
 remote metadata publication/downloads ran serially at low priority.
@@ -189,35 +187,50 @@ design constraints. PR #128 bundles phases5–6 and is open at
 Production publisher fwp-publish-ownership-production.py is completed; do not
 rerun it. Receipt: fwp-ownership-production-publication.json.
 Roadmap documentation38244684891, bench and both macos_gc jobs in
-CI38244684931 pass. Regular ARM fails the original stack allocation control:
-variants_returned_as_structs_are_not_allocated reports24.3MiB with FWP_VRET
-both0 and1. Linux and regular Intel are still running to collect other failures.
-Failure log: /private/tmp/fwp-pr128-arm-failure.log. This head cannot merge. The production source removes the Step-by-name exception, requiring
-the registered ordinary variant contract. This delta needs the current-head gates.
+CI38244684931 pass. The completed Linux and both regular macOS jobs fail only
+stack::variants_returned_as_structs_are_not_allocated:24.3MiB with FWP_VRET
+both0 and1. fwp-pr128-initial-ci-failures.json records all three complete logs
+and their hashes. This head cannot merge. The production source removes the
+Step-by-name exception and requires the registered ordinary variant contract.
 Require all six exact-head jobs and roadmap_docs before fwp-merge-ownership-bundle.py.
 Then run the prepared ownership merged-source audit publisher/downloader and
 update the plan to Done only after actual acceptance. Keep final source support
 and deliberately rejected ARC boundaries explicit. No additional feature phase
 remains after this bundle satisfies its acceptance criteria.
 
-## Active variant return repair
+## Active aggregate return repair
 
-Preparation branch ownership-evidence-variant-return-repair is
-f04ae9c646a9bb8d78b0a764566b7b78d6c8a29b, run38248993545, based on PR128
-head82d552c4. All three jobs pass. The original digits control reports24.3MiB
-with variant returns disabled and0.0MiB rounded when enabled, preserving the
-original >10MiB/<1MiB thresholds. All21 ARC cases still execute and reclaim.
-Hash-verified evidence: /private/tmp/fwp-variant-return-repair-evidence.
-fwp-download-variant-return-repair.py is completed; do not rerun it. The typed aggregate bindings needed for ownership expose a return
-ABI analysis gap: constructor results returned through locals lose their unboxed
-variant eligibility. The repair follows local value origins and keeps direct
-constructor bindings in variant structs. It does not remove type context, allow
-caller-supplied aliases into the ABI, or weaken the original >10MiB/<1MiB control.
-Draft: /private/tmp/fwp-variant-return-repair-draft; receipt:
-fwp-variant-return-repair-publication.json. Its three-platform runner includes
-the original stack controls, variant alias/conversion/stack/unwind ownership,
-numeric/loop controls and all named ARC executions. Wait for the remaining original full-job diagnostics, then repair the same PR in one
-commit and require all six jobs again at its new head.
+Preparation branch ownership-evidence-variant-return-repair starts from PR128.
+Variant repair f04ae9c646a9bb8d78b0a764566b7b78d6c8a29b passes all three jobs
+in38248993545. The original digits control reports24.3MiB with variant returns
+disabled and0.0MiB rounded when enabled; the >10MiB/<1MiB thresholds are unchanged.
+All21 ARC cases execute and reclaim. Hash-verified artifacts are retained in
+/private/tmp/fwp-variant-return-repair-evidence; its downloader is complete.
+
+Shared origin analysis now follows typed local bindings for both variant and
+wide-record return eligibility. The added wide-record alias regression fails
+at366.2MiB in38252834369 (headf1b3d135); the original four allocation tests pass.
+Earlier38252451591 used an invalid new negative control: FWP_STACK does not
+disable the wide-record return ABI. The corrected new control requires the same
+<1MiB allocation bound as the existing wide-record test, and still exposes the
+lowering gap. Preserve the typed bindings and all original controls.
+Diagnostic15a5e0ea/run38254202682 passes. Retained IR/C in
+/private/tmp/fwp-wide-origin-inspection shows that an intervening unit binding
+hides the record fields, causing every recursive match result to be boxed and
+immediately unpacked. Field tracking now follows typed aliases and preserves
+intervening evaluation and ownership operations.
+Current preparation c94f759a25205d818e7f62d65873e34585a7685d/run38255126357
+adds raw-interpreter comparisons for returned owned strings and an intervening
+print, with GC stress/reuse verification and explicit ARC execution at O1/O2.
+It uses counted string construction: the precedingec2b64ac control incorrectly
+used read-all, outside the explicit ARC subset. Allocation helpers now also
+require successful process exit.
+The preceding4f88beb8/run38254542175 is completed/cancelled;
+it supplies no passing gate. Draft: /private/tmp/fwp-variant-return-repair-draft.
+Next: fix any failures in all three preparation jobs, then download their exact
+formatted source, update measurements and repair PR128 in one commit with
+fwp-publish-variant-return-pr-repair.py. Require all six jobs and roadmap_docs
+again on the new PR head before merging. Failed or superseded runs pass no gate.
 
 After accepted implementation source, fwp-close-roadmap-docs.py prepares the
 final live-doc closure. fwp-publish-roadmap-closure.py publishes those12 docs on

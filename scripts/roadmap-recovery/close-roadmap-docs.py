@@ -76,7 +76,10 @@ unneeded scalar unwind scopes and mutable descriptor dispatch. Phase6 adds
 checked native ARC with physical reclamation and actual binary controls.
 Fusion registers synthesized Step variants; eligibility uses their ordinary
 variant metadata. Inlining preserves constructed and compile-time aggregate
-types. Formatting renders directly into a cleanup-protected buffer.
+types. Return-origin and field tracking preserve unboxed aggregates through
+typed aliases and intervening bindings. Allocation, owned-child and observable
+effect regressions cover these paths. Formatting renders directly into a
+cleanup-protected buffer.
 
 Preparation350500f2 passes all three complete jobs in38242709162. Each target
 executes21 named ARC corpus cases, reports47 eligibility rejections and verifies

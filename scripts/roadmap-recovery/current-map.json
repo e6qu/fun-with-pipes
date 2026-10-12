@@ -1,4 +1,4 @@
 {
   "version": 1,
-  "publisher": "scripts/roadmap-recovery/publish-variant-return-recovery.py"
+  "publisher": "scripts/roadmap-recovery/publish-aggregate-alias-recovery.py"
 }

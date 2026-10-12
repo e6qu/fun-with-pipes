@@ -1,0 +1,68 @@
+name: Typed variant return ownership repair
+on:
+  push:
+    branches: [ownership-evidence-variant-return-repair]
+jobs:
+  variant_returns:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_ARC_ARTIFACTS: variant-evidence/arc
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: OpenSSL 3
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Compiler checks
+        run: |
+          cargo fmt --all
+          cargo clippy --all-targets -- -D warnings
+          cargo test --lib
+      - name: Retain aggregate return origins
+        run: |
+          cargo build
+          mkdir -p variant-evidence
+          for case in wide wide_alias; do
+            FWP_DUMP_IR=rc target/debug/fwp build tests/stack/$case.fwp --emit-c -o variant-evidence/$case.c 2>variant-evidence/$case.ir
+          done
+      - name: Preserve original stack allocation and variant ownership controls
+        run: cargo test --no-fail-fast --test stack --test stack_ownership --test stack_match_ownership --test variant_alias_ownership --test variant_conversion_ownership --test retain_unwind_ownership --test numeric_array_fusion --test loop_ownership
+      - name: Preserve checked ARC coverage and reclamation
+        run: cargo test --no-fail-fast --test arc_corpus --test arc_execution
+      - name: Retain counted IR and generated variant code
+        run: |
+          mkdir -p variant-evidence
+          for setting in 0 1; do
+            FWP_VRET=$setting FWP_DUMP_IR=rc target/debug/fwp build tests/stack/digits.fwp --emit-c -o "variant-evidence/digits-$setting.c" 2> "variant-evidence/digits-$setting.ir"
+            FWP_VRET=$setting target/debug/fwp build tests/stack/digits.fwp -o "variant-evidence/digits-$setting"
+            FWP_GC_STATS=1 "variant-evidence/digits-$setting" > "variant-evidence/digits-$setting.out" 2> "variant-evidence/digits-$setting.stats"
+          done
+      - name: Export formatted source
+        if: always()
+        run: |
+          mkdir -p variant-evidence/source
+          cp src/cgen.rs tests/stack.rs variant-evidence/source/
+          cp tests/stack/wide_alias.fwp variant-evidence/source/
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: variant-return-evidence-${{ matrix.runner }}
+          path: |
+            variant-evidence/source/
+            variant-evidence/*.c
+            variant-evidence/*.ir
+            variant-evidence/*.out
+            variant-evidence/*.stats
+            variant-evidence/arc/

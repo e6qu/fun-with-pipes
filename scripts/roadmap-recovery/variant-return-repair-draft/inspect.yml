@@ -1,0 +1,24 @@
+name: Inspect aggregate return origins
+on:
+  push:
+    branches: [ownership-evidence-variant-return-repair]
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build
+      - run: |
+          mkdir -p evidence
+          for case in wide wide_alias; do
+            FWP_DUMP_IR=rc target/debug/fwp build tests/stack/$case.fwp --emit-c -o evidence/$case.c 2>evidence/$case.ir
+          done
+      - uses: actions/upload-artifact@v7
+        with:
+          name: aggregate-return-origins
+          path: evidence/

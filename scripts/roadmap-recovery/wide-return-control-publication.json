@@ -1,0 +1,9 @@
+{
+  "head": "f1b3d135bd1dc3b40a61478ca9b66b239ece6a71",
+  "previous": "fc8f20732e729d5043e68a1e1ca9dafe81893afe",
+  "tree": "f0e614d1cad910aab2a4a6ef32c3d80030e52aa2",
+  "branch": "ownership-evidence-variant-return-repair",
+  "files": {
+    "tests/stack.rs": "5277812d571379b532d8577a2f7ae24ac05138dabafe22e30ab4558a30c41f0e"
+  }
+}

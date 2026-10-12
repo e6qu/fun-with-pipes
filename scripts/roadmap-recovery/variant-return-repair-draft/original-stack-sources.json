@@ -1,0 +1,13 @@
+{
+  "head": "f04ae9c646a9bb8d78b0a764566b7b78d6c8a29b",
+  "files": {
+    "tests/stack.rs": {
+      "blob": "160a60855843e69c2c37bdc52225b71002264526",
+      "sha256": "ac770347967ac5d2b3dba8a7817c3d6d8e7f88430d77af800702f3dc14e7e559"
+    },
+    "tests/stack/wide.fwp": {
+      "blob": "7eda0ad5210a8be1f8e491b8ba9ae71c8804054e",
+      "sha256": "36b48af7a645ffba5b7efedf5594fc6b02c4af6fdb7731c54a082c801f706384"
+    }
+  }
+}
