@@ -49,7 +49,7 @@ Merged folds protect the current accumulator and each completed borrowed argumen
 duplicate until callback transfer; right-fold scratch releases on unwind.
 Merged loops protect current state across cancellation ticks and Step payload
 preparation; flattened Again records remain unboxed.
-Other callback/runtime and exceptional ownership extensions are prepared separately.
+Other runtime boundaries retain explicit sharing fallbacks.
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.
 
@@ -75,7 +75,7 @@ and release replaced owners; replacement, partial retains and unfinished copies
 stay protected through failure, while general copies preserve borrowed originals.
 Boxed record conversion protects the original box, remaining caller owners and
 completed typed field retains; matched results preserve the caller checkpoint.
-Wider callback registration stays prepared.
+Unmodeled callback boundaries retain shared fallback.
 
 Merged runtime application cleanup protects consumed functions, pending typed
 arguments and original stack captures through nonlocal unwind. It adds a typed
@@ -124,10 +124,10 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   allowing callee effects in a larger ambient context without contaminating
   function-valued argument types. Pipe application, composition and ordinary
   application use this rule; required callback effects remain checked.
-- The prepared row-unifier repair refreshes tails after payload unification,
+- The row-unifier refreshes tails after payload unification,
   preserving required effects or fields bound by those payloads. Positive and
   missing-IO State callback controls remain mandatory before acceptance.
-- Prepared callback argument comparison widens only the outer function effects
+- Callback argument comparison widens only the outer function effects
   permitted by the parameter. It preserves nested input rows, rejects missing
   required effects and reports the original value type on mismatches.
 - Tuples are records with numeric labels, and unit is the empty record.
@@ -161,10 +161,9 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   back to `FromInt` and `FromFloat`, so `Dual[F64]` accepts literals.
 - Every arrow carries an effect row. Signature instantiation opens result
   spine rows for subeffecting. Actual calls reopen only their own closed row;
-  the prepared repair adds known ambient labels to a temporary open call row
+  temporary call rows include known ambient labels to a temporary open call row
   so State does not recursively contaminate a stored function type. Existing
-  effect/type snapshots and simple closure State controls must pass before
-  acceptance. Handlers (`attempt`, `try`, `run-state`) remove labels by unification.
+  effect/type snapshots and positive/negative State controls pass in PR124. Handlers (`attempt`, `try`, `run-state`) remove labels by unification.
 - Only the last arrow of a binding may have effects, so effects happen
   exactly when a call is saturated. Top-level values that are not
   functions must be pure (`main` and tests aside).
@@ -246,7 +245,7 @@ scopes protect result/storage through joining and unwind. Counted task handles
 own cached results, and await returns separate owners. Typed channel queues
 retain elements and transfer them on receive; close preserves queued values.
 Explicit draining breaks the tested counted cycle; automatic unreachable-cycle
-reclamation remains unproved. Other resource boundaries stay prepared.
+reclamation remains unproved. Unmodeled resource boundaries retain compatibility lifetimes.
 
 PR123 accepts library input/result/unload ownership, scoped native and
 interpreter OpenCL teardown, TLS listener/cache/wire/connect cleanup and File
@@ -264,13 +263,11 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
 - A closure is a partial application of a known function. Tacit code has
   no free variables, so every function value can be serialized, which is
   how `comptime` results become static data.
-- Native State uses per-task scanned word storage. Prepared cleanup clears
-  inactive slots on return, error recovery and task exit, preserving active
-  suspended values and live aliases. This adds no surface syntax or counted
-  State contract. The separately verified typed State candidate retains values
-  with stack ownership records and typed duplicate/drop functions, saves scope
-  heads across task switches and releases them on failure/cancellation. Its
-  aggregate/escaping-closure cases and final production gates remain pending.
+- Native State uses per-task scanned storage and typed stack owner records.
+  Inactive words clear on pop/error/task exit; typed values retain borrowed
+  initials, own gets/results and release replacements across return and nonlocal
+  exits. Task switches preserve scope chains. Legacy/unmodeled payloads retain
+  tracing fallback. PR124 passes aggregate and escaping-closure controls.
 - A type descriptor per monomorphic type drives equality, ordering,
   hashing, `Display`, text parsing, typed JSON and the binary protocol in
   C. For JSON, nominal records also carry their declaration order and the
@@ -415,179 +412,31 @@ error. See [protocol.md](protocol.md).
   `wasm64`.
 
 
-## Prepared ownership implementation
+## Ownership implementation
 
-Compiler call ownership lowering must preserve allocation optimizations as well
-as exceptional lifetimes. PR113 protects consumed constructor fields and remaining
-caller references before allocation. Earlier counted arguments, including duplicated
-locals, stay registered while later arguments evaluate. A final consumed value
-can stay inline when no earlier counted argument needs protection, preserving
-direct stack, worker and flattened-loop representations. Later scalar
-computations also finish before pending counted owners transfer, preserving
-cleanup when scalar evaluation fails. Existing allocation
-limits and raw-interpreter comparisons remain acceptance gates.
+PR124 accepts compiler and runtime ownership for original resource frames,
+File IO/storage, typed State, synchronous list callbacks, scoped AD and resource/
+network contexts. Typed holders preserve original lifetime/trap order through
+inlining and flattening. Incoming owners, partial retains, callback results and
+scratch remain protected across error, raw trap and cancellation; frame assignment
+follows successful acquisition. FWP_FRAME_FIELDS=0 preserves the boxed control.
 
-Prepared record-worker calls keep returned locals as fields when every use is a
-field read or a complete call with the matching record ABI. Typed aliases and
-trap cleanup preserve field owners; partial and dynamic calls retain boxed
-captures. The ordinary worker/wrapper ABI is unchanged. Sequential full CI
-is still required; emitted box removal alone is not a speed claim.
+Native File owners close at original frame boundaries independently of optional
+ordinary freeing. Inline paths use aligned leaf storage; constructor rollback
+closes streams and last-owner release removes library finalizers before freeing
+unshared headers. Shared headers keep compatibility lifetime. Actual WASI verifies
+logical aggregate/task resource counts; physical bump storage remains allocated.
 
-[Ownership](ownership.md#prepared-ownership-work) summarizes prepared contracts
-and acceptance limits; [the handoff](development-state.md) records current checks.
-Original ResourceRegion markers preserve source resource lifetimes through
-optimization. Eligible original record holders use typed fields; variants use
-fwp_u structs with existing tag-aware vdup/vdrop helpers. Incoming owners remain
-protected during partial retains, and frame assignment follows successful retain.
-Cleanup IDs are captured after helper generation, which can add definitions.
-Pattern bindings initialize payloads/fields from the current path's scrutinee.
-FWP_FRAME_FIELDS=0 preserves the boxed comparison path.
+HTTP/2 and gRPC owners protect metadata roots, dequeued/copied messages, status,
+encoding scratch, connections and inherited task contexts. TLS options/metadata
+retain their original scoped and task owners; completion releases acquired owners
+through joins and cancellation. Length-framed full keys preserve pool identity;
+aligned tail storage avoids separate option strings and connection addresses.
+Library teardown drains tasks and finalizers before clearing read-once TLS caches.
+Protocol bytes, receive order and observable evaluation/trap order stay unchanged.
 
-Merged match elimination carries nominal constructor-field context into
-effectful discarded temporaries. If elimination cannot recover a safe type,
-it preserves the original typed binding rather than erasing its ownership.
-Inlined record projections similarly preserve the checked base type through
-scalar replacement so discarded nested children keep their typed destruction.
-Prepared loop normalization lifts both bound and inline Again record-field
-preparation through the same evaluation/drop spine for shape analysis and code
-emission. Cancellation observers read the actual counted-owner layout, including
-direct flattened String slots, while checking unchanged aliases and scalar bits.
-Prepared nested loop reconstruction keeps compatible nested records as flat
-state slots through Again updates. Reading a whole record reconstructs it with
-typed children; progressive retains and completed fields remain protected until
-boxing succeeds. Field reads that can reconstruct records participate in caller
-liveness cleanup. Scalars remain uncounted; full CI per final bundle is required.
-
-Merged CAF ownership retains a typed cache owner and returns a separate
-owner on each call. Initialization retry and reentrant replacement preserve
-callers; executable teardown releases caches after finishing tasks. CAF
-evaluation is a call safe point that protects existing caller owners.
-Inlining treats a zero-argument function as an evaluation, preserving unused
-argument evaluation and trap order rather than duplicating or erasing it.
-Merged task.spawn retains counted thunks until entry or cancellation.
-Fallible stack/scope preparation protects only the extra owner and publishes
-a task after preparation succeeds. Unknown closure metadata retains sharing.
-Merged deadline callbacks use the same retained owner through completion
-or cancellation and preserve external capture aliases.
-Merged task.scope borrows its callback and protects its owned result
-through joining/cancellation checks; unwind cleanup restores handlers and
-scope state and releases scope storage.
-The merged task-handle contract owns typed cached results, with
-independent scheduler, scope, caller and await references; unknown/shared
-boundaries retain tracing fallback.
-Merged typed channels own queued elements and transfer their references
-into receive results after successful Option allocation. Close preserves
-queued values; unknown sink/runtime boundaries still share, and cycles
-require the explicit lifetime policy described in ownership.md.
-Prepared TLS listener ownership retains server context and ALPN state through
-accepted sessions, including raw HTTP/2 transfer. Listener stop releases its
-owner; the last session releases the context and protocol storage.
-Prepared library teardown finalizes Files, sockets and transferred HTTP/2
-handles before releasing TLS client caches; implicit session disposal avoids
-network shutdown traffic and preserves host signal policy.
-The RC match preparation recovers missing nominal context from a whole-value
-pattern's typed local, using it for scrutinee conversion and temporary destruction.
-Known expression types remain authoritative. Whole-value pattern aliases of
-stack aggregates retain/drop their typed children, preserving them when the
-scrutinee releases its ownership. No new surface syntax is introduced.
-Prepared original resource-frame holders keep eligible field-only records in
-typed fields, avoiding a parent heap box while retaining children for the
-original frame lifetime. Other bindings retain the boxed parent.
-FWP_FRAME_FIELDS=0 provides an allocation comparison; partial field retention
-must unwind safely. This preparation supplies no general speed claim.
-Prepared File layout stores FILE*, a uint64 owner count and a NUL-terminated
-inline path in one aligned leaf allocation. The checked path length includes
-header and terminator. On 64-bit hosts the header is 16 bytes rather than
-24 bytes; constructor allocation controls and display/I/O agreement are
-required. This reduces layout/allocation overhead without a timing claim.
-Prepared last-owner File disposal removes weak library finalizers before
-reclaiming unshared native storage. Shared, bump and disabled-free storage
-keeps its allocator lifetime. Scoped cleanup closes while its constructor
-owner is live, then drops that owner; aliases must never see reclaimed storage.
-Prepared original variant holders use tag-aware typed structs for eligible
-matched bindings. Retain incoming payloads completely before replacing a frame
-slot; cleanup dispatches only the active tag. Boxed fallback retains payloads
-before dropping the wrapper. Generate cleanup IDs after helper generation,
-which may add nested cleanup definitions. FWP_FRAME_FIELDS=0 compares boxing.
-Prepared whole-pattern variant bindings initialize fresh typed holders from
-the current scrutinee on each binding path. A local used by a let in another
-arm must not supply that payload. Partially failed patterns preserve original
-frame lifetime rather than releasing their File bindings early.
-Prepared record pattern holders likewise initialize typed fields from their
-current scrutinee before anchoring the original frame owner. A field mapping
-created by a let on another arm must not supply these borrowed fields.
-Prepared HTTP/2 body copying keeps its borrowed call owner live through
-allocation. The stream buffer uses malloc, so its bytes alone cannot root
-the GC-managed stream. Forced major collection and finalizer omission controls
-verify this boundary; HTTP/2 handles still retain the tracing compatibility policy.
-Prepared HTTP/2 body bounds clamp negative limits to zero, matching the
-interpreter. Check size before completion, then reset/dead state, then timeout;
-an empty completed body succeeds at a zero limit even if the stream reset.
-File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
-remain subject to full final-bundle CI and the ownership acceptance criteria.
-
-Prepared network ownership uses the existing unwind cleanup stack. HTTP/2
-peer subject temporaries stay owned until String/Option copying finishes.
-HTTP/2 handles and GC-managed connection/context storage retain tracing
-compatibility; these preparations do not establish complete ARC support.
-
-Served gRPC peer metadata has a logical owner for its serving task and each
-detached sender that can invoke language code. A nonallocating, nonthrowing
-completion callback releases its owner after structured child joins; the last
-owner frees peer metadata and any stored status. Acquisition checks overflow
-and unwinds failed spawning. Stored status replacement copies before dropping
-the prior owner, including aliased input. Final encoding owns transferred text.
-
-Server and client receive paths own dequeued malloc messages and copied status
-text through decoding, subsequent waits and callbacks. Extra/malformed responses,
-cancellation and decoder failures release scratch. Normal returns transfer only
-the requested message, value or error text; cell forcing preserves its memo.
-Retry releases copied reset text before reopening. Client failure raising copies
-raw trap or typed GrpcError contents before releasing its transferred text;
-the receive owner clears that text slot to prevent a second release. Reflection
-releases copied end status, and streamed error rendering owns partial buffers.
-
-Encoded frame buffers, detached and synchronous client request buffers, and
-served unary/stream/error response buffers keep cleanup active across encoding
-and cancellable flow-control waits. Canonical serialization scratch is owned
-before writing/transcoding and released after success or unwind. Wire bytes,
-plain/gzip payloads, fixed-width representation, oneof prefixes, diagnostics,
-receive order and error/trap order remain unchanged.
-
-These are prepared contracts, subject to full platform/GC CI per bundle.
-[Primitive ownership](primitive-ownership.md#prepared-refinements) records individual
-acceptance controls; [the handoff](development-state.md) records delivery status.
-Prepared pending gRPC connections also own lookup results, descriptors and
-SSL state across connection/handshake suspension, transferring them after
-connection-wrapper creation. Background startup has a temporary connection
-owner and a protected reference reserved for each task; abort marks the
-unpublished connection dead without allocating, cancels published tasks and
-drops its owner. The last task releases the descriptor. Its static failure
-marker is excluded from malloc finalization. Dynamic context callbacks use
-the same cleanup stack to restore the saved task context on raw traps and
-cancellation, retaining existing normal/typed-error restoration and handler
-boundaries. Scoped TLS options have checked dynamic-scope and inheriting-task
-owners; the last user releases copied strings and option storage without
-tracing. Task preparation protects acquired context owners, and completion
-releases the original retained context after child joins even if current
-gctx changed. These hooks and one private pointer compile only for service/
-web programs. Read-once environment options keep their cache lifetime; context
-wrappers retain tracing compatibility. Response metadata captures also retain
-constructor, scope and inheriting-task owners; the last owner frees headers
-and their storage. Returned metadata is a snapshot, independent of later
-child appends. Both resource counters validate before acquisition changes
-either, and constructors protect resources if acquisition traps. TLS pool
-keys use checked length framing and complete bytes rather than delimiter
-serialization through a fixed diagnostic buffer; connections copy keys so
-scoped options can be released independently. Read-once environment TLS
-caches release on library teardown after tasks drain and GC finalizers finish,
-before SSL cache disposal. Cache and hook state reset for reinitialization.
-Prepared packed TLS options use one checked allocation containing an aligned
-header followed by strings and the full length-framed key. Child string/key
-pointers are borrowed within that allocation; last-owner release frees its
-base once. Original allocation probes and actual ARM/Intel binary layouts pass
-on prepared source112; final bundle CI still gates merged support. Full connection addresses also use checked tail storage
-within the existing managed connection allocation, preserving complete pool
-keys without separate address allocation. Connection wrappers retain tracing
-compatibility. Canonical decode already frees temporary C buffers on normal
-success/error exits; typed ownership of reconstructed aggregates remains an audit.
+Unknown reconstruction, cached decoded values and retained callback boundaries
+keep tracing compatibility. Channel close preserves queued values; explicit drain
+breaks the tested counted cycle, while unreachable shared cycles still require
+tracing. [Ownership coverage](ownership.md#ownership-coverage) and
+[the handoff](development-state.md) record the finite review and later work.

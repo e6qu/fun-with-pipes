@@ -89,56 +89,21 @@ forward mode).
 Reverse mode needs the tape's memory, 24 bytes per operation; there is no
 checkpointing.
 
-The later numeric phase must verify exceptional tape lifetimes before reusing
-capacity. Code review of prepared source112 (`b45e93a71d40`) finds that native
-`ad.backward` detaches four tape buffers before validating output tape IDs; its
-mixed-tape trap frees adjoints but does not release those buffers. The interpreter
-uses a local owned `Tape`, whose buffers drop on that error. Add a native
-allocation/release regression and preserve the same trap and raw interpreter
-behavior when fixing this path. Grad callback failure and cancellation before
-`ad.backward` also need explicit scoped lifetime evidence.
+The PR124 candidate registers detached tape buffers and adjoints for cleanup
+through normal return, mixed-tape errors, recoverable traps and cancellation.
+It preserves consumption of the selected tape before output validation.
+Token validation checks live tape identity and node bounds; slots retire after
+generation32767 so old tokens cannot identify a later tape after wrap.
+Interpreter/native and deliberate omission controls pass on Linux and both Macs.
+Final production acceptance remains in [the handoff](development-state.md).
 
-Preserve failure consumption when repairing backward cleanup: both backends
-detach the selected tape before checking output IDs, and the interpreter's
-local Tape then drops on error. Register the detached native buffers and
-adjoints for cleanup rather than leaving the tape live by moving validation
-ahead of detachment. Normal return, mixed-tape failure, recoverable traps and
-cancellation need separate controls; capacity reuse must preserve those exits.
-
-Both token implementations wrap the slot generation after 32767 uses. The
-ordinary stale-token check therefore needs a regression across that wrap and a
-policy that prevents an old token from identifying a new tape. These are
-prepared-source review findings. The candidate ownership repair retires a
-slot after generation32767, with an explicit terminal-boundary regression; its
-runner checks and final bundle gates remain pending. It does not establish
-verified cleanup or stale-token guarantees for all lifetimes.
-
-The public `ad.push` and `ad.backward` primitives accept `I64` tokens. Current
-code validates tape identity but does not check the low-word node index against
-the live tape before recording a parent or indexing adjoints. Forged same-tape
-indices therefore need explicit interpreter/native bounds regressions: Rust
-indexing can panic, while the native indexing can access outside the allocation.
-Validate tokens before use, preserve valid operation and reduction order, and
-verify exceptional buffer release as part of that fix. This is a source-review
-finding. Candidate bounds and detached-buffer cleanup repairs are published
-with passing Linux/ARM/Intel raw interpreter/native and omitted-check controls;
-final combined production gates remain required. Keep the
-current numeric phase order from [the plan](../PLAN.md).
-
-The candidate scoped repair adds internal ad.scope around value-and-grad and
-vjp, so grad, vector gradients and reverse Jacobian rows also release tapes
-when their callbacks fail before backward. Native scopes use stack owners and
-stable slot links in the existing task-local cleanup chain; interpreter scopes
-use RAII and remove consumed tokens. Borrowed AD inputs and counted fresh F64
-gradient arrays have explicit contracts. Focused scope, counting, layout,
-trap/cancellation and raw interpreter/native checks pass on Linux/ARM/Intel.
-The direct scoped-callback allocation repair is being validated separately;
-final combined gates and merge remain required. No tracing-free support is claimed.
-Equivalent runtime-dependent gradients must also show no increase in managed
-steady-state allocation calls or requested bytes, with unchanged external buffer
-allocation calls/bytes, at O1/O2 on Linux and both macOS architectures. Report
-warmup, live/peak memory and tape layout separately; stack scope storage alone
-does not establish allocation parity for generic callback bridges.
+Internal ad.scope/ad.scope2 release tapes when callbacks fail before backward.
+Native scopes use stack owners and stable slot links in each task's cleanup chain;
+interpreter scopes use RAII. Borrowed inputs require Dup. Public grad/vjp types
+remain unchanged; direct arguments and projection inside the grad callback avoid
+wrapper allocations. [Allocation validation](#scoped-gradient-allocation-validation)
+records the complete counters and limits. Capacity reuse and gradient kernel
+optimization remain later-phase work; no tracing-free support is claimed.
 
 Historical timing samples are preserved in
 [the benchmark history](roadmap-history.md#archived-numerics-timing-samples).

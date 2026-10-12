@@ -67,7 +67,7 @@ scopes protect result/storage through joining and unwind. Counted task handles
 own cached results, and await returns separate owners. Typed channel queues
 retain elements and transfer them on receive; close preserves queued values.
 Explicit draining breaks the tested counted cycle; automatic unreachable-cycle
-reclamation remains unproved. Other resource boundaries stay prepared.
+reclamation remains unproved. Unmodeled resource boundaries retain compatibility lifetimes.
 
 ## Remaining ownership coverage
 
@@ -126,7 +126,7 @@ requirements until phase 6 proves eligibility for execution without collection.
 | Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
-The PR124 final integration38179558348 verifies375 declarations resolving to365
+The accepted PR124 inventory verifies375 declarations resolving to365
 runtime symbols after40 aliases:168 explicit contracts,19 ordinary IR combinators,
 11 flat scalar signatures and177 review declarations representing167 symbols.
 This includes typed State, internal ad.scope/ad.scope2 and14 fresh codec leaves.
@@ -293,10 +293,10 @@ and measurements are in [history](roadmap-history.md).
   result checkpoints. Wider callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
-  children without treating scalar bits as pointers. General unwind remains prepared.
+  children without treating scalar bits as pointers. Unmodeled payloads retain shared fallback.
 - Maps and sets own typed keys/elements across construction, copies, lookup
   and immutable updates. Synchronous callbacks borrow inputs and adopt results;
-  typed destruction releases children and storage. General unwind remains prepared.
+  typed destruction releases children and storage. Unmodeled payloads retain shared fallback.
 - Task result/deadline boundaries own fresh typed result wrappers and retain
   aliases without treating scalar words as pointers. Spawn/deadline thunks retain
   captures through entry, completion or cancellation, with preparation rollback.
@@ -341,38 +341,34 @@ and measurements are in [history](roadmap-history.md).
 These contracts do not establish complete runtime retention, exceptional
 lifetimes, shared graph ownership or general execution without tracing.
 
-## Prepared ownership work
+## Ownership coverage
 
-[The immutable queue](roadmap-queue.md) records the ordered published work.
-Prepared code and focused checks are not merged support. Every preparation must
-rebase and pass six exact-head production jobs plus the documentation audit.
-Current failures and commands are
-in [the handoff](development-state.md), rather than a second priority list here.
+PR124 accepts the resource/network, State, AD and list/codec contracts recorded
+in [the handoff](development-state.md); original preparation controls and exact
+heads are archived in history. All375 declarations are inventoried:168 contracts,
+19 IR combinators,11 flat signatures and177 declarations retaining explicit
+shared fallback. The finite review classifies arguments, results, callbacks,
+retention and teardown for these remaining167 runtime symbols. Its three-platform
+candidate audit passes; actual merged-source review and final production gates
+are still required before phase2 exit.
 
-| Area | Prepared contract | Acceptance still required |
-|---|---|---|
-| Loop and resource aggregates | Remaining reconstruction/context protections and original resource holders | Bundle CI; partial retains, traps and nested holders |
-| Libraries and devices | Input/result/unload ownership, resource teardown and OpenCL loader lifetimes | Bundle CI; host aliases and actual device evidence |
-| Networking and retained contexts | TLS/HTTP2/gRPC owners, cancellation, caches and context restoration | Bundle CI; metadata roots, callback lifetimes and protocol behavior |
-| Files and original frames | Logical ownership, borrowed IO, original scope anchors and deterministic close | Bundle CI; all escaping/error/shared boundaries |
-| File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Bundle CI; shared/stale handles and actual WASI behavior |
-| Autodiff ownership | Scoped numeric buffers, validated/retired tokens and counted gradient arrays | Callback return/error/cancellation, nested scopes, GC/reuse and raw/native controls; equivalent steady-state allocation counts/bytes must not increase |
-| Applicative and flat-map callbacks | Borrowed inputs, owned results/chunks, retained copied aliases and counted spines; separate scratch/unwind owners | Raw/native aliases and order, callback trap/cancellation, partial spine and size controls; focused and full bundle gates |
-| State backing storage | Clear inactive scanned words on pop, handler restoration and task exit; preserve suspended active states | Actual collector scans, live aliases, nested failures, gRPC recovery and real task exit/cancellation; typed State ownership remains separate |
-| WASM resources | Logical aggregate/task counts and disposal metadata | Actual-WASI full gates; physical bump storage remains allocated |
-| Frame representation | Typed record fields and variant structs, per-path pattern initialization | Bundle CI; nested holders and partial-retain traps |
+Reconstructed/decoded graphs and cached/retained contexts require tracing unless
+a typed ownership contract proves their full graph and teardown. Channel close
+preserves queued values; draining breaks the tested counted cycle. Automatic
+unreachable-cycle reclamation remains unproved. Numeric representation, optimized
+kernels and tracing-free eligibility remain separate later phases.
 
 ## Original resource semantics
 
 File values stay affine: no duplication trait or resource capture is added.
 A File parameter remains alive until its original function frame exits, even
-when ignored; early close would change later IO failures. Prepared internal ResourceRegion
+when ignored; early close would change later IO failures. Internal ResourceRegion
 anchors record these lifetimes before optimization and preserve them through
-inlining and fusion; their implementation still requires accepted bundle delivery.
+inlining and fusion, as accepted in PR124.
 Returned/error aliases retain their owners. Partially failed patterns retain
 already bound locals until frame exit, matching the interpreter.
 
-Prepared native File headers count logical owners independently of GC slots.
+Native File headers count logical owners independently of GC slots.
 The last owner closes the stream; explicit close and teardown are idempotent.
 Inline-path storage uses one aligned leaf allocation. Unshared last-owner
 storage release first removes library finalizers, and constructor failures retain
