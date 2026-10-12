@@ -166,28 +166,39 @@ request, without a word scratch buffer or intermediate list nodes. Truncated
 numeric payloads, huge counts and omission controls pass under O1/O2 GC stress.
 This focused finalization is not the six-job production merge gate.
 
-Production PR126 is open at13577c8862bb6f05e9b5f5550cedf8f181815c36 on
-numeric-storage-and-worker-abi. The initial historical archive edit removed more
-text than intended; its replacement indexes all unique earlier headings and
-retains the complete verified b61 snapshot. Publish that doc correction before
-using a production gate. Native source remains the formatted export on PR125. Keep one production PR open; require all six
-exact-head jobs and roadmap_docs before the authorized one-line squash. Verify
-raw message, one parent, complete-tree parity and actual merged-source acceptance.
+Production PR126 is open at8d244fedf2b22c6b3df3d88c4fa15673c8ff28ba on
+numeric-storage-and-worker-abi. Roadmap documentation38202824326 passes;
+CI38202824347 passes bench and both dedicated GC stress jobs, but Linux and
+regular ARM macOS fail three older generated-C probes. Regular Intel is still
+running. The probes assumed a one-argument array constructor, the previous
+position of the array destructor and fwp_r2 worker results. Focused repair
+f99f0a64e28f780ef61172fbb4b058994e7d89e1 passes runner38207493251, preserving
+all original reclamation, partial-retain unwind, alias and omission controls.
+Runner-formatted repairs are retained in /private/tmp/fwp-pr126-probe-repair-export
+and will be published to PR126 before rerunning all production gates. Native
+implementation still matches the formatted export; phase3 is not accepted.
+Initial13577c8 docs failed because the archive edit removed the tensor timing
+anchor. The corrected102-KiB index retains383 unique historic heading names,
+selected measurement text and the complete verified b61 snapshot. Superseded
+CI38202469769 was cancelled; it is not a passing gate. Preserve its metadata and
+old docs failure log. Do not change the current PR head merely for status updates;
+keep the live local/recovery handoff current while exact-head gates run.
+
+Require all six current-head jobs and roadmap_docs before squash with the
+explicit subject and empty body. merge-numeric-storage.py verifies those gates,
+raw resulting message, one parent and complete-tree parity. Actual merged-source
+phase3 acceptance remains required after the merge. No new PR is open until then.
 Then deliver phases4–6. Windows/new deployment/backends remain deferred.
 
 ## Next concrete action
 
-Deliver phase3 in one coherent representation/ABI bundle: descriptor-directed
-naturally packed narrow numeric arrays, checked views retaining their backing
-owners, and typed scalar/aggregate worker layouts with ordinary V bridges.
-Start from the actual accepted main above; preserve Pipe semantics and all
-existing generic, callback, ownership and exceptional controls. Prove exact
-bytes, alignment, immutable update behavior, serialization/hash/FFI compatibility
-and actual ARM/Intel ABI assembly before performance claims. Source preparation:
-fwp-numeric-representation-design-preparation.json and its verified source
-manifest. The accepted snapshot is current. Finish pending permanent controls,
-then export one formatted production bundle onto accepted PR125.
-Finish phases3–6 with full exact-head gates and one-line squash messages.
+Publish the verified probe repairs into PR126 with an exact branch lease.
+Require all six production jobs and roadmap_docs at the repaired head; fix any
+further failures. Then squash with an explicit one-line subject and empty body,
+verify signed commit/tree parity and audit the actual merged source for phase3.
+Continue the independent numeric fusion preparation while CI runs. Open the next
+coherent numerics PR only after PR126 merges; finish phases4–6 without repeating
+already granted publication and merge approval.
 
 ## Local checks and recovery
 
@@ -237,3 +248,19 @@ scanned allocation and typed worker ABI bridges. Source review also corrects
 the old four-field register claim in the future unboxed-record fixture; actual
 placement follows target ABI. These are source-only plans/drafts. Finish PR125
 and its actual merged-source phase2 audit before implementation.
+
+## Prepared next-phase investigation
+
+Phase4 preparation may continue while production CI runs; phase3 is not yet
+accepted. Examine pure Array map/fold fusion, a blocked F64 matrix path retaining
+per-cell floating-point order and generic fallback for malformed/cast shapes,
+and bounded reusable AD workspaces with reentrancy/unwind controls. Source
+inspection also found unchecked tape capacity multiplication on wasm32 and
+realloc pointer replacement on failure; add bounded allocator fault/overflow
+controls before changing those paths. They are tasks to fix in the next coherent
+numerics bundle, not reasons to stop the roadmap. Numeric Array fusion prototype b8199fc953c46142c9db01248e7a4a92273f6778 is
+on ownership-evidence-numeric-array-fusion. Its runner must check compiler
+invariants, raw/native behavior and complete allocation counters before it is
+considered verified. Source drafts are retained under fwp-phase4-array-fusion-draft.
+No phase4 code is verified yet. Source inspection confirms record-cell reuse
+only accepts record/ADT shapes, excluding numeric array storage.
