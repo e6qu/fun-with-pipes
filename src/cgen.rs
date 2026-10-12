@@ -5668,6 +5668,8 @@ impl<'p> Gen<'p> {
                     ("list.transpose", "fwp_p_list_transpose(l0)"),
                     ("ad.scope", "fwp_p_ad_scope(l0, l1)"),
                     ("ad.scope2", "fwp_p_ad_scope2(l0, l1, l2)"),
+                    ("matrix._valid-f64", "fwp_p_matrix_valid_f64(l0, l1)"),
+                    ("matrix._mul-f64", "fwp_p_matrix_mul_f64(l0, l1)"),
                     ("ad.tape", "fwp_p_ad_tape(l0)"),
                     ("ad.push", "fwp_p_ad_push(l0)"),
                     ("ad.backward", "fwp_p_ad_backward(l0, l1, l2)"),

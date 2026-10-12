@@ -35,8 +35,11 @@ static V workspace_result_array(size_t n){
     return fwp_arr_new(n);
 }
 static int workspace_dead(V base){
-    if(!setjmp(workspace_recovered)){fwp_tape_of((int64_t)base>>32);return 0;}
-    return !strcmp(fwp_trap_msg,FWP_AD_OUTSIDE);
+    fwp_cleanup *saved=fwp_trap_cleanup;fwp_trap_cleanup=fwp_cleanups;
+    if(!setjmp(workspace_recovered)){
+        fwp_tape_of((int64_t)base>>32);fwp_trap_cleanup=saved;return 0;
+    }
+    fwp_trap_cleanup=saved;return !strcmp(fwp_trap_msg,FWP_AD_OUTSIDE);
 }
 static uint64_t workspace_gradient(size_t n){
     const fwp_desc number={.kind=K_F64};const fwp_desc index={.kind=K_I64};
@@ -82,7 +85,10 @@ static V workspace_scope_entry(V *args){
     if(workspace_mode==5)return FWP_UNIT;
     if(workspace_mode==7){
         fwp_p_ad_scope(PTR(&workspace_nested_callback),FWP_UNIT);
-        if(!workspace_dead(workspace_nested_base))exit(207);
+        if(!workspace_dead(workspace_nested_base)){
+            int64_t id=(int64_t)workspace_nested_base>>32;size_t slot=(size_t)((id&0xffff)-1);
+            fprintf(stderr,"nested tape token=%lld slot=%zu live=%d generation=%u scope=%p\n",(long long)workspace_nested_base,slot,fwp_tapes[slot].live,fwp_tapes[slot].gen,(void *)fwp_tapes[slot].scope);exit(207);
+        }
         if(fwp_tape_of((int64_t)workspace_base>>32)->leaves!=5)exit(208);
         return FWP_UNIT;
     }
