@@ -1,5 +1,6 @@
 {
   "publisher": "scripts/roadmap-recovery/publish-arc-corpus-recovery.py",
   "previous": "6489ec4a701fe35ffda631b2612be892323a98c4",
-  "scope": "Current ARC corpus format repair and latest source; historical prior evidence stays reachable through previous checkpoint"
+  "scope": "Current ARC corpus format repair and latest source; historical prior evidence stays reachable through previous checkpoint",
+  "version": 1
 }

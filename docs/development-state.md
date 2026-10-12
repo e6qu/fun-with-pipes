@@ -11,7 +11,9 @@ Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
 verifies397 targets/34857977 bytes. Reports are retained in
-/private/tmp/fwp-verified-current-ownership-restoration. The active map is compact.
+/private/tmp/fwp-verified-current-ownership-restoration. The active map is compact. New snapshot79dbf674 retained the current drafts but
+failed audit38235606989 because its map descriptor omitted version=1; the
+descriptor repair is pending a passing restoration audit.
 The previous complete snapshot d00d306d1bac3d731f19769300e659b48cf7c020
 (audit38227215868,702 targets/48528910 bytes) retains superseded helpers and
 historical source. Restore that immutable head explicitly if they are needed. Current work
@@ -185,7 +187,7 @@ phase5-compatible RC source is fwp-scalar-borrow-reuse-draft/rc-phase5.rs.
 ## Phase6 preparation
 
 Independent branch ownership-evidence-tracing-free at
-75981271fe74b7a7dec2bc94ea1e8e57a7420286, awaiting runner validation,
+75981271fe74b7a7dec2bc94ea1e8e57a7420286, runner38235361753 in progress,
 adds explicit --gc arc/tracing build selection. ARC checks monomorphic value
 shapes and primitive ownership contracts; unsupported opaque/mutable graphs,
 retained callbacks, raw pointers, raw AD tape lifetimes, foreign/remote and executable-protocol/library

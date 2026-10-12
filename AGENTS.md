@@ -32,6 +32,10 @@ effects, checked arithmetic and observable evaluation/trap order. Infer
 ordinary types strongly; keep explicit generic signatures and compile-time
 specialization. Prefer compiler-internal ownership over new surface syntax.
 Compare interpreter and native behavior for every semantic change.
+Avoid needless wrappers, fallbacks, magic, implicit behavior and defaults.
+Register spills are ordinary allocation decisions, not fallbacks. Alternatives
+defined by a protocol are peers, not fallbacks of one another. Make necessary
+representation choices and limits explicit and justify them.
 
 ## Work and validation
 
