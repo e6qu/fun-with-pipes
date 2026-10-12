@@ -6,21 +6,17 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `50d2ee568e006b106886efdfd4f69ca66d72cf97` passes audit38242884940.
+checkpoint `e17eefa12b345b43f2956a8ffd31c2d277a9aa64` passes audit38244965952.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
-own commit. restore-roadmap-recovery.py restores only temporary paths from a
-bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies389 targets/36999908 bytes. Reports are retained in
-/private/tmp/fwp-verified-type-context-restoration. The active map retains current
-ARC/type repairs, failure IR, phase4 acceptance and complete ec866d57 platform evidence.
-Older phase4 and standalone phase5 artifact payloads remain in parent checkpoints;
-the current map retains their receipts and current delivery helpers. Prior snapshot79dbf674 failed because
-its descriptor omitted version=1; the current repair passes actual restoration.
-The previous complete snapshot d00d306d1bac3d731f19769300e659b48cf7c020
-(audit38227215868,702 targets/48528910 bytes) retains superseded helpers and
-historical source. Restore that immutable head explicitly if they are needed. Current work
-uses the designated current-map.json, not an old publisher's next action.
-Never rerun completed publishers. Phases1–4 are accepted; phases5–6 remain unfinished.
+own commit. restore-roadmap-recovery.py restores temporary paths from a bounded
+immutable archive after verifying Git blob hashes. Its disposable-runner audit
+verifies401 targets/37464368 bytes. Reports are retained in
+/private/tmp/fwp-verified-pr128-restoration. The active map retains the final
+350500f2 platform artifacts, type-repair evidence, PR #128 receipt and all remaining
+delivery helpers. Superseded ec866d57 artifact payloads remain in parent50d2ee56;
+current receipts and corpus classifications remain in the active map.
+Use current-map.json, not a historical publisher's next action. Never rerun
+completed publishers. Phases1–4 are accepted; PR #128 delivers phases5–6.
 
 ## Execution contract
 
@@ -192,11 +188,40 @@ design constraints. PR #128 bundles phases5–6 and is open at
 82d552c48663c28d05543313fa91e05b8c327b14 on checked-arc-and-loop-ownership.
 Production publisher fwp-publish-ownership-production.py is completed; do not
 rerun it. Receipt: fwp-ownership-production-publication.json.
-Roadmap documentation38244684891 passes; all six jobs in CI38244684931 remain
-pending. The production source removes the Step-by-name exception, requiring
+Roadmap documentation38244684891, bench and both macos_gc jobs in
+CI38244684931 pass. Regular ARM fails the original stack allocation control:
+variants_returned_as_structs_are_not_allocated reports24.3MiB with FWP_VRET
+both0 and1. Linux and regular Intel are still running to collect other failures.
+Failure log: /private/tmp/fwp-pr128-arm-failure.log. This head cannot merge. The production source removes the Step-by-name exception, requiring
 the registered ordinary variant contract. This delta needs the current-head gates.
 Require all six exact-head jobs and roadmap_docs before fwp-merge-ownership-bundle.py.
 Then run the prepared ownership merged-source audit publisher/downloader and
 update the plan to Done only after actual acceptance. Keep final source support
 and deliberately rejected ARC boundaries explicit. No additional feature phase
 remains after this bundle satisfies its acceptance criteria.
+
+## Active variant return repair
+
+Preparation branch ownership-evidence-variant-return-repair is
+f04ae9c646a9bb8d78b0a764566b7b78d6c8a29b, run38248993545, based on PR128
+head82d552c4. All three jobs pass. The original digits control reports24.3MiB
+with variant returns disabled and0.0MiB rounded when enabled, preserving the
+original >10MiB/<1MiB thresholds. All21 ARC cases still execute and reclaim.
+Hash-verified evidence: /private/tmp/fwp-variant-return-repair-evidence.
+fwp-download-variant-return-repair.py is completed; do not rerun it. The typed aggregate bindings needed for ownership expose a return
+ABI analysis gap: constructor results returned through locals lose their unboxed
+variant eligibility. The repair follows local value origins and keeps direct
+constructor bindings in variant structs. It does not remove type context, allow
+caller-supplied aliases into the ABI, or weaken the original >10MiB/<1MiB control.
+Draft: /private/tmp/fwp-variant-return-repair-draft; receipt:
+fwp-variant-return-repair-publication.json. Its three-platform runner includes
+the original stack controls, variant alias/conversion/stack/unwind ownership,
+numeric/loop controls and all named ARC executions. Wait for the remaining original full-job diagnostics, then repair the same PR in one
+commit and require all six jobs again at its new head.
+
+After accepted implementation source, fwp-close-roadmap-docs.py prepares the
+final live-doc closure. fwp-publish-roadmap-closure.py publishes those12 docs on
+complete-language-roadmap-docs; fwp-merge-roadmap-closure.py requires all six
+exact-head jobs plus roadmap_docs and verifies that only docs changed. These
+three helpers are prepared, not executed. This final docs-only delivery keeps
+main's plan current without claiming acceptance before its actual source audit.

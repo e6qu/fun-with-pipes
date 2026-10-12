@@ -50,8 +50,8 @@ duplicate until callback transfer; right-fold scratch releases on unwind.
 Merged loops protect current state across cancellation ticks and Step payload
 preparation; flattened Again records remain unboxed.
 Other runtime boundaries retain explicit sharing fallbacks.
-Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
-for their exact status; prepared changes are not merged support.
+See [the ownership contract](ownership.md) for the supported memory modes and
+explicit compatibility boundaries.
 
 Compiler reuse tokens clear dead fields before retaining empty young cells,
 transfer into compatible constructors and release unused cells. Registered token

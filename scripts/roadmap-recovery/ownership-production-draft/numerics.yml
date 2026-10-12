@@ -43,6 +43,8 @@ jobs:
         run: cargo test --test arc_execution --test arc_corpus
       - name: Numerical, autodiff and loop ownership regressions
         run: cargo test --no-fail-fast --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals --test loop_ownership --test loop_unwind_ownership --test loop_preparation_ownership --test field_context_ownership
+      - name: Preserve original stack allocation and variant ownership controls
+        run: cargo test --no-fail-fast --test stack --test stack_ownership --test stack_match_ownership --test variant_alias_ownership --test variant_conversion_ownership
       - name: Preserve original in-place allocation thresholds
         run: cargo test --test reuse unique_arrays_are_written_in_place
       - name: Escaping closures and exceptional resource ownership

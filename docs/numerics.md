@@ -273,5 +273,8 @@ The [ownership measurement record](measurements/ownership-and-arc-2026-10-12.jso
 retains the three-platform results and separates numerical timings from ARC
 execution controls. The handoff records full production acceptance; a lower
 instruction/count total alone is not a timing guarantee.
+Variant-return analysis follows typed constructor aliases so preserving ownership
+context does not reintroduce variant boxes. The ownership report records the
+original allocation controls separately from its earlier timing samples.
 The checked ARC subset currently excludes raw reverse-mode tape lifetimes;
 normal native autodiff continues to use the scoped bounded workspace above.
