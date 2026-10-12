@@ -145,6 +145,42 @@ fn run_wasi(wasm: &Path, env: &[(&str, &str)]) -> String {
     render(&out.stdout, &out.stderr, out.status.code().unwrap_or(-1))
 }
 
+#[test]
+fn positive_64_bit_counts_saturate_before_wasi_allocation_and_slice_bounds() {
+    let ready = available();
+    if std::env::var_os("FWP_REQUIRE_WASI_COUNTS").is_some() {
+        assert!(
+            ready,
+            "WASI count controls require the actual wasm32 toolchain and node"
+        );
+    }
+    if !ready {
+        return;
+    }
+    let tmp = std::env::temp_dir().join(format!("fwp-wasi-counts-{}", std::process::id()));
+    std::fs::create_dir(&tmp).unwrap();
+    let prefix = "make-array : I64 -> Array[I8]\nmake-array = flip array.make 0i8\ngenerate-array : I64 -> Array[I8]\ngenerate-array = flip array.generate (const \"callback control\" | prim.trap)\nbad-argument : I64 -> Array[I8]\nbad-argument = fork array.make id (const \"argument control\" | prim.trap)\n";
+    for (label, expression, expected) in [
+        ("make", "add 4294967296 | make-array | array.length", "--- stderr\nfwp: trap: array too large\n--- exit 101\n"),
+        ("generate", "add 4294967296 | generate-array | array.length", "--- stderr\nfwp: trap: array too large\n--- exit 101\n"),
+        ("argument", "add 4294967296 | bad-argument | array.length", "--- stderr\nfwp: trap: argument control\n--- exit 101\n"),
+        ("negative", "sub 1 | generate-array | array.length", "0\n"),
+        ("slice", "add 4294967296 | flip (array.slice 0) ([1i8, 2i8, 3i8] | array.from-list) | array.length", "3\n"),
+        ("take", "add 4294967296 | flip take [1, 2, 3] | length", "3\n"),
+    ] {
+        let source = tmp.join(format!("{label}.fwp"));
+        std::fs::write(&source, format!("{prefix}main = read-all () | string.length | {expression} | echo\n")).unwrap();
+        for opt in ["-O1", "-O2"] {
+            let wasm = tmp.join(format!("{label}{}.wasm", &opt[1..]));
+            let b = Command::new(fwp()).env_remove("FWP_NO_OPT")
+                .args(["build", "--target", "wasm32-wasi", opt]).arg(&source).arg("-o").arg(&wasm).output().unwrap();
+            assert!(b.status.success(), "{label} {opt}: {}", String::from_utf8_lossy(&b.stderr));
+            assert_eq!(run_wasi(&wasm, &[]), expected, "{label} {opt}");
+        }
+    }
+    std::fs::remove_dir_all(tmp).unwrap();
+}
+
 /// Tasks as fibers: thousands waiting at once, a deadlock (which traps as
 /// in native programs), and a host without JavaScript Promise Integration
 /// (where starting a task traps).

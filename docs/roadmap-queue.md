@@ -1,12 +1,11 @@
 # Prepared roadmap queue
 
-Updated 2026-10-11. This table preserves preparation ancestry. Current merge
+Updated 2026-10-12. This table preserves preparation ancestry. Current merge
 status, actual rewritten bases and checks live in [the handoff](development-state.md).
 A published preparation is not verified main support.
 
-Queue33 and35–73 are accepted through PR123; row34 is an accepted duplicate.
-The active bundle is74–112, with the extra ownership repairs and gates in the
-handoff. The table below retains immutable evidence and is not a live priority list.
+Queue33 and35–112 are accepted through PR125; row34 is an accepted duplicate.
+Phase3 numeric storage/ABI is the active bundle recorded in the handoff. The table below retains immutable evidence and is not a live priority list.
 
 Deliver related preparations as coherent bundles, one production PR at a time.
 Open the next PR after the previous one passes all six exact-head jobs plus

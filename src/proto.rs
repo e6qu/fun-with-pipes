@@ -163,11 +163,13 @@ impl<'a> Reader<'a> {
         }
     }
 
-    /// An element count: no more than the bytes of the whole value, so a
-    /// corrupt count fails fast instead of looping or allocating.
-    fn count(&mut self) -> Result<usize, String> {
+    /// Check wire and allocation bounds before constructing a collection.
+    fn count(&mut self, empty_wire: bool, unique: bool) -> Result<usize, String> {
         let n = self.leb128()?;
-        if n > self.data.len() as u64 {
+        if n > (isize::MAX as usize / std::mem::size_of::<Value>()) as u64
+            || (!empty_wire && n > self.data.len() as u64)
+            || (empty_wire && unique && n > 1)
+        {
             return Err("truncated value".into());
         }
         Ok(n as usize)
@@ -183,6 +185,26 @@ fn prim(mt: &MT) -> &str {
         MT::Con(n, _) => n.strip_prefix("std::").unwrap_or(n),
         _ => "",
     }
+}
+
+fn wire_empty(mt: &MT, prog: &Program) -> bool {
+    fn inner<'a>(mt: &'a MT, prog: &'a Program, path: &mut Vec<&'a MT>) -> bool {
+        if path.contains(&mt) {
+            return false;
+        }
+        let fields = match mt {
+            MT::Record(fields) => fields,
+            _ => match prog.shapes.get(mt) {
+                Some(TypeShape::Record(fields)) => fields,
+                _ => return false,
+            },
+        };
+        path.push(mt);
+        let empty = fields.iter().all(|(_, field)| inner(field, prog, path));
+        path.pop();
+        empty
+    }
+    inner(mt, prog, &mut Vec::new())
 }
 
 /// Decode a value of type `mt` (inverse of `encode`).
@@ -212,18 +234,24 @@ pub fn decode(r: &mut Reader, mt: &MT, prog: &Program) -> Result<Value, String> 
             "TInt" => Value::TInt(i64::from_le_bytes(r.arr()?)),
             "Trit" => Value::Trit(r.take(1)?[0] as i8),
             "String" => {
-                let n = r.leb128()? as usize;
+                let n = usize::try_from(r.leb128()?).map_err(|_| "truncated value")?;
                 let b = r.take(n)?;
                 Value::str(std::str::from_utf8(b).map_err(|_| "invalid UTF-8 in string")?)
             }
             "Bytes" => {
-                let n = r.leb128()? as usize;
+                let n = usize::try_from(r.leb128()?).map_err(|_| "truncated value")?;
                 Value::Bytes(std::rc::Rc::from(r.take(n)?))
             }
             "List" | "Array" => {
-                let n = r.count()?;
                 let t = args.first().cloned().unwrap_or(MT::unit());
+                let empty_wire = wire_empty(&t, prog);
+                let n = r.count(empty_wire, false)?;
                 let mut items = Vec::new();
+                if empty_wire {
+                    items
+                        .try_reserve_exact(n)
+                        .map_err(|_| "allocation failed")?;
+                }
                 for _ in 0..n {
                     items.push(decode(r, &t, prog)?);
                 }
@@ -234,9 +262,11 @@ pub fn decode(r: &mut Reader, mt: &MT, prog: &Program) -> Result<Value, String> 
                 }
             }
             "Map" | "Set" => {
-                let n = r.count()?;
                 let kt = args.first().cloned().unwrap_or(MT::unit());
                 let vt = args.get(1).cloned().unwrap_or(MT::unit());
+                let empty_wire =
+                    wire_empty(&kt, prog) && (prim(mt) == "Set" || wire_empty(&vt, prog));
+                let n = r.count(empty_wire, true)?;
                 let mut m = std::collections::BTreeMap::new();
                 for _ in 0..n {
                     let k = decode(r, &kt, prog)?;
@@ -251,7 +281,7 @@ pub fn decode(r: &mut Reader, mt: &MT, prog: &Program) -> Result<Value, String> 
             }
             _ => match prog.shapes.get(mt) {
                 Some(TypeShape::Adt(vs)) => {
-                    let tag = r.leb128()? as usize;
+                    let tag = usize::try_from(r.leb128()?).map_err(|_| "bad constructor tag")?;
                     let Some((_, fts)) = vs.get(tag) else {
                         return Err(format!("bad constructor tag {} for {}", tag, n));
                     };

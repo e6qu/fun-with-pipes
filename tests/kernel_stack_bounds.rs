@@ -34,8 +34,8 @@ fn empty_kernel_stack_is_safe_and_omission_is_detected() {
             let body = match omitted {
                 "stack" => kernel.replace(guarded, "stack + (sp - 1) * FWP_KCHUNK"),
                 "constant" => {
-                    assert_eq!(kernel.matches("fwp_f64(k->consts[ci++])").count(), 1);
-                    kernel.replace("fwp_f64(k->consts[ci++])", "(double)k->consts[ci++]")
+                    assert_eq!(kernel.matches("fwp_kernel_constant(k, ci++)").count(), 1);
+                    kernel.replace("fwp_kernel_constant(k, ci++)", "(double)k->consts[ci++]")
                 }
                 _ => kernel.to_owned(),
             };

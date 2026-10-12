@@ -103,8 +103,9 @@ contract. Define how runtime cycles are broken before removing tracing.
 
 Immutable source values alone do not account for runtime cycles: a channel can
 queue a value containing that same channel. Closing must preserve queued values
-for later receives. A prepared regression verifies that explicit draining and
-typed destruction break this counted cycle, including GC-off execution. Losing
+for later receives. Accepted regression controls verify explicit draining and typed destruction
+break the counted cycle. GC-off logical-count controls do not establish physical
+reclamation by the WebAssembly bump allocator. Losing
 the last external handle without draining leaves an internal counted owner;
 this does not establish automatic cycle reclamation. Tracing-free eligibility
 therefore needs proved scoped/drained lifetimes or another explicit cycle policy;
@@ -112,8 +113,8 @@ unproved shared cycles retain the tracing fallback.
 
 ## Phase 2 exit gates
 
-Finish the prepared ownership deliveries and the following finite coverage
-review before phase 3. The primitive inventory, IR checker and generated
+The actual merged-source finite coverage review passes after PR125 acceptance.
+Phase3 must preserve these contracts and explicit fallbacks. The primitive inventory, IR checker and generated
 wrappers must agree on each contract. Record conservative shared boundaries
 explicitly, including their retention and teardown; they remain tracing
 requirements until phase 6 proves eligibility for execution without collection.
@@ -136,8 +137,8 @@ Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
 when no proven borrowing contract applies; scalar words remain uncounted.
 Reconstructed decode/parse values and retained network contexts can therefore
 still require tracing even when their temporary C buffers reclaim deterministically.
-Classify these conservative requirements explicitly before phase 3; phase 6 must
-prove eligibility separately. External AD/FFI state has its own lifetime contract.
+These conservative requirements are explicitly classified in accepted phase2.
+Phase6 must prove tracing-free eligibility separately. External AD/FFI state has its own lifetime contract.
 
 PR123 accepts borrowed arguments for all nine raw-memory declarations.
 mem.alloc/mem.string allocate raw C buffers released explicitly by mem.free;
@@ -225,29 +226,34 @@ field types; generic/foreign boundaries keep explicit conversion contracts.
 | Views and reusable backing | Retain backing owners across escapes; unique updates preserve immutable aliases; cover zero-length/subrange/overflow cases and exceptional release |
 | Measured representation gate | Equivalent C/Rust work, allocation-inclusive and kernel-only results, requested/actual bytes and peak live memory; hardware/compiler/flags/assembly recorded |
 
-The current worker ABI passes fields as V words and keys fwp_r layouts by field
-count. Natural scalar fields therefore need layouts keyed by concrete field
-types, typed worker parameters/results and bit-preserving bridges to generic V
-entries. Verify floating-point register use in the emitted machine code; an
-unboxed record alone does not establish a natural floating-point calling
-convention. Keep closure, callback and foreign conversion contracts explicit.
+Direct numeric workers use concrete C scalar parameters/results and aggregate
+fields; boxing, closures, callbacks and foreign conversion keep bit-preserving
+V bridges. Natural fields distinguish layouts by their concrete types. The
+C ABI chooses register or caller-storage return: three F64 fields form an ARM
+floating-point aggregate, while the24-byte Intel result uses caller storage.
+FWP_TYPED_ABI=0 preserves the previous V-worker boundary for comparisons.
 
-Natural-width storage must cover every producer and consumer, including owned
-array primitives, typed destruction, display/equality, JSON and binary decode,
-constant construction and callback/dynamic boundaries. The current fwp_arr
-header has a64-bit length followed by V slots; it has no spare32-bit field to
-reuse without a new layout contract. Preserve length/bounds/overflow behavior.
-Specialized hot loops should select concrete loads/stores at compile time;
-unknown or mixed runtime boundaries need an explicit representation fallback or
-conversion. Measure any representation-tag/header or side-metadata overhead
-alongside payload savings, including empty and small arrays; narrow storage does
-not automatically reduce total allocated bytes. A narrower array.get alone does
-not establish representation support.
+Numeric arrays retain an8-byte length header with descriptors outside the
+payload. I8/U8 use1 byte, I16/U16 use2, I32/U32/F32 use4, I64/U64/F64 use8.
+Typed loads/stores use memcpy and preserve signed extension and float bits.
+Pointer-free numeric storage uses leaf allocations; pointer-bearing and boxed
+wide values keep word storage and typed teardown. The established count/trap
+bound remains even for narrow payloads. FWP_PACKED_ARRAYS=0 keeps word payloads
+and copied slices for controlled comparisons.
 
-Handle boxed128-bit and F16 paths explicitly: retain current numeric behavior
-until their representation/conversion contracts pass. Keep default reduction
-order and floating-point contraction unchanged. Phase 4 owns numerical loop,
-matrix and autodiff buffer/tape improvements after this representation gate.
+Numeric views have a tagged length, retained backing owner and byte address.
+Nested views retain the original backing directly. Immutable updates copy views;
+only an owning array may mutate in place. Slices with payload at most the24-byte
+view header or less than one quarter of backing length copy instead, avoiding
+unbounded retention for small results. Pointer/resource slices always copy to
+preserve disposal order. Natural alignment follows backing alignment and element
+stride; this is not a guarantee of cache-line or SIMD-register alignment.
+
+F16/BF16 currently retain their existing F32 representation and4-byte wire/storage
+format; F128 retains its existing F64 representation and8-byte format. They are
+not native half/128-bit floating formats. I128/U128 stay boxed in word slots.
+A new wide/half format requires a separate semantic and wire-format decision.
+The handoff records prepared versus accepted source and its actual runner gates.
 
 ## Evidence required
 
@@ -262,7 +268,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #123 includes the following contracts. Detailed primitive modes
+Main through PR #124 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -270,7 +276,7 @@ and measurements are in [history](roadmap-history.md).
   transfer to compatible constructors, release unused cells and unlink cleanup
   before tail calls. Failure/trap/cancellation releases registered tokens.
   Compiler call liveness and consumed constructor-field protection are merged;
-  worker argument preparation is merged. Wider callback paths stay prepared.
+  worker argument preparation is merged. Unmodeled callbacks retain compatibility roots.
 - Registered runtime owners and scoped files release exactly once before failure,
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.
@@ -290,7 +296,7 @@ and measurements are in [history](roadmap-history.md).
   partial retains and unfinished copies in PR120; general copies preserve the
   borrowed original. Boxed record conversion protects original boxes, remaining
   caller owners and completed typed field retains in PR121, including matched
-  result checkpoints. Wider callback registration remains prepared.
+  result checkpoints. Unmodeled callbacks retain shared fallback.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. Unmodeled payloads retain shared fallback.
@@ -319,13 +325,13 @@ and measurements are in [history](roadmap-history.md).
   typed ownership. Count operations address children rather than stack wrappers.
 - Zip/unzip/chunks borrow inputs and build typed counted nested spines retaining
   selected aliases. Scratch releases after construction; chunk validation
-  preserves trap order. General unwind protection remains prepared work.
+  preserves trap order. Unmodeled runtime boundaries retain compatibility roots.
 - Loop consumes its state and transfers callback inputs; it retains selected
   typed Step payloads before destroying wrappers. Specialized/flattened workers
   reclaim typed boxed inputs and ABI wrappers. Registered cleanup protects current
   state during first/later cancellation ticks and Step owners during payload
   preparation; flattened Again records remain unboxed. Later reconstruction
-  and retained-callback extensions remain prepared.
+  and retained-callback boundaries retain shared fallback.
 - Scan/iterate borrow callbacks and own each stored state, retaining initial
   aliases and adopting subsequent callback results.
 - Synchronous callbacks borrow typed inputs and return owned results. Map/filter
@@ -343,20 +349,17 @@ lifetimes, shared graph ownership or general execution without tracing.
 
 ## Ownership coverage
 
-PR124 accepts the resource/network, State, AD and list/codec contracts recorded
-in [the handoff](development-state.md); original preparation controls and exact
-heads are archived in history. All375 declarations are inventoried:168 contracts,
-19 IR combinators,11 flat signatures and177 declarations retaining explicit
-shared fallback. The finite review classifies arguments, results, callbacks,
-retention and teardown for these remaining167 runtime symbols. Its three-platform
-candidate audit passes; actual merged-source review and final production gates
-are still required before phase2 exit.
+Phase2 is accepted against the actual merged source recorded in the handoff.
+All375 declarations are inventoried:168 contracts,19 IR combinators,11 flat
+signatures and177 explicit fallback declarations/167 symbols. Their argument,
+result, callback, retention, teardown and cycle policies are checked against the
+compiler and runtime. This establishes the documented compatibility model.
 
 Reconstructed/decoded graphs and cached/retained contexts require tracing unless
-a typed ownership contract proves their full graph and teardown. Channel close
-preserves queued values; draining breaks the tested counted cycle. Automatic
-unreachable-cycle reclamation remains unproved. Numeric representation, optimized
-kernels and tracing-free eligibility remain separate later phases.
+a typed contract proves their complete graph and teardown. Channel close preserves
+queued values; draining breaks the tested counted cycle. Unreachable shared cycles
+still require tracing. Natural numeric storage/views and later optimized kernels
+must preserve these lifetimes. Optional tracing-free execution remains phase6.
 
 ## Original resource semantics
 

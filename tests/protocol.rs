@@ -7,6 +7,55 @@ use fwp::mono::Roots;
 use fwp::proto;
 use fwp::value::{display, Value};
 
+#[test]
+fn zero_byte_records_round_trip_in_collections_and_corrupt_counts_fail() {
+    let prog = program();
+    let types = [
+        MT::unit(),
+        MT::Record(vec![("0".into(), MT::unit()), ("1".into(), MT::unit())]),
+    ];
+    let values = [
+        Value::unit(),
+        Value::tuple(vec![Value::unit(), Value::unit()]),
+    ];
+    for (element, value) in types.into_iter().zip(values) {
+        for container in ["List", "Array"] {
+            let mt = MT::Con(format!("std::{container}"), vec![element.clone()]);
+            let values = vec![value.clone(); 257];
+            let value = if container == "List" {
+                Value::list(values)
+            } else {
+                Value::Array(std::rc::Rc::new(values))
+            };
+            let mut bytes = Vec::new();
+            proto::encode(&mut bytes, &value, &mt, &prog);
+            assert_eq!(bytes, [0x81, 0x02]);
+            let mut reader = proto::Reader::new(&bytes);
+            let decoded = proto::decode(&mut reader, &mt, &prog).unwrap();
+            assert_eq!(reader.pos, bytes.len());
+            assert_eq!(
+                display(&decoded, &mt, &prog, false),
+                display(&value, &mt, &prog, false)
+            );
+            let mut huge = Vec::new();
+            proto::leb128(&mut huge, u64::MAX);
+            assert!(proto::decode(&mut proto::Reader::new(&huge), &mt, &prog).is_err());
+        }
+    }
+    let mt = MT::Con("std::Array".into(), vec![MT::con("std::I8")]);
+    assert!(proto::decode(&mut proto::Reader::new(&[3, 128, 255]), &mt, &prog).is_err());
+    for name in ["String", "Bytes"] {
+        let mut huge = Vec::new();
+        proto::leb128(&mut huge, 4294967296);
+        assert!(proto::decode(
+            &mut proto::Reader::new(&huge),
+            &MT::con(&format!("std::{name}")),
+            &prog
+        )
+        .is_err());
+    }
+}
+
 const SRC: &str = r#"
 User = { name: String, age: U8, tags: List[String] }
 Shape = | Circle F64 | Rect F64 F64

@@ -229,13 +229,13 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
         fprintf(stderr, "fwp: out of memory\n");
         exit(102);
     }
-    size_t no = ARR(outs)->len, ns = ARR(seeds)->len, m = no < ns ? no : ns;
+    size_t no = fwp_array_len(outs), ns = fwp_array_len(seeds), m = no < ns ? no : ns;
     for (size_t i = 0; i < m; i++) {
-        int64_t o = (int64_t)ARR(outs)->d[i];
+        int64_t o = (int64_t)fwp_array_load(outs, i, NULL);
         if (o < 0) continue;
         if ((o >> 32) != id) fwp_trap(FWP_AD_MIXED);
         if ((o & 0xffffffff) >= tp.len) fwp_trap(FWP_AD_INVALID_NODE);
-        adj[o & 0xffffffff] += fwp_f64(ARR(seeds)->d[i]);
+        adj[o & 0xffffffff] += fwp_f64(fwp_array_load(seeds, i, NULL));
     }
     for (int64_t i = tp.len - 1; i >= tp.leaves; i--) {
         double a = adj[i];
@@ -269,6 +269,12 @@ typedef struct {
 } fwp_kernel;
 
 /* elements start..start+len (len <= FWP_KCHUNK) into out */
+static inline double fwp_kernel_constant(const fwp_kernel *k, size_t index) {
+    V bits;
+    memcpy(&bits, (const unsigned char *)k->consts + index * sizeof(V), sizeof bits);
+    return fwp_f64(bits);
+}
+
 static void fwp_kernel_eval(const fwp_kernel *k, size_t start, size_t len, double *out, double *stack) {
     size_t sp = 0, li = 0, ci = 0;
     for (size_t pc = 0; pc < k->ncode; pc++) {
@@ -280,7 +286,7 @@ static void fwp_kernel_eval(const fwp_kernel *k, size_t start, size_t len, doubl
             sp++;
             break;
         case FWP_K_CONST: {
-            double c = fwp_f64(k->consts[ci++]), *s = stack + sp * FWP_KCHUNK;
+            double c = fwp_kernel_constant(k, ci++), *s = stack + sp * FWP_KCHUNK;
             for (size_t j = 0; j < len; j++) s[j] = c;
             sp++;
             break;
@@ -412,8 +418,8 @@ static int fwp_kernel_workspace_fits(size_t depth) {
 /* check a kernel and gather its inputs; *inputs is malloc'ed */
 static void fwp_kernel_prepare(fwp_kernel *k, V code, V consts, V inputs, size_t n) {
     size_t sp = 0, depth = 0, leaves = 0, nconsts = 0;
-    k->code = (const int64_t *)ARR(code)->d;
-    k->ncode = ARR(code)->len;
+    k->code = (const int64_t *)((const V *)fwp_array_data(code));
+    k->ncode = fwp_array_len(code);
     for (size_t i = 0; i < k->ncode; i++) {
         int64_t op = k->code[i];
         if (op == FWP_K_LEAF || op == FWP_K_CONST) {
@@ -431,21 +437,21 @@ static void fwp_kernel_prepare(fwp_kernel *k, V code, V consts, V inputs, size_t
         }
     }
     size_t nin = fwp_list_len(inputs);
-    if (sp != 1 || leaves != nin || nconsts != ARR(consts)->len) fwp_trap("device: malformed kernel");
-    k->consts = ARR(consts)->d;
+    if (sp != 1 || leaves != nin || nconsts != fwp_array_len(consts)) fwp_trap("device: malformed kernel");
+    k->consts = ((const V *)fwp_array_data(consts));
     k->depth = depth;
     k->inputs = (const double **)fwp_k_malloc((nin ? nin : 1) * sizeof(double *));
     V xs = inputs;
     for (size_t i = 0; i < nin; i++) {
         V a = OBJ(xs)->f[0];
-        if (ARR(a)->len != n) {
+        if (fwp_array_len(a) != n) {
             char msg[128];
             snprintf(msg, sizeof msg, "device: input %zu has %llu elements, the kernel %zu", i,
-                     (unsigned long long)ARR(a)->len, n);
+                     (unsigned long long)fwp_array_len(a), n);
             free((void *)k->inputs);
             fwp_trap(msg);
         }
-        k->inputs[i] = (const double *)ARR(a)->d;
+        k->inputs[i] = (const double *)((const V *)fwp_array_data(a));
         xs = OBJ(xs)->f[1];
     }
     if (!fwp_kernel_workspace_fits(depth)) {
@@ -701,9 +707,9 @@ static V fwp_p_gpu_run(V src, V nv, V consts, V inputs) {
     for (size_t i = 0; i < nin + 2; i++) {
         V a = i == 0 ? 0 : i == 1 ? consts : OBJ(inputs)->f[0];
         if (i >= 2) inputs = OBJ(inputs)->f[1];
-        size_t len = i == 0 ? n : ARR(a)->len;
+        size_t len = i == 0 ? n : fwp_array_len(a);
         uint64_t flags = i == 0 ? (1 << 1) : (1 << 2);
-        void *host = (i > 0 && len > 0) ? (void *)ARR(a)->d : 0;
+        void *host = (i > 0 && len > 0) ? (void *)((const V *)fwp_array_data(a)) : 0;
         if (host) flags |= 1 << 5;
         mems[nmem] = fwp_cl.create_buffer(fwp_cl.context, flags, (len ? len : 1) * sizeof(double), host, &err);
         if (!mems[nmem] || err) {

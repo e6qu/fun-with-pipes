@@ -429,9 +429,9 @@ static void fwp_jt_write(fwp_buf *b, V v, const fwp_desc *d) {
     }
     case K_ARRAY: {
         buf_putc(b, '[');
-        for (uint64_t i = 0; i < ARR(v)->len; i++) {
+        for (uint64_t i = 0; i < fwp_array_len(v); i++) {
             if (i) buf_putc(b, ',');
-            fwp_jt_write(b, ARR(v)->d[i], d->elem);
+            fwp_jt_write(b, fwp_array_load(v, i, d->elem), d->elem);
         }
         buf_putc(b, ']');
         return;
@@ -972,7 +972,7 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
             return 1;
         }
         V l = fwp_list_from(items, r->n);
-        *out = d->kind == K_ARRAY ? fwp_p_array_from_list(l) : l;
+        *out = d->kind == K_ARRAY ? fwp_p_array_from_list_with_elem(l, d->elem) : l;
         return 1;
     }
     case K_MAP: {
