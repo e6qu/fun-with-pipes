@@ -1,0 +1,43 @@
+name: Numeric Array fusion preparation
+on:
+  push:
+    branches: [ownership-evidence-numeric-array-fusion]
+jobs:
+  numeric_fusion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+      FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format and validate compiler changes
+        run: |
+          cargo fmt --all
+          cargo clippy --all-targets -- -D warnings
+          cargo test --lib
+          cargo test --test blocked_matrix
+
+      - name: Export formatted source
+        if: always()
+        run: |
+          mkdir -p array-fusion-evidence/source
+          cp src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/wasm.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/
+          cp runtime/fwp_rt_kernel.c array-fusion-evidence/source/
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: numeric-array-fusion-evidence
+          path: |
+            array-fusion-evidence/source/*.rs
+            array-fusion-evidence/source/*.c
+            array-fusion-evidence/*.json
+            array-fusion-evidence/*.c
+            array-fusion-evidence/*.asm
+            array-fusion-evidence/workspaces/*.json

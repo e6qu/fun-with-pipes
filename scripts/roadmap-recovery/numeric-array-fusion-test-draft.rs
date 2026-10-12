@@ -46,11 +46,20 @@ fn numeric_array_fusion_eliminates_intermediates_and_reclaims_inputs() {
           .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {","static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){measured_calls++;measured_bytes+=n;}")
           .replace("static inline void *fwp_alloc_init(size_t n) {","static inline void *fwp_alloc_init(size_t n) {\nmeasured_calls++;measured_bytes+=n;")
           .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
+        if let Some(destination)=std::env::var_os("FWP_ARRAY_FUSION_ARTIFACTS") {
+            let destination=std::path::PathBuf::from(destination);std::fs::create_dir_all(&destination).unwrap();
+            std::fs::write(destination.join(format!("original-{mode}.c")),&source).unwrap();
+            std::fs::write(destination.join(format!("measured-{mode}.c")),format!("{code}\n{probe}")).unwrap();
+        }
         for opt in ["-O1","-O2"] {
             let executable=directory.join(format!("profile-{mode}{}",&opt[1..]));fwp::cgen::compile_c(&format!("{code}\n{probe}"),&executable,opt).unwrap();
             let out=checked(Command::new(&executable).env("FWP_GC_STRESS","0").env("FWP_GC_VERIFY","1").env("FWP_REUSE_VERIFY","0"));
             if let Some(destination)=std::env::var_os("FWP_ARRAY_FUSION_ARTIFACTS") {
                 let destination=std::path::PathBuf::from(destination);std::fs::create_dir_all(&destination).unwrap();std::fs::write(destination.join(format!("permanent-{mode}{opt}.json")),&out.stdout).unwrap();
+                if opt=="-O2" {
+                    let mut disasm=if cfg!(target_os="macos") {let mut c=Command::new("otool");c.arg("-tvV");c}else{let mut c=Command::new("objdump");c.arg("-d");c};
+                    let assembly=checked(disasm.arg(&executable));std::fs::write(destination.join(format!("production-{mode}.asm")),assembly.stdout).unwrap();
+                }
             }
             let report=fwp::json::Json::parse(std::str::from_utf8(&out.stdout).unwrap()).unwrap();
             let Some(fwp::json::Json::Arr(cases))=report.get("cases") else {panic!("missing measured cases");};

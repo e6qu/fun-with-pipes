@@ -1,0 +1,198 @@
+numeric_fusion	Format and validate compiler changes	﻿2026-10-12T07:13:19.6562947Z ##[group]Run cargo fmt --all
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6563473Z ^[[36;1mcargo fmt --all^[[0m
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6563932Z ^[[36;1mcargo clippy --all-targets -- -D warnings^[[0m
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6564458Z ^[[36;1mcargo test --lib^[[0m
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6566433Z ^[[36;1mcargo test --no-fail-fast --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals^[[0m
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6655213Z shell: /usr/bin/bash -e {0}
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6655654Z env:
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6655971Z   CC: clang
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6656287Z   CARGO_BUILD_JOBS: 2
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6656642Z   RUST_TEST_THREADS: 2
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6657073Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6658259Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6658888Z   CARGO_HOME: /home/runner/.cargo
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6659385Z   CARGO_INCREMENTAL: 0
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6659748Z   CARGO_TERM_COLOR: always
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:19.6660119Z ##[endgroup]
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:21.1818787Z ^[[1m^[[92m    Checking^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:31.5069854Z ^[[1m^[[92m    Finished^[[0m `dev` profile [unoptimized + debuginfo] target(s) in 10.42s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:31.5833273Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0672565Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized + debuginfo] target(s) in 10.52s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0679497Z ^[[1m^[[92m     Running^[[0m unittests src/lib.rs (target/debug/deps/fwp-9a38a0d8d9915b2b)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0692010Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0692221Z running 72 tests
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0695454Z test cli::tests::names ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0696077Z test cli::tests::field_comments ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0696693Z test csv::tests::quoting ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0697872Z test escape::tests::applying_a_closure_does_not_let_it_escape ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0698770Z test escape::tests::counts_around_an_argument_are_seen_through ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0699565Z test escape::tests::match_aliases_are_followed ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0700312Z test escape::tests::passing_on_follows_the_callee ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0701131Z test escape::tests::reading_fields_does_not_escape ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0701785Z test escape::tests::returning_or_storing_escapes ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0705470Z test fmt::tests::comments_and_blank_lines ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0713579Z test fmt::tests::layout ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0714526Z test fmt::tests::spelling_and_ambiguities ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0715894Z test grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0768608Z test grpc::web::tests::frames_round_trip ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0769594Z test grpc::web::tests::sha1_and_accept ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0786788Z test grpc::web::tests::websocket_messages_deflate_and_inflate ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0793536Z test grpc::web::tests::zlib_round_trip ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0809107Z test gzip::tests::chunks_make_one_stream ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.0810002Z test gzip::tests::crc ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2075277Z test gzip::tests::others_read_ours ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2078666Z test gzip::tests::reads_other_encoders ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2084107Z test gzip::tests::rejects_bad_data ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2249850Z test gzip::tests::round_trip ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2252642Z test jsontype::tests::base64_round_trip ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2255079Z test jsontype::tests::durations ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2257971Z test jsontype::tests::exact_integers ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2258701Z test lexer::tests::hyphen_vs_negative ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2259509Z test lexer::tests::idents_and_selectors ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2260240Z test lexer::tests::layout_flags ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2261355Z test lexer::tests::numbers ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2261932Z test lexer::tests::strings_comments_macros ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2262869Z test numerics::tape_validation_tests::invalid_nodes_preserve_push_state_and_consume_backward_tapes ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2264739Z test numerics::tape_validation_tests::scoped_callbacks_release_only_their_live_tapes ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2282287Z test numerics::tape_validation_tests::workspace_reuse_clears_adjoint_and_preserves_token_lifetimes ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2287118Z test ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2290145Z test rc::tests::a_borrowed_argument_lives_until_the_operation ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2293043Z test rc::tests::a_match_dups_the_fields_an_arm_keeps_and_drops_the_rest ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2294318Z test rc::tests::a_parameter_returned_is_moved ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2297172Z test rc::tests::a_parameter_used_twice_is_duplicated_once ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2301054Z test rc::tests::an_unused_parameter_is_dropped ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2302187Z test rc::tests::borrowed_pattern_values_are_not_unwind_owners ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2303479Z test rc::tests::call_liveness_distinguishes_borrows_transfers_and_duplicate_owners ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2305553Z test rc::tests::constructors_transfer_fields_and_keep_other_caller_owners ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2306772Z test rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2310468Z test rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2313134Z test rc::tests::earlier_caf_owner_remains_owned_during_a_final_scalar_call ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2316071Z test rc::tests::earlier_consumed_arguments_remain_owned_during_later_calls ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2319805Z test rc::tests::earlier_duplicate_remains_owned_during_the_final_call ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2323587Z test rc::tests::earlier_owner_remains_owned_during_a_final_scalar_call ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2324743Z test rc::tests::matched_value_conversion_keeps_remaining_caller_owners ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2328629Z test rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2332733Z test rc::tests::original_resource_parameters_enter_the_frame_before_dead_drops ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2333556Z test rc::tests::parts_keep_their_order ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2334595Z test rc::tests::retain_liveness_excludes_the_unfinished_extra_reference ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2335682Z test rc::tests::scalars_are_not_counted ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2337905Z test rc::tests::the_checker_rejects_mistakes ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2341785Z test rc::tests::uninitialized_region_bindings_are_not_entry_owners ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2342462Z test rc::tests::update_liveness_keeps_the_borrowed_base_and_remaining_owners ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2348345Z test resource::tests::fusion_preserves_resource_stage_frames_even_with_pure_bodies ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2349658Z test resource::tests::nominal_recursive_resource_graphs_and_nonowning_arrows ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2351135Z test resource::tests::owner_metadata_rejects_missing_duplicate_and_scalar_slots ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2354471Z test swagger::tests::converts_a_document ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2356623Z test value::tests::floats_round_trip_shortest ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2358089Z test value::tests::trits ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2359711Z test yaml::tests::anchors ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2361935Z test yaml::tests::block_collections ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2363342Z test yaml::tests::block_scalars ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2364802Z test yaml::tests::errors ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2366303Z test yaml::tests::flow_over_lines ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2370209Z test yaml::tests::reads_what_openapi_writes ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:42.2372144Z test yaml::tests::scalars ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:45.6752737Z test grpc::web::tests::body_bounds_and_error_order_agree_with_native ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:45.6753801Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:45.6754534Z test result: ok. 72 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.61s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:45.6755218Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:13:45.6958164Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:00.3449930Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized + debuginfo] target(s) in 14.65s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:00.3467718Z ^[[1m^[[92m     Running^[[0m tests/ad_tape_ownership.rs (target/debug/deps/ad_tape_ownership-2194d4e6cbded721)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:00.3476990Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:00.3477192Z running 2 tests
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:09.9571732Z test detached_tape_buffers_release_on_return_trap_and_cancellation ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:23.4394548Z ^[[1m^[[92m     Running^[[0m tests/ad_tape_scopes.rs (target/debug/deps/ad_tape_scopes-aa2d827e754849af)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:23.4397197Z test public_tape_tokens_agree_with_raw_interpreter ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:23.4404976Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:23.4407132Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.09s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:23.4407846Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:23.4411379Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:23.4411535Z running 4 tests
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:25.5508962Z test borrowed_scope_inputs_reject_affine_files ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:30.4873622Z test scoped_callbacks_return_independently_owned_input_aliases ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:14:32.9692621Z test callback_scopes_release_live_tapes_without_per_scope_heap_owners ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:02.4172062Z test scoped_gradient_functions_agree_with_raw_interpreter ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:02.4172683Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:02.4173313Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 38.98s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:02.4173923Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:02.4192805Z ^[[1m^[[92m     Running^[[0m tests/autodiff_capacity_bounds.rs (target/debug/deps/autodiff_capacity_bounds-0fea73fe24b7fe80)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:02.4202040Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:02.4204906Z running 1 test
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:09.0475958Z test tape_capacity_checks_and_realloc_failures_preserve_owners ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:09.0476606Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:09.0477557Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.63s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:09.0478265Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:09.0479113Z ^[[1m^[[92m     Running^[[0m tests/autodiff_library.rs (target/debug/deps/autodiff_library-edfad182baa560d7)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:09.0488299Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:09.0488515Z running 1 test
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:12.9272644Z test autodiff_library_unload_releases_live_and_cached_buffers ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:12.9273195Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:12.9273707Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.88s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:12.9274282Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:12.9275850Z ^[[1m^[[92m     Running^[[0m tests/autodiff_workspace.rs (target/debug/deps/autodiff_workspace-89a237612106f91b)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:12.9284809Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:12.9285040Z running 1 test
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:15.9395635Z test autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:15.9396921Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:15.9398102Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.01s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:15.9399148Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:15.9407150Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:15.9407668Z running 2 tests
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:15.9412152Z ^[[1m^[[92m     Running^[[0m tests/blocked_matrix.rs (target/debug/deps/blocked_matrix-020185df6581623f)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:17.0057523Z test blocked_matrix_uses_only_output_storage_and_preserves_scalar_order ... FAILED
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9223459Z test blocked_matrix_preserves_raw_products_and_cast_shape_behavior ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9224379Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9224618Z failures:
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9225019Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9225572Z ---- blocked_matrix_uses_only_output_storage_and_preserves_scalar_order stdout ----
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9225942Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9226497Z thread 'blocked_matrix_uses_only_output_storage_and_preserves_scalar_order' (4126) panicked at tests/blocked_matrix.rs:5:5:
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9230010Z env -u FWP_NO_OPT FWP_MATRIX_BLOCKING="0" "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp" "build" "--fn" "product-data" "--emit-c" "/tmp/fwp-blocked-matrix-alloc-4123/matrix.fwp" "-o" "/tmp/fwp-blocked-matrix-alloc-4123/matrix-0.c":  /tmp/fwp-blocked-matrix-alloc-4123/matrix.fwp:17:23: error: type mismatch in pipe input (composition): expected `{data: a | r}`, found `Matrix[b, c, d] -> Matrix[b, c, f]`
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9231746Z 17 | product-data = matmul | .data
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9232026Z    |                       ^
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9232175Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9232489Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9232807Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9232837Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9232919Z failures:
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9233254Z     blocked_matrix_uses_only_output_storage_and_preserves_scalar_order
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9233546Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9233918Z test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.98s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9234292Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9234838Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test blocked_matrix`
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9235627Z ^[[1m^[[92m     Running^[[0m tests/numeric_array_fusion.rs (target/debug/deps/numeric_array_fusion-4edc099c87f45a10)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9240881Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:26.9241066Z running 2 tests
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:15:36.5166121Z test numeric_array_fusion_eliminates_intermediates_and_reclaims_inputs ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:09.5004652Z test numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:09.5005331Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:09.5005997Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 42.58s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:09.5006565Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:09.5007804Z ^[[1m^[[92m     Running^[[0m tests/old_reclamation.rs (target/debug/deps/old_reclamation-798e088a482ce582)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:09.5016078Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:09.5016294Z running 3 tests
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:13.0539206Z test marked_owned_storage_reclaims_and_reuses_as_young ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:15.3135382Z test surviving_leaf_storage_is_released_by_counts ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:17.5923289Z test retained_task_boundaries_preserve_golden_behavior ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:17.5924212Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:17.5925314Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.09s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:17.5926837Z ^[[1m^[[92m     Running^[[0m tests/retain_unwind_ownership.rs (target/debug/deps/retain_unwind_ownership-ce848ff476d03f87)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:17.5927603Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:17.5936013Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:17.5936169Z running 1 test
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:31.1260912Z test wide_count_overflow_releases_partial_variant_retains_and_live_callers ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:31.1261623Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:31.1262253Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.53s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:31.1262872Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:31.1266310Z ^[[1m^[[92m     Running^[[0m tests/unboxed_worker_locals.rs (target/debug/deps/unboxed_worker_locals-fde6f05ec359699a)
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:31.1276719Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:31.1277081Z running 2 tests
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:32.8808572Z test transferred_record_fields_preserve_aliases_and_trap_cleanup ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:34.7549749Z test recursive_record_workers_keep_results_unboxed ... ok
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:34.7550509Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:34.7551360Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.63s
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:34.7552315Z 
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:34.7556515Z ^[[1m^[[91merror^[[0m: 1 target failed:
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:34.7557014Z     `--test blocked_matrix`
+numeric_fusion	Format and validate compiler changes	2026-10-12T07:16:34.7589694Z ##[error]Process completed with exit code 101.

@@ -1307,6 +1307,9 @@ impl<'a> Mono<'a> {
                 abi,
                 variadic,
             } => {
+                if abi != "C" && matches!(symbol.as_str(), "matrix._valid-f64" | "matrix._mul-f64") {
+                    return Err(Diagnostic::error(e.span, "matrix specialization primitives are compiler-internal"));
+                }
                 let mt = self.node_mt(e.id, s);
                 let id = if abi == "C" {
                     self.c_instance(&inst.target, symbol, *variadic, mt)

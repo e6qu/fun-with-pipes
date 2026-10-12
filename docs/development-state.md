@@ -6,12 +6,12 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `85ea2b6d130c86ff260f4ad1850f9eae444b5919` passes audit38213004389.
+checkpoint `817335feace85d9bda136f3bac94515f2f25fb87` passes audit38215614654.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies292 targets/15295098 bytes. Reports are retained in
-/private/tmp/fwp-verified-numerics-workspace-restoration. On recovery, run the
+verifies368 targets/19186843 bytes. Reports are retained in
+/private/tmp/fwp-verified-phase4-active-restoration. On recovery, run the
 bounded restore-numeric-finalization-archive.py after restoring temporary
 sources to reconstruct the verified gzip export from its retained base64 text. Never rerun completed publishers. Phases1–3 are accepted; phases4–6 remain unfinished.
 
@@ -104,35 +104,49 @@ instructions are historical; use the current checkpoint and active bundle.
 
 ## Active phase4 bundle
 
-Preparation branch ownership-evidence-numeric-array-fusion at
-d2b9a90d2eb61448f5caf282137ac5d4424a5266 passes Linux runner38212917636.
-Formatted source/reports: /private/tmp/fwp-rust-numeric-workspace-evidence.
+Preparation branch ownership-evidence-numeric-array-fusion has a passing
+Linux bundle3dbcddafe52b77a95f8db600d43d6208d4739b6c in runner38216031833.
+Formatted source/reports: /private/tmp/fwp-matrix-wasi-workspace-evidence.
 Eligible pure Array map/fold/length fusion removes intermediate allocations;
-original effect/trap, recursion, exact finite bits and arithmetic NaN controls
-pass. Native and interpreter AD workspace caches are bounded to512KiB with
-scoped owners; matching tape bounds and allocator-fault controls pass. Native
-cold/warm allocation, cancellation, reentrancy and shutdown controls pass;
-interpreter buffer identity, adjoint zeroing, stale token and over-budget
-controls pass. These focused checks are preparation, not merged phase4 support.
-The prior2f run failed because publication omitted an updated signed-zero
-fixture; e166 repaired it without weakening assertions. Earlier arithmetic
-NaN payload equality was overconstrained; exact results remain recorded and
-copy/storage/ABI bit guarantees remain unchanged.
+effect/trap, recursion, exact finite bits and arithmetic NaN controls pass.
+Native/interpreter AD caches are bounded to512KiB. Cold/warm allocation,
+scoped ownership, stale tokens, adjoint zeroing, capacity faults, cancellation,
+reentrancy, normal/nested scopes, library unload and actual wasm32 limits pass.
+The library omission control fails as intended. Matrix ordinary and cast-shape
+products match the raw interpreter under both optimization settings.
 
-Next finish normal/nested native workspace scopes and library-unload cleanup,
-actual wasm32 AD bounds, guarded blocked F64 matrix execution and equivalent
-C/Rust performance/memory profiles. Then validate the coherent bundle on
-Linux and both Macs, export formatted source, open one production PR from
-accepted main and require all six exact-head jobs plus roadmap_docs before
-squash. Continue phases5–6 after actual merged-source acceptance. Fix encountered
-bugs and failed controls throughout; CI waiting gates merges, not preparation.
+Direct matrix dimension/array arguments and output-only allocation pass at
+019580cc1ce07cc3f801e20ab3328c85ab6d8d68 in runner38217572666. Trap and
+cancellation cleanup, deliberately omitted cleanup, internal primitive access
+rejection and raw-interpreter shape controls pass. The kernel allocates exactly
+one output payload; callers retain responsibility for their input owners.
+
+Equivalent C/Rust/generated benchmarks are being validated. Head80b454 in
+runner38218487246 passed compiler and regression checks, then failed its profile
+instrumentation because a function prefix also matched a compile-time stub.
+Head e5de4d3811e2cc77a78612f359db2b93a92b9b88 makes that match precise; results
+are pending. Timings use separate uninstrumented executables, and all workloads
+must agree on exact result hashes. Allocation, reference-count operations,
+charged live memory and process RSS are recorded separately. No speed claim is
+accepted yet. Permanent test artifacts now supply allocation metadata without
+rebuilding the same evidence. Historical failed preparation heads are retained;
+none substitutes for a passing production gate.
+
+Current source is /private/tmp/fwp-phase4-matrix-draft; the complete publication
+mapping is /private/tmp/fwp-numerical-performance-files.json. Next finish the
+benchmark checks, run the coherent numerical/AD bundle on Linux and both Macs,
+then export formatted source and open one production PR from accepted main.
+Require all six exact-head jobs plus roadmap_docs before squash. Continue
+phases5–6 after actual merged-source acceptance. Fix encountered bugs throughout;
+CI waiting gates merges, not preparation. No phase4 production PR is open yet.
 
 Latest user constraint: avoid needless wrappers, alternate paths, magic and
 implicit defaults. Register spills are ordinary lowering, and protocol-defined
-options are peers. Review the proposed matrix shape branch against existing
-semantics before retaining it. Native library unload controls pass at464dd3b8
-(run38214871597), but its nested-scope probe fails207; the run is not passing.
-The expected-trap probe crossed its enclosing cleanup boundary; its catcher is
-being corrected and diagnostics retained before concluding whether runtime
-changes are needed. Current source-only matrix drafts have not run yet.
-
+options are peers. Runtime matrix.cast preserves fields and may create shape
+mismatches; the specialized path must preserve their existing list/zip behavior.
+The checked shape branch is semantic protection, not an allocation fallback.
+Dimensions and borrowed arrays cross internal primitives directly. The tile
+candidate has an explicit32-element name and24KiB three-tile payload rationale;
+measure it on each supported target before claiming performance. Caches and
+comparison switches are compiler/runtime implementation controls, not new Pipe
+syntax or implicit type conversions.

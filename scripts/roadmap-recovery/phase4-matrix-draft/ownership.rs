@@ -169,8 +169,8 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         }
         "ptr.at" | "ptr.write" => (&[B, B], R, None, &[]),
         "ptr.read-string" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
-        "matrix._valid-f64" => (&[B, B], R, None, &[]),
-        "matrix._mul-f64" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "matrix._valid-f64" => (&[B, B, B, B, B, B], R, None, &[]),
+        "matrix._mul-f64" => (&[B, B, B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "ad.tape" | "ad.push" => (&[B], ResultOwnership::Shared, None, &[]),
         "ad.backward" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "task.spawn" => (
