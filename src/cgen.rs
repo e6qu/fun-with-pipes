@@ -819,32 +819,38 @@ fn mentions(ft: &MT, t: &MT) -> bool {
         }
 }
 
+/// Whether every result is built here or comes from a qualifying worker.
+/// Typed local bindings retain ownership context without hiding those origins.
+/// Caller-provided values have no entry in `known` and remain boxed.
+fn built_return(
+    e: &Expr,
+    known: &std::collections::HashSet<Local>,
+    builds: &impl Fn(&Expr) -> bool,
+) -> bool {
+    match e {
+        Expr::Local(l) => known.contains(l),
+        Expr::Let(l, value, body) => {
+            let mut known = known.clone();
+            if built_return(value, &known, builds) {
+                known.insert(*l);
+            } else {
+                known.remove(l);
+            }
+            built_return(body, &known, builds)
+        }
+        Expr::Match(_, arms) => arms.iter().all(|(_, body)| built_return(body, known, builds)),
+        Expr::Dup(_, body) | Expr::Drop(_, body) | Expr::ResourceRegion { body, .. } => {
+            built_return(body, known, builds)
+        }
+        _ => builds(e),
+    }
+}
+
 /// Which functions return their variant result as a struct: those whose
 /// every tail builds a constructor or calls such a function (a fixed point
 /// from all candidates down). A function that may return a value it was
 /// given keeps returning it as it is.
 fn variant_returns(prog: &Program, abis: &mut [Option<Abi>]) {
-    // Typed bindings preserve ownership context after inlining. Follow their
-    // value origins so an alias of a freshly produced variant keeps the same
-    // return ABI; a value supplied by the caller is still not a candidate.
-    fn produces(e: &Expr, m: usize, cand: &[Option<usize>], known: &std::collections::HashSet<Local>) -> bool {
-        match e {
-            Expr::Construct(..) => true,
-            Expr::Call(id, _) => cand[*id] == Some(m),
-            Expr::Local(l) => known.contains(l),
-            Expr::Let(l, value, body) => {
-                let mut known = known.clone();
-                if produces(value, m, cand, &known) { known.insert(*l); }
-                else { known.remove(l); }
-                produces(body, m, cand, &known)
-            }
-            Expr::Match(_, arms) => arms.iter().all(|(_, body)| produces(body, m, cand, known)),
-            Expr::Dup(_, body) | Expr::Drop(_, body) | Expr::ResourceRegion { body, .. } => {
-                produces(body, m, cand, known)
-            }
-            _ => false,
-        }
-    }
     let mut cand: Vec<Option<usize>> = prog
         .funcs
         .iter()
@@ -862,7 +868,11 @@ fn variant_returns(prog: &Program, abis: &mut [Option<Abi>]) {
             let (Some(m), Body::Expr(body)) = (cand[id], &f.body) else {
                 continue;
             };
-            let ok = produces(body, m, &cand, &std::collections::HashSet::new());
+            let ok = built_return(body, &std::collections::HashSet::new(), &|e| match e {
+                Expr::Construct(..) => true,
+                Expr::Call(g, _) => cand[*g] == Some(m),
+                _ => false,
+            });
             if !ok {
                 cand[id] = None;
                 changed = true;
@@ -902,9 +912,7 @@ fn wide_record_returns(prog: &Program, abis: &mut [Option<Abi>]) {
             if n <= MAX_ANY_RET {
                 continue;
             }
-            let mut ts = Vec::new();
-            tails(body, &mut ts);
-            let ok = ts.iter().all(|t| match t {
+            let ok = built_return(body, &std::collections::HashSet::new(), &|e| match e {
                 Expr::Record(xs) => xs.len() == n,
                 Expr::Call(g, _) => abis[*g].as_ref().and_then(|a| a.ret) == Some(n),
                 _ => false,

@@ -89,6 +89,13 @@ fn wide_records_are_returned_without_allocating() {
     assert!(mib < 1.0, "{} MiB", mib);
 }
 
+/// Inlining `const` preserves the constructed record's typed binding. That
+/// ownership context must not hide its origin from the return ABI analysis.
+#[test]
+fn wide_record_aliases_are_returned_without_allocating() {
+    on_heap_and_stack("wide_alias", "FWP_STACK", "60003000000\n");
+}
+
 /// What `tests/stack/<name>.fwp`, compiled with `var` set to `value`,
 /// allocates (MiB), checking that it prints `expected`.
 fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) -> f64 {
