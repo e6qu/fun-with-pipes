@@ -952,8 +952,8 @@ fn inputs(v: &Value) -> Vec<Vec<f64>> {
 pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
     let r = (|| -> R<Option<Value>> {
         Ok(Some(match sym {
-            "matrix._valid-f64" => Value::bool(matrix_product_shape(&a[0], &a[1]).is_some()),
-            "matrix._mul-f64" => matrix_product(&a[0], &a[1])?,
+            "matrix._valid-f64" => Value::bool(matrix_product_shape(a).is_some()),
+            "matrix._mul-f64" => matrix_product(a)?,
             "ad.tape" => Value::I64(tape_new(int(&a[0]))?),
             "ad.push" => {
                 let f = match &a[0] {
@@ -1013,19 +1013,19 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
 // This fixed candidate is measured on each supported target before acceptance.
 const MATRIX_TILE: usize = 32;
 type MatrixProduct<'a> = (usize, usize, usize, &'a [Value], &'a [Value]);
-fn matrix_product_shape<'a>(b: &'a Value, a: &'a Value) -> Option<MatrixProduct<'a>> {
-    let (Value::Record(a), Value::Record(b)) = (a, b) else { return None; };
-    if a.len()!=3 || b.len()!=3 { return None; }
-    let (m,k,br,n)=(usize::try_from(int(&a[2])).ok()?,usize::try_from(int(&a[0])).ok()?,usize::try_from(int(&b[2])).ok()?,usize::try_from(int(&b[0])).ok()?);
+fn matrix_product_shape(a: &[Value]) -> Option<MatrixProduct<'_>> {
+    let (m,k,br,n)=(usize::try_from(int(&a[0])).ok()?,usize::try_from(int(&a[1])).ok()?,usize::try_from(int(&a[2])).ok()?,usize::try_from(int(&a[3])).ok()?);
     if br!=k { return None; }
-    let (Value::Array(left),Value::Array(right))=(&a[1],&b[1]) else {return None;};
+    let (Value::Array(left),Value::Array(right))=(&a[4],&a[5]) else {return None;};
     let limit=(usize::MAX-8)/8;
     let (ak,bk,out)=(m.checked_mul(k)?,k.checked_mul(n)?,m.checked_mul(n)?);
     if ak>limit || bk>limit || out>limit || left.len()!=ak || right.len()!=bk {return None;}
     Some((m,k,n,left,right))
 }
-fn matrix_product(b: &Value,a: &Value) -> R<Value> {
-    let Some((m,k,n,left,right))=matrix_product_shape(b,a) else {return trap("invalid internal matrix shape");};
+fn matrix_product(a: &[Value]) -> R<Value> {
+    // Only the compiler emits this primitive, after validating these fields.
+    let (m,k,n)=(int(&a[0]) as usize,int(&a[1]) as usize,int(&a[2]) as usize);
+    let (Value::Array(left),Value::Array(right))=(&a[3],&a[4]) else { unreachable!("typed matrix storage"); };
     let mut result=vec![0.0f64;m*n];
     if n!=0 && k!=0 {
         for ib in (0..m).step_by(MATRIX_TILE) {

@@ -21,3 +21,31 @@ fn blocked_matrix_preserves_raw_products_and_cast_shape_behavior(){
     }
     std::fs::remove_dir_all(d).unwrap();
 }
+#[test]
+fn blocked_matrix_uses_only_output_storage_and_preserves_scalar_order(){
+    let d=std::env::temp_dir().join(format!("fwp-blocked-matrix-alloc-{}",std::process::id()));std::fs::create_dir(&d).unwrap();
+    let input=d.join("matrix.fwp");let source=format!("{}\nexport product-data : Matrix[F64, 3, 2] -> Matrix[F64, 2, 3] -> Array[F64]\nproduct-data = matmul | .data\n",include_str!("fixtures/blocked_matrix.fwp"));std::fs::write(&input,source).unwrap();
+    for mode in ["0","1"] {
+        let generated=d.join(format!("matrix-{mode}.c"));
+        checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT").env("FWP_MATRIX_BLOCKING",mode).args(["build","--fn","product-data","--emit-c"]).arg(&input).arg("-o").arg(&generated));
+        let source=std::fs::read_to_string(&generated).unwrap();let start=source.find("/* product-data :").unwrap();let id=source[start..].split("static V f").nth(1).unwrap().split('(').next().unwrap();
+        let probe=include_str!("fixtures/matrix_allocation_probe.c").replace("fPRODUCT_DATA",&format!("f{id}")).replace("BLOCKED",mode);
+        let runtime=source.replace("typedef uint64_t V;","typedef uint64_t V;\nstatic uint64_t matrix_calls,matrix_bytes;")
+            .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {","static inline void *fwp_gc_alloc(size_t n, int leaf) {\nif(leaf!=0){matrix_calls++;matrix_bytes+=n;}")
+            .replace("static inline void *fwp_alloc_init(size_t n) {","static inline void *fwp_alloc_init(size_t n) {\nmatrix_calls++;matrix_bytes+=n;")
+            .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
+        let code=format!("{runtime}\n{probe}");
+        for opt in ["-O1","-O2"] {
+            let executable=d.join(format!("profile-{mode}{opt}"));fwp::cgen::compile_c(&code,&executable,opt).unwrap();
+            let out=checked(Command::new(&executable).env("FWP_GC_STRESS","0").env("FWP_GC_VERIFY","1").env("FWP_REUSE_VERIFY","0"));
+            if let Some(destination)=std::env::var_os("FWP_ARRAY_FUSION_ARTIFACTS"){
+                let destination=std::path::PathBuf::from(destination);std::fs::create_dir_all(&destination).unwrap();std::fs::write(destination.join(format!("matrix-{mode}{opt}.json")),out.stdout).unwrap();
+                if opt=="-O2" {
+                    std::fs::write(destination.join(format!("matrix-original-{mode}.c")),&source).unwrap();
+                    std::fs::write(destination.join(format!("matrix-measured-{mode}.c")),&code).unwrap();
+                }
+            }
+        }
+    }
+    std::fs::remove_dir_all(d).unwrap();
+}
