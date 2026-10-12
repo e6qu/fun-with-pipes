@@ -40,6 +40,17 @@ jobs:
           cargo fmt --all
           cargo clippy --all-targets -- -D warnings
           cargo test --lib
+      - name: Inspect compiler-generated ownership types
+        run: |
+          cargo build
+          mkdir -p arc-evidence
+          for fixture in basics comptime fusion_iter fusion_lists; do
+            if FWP_DUMP_IR=rc target/debug/fwp build --gc arc --emit-c -O1 "tests/run/$fixture.fwp" -o "/tmp/$fixture.c" 2> "arc-evidence/types-$fixture.txt"; then
+              echo "$fixture accepted"
+            else
+              echo "$fixture rejected; retained IR diagnostic"
+            fi
+          done
       - name: Checked ARC eligibility, reclamation and native binaries
         run: cargo test --test arc_execution --test arc_corpus
       - name: Numerical, autodiff and loop ownership regressions

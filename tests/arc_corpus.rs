@@ -49,6 +49,9 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             assert!(reason.contains("--gc arc:"), "unexpected compilation failure for {name}: {reason}");
             report.push_str(&format!("rejected\t{name}\t{reason:?}\n"));
             rejected += 1;
+            if ["any_sized", "basics", "case_of_case", "collections_build", "comptime", "float_literals", "forward_aliases", "fusion_find_trap", "fusion_iter", "fusion_lists", "fusion_traps", "loop_nested_state", "map_lookup_match", "opt_constant_order", "optimizer", "reuse_aliasing", "show_ints", "traits", "trap_format_count", "unboxed_records", "optimizer_bounded"].contains(&name) {
+                failures.push(format!("previously eligible ARC program {name} was rejected: {reason}"));
+            }
         } else {
             let code = std::fs::read_to_string(&cfile).unwrap();
             let start = code.find("static void *fwp_main_thread(void *arg) {").unwrap();

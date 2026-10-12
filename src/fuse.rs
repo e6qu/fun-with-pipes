@@ -277,7 +277,7 @@ fn prim_sym(funcs: &[Func], id: FuncId) -> Option<&str> {
 
 struct Fuser<'p> {
     funcs: &'p [Func],
-    shapes: &'p Shapes,
+    shapes: &'p mut Shapes,
     std_names: &'p std::collections::BTreeMap<FuncId, String>,
     beh: Behaviors<'p>,
     /// Functions made by this pass (step functions and primitives).
@@ -627,13 +627,19 @@ impl Fuser<'_> {
                 vec![(Pat::Construct(1, vec![]), stop.clone()), (Pat::Wild, body)],
             );
         }
-        let step_ty = MT::Fun(
-            Box::new(state_ty.clone()),
-            Box::new(MT::Con(
-                "std::Step".into(),
-                vec![state_ty.clone(), list_ty.clone()],
-            )),
+        let step_result = MT::Con(
+            "std::Step".into(),
+            vec![state_ty.clone(), list_ty.clone()],
         );
+        // Ownership lowering needs the fields of compiler-generated variants
+        // just as it needs the fields registered during monomorphization.
+        self.shapes.entry(step_result.clone()).or_insert_with(|| {
+            TypeShape::Adt(vec![
+                ("Again".into(), vec![state_ty.clone()]),
+                ("Stop".into(), vec![list_ty.clone()]),
+            ])
+        });
+        let step_ty = MT::Fun(Box::new(state_ty.clone()), Box::new(step_result));
         let all: Vec<Func> = self.funcs.iter().chain(&self.made).cloned().collect();
         let (body, locals) = crate::opt::simplify(&all, self.shapes, body, nl);
         let step = self.new_func(Func {
@@ -1104,13 +1110,19 @@ impl Fuser<'_> {
             step_locals.push(self.ty_in(&[], v)?);
         }
         debug_assert_eq!(step_locals.len(), nl as usize);
-        let step_ty = MT::Fun(
-            Box::new(state_ty.clone()),
-            Box::new(MT::Con(
-                "std::Step".into(),
-                vec![state_ty.clone(), result_ty.clone()],
-            )),
+        let step_result = MT::Con(
+            "std::Step".into(),
+            vec![state_ty.clone(), result_ty.clone()],
         );
+        // Ownership lowering needs the fields of compiler-generated variants
+        // just as it needs the fields registered during monomorphization.
+        self.shapes.entry(step_result.clone()).or_insert_with(|| {
+            TypeShape::Adt(vec![
+                ("Again".into(), vec![state_ty.clone()]),
+                ("Stop".into(), vec![result_ty.clone()]),
+            ])
+        });
+        let step_ty = MT::Fun(Box::new(state_ty.clone()), Box::new(step_result));
         let all: Vec<Func> = self.funcs.iter().chain(&self.made).cloned().collect();
         let (body, locals) = crate::opt::simplify(&all, self.shapes, body, step_locals);
         // the step may have inlined pipelines (from the functions as they
@@ -1245,7 +1257,6 @@ pub fn fuse(prog: &mut Program) {
             });
     }
     let snapshot = prog.funcs.clone();
-    let shapes = prog.shapes.clone();
     let std_names = prog.std_names.clone();
     let mut made = Vec::new();
     for id in 0..snapshot.len() {
@@ -1254,7 +1265,7 @@ pub fn fuse(prog: &mut Program) {
         };
         let mut f = Fuser {
             funcs: &snapshot,
-            shapes: &shapes,
+            shapes: &mut prog.shapes,
             std_names: &std_names,
             beh: Behaviors::new(&snapshot),
             made: std::mem::take(&mut made),
