@@ -1,10 +1,14 @@
 # Numeric slices, immutable updates, signed narrow values and structural bridges.
 export sliced : I64 -> Array[I8]
-sliced = flip array.make (-128i8) | array.slice 1 3
+sliced = flip array.make (-128i8) | array.slice 1 200
 export nested : I64 -> Array[I8]
-nested = flip array.make (-128i8) | array.slice 1 5 | array.slice 1 2
+nested = flip array.make (-128i8) | array.slice 1 200 | array.slice 1 128
 export empty : I64 -> Array[I8]
 empty = flip array.make (-128i8) | array.slice 9223372036854775807 3
+export compact : I64 -> Array[I8]
+compact = flip array.make (-128i8) | array.slice 1 3
+export compact-nested : I64 -> Array[I8]
+compact-nested = flip array.make (-128i8) | array.slice 1 200 | array.slice 1 2
 
 export views8 : Array[I8] -> (Array[I8], Array[I8], Option[Array[I8]], Array[I8], Array[I8])
 views8 = make { 0 = id, 1 = array.slice 1 2, 2 = array.set 1 12i8,

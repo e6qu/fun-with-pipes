@@ -15,8 +15,8 @@ reports={}
 for mode in ['0','1']:
  cfile=OUT/('original-'+mode+'.c');run(str(fwp),'build','--fn','sliced','--emit-c','tests/fixtures/packed_numeric_arrays.fwp','-o',str(cfile),environment=dict(env,FWP_PACKED_ARRAYS=mode))
  source=cfile.read_text();probe=(ROOT/'tests/fixtures/packed_array_memory_probe.c').read_text()
- for name in ['sliced','nested','empty']:
-  at=source.index('/* '+name+' :');entry='f'+source[at:].split('static V f',1)[1].split('(',1)[0];probe=probe.replace('f'+name.upper(),entry)
+ for name in ['compact-nested','compact','sliced','nested','empty']:
+  at=source.index('/* '+name+' :');entry='f'+source[at:].split('static V f',1)[1].split('(',1)[0];probe=probe.replace('f'+name.upper().replace('-','_'),entry)
  drop=re.search(r'/\* Array\[I8\] \*/\nstatic void (fwp_drop\d+)\(V v\) \{',source);assert drop;probe=probe.replace('fARRAY_DROP',drop[1])
  marker='typedef uint64_t V;';assert source.count(marker)==1
  source=source.replace(marker,marker+'\nstatic uint64_t measured_calls,measured_bytes;')

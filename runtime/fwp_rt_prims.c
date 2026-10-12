@@ -1681,7 +1681,7 @@ static V fwp_p_array_slice_with_elem(V start,V len,V a,const fwp_desc *elem) {
     size_t n=fwp_array_len(a),first=fwp_count_arg(start);if(first>n)first=n;
     size_t count=fwp_count_arg(len);if(count>n-first)count=n-first;
 #if FWP_PACKED_ARRAYS
-    if(count && fwp_array_numeric(elem)) {
+    if(fwp_array_should_view(a,count,elem)) {
         V owner=fwp_array_owner(a);const unsigned char *data=fwp_array_data(a)+first*fwp_array_stride(elem);
         fwp_array_view *view=(fwp_array_view *)fwp_alloc_init(sizeof *view);
         view->len=FWP_ARRAY_VIEW_FLAG|count;view->owner=owner;view->data=data;
@@ -1849,7 +1849,7 @@ static V fwp_p_array_slice_typed(V start, V len, V a, void (*dup)(V), const fwp_
     size_t count = fwp_count_arg(len);
     if (count > n - first) count = n - first;
 #if FWP_PACKED_ARRAYS
-    if (count && fwp_array_numeric(elem)) {
+    if (fwp_array_should_view(a, count, elem)) {
         V owner = fwp_array_owner(a);
         const unsigned char *data = fwp_array_data(a) + first * fwp_array_stride(elem);
         fwp_array_view *view = (fwp_array_view *)fwp_alloc_init(sizeof *view);

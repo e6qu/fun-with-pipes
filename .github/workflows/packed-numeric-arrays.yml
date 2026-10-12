@@ -25,18 +25,33 @@ jobs:
       - name: macOS OpenSSL
         if: runner.os == 'macOS'
         run: echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v7
+        if: runner.os == 'Linux'
+        with:
+          node-version: 24
+      - name: Actual wasm32 toolchain
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32
       - name: Current bytes, original semantics and diagnostic ABI
         id: build
         env:
           FWP_NUMERIC_LAYOUT_ARTIFACTS: ${{ runner.temp }}/numeric-layout-baseline
         run: |
           mkdir -p "$FWP_NUMERIC_LAYOUT_ARTIFACTS"
-          rustfmt --edition 2021 src/cgen.rs
+          rustfmt --edition 2021 src/cgen.rs tests/packed_numeric_storage.rs tests/array_size_limits.rs tests/wasm.rs
           cp src/cgen.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/cgen.formatted.rs"
+          cp tests/packed_numeric_storage.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/packed_numeric_storage.formatted.rs"
+          cp tests/array_size_limits.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/array_size_limits.formatted.rs"
+          cp tests/wasm.rs "$FWP_NUMERIC_LAYOUT_ARTIFACTS/wasm.formatted.rs"
           cargo clippy --lib -- -D warnings
           cargo test --lib
       - name: Original ownership and allocation boundary controls
-        run: cargo test --test array_element_ownership --test array_size_limits --test kernel_stack_bounds --test device_bounds --test worker_boxing_ownership --test worker_preparation_ownership --test numerics --test golden_check --no-fail-fast -- --nocapture
+        run: cargo test --test array_element_ownership --test array_size_limits --test kernel_stack_bounds --test device_bounds --test worker_boxing_ownership --test worker_preparation_ownership --test numerics --test golden_check --test packed_numeric_storage --no-fail-fast -- --nocapture
+      - name: Actual wasm32 count boundaries
+        if: runner.os == 'Linux'
+        env:
+          FWP_REQUIRE_WASI_COUNTS: 1
+        run: cargo test --test wasm positive_64_bit_counts_saturate_before_wasi_allocation_and_slice_bounds -- --exact --nocapture
       - name: Exact packed bytes and raw native mode comparisons
         if: ${{ steps.build.outcome == 'success' && !cancelled() }}
         env:
