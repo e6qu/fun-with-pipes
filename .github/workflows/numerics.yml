@@ -38,7 +38,7 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy --all-targets -- -D warnings
           cargo test --lib
-          cargo test --no-fail-fast --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals
+          cargo test --no-fail-fast --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals --test loop_ownership --test loop_unwind_ownership --test loop_preparation_ownership
       - name: Actual wasm32 autodiff capacity controls
         if: runner.os == 'Linux'
         env:
