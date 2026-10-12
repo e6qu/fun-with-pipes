@@ -6,12 +6,12 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `36edc683abc938c6a4479150cd0ad2f6dace1f89` passes audit38221212500.
+checkpoint `e8b4f5a14a564fd73d60bfef8c52cc78642b8349` passes audit38223569689.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies477 targets/28332904 bytes. Reports are retained in
-/private/tmp/fwp-verified-numerical-lookup-restoration. On recovery, run the
+verifies597 targets/35125144 bytes. Reports are retained in
+/private/tmp/fwp-verified-pr127-loop-restoration. On recovery, run the
 bounded restore-numeric-finalization-archive.py after restoring temporary
 sources to reconstruct the verified gzip export from its retained base64 text. Never rerun completed publishers. Phases1–3 are accepted; phases4–6 remain unfinished.
 
@@ -161,29 +161,42 @@ emits separate SSE multiply/add vector instructions; the measured ARM kernel
 uses scalar floating registers. Timing remains descriptive, with residual costs
 recorded in docs/numerics.md. The failed preceding head remains a failed gate.
 
-PR #127 is open at3c56dcb02feefb24a87f82293c234620077426fe on
-numerical-kernels-and-workspaces, based on accepted main3a458236. CI38222106138
-and roadmap_docs38222106323 are the current production gates. Docs, bench and
-ARM GC stress passed; Linux, regular Macs and Intel GC stress were pending.
-Query all seven exact-head results before merging. Publication/source hashes:
-/private/tmp/fwp-numerical-production-publication.json. Formatted sources:
-/private/tmp/fwp-numerical-production-files.json. The prepared merge helper
-fwp-merge-numerical-kernels.py has not run; it requires all gates, supplies an
+PR #127 is open at d19fef9bf070cf435edb892663f6f388b337f0e7 on
+numerical-kernels-and-workspaces, based on accepted main3a458236. CI38225479910
+and roadmap_docs38225479939 are the current production gates. Docs and bench
+pass; Linux and both regular/GC macOS pairs are running. Query all seven results
+before merging. The superseded initial-head CI38222106138 was cancelled after
+repairing the loop reclamation test's boxed-only instrumentation. Its shared
+state control now marks typed pointer fields in direct flat entries as shared;
+the original reclamation threshold and semantic checks remain unchanged.
+Publication/source hashes: /private/tmp/fwp-numerical-production-publication.json.
+The prepared fwp-merge-numerical-kernels.py requires every gate, supplies an
 explicit single-line subject/empty body and verifies signed squash/tree parity.
 Actual merged-source acceptance remains required after merge.
 
-Separate phase5 preparation: ownership-evidence-flat-loop-owners at
-89ed2a60b5e4996e57b41b1a6b969a45047b8dc6, runner38223290977 pending. Source and
-publication mapping: /private/tmp/fwp-phase5-loop-owners-draft/files.json.
-It gives flat state fields independent ownership parameters before RC, so
-carried arrays can move between iterations without retain/release pairs.
-Permanent controls require zero retains plus input reclamation; existing loop
-unwind/preparation/field controls remain. First head6a0c533 failed compilation
-because a local-index bound used usize instead of the compiler's u32; current
-head fixes that mismatch. No phase5 support is accepted yet. Keep these changes
-separate from PR127, then include them in the next coherent delivery after its
-merge/acceptance. Inspect residual counts and target-dependent vectorization
-without changing arithmetic order. Fix failing checks throughout.
+Separate phase5 preparation: ownership-evidence-flat-loop-owners. Native head
+7dbeb34cbc0d99c673577fd98c104b13e96e260a passes Linux runner38224092414:
+compiler, loop ownership/unwind/preparation, field and numeric controls. Flat
+state fields become independent ownership parameters before RC insertion,
+allowing carried arrays to move without per-iteration retain/release pairs.
+Eight65537-element rounds retain/release zero times and reclaim all charged
+storage with zero collections. Uninstrumented timing still trails C/Rust;
+zero counts alone do not establish machine-code parity. Sources/assembly:
+/private/tmp/fwp-flat-loop-owners-evidence. Formatter-only export70bed875 in
+38224748379 verifies unchanged implementation and supplies the PR127 test repair;
+it is not an additional native gate. Earlier failed compilation and missed
+flat-entry instrumentation remain failed runs, retained in preparation receipts.
+
+Current preparation0264d036dcac0f16833ea5a6a0996172e6148ecd additionally removes
+unwind registration around concretely typed F32/F64 add/subtract/multiply/negate
+primitive calls. Argument evaluation and checked integer calls retain their
+protection. Permanent instrumentation bounds cleanup registrations per element,
+as well as requiring zero retains/allocations and reclaimed input ownership.
+Actual native tests and benchmarks are restored in the preparation workflow;
+this new head is pending validation. Source map:
+/private/tmp/fwp-phase5-scalar-unwind-draft/files.json. Keep phase5 compiler
+changes separate from PR127 until its merge/acceptance. Then validate the
+coherent ownership/evidence bundle on Linux and both macOS targets before PR.
 
 Latest user constraint: avoid needless wrappers, alternate paths, magic and
 implicit defaults. Register spills are ordinary lowering, and protocol-defined

@@ -1,0 +1,26 @@
+{
+  "head": "7dbeb34cbc0d99c673577fd98c104b13e96e260a",
+  "run": 38224092414,
+  "artifact": {
+    "id": 11735673700,
+    "node_id": "MDg6QXJ0aWZhY3QxMTczNTY3MzcwMA==",
+    "name": "numeric-array-fusion-evidence-ubuntu-latest",
+    "size_in_bytes": 2545501,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11735673700",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11735673700/zip",
+    "expired": false,
+    "digest": "sha256:99c15f72fbb678aceef0ee6cc84cb644a919a6dacf42d3b163ac0ce80f33e119",
+    "created_at": "2026-10-12T08:34:50Z",
+    "updated_at": "2026-10-12T08:34:50Z",
+    "expires_at": "2027-01-10T08:31:32Z",
+    "workflow_run": {
+      "id": 38224092414,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "ownership-evidence-flat-loop-owners",
+      "head_sha": "7dbeb34cbc0d99c673577fd98c104b13e96e260a"
+    }
+  },
+  "archiveSha256": "99c15f72fbb678aceef0ee6cc84cb644a919a6dacf42d3b163ac0ce80f33e119",
+  "status": "Linux compiler, loop ownership/unwind/preparation controls, zero-retain Array fusion, typed shared-state negative control and numerical C/Rust comparisons passed"
+}

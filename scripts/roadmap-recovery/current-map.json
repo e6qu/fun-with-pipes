@@ -1,5 +1,4 @@
 {
   "version": 1,
-  "publisher": "scripts/roadmap-recovery/publish-pr127-loop-recovery.py",
-  "scope": "PR127 exact source and measurements, pending full gates, independent phase5 loop ownership preparation"
+  "publisher": "scripts/roadmap-recovery/publish-scalar-unwind-recovery.py"
 }

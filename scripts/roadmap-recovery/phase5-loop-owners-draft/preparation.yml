@@ -18,6 +18,8 @@ jobs:
       FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -27,21 +29,32 @@ jobs:
           brew install openssl@3
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
-      - name: Format and validate compiler changes
+      - name: Verify passing implementation is unchanged
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          cargo fmt --all
-          cargo clippy --all-targets -- -D warnings
-          cargo test --lib
-          cargo test --no-fail-fast --test loop_ownership --test loop_unwind_ownership --test loop_preparation_ownership --test field_context_ownership --test numeric_array_fusion --test blocked_matrix --test retain_unwind_ownership
-      - name: Retain permanent allocation evidence
-        run: python3 scripts/summarize-numeric-array-fusion.py
-      - name: Equivalent C and Rust numerical workloads
-        run: python3 scripts/measure-numerical-kernels.py
+          python3 - <<'PYCODE'
+          import json,subprocess
+          p=json.loads(subprocess.check_output(['gh','run','view','38224092414','--repo','e6qu/fun-with-pipes','--json','headSha,status,conclusion,jobs']))
+          assert p['headSha']=='7dbeb34cbc0d99c673577fd98c104b13e96e260a' and p['status']=='completed' and p['conclusion']=='success'
+          assert len(p['jobs'])==1 and p['jobs'][0]['conclusion']=='success'
+          assert subprocess.check_output(['git','rev-parse','HEAD^'],text=True).strip()==p['headSha']
+          assert subprocess.check_output(['git','diff','--name-only','HEAD^','HEAD'],text=True).splitlines()==['.github/workflows/flat-loop-owners-preparation.yml']
+          PYCODE
+      - name: Export formatting from verified source
+        run: cargo fmt --all
+      - name: Preserve primitive ownership coverage
+        env:
+          FWP_INVENTORY_EXPECTED_HEAD: ${{ github.sha }}
+        run: |
+          mkdir -p array-fusion-evidence
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output array-fusion-evidence/inventory.json
+          python3 scripts/check-explicit-fallback-review.py --inventory array-fusion-evidence/inventory.json --review tests/fixtures/primitive-fallback-review.json --output array-fusion-evidence/fallback-review.json
       - name: Export formatted source
         if: always()
         run: |
           mkdir -p array-fusion-evidence/source
-          cp src/rc.rs src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/wasm.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/
+          cp tests/loop_ownership.rs src/rc.rs src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/wasm.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/
           cp runtime/fwp_rt_kernel.c array-fusion-evidence/source/
       - uses: actions/upload-artifact@v7
         if: always()
