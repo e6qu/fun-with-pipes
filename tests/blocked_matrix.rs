@@ -24,7 +24,7 @@ fn blocked_matrix_preserves_raw_products_and_cast_shape_behavior(){
 #[test]
 fn blocked_matrix_uses_only_output_storage_and_preserves_scalar_order(){
     let d=std::env::temp_dir().join(format!("fwp-blocked-matrix-alloc-{}",std::process::id()));std::fs::create_dir(&d).unwrap();
-    let input=d.join("matrix.fwp");let source=format!("{}\nexport product-data : Matrix[F64, 3, 2] -> Matrix[F64, 2, 3] -> Array[F64]\nproduct-data = matmul | .data\n",include_str!("fixtures/blocked_matrix.fwp"));std::fs::write(&input,source).unwrap();
+    let input=d.join("matrix.fwp");let source=format!("{}\nexport product-data : Matrix[F64, 3, 2] -> Matrix[F64, 2, 3] -> Array[F64]\nproduct-data = curry (uncurry matmul | .data)\n",include_str!("fixtures/blocked_matrix.fwp"));std::fs::write(&input,source).unwrap();
     for mode in ["0","1"] {
         let generated=d.join(format!("matrix-{mode}.c"));
         checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT").env("FWP_MATRIX_BLOCKING",mode).args(["build","--fn","product-data","--emit-c"]).arg(&input).arg("-o").arg(&generated));
@@ -45,6 +45,20 @@ fn blocked_matrix_uses_only_output_storage_and_preserves_scalar_order(){
                     std::fs::write(destination.join(format!("matrix-measured-{mode}.c")),&code).unwrap();
                 }
             }
+        }
+    }
+    std::fs::remove_dir_all(d).unwrap();
+}
+
+#[test]
+fn source_cannot_bypass_matrix_shape_checks_with_internal_primitives(){
+    let d=std::env::temp_dir().join(format!("fwp-matrix-internal-{}",std::process::id()));std::fs::create_dir(&d).unwrap();
+    for symbol in ["matrix._valid-f64","matrix._mul-f64"] {
+        let input=d.join("forged.fwp");std::fs::write(&input,format!("foreign \"fwp\" forged : I64 -> I64 = \"{symbol}\"\nmain = 0 | forged | echo\n")).unwrap();
+        for raw in [false,true] {
+            let mut command=Command::new(env!("CARGO_BIN_EXE_fwp"));command.args(["run","--interp"]).arg(&input);
+            if raw {command.env("FWP_NO_OPT","1");}else{command.env_remove("FWP_NO_OPT");}
+            let out=command.output().unwrap();assert!(!out.status.success());assert!(String::from_utf8_lossy(&out.stderr).contains("matrix specialization primitives are compiler-internal"),"{}",String::from_utf8_lossy(&out.stderr));
         }
     }
     std::fs::remove_dir_all(d).unwrap();
