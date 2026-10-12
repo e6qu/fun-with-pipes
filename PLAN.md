@@ -49,15 +49,12 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#123: native macOS ARM/Intel support and selected ownership,
-last-owner reclamation and unwind protections. Queues33 and35–73 are accepted;
-queue34 is a verified duplicate delivered in #107. Next bundle74–112 resource and
-network ownership on the actual PR123 squash, then the finite phase2
-exit review. [The handoff](docs/development-state.md) records exact heads,
-checks and the next action. PR124 publishes the verified combined repair; its full current-head CI is
-running. Complete counters exposed an included AD allocation regression; fold
-its verified repair, codec contracts and streamlined docs into PR124 before the
-final exact-head matrix. Preserve current-run diagnostics.
+Main includes #74–#124: native macOS ARM/Intel support, resource/network and
+callback ownership, typed State, scoped AD and independent codec leaves.
+Queue33 and35–112 are accepted;34 is a verified duplicate. Next bundle completes
+the finite177-declaration ownership fallback review and checked buffer/array/bump
+allocation and kernel stack/constant decoding and device allocation boundaries with current docs and CI actions. Require actual-source validation and all final gates
+before phase2 exit, then deliver numeric representation and phases4–6.
 
 Phase2 remaining audits cover borrowed metadata roots, reconstructed/untyped
 aggregates, retained contexts, resource disposal and cycles. Verify each boundary
@@ -78,8 +75,8 @@ Never call skipped, queued, superseded or cancelled runs passing support.
 
 ## Concrete remaining deliveries
 
-Finish phase2 with the resource/State bundle, then serializer/codec contracts,
-the scoped-gradient allocation regression and the finite177-declaration review.
+Finish phase2 with the finite177-declaration fallback review and checked buffer,
+array/bump allocation and kernel stack/constant decoding and device allocation boundaries with current CI actions.
 Classify each remaining boundary with its argument/result/alias/callback policy
 or explicit tracing fallback, including retained contexts, partial reconstruction
 and cycle lifetime. Complete allocator counters must include initializer fast

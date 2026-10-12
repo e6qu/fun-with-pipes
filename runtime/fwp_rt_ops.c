@@ -7,10 +7,23 @@
 typedef struct { char *d; size_t len, cap; } fwp_buf;
 
 static void buf_grow(fwp_buf *b, size_t extra) {
-    if (b->len + extra + 1 > b->cap) {
+    if (b->len == SIZE_MAX || extra > SIZE_MAX - b->len - 1) {
+        fprintf(stderr, "fwp: out of memory\n");
+        exit(102);
+    }
+    size_t needed = b->len + extra + 1;
+    if (needed > b->cap) {
         size_t cap = b->cap ? b->cap : 64;
-        while (cap < b->len + extra + 1) cap *= 2;
-        b->d = (char *)realloc(b->d, cap);
+        while (cap < needed) {
+            if (cap > SIZE_MAX / 2) { cap = needed; break; }
+            cap *= 2;
+        }
+        char *data = (char *)realloc(b->d, cap);
+        if (!data) {
+            fprintf(stderr, "fwp: out of memory\n");
+            exit(102);
+        }
+        b->d = data;
         b->cap = cap;
     }
 }

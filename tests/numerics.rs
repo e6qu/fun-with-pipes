@@ -58,6 +58,7 @@ fn interp(path: &Path, env: &[(&str, &str)]) -> String {
         .args(["run", "--interp"])
         .arg(path)
         .envs(env.iter().copied())
+        .env("FWP_NO_OPT", "1")
         .output()
         .unwrap();
     render(&out)
@@ -65,6 +66,7 @@ fn interp(path: &Path, env: &[(&str, &str)]) -> String {
 
 fn build(path: &Path, exe: &Path) {
     let out = Command::new(fwp())
+        .env_remove("FWP_NO_OPT")
         .arg("build")
         .arg(path)
         .args(["-O2", "-o"])
@@ -237,7 +239,12 @@ fn bench() {
         let (b, t_interp) = if name.contains("4M") || name.contains("gradient n=1000") {
             (a.clone(), f64::NAN)
         } else {
-            timed(Command::new(fwp()).args(["run", "--interp"]).arg(&path))
+            timed(
+                Command::new(fwp())
+                    .env("FWP_NO_OPT", "1")
+                    .args(["run", "--interp"])
+                    .arg(&path),
+            )
         };
         assert_eq!(a, b);
         println!(

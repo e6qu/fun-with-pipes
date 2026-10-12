@@ -6,13 +6,12 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `160a5ef367316fe1e9647a5bea441b91c21a4771` passes audit38175639142.
-The next checkpoint retains the completed repair export and this streamlined
-handoff. Query the branch tip when recovering; do not assume an embedded
-checkpoint identifies its own commit. Restore only temporary paths with verified
-Git blob hashes using restore-roadmap-recovery.py. The AST-based restore repair
-is source-reviewed, but its execution has not been validated. Never rerun
-completed publishers. Phases2–6 remain unfinished.
+checkpoint `a627bcfae3b1994004da28ff5f7166bad709d221` passes audit38189357799.
+Query the branch tip on recovery; an embedded checkpoint cannot identify its
+own commit. restore-roadmap-recovery.py restores only temporary paths from a
+bounded immutable archive after verifying Git blob hashes. Its runner audit
+verifies395 targets/9594149 bytes. Never rerun completed publishers. Phases2–6
+remain unfinished.
 
 ## Execution contract
 
@@ -42,139 +41,125 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is `b4285fc177b3ae7afaf195e5ebd7115cc77b815c` (PR #123). Frozen head `9e7d0b24610524cf54125c44b47ee07185c0b7c3`
-passes all six exact-head jobs in CI38138731040 and roadmap_docs38138731036
-before match-head squash at 2026-10-11T17:47:22Z. Subject `Own library file and raw-memory resource lifetimes`
-has 50 characters, one line, empty body and no trailers or
-attribution. One parent `68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4` and complete tree `c94ed7f1bbc4e0c1f8f74b2fcbbbbe70e1359b0c` match
-the tested head. The raw signed payload is retained in
-/private/tmp/fwp-pr123-signed-payload.txt. All11 live docs were backed up before
-acceptance edits in /private/tmp/fwp-main-docs-remote-pre123. Local main remains
-`68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4` until the guarded fast-forward has at least64GiB free disk; no local
-checkout update or full check ran. Actual-main documentation38161107226 passes independently.
+Main is `3598a675b5bd9ad2e22ac17d42a27a89ea74fdeb` (PR #124). Frozen head `3aae99bfa705e26babc2cf251b0e583dfd95cf38` passes all six
+jobs in CI38184549852 and roadmap_docs38184549850 before match-head squash
+at 2026-10-12T00:52:11Z. Subject `Own resource and State lifetimes and preserve inferred effects` has 62 characters,
+one line and no body/trailers/attribution. One parent `b4285fc177b3ae7afaf195e5ebd7115cc77b815c` and complete
+tree `28ae0e5cea7fa5948683adb39a035ed40fb9b226` match the tested head. Raw signed payload:
+fwp-pr124-signed-payload.txt. All11 docs were backed up before these acceptance
+edits in /private/tmp/fwp-main-docs-remote-pre124. Local main remains `68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4`;
+no local fast-forward or compiled check ran while free disk is below64GiB.
 
-Queue33 and35–73 are accepted; queue34 is a verified duplicate. PR123 accepts
-all42 original library/OpenCL/TLS/file/resource commits and both pointer and
-raw-memory repairs. Raw pointer offsets wrap at the native pointer width;
-ordinary arithmetic remains checked. Nine raw-memory primitive contracts
-borrow their arguments; ptr.read-string returns a counted independent managed
-copy. C buffers still require mem.free. Fake OpenCL coverage does not prove
-GPU hardware support, and F16/128-bit/WASI pointer widths remain unverified.
-
-Current delivery is PR[#124](https://github.com/e6qu/fun-with-pipes/pull/124):
-resource/network items74–112, compiler/cache and effect inference repairs, AD
-and list/closure lifetimes, typed State and independent codec leaves. Previous
-production head1aadb8a075e1737d0e6a4db96eae5d675f6fb404 is superseded by this
-prepared native-source integration. Final publication and full current-head gates
-remain required. Historical receipts remain in roadmap-history.md.
-
-Duplicate main CI38161107239 was cancelled while all six jobs were queued,
-after complete-tree identity and all seven passing pre-merge gates were proved.
-This is duplicate-run avoidance, not a passing main gate. Proof:
-/private/tmp/fwp-main123-duplicate-ci-proof.json.
+Queue33 and35–112 are accepted;34 is a verified duplicate. PR124 accepts resource
+and network owners, compiler/cache/effect repairs, scoped AD and list/closure
+lifetimes, typed State and14 fresh codec leaves, plus codec fixture-copy repair. Borrowed scoped inputs require
+Dup; affine File rejection, type snapshots, actual WASI and all original nonlocal
+exit/omission controls pass. Public Pipe and grad/vjp signatures remain unchanged.
+Raw buffers still require mem.free; unknown reconstruction and retained contexts
+keep tracing. Fake OpenCL tests do not establish GPU hardware support.
 
 ## Current verified bundle evidence
 
-The current runner integrates the passing typed State/effect repairs,14 fresh
-serializer/codec contracts and direct scoped AD callbacks. Library units, all
-type/effect snapshots, deadline callback argument rows, formatting/stdlib docs,
-affine File rejection, input
-aliases and original State/AD omission controls pass together. Public Pipe and
-grad/vjp signatures are preserved; borrowed scoped inputs require Dup.
-
-Complete initializer-aware allocation counters are preserved; the original
-partial counters do not establish total allocation parity. Independent exact
-three-platform State, list and scoped AD comparisons pass. The combined-source
-Linux comparisons pass, retaining original assertions and source/binary hashes.
-No timing or tracing-free claim is established. Runtime ownership fallbacks and
-cycles still require the finite phase2 exit review. Phases2–6 remain unfinished.
-
-Next: publish the runner export with the exact1aadb lease, then require all six
-exact-head production jobs and roadmap_docs on the resulting PR124 head before
-squash. Earlier heads, preflights and cancelled runs cannot supply those gates.
-Current production head must be queried from PR124; this preparation does not
-claim publication or acceptance. Source manifest: final-ownership.json in the
-runner artifact. Preserve one production PR and the required one-line commits.
+Accepted strict inventory:375 declarations/365 symbols,40 aliases,168 contracts,
+19 IR combinators,11 flat signatures and177 review declarations/167 symbols.
+Complete counters include initializer fast paths and count slow delegation once.
+Independent Linux/ARM/Intel and final combined Linux profiles pass. Scoped grad
+matches33 calls/720 requested bytes per gradient. State4096-call profiles reduce
+managed calls16384→12288 and requested bytes272212→206676, with counted freed
+bytes0→262144. List2048-call profiles retain43008 calls/965374 bytes and raise
+counted freed bytes65536→917504. These are workload-specific results, without
+a timing or tracing-free claim. Earlier partial counter reports remain archived.
 
 ## Remaining ownership deliveries
 
-Original focused checks are preserved in
-[history](roadmap-history.md#prepared-ownership-checks-retained-during-handoff-streamlining).
-Use actual bases below, never immutable OLD parents. Preserve all11 root docs
-when resolving conflicts. Remove a live row only after verified acceptance or
-a verified duplicate, retaining its queue anchor and history. All listed
-preparations need final squash rebases and all seven exact-head production gates.
+All immutable preparation rows74–112 are delivered; their contracts, heads and
+original checks are archived in history. Queue anchors remain unchanged.
+Next: rebase the passing finite fallback audit, checked buffer/array/bump allocation and
+kernel stack/constant decoding and device allocation fixes with current CI actions onto the actual PR124 squash, preserve all11 current docs, publish one focused
+ownership exit PR and require its six exact-head jobs and roadmap_docs. Confirm
+actual merged-source coverage before marking phase2 complete. Then implement
+natural-width numeric storage and views, followed by phases4–6. No numeric
+representation or tracing-free acceptance is established yet.
 
-| Row / branch | Current head | Actual current base | Delivery status |
-|---|---|---|---|
-| 74 ownership-file-runtime-owners | 8d5cb3c4e3e4 | 3dba256655a3 | Runner integration passed; production gates pending |
-| 75 ownership-file-discard | 423a7ddcc760 | 8d5cb3c4e3e4 | Runner integration passed; production gates pending |
-| 76 ownership-file-runtime-boundaries | 603bb0b914db | 423a7ddcc760 | Runner integration passed; production gates pending |
-| 77 ownership-wasm-resource-counts | f4a26004d5a8 | 603bb0b914db | Runner integration passed; production gates pending |
-| 78 ownership-wasm-count-disposal | 13c77dbb7b82 | f4a26004d5a8 | Runner integration passed; production gates pending |
-| 79 ownership-resource-frame-fields | 2f842d5d266f | 13c77dbb7b82 | Runner integration passed; production gates pending |
-| 80 ownership-file-inline-path | 010e622f064e | 2f842d5d266f | Runner integration passed; production gates pending |
-| 81 ownership-file-storage-disposal | 6e5063786651 | 010e622f064e | Runner integration passed; production gates pending |
-| 82 ownership-file-construction-disposal | ecfd9a28c39e | 6e5063786651 | Runner integration passed; production gates pending |
-| 83 ownership-resource-frame-variants | 7b7e45b20230 | ecfd9a28c39e | Runner integration passed; production gates pending |
-| 84 ownership-resource-frame-binding-kinds | e2a2baa977fa | 7b7e45b20230 | Runner integration passed; production gates pending |
-| 85 ownership-match-scrutinee-types | ebe69e13a935 | e2a2baa977fa | Runner integration passed; production gates pending |
-| 86 ownership-resource-record-binding-kinds | a0de231a4c0c | ebe69e13a935 | Runner integration passed; production gates pending |
-| 87 ownership-nominal-source-context | 5a4ef15301c8 | a0de231a4c0c | Runner integration passed; production gates pending |
-| 88 ownership-channel-cycle-lifetimes | 3db25573057b | 5a4ef15301c8 | Runner integration passed; production gates pending |
-| 89 ownership-http2-body-roots | 5bc4f862bd5a | 3db25573057b | Runner integration passed; production gates pending |
-| 90 fix-http2-body-bounds | fabe0ac7b24a | 5bc4f862bd5a | Runner integration passed; production gates pending |
-| 91 ownership-http2-peer-cleanup | 5029a447bcec | fabe0ac7b24a | Runner integration passed; production gates pending |
-| 92 ownership-grpc-peer-completion | 26545f1b279b | 5029a447bcec | Runner integration passed; production gates pending |
-| 93 ownership-grpc-status-cleanup | 9ad102d5a16f | 26545f1b279b | Runner integration passed; production gates pending |
-| 94 ownership-grpc-receive-cleanup | ec0fd11c6b26 | 9ad102d5a16f | Runner integration passed; production gates pending |
-| 95 ownership-grpc-force-cleanup | 91ab62452636 | ec0fd11c6b26 | Runner integration passed; production gates pending |
-| 96 ownership-grpc-render-cleanup | b4087dc07beb | 91ab62452636 | Runner integration passed; production gates pending |
-| 97 ownership-grpc-send-cleanup | 0203804096d8 | b4087dc07beb | Runner integration passed; production gates pending |
-| 98 ownership-grpc-request-encoding | 9c2c91fa8e21 | 0203804096d8 | Runner integration passed; production gates pending |
-| 99 ownership-grpc-canonical-encoding | 58bf72dbf3df | 9c2c91fa8e21 | Runner integration passed; production gates pending |
-| 100 ownership-grpc-response-encoding | 3b13964722ba | 58bf72dbf3df | Runner integration passed; production gates pending |
-| 101 ownership-grpc-client-requests | a584b59ec896 | 3b13964722ba | Runner integration passed; production gates pending |
-| 102 ownership-grpc-client-failure-text | 4e6dbbddf888 | a584b59ec896 | Runner integration passed; production gates pending |
-| 103 ownership-grpc-client-receive | 09b5e3e70117 | 4e6dbbddf888 | Runner integration passed; production gates pending |
-| 104 ownership-grpc-connect-cleanup | 518e5cfaca02 | 09b5e3e70117 | Runner integration passed; production gates pending |
-| 105 ownership-grpc-connect-startup | 4802e1dfb8a5 | 518e5cfaca02 | Runner integration passed; production gates pending |
-| 106 ownership-grpc-context-restore | 2308b7c1db43 | 4802e1dfb8a5 | Runner integration passed; production gates pending |
-| 107 ownership-grpc-context-resources | a2b3b132f094 | 2308b7c1db43 | Runner integration passed; production gates pending |
-| 108 ownership-grpc-capture-resources | ef437370ca74 | a2b3b132f094 | Runner integration passed; production gates pending |
-| 109 fix-grpc-tls-pool-identity | c9d841ee5a9d | ef437370ca74 | Runner integration passed; production gates pending |
-| 110 ownership-grpc-environment-cache | bf297ac299ea | c9d841ee5a9d | Runner integration passed; production gates pending |
-| 111 ownership-grpc-packed-options | 5a01572cb2c6 | bf297ac299ea | Runner integration passed; production gates pending |
-| 112 ownership-grpc-connection-addresses | b45e93a71d40 | 5a01572cb2c6 | Runner integration passed; production gates pending |
+## Next bundle preparation
 
-## Finish phase2, then continue the plan
+The177 remaining declarations have an explicit shared-fallback review draft at
+/private/tmp/fwp-phase2-explicit-fallback-review-draft.json. It records argument,
+result, callback, retention, teardown and cycle policies across18 families.
+Three-platform review38180899508 passes at167d769deaa28fae9b361ba4e9fa33b443d1a79c
+on ownership-evidence-phase2-exit-review: actual inventory, compiler fallback
+rules and the buffer controls agree. PR124 is accepted; the next final full
+production matrix and merged-source audit remain required; this does not establish tracing-free eligibility.
+Validate the actual accepted inventory and compiler wrappers before phase2 exit.
+Verifier and three-platform workflow drafts: fwp-check-explicit-fallback-review-draft.py
+and fwp-phase2-exit-review-evidence.yml. No phase2 exit claim is established. Publication receipt:
+fwp-phase2-exit-review-publication.json.
 
-The pointer-width and raw-memory contracts are accepted in PR123.
-Independent Linux/ARM/Intel evidence remains in
-/private/tmp/fwp-pointer-boundary-passing-proof.json and its retained artifacts.
-The twelve sanitizer binaries preserve exact success0/overflow1 statuses;
-F16/128-bit, WASI pointer widths and automatic raw-buffer lifetimes remain
-separate requirements. Production acceptance is recorded above.
+The boy scout audit found structural buffer addition/doubling overflow and
+unchecked realloc failure in the exact1aadb runtime/fwp_rt_ops.c. Draft repair
+preserves malloc/free storage and exits102 on overflow/allocation failure.
+Runner-only branch ownership-evidence-structural-buffer publishes
+c95d970c8c300cf3b342847ee60f7fd052294f28; runner38180514117 passes Linux and both Macs. Tests cover
+ordinary growth/data preservation, addition overflow, capacity overflow and
+allocation failure at O1/O2 with ASan/UBSan, plus three deliberate omission
+variants. Drafts: fwp-structural-buffer-{draft.c,test.rs,probe.c,patch.json}.
+Deliver it with the finite ownership exit review in the next coherent bundle.
 
-After queue112 is delivered, recheck the finite [ownership exit gates](ownership.md#phase-2-exit-gates)
-and [primitive contracts](primitive-ownership.md) against merged source. The verified final candidate168-contract inventory leaves177 declarations/167
-symbols for classification. Preserve conservative fallbacks until typed ownership and
-teardown are proved.
+Array-limit candidate296ea83b45bb153c2b86d1df68e05c799013b2eb on
+ownership-evidence-array-size-limits passes all three jobs in38182446407.
+Central constructor multiplication, matching interpreter make/generate limits,
+bump alignment overflow and nonnull empty initialization are checked. Five
+raw/native cases preserve oversized make/generate traps, argument trap order
+and negative counts at O1/O2 with reuse on/off and real GC/reuse verification.
+ASan/UBSan constructor/bump omission controls,71 library units, all golden type
+snapshots and eight effect tests pass. Proof: fwp-array-size-passing-proof.json.
+Earlierd8/b42 failed a missing native forward declaration; a2 passed all C/unit/
+effect/snapshot controls but the new semantic fixture expected1 rather than the
+established trap status101. The final head corrects that fixture and makes the
+initialization omission's null-address arithmetic defined. No control was removed.
+Logs: fwp-array-size-d8-failed.log and fwp-array-size-a2-linux-failed.log.
+Include this passing repair in the same phase2 exit bundle; final full gates still
+apply. Drafts: fwp-array-size-{runtime-draft.c,interpreter-draft.rs,gc-draft.c,
+test.rs,probe.c}; fwp-bump-size-probe.c.
 
-Review borrowed metadata roots, reconstruction/partial failure, retained
-callbacks/contexts and resource disposal. The source-reviewed fallback list also
-includes per-task typed State slots and remaining callback/reconstruction paths;
-see [primitive contracts](primitive-ownership.md). List reconstruction owners
-and inactive State root clearing now have published candidate controls below.
-Typed State ownership is verified in the candidate; full production gates and
-merge remain required.
-Channel close preserves queued values;
-explicit drain breaks its counted cycle, while automatic unreachable-cycle
-reclamation remains unproved. Scalar AD tape handles do not prove external
-buffer lifetimes. Numeric lifetime findings and future regressions are in
-[numerics](numerics.md). Complete phase2 before representation, numerics/AD,
-performance and tracing-free work. Phases3–6 still require implementation and
-measured acceptance; the prepared ownership queue is not the whole plan.
+Completed acceptance: fwp-record-pr124-remote-acceptance.py backed up11 docs
+and archived39 live/primitive rows after exact-head squash/raw-payload proof.
+It streamlined obsolete design/resource notes into history. Do not rerun it. fwp-finalize-phase2-exit-on-runner.py and
+fwp-publish-phase2-exit-finalization.py require the actual PR124 squash and passing
+finite review. That finalizer pins the passing296ea83 array/bump source
+and passing kernel/device sources and all three verified preflight jobs.
+It preserves original controls and exports one ownership exit/allocation bundle and fresh docs for the next full matrix.
+
+Numeric design preparation reads30 blob-verified files at d5ae8c and maps108
+direct array references in seven runtime files. Current arrays have8-byte
+headers and V-word payloads; F32 values use low32-bit encoding. Draft layout
+alternatives and producer/consumer, view-owner and ABI requirements are in
+fwp-numeric-representation-design-preparation.json. This is source review, not
+a representation implementation or compiled evidence. Complete phase2 before
+changing numeric representation.
+
+Kernel candidate d240231c5dd33e83ecdd5bf3df06715a0e279768 passes all three
+platform jobs in38186836622. It guards empty-stack pointer formation and reads
+F64 constant V words through the existing memcpy bit decoder. Extracted actual
+kernels pass O1/O2 sanitizers with first leaf/constant operations, lengths
+0/1/7/127/256, nonzero offsets, exact bytes and sentinels. Omitted stack guards
+and constant decoders fail their controls. Original parallel/missing-OpenCL
+tests pass against FWP_NO_OPT=1; the benchmark remains ignored, with no timing
+or GPU hardware claim. Proof: fwp-kernel-constant-bits-passing-proof.json.
+
+Device candidate6ee21a54dee1029178b28291d60dd31dd179a7a7 on
+ownership-evidence-device-output-bounds checks positive output counts before
+multiplication/allocation, preserving malformed code and input-length trap order
+and releasing the temporary input table. Workspace limits follow input validation
+in both implementations. All three jobs in38188567610 pass; proof: fwp-device-bounds-passing-proof.json. Previous
+857 candidate passed both Macs; Linux38188246198 found LeakSanitizer changed
+deliberate omission exits because the sentinel left small probe allocations alive.
+The repaired sentinel records omitted bounds/cleanup before freeing its own
+allocations; leak detection remains enabled. Original raw/O1/O2/GC/reuse and
+omission controls remain. The passing candidate is ready for inclusion in the next coherent
+bundle; its final production gates remain required. Receipts: fwp-device-bounds-publication.json and
+fwp-device-bounds-control-cleanup-publication.json; diagnostic log:
+fwp-device-bounds-857-linux-failed.log.
 
 ## Local checks and recovery
 
@@ -183,7 +168,7 @@ workloads are serial, low priority and guarded: sampled aggregate RSS below1GiB,
 target below2GiB, at least64GiB free disk, deadline180 seconds. Stop at limits;
 never raise or bypass them. Use `python3 scripts/local-guard.py COMMAND...` for
 fwp checks. The fun-refactor guard applies to that other repository.
-Latest disk observation:44,150,024KiB available, about42.1GiB; local target
+Latest disk observation:57,358,200KiB available, about54.7GiB; local target
 103,696KiB, about101.3MiB. The64GiB reserve remains unavailable. No local compiled
 check, broad doc audit, rebase or fast-forward ran. Only source edits and bounded
 remote metadata publication/downloads ran serially at low priority.
@@ -201,5 +186,50 @@ Immutable tags, remote source heads and retained receipt hashes survive temporar
 file loss. Never treat an earlier head, skipped check or source snapshot as a
 passing production gate.
 
-Verified final inventory:375 declarations/365 symbols,40 aliases,168 contracts,
-19 IR combinators,11 flat signatures and177 review declarations/167 symbols.
+The cancelled d5 Linux log independently confirms the same codec source-copy
+failure; retained Linux/Intel logs reveal no other completed test failure before
+cancellation. Cancelled jobs supply no passing evidence. A Node20 action-runtime
+deprecation warning was also encountered. Verified official checkout/upload v7
+manifests use Node24. A source-only action-version patch is prepared for the next
+phase2 exit bundle; job definitions, checks and artifact inputs remain intact.
+Node24 checkout/uploads pass the three-platform preflights; full production
+gates remain required. Recipe:
+fwp-node24-actions-patch.json; preparation: fwp-node24-actions-preparation.json.
+Finalization driver83f240569685274589bc1a003f2f444b0dd79e94 on
+ownership-phase2-exit-finalization uses the accepted3598a675 base and includes
+all passing buffer/array/kernel/device candidates and this action patch. Its
+combined runner controls, formatting, library tests and exact-source audit are
+pending. Export native changes after PASS; refresh current root docs before
+opening the one production PR, then require its exact full gates. The accepted-source phase2 audit remains a source-only draft until the
+finite review bundle is merged and its exact source is checked.
+
+Recovery checkpoint f7290c8827f641d8f9cdc9928f1c68a59954e61a passes
+audit38188292080. The bounded immutable archive path actually restores395
+temporary targets (9594149 bytes) on a disposable GitHub runner, verifying all
+source hashes. Helpers and compiler were not executed. Only bounded reports
+were downloaded into fwp-verified-archive-recovery-restoration; no local restore
+ran. Node24 checkout/upload pass there and in all three kernel preflights.
+Keep finalization metadata separate from binary control artifacts.
+
+The duplicate main full matrix38189663885 was cancelled after all seven
+pre-merge gates and complete-tree parity were proved. This is duplicate-run
+avoidance, not a passing main gate. Proof: fwp-main124-duplicate-ci-proof.json.
+Prepared merge-phase2-exit.py, publish-accepted-phase2-audit.py,
+download-accepted-phase2-audit.py and record-accepted-phase2.py require actual
+passing final gates and the accepted-source audit before advancing phase3.
+
+Recovery audit38189929028 at42c1aa913f8ba370b29068c7edbb2803ce47871b
+found that copied backup Markdown was being checked as live documentation,
+so its original relative links no longer resolve inside the backup directory.
+Preserve the original bytes under snapshot source names and remove duplicate
+live Markdown paths on the recovery branch; then rerun that audit. Production
+source/combined validation is independent and passes38189708217.
+
+Combined ownership exit preparation passes runner38189708217 at driver83f240569685274589bc1a003f2f444b0dd79e94.
+Native export 07fb6f72f7a0b4309057f89209250ca573d7103e has tree30a0ccea090697165713d2411ed75f3f0aa03a35 on the actual
+PR124 squash. All original allocation, sanitizer, raw/native, codec, type,
+format/library/docs, inventory and finite fallback controls pass together.
+Current root docs are refreshed before opening the production PR; this update
+changes documentation only. Query ownership-exit-and-buffer-bundle for its
+current tip and require all six exact-head jobs and roadmap_docs before squash.
+Phase2 stays open until the actual merged-source audit passes.

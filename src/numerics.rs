@@ -258,6 +258,10 @@ struct Kernel<'a> {
 
 /// Check a kernel: its stack depth, and that it uses the inputs and
 /// constants it is given.
+fn workspace_fits(depth: usize) -> bool {
+    depth <= usize::MAX / CHUNK / std::mem::size_of::<f64>()
+}
+
 fn check(code: &[i64], nconsts: usize, inputs: &[Vec<f64>], n: usize) -> R<usize> {
     let bad = || trap("device: malformed kernel");
     let (mut sp, mut depth, mut leaves, mut consts) = (0usize, 0usize, 0usize, 0usize);
@@ -298,6 +302,9 @@ fn check(code: &[i64], nconsts: usize, inputs: &[Vec<f64>], n: usize) -> R<usize
                 n
             ));
         }
+    }
+    if !workspace_fits(depth) {
+        return trap("device: kernel too large");
     }
     Ok(depth)
 }
@@ -882,7 +889,8 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
             "ad.backward" => f64_array(&backward(int(&a[0]), &ints(&a[1]), &f64s(&a[2]))?),
             "device.run" | "device.sum" => {
                 let threads = int(&a[0]).clamp(1, 256) as usize;
-                let n = int(&a[1]).max(0) as usize;
+                let count = int(&a[1]).max(0) as u64;
+                let n = count as usize;
                 let code = ints(&a[2]);
                 let consts = f64s(&a[3]);
                 let ins = inputs(&a[4]);
@@ -894,6 +902,11 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
                     depth,
                 };
                 if sym == "device.run" {
+                    let limit =
+                        (usize::MAX - std::mem::size_of::<u64>()) / std::mem::size_of::<u64>();
+                    if count > limit as u64 {
+                        return trap("array too large");
+                    }
                     f64_array(&run(threads, n, &k))
                 } else {
                     Value::F64(sum(threads, n, &k))

@@ -18249,7 +18249,153 @@ All inputs are verified individually; the combined final tree is not yet verifie
 
 
 
-## Before the final PR124 ownership integration
+## Scoped autodiff review before the final PR124 candidate
+
+The later numeric phase must verify exceptional tape lifetimes before reusing
+capacity. Code review of prepared source112 (`b45e93a71d40`) finds that native
+`ad.backward` detaches four tape buffers before validating output tape IDs; its
+mixed-tape trap frees adjoints but does not release those buffers. The interpreter
+uses a local owned `Tape`, whose buffers drop on that error. Add a native
+allocation/release regression and preserve the same trap and raw interpreter
+behavior when fixing this path. Grad callback failure and cancellation before
+`ad.backward` also need explicit scoped lifetime evidence.
+
+Preserve failure consumption when repairing backward cleanup: both backends
+detach the selected tape before checking output IDs, and the interpreter's
+local Tape then drops on error. Register the detached native buffers and
+adjoints for cleanup rather than leaving the tape live by moving validation
+ahead of detachment. Normal return, mixed-tape failure, recoverable traps and
+cancellation need separate controls; capacity reuse must preserve those exits.
+
+Both token implementations wrap the slot generation after 32767 uses. The
+ordinary stale-token check therefore needs a regression across that wrap and a
+policy that prevents an old token from identifying a new tape. These are
+prepared-source review findings. The candidate ownership repair retires a
+slot after generation32767, with an explicit terminal-boundary regression; its
+runner checks and final bundle gates remain pending. It does not establish
+verified cleanup or stale-token guarantees for all lifetimes.
+
+The public `ad.push` and `ad.backward` primitives accept `I64` tokens. Current
+code validates tape identity but does not check the low-word node index against
+the live tape before recording a parent or indexing adjoints. Forged same-tape
+indices therefore need explicit interpreter/native bounds regressions: Rust
+indexing can panic, while the native indexing can access outside the allocation.
+Validate tokens before use, preserve valid operation and reduction order, and
+verify exceptional buffer release as part of that fix. This is a source-review
+finding. Candidate bounds and detached-buffer cleanup repairs are published
+with passing Linux/ARM/Intel raw interpreter/native and omitted-check controls;
+final combined production gates remain required. Keep the
+current numeric phase order from [the plan](../PLAN.md).
+
+The candidate scoped repair adds internal ad.scope around value-and-grad and
+vjp, so grad, vector gradients and reverse Jacobian rows also release tapes
+when their callbacks fail before backward. Native scopes use stack owners and
+stable slot links in the existing task-local cleanup chain; interpreter scopes
+use RAII and remove consumed tokens. Borrowed AD inputs and counted fresh F64
+gradient arrays have explicit contracts. Focused scope, counting, layout,
+trap/cancellation and raw interpreter/native checks pass on Linux/ARM/Intel.
+The direct scoped-callback allocation repair is being validated separately;
+final combined gates and merge remain required. No tracing-free support is claimed.
+Equivalent runtime-dependent gradients must also show no increase in managed
+steady-state allocation calls or requested bytes, with unchanged external buffer
+allocation calls/bytes, at O1/O2 on Linux and both macOS architectures. Report
+warmup, live/peak memory and tape layout separately; stack scope storage alone
+does not establish allocation parity for generic callback bridges.
+
+
+
+## Kernel and recovery preparation before device bounds
+
+Actual temporary recovery restoration passes on disposable GitHub runner38185353180.
+All365 restored targets (9134228 bytes) have verified source hashes; publishers,
+merge helpers and compiler workloads were not executed. Metadata and proof are
+retained in fwp-verified-recovery-restoration. Checkout and artifact upload v7
+also pass there; the dedicated kernel preflight below proves both actions on
+Linux and both macOS architectures. No local recovery restoration ran.
+
+An encountered numeric kernel bug is also fixed in preparation: computing
+(sp - 1) at an empty evaluation stack forms an out-of-bounds top pointer.
+Candidate28db5471d503763aa27e7da4f60c5ad880ad4183 passes Linux/ARM/Intel
+runner38185769269. Extracted actual kernels pass O1/O2 address/undefined/unsigned-
+overflow sanitizers with first leaf/constant operations, lengths0/1/7/127/256,
+nonzero offsets, exact numeric bytes and boundary sentinels. Removing the guard
+must fail on the empty-stack subtraction. Existing parallel-kernel and missing-
+OpenCL controls also pass against explicit FWP_NO_OPT=1 interpreter results.
+Original benchmark remains ignored; no timing or real GPU claim is established.
+Retain C, binary and status artifacts on GitHub. The next finite phase2 exit
+bundle combines this fix with buffer/array/bump bounds and Node24 actions;
+PR124's current head remains frozen. Future finalizer pins all three passing
+kernel jobs and retains array/kernel controls; metadata exports are separate
+from binary artifacts to keep local downloads bounded.
+
+A bounded archive-based recovery refinement is prepared to replace hundreds of
+per-blob API requests with one immutable source archive. Each restored source
+still requires its Git blob hash, temporary-path checks and size limits. The
+original runner restoration proof above remains valid for its tested version;
+the refined restorer and validator require a fresh checkpoint audit before
+claiming that the faster path is verified.
+
+The kernel constant-word refinement at d240231c5dd33e83ecdd5bf3df06715a0e279768
+passes all three platform preflights in38186836622, including exact F64 bytes,
+stack subtraction and omitted decoder controls. Native compiler flags do not
+disable strict aliasing; the candidate reads V words through the existing
+memcpy bit decoder. No timing or new GPU hardware claim follows.
+
+Device allocation guards are prepared at857cd5d2ee09f52cef2d6cb9fc33fd904a14d9c6
+on ownership-evidence-device-output-bounds. Positive output counts are checked
+before multiplication/allocation; malformed code and input-length errors remain
+first, and the temporary input table is released on the new trap. Workspace
+size is checked after input validation in both implementations. Raw-interpreter,
+O1/O2, GC/reuse, bounded allocation and omitted guard/cleanup controls are pending
+on Linux/ARM/Intel. Include only passing candidates in the next finite-review
+bundle; current PR124 remains frozen. Receipt: fwp-device-bounds-publication.json.
+
+
+## Archived handoff after PR #124
+
+Main is `b4285fc177b3ae7afaf195e5ebd7115cc77b815c` (PR #123). Frozen head `9e7d0b24610524cf54125c44b47ee07185c0b7c3`
+passes all six exact-head jobs in CI38138731040 and roadmap_docs38138731036
+before match-head squash at 2026-10-11T17:47:22Z. Subject `Own library file and raw-memory resource lifetimes`
+has 50 characters, one line, empty body and no trailers or
+attribution. One parent `68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4` and complete tree `c94ed7f1bbc4e0c1f8f74b2fcbbbbe70e1359b0c` match
+the tested head. The raw signed payload is retained in
+/private/tmp/fwp-pr123-signed-payload.txt. All11 live docs were backed up before
+acceptance edits in /private/tmp/fwp-main-docs-remote-pre123. Local main remains
+`68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4` until the guarded fast-forward has at least64GiB free disk; no local
+checkout update or full check ran. Actual-main documentation38161107226 passes independently.
+
+Queue33 and35–73 are accepted; queue34 is a verified duplicate. PR123 accepts
+all42 original library/OpenCL/TLS/file/resource commits and both pointer and
+raw-memory repairs. Raw pointer offsets wrap at the native pointer width;
+ordinary arithmetic remains checked. Nine raw-memory primitive contracts
+borrow their arguments; ptr.read-string returns a counted independent managed
+copy. C buffers still require mem.free. Fake OpenCL coverage does not prove
+GPU hardware support, and F16/128-bit/WASI pointer widths remain unverified.
+
+Current delivery is PR[#124](https://github.com/e6qu/fun-with-pipes/pull/124):
+resource/network items74–112, compiler/cache diagnostics, AD tape/scoped-gradient
+lifetimes, list callback owners, closure cleanup and typed State ownership.
+Production head is `3aae99bfa705e26babc2cf251b0e583dfd95cf38`, complete tree
+`28ae0e5cea7fa5948683adb39a035ed40fb9b226`. It adds only the codec fixture-copy repair to the final
+verified ownership export: the default artifact directory is a separate
+subdirectory and the source bytes are checked after copying. Both default and
+explicit artifact paths pass on Linux/ARM/Intel in38184029472 at647d45ca45a76f46aaa22d0901d7fd3ea7949220.
+Full CI38184549852 passes Linux, bench, ARM regular and both GC jobs;
+Intel regular remains running. Roadmap_docs38184549850 passes at the
+repaired head. Require all seven exact-head gates before squash.
+Receipt: fwp-codec-copy-production-publication.json. The earlier d5 full matrix
+38180852377 fails regular ARM because copying the fixture onto itself empties
+it on macOS; bench/both GC and docs pass, while Linux/Intel were still running. The superseded run was cancelled after
+verifying the new head differs only in the codec test and its replacement full
+matrix exists; cancellation supplies no passing gate. Proof:
+fwp-pr124-d5-superseded-ci-proof.json. Earlier
+isolated preflights supplied an explicit artifact directory and missed this
+harness bug. All original ownership/alias/GC controls remain intact.
+
+Duplicate main CI38161107239 was cancelled while all six jobs were queued,
+after complete-tree identity and all seven passing pre-merge gates were proved.
+This is duplicate-run avoidance, not a passing main gate. Proof:
+/private/tmp/fwp-main123-duplicate-ci-proof.json.
 
 ## Current verified bundle evidence
 
@@ -18266,7 +18412,8 @@ runner38179961853: eight effect controls, original snapshots, native task aliase
 State controls and71 library units. Argument comparison permits only the
 parameter's known outer effects, preserves nested input rows and displays the
 original callback type on every mismatch. No original task fixture was changed.
-Integrate this refinement and these docs before publication and full gates.
+Final driver040a3f64f4e2fcc9466c76aea7466a6fc36a3d68 integrates this refinement
+and streamlined docs; runner38180262247 passes and its exact tree is published.
 
 Complete counters include initializer fast paths and count slow delegation once.
 Independent Linux/ARM/Intel State38174682933, list38175393180 and scoped
@@ -18276,7 +18423,9 @@ bytes272212→206676; counted freed bytes rise0→262144. List2048-call profiles
 retain43008 calls/965374 bytes and raise counted freed bytes65536→917504.
 Scoped grad4096-call profiles match the baseline33 calls/720 bytes per gradient,
 repairing the40-call/872-byte regression without weakening assertions. Hardware,
-compiler, flags and source/binary hashes remain in the runner artifacts.
+compiler, flags and source/binary hashes remain in the runner artifacts. Combined
+Linux report metadata is retained in fwp-pr124-final-combined-profile-metadata,
+with source893a9c60586ede490c8d949223d6a45862ae3fd8 and artifact11716429988.
 No timing or tracing-free claim is established.
 
 The old production38174221614 is complete: regular Linux/ARM/Intel fail only
@@ -18284,10 +18433,380 @@ the original pass-fn callback comparison; bench and both GC jobs pass.
 Documentation38174221611 passes. These are earlier-head diagnostics, not final
 gates. Logs: fwp-pr124-combined-{linux,arm,intel}-failed.log.
 
-Next: rerun the final integration with6ff1ff and the streamlined docs, publish
-its exact-tree export with the1aadb lease, then require all six current-head
-production jobs and roadmap_docs before squash. Keep one production PR. Prepare
-the finite177-declaration phase2 classification while CI runs. Earlier preflights
-and cancelled runs cannot supply final production gates. Phases2–6 remain open.
-Integration recipe: /private/tmp/fwp-integrate-final-ownership-on-runner.py.
+Next: monitor all six production jobs and roadmap_docs at 3aae99b.
+Fix failures without weakening original controls; squash only after all seven
+current-head gates pass. Prepared merge/verification/acceptance scripts pin
+3aae99b and the current run IDs; do not execute while gates are pending.
+The finite177-declaration classification and allocation guards are prepared for
+the next production PR after this merge. Earlier preflights and cancelled runs
+cannot supply final production gates. Phases2–6
+remain open. Integration recipe: fwp-integrate-final-ownership-on-runner.py.
+Final runner/export head0b4a2d61781b6151fda28d690c0db9a5463b9090 has the
+same native source as repaired production3aae99; the latter additionally fixes
+the codec artifact-copy test. Complete-tree parity is checked against the
+current head at merge. No local compiled test ran.
+
+## Remaining ownership deliveries
+
+Original focused checks are preserved in
+[history](roadmap-history.md#prepared-ownership-checks-retained-during-handoff-streamlining).
+Use actual bases below, never immutable OLD parents. Preserve all11 root docs
+when resolving conflicts. Remove a live row only after verified acceptance or
+a verified duplicate, retaining its queue anchor and history. All listed
+preparations need final squash rebases and all seven exact-head production gates.
+
+| Row / branch | Current head | Actual current base | Delivery status |
+|---|---|---|---|
+| 74 ownership-file-runtime-owners | 8d5cb3c4e3e4 | 3dba256655a3 | Runner integration passed; production gates pending |
+| 75 ownership-file-discard | 423a7ddcc760 | 8d5cb3c4e3e4 | Runner integration passed; production gates pending |
+| 76 ownership-file-runtime-boundaries | 603bb0b914db | 423a7ddcc760 | Runner integration passed; production gates pending |
+| 77 ownership-wasm-resource-counts | f4a26004d5a8 | 603bb0b914db | Runner integration passed; production gates pending |
+| 78 ownership-wasm-count-disposal | 13c77dbb7b82 | f4a26004d5a8 | Runner integration passed; production gates pending |
+| 79 ownership-resource-frame-fields | 2f842d5d266f | 13c77dbb7b82 | Runner integration passed; production gates pending |
+| 80 ownership-file-inline-path | 010e622f064e | 2f842d5d266f | Runner integration passed; production gates pending |
+| 81 ownership-file-storage-disposal | 6e5063786651 | 010e622f064e | Runner integration passed; production gates pending |
+| 82 ownership-file-construction-disposal | ecfd9a28c39e | 6e5063786651 | Runner integration passed; production gates pending |
+| 83 ownership-resource-frame-variants | 7b7e45b20230 | ecfd9a28c39e | Runner integration passed; production gates pending |
+| 84 ownership-resource-frame-binding-kinds | e2a2baa977fa | 7b7e45b20230 | Runner integration passed; production gates pending |
+| 85 ownership-match-scrutinee-types | ebe69e13a935 | e2a2baa977fa | Runner integration passed; production gates pending |
+| 86 ownership-resource-record-binding-kinds | a0de231a4c0c | ebe69e13a935 | Runner integration passed; production gates pending |
+| 87 ownership-nominal-source-context | 5a4ef15301c8 | a0de231a4c0c | Runner integration passed; production gates pending |
+| 88 ownership-channel-cycle-lifetimes | 3db25573057b | 5a4ef15301c8 | Runner integration passed; production gates pending |
+| 89 ownership-http2-body-roots | 5bc4f862bd5a | 3db25573057b | Runner integration passed; production gates pending |
+| 90 fix-http2-body-bounds | fabe0ac7b24a | 5bc4f862bd5a | Runner integration passed; production gates pending |
+| 91 ownership-http2-peer-cleanup | 5029a447bcec | fabe0ac7b24a | Runner integration passed; production gates pending |
+| 92 ownership-grpc-peer-completion | 26545f1b279b | 5029a447bcec | Runner integration passed; production gates pending |
+| 93 ownership-grpc-status-cleanup | 9ad102d5a16f | 26545f1b279b | Runner integration passed; production gates pending |
+| 94 ownership-grpc-receive-cleanup | ec0fd11c6b26 | 9ad102d5a16f | Runner integration passed; production gates pending |
+| 95 ownership-grpc-force-cleanup | 91ab62452636 | ec0fd11c6b26 | Runner integration passed; production gates pending |
+| 96 ownership-grpc-render-cleanup | b4087dc07beb | 91ab62452636 | Runner integration passed; production gates pending |
+| 97 ownership-grpc-send-cleanup | 0203804096d8 | b4087dc07beb | Runner integration passed; production gates pending |
+| 98 ownership-grpc-request-encoding | 9c2c91fa8e21 | 0203804096d8 | Runner integration passed; production gates pending |
+| 99 ownership-grpc-canonical-encoding | 58bf72dbf3df | 9c2c91fa8e21 | Runner integration passed; production gates pending |
+| 100 ownership-grpc-response-encoding | 3b13964722ba | 58bf72dbf3df | Runner integration passed; production gates pending |
+| 101 ownership-grpc-client-requests | a584b59ec896 | 3b13964722ba | Runner integration passed; production gates pending |
+| 102 ownership-grpc-client-failure-text | 4e6dbbddf888 | a584b59ec896 | Runner integration passed; production gates pending |
+| 103 ownership-grpc-client-receive | 09b5e3e70117 | 4e6dbbddf888 | Runner integration passed; production gates pending |
+| 104 ownership-grpc-connect-cleanup | 518e5cfaca02 | 09b5e3e70117 | Runner integration passed; production gates pending |
+| 105 ownership-grpc-connect-startup | 4802e1dfb8a5 | 518e5cfaca02 | Runner integration passed; production gates pending |
+| 106 ownership-grpc-context-restore | 2308b7c1db43 | 4802e1dfb8a5 | Runner integration passed; production gates pending |
+| 107 ownership-grpc-context-resources | a2b3b132f094 | 2308b7c1db43 | Runner integration passed; production gates pending |
+| 108 ownership-grpc-capture-resources | ef437370ca74 | a2b3b132f094 | Runner integration passed; production gates pending |
+| 109 fix-grpc-tls-pool-identity | c9d841ee5a9d | ef437370ca74 | Runner integration passed; production gates pending |
+| 110 ownership-grpc-environment-cache | bf297ac299ea | c9d841ee5a9d | Runner integration passed; production gates pending |
+| 111 ownership-grpc-packed-options | 5a01572cb2c6 | bf297ac299ea | Runner integration passed; production gates pending |
+| 112 ownership-grpc-connection-addresses | b45e93a71d40 | 5a01572cb2c6 | Runner integration passed; production gates pending |
+
+## Finish phase2, then continue the plan
+
+The pointer-width and raw-memory contracts are accepted in PR123.
+Independent Linux/ARM/Intel evidence remains in
+/private/tmp/fwp-pointer-boundary-passing-proof.json and its retained artifacts.
+The twelve sanitizer binaries preserve exact success0/overflow1 statuses;
+F16/128-bit, WASI pointer widths and automatic raw-buffer lifetimes remain
+separate requirements. Production acceptance is recorded above.
+
+After queue112 is delivered, recheck the finite [ownership exit gates](ownership.md#phase-2-exit-gates)
+and [primitive contracts](primitive-ownership.md) against merged source. The verified final candidate168-contract inventory leaves177 declarations/167
+symbols for classification. Preserve conservative fallbacks until typed ownership and
+teardown are proved.
+
+Review borrowed metadata roots, reconstruction/partial failure, retained
+callbacks/contexts and resource disposal. The source-reviewed fallback list also
+includes per-task typed State slots and remaining callback/reconstruction paths;
+see [primitive contracts](primitive-ownership.md). List reconstruction owners
+and inactive State root clearing now have published candidate controls below.
+Typed State ownership is verified in the candidate; full production gates and
+merge remain required.
+Channel close preserves queued values;
+explicit drain breaks its counted cycle, while automatic unreachable-cycle
+reclamation remains unproved. Scalar AD tape handles do not prove external
+buffer lifetimes. Numeric lifetime findings and future regressions are in
+[numerics](numerics.md). Complete phase2 before representation, numerics/AD,
+performance and tracing-free work. Phases3–6 still require implementation and
+measured acceptance; the prepared ownership queue is not the whole plan.
+
+
+
+Accepted resource/primitive preparation:
+
+## Prepared refinements
+
+PR123 accepts raw-memory contracts: address words borrow without
+managed counting; mem.string copies a borrowed managed String; ptr.read-string
+returns a fresh counted managed String independent of the raw buffer. Buffers
+from mem.alloc/mem.string require manual mem.free. These are locally checked
+accepted contracts after all exact-head production gates. Numeric width and
+WebAssembly limitations remain in [ownership](ownership.md#phase-2-exit-gates).
+
+The remaining contracts below are prepared, with exact heads and immutable
+anchors in [the queue](roadmap-queue.md). [The handoff](development-state.md)
+gives current checks and the sole next action. Each delivery still needs its
+actual squash-base rebase and all seven exact-head gates. Merged contracts are
+summarized in [ownership](ownership.md#merged-ownership-boundaries); earlier
+prepared rows and acceptance evidence are in history.
+
+| Queue | Prepared contract | Remaining acceptance |
+|---|---|---|
+| 74 | File logical alias counts live in the header independently of GC metadata; borrowed IO returns separately owned aliases and protects them during failures | Bundle CI; wide counts/overflow, GC-off close, IO traps and omission controls |
+| 75 | Mandatory resource ownership releases File aliases at original frame boundaries even when ordinary reuse/freeing is disabled | Bundle CI; descriptor-bound discard, preserved parameter lifetimes, aliases and omitted-frame-drop controls |
+| 76 | Scoped File callbacks return separately owned result aliases; task/loop results preserve File owners while disabled ordinary freeing still retains child storage | Bundle CI; raw interpreter/scoped/task/loop outputs, lost-owner and storage-free controls |
+| 77 | Bump-heap resource aggregates use logical count metadata and drop typed File children; count metadata releases while physical value storage remains | Bundle CI; required actual WASI fstat, wide counts/overflow and scalar-bit safety; host C is separate evidence |
+| 78 | Disabled-free aggregates/tasks/channels dispose logical metadata and File children while physical bump storage remains | Bundle CI; O1/O2 omission controls and required actual WASI in both free modes |
+| 79 | Eligible field-only original record holders retain typed children without a parent box; boxed holders retain the parent | Bundle CI; original lifetime, partial-retain unwind and parent-box count control |
+| 80 | File handle, count and inline path share one aligned leaf allocation; checked size includes terminator | Bundle CI; display/I/O agreement, one allocation versus two and constructor rollback |
+| 81 | Last File owner closes the stream, removes weak finalizers and reclaims unshared native storage; shared/bump or disabled-free storage remains | Bundle CI; finalizer omission, reuse, freed-byte and scoped close-before-drop controls |
+| 82 | Failed File construction closes raw streams and releases allocated headers; finalizer growth commits only after checked allocation succeeds | Bundle CI; constructor fault stages, retained registry, overflow and stale-finalizer controls |
+| 83 | Original variant holders retain active typed payloads in structs; incoming values survive partial retains and boxed fallback | Bundle CI; tag/nullary/scalar safety, cleanup IDs and parent-box count controls |
+| 84 | Whole-pattern variant holders initialize from the current scrutinee on each binding path | Bundle CI; mixed let/pattern arms, exact-once close and stale-local prevention |
+| 85 | Whole-match scrutinees preserve nominal context; whole stack binders retain and drop their typed children | Bundle CI; File disposal plus HTTP/stack alias regressions and retain omission controls |
+| 86 | Record pattern holders initialize borrowed typed fields from their own current scrutinee before frame retention | Bundle CI; mixed let/pattern arms, exact-once close and preserved stack binder repair |
+| 87 | Nested nominal source matches discard typed File payloads at original frame exit without exhausting descriptors | Bundle CI; raw interpreter, optimized/unoptimized source, reuse/free and GC modes |
+| 88 | Channel close preserves queued values; explicit receive/discard drains and breaks a counted self-cycle | Bundle CI; queue counts and normal/poison disposal; automatic cycle reclamation remains unproved |
+| 89 | HTTP/2 body copying keeps the borrowed call/stream owner live while allocating from its external malloc buffer | Bundle CI; actual major collection, arbitrary bytes, finalizer lifetime and omitted-fence control |
+| 90 | Negative HTTP/2 body limits clamp to zero; size, completion, reset/dead and timeout retain interpreter ordering | Bundle CI; thirteen raw interpreter/native cases, removed-clamp and borrowed-root controls |
+| 91 | HTTP/2 peer subject malloc temporary remains unwind-owned through String/Option copying | Bundle CI; exactly-once release, copy traps, absent peer and no-TLS paths, omitted-cleanup controls |
+| 92 | Served gRPC peer metadata has a task owner plus retained detached-sender owners; release each after child joins, protect spawning | Bundle CI; tracing off/on, child and detached callbacks, cancellation, preparation traps, overflow and leak/early controls |
+| 93 | Served status messages transfer cancellation storage, stay unwind-owned through final encoding, and free normally; replaced stored statuses copy before old release | Bundle CI; final wire bytes, tracing off/on, cancellation, aliased replacement, retained context and allocation-failure/leak controls |
+| 94 | Unary server receive owns dequeued request/copied status through subsequent wait; transfers only returned request or error text; reflection releases end text | Bundle CI; binary transfer, missing/extra messages, reset/cancelled wait and omitted-release controls |
+| 95 | Streaming force owns received payload/status through decoding/copying; decoder failure and temporary error text unwind; first-error return transfers ownership | Bundle CI; first-error/memo behavior, decoder/copy traps, scalar/results, tracing off/on and three omission controls |
+| 96 | Streamed non-status error owns its rendering scratch before formatting/trapping | Bundle CI; partial-render/final trap, exact diagnostics, tracing off/on and omitted cleanup |
+| 97 | Encoded gRPC message h2_buf owns its malloc storage through cancellable flow-control waits | Bundle CI; zero/partial window cancellation, wake/resume, closed streams, exact plain/gzip frames and omitted cleanup |
+| 98 | Detached sender owns request encoding scratch through encoding and cancellable send | Bundle CI; encode trap recovery, normal request bytes/end marker, simultaneous request/wire cancellation and omitted cleanup |
+| 99 | Message/request encoders own canonical serialization scratch until transcoding completes or unwinds | Bundle CI; actual fixed-width/oneof bytes, partial serialization/transcoder traps, diagnostics and omitted cleanup |
+| 100 | Served unary/stream/error responses own encoded buffers through cancellation; error canonical scratch owns partial serialization | Bundle CI; real parked scheduler cancellation, normal bytes, partial traps and omitted cleanup controls |
+| 101 | Synchronous unary/iterator client requests own encoded buffers through encoding and cancellable sends | Bundle CI; real parked cancellation, request bytes/end marker, diagnostics and omitted cleanup controls |
+| 102 | Client failure helper takes copied transport/status/iterator text and releases it after raising | Bundle CI; exact raw trap and typed GrpcError code/text, copying before release and omitted cleanup |
+| 103 | Client receives own dequeued messages, status copies and decoder text across retry, callbacks and cancellation | Bundle CI; actual receive/scheduler success/retry/error/callback/cancel and first/next/decoder omission controls |
+| 104 | Pending gRPC connects own address lookup, descriptor and SSL through handshake and wrapper transfer | Bundle CI; actual loopback connect/handshake cancellation, refusal/handoff and omitted fd/SSL cleanup; partial background startup remains separate |
+| 105 | Background gRPC startup owns temporary and per-task reserved references until publication | Bundle CI; first/second spawn traps, actual reader/writer termination, descriptor/ref/finalizer checks and omitted reservation/startup/marker controls |
+| 106 | Dynamic gRPC context restores its saved task pointer on every callback exit | Bundle CI; nested normal/typed/raw failures, actual parked cancellation and omitted unwind restore |
+| 107 | Scoped TLS options have checked dynamic-scope and original inheriting-task owners | Bundle CI; structured/detached escapes, cancellation/preparation/overflow, original-context replacement, six malloc releases and three omission controls; plain tasks omit hooks |
+| 108 | Response metadata captures have constructor, scope and inheriting-task owners | Bundle CI; snapshots resist later child appends, nested forwarding, typed/raw/cancel exits, failed preparation and counter acquisition; three omission controls |
+| 109 | TLS pool identity preserves full fields with checked length framing | Bundle CI; delimiter collisions, every field, names beyond 1 KiB, actual key copy/pool reuse after scoped release, interpreter oracle and old-encoding rejection |
+| 110 | Library teardown releases read-once environment TLS caches after tasks/finalizers | Focused GitHub CI37948869170 passes; cache immutability, task/finalizer order, ten malloc frees, reinit/idempotence and omission control; final bundle CI remains required |
+| 111 | Immutable TLS options pack header, strings and full key into one checked allocation | Focused GitHub CI37950759037 passes; final bundle CI remains required; actual allocation/byte counts, header alignment, copied inputs, failure cleanup and existing scope/task/cache/pool controls |
+| 112 | Connections preserve full addresses after aligned headers in one checked allocation | Focused GitHub CI37958243461 passes; final bundle CI remains required; actual long-address loopback/pool reuse, truncation rejection, copied inputs and requested bytes against legacy short-address layout; tracing compatibility remains |
+| 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Bundle CI; original lifetimes, ambiguous contexts and shared cycle policy |
+
+Prepared File IO borrows handles, owns returned File aliases/tuples and closes
+idempotently. file.with transfers the owned callback result before scoped close;
+fail/attempt retain and transfer typed error payloads before unwind. Resource
+counts are mandatory even when optional reuse/freeing is disabled. Original frame
+anchors preserve interpreter lifetimes rather than exposing new source syntax.
+
+Prepared File paths use one aligned leaf allocation; final-owner disposal removes
+library finalizers before unshared native storage release. Constructor failures
+close streams and preserve existing registry entries. Shared/poison/no-free
+storage follows its compatibility lifetime. WASM counts track logical owners and
+resource disposal; physical bump storage remains allocated. Closing a channel
+preserves its queued values; explicit drain can break a counted cycle. This is
+not automatic cycle reclamation or general tracing-free support.
+
+
+Verified acceptance: {"acceptedHead": "3aae99bfa705e26babc2cf251b0e583dfd95cf38", "characters": 62, "localFastForward": "Deferred while free disk is below 64 GiB", "localMain": "68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4", "mergedAt": "2026-10-12T00:52:11Z", "message": "Own resource and State lifetimes and preserve inferred effects", "parents": ["b4285fc177b3ae7afaf195e5ebd7115cc77b815c"], "rawPayloadHash": "fdb3e26b7fcd183637cc18bf447cccd5da36edf627406f42835894758bbb658d", "sha": "3598a675b5bd9ad2e22ac17d42a27a89ea74fdeb", "subject": "Own resource and State lifetimes and preserve inferred effects", "tree": "28ae0e5cea7fa5948683adb39a035ed40fb9b226", "verification": "GitHub verified signed commit payload"}
+
+
+## PR124 ownership implementation notes before acceptance
+
+## Prepared ownership implementation
+
+Compiler call ownership lowering must preserve allocation optimizations as well
+as exceptional lifetimes. PR113 protects consumed constructor fields and remaining
+caller references before allocation. Earlier counted arguments, including duplicated
+locals, stay registered while later arguments evaluate. A final consumed value
+can stay inline when no earlier counted argument needs protection, preserving
+direct stack, worker and flattened-loop representations. Later scalar
+computations also finish before pending counted owners transfer, preserving
+cleanup when scalar evaluation fails. Existing allocation
+limits and raw-interpreter comparisons remain acceptance gates.
+
+Prepared record-worker calls keep returned locals as fields when every use is a
+field read or a complete call with the matching record ABI. Typed aliases and
+trap cleanup preserve field owners; partial and dynamic calls retain boxed
+captures. The ordinary worker/wrapper ABI is unchanged. Sequential full CI
+is still required; emitted box removal alone is not a speed claim.
+
+[Ownership](ownership.md#ownership-coverage) summarizes prepared contracts
+and acceptance limits; [the handoff](development-state.md) records current checks.
+Original ResourceRegion markers preserve source resource lifetimes through
+optimization. Eligible original record holders use typed fields; variants use
+fwp_u structs with existing tag-aware vdup/vdrop helpers. Incoming owners remain
+protected during partial retains, and frame assignment follows successful retain.
+Cleanup IDs are captured after helper generation, which can add definitions.
+Pattern bindings initialize payloads/fields from the current path's scrutinee.
+FWP_FRAME_FIELDS=0 preserves the boxed comparison path.
+
+Merged match elimination carries nominal constructor-field context into
+effectful discarded temporaries. If elimination cannot recover a safe type,
+it preserves the original typed binding rather than erasing its ownership.
+Inlined record projections similarly preserve the checked base type through
+scalar replacement so discarded nested children keep their typed destruction.
+Prepared loop normalization lifts both bound and inline Again record-field
+preparation through the same evaluation/drop spine for shape analysis and code
+emission. Cancellation observers read the actual counted-owner layout, including
+direct flattened String slots, while checking unchanged aliases and scalar bits.
+Prepared nested loop reconstruction keeps compatible nested records as flat
+state slots through Again updates. Reading a whole record reconstructs it with
+typed children; progressive retains and completed fields remain protected until
+boxing succeeds. Field reads that can reconstruct records participate in caller
+liveness cleanup. Scalars remain uncounted; full CI per final bundle is required.
+
+Merged CAF ownership retains a typed cache owner and returns a separate
+owner on each call. Initialization retry and reentrant replacement preserve
+callers; executable teardown releases caches after finishing tasks. CAF
+evaluation is a call safe point that protects existing caller owners.
+Inlining treats a zero-argument function as an evaluation, preserving unused
+argument evaluation and trap order rather than duplicating or erasing it.
+Merged task.spawn retains counted thunks until entry or cancellation.
+Fallible stack/scope preparation protects only the extra owner and publishes
+a task after preparation succeeds. Unknown closure metadata retains sharing.
+Merged deadline callbacks use the same retained owner through completion
+or cancellation and preserve external capture aliases.
+Merged task.scope borrows its callback and protects its owned result
+through joining/cancellation checks; unwind cleanup restores handlers and
+scope state and releases scope storage.
+The merged task-handle contract owns typed cached results, with
+independent scheduler, scope, caller and await references; unknown/shared
+boundaries retain tracing fallback.
+Merged typed channels own queued elements and transfer their references
+into receive results after successful Option allocation. Close preserves
+queued values; unknown sink/runtime boundaries still share, and cycles
+require the explicit lifetime policy described in ownership.md.
+Prepared TLS listener ownership retains server context and ALPN state through
+accepted sessions, including raw HTTP/2 transfer. Listener stop releases its
+owner; the last session releases the context and protocol storage.
+Prepared library teardown finalizes Files, sockets and transferred HTTP/2
+handles before releasing TLS client caches; implicit session disposal avoids
+network shutdown traffic and preserves host signal policy.
+The RC match preparation recovers missing nominal context from a whole-value
+pattern's typed local, using it for scrutinee conversion and temporary destruction.
+Known expression types remain authoritative. Whole-value pattern aliases of
+stack aggregates retain/drop their typed children, preserving them when the
+scrutinee releases its ownership. No new surface syntax is introduced.
+Prepared original resource-frame holders keep eligible field-only records in
+typed fields, avoiding a parent heap box while retaining children for the
+original frame lifetime. Other bindings retain the boxed parent.
+FWP_FRAME_FIELDS=0 provides an allocation comparison; partial field retention
+must unwind safely. This preparation supplies no general speed claim.
+Prepared File layout stores FILE*, a uint64 owner count and a NUL-terminated
+inline path in one aligned leaf allocation. The checked path length includes
+header and terminator. On 64-bit hosts the header is 16 bytes rather than
+24 bytes; constructor allocation controls and display/I/O agreement are
+required. This reduces layout/allocation overhead without a timing claim.
+Prepared last-owner File disposal removes weak library finalizers before
+reclaiming unshared native storage. Shared, bump and disabled-free storage
+keeps its allocator lifetime. Scoped cleanup closes while its constructor
+owner is live, then drops that owner; aliases must never see reclaimed storage.
+Prepared original variant holders use tag-aware typed structs for eligible
+matched bindings. Retain incoming payloads completely before replacing a frame
+slot; cleanup dispatches only the active tag. Boxed fallback retains payloads
+before dropping the wrapper. Generate cleanup IDs after helper generation,
+which may add nested cleanup definitions. FWP_FRAME_FIELDS=0 compares boxing.
+Prepared whole-pattern variant bindings initialize fresh typed holders from
+the current scrutinee on each binding path. A local used by a let in another
+arm must not supply that payload. Partially failed patterns preserve original
+frame lifetime rather than releasing their File bindings early.
+Prepared record pattern holders likewise initialize typed fields from their
+current scrutinee before anchoring the original frame owner. A field mapping
+created by a let on another arm must not supply these borrowed fields.
+Prepared HTTP/2 body copying keeps its borrowed call owner live through
+allocation. The stream buffer uses malloc, so its bytes alone cannot root
+the GC-managed stream. Forced major collection and finalizer omission controls
+verify this boundary; HTTP/2 handles still retain the tracing compatibility policy.
+Prepared HTTP/2 body bounds clamp negative limits to zero, matching the
+interpreter. Check size before completion, then reset/dead state, then timeout;
+an empty completed body succeeds at a zero limit even if the stream reset.
+File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
+remain subject to full final-bundle CI and the ownership acceptance criteria.
+
+Prepared network ownership uses the existing unwind cleanup stack. HTTP/2
+peer subject temporaries stay owned until String/Option copying finishes.
+HTTP/2 handles and GC-managed connection/context storage retain tracing
+compatibility; these preparations do not establish complete ARC support.
+
+Served gRPC peer metadata has a logical owner for its serving task and each
+detached sender that can invoke language code. A nonallocating, nonthrowing
+completion callback releases its owner after structured child joins; the last
+owner frees peer metadata and any stored status. Acquisition checks overflow
+and unwinds failed spawning. Stored status replacement copies before dropping
+the prior owner, including aliased input. Final encoding owns transferred text.
+
+Server and client receive paths own dequeued malloc messages and copied status
+text through decoding, subsequent waits and callbacks. Extra/malformed responses,
+cancellation and decoder failures release scratch. Normal returns transfer only
+the requested message, value or error text; cell forcing preserves its memo.
+Retry releases copied reset text before reopening. Client failure raising copies
+raw trap or typed GrpcError contents before releasing its transferred text;
+the receive owner clears that text slot to prevent a second release. Reflection
+releases copied end status, and streamed error rendering owns partial buffers.
+
+Encoded frame buffers, detached and synchronous client request buffers, and
+served unary/stream/error response buffers keep cleanup active across encoding
+and cancellable flow-control waits. Canonical serialization scratch is owned
+before writing/transcoding and released after success or unwind. Wire bytes,
+plain/gzip payloads, fixed-width representation, oneof prefixes, diagnostics,
+receive order and error/trap order remain unchanged.
+
+These are prepared contracts, subject to full platform/GC CI per bundle.
+[Primitive ownership](primitive-ownership.md#prepared-refinements) records individual
+acceptance controls; [the handoff](development-state.md) records delivery status.
+Prepared pending gRPC connections also own lookup results, descriptors and
+SSL state across connection/handshake suspension, transferring them after
+connection-wrapper creation. Background startup has a temporary connection
+owner and a protected reference reserved for each task; abort marks the
+unpublished connection dead without allocating, cancels published tasks and
+drops its owner. The last task releases the descriptor. Its static failure
+marker is excluded from malloc finalization. Dynamic context callbacks use
+the same cleanup stack to restore the saved task context on raw traps and
+cancellation, retaining existing normal/typed-error restoration and handler
+boundaries. Scoped TLS options have checked dynamic-scope and inheriting-task
+owners; the last user releases copied strings and option storage without
+tracing. Task preparation protects acquired context owners, and completion
+releases the original retained context after child joins even if current
+gctx changed. These hooks and one private pointer compile only for service/
+web programs. Read-once environment options keep their cache lifetime; context
+wrappers retain tracing compatibility. Response metadata captures also retain
+constructor, scope and inheriting-task owners; the last owner frees headers
+and their storage. Returned metadata is a snapshot, independent of later
+child appends. Both resource counters validate before acquisition changes
+either, and constructors protect resources if acquisition traps. TLS pool
+keys use checked length framing and complete bytes rather than delimiter
+serialization through a fixed diagnostic buffer; connections copy keys so
+scoped options can be released independently. Read-once environment TLS
+caches release on library teardown after tasks drain and GC finalizers finish,
+before SSL cache disposal. Cache and hook state reset for reinitialization.
+Prepared packed TLS options use one checked allocation containing an aligned
+header followed by strings and the full length-framed key. Child string/key
+pointers are borrowed within that allocation; last-owner release frees its
+base once. Original allocation probes and actual ARM/Intel binary layouts pass
+on prepared source112; final bundle CI still gates merged support. Full connection addresses also use checked tail storage
+within the existing managed connection allocation, preserving complete pool
+keys without separate address allocation. Connection wrappers retain tracing
+compatibility. Canonical decode already frees temporary C buffers on normal
+success/error exits; typed ownership of reconstructed aggregates remains an audit.
+
+
+## Ownership preparation coverage before PR124 acceptance
+
+## Prepared ownership work
+
+[The immutable queue](roadmap-queue.md) records the ordered published work.
+Prepared code and focused checks are not merged support. Every preparation must
+rebase and pass six exact-head production jobs plus the documentation audit.
+Current failures and commands are
+in [the handoff](development-state.md), rather than a second priority list here.
+
+| Area | Prepared contract | Acceptance still required |
+|---|---|---|
+| Loop and resource aggregates | Remaining reconstruction/context protections and original resource holders | Bundle CI; partial retains, traps and nested holders |
+| Libraries and devices | Input/result/unload ownership, resource teardown and OpenCL loader lifetimes | Bundle CI; host aliases and actual device evidence |
+| Networking and retained contexts | TLS/HTTP2/gRPC owners, cancellation, caches and context restoration | Bundle CI; metadata roots, callback lifetimes and protocol behavior |
+| Files and original frames | Logical ownership, borrowed IO, original scope anchors and deterministic close | Bundle CI; all escaping/error/shared boundaries |
+| File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Bundle CI; shared/stale handles and actual WASI behavior |
+| Autodiff ownership | Scoped numeric buffers, validated/retired tokens and counted gradient arrays | Callback return/error/cancellation, nested scopes, GC/reuse and raw/native controls; equivalent steady-state allocation counts/bytes must not increase |
+| Applicative and flat-map callbacks | Borrowed inputs, owned results/chunks, retained copied aliases and counted spines; separate scratch/unwind owners | Raw/native aliases and order, callback trap/cancellation, partial spine and size controls; focused and full bundle gates |
+| State backing storage | Clear inactive scanned words on pop, handler restoration and task exit; preserve suspended active states | Actual collector scans, live aliases, nested failures, gRPC recovery and real task exit/cancellation; typed State ownership remains separate |
+| WASM resources | Logical aggregate/task counts and disposal metadata | Actual-WASI full gates; physical bump storage remains allocated |
+| Frame representation | Typed record fields and variant structs, per-path pattern initialization | Bundle CI; nested holders and partial-retain traps |
 

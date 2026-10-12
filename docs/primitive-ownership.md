@@ -102,7 +102,7 @@ Counts and scope are recorded in
 
 Final integration38179558348 verifies375 declarations,365 symbols,40 aliases,
 168 contracts,19 IR combinators,11 flat signatures and177 review declarations
-representing167 symbols in the PR124 candidate. It includes internal ad.scope
+representing167 symbols in accepted PR124. It includes internal ad.scope
 and ad.scope2, raw-memory, AD, list, typed State and14 codec contracts. Final
 production gates and merged-source classification remain required. These counts
 classify boundaries and do not establish tracing-free eligibility.
@@ -303,80 +303,18 @@ passed all six production gates and the documentation audit.
 
 ## Prepared refinements
 
-PR123 accepts raw-memory contracts: address words borrow without
-managed counting; mem.string copies a borrowed managed String; ptr.read-string
-returns a fresh counted managed String independent of the raw buffer. Buffers
-from mem.alloc/mem.string require manual mem.free. These are locally checked
-accepted contracts after all exact-head production gates. Numeric width and
-WebAssembly limitations remain in [ownership](ownership.md#phase-2-exit-gates).
-
-The remaining contracts below are prepared, with exact heads and immutable
-anchors in [the queue](roadmap-queue.md). [The handoff](development-state.md)
-gives current checks and the sole next action. Each delivery still needs its
-actual squash-base rebase and all seven exact-head gates. Merged contracts are
-summarized in [ownership](ownership.md#merged-ownership-boundaries); earlier
-prepared rows and acceptance evidence are in history.
-
-| Queue | Prepared contract | Remaining acceptance |
-|---|---|---|
-| 74 | File logical alias counts live in the header independently of GC metadata; borrowed IO returns separately owned aliases and protects them during failures | Bundle CI; wide counts/overflow, GC-off close, IO traps and omission controls |
-| 75 | Mandatory resource ownership releases File aliases at original frame boundaries even when ordinary reuse/freeing is disabled | Bundle CI; descriptor-bound discard, preserved parameter lifetimes, aliases and omitted-frame-drop controls |
-| 76 | Scoped File callbacks return separately owned result aliases; task/loop results preserve File owners while disabled ordinary freeing still retains child storage | Bundle CI; raw interpreter/scoped/task/loop outputs, lost-owner and storage-free controls |
-| 77 | Bump-heap resource aggregates use logical count metadata and drop typed File children; count metadata releases while physical value storage remains | Bundle CI; required actual WASI fstat, wide counts/overflow and scalar-bit safety; host C is separate evidence |
-| 78 | Disabled-free aggregates/tasks/channels dispose logical metadata and File children while physical bump storage remains | Bundle CI; O1/O2 omission controls and required actual WASI in both free modes |
-| 79 | Eligible field-only original record holders retain typed children without a parent box; boxed holders retain the parent | Bundle CI; original lifetime, partial-retain unwind and parent-box count control |
-| 80 | File handle, count and inline path share one aligned leaf allocation; checked size includes terminator | Bundle CI; display/I/O agreement, one allocation versus two and constructor rollback |
-| 81 | Last File owner closes the stream, removes weak finalizers and reclaims unshared native storage; shared/bump or disabled-free storage remains | Bundle CI; finalizer omission, reuse, freed-byte and scoped close-before-drop controls |
-| 82 | Failed File construction closes raw streams and releases allocated headers; finalizer growth commits only after checked allocation succeeds | Bundle CI; constructor fault stages, retained registry, overflow and stale-finalizer controls |
-| 83 | Original variant holders retain active typed payloads in structs; incoming values survive partial retains and boxed fallback | Bundle CI; tag/nullary/scalar safety, cleanup IDs and parent-box count controls |
-| 84 | Whole-pattern variant holders initialize from the current scrutinee on each binding path | Bundle CI; mixed let/pattern arms, exact-once close and stale-local prevention |
-| 85 | Whole-match scrutinees preserve nominal context; whole stack binders retain and drop their typed children | Bundle CI; File disposal plus HTTP/stack alias regressions and retain omission controls |
-| 86 | Record pattern holders initialize borrowed typed fields from their own current scrutinee before frame retention | Bundle CI; mixed let/pattern arms, exact-once close and preserved stack binder repair |
-| 87 | Nested nominal source matches discard typed File payloads at original frame exit without exhausting descriptors | Bundle CI; raw interpreter, optimized/unoptimized source, reuse/free and GC modes |
-| 88 | Channel close preserves queued values; explicit receive/discard drains and breaks a counted self-cycle | Bundle CI; queue counts and normal/poison disposal; automatic cycle reclamation remains unproved |
-| 89 | HTTP/2 body copying keeps the borrowed call/stream owner live while allocating from its external malloc buffer | Bundle CI; actual major collection, arbitrary bytes, finalizer lifetime and omitted-fence control |
-| 90 | Negative HTTP/2 body limits clamp to zero; size, completion, reset/dead and timeout retain interpreter ordering | Bundle CI; thirteen raw interpreter/native cases, removed-clamp and borrowed-root controls |
-| 91 | HTTP/2 peer subject malloc temporary remains unwind-owned through String/Option copying | Bundle CI; exactly-once release, copy traps, absent peer and no-TLS paths, omitted-cleanup controls |
-| 92 | Served gRPC peer metadata has a task owner plus retained detached-sender owners; release each after child joins, protect spawning | Bundle CI; tracing off/on, child and detached callbacks, cancellation, preparation traps, overflow and leak/early controls |
-| 93 | Served status messages transfer cancellation storage, stay unwind-owned through final encoding, and free normally; replaced stored statuses copy before old release | Bundle CI; final wire bytes, tracing off/on, cancellation, aliased replacement, retained context and allocation-failure/leak controls |
-| 94 | Unary server receive owns dequeued request/copied status through subsequent wait; transfers only returned request or error text; reflection releases end text | Bundle CI; binary transfer, missing/extra messages, reset/cancelled wait and omitted-release controls |
-| 95 | Streaming force owns received payload/status through decoding/copying; decoder failure and temporary error text unwind; first-error return transfers ownership | Bundle CI; first-error/memo behavior, decoder/copy traps, scalar/results, tracing off/on and three omission controls |
-| 96 | Streamed non-status error owns its rendering scratch before formatting/trapping | Bundle CI; partial-render/final trap, exact diagnostics, tracing off/on and omitted cleanup |
-| 97 | Encoded gRPC message h2_buf owns its malloc storage through cancellable flow-control waits | Bundle CI; zero/partial window cancellation, wake/resume, closed streams, exact plain/gzip frames and omitted cleanup |
-| 98 | Detached sender owns request encoding scratch through encoding and cancellable send | Bundle CI; encode trap recovery, normal request bytes/end marker, simultaneous request/wire cancellation and omitted cleanup |
-| 99 | Message/request encoders own canonical serialization scratch until transcoding completes or unwinds | Bundle CI; actual fixed-width/oneof bytes, partial serialization/transcoder traps, diagnostics and omitted cleanup |
-| 100 | Served unary/stream/error responses own encoded buffers through cancellation; error canonical scratch owns partial serialization | Bundle CI; real parked scheduler cancellation, normal bytes, partial traps and omitted cleanup controls |
-| 101 | Synchronous unary/iterator client requests own encoded buffers through encoding and cancellable sends | Bundle CI; real parked cancellation, request bytes/end marker, diagnostics and omitted cleanup controls |
-| 102 | Client failure helper takes copied transport/status/iterator text and releases it after raising | Bundle CI; exact raw trap and typed GrpcError code/text, copying before release and omitted cleanup |
-| 103 | Client receives own dequeued messages, status copies and decoder text across retry, callbacks and cancellation | Bundle CI; actual receive/scheduler success/retry/error/callback/cancel and first/next/decoder omission controls |
-| 104 | Pending gRPC connects own address lookup, descriptor and SSL through handshake and wrapper transfer | Bundle CI; actual loopback connect/handshake cancellation, refusal/handoff and omitted fd/SSL cleanup; partial background startup remains separate |
-| 105 | Background gRPC startup owns temporary and per-task reserved references until publication | Bundle CI; first/second spawn traps, actual reader/writer termination, descriptor/ref/finalizer checks and omitted reservation/startup/marker controls |
-| 106 | Dynamic gRPC context restores its saved task pointer on every callback exit | Bundle CI; nested normal/typed/raw failures, actual parked cancellation and omitted unwind restore |
-| 107 | Scoped TLS options have checked dynamic-scope and original inheriting-task owners | Bundle CI; structured/detached escapes, cancellation/preparation/overflow, original-context replacement, six malloc releases and three omission controls; plain tasks omit hooks |
-| 108 | Response metadata captures have constructor, scope and inheriting-task owners | Bundle CI; snapshots resist later child appends, nested forwarding, typed/raw/cancel exits, failed preparation and counter acquisition; three omission controls |
-| 109 | TLS pool identity preserves full fields with checked length framing | Bundle CI; delimiter collisions, every field, names beyond 1 KiB, actual key copy/pool reuse after scoped release, interpreter oracle and old-encoding rejection |
-| 110 | Library teardown releases read-once environment TLS caches after tasks/finalizers | Focused GitHub CI37948869170 passes; cache immutability, task/finalizer order, ten malloc frees, reinit/idempotence and omission control; final bundle CI remains required |
-| 111 | Immutable TLS options pack header, strings and full key into one checked allocation | Focused GitHub CI37950759037 passes; final bundle CI remains required; actual allocation/byte counts, header alignment, copied inputs, failure cleanup and existing scope/task/cache/pool controls |
-| 112 | Connections preserve full addresses after aligned headers in one checked allocation | Focused GitHub CI37958243461 passes; final bundle CI remains required; actual long-address loopback/pool reuse, truncation rejection, copied inputs and requested bytes against legacy short-address layout; tracing compatibility remains |
-| 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Bundle CI; original lifetimes, ambiguous contexts and shared cycle policy |
-
-Prepared File IO borrows handles, owns returned File aliases/tuples and closes
-idempotently. file.with transfers the owned callback result before scoped close;
-fail/attempt retain and transfer typed error payloads before unwind. Resource
-counts are mandatory even when optional reuse/freeing is disabled. Original frame
-anchors preserve interpreter lifetimes rather than exposing new source syntax.
-
-Prepared File paths use one aligned leaf allocation; final-owner disposal removes
-library finalizers before unshared native storage release. Constructor failures
-close streams and preserve existing registry entries. Shared/poison/no-free
-storage follows its compatibility lifetime. WASM counts track logical owners and
-resource disposal; physical bump storage remains allocated. Closing a channel
-preserves its queued values; explicit drain can break a counted cycle. This is
-not automatic cycle reclamation or general tracing-free support.
+PR124 accepts resource/network, State, AD and list callback owners and14 codec
+leaves after all six exact-head platform jobs and roadmap_docs pass. Original
+preparation contracts and omission controls are archived in
+[history](roadmap-history.md#archived-handoff-after-pr-124). The immutable queue
+retains their anchors. The next finite exit review explicitly classifies177
+remaining declarations with tracing fallback and includes checked structural
+buffer growth, array/bump allocation and kernel stack/constant decoding and device allocation boundaries; their three-platform preflights pass, while the
+production bundle and actual merged-source phase2 exit remain required.
 
 ## Validation and limits
 
-Merged contracts through #103 passed their exact-head full platform gates.
+Merged contracts through #124 passed their exact-head full platform gates.
 Prepared ownership extensions remain subject to their final bundle full
 acceptance. Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,
