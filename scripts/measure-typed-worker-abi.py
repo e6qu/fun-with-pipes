@@ -18,11 +18,18 @@ fwp=ROOT/'target/debug/fwp';reference=run(str(fwp),'run','--interp',str(fixture)
 (OUT/'raw.stdout').write_bytes(reference)
 # The original golden record program must agree in both ABI modes.
 record_fixture=ROOT/'tests/run/unboxed_records.fwp'
-record_reference=run(str(fwp),'run','--interp',str(record_fixture),environment=dict(env,FWP_NO_OPT='1'))
+def execute(argv, environment):
+ p=subprocess.run(argv,env=environment,capture_output=True)
+ return p.stdout,p.stderr,p.returncode
+record_reference=execute([str(fwp),'run','--interp',str(record_fixture)],dict(env,FWP_NO_OPT='1'))
+stdout,stderr,status=record_reference
+rendered=stdout+(b'--- stderr\n'+stderr if stderr else b'')+(b'--- exit '+str(status).encode()+b'\n' if status else b'')
+assert rendered==record_fixture.with_suffix('.out').read_bytes()
+(OUT/'records.original.out').write_bytes(rendered)
 for mode in ['0','1']:
  for opt in ['-O1','-O2']:
   executable=OUT/('records-'+mode+opt);run(str(fwp),'build',opt,str(record_fixture),'-o',str(executable),environment=dict(env,FWP_TYPED_ABI=mode))
-  assert run(str(executable),environment=dict(env,FWP_GC_STRESS='1',FWP_GC_VERIFY='1',FWP_REUSE_VERIFY='1'))==record_reference
+  assert execute([str(executable)],dict(env,FWP_GC_STRESS='1',FWP_GC_VERIFY='1',FWP_REUSE_VERIFY='1'))==record_reference
 for opt in ['-O1','-O2']:
  binary=OUT/('original'+opt);run(str(fwp),'build',opt,str(fixture),'-o',str(binary));actual=run(str(binary),environment=dict(env,FWP_GC_STRESS='1',FWP_GC_VERIFY='1',FWP_REUSE_VERIFY='1'));assert actual==reference
  (OUT/('original'+opt+'.stdout')).write_bytes(actual)
