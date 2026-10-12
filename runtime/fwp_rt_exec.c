@@ -437,10 +437,19 @@ static int fwp_decode(fwp_rd *r, const fwp_desc *d, V *out) {
     }
     case K_LIST: case K_ARRAY: {
         if (!fwp_decode_count(r, d->elem, 0, &x)) return 0;
+        if (d->kind == K_ARRAY) {
+            V array = fwp_array_new_packed((size_t)x, d->elem);
+            for (size_t i = 0; i < (size_t)x; i++) {
+                V value;
+                if (!fwp_decode(r, d->elem, &value)) return 0;
+                fwp_array_store(array, i, value, d->elem);
+            }
+            *out = array; FWP_KEEP_ALIVE(array); return 1;
+        }
         V *items = (V *)fwp_alloc((size_t)(x + 1) * sizeof(V));
         for (uint64_t i = 0; i < x; i++) if (!fwp_decode(r, d->elem, &items[i])) return 0;
         V l = fwp_list_from(items, (size_t)x);
-        *out = d->kind == K_ARRAY ? fwp_p_array_from_list_with_elem(l, d->elem) : l;
+        *out = l;
         return 1;
     }
     case K_MAP: case K_SET: {

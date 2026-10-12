@@ -101,7 +101,7 @@ Diagnostic no-inline calls are separate from production performance; integrated
 controls retain ordinary optimized scalar/record assembly too.
 
 Packed branch ownership-evidence-packed-numeric-arrays is now at
-21117f4971e838cf3ccfcf8aa001be804d16bc44; runner38200555737 is in progress.
+21117f4971e838cf3ccfcf8aa001be804d16bc44; runner38200555737 passes all three platforms.
 Previous1432b969b0ed1f780ffced363cc646e569bc4869 passes all three platforms in
 38199430982, including packed bytes, original ownership/bounds controls, bit
 bridges, view retention/reclamation and allocator-counter omission controls.
@@ -125,7 +125,7 @@ allocation counters, last-owner release, nested views and small-copy release.
 Packed constructor omission controls exercise widths1/2/4/8. Actual wasm32
 count controls must run on Linux and preserve callback/argument trap order.
 Positive counts saturate at SIZE_MAX before allocation and slice/take bounds.
-These211 refinements are pending actual runner outcomes.
+All211 refinements pass actual runner controls on all three platforms.
 
 The94d first integration repeated helper insertion, causing C redefinitions.
 The3b original scalar-array probe parsed the descriptor as a release function;
@@ -146,8 +146,22 @@ an obsolete map by entry count. The209 runner validates restoration of all111
 temporary targets without executing helpers or the compiler. Historical source,
 assembly and completed proofs remain in immutable checkpoints. A56-MiB inline
 tree request failed without changing the branch; publication now reuses blobs
-and bounds incremental requests. Retain the latest211 drafts and reports in the
-next checkpoint before claiming they are durably recoverable.
+and bounds incremental requests. Checkpointb61cde67f467fc67d672b1d0efd3c0cf59a3acad passes audit38200778577
+and retains211 sources plus143 reports; bounded restoration metadata is pending
+download. Current finalization and protocol refinements need the next checkpoint.
+
+## Final bundle refinements
+
+Finalizationc97669db6f3ca9ae833475e3d7549c3e9936f857 runs38201233200 on Linux;
+its formatting, all-target clippy and library controls pass, focused controls
+are running. Adjacent protocol repairs allow valid zero-byte record collections,
+check allocation/count limits before construction, and check Rust lengths/tags
+before narrowing to usize. Numeric truncation and omission controls remain.
+A further prepared refinement decodes native arrays directly into packed storage
+instead of allocating a word buffer and list nodes first; its actual allocator
+control requires one destination request. These protocol refinements have no
+passing final gate yet. Publish the coherent final source with an exact lease,
+then export its runner-formatted files and create one production PR on PR125.
 
 ## Next concrete action
 

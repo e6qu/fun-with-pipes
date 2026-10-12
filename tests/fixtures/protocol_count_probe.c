@@ -21,8 +21,10 @@ int main(void) {
     }
     const unsigned char numeric[]={3,0x80,0xff,0x7f};
     const fwp_desc numbers={.kind=K_ARRAY,.elem=&i8};V value;
+    uint64_t calls=measured_calls,bytes=measured_bytes;
     fwp_rd reader={numeric,sizeof numeric,0};
     if(!fwp_decode(&reader,&numbers,&value) || fwp_array_len(value)!=3)return 159;
+    if(measured_calls-calls!=1 || measured_bytes-bytes!=sizeof(fwp_arr)+3*fwp_array_stride(&i8))return 163;
     const V expected[]={(V)(int64_t)-128,(V)(int64_t)-1,127};
     for(size_t i=0;i<3;i++)if(fwp_array_load(value,i,&i8)!=expected[i])return 160;
     reader=(fwp_rd){numeric,3,0};

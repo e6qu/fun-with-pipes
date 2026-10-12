@@ -226,29 +226,34 @@ field types; generic/foreign boundaries keep explicit conversion contracts.
 | Views and reusable backing | Retain backing owners across escapes; unique updates preserve immutable aliases; cover zero-length/subrange/overflow cases and exceptional release |
 | Measured representation gate | Equivalent C/Rust work, allocation-inclusive and kernel-only results, requested/actual bytes and peak live memory; hardware/compiler/flags/assembly recorded |
 
-The current worker ABI passes fields as V words and keys fwp_r layouts by field
-count. Natural scalar fields therefore need layouts keyed by concrete field
-types, typed worker parameters/results and bit-preserving bridges to generic V
-entries. Verify floating-point register use in the emitted machine code; an
-unboxed record alone does not establish a natural floating-point calling
-convention. Keep closure, callback and foreign conversion contracts explicit.
+Direct numeric workers use concrete C scalar parameters/results and aggregate
+fields; boxing, closures, callbacks and foreign conversion keep bit-preserving
+V bridges. Natural fields distinguish layouts by their concrete types. The
+C ABI chooses register or caller-storage return: three F64 fields form an ARM
+floating-point aggregate, while the24-byte Intel result uses caller storage.
+FWP_TYPED_ABI=0 preserves the previous V-worker boundary for comparisons.
 
-Natural-width storage must cover every producer and consumer, including owned
-array primitives, typed destruction, display/equality, JSON and binary decode,
-constant construction and callback/dynamic boundaries. The current fwp_arr
-header has a64-bit length followed by V slots; it has no spare32-bit field to
-reuse without a new layout contract. Preserve length/bounds/overflow behavior.
-Specialized hot loops should select concrete loads/stores at compile time;
-unknown or mixed runtime boundaries need an explicit representation fallback or
-conversion. Measure any representation-tag/header or side-metadata overhead
-alongside payload savings, including empty and small arrays; narrow storage does
-not automatically reduce total allocated bytes. A narrower array.get alone does
-not establish representation support.
+Numeric arrays retain an8-byte length header with descriptors outside the
+payload. I8/U8 use1 byte, I16/U16 use2, I32/U32/F32 use4, I64/U64/F64 use8.
+Typed loads/stores use memcpy and preserve signed extension and float bits.
+Pointer-free numeric storage uses leaf allocations; pointer-bearing and boxed
+wide values keep word storage and typed teardown. The established count/trap
+bound remains even for narrow payloads. FWP_PACKED_ARRAYS=0 keeps word payloads
+and copied slices for controlled comparisons.
 
-Handle boxed128-bit and F16 paths explicitly: retain current numeric behavior
-until their representation/conversion contracts pass. Keep default reduction
-order and floating-point contraction unchanged. Phase 4 owns numerical loop,
-matrix and autodiff buffer/tape improvements after this representation gate.
+Numeric views have a tagged length, retained backing owner and byte address.
+Nested views retain the original backing directly. Immutable updates copy views;
+only an owning array may mutate in place. Slices with payload at most the24-byte
+view header or less than one quarter of backing length copy instead, avoiding
+unbounded retention for small results. Pointer/resource slices always copy to
+preserve disposal order. Natural alignment follows backing alignment and element
+stride; this is not a guarantee of cache-line or SIMD-register alignment.
+
+F16/BF16 currently retain their existing F32 representation and4-byte wire/storage
+format; F128 retains its existing F64 representation and8-byte format. They are
+not native half/128-bit floating formats. I128/U128 stay boxed in word slots.
+A new wide/half format requires a separate semantic and wire-format decision.
+The handoff records prepared versus accepted source and its actual runner gates.
 
 ## Evidence required
 
