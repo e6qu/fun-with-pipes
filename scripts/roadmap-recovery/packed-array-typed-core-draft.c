@@ -1764,7 +1764,7 @@ static V fwp_p_array_slice_typed(V start, V len, V a, void (*dup)(V), const fwp_
     size_t count = fwp_count_arg(len);
     if (count > n - first) count = n - first;
 #if FWP_PACKED_ARRAYS
-    if (count && fwp_array_numeric(elem)) {
+    if (fwp_array_should_view(a, count, elem)) {
         V owner = fwp_array_owner(a);
         const unsigned char *data = fwp_array_data(a) + first * fwp_array_stride(elem);
         fwp_array_view *view = (fwp_array_view *)fwp_alloc_init(sizeof *view);

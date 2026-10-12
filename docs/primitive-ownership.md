@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe accepted main through PR #124. Arrays, maps and sets own typed elements.
+The tables describe accepted main through PR #125. Arrays, maps and sets own typed elements.
 The finite review records explicit compatibility fallbacks; [the queue](roadmap-queue.md) retains delivered preparation anchors.
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |

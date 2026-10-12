@@ -25,7 +25,7 @@ part=part.replace('memcpy(keys, ARR(result)->d, n * sizeof(V));\n        fwp_mso
 # Numeric slices retain the original owning backing allocation, flattening views.
 old='    V result = fwp_array_typed_new(count, elem);\n    for (size_t i = 0; i < count; i++) {\n        V value = fwp_array_load(a, first + i, elem);'
 new='''#if FWP_PACKED_ARRAYS
-    if (count && fwp_array_numeric(elem)) {
+    if (fwp_array_should_view(a, count, elem)) {
         V owner = fwp_array_owner(a);
         const unsigned char *data = fwp_array_data(a) + first * fwp_array_stride(elem);
         fwp_array_view *view = (fwp_array_view *)fwp_alloc_init(sizeof *view);

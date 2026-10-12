@@ -109,11 +109,23 @@ for name in ['fwp_rt_ops.c','fwp_rt_json.c','fwp_rt_exec.c']:
  (OUT/name).write_text(t)
 # Word-wide AD/kernel inputs still resolve view lengths and backing pointers.
 t=(BASE/'runtime/fwp_rt_kernel.c').read_text()
+at=t.index('static void fwp_kernel_eval(')
+constant_reader='''static inline double fwp_kernel_constant(const fwp_kernel *k, size_t index) {
+    V bits;
+    memcpy(&bits, (const unsigned char *)k->consts + index * sizeof(V), sizeof bits);
+    return fwp_f64(bits);
+}
+
+'''
+t=t[:at]+constant_reader+t[at:]
+t=t.replace('fwp_f64(k->consts[ci++])','fwp_kernel_constant(k, ci++)')
 for v in ['outs','seeds','code','consts','a']:
  t=t.replace(f'ARR({v})->len',f'fwp_array_len({v})').replace(f'ARR({v})->d',f'((const V *)fwp_array_data({v}))')
+for v in ['outs','seeds']:
+ t=t.replace('((const V *)fwp_array_data('+v+'))[i]', 'fwp_array_load('+v+', i, NULL)')
 (OUT/'fwp_rt_kernel.c').write_text(t)
 # Existing F64 linalg adapters use word-sized elements but can receive views.
-t=Path('/private/tmp/fwp-packed-array-typed-core-draft.c').read_text();t=t.replace('ARR(arr)->len','fwp_array_len(arr)').replace('ARR(arr)->d[i]','((const V *)fwp_array_data(arr))[i]')
+t=Path('/private/tmp/fwp-packed-array-typed-core-draft.c').read_text();t=t.replace('ARR(arr)->len','fwp_array_len(arr)').replace('ARR(arr)->d[i]','fwp_array_load(arr, i, NULL)')
 anchor='/* Typed array boundaries:';at=t.index(anchor);raw=Path('/private/tmp/fwp-packed-array-unowned-draft.c').read_text();t=t[:at]+raw+'\n'+t[at:];(OUT/'fwp_rt_prims.c').write_text(t)
 # All SIMD lane aliases use the same element descriptor as Array producers.
 t=(BASE/'runtime/fwp_rt_num.c').read_text();a=t.index('/* ----- portable SIMD:');part=t[a:]

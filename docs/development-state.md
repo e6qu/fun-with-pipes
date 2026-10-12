@@ -6,11 +6,11 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `162952070773bca2abf0f6dce089f3089dedbb27` passes audit38195043195.
+checkpoint `2091ad9bacf33806b8de1cecddf626e667575eef` passes audit38198377356.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies559 targets/30385213 bytes. Never rerun completed publishers. Phase2 is accepted; phases3–6 remain unfinished.
+verifies111 targets/4353268 bytes. Never rerun completed publishers. Phase2 is accepted; phases3–6 remain unfinished.
 
 ## Execution contract
 
@@ -100,39 +100,54 @@ FP registers d0/d1/d2; Intel uses caller storage for that24-byte result.
 Diagnostic no-inline calls are separate from production performance; integrated
 controls retain ordinary optimized scalar/record assembly too.
 
-Packed branch ownership-evidence-packed-numeric-arrays is at
-b66e60d1342f261a07efa567e696b9a823f10cd7. Runner38197625349 passes Linux and ARM;
-Intel remains running. Main stays accepted PR125: these are preparation checks,
-without a final production gate, full performance or phase3 acceptance claim.
+Packed branch ownership-evidence-packed-numeric-arrays is now at
+21117f4971e838cf3ccfcf8aa001be804d16bc44; runner38200555737 is in progress.
+Previous1432b969b0ed1f780ffced363cc646e569bc4869 passes all three platforms in
+38199430982, including packed bytes, original ownership/bounds controls, bit
+bridges, view retention/reclamation and allocator-counter omission controls.
+Reports, actual optimized assembly and hashes are retained in
+/private/tmp/fwp-packed-representation-evidence. Preparation checks do not
+establish full production or phase3 acceptance; main remains PR125.
+
 The8-byte header remains; descriptor-directed I8/U8, I16/U16, I32/U32 and F32
-payloads use1/2/4-byte elements. I64/U64/F64 remain8 bytes. Numeric views retain
-backing owners; pointer-bearing slices remain copied. Structural operations,
-constants, decoding, SIMD and kernels use matching descriptors or word-wide
-view data helpers. Original ownership and bounds tests remain required.
+payloads use1/2/4-byte elements. I64/U64/F64 remain8 bytes. Pointer-bearing
+slices stay copies. Numeric leaf capacity permits array reuse while generic
+record reuse keeps its scanned-slot restriction. Kernel constants now load
+bits with memcpy from both word and actual double-backed storage, preserving
+negative-zero/NaN payloads without effective-type aliasing.
+
+The143 measurements exposed whole-backing retention for tiny slices. The211
+refinement copies slices with payload at most the24-byte view header or less
+than one quarter of the original backing length; larger numeric slices retain
+flat backing owners. Permanent packed_numeric_storage tests cover exact bytes,
+alignment, raw/native immutable operations, typed float payloads, complete
+allocation counters, last-owner release, nested views and small-copy release.
+Packed constructor omission controls exercise widths1/2/4/8. Actual wasm32
+count controls must run on Linux and preserve callback/argument trap order.
+Positive counts saturate at SIZE_MAX before allocation and slice/take bounds.
+These211 refinements are pending actual runner outcomes.
 
 The94d first integration repeated helper insertion, causing C redefinitions.
-The3b original scalar-array probe parsed the new descriptor as a release function;
-b66 fixes its lookup while preserving its address-shaped scalar-bit controls.
-Source generation now starts from a stable typed core. Preserve actual failed
-logs and do not treat either earlier head as passing. Pending source refinements
-add leaf-array capacity without broadening generic record reuse, view backing
-retention/reclamation measurements and explicit target-width count controls.
-Positive count normalization saturates at SIZE_MAX before allocation/clamp checks.
+The3b original scalar-array probe parsed the descriptor as a release function;
+b66 corrected its lookup while preserving address-shaped scalar-bit controls.
+Both earlier failures are retained; b66 and143 pass all three platforms.
+Source generation starts from a stable typed core and a verified formatted ABI
+source; publish repairs only with an exact branch lease.
 
-Current helpers: prepare-packed-array-runtime.py, prepare-packed-array-integration.py,
-measure-packed-numeric-arrays.py, publish-packed-numeric-arrays.py and publication
-receipts. Original controls and source drafts are in fwp-packed-array-original-controls
-and fwp-packed-array-runtime-draft. Actual accepted source snapshot is recorded
-in fwp-numeric-representation-accepted-source-manifest.json. Never overwrite the
-b66 branch with pending sources without an exact lease and rerunning its controls.
+Current sources and receipts: fwp-packed-array-runtime-draft,
+fwp-packed-array-original-controls, fwp-packed-array-permanent-controls-publication.json,
+fwp-packed-numeric-storage-test-draft.rs, fwp-packed-wasm-test-draft.rs and
+fwp-packed-array-size-test-draft.rs. Measurement helpers preserve independent
+omission controls and original golden traps. Accepted source provenance is in
+fwp-numeric-representation-accepted-source-manifest.json.
 
-Recovery now designates the current safe map with current-map.json rather than
-choosing an obsolete map by its entry count. Historical source/assembly and
-completed ownership proofs remain in immutable checkpoints; current recovery
-restores only phase3 work and necessary acceptance proofs. Publication reuses
-unchanged blobs and bounds incremental tree requests. A56-MiB inline tree request
-was rejected; no branch changed until the bounded publisher verified its tree.
-New recovery source changes still require a passing disposable-runner restoration.
+Recovery current-map.json designates the active safe map rather than selecting
+an obsolete map by entry count. The209 runner validates restoration of all111
+temporary targets without executing helpers or the compiler. Historical source,
+assembly and completed proofs remain in immutable checkpoints. A56-MiB inline
+tree request failed without changing the branch; publication now reuses blobs
+and bounds incremental requests. Retain the latest211 drafts and reports in the
+next checkpoint before claiming they are durably recoverable.
 
 ## Next concrete action
 
@@ -144,7 +159,8 @@ existing generic, callback, ownership and exceptional controls. Prove exact
 bytes, alignment, immutable update behavior, serialization/hash/FFI compatibility
 and actual ARM/Intel ABI assembly before performance claims. Source preparation:
 fwp-numeric-representation-design-preparation.json and its verified source
-manifest. Refresh those snapshots to this accepted base before implementing.
+manifest. The accepted snapshot is current. Finish pending permanent controls,
+then export one formatted production bundle onto accepted PR125.
 Finish phases3–6 with full exact-head gates and one-line squash messages.
 
 ## Local checks and recovery

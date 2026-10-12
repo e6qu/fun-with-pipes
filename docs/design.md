@@ -85,9 +85,9 @@ words stay uncounted. Merged loop cleanup protects counted current state and
 owned Step payloads; flattened loop argument preparation now protects the original
 box and each completed field duplicate until transfer.
 
-Prepared resource lifetimes and storage are summarized in
+Accepted resource lifetimes and storage are summarized in
 [ownership](ownership.md#original-resource-semantics). The queue records immutable
-branches and the handoff records acceptance; these are not merged ARC support.
+branches and the handoff records acceptance and the remaining tracing fallbacks.
 
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in

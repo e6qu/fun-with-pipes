@@ -45,6 +45,14 @@ static inline size_t fwp_array_stride(const fwp_desc *elem) {
 #endif
     return sizeof(V);
 }
+static inline int fwp_array_should_view(V a, size_t count, const fwp_desc *elem) {
+    if (!count || !fwp_array_numeric(elem)) return 0;
+    size_t stride = fwp_array_stride(elem), backing = fwp_array_len(fwp_array_owner(a));
+    /* Copy tiny slices and slices retaining more than four times their payload.
+     * Division keeps this decision independent of byte-count overflow. */
+    return count > sizeof(fwp_array_view) / stride
+        && count >= backing / 4 + (backing % 4 != 0);
+}
 static inline V fwp_array_load(V a, size_t i, const fwp_desc *elem) {
     size_t stride = fwp_array_stride(elem);
     const unsigned char *p = fwp_array_data(a) + i * stride;

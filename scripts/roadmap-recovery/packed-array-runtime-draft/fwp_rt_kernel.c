@@ -231,11 +231,11 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     }
     size_t no = fwp_array_len(outs), ns = fwp_array_len(seeds), m = no < ns ? no : ns;
     for (size_t i = 0; i < m; i++) {
-        int64_t o = (int64_t)((const V *)fwp_array_data(outs))[i];
+        int64_t o = (int64_t)fwp_array_load(outs, i, NULL);
         if (o < 0) continue;
         if ((o >> 32) != id) fwp_trap(FWP_AD_MIXED);
         if ((o & 0xffffffff) >= tp.len) fwp_trap(FWP_AD_INVALID_NODE);
-        adj[o & 0xffffffff] += fwp_f64(((const V *)fwp_array_data(seeds))[i]);
+        adj[o & 0xffffffff] += fwp_f64(fwp_array_load(seeds, i, NULL));
     }
     for (int64_t i = tp.len - 1; i >= tp.leaves; i--) {
         double a = adj[i];
@@ -269,6 +269,12 @@ typedef struct {
 } fwp_kernel;
 
 /* elements start..start+len (len <= FWP_KCHUNK) into out */
+static inline double fwp_kernel_constant(const fwp_kernel *k, size_t index) {
+    V bits;
+    memcpy(&bits, (const unsigned char *)k->consts + index * sizeof(V), sizeof bits);
+    return fwp_f64(bits);
+}
+
 static void fwp_kernel_eval(const fwp_kernel *k, size_t start, size_t len, double *out, double *stack) {
     size_t sp = 0, li = 0, ci = 0;
     for (size_t pc = 0; pc < k->ncode; pc++) {
@@ -280,7 +286,7 @@ static void fwp_kernel_eval(const fwp_kernel *k, size_t start, size_t len, doubl
             sp++;
             break;
         case FWP_K_CONST: {
-            double c = fwp_f64(k->consts[ci++]), *s = stack + sp * FWP_KCHUNK;
+            double c = fwp_kernel_constant(k, ci++), *s = stack + sp * FWP_KCHUNK;
             for (size_t j = 0; j < len; j++) s[j] = c;
             sp++;
             break;
