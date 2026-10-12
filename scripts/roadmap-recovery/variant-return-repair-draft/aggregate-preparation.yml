@@ -37,8 +37,10 @@ jobs:
           for case in wide wide_alias; do
             FWP_DUMP_IR=rc target/debug/fwp build tests/stack/$case.fwp --emit-c -o variant-evidence/$case.c 2>variant-evidence/$case.ir
           done
+      - name: Aggregate allocation and alias effects
+        run: cargo test --test stack
       - name: Preserve original stack allocation and variant ownership controls
-        run: cargo test --no-fail-fast --test stack --test stack_ownership --test stack_match_ownership --test variant_alias_ownership --test variant_conversion_ownership --test retain_unwind_ownership --test numeric_array_fusion --test loop_ownership
+        run: cargo test --no-fail-fast --test stack_ownership --test stack_match_ownership --test variant_alias_ownership --test variant_conversion_ownership --test retain_unwind_ownership --test numeric_array_fusion --test loop_ownership
       - name: Preserve checked ARC coverage and reclamation
         run: cargo test --no-fail-fast --test arc_corpus --test arc_execution
       - name: Retain counted IR and generated variant code

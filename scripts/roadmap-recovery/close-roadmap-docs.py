@@ -104,6 +104,11 @@ explicitly rejected. Rejection never selects tracing. Existing tracing-mode
 features remain available. Register spills are normal lowering; protocol-defined
 alternatives are peers. Avoid needless wrappers/fallbacks and hidden defaults.
 
+## Remaining ownership deliveries
+
+None. The accepted source satisfies all six implementation phases. Final
+documentation delivery is described below.
+
 ## Local workspace and next action
 
 The local source checkout remains68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4.
@@ -127,6 +132,8 @@ p=root/'docs/primitive-ownership.md';t=p.read_text().replace('compatibility mode
 p=root/'docs/design.md';t=p.read_text().replace('The prepared `fwp build --gc arc` mode','The `fwp build --gc arc` mode');p.write_text(t)
 p=root/'docs/reference.md';s=p.read_text().replace('The prepared `--gc arc` mode','The `--gc arc` mode');p.write_text(s)
 p=root/'docs/numerics.md';s=p.read_text().replace('The accepted phase4 implementation allocates no array intermediates but still\nretains/releases its carried array once per element. Matrix multiplication allocates one output;','The current implementation allocates no intermediate arrays and performs no\nper-element retains/releases of its carried array. Matrix multiplication allocates one output;').replace('Phase5 targets the per-element counts; the two public-boundary Matrix records\nremain explicit representation costs.','The two public-boundary Matrix records remain explicit representation costs.').replace('Phase5 preparation gives flat loop fields independent owners and removes','Flat loop fields have independent owners, removing');p.write_text(s)
+p=root/'docs/numerics.md';s=p.read_text().replace('[../PLAN.md](../PLAN.md) tracks the remaining performance evidence and checked\nnative ARC delivery.','[../PLAN.md](../PLAN.md) records the completed roadmap, retained performance\nevidence and checked native ARC scope.');p.write_text(s)
+p=root/'docs/ownership.md';s=p.read_text().replace('## Remaining ownership coverage','## Ownership boundaries').replace('Remaining work is measured optimization\nand the eligibility/cycle policy for optional tracing-free execution.','Measured optimizations and checked native ARC enforce the eligibility and\ncycle policy below.').replace('Extend measured borrowing and deterministic cleanup to the remaining container,\ncallback and runtime boundaries in focused changes.','Future extensions to borrowing or deterministic cleanup must preserve these\ncontainer, callback and runtime contracts; they are outside the completed roadmap.');p.write_text(s)
 p=root/'docs/roadmap-history.md'
 p.write_text(p.read_text()+f'\n## Accepted final ownership and ARC bundle (PR #{pr})\n\n'
     +f'Merged{proof["sha"]} has tested tree{proof["tree"]}, with all six jobs in CI{ci}, '

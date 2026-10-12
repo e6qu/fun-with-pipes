@@ -6,10 +6,10 @@ run. The library itself is listed in [stdlib.md](stdlib.md) (sections
 and [tutorial 20](tutorials/20-autodiff-and-devices/README.md) introduce
 it.
 
-Runtime ownership and natural-width numeric storage are accepted. The active
-work in [../PLAN.md](../PLAN.md) is numerical loop fusion, blocked matrix
-multiplication and bounded autodiff workspace reuse, followed by broader
-performance evidence and optional tracing-free execution.
+Runtime ownership, natural-width numeric storage, numerical loop fusion,
+blocked matrix multiplication and bounded autodiff workspace reuse are accepted.
+[../PLAN.md](../PLAN.md) tracks the remaining performance evidence and checked
+native ARC delivery.
 [ownership.md](ownership.md) records the representation and floating-point
 contract; [development-state.md](development-state.md) records current evidence.
 
@@ -107,7 +107,7 @@ records the complete counters and limits. A single detached workspace may retain
 at most 512 KiB of numeric buffers. Reuse zeroes adjoints and preserves stale-token
 checks; oversized capacity is released. FWP_AD_WORKSPACE=0 disables this cache
 for comparison. Native library unload releases both live and cached tape owners.
-No tracing-free support is claimed.
+Raw reverse-mode tape interfaces remain outside checked ARC eligibility.
 
 Historical timing samples are preserved in
 [the benchmark history](roadmap-history.md#archived-numerics-timing-samples).

@@ -1,0 +1,28 @@
+{
+  "head": "4ecc9b198a9362a23e50a943732e7a0dc5c03010",
+  "previous": "82d552c48663c28d05543313fa91e05b8c327b14",
+  "tree": "fcabfba0e0ca6b7a3e0ef0f7b99792bad7da8381",
+  "branch": "checked-arc-and-loop-ownership",
+  "pr": 128,
+  "repairHead": "11f9bb7555b000bbd2a16f03dd46741f14075953",
+  "repairRun": 38255456223,
+  "files": {
+    "src/cgen.rs": "4a5a377cb9601aa2b672ec58737592aee04fb0e574fdb4600a010fe3b9a53294",
+    ".github/workflows/numerics.yml": "7b494d56f0ab6b29a5d30325ddc4122fd0469568d1e0b4d949f24c223d0deb04",
+    "tests/stack.rs": "b0adaf20412105afe2503b5987c0669709b954290fccbdc082719dec2307e853",
+    "tests/stack/wide_alias.fwp": "f7e85f0af45d64197f1c9efc14915c1030106b2fa0f344d0a5ae16cb13c123f1",
+    "AGENTS.md": "988178ace62f154687d8ab622d0d1ef751a042dc3b4810618580220b0824b415",
+    "CONTRIBUTING.md": "7a00b334e94f203e209666fabe36a85ddd049bdd6f8d09195cbbd683f2ad2ead",
+    "PLAN.md": "dcb7319f38fd58c50469dcd6fbc445db0c10c337b4955281e487974379442139",
+    "docs/design.md": "277927b9cdcb4445ff577a95e10b65e7e95b97b0a7c9a9d174a1749ddd8acdd5",
+    "docs/development-state.md": "9bb861c5ac7e37ae203c8c047cc49932d5e08c3bfa5c3443f6e7b137a72f2de5",
+    "docs/ownership.md": "ee88145cce7ace4a5ca6ef443ddb479914934cd2b36c50356df32464e24da3ae",
+    "docs/primitive-ownership.md": "5ed2f6ca081d3885f6141f7a6a857fd2efbff4597493eaebb929a7f3b4928a44",
+    "docs/roadmap-queue.md": "46cd62e56271b10a6756a1b59dd2a4c6e62f878ad4188bb00fcadf5c0e4e0d18",
+    "docs/roadmap-history.md": "515b7cd584d3fc414dac711790c5a4fd356b4a2eb060ba2e5f4b2bbf75737759",
+    "docs/reference.md": "b5ac6a9461682fe0ef361f4ecdd9c204ca8008c1259adabc09fde72e477b38fe",
+    "docs/concurrency.md": "38109f6b0a299157550e7394cb5458cc023660a80de384b821db5ae92ccf5906",
+    "docs/numerics.md": "50d2df038724b7f6fd7caaee90dc0c6c7fd4acaf60c4cf0d7e803ddaad5a41a8",
+    "docs/measurements/ownership-and-arc-2026-10-12.json": "6dd5f6eb2b1daa13623be8645c33cd8208098b2573eb92761d0ce53586a59886"
+  }
+}

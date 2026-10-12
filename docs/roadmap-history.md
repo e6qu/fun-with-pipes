@@ -2326,3 +2326,28 @@ syntax or implicit type conversions.
 
 
 The live handoff supersedes the next actions in this historical snapshot.
+
+## Aggregate return repair diagnostics (PR #128)
+
+Initial PR head82d552c4 passes bench, both GC-stress jobs and docs but fails
+only the original variant allocation control in all three regular jobs of
+CI38244684931. f04ae9c6/run38248993545 restores24.3MiB disabled versus0.0MiB
+rounded enabled on all platforms, with21 ARC executions preserved.
+Wide-record follow-up f1b3d135/run38252834369 fails its new allocation bound at
+366.2MiB. The earlierfc8f2073 negative control was invalid because FWP_STACK
+does not disable the wide-record ABI; the corrected positive bound still fails.
+Diagnostic15a5e0ea/run38254202682 shows an intervening unit binding causing
+recursive match results to box and immediately unpack. Alias-aware field
+tracking fixes that path; c94f759a Linux passes all five allocation controls.
+Its new effect test fails because IO was omitted from its signature, corrected
+in11f9bb75. Earlierec2b64ac used read-all outside checked ARC coverage; the
+control now constructs counted strings. Superseded4f88beb8/ec2b64ac/c94f759a
+runs supply no passing gate. The live handoff records current acceptance.
+
+Aggregate repair11f9bb7555b000bbd2a16f03dd46741f14075953 passes all three
+complete jobs in38255456223. Formatted compiler/tests match across targets;
+variant allocations retain24.3MiB/0.0MiB rounded and the wide alias meets<1MiB.
+Owned-child/effect, GC/reuse and ARC controls pass; each corpus remains
+21 executions/47 rejections/3 expected compiler errors with seven native
+disassemblies. The measurement report retains original timing identities and
+records this regression follow-up separately.

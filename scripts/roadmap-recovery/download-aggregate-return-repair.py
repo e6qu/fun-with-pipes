@@ -1,6 +1,6 @@
 from pathlib import Path
 import hashlib,io,json,re,subprocess,zipfile
-REPO='repos/e6qu/fun-with-pipes';HEAD='c94f759a25205d818e7f62d65873e34585a7685d';RUN=38255126357
+REPO='repos/e6qu/fun-with-pipes';HEAD='11f9bb7555b000bbd2a16f03dd46741f14075953';RUN=38255456223
 OUT=Path('/private/tmp/fwp-aggregate-return-repair-evidence');assert not OUT.exists()
 def api(path):return json.loads(subprocess.check_output(['gh','api',REPO+path]))
 r=api('/actions/runs/'+str(RUN));assert r['head_sha']==HEAD and r['status']=='completed' and r['conclusion']=='success'

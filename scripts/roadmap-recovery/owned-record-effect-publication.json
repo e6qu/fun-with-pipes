@@ -1,0 +1,12 @@
+{
+  "head": "11f9bb7555b000bbd2a16f03dd46741f14075953",
+  "previous": "c94f759a25205d818e7f62d65873e34585a7685d",
+  "tree": "6ffae15d80098c7b587904f3ce307421acd2f05b",
+  "branch": "ownership-evidence-variant-return-repair",
+  "files": {
+    "src/cgen.rs": "b056131563e1d3962f7a59fe685f9b71f307624e56cf51c70472505b657644c6",
+    "tests/stack.rs": "7229fa3e85a2324364fb2fb49d01f9ad54d222a0e8d3ce5cb876420bbbc205c4",
+    "tests/stack/wide_alias.fwp": "f7e85f0af45d64197f1c9efc14915c1030106b2fa0f344d0a5ae16cb13c123f1",
+    ".github/workflows/variant-return-repair.yml": "48a3141c8e41025da45392725c356c4d12b2a9bc43a3f03b5983a9cfac3772ea"
+  }
+}

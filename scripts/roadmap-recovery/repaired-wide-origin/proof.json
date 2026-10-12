@@ -1,0 +1,26 @@
+{
+  "head": "c94f759a25205d818e7f62d65873e34585a7685d",
+  "run": 38255126357,
+  "artifact": {
+    "id": 11750455586,
+    "node_id": "MDg6QXJ0aWZhY3QxMTc1MDQ1NTU4Ng==",
+    "name": "variant-return-evidence-ubuntu-latest",
+    "size_in_bytes": 332233,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11750455586",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11750455586/zip",
+    "expired": false,
+    "digest": "sha256:060ff414160c89b8108ab35d428d6d970c777469966554d73382e1c9efdc9684",
+    "created_at": "2026-10-12T13:23:20Z",
+    "updated_at": "2026-10-12T13:23:20Z",
+    "expires_at": "2027-01-10T13:21:31Z",
+    "workflow_run": {
+      "id": 38255126357,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "ownership-evidence-variant-return-repair",
+      "head_sha": "c94f759a25205d818e7f62d65873e34585a7685d"
+    }
+  },
+  "archiveSha256": "060ff414160c89b8108ab35d428d6d970c777469966554d73382e1c9efdc9684",
+  "scope": "Generated record worker after lowering repair; this run failed the new test IO signature and is not an acceptance gate."
+}
