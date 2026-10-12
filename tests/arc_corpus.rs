@@ -13,6 +13,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
     let total = paths.len();
     let mut executed = 0;
     let mut rejected = 0;
+    let mut compile_errors = 0;
     let mut failures = Vec::new();
     let mut report = String::from("ARC golden corpus: rejected programs are not execution support\n");
     let artifacts = std::env::var_os("FWP_ARC_ARTIFACTS").map(std::path::PathBuf::from);
@@ -24,7 +25,15 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             .env_remove("FWP_NO_OPT").args(["build", "--gc", "arc", "--emit-c", "-O1"])
             .arg(path.file_name().unwrap()).current_dir(&root).arg("-o").arg(&cfile)
             .output().unwrap();
-        if !emitted.status.success() {
+        if name.starts_with("err_") {
+            assert_eq!(emitted.status.code(), Some(1), "{name}");
+            assert!(emitted.stdout.is_empty(), "{name}");
+            let expected = std::fs::read_to_string(path.with_extension("out")).unwrap();
+            let actual = format!("--- stderr\n{}--- exit 1\n", String::from_utf8_lossy(&emitted.stderr));
+            assert_eq!(actual, expected, "front-end diagnostic for {name}");
+            report.push_str(&format!("compile-error\t{name}\tverified golden diagnostic\n"));
+            compile_errors += 1;
+        } else if !emitted.status.success() {
             let reason = String::from_utf8_lossy(&emitted.stderr);
             assert!(reason.contains("--gc arc:"), "unexpected compilation failure for {name}: {reason}");
             report.push_str(&format!("rejected\t{name}\t{reason:?}\n"));
@@ -40,7 +49,11 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             let measured = format!("{runtime}{main}");
             let binary = scratch.join(name);
             fwp::cgen::compile_c(&measured, &binary, "-O1").unwrap();
-            let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
+            let input = match std::fs::read(path.with_extension("in")) {
+                Ok(input) => input,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => Vec::new(),
+                Err(error) => panic!("input for {name}: {error}"),
+            };
             let execute = |command: &mut Command| -> Output {
                 let mut child = command.current_dir(&root).env("FWP_SEED", "42")
                     .env_remove("FWP_GC").env("FWP_GC_STRESS", "0")
@@ -70,8 +83,8 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
         if let Some(path) = &artifacts { std::fs::write(path.join("corpus.txt"), &report).unwrap(); }
     }
     assert!(executed > 0 && rejected > 0);
-    assert_eq!(executed + rejected, total);
-    report.push_str(&format!("total={total} executed={executed} rejected={rejected}\n"));
+    assert_eq!(executed + rejected + compile_errors, total);
+    report.push_str(&format!("total={total} executed={executed} rejected={rejected} compile-errors={compile_errors}\n"));
     if let Some(path) = &artifacts { std::fs::write(path.join("corpus.txt"), &report).unwrap(); }
     println!("{report}");
     assert!(failures.is_empty(), "{}", failures.join("\n"));
