@@ -63,3 +63,22 @@ fn source_cannot_bypass_matrix_shape_checks_with_internal_primitives(){
     }
     std::fs::remove_dir_all(d).unwrap();
 }
+#[test]
+fn blocked_matrix_releases_output_when_computation_unwinds(){
+    let d=std::env::temp_dir().join(format!("fwp-matrix-unwind-{}",std::process::id()));std::fs::create_dir(&d).unwrap();
+    let input=d.join("matrix.fwp");std::fs::write(&input,include_str!("fixtures/blocked_matrix.fwp")).unwrap();let cfile=d.join("matrix.c");
+    checked(Command::new(env!("CARGO_BIN_EXE_fwp")).args(["build","--emit-c"]).arg(&input).arg("-o").arg(&cfile));
+    let source=std::fs::read_to_string(cfile).unwrap();let a=source.find("static V fwp_p_matrix_mul_f64(").unwrap();let b=a+source[a..].find("return result;\n}").unwrap()+"return result;\n}".len();
+    let body=source[a..b].replace("FWP_TICK();","matrix_probe_tick();");assert!(body.contains("matrix_probe_tick();"));
+    for omit in [false,true]{
+        let body=if omit{body.replace("fwp_cleanup_push(&cleanup,fwp_matrix_output_release,&result);","").replace("fwp_cleanup_pop(&cleanup);","")}else{body.clone()};
+        if omit {assert!(!body.contains("fwp_cleanup_push(&cleanup,fwp_matrix_output_release,&result);"));}
+        let runtime=format!("{}\nstatic void matrix_probe_tick(void);\n{}{}\n{}",&source[..a],body,&source[b..],include_str!("fixtures/matrix_unwind_probe.c")).replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
+        for opt in ["-O1","-O2"] {
+            let exe=d.join(format!("unwind-{omit}{opt}"));fwp::cgen::compile_c(&runtime,&exe,opt).unwrap();
+            let output=Command::new(&exe).env("FWP_GC_STRESS","0").env("FWP_GC_VERIFY","1").env("FWP_REUSE_VERIFY","0").output().unwrap();
+            assert_eq!(output.status.code(),Some(if omit{217}else{0}),"{opt} omit={omit}: {}",String::from_utf8_lossy(&output.stderr));
+        }
+    }
+    std::fs::remove_dir_all(d).unwrap();
+}
