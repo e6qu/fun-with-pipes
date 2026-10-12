@@ -14,7 +14,7 @@ int main(void) {
         V result=fREDUCE64(input);
         if(result!=fwp_from_f64(reference))return 170;
         calls=measured_calls-calls;bytes=measured_bytes-bytes;
-        if(FUSED && (calls || bytes))return 171;
+        if(FUSED && (calls || bytes)){fprintf(stderr,"fused allocated %llu calls and %llu bytes\n",(unsigned long long)calls,(unsigned long long)bytes);return 171;}
         if(!FUSED && calls<2)return 172;
         printf("%s{\"elements\":%zu,\"managedCalls\":%llu,\"managedRequestedBytes\":%llu,\"freedBytes\":%.0f,\"resultBits\":\"%016llx\"}",run?",\n":"",n,(unsigned long long)calls,(unsigned long long)bytes,fwp_gc.freed-freed,(unsigned long long)result);
     }

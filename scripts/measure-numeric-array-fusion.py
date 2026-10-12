@@ -7,7 +7,7 @@ env=dict(os.environ);env.pop('FWP_NO_OPT',None)
 def execute(args,environment=env):return subprocess.run(args,env=environment,capture_output=True)
 def run(*args,environment=env):
  p=execute(args,environment)
- if p.returncode:raise RuntimeError(str(args)+'\n'+p.stderr.decode(errors='replace'))
+ if p.returncode:raise RuntimeError(str(args)+' status='+str(p.returncode)+'\n'+p.stdout.decode(errors='replace')+'\n'+p.stderr.decode(errors='replace'))
  return p.stdout
 run('cargo','build','--bin','fwp')
 fwp=ROOT/'target/debug/fwp';fixture=ROOT/'tests/fixtures/numeric_array_fusion.fwp'

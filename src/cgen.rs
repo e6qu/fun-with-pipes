@@ -2724,6 +2724,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
         f.ty.params(f.arity as usize).1.clone()
     }
 
+    fn scalar_array_get(&self, id: FuncId) -> Option<MT> {
+        let function = &self.g.prog.funcs[id];
+        if function.arity != 2 || !matches!(&function.body, Body::Prim(symbol) if symbol == "array.get") { return None; }
+        match &function.locals[1] {
+            MT::Con(name, elements) if name == "std::Array" && elements.len() == 1 && scalar(&elements[0]).is_some() => Some(elements[0].clone()),
+            _ => None,
+        }
+    }
+
     /// The size of the struct a variant `e` of type `ty` gives without
     /// being built: every tail of `e` builds a constructor or calls a
     /// worker returning one (`Abi::vret`), and at least one is not a
@@ -2756,6 +2765,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     Some(fields)
                 }
                 Expr::Construct(_, xs) => Some(!xs.is_empty()),
+                Expr::Call(id, args) if m == 1 && args.len() == 2 && fg.scalar_array_get(*id).is_some() => Some(true),
                 Expr::Call(id, _) if fg.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m) => {
                     Some(true)
                 }
@@ -2785,6 +2795,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Local(l) if self.vlocals.contains_key(l) => {
                 let u = self.vlocals[l].0.clone();
                 parts(&u)
+            }
+            Expr::Call(id, args) if m == 1 && args.len() == 2 && self.scalar_array_get(*id).is_some() => {
+                let element = self.scalar_array_get(*id).unwrap();
+                let descriptor = self.g.desc(&element);
+                let values = self.args(args);
+                let pending = self.begin_call(e as *const Expr);
+                let tag = self.bind(format!("(V)((int64_t){index} >= 0 && (uint64_t){index} < fwp_array_len({array}))", index=values[0], array=values[1]));
+                let value = self.bind(format!("{tag} ? fwp_array_load({array}, (size_t){index}, {descriptor}) : 0", index=values[0], array=values[1]));
+                self.line(&format!("FWP_KEEP_ALIVE({});", values[1]));
+                self.end_call(pending);
+                (tag, vec![value])
             }
             Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m) => {
                 let abi = self.g.abis[*id].clone().unwrap();
@@ -4743,50 +4764,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.record_update(e, r, &rv, sets, &xs)
             }
             Expr::Let(l, v, body) => {
-                // Lookup-only aliases need no Option box or reference counts.
-                let mut lookup = &**v;
-                while let Expr::Let(_, _, body) = lookup { lookup = body; }
-                let numeric_array = matches!(lookup, Expr::Call(id, _) if matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "array.get"));
-                let mut releases = Vec::new();
-                let mut aliases = vec![*l];
-                let mut inner = &**body;
-                loop {
-                    match inner {
-                        Expr::Let(alias, value, next) if matches!(&**value, Expr::Local(x) if Some(x) == aliases.last()) =>
-                        {
-                            aliases.push(*alias);
-                            inner = next;
-                        }
-                        Expr::Dup(x, next) | Expr::Drop(x, next) if aliases.contains(x) => {
-                            inner = next
-                        }
-                        Expr::Drop(local, next) if numeric_array && !self.resource_slots.contains_key(local) => {
-                            releases.push(*local);
-                            inner = next;
-                        }
-                        _ => break,
-                    }
-                }
-                if !aliases.iter().any(|x| self.resource_slots.contains_key(x)) {
-                    if let Expr::Match(scrutinee, arms) = inner {
-                        if matches!(&**scrutinee, Expr::Local(x) if Some(x) == aliases.last()) {
-                            let stripped: Option<Vec<(Pat, Expr)>> = arms
-                                .iter()
-                                .map(|(pattern, arm)| {
-                                    let body =
-                                        aliases.iter().try_fold(arm.clone(), |body, local| {
-                                            without_counts(&body, *local)
-                                        });
-                                    body.map(|body| {
-                                    let body = releases.iter().rev().fold(body, |body, local| Expr::Drop(*local, Box::new(body)));
-                                    (pattern.clone(), body)
-                                })
-                                })
-                                .collect();
-                            if let Some(arms) = stripped {
-                                if let Some(result) = self.lookup_match(v, &arms) {
-                                    return result;
-                                }
+                // `let o = map.get k m in match o ...`, with only o's
+                // reference counts in the arms: no `Some` is built
+                if let Expr::Match(s, arms) = &**body {
+                    if matches!(**s, Expr::Local(x) if x == *l) {
+                        let stripped: Option<Vec<(Pat, Expr)>> = arms
+                            .iter()
+                            .map(|(p, b)| without_counts(b, *l).map(|b| (p.clone(), b)))
+                            .collect();
+                        if let Some(arms) = stripped {
+                            if let Some(r) = self.lookup_match(v, &arms) {
+                                return r;
                             }
                         }
                     }
