@@ -105,6 +105,7 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
             fwp::cgen::compile_c(&source, &executable, opt).unwrap();
             for reuse in ["0", "1"] {
                 let output = Command::new(&executable)
+                    .env("FWP_AD_WORKSPACE", "0")
                     .env("FWP_GC_STRESS", "1")
                     .env("FWP_GC_VERIFY", "1")
                     .env("FWP_REUSE_VERIFY", reuse)
@@ -183,7 +184,8 @@ fn public_tape_tokens_agree_with_raw_interpreter() {
                     .arg(&executable),
             );
             let native = Command::new(&executable)
-                .env("FWP_GC_STRESS", "1")
+                .env("FWP_AD_WORKSPACE", "0")
+                    .env("FWP_GC_STRESS", "1")
                 .env("FWP_GC_VERIFY", "1")
                 .env("FWP_REUSE_VERIFY", "1")
                 .output()

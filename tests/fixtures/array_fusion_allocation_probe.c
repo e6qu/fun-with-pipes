@@ -4,7 +4,7 @@ int main(void) {
     puts("{\"cases\":[");
     for(size_t run=0;run<5;run++) {
         size_t n=run==0?129:run==1?257:run==2?0:run==3?7:1;
-        V input=fwp_rc_fresh(fwp_array_new_packed(n,&element));double reference=0.0;
+        V input=fwp_rc_fresh(fwp_array_new_packed(n,&element));double reference=-0.0;
         for(size_t i=0;i<n;i++) {
             double x=((double)(int)(i%13)-6.0)/4.0;
             static const V edge[]={0x7ff8000000000001ULL,0x3ff0000000000000ULL,0x7ff8000000000012ULL,0x8000000000000000ULL,0xfff0000000000000ULL,0x7ff0000000000000ULL,0x4000000000000000ULL};

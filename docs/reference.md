@@ -136,6 +136,9 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
     an integer literal at a float type is its magnitude, rounded once.
     `neg` flips the sign, so `neg 0.0` is `-0.0`. `float.to-int` is `None`
     unless the truncated value fits the integer type exactly.
+    Copies, storage, protocol and ABI bridges preserve float bits. Arithmetic
+    NaN payloads/signs are implementation dependent; optimizations preserve
+    operation/reduction order and exact finite and signed-zero behavior.
 - **Basic types:** `Bool`, `String` (UTF-8), `Bytes`, `Duration`,
   `List[T]`, `Array[T]`, `Map[K, V]`, `Set[T]`, `Option[T]`,
   `Result[T, E]`.

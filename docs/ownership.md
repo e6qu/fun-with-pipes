@@ -199,6 +199,14 @@ the number of fields alone is not a machine-speed guarantee. The C backend
 remains the first implementation target.
 
 Keep deterministic operation/reduction order by default and contraction off.
+Storage, protocol and ABI bridges preserve complete float bits. Arithmetic
+results that are NaNs retain the compiler's existing payload/sign choices;
+those choices can vary across optimization levels. Compare arithmetic NaN
+classification separately from exact finite and signed-zero results, retaining
+raw payloads in evidence. This boundary follows the existing C/Rust backends
+and [LLVM's NaN contract](https://releases.llvm.org/18.1.7/docs/LangRef.html#behavior-of-floating-point-nan-values);
+it introduces no new arithmetic canonicalization. Bit copies and sign-only
+operations still require exact payload controls.
 If relaxed floating-point arithmetic is later exposed, it needs an explicit
 contract and separate tests. Prioritize fused elementwise and gradient kernels,
 blocked matrix multiplication, reusable tape/scratch buffers and exceptional
