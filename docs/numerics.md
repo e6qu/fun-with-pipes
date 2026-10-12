@@ -6,10 +6,10 @@ run. The library itself is listed in [stdlib.md](stdlib.md) (sections
 and [tutorial 20](tutorials/20-autodiff-and-devices/README.md) introduce
 it.
 
-After runtime ownership reaches its exit gates, [../PLAN.md](../PLAN.md)
-prioritizes typed contiguous numeric storage and views, tape cleanup on
-failure/cancellation and capacity reuse, fused gradient kernels, and blocked
-matrix multiplication.
+Runtime ownership and natural-width numeric storage are accepted. The active
+work in [../PLAN.md](../PLAN.md) is numerical loop fusion, blocked matrix
+multiplication and bounded autodiff workspace reuse, followed by broader
+performance evidence and optional tracing-free execution.
 [ownership.md](ownership.md) records the representation and floating-point
 contract; [development-state.md](development-state.md) records current evidence.
 

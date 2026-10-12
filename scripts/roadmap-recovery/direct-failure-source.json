@@ -1,0 +1,8 @@
+{
+  "run": 38219862595,
+  "head": "0e50753158d8a688cb04214d386465645a747cbf",
+  "artifact": 11733478627,
+  "archiveSha256": "85ba6ec2f6e8ef190c924941186d6cd6413b3bafe9f49f6bee3f7cfa863a10f1",
+  "sourceSha256": "44ad12c4841f88cde1bc9396d412899d3f103357afc8fe38619958e180aa286a",
+  "scope": "Failure investigation source; not a passing gate"
+}

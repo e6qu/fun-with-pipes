@@ -1,0 +1,82 @@
+{
+  "run": 38219456851,
+  "head": "71669990eeadcb77b4fd58e2181d86b78b0b2a2b",
+  "reports": [
+    {
+      "platform": "ubuntu-latest",
+      "artifact": {
+        "id": 11733985091,
+        "node_id": "MDg6QXJ0aWZhY3QxMTczMzk4NTA5MQ==",
+        "name": "numeric-array-fusion-evidence-ubuntu-latest",
+        "size_in_bytes": 2106684,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11733985091",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11733985091/zip",
+        "expired": false,
+        "digest": "sha256:37932330c66cd1c5cbedae11b2f2cdc1dc9576ee4418885eca0a6d4219b8ec85",
+        "created_at": "2026-10-12T07:48:50Z",
+        "updated_at": "2026-10-12T07:48:50Z",
+        "expires_at": "2027-01-10T07:44:42Z",
+        "workflow_run": {
+          "id": 38219456851,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "ownership-evidence-numeric-array-fusion",
+          "head_sha": "71669990eeadcb77b4fd58e2181d86b78b0b2a2b"
+        }
+      },
+      "archiveSha256": "37932330c66cd1c5cbedae11b2f2cdc1dc9576ee4418885eca0a6d4219b8ec85",
+      "reportSha256": "a14b4d70a39dc88ffd9ea4f69f83843763d42157b63d8ecbfb0261b442a87f84"
+    },
+    {
+      "platform": "macos-15-intel",
+      "artifact": {
+        "id": 11733768278,
+        "node_id": "MDg6QXJ0aWZhY3QxMTczMzc2ODI3OA==",
+        "name": "numeric-array-fusion-evidence-macos-15-intel",
+        "size_in_bytes": 1915377,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11733768278",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11733768278/zip",
+        "expired": false,
+        "digest": "sha256:52f1de26de81c7eb24527e865ce08ad69e09eea4f615260e1158ad617c6199f9",
+        "created_at": "2026-10-12T07:52:04Z",
+        "updated_at": "2026-10-12T07:52:04Z",
+        "expires_at": "2027-01-10T07:44:42Z",
+        "workflow_run": {
+          "id": 38219456851,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "ownership-evidence-numeric-array-fusion",
+          "head_sha": "71669990eeadcb77b4fd58e2181d86b78b0b2a2b"
+        }
+      },
+      "archiveSha256": "52f1de26de81c7eb24527e865ce08ad69e09eea4f615260e1158ad617c6199f9",
+      "reportSha256": "f0107b7ce5b67634fc0a58a50ca3491ad997c6ff6842792751f9289afa5f4816"
+    },
+    {
+      "platform": "macos-15",
+      "artifact": {
+        "id": 11733549689,
+        "node_id": "MDg6QXJ0aWZhY3QxMTczMzU0OTY4OQ==",
+        "name": "numeric-array-fusion-evidence-macos-15",
+        "size_in_bytes": 1890068,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11733549689",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11733549689/zip",
+        "expired": false,
+        "digest": "sha256:6294ee71a32280f21a033c78e0fed948d56446e3c67b2e76473b4a44556877bc",
+        "created_at": "2026-10-12T07:47:57Z",
+        "updated_at": "2026-10-12T07:47:57Z",
+        "expires_at": "2027-01-10T07:44:42Z",
+        "workflow_run": {
+          "id": 38219456851,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "ownership-evidence-numeric-array-fusion",
+          "head_sha": "71669990eeadcb77b4fd58e2181d86b78b0b2a2b"
+        }
+      },
+      "archiveSha256": "6294ee71a32280f21a033c78e0fed948d56446e3c67b2e76473b4a44556877bc",
+      "reportSha256": "a1e2e635b804ddc7c3733ca6e43928b3052404ebe0e0f3f1dacc7792829eca4c"
+    }
+  ],
+  "scope": "All three coherent numerical/AD jobs pass; benchmark reports only downloaded"
+}

@@ -6,12 +6,12 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `817335feace85d9bda136f3bac94515f2f25fb87` passes audit38215614654.
+checkpoint `02445af5d5b590d50df05f67cc0951520186f841` passes audit38219276272.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies368 targets/19186843 bytes. Reports are retained in
-/private/tmp/fwp-verified-phase4-active-restoration. On recovery, run the
+verifies454 targets/27300063 bytes. Reports are retained in
+/private/tmp/fwp-verified-numerical-benchmark-restoration. On recovery, run the
 bounded restore-numeric-finalization-archive.py after restoring temporary
 sources to reconstruct the verified gzip export from its retained base64 text. Never rerun completed publishers. Phases1–3 are accepted; phases4–6 remain unfinished.
 
@@ -124,21 +124,42 @@ one output payload; callers retain responsibility for their input owners.
 Equivalent C/Rust/generated benchmarks are being validated. Head80b454 in
 runner38218487246 passed compiler and regression checks, then failed its profile
 instrumentation because a function prefix also matched a compile-time stub.
-Head e5de4d3811e2cc77a78612f359db2b93a92b9b88 makes that match precise; results
-are pending. Timings use separate uninstrumented executables, and all workloads
-must agree on exact result hashes. Allocation, reference-count operations,
-charged live memory and process RSS are recorded separately. No speed claim is
-accepted yet. Permanent test artifacts now supply allocation metadata without
+Head e5de4d3811e2cc77a78612f359db2b93a92b9b88 passes runner38219155681;
+reports and source are retained in /private/tmp/fwp-numerical-benchmark-evidence.
+C/Rust/generated exact result hashes agree. Separate uninstrumented executables
+supply timings; allocation and reference counts, charged live memory and process
+RSS are recorded separately. Eight array rounds make8 managed requests and
+reclaim all charged storage with no collections, but retain/release1048600 times.
+This Linux sample's fwp kernels remain substantially slower than C/Rust. It is
+an optimization baseline, not a claim of parity or general hardware performance.
+Permanent test artifacts now supply allocation metadata without
 rebuilding the same evidence. Historical failed preparation heads are retained;
 none substitutes for a passing production gate.
 
-Current source is /private/tmp/fwp-phase4-matrix-draft; the complete publication
-mapping is /private/tmp/fwp-numerical-performance-files.json. Next finish the
-benchmark checks, run the coherent numerical/AD bundle on Linux and both Macs,
-then export formatted source and open one production PR from accepted main.
-Require all six exact-head jobs plus roadmap_docs before squash. Continue
-phases5–6 after actual merged-source acceptance. Fix encountered bugs throughout;
-CI waiting gates merges, not preparation. No phase4 production PR is open yet.
+Combined Linux/ARM/Intel preparation71669990eeadcb77b4fd58e2181d86b78b0b2a2b
+passes all three jobs in38219456851. Per-platform benchmark reports and verified
+receipts are retained in /private/tmp/fwp-numerical-platform-baseline.
+
+Head0e50753158d8a688cb04214d386465645a747cbf (38219862595) passes the new matrix
+shared-view/direct-access controls and the borrowed-parent liveness unit test,
+but fails Array fusion semantics/allocation on Linux and ARM. The borrowing
+change exposes an old lookup rewrite cloning branch IR: address-keyed loop-tail
+and ownership maps then refer to the original nodes. Generated C wrongly boxes
+Step values and returns their addresses as completion flags. Failure source and
+log: fwp-direct-failure-array.c and fwp-numerical-direct-initial-failure.log.
+
+Current b05ba75320db7359b00af53ff0a7e43512d07406 (38220639450) removes that cloning
+rewrite and uses existing tag/payload variant locals for array/map lookups.
+It adds an owned map-result regression and uninstrumented benchmark disassembly.
+Results are pending. Do not accept the failed head or claim its source verified.
+
+Current source is /private/tmp/fwp-phase4-matrix-draft; the latest publication
+mapping is /private/tmp/fwp-numerical-direct-files.json. Finish the combined
+platform checks and inspect measured costs, then export formatted source and
+open one production PR from accepted main. Require all six exact-head jobs plus
+roadmap_docs before squash. Continue phases5–6 after actual merged-source
+acceptance. Fix encountered bugs throughout; CI waiting gates merges, not
+preparation. No phase4 production PR is open yet.
 
 Latest user constraint: avoid needless wrappers, alternate paths, magic and
 implicit defaults. Register spills are ordinary lowering, and protocol-defined

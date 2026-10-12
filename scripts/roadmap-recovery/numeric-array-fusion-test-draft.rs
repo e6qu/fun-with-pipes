@@ -13,6 +13,7 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
       ("effect-order","main = [1i8, 2i8] | array.from-list | array.map (tap echo) | array.fold add 127i8 | echo\n",101),
       ("distinct-traps","main = [0, 9223372036854775807] | array.from-list | array.map (add 1) | array.fold div 0 | echo\n",101),
       ("length-overflow","main = [127i8] | array.from-list | array.map (add 1i8) | array.length | echo\n",101),
+      ("owned-map-lookup","main = map.empty | map.insert \"values\" ([1, 2, 3] | array.from-list) | map.get \"values\" | option.unwrap-or ([] | array.from-list) | array.to-list | echo\n",0),
       ("recursive-callback","descend : I64 -> I64\nrec descend = if (le 0) id (sub 1 | descend)\nmain = [3, 2] | array.from-list | array.map descend | array.fold add 0 | echo\n",0),
     ];
     for (label,source,status) in cases {
