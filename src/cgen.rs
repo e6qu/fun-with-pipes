@@ -2630,27 +2630,34 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     /// The number of fields of a record `e` can give without building it.
     fn unboxed(&self, e: &Expr) -> Option<usize> {
-        if let Some((_, m)) = self.state_field(e) {
-            return Some(m);
-        }
-        match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-                self.unboxed(b)
+        fn fields(fg: &FnGen<'_, '_>, e: &Expr, known: &HashMap<Local, usize>) -> Option<usize> {
+            if let Some((_, n)) = fg.state_field(e) {
+                return Some(n);
             }
-            Expr::Local(l) if self.fields.contains_key(l) => Some(self.fields[l].len()),
-            // `let x = v in x` (with its reference counts)
-            Expr::Let(x, v, b) if is_local_through_counts(b, *x) => self.unboxed(v),
-            Expr::Call(id, _) => self.g.abis[*id].as_ref()?.ret,
-            Expr::Record(xs) if (1..=MAX_UNBOXED).contains(&xs.len()) => Some(xs.len()),
-            Expr::Let(_, _, b) => self.unboxed(b),
-            Expr::Match(_, arms) => {
-                let n = self.unboxed(&arms.first()?.1)?;
-                arms.iter()
-                    .all(|(_, b)| self.unboxed(b) == Some(n))
-                    .then_some(n)
+            match e {
+                Expr::Dup(_, body) | Expr::Drop(_, body) | Expr::ResourceRegion { body, .. } => {
+                    fields(fg, body, known)
+                }
+                Expr::Local(l) => known.get(l).copied().or_else(|| fg.fields.get(l).map(Vec::len)),
+                Expr::Let(l, value, body) => {
+                    let mut known = known.clone();
+                    if let Some(n) = fields(fg, value, &known) {
+                        known.insert(*l, n);
+                    } else {
+                        known.remove(l);
+                    }
+                    fields(fg, body, &known)
+                }
+                Expr::Call(id, _) => fg.g.abis[*id].as_ref()?.ret,
+                Expr::Record(xs) if (1..=MAX_UNBOXED).contains(&xs.len()) => Some(xs.len()),
+                Expr::Match(_, arms) => {
+                    let n = fields(fg, &arms.first()?.1, known)?;
+                    arms.iter().all(|(_, body)| fields(fg, body, known) == Some(n)).then_some(n)
+                }
+                _ => None,
             }
-            _ => None,
         }
+        fields(self, e, &HashMap::new())
     }
 
     /// The `n` fields of the record `e`, as C expressions, building it
@@ -2678,7 +2685,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
             Expr::Let(x, v, b)
                 if !self.resource_slots.contains_key(x)
-                    && is_local_through_counts(b, *x)
+                    && self.field_uses(b, *x, n, true)
                     && self.unboxed(v) == Some(n) =>
             {
                 let fs = self.expr_fields(v, n);
@@ -3153,11 +3160,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     /// Field reads and complete calls to workers with the matching record ABI
     /// can consume fields directly. Partial/dynamic calls still need a box.
-    fn field_uses(&self, e: &Expr, l: Local, n: usize) -> bool {
-        let reads = |e: &Expr| self.field_uses(e, l, n);
+    fn field_uses(&self, e: &Expr, l: Local, n: usize, returned: bool) -> bool {
+        let reads = |e: &Expr| self.field_uses(e, l, n, false);
         match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => reads(b),
-            Expr::Local(x) => *x != l,
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => self.field_uses(b, l, n, returned),
+            Expr::Local(x) => *x != l || returned,
             Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
             Expr::Const(_) | Expr::Func(_) => true,
             Expr::Call(id, args) => {
@@ -3191,11 +3198,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Let(x, v, b) if is_local_through_counts(v, l) => {
                 *x != l
                     && small_record(self.g.prog, &self.locals[*x as usize]) == Some(n)
-                    && reads(b)
-                    && self.field_uses(b, *x, n)
+                    && self.field_uses(b, l, n, returned)
+                    && self.field_uses(b, *x, n, returned)
             }
-            Expr::Let(_, v, b) => reads(v) && reads(b),
-            Expr::Match(s, arms) => reads(s) && arms.iter().all(|(_, b)| reads(b)),
+            Expr::Let(_, v, b) => reads(v) && self.field_uses(b, l, n, returned),
+            Expr::Match(s, arms) => reads(s) && arms.iter().all(|(_, b)| self.field_uses(b, l, n, returned)),
         }
     }
 
@@ -3205,7 +3212,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         let eligible = |e: &Expr| self.resource_field_binding(e, local, n);
         match e {
             Expr::Let(l, value, body) if *l == local => {
-                self.unboxed(value) == Some(n) && self.field_uses(body, local, n)
+                self.unboxed(value) == Some(n) && self.field_uses(body, local, n, false)
             }
             Expr::Let(_, value, body) => eligible(value) || eligible(body),
             Expr::Dup(_, body)
@@ -3477,7 +3484,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
             if let Some(ResourceSlot::Fields(slots)) = self.resource_slots.get(&l) {
                 let n = slots.len();
-                if self.unboxed(v) == Some(n) && self.field_uses(body, l, n) {
+                if self.unboxed(v) == Some(n) && self.field_uses(body, l, n, false) {
                     let values = self.expr_fields(v, n);
                     let names = values.into_iter().map(|value| self.bind(value)).collect();
                     self.fields.insert(l, names);
@@ -3525,7 +3532,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         if let Some(n) = self.unboxed(v) {
             if (!matches!(v, Expr::Record(_)) || self.in_loop.is_some())
-                && self.field_uses(body, l, n)
+                && self.field_uses(body, l, n, false)
             {
                 let fs = self.expr_fields(v, n);
                 let names: Vec<String> = fs.into_iter().map(|f| self.bind(f)).collect();
