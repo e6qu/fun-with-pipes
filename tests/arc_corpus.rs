@@ -13,6 +13,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
     let total = paths.len();
     let mut executed = 0;
     let mut rejected = 0;
+    let mut failures = Vec::new();
     let mut report = String::from("ARC golden corpus: rejected programs are not execution support\n");
     let artifacts = std::env::var_os("FWP_ARC_ARTIFACTS").map(std::path::PathBuf::from);
     if let Some(path) = &artifacts { std::fs::create_dir_all(path).unwrap(); }
@@ -52,7 +53,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             let reference = execute(Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .env("FWP_NO_OPT", "1").args(["run", "--interp"]).arg(path.file_name().unwrap()));
             let actual = execute(&mut Command::new(&binary));
-            let matches = actual.status.code() == reference.status.code()
+            let matches = actual.status.code().is_some() && actual.status.code() == reference.status.code()
                 && actual.stdout == reference.stdout && actual.stderr == reference.stderr;
             if !matches {
                 if let Some(path) = &artifacts {
@@ -60,9 +61,9 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                     std::fs::write(path.join("corpus.txt"), &report).unwrap();
                 }
             }
-            assert!(matches, "ARC corpus {name}: expected {:?} stdout={} stderr={}; got {:?} stdout={} stderr={}",
+            if !matches { failures.push(format!("ARC corpus {name}: expected {:?} stdout={} stderr={}; got {:?} stdout={} stderr={}",
                 reference.status.code(), String::from_utf8_lossy(&reference.stdout), String::from_utf8_lossy(&reference.stderr),
-                actual.status.code(), String::from_utf8_lossy(&actual.stdout), String::from_utf8_lossy(&actual.stderr));
+                actual.status.code(), String::from_utf8_lossy(&actual.stdout), String::from_utf8_lossy(&actual.stderr))); }
             report.push_str(&format!("executed\t{name}\tstatus={:?}\treturn-ledger={}\n", actual.status.code(), actual.status.success()));
             executed += 1;
         }
@@ -73,5 +74,6 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
     report.push_str(&format!("total={total} executed={executed} rejected={rejected}\n"));
     if let Some(path) = &artifacts { std::fs::write(path.join("corpus.txt"), &report).unwrap(); }
     println!("{report}");
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
     std::fs::remove_dir_all(scratch).unwrap();
 }
