@@ -1,0 +1,25 @@
+name: Accepted phase2 source audit
+on:
+  push:
+    branches: [ownership-accepted-phase2-audit]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  accepted_source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify accepted source and exact-head gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/audit-accepted-phase2.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: phase2-accepted-source
+          path: phase2-accepted-source/
