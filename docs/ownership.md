@@ -103,8 +103,9 @@ contract. Define how runtime cycles are broken before removing tracing.
 
 Immutable source values alone do not account for runtime cycles: a channel can
 queue a value containing that same channel. Closing must preserve queued values
-for later receives. A prepared regression verifies that explicit draining and
-typed destruction break this counted cycle, including GC-off execution. Losing
+for later receives. Accepted regression controls verify explicit draining and typed destruction
+break the counted cycle. GC-off logical-count controls do not establish physical
+reclamation by the WebAssembly bump allocator. Losing
 the last external handle without draining leaves an internal counted owner;
 this does not establish automatic cycle reclamation. Tracing-free eligibility
 therefore needs proved scoped/drained lifetimes or another explicit cycle policy;
@@ -112,8 +113,8 @@ unproved shared cycles retain the tracing fallback.
 
 ## Phase 2 exit gates
 
-Finish the prepared ownership deliveries and the following finite coverage
-review before phase 3. The primitive inventory, IR checker and generated
+The actual merged-source finite coverage review passes after PR125 acceptance.
+Phase3 must preserve these contracts and explicit fallbacks. The primitive inventory, IR checker and generated
 wrappers must agree on each contract. Record conservative shared boundaries
 explicitly, including their retention and teardown; they remain tracing
 requirements until phase 6 proves eligibility for execution without collection.
@@ -136,8 +137,8 @@ Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
 when no proven borrowing contract applies; scalar words remain uncounted.
 Reconstructed decode/parse values and retained network contexts can therefore
 still require tracing even when their temporary C buffers reclaim deterministically.
-Classify these conservative requirements explicitly before phase 3; phase 6 must
-prove eligibility separately. External AD/FFI state has its own lifetime contract.
+These conservative requirements are explicitly classified in accepted phase2.
+Phase6 must prove tracing-free eligibility separately. External AD/FFI state has its own lifetime contract.
 
 PR123 accepts borrowed arguments for all nine raw-memory declarations.
 mem.alloc/mem.string allocate raw C buffers released explicitly by mem.free;
@@ -262,7 +263,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #123 includes the following contracts. Detailed primitive modes
+Main through PR #124 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -270,7 +271,7 @@ and measurements are in [history](roadmap-history.md).
   transfer to compatible constructors, release unused cells and unlink cleanup
   before tail calls. Failure/trap/cancellation releases registered tokens.
   Compiler call liveness and consumed constructor-field protection are merged;
-  worker argument preparation is merged. Wider callback paths stay prepared.
+  worker argument preparation is merged. Unmodeled callbacks retain compatibility roots.
 - Registered runtime owners and scoped files release exactly once before failure,
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.
@@ -290,7 +291,7 @@ and measurements are in [history](roadmap-history.md).
   partial retains and unfinished copies in PR120; general copies preserve the
   borrowed original. Boxed record conversion protects original boxes, remaining
   caller owners and completed typed field retains in PR121, including matched
-  result checkpoints. Wider callback registration remains prepared.
+  result checkpoints. Unmodeled callbacks retain shared fallback.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. Unmodeled payloads retain shared fallback.
@@ -319,13 +320,13 @@ and measurements are in [history](roadmap-history.md).
   typed ownership. Count operations address children rather than stack wrappers.
 - Zip/unzip/chunks borrow inputs and build typed counted nested spines retaining
   selected aliases. Scratch releases after construction; chunk validation
-  preserves trap order. General unwind protection remains prepared work.
+  preserves trap order. Unmodeled runtime boundaries retain compatibility roots.
 - Loop consumes its state and transfers callback inputs; it retains selected
   typed Step payloads before destroying wrappers. Specialized/flattened workers
   reclaim typed boxed inputs and ABI wrappers. Registered cleanup protects current
   state during first/later cancellation ticks and Step owners during payload
   preparation; flattened Again records remain unboxed. Later reconstruction
-  and retained-callback extensions remain prepared.
+  and retained-callback boundaries retain shared fallback.
 - Scan/iterate borrow callbacks and own each stored state, retaining initial
   aliases and adopting subsequent callback results.
 - Synchronous callbacks borrow typed inputs and return owned results. Map/filter
@@ -343,20 +344,17 @@ lifetimes, shared graph ownership or general execution without tracing.
 
 ## Ownership coverage
 
-PR124 accepts the resource/network, State, AD and list/codec contracts recorded
-in [the handoff](development-state.md); original preparation controls and exact
-heads are archived in history. All375 declarations are inventoried:168 contracts,
-19 IR combinators,11 flat signatures and177 declarations retaining explicit
-shared fallback. The finite review classifies arguments, results, callbacks,
-retention and teardown for these remaining167 runtime symbols. Its three-platform
-candidate audit passes; actual merged-source review and final production gates
-are still required before phase2 exit.
+Phase2 is accepted against the actual merged source recorded in the handoff.
+All375 declarations are inventoried:168 contracts,19 IR combinators,11 flat
+signatures and177 explicit fallback declarations/167 symbols. Their argument,
+result, callback, retention, teardown and cycle policies are checked against the
+compiler and runtime. This establishes the documented compatibility model.
 
 Reconstructed/decoded graphs and cached/retained contexts require tracing unless
-a typed ownership contract proves their full graph and teardown. Channel close
-preserves queued values; draining breaks the tested counted cycle. Automatic
-unreachable-cycle reclamation remains unproved. Numeric representation, optimized
-kernels and tracing-free eligibility remain separate later phases.
+a typed contract proves their complete graph and teardown. Channel close preserves
+queued values; draining breaks the tested counted cycle. Unreachable shared cycles
+still require tracing. Natural numeric storage/views and later optimized kernels
+must preserve these lifetimes. Optional tracing-free execution remains phase6.
 
 ## Original resource semantics
 

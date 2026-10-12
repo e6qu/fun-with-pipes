@@ -1,0 +1,144 @@
+{
+  "ubuntu-latest-metadata": {
+    "artifact": {
+      "id": 11722220194,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMjIyMDE5NA==",
+      "name": "numeric-layout-metadata-ubuntu-latest",
+      "size_in_bytes": 3169,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11722220194",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11722220194/zip",
+      "expired": false,
+      "digest": "sha256:4e5109da7a6e31cde65abdfc917a6c547f3ce5202c75e64a2dfb2e153a484206",
+      "created_at": "2026-10-12T01:27:22Z",
+      "updated_at": "2026-10-12T01:27:22Z",
+      "expires_at": "2027-01-10T01:26:23Z",
+      "workflow_run": {
+        "id": 38191886880,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-numeric-layout-baseline",
+        "head_sha": "2592570aa44b8dc41674238c405e19b33b7e9550"
+      }
+    },
+    "archiveSha256": "4e5109da7a6e31cde65abdfc917a6c547f3ce5202c75e64a2dfb2e153a484206"
+  },
+  "ubuntu-latest-controls": {
+    "artifact": {
+      "id": 11721856549,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMTg1NjU0OQ==",
+      "name": "numeric-layout-controls-ubuntu-latest",
+      "size_in_bytes": 2982159,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11721856549",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11721856549/zip",
+      "expired": false,
+      "digest": "sha256:83a0cf48b9f644029bc6eeb09ac51bc43d4450f88945009e43b2a348db3025b6",
+      "created_at": "2026-10-12T01:27:24Z",
+      "updated_at": "2026-10-12T01:27:24Z",
+      "expires_at": "2027-01-10T01:26:23Z",
+      "workflow_run": {
+        "id": 38191886880,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-numeric-layout-baseline",
+        "head_sha": "2592570aa44b8dc41674238c405e19b33b7e9550"
+      }
+    },
+    "archiveSha256": "83a0cf48b9f644029bc6eeb09ac51bc43d4450f88945009e43b2a348db3025b6"
+  },
+  "macos-15-metadata": {
+    "artifact": {
+      "id": 11720844193,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMDg0NDE5Mw==",
+      "name": "numeric-layout-metadata-macos-15",
+      "size_in_bytes": 3302,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11720844193",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11720844193/zip",
+      "expired": false,
+      "digest": "sha256:83eca5a23e7c7086f03b9e33fcf1f32389c641b640fd5a00814fe0ddf1bac35f",
+      "created_at": "2026-10-12T01:27:20Z",
+      "updated_at": "2026-10-12T01:27:20Z",
+      "expires_at": "2027-01-10T01:26:23Z",
+      "workflow_run": {
+        "id": 38191886880,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-numeric-layout-baseline",
+        "head_sha": "2592570aa44b8dc41674238c405e19b33b7e9550"
+      }
+    },
+    "archiveSha256": "83eca5a23e7c7086f03b9e33fcf1f32389c641b640fd5a00814fe0ddf1bac35f"
+  },
+  "macos-15-controls": {
+    "artifact": {
+      "id": 11720889198,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMDg4OTE5OA==",
+      "name": "numeric-layout-controls-macos-15",
+      "size_in_bytes": 1480893,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11720889198",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11720889198/zip",
+      "expired": false,
+      "digest": "sha256:9ecddee25b596a4644cae3564734a679c3dcb4c2b3c5794bda977190f3260a1a",
+      "created_at": "2026-10-12T01:27:21Z",
+      "updated_at": "2026-10-12T01:27:21Z",
+      "expires_at": "2027-01-10T01:26:23Z",
+      "workflow_run": {
+        "id": 38191886880,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-numeric-layout-baseline",
+        "head_sha": "2592570aa44b8dc41674238c405e19b33b7e9550"
+      }
+    },
+    "archiveSha256": "9ecddee25b596a4644cae3564734a679c3dcb4c2b3c5794bda977190f3260a1a"
+  },
+  "macos-15-intel-metadata": {
+    "artifact": {
+      "id": 11721498329,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMTQ5ODMyOQ==",
+      "name": "numeric-layout-metadata-macos-15-intel",
+      "size_in_bytes": 3294,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11721498329",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11721498329/zip",
+      "expired": false,
+      "digest": "sha256:0afee4ef87eef83ca3683808d8119494151293deefa95598ac9e8e923cd07a07",
+      "created_at": "2026-10-12T01:27:41Z",
+      "updated_at": "2026-10-12T01:27:41Z",
+      "expires_at": "2027-01-10T01:26:23Z",
+      "workflow_run": {
+        "id": 38191886880,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-numeric-layout-baseline",
+        "head_sha": "2592570aa44b8dc41674238c405e19b33b7e9550"
+      }
+    },
+    "archiveSha256": "0afee4ef87eef83ca3683808d8119494151293deefa95598ac9e8e923cd07a07"
+  },
+  "macos-15-intel-controls": {
+    "artifact": {
+      "id": 11720894151,
+      "node_id": "MDg6QXJ0aWZhY3QxMTcyMDg5NDE1MQ==",
+      "name": "numeric-layout-controls-macos-15-intel",
+      "size_in_bytes": 1514979,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11720894151",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11720894151/zip",
+      "expired": false,
+      "digest": "sha256:5d6b778478c62ab79dd820bfb8243a8e272f795eb80668292f37eeedbb11d6f9",
+      "created_at": "2026-10-12T01:27:43Z",
+      "updated_at": "2026-10-12T01:27:43Z",
+      "expires_at": "2027-01-10T01:26:23Z",
+      "workflow_run": {
+        "id": 38191886880,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "ownership-evidence-numeric-layout-baseline",
+        "head_sha": "2592570aa44b8dc41674238c405e19b33b7e9550"
+      }
+    },
+    "archiveSha256": "5d6b778478c62ab79dd820bfb8243a8e272f795eb80668292f37eeedbb11d6f9"
+  },
+  "run": 38191886880,
+  "driver": "2592570aa44b8dc41674238c405e19b33b7e9550",
+  "source": "37e94c1efa1bb99e955d026b8dde46dfe632e972",
+  "scope": "Reports, source and diagnostic disassembly only; no binaries or local compiler execution"
+}

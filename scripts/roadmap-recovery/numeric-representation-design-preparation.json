@@ -520,8 +520,20 @@
       "immutableUpdates": "Exclude view headers from in-place update/reuse. A unique view is not proof that its backing storage is uniquely owned; produce a packed owning copy before mutation unless a separately proved transfer applies.",
       "alignment": "The eight-byte owning header provides natural alignment up to eight bytes, not guaranteed sixteen-byte SIMD alignment. Use checked unaligned accesses or explicit stronger allocation/layout proof for vector loads.",
       "measuredSpace": "Record requested bytes, actual allocation class, live/count/freed bytes and retained backing size. Header and size-class rounding can change the realized density gain; views can retain more backing memory than their own size suggests."
+    },
+    "viewEligibility": {
+      "initial": "Only pointer-free supported numeric element types; keep pointer-bearing/affine/resource arrays on their existing copied-slice path",
+      "reason": "Retaining the entire backing array would also retain unselected children and can delay externally observable teardown. General views need a separate lifetime proof.",
+      "retention": "Record live backing bytes for large-owner/small-view workloads, empty slices and nested slices; do not claim a memory reduction from the view header size alone.",
+      "access": "Use descriptor-directed byte access and memcpy bit decoding for packed payloads and header flags, including generated constants and view metadata; avoid incompatible C lvalue types."
     }
   },
   "candidateSourceManifest": "/private/tmp/fwp-numeric-representation-phase2-candidate-source/manifest.json",
-  "candidateSourceStatus": "Frozen PR125 source verified by Git blob hash; full gates and actual phase2 acceptance still pending"
+  "candidateSourceStatus": "Frozen PR125 source verified by Git blob hash; full gates and actual phase2 acceptance still pending",
+  "documentationCorrections": {
+    "status": "Source-only next-bundle correction",
+    "fixture": "/private/tmp/fwp-unboxed-records-fixture-draft.fwp",
+    "issue": "Original fixture claimed up to four fields always return in registers and five fields are boxed; actual C ABI and wide_record_returns determine these independently",
+    "controls": "Preserve the entire original fixture program and golden output; only its comments change"
+  }
 }

@@ -41,28 +41,25 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 | Order | Status and work | Acceptance |
 |---|---|---|
 | 1 | Done: native macOS ARM/Intel support (#74) | Full platform gates; real collection; interpreter/native agreement; explicit unsupported options |
-| 2 | In progress: runtime ownership, borrowed boundaries, text/bytes, closures and exceptional lifetimes | Checked aliases/callbacks/unwind; fewer counts without lost roots or more allocation; immediate reclamation evidence |
-| 3 | Pending: natural-width contiguous numeric storage, views, aggregate/scalar ABI and alignment | Narrow elements use natural width; fewer copies/boxes; arm64/x86-64 allocation/assembly evidence; ABI/FFI checks |
+| 2 | Done: typed ownership and explicit runtime compatibility fallbacks | Accepted merged-source coverage; callback/unwind/resource, alias, GC/reuse and reclamation controls |
+| 3 | In progress: natural-width contiguous numeric storage, views, aggregate/scalar ABI and alignment | Narrow elements use natural width; fewer copies/boxes; arm64/x86-64 allocation/assembly evidence; ABI/FFI checks |
 | 4 | Pending: fused numerical loops, blocked matrices, autodiff lifetimes and reusable buffers | Correct gradients and exceptional cleanup; equivalent C/Rust workloads; fixed floating-point behavior by default |
 | 5 | Pending: broaden ownership/performance regression evidence | Allocations, live memory, counts and collections alongside timing, hardware/compiler/flags recorded |
 | 6 | Pending: optional tracing-free execution after coverage | Supported programs reclaim without collection, including escapes/runtime boundaries; explicit cycle lifetime policy |
 
 ## Current delivery
 
-Main includes #74–#124: native macOS ARM/Intel support, resource/network and
-callback ownership, typed State, scoped AD and independent codec leaves.
-Queue33 and35–112 are accepted;34 is a verified duplicate. Next bundle completes
-the finite177-declaration ownership fallback review and checked buffer/array/bump
-allocation and kernel stack/constant decoding and device allocation boundaries with current docs and CI actions. Require actual-source validation and all final gates
-before phase2 exit, then deliver numeric representation and phases4–6.
+Main through PR #125 completes phase2's documented ownership model.
+All177 remaining runtime declarations explicitly retain compatibility fallback;
+tracing-free execution remains phase6. Resource and network queue anchors are
+accepted and archived. Checked allocation/kernel boundaries and current CI
+pass the exact final head and actual merged-source audit. The handoff records
+those proofs and the actual base for phase3.
 
-Phase2 remaining audits cover borrowed metadata roots, reconstructed/untyped
-aggregates, retained contexts, resource disposal and cycles. Verify each boundary
-against the accepted bundle and retain explicit tracing fallbacks where ownership
-is not proved. Prepared changes require full CI per final bundle.
-Finish phase 2 before numeric representation, numerics/autodiff and optional
-tracing-free work. Windows, new deployment interfaces and a new backend remain
-deferred unless the user changes priorities.
+Next deliver natural-width numeric arrays, checked owner-retaining views and
+typed worker ABI layouts in one coherent bundle. Preserve existing type inference,
+Pipe semantics, ownership and trap order. Then complete phases4–6. Windows,
+new deployment interfaces and a new backend remain deferred.
 
 ## Validation limits
 
@@ -74,13 +71,6 @@ repository. Memory changes need actual GC stress/verification and reuse checks.
 Never call skipped, queued, superseded or cancelled runs passing support.
 
 ## Concrete remaining deliveries
-
-Finish phase2 with the finite177-declaration fallback review and checked buffer,
-array/bump allocation and kernel stack/constant decoding and device allocation boundaries with current CI actions.
-Classify each remaining boundary with its argument/result/alias/callback policy
-or explicit tracing fallback, including retained contexts, partial reconstruction
-and cycle lifetime. Complete allocator counters must include initializer fast
-paths and count delegation once. Preserve full ownership and exceptional controls.
 
 For phase3, implement descriptors and typed loads/stores for naturally packed
 I8/U8, I16/U16, I32/U32 and F32 arrays; preserve I64/U64/F64 semantics. Carry

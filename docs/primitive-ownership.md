@@ -17,8 +17,8 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #123. Arrays, maps and sets own typed elements.
-Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
+The tables describe accepted main through PR #124. Arrays, maps and sets own typed elements.
+The finite review records explicit compatibility fallbacks; [the queue](roadmap-queue.md) retains delivered preparation anchors.
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
@@ -36,7 +36,7 @@ Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue
 
 Array destruction releases typed children before outer storage. Scalar fields
 are skipped; boxed128-bit payloads retain their compatibility lifetime. Immutable
-updates preserve live aliases. General callback unwind remains prepared work.
+updates preserve live aliases. Unmodeled callbacks retain explicit sharing and conservative roots.
 
 | Map/set primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
@@ -59,7 +59,7 @@ Their wrappers omit fwp_rc_share(key). Typed destruction releases keys/elements
 before buffers and outer storage. Copies retain aliases; replacement/removal
 releases displaced owners. Scalar payloads are skipped and boxed128-bit values
 retain their compatibility lifetime. Ordering, key identity and immutable
-aliases are preserved. General callback unwind remains prepared work.
+aliases are preserved. Unmodeled callbacks retain explicit sharing and conservative roots.
 
 ## Registered unwind cleanup
 
@@ -68,108 +68,40 @@ LIFO order before failure, trap or cancellation invalidates their frames. It
 stops at the catching handler boundary; task switches preserve separate chains.
 Normal transfer unlinks registrations without releasing a transferred value.
 Compiler caller/reuse-token and runtime application/capture-preparation cleanup
-are merged through PR107 after all exact-head gates. Registration for wider
-callback, constructor and runtime ownership remains prepared work; this is not
+are merged through PR107 after all exact-head gates. Selected compiler, runtime and synchronous callback registrations are accepted
+through PR124. Unmodeled runtime boundaries retain compatibility roots; this is not
 complete exceptional ownership or tracing-free support.
 
 ## Conservative reconstruction and external boundaries
 
-A bounded audit of prepared source 112 (`b45e93a71d40`) enumerates 373 library primitive declarations,
-resolves 40 explicit foreign aliases and finds 363 distinct runtime symbols.
-It queries the unmodified shared contract module using those actual symbols
-and checks monomorphization templates:
+Accepted PR124 inventories375 declarations,365 runtime symbols and40 aliases:
+168 ownership contracts,19 combinators lowered to ordinary IR,11 flat scalar
+signatures and177 review declarations covering167 symbols. Scalar signatures can
+still allocate external state; descriptor availability does not prove counted
+ownership of a reconstructed graph. The declaration audit passes all production
+gates. The finite fallback classification passes against the actual accepted source;
+the handoff records its exact gates and acceptance proof.
 
-| Declaration category | Count | Meaning |
-|---|---|---|
-| Explicit ownership contract | 134 | IR counting and native wrapper selection use the shared inventory |
-| Combinator lowered to ordinary IR | 19 | `mono::foreign_instance` emits `Body::Expr`; ordinary function ownership applies |
-| Flat concrete scalar signature | 12 | No counted value parameters/results in these declared signatures; external state may still exist |
-| Runtime or specialization review | 208 | Inspect actual monomorphic types, lowering and wrappers before judging sharing or ownership |
+Unknown primitive, foreign and remote boundaries keep explicit sharing in
+[src/ownership.rs](../src/ownership.rs). The finite review records argument,
+result, callback, retention, teardown and cycle policy for every remaining
+boundary; it does not establish tracing-free eligibility.
 
-The208 review declarations resolve to198 distinct symbols; aliases remain
-declaration coverage, not extra runtime boundaries. Missing metadata alone
-does not identify a runtime sharing boundary. The scalar
-category includes `ad.tape`, which creates external tape state; scalar values do
-not prove allocation freedom or complete lifetime coverage. Generic numeric,
-boxed 128-bit, callback, resource and reconstructed-value cases require their
-actual representations. The portable audit passes on GitHub at evidence head
-669c19e7cb67 (CI38099556010), checking actual contract metadata and IR lowering,
-explicit aliases and all recorded compiler/library source hashes. Run the
-inventory again on actual merged source at the phase 2 exit checkpoint. This is
-prepared-source classification, not main acceptance or a tracing-free guarantee.
-Counts and scope are recorded in
-[history](roadmap-history.md#portable-finite-ownership-inventory-2026-10-11).
-
-Final integration38179558348 verifies375 declarations,365 symbols,40 aliases,
-168 contracts,19 IR combinators,11 flat signatures and177 review declarations
-representing167 symbols in accepted PR124. It includes internal ad.scope
-and ad.scope2, raw-memory, AD, list, typed State and14 codec contracts. Final
-production gates and merged-source classification remain required. These counts
-classify boundaries and do not establish tracing-free eligibility.
-
-Unknown primitive, foreign and remote boundaries keep the explicit shared
-fallback in [src/ownership.rs](../src/ownership.rs). A successful result or a
-known descriptor does not establish ownership of every reconstructed node.
-
-| Boundary | Current requirement and remaining ownership evidence |
+| Boundary | Current lifetime policy |
 |---|---|
-| JSON/CSV/protocol parsing | Shared reconstructed aggregates; typed child transfer and partial-failure cleanup need separate contracts |
-| Descriptor-based text/binary decode | Normal scratch cleanup does not make returned trees counted; fresh nodes, aliases and partial construction require typed review |
-| Remote values and memoized decoding | Cached decoded results may have several readers; preserve a cache owner before returning independently owned aliases |
-| Foreign values and retained callbacks | Explicit sharing protects unknown retention; ownership requires a verified host/runtime lifetime and teardown contract |
-| list.flat-map and list.ap | Generic runtime application and list reconstruction retain the compatibility path; owned callback results, temporary storage and copied spines need explicit contracts before tracing-free eligibility |
-| State handlers | The PR124 candidate owns typed get/put/modify/run-state values and preserves per-task scope chains; focused nonlocal-exit and escaping-capture controls pass, while full production acceptance remains required |
+| JSON/CSV/protocol and descriptor decoding | Reconstructed or cached graphs retain compatibility roots; typed child transfer and partial-construction ownership require explicit contracts |
+| Remote values and memoized decoding | Preserve retained context/cache owners and independent reader aliases; scratch cleanup alone does not count decoded nodes |
+| Foreign values and retained callbacks | Keep explicit sharing unless host lifetime and teardown are proved |
+| list.flat-map and list.ap | Borrow typed synchronous inputs, adopt owned callback results and own copied spines; partial results, scratch and unwind cleanup pass PR124 controls |
+| State handlers | Typed get/put/modify/run-state ownership and task scope chains pass PR124 aggregate, capture and nonlocal-exit controls; legacy/unmodeled payloads retain fallback |
+| External resource contexts | Original scoped/task owners preserve teardown order; counted C context storage does not by itself prove ownership of every fwp graph |
 
-Source review of the same prepared head separates three concrete cases:
-
-- `parse-int` and `parse-float` already borrow String input and return a shared
-  `Option` result. Their wrappers select the monomorphic numeric kind; integer
-  parsing can include boxed numeric payloads. Counting only the outer `Some`
-  would not establish typed payload ownership.
-- `g_force` returns `cell->memo` on repeated reads and stores the decoded result
-  after the first successful force. A future counted contract must retain the
-  cache's owner and acquire independent reader aliases; scratch-buffer cleanup
-  alone does not supply that contract.
-- `grpc.with-tls` copies option text into explicitly owned C storage and releases
-  its scoped owner after `g_with_ctx`. Prepared task inheritance holds that C
-  storage separately. The current primitive wrapper still shares counted fwp
-  arguments, including callbacks; the C counter does not count their value graphs.
-
-These are source-reviewed compatibility policies, not new runtime tests or
-verified deterministic reclamation. Keep them in the finite phase 2 exit review;
-changing a boundary requires interpreter/native, alias, partial-failure and
-retention/teardown evidence before removing sharing.
-
-The resource/network candidate will carry a baseline-pinned declaration audit
-in its regular Linux and ARM/Intel macOS jobs. It reads the actual shared
-contract module, checks the candidate commit identity and records all compiler,
-runtime and library source hashes. Expected changes are explicit; unknown
-declarations remain visible in the observed report even when the audit fails.
-The integrated candidate audit passes in finalization38163941948; its regular
-production gates and actual merged-source exit review remain required. A passing declaration audit establishes
-inventory consistency, not runtime retention, exceptional cleanup or tracing-free
-eligibility. Those still require the controls and lifetime policies above.
-
-The combined list.ap/list.flat-map candidate supplies borrowed inputs, owned
-synchronous callback results and counted spines, with scratch/result-prefix/
-partial-spine unwind controls. Flat-map copies retain typed element aliases and
-release the original callback chunks. Both repairs pass focused Linux/ARM/Intel evidence38160607296; final bundle
-gates remain required. The same candidate clears inactive
-State buffer words after pop, depth restoration and task exit; collector-scan,
-alias/error and real scheduler controls pass the same focused matrix. Clearing dead roots
-does not count or destroy live State values. Candidate typed State scope controls now pass; legacy/unmodeled fallbacks remain
-on the tracing compatibility path. See the handoff for candidate identities.
-
-Current list callback and typed State candidates have focused retention and
-cleanup evidence described above. The earlier main68f source observations are
-archived in [history](roadmap-history.md#historical-list-and-state-source-observations).
-Legacy/unmodeled states, reconstruction and unknown runtime callbacks still
-require explicit fallback classification. Preserve callback evaluation order
-and task/error/trap behavior when extending ownership.
-
-Keep these boundaries on tracing compatibility until their contracts and cleanup
-are proved. Phase2 records coverage and remaining fallback requirements; phase6
-must establish eligibility and cycle policy before claiming collection-free use.
+Channel close preserves queued values. Explicit drain breaks the tested counted
+cycle, while unreachable shared cycles still need tracing. Preserve callback,
+trap and task ordering when extending contracts. Phase2 verifies this documented
+compatibility model; phase6 must separately prove tracing-free eligibility and
+its cycle policy. Older373-declaration classifications and prepared-only notes
+are archived in history rather than supplying current priorities.
 
 ## Complete runtime sharing
 
@@ -301,22 +233,19 @@ lookup returns an owned Option; updates consume the container and release
 displaced owners. Synchronous callbacks borrow values and adopt results. PR100
 passed all six production gates and the documentation audit.
 
-## Prepared refinements
+## Accepted ownership review
 
-PR124 accepts resource/network, State, AD and list callback owners and14 codec
-leaves after all six exact-head platform jobs and roadmap_docs pass. Original
-preparation contracts and omission controls are archived in
-[history](roadmap-history.md#archived-handoff-after-pr-124). The immutable queue
-retains their anchors. The next finite exit review explicitly classifies177
-remaining declarations with tracing fallback and includes checked structural
-buffer growth, array/bump allocation and kernel stack/constant decoding and device allocation boundaries; their three-platform preflights pass, while the
-production bundle and actual merged-source phase2 exit remain required.
+The finite177-declaration/167-symbol fallback review passes against the actual
+merged source. All168 explicit contracts and remaining IR/flat boundaries are
+inventoried. Original preparation and accepted binary/GC/reuse/omission controls
+are retained in history and the immutable queue. Numeric representation and
+tracing-free eligibility remain later work; no blanket no-GC claim is established.
 
 ## Validation and limits
 
 Merged contracts through #124 passed their exact-head full platform gates.
-Prepared ownership extensions remain subject to their final bundle full
-acceptance. Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
+PR125 finite coverage and allocation-boundary changes require their final
+exact-head gates and merged-source acceptance. Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,
 GC stress/verification and reuse poisoning. The interpreter/native comparison
 includes observable callback and trap order.
@@ -330,5 +259,5 @@ unknown runtime boundaries and cycle policy remain part of phase2 acceptance.
 
 Merged scan/iterate boundaries borrow callbacks and inputs, own initial stored
 aliases and adopt subsequent callback results. Scratch storage is released
-after the state sequence is built. Exceptional lifetime extensions remain
-prepared work.
+after the state sequence is built. Unmodeled retained/runtime callbacks keep
+explicit sharing and conservative roots.

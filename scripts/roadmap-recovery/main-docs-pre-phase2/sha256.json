@@ -1,0 +1,13 @@
+{
+  "CONTRIBUTING.md": "7a00b334e94f203e209666fabe36a85ddd049bdd6f8d09195cbbd683f2ad2ead",
+  "PLAN.md": "2c795c23d1de3f53af253812ba5020101ad5e6686a0e336eea91c167b0007397",
+  "docs/design.md": "f20b528ef3dfa9f9e02ec27b9a2c01eb79261e68200b2ad80a674decfa8740aa",
+  "docs/development-state.md": "8fd8e9423f8dc8b29b7a02e51c4f24a12846d36809aa723b1400bce1f470c2b0",
+  "docs/ownership.md": "3a3c057642d65a67614e538a56d11a1cc35a198b402e492b918cfaea5299adb0",
+  "docs/primitive-ownership.md": "714ed434419b14fb8133f753a87268d7b642ae5f202873a94242eff53fb3d15d",
+  "docs/roadmap-queue.md": "5dde27287c6faa7043339ee5fe1525e51b869fe72b0bb873b44eda980f8b7d77",
+  "docs/roadmap-history.md": "c1b1991df0a27407e42fa51b4521cb436bcaea04ecd42fb5b9072ae1cda4a99d",
+  "docs/reference.md": "578c74c42fce1ab7155f54d9042cbbe91c722a6f94e8e85df5dd0aa711706c9d",
+  "docs/concurrency.md": "a14cc48731fff6340993abcd979fd9d864dc04d3760d6d678afd9d34359fa960",
+  "docs/numerics.md": "dd83a998ae419d91b5ffa2ac8902024df1ce84b31d9170488d7be06db1cfa394"
+}

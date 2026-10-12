@@ -114,6 +114,9 @@ tracing-free eligibility remain later work; no blanket no-GC claim is establishe
 '''+p[b:]
 for name in DOCS:
  texts[name]=texts[name].replace('primitive-ownership.md#prepared-refinements','primitive-ownership.md#accepted-ownership-review')
+ texts[name]=texts[name].replace("PR125's finite fallback classification still requires its final gates and\nactual merged-source audit before phase2 exit.", "The finite fallback classification passes against the actual accepted source;\nthe handoff records its exact gates and acceptance proof.")
+ texts[name]=texts[name].replace('Finish PR125 and the actual merged-source finite coverage review before\nphase 3.', 'The actual merged-source finite coverage review passes after PR125 acceptance.\nPhase3 must preserve these contracts and explicit fallbacks.')
+ texts[name]=texts[name].replace('Classify these conservative requirements explicitly before phase 3; phase 6 must\nprove eligibility separately.', 'These conservative requirements are explicitly classified in accepted phase2.\nPhase6 must prove tracing-free eligibility separately.')
 backup=Path('/private/tmp/fwp-main-docs-pre-phase2');assert not backup.exists();backup.mkdir();hashes={}
 for name in DOCS:
  data=(ROOT/name).read_bytes();destination=backup/name;destination.parent.mkdir(parents=True,exist_ok=True);destination.write_bytes(data);hashes[name]=hashlib.sha256(data).hexdigest()

@@ -1,0 +1,11 @@
+{
+  "head": "c65aee1c1e5324107972a106c7e95220d55bf9ea",
+  "base": "cbf68ea60c3b9439a117ef9d9b28b472f23dc632",
+  "branch": "ownership-accepted-phase2-audit",
+  "unchangedNativeTree": "07fe7b60a473f8c5ae6b7aede7678ff7fb17906a",
+  "sourceHashes": {
+    "scripts/audit-accepted-phase2.py": "8e7ab706268443301623897ffc607bdf083113ce38513a6d4034b4b03ed00b41",
+    ".github/workflows/accepted-phase2-audit.yml": "8c50404fce9463ea121302490a5ed22d203ad934b8e26206356ce51b06e61f18"
+  },
+  "stage": "Actual merged-source audit published; acceptance pending"
+}
