@@ -123,7 +123,7 @@ impl Kw {
         }
     }
 
-    fn from_str(s: &str) -> Option<Kw> {
+    pub(crate) fn from_str(s: &str) -> Option<Kw> {
         Some(match s {
             "rec" => Kw::Rec,
             "match" => Kw::Match,

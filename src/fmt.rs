@@ -917,6 +917,10 @@ mod tests {
             "f = make { .name, age = .age | add 1 }\n",
             "f = make { name = .name, age = .age | add 1 }\n"
         ));
+        assert!(same_program(
+            "f = make { .if, ._private, .first-name }\n",
+            "f = make { if = .if, _private = ._private, first-name = .first-name }\n"
+        ));
         let multiline = "f = make { .first, .second, .third, .fourth, .fifth, .sixth, .seventh, .eighth, .ninth }\n";
         let formatted = fmt(multiline);
         assert!(formatted.contains("\n    .first,"));
@@ -945,7 +949,14 @@ mod tests {
                 "duplicate field `name`"
             );
         }
-        for source in ["f = make { .address.city }\n", "f = make { .0 }\n"] {
+        for source in [
+            "f = make { .address.city }\n",
+            "f = make { .0 }\n",
+            "f = make { .True }\n",
+            "f = make { .match }\n",
+            "f = make { ._ }\n",
+            "f = make { .0abc }\n",
+        ] {
             assert!(format_source(source)
                 .unwrap_err()
                 .message

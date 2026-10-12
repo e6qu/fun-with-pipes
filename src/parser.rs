@@ -941,7 +941,11 @@ impl<'a> Parser<'a> {
                 let Tok::Selector(path) = self.bump().tok else {
                     unreachable!()
                 };
-                if path.len() != 1 || path[0].chars().all(|c| c.is_ascii_digit()) {
+                if path.len() != 1
+                    || !matches!(path[0].as_bytes()[0], b'a'..=b'z' | b'_')
+                    || path[0] == "_"
+                    || Kw::from_str(&path[0]).is_some()
+                {
                     return Err(Diagnostic::error(
                         sp,
                         "projection shorthand needs one named field; use `name = .path`",

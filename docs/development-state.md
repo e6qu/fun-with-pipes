@@ -80,10 +80,28 @@ All local workloads run serially through `python3 scripts/local-guard.py`:
   queue pairs/tags, zero live ownership rows). A trailing blank line found
   by the whitespace check was removed.
 
-## Next action
+## Published head and next action
 
-Publish this one reviewed bundle PR. Full builds, all six platform jobs and
-roadmap_docs run on GitHub at the final head. Long traversals, GC stress and
+PR #131: https://github.com/e6qu/fun-with-pipes/pull/131.
+Initial head: `cd5a918dbba4e5d7febcd081db4893f96b6bcb7a`.
+CI 38321908920 was still running and roadmap_docs 38321908967 passed when
+review found an additional parser edge case. Selectors can spell keywords,
+constructor names, a lone underscore and digit-prefixed text that are not legal
+named output fields. Shorthand now rejects those spellings, with regressions;
+ordinary identifiers including `if`, `_private` and `first-name` remain valid.
+Publish the repair and require a fresh complete matrix at its exact head.
+The earlier run does not establish acceptance of this repair.
+
+The guarded native representation probe
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-inspect-iterator-code.py`
+passes (0.99s CPU / 2.35s elapsed). An argument-controlled fold over 100 elements
+returns 4950. Generated C and ARM64 Mach-O disassembly show a fixed-frame loop,
+but also record allocations and dynamic callback dispatch. This uses the
+available compiler with the new definitions; it is not exact-head compiler
+acceptance or a zero-allocation/speedup claim. Evidence:
+/private/tmp/fwp-iterator-code/{fold.fwp,fold.c,fold,fold.disassembly,fold.symbols}.
+
+Monitor all six exact-head platform jobs. Long traversals, GC stress and
 reuse verification remain pending there. Fix failures and keep this handoff
 current; queued or failed CI does not block useful work. Merge only after all
 required gates pass, using a one-line subject <=80 characters and empty body.
