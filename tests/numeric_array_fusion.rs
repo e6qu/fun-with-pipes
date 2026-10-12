@@ -1,7 +1,7 @@
 //! Actual numeric Array fusion, trap order, raw semantics and allocation controls.
 use std::process::{Command,Output};
 fn checked(command:&mut Command)->Output {
-    let out=command.output().unwrap();assert!(out.status.success(),"{command:?}: {}",String::from_utf8_lossy(&out.stderr));out
+    let out=command.output().unwrap();assert!(out.status.success(),"{command:?}: status={} stdout={} stderr={}",out.status,String::from_utf8_lossy(&out.stdout),String::from_utf8_lossy(&out.stderr));out
 }
 #[test]
 fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
