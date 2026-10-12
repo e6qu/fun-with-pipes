@@ -67,3 +67,4 @@ jobs:
             phase2-exit-evidence/arrays/
             phase2-exit-evidence/kernels/
             phase2-exit-evidence/codecs/
+            phase2-exit-evidence/devices/

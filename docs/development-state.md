@@ -6,14 +6,12 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `d1c7a4f4bd02e50b6465813f2a59f25cdb861b4c` passes audit38186237805
-and retains the latest AD/input and callback diagnostic sources. Query the branch tip when recovering; do not assume an embedded
-checkpoint identifies its own commit. Restore only temporary paths with verified
-Git blob hashes using restore-roadmap-recovery.py. Actual runner restoration passes in38185353180:365 temporary targets and
-9134228 bytes have verified hashes. Only bounded report metadata was downloaded
-to fwp-verified-recovery-restoration; no local restoration, helper execution or
-compiler check ran. Never rerun
-completed publishers. Phases2–6 remain unfinished.
+checkpoint `f7290c8827f641d8f9cdc9928f1c68a59954e61a` passes audit38188292080.
+Query the branch tip on recovery; an embedded checkpoint cannot identify its
+own commit. restore-roadmap-recovery.py restores only temporary paths from a
+bounded immutable archive after verifying Git blob hashes. Its runner audit
+verifies395 targets/9594149 bytes. Never rerun completed publishers. Phases2–6
+remain unfinished.
 
 ## Execution contract
 
@@ -264,8 +262,8 @@ It streamlines obsolete design/resource notes into history. Never execute before
 verified acceptance. fwp-finalize-phase2-exit-on-runner.py and
 fwp-publish-phase2-exit-finalization.py require the actual PR124 squash and passing
 finite review. That finalizer pins the passing296ea83 array/bump source
-and all original controls. It will export a focused ownership
-exit/buffer/array-limit bundle and fresh docs for the next full matrix.
+and passing kernel sources; device guards require all three pending jobs.
+It preserves original controls and exports one ownership exit/allocation bundle and fresh docs for the next full matrix.
 
 Numeric design preparation reads30 blob-verified files at d5ae8c and maps108
 direct array references in seven runtime files. Current arrays have8-byte
@@ -275,6 +273,29 @@ fwp-numeric-representation-design-preparation.json. This is source review, not
 a representation implementation or compiled evidence. Complete phase2 before
 changing numeric representation.
 
+Kernel candidate d240231c5dd33e83ecdd5bf3df06715a0e279768 passes all three
+platform jobs in38186836622. It guards empty-stack pointer formation and reads
+F64 constant V words through the existing memcpy bit decoder. Extracted actual
+kernels pass O1/O2 sanitizers with first leaf/constant operations, lengths
+0/1/7/127/256, nonzero offsets, exact bytes and sentinels. Omitted stack guards
+and constant decoders fail their controls. Original parallel/missing-OpenCL
+tests pass against FWP_NO_OPT=1; the benchmark remains ignored, with no timing
+or GPU hardware claim. Proof: fwp-kernel-constant-bits-passing-proof.json.
+
+Device candidate6ee21a54dee1029178b28291d60dd31dd179a7a7 on
+ownership-evidence-device-output-bounds checks positive output counts before
+multiplication/allocation, preserving malformed code and input-length trap order
+and releasing the temporary input table. Workspace limits follow input validation
+in both implementations. All three jobs in38188567610 are pending. Previous
+857 candidate passed both Macs; Linux38188246198 found LeakSanitizer changed
+deliberate omission exits because the sentinel left small probe allocations alive.
+The repaired sentinel records omitted bounds/cleanup before freeing its own
+allocations; leak detection remains enabled. Original raw/O1/O2/GC/reuse and
+omission controls remain. Proof remains required before inclusion in the next
+bundle. Receipts: fwp-device-bounds-publication.json and
+fwp-device-bounds-control-cleanup-publication.json; diagnostic log:
+fwp-device-bounds-857-linux-failed.log.
+
 ## Local checks and recovery
 
 Full builds/tests, benchmarks and large regeneration run on GitHub. Local
@@ -282,7 +303,7 @@ workloads are serial, low priority and guarded: sampled aggregate RSS below1GiB,
 target below2GiB, at least64GiB free disk, deadline180 seconds. Stop at limits;
 never raise or bypass them. Use `python3 scripts/local-guard.py COMMAND...` for
 fwp checks. The fun-refactor guard applies to that other repository.
-Latest disk observation:61,067,468KiB available, about58.2GiB; local target
+Latest disk observation:57,358,200KiB available, about54.7GiB; local target
 103,696KiB, about101.3MiB. The64GiB reserve remains unavailable. No local compiled
 check, broad doc audit, rebase or fast-forward ran. Only source edits and bounded
 remote metadata publication/downloads ran serially at low priority.
@@ -306,52 +327,17 @@ cancellation. Cancelled jobs supply no passing evidence. A Node20 action-runtime
 deprecation warning was also encountered. Verified official checkout/upload v7
 manifests use Node24. A source-only action-version patch is prepared for the next
 phase2 exit bundle; job definitions, checks and artifact inputs remain intact.
-Its runner checkout/uploads and full platform gates are still required. Recipe:
+Node24 checkout/uploads pass the three-platform preflights; full production
+gates remain required. Recipe:
 fwp-node24-actions-patch.json; preparation: fwp-node24-actions-preparation.json.
 The future finalization publisher now pins repaired3aae99 and includes this
 patch. The accepted-source phase2 audit remains a source-only draft until the
 finite review bundle is merged and its exact source is checked.
 
-Actual temporary recovery restoration passes on disposable GitHub runner38185353180.
-All365 restored targets (9134228 bytes) have verified source hashes; publishers,
-merge helpers and compiler workloads were not executed. Metadata and proof are
-retained in fwp-verified-recovery-restoration. Checkout and artifact upload v7
-also pass there; the dedicated kernel preflight below proves both actions on
-Linux and both macOS architectures. No local recovery restoration ran.
-
-An encountered numeric kernel bug is also fixed in preparation: computing
-(sp - 1) at an empty evaluation stack forms an out-of-bounds top pointer.
-Candidate28db5471d503763aa27e7da4f60c5ad880ad4183 passes Linux/ARM/Intel
-runner38185769269. Extracted actual kernels pass O1/O2 address/undefined/unsigned-
-overflow sanitizers with first leaf/constant operations, lengths0/1/7/127/256,
-nonzero offsets, exact numeric bytes and boundary sentinels. Removing the guard
-must fail on the empty-stack subtraction. Existing parallel-kernel and missing-
-OpenCL controls also pass against explicit FWP_NO_OPT=1 interpreter results.
-Original benchmark remains ignored; no timing or real GPU claim is established.
-Retain C, binary and status artifacts on GitHub. The next finite phase2 exit
-bundle combines this fix with buffer/array/bump bounds and Node24 actions;
-PR124's current head remains frozen. Future finalizer pins all three passing
-kernel jobs and retains array/kernel controls; metadata exports are separate
-from binary artifacts to keep local downloads bounded.
-
-A bounded archive-based recovery refinement is prepared to replace hundreds of
-per-blob API requests with one immutable source archive. Each restored source
-still requires its Git blob hash, temporary-path checks and size limits. The
-original runner restoration proof above remains valid for its tested version;
-the refined restorer and validator require a fresh checkpoint audit before
-claiming that the faster path is verified.
-
-The kernel constant-word refinement at d240231c5dd33e83ecdd5bf3df06715a0e279768
-passes all three platform preflights in38186836622, including exact F64 bytes,
-stack subtraction and omitted decoder controls. Native compiler flags do not
-disable strict aliasing; the candidate reads V words through the existing
-memcpy bit decoder. No timing or new GPU hardware claim follows.
-
-Device allocation guards are prepared at857cd5d2ee09f52cef2d6cb9fc33fd904a14d9c6
-on ownership-evidence-device-output-bounds. Positive output counts are checked
-before multiplication/allocation; malformed code and input-length errors remain
-first, and the temporary input table is released on the new trap. Workspace
-size is checked after input validation in both implementations. Raw-interpreter,
-O1/O2, GC/reuse, bounded allocation and omitted guard/cleanup controls are pending
-on Linux/ARM/Intel. Include only passing candidates in the next finite-review
-bundle; current PR124 remains frozen. Receipt: fwp-device-bounds-publication.json.
+Recovery checkpoint f7290c8827f641d8f9cdc9928f1c68a59954e61a passes
+audit38188292080. The bounded immutable archive path actually restores395
+temporary targets (9594149 bytes) on a disposable GitHub runner, verifying all
+source hashes. Helpers and compiler were not executed. Only bounded reports
+were downloaded into fwp-verified-archive-recovery-restoration; no local restore
+ran. Node24 checkout/upload pass there and in all three kernel preflights.
+Keep finalization metadata separate from binary control artifacts.

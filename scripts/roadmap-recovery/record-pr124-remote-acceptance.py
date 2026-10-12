@@ -53,7 +53,7 @@ a timing or tracing-free claim. Earlier partial counter reports remain archived.
 All immutable preparation rows74–112 are delivered; their contracts, heads and
 original checks are archived in history. Queue anchors remain unchanged.
 Next: rebase the passing finite fallback audit, checked buffer/array/bump allocation and
-kernel stack fixes with current CI actions onto the actual PR124 squash, preserve all11 current docs, publish one focused
+kernel stack/constant decoding and device allocation fixes with current CI actions onto the actual PR124 squash, preserve all11 current docs, publish one focused
 ownership exit PR and require its six exact-head jobs and roadmap_docs. Confirm
 actual merged-source coverage before marking phase2 complete. Then implement
 natural-width numeric storage and views, followed by phases4–6. No numeric
@@ -70,7 +70,7 @@ preparation contracts and omission controls are archived in
 [history](roadmap-history.md#archived-handoff-after-pr-124). The immutable queue
 retains their anchors. The next finite exit review explicitly classifies177
 remaining declarations with tracing fallback and includes checked structural
-buffer growth, array/bump allocation and kernel stack boundaries; their three-platform preflights pass, while the
+buffer growth, array/bump allocation and kernel stack/constant decoding and device allocation boundaries; their three-platform preflights pass, while the
 production bundle and actual merged-source phase2 exit remain required.
 
 '''+primitive[pb:]
@@ -80,12 +80,12 @@ texts['PLAN.md']=plan[:a]+'''Main includes #74–#124: native macOS ARM/Intel su
 callback ownership, typed State, scoped AD and independent codec leaves.
 Queue33 and35–112 are accepted;34 is a verified duplicate. Next bundle completes
 the finite177-declaration ownership fallback review and checked buffer/array/bump
-allocation and kernel stack boundaries with current docs and CI actions. Require actual-source validation and all final gates
+allocation and kernel stack/constant decoding and device allocation boundaries with current docs and CI actions. Require actual-source validation and all final gates
 before phase2 exit, then deliver numeric representation and phases4–6.
 
 '''+plan[b:]
 plan=texts['PLAN.md'];a=plan.index('Finish phase2',plan.index('## Concrete remaining deliveries'));b=plan.index('Classify each remaining boundary',a)
-texts['PLAN.md']=plan[:a]+"Finish phase2 with the finite177-declaration fallback review and checked buffer,\narray/bump allocation and kernel stack boundaries with current CI actions.\n"+plan[b:]
+texts['PLAN.md']=plan[:a]+"Finish phase2 with the finite177-declaration fallback review and checked buffer,\narray/bump allocation and kernel stack/constant decoding and device allocation boundaries with current CI actions.\n"+plan[b:]
 for name in ['docs/ownership.md','docs/primitive-ownership.md']:
  texts[name]=texts[name].replace('The PR124 final integration38179558348 verifies','The accepted PR124 inventory verifies').replace('Final production\nacceptance is recorded','Production\nacceptance is recorded').replace('in the PR124 candidate','in accepted PR124')
 # Preserve other prepared work; only these delivered rules change their status.

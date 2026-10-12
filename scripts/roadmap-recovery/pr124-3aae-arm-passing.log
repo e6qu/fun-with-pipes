@@ -1,0 +1,1915 @@
+﻿2026-10-11T23:37:34.4893810Z Current runner version: '2.337.0'
+2026-10-11T23:37:34.4916220Z ##[group]Runner Image Provisioner
+2026-10-11T23:37:34.4916850Z Hosted Compute Agent
+2026-10-11T23:37:34.4917250Z Version: 20260828.587
+2026-10-11T23:37:34.4917660Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-10-11T23:37:34.4918250Z Build Date: 2026-08-28T16:44:25Z
+2026-10-11T23:37:34.4918720Z Worker ID: {8de797a2-4a95-49d7-8472-c0b27f724f1e}
+2026-10-11T23:37:34.4919290Z Azure Region: westus
+2026-10-11T23:37:34.4919740Z ##[endgroup]
+2026-10-11T23:37:34.4920900Z ##[group]Operating System
+2026-10-11T23:37:34.4921300Z macOS
+2026-10-11T23:37:34.4921690Z 15.7.9
+2026-10-11T23:37:34.4922090Z 24G830
+2026-10-11T23:37:34.4922450Z ##[endgroup]
+2026-10-11T23:37:34.4922890Z ##[group]Runner Image
+2026-10-11T23:37:34.4923640Z Image: macos-15-arm64
+2026-10-11T23:37:34.4924090Z Version: 20260907.0337.1
+2026-10-11T23:37:34.4925070Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+2026-10-11T23:37:34.4926190Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+2026-10-11T23:37:34.4926920Z ##[endgroup]
+2026-10-11T23:37:34.4927800Z ##[group]GITHUB_TOKEN Permissions
+2026-10-11T23:37:34.4929260Z Contents: read
+2026-10-11T23:37:34.4929710Z Metadata: read
+2026-10-11T23:37:34.4930090Z Packages: read
+2026-10-11T23:37:34.4930580Z ##[endgroup]
+2026-10-11T23:37:34.4932320Z Secret source: Actions
+2026-10-11T23:37:34.4932990Z Cache mode: write
+2026-10-11T23:37:34.4933520Z Prepare workflow directory
+2026-10-11T23:37:34.5238970Z Prepare all required actions
+2026-10-11T23:37:34.5306360Z Getting action download info
+2026-10-11T23:37:34.6617540Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-11T23:37:34.9237070Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:686976e191b89faba57d3206551f0f330d8cb249)
+2026-10-11T23:37:35.3629320Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-10-11T23:37:35.5750300Z Complete job name: macos (macos-15)
+2026-10-11T23:37:35.6298240Z ##[group]Run actions/checkout@v4
+2026-10-11T23:37:35.6299230Z with:
+2026-10-11T23:37:35.6299740Z   ref: 3aae99bfa705e26babc2cf251b0e583dfd95cf38
+2026-10-11T23:37:35.6300300Z   repository: e6qu/fun-with-pipes
+2026-10-11T23:37:35.6303640Z   token: ***
+2026-10-11T23:37:35.6304030Z   ssh-strict: true
+2026-10-11T23:37:35.6304410Z   ssh-user: git
+2026-10-11T23:37:35.6304770Z   persist-credentials: true
+2026-10-11T23:37:35.6305150Z   clean: true
+2026-10-11T23:37:35.6305500Z   sparse-checkout-cone-mode: true
+2026-10-11T23:37:35.6305930Z   fetch-depth: 1
+2026-10-11T23:37:35.6306270Z   fetch-tags: false
+2026-10-11T23:37:35.6306670Z   show-progress: true
+2026-10-11T23:37:35.6307150Z   lfs: false
+2026-10-11T23:37:35.6307510Z   submodules: false
+2026-10-11T23:37:35.6307940Z   set-safe-directory: true
+2026-10-11T23:37:35.6308340Z   allow-unsafe-pr-checkout: false
+2026-10-11T23:37:35.6309080Z env:
+2026-10-11T23:37:35.6309410Z   CC: clang
+2026-10-11T23:37:35.6309740Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:35.6310150Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:35.6310520Z ##[endgroup]
+2026-10-11T23:37:35.9467890Z Syncing repository: e6qu/fun-with-pipes
+2026-10-11T23:37:35.9469700Z ##[group]Getting Git version info
+2026-10-11T23:37:35.9470530Z Working directory is '/Users/runner/work/fun-with-pipes/fun-with-pipes'
+2026-10-11T23:37:35.9471790Z [command]/opt/homebrew/bin/git version
+2026-10-11T23:37:35.9932820Z git version 2.55.0
+2026-10-11T23:37:35.9945590Z ##[endgroup]
+2026-10-11T23:37:35.9951620Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/4e33c75a-405e-41f9-bb6d-e033d30249dd/.gitconfig'
+2026-10-11T23:37:35.9958020Z Temporarily overriding HOME='/Users/runner/work/_temp/4e33c75a-405e-41f9-bb6d-e033d30249dd' before making global git config changes
+2026-10-11T23:37:35.9960180Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-11T23:37:35.9962670Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/fun-with-pipes/fun-with-pipes
+2026-10-11T23:37:36.0061940Z Deleting the contents of '/Users/runner/work/fun-with-pipes/fun-with-pipes'
+2026-10-11T23:37:36.0064640Z ##[group]Initializing the repository
+2026-10-11T23:37:36.0067710Z [command]/opt/homebrew/bin/git init /Users/runner/work/fun-with-pipes/fun-with-pipes
+2026-10-11T23:37:36.0253510Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-11T23:37:36.0255740Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-11T23:37:36.0257680Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-11T23:37:36.0259240Z hint: call:
+2026-10-11T23:37:36.0260030Z hint:
+2026-10-11T23:37:36.0261080Z hint: 	git config --global init.defaultBranch <name>
+2026-10-11T23:37:36.0262250Z hint:
+2026-10-11T23:37:36.0263430Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-11T23:37:36.0265270Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-11T23:37:36.0266760Z hint:
+2026-10-11T23:37:36.0267630Z hint: 	git branch -m <name>
+2026-10-11T23:37:36.0268570Z hint:
+2026-10-11T23:37:36.0269910Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-11T23:37:36.0272190Z Initialized empty Git repository in /Users/runner/work/fun-with-pipes/fun-with-pipes/.git/
+2026-10-11T23:37:36.0275830Z [command]/opt/homebrew/bin/git remote add origin https://github.com/e6qu/fun-with-pipes
+2026-10-11T23:37:36.0337570Z ##[endgroup]
+2026-10-11T23:37:36.0338900Z ##[group]Disabling automatic garbage collection
+2026-10-11T23:37:36.0340250Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+2026-10-11T23:37:36.0404230Z ##[endgroup]
+2026-10-11T23:37:36.0405460Z ##[group]Setting up auth
+2026-10-11T23:37:36.0408030Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-11T23:37:36.0473160Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-11T23:37:36.1364510Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-11T23:37:36.1425150Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-11T23:37:36.2137270Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-11T23:37:36.2191900Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-11T23:37:36.2921120Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-11T23:37:36.2985400Z ##[endgroup]
+2026-10-11T23:37:36.2986720Z ##[group]Fetching the repository
+2026-10-11T23:37:36.2992130Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 3aae99bfa705e26babc2cf251b0e583dfd95cf38
+2026-10-11T23:37:37.2844120Z From https://github.com/e6qu/fun-with-pipes
+2026-10-11T23:37:37.2845980Z  * branch            3aae99bfa705e26babc2cf251b0e583dfd95cf38 -> FETCH_HEAD
+2026-10-11T23:37:37.2847580Z ##[endgroup]
+2026-10-11T23:37:37.2848010Z ##[group]Determining the checkout info
+2026-10-11T23:37:37.2848500Z ##[endgroup]
+2026-10-11T23:37:37.2850550Z [command]/opt/homebrew/bin/git sparse-checkout disable
+2026-10-11T23:37:37.2921300Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-11T23:37:37.2980540Z ##[group]Checking out the ref
+2026-10-11T23:37:37.2982580Z [command]/opt/homebrew/bin/git checkout --progress --force 3aae99bfa705e26babc2cf251b0e583dfd95cf38
+2026-10-11T23:37:37.4392430Z HEAD is now at 3aae99b Preserve codec fixtures while copying test artifacts
+2026-10-11T23:37:37.4407080Z ##[endgroup]
+2026-10-11T23:37:37.4648230Z [command]/opt/homebrew/bin/git log -1 --format=%H
+2026-10-11T23:37:37.4707950Z 3aae99bfa705e26babc2cf251b0e583dfd95cf38
+2026-10-11T23:37:37.5271430Z ##[group]Run dtolnay/rust-toolchain@stable
+2026-10-11T23:37:37.5271730Z with:
+2026-10-11T23:37:37.5271950Z   components: rustfmt, clippy
+2026-10-11T23:37:37.5272140Z   toolchain: stable
+2026-10-11T23:37:37.5272300Z env:
+2026-10-11T23:37:37.5272430Z   CC: clang
+2026-10-11T23:37:37.5272590Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:37.5272790Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:37.5272980Z ##[endgroup]
+2026-10-11T23:37:37.5342850Z ##[start-action display=Parse toolchain version;id=__dtolnay_rust-toolchain.parse]
+2026-10-11T23:37:37.5397390Z ##[group]Run if [[ -z $toolchain ]]; then
+2026-10-11T23:37:37.5397710Z [36;1mif [[ -z $toolchain ]]; then[0m
+2026-10-11T23:37:37.5398160Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+2026-10-11T23:37:37.5398640Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+2026-10-11T23:37:37.5398880Z [36;1m  exit 1[0m
+2026-10-11T23:37:37.5399210Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+2026-10-11T23:37:37.5399570Z [36;1m  if [[ macOS == macOS ]]; then[0m
+2026-10-11T23:37:37.5400040Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-10-11T23:37:37.5400550Z [36;1m  else[0m
+2026-10-11T23:37:37.5400890Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-10-11T23:37:37.5401270Z [36;1m  fi[0m
+2026-10-11T23:37:37.5401510Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+2026-10-11T23:37:37.5401950Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+2026-10-11T23:37:37.5402340Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+2026-10-11T23:37:37.5402790Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+2026-10-11T23:37:37.5403200Z [36;1melse[0m
+2026-10-11T23:37:37.5403350Z [36;1m  delimiter=EOF[0m
+2026-10-11T23:37:37.5403600Z [36;1m  while [[ $toolchain == *$delimiter* ]]; do delimiter+=_; done[0m
+2026-10-11T23:37:37.5404130Z [36;1m  printf 'toolchain<<%s\n%s\n%s\n' "$delimiter" "$toolchain" "$delimiter" >> $GITHUB_OUTPUT[0m
+2026-10-11T23:37:37.5404470Z [36;1mfi[0m
+2026-10-11T23:37:37.5515960Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:37.5516270Z env:
+2026-10-11T23:37:37.5516430Z   CC: clang
+2026-10-11T23:37:37.5516570Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:37.5516740Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:37.5516920Z   toolchain: stable
+2026-10-11T23:37:37.5517090Z ##[endgroup]
+2026-10-11T23:37:37.5910160Z ##[end-action id=__dtolnay_rust-toolchain.parse;outcome=success;conclusion=success;duration_ms=56]
+2026-10-11T23:37:37.5913440Z ##[start-action display=Set $CARGO_HOME;id=__dtolnay_rust-toolchain.__run]
+2026-10-11T23:37:37.6004280Z ##[group]Run echo CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV
+2026-10-11T23:37:37.6004710Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+2026-10-11T23:37:37.6037580Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:37.6037850Z env:
+2026-10-11T23:37:37.6038030Z   CC: clang
+2026-10-11T23:37:37.6038190Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:37.6038390Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:37.6038560Z ##[endgroup]
+2026-10-11T23:37:37.6406210Z ##[end-action id=__dtolnay_rust-toolchain.__run;outcome=success;conclusion=success;duration_ms=49]
+2026-10-11T23:37:37.6408340Z ##[start-action display=Install rustup if needed;id=__dtolnay_rust-toolchain.__run_2]
+2026-10-11T23:37:37.6555320Z ##[group]Run if ! command -v rustup &>/dev/null; then
+2026-10-11T23:37:37.6555780Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+2026-10-11T23:37:37.6557110Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+2026-10-11T23:37:37.6557790Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+2026-10-11T23:37:37.6558010Z [36;1mfi[0m
+2026-10-11T23:37:37.6592590Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:37.6592930Z env:
+2026-10-11T23:37:37.6593080Z   CC: clang
+2026-10-11T23:37:37.6593220Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:37.6593390Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:37.6593560Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:37.6593750Z ##[endgroup]
+2026-10-11T23:37:37.6856970Z ##[end-action id=__dtolnay_rust-toolchain.__run_2;outcome=success;conclusion=success;duration_ms=44]
+2026-10-11T23:37:37.6859280Z ##[start-action display=Install rustup if needed on windows;id=__dtolnay_rust-toolchain.__run_3]
+2026-10-11T23:37:37.6865700Z ##[end-action id=__dtolnay_rust-toolchain.__run_3;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-10-11T23:37:37.6874070Z ##[start-action display=rustup toolchain install stable;id=__dtolnay_rust-toolchain.__run_4]
+2026-10-11T23:37:37.7146580Z ##[group]Run set -f  # split targets and components on commas and whitespace, without glob expansion
+2026-10-11T23:37:37.7147200Z [36;1mset -f  # split targets and components on commas and whitespace, without glob expansion[0m
+2026-10-11T23:37:37.7147570Z [36;1mflags=()[0m
+2026-10-11T23:37:37.7147810Z [36;1mfor t in ${targets//,/ }; do flags+=(--target "$t"); done[0m
+2026-10-11T23:37:37.7148190Z [36;1mfor c in ${components//,/ }; do flags+=(--component "$c"); done[0m
+2026-10-11T23:37:37.7148710Z [36;1mif [[ $toolchain == nightly && -n $components ]]; then flags+=(--allow-downgrade); fi[0m
+2026-10-11T23:37:37.7149080Z [36;1mlog=$(mktemp)[0m
+2026-10-11T23:37:37.7149280Z [36;1mtrap 'rm -f "$log"' EXIT[0m
+2026-10-11T23:37:37.7149500Z [36;1mfor attempt in 1 2 3 4 5; do[0m
+2026-10-11T23:37:37.7150030Z [36;1m  if rustup toolchain install "$toolchain" "${flags[@]}" --profile minimal --no-self-update --force-non-host 2>&1 | tee "$log"; then[0m
+2026-10-11T23:37:37.7150510Z [36;1m    break[0m
+2026-10-11T23:37:37.7150710Z [36;1m  else[0m
+2026-10-11T23:37:37.7150880Z [36;1m    status=$?[0m
+2026-10-11T23:37:37.7151050Z [36;1m  fi[0m
+2026-10-11T23:37:37.7151310Z [36;1m  if [[ $attempt == 5 ]] || ! grep -Fq 'checksum failed for ' "$log" \[0m
+2026-10-11T23:37:37.7151790Z [36;1m      || ! grep -Fq 'this is likely due to an ongoing update of the official release server' "$log"; then[0m
+2026-10-11T23:37:37.7152360Z [36;1m    exit "$status"[0m
+2026-10-11T23:37:37.7152590Z [36;1m  fi[0m
+2026-10-11T23:37:37.7152920Z [36;1m  echo "Retrying rustup toolchain install in 30 seconds (retry $attempt of 4)" >&2[0m
+2026-10-11T23:37:37.7153270Z [36;1m  sleep 30[0m
+2026-10-11T23:37:37.7153460Z [36;1mdone[0m
+2026-10-11T23:37:37.7183660Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:37.7183940Z env:
+2026-10-11T23:37:37.7184090Z   CC: clang
+2026-10-11T23:37:37.7184230Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:37.7184420Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:37.7184600Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:37.7184810Z   toolchain: stable
+2026-10-11T23:37:37.7184970Z   targets: 
+2026-10-11T23:37:37.7185130Z   components: rustfmt, clippy
+2026-10-11T23:37:37.7185330Z   RUSTUP_PERMIT_COPY_RENAME: 1
+2026-10-11T23:37:37.7185520Z ##[endgroup]
+2026-10-11T23:37:38.9379140Z info: syncing channel updates for stable-aarch64-apple-darwin
+2026-10-11T23:37:39.1490050Z info: latest update on 2026-10-01 for version 1.99.0 (b940084d7 2026-09-28)
+2026-10-11T23:37:39.1717180Z info: removing previous version of component clippy
+2026-10-11T23:37:39.1746950Z info: removing previous version of component rustfmt
+2026-10-11T23:37:39.1762330Z info: removing previous version of component cargo
+2026-10-11T23:37:39.1822160Z info: removing previous version of component rust-std
+2026-10-11T23:37:39.2206210Z info: removing previous version of component rustc
+2026-10-11T23:37:39.2527190Z info: downloading 5 components
+2026-10-11T23:37:45.7110520Z 
+2026-10-11T23:37:45.7535400Z   stable-aarch64-apple-darwin updated - rustc 1.99.0 (b940084d7 2026-09-28) (from rustc 1.98.1 (48a229cea 2026-09-01))
+2026-10-11T23:37:45.7536210Z 
+2026-10-11T23:37:45.7537650Z info: self-update is disabled for this build of rustup
+2026-10-11T23:37:45.7538460Z info: any updates to rustup will need to be fetched with your system package manager
+2026-10-11T23:37:45.7971340Z ##[end-action id=__dtolnay_rust-toolchain.__run_4;outcome=success;conclusion=success;duration_ms=8109]
+2026-10-11T23:37:45.7989160Z ##[start-action display=rustup default stable;id=__dtolnay_rust-toolchain.__run_5]
+2026-10-11T23:37:45.8022940Z ##[group]Run rustup default "$toolchain" --force-non-host
+2026-10-11T23:37:45.8023780Z [36;1mrustup default "$toolchain" --force-non-host[0m
+2026-10-11T23:37:45.8068560Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:45.8068990Z env:
+2026-10-11T23:37:45.8069230Z   CC: clang
+2026-10-11T23:37:45.8069690Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:45.8069980Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:45.8070240Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:45.8070540Z   toolchain: stable
+2026-10-11T23:37:45.8070950Z ##[endgroup]
+2026-10-11T23:37:45.9224130Z info: using existing install for stable-aarch64-apple-darwin
+2026-10-11T23:37:45.9241300Z info: default toolchain set to stable-aarch64-apple-darwin
+2026-10-11T23:37:45.9242070Z 
+2026-10-11T23:37:45.9427760Z   stable-aarch64-apple-darwin unchanged - rustc 1.99.0 (b940084d7 2026-09-28)
+2026-10-11T23:37:45.9428360Z 
+2026-10-11T23:37:45.9446900Z ##[end-action id=__dtolnay_rust-toolchain.__run_5;outcome=success;conclusion=success;duration_ms=145]
+2026-10-11T23:37:45.9454660Z ##[start-action display=Create cachekey;id=__dtolnay_rust-toolchain.rustc-version]
+2026-10-11T23:37:45.9518300Z ##[group]Run DATE=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')
+2026-10-11T23:37:45.9519220Z [36;1mDATE=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+2026-10-11T23:37:45.9520080Z [36;1mHASH=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+2026-10-11T23:37:45.9521960Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+2026-10-11T23:37:45.9589220Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:45.9589600Z env:
+2026-10-11T23:37:45.9589900Z   CC: clang
+2026-10-11T23:37:45.9590170Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:45.9590400Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:45.9590710Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:45.9591020Z   toolchain: stable
+2026-10-11T23:37:45.9591330Z ##[endgroup]
+2026-10-11T23:37:46.0620770Z ##[end-action id=__dtolnay_rust-toolchain.rustc-version;outcome=success;conclusion=success;duration_ms=116]
+2026-10-11T23:37:46.0623450Z ##[start-action display=Disable incremental compilation;id=__dtolnay_rust-toolchain.__run_6]
+2026-10-11T23:37:46.0646940Z ##[group]Run if [ -z "${CARGO_INCREMENTAL+set}" ]; then
+2026-10-11T23:37:46.0647300Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+2026-10-11T23:37:46.0647630Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+2026-10-11T23:37:46.0647880Z [36;1mfi[0m
+2026-10-11T23:37:46.0680400Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:46.0680700Z env:
+2026-10-11T23:37:46.0680970Z   CC: clang
+2026-10-11T23:37:46.0681160Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:46.0681400Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:46.0681590Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:46.0681890Z ##[endgroup]
+2026-10-11T23:37:46.0944740Z ##[end-action id=__dtolnay_rust-toolchain.__run_6;outcome=success;conclusion=success;duration_ms=32]
+2026-10-11T23:37:46.0948030Z ##[start-action display=Enable colors in Cargo output;id=__dtolnay_rust-toolchain.__run_7]
+2026-10-11T23:37:46.0968200Z ##[group]Run if [ -z "${CARGO_TERM_COLOR+set}" ]; then
+2026-10-11T23:37:46.0968840Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+2026-10-11T23:37:46.0969130Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+2026-10-11T23:37:46.0969380Z [36;1mfi[0m
+2026-10-11T23:37:46.1000870Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:46.1001130Z env:
+2026-10-11T23:37:46.1001310Z   CC: clang
+2026-10-11T23:37:46.1001460Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:46.1001650Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:46.1001860Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:46.1002080Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:37:46.1002260Z ##[endgroup]
+2026-10-11T23:37:46.1278730Z ##[end-action id=__dtolnay_rust-toolchain.__run_7;outcome=success;conclusion=success;duration_ms=32]
+2026-10-11T23:37:46.1282030Z ##[start-action display=Enable Cargo sparse registry;id=__dtolnay_rust-toolchain.__run_8]
+2026-10-11T23:37:46.1303580Z ##[group]Run # implemented in 1.66, stabilized in 1.68, made default in 1.70
+2026-10-11T23:37:46.1304090Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+2026-10-11T23:37:46.1304700Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/Users/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+2026-10-11T23:37:46.1305430Z [36;1m  if rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+2026-10-11T23:37:46.1305950Z [36;1m    touch "/Users/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-10-11T23:37:46.1306430Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+2026-10-11T23:37:46.1306860Z [36;1m  elif rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+2026-10-11T23:37:46.1307380Z [36;1m    touch "/Users/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-10-11T23:37:46.1307830Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+2026-10-11T23:37:46.1308120Z [36;1m  fi[0m
+2026-10-11T23:37:46.1308270Z [36;1mfi[0m
+2026-10-11T23:37:46.1339040Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:46.1339350Z env:
+2026-10-11T23:37:46.1339490Z   CC: clang
+2026-10-11T23:37:46.1339650Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:46.1339830Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:46.1340000Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:46.1340220Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:37:46.1340390Z   CARGO_TERM_COLOR: always
+2026-10-11T23:37:46.1340730Z   toolchain: stable
+2026-10-11T23:37:46.1340930Z ##[endgroup]
+2026-10-11T23:37:46.2559820Z ##[end-action id=__dtolnay_rust-toolchain.__run_8;outcome=success;conclusion=success;duration_ms=127]
+2026-10-11T23:37:46.2562750Z ##[start-action display=Work around spurious network errors in curl 8.0;id=__dtolnay_rust-toolchain.__run_9]
+2026-10-11T23:37:46.2581310Z ##[group]Run # https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation
+2026-10-11T23:37:46.2581980Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+2026-10-11T23:37:46.2582500Z [36;1mif rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+2026-10-11T23:37:46.2582890Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+2026-10-11T23:37:46.2583140Z [36;1mfi[0m
+2026-10-11T23:37:46.2615730Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:46.2615980Z env:
+2026-10-11T23:37:46.2616130Z   CC: clang
+2026-10-11T23:37:46.2616270Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:46.2616450Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:46.2616620Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:46.2616830Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:37:46.2617000Z   CARGO_TERM_COLOR: always
+2026-10-11T23:37:46.2617390Z   toolchain: stable
+2026-10-11T23:37:46.2617540Z ##[endgroup]
+2026-10-11T23:37:46.3230690Z ##[end-action id=__dtolnay_rust-toolchain.__run_9;outcome=success;conclusion=success;duration_ms=66]
+2026-10-11T23:37:46.3234950Z ##[start-action display=rustc +stable --version --verbose;id=__dtolnay_rust-toolchain.__run_10]
+2026-10-11T23:37:46.3381790Z ##[group]Run rustc +"$toolchain" --version --verbose
+2026-10-11T23:37:46.3382170Z [36;1mrustc +"$toolchain" --version --verbose[0m
+2026-10-11T23:37:46.3413980Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-11T23:37:46.3414290Z env:
+2026-10-11T23:37:46.3414490Z   CC: clang
+2026-10-11T23:37:46.3414650Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:46.3414810Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:46.3415010Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:46.3415210Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:37:46.3415410Z   CARGO_TERM_COLOR: always
+2026-10-11T23:37:46.3415600Z   toolchain: stable
+2026-10-11T23:37:46.3415890Z ##[endgroup]
+2026-10-11T23:37:46.3976620Z rustc 1.99.0 (b940084d7 2026-09-28)
+2026-10-11T23:37:46.3986720Z binary: rustc
+2026-10-11T23:37:46.3986970Z commit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4
+2026-10-11T23:37:46.3987310Z commit-date: 2026-09-28
+2026-10-11T23:37:46.3987530Z host: aarch64-apple-darwin
+2026-10-11T23:37:46.3987750Z release: 1.99.0
+2026-10-11T23:37:46.3987890Z LLVM version: 23.1.1
+2026-10-11T23:37:46.3993710Z ##[end-action id=__dtolnay_rust-toolchain.__run_10;outcome=success;conclusion=success;duration_ms=75]
+2026-10-11T23:37:46.4042530Z ##[group]Run brew install openssl@3
+2026-10-11T23:37:46.4042810Z [36;1mbrew install openssl@3[0m
+2026-10-11T23:37:46.4043100Z [36;1mecho "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"[0m
+2026-10-11T23:37:46.4043470Z [36;1mecho "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"[0m
+2026-10-11T23:37:46.4072050Z shell: /bin/bash -e {0}
+2026-10-11T23:37:46.4072230Z env:
+2026-10-11T23:37:46.4072370Z   CC: clang
+2026-10-11T23:37:46.4072500Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:46.4072700Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:46.4072870Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:46.4073080Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:37:46.4073250Z   CARGO_TERM_COLOR: always
+2026-10-11T23:37:46.4073430Z ##[endgroup]
+2026-10-11T23:37:48.0988470Z [33mWarning:[0m openssl@3 3.6.4 is already installed and up-to-date.
+2026-10-11T23:37:48.0989080Z To reinstall 3.6.4, run:
+2026-10-11T23:37:48.0989290Z   brew reinstall openssl@3
+2026-10-11T23:37:48.1476170Z ##[group]Run CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
+2026-10-11T23:37:48.1476840Z [36;1mCARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"[0m
+2026-10-11T23:37:48.1477400Z [36;1menv -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current[0m
+2026-10-11T23:37:48.1514260Z shell: /bin/bash -e {0}
+2026-10-11T23:37:48.1514460Z env:
+2026-10-11T23:37:48.1514630Z   CC: clang
+2026-10-11T23:37:48.1514830Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:48.1515050Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:48.1515230Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:48.1515480Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:37:48.1515660Z   CARGO_TERM_COLOR: always
+2026-10-11T23:37:48.1515890Z   FWP_OPENSSL_DIR: /opt/homebrew/opt/openssl@3
+2026-10-11T23:37:48.1516200Z ##[endgroup]
+2026-10-11T23:37:50.0460730Z 
+2026-10-11T23:37:50.0461100Z running 1 test
+2026-10-11T23:37:50.0567570Z test stdlib_doc_is_current ... ok
+2026-10-11T23:37:50.0568450Z 
+2026-10-11T23:37:50.0570700Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-10-11T23:37:50.0571260Z 
+2026-10-11T23:37:50.0613630Z ##[group]Run mkdir -p "$RUNNER_TEMP/ownership-inventory"
+2026-10-11T23:37:50.0614040Z [36;1mmkdir -p "$RUNNER_TEMP/ownership-inventory"[0m
+2026-10-11T23:37:50.0614380Z [36;1mrustc --version > "$RUNNER_TEMP/ownership-inventory/rustc.txt"[0m
+2026-10-11T23:37:50.0615240Z [36;1mpython3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output "$RUNNER_TEMP/ownership-inventory/candidate.json" 2>&1 | tee "$RUNNER_TEMP/ownership-inventory/audit.log"[0m
+2026-10-11T23:37:50.0647360Z shell: /bin/bash -e {0}
+2026-10-11T23:37:50.0647540Z env:
+2026-10-11T23:37:50.0647700Z   CC: clang
+2026-10-11T23:37:50.0647860Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:50.0648030Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:50.0648240Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:50.0648450Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:37:50.0648610Z   CARGO_TERM_COLOR: always
+2026-10-11T23:37:50.0648820Z   FWP_OPENSSL_DIR: /opt/homebrew/opt/openssl@3
+2026-10-11T23:37:50.0649180Z   FWP_INVENTORY_EXPECTED_HEAD: 3aae99bfa705e26babc2cf251b0e583dfd95cf38
+2026-10-11T23:37:50.0649460Z ##[endgroup]
+2026-10-11T23:37:50.6025700Z {
+2026-10-11T23:37:50.6026060Z   "head": "3aae99bfa705e26babc2cf251b0e583dfd95cf38",
+2026-10-11T23:37:50.6026340Z   "declarations": 375,
+2026-10-11T23:37:50.6026610Z   "distinctSymbols": 365,
+2026-10-11T23:37:50.6026810Z   "explicitAliases": 40,
+2026-10-11T23:37:50.6027000Z   "counts": {
+2026-10-11T23:37:50.6027170Z     "contract": 168,
+2026-10-11T23:37:50.6027370Z     "runtime_or_specialization_review": 177,
+2026-10-11T23:37:50.6027640Z     "flat_scalar_signature": 11,
+2026-10-11T23:37:50.6027830Z     "ir_template": 19
+2026-10-11T23:37:50.6028030Z   },
+2026-10-11T23:37:50.6028180Z   "reviewSymbols": 167
+2026-10-11T23:37:50.6028360Z }
+2026-10-11T23:37:50.6379750Z ##[group]Run actions/upload-artifact@v4
+2026-10-11T23:37:50.6380000Z with:
+2026-10-11T23:37:50.6380220Z   name: ownership-inventory-macOS-ARM64
+2026-10-11T23:37:50.6380490Z   path: /Users/runner/work/_temp/ownership-inventory/
+2026-10-11T23:37:50.6380750Z   if-no-files-found: warn
+2026-10-11T23:37:50.6380930Z   compression-level: 6
+2026-10-11T23:37:50.6381110Z   overwrite: false
+2026-10-11T23:37:50.6381280Z   include-hidden-files: false
+2026-10-11T23:37:50.6381460Z env:
+2026-10-11T23:37:50.6381590Z   CC: clang
+2026-10-11T23:37:50.6381750Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:50.6381950Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:50.6382240Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:50.6382470Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:37:50.6382670Z   CARGO_TERM_COLOR: always
+2026-10-11T23:37:50.6382900Z   FWP_OPENSSL_DIR: /opt/homebrew/opt/openssl@3
+2026-10-11T23:37:50.6383130Z ##[endgroup]
+2026-10-11T23:37:50.8168740Z (node:1475) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-11T23:37:50.8169510Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-11T23:37:50.8205500Z With the provided path, there will be 10 files uploaded
+2026-10-11T23:37:50.8208660Z Artifact name is valid!
+2026-10-11T23:37:50.8209000Z Root directory input is valid!
+2026-10-11T23:37:51.0142940Z Beginning upload of artifact content to blob storage
+2026-10-11T23:37:51.0494590Z (node:1475) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-11T23:37:51.0733240Z Uploaded bytes 34787
+2026-10-11T23:37:51.0862680Z Finished uploading artifact content to blob storage!
+2026-10-11T23:37:51.0863360Z SHA256 digest of uploaded artifact zip is aa09a105d18b2b51b96661fd8d83d5d61445cb8932094b2869f3350b148c6555
+2026-10-11T23:37:51.0863900Z Finalizing artifact upload
+2026-10-11T23:37:51.2757600Z Artifact ownership-inventory-macOS-ARM64.zip successfully finalized. Artifact ID 11719257227
+2026-10-11T23:37:51.2758420Z Artifact ownership-inventory-macOS-ARM64 has been successfully uploaded! Final size is 34787 bytes. Artifact ID is 11719257227
+2026-10-11T23:37:51.2764220Z Artifact download URL: https://github.com/e6qu/fun-with-pipes/actions/runs/38184549852/artifacts/11719257227
+2026-10-11T23:37:51.2828760Z ##[group]Run cargo fmt --all -- --check
+2026-10-11T23:37:51.2829130Z [36;1mcargo fmt --all -- --check[0m
+2026-10-11T23:37:51.2859010Z shell: /bin/bash -e {0}
+2026-10-11T23:37:51.2859210Z env:
+2026-10-11T23:37:51.2859350Z   CC: clang
+2026-10-11T23:37:51.2859510Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:51.2859680Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:51.2859870Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:51.2860080Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:37:51.2860260Z   CARGO_TERM_COLOR: always
+2026-10-11T23:37:51.2860480Z   FWP_OPENSSL_DIR: /opt/homebrew/opt/openssl@3
+2026-10-11T23:37:51.2860710Z ##[endgroup]
+2026-10-11T23:37:52.3043450Z ##[group]Run cargo clippy --all-targets -- -D warnings
+2026-10-11T23:37:52.3043840Z [36;1mcargo clippy --all-targets -- -D warnings[0m
+2026-10-11T23:37:52.3072000Z shell: /bin/bash -e {0}
+2026-10-11T23:37:52.3072180Z env:
+2026-10-11T23:37:52.3072340Z   CC: clang
+2026-10-11T23:37:52.3072480Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:37:52.3072680Z   RUST_TEST_THREADS: 2
+2026-10-11T23:37:52.3072870Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:37:52.3073100Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:37:52.3073280Z   CARGO_TERM_COLOR: always
+2026-10-11T23:37:52.3073490Z   FWP_OPENSSL_DIR: /opt/homebrew/opt/openssl@3
+2026-10-11T23:37:52.3073730Z ##[endgroup]
+2026-10-11T23:37:52.5074280Z [1m[92m    Checking[0m fwp v0.1.0 (/Users/runner/work/fun-with-pipes/fun-with-pipes)
+2026-10-11T23:38:03.0903770Z [1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 10.70s
+2026-10-11T23:38:03.1302130Z ##[group]Run cargo test --all-targets --no-fail-fast -- --skip golden_programs_under_gc_stress
+2026-10-11T23:38:03.1303100Z [36;1mcargo test --all-targets --no-fail-fast -- --skip golden_programs_under_gc_stress[0m
+2026-10-11T23:38:03.1352530Z shell: /bin/bash -e {0}
+2026-10-11T23:38:03.1352790Z env:
+2026-10-11T23:38:03.1353010Z   CC: clang
+2026-10-11T23:38:03.1353310Z   CARGO_BUILD_JOBS: 2
+2026-10-11T23:38:03.1353570Z   RUST_TEST_THREADS: 2
+2026-10-11T23:38:03.1353920Z   CARGO_HOME: /Users/runner/.cargo
+2026-10-11T23:38:03.1354340Z   CARGO_INCREMENTAL: 0
+2026-10-11T23:38:03.1354760Z   CARGO_TERM_COLOR: always
+2026-10-11T23:38:03.1355180Z   FWP_OPENSSL_DIR: /opt/homebrew/opt/openssl@3
+2026-10-11T23:38:03.1355490Z ##[endgroup]
+2026-10-11T23:38:03.2820840Z [1m[92m   Compiling[0m fwp v0.1.0 (/Users/runner/work/fun-with-pipes/fun-with-pipes)
+2026-10-11T23:38:53.0416830Z [1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 49.83s
+2026-10-11T23:38:53.0826960Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/fwp-b701ed60c1ae0ccf)
+2026-10-11T23:38:53.0948580Z 
+2026-10-11T23:38:53.0949040Z running 71 tests
+2026-10-11T23:38:53.1030750Z test cli::tests::names ... ok
+2026-10-11T23:38:53.1031450Z test cli::tests::field_comments ... ok
+2026-10-11T23:38:53.1034990Z test csv::tests::quoting ... ok
+2026-10-11T23:38:53.1049730Z test escape::tests::applying_a_closure_does_not_let_it_escape ... ok
+2026-10-11T23:38:53.1051490Z test escape::tests::counts_around_an_argument_are_seen_through ... ok
+2026-10-11T23:38:53.1052120Z test escape::tests::passing_on_follows_the_callee ... ok
+2026-10-11T23:38:53.1052840Z test escape::tests::reading_fields_does_not_escape ... ok
+2026-10-11T23:38:53.1053260Z test escape::tests::returning_or_storing_escapes ... ok
+2026-10-11T23:38:53.1054570Z test escape::tests::match_aliases_are_followed ... ok
+2026-10-11T23:38:53.1068350Z test fmt::tests::comments_and_blank_lines ... ok
+2026-10-11T23:38:53.1075210Z test fmt::tests::layout ... ok
+2026-10-11T23:38:53.1075970Z test grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool ... ok
+2026-10-11T23:38:53.1076580Z test fmt::tests::spelling_and_ambiguities ... ok
+2026-10-11T23:38:53.1113020Z test grpc::web::tests::frames_round_trip ... ok
+2026-10-11T23:38:53.1114050Z test grpc::web::tests::sha1_and_accept ... ok
+2026-10-11T23:38:53.1125190Z test grpc::web::tests::websocket_messages_deflate_and_inflate ... ok
+2026-10-11T23:38:53.1129340Z test grpc::web::tests::zlib_round_trip ... ok
+2026-10-11T23:38:53.1139310Z test gzip::tests::chunks_make_one_stream ... ok
+2026-10-11T23:38:53.1141700Z test gzip::tests::crc ... ok
+2026-10-11T23:38:53.3227180Z test gzip::tests::others_read_ours ... ok
+2026-10-11T23:38:53.3229010Z test gzip::tests::reads_other_encoders ... ok
+2026-10-11T23:38:53.3232450Z test gzip::tests::rejects_bad_data ... ok
+2026-10-11T23:38:53.3357380Z test gzip::tests::round_trip ... ok
+2026-10-11T23:38:53.3358820Z test jsontype::tests::base64_round_trip ... ok
+2026-10-11T23:38:53.3359290Z test jsontype::tests::durations ... ok
+2026-10-11T23:38:53.3361000Z test jsontype::tests::exact_integers ... ok
+2026-10-11T23:38:53.3361750Z test lexer::tests::hyphen_vs_negative ... ok
+2026-10-11T23:38:53.3363570Z test lexer::tests::idents_and_selectors ... ok
+2026-10-11T23:38:53.3364410Z test lexer::tests::layout_flags ... ok
+2026-10-11T23:38:53.3366070Z test lexer::tests::numbers ... ok
+2026-10-11T23:38:53.3366660Z test lexer::tests::strings_comments_macros ... ok
+2026-10-11T23:38:53.3369070Z test numerics::tape_validation_tests::invalid_nodes_preserve_push_state_and_consume_backward_tapes ... ok
+2026-10-11T23:38:53.3371180Z test numerics::tape_validation_tests::scoped_callbacks_release_only_their_live_tapes ... ok
+2026-10-11T23:38:53.3381040Z test ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts ... ok
+2026-10-11T23:38:53.3394870Z test rc::tests::a_borrowed_argument_lives_until_the_operation ... ok
+2026-10-11T23:38:53.3398930Z test rc::tests::a_match_dups_the_fields_an_arm_keeps_and_drops_the_rest ... ok
+2026-10-11T23:38:53.3399770Z test rc::tests::a_parameter_returned_is_moved ... ok
+2026-10-11T23:38:53.3400950Z test rc::tests::a_parameter_used_twice_is_duplicated_once ... ok
+2026-10-11T23:38:53.3402550Z test rc::tests::an_unused_parameter_is_dropped ... ok
+2026-10-11T23:38:53.3402960Z test rc::tests::borrowed_pattern_values_are_not_unwind_owners ... ok
+2026-10-11T23:38:53.3403660Z test rc::tests::call_liveness_distinguishes_borrows_transfers_and_duplicate_owners ... ok
+2026-10-11T23:38:53.3405050Z test rc::tests::constructors_transfer_fields_and_keep_other_caller_owners ... ok
+2026-10-11T23:38:53.3405720Z test rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners ... ok
+2026-10-11T23:38:53.3411000Z test rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types ... ok
+2026-10-11T23:38:53.3411680Z test rc::tests::earlier_caf_owner_remains_owned_during_a_final_scalar_call ... ok
+2026-10-11T23:38:53.3412430Z test rc::tests::earlier_consumed_arguments_remain_owned_during_later_calls ... ok
+2026-10-11T23:38:53.3413450Z test rc::tests::earlier_duplicate_remains_owned_during_the_final_call ... ok
+2026-10-11T23:38:53.3414380Z test rc::tests::earlier_owner_remains_owned_during_a_final_scalar_call ... ok
+2026-10-11T23:38:53.3415160Z test rc::tests::matched_value_conversion_keeps_remaining_caller_owners ... ok
+2026-10-11T23:38:53.3416720Z test rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape ... ok
+2026-10-11T23:38:53.3421150Z test rc::tests::original_resource_parameters_enter_the_frame_before_dead_drops ... ok
+2026-10-11T23:38:53.3421980Z test rc::tests::parts_keep_their_order ... ok
+2026-10-11T23:38:53.3422590Z test rc::tests::retain_liveness_excludes_the_unfinished_extra_reference ... ok
+2026-10-11T23:38:53.3423260Z test rc::tests::scalars_are_not_counted ... ok
+2026-10-11T23:38:53.3423780Z test rc::tests::the_checker_rejects_mistakes ... ok
+2026-10-11T23:38:53.3425190Z test rc::tests::uninitialized_region_bindings_are_not_entry_owners ... ok
+2026-10-11T23:38:53.3426420Z test rc::tests::update_liveness_keeps_the_borrowed_base_and_remaining_owners ... ok
+2026-10-11T23:38:53.3431630Z test resource::tests::fusion_preserves_resource_stage_frames_even_with_pure_bodies ... ok
+2026-10-11T23:38:53.3432240Z test resource::tests::nominal_recursive_resource_graphs_and_nonowning_arrows ... ok
+2026-10-11T23:38:53.3432940Z test resource::tests::owner_metadata_rejects_missing_duplicate_and_scalar_slots ... ok
+2026-10-11T23:38:53.3435240Z test swagger::tests::converts_a_document ... ok
+2026-10-11T23:38:53.3436800Z test value::tests::floats_round_trip_shortest ... ok
+2026-10-11T23:38:53.3437240Z test value::tests::trits ... ok
+2026-10-11T23:38:53.3437710Z test yaml::tests::anchors ... ok
+2026-10-11T23:38:53.3438810Z test yaml::tests::block_collections ... ok
+2026-10-11T23:38:53.3439400Z test yaml::tests::block_scalars ... ok
+2026-10-11T23:38:53.3440090Z test yaml::tests::errors ... ok
+2026-10-11T23:38:53.3440740Z test yaml::tests::flow_over_lines ... ok
+2026-10-11T23:38:53.3442460Z test yaml::tests::reads_what_openapi_writes ... ok
+2026-10-11T23:38:53.3443300Z test yaml::tests::scalars ... ok
+2026-10-11T23:38:54.8111830Z test grpc::web::tests::body_bounds_and_error_order_agree_with_native ... ok
+2026-10-11T23:38:54.8112160Z 
+2026-10-11T23:38:54.8112490Z test result: ok. 71 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.72s
+2026-10-11T23:38:54.8112890Z 
+2026-10-11T23:38:54.8114250Z [1m[92m     Running[0m unittests src/main.rs (target/debug/deps/fwp-5567e4ed57ccafcb)
+2026-10-11T23:38:54.8140860Z 
+2026-10-11T23:38:54.8142170Z running 0 tests
+2026-10-11T23:38:54.8142630Z 
+2026-10-11T23:38:54.8143380Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-10-11T23:38:54.8144520Z 
+2026-10-11T23:38:54.8145570Z [1m[92m     Running[0m tests/ad_tape_ownership.rs (target/debug/deps/ad_tape_ownership-dfad75cf73ef181f)
+2026-10-11T23:38:54.8173230Z 
+2026-10-11T23:38:54.8174090Z running 2 tests
+2026-10-11T23:38:59.7019740Z test detached_tape_buffers_release_on_return_trap_and_cancellation ... ok
+2026-10-11T23:39:09.9500160Z test public_tape_tokens_agree_with_raw_interpreter ... ok
+2026-10-11T23:39:09.9500510Z 
+2026-10-11T23:39:09.9500750Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.13s
+2026-10-11T23:39:09.9501140Z 
+2026-10-11T23:39:09.9504110Z [1m[92m     Running[0m tests/ad_tape_scopes.rs (target/debug/deps/ad_tape_scopes-6c9e0509b299e455)
+2026-10-11T23:39:09.9542260Z 
+2026-10-11T23:39:09.9543030Z running 4 tests
+2026-10-11T23:39:11.4891420Z test borrowed_scope_inputs_reject_affine_files ... ok
+2026-10-11T23:39:14.2693880Z test callback_scopes_release_live_tapes_without_per_scope_heap_owners ... ok
+2026-10-11T23:39:14.6592360Z test scoped_callbacks_return_independently_owned_input_aliases ... ok
+2026-10-11T23:39:33.5083450Z test scoped_gradient_functions_agree_with_raw_interpreter ... ok
+2026-10-11T23:39:33.5084210Z 
+2026-10-11T23:39:33.5084520Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.55s
+2026-10-11T23:39:33.5084910Z 
+2026-10-11T23:39:33.5093920Z [1m[92m     Running[0m tests/aot.rs (target/debug/deps/aot-49bfa8864fcc6022)
+2026-10-11T23:39:33.5125600Z 
+2026-10-11T23:39:33.5126160Z running 10 tests
+2026-10-11T23:39:45.3341390Z test pipe_reuses_the_same_native_executable ... ok
+2026-10-11T23:39:47.0751840Z test pipe_runs_native_stages ... ok
+2026-10-11T23:39:47.2461860Z test exec_runs_exported_functions_natively ... ok
+2026-10-11T23:39:49.0602740Z test programs_are_interpreted_without_a_c_compiler ... ok
+2026-10-11T23:39:55.2553960Z test run_compiles_once_and_matches_the_interpreter ... ok
+2026-10-11T23:40:01.3243340Z test serve_runs_a_native_service ... ok
+2026-10-11T23:40:03.9108200Z test test_runs_tests_natively ... ok
+2026-10-11T23:40:04.2578860Z test serve_rest_runs_a_native_server ... ok
+2026-10-11T23:40:06.0557880Z test the_mode_comes_from_options_and_fwp_run ... ok
+2026-10-11T23:40:09.0249270Z [1m[92m     Running[0m tests/argument_preparation_ownership.rs (target/debug/deps/argument_preparation_ownership-e6718291d9deb5fe)
+2026-10-11T23:40:09.0250510Z test the_cache_has_a_directory_a_size_and_can_be_cleaned ... ok
+2026-10-11T23:40:09.0250900Z 
+2026-10-11T23:40:09.0251800Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 35.51s
+2026-10-11T23:40:09.0252220Z 
+2026-10-11T23:40:09.0354180Z 
+2026-10-11T23:40:09.0355430Z running 1 test
+2026-10-11T23:40:15.3309540Z test partial_duplicate_failures_preserve_aliases_and_pending_owned_arguments ... ok
+2026-10-11T23:40:15.3322300Z [1m[92m     Running[0m tests/array_element_ownership.rs (target/debug/deps/array_element_ownership-904776c67d431b44)
+2026-10-11T23:40:15.3322880Z 
+2026-10-11T23:40:15.3323170Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.30s
+2026-10-11T23:40:15.3323450Z 
+2026-10-11T23:40:15.3420930Z 
+2026-10-11T23:40:15.3421510Z running 3 tests
+2026-10-11T23:40:18.9517820Z test array_elements_are_released_without_tracing ... ok
+2026-10-11T23:40:20.6078770Z test scalar_array_elements_do_not_count_address_shaped_bits ... ok
+2026-10-11T23:40:25.6274150Z test array_elements_aliases_and_callbacks_under_collection ... ok
+2026-10-11T23:40:25.6376240Z [1m[92m     Running[0m tests/bench.rs (target/debug/deps/bench-63b4a67eaecadb66)
+2026-10-11T23:40:25.6376840Z 
+2026-10-11T23:40:25.6506070Z [1m[92m     Running[0m tests/borrowed_callbacks.rs (target/debug/deps/borrowed_callbacks-0c36fcb6834bd758)
+2026-10-11T23:40:25.6507650Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.29s
+2026-10-11T23:40:25.6513670Z 
+2026-10-11T23:40:25.6513670Z 
+2026-10-11T23:40:25.6513810Z running 1 test
+2026-10-11T23:40:25.6514340Z test benchmarks ... ignored
+2026-10-11T23:40:25.6514480Z 
+2026-10-11T23:40:25.6514700Z test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-10-11T23:40:25.6530820Z 
+2026-10-11T23:40:25.6560880Z 
+2026-10-11T23:40:25.6561400Z running 1 test
+2026-10-11T23:40:27.2119130Z test borrowed_application_preserves_aliases_and_typed_argument_slices ... ok
+2026-10-11T23:40:27.2119720Z 
+2026-10-11T23:40:27.2120110Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.56s
+2026-10-11T23:40:27.2120580Z 
+2026-10-11T23:40:27.2121330Z [1m[92m     Running[0m tests/browser.rs (target/debug/deps/browser-4d5f0c2469857bce)
+2026-10-11T23:40:27.2210810Z 
+2026-10-11T23:40:27.2211810Z running 10 tests
+2026-10-11T23:40:27.6459880Z test check_matches_native ... ok
+2026-10-11T23:40:27.6461050Z test engine_stack_overflow_is_a_trap ... ok
+2026-10-11T23:40:27.6461750Z test fmt_and_lint ... ok
+2026-10-11T23:40:27.6462170Z test fmt_rewrites_files_in_the_playground ... ok
+2026-10-11T23:40:27.6462620Z test golden_programs_under_node_wasi ... ok
+2026-10-11T23:40:27.6463010Z test rejections_name_what_is_missing ... ok
+2026-10-11T23:40:27.6463420Z test golden_programs_under_the_playground_wasi ... ok
+2026-10-11T23:40:27.6464000Z test stdin_programs_and_unavailable_commands ... ok
+2026-10-11T23:40:27.6464460Z test tasks_as_fibers ... ok
+2026-10-11T23:40:27.6464930Z test tutorials_in_the_playground ... ok
+2026-10-11T23:40:27.6465210Z 
+2026-10-11T23:40:27.6466160Z [1m[92m     Running[0m tests/builds.rs (target/debug/deps/builds-c5198a8ef0637eab)
+2026-10-11T23:40:27.6466830Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.43s
+2026-10-11T23:40:27.6467280Z 
+2026-10-11T23:40:27.6563720Z 
+2026-10-11T23:40:27.6564340Z running 3 tests
+2026-10-11T23:40:27.6566760Z test profile_guided_builds_behave_alike ... ok
+2026-10-11T23:40:27.6567580Z test static_executables_need_no_loader ... ok
+2026-10-11T23:40:27.6683920Z test options_are_checked ... ok
+2026-10-11T23:40:27.6684240Z 
+2026-10-11T23:40:27.6687550Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-10-11T23:40:27.6687950Z 
+2026-10-11T23:40:27.6689910Z [1m[92m     Running[0m tests/c-interop/main.rs (target/debug/deps/c_interop-d78e46b9c8deef17)
+2026-10-11T23:40:27.6778920Z 
+2026-10-11T23:40:27.6779240Z running 0 tests
+2026-10-11T23:40:27.6779590Z 
+2026-10-11T23:40:27.6779850Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-10-11T23:40:27.6780290Z 
+2026-10-11T23:40:27.6784280Z [1m[92m     Running[0m tests/cache_lifetime.rs (target/debug/deps/cache_lifetime-7076636dd2d330e7)
+2026-10-11T23:40:27.6886260Z 
+2026-10-11T23:40:27.6886930Z running 2 tests
+2026-10-11T23:40:32.5234500Z test cache_hit_applies_reduced_limit_without_deleting_current_executable ... ok
+2026-10-11T23:40:33.6883540Z test cache_limit_preserves_current_executable_despite_future_timestamps ... ok
+2026-10-11T23:40:33.6891220Z [1m[92m     Running[0m tests/caf_ownership.rs (target/debug/deps/caf_ownership-c39b9d818ca8bada)
+2026-10-11T23:40:33.6891560Z 
+2026-10-11T23:40:33.6895100Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.00s
+2026-10-11T23:40:33.6895470Z 
+2026-10-11T23:40:33.6997760Z 
+2026-10-11T23:40:33.6998150Z running 3 tests
+2026-10-11T23:40:36.5754760Z test source_cafs_initialize_once_and_release_after_tasks_finish ... ok
+2026-10-11T23:40:36.7656300Z test cached_values_keep_exact_owners_and_release_typed_children ... ok
+2026-10-11T23:40:40.5802570Z test trapping_caf_evaluation_releases_caller_owners ... ok
+2026-10-11T23:40:40.5802910Z 
+2026-10-11T23:40:40.5803660Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.88s
+2026-10-11T23:40:40.5804120Z 
+2026-10-11T23:40:40.5806240Z [1m[92m     Running[0m tests/call_effects.rs (target/debug/deps/call_effects-fda3a0351c83655e)
+2026-10-11T23:40:40.5902270Z 
+2026-10-11T23:40:40.5902740Z running 8 tests
+2026-10-11T23:40:41.3248760Z test argument_mismatch_reports_the_value_without_permitted_effects ... ok
+2026-10-11T23:40:43.5413980Z test effectful_callbacks_still_require_their_effects ... ok
+2026-10-11T23:40:45.7269410Z test higher_order_callback_rows_allow_known_effect_weakening ... ok
+2026-10-11T23:40:48.8934900Z test inferred_pure_callbacks_agree_with_native_execution ... ok
+2026-10-11T23:40:49.6112820Z test pure_function_values_in_io_pipes_and_applications ... ok
+2026-10-11T23:40:53.8235380Z test call_related_effect_and_size_snapshots_stay_stable ... ok
+2026-10-11T23:40:53.9098150Z test state_function_values_preserve_callback_effects_in_pipes_and_applications ... ok
+2026-10-11T23:40:55.2751880Z test weakening_callback_rows_preserves_required_async_and_io ... ok
+2026-10-11T23:40:55.2752590Z 
+2026-10-11T23:40:55.2752940Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.68s
+2026-10-11T23:40:55.2753330Z 
+2026-10-11T23:40:55.2768710Z [1m[92m     Running[0m tests/channel_cycle_ownership.rs (target/debug/deps/channel_cycle_ownership-afb426eafe12d4b5)
+2026-10-11T23:40:55.2865130Z 
+2026-10-11T23:40:55.2865470Z running 1 test
+2026-10-11T23:40:57.6860950Z test closed_channel_cycles_keep_values_until_drain_and_then_release ... ok
+2026-10-11T23:40:57.6861300Z 
+2026-10-11T23:40:57.6861550Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.40s
+2026-10-11T23:40:57.6861940Z 
+2026-10-11T23:40:57.6863090Z [1m[92m     Running[0m tests/channel_queue_ownership.rs (target/debug/deps/channel_queue_ownership-3fa6ae0b298b4a2c)
+2026-10-11T23:40:57.6967390Z 
+2026-10-11T23:40:57.6968530Z running 1 test
+2026-10-11T23:41:06.5729850Z test channels_own_queues_and_transfer_received_values ... ok
+2026-10-11T23:41:06.5730330Z 
+2026-10-11T23:41:06.5730630Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.88s
+2026-10-11T23:41:06.5731020Z 
+2026-10-11T23:41:06.5740690Z [1m[92m     Running[0m tests/cli.rs (target/debug/deps/cli-7974069826e04a3f)
+2026-10-11T23:41:06.5844930Z 
+2026-10-11T23:41:06.5845590Z running 9 tests
+2026-10-11T23:41:09.4740630Z test called_programs_keep_the_protocol_clean ... ok
+2026-10-11T23:41:11.2061010Z test declaration_errors ... ok
+2026-10-11T23:41:11.2312130Z test early_stdin_close_preserves_command_result ... ok
+2026-10-11T23:41:15.9686650Z test doc_comments ... ok
+2026-10-11T23:41:41.1321360Z test enumerations_environment_and_statuses ... ok
+2026-10-11T23:41:47.8960130Z test exposure ... ok
+2026-10-11T23:41:52.3328700Z test example_clis ... ok
+2026-10-11T23:42:04.0272550Z test single_function_executables ... ok
+2026-10-11T23:42:28.0725940Z test multi_command_program ... ok
+2026-10-11T23:42:28.0728780Z 
+2026-10-11T23:42:28.0730350Z test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 81.49s
+2026-10-11T23:42:28.0734030Z 
+2026-10-11T23:42:28.0764440Z [1m[92m     Running[0m tests/closure_cleanup.rs (target/debug/deps/closure_cleanup-6af11eee32d85159)
+2026-10-11T23:42:28.0980340Z 
+2026-10-11T23:42:28.0982940Z running 1 test
+2026-10-11T23:42:32.7868240Z test deep_capture_cleanup_uses_bounded_c_stack ... ok
+2026-10-11T23:42:32.7869130Z 
+2026-10-11T23:42:32.7869590Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.69s
+2026-10-11T23:42:32.7869960Z 
+2026-10-11T23:42:32.7872460Z [1m[92m     Running[0m tests/closure_ownership.rs (target/debug/deps/closure_ownership-10ad9936b6ebd6f1)
+2026-10-11T23:42:32.7971110Z 
+2026-10-11T23:42:32.7976150Z running 2 tests
+2026-10-11T23:42:36.4093010Z test escaping_closures_are_released_by_counts ... ok
+2026-10-11T23:42:40.1374010Z test closure_aliases_and_captures_under_stress ... ok
+2026-10-11T23:42:40.1407920Z [1m[92m     Running[0m tests/compiler_call_liveness.rs (target/debug/deps/compiler_call_liveness-24ba0c413db44f65)
+2026-10-11T23:42:40.1412460Z 
+2026-10-11T23:42:40.1448080Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.34s
+2026-10-11T23:42:40.1450010Z 
+2026-10-11T23:42:40.1639880Z 
+2026-10-11T23:42:40.1640810Z running 5 tests
+2026-10-11T23:42:45.5021890Z test actual_caller_releases_owned_values_and_preserves_aliases ... ok
+2026-10-11T23:42:45.5131790Z test boxed_wrapper_and_unboxed_worker_release_separate_owners ... ok
+2026-10-11T23:42:47.1789800Z test incoming_parameters_release_before_cancelled_entry_tick ... ok
+2026-10-11T23:42:55.9893450Z test earlier_argument_is_released_when_later_argument_fails ... ok
+2026-10-11T23:42:57.0706010Z test struct_variant_owner_releases_its_typed_payload ... ok
+2026-10-11T23:42:57.0712230Z 
+2026-10-11T23:42:57.0720500Z [1m[92m     Running[0m tests/compiler_diagnostics.rs (target/debug/deps/compiler_diagnostics-a55bd8c6cf5686b9)
+2026-10-11T23:42:57.0721130Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.91s
+2026-10-11T23:42:57.0723240Z 
+2026-10-11T23:42:57.0836240Z 
+2026-10-11T23:42:57.0838170Z running 2 tests
+2026-10-11T23:43:00.3160310Z test compiler_failure_preserves_stdout_stderr_and_status ... ok
+2026-10-11T23:43:02.5381140Z test compiler_signal_is_reported_and_successful_programs_still_run ... ok
+2026-10-11T23:43:02.5382170Z 
+2026-10-11T23:43:02.5384500Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.45s
+2026-10-11T23:43:02.5386650Z [1m[92m     Running[0m tests/connect_cleanup.rs (target/debug/deps/connect_cleanup-673fcde0f4df33a0)
+2026-10-11T23:43:02.5386980Z 
+2026-10-11T23:43:02.5539090Z 
+2026-10-11T23:43:02.5539580Z running 1 test
+2026-10-11T23:43:05.4356590Z test cancelled_connect_and_handshake_release_completed_resource_owners ... ok
+2026-10-11T23:43:05.4357310Z 
+2026-10-11T23:43:05.4358170Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.88s
+2026-10-11T23:43:05.4359460Z 
+2026-10-11T23:43:05.4363480Z [1m[92m     Running[0m tests/constructor_type_ownership.rs (target/debug/deps/constructor_type_ownership-89b5fbe8448142af)
+2026-10-11T23:43:05.4461470Z 
+2026-10-11T23:43:05.4461820Z running 1 test
+2026-10-11T23:43:12.6423480Z test later_field_error_releases_nested_constructor_children ... ok
+2026-10-11T23:43:12.6484500Z [1m[92m     Running[0m tests/constructor_unwind_ownership.rs (target/debug/deps/constructor_unwind_ownership-6953230a1264864e)
+2026-10-11T23:43:12.6485020Z 
+2026-10-11T23:43:12.6485790Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.20s
+2026-10-11T23:43:12.6486180Z 
+2026-10-11T23:43:12.6555410Z 
+2026-10-11T23:43:12.6555810Z running 1 test
+2026-10-11T23:43:19.8176920Z test failed_constructor_allocation_releases_typed_fields_and_preserves_aliases ... ok
+2026-10-11T23:43:19.8178000Z 
+2026-10-11T23:43:19.8179160Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.16s
+2026-10-11T23:43:19.8190120Z [1m[92m     Running[0m tests/cross.rs (target/debug/deps/cross-c13c726a154fa482)
+2026-10-11T23:43:19.8190510Z 
+2026-10-11T23:43:19.8283490Z 
+2026-10-11T23:43:19.8283950Z running 4 tests
+2026-10-11T23:43:19.8357440Z test builds_for_aarch64 ... ok
+2026-10-11T23:43:19.8358220Z test golden_programs_on_aarch64 ... ok
+2026-10-11T23:43:19.8358660Z test golden_programs_with_musl ... ok
+2026-10-11T23:43:19.8368490Z test tasks_on_aarch64_with_the_runtimes_own_switch ... ok
+2026-10-11T23:43:19.8368820Z 
+2026-10-11T23:43:19.8369090Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-10-11T23:43:19.8369450Z 
+2026-10-11T23:43:19.8370790Z [1m[92m     Running[0m tests/examples.rs (target/debug/deps/examples-336d5607382a4542)
+2026-10-11T23:43:19.8466940Z 
+2026-10-11T23:43:19.8467590Z running 4 tests
+2026-10-11T23:43:31.0646840Z test other_examples_check ... ok
+2026-10-11T23:43:31.0749420Z test tutorial_readmes_match_their_programs ... ok
+2026-10-11T23:44:19.8743570Z test tutorial_programs has been running for over 60 seconds
+2026-10-11T23:44:20.4081280Z test tutorial_programs ... ok
+2026-10-11T23:44:30.7854230Z test tutorial_sessions ... ok
+2026-10-11T23:44:30.7970050Z [1m[92m     Running[0m tests/exec.rs (target/debug/deps/exec-528757927c80ba1b)
+2026-10-11T23:44:30.7972510Z 
+2026-10-11T23:44:30.8133590Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 70.94s
+2026-10-11T23:44:30.8134350Z 
+2026-10-11T23:44:30.8199170Z 
+2026-10-11T23:44:30.8335940Z running 3 tests
+2026-10-11T23:44:31.9933940Z test fwp_pipe_connects_stages ... ok
+2026-10-11T23:44:32.0034570Z test transports_switch_and_fall_back ... ok
+2026-10-11T23:45:30.8206650Z test executables_behave_identically has been running for over 60 seconds
+2026-10-11T23:45:34.7086330Z test executables_behave_identically ... ok
+2026-10-11T23:45:34.7086660Z 
+2026-10-11T23:45:34.7086990Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 63.89s
+2026-10-11T23:45:34.7087610Z 
+2026-10-11T23:45:34.7098360Z [1m[92m     Running[0m tests/fat.rs (target/debug/deps/fat-cd7d25b99a8bc97f)
+2026-10-11T23:45:34.7221960Z 
+2026-10-11T23:45:34.7222390Z running 1 test
+2026-10-11T23:45:40.6104560Z [1m[92m     Running[0m tests/ffi.rs (target/debug/deps/ffi-ab787a7d56eb1027)
+2026-10-11T23:45:40.6105430Z test fat_variants_agree ... ok
+2026-10-11T23:45:40.6105880Z 
+2026-10-11T23:45:40.6106160Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.89s
+2026-10-11T23:45:40.6106520Z 
+2026-10-11T23:45:40.6206460Z 
+2026-10-11T23:45:40.6206860Z running 5 tests
+2026-10-11T23:45:41.5063690Z test foreign_functions_interpreted ... ok
+2026-10-11T23:45:42.0074950Z test foreign_functions_native ... ok
+2026-10-11T23:45:43.0104320Z test shared_library_from_c ... ok
+2026-10-11T23:45:43.8589610Z test unsupported_types_are_reported ... ok
+2026-10-11T23:45:45.9747810Z test static_library_from_rust ... ok
+2026-10-11T23:45:45.9748970Z 
+2026-10-11T23:45:45.9749260Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.35s
+2026-10-11T23:45:45.9749660Z 
+2026-10-11T23:45:45.9753600Z [1m[92m     Running[0m tests/ffi_pointer_arithmetic.rs (target/debug/deps/ffi_pointer_arithmetic-13f0adbfbe0d1658)
+2026-10-11T23:45:45.9892590Z 
+2026-10-11T23:45:45.9894730Z running 2 tests
+2026-10-11T23:45:45.9916880Z test interpreter_offsets_wrap_at_pointer_width_for_all_numeric_storage_widths ... ok
+2026-10-11T23:45:51.7368660Z [1m[92m     Running[0m tests/field_context_ownership.rs (target/debug/deps/field_context_ownership-844808574760013f)
+2026-10-11T23:45:51.7369410Z test native_boundary_offsets_match_raw_interpreter_and_reject_signed_overflow ... ok
+2026-10-11T23:45:51.7457970Z 
+2026-10-11T23:45:51.7458650Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.74s
+2026-10-11T23:45:51.7459100Z 
+2026-10-11T23:45:51.7473680Z 
+2026-10-11T23:45:51.7474170Z running 2 tests
+2026-10-11T23:45:52.8012730Z test inlined_projection_releases_discarded_nested_children ... ok
+2026-10-11T23:45:56.5207110Z test source_record_projection_releases_discarded_children ... ok
+2026-10-11T23:45:56.5208280Z 
+2026-10-11T23:45:56.5209020Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.77s
+2026-10-11T23:45:56.5209690Z 
+2026-10-11T23:45:56.5222780Z [1m[92m     Running[0m tests/file_construction_disposal.rs (target/debug/deps/file_construction_disposal-634f0927cd103ebc)
+2026-10-11T23:45:56.5494670Z 
+2026-10-11T23:45:56.5495150Z running 1 test
+2026-10-11T23:45:59.3941830Z test constructor_failures_release_storage_and_preserve_finalizer_registry ... ok
+2026-10-11T23:45:59.3952930Z [1m[92m     Running[0m tests/file_construction_ownership.rs (target/debug/deps/file_construction_ownership-e5762bf40f510c19)
+2026-10-11T23:45:59.3953420Z 
+2026-10-11T23:45:59.3954900Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.84s
+2026-10-11T23:45:59.3955590Z 
+2026-10-11T23:45:59.4060530Z 
+2026-10-11T23:45:59.4060950Z running 1 test
+2026-10-11T23:46:01.6214290Z test construction_failures_close_streams_once_and_clear_finalized_handles ... ok
+2026-10-11T23:46:01.6214870Z 
+2026-10-11T23:46:01.6218510Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.22s
+2026-10-11T23:46:01.6226580Z [1m[92m     Running[0m tests/file_discard_ownership.rs (target/debug/deps/file_discard_ownership-46afddc43b161ced)
+2026-10-11T23:46:01.6227180Z 
+2026-10-11T23:46:01.6334490Z 
+2026-10-11T23:46:01.6334820Z running 1 test
+2026-10-11T23:46:15.0333190Z test discarded_files_close_before_the_next_iteration_without_collection ... ok
+2026-10-11T23:46:15.0333890Z 
+2026-10-11T23:46:15.0334200Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.40s
+2026-10-11T23:46:15.0334570Z 
+2026-10-11T23:46:15.0341180Z [1m[92m     Running[0m tests/file_inline_path.rs (target/debug/deps/file_inline_path-d7e811085516146f)
+2026-10-11T23:46:15.0441670Z 
+2026-10-11T23:46:15.0441920Z running 2 tests
+2026-10-11T23:46:16.4850240Z test inline_paths_preserve_display_and_reduce_constructor_allocations ... ok
+2026-10-11T23:46:21.0035240Z test source_file_io_matches_the_unoptimized_interpreter ... ok
+2026-10-11T23:46:21.0035830Z 
+2026-10-11T23:46:21.0036330Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.96s
+2026-10-11T23:46:21.0036970Z 
+2026-10-11T23:46:21.0041770Z [1m[92m     Running[0m tests/file_io_errors.rs (target/debug/deps/file_io_errors-f7d2f8455454c339)
+2026-10-11T23:46:21.0148080Z 
+2026-10-11T23:46:21.0149430Z running 2 tests
+2026-10-11T23:46:23.5104450Z test read_temporaries_and_write_errors_have_precise_stream_ownership ... ok
+2026-10-11T23:46:34.5713810Z test read_failures_and_invalid_utf8_match_the_original_interpreter ... ok
+2026-10-11T23:46:34.5714380Z 
+2026-10-11T23:46:34.5714660Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.56s
+2026-10-11T23:46:34.5715240Z 
+2026-10-11T23:46:34.5723680Z [1m[92m     Running[0m tests/file_read_kinds.rs (target/debug/deps/file_read_kinds-9e72786d2fd65901)
+2026-10-11T23:46:34.5835330Z 
+2026-10-11T23:46:34.5835690Z running 1 test
+2026-10-11T23:46:38.0315750Z test byte_reads_and_text_validation_match_the_unoptimized_interpreter ... ok
+2026-10-11T23:46:38.0316590Z 
+2026-10-11T23:46:38.0317390Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.45s
+2026-10-11T23:46:38.0317800Z 
+2026-10-11T23:46:38.0318960Z [1m[92m     Running[0m tests/file_runtime_boundaries.rs (target/debug/deps/file_runtime_boundaries-ab749304af3c4b0c)
+2026-10-11T23:46:38.0438290Z 
+2026-10-11T23:46:38.0443910Z running 1 test
+2026-10-11T23:47:06.0530570Z test file_results_survive_scoped_callbacks_tasks_and_loop_variants ... ok
+2026-10-11T23:47:06.0639290Z [1m[92m     Running[0m tests/file_runtime_ownership.rs (target/debug/deps/file_runtime_ownership-a54a07884e4b9e54)
+2026-10-11T23:47:06.0641760Z 
+2026-10-11T23:47:06.0744660Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.01s
+2026-10-11T23:47:06.0850730Z 
+2026-10-11T23:47:06.0989190Z 
+2026-10-11T23:47:06.1074090Z running 1 test
+2026-10-11T23:47:09.7033640Z [1m[92m     Running[0m tests/file_storage_disposal.rs (target/debug/deps/file_storage_disposal-8713b77586b02c02)
+2026-10-11T23:47:09.7034370Z test file_aliases_and_borrowed_io_unwind_preserve_stream_owners ... ok
+2026-10-11T23:47:09.7039460Z 
+2026-10-11T23:47:09.7052370Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.64s
+2026-10-11T23:47:09.7063760Z 
+2026-10-11T23:47:09.7162550Z 
+2026-10-11T23:47:09.7164060Z running 1 test
+2026-10-11T23:47:11.8149790Z test file_storage_disposal_removes_finalizers_before_reuse ... ok
+2026-10-11T23:47:11.8150160Z 
+2026-10-11T23:47:11.8150500Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.10s
+2026-10-11T23:47:11.8150900Z 
+2026-10-11T23:47:11.8152610Z [1m[92m     Running[0m tests/file_write_visibility.rs (target/debug/deps/file_write_visibility-878a53263cc65dab)
+2026-10-11T23:47:11.8257790Z 
+2026-10-11T23:47:11.8258230Z running 2 tests
+2026-10-11T23:47:12.9384580Z test flush_failures_are_write_errors_and_preserve_the_borrowed_handle ... ok
+2026-10-11T23:47:15.2487760Z test write_is_visible_before_the_owning_frame_closes_its_file ... ok
+2026-10-11T23:47:15.2488480Z 
+2026-10-11T23:47:15.2488800Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.42s
+2026-10-11T23:47:15.2489120Z 
+2026-10-11T23:47:15.2497680Z [1m[92m     Running[0m tests/filter_ownership.rs (target/debug/deps/filter_ownership-f690355794afdca3)
+2026-10-11T23:47:15.2601020Z 
+2026-10-11T23:47:15.2601580Z running 2 tests
+2026-10-11T23:47:19.4836050Z test filtered_spines_and_aliases_are_released_without_tracing ... ok
+2026-10-11T23:47:22.0001090Z test selected_input_and_function_aliases_under_collection ... ok
+2026-10-11T23:47:22.0001650Z 
+2026-10-11T23:47:22.0001950Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.74s
+2026-10-11T23:47:22.0002330Z 
+2026-10-11T23:47:22.0003870Z [1m[92m     Running[0m tests/fmt.rs (target/debug/deps/fmt-bacdd56bf7a5648a)
+2026-10-11T23:47:22.0106620Z 
+2026-10-11T23:47:22.0107430Z running 3 tests
+2026-10-11T23:47:22.1920230Z test fmt_check_command ... ok
+2026-10-11T23:47:22.3450190Z test repository_is_formatted ... ok
+2026-10-11T23:48:00.8084460Z test formatting_is_stable_and_faithful ... ok
+2026-10-11T23:48:00.8184810Z [1m[92m     Running[0m tests/fold_ownership.rs (target/debug/deps/fold_ownership-b5f3a4ca954bf949)
+2026-10-11T23:48:00.8185370Z 
+2026-10-11T23:48:00.8185590Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 38.80s
+2026-10-11T23:48:00.8186200Z 
+2026-10-11T23:48:00.8286030Z 
+2026-10-11T23:48:00.8386890Z running 2 tests
+2026-10-11T23:48:03.9667850Z test folded_accumulators_are_released_without_tracing ... ok
+2026-10-11T23:48:07.4346560Z test accumulator_input_and_capture_aliases_under_collection ... ok
+2026-10-11T23:48:07.4347610Z 
+2026-10-11T23:48:07.4348130Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.61s
+2026-10-11T23:48:07.4349580Z [1m[92m     Running[0m tests/fold_unwind_ownership.rs (target/debug/deps/fold_unwind_ownership-41ce8f693cc39089)
+2026-10-11T23:48:07.4354610Z 
+2026-10-11T23:48:07.4470620Z 
+2026-10-11T23:48:07.4471520Z running 2 tests
+2026-10-11T23:48:09.5472520Z test borrowed_prefix_duplicates_and_scalar_words_release_precisely ... ok
+2026-10-11T23:48:17.5290330Z [1m[92m     Running[0m tests/gc.rs (target/debug/deps/gc-e04374d53be2aa03)
+2026-10-11T23:48:17.5290980Z test right_fold_releases_accumulator_and_scratch_on_failure ... ok
+2026-10-11T23:48:17.5337300Z 
+2026-10-11T23:48:17.5340290Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.08s
+2026-10-11T23:48:17.5340800Z 
+2026-10-11T23:48:17.5402570Z 
+2026-10-11T23:48:17.5435460Z running 5 tests
+2026-10-11T23:48:17.5725790Z test grpc_server_runs_in_bounded_memory ... ok
+2026-10-11T23:48:17.6076140Z test http_server_runs_in_bounded_memory ... ok
+2026-10-11T23:48:17.6273840Z test long_loop_runs_in_bounded_memory ... ok
+2026-10-11T23:48:17.6468080Z test rest_server_runs_in_bounded_memory ... ok
+2026-10-11T23:48:20.3721670Z [1m[92m     Running[0m tests/general_record_update_ownership.rs (target/debug/deps/general_record_update_ownership-4461c056de02f4c3)
+2026-10-11T23:48:20.3722460Z test gc_stress_reports_native_compiler_failure ... ok
+2026-10-11T23:48:20.3722790Z 
+2026-10-11T23:48:20.3723150Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 2.83s
+2026-10-11T23:48:20.3723510Z 
+2026-10-11T23:48:20.3829010Z 
+2026-10-11T23:48:20.3829370Z running 1 test
+2026-10-11T23:48:29.9840870Z test general_copies_keep_original_and_release_partial_work ... ok
+2026-10-11T23:48:29.9841310Z 
+2026-10-11T23:48:29.9841750Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.60s
+2026-10-11T23:48:29.9842090Z 
+2026-10-11T23:48:29.9844150Z [1m[92m     Running[0m tests/golden_check.rs (target/debug/deps/golden_check-ee5aac83bb1b5722)
+2026-10-11T23:48:29.9971330Z 
+2026-10-11T23:48:29.9971760Z running 1 test
+2026-10-11T23:49:21.4661720Z test check_snapshots ... ok
+2026-10-11T23:49:21.4662330Z 
+2026-10-11T23:49:21.4668410Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 51.47s
+2026-10-11T23:49:21.4668880Z 
+2026-10-11T23:49:21.4682570Z [1m[92m     Running[0m tests/golden_parse.rs (target/debug/deps/golden_parse-936d8acbedcc6e27)
+2026-10-11T23:49:21.4732060Z 
+2026-10-11T23:49:21.4732340Z running 1 test
+2026-10-11T23:49:21.4747670Z test parse_snapshots ... ok
+2026-10-11T23:49:21.4748320Z 
+2026-10-11T23:49:21.4748640Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-10-11T23:49:21.4749010Z 
+2026-10-11T23:49:21.4751530Z [1m[92m     Running[0m tests/golden_run.rs (target/debug/deps/golden_run-ba6d6a087ec9bdbf)
+2026-10-11T23:49:21.4787540Z 
+2026-10-11T23:49:21.4787920Z running 1 test
+2026-10-11T23:50:21.6069810Z test run_snapshots has been running for over 60 seconds
+2026-10-11T23:52:47.1651210Z test run_snapshots ... ok
+2026-10-11T23:52:47.1665220Z [1m[92m     Running[0m tests/grpc.rs (target/debug/deps/grpc-109b50eae7c47051)
+2026-10-11T23:52:47.1665530Z 
+2026-10-11T23:52:47.1767260Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 205.69s
+2026-10-11T23:52:47.1813210Z 
+2026-10-11T23:52:47.1833470Z 
+2026-10-11T23:52:47.1895900Z running 3 tests
+2026-10-11T23:53:02.9399180Z test every_kind_of_call ... ok
+2026-10-11T23:53:02.9451210Z test go_client_interoperates ... ok
+2026-10-11T23:53:08.4275240Z test calls_are_concurrent ... ok
+2026-10-11T23:53:08.4276240Z 
+2026-10-11T23:53:08.4277210Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.25s
+2026-10-11T23:53:08.4280070Z 
+2026-10-11T23:53:08.4294890Z [1m[92m     Running[0m tests/grpc_canonical_encoding.rs (target/debug/deps/grpc_canonical_encoding-c3f3c93323c736d2)
+2026-10-11T23:53:08.4480520Z 
+2026-10-11T23:53:08.4481170Z running 1 test
+2026-10-11T23:53:09.6569610Z test canonical_encoding_scratch_releases_on_partial_and_transcoder_failure ... ok
+2026-10-11T23:53:09.6570140Z 
+2026-10-11T23:53:09.6571260Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.21s
+2026-10-11T23:53:09.6571790Z 
+2026-10-11T23:53:09.6573700Z [1m[92m     Running[0m tests/grpc_capture_resources.rs (target/debug/deps/grpc_capture_resources-9851031bf835d486)
+2026-10-11T23:53:09.6686410Z 
+2026-10-11T23:53:09.6687070Z running 1 test
+2026-10-11T23:53:13.7436360Z test metadata_capture_releases_after_callbacks_and_escaped_tasks ... ok
+2026-10-11T23:53:13.7436800Z 
+2026-10-11T23:53:13.7438980Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.08s
+2026-10-11T23:53:13.7442360Z 
+2026-10-11T23:53:13.7445210Z [1m[92m     Running[0m tests/grpc_client_failure_text.rs (target/debug/deps/grpc_client_failure_text-45aca2d6118a4925)
+2026-10-11T23:53:13.7568630Z 
+2026-10-11T23:53:13.7569310Z running 1 test
+2026-10-11T23:53:15.2466250Z test client_failure_text_releases_after_traps_and_typed_errors ... ok
+2026-10-11T23:53:15.2466740Z 
+2026-10-11T23:53:15.2471070Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.49s
+2026-10-11T23:53:15.2471610Z 
+2026-10-11T23:53:15.2473790Z [1m[92m     Running[0m tests/grpc_client_receive.rs (target/debug/deps/grpc_client_receive-2f0c48ca69df55c5)
+2026-10-11T23:53:15.2581560Z 
+2026-10-11T23:53:15.2581840Z running 1 test
+2026-10-11T23:53:21.3066640Z test client_received_buffers_release_on_retry_errors_and_cancelled_waits ... ok
+2026-10-11T23:53:21.3067340Z 
+2026-10-11T23:53:21.3067780Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.05s
+2026-10-11T23:53:21.3068340Z 
+2026-10-11T23:53:21.3070940Z [1m[92m     Running[0m tests/grpc_client_requests.rs (target/debug/deps/grpc_client_requests-cfe855d4f8271360)
+2026-10-11T23:53:21.3184290Z 
+2026-10-11T23:53:21.3184750Z running 1 test
+2026-10-11T23:53:24.2352550Z test client_request_buffers_release_on_encode_trap_and_cancelled_send ... ok
+2026-10-11T23:53:24.2352930Z 
+2026-10-11T23:53:24.2365580Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.92s
+2026-10-11T23:53:24.2366080Z 
+2026-10-11T23:53:24.2366630Z [1m[92m     Running[0m tests/grpc_connect_cleanup.rs (target/debug/deps/grpc_connect_cleanup-ea11c711fbfbafe1)
+2026-10-11T23:53:24.2458870Z 
+2026-10-11T23:53:24.2459340Z running 1 test
+2026-10-11T23:53:27.0944260Z test grpc_connect_and_handshake_release_pending_resources_on_cancellation ... ok
+2026-10-11T23:53:27.0944690Z 
+2026-10-11T23:53:27.0944970Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.85s
+2026-10-11T23:53:27.0945360Z 
+2026-10-11T23:53:27.0946350Z [1m[92m     Running[0m tests/grpc_connect_startup.rs (target/debug/deps/grpc_connect_startup-ad9f77415eb1f348)
+2026-10-11T23:53:27.1052060Z 
+2026-10-11T23:53:27.1052800Z running 1 test
+2026-10-11T23:53:36.8498900Z test grpc_connection_startup_releases_failed_task_reservations ... ok
+2026-10-11T23:53:36.8499340Z 
+2026-10-11T23:53:36.8500090Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.75s
+2026-10-11T23:53:36.8500500Z 
+2026-10-11T23:53:36.8503270Z [1m[92m     Running[0m tests/grpc_connection_addresses.rs (target/debug/deps/grpc_connection_addresses-e834b9d862cb0d51)
+2026-10-11T23:53:36.8605260Z 
+2026-10-11T23:53:36.8605750Z running 1 test
+2026-10-11T23:53:39.2747130Z test connection_addresses_preserve_long_pool_keys_in_one_allocation ... ok
+2026-10-11T23:53:39.2747840Z 
+2026-10-11T23:53:39.2748160Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.41s
+2026-10-11T23:53:39.2748620Z 
+2026-10-11T23:53:39.2749710Z [1m[92m     Running[0m tests/grpc_context_resources.rs (target/debug/deps/grpc_context_resources-db29ec5b48c8d645)
+2026-10-11T23:53:39.2860260Z 
+2026-10-11T23:53:39.2860900Z running 1 test
+2026-10-11T23:53:43.5895780Z test scoped_tls_options_release_after_callbacks_and_escaped_tasks ... ok
+2026-10-11T23:53:43.5899970Z 
+2026-10-11T23:53:43.5900500Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.30s
+2026-10-11T23:53:43.5901160Z 
+2026-10-11T23:53:43.5906410Z [1m[92m     Running[0m tests/grpc_context_restore.rs (target/debug/deps/grpc_context_restore-4a075edf7af6e233)
+2026-10-11T23:53:43.6023080Z 
+2026-10-11T23:53:43.6023490Z running 1 test
+2026-10-11T23:53:45.6883600Z test grpc_context_restores_on_nested_failures_and_cancelled_callbacks ... ok
+2026-10-11T23:53:45.6884070Z 
+2026-10-11T23:53:45.6884480Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.09s
+2026-10-11T23:53:45.6886710Z [1m[92m     Running[0m tests/grpc_environment_cache.rs (target/debug/deps/grpc_environment_cache-afdfb8b9c537237a)
+2026-10-11T23:53:45.6887180Z 
+2026-10-11T23:53:45.6995470Z 
+2026-10-11T23:53:45.6996030Z running 1 test
+2026-10-11T23:53:47.6221510Z test environment_tls_cache_releases_after_task_and_finalizer_teardown ... ok
+2026-10-11T23:53:47.6222390Z 
+2026-10-11T23:53:47.6227900Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.92s
+2026-10-11T23:53:47.6229690Z 
+2026-10-11T23:53:47.6233890Z [1m[92m     Running[0m tests/grpc_force_cleanup.rs (target/debug/deps/grpc_force_cleanup-ed0efbc2c1d27514)
+2026-10-11T23:53:47.6387550Z 
+2026-10-11T23:53:47.6388430Z running 1 test
+2026-10-11T23:53:51.3728400Z test forced_cells_release_received_storage_and_decoder_failure_text ... ok
+2026-10-11T23:53:51.3728930Z 
+2026-10-11T23:53:51.3729160Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.73s
+2026-10-11T23:53:51.3729530Z 
+2026-10-11T23:53:51.3730460Z [1m[92m     Running[0m tests/grpc_packed_options.rs (target/debug/deps/grpc_packed_options-54e4ece58d084ff4)
+2026-10-11T23:53:51.3836170Z 
+2026-10-11T23:53:51.3836620Z running 1 test
+2026-10-11T23:53:51.9296860Z test tls_options_use_one_allocation_and_release_after_the_last_owner ... ok
+2026-10-11T23:53:51.9297200Z 
+2026-10-11T23:53:51.9301830Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s
+2026-10-11T23:53:51.9302820Z [1m[92m     Running[0m tests/grpc_peer_completion.rs (target/debug/deps/grpc_peer_completion-c5311625b5df178b)
+2026-10-11T23:53:51.9303230Z 
+2026-10-11T23:53:51.9445260Z 
+2026-10-11T23:53:51.9446070Z running 1 test
+2026-10-11T23:53:58.4096360Z test serving_peer_owner_survives_children_and_releases_at_completion ... ok
+2026-10-11T23:53:58.4096980Z 
+2026-10-11T23:53:58.4097380Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.47s
+2026-10-11T23:53:58.4097860Z 
+2026-10-11T23:53:58.4102780Z [1m[92m     Running[0m tests/grpc_receive_cleanup.rs (target/debug/deps/grpc_receive_cleanup-fa29d43577b6ed2e)
+2026-10-11T23:53:58.4217270Z 
+2026-10-11T23:53:58.4218310Z running 1 test
+2026-10-11T23:54:03.2637220Z test received_requests_and_statuses_release_on_errors_and_cancelled_waits ... ok
+2026-10-11T23:54:03.2637570Z 
+2026-10-11T23:54:03.2640570Z [1m[92m     Running[0m tests/grpc_render_cleanup.rs (target/debug/deps/grpc_render_cleanup-99339167f48a7d13)
+2026-10-11T23:54:03.2641460Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.84s
+2026-10-11T23:54:03.2641900Z 
+2026-10-11T23:54:03.2748180Z 
+2026-10-11T23:54:03.2748690Z running 1 test
+2026-10-11T23:54:05.2499110Z test streamed_error_rendering_releases_partial_and_complete_scratch ... ok
+2026-10-11T23:54:05.2499560Z 
+2026-10-11T23:54:05.2499770Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.98s
+2026-10-11T23:54:05.2500150Z 
+2026-10-11T23:54:05.2503110Z [1m[92m     Running[0m tests/grpc_request_encoding.rs (target/debug/deps/grpc_request_encoding-f9ab071fb4e4c7e7)
+2026-10-11T23:54:05.2621890Z 
+2026-10-11T23:54:05.2622320Z running 1 test
+2026-10-11T23:54:07.2036690Z test request_encoding_buffer_releases_on_encode_trap_and_cancelled_send ... ok
+2026-10-11T23:54:07.2037170Z 
+2026-10-11T23:54:07.2037490Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.94s
+2026-10-11T23:54:07.2037880Z 
+2026-10-11T23:54:07.2039750Z [1m[92m     Running[0m tests/grpc_response_encoding.rs (target/debug/deps/grpc_response_encoding-7ec86181db8359d1)
+2026-10-11T23:54:07.2141990Z 
+2026-10-11T23:54:07.2142330Z running 1 test
+2026-10-11T23:54:11.6080370Z test served_response_buffers_release_on_encode_trap_and_cancelled_send ... ok
+2026-10-11T23:54:11.6081070Z 
+2026-10-11T23:54:11.6081380Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.39s
+2026-10-11T23:54:11.6081730Z 
+2026-10-11T23:54:11.6082900Z [1m[92m     Running[0m tests/grpc_send_cleanup.rs (target/debug/deps/grpc_send_cleanup-f399a5e7f153f7e3)
+2026-10-11T23:54:11.6191690Z 
+2026-10-11T23:54:11.6192090Z running 1 test
+2026-10-11T23:54:13.9166910Z test encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames ... ok
+2026-10-11T23:54:13.9167330Z 
+2026-10-11T23:54:13.9167540Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.30s
+2026-10-11T23:54:13.9168080Z 
+2026-10-11T23:54:13.9172310Z [1m[92m     Running[0m tests/grpc_server_ownership.rs (target/debug/deps/grpc_server_ownership-b487a4511b9f2665)
+2026-10-11T23:54:13.9281130Z 
+2026-10-11T23:54:13.9281740Z running 1 test
+2026-10-11T23:54:19.4033590Z test cancelling_grpc_server_releases_listener_and_preserves_accepted_owners ... ok
+2026-10-11T23:54:19.4033930Z 
+2026-10-11T23:54:19.4034250Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.48s
+2026-10-11T23:54:19.4034620Z 
+2026-10-11T23:54:19.4036060Z [1m[92m     Running[0m tests/grpc_status_cleanup.rs (target/debug/deps/grpc_status_cleanup-87853d982ca731b3)
+2026-10-11T23:54:19.4141270Z 
+2026-10-11T23:54:19.4141660Z running 1 test
+2026-10-11T23:54:24.5184710Z test served_status_messages_release_after_encoding_and_on_cancellation ... ok
+2026-10-11T23:54:24.5185100Z 
+2026-10-11T23:54:24.5185330Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.10s
+2026-10-11T23:54:24.5191070Z 
+2026-10-11T23:54:24.5192030Z [1m[92m     Running[0m tests/grpc_tls_pool_identity.rs (target/debug/deps/grpc_tls_pool_identity-90f3bdc26aea5302)
+2026-10-11T23:54:24.5296730Z 
+2026-10-11T23:54:24.5297200Z running 1 test
+2026-10-11T23:54:26.4015950Z test tls_pool_keys_distinguish_complete_options_and_survive_scope_release ... ok
+2026-10-11T23:54:26.4017640Z 
+2026-10-11T23:54:26.4019070Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.87s
+2026-10-11T23:54:26.4022410Z [1m[92m     Running[0m tests/http2_body_roots.rs (target/debug/deps/http2_body_roots-2d622b2f49013164)
+2026-10-11T23:54:26.4023580Z 
+2026-10-11T23:54:26.4131520Z 
+2026-10-11T23:54:26.4132350Z running 1 test
+2026-10-11T23:54:27.3440570Z test body_copy_keeps_the_stream_alive_through_major_collection ... ok
+2026-10-11T23:54:27.3440930Z 
+2026-10-11T23:54:27.3444730Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.93s
+2026-10-11T23:54:27.3445250Z 
+2026-10-11T23:54:27.3447330Z [1m[92m     Running[0m tests/http2_peer_cleanup.rs (target/debug/deps/http2_peer_cleanup-b314bdfae8c54adc)
+2026-10-11T23:54:27.3555300Z 
+2026-10-11T23:54:27.3555880Z running 1 test
+2026-10-11T23:54:28.5989700Z test peer_subject_copy_and_option_failures_release_temporary_storage ... ok
+2026-10-11T23:54:28.5990130Z 
+2026-10-11T23:54:28.5990340Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.24s
+2026-10-11T23:54:28.5991250Z 
+2026-10-11T23:54:28.5993680Z [1m[92m     Running[0m tests/http_server.rs (target/debug/deps/http_server-043801abf8f155b7)
+2026-10-11T23:54:28.6056660Z 
+2026-10-11T23:54:28.6056870Z running 2 tests
+2026-10-11T23:54:31.1449150Z test interpreted_server ... ok
+2026-10-11T23:54:41.5089890Z test native_server ... ok
+2026-10-11T23:54:41.5091640Z 
+2026-10-11T23:54:41.5093410Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.90s
+2026-10-11T23:54:41.5095430Z 
+2026-10-11T23:54:41.5100210Z [1m[92m     Running[0m tests/inline_caf_ownership.rs (target/debug/deps/inline_caf_ownership-2487845bb17b8037)
+2026-10-11T23:54:41.5297510Z 
+2026-10-11T23:54:41.5298950Z running 2 tests
+2026-10-11T23:54:44.0930960Z test unused_counted_caf_argument_evaluates_and_releases_its_temporary ... ok
+2026-10-11T23:54:52.3376600Z test ignored_caf_arguments_still_trap_in_evaluation_order ... ok
+2026-10-11T23:54:52.3377120Z 
+2026-10-11T23:54:52.3377460Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.81s
+2026-10-11T23:54:52.3377870Z 
+2026-10-11T23:54:52.3387470Z [1m[92m     Running[0m tests/leaf_ownership.rs (target/debug/deps/leaf_ownership-6382844f4aa10b45)
+2026-10-11T23:54:52.3451710Z 
+2026-10-11T23:54:52.3452140Z running 2 tests
+2026-10-11T23:54:55.3922890Z test copied_leaves_are_released_by_counts ... ok
+2026-10-11T23:54:55.6882970Z test leaf_aliases_and_copy_results_under_stress ... ok
+2026-10-11T23:54:55.6883330Z 
+2026-10-11T23:54:55.6883850Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.34s
+2026-10-11T23:54:55.6884450Z 
+2026-10-11T23:54:55.6888280Z [1m[92m     Running[0m tests/library_input_ownership.rs (target/debug/deps/library_input_ownership-44d04cd0fa10c991)
+2026-10-11T23:54:55.6991780Z 
+2026-10-11T23:54:55.6992210Z running 2 tests
+2026-10-11T23:54:55.7085380Z test byte_pointer_export_parameters_report_the_missing_length ... ok
+2026-10-11T23:54:58.7591420Z test library_input_copies_transfer_or_release_exactly_once ... ok
+2026-10-11T23:54:58.7591850Z 
+2026-10-11T23:54:58.7592150Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.06s
+2026-10-11T23:54:58.7592460Z 
+2026-10-11T23:54:58.7596170Z [1m[92m     Running[0m tests/library_resources.rs (target/debug/deps/library_resources-2e5725357cf48b50)
+2026-10-11T23:54:58.7714200Z 
+2026-10-11T23:54:58.7714780Z running 1 test
+2026-10-11T23:55:01.7980570Z test unload_closes_owned_files_sessions_and_transferred_http2_handles ... ok
+2026-10-11T23:55:01.7981100Z 
+2026-10-11T23:55:01.7981400Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.03s
+2026-10-11T23:55:01.7981770Z 
+2026-10-11T23:55:01.7982380Z [1m[92m     Running[0m tests/library_result_ownership.rs (target/debug/deps/library_result_ownership-d64cf51b508b37fb)
+2026-10-11T23:55:01.8084800Z 
+2026-10-11T23:55:01.8085570Z running 1 test
+2026-10-11T23:55:04.3050520Z test exported_boxes_are_reclaimed_and_host_strings_survive ... ok
+2026-10-11T23:55:04.3050900Z 
+2026-10-11T23:55:04.3051320Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.50s
+2026-10-11T23:55:04.3051670Z 
+2026-10-11T23:55:04.3053460Z [1m[92m     Running[0m tests/library_unload.rs (target/debug/deps/library_unload-e1ee647b6bf91047)
+2026-10-11T23:55:04.3175050Z 
+2026-10-11T23:55:04.3175450Z running 1 test
+2026-10-11T23:55:09.7559440Z test loader_unload_drains_tasks_restores_signals_and_releases_regions ... ok
+2026-10-11T23:55:09.7559890Z 
+2026-10-11T23:55:09.7560240Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.44s
+2026-10-11T23:55:09.7560680Z 
+2026-10-11T23:55:09.7562870Z [1m[92m     Running[0m tests/lint.rs (target/debug/deps/lint-d8d61f56869b0061)
+2026-10-11T23:55:09.7700040Z 
+2026-10-11T23:55:09.7700720Z running 3 tests
+2026-10-11T23:55:09.7846270Z test every_rule_has_a_snapshot ... ok
+2026-10-11T23:55:10.5258870Z test lint_snapshots ... ok
+2026-10-11T23:55:11.2447930Z test lint_command_exit_status ... ok
+2026-10-11T23:55:11.2448500Z 
+2026-10-11T23:55:11.2448980Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.48s
+2026-10-11T23:55:11.2449390Z 
+2026-10-11T23:55:11.2454470Z [1m[92m     Running[0m tests/list_applicative_ownership.rs (target/debug/deps/list_applicative_ownership-ecb05dde0460300f)
+2026-10-11T23:55:11.2514510Z 
+2026-10-11T23:55:11.2514950Z running 5 tests
+2026-10-11T23:55:13.4070430Z test closure_drop_context_recovers_after_capture_trap_and_spill_oom ... ok
+2026-10-11T23:55:17.5377770Z test cartesian_results_and_scratch_release_on_trap_and_cancel ... ok
+2026-10-11T23:55:18.1402120Z test inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries ... ok
+2026-10-11T23:55:20.8948010Z test state_aliases_nested_errors_and_task_cancellation_match_raw_interpreter ... ok
+2026-10-11T23:55:27.2250510Z test typed_applicative_aliases_and_evaluation_order_match_raw_interpreter ... ok
+2026-10-11T23:55:27.2251250Z 
+2026-10-11T23:55:27.2251820Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.97s
+2026-10-11T23:55:27.2253030Z 
+2026-10-11T23:55:27.2259340Z [1m[92m     Running[0m tests/list_copy_ownership.rs (target/debug/deps/list_copy_ownership-c84faffc5c806af2)
+2026-10-11T23:55:27.2318150Z 
+2026-10-11T23:55:27.2318440Z running 2 tests
+2026-10-11T23:55:30.8863660Z test list_copies_and_suffixes_are_released_without_tracing ... ok
+2026-10-11T23:55:33.4438840Z test copied_spines_and_suffix_aliases_under_collection ... ok
+2026-10-11T23:55:33.4439140Z 
+2026-10-11T23:55:33.4439470Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.21s
+2026-10-11T23:55:33.4439890Z 
+2026-10-11T23:55:33.4441510Z [1m[92m     Running[0m tests/list_generation_ownership.rs (target/debug/deps/list_generation_ownership-03fed44ed32b847b)
+2026-10-11T23:55:33.4506930Z 
+2026-10-11T23:55:33.4507300Z running 3 tests
+2026-10-11T23:55:36.5735120Z test generated_lists_are_released_without_tracing ... ok
+2026-10-11T23:55:38.0036230Z test scalar_list_generation_does_not_count_address_shaped_bits ... ok
+2026-10-11T23:55:43.1946420Z test generated_lists_and_repeated_aliases_under_collection ... ok
+2026-10-11T23:55:43.1948180Z [1m[92m     Running[0m tests/list_option_ownership.rs (target/debug/deps/list_option_ownership-3f418c74675e0ea3)
+2026-10-11T23:55:43.1948680Z 
+2026-10-11T23:55:43.1949160Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.74s
+2026-10-11T23:55:43.1950850Z 
+2026-10-11T23:55:43.2027280Z 
+2026-10-11T23:55:43.2027930Z running 2 tests
+2026-10-11T23:55:46.8584720Z test optional_aliases_are_released_without_tracing ... ok
+2026-10-11T23:55:51.0070330Z test optional_element_aliases_and_predicates_under_collection ... ok
+2026-10-11T23:55:51.0070690Z 
+2026-10-11T23:55:51.0071010Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.80s
+2026-10-11T23:55:51.0071330Z 
+2026-10-11T23:55:51.0076510Z [1m[92m     Running[0m tests/list_order_ownership.rs (target/debug/deps/list_order_ownership-26cde1ef410ebf7e)
+2026-10-11T23:55:51.0134930Z 
+2026-10-11T23:55:51.0135470Z running 2 tests
+2026-10-11T23:55:54.0110230Z test ordered_copies_are_released_without_tracing ... ok
+2026-10-11T23:55:56.6889710Z test sorted_and_unique_aliases_under_collection ... ok
+2026-10-11T23:55:56.6890070Z 
+2026-10-11T23:55:56.6890430Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.68s
+2026-10-11T23:55:56.6890900Z 
+2026-10-11T23:55:56.6891750Z [1m[92m     Running[0m tests/list_structure_ownership.rs (target/debug/deps/list_structure_ownership-1f3566718ab16816)
+2026-10-11T23:55:56.6954390Z 
+2026-10-11T23:55:56.6954780Z running 4 tests
+2026-10-11T23:55:58.1881730Z test scalar_structural_fields_do_not_count_address_shaped_bits ... ok
+2026-10-11T23:56:02.2817460Z test invalid_chunk_sizes_preserve_failure_order ... ok
+2026-10-11T23:56:05.5752910Z test structural_lists_are_released_without_tracing ... ok
+2026-10-11T23:56:06.8922600Z test structural_list_aliases_under_collection ... ok
+2026-10-11T23:56:06.8923240Z 
+2026-10-11T23:56:06.8923930Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.20s
+2026-10-11T23:56:06.8924330Z 
+2026-10-11T23:56:06.8926080Z [1m[92m     Running[0m tests/loop_ownership.rs (target/debug/deps/loop_ownership-ea2f53a51ac9a453)
+2026-10-11T23:56:06.8995210Z 
+2026-10-11T23:56:06.8995630Z running 5 tests
+2026-10-11T23:56:10.1166070Z test boxed_callback_arguments_are_released_without_tracing ... ok
+2026-10-11T23:56:10.3900620Z test fused_loop_consumers_reclaim_sequence_states_without_tracing ... ok
+2026-10-11T23:56:18.8456210Z test loop_goldens_keep_trap_and_evaluation_order ... ok
+2026-10-11T23:56:19.4748410Z test loop_states_and_step_payload_aliases_under_collection ... ok
+2026-10-11T23:56:20.1059340Z test scalar_loop_payloads_do_not_release_address_shaped_bits ... ok
+2026-10-11T23:56:20.1059730Z 
+2026-10-11T23:56:20.1060010Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.21s
+2026-10-11T23:56:20.1061190Z 
+2026-10-11T23:56:20.1071610Z [1m[92m     Running[0m tests/loop_preparation_ownership.rs (target/debug/deps/loop_preparation_ownership-30f2fd4b8b4cd7ee)
+2026-10-11T23:56:20.1127720Z 
+2026-10-11T23:56:20.1128050Z running 1 test
+2026-10-11T23:56:25.8764780Z test flattened_loop_preparation_releases_original_and_partial_fields ... ok
+2026-10-11T23:56:25.8765220Z 
+2026-10-11T23:56:25.8765510Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.76s
+2026-10-11T23:56:25.8765920Z 
+2026-10-11T23:56:25.8768160Z [1m[92m     Running[0m tests/loop_unwind_ownership.rs (target/debug/deps/loop_unwind_ownership-f24f86c0e1976d2c)
+2026-10-11T23:56:25.8829280Z 
+2026-10-11T23:56:25.8829540Z running 2 tests
+2026-10-11T23:56:28.0853330Z test owned_steps_release_if_payload_preparation_fails ... ok
+2026-10-11T23:56:31.6801370Z test current_loop_states_release_at_first_and_later_cancellation_ticks ... ok
+2026-10-11T23:56:31.6802940Z [1m[92m     Running[0m tests/lsp.rs (target/debug/deps/lsp-b48ef7b27ce0ddc0)
+2026-10-11T23:56:31.6803470Z 
+2026-10-11T23:56:31.6803760Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.80s
+2026-10-11T23:56:31.6804080Z 
+2026-10-11T23:56:31.6882280Z 
+2026-10-11T23:56:31.6882680Z running 1 test
+2026-10-11T23:56:35.3062820Z test language_server ... ok
+2026-10-11T23:56:35.3063100Z 
+2026-10-11T23:56:35.3064900Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.62s
+2026-10-11T23:56:35.3065320Z 
+2026-10-11T23:56:35.3065900Z [1m[92m     Running[0m tests/macos.rs (target/debug/deps/macos-937fb59b6d808951)
+2026-10-11T23:56:35.3132120Z 
+2026-10-11T23:56:35.3132510Z running 5 tests
+2026-10-11T23:56:36.5410900Z test darwin_library_names_and_unsupported_static_linking ... ok
+2026-10-11T23:56:38.4686520Z test openssl_prefix_is_usable_in_both_backends ... ok
+2026-10-11T23:56:44.5265290Z test native_tasks_and_autodiff_under_collection ... ok
+2026-10-11T23:56:45.4802720Z test writable_global_roots_survive_collection ... ok
+2026-10-11T23:56:52.6110720Z test optimized_lists_under_collection ... ok
+2026-10-11T23:56:52.6111030Z 
+2026-10-11T23:56:52.6111320Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.30s
+2026-10-11T23:56:52.6111700Z 
+2026-10-11T23:56:52.6117120Z [1m[92m     Running[0m tests/map_ownership.rs (target/debug/deps/map_ownership-182f660ef0cd718e)
+2026-10-11T23:56:52.6174870Z 
+2026-10-11T23:56:52.6175160Z running 2 tests
+2026-10-11T23:56:55.9971850Z test mapped_spines_and_aliases_are_released_without_tracing ... ok
+2026-10-11T23:56:58.3152300Z test callback_input_capture_and_function_aliases_under_collection ... ok
+2026-10-11T23:56:58.3152590Z 
+2026-10-11T23:56:58.3152870Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.70s
+2026-10-11T23:56:58.3153220Z 
+2026-10-11T23:56:58.3153930Z [1m[92m     Running[0m tests/map_set_ownership.rs (target/debug/deps/map_set_ownership-34c3db15b9c62a80)
+2026-10-11T23:56:58.3216600Z 
+2026-10-11T23:56:58.3217050Z running 3 tests
+2026-10-11T23:56:59.9572730Z test actual_map_set_wrappers_preserve_scalar_bits_and_key_identity ... ok
+2026-10-11T23:57:04.7579230Z test map_set_elements_are_released_without_tracing ... ok
+2026-10-11T23:57:08.6522250Z test map_set_elements_and_aliases_under_collection ... ok
+2026-10-11T23:57:08.6522690Z 
+2026-10-11T23:57:08.6523400Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.33s
+2026-10-11T23:57:08.6523710Z 
+2026-10-11T23:57:08.6530600Z [1m[92m     Running[0m tests/map_unwind_ownership.rs (target/debug/deps/map_unwind_ownership-341c2a669c394965)
+2026-10-11T23:57:08.6601480Z 
+2026-10-11T23:57:08.6601960Z running 2 tests
+2026-10-11T23:57:10.5216330Z test scalar_address_bits_survive_map_cleanup ... ok
+2026-10-11T23:57:16.0627350Z test callbacks_and_partial_spines_release_results_and_scratch ... ok
+2026-10-11T23:57:16.0627730Z 
+2026-10-11T23:57:16.0628080Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.40s
+2026-10-11T23:57:16.0629330Z 
+2026-10-11T23:57:16.0630920Z [1m[92m     Running[0m tests/match_context_ownership.rs (target/debug/deps/match_context_ownership-4a4aadd24a87717e)
+2026-10-11T23:57:16.0729880Z 
+2026-10-11T23:57:16.0730290Z running 2 tests
+2026-10-11T23:57:16.9936020Z test discarded_effectful_constructor_fields_keep_their_nominal_types ... ok
+2026-10-11T23:57:20.0643000Z test source_discarded_nested_fields_release_children ... ok
+2026-10-11T23:57:20.0643340Z 
+2026-10-11T23:57:20.0643660Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.99s
+2026-10-11T23:57:20.0644010Z 
+2026-10-11T23:57:20.0646080Z [1m[92m     Running[0m tests/nested_loop_boxing.rs (target/debug/deps/nested_loop_boxing-258added695ca476)
+2026-10-11T23:57:20.0705310Z 
+2026-10-11T23:57:20.0705640Z running 1 test
+2026-10-11T23:57:27.2038130Z test nested_loop_fields_retain_exact_owners_when_boxing_unwinds ... ok
+2026-10-11T23:57:27.2038670Z 
+2026-10-11T23:57:27.2038970Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.13s
+2026-10-11T23:57:27.2039260Z 
+2026-10-11T23:57:27.2039850Z [1m[92m     Running[0m tests/numerics.rs (target/debug/deps/numerics-e1f80435464dc7b2)
+2026-10-11T23:57:27.2105830Z 
+2026-10-11T23:57:27.2106370Z running 3 tests
+2026-10-11T23:57:27.2106630Z test bench ... ignored
+2026-10-11T23:57:30.8942880Z test gpu_without_opencl ... ok
+2026-10-11T23:57:32.7379990Z test parallel_kernels_are_deterministic ... ok
+2026-10-11T23:57:32.7380500Z 
+2026-10-11T23:57:32.7380800Z test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 5.53s
+2026-10-11T23:57:32.7381150Z 
+2026-10-11T23:57:32.7386220Z [1m[92m     Running[0m tests/old_reclamation.rs (target/debug/deps/old_reclamation-73168b845d32b049)
+2026-10-11T23:57:32.7457290Z 
+2026-10-11T23:57:32.7457680Z running 3 tests
+2026-10-11T23:57:34.4251230Z test marked_owned_storage_reclaims_and_reuses_as_young ... ok
+2026-10-11T23:57:35.6007750Z test surviving_leaf_storage_is_released_by_counts ... ok
+2026-10-11T23:57:36.8902180Z test retained_task_boundaries_preserve_golden_behavior ... ok
+2026-10-11T23:57:36.8903720Z 
+2026-10-11T23:57:36.8905050Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.14s
+2026-10-11T23:57:36.8906740Z 
+2026-10-11T23:57:36.8910480Z [1m[92m     Running[0m tests/opencl_lifetime.rs (target/debug/deps/opencl_lifetime-ec1f0ac518038516)
+2026-10-11T23:57:36.9101450Z 
+2026-10-11T23:57:36.9101850Z running 1 test
+2026-10-11T23:57:49.1804380Z test opencl_load_failures_and_library_unload_release_external_owners ... ok
+2026-10-11T23:57:49.1804870Z 
+2026-10-11T23:57:49.1805240Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.27s
+2026-10-11T23:57:49.1805670Z 
+2026-10-11T23:57:49.1811780Z [1m[92m     Running[0m tests/ownership.rs (target/debug/deps/ownership-51c42464233971df)
+2026-10-11T23:57:49.1879980Z 
+2026-10-11T23:57:49.1880450Z running 3 tests
+2026-10-11T23:57:51.4443460Z test comparison_only_keys_stay_reusable ... ok
+2026-10-11T23:57:52.0912170Z test container_keys_aliases_and_callbacks ... ok
+2026-10-11T23:57:52.6613660Z test saturated_counts_protect_reachable_values ... ok
+2026-10-11T23:57:52.6613970Z 
+2026-10-11T23:57:52.6614260Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.47s
+2026-10-11T23:57:52.6614690Z 
+2026-10-11T23:57:52.6615480Z [1m[92m     Running[0m tests/pipe_modes.rs (target/debug/deps/pipe_modes-c00edd810b2abb37)
+2026-10-11T23:57:52.6719460Z 
+2026-10-11T23:57:52.6720030Z running 4 tests
+2026-10-11T23:57:53.4147800Z test deferred_until_known ... ok
+2026-10-11T23:57:53.4148690Z test function_on_the_left_composes ... ok
+2026-10-11T23:57:54.1249060Z test mixed_pipeline ... ok
+2026-10-11T23:57:54.1249540Z test value_on_the_left_applies ... ok
+2026-10-11T23:57:54.1249750Z 
+2026-10-11T23:57:54.1250060Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.45s
+2026-10-11T23:57:54.1251130Z 
+2026-10-11T23:57:54.1262020Z [1m[92m     Running[0m tests/preempt.rs (target/debug/deps/preempt-82cdae7954a9dd1b)
+2026-10-11T23:57:54.1342770Z 
+2026-10-11T23:57:54.1343160Z running 3 tests
+2026-10-11T23:57:57.4231060Z test deadline_cancels_a_spinning_task ... ok
+2026-10-11T23:58:03.9830130Z test output_is_reproducible ... ok
+2026-10-11T23:58:17.8981230Z test backends_interleave_alike_for_any_slice ... ok
+2026-10-11T23:58:17.8982970Z 
+2026-10-11T23:58:17.8984250Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.76s
+2026-10-11T23:58:17.8986020Z 
+2026-10-11T23:58:17.9007480Z [1m[92m     Running[0m tests/prefix_ownership.rs (target/debug/deps/prefix_ownership-b841b54c6f99aec0)
+2026-10-11T23:58:17.9170090Z 
+2026-10-11T23:58:17.9172140Z running 2 tests
+2026-10-11T23:58:22.0478650Z test prefixes_and_suffixes_are_released_without_tracing ... ok
+2026-10-11T23:58:24.3891460Z test prefix_and_suffix_aliases_under_collection ... ok
+2026-10-11T23:58:24.3891880Z 
+2026-10-11T23:58:24.3892150Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.47s
+2026-10-11T23:58:24.3892520Z 
+2026-10-11T23:58:24.3894760Z [1m[92m     Running[0m tests/protocol.rs (target/debug/deps/protocol-8954c1bde9d98c4e)
+2026-10-11T23:58:24.4008020Z 
+2026-10-11T23:58:24.4008630Z running 5 tests
+2026-10-11T23:58:25.1479870Z test fingerprints_depend_on_structure ... ok
+2026-10-11T23:58:25.1480670Z test encode_decode_round_trip ... ok
+2026-10-11T23:58:25.8541930Z test header_offers_the_transports ... ok
+2026-10-11T23:58:25.8542610Z test pipeline_parsing ... ok
+2026-10-11T23:58:25.8547520Z test golden_bytes ... ok
+2026-10-11T23:58:25.8547740Z 
+2026-10-11T23:58:25.8548090Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.45s
+2026-10-11T23:58:25.8548520Z 
+2026-10-11T23:58:25.8556840Z [1m[92m     Running[0m tests/raw_memory_ownership.rs (target/debug/deps/raw_memory_ownership-5345f2ded4e0ba70)
+2026-10-11T23:58:25.8662570Z 
+2026-10-11T23:58:25.8663080Z running 3 tests
+2026-10-11T23:58:27.2395880Z test native_string_boundaries_borrow_inputs_and_return_reclaimable_copies ... ok
+2026-10-11T23:58:27.2396440Z test string_copies_survive_their_source_buffers ... ok
+2026-10-11T23:58:27.9767910Z test pipe_string_copy_matches_raw_interpreter_under_gc_and_reuse_verification ... ok
+2026-10-11T23:58:27.9791560Z 
+2026-10-11T23:58:27.9791910Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.11s
+2026-10-11T23:58:27.9792240Z 
+2026-10-11T23:58:27.9792920Z [1m[92m     Running[0m tests/record_conversion_ownership.rs (target/debug/deps/record_conversion_ownership-1e0744805264df44)
+2026-10-11T23:58:27.9843410Z 
+2026-10-11T23:58:27.9843900Z running 1 test
+2026-10-11T23:58:35.8838850Z test record_conversion_overflow_releases_box_and_remaining_callers ... ok
+2026-10-11T23:58:35.8839220Z 
+2026-10-11T23:58:35.8839530Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.90s
+2026-10-11T23:58:35.8840150Z 
+2026-10-11T23:58:35.8845160Z [1m[92m     Running[0m tests/record_update_ownership.rs (target/debug/deps/record_update_ownership-6730741f35fa1365)
+2026-10-11T23:58:35.8908890Z 
+2026-10-11T23:58:35.8909350Z running 1 test
+2026-10-11T23:58:44.2228970Z test updates_release_replaced_fields_and_partial_copy_owners ... ok
+2026-10-11T23:58:44.2229340Z 
+2026-10-11T23:58:44.2229670Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.33s
+2026-10-11T23:58:44.2230080Z 
+2026-10-11T23:58:44.2231680Z [1m[92m     Running[0m tests/resource_frame_fields.rs (target/debug/deps/resource_frame_fields-91782d8b5e8783b0)
+2026-10-11T23:58:44.2346630Z 
+2026-10-11T23:58:44.2347330Z running 1 test
+2026-10-11T23:58:50.8105720Z test original_record_holders_preserve_files_without_heap_boxes ... ok
+2026-10-11T23:58:50.8106170Z 
+2026-10-11T23:58:50.8106420Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.58s
+2026-10-11T23:58:50.8108240Z 
+2026-10-11T23:58:50.8109190Z [1m[92m     Running[0m tests/resource_frame_variants.rs (target/debug/deps/resource_frame_variants-ac31dfce485b03ac)
+2026-10-11T23:58:50.8213540Z 
+2026-10-11T23:58:50.8213970Z running 1 test
+2026-10-11T23:58:58.2089570Z test original_variant_frame_holders_do_not_force_heap_boxes ... ok
+2026-10-11T23:58:58.2089940Z 
+2026-10-11T23:58:58.2090280Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.39s
+2026-10-11T23:58:58.2090650Z 
+2026-10-11T23:58:58.2092500Z [1m[92m     Running[0m tests/resource_frames.rs (target/debug/deps/resource_frames-0790d2f4ef514a9e)
+2026-10-11T23:58:58.2149240Z 
+2026-10-11T23:58:58.2149600Z running 3 tests
+2026-10-11T23:59:01.9981500Z test parameter_owner_stays_live_until_its_original_frame_exits ... ok
+2026-10-11T23:59:04.1002790Z test inlined_helper_frames_release_original_locals_before_the_next_call ... ok
+2026-10-11T23:59:09.3468150Z test resource_frame_results_and_handled_errors_keep_their_file_aliases ... ok
+2026-10-11T23:59:09.3474470Z [1m[92m     Running[0m tests/resource_match_context.rs (target/debug/deps/resource_match_context-a16a8e2d5a5d6037)
+2026-10-11T23:59:09.3474940Z 
+2026-10-11T23:59:09.3475290Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.13s
+2026-10-11T23:59:09.3475670Z 
+2026-10-11T23:59:09.3536280Z 
+2026-10-11T23:59:09.3537900Z running 1 test
+2026-10-11T23:59:20.6266290Z test nested_nominal_match_discard_preserves_source_resource_lifetimes ... ok
+2026-10-11T23:59:20.6266690Z 
+2026-10-11T23:59:20.6267020Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.27s
+2026-10-11T23:59:20.6267450Z 
+2026-10-11T23:59:20.6268450Z [1m[92m     Running[0m tests/rest.rs (target/debug/deps/rest-48d266abd3d80619)
+2026-10-11T23:59:20.6341040Z 
+2026-10-11T23:59:20.6341550Z running 25 tests
+2026-10-11T23:59:24.2350240Z test api_interpreted ... ok
+2026-10-11T23:59:39.9395910Z test api_native ... ok
+2026-10-11T23:59:41.4960930Z test cli_help_without_routes ... ok
+2026-10-11T23:59:43.9347950Z test client_golden ... ok
+2026-10-11T23:59:44.1512100Z test books_example ... ok
+2026-10-11T23:59:50.0470700Z test cors_from_the_command_line ... ok
+2026-10-12T00:00:17.2372030Z test client_round_trip ... ok
+2026-10-12T00:00:20.4170410Z test forms_and_formats_interpreted ... ok
+2026-10-12T00:00:23.2765920Z test endpoint_errors ... ok
+2026-10-12T00:00:39.2083100Z test forms_and_formats_native ... ok
+2026-10-12T00:00:39.2221730Z test import_errors ... ok
+2026-10-12T00:00:44.3516630Z test media_type_errors ... ok
+2026-10-12T00:00:47.7586230Z test openapi_golden ... ok
+2026-10-12T00:00:49.3216500Z test openapi_media_types ... ok
+2026-10-12T00:00:52.5507600Z test openapi_structure ... ok
+2026-10-12T00:00:53.4473460Z test openapi_yaml ... ok
+2026-10-12T00:00:53.4869210Z test responses_match_schemas ... ok
+2026-10-12T00:00:55.3210430Z test forms_client_round_trip ... ok
+2026-10-12T00:00:58.4956570Z test secure_interpreted ... ok
+2026-10-12T00:01:16.3915280Z test secure_native ... ok
+2026-10-12T00:01:22.4359810Z test secure_client_round_trip ... ok
+2026-10-12T00:01:23.6914300Z test server_command_line ... ok
+2026-10-12T00:01:26.5485490Z test uploads_example ... ok
+2026-10-12T00:01:31.4190890Z test yaml_documents ... ok
+2026-10-12T00:01:52.5348460Z test swagger_documents ... ok
+2026-10-12T00:01:52.5349890Z 
+2026-10-12T00:01:52.5351400Z test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 151.90s
+2026-10-12T00:01:52.5352490Z 
+2026-10-12T00:01:52.5388240Z [1m[92m     Running[0m tests/retain_unwind_ownership.rs (target/debug/deps/retain_unwind_ownership-750ff098391738b0)
+2026-10-12T00:01:52.5511650Z 
+2026-10-12T00:01:52.5512390Z running 1 test
+2026-10-12T00:01:59.8986640Z test wide_count_overflow_releases_partial_variant_retains_and_live_callers ... ok
+2026-10-12T00:01:59.8987250Z 
+2026-10-12T00:01:59.8987710Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.35s
+2026-10-12T00:01:59.8999120Z 
+2026-10-12T00:01:59.9000820Z [1m[92m     Running[0m tests/retained_thunk_ownership.rs (target/debug/deps/retained_thunk_ownership-6521be87696dcc23)
+2026-10-12T00:01:59.9066380Z 
+2026-10-12T00:01:59.9067090Z running 2 tests
+2026-10-12T00:02:03.7974030Z test spawned_thunks_release_captures_and_preserve_external_aliases ... ok
+2026-10-12T00:02:04.1000490Z test failing_spawn_preparation_releases_only_its_extra_thunk_owner ... ok
+2026-10-12T00:02:04.1000890Z 
+2026-10-12T00:02:04.1001200Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.19s
+2026-10-12T00:02:04.1001520Z 
+2026-10-12T00:02:04.1005410Z [1m[92m     Running[0m tests/reuse.rs (target/debug/deps/reuse-be39c46e962a3760)
+2026-10-12T00:02:04.1091400Z 
+2026-10-12T00:02:04.1092490Z running 5 tests
+2026-10-12T00:02:08.5708980Z test objects_are_freed_by_their_counts ... ok
+2026-10-12T00:02:53.9281840Z test unique_arrays_are_written_in_place ... ok
+2026-10-12T00:02:58.1181560Z test unique_records_are_updated_in_place ... ok
+2026-10-12T00:03:01.5151620Z test variant_cells_are_reused ... ok
+2026-10-12T00:03:04.2369450Z test golden_programs_with_reuse_verified has been running for over 60 seconds
+2026-10-12T00:03:09.9904000Z test golden_programs_with_reuse_verified ... ok
+2026-10-12T00:03:09.9904690Z 
+2026-10-12T00:03:09.9917060Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 65.88s
+2026-10-12T00:03:09.9917530Z 
+2026-10-12T00:03:09.9920460Z [1m[92m     Running[0m tests/reuse_token_ownership.rs (target/debug/deps/reuse_token_ownership-0a390d45128775e1)
+2026-10-12T00:03:09.9983880Z 
+2026-10-12T00:03:09.9984180Z running 4 tests
+2026-10-12T00:03:11.9553760Z test bump_allocator_still_compiles_token_cleanup ... ok
+2026-10-12T00:03:17.0336610Z test compiler_tokens_transfer_release_and_unwind ... ok
+2026-10-12T00:03:20.0899900Z test tail_token_cleanup_preserves_long_native_recursion ... ok
+2026-10-12T00:03:22.9114840Z test compiler_token_cleanup_respects_ownership_switches ... ok
+2026-10-12T00:03:22.9115550Z 
+2026-10-12T00:03:22.9115870Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.91s
+2026-10-12T00:03:22.9116170Z 
+2026-10-12T00:03:22.9127320Z [1m[92m     Running[0m tests/right_fold_ownership.rs (target/debug/deps/right_fold_ownership-542d7c5754a4deed)
+2026-10-12T00:03:22.9230150Z 
+2026-10-12T00:03:22.9230860Z running 2 tests
+2026-10-12T00:03:25.9068920Z test folded_accumulators_are_released_without_tracing ... ok
+2026-10-12T00:03:29.1222610Z test accumulator_input_and_capture_aliases_under_collection ... ok
+2026-10-12T00:03:29.1223000Z 
+2026-10-12T00:03:29.1223310Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.20s
+2026-10-12T00:03:29.1223700Z 
+2026-10-12T00:03:29.1225960Z [1m[92m     Running[0m tests/runtime_call_ownership.rs (target/debug/deps/runtime_call_ownership-8f08e524c0fd090c)
+2026-10-12T00:03:29.1353540Z 
+2026-10-12T00:03:29.1354000Z running 5 tests
+2026-10-12T00:03:30.8195160Z test cancelled_entry_releases_runtime_function_and_callee_parameters ... ok
+2026-10-12T00:03:32.3506170Z test failed_calls_reclaim_function_storage_without_collection ... ok
+2026-10-12T00:03:33.8152150Z test consumed_function_releases_captures_when_its_entry_fails ... ok
+2026-10-12T00:03:38.1423050Z test overapplication_releases_pending_arguments_without_counting_scalars ... ok
+2026-10-12T00:03:38.8944230Z test owned_primitive_arguments_and_stack_captures_release_on_trap ... ok
+2026-10-12T00:03:38.8944600Z 
+2026-10-12T00:03:38.8944860Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.76s
+2026-10-12T00:03:38.8945220Z 
+2026-10-12T00:03:38.8958600Z [1m[92m     Running[0m tests/scalar_traps.rs (target/debug/deps/scalar_traps-9ec73613f2824690)
+2026-10-12T00:03:38.9050910Z 
+2026-10-12T00:03:38.9051470Z running 1 test
+2026-10-12T00:04:01.7756850Z test traps_agree ... ok
+2026-10-12T00:04:01.7757900Z 
+2026-10-12T00:04:01.7769860Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.87s
+2026-10-12T00:04:01.7771250Z 
+2026-10-12T00:04:01.7786050Z [1m[92m     Running[0m tests/scope_thunk_ownership.rs (target/debug/deps/scope_thunk_ownership-9586b233d4969558)
+2026-10-12T00:04:01.7888140Z 
+2026-10-12T00:04:01.7888610Z running 1 test
+2026-10-12T00:04:08.6362540Z test scoped_callbacks_own_results_and_release_them_on_cancellation ... ok
+2026-10-12T00:04:08.6363340Z 
+2026-10-12T00:04:08.6364280Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.85s
+2026-10-12T00:04:08.6364920Z 
+2026-10-12T00:04:08.6367430Z [1m[92m     Running[0m tests/selection_unwind_ownership.rs (target/debug/deps/selection_unwind_ownership-b818ac8b544edb2c)
+2026-10-12T00:04:08.6497860Z 
+2026-10-12T00:04:08.6498890Z running 2 tests
+2026-10-12T00:04:10.7258920Z test scalar_address_bits_survive_selection_cleanup ... ok
+2026-10-12T00:04:17.4767930Z test predicates_and_partial_spines_release_selected_aliases_and_scratch ... ok
+2026-10-12T00:04:17.4768500Z 
+2026-10-12T00:04:17.4768780Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.83s
+2026-10-12T00:04:17.4818230Z [1m[92m     Running[0m tests/serializer_leaf_ownership.rs (target/debug/deps/serializer_leaf_ownership-a74f4266cb769d4a)
+2026-10-12T00:04:17.4819890Z 
+2026-10-12T00:04:17.4905320Z 
+2026-10-12T00:04:17.4908150Z running 1 test
+2026-10-12T00:04:27.9832210Z test serializer_and_codec_results_preserve_input_aliases ... ok
+2026-10-12T00:04:27.9833090Z 
+2026-10-12T00:04:27.9833390Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.49s
+2026-10-12T00:04:27.9833790Z 
+2026-10-12T00:04:27.9842830Z [1m[92m     Running[0m tests/services.rs (target/debug/deps/services-cdba032c3b2f51e7)
+2026-10-12T00:04:27.9958140Z 
+2026-10-12T00:04:27.9958610Z running 10 tests
+2026-10-12T00:04:33.3486790Z test curl_calls_the_services ... ok
+2026-10-12T00:04:33.3725600Z test go_http2_interoperates ... ok
+2026-10-12T00:04:33.3727940Z test hpack_rfc7541_examples ... ok
+2026-10-12T00:04:33.5858180Z test concurrent_streams_and_flow_control ... ok
+2026-10-12T00:04:33.6401870Z test hpack_rfc7541_examples_in_c ... ok
+2026-10-12T00:04:33.6687550Z test protobuf_golden_bytes ... ok
+2026-10-12T00:04:36.9705340Z test proto_file_of_the_shop ... ok
+2026-10-12T00:04:38.5006950Z test split_build_rejects_bad_interfaces ... ok
+2026-10-12T00:04:50.2521130Z test values_errors_and_traps_cross_the_wire ... ok
+2026-10-12T00:04:52.6420070Z test shop_split_into_services ... ok
+2026-10-12T00:04:52.6420590Z 
+2026-10-12T00:04:52.6420980Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 24.65s
+2026-10-12T00:04:52.6421460Z 
+2026-10-12T00:04:52.6436340Z [1m[92m     Running[0m tests/sort_callback_ownership.rs (target/debug/deps/sort_callback_ownership-7b76593c6ad6614c)
+2026-10-12T00:04:52.6547570Z 
+2026-10-12T00:04:52.6547960Z running 3 tests
+2026-10-12T00:04:54.2632380Z test scalar_key_bits_do_not_release_pointed_to_values ... ok
+2026-10-12T00:04:58.6447490Z test sort_keys_and_results_are_released_without_tracing ... ok
+2026-10-12T00:05:02.3938910Z test sort_keys_and_aliases_under_collection ... ok
+2026-10-12T00:05:02.3939470Z 
+2026-10-12T00:05:02.3939830Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.74s
+2026-10-12T00:05:02.3940200Z 
+2026-10-12T00:05:02.3953640Z [1m[92m     Running[0m tests/stack.rs (target/debug/deps/stack-4a86c303b25b9d23)
+2026-10-12T00:05:02.4060430Z 
+2026-10-12T00:05:02.4061970Z running 4 tests
+2026-10-12T00:05:04.7905110Z test values_that_do_not_escape_are_not_allocated ... ok
+2026-10-12T00:05:04.9040710Z test closures_that_do_not_escape_are_not_allocated ... ok
+2026-10-12T00:05:06.1451120Z test wide_records_are_returned_without_allocating ... ok
+2026-10-12T00:05:07.3133620Z test variants_returned_as_structs_are_not_allocated ... ok
+2026-10-12T00:05:07.3134050Z 
+2026-10-12T00:05:07.3134330Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.91s
+2026-10-12T00:05:07.3136090Z 
+2026-10-12T00:05:07.3139100Z [1m[92m     Running[0m tests/stack_match_ownership.rs (target/debug/deps/stack_match_ownership-b9bf37a9bd37e03a)
+2026-10-12T00:05:07.3286770Z 
+2026-10-12T00:05:07.3287490Z running 1 test
+2026-10-12T00:05:11.3768880Z test whole_stack_match_binders_own_children_and_return_aliases ... ok
+2026-10-12T00:05:11.3769760Z 
+2026-10-12T00:05:11.3770410Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.05s
+2026-10-12T00:05:11.3770810Z 
+2026-10-12T00:05:11.3814360Z [1m[92m     Running[0m tests/stack_ownership.rs (target/debug/deps/stack_ownership-d9fbdd71ee65c570)
+2026-10-12T00:05:11.3929060Z 
+2026-10-12T00:05:11.3930070Z running 2 tests
+2026-10-12T00:05:14.7076190Z test stack_children_and_returned_aliases_under_collection ... ok
+2026-10-12T00:05:16.3923520Z test temporary_stack_arguments_release_owned_children ... ok
+2026-10-12T00:05:16.3924020Z 
+2026-10-12T00:05:16.3924290Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.00s
+2026-10-12T00:05:16.3924590Z 
+2026-10-12T00:05:16.3926140Z [1m[92m     Running[0m tests/state_sequence_ownership.rs (target/debug/deps/state_sequence_ownership-8f0bd1b5b4edc7f9)
+2026-10-12T00:05:16.4049880Z 
+2026-10-12T00:05:16.4050530Z running 2 tests
+2026-10-12T00:05:20.2012590Z test state_sequences_are_released_without_tracing ... ok
+2026-10-12T00:05:25.5543390Z test state_sequences_preserve_aliases_under_collection ... ok
+2026-10-12T00:05:25.5544010Z 
+2026-10-12T00:05:25.5544300Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.15s
+2026-10-12T00:05:25.5544680Z 
+2026-10-12T00:05:25.5557870Z [1m[92m     Running[0m tests/static_memory.rs (target/debug/deps/static_memory-2480cfb00057332e)
+2026-10-12T00:05:25.5708390Z 
+2026-10-12T00:05:25.5709770Z running 5 tests
+2026-10-12T00:05:25.5710860Z test golden_programs_with_static_memory ... ok
+2026-10-12T00:05:25.5711890Z test a_small_heap_is_collected_and_reused ... ok
+2026-10-12T00:05:25.5712510Z test nothing_is_mapped_after_startup ... ok
+2026-10-12T00:05:25.5713980Z test running_out_names_the_option ... ok
+2026-10-12T00:05:25.5883820Z test options_are_checked ... ok
+2026-10-12T00:05:25.5884010Z 
+2026-10-12T00:05:25.5889670Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+2026-10-12T00:05:25.5890170Z 
+2026-10-12T00:05:25.5894000Z [1m[92m     Running[0m tests/std_tests.rs (target/debug/deps/std_tests-93c0dac508044f1d)
+2026-10-12T00:05:25.6017810Z 
+2026-10-12T00:05:25.6018730Z running 2 tests
+2026-10-12T00:05:29.8176210Z test std_tests_pass ... ok
+2026-10-12T00:05:50.9461790Z test std_tests_pass_natively ... ok
+2026-10-12T00:05:50.9462570Z 
+2026-10-12T00:05:50.9462890Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.34s
+2026-10-12T00:05:50.9463270Z 
+2026-10-12T00:05:50.9472090Z [1m[92m     Running[0m tests/stdlib_doc.rs (target/debug/deps/stdlib_doc-6cc80f1d14633083)
+2026-10-12T00:05:50.9599680Z 
+2026-10-12T00:05:50.9600080Z running 1 test
+2026-10-12T00:05:50.9761820Z test stdlib_doc_is_current ... ok
+2026-10-12T00:05:50.9762070Z 
+2026-10-12T00:05:50.9762280Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+2026-10-12T00:05:50.9762640Z 
+2026-10-12T00:05:50.9765180Z [1m[92m     Running[0m tests/task_handle_ownership.rs (target/debug/deps/task_handle_ownership-468eefe7899cc066)
+2026-10-12T00:05:50.9887150Z 
+2026-10-12T00:05:50.9887580Z running 1 test
+2026-10-12T00:06:00.7375620Z test task_handles_and_cached_results_have_independent_owners ... ok
+2026-10-12T00:06:00.7376500Z 
+2026-10-12T00:06:00.7376750Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.75s
+2026-10-12T00:06:00.7377160Z 
+2026-10-12T00:06:00.7386300Z [1m[92m     Running[0m tests/task_ownership.rs (target/debug/deps/task_ownership-323d45cdcf8d1b94)
+2026-10-12T00:06:00.7504190Z 
+2026-10-12T00:06:00.7505090Z running 3 tests
+2026-10-12T00:06:02.4240810Z test deadline_aliases_count_only_owned_types ... ok
+2026-10-12T00:06:03.4926040Z test deadline_passthrough_preserves_count_reclamation ... ok
+2026-10-12T00:06:06.1971170Z test task_values_and_channel_aliases_under_stress ... ok
+2026-10-12T00:06:06.1971580Z 
+2026-10-12T00:06:06.1972100Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.45s
+2026-10-12T00:06:06.1972570Z 
+2026-10-12T00:06:06.1977280Z [1m[92m     Running[0m tests/task_timer_order.rs (target/debug/deps/task_timer_order-757dcef67d48e0e7)
+2026-10-12T00:06:06.2093760Z 
+2026-10-12T00:06:06.2094140Z running 1 test
+2026-10-12T00:06:16.3515590Z test channel_orders_prints_even_when_shorter_timer_starts_late ... ok
+2026-10-12T00:06:16.3516620Z 
+2026-10-12T00:06:16.3516990Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.14s
+2026-10-12T00:06:16.3517380Z 
+2026-10-12T00:06:16.3519930Z [1m[92m     Running[0m tests/temporary_ownership.rs (target/debug/deps/temporary_ownership-411085fa848ca39b)
+2026-10-12T00:06:16.3635130Z 
+2026-10-12T00:06:16.3637860Z running 2 tests
+2026-10-12T00:06:18.7063140Z test borrowed_constructor_temporaries_release_their_children ... ok
+2026-10-12T00:06:19.6197190Z test retained_children_survive_borrowed_constructor_cleanup ... ok
+2026-10-12T00:06:19.6197620Z 
+2026-10-12T00:06:19.6199600Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.26s
+2026-10-12T00:06:19.6200030Z 
+2026-10-12T00:06:19.6200820Z [1m[92m     Running[0m tests/text_ownership.rs (target/debug/deps/text_ownership-8621228e3cf3e47a)
+2026-10-12T00:06:19.6329720Z 
+2026-10-12T00:06:19.6331460Z running 3 tests
+2026-10-12T00:06:22.7585070Z test nested_text_results_are_released_without_tracing ... ok
+2026-10-12T00:06:23.4821710Z test nested_text_results_under_collection ... ok
+2026-10-12T00:06:25.6995030Z test text_conversion_scratch_stays_bounded_without_tracing ... ok
+2026-10-12T00:06:25.6995860Z 
+2026-10-12T00:06:25.6996250Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.07s
+2026-10-12T00:06:25.6996680Z 
+2026-10-12T00:06:25.7000100Z [1m[92m     Running[0m tests/tls.rs (target/debug/deps/tls-e18ab2d41cc7fa08)
+2026-10-12T00:06:25.7131950Z 
+2026-10-12T00:06:25.7133750Z running 10 tests
+2026-10-12T00:06:31.9353600Z test client_of_openssl_s_server ... ok
+2026-10-12T00:06:36.5105760Z test grpc_with_client_certificates ... ok
+2026-10-12T00:06:48.1109800Z test grpc_over_tls ... ok
+2026-10-12T00:06:48.1424990Z test linking ... ok
+2026-10-12T00:06:51.7611870Z test mutual_tls ... ok
+2026-10-12T00:06:52.5831890Z test rejected_for_webassembly ... ok
+2026-10-12T00:06:57.7704550Z test https_servers_and_clients ... ok
+2026-10-12T00:07:17.2590910Z test rest_with_client_certificates ... ok
+2026-10-12T00:07:28.6480600Z test rest_over_https ... ok
+2026-10-12T00:07:33.6070720Z test streams ... ok
+2026-10-12T00:07:33.6071930Z 
+2026-10-12T00:07:33.6074000Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 67.89s
+2026-10-12T00:07:33.6077070Z 
+2026-10-12T00:07:33.6130070Z [1m[92m     Running[0m tests/tls_alpn_roots.rs (target/debug/deps/tls_alpn_roots-c7be20039c006750)
+2026-10-12T00:07:33.6252970Z 
+2026-10-12T00:07:33.6253250Z running 1 test
+2026-10-12T00:07:34.9130230Z test alpn_string_allocation_keeps_the_owning_session_live ... ok
+2026-10-12T00:07:34.9130790Z 
+2026-10-12T00:07:34.9131690Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.29s
+2026-10-12T00:07:34.9132330Z 
+2026-10-12T00:07:34.9138700Z [1m[92m     Running[0m tests/tls_cache_ownership.rs (target/debug/deps/tls_cache_ownership-9cf2a286edfe88de)
+2026-10-12T00:07:34.9274300Z 
+2026-10-12T00:07:34.9274720Z running 1 test
+2026-10-12T00:07:36.8968440Z test tls_cache_allocation_failures_release_partial_owners_and_allow_retry ... ok
+2026-10-12T00:07:36.8968930Z 
+2026-10-12T00:07:36.8969230Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.97s
+2026-10-12T00:07:36.8970490Z 
+2026-10-12T00:07:36.8971700Z [1m[92m     Running[0m tests/tls_listener_ownership.rs (target/debug/deps/tls_listener_ownership-af80f94a41b47904)
+2026-10-12T00:07:36.9110990Z 
+2026-10-12T00:07:36.9111330Z running 1 test
+2026-10-12T00:07:42.0068510Z test listener_stop_releases_context_after_accepted_sessions_finish ... ok
+2026-10-12T00:07:42.0068950Z 
+2026-10-12T00:07:42.0070580Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.10s
+2026-10-12T00:07:42.0070950Z 
+2026-10-12T00:07:42.0078450Z [1m[92m     Running[0m tests/tls_peer_subject_ownership.rs (target/debug/deps/tls_peer_subject_ownership-23b592cbec6e78b5)
+2026-10-12T00:07:42.0206080Z 
+2026-10-12T00:07:42.0206540Z running 1 test
+2026-10-12T00:07:44.4499000Z test peer_subject_failures_and_copy_traps_release_temporary_owners ... ok
+2026-10-12T00:07:44.4499730Z 
+2026-10-12T00:07:44.4532930Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.43s
+2026-10-12T00:07:44.4541610Z [1m[92m     Running[0m tests/tls_wire_ownership.rs (target/debug/deps/tls_wire_ownership-d141c0a650730833)
+2026-10-12T00:07:44.4542030Z 
+2026-10-12T00:07:44.4702590Z 
+2026-10-12T00:07:44.4706310Z running 1 test
+2026-10-12T00:07:46.9973220Z test alpn_preparation_bounds_storage_and_closes_connection_on_failure ... ok
+2026-10-12T00:07:46.9973810Z 
+2026-10-12T00:07:46.9974160Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.53s
+2026-10-12T00:07:46.9974530Z 
+2026-10-12T00:07:46.9978180Z [1m[92m     Running[0m tests/typed_state_ownership.rs (target/debug/deps/typed_state_ownership-b314660d39699702)
+2026-10-12T00:07:47.0147480Z 
+2026-10-12T00:07:47.0147970Z running 2 tests
+2026-10-12T00:07:56.0948160Z test typed_state_changes_preserve_pipe_semantics_and_suspended_tasks ... ok
+2026-10-12T00:07:57.2993290Z test state_owners_reclaim_aliases_and_unwind_on_actual_runtime_boundaries ... ok
+2026-10-12T00:07:57.2994400Z 
+2026-10-12T00:07:57.2995190Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.29s
+2026-10-12T00:07:57.2995540Z 
+2026-10-12T00:07:57.3002110Z [1m[92m     Running[0m tests/unboxed_worker_locals.rs (target/debug/deps/unboxed_worker_locals-8f9714d331b00797)
+2026-10-12T00:07:57.3150860Z 
+2026-10-12T00:07:57.3151370Z running 2 tests
+2026-10-12T00:07:58.1532220Z test transferred_record_fields_preserve_aliases_and_trap_cleanup ... ok
+2026-10-12T00:07:59.7902660Z test recursive_record_workers_keep_results_unboxed ... ok
+2026-10-12T00:07:59.7903030Z 
+2026-10-12T00:07:59.7903250Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.48s
+2026-10-12T00:07:59.7903610Z 
+2026-10-12T00:07:59.7904720Z [1m[92m     Running[0m tests/unwind_cleanup.rs (target/debug/deps/unwind_cleanup-4d7586a2c14c3ea3)
+2026-10-12T00:07:59.8019970Z 
+2026-10-12T00:07:59.8020760Z running 3 tests
+2026-10-12T00:08:01.5788940Z test cleanup_scopes_and_suspended_tasks_unwind_exactly_once ... ok
+2026-10-12T00:08:03.3871980Z test scoped_files_close_on_return_error_trap_and_cancellation ... ok
+2026-10-12T00:08:03.4209480Z test scoped_file_handlers_match_interpreter ... ok
+2026-10-12T00:08:03.4209820Z 
+2026-10-12T00:08:03.4210140Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.62s
+2026-10-12T00:08:03.4210530Z 
+2026-10-12T00:08:03.4213820Z [1m[92m     Running[0m tests/variant_alias_ownership.rs (target/debug/deps/variant_alias_ownership-5b2b8f7ab3da1f5d)
+2026-10-12T00:08:03.4326680Z 
+2026-10-12T00:08:03.4327200Z running 2 tests
+2026-10-12T00:08:04.5897110Z test returned_variant_aliases_transfer_fields_once ... ok
+2026-10-12T00:08:08.2696240Z test source_aliases_across_yield_keep_pipe_behavior ... ok
+2026-10-12T00:08:08.2697150Z 
+2026-10-12T00:08:08.2697580Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.84s
+2026-10-12T00:08:08.2697990Z 
+2026-10-12T00:08:08.2709980Z [1m[92m     Running[0m tests/variant_conversion_ownership.rs (target/debug/deps/variant_conversion_ownership-6cba9c6f980e4a23)
+2026-10-12T00:08:08.2826930Z 
+2026-10-12T00:08:08.2827950Z running 1 test
+2026-10-12T00:08:16.0977030Z test conversion_overflow_releases_box_and_remaining_callers ... ok
+2026-10-12T00:08:16.0977690Z 
+2026-10-12T00:08:16.0977960Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.82s
+2026-10-12T00:08:16.0978310Z 
+2026-10-12T00:08:16.0979210Z [1m[92m     Running[0m tests/wasm.rs (target/debug/deps/wasm-4e0ea1e3ae0d13c0)
+2026-10-12T00:08:16.1107350Z 
+2026-10-12T00:08:16.1107830Z running 7 tests
+2026-10-12T00:08:16.1499780Z test browser_loader ... ok
+2026-10-12T00:08:16.1500340Z test command_line_program_under_wasi ... ok
+2026-10-12T00:08:16.1780250Z test golden_programs_under_wasi ... ok
+2026-10-12T00:08:16.1780640Z test tasks_as_fibers ... ok
+2026-10-12T00:08:16.2042450Z test tasks_with_asyncify ... ok
+2026-10-12T00:08:16.2044550Z test unavailable_effects_are_rejected ... ok
+2026-10-12T00:08:16.2295300Z test webassembly_tutorial_runs_under_wasi ... ok
+2026-10-12T00:08:16.2295580Z 
+2026-10-12T00:08:16.2295910Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+2026-10-12T00:08:16.2296310Z 
+2026-10-12T00:08:16.2298370Z [1m[92m     Running[0m tests/wasm_resource_counts.rs (target/debug/deps/wasm_resource_counts-84399a1e302e265a)
+2026-10-12T00:08:16.2417630Z 
+2026-10-12T00:08:16.2418320Z running 3 tests
+2026-10-12T00:08:18.8245500Z test bump_heap_aggregate_counts_release_file_children ... ok
+2026-10-12T00:08:18.8484110Z test wasi_aggregate_counts_release_file_children ... ok
+2026-10-12T00:08:20.0399220Z test disabled_free_disposes_resource_counts_without_freeing_bump_storage ... ok
+2026-10-12T00:08:20.0399730Z 
+2026-10-12T00:08:20.0400190Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.80s
+2026-10-12T00:08:20.0401010Z 
+2026-10-12T00:08:20.0405960Z [1m[92m     Running[0m tests/web.rs (target/debug/deps/web-5a99e635542badd1)
+2026-10-12T00:08:20.0536530Z 
+2026-10-12T00:08:20.0536860Z running 11 tests
+2026-10-12T00:08:21.8090990Z test chat_example ... ok
+2026-10-12T00:08:24.3020380Z test curl_h2c_and_compression_interpreted ... ok
+2026-10-12T00:08:42.5099280Z test curl_h2c_and_compression_native ... ok
+2026-10-12T00:08:43.9392650Z test curl_h2_over_tls_with_alpn ... ok
+2026-10-12T00:08:49.0483780Z test fwp_client_and_server ... ok
+2026-10-12T00:08:50.4036810Z test fwp_client_and_server_over_tls ... ok
+2026-10-12T00:08:51.4819950Z test native_under_gc_stress ... ok
+2026-10-12T00:08:51.5129290Z test h2_graceful_shutdown ... ok
+2026-10-12T00:08:53.3682300Z test websocket_raw_interpreted ... ok
+2026-10-12T00:08:53.7525100Z test websocket_raw_native ... ok
+2026-10-12T00:08:53.8950820Z test websocket_node_client ... ok
+2026-10-12T00:08:53.8951170Z 
+2026-10-12T00:08:53.8951700Z test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 33.84s
+2026-10-12T00:08:53.8952210Z 
+2026-10-12T00:08:53.8967360Z [1m[92m     Running[0m tests/wide_counts.rs (target/debug/deps/wide_counts-71f3a9d828695f0b)
+2026-10-12T00:08:53.9123110Z 
+2026-10-12T00:08:53.9123510Z running 3 tests
+2026-10-12T00:09:00.4144930Z test high_fanout_functions_and_leaves_survive_collection ... ok
+2026-10-12T00:09:02.4838700Z test wide_counts_release_aliases_and_clear_gc_metadata ... ok
+2026-10-12T00:09:02.9439870Z test high_fanout_leaves_are_reclaimed_without_tracing ... ok
+2026-10-12T00:09:02.9440250Z 
+2026-10-12T00:09:02.9440570Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.03s
+2026-10-12T00:09:02.9440890Z 
+2026-10-12T00:09:02.9482920Z [1m[92m     Running[0m tests/within_thunk_ownership.rs (target/debug/deps/within_thunk_ownership-cf896ae99b130244)
+2026-10-12T00:09:02.9629740Z 
+2026-10-12T00:09:02.9630120Z running 1 test
+2026-10-12T00:09:07.8187880Z test deadline_thunks_preserve_aliases_and_release_capture_owners ... ok
+2026-10-12T00:09:07.8194750Z 
+2026-10-12T00:09:07.8195030Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.86s
+2026-10-12T00:09:07.8195490Z 
+2026-10-12T00:09:07.8196210Z [1m[92m     Running[0m tests/worker_boxing_ownership.rs (target/debug/deps/worker_boxing_ownership-27b19b5ae0418180)
+2026-10-12T00:09:07.8316660Z 
+2026-10-12T00:09:07.8317040Z running 1 test
+2026-10-12T00:09:14.9089040Z test failed_result_boxing_releases_fields_and_remaining_caller_owners ... ok
+2026-10-12T00:09:14.9089470Z 
+2026-10-12T00:09:14.9094670Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.08s
+2026-10-12T00:09:14.9095070Z 
+2026-10-12T00:09:14.9117700Z [1m[92m     Running[0m tests/worker_preparation_ownership.rs (target/debug/deps/worker_preparation_ownership-5acbd7d39fa4e350)
+2026-10-12T00:09:14.9222030Z 
+2026-10-12T00:09:14.9222370Z running 1 test
+2026-10-12T00:09:21.5500460Z test wrapper_preparation_failures_and_worker_entry_preserve_exact_owners ... ok
+2026-10-12T00:09:21.5501350Z 
+2026-10-12T00:09:21.5501720Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.63s
+2026-10-12T00:09:21.5502170Z 
+2026-10-12T00:09:21.5503810Z [1m[92m     Running[0m tests/zip_ownership.rs (target/debug/deps/zip_ownership-966a7345be0a3bc6)
+2026-10-12T00:09:21.5633340Z 
+2026-10-12T00:09:21.5633740Z running 2 tests
+2026-10-12T00:09:25.0049170Z test zipped_spines_and_aliases_are_released_without_tracing ... ok
+2026-10-12T00:09:28.4201040Z test two_input_and_capture_aliases_under_collection ... ok
+2026-10-12T00:09:28.4202190Z 
+2026-10-12T00:09:28.4203080Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.86s
+2026-10-12T00:09:28.4204310Z 
+2026-10-12T00:09:28.4205880Z [1m[92m     Running[0m tests/zip_unwind_ownership.rs (target/debug/deps/zip_unwind_ownership-65f43574a02f79cf)
+2026-10-12T00:09:28.4350680Z 
+2026-10-12T00:09:28.4351470Z running 2 tests
+2026-10-12T00:09:30.8753300Z test scalar_address_bits_survive_zip_cleanup ... ok
+2026-10-12T00:09:39.1544460Z test zip_callbacks_partial_spines_and_allocation_failure_release_owners ... ok
+2026-10-12T00:09:39.1545140Z 
+2026-10-12T00:09:39.1545430Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.72s
+2026-10-12T00:09:39.1545840Z 
+2026-10-12T00:09:39.1911320Z Post job cleanup.
+2026-10-12T00:09:39.6021540Z [command]/opt/homebrew/bin/git version
+2026-10-12T00:09:39.6270010Z git version 2.55.0
+2026-10-12T00:09:39.6291510Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/5d15e889-9934-46b9-ba0a-8a8fce298c77/.gitconfig'
+2026-10-12T00:09:39.6304160Z Temporarily overriding HOME='/Users/runner/work/_temp/5d15e889-9934-46b9-ba0a-8a8fce298c77' before making global git config changes
+2026-10-12T00:09:39.6305950Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-12T00:09:39.6309940Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/fun-with-pipes/fun-with-pipes
+2026-10-12T00:09:39.6453010Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-12T00:09:39.6521160Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-12T00:09:39.9789930Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-12T00:09:39.9857750Z http.https://github.com/.extraheader
+2026-10-12T00:09:39.9865710Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-12T00:09:39.9949690Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-12T00:09:40.0925890Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-12T00:09:40.0993130Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-12T00:09:40.2189640Z Cleaning up orphan processes
+2026-10-12T00:09:42.3147260Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

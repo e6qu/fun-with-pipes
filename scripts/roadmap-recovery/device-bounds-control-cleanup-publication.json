@@ -1,0 +1,9 @@
+{
+  "head": "6ee21a54dee1029178b28291d60dd31dd179a7a7",
+  "previous": "857cd5d2ee09f52cef2d6cb9fc33fd904a14d9c6",
+  "branch": "ownership-evidence-device-output-bounds",
+  "tree": "55e195f7f53c128943b1e36cf73418cd505bc193",
+  "files": {
+    "tests/fixtures/device_bounds_probe.c": "14cecd7865a11ac9276cbb76de1e6dc783a7b71caf48b9c5dee5a3c2bfc2e902"
+  }
+}

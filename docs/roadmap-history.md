@@ -18302,3 +18302,50 @@ allocation calls/bytes, at O1/O2 on Linux and both macOS architectures. Report
 warmup, live/peak memory and tape layout separately; stack scope storage alone
 does not establish allocation parity for generic callback bridges.
 
+
+
+## Kernel and recovery preparation before device bounds
+
+Actual temporary recovery restoration passes on disposable GitHub runner38185353180.
+All365 restored targets (9134228 bytes) have verified source hashes; publishers,
+merge helpers and compiler workloads were not executed. Metadata and proof are
+retained in fwp-verified-recovery-restoration. Checkout and artifact upload v7
+also pass there; the dedicated kernel preflight below proves both actions on
+Linux and both macOS architectures. No local recovery restoration ran.
+
+An encountered numeric kernel bug is also fixed in preparation: computing
+(sp - 1) at an empty evaluation stack forms an out-of-bounds top pointer.
+Candidate28db5471d503763aa27e7da4f60c5ad880ad4183 passes Linux/ARM/Intel
+runner38185769269. Extracted actual kernels pass O1/O2 address/undefined/unsigned-
+overflow sanitizers with first leaf/constant operations, lengths0/1/7/127/256,
+nonzero offsets, exact numeric bytes and boundary sentinels. Removing the guard
+must fail on the empty-stack subtraction. Existing parallel-kernel and missing-
+OpenCL controls also pass against explicit FWP_NO_OPT=1 interpreter results.
+Original benchmark remains ignored; no timing or real GPU claim is established.
+Retain C, binary and status artifacts on GitHub. The next finite phase2 exit
+bundle combines this fix with buffer/array/bump bounds and Node24 actions;
+PR124's current head remains frozen. Future finalizer pins all three passing
+kernel jobs and retains array/kernel controls; metadata exports are separate
+from binary artifacts to keep local downloads bounded.
+
+A bounded archive-based recovery refinement is prepared to replace hundreds of
+per-blob API requests with one immutable source archive. Each restored source
+still requires its Git blob hash, temporary-path checks and size limits. The
+original runner restoration proof above remains valid for its tested version;
+the refined restorer and validator require a fresh checkpoint audit before
+claiming that the faster path is verified.
+
+The kernel constant-word refinement at d240231c5dd33e83ecdd5bf3df06715a0e279768
+passes all three platform preflights in38186836622, including exact F64 bytes,
+stack subtraction and omitted decoder controls. Native compiler flags do not
+disable strict aliasing; the candidate reads V words through the existing
+memcpy bit decoder. No timing or new GPU hardware claim follows.
+
+Device allocation guards are prepared at857cd5d2ee09f52cef2d6cb9fc33fd904a14d9c6
+on ownership-evidence-device-output-bounds. Positive output counts are checked
+before multiplication/allocation; malformed code and input-length errors remain
+first, and the temporary input table is released on the new trap. Workspace
+size is checked after input validation in both implementations. Raw-interpreter,
+O1/O2, GC/reuse, bounded allocation and omitted guard/cleanup controls are pending
+on Linux/ARM/Intel. Include only passing candidates in the next finite-review
+bundle; current PR124 remains frozen. Receipt: fwp-device-bounds-publication.json.
