@@ -13,7 +13,7 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
       ("effect-order","main = [1i8, 2i8] | array.from-list | array.map (tap echo) | array.fold add 127i8 | echo\n",101),
       ("distinct-traps","main = [0, 9223372036854775807] | array.from-list | array.map (add 1) | array.fold div 0 | echo\n",101),
       ("length-overflow","main = [127i8] | array.from-list | array.map (add 1i8) | array.length | echo\n",101),
-      ("recursive-callback","descend : I64 -> I64\ndescend = if (le 0) id (sub 1 | descend)\nmain = [3, 2] | array.from-list | array.map descend | array.fold add 0 | echo\n",0),
+      ("recursive-callback","descend : I64 -> I64\nrec descend = if (le 0) id (sub 1 | descend)\nmain = [3, 2] | array.from-list | array.map descend | array.fold add 0 | echo\n",0),
     ];
     for (label,source,status) in cases {
         let input=directory.join(format!("{label}.fwp"));std::fs::write(&input,source).unwrap();
@@ -49,12 +49,15 @@ fn numeric_array_fusion_eliminates_intermediates_and_reclaims_inputs() {
         for opt in ["-O1","-O2"] {
             let executable=directory.join(format!("profile-{mode}{}",&opt[1..]));fwp::cgen::compile_c(&format!("{code}\n{probe}"),&executable,opt).unwrap();
             let out=checked(Command::new(&executable).env("FWP_GC_STRESS","0").env("FWP_GC_VERIFY","1").env("FWP_REUSE_VERIFY","0"));
+            if let Some(destination)=std::env::var_os("FWP_ARRAY_FUSION_ARTIFACTS") {
+                let destination=std::path::PathBuf::from(destination);std::fs::create_dir_all(&destination).unwrap();std::fs::write(destination.join(format!("permanent-{mode}{opt}.json")),&out.stdout).unwrap();
+            }
             let report=fwp::json::Json::parse(std::str::from_utf8(&out.stdout).unwrap()).unwrap();
             let Some(fwp::json::Json::Arr(cases))=report.get("cases") else {panic!("missing measured cases");};
             let bits:Vec<_>=cases.iter().map(|case| (case.get("elements").unwrap().clone(),case.get("resultBits").unwrap().clone())).collect();
             results.push(bits);
         }
     }
-    assert!(results.windows(2).all(|pair| pair[0]==pair[1]),"Floating result bits changed with fusion or optimization");
+    assert!(results.windows(2).all(|pair| pair[0]==pair[1]),"Floating result bits changed with fusion or optimization: {results:?}");
     std::fs::remove_dir_all(directory).unwrap();
 }

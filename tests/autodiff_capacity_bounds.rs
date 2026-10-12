@@ -22,7 +22,7 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
     for opt in ["-O1","-O2"] {
       for (label,source,expected) in [("checked",&code,0),("missing-bound",&missing_input_bound,182),("missing-release",&missing_release,184),("missing-registry-owner",&missing_registry_owner,186)] {
         let executable=directory.join(format!("{label}{}",&opt[1..]));fwp::cgen::compile_c(source,&executable,opt).unwrap();
-        let out=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1").env("FWP_REUSE_VERIFY","1").output().unwrap();
+        let out=Command::new(&executable).env("FWP_AD_WORKSPACE","0").env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1").env("FWP_REUSE_VERIFY","1").output().unwrap();
         assert_eq!(out.status.code(),Some(expected),"{label} {opt}: {}",String::from_utf8_lossy(&out.stderr));
         if expected==0 {assert_eq!(out.stdout,b"checked tape capacities and exact realloc failure ownership passed\n");}
       }
