@@ -375,6 +375,7 @@ struct RemoteSpec {
 
 struct Gen<'p> {
     prog: &'p Program,
+    uncounted: &'p Program,
     descs: HashMap<MT, usize>,
     desc_defs: Vec<String>,
     /// Drop functions by type (`Gen::drop_id`): a reference given up, and
@@ -2097,6 +2098,7 @@ fn allocates(e: &Expr, n: usize) -> bool {
 /// (`Again s` and `Stop r` in tail position) write the next state or the
 /// result instead of being allocated.
 struct LoopGen {
+    unpacked_parameters: bool,
     tails: std::collections::HashSet<*const Expr>,
     record: bool,
     /// Per field of a record state: its first slot in the state arrays,
@@ -2373,6 +2375,60 @@ fn again_record(e: &Expr) -> Option<Expr> {
     })
 }
 
+/// Give flat loop state fields their own ownership parameters before RC.
+/// This is the same state layout already selected by loop_shape; it avoids
+/// retaining a field merely to move it from the old state to the next state.
+fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
+    let Body::Expr(body) = &f.body else { return None };
+    if f.arity != 1 { return None; }
+    let fields = record_fields(&prog.shapes, &f.locals[0])?;
+    if fields.is_empty() || fields.iter().any(|(_, ty)| crate::resource::contains_file(&prog.shapes, ty)) {
+        return None;
+    }
+    let width = u32::try_from(fields.len()).ok()?;
+    fn local(l: Local, width: u32) -> Option<Local> {
+        (l > 0).then(|| l.checked_add(width - 1)).flatten()
+    }
+    fn pattern(p: &Pat, width: u32) -> Option<Pat> {
+        Some(match p {
+            Pat::Bind(l) => Pat::Bind(local(*l, width)?),
+            Pat::Construct(tag, ps) => Pat::Construct(*tag, ps.iter().map(|p| pattern(p, width)).collect::<Option<_>>()?),
+            Pat::Record(ps) => Pat::Record(ps.iter().map(|p| pattern(p, width)).collect::<Option<_>>()?),
+            Pat::Wild | Pat::Lit(_) => p.clone(),
+        })
+    }
+    fn rewrite(e: &Expr, width: u32) -> Option<Expr> {
+        let one = |e: &Expr| rewrite(e, width);
+        let many = |es: &[Expr]| es.iter().map(one).collect::<Option<Vec<_>>>();
+        Some(match e {
+            Expr::Field(base, index) if matches!(&**base, Expr::Local(0)) => {
+                if *index >= width { return None; }
+                Expr::Local(*index)
+            }
+            Expr::Local(l) => Expr::Local(local(*l, width)?),
+            Expr::Const(_) | Expr::Func(_) => e.clone(),
+            Expr::Call(id, xs) => Expr::Call(*id, many(xs)?),
+            Expr::Apply(f, xs) => Expr::Apply(Box::new(one(f)?), many(xs)?),
+            Expr::Construct(tag, xs) => Expr::Construct(*tag, many(xs)?),
+            Expr::Record(xs) => Expr::Record(many(xs)?),
+            Expr::Field(base, index) => Expr::Field(Box::new(one(base)?), *index),
+            Expr::SetFields(base, fields) => Expr::SetFields(Box::new(one(base)?), fields.iter().map(|(i, e)| Some((*i, one(e)?))).collect::<Option<_>>()?),
+            Expr::Let(l, value, body) => Expr::Let(local(*l, width)?, Box::new(one(value)?), Box::new(one(body)?)),
+            Expr::Match(value, arms) => Expr::Match(Box::new(one(value)?), arms.iter().map(|(p, b)| Some((pattern(p, width)?, one(b)?))).collect::<Option<_>>()?),
+            // Original resource frames retain their established representation.
+            // This transformation runs on the source IR, before reference counts.
+            Expr::ResourceRegion { .. } | Expr::Dup(..) | Expr::Drop(..) => return None,
+        })
+    }
+    let body = rewrite(body, width)?;
+    let result = f.ty.params(1).1.clone();
+    let params: Vec<MT> = fields.iter().map(|(_, ty)| ty.clone()).collect();
+    let ty = params.iter().rev().fold(result, |ret, p| MT::Fun(Box::new(p.clone()), Box::new(ret)));
+    let mut locals = params;
+    locals.extend(f.locals.iter().skip(1).cloned());
+    Some(Func { name: f.name.clone(), arity: width, locals, ty, body: Body::Expr(body) })
+}
+
 fn loop_state_expr(e: &Expr) -> Expr {
     match e {
         Expr::Construct(0, xs) if xs.len() == 1 => {
@@ -2488,7 +2544,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// In a loop's step, a field of the state kept as its own fields: its
     /// first slot and its number of fields.
     fn state_field(&self, e: &Expr) -> Option<(usize, usize)> {
-        let lg = self.in_loop.as_ref().filter(|lg| lg.record)?;
+        let lg = self.in_loop.as_ref().filter(|lg| lg.record && !lg.unpacked_parameters)?;
         match e {
             Expr::Field(r, i) if matches!(**r, Expr::Local(0)) => match lg.slots[*i as usize] {
                 (off, Some(m)) => Some((off, m)),
@@ -3178,7 +3234,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                             .map(|(_, t)| t.clone()),
                     )
                     .collect()
-            } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && l == 0) {
+            } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && !lg.unpacked_parameters && l == 0) {
                 let mut parts = Vec::new();
                 for ((off, width), (_, t)) in lg
                     .slots
@@ -3700,7 +3756,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if !reuse_enabled() {
             return None;
         }
-        let virtual_state = self.in_loop.as_ref().is_some_and(|lg| lg.record) && x == 0;
+        let virtual_state = self.in_loop.as_ref().is_some_and(|lg| lg.record && !lg.unpacked_parameters) && x == 0;
         if self.fields.contains_key(&x)
             || self.vlocals.contains_key(&x)
             || self.stack_children.contains_key(&x)
@@ -3994,7 +4050,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 .cloned()
                 .zip(field_tys(&self.locals[l as usize]))
                 .collect();
-        } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && l == 0) {
+        } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && !lg.unpacked_parameters && l == 0) {
             for ((off, w), t) in lg.slots.iter().zip(field_tys(&self.locals[0])) {
                 match w {
                     Some(_) => {
@@ -4103,7 +4159,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                             .map(|(_, t)| t.clone()),
                     )
                     .collect()
-            } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && l == 0) {
+            } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && !lg.unpacked_parameters && l == 0) {
                 let mut parts = Vec::new();
                 for ((off, width), (_, t)) in lg
                     .slots
@@ -4175,11 +4231,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
-    fn entry_tick(&mut self) {
+    fn entry_tick(&mut self, arity: u32) {
         if !self.g.ticks {
             return;
         }
-        let owners: Vec<_> = (0..self.g.prog.funcs[self.me].arity)
+        let owners: Vec<_> = (0..arity)
             .filter(|l| crate::rc::needs_rc(&self.g.prog.shapes, &self.locals[*l as usize]))
             .map(|l| (l, 1))
             .collect();
@@ -4598,12 +4654,13 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         if let Some(lg) = &self.in_loop {
             let record = lg.record;
+            let virtual_record = record && !lg.unpacked_parameters;
             match e {
-                Expr::Field(r, k) if record && self.state_field(r).is_some() => {
+                Expr::Field(r, k) if virtual_record && self.state_field(r).is_some() => {
                     let (off, _) = self.state_field(r).unwrap();
                     return format!("st[{}]", off + *k as usize);
                 }
-                Expr::Field(r, i) if record && matches!(**r, Expr::Local(0)) => {
+                Expr::Field(r, i) if virtual_record && matches!(**r, Expr::Local(0)) => {
                     let (off, w) = lg.slots[*i as usize];
                     return match w {
                         None => format!("st[{}]", off),
@@ -5853,10 +5910,8 @@ impl<'p> Gen<'p> {
         let Body::Expr(original) = &f.body else {
             unreachable!()
         };
-        let normalized = loop_state_expr(original);
+        let mut normalized = loop_state_expr(original);
         let e = &normalized;
-        let mut ts = Vec::new();
-        tails(e, &mut ts);
         // a field of a record state that is itself a small record, and
         // that every `Again` gives unboxed, is kept as its fields
         let field_tys: Vec<MT> = record_fields(&self.prog.shapes, &f.locals[0])
@@ -5873,7 +5928,23 @@ impl<'p> Gen<'p> {
             n += w.unwrap_or(1);
         }
         let n = if record.is_some() { n } else { 1 };
+        let mut body_function = f.clone();
+        let mut unpacked_parameters = false;
+        if self.reuse && record.is_some() && slots.iter().all(|(_, width)| width.is_none()) {
+            if let Some(mut unpacked) = unpack_loop_state(self.uncounted, &self.uncounted.funcs[step]) {
+                let (body, locals) = crate::rc::insert_function(self.uncounted, &unpacked).expect("expression loop step");
+                unpacked.locals = locals;
+                crate::rc::check(self.prog, &unpacked, &body, &unpacked.locals).expect("invalid unpacked loop ownership");
+                normalized = loop_state_expr(&body);
+                body_function = unpacked;
+                unpacked_parameters = true;
+            }
+        }
+        let e = &normalized;
+        let mut ts = Vec::new();
+        tails(e, &mut ts);
         let lg = LoopGen {
+            unpacked_parameters,
             tails: ts.iter().map(|t| *t as *const Expr).collect(),
             record: record.is_some(),
             slots: slots.clone(),
@@ -5884,17 +5955,23 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
 ",
             f.name, f.ty, step
         );
-        if record.is_none() {
-            out.push_str(
-                "    V l0 = st[0];
-",
-            );
+        if unpacked_parameters {
+            for i in 0..body_function.arity {
+                let _ = writeln!(out, "    V l{i} = st[{i}];");
+            }
+        } else if record.is_none() {
+            out.push_str("    V l0 = st[0];\n");
         }
-        for i in 1..f.nlocals() {
-            let _ = writeln!(out, "    V l{} = 0;", i);
+        let first_temporary = if unpacked_parameters { body_function.arity as usize } else { 1 };
+        for i in first_temporary..body_function.nlocals() {
+            let _ = writeln!(out, "    V l{i} = 0;");
         }
+        let live_calls = if self.reuse && self.unwind {
+            crate::rc::ownership_liveness(self.prog, &body_function, e, &body_function.locals)
+                .expect("invalid loop ownership before C generation")
+        } else { HashMap::new() };
         let mut fg = FnGen {
-            live_calls: self.live_calls(step, e),
+            live_calls,
             g: self,
             out: String::new(),
             tmp: 0,
@@ -5902,7 +5979,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             indent: 1,
             in_loop: Some(lg),
             fields: HashMap::new(),
-            locals: f.locals.clone(),
+            locals: body_function.locals.clone(),
             known_tag: HashMap::new(),
             vlocals: HashMap::new(),
             tokens: Vec::new(),
@@ -5913,7 +5990,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             me: step,
             tail_calls: tail_calls(e),
         };
-        fg.entry_tick();
+        fg.entry_tick(body_function.arity);
         let r = fg.expr(e);
         out.push_str(&fg.out);
         let _ = writeln!(
@@ -6791,7 +6868,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     me: id,
                     tail_calls: tail_calls(&e),
                 };
-                fg.entry_tick();
+                fg.entry_tick(fg.g.prog.funcs[fg.me].arity);
                 let r = fg.expr(&e);
                 let body = fg.out;
                 out.push_str(&body);
@@ -6857,7 +6934,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             me: id,
             tail_calls: tail_calls(e),
         };
-        fg.entry_tick();
+        fg.entry_tick(fg.g.prog.funcs[fg.me].arity);
         let ret = match (abi.ret, abi.vret) {
             (Some(n), _) => {
                 let fs = fg.expr_fields(e, n);
@@ -7544,6 +7621,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             .any(|t| crate::resource::contains_file(&prog.shapes, t))
     });
     let reuse = reuse_enabled() || resources;
+    let uncounted = prog;
     let counted;
     let prog = if reuse {
         counted = counted_program(prog);
@@ -7553,6 +7631,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     };
     let mut g = Gen {
         prog,
+        uncounted,
         descs: HashMap::new(),
         desc_defs: Vec::new(),
         drops: HashMap::new(),

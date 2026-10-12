@@ -12,14 +12,15 @@ int main(void) {
             fwp_array_store(input,i,bits,&element);
             double mapped=x*3.0;mapped=mapped+1.0;reference=mapped+reference;
         }
-        uint64_t calls=measured_calls,bytes=measured_bytes;double freed=fwp_gc.freed;
+        uint64_t calls=measured_calls,bytes=measured_bytes,retains=measured_retains;double freed=fwp_gc.freed;
         V result=fREDUCE64(input);
         if(run<3 && result!=fwp_from_f64(reference))return 170;
-        calls=measured_calls-calls;bytes=measured_bytes-bytes;
+        calls=measured_calls-calls;bytes=measured_bytes-bytes;retains=measured_retains-retains;
+        if(FUSED && retains)return 174;
         if(FUSED && (calls || bytes)){fprintf(stderr,"fused allocated %llu calls and %llu bytes\n",(unsigned long long)calls,(unsigned long long)bytes);return 171;}
         if(!FUSED && calls<2)return 172;
         if(fwp_gc.freed<=freed)return 173;
-        printf("%s{\"elements\":%zu,\"managedCalls\":%llu,\"managedRequestedBytes\":%llu,\"freedBytes\":%.0f,\"resultBits\":\"%016llx\"}",run?",\n":"",n,(unsigned long long)calls,(unsigned long long)bytes,fwp_gc.freed-freed,(unsigned long long)result);
+        printf("%s{\"elements\":%zu,\"managedCalls\":%llu,\"managedRequestedBytes\":%llu,\"retains\":%llu,\"freedBytes\":%.0f,\"resultBits\":\"%016llx\"}",run?",\n":"",n,(unsigned long long)calls,(unsigned long long)bytes,(unsigned long long)retains,fwp_gc.freed-freed,(unsigned long long)result);
     }
     puts("]}");return 0;
 }

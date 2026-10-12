@@ -636,23 +636,22 @@ fn pat_binds(p: &Pat, out: &mut Vec<Local>) {
 /// The function bodies of `prog` with their references counted: the new
 /// bodies and their locals, for each function with a body.
 pub fn insert(prog: &Program) -> Vec<Option<(Expr, Vec<MT>)>> {
-    prog.funcs
-        .iter()
-        .map(|f| {
-            let Body::Expr(e) = &f.body else {
-                return None;
-            };
-            let mut p = Pass {
-                funcs: &prog.funcs,
-                shapes: &prog.shapes,
-                locals: f.locals.clone(),
-            };
-            let params: Set = (0..f.arity).filter(|l| p.counted(*l)).collect();
-            let result = f.ty.params(f.arity as usize).1.clone();
-            let body = p.conv_typed(e, &params, &Set::new(), &result);
-            Some((body, p.locals))
-        })
-        .collect()
+    prog.funcs.iter().map(|f| insert_function(prog, f)).collect()
+}
+
+/// Insert ownership for a concrete function, including backend representations
+/// whose state fields have become separate parameters.
+pub(crate) fn insert_function(prog: &Program, f: &Func) -> Option<(Expr, Vec<MT>)> {
+    let Body::Expr(e) = &f.body else { return None };
+    let mut p = Pass {
+        funcs: &prog.funcs,
+        shapes: &prog.shapes,
+        locals: f.locals.clone(),
+    };
+    let params: Set = (0..f.arity).filter(|l| p.counted(*l)).collect();
+    let result = f.ty.params(f.arity as usize).1.clone();
+    let body = p.conv_typed(e, &params, &Set::new(), &result);
+    Some((body, p.locals))
 }
 
 // ----- checking ------------------------------------------------------------
