@@ -4295,6 +4295,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         self.g.used_closures[g] = true;
         if sym == "loop" && n == 0 {
+            if let Some(Some(width)) = loop_shape(&self.g.prog.funcs[g]) {
+                let flat = record_fields(&self.g.prog.shapes, &self.g.prog.funcs[g].locals[0])
+                    .is_some_and(|fields| fields.iter().all(|(_, ty)| record_fields(&self.g.prog.shapes, ty).is_none()));
+                if flat && self.unboxed(&args[1]) == Some(width) {
+                    if !self.g.loops.iter().any(|(step, _)| *step == g) { self.g.loops.push((g, Some(width))); }
+                    let fields = self.expr_fields(&args[1], width);
+                    return Some(format!("fwp_loop_fields{g}({})", fields.join(", ")));
+                }
+            }
             let s = self.expr(&args[1]);
             if let Some(shape) = loop_shape(&self.g.prog.funcs[g]) {
                 if !self.g.loops.iter().any(|(step, _)| *step == g) {
@@ -4735,28 +4744,49 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
             Expr::Let(l, v, body) => {
                 // Lookup-only aliases need no Option box or reference counts.
+                let mut lookup = &**v;
+                while let Expr::Let(_, _, body) = lookup { lookup = body; }
+                let numeric_array = matches!(lookup, Expr::Call(id, _) if matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "array.get"));
+                let mut releases = Vec::new();
                 let mut aliases = vec![*l];
                 let mut inner = &**body;
                 loop {
                     match inner {
-                        Expr::Let(alias, value, next)
-                            if matches!(&**value, Expr::Local(x) if Some(x) == aliases.last()) => {
-                                aliases.push(*alias);
-                                inner = next;
-                            }
-                        Expr::Dup(x, next) | Expr::Drop(x, next) if aliases.contains(x) => inner = next,
+                        Expr::Let(alias, value, next) if matches!(&**value, Expr::Local(x) if Some(x) == aliases.last()) =>
+                        {
+                            aliases.push(*alias);
+                            inner = next;
+                        }
+                        Expr::Dup(x, next) | Expr::Drop(x, next) if aliases.contains(x) => {
+                            inner = next
+                        }
+                        Expr::Drop(local, next) if numeric_array && !self.resource_slots.contains_key(local) => {
+                            releases.push(*local);
+                            inner = next;
+                        }
                         _ => break,
                     }
                 }
                 if !aliases.iter().any(|x| self.resource_slots.contains_key(x)) {
                     if let Expr::Match(scrutinee, arms) = inner {
                         if matches!(&**scrutinee, Expr::Local(x) if Some(x) == aliases.last()) {
-                            let stripped: Option<Vec<(Pat, Expr)>> = arms.iter().map(|(pattern, arm)| {
-                                let body = aliases.iter().try_fold(arm.clone(), |body, local| without_counts(&body, *local));
-                                body.map(|body| (pattern.clone(), body))
-                            }).collect();
+                            let stripped: Option<Vec<(Pat, Expr)>> = arms
+                                .iter()
+                                .map(|(pattern, arm)| {
+                                    let body =
+                                        aliases.iter().try_fold(arm.clone(), |body, local| {
+                                            without_counts(&body, *local)
+                                        });
+                                    body.map(|body| {
+                                    let body = releases.iter().rev().fold(body, |body, local| Expr::Drop(*local, Box::new(body)));
+                                    (pattern.clone(), body)
+                                })
+                                })
+                                .collect();
                             if let Some(arms) = stripped {
-                                if let Some(result) = self.lookup_match(v, &arms) { return result; }
+                                if let Some(result) = self.lookup_match(v, &arms) {
+                                    return result;
+                                }
                             }
                         }
                     }
@@ -6045,6 +6075,11 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             root_fences = root_fences,
             tick = tick
         );
+        if record.is_some() && slots.iter().all(|(_, width)| width.is_none()) {
+            let parameters = (0..n).map(|i| format!("V a{i}")).collect::<Vec<_>>().join(", ");
+            let initial = (0..n).map(|i| format!("a{i}")).collect::<Vec<_>>().join(", ");
+            let _ = write!(out, "static V fwp_loop_fields{step}({parameters}) {{\n    V st[{n}] = {{{initial}}}, nx[{n}] = {{0}}, out = 0;\n    {protect}\n    for (;;) {{\n        {save}{tick}\n        {transfer}\n        int done = fs{step}(st, nx, &out);\n{root_fences}        if (done) {{ {finish} return out; }}\n        for (int i = 0; i < {n}; i++) st[i] = nx[i];\n    }}\n}}\n");
+        }
         out
     }
 
@@ -8280,6 +8315,12 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     for (step, _) in &g.loops {
         let _ = writeln!(out, "static V fwp_loop{}(V s);", step);
+        if let Some(fields) = record_fields(&prog.shapes, &prog.funcs[*step].locals[0]) {
+            if fields.iter().all(|(_, ty)| record_fields(&prog.shapes, ty).is_none()) {
+                let parameters = (0..fields.len()).map(|i| format!("V a{i}")).collect::<Vec<_>>().join(", ");
+                let _ = writeln!(out, "static V fwp_loop_fields{step}({parameters});");
+            }
+        }
     }
     if g.reuse {
         for (id, _) in prog

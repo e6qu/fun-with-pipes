@@ -117,9 +117,13 @@ fn slot_of(tapes: &[Tape], id: i64) -> R<usize> {
     Ok(slot as usize)
 }
 
+fn tape_limit() -> usize {
+    (isize::MAX as usize / std::mem::size_of::<f64>()).min(i32::MAX as usize)
+}
+
 /// `ad.tape n`: a new tape whose first n nodes are the inputs.
 fn tape_new(n: i64) -> R<i64> {
-    if !(0..=i32::MAX as i64).contains(&n) {
+    if !(0..=tape_limit() as i64).contains(&n) {
         return trap("autodiff: too many inputs");
     }
     let mut tapes = TAPES.lock().unwrap();
@@ -170,7 +174,7 @@ fn push(ra: i64, da: f64, rb: i64, db: f64) -> R<i64> {
     let slot = slot_of(&tapes, id)?;
     let t = &mut tapes[slot];
     let idx = t.pa.len();
-    if idx >= i32::MAX as usize {
+    if idx >= tape_limit() {
         return trap("autodiff: the tape is full");
     }
     if (ra & 0xffff_ffff) as usize >= idx || (rb >= 0 && (rb & 0xffff_ffff) as usize >= idx) {

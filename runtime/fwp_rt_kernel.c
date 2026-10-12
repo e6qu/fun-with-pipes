@@ -133,33 +133,55 @@ static fwp_tape *fwp_tape_of(int64_t id) {
     return &fwp_tapes[slot];
 }
 
+/* Match Rust Vec's byte bound, independently of native pointer width. */
+static int64_t fwp_tape_limit(void) {
+    size_t limit = (size_t)PTRDIFF_MAX / sizeof(double);
+    return limit < (size_t)INT32_MAX ? (int64_t)limit : INT32_MAX;
+}
+
 static void fwp_tape_reserve(fwp_tape *t, int64_t n) {
+    int64_t limit = fwp_tape_limit();
+    if (n < 0 || n > limit) fwp_trap("autodiff: the tape is full");
     if (n <= t->cap) return;
-    int64_t cap = t->cap ? t->cap : 64;
-    while (cap < n) cap *= 2;
-    t->pa = (int32_t *)realloc(t->pa, (size_t)cap * sizeof(int32_t));
-    t->pb = (int32_t *)realloc(t->pb, (size_t)cap * sizeof(int32_t));
-    t->da = (double *)realloc(t->da, (size_t)cap * sizeof(double));
-    t->db = (double *)realloc(t->db, (size_t)cap * sizeof(double));
-    if (!t->pa || !t->pb || !t->da || !t->db) {
-        fprintf(stderr, "fwp: out of memory\n");
-        exit(102);
-    }
+    int64_t cap = t->cap ? t->cap : (limit < 64 ? limit : 64);
+    while (cap < n) cap = cap > limit / 2 ? limit : cap * 2;
+    /* Commit each successful realloc; a failed call still owns the old buffer. */
+    void *next = realloc(t->pa, (size_t)cap * sizeof(int32_t));
+    if (!next) goto oom;
+    t->pa = (int32_t *)next;
+    next = realloc(t->pb, (size_t)cap * sizeof(int32_t));
+    if (!next) goto oom;
+    t->pb = (int32_t *)next;
+    next = realloc(t->da, (size_t)cap * sizeof(double));
+    if (!next) goto oom;
+    t->da = (double *)next;
+    next = realloc(t->db, (size_t)cap * sizeof(double));
+    if (!next) goto oom;
+    t->db = (double *)next;
     t->cap = cap;
+    return;
+oom:
+    fwp_tape_unlink_scope(t);
+    free(t->pa);free(t->pb);free(t->da);free(t->db);
+    t->pa = t->pb = 0;t->da = t->db = 0;
+    t->live = 0;t->len = t->cap = t->leaves = 0;
+    fprintf(stderr, "fwp: out of memory\n");
+    exit(102);
 }
 
 static V fwp_p_ad_tape(V nv) {
     int64_t n = (int64_t)nv;
-    if (n < 0 || n > INT32_MAX) fwp_trap("autodiff: too many inputs");
+    if (n < 0 || n > fwp_tape_limit()) fwp_trap("autodiff: too many inputs");
     int64_t slot = 0;
     while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;
     if (slot == fwp_ntapes) {
         if (fwp_ntapes >= 0xffff) fwp_trap("autodiff: too many grad computations at once");
-        fwp_tapes = (fwp_tape *)realloc(fwp_tapes, (size_t)(fwp_ntapes + 1) * sizeof(fwp_tape));
-        if (!fwp_tapes) {
+        fwp_tape *next = (fwp_tape *)realloc(fwp_tapes, (size_t)(fwp_ntapes + 1) * sizeof(fwp_tape));
+        if (!next) {
             fprintf(stderr, "fwp: out of memory\n");
             exit(102);
         }
+        fwp_tapes = next;
         memset(&fwp_tapes[fwp_ntapes], 0, sizeof(fwp_tape));
         fwp_ntapes++;
     }
@@ -196,7 +218,7 @@ static V fwp_p_ad_push(V tup) {
     int64_t id = ra >> 32;
     fwp_tape *t = fwp_tape_of(id);
     int64_t idx = t->len;
-    if (idx >= INT32_MAX) fwp_trap("autodiff: the tape is full");
+    if (idx >= fwp_tape_limit()) fwp_trap("autodiff: the tape is full");
     if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))
         fwp_trap(FWP_AD_INVALID_NODE);
     fwp_tape_reserve(t, idx + 1);

@@ -951,7 +951,11 @@ impl Fuser<'_> {
             }
         };
         let again = |pos: &Expr, acc: Expr, n: usize| {
-            let mut fs = if array { vec![pos.clone(), st(1), acc] } else { vec![pos.clone(), acc] };
+            let mut fs = if array {
+                vec![pos.clone(), st(1), acc]
+            } else {
+                vec![pos.clone(), acc]
+            };
             fs.extend((0..n).map(|i| st((i + capture_start) as u32)));
             Expr::Construct(0, vec![Expr::Record(fs)])
         };
@@ -972,12 +976,19 @@ impl Fuser<'_> {
         // the element after every stage, into the consumer
         let some = |x: Expr| Expr::Construct(1, vec![Expr::Construct(1, vec![x])]);
         let last = match kind {
-            "fold" => Ok(apply(&mut field, cv.as_ref()?, vec![st(accumulator), x.clone()])),
+            "fold" => Ok(apply(
+                &mut field,
+                cv.as_ref()?,
+                vec![st(accumulator), x.clone()],
+            )),
             "list" => Ok(Expr::Construct(1, vec![x.clone(), st(accumulator)])),
             "length" => {
                 let i64 = MT::con("std::I64");
                 let add = self.prim("prim.add", fun2(&i64, &i64, &i64), 2);
-                Ok(Expr::Call(add, vec![Expr::Const(Value::I64(1)), st(accumulator)]))
+                Ok(Expr::Call(
+                    add,
+                    vec![Expr::Const(Value::I64(1)), st(accumulator)],
+                ))
             }
             _ => Err(apply(&mut field, cv.as_ref()?, vec![x.clone()])),
         };
@@ -1066,16 +1077,20 @@ impl Fuser<'_> {
             Producer::Array(_) => MT::con("std::I64"),
         };
         let mut fields = if array {
-            vec![("0".into(), pos_ty.clone()), ("1".into(), prod_ty.clone()), ("2".into(), acc_ty.clone())]
+            vec![
+                ("0".into(), pos_ty.clone()),
+                ("1".into(), prod_ty.clone()),
+                ("2".into(), acc_ty.clone()),
+            ]
         } else {
             vec![("0".into(), pos_ty.clone()), ("1".into(), acc_ty.clone())]
         };
-        fields.extend(
-            outer
-                .iter()
-                .enumerate()
-                .map(|(i, l)| ((i + capture_start).to_string(), self.locals[*l as usize].clone())),
-        );
+        fields.extend(outer.iter().enumerate().map(|(i, l)| {
+            (
+                (i + capture_start).to_string(),
+                self.locals[*l as usize].clone(),
+            )
+        }));
         MT::sort_fields(&mut fields);
         let state_ty = MT::Record(fields);
         // the step's locals: the state, a list's head and tail, the stages'
@@ -1119,10 +1134,14 @@ impl Fuser<'_> {
             2,
         );
         let mut init = if array {
-            let Expr::Record(mut positions) = start else { return None; };
+            let Expr::Record(mut positions) = start else {
+                return None;
+            };
             positions.push(z);
             positions
-        } else { vec![start, z] };
+        } else {
+            vec![start, z]
+        };
         init.extend(outer.into_iter().map(Expr::Local));
         let mut out = Expr::Call(loop_id, vec![Expr::Func(step), Expr::Record(init)]);
         if kind == "list" {
