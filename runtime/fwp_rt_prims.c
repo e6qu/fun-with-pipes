@@ -1785,7 +1785,7 @@ static V fwp_p_array_push_typed(V x, V a, void (*dup)(V),
     size_t n = fwp_array_len(a);
     if (n >= (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
     int unique = fwp_array_is_view(a) ? 0 : fwp_rc_unique_mut(a);
-    if (unique == 1 && fwp_rc_capacity(a) >= sizeof(fwp_arr) + (n + 1) * fwp_array_stride(elem)) {
+    if (unique == 1 && fwp_array_capacity(a, elem) >= sizeof(fwp_arr) + (n + 1) * fwp_array_stride(elem)) {
         if (dup) dup(x);
         fwp_array_store(a, n, x, elem);
         fwp_array_set_len(a, n + 1);
@@ -3206,7 +3206,7 @@ static V fwp_p_syntax_show(V v) {
 
 static double *la_get(V arr, size_t n) {
     double *d = (double *)fwp_alloc_leaf((n + 1) * sizeof(double));
-    for (size_t i = 0; i < n; i++) d[i] = fwp_f64(((const V *)fwp_array_data(arr))[i]);
+    for (size_t i = 0; i < n; i++) d[i] = fwp_f64(fwp_array_load(arr, i, NULL));
     return d;
 }
 

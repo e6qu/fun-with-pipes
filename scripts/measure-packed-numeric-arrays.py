@@ -6,7 +6,7 @@ ROOT=Path.cwd();OUT=Path(os.environ['FWP_NUMERIC_LAYOUT_ARTIFACTS']);OUT.mkdir(p
 HEAD='cbf68ea60c3b9439a117ef9d9b28b472f23dc632'
 subprocess.run(['git','merge-base','--is-ancestor',HEAD,'HEAD'],check=True)
 changed=set(subprocess.check_output(['git','diff','--name-only',HEAD,'HEAD'],text=True).splitlines())
-assert changed <= {'src/cgen.rs','tests/array_element_ownership.rs','scripts/measure-packed-numeric-arrays.py','tests/fixtures/numeric_layout_baseline.fwp','tests/fixtures/packed_numeric_arrays.fwp','tests/run/unboxed_records.fwp','.github/workflows/packed-numeric-arrays.yml'} | { 'runtime/'+n for n in ['fwp_rt.c','fwp_rt_gc.c','fwp_rt_ops.c','fwp_rt_prims.c','fwp_rt_num.c','fwp_rt_json.c','fwp_rt_exec.c','fwp_rt_kernel.c'] }
+assert changed <= {'src/cgen.rs','tests/array_element_ownership.rs','tests/kernel_stack_bounds.rs','tests/fixtures/kernel_stack_probe.c','tests/fixtures/packed_array_memory_probe.c','scripts/measure-packed-array-memory.py','scripts/measure-packed-numeric-arrays.py','tests/fixtures/numeric_layout_baseline.fwp','tests/fixtures/packed_numeric_arrays.fwp','tests/run/unboxed_records.fwp','.github/workflows/packed-numeric-arrays.yml'} | { 'runtime/'+n for n in ['fwp_rt.c','fwp_rt_gc.c','fwp_rt_ops.c','fwp_rt_prims.c','fwp_rt_num.c','fwp_rt_json.c','fwp_rt_exec.c','fwp_rt_kernel.c'] }
 fixture=ROOT/'tests/fixtures/numeric_layout_baseline.fwp'
 env=dict(os.environ);env.pop('FWP_NO_OPT',None);env.pop('FWP_TYPED_ABI',None);env.pop('FWP_PACKED_ARRAYS',None)
 def run(*argv,environment=None):
