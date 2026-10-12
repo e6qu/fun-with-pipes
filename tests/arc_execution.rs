@@ -36,10 +36,13 @@ main = range 0 129 | map (choose | checks) | length | echo
             checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT").env("FWP_STACK",stack).args(["build","--gc","arc","--emit-c"]).arg(&input).arg("-o").arg(&cfile));
             let code = std::fs::read_to_string(&cfile).unwrap();
             assert!(code.contains("#define FWP_ARC_ONLY 1"));
-            assert_eq!(code.matches("    fwp_init_consts();\n").count(),1);
-            assert_eq!(code.matches("    fwp_cl_finish();\n").count(),1);
-            let measured = code.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t arc_budget = fwp_gc.budget;\n")
+            let main_start = code.find("static void *fwp_main_thread(void *arg) {").unwrap();
+            let (runtime, main) = code.split_at(main_start);
+            assert_eq!(main.matches("    fwp_init_consts();\n").count(),1);
+            assert_eq!(main.matches("    fwp_cl_finish();\n").count(),1);
+            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t arc_budget = fwp_gc.budget;\n")
                 .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget || fwp_gc.freed <= 0) { fprintf(stderr,\"ARC unreclaimed bytes: %ld\\n\",(long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
+            let measured = format!("{runtime}{main}");
             if let Some(path) = std::env::var_os("FWP_ARC_ARTIFACTS") {
                 let destination = std::path::PathBuf::from(path);
                 std::fs::create_dir_all(&destination).unwrap();
@@ -75,6 +78,7 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     std::fs::create_dir(&dir).unwrap();
     for (name,source,reason) in [
         ("tasks","main = task.yield ()\n","tracing-free lifetime policy"),
+        ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
         ("input","main = read-all () | echo\n","tracing-free ownership contract"),
     ] {
         let input=dir.join(format!("{name}.fwp"));

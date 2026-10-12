@@ -430,8 +430,8 @@ impl Pass<'_> {
                 last.insert(*l, i);
             }
         }
-        for (p, mode) in parts.iter().zip(modes) {
-            if matches!(mode, Mode::Borrow) {
+        for ((p, mode), ty) in parts.iter().zip(modes).zip(&types) {
+            if matches!(mode, Mode::Borrow) && needs_rc(self.shapes, ty) {
                 let owner = match p {
                     Expr::Local(l) => Some(l),
                     Expr::Field(base, _) => match &**base {
@@ -494,7 +494,11 @@ impl Pass<'_> {
                 // A direct field read borrows its parent's reference. Keep
                 // that owner through all arguments and the operation; no
                 // temporary retain/release pair is needed for the field.
-                (Mode::Borrow, Expr::Field(base, _)) if matches!(&**base, Expr::Local(_)) => {
+                // Scalar fields instead finish evaluation before a later
+                // consuming argument can release the parent or reuse a child.
+                (Mode::Borrow, Expr::Field(base, _))
+                    if !uncounted[i] && matches!(&**base, Expr::Local(_)) =>
+                {
                     let Expr::Local(l) = &**base else {
                         unreachable!()
                     };
@@ -636,7 +640,10 @@ fn pat_binds(p: &Pat, out: &mut Vec<Local>) {
 /// The function bodies of `prog` with their references counted: the new
 /// bodies and their locals, for each function with a body.
 pub fn insert(prog: &Program) -> Vec<Option<(Expr, Vec<MT>)>> {
-    prog.funcs.iter().map(|f| insert_function(prog, f)).collect()
+    prog.funcs
+        .iter()
+        .map(|f| insert_function(prog, f))
+        .collect()
 }
 
 /// Insert ownership for a concrete function, including backend representations
