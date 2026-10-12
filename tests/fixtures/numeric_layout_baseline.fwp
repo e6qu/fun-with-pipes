@@ -1,8 +1,8 @@
 export bits64 : F64 -> (F64, F64, F64)
-bits64 = make (id, id, id)
+bits64 = make { 0 = id, 1 = id, 2 = id }
 
 export bits32 : F32 -> (F32, F32, F32)
-bits32 = make (id, id, id)
+bits32 = make { 0 = id, 1 = id, 2 = id }
 
 export step : I64 -> (Array[I8], Array[U8], Array[I16], Array[U16], Array[I32], Array[U32], Array[F32], Array[F64])
 step = make {
