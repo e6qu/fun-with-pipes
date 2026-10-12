@@ -49,16 +49,12 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#123: native macOS ARM/Intel support and selected ownership,
-last-owner reclamation and unwind protections. Queues33 and35–73 are accepted;
-queue34 is a verified duplicate delivered in #107. Next bundle74–112 resource and
-network ownership on the actual PR123 squash, then the finite phase2
-exit review. [The handoff](docs/development-state.md) records exact heads,
-checks and the next action. PR124 combines the verified resource/State,
-codec, callback-effect and scoped-gradient repairs. Its full matrix exposed a
-codec test that copies its fixture onto itself when the artifact directory is
-unset. Both artifact-path modes now pass all three preflights; the repaired exact-head
-full matrix is running. Preserve runtime alias/GC controls and diagnostics.
+Main includes #74–#124: native macOS ARM/Intel support, resource/network and
+callback ownership, typed State, scoped AD and independent codec leaves.
+Queue33 and35–112 are accepted;34 is a verified duplicate. Next bundle completes
+the finite177-declaration ownership fallback review and checked buffer/array/bump
+allocation and kernel stack/constant decoding and device allocation boundaries with current docs and CI actions. Require actual-source validation and all final gates
+before phase2 exit, then deliver numeric representation and phases4–6.
 
 Phase2 remaining audits cover borrowed metadata roots, reconstructed/untyped
 aggregates, retained contexts, resource disposal and cycles. Verify each boundary
@@ -79,10 +75,8 @@ Never call skipped, queued, superseded or cancelled runs passing support.
 
 ## Concrete remaining deliveries
 
-Finish phase2 by accepting PR124's combined resource/State, codec and scoped
-gradient work, then the finite177-declaration review with checked structural
-buffer and array/bump allocation boundaries, kernel stack/constant decoding, device allocation bounds and current
-CI actions in one coherent next bundle.
+Finish phase2 with the finite177-declaration fallback review and checked buffer,
+array/bump allocation and kernel stack/constant decoding and device allocation boundaries with current CI actions.
 Classify each remaining boundary with its argument/result/alias/callback policy
 or explicit tracing fallback, including retained contexts, partial reconstruction
 and cycle lifetime. Complete allocator counters must include initializer fast

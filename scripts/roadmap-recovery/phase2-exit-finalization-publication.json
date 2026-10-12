@@ -1,0 +1,24 @@
+{
+  "head": "83f240569685274589bc1a003f2f444b0dd79e94",
+  "base": "3598a675b5bd9ad2e22ac17d42a27a89ea74fdeb",
+  "branch": "ownership-phase2-exit-finalization",
+  "unchangedNativeTree": "28ae0e5cea7fa5948683adb39a035ed40fb9b226",
+  "sourceHashes": {
+    "scripts/finalize-phase2-exit.py": "52c799e2950888f61df235e29cd1d0e6004a86e64a171580114d46f11e726cf3",
+    "scripts/node24-actions-patch.json": "0f3f0f63a2f2019f0c71cc1f62ce0fbf701af2a177c173091e5457e12b1f1d8b",
+    "scripts/export_prepared_commits.py": "63be0cd83351414289202dd99983a513558915796fb36207ff8b2cb0cb8dd343",
+    ".github/workflows/phase2-exit-finalization.yml": "09b652e46b84b95506cd15cbb9ab76133639965b7bc5f72e1fc5c6bf51cf3fcb",
+    "CONTRIBUTING.md": "542f28742abdf5e0d50923b7a037f932522e159ad43f7b0adabe9ff7291501b2",
+    "PLAN.md": "2c795c23d1de3f53af253812ba5020101ad5e6686a0e336eea91c167b0007397",
+    "docs/design.md": "a2493d50da74d21ba50bf8659eb2622154ab7843616c8f4d8db5256e8c0f5743",
+    "docs/development-state.md": "dbe271e353f494ad5d0fff6eb8fed15995c995c6b1c0cc58b9b7b3f6a8b088a6",
+    "docs/ownership.md": "54e0a73e1e5bc9e62b013b2949129a0c4c2feaee880044c6fe77136064f67746",
+    "docs/primitive-ownership.md": "b8e2425fd494d0e840c8616fc844408d5aec8ac5c888f3c6c324f7d5343fc5aa",
+    "docs/roadmap-queue.md": "5dde27287c6faa7043339ee5fe1525e51b869fe72b0bb873b44eda980f8b7d77",
+    "docs/roadmap-history.md": "c8ab20269ddf8df85353fda1d4e6cfaa835730a6db9da357e2b2db8bce0cb245",
+    "docs/reference.md": "578c74c42fce1ab7155f54d9042cbbe91c722a6f94e8e85df5dd0aa711706c9d",
+    "docs/concurrency.md": "a14cc48731fff6340993abcd979fd9d864dc04d3760d6d678afd9d34359fa960",
+    "docs/numerics.md": "adc47bb9e1a01815986057bf65da140e5abe1ef5ebd1d024e34bca15e32ed605"
+  },
+  "stage": "Phase2 exit finalization published; runner validation pending"
+}

@@ -496,7 +496,15 @@
     "scalars": "Use native C float/double and fixed-width integer scalar worker parameters/results when supported; reconstruct the existing V encoding at the worker body boundary so ordinary typed IR and cleanup continue to agree. Validate exact signed extension and low32 F32 bits.",
     "records": "Use naturally typed C fields in direct-worker aggregate returns/arguments. Same-count records with different MT fields cannot share a layout. Generated result temporaries, field projections, boxing and variant bridges must carry the right layout.",
     "assemblyCases": "Inspect F64 pairs and ARM homogeneous3/4-float aggregates versus mixed float/pointer records on both architectures; C ABI rules determine registers. Preserve separate diagnostic flags from production-performance flags.",
-    "acceptance": "Actual sizeof/offsetof/alignment and byte/assembly artifacts, raw/native oracles, ABI/FFI boundaries, exceptional owners and complete allocation/live memory profiles. No register, packing or speed claim from source review alone."
+    "acceptance": "Actual sizeof/offsetof/alignment and byte/assembly artifacts, raw/native oracles, ABI/FFI boundaries, exceptional owners and complete allocation/live memory profiles. No register, packing or speed claim from source review alone.",
+    "implementationSketch": {
+      "status": "Source-only plan; phase2 actual acceptance required before implementation",
+      "workerBoundary": "Derive C parameter/result types from each concrete monomorphic MT. Convert to existing V locals at entry and back at return initially, so Clang can remove bit bridges while existing body semantics and cleanup remain intact.",
+      "layouts": "Key aggregate layouts by ordered concrete field types rather than field count. Use natural float/double/fixed-width integer fields and word/pointer representations where ownership requires them. Preserve V-based closure/runtime/foreign bridges unless their explicit ABI contract changes.",
+      "heapRecords": "Keep boxed record layout and typed drop behavior unchanged initially; typed worker structs can eliminate temporary boxes without changing the public value model.",
+      "controls": "Use exact bit-pattern/NaN/signed-zero and small signed/unsigned controls, generic/callback/FFI/nonlocal exits, sizeof/offsetof/alignment, and ARM/Intel disassembly. Diagnostic no-inline flags must be recorded separately from production performance evidence.",
+      "limits": "C ABI determines actual register classes and sret behavior. Do not infer register use from C structs alone or claim wider unverified numeric formats."
+    }
   },
   "typedStoragePreparation": {
     "status": "Source-reviewed integration proposal; not implemented or validated",
@@ -505,6 +513,13 @@
     "owningHeader": "Preferred experiment keeps uint64 length and naturally packed inline payload; width and scalar decoding come from the concrete element descriptor. F32 uses low32-bit payload encoding; signed small loads must sign extend and unsigned loads zero extend.",
     "genericBoundary": "Every array-producing/consuming primitive, generic foreign wrapper, callback bridge, constant emitter and runtime serialization boundary must carry the same concrete descriptor. An untyped V-word fallback cannot consume a packed array directly; explicit descriptor-aware bridging must preserve value and lifetime semantics.",
     "views": "Use a separate high length-bit view flag, retain one flattened same-element backing owner, and dispatch length/data helpers before reading payload. Keep the existing constructor count bound until a separately reviewed semantic change; this lies below the flag bit. Typed destruction must drop the backing owner once and never treat view metadata as elements.",
-    "acceptance": "All producer/consumer aliases, immutable update copies, GC/reuse/unwind, JSON/printing/hash/equality, numeric kernels and FFI must be covered before publishing packed support; exact byte and alignment evidence must precede performance claims."
+    "acceptance": "All producer/consumer aliases, immutable update copies, GC/reuse/unwind, JSON/printing/hash/equality, numeric kernels and FFI must be covered before publishing packed support; exact byte and alignment evidence must precede performance claims.",
+    "collectorAndReuse": {
+      "numericOwners": "Allocate naturally packed pointer-free numeric owners as leaf objects when descriptor proves no managed children; allocation must still participate in native counted physical reclamation. Record collector scanning/liveness as well as requested bytes.",
+      "viewRoots": "View metadata contains a real backing-owner pointer and must remain scanned/rooted until typed destruction releases that owner. Never mark the view header as a numeric leaf merely because its element type is scalar.",
+      "immutableUpdates": "Exclude view headers from in-place update/reuse. A unique view is not proof that its backing storage is uniquely owned; produce a packed owning copy before mutation unless a separately proved transfer applies.",
+      "alignment": "The eight-byte owning header provides natural alignment up to eight bytes, not guaranteed sixteen-byte SIMD alignment. Use checked unaligned accesses or explicit stronger allocation/layout proof for vector loads.",
+      "measuredSpace": "Record requested bytes, actual allocation class, live/count/freed bytes and retained backing size. Header and size-class rounding can change the realized density gain; views can retain more backing memory than their own size suggests."
+    }
   }
 }
