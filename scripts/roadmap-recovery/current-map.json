@@ -1,4 +1,4 @@
 {
   "version": 1,
-  "publisher": "scripts/roadmap-recovery/publish-production-repair-recovery.py"
+  "publisher": "scripts/roadmap-recovery/publish-roadmap-closure-recovery.py"
 }

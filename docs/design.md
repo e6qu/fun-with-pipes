@@ -372,7 +372,7 @@ cover the private buffers separately from the managed result array.
 
 ## Checked native ARC execution
 
-The prepared `fwp build --gc arc` mode admits immutable typed value graphs and
+The `fwp build --gc arc` mode admits immutable typed value graphs and
 scoped File owners whose compiler/runtime ownership contracts are established.
 The checker visits monomorphic function/local types, ownership temporaries and
 primitive boundaries after reference-count insertion.
@@ -495,4 +495,4 @@ Unknown reconstruction, cached decoded values and retained callback boundaries
 keep tracing compatibility. Channel close preserves queued values; explicit drain
 breaks the tested counted cycle, while unreachable shared cycles still require
 tracing. [Ownership coverage](ownership.md#ownership-coverage) and
-[the handoff](development-state.md) record the finite review and later work.
+[the handoff](development-state.md) record the finite review and accepted scope.

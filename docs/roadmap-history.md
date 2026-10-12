@@ -2351,3 +2351,9 @@ Owned-child/effect, GC/reuse and ARC controls pass; each corpus remains
 21 executions/47 rejections/3 expected compiler errors with seven native
 disassemblies. The measurement report retains original timing identities and
 records this regression follow-up separately.
+
+## Accepted final ownership and ARC bundle (PR #128)
+
+Merged7350a5566fa991c89916ea67ab693c2a0bba9327 has tested treefcabfba0e0ca6b7a3e0ef0f7b99792bad7da8381, with all six jobs in CI38256949765, roadmap_docs38256949763 and actual-source audit38268514619 passing. The complete signed message is one line without trailers.
+
+Post-lowering eligibility exposed four lost temporary types at a2500e0f. Head2d4bf66a registered synthesized Step fields and restored three cases; its failed/cancelled run38242127912 identified a compile-time record whose type inlining discarded. Head350500f2 retains aggregate constant types and passes all three complete jobs in38242709162 with21 named ARC executions,47 rejections and3 expected compiler errors per platform. Production removes the Step-by-name exception and passes the full matrix. Failure IR and reports remain in fwp-arc-step-type-failure; final platform artifacts and source acceptance are retained by the designated recovery map. These records supply no new next task.

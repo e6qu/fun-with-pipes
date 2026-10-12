@@ -1,0 +1,7 @@
+{
+  "run": 38267463468,
+  "head": "7350a5566fa991c89916ea67ab693c2a0bba9327",
+  "status": "completed",
+  "conclusion": "cancelled",
+  "reason": "Duplicate main run cancelled after all six exact-head pre-merge jobs, docs, full tree parity and actual merged-source acceptance; cancellation supplies no additional passing gate."
+}

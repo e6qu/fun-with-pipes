@@ -1,0 +1,8 @@
+{
+  "head": "2ad52901fdef3725d5a98efce4430402ce91a3b1",
+  "tree": "c5129a8cd36f4f540c9dd56c87a7b8fd7b282640",
+  "verifiedTargets": 502,
+  "bytes": 43576850,
+  "status": "Temporary recovery restoration and source hashes verified; helpers and compiler were not executed",
+  "restorationSha256": "55b6be77f4fbaf1b78cc461f4048b10c64418de8a5910326d304a254c9de28db"
+}

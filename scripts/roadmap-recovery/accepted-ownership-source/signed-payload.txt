@@ -1,0 +1,6 @@
+tree fcabfba0e0ca6b7a3e0ef0f7b99792bad7da8381
+parent 59af498c32689dc4928e3681eb90dd453d8e57ce
+author e6qu <adi11235@gmail.com> 1791817423 +0200
+committer GitHub <noreply@github.com> 1791817423 +0200
+
+Complete checked ARC execution and loop ownership optimizations

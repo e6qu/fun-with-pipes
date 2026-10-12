@@ -1,0 +1,36 @@
+{
+  "head": "bedbf8a1fe22127567305eb17be5efa3bc4366e7",
+  "base": "7350a5566fa991c89916ea67ab693c2a0bba9327",
+  "tree": "fa17c2b3a29effe8876f0bb9ccf92a94144a05aa",
+  "branch": "complete-language-roadmap-docs",
+  "pr": 129,
+  "url": "https://github.com/e6qu/fun-with-pipes/pull/129",
+  "files": {
+    "AGENTS.md": "24087524a5590832803a7f10f6b3544e867269cb00908b15d6f015b90643591e",
+    "CONTRIBUTING.md": "7a00b334e94f203e209666fabe36a85ddd049bdd6f8d09195cbbd683f2ad2ead",
+    "PLAN.md": "f1f5ca2641003677c01812247f7af8e4bb43fa026867b650cea622e8949c2d1a",
+    "docs/design.md": "c63bf41c330e95993ff2446644ec1437065a3fd003588e68cefe45c9ca7c9fec",
+    "docs/development-state.md": "261a45642ba010638e0aea30ba9f273a9f9a32e24c78d3bcd1b111d6bab57479",
+    "docs/ownership.md": "fe463f39cf108e5622c0df59b1b07063f7f2635253cedc9a0b4ca9b781971a77",
+    "docs/primitive-ownership.md": "cb3842d411ae21cb1512225b93092b2208489235f43d5c65155b4cc52c6afb95",
+    "docs/roadmap-queue.md": "46cd62e56271b10a6756a1b59dd2a4c6e62f878ad4188bb00fcadf5c0e4e0d18",
+    "docs/roadmap-history.md": "19f7164aa6133b747a73993b53eb9dbaf68e90a815619be0db4456d6260a96cc",
+    "docs/reference.md": "9bddcf98f219a102456c9bfc6cd5ae7b3a63a84cf8f234ebd34c3db497e237ec",
+    "docs/concurrency.md": "38109f6b0a299157550e7394cb5458cc023660a80de384b821db5ae92ccf5906",
+    "docs/numerics.md": "7fd0db574d15639449d58e470042c6776f903fa79e44fac016f31bc0484fa00c"
+  },
+  "docs": [
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "PLAN.md",
+    "docs/design.md",
+    "docs/development-state.md",
+    "docs/ownership.md",
+    "docs/primitive-ownership.md",
+    "docs/roadmap-queue.md",
+    "docs/roadmap-history.md",
+    "docs/reference.md",
+    "docs/concurrency.md",
+    "docs/numerics.md"
+  ]
+}

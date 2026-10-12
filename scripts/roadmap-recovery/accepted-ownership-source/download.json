@@ -1,0 +1,31 @@
+{
+  "run": 38268514619,
+  "driver": "40d7c6606eda15a9b6ece4283a9bafc5f795cf19",
+  "artifact": {
+    "id": 11755634753,
+    "node_id": "MDg6QXJ0aWZhY3QxMTc1NTYzNDc1Mw==",
+    "name": "accepted-ownership-arc-source",
+    "size_in_bytes": 47806,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11755634753",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11755634753/zip",
+    "expired": false,
+    "digest": "sha256:cc5e74743d44b4626179eea33dd84d32cf0c110947e5e5479d054bc6b11bedee",
+    "created_at": "2026-10-12T15:23:24Z",
+    "updated_at": "2026-10-12T15:23:24Z",
+    "expires_at": "2027-01-10T15:12:22Z",
+    "workflow_run": {
+      "id": 38268514619,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "ownership-evidence-accepted-ownership-arc",
+      "head_sha": "40d7c6606eda15a9b6ece4283a9bafc5f795cf19"
+    }
+  },
+  "archiveSha256": "cc5e74743d44b4626179eea33dd84d32cf0c110947e5e5479d054bc6b11bedee",
+  "hashes": {
+    "phase5-6-acceptance.json": "533041d8fc1d8ef0e75984dae6b40afd604bc1a119bf9ce8a7d0a8800321600d",
+    "inventory.json": "95989ea3a9b3ebc87c17cf624497a503777573ef4e9f9785d50c59960df0bc88",
+    "fallback-review.json": "1dd26fdf56c41c399bb8300be1555a7fe95502e186accbe689df622382e19d3d",
+    "signed-payload.txt": "956857f9b21ef3c46037424657016c957000ebe00aabcc4f8a6798ea2cc3ee78"
+  }
+}
