@@ -435,7 +435,7 @@ rejected otherwise.
 
 ### Checked reference counting
 
-The prepared `--gc arc` mode checks eligibility and reclaims supported immutable
+The `--gc arc` mode checks eligibility and reclaims supported immutable
 values and scoped File owners by reference counts. It supports native main
 programs and rejects unproved cycle/owner boundaries, WebAssembly, executable
 protocol entry points, libraries and services. It requires normal counted

@@ -21,8 +21,11 @@ fixes and merges; keep later sessions within that scope and do not request
 the same permission again. Maintain the plan and handoff throughout. A queued,
 skipped or superseded CI run is not a passing gate for the current PR head.
 
-Finish native macOS support, then runtime ownership contracts, numeric
-representation and measured compiler/autodiff improvements, in that order.
+The implementation roadmap is complete: native macOS, runtime ownership,
+numeric representation, compiler/autodiff improvements and checked ARC are
+accepted. Follow the live handoff only to finish any pending final documentation
+delivery; do not reopen archived preparations. Further implementation requires
+a new user-directed scope.
 [docs/ownership.md](docs/ownership.md) records the memory design and its
 acceptance criteria. Windows, new deployment interfaces and a new compiler
 backend are deferred unless the user changes priorities.

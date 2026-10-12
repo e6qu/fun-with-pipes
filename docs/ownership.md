@@ -1,7 +1,7 @@
 # Ownership and efficient native execution
 
 This is the development contract for the memory work in [PLAN.md](../PLAN.md).
-It separates existing behavior from proposed changes. Current progress and
+It records accepted behavior, explicit boundaries and evidence. Source identities and
 validation are in [development-state.md](development-state.md).
 
 ## Stable language behavior
@@ -41,29 +41,28 @@ Unique records, variants and containers can reuse storage. Escape analysis,
 scalar replacement, specialized calls and pipeline fusion eliminate many
 allocations before counting is needed.
 
-| Category | Current treatment | Remaining work |
+| Category | Current treatment | Boundary |
 |---|---|---|
-| Scalars and nullary variants | Inline words; no counting | Preserve typed arithmetic and improve native ABI where measured |
-| Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
-| Arrays, maps, sets | Typed counted storage, numeric views and unique updates | Broader borrowing and performance evidence |
-| Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
-| Escaping closures | Compiled dynamic calls own heap closures and typed captures; selected synchronous callbacks borrow | Unmodeled retained callbacks, temporary contexts and exceptional cleanup |
-| Tasks and channels | Counted handles, retained task captures and typed channel queues | Broader runtime boundaries and explicit cycle lifetimes |
-| Networking and external callbacks | Accepted resource ownership and teardown; unmodeled value boundaries share | Prove eligibility before allowing tracing-free use |
-| AD tapes/kernel buffers | Scoped numeric owners outside the collected value heap | Bounded capacity reuse and measured numerical optimization |
+| Scalars and nullary variants | Inline words; direct numeric workers use concrete C types | Boxed I128/U128 remain outside checked ARC |
+| Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Return aliases preserve field ownership; target C ABI selects registers or caller storage |
+| Arrays, maps, sets | Typed counted storage, numeric views and unique updates | ARC requires proved primitive argument/result contracts |
+| Strings and bytes | Proved copy/alias results count owners; leaf destruction frees storage | Unmodeled result families remain tracing boundaries |
+| Escaping closures | Compiled calls own typed captures; selected synchronous callbacks borrow | Unmodeled retained callbacks are excluded from ARC |
+| Tasks and channels | Counted handles, retained captures and typed queues | Unproved mutable cycles require tracing and are excluded from ARC |
+| Networking and external callbacks | Resource ownership and teardown; unmodeled values share | External/deployment boundaries remain outside checked ARC |
+| AD tapes/kernel buffers | Scoped numeric owners with bounded reusable workspaces | Raw reverse-mode tape interfaces remain outside checked ARC |
 
-Native executables still need a generational conservative collector for shared
-values. WebAssembly uses a bump allocator; native libraries do not trace the
-host's unknown roots. `FWP_GC=off` disables tracing, not all allocation and not
-the ownership gap. `--memory static` provisions bounded memory, not static
-lifetimes. None of these is a general collector-free execution guarantee.
+Tracing mode collects shared graphs; checked ARC rejects unproved shared
+boundaries. WebAssembly uses a bump allocator; native libraries do not trace
+the host's unknown roots. `FWP_GC=off` disables collection without proving owner
+coverage. `--memory static` provisions bounded memory, not static lifetimes.
+Neither option establishes a general collector-free execution guarantee.
 
-
-## Remaining ownership coverage
+## Ownership boundaries
 
 Phase2 has a finite accepted inventory of owned and shared boundaries; see
-[ownership coverage](#ownership-coverage). Remaining work is measured optimization
-and the eligibility/cycle policy for optional tracing-free execution. Keep the
+[ownership coverage](#ownership-coverage). Measured optimizations and checked native ARC enforce the eligibility and
+cycle policy below. Keep the
 IR pass and code generator on the same contracts; accepting an explicit shared
 boundary does not make its values deterministically reclaimed.
 
@@ -72,8 +71,8 @@ retaining a reference beyond the call, returning a fresh owned value, and
 returning an alias of an argument. A borrowed callback input cannot silently
 become an owned result. A slice must retain its backing buffer if it escapes.
 
-Extend measured borrowing and deterministic cleanup to the remaining container,
-callback and runtime boundaries in focused changes.
+Future extensions to borrowing or deterministic cleanup must preserve these
+container, callback and runtime contracts; they are outside the completed roadmap.
 Do not indiscriminately count every short-lived list: the delivery history
 records a case where doing so slowed execution by 35%.
 
@@ -98,7 +97,7 @@ The actual merged-source finite coverage review passes after PR125 acceptance.
 The accepted representation changes preserve these contracts. The primitive inventory, IR checker and generated
 wrappers must agree on each contract. Record conservative shared boundaries
 explicitly, including their retention and teardown; they remain tracing
-requirements until phase 6 proves eligibility for execution without collection.
+requirements at unproved boundaries, which checked native ARC explicitly rejects.
 
 | Review | Required evidence |
 |---|---|
@@ -227,7 +226,7 @@ F16/BF16 currently retain their existing F32 representation and4-byte wire/stora
 format; F128 retains its existing F64 representation and8-byte format. They are
 not native half/128-bit floating formats. I128/U128 stay boxed in word slots.
 A new wide/half format requires a separate semantic and wire-format decision.
-The handoff records prepared versus accepted source and its actual runner gates.
+The handoff records accepted source and its actual runner gates.
 
 ## Evidence required
 
@@ -332,8 +331,8 @@ compiler and runtime. This establishes the documented compatibility model.
 Reconstructed/decoded graphs and cached/retained contexts require tracing unless
 a typed contract proves their complete graph and teardown. Channel close preserves
 queued values; draining breaks the tested counted cycle. Unreachable shared cycles
-still require tracing. Natural numeric storage/views and later optimized kernels
-must preserve these lifetimes. Optional tracing-free execution remains phase6.
+still require tracing. Natural numeric storage/views and optimized kernels
+must preserve these lifetimes. Checked native ARC has the eligibility boundaries below.
 
 ## Original resource semantics
 
@@ -359,15 +358,15 @@ bindings retain the parent once. FWP_FRAME_FIELDS=0 is the comparison control.
 Incoming owners remain protected through partial-retain failures. Whole-pattern
 bindings initialize their own path's payload/fields, avoiding C temporaries from
 another branch. Missing nominal scrutinee context can be recovered from a typed
-whole-value binder; other ambiguous patterns remain an audit item.
+whole-value binder; other ambiguous pattern types remain outside checked ARC eligibility.
 
-Focused descriptor, allocation and omission controls support these preparations.
-Full tracing-free acceptance still requires complete escape/runtime ownership,
-physical reclamation where supported and an explicit cycle lifetime policy.
+Descriptor, allocation, omission and full platform controls establish these
+ownership contracts. Checked ARC separately enforces its admitted escape/runtime
+boundaries and cycle policy, with physical reclamation verified below.
 
 ## Checked ARC delivery
 
-The phase6 preparation checks `--gc arc` against monomorphic value shapes and
+The compiler checks `--gc arc` against monomorphic value shapes and
 primitive contracts, with the cycle policy described in [design](design.md#checked-native-arc-execution).
 Escaping closures, arrays/views and scoped File owners have native O1/O2
 reclamation controls with stack allocation both enabled and disabled. The ledger
@@ -375,7 +374,7 @@ runs after typed CAF/closure cleanup and requires no newly charged live value
 storage or collections; a missing-free control must fail it. Binary symbol and
 disassembly evidence verifies tracing routines are absent; forcing a collector
 entry must trap. Native static-memory and complete-bundle controls remain
-subject to the current preparation/production gates in the handoff.
+covered by the accepted production gates recorded in the handoff.
 
 The collector allocator remains responsible for metadata and reusable storage.
 ARC does not promise zero allocator overhead, zero reserved address space, or
@@ -394,4 +393,4 @@ requires previously eligible programs to stay eligible. It uses the raw
 interpreter except for the original deep non-tail recursion case, which retains
 its optimized-interpreter/golden oracle and adds a bounded raw-interpreter copy.
 Rejections and expected front-end errors are listed separately from executions.
-The handoff records the current preparation and production gates.
+The handoff records the accepted source and production gates.
