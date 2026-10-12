@@ -91,34 +91,48 @@ resource arrays retain copied slices until their disposal-order contracts are
 proved. Views must retain backing owners, mask tagged lengths consistently,
 avoid unsafe in-place updates and measure backing retention, not just headers.
 
-## Active typed-worker preparation
+## Active numeric representation bundle
 
-Branch ownership-evidence-typed-worker-abi is at9fe843746e9dd9a7ebf890caaa58a5b656a46076.
-Runner38195896907 passes Linux and both Macs. This is
-preparation only: main remains accepted PR125. Worker parameters/results use
-native scalar C types and record fields, with V bridges for closures/runtime
-boundaries. Exact F32/F64 signed-zero/quiet/signaling-NaN payloads, original
-record stdout/stderr/trap status and diagnostic machine code are checked.
-Actual diagnostic ARM assembly returns the three-F64 record in d0/d1/d2;
-the scalar boundary uses d0. Intel retains caller storage for the24-byte record.
-Diagnostic no-inline helper calls are separate from production performance.
-The next integrated run will also retain ordinary optimized assembly.
-Arrays retain their word layout in this preparation. No full production gate
-or performance acceptance is claimed. Fix all remaining failures before bundling.
-Initial4da head failed a receiver naming lint; ea401 fixture used invalid make
-syntax. The33d harness incorrectly expected a successful exit from the original
-record fixture, whose division-by-zero trap is intentional. Preserve its golden
-output and exit101; the9fe harness compares all observable results.
-Source drafts: fwp-prepare-typed-worker-abi.py, fwp-typed-worker-abi-cgen-draft.rs,
-fwp-measure-typed-worker-abi.py and corresponding publication receipts/logs.
+Typed worker preparation9fe843746e9dd9a7ebf890caaa58a5b656a46076 passes all three
+jobs in38195896907. Exact floating payloads and original record trap/ownership
+semantics pass. ARM diagnostic assembly returns the three-F64 record in
+FP registers d0/d1/d2; Intel uses caller storage for that24-byte result.
+Diagnostic no-inline calls are separate from production performance; integrated
+controls retain ordinary optimized scalar/record assembly too.
 
-Packed access helper preparation retains the8-byte owning header, uses external
-element descriptors and byte-copy loads/stores with signed extension. Numeric
-views use a tagged length and retain backing owners. This helper draft is not
-integrated or compiled: fwp-packed-array-helpers-draft.c. All producers,
-consumers, SIMD, serialization, constants and drop paths must agree on layout
-before any packed representation is accepted. Actual accepted source manifest:
-fwp-numeric-representation-accepted-source-manifest.json.
+Packed branch ownership-evidence-packed-numeric-arrays is at
+b66e60d1342f261a07efa567e696b9a823f10cd7. Runner38197625349 passes Linux and ARM;
+Intel remains running. Main stays accepted PR125: these are preparation checks,
+without a final production gate, full performance or phase3 acceptance claim.
+The8-byte header remains; descriptor-directed I8/U8, I16/U16, I32/U32 and F32
+payloads use1/2/4-byte elements. I64/U64/F64 remain8 bytes. Numeric views retain
+backing owners; pointer-bearing slices remain copied. Structural operations,
+constants, decoding, SIMD and kernels use matching descriptors or word-wide
+view data helpers. Original ownership and bounds tests remain required.
+
+The94d first integration repeated helper insertion, causing C redefinitions.
+The3b original scalar-array probe parsed the new descriptor as a release function;
+b66 fixes its lookup while preserving its address-shaped scalar-bit controls.
+Source generation now starts from a stable typed core. Preserve actual failed
+logs and do not treat either earlier head as passing. Pending source refinements
+add leaf-array capacity without broadening generic record reuse, view backing
+retention/reclamation measurements and explicit target-width count controls.
+Positive count normalization saturates at SIZE_MAX before allocation/clamp checks.
+
+Current helpers: prepare-packed-array-runtime.py, prepare-packed-array-integration.py,
+measure-packed-numeric-arrays.py, publish-packed-numeric-arrays.py and publication
+receipts. Original controls and source drafts are in fwp-packed-array-original-controls
+and fwp-packed-array-runtime-draft. Actual accepted source snapshot is recorded
+in fwp-numeric-representation-accepted-source-manifest.json. Never overwrite the
+b66 branch with pending sources without an exact lease and rerunning its controls.
+
+Recovery now designates the current safe map with current-map.json rather than
+choosing an obsolete map by its entry count. Historical source/assembly and
+completed ownership proofs remain in immutable checkpoints; current recovery
+restores only phase3 work and necessary acceptance proofs. Publication reuses
+unchanged blobs and bounds incremental tree requests. A56-MiB inline tree request
+was rejected; no branch changed until the bounded publisher verified its tree.
+New recovery source changes still require a passing disposable-runner restoration.
 
 ## Next concrete action
 

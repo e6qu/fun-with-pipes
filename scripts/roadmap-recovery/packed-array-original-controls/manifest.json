@@ -1,0 +1,46 @@
+{
+  "head": "cbf68ea60c3b9439a117ef9d9b28b472f23dc632",
+  "tree": "07fe7b60a473f8c5ae6b7aede7678ff7fb17906a",
+  "files": {
+    "tests/array_element_ownership.rs": {
+      "blob": "014dc016ffb8a21b815031e6bccea2cd8287fe01",
+      "sha256": "92b5ab450d675a2d7954fab505a91ab5b9ac5161f7e4a80582d748e54e5dc45d"
+    },
+    "tests/array_size_limits.rs": {
+      "blob": "a6bc485da3d523a684b443875eecac9966c977b3",
+      "sha256": "b3d55dc878885f431baabcf5436e12b8531e0d913fcf7916732c4fedff20e4c1"
+    },
+    "tests/kernel_stack_bounds.rs": {
+      "blob": "66946779c6bad7c3bf36a7fa7708c3cb50f83c5a",
+      "sha256": "8c20505a5aa2677e91311d65c7b199ed58a0b5feedbb6b23f729df2b15cffc77"
+    },
+    "tests/device_bounds.rs": {
+      "blob": "db02756ba40c87242f446179275a96a8b2b0395e",
+      "sha256": "48eb32faefaae4d83b0ec66d70fa7d682c4ad2828190d0037a3629211c87eeeb"
+    },
+    "tests/fixtures/array_size_probe.c": {
+      "blob": "7c94a5a83995b1ef5c456554bf9181392c5a9ac8",
+      "sha256": "7660add983cb8f51c9757e84dbfb8e2c713794339ded954e77d87303601eb2ec"
+    },
+    "tests/fixtures/kernel_stack_probe.c": {
+      "blob": "d54284869149675ae2428c30eb7e836e034079e3",
+      "sha256": "a7afff81550f172fa337c3b676a642473dbc6d907ed875099e9700cad7f10d5c"
+    },
+    "tests/fixtures/device_bounds_probe.c": {
+      "blob": "06652b7aab8307128dfd545d14235187c3e6a288",
+      "sha256": "14cecd7865a11ac9276cbb76de1e6dc783a7b71caf48b9c5dee5a3c2bfc2e902"
+    },
+    "tests/worker_boxing_ownership.rs": {
+      "blob": "8df6cc6fc51c15ad1345751ab1ff19a27e816267",
+      "sha256": "430ec3f6a205a53438010e01152c8eac00c5c6d9ad1e65add08bee5b2fcc5575"
+    },
+    "tests/worker_preparation_ownership.rs": {
+      "blob": "9d3554f83d20bb6e4488f5ec1bb24d4d8b189a65",
+      "sha256": "e5d211ec1d3d9f67f68692e3bd07602a5d45df56e55d56fca51dcaac4dc9ad9b"
+    },
+    "tests/numerics.rs": {
+      "blob": "ee16bcb88fa9c12a3800f41289da299fac84a7ab",
+      "sha256": "6311ca60103549f28ad5301c54dea7dfa96389943302a0aa834586c546e16f98"
+    }
+  }
+}

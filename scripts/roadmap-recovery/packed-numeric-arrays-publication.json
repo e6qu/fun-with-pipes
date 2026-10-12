@@ -1,0 +1,23 @@
+{
+  "head": "94d534906a82364e500059a6676417f5dac88639",
+  "base": "cbf68ea60c3b9439a117ef9d9b28b472f23dc632",
+  "branch": "ownership-evidence-packed-numeric-arrays",
+  "unchangedNativeTree": "07fe7b60a473f8c5ae6b7aede7678ff7fb17906a",
+  "sourceHashes": {
+    "src/cgen.rs": "6ef0d7a53c01aac52ad9751ab4340e3b0215c8a71fb98c229a3cfe0717d4f1c4",
+    "scripts/measure-packed-numeric-arrays.py": "e990477aeb8214eb1ae61fee2e180ab2435438a2a82c444d90aa0a2358e9bea7",
+    "tests/fixtures/numeric_layout_baseline.fwp": "85ed14dc2bacb952ad8e1f5e29a4d88b3e442c4daae6f2849303b89042cafe40",
+    "tests/fixtures/packed_numeric_arrays.fwp": "ee6294a27f41df38e379f36e6eeadbefeaac55a93f1b41ed840a346870c93c31",
+    "tests/run/unboxed_records.fwp": "494283d0a4cb8d4cc9ba8f29441d3ed910e4f01794a7b68746aac76177aed305",
+    ".github/workflows/packed-numeric-arrays.yml": "4d3fd0d29ec20a0bd9d86c5c5eefcbb7122d7fa309d4e00ed61f93a92798d113",
+    "runtime/fwp_rt.c": "759c49aee6af84ccbc9915a9bc747c4d09db44a86a6122ebf8b57d7c92f2b923",
+    "runtime/fwp_rt_gc.c": "e6df2be49b60c7451cc5737561696ccd859557cee25f2e242f30aeb142fef3ce",
+    "runtime/fwp_rt_ops.c": "5a49b59741107a32afc9f14b35dff19588dbb9de17e7eb6debf6f12715b763b3",
+    "runtime/fwp_rt_prims.c": "df21e32945cb2ae9cc3206821f085ca2abf1160773d821add3b0b147328ca210",
+    "runtime/fwp_rt_num.c": "ff2315ad64d06122ef8731357eaed33a04e640f50229b845730381bf28cbff46",
+    "runtime/fwp_rt_json.c": "7bc6cdba70e8bf373188e0e83cbf04fe58da6fd1014ee203fc8a25cdfacf4914",
+    "runtime/fwp_rt_exec.c": "2da84b9159715ec51ecedc5944eba7d806042e7817d98691d80210a7975dcffc",
+    "runtime/fwp_rt_kernel.c": "da0b61333720a07ee0c7fb6325646be3b4c75039125906dc26837d5d040c53e2"
+  },
+  "stage": "Packed numeric arrays and typed ABI preparation published; all runner controls pending"
+}

@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "publisher": "scripts/roadmap-recovery/publish-active-numeric-recovery-checkpoint.py",
+  "scope": "Current phase3 sources and acceptance proofs; immutable earlier checkpoints preserve completed ownership and whole baseline assembly"
+}

@@ -63,7 +63,18 @@ for publisher in sorted(entries):
             continue
         maps.append((len(mapping),publisher,mapping))
 assert maps,'No complete safe recovery map found'
-_,publisher,mapping=max(maps)
+current = 'scripts/roadmap-recovery/current-map.json'
+if current in entries:
+    descriptor = json.loads(blob(current))
+    assert descriptor['version'] == 1
+    designated = descriptor['publisher']
+    assert designated.startswith('scripts/roadmap-recovery/publish-') and designated.endswith('.py')
+    selected = [row for row in maps if row[1] == designated]
+    assert len(selected) == 1, 'Designated recovery map is incomplete or unsafe'
+    _, publisher, mapping = selected[0]
+else:
+    # Immutable checkpoints before the current-map marker retain legacy recovery.
+    _, publisher, mapping = max(maps)
 assert len(mapping)>40
 record={}
 for name,target in mapping:
