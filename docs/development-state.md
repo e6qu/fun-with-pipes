@@ -6,14 +6,21 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `36edc683abc938c6a4479150cd0ad2f6dace1f89` passes audit38221212500.
+checkpoint `50d2ee568e006b106886efdfd4f69ca66d72cf97` passes audit38242884940.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
-verifies477 targets/28332904 bytes. Reports are retained in
-/private/tmp/fwp-verified-numerical-lookup-restoration. On recovery, run the
-bounded restore-numeric-finalization-archive.py after restoring temporary
-sources to reconstruct the verified gzip export from its retained base64 text. Never rerun completed publishers. Phases1–3 are accepted; phases4–6 remain unfinished.
+verifies389 targets/36999908 bytes. Reports are retained in
+/private/tmp/fwp-verified-type-context-restoration. The active map retains current
+ARC/type repairs, failure IR, phase4 acceptance and complete ec866d57 platform evidence.
+Older phase4 and standalone phase5 artifact payloads remain in parent checkpoints;
+the current map retains their receipts and current delivery helpers. Prior snapshot79dbf674 failed because
+its descriptor omitted version=1; the current repair passes actual restoration.
+The previous complete snapshot d00d306d1bac3d731f19769300e659b48cf7c020
+(audit38227215868,702 targets/48528910 bytes) retains superseded helpers and
+historical source. Restore that immutable head explicitly if they are needed. Current work
+uses the designated current-map.json, not an old publisher's next action.
+Never rerun completed publishers. Phases1–4 are accepted; phases5–6 remain unfinished.
 
 ## Execution contract
 
@@ -43,17 +50,22 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and verified coverage
 
-Main is `3a4582368f987ddb0233086be50c47995eb4ed3f` (PR #126), merged 2026-10-12T06:45:18Z.
-Exact tested head `916263e7c07443bccd4f87e764ca0c3f33dc664e` passes all six jobs in
-CI38207662016 and roadmap_docs38207662006. Signed squash subject
-`Pack numeric arrays and specialize worker ABI boundaries` is one line, 56 characters,
-with no body or trailers. Its sole parent is `cbf68ea60c3b9439a117ef9d9b28b472f23dc632`;
-complete tree `e3e00f4c134a912e73c33c844a1cac17202e5fb4` matches the tested head.
-Actual merged-source audit38214129076 passes at driverb1b5372e9d7bfffe19361cbb8a2634b33f4f874f.
-Hash-verified reports: /private/tmp/fwp-accepted-numeric-source.
+Main is `59af498c32689dc4928e3681eb90dd453d8e57ce` (PR #127), merged2026-10-12T10:43:08Z.
+Exact tested head8eb13370945b491cced1263ced290192e903acbb passes all six jobs in
+CI38231014878 and roadmap_docs38231014937. Signed squash subject
+`Fuse numerical pipelines and reuse autodiff workspaces` is one line,54 characters,
+with no body or trailers. Its sole parent is3a4582368f987ddb0233086be50c47995eb4ed3f;
+complete tree8f5e908c8dc2a0ff60976e204d46260a27f7ee79 matches the tested head.
+Actual merged-source audit38238135536 passes at drivera8483d40c7e4ed95831b39f36d67b3e563dc6f78.
+Hash-verified reports: /private/tmp/fwp-accepted-numerical-source. Merge and gate
+proofs: fwp-numerical-merge-proof.json and fwp-numerical-final-gate-proof.json.
+Duplicate main CI38238081009 is completed/cancelled after complete-tree
+parity and actual source acceptance.
+Cancellation supplies no additional passing gate.
+Main roadmap_docs38238081051 passes.
 Local checkout remains68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4.
 
-Phases1–3 are accepted. Phase2 retains the explicit tracing compatibility model:
+Phases1–4 are accepted. Phase2 retains the explicit tracing compatibility model:
 375 declarations,168 ownership contracts,19 IR combinators,11 flat signatures,
 and177 fallback declarations/167 symbols. Phase3 adds natural1/2/4-byte numeric
 payloads, bounded backing-owner views, concrete scalar/record worker ABI and
@@ -78,13 +90,13 @@ workloads are serial, low priority and guarded: sampled aggregate RSS below1GiB,
 target below2GiB, at least64GiB free disk, deadline180 seconds. Stop at limits;
 never raise or bypass them. Use `python3 scripts/local-guard.py COMMAND...` for
 fwp checks. The fun-refactor guard applies to that other repository.
-Latest disk observation:57,358,200KiB available, about54.7GiB; local target
+Latest disk observation:56,620,208KiB available, about54.0GiB; last local target
 103,696KiB, about101.3MiB. The64GiB reserve remains unavailable. No local compiled
 check, broad doc audit, rebase or fast-forward ran. Only source edits and bounded
 remote metadata publication/downloads ran serially at low priority.
 
-Protect all11 authoritative docs before any guarded main fast-forward:
-CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md,
+Protect all12 authoritative docs before any guarded main fast-forward:
+AGENTS.md, CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md,
 docs/ownership.md, docs/primitive-ownership.md, docs/roadmap-queue.md,
 docs/roadmap-history.md, docs/reference.md, docs/concurrency.md, docs/numerics.md.
 Actual pre-acceptance hashed backup: /private/tmp/fwp-main-docs-remote-pre123.
@@ -102,83 +114,83 @@ Its status is retained in fwp-main126-duplicate-ci-status.json; cancellation
 is not recorded as a passing main run. Earlier checkpoint and preparation
 instructions are historical; use the current checkpoint and active bundle.
 
-## Active phase4 bundle
+## Active phases5–6 bundle
 
-Preparation branch ownership-evidence-numeric-array-fusion has a passing
-Linux bundle3dbcddafe52b77a95f8db600d43d6208d4739b6c in runner38216031833.
-Formatted source/reports: /private/tmp/fwp-matrix-wasi-workspace-evidence.
-Eligible pure Array map/fold/length fusion removes intermediate allocations;
-effect/trap, recursion, exact finite bits and arithmetic NaN controls pass.
-Native/interpreter AD caches are bounded to512KiB. Cold/warm allocation,
-scoped ownership, stale tokens, adjoint zeroing, capacity faults, cancellation,
-reentrancy, normal/nested scopes, library unload and actual wasm32 limits pass.
-The library omission control fails as intended. Matrix ordinary and cast-shape
-products match the raw interpreter under both optimization settings.
+Phase4 is accepted on main. Its original numerical, AD, reuse, GC stress, library,
+WASI and allocation controls pass the full production matrix and merged-source
+audit. Measurements remain in docs/measurements/numerical-kernels-2026-10-12.json.
+Prior preparation and repair details are preserved in history.
 
-Direct matrix dimension/array arguments and output-only allocation pass at
-019580cc1ce07cc3f801e20ab3328c85ab6d8d68 in runner38217572666. Trap and
-cancellation cleanup, deliberately omitted cleanup, internal primitive access
-rejection and raw-interpreter shape controls pass. The kernel allocates exactly
-one output payload; callers retain responsibility for their input owners.
+Separate phase5 preparation: independently owned loop-state fields remove
+per-element retains/releases; typed scalar calls and bounded Array reads avoid
+unnecessary unwind registration; generated immutable descriptors eliminate
+runtime width dispatch in the measured F64 loop. The checked-index scope remains.
+Latest standalone headc600a9343283c975be018ba59c40c7d0068d161e passes all three
+jobs in38229158359. Reports, formatted sources and actual binary disassembly:
+/private/tmp/fwp-const-descriptors-platform-evidence. The current ARC branch also
+contains the scalar-borrow production repair and these phase5 changes.
+Eight65537-element rounds retain/release zero times and reclaim all charged
+storage with zero collections. Timings vary across shared runners; zero counts
+and smaller dispatch do not establish C/Rust parity or a universal speedup.
+Earlier preparation and instrumentation repairs are preserved in history.
 
-Equivalent C/Rust/generated benchmarks are being validated. Head80b454 in
-runner38218487246 passed compiler and regression checks, then failed its profile
-instrumentation because a function prefix also matched a compile-time stub.
-Head e5de4d3811e2cc77a78612f359db2b93a92b9b88 passes runner38219155681;
-reports and source are retained in /private/tmp/fwp-numerical-benchmark-evidence.
-C/Rust/generated exact result hashes agree. Separate uninstrumented executables
-supply timings; allocation and reference counts, charged live memory and process
-RSS are recorded separately. Eight array rounds make8 managed requests and
-reclaim all charged storage with no collections, but retain/release1048600 times.
-This Linux sample's fwp kernels remain substantially slower than C/Rust. It is
-an optimization baseline, not a claim of parity or general hardware performance.
-Permanent test artifacts now supply allocation metadata without
-rebuilding the same evidence. Historical failed preparation heads are retained;
-none substitutes for a passing production gate.
+## Phase6 preparation
 
-Combined Linux/ARM/Intel preparation71669990eeadcb77b4fd58e2181d86b78b0b2a2b
-passes all three jobs in38219456851. Per-platform benchmark reports and verified
-receipts are retained in /private/tmp/fwp-numerical-platform-baseline.
+Current branch ownership-evidence-tracing-free:
+350500f2cbbfccbde57dbd85e9fb855e13088e7d passes all three complete jobs
+in38242709162. Each platform executes all21 named ARC corpus cases, reports
+47 eligibility rejections and verifies3 expected compiler errors (71 total).
+Each retains seven actual native disassemblies. Original numerical, autodiff,
+reuse, exceptional cleanup and equivalent C/Rust controls pass.
+Explicit --gc arc checks native-main monomorphic types, native declaration
+provenance and primitive ownership contracts after ownership lowering.
+Unproved mutable/cyclic graphs, raw tape/pointers, boxed I128/U128, custom native
+signatures and foreign/deployment boundaries diagnose. The collector body is
+excluded; physical reclamation and forced-collection controls are required.
 
-Head0e50753158d8a688cb04214d386465645a747cbf (38219862595) passes the new matrix
-shared-view/direct-access controls and the borrowed-parent liveness unit test,
-but fails Array fusion semantics/allocation on Linux and ARM. The borrowing
-change exposes an old lookup rewrite cloning branch IR: address-keyed loop-tail
-and ownership maps then refer to the original nodes. Generated C wrongly boxes
-Step values and returns their addresses as completion flags. Failure source and
-log: fwp-direct-failure-array.c and fwp-numerical-direct-initial-failure.log.
+Baseline ec866d572f68e68c746992d55a7f75ff88188644 passes all three complete
+jobs in38237738284:71 corpus entries,21 executions,47 explicit rejections and
+3 expected front-end errors. It includes direct-buffer formatting cleanup,
+typed aggregate inlining, original deep recursion plus a bounded raw-interpreter
+control, all numerical/AD/reuse regressions and platform measurements.
+Retained evidence: /private/tmp/fwp-complete-ownership-platform-baseline and
+/private/tmp/fwp-complete-arc-platform-baseline. Prior failures are in history.
 
-Current b05ba75320db7359b00af53ff0a7e43512d07406 (38220639450) removes that cloning
-rewrite and uses existing tag/payload variant locals for array/map lookups.
-It adds an owned map-result regression and uninstrumented benchmark disassembly.
-All three jobs pass. Formatted compiler/test source agrees across all targets;
-reports and uninstrumented disassembly are retained in
-/private/tmp/fwp-numerical-platform-evidence. The array profile now retains and
-releases524296 times for eight65537-element rounds (previously1048600). All
-charged value storage reclaims with zero collections. Matrix requested storage
-is unchanged; direct F64 access removes repeated view/stride checks. Linux
-emits separate SSE multiply/add vector instructions; the measured ARM kernel
-uses scalar floating registers. Timing remains descriptive, with residual costs
-recorded in docs/numerics.md. The failed preceding head remains a failed gate.
+Post-lowering check a2500e0f passes CI38239726785 but reduces actual executions
+to17: basics, comptime, fusion_iter and fusion_lists acquire unknown temporary
+types. This is a coverage regression, not acceptance. Its Linux corpus and
+artifact proof are fwp-lowered-arc-linux-corpus.txt and its -proof.json.
+Head2d4bf66a registers synthesized Step variant fields where fusion creates
+them and adds a permanent named regression for all21 prior executions. Linux
+and ARM in38242127912 restore the three fused cases but fail on comptime;
+Intel was superseded; run38242127912 is completed/cancelled, not a passing gate. Retained counted IR identifies an inlined compile-time
+record whose parameter type was discarded. Current350500f2 preserves typed
+bindings for aggregate constants as well as constructed aggregates. The full
+three-platform workflow is restored; temporary IR diagnostics are removed.
+Receipts: fwp-arc-step-types-publication.json and fwp-arc-constant-types-publication.json.
+Failure IR/report/proof: /private/tmp/fwp-arc-step-type-failure. Keep the
+post-lowering check and all21 named eligibility controls before acceptance.
 
-Current source is /private/tmp/fwp-phase4-matrix-draft; the latest publication
-mapping is /private/tmp/fwp-numerical-production-files.json, selecting the
-formatted source verified on all three targets. Production publication uses
-branch numerical-kernels-and-workspaces from accepted main; query its PR and
-exact head before continuing. The publication receipt is
-/private/tmp/fwp-numerical-production-publication.json. Require all six exact-head
-jobs plus roadmap_docs before squash. Continue phases5–6 after actual
-merged-source acceptance. The next measured costs are carried-array reference
-counts and target-dependent matrix vectorization; preserve arithmetic order.
-Fix encountered bugs throughout; CI waiting gates merges, not preparation.
+## Final delivery procedure
 
-Latest user constraint: avoid needless wrappers, alternate paths, magic and
-implicit defaults. Register spills are ordinary lowering, and protocol-defined
-options are peers. Runtime matrix.cast preserves fields and may create shape
-mismatches; the specialized path must preserve their existing list/zip behavior.
-The checked shape branch is semantic protection, not an allocation fallback.
-Dimensions and borrowed arrays cross internal primitives directly. The tile
-candidate has an explicit32-element name and24KiB three-tile payload rationale;
-measure it on each supported target before claiming performance. Caches and
-comparison switches are compiler/runtime implementation controls, not new Pipe
-syntax or implicit type conversions.
+Both artifact downloads are complete and hash-verified:
+/private/tmp/fwp-complete-ownership-platform-evidence and
+/private/tmp/fwp-complete-arc-platform-evidence. Formatted source agrees on all
+three platforms. fwp-download-complete-ownership-platform.py,
+fwp-download-complete-arc-platform.py and fwp-write-ownership-measurements.py
+are completed; do not rerun them. The retained report is
+docs/measurements/ownership-and-arc-2026-10-12.json. The production publisher also removes the redundant
+Step-by-name eligibility exception after verifying all imported source hashes.
+This explicit eligibility-only delta must pass the full production matrix; the
+preparation measurements retain their original head and are not relabeled. The report separates existing-mode numerical measurements from explicit ARC
+semantic/reclamation and binary controls; timings are descriptive.
+The source map fwp-ownership-production-files.json and publisher
+fwp-publish-ownership-production.py target checked-arc-and-loop-ownership, based
+on accepted main59af498c. They preserve original reuse and ownership controls.
+Include AGENTS.md along with the11 other live docs; do not revert its new explicit
+design constraints. This next PR bundles phases5–6. It is not yet published.
+Require all six exact-head jobs and roadmap_docs before fwp-merge-ownership-bundle.py.
+Then run the prepared ownership merged-source audit publisher/downloader and
+update the plan to Done only after actual acceptance. Keep final source support
+and deliberately rejected ARC boundaries explicit. No additional feature phase
+remains after this bundle satisfies its acceptance criteria.

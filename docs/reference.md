@@ -338,6 +338,9 @@ fwp build file.fwp [options]                  compile
                      with the arguments after `--` (stdin from
                      --pgo-input F, or empty), then build with the profile
                      (needs GCC)
+    --gc arc         checked native main programs with counted ownership;
+                     unsupported value/runtime boundaries diagnose
+    --gc tracing     existing tracing compatibility mode (the default)
     --memory static  all memory mapped once at startup (see below), with
                      --heap S, --pool S, --stack S, --tasks N,
                      --task-stack S and --threads N
@@ -429,6 +432,16 @@ way: each maximal invalid sequence of bytes becomes one U+FFFD (`�`), as
 Rust's `String::from_utf8_lossy` does. Strings are therefore always valid
 UTF-8. Strings in the binary pipe protocol must be valid UTF-8 and are
 rejected otherwise.
+
+### Checked reference counting
+
+The prepared `--gc arc` mode checks eligibility and reclaims supported immutable
+values and scoped File owners by reference counts. It supports native main
+programs and rejects unproved cycle/owner boundaries, WebAssembly, executable
+protocol entry points, libraries and services. It requires normal counted
+freeing; tracing stress/verification and reuse poisoning are incompatible.
+The [ownership contract](ownership.md#checked-arc-delivery) and
+[handoff](development-state.md) record coverage and production acceptance.
 
 ### Static memory
 

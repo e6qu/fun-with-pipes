@@ -67,7 +67,9 @@ caller references stay protected until record/variant boxing succeeds. Worker
 argument preparation now protects original boxed arguments and each completed
 field duplicate until worker transfer. Multi-field retain cleanup releases
 completed extras on count overflow and protects existing caller owners before
-duplication. Nested constructor temporaries inherit known monomorphic context
+duplication. Fusion registers the fields of synthesized Step variants. Inlining preserves
+typed bindings for constructed and compile-time aggregates.
+Nested constructor temporaries inherit known monomorphic context
 for typed child cleanup; expression-inferred types remain authoritative. Boxed
 variant conversion keeps original boxed and remaining caller owners registered
 until typed payload retention succeeds. Record updates retain typed kept fields
@@ -367,6 +369,35 @@ workspace up to512KiB; oversized buffers are released. Reuse clears adjoints and
 retains generation/token validation. Scope exit, traps, cancellation and library
 unload retire owners. Cold/warm allocation and native/WASI boundary controls
 cover the private buffers separately from the managed result array.
+
+## Checked native ARC execution
+
+The prepared `fwp build --gc arc` mode admits immutable typed value graphs and
+scoped File owners whose compiler/runtime ownership contracts are established.
+The checker visits monomorphic function/local types, ownership temporaries and
+primitive boundaries after reference-count insertion.
+Ordinary calls, records, variants, captured functions and numeric containers keep
+their existing Pipe syntax and value semantics. Scalar fields finish evaluation
+before consuming later arguments; reference-valued borrowed fields retain their
+parent owner through the operation. Inlining retains typed locals for constructed
+aggregate arguments so ownership lowering keeps their child types.
+
+ARC builds require counted ownership and freeing. They exclude the collector
+body and reject incompatible tracing/reuse-poison settings. An attempted
+promotion of a counted owner to uncounted runtime sharing is a contract error.
+The native allocator still maintains allocation and reference-count metadata;
+released value storage returns to that allocator. Reserved pages and permanent
+program constants are separate from live temporary values.
+
+Eligibility excludes unproved mutable/cyclic runtime graphs, retained callbacks,
+raw pointers, raw reverse-mode tape tokens, boxed I128/U128 without counted
+owners, unchecked user native declarations, foreign/remote calls and unmodeled
+shared results. Native symbol names alone do not establish ownership signatures. Raw AD tokens need a scope proof in addition to their scalar
+representation; the normal numerical runtime retains the phase4 scoped AD
+workspace implementation. The initial checked mode supports native main programs;
+WebAssembly, executable protocol, library and service boundaries diagnose as
+unsupported. `--gc tracing` explicitly selects the existing compatibility mode;
+no ARC rejection silently selects it. The handoff records production acceptance.
 
 ## Executables and the pipe protocol
 

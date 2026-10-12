@@ -62,6 +62,10 @@
 #define FWP_GC 1
 #endif
 
+#if defined(FWP_ARC_ONLY) && !FWP_GC
+#error "ARC requires the native counted allocator; WebAssembly is not eligible"
+#endif
+
 #if !FWP_GC
 
 static char *fwp_heap_cur = 0, *fwp_heap_end = 0;
@@ -410,6 +414,15 @@ static void fwp_gc_init(void) {
     e = getenv("FWP_GC_STRESS");
     fwp_gc.stress = e ? atol(e) : 0;
     if (fwp_gc.stress < 0) fwp_gc.stress = 0;
+#ifdef FWP_ARC_ONLY
+    e = getenv("FWP_GC");
+    if ((e && *e && strcmp(e,"off") && strcmp(e,"0")) || fwp_gc.stress || fwp_gc.verify)
+        fwp_trap("--gc arc cannot enable tracing, GC stress or GC verification");
+    e = getenv("FWP_REUSE_VERIFY");
+    if (e && *e && strcmp(e,"0"))
+        fwp_trap("--gc arc cannot retain released storage for reuse verification");
+    fwp_gc.enabled = 0;
+#endif
     fwp_gc.budget = fwp_gc.budget_given = GC_MIN_BUDGET;
 }
 
@@ -719,6 +732,9 @@ static inline int fwp_rc_release_last(V v) {
 static void fwp_rc_share(V v) {
     uint8_t *c = fwp_rc_slot(v);
     if (!c || !*c) return;
+#ifdef FWP_ARC_ONLY
+    fwp_trap("internal: counted owner escaped ARC contract");
+#endif
     V stack[64];
     size_t sp = 0;
     fwp_rc_clear_slot(c);
@@ -1301,6 +1317,9 @@ static void fwp_gc_verify_minor(void) {
 }
 
 static __attribute__((noinline)) void fwp_gc_collect(void) {
+#ifdef FWP_ARC_ONLY
+    fwp_trap("internal: tracing requested in an ARC executable");
+#else
     if (fwp_gc.collecting) return;
     fwp_gc.collecting = 1;
     struct timespec t0, t1;
@@ -1344,6 +1363,7 @@ static __attribute__((noinline)) void fwp_gc_collect(void) {
     fwp_gc.pause_total += ms;
     if (ms > fwp_gc.pause_max) fwp_gc.pause_max = ms;
     fwp_gc.collecting = 0;
+#endif
 }
 
 static long fwp_gc_status_kb(const char *key) {

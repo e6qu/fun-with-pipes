@@ -2086,3 +2086,243 @@ Actual merged-source acceptance:
   "scope": "Natural narrow storage, owner-retaining numeric views, typed worker boundaries and checked protocol/count paths. Existing F16/BF16/F128 formats and tracing compatibility fallbacks remain explicit. Full six-job CI is reused only after complete-tree parity; no skipped or repeated focused run substitutes for that gate."
 }
 ```
+
+## Numerical kernel preparation before PR127
+
+Preparation branch ownership-evidence-numeric-array-fusion has a passing
+Linux bundle3dbcddafe52b77a95f8db600d43d6208d4739b6c in runner38216031833.
+Formatted source/reports: /private/tmp/fwp-matrix-wasi-workspace-evidence.
+Eligible pure Array map/fold/length fusion removes intermediate allocations;
+effect/trap, recursion, exact finite bits and arithmetic NaN controls pass.
+Native/interpreter AD caches are bounded to512KiB. Cold/warm allocation,
+scoped ownership, stale tokens, adjoint zeroing, capacity faults, cancellation,
+reentrancy, normal/nested scopes, library unload and actual wasm32 limits pass.
+The library omission control fails as intended. Matrix ordinary and cast-shape
+products match the raw interpreter under both optimization settings.
+
+Direct matrix dimension/array arguments and output-only allocation pass at
+019580cc1ce07cc3f801e20ab3328c85ab6d8d68 in runner38217572666. Trap and
+cancellation cleanup, deliberately omitted cleanup, internal primitive access
+rejection and raw-interpreter shape controls pass. The kernel allocates exactly
+one output payload; callers retain responsibility for their input owners.
+
+Equivalent C/Rust/generated benchmarks are being validated. Head80b454 in
+runner38218487246 passed compiler and regression checks, then failed its profile
+instrumentation because a function prefix also matched a compile-time stub.
+Head e5de4d3811e2cc77a78612f359db2b93a92b9b88 passes runner38219155681;
+reports and source are retained in /private/tmp/fwp-numerical-benchmark-evidence.
+C/Rust/generated exact result hashes agree. Separate uninstrumented executables
+supply timings; allocation and reference counts, charged live memory and process
+RSS are recorded separately. Eight array rounds make8 managed requests and
+reclaim all charged storage with no collections, but retain/release1048600 times.
+This Linux sample's fwp kernels remain substantially slower than C/Rust. It is
+an optimization baseline, not a claim of parity or general hardware performance.
+Permanent test artifacts now supply allocation metadata without
+rebuilding the same evidence. Historical failed preparation heads are retained;
+none substitutes for a passing production gate.
+
+Combined Linux/ARM/Intel preparation71669990eeadcb77b4fd58e2181d86b78b0b2a2b
+passes all three jobs in38219456851. Per-platform benchmark reports and verified
+receipts are retained in /private/tmp/fwp-numerical-platform-baseline.
+
+Head0e50753158d8a688cb04214d386465645a747cbf (38219862595) passes the new matrix
+shared-view/direct-access controls and the borrowed-parent liveness unit test,
+but fails Array fusion semantics/allocation on Linux and ARM. The borrowing
+change exposes an old lookup rewrite cloning branch IR: address-keyed loop-tail
+and ownership maps then refer to the original nodes. Generated C wrongly boxes
+Step values and returns their addresses as completion flags. Failure source and
+log: fwp-direct-failure-array.c and fwp-numerical-direct-initial-failure.log.
+
+Current b05ba75320db7359b00af53ff0a7e43512d07406 (38220639450) removes that cloning
+rewrite and uses existing tag/payload variant locals for array/map lookups.
+It adds an owned map-result regression and uninstrumented benchmark disassembly.
+All three jobs pass. Formatted compiler/test source agrees across all targets;
+reports and uninstrumented disassembly are retained in
+/private/tmp/fwp-numerical-platform-evidence. The array profile now retains and
+releases524296 times for eight65537-element rounds (previously1048600). All
+charged value storage reclaims with zero collections. Matrix requested storage
+is unchanged; direct F64 access removes repeated view/stride checks. Linux
+emits separate SSE multiply/add vector instructions; the measured ARM kernel
+uses scalar floating registers. Timing remains descriptive, with residual costs
+recorded in docs/numerics.md. The failed preceding head remains a failed gate.
+
+
+## Loop ownership preparation before the ARC bundle
+
+Separate phase5 preparation: ownership-evidence-flat-loop-owners. Native head
+7dbeb34cbc0d99c673577fd98c104b13e96e260a passes Linux runner38224092414:
+compiler, loop ownership/unwind/preparation, field and numeric controls. Flat
+state fields become independent ownership parameters before RC insertion,
+allowing carried arrays to move without per-iteration retain/release pairs.
+Eight65537-element rounds retain/release zero times and reclaim all charged
+storage with zero collections. Uninstrumented timing still trails C/Rust;
+zero counts alone do not establish machine-code parity. Sources/assembly:
+/private/tmp/fwp-flat-loop-owners-evidence. Formatter-only export70bed875 in
+38224748379 verifies unchanged implementation and supplies the PR127 test repair;
+it is not an additional native gate. Earlier failed compilation and missed
+flat-entry instrumentation remain failed runs, retained in preparation receipts.
+
+Preparation0264d036dcac0f16833ea5a6a0996172e6148ecd passes Linux38226799564 and removes
+unwind registration around concretely typed F32/F64 add/subtract/multiply/negate
+primitive calls. Argument evaluation and checked integer calls retain their
+protection. Permanent instrumentation bounds cleanup registrations per element,
+as well as requiring zero retains/allocations and reclaimed input ownership.
+Actual native tests and benchmarks are restored in the preparation workflow;
+this head passes its native checks. Source map:
+/private/tmp/fwp-phase5-scalar-unwind-draft/files.json. Keep phase5 compiler
+changes separate from PR127 until its merge/acceptance. Current b3fde38ec477433b0a11a63fcef2f15425bf7cce additionally removes
+scopes around bounded scalar Array reads; map comparisons/retains remain
+protected. The measured bound retains one checked-index scope per element.
+All three platform jobs pass in38227512382. Verified reports, sources and
+actual uninstrumented disassembly: /private/tmp/fwp-loop-ownership-platform-evidence. Source map:
+/private/tmp/fwp-phase5-lookup-unwind-draft/files.json. Inspect every result
+and retain formatted sources/measurements before preparing the next PR.
+Assembly still reloads writable descriptors and dispatches fixed element widths.
+Current c600a9343283c975be018ba59c40c7d0068d161e makes generated descriptors
+const;38229158359 passes all three targets. Reports and assembly are retained
+in /private/tmp/fwp-const-descriptors-platform-evidence. Source map:
+/private/tmp/fwp-phase5-const-descriptors-draft/files.json. Carry the production
+scalar-borrow fix into this compiler before its final bundle validation; the
+phase5-compatible RC source is fwp-scalar-borrow-reuse-draft/rc-phase5.rs.
+
+
+## Numeric storage acceptance before PR127
+
+Main is `3a4582368f987ddb0233086be50c47995eb4ed3f` (PR #126), merged 2026-10-12T06:45:18Z.
+Exact tested head `916263e7c07443bccd4f87e764ca0c3f33dc664e` passes all six jobs in
+CI38207662016 and roadmap_docs38207662006. Signed squash subject
+`Pack numeric arrays and specialize worker ABI boundaries` is one line, 56 characters,
+with no body or trailers. Its sole parent is `cbf68ea60c3b9439a117ef9d9b28b472f23dc632`;
+complete tree `e3e00f4c134a912e73c33c844a1cac17202e5fb4` matches the tested head.
+Actual merged-source audit38214129076 passes at driverb1b5372e9d7bfffe19361cbb8a2634b33f4f874f.
+Hash-verified reports: /private/tmp/fwp-accepted-numeric-source.
+
+## Phase4 delivery through PR127
+
+Verified preparation b05ba75320db7359b00af53ff0a7e43512d07406 passes all three
+platform jobs in38220639450. Formatted source agrees across Linux/ARM/Intel;
+reports and uninstrumented disassembly are in
+/private/tmp/fwp-numerical-platform-evidence. Array fusion removes intermediate
+allocation; matrix kernels allocate only the output and preserve ordered floating
+arithmetic; AD reuses a bounded512KiB workspace with checked capacities and
+unwind/unload cleanup. Permanent semantic, physical-reclamation, alias/view,
+omission, library and actual WASI controls pass. C/Rust comparison reports are
+in docs/measurements/numerical-kernels-2026-10-12.json. Timings are descriptive;
+prior failing preparations and repairs are archived in history.
+
+Before merge, PR #127 reached head8eb13370945b491cced1263ced290192e903acbb on
+numerical-kernels-and-workspaces, based on accepted main3a458236. Final gates CI38231014878 and roadmap_docs38231014937 pass. Repair publication:
+/private/tmp/fwp-scalar-reuse-production-update.json.
+The previous head d19fef9 had passing docs, bench and both macOS GC jobs. Its ARM regular macOS failed the original
+unique_arrays_are_written_in_place control: push allocates38149.4MiB with or
+without reuse. The remaining superseded jobs were cancelled after repair publication; no
+results from that failed/cancelled head count toward the new gate.
+The scalar-field borrowing optimization incorrectly holds a parent through
+an operation even when the borrowed field is an immediate scalar; consuming
+its array field then duplicates an owner and prevents in-place writes.
+Repair branch ownership-evidence-borrowed-scalar-reuse at
+70d04387f475cb3fc37ac047aebbc20dfa8c1750 passes38229871625 on all three targets. Identical formatted source/proof:
+/private/tmp/fwp-scalar-borrow-reuse-evidence.
+Only reference-valued fields extend parent borrowing; scalar field evaluation
+finishes before a later consuming argument. The original thresholds are unchanged.
+Source map: /private/tmp/fwp-scalar-borrow-reuse-draft/files.json.
+The formatted repair and manual evidence workflow regression are published;
+all seven results subsequently passed for the repaired production head. Failure log:
+/private/tmp/fwp-pr127-macos-arm-failure.log. The superseded initial-head CI38222106138 was cancelled after
+repairing the loop reclamation test's boxed-only instrumentation. Its shared
+state control now marks typed pointer fields in direct flat entries as shared;
+the original reclamation threshold and semantic checks remain unchanged.
+Publication/source hashes: /private/tmp/fwp-numerical-production-publication.json.
+The prepared fwp-merge-numerical-kernels.py requires every gate, supplies an
+explicit single-line subject/empty body and verifies signed squash/tree parity.
+Actual merged-source acceptance subsequently passed in38238135536.
+
+
+PR127 subsequently merged at59af498c after all six exact-head jobs and docs passed.
+Actual merged-source acceptance38238135536 passes. The live handoff records the
+accepted source and directs work to the phases5–6 bundle.
+
+## ARC preparation through the lowered-type audit
+
+
+Independent branch ownership-evidence-tracing-free at
+a2500e0f68887412a80cd3ca00ae579b89bef560, runner38239726785 completed,
+adds explicit --gc arc/tracing build selection. ARC checks monomorphic value
+shapes and primitive ownership contracts; unsupported opaque/mutable graphs,
+retained callbacks, raw pointers, raw AD tape lifetimes, foreign/remote and executable-protocol/library
+boundaries diagnose instead of selecting tracing. The first supported target is
+native main programs. Counted immutable escapes and scoped File owners must
+reclaim physically. Collector implementation is excluded in ARC builds;
+conflicting GC/reuse-debug settings diagnose. A counted-to-uncounted promotion
+traps as an internal contract violation. Linux20adf795 passes38229919586. Extended85e2ead3 passes all three targets
+in38230592270: immutable escapes, File ownership, cycle-type rejection,
+missing-free/forced-collection controls, actual binary symbols/disassembly and
+existing closure/unwind/AD regressions. This remains preparation, not merged support.
+The native tests compare a raw interpreter with arrays/views, escaping closures
+and scoped files, check charged storage at return, and deliberately omit freeing.
+Initial f1a748 failed clippy for redundant diagnostic borrows; ff325009 passes
+compiler checks but rejects synthesized Step shapes;6c2344 admits Step and
+fails the ledger test's global rather than main-thread instrumentation anchor.
+Head20adf795 scopes that anchor, rejects unproved AD token lifetimes and
+includes the scalar-borrow production repair. Head0ab3d491 passes all three jobs in38231696023 and combines all
+numerical/AD/loop controls and benchmarks with ARC checks on the three platforms,
+adding native static-memory and explicit foreign/deployment rejection controls.
+Its export workflow is fwp-phase6-arc-draft/complete-preparation.yml. The three earlier
+failed preparations remain failures; none supplies an ARC acceptance gate. Broader eligibility head82ca8bb5 rejects boxed I128/U128, which lack counted owners,
+and user native declarations without checked signatures. Its new golden corpus
+passes compiler checks but fails38233842841 on all targets: case_of_case leaves
+16 charged bytes in format's managed rendering temporary. Head75981271 renders
+directly into one private output buffer and registers its recoverable-trap cleanup.
+The corpus now reports every semantic/reclamation failure in one run; it still
+fails if any mismatch remains and requires real exit codes. Source/proof:
+/private/tmp/fwp-phase6-arc-draft/format-files.json and fwp-arc-format-publication.json.
+Failure C/report: /private/tmp/fwp-arc-corpus-failure. Head75981271 passes case_of_case's
+return ledger, then fails38235361753 because the harness treats intentional err_
+compiler fixtures as unexpected failures. Head74f70ab2 verifies their exact golden
+diagnostics separately and records them as compile-errors, never ARC execution.
+ARC checks now run before the broad numerical suite for earlier failure feedback;
+all prior checks remain required. Head74f70ab2 fails38236264475 after evaluating all70 corpus entries:
+20 executed,47 rejected,3 expected compilation errors. Two executions disagree:
+optimizer exceeds the raw interpreter stack at100000 non-tail calls; traits
+leaves64 charged bytes. This is failure evidence, not20 verified ARC programs.
+The retained-C diagnosis35de2ce17 passes38237086329 and identifies four16-byte
+live cells (Options and a captured function). Inlining substitutes constructed
+aggregates without preserving parameter types, leaving stack-container children
+without typed releases. Headec866d57 preserves the existing typed local during
+inlining. It keeps the original deep recursion native/golden control and adds a
+100-call copy for raw interpreter comparison; no stack limits are increased.
+Source/receipt: fwp-phase6-arc-draft/typed-aggregate-files.json and
+fwp-arc-typed-aggregate-publication.json. Probe/failure evidence:
+/private/tmp/fwp-arc-full-corpus-failure and fwp-arc-traits-diagnostic.log.
+Headec866d57 passes all three complete jobs in38237738284, including the repaired
+ARC corpus and measurements. Final review found the checker ran before RC added
+its temporary locals. Heada2500e0f moves the same eligibility check after counted
+program construction, requiring ownership temporaries to have supported concrete
+types too. This strengthening is unverified; ec866d57 is retained as the full
+baseline, not as a gate for its successor. Source/receipt:
+fwp-phase6-arc-draft/lowered-eligibility-files.json and
+fwp-arc-lowered-eligibility-publication.json.
+Publication: fwp-arc-corpus-diagnostics-publication.json. Partial report:
+/private/tmp/fwp-arc-format-corpus.txt.
+Draft source map:
+/private/tmp/fwp-phase6-arc-draft/files.json, fwp-arc-ledger-fix-files.json,
+fwp-arc-platform-files.json and fwp-phase6-arc-draft/complete-files.json.
+Fix all failures;
+do not broaden eligibility without physical lifetime evidence. Source was
+prepared from exact accepted runtime/IR blobs plus the current phase5 compiler.
+Once coherent, phases5–6 may share the next production PR and full matrix to
+reduce cycle time, with each phase's criteria checked separately in order.
+
+Latest user constraint: avoid needless wrappers and fallbacks, magic, and
+unnecessary implicit behavior or defaults. Register spills are ordinary lowering, and protocol-defined
+options are peers. Runtime matrix.cast preserves fields and may create shape
+mismatches; the specialized path must preserve their existing list/zip behavior.
+The checked shape branch is semantic protection, not an allocation fallback.
+Dimensions and borrowed arrays cross internal primitives directly. The tile
+candidate has an explicit32-element name and24KiB three-tile payload rationale;
+measure it on each supported target before claiming performance. Caches and
+comparison switches are compiler/runtime implementation controls, not new Pipe
+syntax or implicit type conversions.
+
+
+The live handoff supersedes the next actions in this historical snapshot.

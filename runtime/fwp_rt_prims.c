@@ -1459,18 +1459,12 @@ static V fwp_p_parse_float(V s, int kind) {
     return fwp_some(fwp_from_f64(strtod(STR(s)->d, 0)));
 }
 
+/* Formatting writes directly into one private buffer. The cleanup owns it
+ * across recoverable traps; no managed strings or parts array are temporary. */
+static void fwp_format_release(void *arg) { free(((fwp_buf *)arg)->d); }
 static V fwp_p_format(V tmpl, V v, const fwp_desc *d) {
-    V parts_small[1];
-    V *parts = parts_small;
-    int np;
-    if (d->kind == K_RECORD && !d->name && d->n > 0) {
-        np = d->n;
-        parts = (V *)fwp_alloc((size_t)np * sizeof(V));
-        for (int i = 0; i < np; i++) parts[i] = fwp_show(OBJ(v)->f[i], d->fields[i]);
-    } else {
-        np = 1;
-        parts[0] = fwp_show(v, d);
-    }
+    int tuple = d->kind == K_RECORD && !d->name && d->n > 0;
+    int np = tuple ? d->n : 1;
     const char *t = STR(tmpl)->d;
     size_t n = STR(tmpl)->len, i = 0;
     int holes = 0;
@@ -1479,28 +1473,32 @@ static V fwp_p_format(V tmpl, V v, const fwp_desc *d) {
         else if (i + 1 < n && t[i] == '{' && t[i + 1] == '}') { holes++; i += 2; }
         else i++;
     }
+    fwp_buf b = {0};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_format_release, &b);
     if (holes != np) {
-        fwp_buf e = {0};
         char num[128];
         snprintf(num, sizeof num, "format: placeholder count (%d) does not match value count (%d) in \"", holes, np);
-        buf_puts(&e, num);
-        buf_put(&e, t, n);
-        buf_putc(&e, '"');
-        fwp_trap(STR(buf_to_str(&e))->d);
+        buf_puts(&b, num);
+        buf_put(&b, t, n);
+        buf_putc(&b, '"');
+        fwp_trap(b.d);
     }
-    fwp_buf b = {0};
     i = 0;
     int next = 0;
     while (i < n) {
         if (t[i] == '{' && i + 1 < n && t[i + 1] == '{') { buf_putc(&b, '{'); i += 2; }
         else if (t[i] == '}' && i + 1 < n && t[i + 1] == '}') { buf_putc(&b, '}'); i += 2; }
         else if (t[i] == '{' && i + 1 < n && t[i + 1] == '}') {
-            if (next < np) { buf_put(&b, STR(parts[next])->d, STR(parts[next])->len); next++; }
-            else buf_puts(&b, "{}");
+            fwp_write(&b, tuple ? OBJ(v)->f[next] : v, tuple ? d->fields[next] : d, 1);
+            next++;
             i += 2;
         } else { buf_putc(&b, t[i]); i++; }
     }
-    return buf_to_str(&b);
+    V result = buf_to_str(&b);
+    fwp_cleanup_pop(&cleanup);
+    FWP_KEEP_ALIVE(tmpl); FWP_KEEP_ALIVE(v);
+    return result;
 }
 
 /* --------------------------------------------------------------- arrays */

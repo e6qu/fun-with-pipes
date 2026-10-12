@@ -240,13 +240,13 @@ support is established, and earlier partial counters do not prove allocation par
 
 ## Numerical kernel measurements
 
-The phase4 preparation compares identical array and matrix computations in C,
+The accepted phase4 measurements compare identical array and matrix computations in C,
 Rust and generated fwp code on Linux and ARM/Intel macOS. The retained
 [measurement record](measurements/numerical-kernels-2026-10-12.json) includes
 source hashes, hardware, compiler versions, build flags, samples, allocations,
 reference counts, live memory, collection counts and process RSS. Raw reports
 and uninstrumented disassembly are artifacts of the linked runner execution.
-Run the Numerical kernel evidence workflow manually to regenerate the same
+Run the Numerical and ownership evidence workflow manually to regenerate the same
 controls on GitHub runners; no local full benchmark run is required.
 
 Timings use separate uninstrumented binaries. Array kernel time consumes and
@@ -257,8 +257,21 @@ with allocator metadata excluded from charged bytes. Reserved virtual address
 space and process RSS are separate metrics. Shared-runner timing is descriptive;
 CI asserts exact results and stable allocation properties.
 
-The fused array kernel allocates no intermediates but still retains/releases
-its carried array once per element. Matrix multiplication allocates one output;
+The accepted phase4 implementation allocates no array intermediates but still
+retains/releases its carried array once per element. Matrix multiplication allocates one output;
 the benchmark's public generic input boundary also builds two Matrix records.
-These remaining costs are explicit targets for phase5. Neither zero intermediate
+Phase5 targets the per-element counts; the two public-boundary Matrix records
+remain explicit representation costs. Neither zero intermediate
 allocations nor vector instructions alone establish C/Rust speed parity.
+
+Phase5 preparation gives flat loop fields independent owners and removes
+per-element array retain/release pairs. Unwind scopes remain around fallible
+operations; concrete scalar reads and F32/F64 arithmetic need none. Generated
+type descriptors are read-only, allowing fixed element-width dispatch to be
+removed. Raw floating-point order and bounds/trap behavior remain unchanged.
+The [ownership measurement record](measurements/ownership-and-arc-2026-10-12.json)
+retains the three-platform results and separates numerical timings from ARC
+execution controls. The handoff records full production acceptance; a lower
+instruction/count total alone is not a timing guarantee.
+The checked ARC subset currently excludes raw reverse-mode tape lifetimes;
+normal native autodiff continues to use the scoped bounded workspace above.

@@ -364,3 +364,34 @@ whole-value binder; other ambiguous patterns remain an audit item.
 Focused descriptor, allocation and omission controls support these preparations.
 Full tracing-free acceptance still requires complete escape/runtime ownership,
 physical reclamation where supported and an explicit cycle lifetime policy.
+
+## Checked ARC delivery
+
+The phase6 preparation checks `--gc arc` against monomorphic value shapes and
+primitive contracts, with the cycle policy described in [design](design.md#checked-native-arc-execution).
+Escaping closures, arrays/views and scoped File owners have native O1/O2
+reclamation controls with stack allocation both enabled and disabled. The ledger
+runs after typed CAF/closure cleanup and requires no newly charged live value
+storage or collections; a missing-free control must fail it. Binary symbol and
+disassembly evidence verifies tracing routines are absent; forcing a collector
+entry must trap. Native static-memory and complete-bundle controls remain
+subject to the current preparation/production gates in the handoff.
+
+The collector allocator remains responsible for metadata and reusable storage.
+ARC does not promise zero allocator overhead, zero reserved address space, or
+immediate return of every freed page to the operating system. Unsupported cyclic
+runtime types and owner boundaries fail eligibility instead of acquiring an
+implicit lifetime or tracing path. Existing unchecked `FWP_GC=off` diagnostics
+remain available in tracing-mode builds; they do not establish ARC eligibility.
+
+ARC eligibility also rejects boxed I128/U128 until their representation has counted
+owners. User native declarations cannot acquire a checked signature merely by
+naming a standard primitive. Eligibility checks the locals introduced by ownership
+lowering as well as source-derived types. Fusion registers synthesized variant
+fields, and inlining retains types for constructed and compile-time aggregates.
+The golden corpus checks semantics and charged storage on normal return and
+requires previously eligible programs to stay eligible. It uses the raw
+interpreter except for the original deep non-tail recursion case, which retains
+its optimized-interpreter/golden oracle and adds a bounded raw-interpreter copy.
+Rejections and expected front-end errors are listed separately from executions.
+The handoff records the current preparation and production gates.
