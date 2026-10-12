@@ -1,0 +1,17 @@
+{
+  "head": "3a4582368f987ddb0233086be50c47995eb4ed3f",
+  "files": {
+    "src/mono.rs": {
+      "blob": "f08c7c4dc4f162774a830d195972ce642a211ae6",
+      "sha256": "e5f6b1d76808a31f964518e899bb4850bd4c72d2b27d14583ab7059eb4efb3fd"
+    },
+    "src/ownership.rs": {
+      "blob": "246230f21aa49e33012c50016a906a3397b7d6a4",
+      "sha256": "af9dc0ac3e30ce641c6f03dc67c9608da3631c4d3e3aa80ea97d2333d9a4fced"
+    },
+    "src/aot.rs": {
+      "blob": "bf71f0561549abc2bb6eb969d85b58e510188ef3",
+      "sha256": "e68fa7d18f066aa85938fffae183bab6fb5deef5367b21d59be8c0b59d55260f"
+    }
+  }
+}

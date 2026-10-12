@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "publisher": "scripts/roadmap-recovery/publish-repaired-workspace-recovery.py",
-  "scope": "Current verified preparation and exact draft source snapshots; root docs supply live links"
+  "publisher": "scripts/roadmap-recovery/publish-phase4-active-recovery.py",
+  "scope": "Accepted phase3 proofs, active phase4 sources and controls, current user constraints"
 }

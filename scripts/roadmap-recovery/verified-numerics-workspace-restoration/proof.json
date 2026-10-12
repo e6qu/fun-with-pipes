@@ -1,0 +1,32 @@
+{
+  "head": "85ea2b6d130c86ff260f4ad1850f9eae444b5919",
+  "run": 38213004389,
+  "artifact": {
+    "id": 11729877992,
+    "node_id": "MDg6QXJ0aWZhY3QxMTcyOTg3Nzk5Mg==",
+    "name": "recovery-restoration",
+    "size_in_bytes": 18255,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11729877992",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11729877992/zip",
+    "expired": false,
+    "digest": "sha256:5b4cc54fed69b7e0f72d6af2f1ec8ad7c5c6cce442343d3c1dbb4e040eba39b7",
+    "created_at": "2026-10-12T06:32:34Z",
+    "updated_at": "2026-10-12T06:32:34Z",
+    "expires_at": "2027-01-10T06:32:16Z",
+    "workflow_run": {
+      "id": 38213004389,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/handoff-pr123-20261011",
+      "head_sha": "85ea2b6d130c86ff260f4ad1850f9eae444b5919"
+    }
+  },
+  "archiveSha256": "5b4cc54fed69b7e0f72d6af2f1ec8ad7c5c6cce442343d3c1dbb4e040eba39b7",
+  "reportHashes": {
+    "validation.json": "731a07c695bc0791ae50a5e7e39229889f7fce7de927d4687b107255adf689c0",
+    "recovery-restoration.json": "c120fcc24166ba33beb40a2ac7ba0424129a946690ff55266eca14ac75c805f7"
+  },
+  "verifiedTargets": 292,
+  "bytes": 15295098,
+  "scope": "Actual restoration on disposable GitHub runner; metadata downloaded only, no local restoration, helper execution or compiler check"
+}

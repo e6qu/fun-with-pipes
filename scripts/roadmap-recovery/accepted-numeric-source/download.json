@@ -1,0 +1,31 @@
+{
+  "run": 38214129076,
+  "driver": "b1b5372e9d7bfffe19361cbb8a2634b33f4f874f",
+  "artifact": {
+    "id": 11730209364,
+    "node_id": "MDg6QXJ0aWZhY3QxMTczMDIwOTM2NA==",
+    "name": "accepted-numeric-storage-source",
+    "size_in_bytes": 47397,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11730209364",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/11730209364/zip",
+    "expired": false,
+    "digest": "sha256:8b848e027d92eedb5ee73745b12336dd64b66233974bb2bcef2fc8f740509c7a",
+    "created_at": "2026-10-12T06:46:10Z",
+    "updated_at": "2026-10-12T06:46:10Z",
+    "expires_at": "2027-01-10T06:45:46Z",
+    "workflow_run": {
+      "id": 38214129076,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "ownership-evidence-accepted-numeric-storage",
+      "head_sha": "b1b5372e9d7bfffe19361cbb8a2634b33f4f874f"
+    }
+  },
+  "archiveSha256": "8b848e027d92eedb5ee73745b12336dd64b66233974bb2bcef2fc8f740509c7a",
+  "hashes": {
+    "phase3-acceptance.json": "513b3af8a806610357f055c5e25ac6a9164c997c42bd1bfda77168c99d351212",
+    "inventory.json": "5ce466dfab733c893e76bc538588cac7493a64c8b7caa51a48ab0d1b40dbb7ea",
+    "fallback-review.json": "4ff74f58b1a0f2f8460bc22841357b34edd89766b688367ea575b716adc504b3",
+    "signed-payload.txt": "f5d37a16eccd32b5ec40408102684ca5009e436fdc8a55c345e1b8d6a1aca921"
+  }
+}

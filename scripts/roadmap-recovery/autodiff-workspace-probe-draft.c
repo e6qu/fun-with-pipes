@@ -35,8 +35,11 @@ static V workspace_result_array(size_t n){
     return fwp_arr_new(n);
 }
 static int workspace_dead(V base){
-    if(!setjmp(workspace_recovered)){fwp_tape_of((int64_t)base>>32);return 0;}
-    return !strcmp(fwp_trap_msg,FWP_AD_OUTSIDE);
+    fwp_cleanup *saved=fwp_trap_cleanup;fwp_trap_cleanup=fwp_cleanups;
+    if(!setjmp(workspace_recovered)){
+        fwp_tape_of((int64_t)base>>32);fwp_trap_cleanup=saved;return 0;
+    }
+    fwp_trap_cleanup=saved;return !strcmp(fwp_trap_msg,FWP_AD_OUTSIDE);
 }
 static uint64_t workspace_gradient(size_t n){
     const fwp_desc number={.kind=K_F64};const fwp_desc index={.kind=K_I64};
@@ -72,12 +75,29 @@ static uint64_t workspace_gradient(size_t n){
     fwp_rc_free_arr(result);fwp_rc_free_arr(workspace_outputs);fwp_rc_free_arr(workspace_seeds);fwp_rc_free_obj(workspace_node);
     return hash;
 }
+static fwp_clo workspace_callback={0,0},workspace_nested_callback={1,0};
+static V workspace_nested_base;
+static V workspace_nested_entry(V *args){
+    (void)args;workspace_nested_base=fwp_p_ad_tape(7);return FWP_UNIT;
+}
 static V workspace_scope_entry(V *args){
     (void)args;workspace_base=fwp_p_ad_tape(5);
+    if(workspace_mode==5)return FWP_UNIT;
+    if(workspace_mode==7){
+        fwp_p_ad_scope(PTR(&workspace_nested_callback),FWP_UNIT);
+        if(!workspace_dead(workspace_nested_base)){
+            int64_t id=(int64_t)workspace_nested_base>>32;size_t slot=(size_t)((id&0xffff)-1);
+            fprintf(stderr,"nested tape token=%lld slot=%zu live=%d generation=%u scope=%p\n",(long long)workspace_nested_base,slot,fwp_tapes[slot].live,fwp_tapes[slot].gen,(void *)fwp_tapes[slot].scope);exit(207);
+        }
+        if(fwp_tape_of((int64_t)workspace_base>>32)->leaves!=5)exit(208);
+        return FWP_UNIT;
+    }
     fwp_trap("workspace scope control");return FWP_UNIT;
 }
-static const fwp_fninfo workspace_functions[]={{1,workspace_scope_entry,"workspace scope control",0}};
-static fwp_clo workspace_callback={0,0};
+static const fwp_fninfo workspace_functions[]={
+    {1,workspace_scope_entry,"workspace scope control",0},
+    {1,workspace_nested_entry,"workspace nested control",0}
+};
 int main(void){
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
     fwp_trap_recover=workspace_recover;fwp_trap_jb=&workspace_recovered;fwp_trap_cleanup=0;
@@ -116,6 +136,11 @@ int main(void){
         }
     }
     fwp_fns=workspace_functions;
+    for(workspace_mode=5;workspace_mode<=7;workspace_mode+=2){
+        if(fwp_p_ad_scope(PTR(&workspace_callback),FWP_UNIT)!=FWP_UNIT)return 209;
+        if(fwp_cleanups || !workspace_dead(workspace_base))return 210;
+    }
+    workspace_mode=6;
     if(!setjmp(workspace_recovered)){fwp_p_ad_scope(PTR(&workspace_callback),FWP_UNIT);return 204;}
     if(strcmp(fwp_trap_msg,"workspace scope control") || fwp_cleanups || !workspace_dead(workspace_base))return 205;
     fwp_rc_free_arr(workspace_outputs);fwp_rc_free_arr(workspace_seeds);

@@ -157,6 +157,14 @@ static void fwp_tape_finish(void) {
     free(fwp_tapes);fwp_tapes = 0;fwp_ntapes = 0;
 }
 
+#ifdef FWP_LIBRARY
+/* Private tape buffers have library lifetime, including GC-disabled libraries.
+ * An explicit unload hook avoids keeping a separate process-exit owner. */
+static void __attribute__((destructor)) fwp_tape_library_finish(void) {
+    fwp_tape_finish();
+}
+#endif
+
 static void *fwp_k_malloc(size_t n) {
     void *p = malloc(n ? n : 1);
     if (!p) {
@@ -213,11 +221,13 @@ oom:
 static V fwp_p_ad_tape(V nv) {
     int64_t n = (int64_t)nv;
     if (n < 0 || n > fwp_tape_limit()) fwp_trap("autodiff: too many inputs");
+#ifndef FWP_LIBRARY
     static int registered_finish;
     if (!registered_finish) {
         if (atexit(fwp_tape_finish)) { fprintf(stderr, "fwp: out of memory\n");exit(102); }
         registered_finish = 1;
     }
+#endif
     int64_t slot = 0;
     while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;
     if (slot == fwp_ntapes) {

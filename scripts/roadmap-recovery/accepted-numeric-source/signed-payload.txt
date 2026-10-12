@@ -1,0 +1,6 @@
+tree e3e00f4c134a912e73c33c844a1cac17202e5fb4
+parent cbf68ea60c3b9439a117ef9d9b28b472f23dc632
+author e6qu <adi11235@gmail.com> 1791787517 +0200
+committer GitHub <noreply@github.com> 1791787517 +0200
+
+Pack numeric arrays and specialize worker ABI boundaries

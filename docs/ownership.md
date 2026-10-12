@@ -165,11 +165,18 @@ ownership transfer, scoped regions and reference counting for sharing. A
 heap-owned reusable buffer is appropriate for large or dynamic tensors;
 forcing them onto a stack is not the goal.
 
-Current generic array slots are 64-bit `V` words. Plan specialized contiguous
-numeric buffers with natural element widths, checked strides and bounds,
-aligned payloads where useful, and views with explicit backing lifetimes.
+Accepted phase3 stores eligible scalar numeric arrays at natural1/2/4/8-byte
+widths with checked bounds and owner-retaining views. Generic pointer-bearing
+slots remain64-bit `V` words.
 Measure array-of-struct versus struct-of-arrays layouts for each workload.
 Do not pad every small object to a cache line.
+
+Register allocation may place values in registers or spill them to the stack;
+these are normal lowering decisions. Protocol-defined alternatives are peers.
+Reserve “compatibility fallback” for an actual conservative ownership path.
+Avoid redundant wrappers or alternate implementations and undocumented implicit
+choices. Give internal resource budgets explicit names, reasons and measured
+limits; compiler optimizations should preserve the same source semantics.
 
 Actual binary/layout baselines are preserved in [history](roadmap-history.md#archived-representation-measurement-detail).
 These are fixture-specific results at prepared source heads; each final delivery
