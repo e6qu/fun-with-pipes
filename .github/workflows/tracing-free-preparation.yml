@@ -42,7 +42,7 @@ jobs:
           cargo test --lib
           cargo test --no-fail-fast --test ad_tape_ownership --test ad_tape_scopes --test autodiff_capacity_bounds --test autodiff_workspace --test autodiff_library --test blocked_matrix --test numeric_array_fusion --test old_reclamation --test retain_unwind_ownership --test unboxed_worker_locals --test loop_ownership --test loop_unwind_ownership --test loop_preparation_ownership --test field_context_ownership
       - name: Checked ARC eligibility, reclamation and native binaries
-        run: cargo test --test arc_execution
+        run: cargo test --test arc_execution --test arc_corpus
       - name: Preserve original in-place allocation thresholds
         run: cargo test --test reuse unique_arrays_are_written_in_place
       - name: Escaping closures and exceptional resource ownership
@@ -60,7 +60,7 @@ jobs:
         if: always()
         run: |
           mkdir -p array-fusion-evidence/source
-          cp src/arc.rs src/main.rs src/lib.rs tests/arc_execution.rs tests/loop_ownership.rs src/rc.rs src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/wasm.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/
+          cp src/arc.rs src/ir.rs src/main.rs src/lib.rs tests/arc_execution.rs tests/arc_corpus.rs tests/loop_ownership.rs src/rc.rs src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/wasm.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/
           cp runtime/fwp_rt_gc.c runtime/fwp_rt_kernel.c array-fusion-evidence/source/
       - uses: actions/upload-artifact@v7
         if: always()

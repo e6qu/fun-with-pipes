@@ -451,6 +451,9 @@ impl<'a> Mono<'a> {
     }
 
     fn foreign_instance(&mut self, canon: &str, symbol: &str, ty: MT) -> FuncId {
+        if !canon.starts_with("std::") {
+            self.prog.unchecked_native_declarations.insert(canon.to_string());
+        }
         let k = (format!("foreign:{}", canon), vec![ty.clone()]);
         if let Some(id) = self.instances.get(&k) {
             return *id;

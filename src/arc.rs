@@ -17,8 +17,8 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
             for arg in args { value_type(prog,arg,seen)?; }
             match name.as_str() {
                 "std::Bool" | "std::String" | "std::Bytes" | "std::File"
-                | "std::I8" | "std::I16" | "std::I32" | "std::I64" | "std::I128" | "std::ISize"
-                | "std::U8" | "std::U16" | "std::U32" | "std::U64" | "std::U128" | "std::USize"
+                | "std::I8" | "std::I16" | "std::I32" | "std::I64" | "std::ISize"
+                | "std::U8" | "std::U16" | "std::U32" | "std::U64" | "std::USize"
                 | "std::F16" | "std::BF16" | "std::F32" | "std::F64" | "std::F128"
                 | "std::Array" | "std::Map" | "std::Set" | "std::Step" => return Ok(()),
                 _ => {}
@@ -40,6 +40,9 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
 }
 
 pub(crate) fn check(prog: &Program) -> Result<(), String> {
+    if let Some(name) = prog.unchecked_native_declarations.first() {
+        return Err(format!("--gc arc: native declaration `{name}` has no checked ownership signature"));
+    }
     let mut seen = HashSet::new();
     for f in &prog.funcs {
         let reject = |reason: String| format!("--gc arc: `{}`: {reason}",f.name);
@@ -79,7 +82,9 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
         }
         // Concrete word-sized arithmetic emits no managed allocation. Wider
         // boxed numerics need their own counted-result contract before admission.
-        let arithmetic = matches!(symbol,"prim.add" | "prim.sub" | "prim.mul" | "prim.div" | "prim.rem" | "prim.neg" | "prim.zero" | "prim.one");
+        let arithmetic = matches!(symbol,"prim.add" | "prim.sub" | "prim.mul" | "prim.div" | "prim.rem" | "prim.neg" | "prim.zero" | "prim.one"
+            | "prim.from-int" | "prim.from-float" | "int.to-float" | "float.convert"
+            | "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" | "pow" | "abs");
         if arithmetic && !crate::rc::needs_rc(&prog.shapes,result)
             && args.iter().all(|arg| !crate::rc::needs_rc(&prog.shapes,arg))
         { continue; }
