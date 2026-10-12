@@ -114,7 +114,7 @@ fn record_return_aliases_preserve_owners_and_effects() {
 rec alias : String -> (String, String, String, String, String, String)
 alias = make { 0 = id, 1 = concat "a", 2 = concat "b", 3 = concat "c", 4 = concat "d", 5 = concat "e" }
     | fork const id (const "effect" | print)
-main = read-all () | concat "seed" | alias | echo
+main = range 1 17 | map (flip string.repeat "seed" | alias) | echo
 "#).unwrap();
     let expected = Command::new(fwp())
         .args(["run", "--interp"])
@@ -158,6 +158,7 @@ fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) 
     assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
     let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
     assert_eq!(String::from_utf8_lossy(&o.stdout), expected);
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
     let err = String::from_utf8_lossy(&o.stderr);
     let mib = err
         .split(" MiB allocated")
