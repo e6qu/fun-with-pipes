@@ -166,8 +166,11 @@ request, without a word scratch buffer or intermediate list nodes. Truncated
 numeric payloads, huge counts and omission controls pass under O1/O2 GC stress.
 This focused finalization is not the six-job production merge gate.
 
-Next publish numeric-storage-and-worker-abi from the formatted export onto
-accepted PR125, with current docs. Keep one production PR open; require all six
+Production PR126 is open at13577c8862bb6f05e9b5f5550cedf8f181815c36 on
+numeric-storage-and-worker-abi. The initial historical archive edit removed more
+text than intended; its replacement indexes all unique earlier headings and
+retains the complete verified b61 snapshot. Publish that doc correction before
+using a production gate. Native source remains the formatted export on PR125. Keep one production PR open; require all six
 exact-head jobs and roadmap_docs before the authorized one-line squash. Verify
 raw message, one parent, complete-tree parity and actual merged-source acceptance.
 Then deliver phases4–6. Windows/new deployment/backends remain deferred.
