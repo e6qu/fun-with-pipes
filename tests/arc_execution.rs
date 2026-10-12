@@ -51,6 +51,19 @@ main = range 0 129 | map (choose | checks) | length | echo
             for opt in ["-O1","-O2"] {
                 let binary=dir.join(format!("{name}-{stack}{opt}"));
                 fwp::cgen::compile_c(&measured,&binary,opt).unwrap();
+                let symbols=checked(Command::new("nm").arg(&binary));
+                let symbols=String::from_utf8_lossy(&symbols.stdout);
+                for tracing_function in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                    assert!(!symbols.contains(tracing_function), "ARC binary contains {tracing_function}");
+                }
+                if opt=="-O2" {
+                    if let Some(path)=std::env::var_os("FWP_ARC_ARTIFACTS") {
+                        let mut disassemble=Command::new(if cfg!(target_os="macos") {"otool"} else {"objdump"});
+                        disassemble.arg(if cfg!(target_os="macos") {"-tvV"} else {"-d"}).arg(&binary);
+                        let assembly=checked(&mut disassemble);
+                        std::fs::write(std::path::PathBuf::from(path).join(format!("{name}-{stack}.asm")),assembly.stdout).unwrap();
+                    }
+                }
                 let actual=checked(Command::new(&binary).env_remove("FWP_GC").env("FWP_GC_STRESS","0").env("FWP_GC_VERIFY","0").env("FWP_REUSE_VERIFY","0"));
                 assert_eq!(actual.stdout,reference.stdout,"{name} {stack} {opt}");
                 assert_eq!(actual.stderr,reference.stderr,"{name} {stack} {opt}");
@@ -66,6 +79,12 @@ main = range 0 129 | map (choose | checks) | length | echo
                 fwp::cgen::compile_c(&omitted,&binary,"-O2").unwrap();
                 let actual=Command::new(binary).env_remove("FWP_GC").env("FWP_GC_STRESS","0").env("FWP_GC_VERIFY","0").env("FWP_REUSE_VERIFY","0").output().unwrap();
                 assert_eq!(actual.status.code(),Some(193),"physical-free omission must fail the ledger");
+                let forced=measured.replace("    intptr_t arc_budget = fwp_gc.budget;", "    fwp_gc_collect();\n    intptr_t arc_budget = fwp_gc.budget;");
+                let binary=dir.join("forced-trace");
+                fwp::cgen::compile_c(&forced,&binary,"-O2").unwrap();
+                let out=Command::new(binary).env_remove("FWP_GC").env("FWP_GC_STRESS","0").env("FWP_GC_VERIFY","0").env("FWP_REUSE_VERIFY","0").output().unwrap();
+                assert_eq!(out.status.code(),Some(101));
+                assert!(String::from_utf8_lossy(&out.stderr).contains("tracing requested in an ARC executable"));
             }
         }
     }
@@ -78,6 +97,7 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     std::fs::create_dir(&dir).unwrap();
     for (name,source,reason) in [
         ("tasks","main = task.yield ()\n","tracing-free lifetime policy"),
+        ("channel","text-channel : I64 -> Channel[String] ! {Async}\ntext-channel = channel.make\nmain = text-channel 1 | channel.close\n","tracing-free ownership contract"),
         ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
         ("input","main = read-all () | echo\n","tracing-free ownership contract"),
     ] {
