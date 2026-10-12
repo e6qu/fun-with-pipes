@@ -55,9 +55,64 @@ struct Tape {
     pb: Vec<i32>,
     da: Vec<f64>,
     db: Vec<f64>,
+    adj: Vec<f64>,
 }
 
 static TAPES: Mutex<Vec<Tape>> = Mutex::new(Vec::new());
+
+const TAPE_WORKSPACE_BUDGET: usize = 512 * 1024;
+static TAPE_WORKSPACE: Mutex<Option<Tape>> = Mutex::new(None);
+
+fn workspace_enabled() -> bool {
+    std::env::var("FWP_AD_WORKSPACE").as_deref() != Ok("0")
+}
+
+impl Tape {
+    fn workspace_bytes(&self) -> usize {
+        self.pa.capacity().saturating_add(self.pb.capacity()).saturating_mul(4)
+            .saturating_add(self.da.capacity().saturating_add(self.db.capacity())
+                .saturating_add(self.adj.capacity()).saturating_mul(8))
+    }
+}
+
+fn recycle_workspace(mut tape: Tape) {
+    if !workspace_enabled() || tape.workspace_bytes() > TAPE_WORKSPACE_BUDGET {
+        return;
+    }
+    tape.gen = 0;
+    tape.live = false;
+    tape.leaves = 0;
+    tape.pa.clear();
+    tape.pb.clear();
+    tape.da.clear();
+    tape.db.clear();
+    tape.adj.clear();
+    *TAPE_WORKSPACE.lock().unwrap() = Some(tape);
+}
+
+struct TapeOwner(Tape);
+impl Drop for TapeOwner {
+    fn drop(&mut self) {
+        recycle_workspace(std::mem::take(&mut self.0));
+    }
+}
+
+fn reserve_nodes(tape: &mut Tape, required: usize) {
+    let target = required.max(tape.pa.capacity().saturating_mul(2).max(64))
+        .min(tape_limit());
+    macro_rules! grow {
+        ($field:ident) => {
+            if tape.$field.capacity() < required {
+                tape.$field.reserve_exact(target - tape.$field.len());
+            }
+        };
+    }
+    grow!(pa);
+    grow!(pb);
+    grow!(da);
+    grow!(db);
+}
+
 
 thread_local! {
     static TAPE_SCOPES: std::cell::RefCell<Vec<Vec<i64>>> = const {
@@ -74,6 +129,7 @@ impl Drop for TapeScope {
             if let Ok(slot) = slot_of(&tapes, base >> 32) {
                 let tape = std::mem::take(&mut tapes[slot]);
                 tapes[slot].gen = tape.gen;
+                recycle_workspace(tape);
             }
         }
     }
@@ -137,14 +193,22 @@ fn tape_new(n: i64) -> R<i64> {
             tapes.len() - 1
         }
     };
-    let t = &mut tapes[slot];
-    t.gen += 1;
-    t.live = true;
-    t.leaves = n as usize;
-    t.pa = vec![-1; n as usize];
-    t.pb = vec![-1; n as usize];
-    t.da = vec![0.0; n as usize];
-    t.db = vec![0.0; n as usize];
+    let gen = tapes[slot].gen + 1;
+    let mut workspace = if workspace_enabled() {
+        TAPE_WORKSPACE.lock().unwrap().take().unwrap_or_default()
+    } else {
+        Tape::default()
+    };
+    reserve_nodes(&mut workspace, n as usize);
+    workspace.pa.resize(n as usize, -1);
+    workspace.pb.resize(n as usize, -1);
+    workspace.da.resize(n as usize, 0.0);
+    workspace.db.resize(n as usize, 0.0);
+    workspace.gen = gen;
+    workspace.live = true;
+    workspace.leaves = n as usize;
+    tapes[slot] = workspace;
+    let t = &tapes[slot];
     let id = ((t.gen as i64) << 16) | (slot as i64 + 1);
     let base = id << 32;
     TAPE_SCOPES.with(|scopes| {
@@ -180,6 +244,7 @@ fn push(ra: i64, da: f64, rb: i64, db: f64) -> R<i64> {
     if (ra & 0xffff_ffff) as usize >= idx || (rb >= 0 && (rb & 0xffff_ffff) as usize >= idx) {
         return trap(INVALID_NODE);
     }
+    reserve_nodes(t, idx + 1);
     t.pa.push((ra & 0xffff_ffff) as i32);
     t.da.push(da);
     t.pb.push(if rb < 0 {
@@ -201,7 +266,14 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
     tapes[slot].gen = t.gen;
     drop(tapes);
     forget_scoped_tape(id);
-    let mut adj = vec![0.0f64; t.pa.len()];
+    let mut owner = TapeOwner(t);
+    let t = &mut owner.0;
+    if t.adj.capacity() < t.pa.len() {
+        t.adj.reserve_exact(t.pa.len() - t.adj.len());
+    }
+    t.adj.resize(t.pa.len(), 0.0);
+    t.adj.fill(0.0);
+    let adj = &mut t.adj;
     for (o, s) in outs.iter().zip(seeds.iter()) {
         if *o < 0 {
             continue;
@@ -227,8 +299,7 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
             adj[t.pb[i] as usize] += a * t.db[i];
         }
     }
-    adj.truncate(t.leaves);
-    Ok(adj)
+    Ok(adj[..t.leaves].to_vec())
 }
 
 // ---------------------------------------------------------------- kernels
@@ -1029,4 +1100,39 @@ mod tape_validation_tests {
         .unwrap();
         TAPE_SCOPES.with(|scopes| assert!(scopes.borrow().is_empty()));
     }
+    #[test]
+    fn workspace_reuse_clears_adjoint_and_preserves_token_lifetimes() {
+        let _serial = TAPE_TEST_LOCK.lock().unwrap();
+        if !workspace_enabled() { return; }
+        *TAPE_WORKSPACE.lock().unwrap() = None;
+        let first = tape_new(129).unwrap();
+        let node = push(first, 4.0, first + 1, 5.0).unwrap();
+        assert_eq!(backward(first, &[node], &[2.0]).unwrap()[..2], [8.0, 10.0]);
+        let pointers = {
+            let pool = TAPE_WORKSPACE.lock().unwrap();
+            let t = pool.as_ref().unwrap();
+            assert!(t.workspace_bytes() <= TAPE_WORKSPACE_BUDGET);
+            (t.pa.as_ptr(), t.pb.as_ptr(), t.da.as_ptr(), t.db.as_ptr(), t.adj.as_ptr())
+        };
+        let second = tape_new(129).unwrap();
+        assert_ne!(first, second);
+        let slot = ((second >> 32) & 0xffff) as usize - 1;
+        {
+            let tapes = TAPES.lock().unwrap();
+            let t = &tapes[slot];
+            assert_eq!((t.pa.as_ptr(), t.pb.as_ptr(), t.da.as_ptr(), t.db.as_ptr(), t.adj.as_ptr()), pointers);
+        }
+        assert_eq!(backward(second, &[second], &[3.0]).unwrap()[..2], [3.0, 0.0]);
+        expect_trap(backward(first, &[], &[]), USED_OUTSIDE);
+        let failed = tape_new(129).unwrap();
+        expect_trap(backward(failed, &[failed + 129], &[1.0]), INVALID_NODE);
+        assert!(TAPE_WORKSPACE.lock().unwrap().is_some());
+        let current = tape_new(129).unwrap();
+        assert!(backward(current, &[], &[]).unwrap().iter().all(|v| v.to_bits() == 0));
+        *TAPE_WORKSPACE.lock().unwrap() = None;
+        let large = tape_new(32769).unwrap();
+        backward(large, &[], &[]).unwrap();
+        assert!(TAPE_WORKSPACE.lock().unwrap().is_none());
+    }
+
 }
