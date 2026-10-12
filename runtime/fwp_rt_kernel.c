@@ -872,7 +872,12 @@ static V fwp_p_matrix_mul_f64(V mv,V kv,V nv,V left,V right) {
     size_t m=(size_t)mv,k=(size_t)kv,n=(size_t)nv;const fwp_desc scalar={.kind=K_F64};
     V result=fwp_array_typed_new(m*n,&scalar);
     fwp_cleanup cleanup;fwp_cleanup_push(&cleanup,fwp_matrix_output_release,&result);
-    for(size_t z=0;z<m*n;z++)fwp_array_store(result,z,fwp_from_f64(0.0),&scalar);
+    /* F64 occupies eight bytes in both packed and word arrays. Resolve views
+     * once, and use memcpy loads to preserve C aliasing and alignment rules.
+     * Only the fresh output is restrict-qualified: inputs may share backing. */
+    const unsigned char *a=fwp_array_data(left),*b=fwp_array_data(right);
+    unsigned char *restrict out=(unsigned char *)(uintptr_t)result+sizeof(fwp_arr);
+    memset(out,0,m*n*sizeof(double));
     for(size_t ib=0;n && k && ib<m;ib+=FWP_MATRIX_TILE){
         size_t ie=m-ib<FWP_MATRIX_TILE?m:ib+FWP_MATRIX_TILE;
         for(size_t kb=0;kb<k;kb+=FWP_MATRIX_TILE){
@@ -880,11 +885,12 @@ static V fwp_p_matrix_mul_f64(V mv,V kv,V nv,V left,V right) {
             for(size_t jb=0;jb<n;jb+=FWP_MATRIX_TILE){
                 size_t je=n-jb<FWP_MATRIX_TILE?n:jb+FWP_MATRIX_TILE;
                 for(size_t i=ib;i<ie;i++)for(size_t q=kb;q<ke;q++){
-                    double x=fwp_f64(fwp_array_load(left,i*k+q,&scalar));
+                    double x;memcpy(&x,a+(i*k+q)*sizeof(double),sizeof x);
                     for(size_t j=jb;j<je;j++){
-                        double product=x*fwp_f64(fwp_array_load(right,q*n+j,&scalar));
-                        double prior=fwp_f64(fwp_array_load(result,i*n+j,&scalar));
-                        fwp_array_store(result,i*n+j,fwp_from_f64(product+prior),&scalar);
+                        double y,prior;memcpy(&y,b+(q*n+j)*sizeof(double),sizeof y);
+                        memcpy(&prior,out+(i*n+j)*sizeof(double),sizeof prior);
+                        double product=x*y,value=product+prior;
+                        memcpy(out+(i*n+j)*sizeof(double),&value,sizeof value);
                     }
                 }
             }

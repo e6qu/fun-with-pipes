@@ -1,13 +1,21 @@
 int main(void){
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
     const fwp_desc scalar={.kind=K_F64};
-    static const size_t sizes[][3]={{31,35,33},{2,3,2},{0,3,2},{2,0,3},{2,3,0},{1,1,1}};
+    static const size_t sizes[][3]={{31,35,33},{2,3,2},{0,3,2},{2,0,3},{2,3,0},{1,1,1},{17,17,17},{17,17,17}};
     puts("{\"cases\":[");
     for(size_t run=0;run<sizeof(sizes)/sizeof(sizes[0]);run++){
         size_t m=sizes[run][0],k=sizes[run][1],n=sizes[run][2];
-        V left=fwp_rc_fresh(fwp_array_new_packed(m*k,&scalar)),right=fwp_rc_fresh(fwp_array_new_packed(k*n,&scalar));
-        for(size_t i=0;i<m*k;i++)fwp_array_store(left,i,fwp_from_f64(run==5?-0.0:((double)(int)(i%19)-9.0)/4.0),&scalar);
-        for(size_t i=0;i<k*n;i++)fwp_array_store(right,i,fwp_from_f64(((double)(int)(i%13)-6.0)/8.0),&scalar);
+        size_t offset=run>=6?3:0;
+        V left=fwp_rc_fresh(fwp_array_new_packed(m*k+offset,&scalar));
+        for(size_t i=0;i<m*k;i++)fwp_array_store(left,i+offset,fwp_from_f64(run==5?-0.0:((double)(int)(i%19)-9.0)/4.0),&scalar);
+        if(offset){V backing=left;left=fwp_p_array_slice_typed(offset,m*k,backing,NULL,&scalar);if(!fwp_array_is_view(left))return 218;if(fwp_rc_release_last(backing))fwp_rc_free_arr(backing);}
+        V right;
+        if(run==6){right=left;fwp_rc_dup(right);}
+        else {
+            right=fwp_rc_fresh(fwp_array_new_packed(k*n+offset,&scalar));
+            for(size_t i=0;i<k*n;i++)fwp_array_store(right,i+offset,fwp_from_f64(((double)(int)(i%13)-6.0)/8.0),&scalar);
+            if(offset){V backing=right;right=fwp_p_array_slice_typed(offset,k*n,backing,NULL,&scalar);if(!fwp_array_is_view(right))return 218;if(fwp_rc_release_last(backing))fwp_rc_free_arr(backing);}
+        }
         /* Independent scalar reference keeps ascending inner index and the
          * language fold's product-plus-accumulator operand order. */
         double reference[31*33];
@@ -15,7 +23,7 @@ int main(void){
             double sum=0.0;
             for(size_t q=0;q<k;q++){
                 double x=run==5?-0.0:((double)(int)((i*k+q)%19)-9.0)/4.0;
-                double y=((double)(int)((q*n+j)%13)-6.0)/8.0;
+                double y=run==6?((double)(int)((q*n+j)%19)-9.0)/4.0:((double)(int)((q*n+j)%13)-6.0)/8.0;
                 double product=x*y;sum=product+sum;
             }
             reference[i*n+j]=sum;
