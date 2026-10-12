@@ -7711,7 +7711,6 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         if !reuse_enabled() || !free_enabled() {
             return Err("--gc arc requires counted ownership and freeing; remove FWP_REUSE=0/FWP_FREE=0".into());
         }
-        crate::arc::check(prog)?;
     }
     let tests = matches!(mode, Mode::Tests);
     let main = prog.main.unwrap_or(0);
@@ -7736,6 +7735,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     } else {
         prog
     };
+    // Ownership lowering introduces temporaries. Check their concrete types
+    // as well as source locals before claiming a tracing-free ownership graph.
+    if arc {
+        crate::arc::check(prog)?;
+    }
     let mut g = Gen {
         prog,
         uncounted,
