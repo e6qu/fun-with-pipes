@@ -405,6 +405,10 @@ static void fwp_kernel_parallel(const fwp_kernel *k, int sum, size_t n, size_t u
 #endif
 }
 
+static int fwp_kernel_workspace_fits(size_t depth) {
+    return depth <= SIZE_MAX / FWP_KCHUNK / sizeof(double);
+}
+
 /* check a kernel and gather its inputs; *inputs is malloc'ed */
 static void fwp_kernel_prepare(fwp_kernel *k, V code, V consts, V inputs, size_t n) {
     size_t sp = 0, depth = 0, leaves = 0, nconsts = 0;
@@ -444,12 +448,21 @@ static void fwp_kernel_prepare(fwp_kernel *k, V code, V consts, V inputs, size_t
         k->inputs[i] = (const double *)ARR(a)->d;
         xs = OBJ(xs)->f[1];
     }
+    if (!fwp_kernel_workspace_fits(depth)) {
+        free((void *)k->inputs);
+        fwp_trap("device: kernel too large");
+    }
 }
 
 static V fwp_p_device_run(V threads, V nv, V code, V consts, V inputs) {
-    size_t n = (int64_t)nv < 0 ? 0 : (size_t)(int64_t)nv;
+    uint64_t count = (int64_t)nv < 0 ? 0 : (uint64_t)nv;
+    size_t n = (size_t)count;
     fwp_kernel k;
     fwp_kernel_prepare(&k, code, consts, inputs, n);
+    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) {
+        free((void *)k.inputs);
+        fwp_trap("array too large");
+    }
     double *out = (double *)fwp_k_malloc(n * sizeof(double));
     fwp_kernel_parallel(&k, 0, n, (n + FWP_KCHUNK - 1) / FWP_KCHUNK, (int64_t)threads, out);
     free((void *)k.inputs);
