@@ -6,7 +6,7 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `f7290c8827f641d8f9cdc9928f1c68a59954e61a` passes audit38188292080.
+checkpoint `a627bcfae3b1994004da28ff5f7166bad709d221` passes audit38189357799.
 Query the branch tip on recovery; an embedded checkpoint cannot identify its
 own commit. restore-roadmap-recovery.py restores only temporary paths from a
 bounded immutable archive after verifying Git blob hashes. Its runner audit
@@ -88,8 +88,8 @@ The177 remaining declarations have an explicit shared-fallback review draft at
 result, callback, retention, teardown and cycle policies across18 families.
 Three-platform review38180899508 passes at167d769deaa28fae9b361ba4e9fa33b443d1a79c
 on ownership-evidence-phase2-exit-review: actual inventory, compiler fallback
-rules and the buffer controls agree. PR124 acceptance and the next final full
-production matrix remain required; this does not establish tracing-free eligibility.
+rules and the buffer controls agree. PR124 is accepted; the next final full
+production matrix and merged-source audit remain required; this does not establish tracing-free eligibility.
 Validate the actual accepted inventory and compiler wrappers before phase2 exit.
 Verifier and three-platform workflow drafts: fwp-check-explicit-fallback-review-draft.py
 and fwp-phase2-exit-review-evidence.yml. No phase2 exit claim is established. Publication receipt:
@@ -103,8 +103,7 @@ c95d970c8c300cf3b342847ee60f7fd052294f28; runner38180514117 passes Linux and bot
 ordinary growth/data preservation, addition overflow, capacity overflow and
 allocation failure at O1/O2 with ASan/UBSan, plus three deliberate omission
 variants. Drafts: fwp-structural-buffer-{draft.c,test.rs,probe.c,patch.json}.
-Deliver it with the finite ownership exit review in the next bundle; no second
-production PR opens before that merge.
+Deliver it with the finite ownership exit review in the next coherent bundle.
 
 Array-limit candidate296ea83b45bb153c2b86d1df68e05c799013b2eb on
 ownership-evidence-array-size-limits passes all three jobs in38182446407.
@@ -119,17 +118,16 @@ effect/snapshot controls but the new semantic fixture expected1 rather than the
 established trap status101. The final head corrects that fixture and makes the
 initialization omission's null-address arithmetic defined. No control was removed.
 Logs: fwp-array-size-d8-failed.log and fwp-array-size-a2-linux-failed.log.
-Fold this passing repair into the same phase2 exit bundle; final full gates still
+Include this passing repair in the same phase2 exit bundle; final full gates still
 apply. Drafts: fwp-array-size-{runtime-draft.c,interpreter-draft.rs,gc-draft.c,
 test.rs,probe.c}; fwp-bump-size-probe.c.
 
-Prepared post-merge helpers: fwp-record-pr124-remote-acceptance.py backs up11 docs
-and archives39 live/primitive rows only after exact-head squash/raw-payload proof.
-It streamlines obsolete design/resource notes into history. Never execute before
-verified acceptance. fwp-finalize-phase2-exit-on-runner.py and
+Completed acceptance: fwp-record-pr124-remote-acceptance.py backed up11 docs
+and archived39 live/primitive rows after exact-head squash/raw-payload proof.
+It streamlined obsolete design/resource notes into history. Do not rerun it. fwp-finalize-phase2-exit-on-runner.py and
 fwp-publish-phase2-exit-finalization.py require the actual PR124 squash and passing
 finite review. That finalizer pins the passing296ea83 array/bump source
-and passing kernel sources; device guards require all three pending jobs.
+and passing kernel/device sources and all three verified preflight jobs.
 It preserves original controls and exports one ownership exit/allocation bundle and fresh docs for the next full matrix.
 
 Numeric design preparation reads30 blob-verified files at d5ae8c and maps108
@@ -197,8 +195,12 @@ phase2 exit bundle; job definitions, checks and artifact inputs remain intact.
 Node24 checkout/uploads pass the three-platform preflights; full production
 gates remain required. Recipe:
 fwp-node24-actions-patch.json; preparation: fwp-node24-actions-preparation.json.
-The future finalization publisher now pins repaired3aae99 and includes this
-patch. The accepted-source phase2 audit remains a source-only draft until the
+Finalization driver83f240569685274589bc1a003f2f444b0dd79e94 on
+ownership-phase2-exit-finalization uses the accepted3598a675 base and includes
+all passing buffer/array/kernel/device candidates and this action patch. Its
+combined runner controls, formatting, library tests and exact-source audit are
+pending. Export native changes after PASS; refresh current root docs before
+opening the one production PR, then require its exact full gates. The accepted-source phase2 audit remains a source-only draft until the
 finite review bundle is merged and its exact source is checked.
 
 Recovery checkpoint f7290c8827f641d8f9cdc9928f1c68a59954e61a passes
@@ -209,9 +211,25 @@ were downloaded into fwp-verified-archive-recovery-restoration; no local restore
 ran. Node24 checkout/upload pass there and in all three kernel preflights.
 Keep finalization metadata separate from binary control artifacts.
 
-Finite phase2 exit candidate: all177 remaining declarations explicitly retain
-tracing-compatible argument/result/callback, retention and teardown policies.
-The exact-source audit and checked buffer/array/bump/kernel/device controls pass together with codec
-aliases, type snapshots, format/stdlib docs and71 library units. This candidate
-still requires publication, all six exact-head jobs and roadmap_docs before
-acceptance; phase2 is not complete yet. Numeric representation remains next.
+The duplicate main full matrix38189663885 was cancelled after all seven
+pre-merge gates and complete-tree parity were proved. This is duplicate-run
+avoidance, not a passing main gate. Proof: fwp-main124-duplicate-ci-proof.json.
+Prepared merge-phase2-exit.py, publish-accepted-phase2-audit.py,
+download-accepted-phase2-audit.py and record-accepted-phase2.py require actual
+passing final gates and the accepted-source audit before advancing phase3.
+
+Recovery audit38189929028 at42c1aa913f8ba370b29068c7edbb2803ce47871b
+found that copied backup Markdown was being checked as live documentation,
+so its original relative links no longer resolve inside the backup directory.
+Preserve the original bytes under snapshot source names and remove duplicate
+live Markdown paths on the recovery branch; then rerun that audit. Production
+source/combined validation is independent and passes38189708217.
+
+Combined ownership exit preparation passes runner38189708217 at driver83f240569685274589bc1a003f2f444b0dd79e94.
+Native export 07fb6f72f7a0b4309057f89209250ca573d7103e has tree30a0ccea090697165713d2411ed75f3f0aa03a35 on the actual
+PR124 squash. All original allocation, sanitizer, raw/native, codec, type,
+format/library/docs, inventory and finite fallback controls pass together.
+Current root docs are refreshed before opening the production PR; this update
+changes documentation only. Query ownership-exit-and-buffer-bundle for its
+current tip and require all six exact-head jobs and roadmap_docs before squash.
+Phase2 stays open until the actual merged-source audit passes.
