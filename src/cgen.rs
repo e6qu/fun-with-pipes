@@ -1703,7 +1703,7 @@ impl<'p> Gen<'p> {
     fn desc_body(&mut self, mt: &MT, id: usize) -> String {
         let simple = |kind: &str, name: &str| {
             format!(
-                "static fwp_desc d{} = {{{}, {}}};",
+                "static const fwp_desc d{} = {{{}, {}}};",
                 id,
                 kind,
                 Self::cstr(name)
@@ -1720,7 +1720,7 @@ impl<'p> Gen<'p> {
             MT::Con(n, args) => {
                 if let Some((k, short, w)) = num_kind(mt) {
                     return format!(
-                        "static fwp_desc d{} = {{{}, {}, .width = {}}};",
+                        "static const fwp_desc d{} = {{{}, {}, .width = {}}};",
                         id,
                         k,
                         Self::cstr(&short),
@@ -1744,13 +1744,13 @@ impl<'p> Gen<'p> {
                             "std::Array" => "K_ARRAY",
                             _ => "K_SET",
                         };
-                        return format!("static fwp_desc d{} = {{{}, 0, .elem = &d{}}};", id, k, e);
+                        return format!("static const fwp_desc d{} = {{{}, 0, .elem = &d{}}};", id, k, e);
                     }
                     "std::Map" => {
                         let k = self.desc_id(&elem(mt, 0));
                         let v = self.desc_id(&elem(mt, 1));
                         return format!(
-                            "static fwp_desc d{} = {{K_MAP, 0, .elem = &d{}, .elem2 = &d{}}};",
+                            "static const fwp_desc d{} = {{K_MAP, 0, .elem = &d{}, .elem2 = &d{}}};",
                             id, k, v
                         );
                     }
@@ -1797,7 +1797,7 @@ impl<'p> Gen<'p> {
                             _ => 0,
                         };
                         format!(
-                            "static fwp_desc d{id};\n{vf}\nstatic const char *const d{id}_n[] = {{{names}}};\nstatic const int d{id}_a[] = {{{arity}}};\nstatic const fwp_desc *const *const d{id}_vf[] = {{{vrefs}}};\nstatic fwp_desc d{id} = {{K_ADT, {name}, {n}, d{id}_n, 0, d{id}_a, d{id}_vf, .width = {flag}}};",
+                            "static const fwp_desc d{id};\n{vf}\nstatic const char *const d{id}_n[] = {{{names}}};\nstatic const int d{id}_a[] = {{{arity}}};\nstatic const fwp_desc *const *const d{id}_vf[] = {{{vrefs}}};\nstatic const fwp_desc d{id} = {{K_ADT, {name}, {n}, d{id}_n, 0, d{id}_a, d{id}_vf, .width = {flag}}};",
                             id = id,
                             vf = vf.join("\n"),
                             names = names.join(", "),
@@ -1873,7 +1873,7 @@ impl<'p> Gen<'p> {
             .map(|(_, t)| format!("&d{}", self.desc_id(t)))
             .collect();
         format!(
-            "static fwp_desc d{id};\nstatic const char *const d{id}_n[] = {{{names}}};\nstatic const fwp_desc *const d{id}_f[] = {{{ds}}};\nstatic fwp_desc d{id} = {{K_RECORD, {name}, {n}, d{id}_n, d{id}_f, .width = {tuple}}};",
+            "static const fwp_desc d{id};\nstatic const char *const d{id}_n[] = {{{names}}};\nstatic const fwp_desc *const d{id}_f[] = {{{ds}}};\nstatic const fwp_desc d{id} = {{K_RECORD, {name}, {n}, d{id}_n, d{id}_f, .width = {tuple}}};",
             id = id,
             names = if names.is_empty() { "0".into() } else { names.join(", ") },
             ds = if ds.is_empty() { "0".into() } else { ds.join(", ") },
@@ -8400,7 +8400,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     // tentative declarations, so descriptors can refer to each other
     for i in 0..g.desc_defs.len() {
-        let _ = writeln!(out, "static fwp_desc d{};", i);
+        let _ = writeln!(out, "static const fwp_desc d{};", i);
     }
     for d in &g.desc_defs {
         out.push_str(d);
