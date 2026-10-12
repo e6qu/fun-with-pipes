@@ -98,11 +98,20 @@ allocation/release regression and preserve the same trap and raw interpreter
 behavior when fixing this path. Grad callback failure and cancellation before
 `ad.backward` also need explicit scoped lifetime evidence.
 
+Preserve failure consumption when repairing backward cleanup: both backends
+detach the selected tape before checking output IDs, and the interpreter's
+local Tape then drops on error. Register the detached native buffers and
+adjoints for cleanup rather than leaving the tape live by moving validation
+ahead of detachment. Normal return, mixed-tape failure, recoverable traps and
+cancellation need separate controls; capacity reuse must preserve those exits.
+
 Both token implementations wrap the slot generation after 32767 uses. The
 ordinary stale-token check therefore needs a regression across that wrap and a
 policy that prevents an old token from identifying a new tape. These are
-prepared-source review findings, not verified cleanup or stale-token guarantees
-for all lifetimes.
+prepared-source review findings. The candidate ownership repair retires a
+slot after generation32767, with an explicit terminal-boundary regression; its
+runner checks and final bundle gates remain pending. It does not establish
+verified cleanup or stale-token guarantees for all lifetimes.
 
 The public `ad.push` and `ad.backward` primitives accept `I64` tokens. Current
 code validates tape identity but does not check the low-word node index against
@@ -111,8 +120,25 @@ indices therefore need explicit interpreter/native bounds regressions: Rust
 indexing can panic, while the native indexing can access outside the allocation.
 Validate tokens before use, preserve valid operation and reduction order, and
 verify exceptional buffer release as part of that fix. This is a source-review
-finding; no invalid-index execution or verified repair is claimed yet. Keep the
+finding. Candidate bounds and detached-buffer cleanup repairs are published
+with passing Linux/ARM/Intel raw interpreter/native and omitted-check controls;
+final combined production gates remain required. Keep the
 current numeric phase order from [the plan](../PLAN.md).
+
+The candidate scoped repair adds internal ad.scope around value-and-grad and
+vjp, so grad, vector gradients and reverse Jacobian rows also release tapes
+when their callbacks fail before backward. Native scopes use stack owners and
+stable slot links in the existing task-local cleanup chain; interpreter scopes
+use RAII and remove consumed tokens. Borrowed AD inputs and counted fresh F64
+gradient arrays have explicit contracts. Focused scope, counting, layout,
+trap/cancellation and raw interpreter/native checks pass on Linux/ARM/Intel.
+The direct scoped-callback allocation repair is being validated separately;
+final combined gates and merge remain required. No tracing-free support is claimed.
+Equivalent runtime-dependent gradients must also show no increase in managed
+steady-state allocation calls or requested bytes, with unchanged external buffer
+allocation calls/bytes, at O1/O2 on Linux and both macOS architectures. Report
+warmup, live/peak memory and tape layout separately; stack scope storage alone
+does not establish allocation parity for generic callback bridges.
 
 Historical timing samples are preserved in
 [the benchmark history](roadmap-history.md#archived-numerics-timing-samples).
@@ -228,3 +254,17 @@ disabled contraction while measuring SIMD, buffer reuse and fused gradients.
 - Nested reverse mode and checkpointing.
 - Kernels other than elementwise expressions and sums (matrix products,
   reductions along an axis) on devices.
+
+
+## Scoped-gradient allocation validation
+
+Complete managed-allocation counters include initializer fast paths and count
+slow delegation once. They exposed a33→40 calls/720→872 bytes regression per
+gradient in the first scoped wrapper. Direct borrowed arguments through internal
+ad.scope/ad.scope2 and projection inside the grad callback restore33 calls/720
+bytes, matching the baseline on4096 equivalent O1/O2 calls across Linux and
+ARM/Intel macOS. The combined candidate Linux profiles also pass. Public grad/vjp
+signatures stay intact; borrowed scoped inputs require Dup, and affine File
+rejection, input aliases and tape cleanup controls pass. [The handoff](development-state.md)
+records exact candidates and final production gates. No timing gain or tracing-free
+support is established, and earlier partial counters do not prove allocation parity.

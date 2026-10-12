@@ -73,7 +73,8 @@ int main(int argc,char **argv){
   }else if(!mode)return 8;
   fault=0;fwp_trap_recover=0;fwp_trap_jb=0;fwp_handlers=0;
   if(fwp_cleanups||closes!=1||watched_fd<0||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 2;
-  if(observed_handle&&((fwp_file *)observed_handle)->f)_Exit(3); /* Stop before the deliberately stale finalizer. */
+  // Inspect the header only while storage was retained by poison mode.
+  if(observed_handle&&getenv("FWP_REUSE_VERIFY")&&strcmp(getenv("FWP_REUSE_VERIFY"),"0")&&((fwp_file *)observed_handle)->f)_Exit(3);
   if(mode&&mode<4&&callbacks)return 4;
   if(mode==4&&callbacks!=1)return 5;
   // A failed but registered handle must not close the stream again.
@@ -88,10 +89,10 @@ int main(int argc,char **argv){
         .unwrap();
     let end = start + generated[start..].find("\n}\n").unwrap() + 3;
     let value = &generated[start..end];
-    let injected = value.replace("    fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file));",
-        "    if(fault==1)fwp_trap(\"file handle allocation\");\n    fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file)); observed_handle=h;")
-        .replace("    char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);",
-            "    if(fault==2)fwp_trap(\"file path allocation\");\n    char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);")
+    let injected = value.replace("    fwp_file *h = (fwp_file *)fwp_alloc_leaf(sizeof(fwp_file) + len + 1);",
+        "    if(fault==1)fwp_trap(\"file handle allocation\");\n    fwp_file *h = (fwp_file *)fwp_alloc_leaf(sizeof(fwp_file) + len + 1); observed_handle=h;")
+        .replace("    memcpy(h->path, path, len + 1);",
+            "    if(fault==2)fwp_trap(\"file path initialization\");\n    memcpy(h->path, path, len + 1);")
         .replace("    fwp_gc_finalizer(h, fwp_file_final);",
             "    if(fault==3)fwp_trap(\"file finalizer registration\");\n    fwp_gc_finalizer(h, fwp_file_final);");
     assert_ne!(value, injected);
@@ -102,7 +103,7 @@ int main(int argc,char **argv){
     let exe = dir.0.join("probe");
     let no_scope = injected
         .replace(
-            "fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);",
+            "fwp_cleanup_push(&cleanup, fwp_close_owned_scoped_file, &file);",
             "(void)cleanup;",
         )
         .replace("fwp_cleanup_pop(&cleanup);", "(void)file;");

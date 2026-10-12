@@ -397,6 +397,18 @@ impl<'a> Infer<'a> {
         found: &Type,
         what: &str,
     ) -> IResult<()> {
+        self.unify_presented(span, expected, found, found, what)
+    }
+
+    /// Check the adapted argument while describing its original value type.
+    fn unify_presented(
+        &mut self,
+        span: Span,
+        expected: &Type,
+        found: &Type,
+        presented: &Type,
+        what: &str,
+    ) -> IResult<()> {
         match self.env.table.unify(expected, found) {
             Ok(()) => {
                 for (a, b) in std::mem::take(&mut self.env.table.deferred) {
@@ -405,7 +417,7 @@ impl<'a> Infer<'a> {
                 Ok(())
             }
             Err(err) => {
-                let (e, f) = self.show2(expected, found);
+                let (e, f) = self.show2(expected, presented);
                 let mut d = Diagnostic::error(
                     span,
                     format!("type mismatch in {}: expected `{}`, found `{}`", what, e, f),
@@ -511,18 +523,71 @@ impl<'a> Infer<'a> {
     /// A call may run inside a larger effect context without changing effects
     /// on function-valued arguments. Argument unification can close a row that
     /// was open when the callee was instantiated; reopen only this call's row.
-    fn open_call(&mut self, ty: &Type) -> Type {
+    fn open_call(&mut self, ty: &Type, ambient: Option<&Row>) -> Type {
         let called = self.env.table.open_call(ty, self.level);
         match called {
             Type::Fun(a, b, e) => {
                 let mut e = self.env.table.zonk_row(&e);
                 if e.tail.is_none() {
                     e.tail = Some(self.env.table.fresh(Kind::Eff, self.level));
+                } else if let Some(ambient) = ambient {
+                    // Extend the temporary call row, rather than adding known
+                    // ambient labels to a stored function's effect variable.
+                    // In State[function], that would make the function's own
+                    // effect row recursively contain itself.
+                    let ambient = self.env.table.zonk_row(ambient);
+                    for (label, payload) in ambient.fields {
+                        if !e.fields.iter().any(|(existing, _)| existing == &label) {
+                            e.fields.push((label, payload));
+                        }
+                    }
+                    e.fields.sort_by(|a, b| a.0.cmp(&b.0));
                 }
                 Type::Fun(a, b, e)
             }
             other => other,
         }
+    }
+
+    /// A function value can satisfy a parameter that permits additional known
+    /// effects. Widen only its temporary outer row, preserving effect variables
+    /// shared with function-valued inputs; this is unrelated to caller effects.
+    fn argument_type(&mut self, expected: &Type, actual: &Type) -> Type {
+        let Type::Fun(_, _, permitted) = self.env.table.resolve(expected) else {
+            return actual.clone();
+        };
+        let permitted = self.env.table.zonk_row(&permitted);
+        if permitted.fields.is_empty() {
+            return actual.clone();
+        }
+        let Type::Fun(input, output, effects) = self.env.table.resolve(actual) else {
+            return actual.clone();
+        };
+        let mut effects = self.env.table.zonk_row(&effects);
+        // Forbidden effects cannot be weakened away. Keep the original value
+        // type on this failure path so diagnostics do not invent permitted ones.
+        if permitted.tail.is_none()
+            && effects
+                .fields
+                .iter()
+                .any(|(label, _)| !permitted.fields.iter().any(|(allowed, _)| allowed == label))
+        {
+            return actual.clone();
+        }
+        if effects.tail.is_none() {
+            effects.tail = Some(self.env.table.fresh(Kind::Eff, self.level));
+        }
+        for (label, payload) in permitted.fields {
+            if !effects
+                .fields
+                .iter()
+                .any(|(existing, _)| existing == &label)
+            {
+                effects.fields.push((label, payload));
+            }
+        }
+        effects.sort();
+        Type::Fun(input, output, effects)
     }
 
     // ----- binding groups ------------------------------------------------------
@@ -1052,7 +1117,7 @@ impl<'a> Infer<'a> {
         let f = Type::fun(lhs.clone(), result.clone(), eff);
         match self.env.table.resolve(rhs) {
             Type::Fun(..) | Type::Var(_) | Type::App(..) => {
-                let rhs = self.open_call(rhs);
+                let rhs = self.open_call(rhs, Some(ctx));
                 self.unify(span, &f, &rhs, "the stage after `|`")
             }
             other => Err(Diagnostic::error(
@@ -1077,7 +1142,7 @@ impl<'a> Infer<'a> {
         // each call of the composition calls both stages once, choosing
         // their abstract sizes again
         let start = self.env.table.vars.len();
-        let lhs = &self.open_call(lhs);
+        let lhs = &self.open_call(lhs, None);
         let Type::Fun(a, b, e) = self.env.table.resolve(lhs) else {
             unreachable!()
         };
@@ -1099,7 +1164,7 @@ impl<'a> Infer<'a> {
         if let Type::Fun(param, _, _) = self.env.table.resolve(rhs) {
             self.unify(span, &param, &b, "pipe input (composition)")?;
         }
-        let rhs = self.open_call(rhs);
+        let rhs = self.open_call(rhs, Some(&e));
         self.unify(span, &g, &rhs, "the stage after `|`")?;
         let composed = self.reabstract(start, Type::Fun(a, Box::new(c), e));
         self.unify(span, result, &composed, "composition")
@@ -1505,11 +1570,19 @@ impl<'a> Infer<'a> {
     fn infer_app(&mut self, e: &Expr, f: &Expr, args: &[Expr], ctx: &Row) -> IResult<Type> {
         let mut tf = self.infer(f, ctx)?;
         for (i, arg) in args.iter().enumerate() {
-            let ta = self.infer(arg, ctx)?;
+            let mut ta = self.infer(arg, ctx)?;
             let r = self.fresh();
             match self.env.table.resolve(&tf) {
                 Type::Fun(p, _, _) => {
-                    self.unify(arg.span, &p, &ta, &format!("argument {}", i + 1))?;
+                    let argument = self.argument_type(&p, &ta);
+                    self.unify_presented(
+                        arg.span,
+                        &p,
+                        &argument,
+                        &ta,
+                        &format!("argument {}", i + 1),
+                    )?;
+                    ta = argument;
                 }
                 Type::Var(_) | Type::App(..) => {}
                 other => {
@@ -1531,7 +1604,7 @@ impl<'a> Infer<'a> {
             }
             self.captures.push((arg.span, ta.clone(), r.clone()));
             let want = Type::fun(ta, r.clone(), ctx.clone());
-            let opened = self.open_call(&tf);
+            let opened = self.open_call(&tf, Some(ctx));
             self.unify(e.span, &want, &opened, "application")?;
             tf = r;
         }

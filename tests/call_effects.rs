@@ -124,3 +124,114 @@ fn inferred_pure_callbacks_agree_with_native_execution() {
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn state_function_values_preserve_callback_effects_in_pipes_and_applications() {
+    for source in [
+        r#"read : () -> String ! {State[(String -> String)]}
+read = get | apply "!"
+"#,
+        r#"read : () -> String ! {State[(String -> String)]}
+read = match
+    () -> apply "!" (get ())
+"#,
+        r#"read : () -> String ! {State[(String -> String ! {IO})], IO}
+read = get | apply "!"
+"#,
+        r#"read : () -> String ! {State[(String -> String ! {IO})], IO}
+read = match
+    () -> apply "!" (get ())
+"#,
+    ] {
+        check_source("stored-function-effects.fwp", source, None)
+            .unwrap_or_else(|error| panic!("{}", error.rendered));
+    }
+    for body in [
+        r#"get | apply "!""#,
+        r#"match
+    () -> apply "!" (get ())"#,
+    ] {
+        let source =
+            format!("bad : () -> String ! {{State[(String -> String ! {{IO}})]}}\nbad = {body}\n");
+        let error = check_source("missing-stored-function-effects.fwp", &source, None)
+            .err()
+            .unwrap_or_else(|| panic!("accepted a callback without its IO effect"));
+        assert!(
+            error.rendered.contains("effect `IO` is not allowed"),
+            "{}",
+            error.rendered
+        );
+    }
+}
+
+#[test]
+fn higher_order_callback_rows_allow_known_effect_weakening() {
+    for source in [
+        r#"
+pass-fn : (I64 -> I64 ! {Async | e}) -> (I64, I64) ! {Async | e}
+pass-fn = both (task.deadline 1h | apply 2) (apply 3)
+main = pass-fn (add 40) | echo
+"#,
+        r#"
+pass-pure : (I64 -> I64) -> (I64, I64) ! {Async}
+pass-pure = both (task.deadline 1h | apply 2) (apply 3)
+main = pass-pure (add 40) | echo
+"#,
+        r#"
+pass-io : (String -> String ! {IO | e}) -> (String, String) ! {Async, IO | e}
+pass-io = both (task.deadline 1h | apply "a") (apply "b")
+main = ()
+"#,
+    ] {
+        check_source("higher-order-rows.fwp", source, None)
+            .unwrap_or_else(|error| panic!("{}", error.rendered));
+    }
+}
+
+#[test]
+fn weakening_callback_rows_preserves_required_async_and_io() {
+    for (source, required) in [
+        (
+            r#"
+bad : (I64 -> I64 ! e) -> (I64, I64) ! e
+bad = both (task.deadline 1h | apply 2) (apply 3)
+main = ()
+"#,
+            "Async",
+        ),
+        (
+            r#"
+bad : (String -> String ! {IO}) -> (String, String) ! {Async}
+bad = both (task.deadline 1h | apply "a") (apply "b")
+main = ()
+"#,
+            "IO",
+        ),
+    ] {
+        match check_source("missing-callback-effects.fwp", source, None) {
+            Ok(_) => panic!("missing {required} accepted"),
+            Err(error) => assert!(error.rendered.contains(required), "{}", error.rendered),
+        }
+    }
+}
+
+#[test]
+fn argument_mismatch_reports_the_value_without_permitted_effects() {
+    let source =
+        "consume : (I64 -> I64 ! {IO}) -> ()\nconsume = ignore\nmain = consume string.length\n";
+    match check_source("argument-type.fwp", source, None) {
+        Ok(_) => panic!("incompatible callback input accepted"),
+        Err(error) => {
+            assert!(
+                error.rendered.contains("found `String -> I64"),
+                "{}",
+                error.rendered
+            );
+            assert!(
+                !error.rendered.contains("found `String -> I64 ! {IO"),
+                "{}",
+                error.rendered
+            );
+        }
+    }
+}

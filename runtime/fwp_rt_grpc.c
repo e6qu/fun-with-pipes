@@ -88,7 +88,7 @@ struct g_conn {
     int fd, refs;
     SSL *ssl;                  /* the TLS session of a TLS connection */
     const g_server *server;    /* 0 for a client connection */
-    char authority[256];       /* a client's: the address it was given */
+    char *authority;           /* full address, stored after this header */
     h2_hpack dec;
     h2_peer peer;
     int64_t conn_window;
@@ -101,7 +101,8 @@ struct g_conn {
     int preface, goaway;
     char *dead;
     fwp_wl writer_wl, space_wl;
-    char *tlskey;              /* a client's TLS options (g_tls key), or 0 */
+    char *tlskey;              /* length-framed client TLS options, or 0 */
+    size_t tlskey_len;
     g_conn *next_pool;
     void *web;                 /* an HTTP server connection's g_web
                                 * (fwp_rt_http2.c), or 0 */
@@ -114,8 +115,18 @@ typedef struct g_serving {
     int code;                  /* a status for a cancelled call, or -1 */
     char *msg;
     char *peer;                /* the subject of the client's certificate, or 0 */
+    size_t peer_users;          /* serving task plus detached language senders */
     g_stream *s;               /* the call's stream */
 } g_serving;
+
+static void g_serving_peer_release(g_serving *sv) {
+    if (sv && --sv->peer_users == 0) {
+        fwp_tls_subject_free(sv->peer);
+        sv->peer = 0;
+        free(sv->msg);
+        sv->msg = 0;
+    }
+}
 
 /* how a client's calls connect over TLS (`grpc.with-tls`, or the
  * FWP_SERVICE_<M>_CA, ... variables): malloc'ed strings ("" for none);
@@ -123,7 +134,11 @@ typedef struct g_serving {
 typedef struct {
     char *ca, *name, *cert, *keyfile, *key;
     int insecure;
+    size_t key_len;
+    size_t users;              /* SIZE_MAX for read-once environment caches */
 } g_tls;
+
+typedef struct { h2_hdrs headers; size_t users; } g_capture;
 
 /* a task's gRPC context: metadata and deadline of the calls it makes, and
  * the call it serves */
@@ -134,6 +149,7 @@ typedef struct {
     g_serving *serving;
     const g_tls *tls;
     h2_hdrs *capture;          /* response metadata collected, or 0 */
+    g_capture *capture_owner; /* retained by dynamic scopes and inheriting tasks */
     int gzip;                  /* the calls made compress their requests */
 } g_ctx;
 
@@ -141,8 +157,45 @@ static g_ctx g_empty_ctx;
 static g_conn *g_pool = 0;
 static const fwp_desc *g_grpc_error_desc = 0;
 
+static void g_tls_release(void *arg) {
+    g_tls *tls = (g_tls *)arg;
+    if (!tls->users || tls->users == SIZE_MAX) abort();
+    if (--tls->users == 0) {
+        free(tls);
+    }
+}
+
+static void g_capture_release(void *arg) {
+    g_capture *cap = (g_capture *)arg;
+    if (!cap->users) abort();
+    if (--cap->users == 0) { h2_hdrs_free(&cap->headers); free(cap); }
+}
+
+static void *g_context_acquire(void *arg) {
+    g_ctx *ctx = (g_ctx *)arg;
+    g_tls *tls = ctx ? (g_tls *)ctx->tls : 0;
+    g_capture *cap = ctx ? ctx->capture_owner : 0;
+    int own_tls = tls && tls->users != SIZE_MAX;
+    /* Validate both counters before changing either, so acquisition is atomic. */
+    if (own_tls && tls->users == SIZE_MAX - 1) fwp_trap("too many TLS option owners");
+    if (cap && cap->users == SIZE_MAX) fwp_trap("too many metadata capture owners");
+    if (own_tls) tls->users++;
+    if (cap) cap->users++;
+    return own_tls || cap ? ctx : 0;
+}
+
+static void g_context_release(void *arg) {
+    g_ctx *ctx = (g_ctx *)arg;
+    if (ctx->tls && ctx->tls->users != SIZE_MAX) g_tls_release((void *)ctx->tls);
+    if (ctx->capture_owner) g_capture_release(ctx->capture_owner);
+}
+
 static g_ctx *g_ctx_of(void) {
     fwp_tasks_init();
+    if (!fwp_gctx_acquire) {
+        fwp_gctx_acquire = g_context_acquire;
+        fwp_gctx_release = g_context_release;
+    }
     return fwp_cur->gctx ? (g_ctx *)fwp_cur->gctx : &g_empty_ctx;
 }
 
@@ -216,6 +269,9 @@ static void g_stream_final(void *p) {
     free(s->bad);
 }
 
+/* Nonallocating failure marker: no stream observes an unpublished connection. */
+static char g_connect_start_failed[] = "connection startup failed";
+
 static void g_conn_final(void *p) {
     g_conn *c = (g_conn *)p;
 #ifdef FWP_LIBRARY
@@ -228,7 +284,7 @@ static void g_conn_final(void *p) {
     h2b_free(&c->in);
     h2b_free(&c->out);
     h2b_free(&c->cont_buf);
-    free(c->dead);
+    if (c->dead != g_connect_start_failed) free(c->dead);
     free(c->tlskey);
 }
 
@@ -248,11 +304,14 @@ static void g_set_reset(g_stream *s, const char *why) {
 }
 
 static g_conn *g_conn_new(int fd, const char *authority, const g_server *server) {
-    g_conn *c = (g_conn *)fwp_mem_alloc(sizeof *c);
+    size_t n = strlen(authority);
+    if (n > SIZE_MAX - sizeof(g_conn) - 1) fwp_trap("connection address too large");
+    g_conn *c = (g_conn *)fwp_mem_alloc(sizeof *c + n + 1);
+    c->authority = (char *)(c + 1);
+    memcpy(c->authority, authority, n + 1);
     fwp_gc_finalizer(c, g_conn_final);
     c->fd = fd;
     c->server = server;
-    snprintf(c->authority, sizeof c->authority, "%s", authority);
     h2_hpack_init(&c->dec);
     c->peer.max_frame = 16384;
     c->peer.init_window = 65535;
@@ -705,6 +764,8 @@ static int g_send_data(g_conn *c, g_stream *s, const unsigned char *d, size_t n,
     }
 }
 
+static void g_h2_buffer_release(void *arg) { h2b_free((h2_buf *)arg); }
+
 /* send one message; a server sends its response headers first */
 static int g_send_msg(g_conn *c, g_stream *s, const unsigned char *msg, size_t n, int end) {
     if (c->server && !s->sent_headers && !c->dead && !s->reset) {
@@ -720,6 +781,8 @@ static int g_send_msg(g_conn *c, g_stream *s, const unsigned char *msg, size_t n
         h2b_free(&blk);
     }
     h2_buf b = {0};
+    fwp_cleanup message_buffer;
+    fwp_cleanup_push(&message_buffer, g_h2_buffer_release, &b);
     if (s->gzip && n >= 64) {
         /* compressed (messages shorter than 64 bytes are sent as they are) */
         h2_buf z = {0};
@@ -732,6 +795,7 @@ static int g_send_msg(g_conn *c, g_stream *s, const unsigned char *msg, size_t n
         h2_grpc_frame(&b, msg, n);
     }
     int r = g_send_data(c, s, b.d, b.len, end);
+    fwp_cleanup_pop(&message_buffer);
     h2b_free(&b);
     return r;
 }
@@ -747,6 +811,15 @@ typedef struct {
     char *text;     /* G_END: grpc-message; G_LOST: why */
     int retry;      /* G_LOST: the request certainly was not processed */
 } g_got;
+
+static void g_got_release(void *arg) {
+    g_got *g = (g_got *)arg;
+    free(g->m);
+    free(g->text);
+    g->m = 0;
+    g->text = 0;
+}
+
 
 static void g_status_of(g_conn *c, g_stream *s, g_got *g) {
     g->kind = G_END;
@@ -848,21 +921,54 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
 /* ------------------------------------------------------------------ client */
 
 static g_tls *g_tls_new(const char *ca, int insecure, const char *name, const char *cert, const char *key) {
-    g_tls *t = (g_tls *)calloc(1, sizeof *t);
-    t->ca = strdup(ca);
+    const char *fields[4] = {ca, name, cert, key};
+    size_t sizes[4], key_len = 1 + 4 * sizeof(size_t), total = sizeof(g_tls);
+    for (size_t i = 0; i < 4; i++) {
+        sizes[i] = strlen(fields[i]);
+        if (sizes[i] > SIZE_MAX - key_len) fwp_trap("TLS option key too large");
+        key_len += sizes[i];
+        if (sizes[i] >= SIZE_MAX - total) fwp_trap("TLS option storage too large");
+        total += sizes[i] + 1;
+    }
+    if (key_len > SIZE_MAX - total) fwp_trap("TLS option storage too large");
+    total += key_len;
+    g_tls *t = (g_tls *)malloc(total);
+    if (!t) fwp_trap("cannot allocate TLS options");
+    memset(t, 0, sizeof *t);
+    char *strings[4], *next = (char *)(t + 1);
+    for (size_t i = 0; i < 4; i++) {
+        strings[i] = next;
+        memcpy(next, fields[i], sizes[i] + 1);
+        next += sizes[i] + 1;
+    }
+    t->users = SIZE_MAX;
+    t->ca = strings[0];
     t->insecure = insecure;
-    t->name = strdup(name);
-    t->cert = strdup(cert);
-    t->keyfile = strdup(key);
-    t->key = g_strdupf("%s|%d|%s|%s|%s", ca, insecure, name, cert, key);
+    t->name = strings[1];
+    t->cert = strings[2];
+    t->keyfile = strings[3];
+    t->key = next;
+    t->key_len = key_len;
+    t->key[0] = !!insecure;
+    char *p = t->key + 1;
+    for (size_t i = 0; i < 4; i++) {
+        memcpy(p, &sizes[i], sizeof sizes[i]); p += sizeof sizes[i];
+        memcpy(p, fields[i], sizes[i]); p += sizes[i];
+    }
     return t;
 }
+
+typedef struct g_env_options {
+    const char *var;
+    const g_tls *tls;
+    struct g_env_options *next;
+} g_env_options;
+static g_env_options *g_env_options_known = 0;
 
 /* the TLS options of a service's variables (FWP_SERVICE_<M>_CA,
  * _INSECURE, _SERVER_NAME, _CERT, _KEY), or 0; read once per service */
 static const g_tls *g_env_tls(const char *var) {
-    static struct g_env_tls { const char *var; const g_tls *tls; struct g_env_tls *next; } *known = 0;
-    for (struct g_env_tls *k = known; k; k = k->next)
+    for (g_env_options *k = g_env_options_known; k; k = k->next)
         if (strcmp(k->var, var) == 0) return k->tls;
     const char *v[5];
     static const char *const sfx[5] = {"CA", "INSECURE", "SERVER_NAME", "CERT", "KEY"};
@@ -873,19 +979,56 @@ static const g_tls *g_env_tls(const char *var) {
         if (v[i] && !*v[i]) v[i] = 0;
     }
     int insecure = v[1] && strcmp(v[1], "0") != 0 && strcmp(v[1], "false") != 0;
-    struct g_env_tls *k = (struct g_env_tls *)calloc(1, sizeof *k);
+    g_env_options *k = (g_env_options *)calloc(1, sizeof *k);
     k->var = strdup(var);
     k->tls = v[0] || insecure || v[2] || v[3] || v[4]
                  ? g_tls_new(v[0] ? v[0] : "", insecure, v[2] ? v[2] : "", v[3] ? v[3] : "", v[4] ? v[4] : "")
                  : 0;
-    k->next = known;
-    known = k;
+    k->next = g_env_options_known;
+    g_env_options_known = k;
     return k->tls;
 }
 
-static int g_same_tls(const char *a, const g_tls *t) {
-    if (!t) return a == 0;
-    return a && strcmp(a, t->key) == 0;
+#ifdef FWP_LIBRARY
+/* Called only after task draining and GC finalization, before SSL cache disposal. */
+static void g_environment_finish(void) {
+    while (g_env_options_known) {
+        g_env_options *k = g_env_options_known;
+        g_env_options_known = k->next;
+        if (k->tls) {
+            g_tls *tls = (g_tls *)k->tls;
+            if (tls->users != SIZE_MAX) abort();
+            tls->users = 1;
+            g_tls_release(tls);
+        }
+        free((void *)k->var);
+        free(k);
+    }
+    g_pool = 0;
+    fwp_gctx_acquire = 0;
+    fwp_gctx_release = 0;
+}
+#endif
+
+static int g_same_tls(const g_conn *c, const g_tls *t) {
+    if (!t) return c->tlskey == 0;
+    return c->tlskey && c->tlskey_len == t->key_len && memcmp(c->tlskey, t->key, t->key_len) == 0;
+}
+
+typedef struct { g_conn *c; fwp_task *reader, *writer; } g_connect_start_owner;
+static void g_connect_ref_release(void *arg) { g_conn_release((g_conn *)arg); }
+static void g_connect_start_abort(void *arg) {
+    g_connect_start_owner *owner = (g_connect_start_owner *)arg;
+    owner->c->dead = g_connect_start_failed;
+    shutdown(owner->c->fd, SHUT_RDWR);
+    if (owner->reader) fwp_cancel_tree(owner->reader);
+    if (owner->writer) fwp_cancel_tree(owner->writer);
+    g_conn_release(owner->c);
+}
+
+static void g_connect_ssl_release(void *arg) {
+    SSL **ssl = (SSL **)arg;
+    if (*ssl) { SSL_free(*ssl); *ssl = 0; }
 }
 
 static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
@@ -906,9 +1049,13 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
         *err = g_strdupf("cannot connect to %s: failed to lookup address information: %s", addr, gai_strerror(rc));
         return 0;
     }
+    fwp_connect_owner owner = {-1, res};
+    fwp_cleanup connect_cleanup;
+    fwp_cleanup_push(&connect_cleanup, fwp_connect_finish, &owner);
     int fd = -1, e = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
         fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+        owner.fd = fd;
         if (fd < 0) { e = errno; continue; }
         fwp_nonblock(fd);
         if (connect(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
@@ -919,17 +1066,23 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
             getsockopt(fd, SOL_SOCKET, SO_ERROR, &e, &el);
             if (e == 0) break;
         }
+        owner.fd = -1;
+        fwp_fd_closing(fd);
         close(fd);
         fd = -1;
     }
     freeaddrinfo(res);
+    owner.addresses = 0;
     if (fd < 0) {
         *err = g_strdupf("cannot connect to %s: %s", addr, strerror(e));
+        fwp_cleanup_pop(&connect_cleanup);
         return 0;
     }
     int one = 1;
     setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
     SSL *ssl = 0;
+    fwp_cleanup ssl_cleanup;
+    fwp_cleanup_push(&ssl_cleanup, g_connect_ssl_release, &ssl);
     if (tls) {
         /* verified with the system's CA certificates (SSL_CERT_FILE,
          * SSL_CERT_DIR) unless the options say otherwise, offering h2 */
@@ -938,19 +1091,41 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
                    : fwp_tls_client_new(fd, "", 1, host, (const unsigned char *)"\x02h2", 3, "", "");
         if (!ssl || !fwp_tls_finish(ssl, fd, 0)) {
             *err = g_strdupf("cannot connect to %s: %s", addr, fwp_tls_err);
-            if (ssl) SSL_free(ssl);
-            close(fd);
+            fwp_cleanup_pop(&ssl_cleanup);
+            g_connect_ssl_release(&ssl);
+            fwp_cleanup_pop(&connect_cleanup);
+            fwp_connect_finish(&owner);
             return 0;
         }
     }
     g_conn *c = g_conn_new(fd, given, 0);
     c->ssl = ssl;
-    c->tlskey = opts ? strdup(opts->key) : 0;
-    c->refs = 2;
-    fwp_spawn_task(0, g_reader, c, 0, 1);
-    fwp_spawn_task(0, g_writer, c, 0, 1);
+    ssl = 0;
+    fwp_cleanup_pop(&ssl_cleanup);
+    owner.fd = -1;
+    fwp_cleanup_pop(&connect_cleanup);
+    if (opts) {
+        c->tlskey_len = opts->key_len;
+        c->tlskey = (char *)malloc(opts->key_len);
+        memcpy(c->tlskey, opts->key, opts->key_len);
+    }
+    c->refs = 1; /* temporary startup owner */
+    g_connect_start_owner startup = {c, 0, 0};
+    fwp_cleanup startup_cleanup;
+    fwp_cleanup_push(&startup_cleanup, g_connect_start_abort, &startup);
+    fwp_cleanup reserved_ref;
+    c->refs++;
+    fwp_cleanup_push(&reserved_ref, g_connect_ref_release, c);
+    startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);
+    fwp_cleanup_pop(&reserved_ref); /* reader takes its reserved reference */
+    c->refs++;
+    fwp_cleanup_push(&reserved_ref, g_connect_ref_release, c);
+    startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);
+    fwp_cleanup_pop(&reserved_ref);
     c->next_pool = g_pool;
     g_pool = c;
+    fwp_cleanup_pop(&startup_cleanup);
+    g_conn_release(c); /* only the reader and writer remain */
     return c;
 }
 
@@ -976,7 +1151,7 @@ static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, 
     const g_tls *opts = g_ctx_of()->tls ? g_ctx_of()->tls : dflt;
     g_conn *c = 0;
     for (g_conn *p = g_pool; p; p = p->next_pool)
-        if (strcmp(p->authority, addr) == 0 && g_same_tls(p->tlskey, opts) && !p->dead && !p->goaway &&
+        if (strcmp(p->authority, addr) == 0 && g_same_tls(p, opts) && !p->dead && !p->goaway &&
             p->next_stream < 0x7fff0000u) {
             c = p;
             break;
@@ -1053,7 +1228,7 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
             return G_DEC_OK;
         }
         fwp_handlers = h.prev;
-        fwp_state_len = h.state_depth;
+        fwp_state_restore(h.state_depth);
         *why = strdup(STR(OBJ(h.value)->f[1])->d);
         return G_DEC_BAD;
     }
@@ -1090,10 +1265,13 @@ static void g_encode(const g_codec *k, V v, int tag, h2_buf *out) {
         return;
     }
     fwp_buf canon = {0};
+    fwp_cleanup canonical_cleanup;
+    fwp_cleanup_push(&canonical_cleanup, fwp_file_buffer_cleanup, &canon);
     if (tag) buf_putc(&canon, 0);
     fwp_encode(&canon, v, k->ty);
     if (!pb_encode(k->schema, k->node, (const unsigned char *)canon.d, canon.len, out))
         g_trapf("cannot encode a message: %s", h2_err);
+    fwp_cleanup_pop(&canonical_cleanup);
     free(canon.d);
 }
 
@@ -1122,11 +1300,14 @@ typedef struct {
 static void g_fail_call(int code, const char *msg) {
     g_serving *sv = g_ctx_of()->serving;
     if (!sv) fwp_trap(msg);
+    char *copy = strdup(msg);
+    if (!copy) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+    free(sv->msg);
     sv->code = code;
-    sv->msg = strdup(msg);
+    sv->msg = copy;
     fwp_cancel_tree(sv->task);
     fwp_check_cancel();
-    fwp_trap(msg);
+    fwp_trap(sv->msg);
 }
 
 /* the failure of a client call: a status, or -1 for a transport failure */
@@ -1150,6 +1331,8 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
     g_incoming *src = cell->src;
     g_got g;
     g_recv(src->c, src->s, src->deadline, &g);
+    fwp_cleanup received_cleanup;
+    fwp_cleanup_push(&received_cleanup, g_got_release, &g);
     V r = FWP_NONE;
     if (src->results) {
         /* a failure is an `Err` element, then the end */
@@ -1158,6 +1341,9 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             char *why = 0;
             int k = g_decode(&src->dec, g.m->d, g.m->n, &x, &why);
             free(g.m);
+            g.m = 0;
+            fwp_cleanup decode_cleanup;
+            fwp_cleanup_push(&decode_cleanup, fwp_tls_subject_free, why);
             if (k == G_DEC_OK) {
                 g_cell *next = (g_cell *)fwp_mem_alloc(sizeof *next);
                 next->src = src;
@@ -1165,15 +1351,21 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             } else {
                 char *t = k == G_DEC_BAD ? g_strdupf("bad response from %s: %s", src->what, why)
                                          : strdup("unexpected error in a response");
+                fwp_cleanup text_cleanup;
+                fwp_cleanup_push(&text_cleanup, fwp_tls_subject_free, t);
                 r = g_err_element(src, GRPC_INTERNAL, t);
+                fwp_cleanup_pop(&text_cleanup);
                 free(t);
             }
+            fwp_cleanup_pop(&decode_cleanup);
+            fwp_tls_subject_free(why);
         } else if (g.kind == G_END && g.code == 0) {
             r = FWP_NONE;
         } else {
             r = g_err_element(src, g.kind == G_END ? g.code : GRPC_UNAVAILABLE, g.text);
         }
-        free(g.text);
+        fwp_cleanup_pop(&received_cleanup);
+        g_got_release(&g);
         cell->forced = 1;
         cell->memo = r;
         return r;
@@ -1183,19 +1375,34 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
         char *why = 0;
         int k = g_decode(&src->dec, g.m->d, g.m->n, &x, &why);
         free(g.m);
+        g.m = 0;
+        fwp_cleanup decode_cleanup;
+        fwp_cleanup_push(&decode_cleanup, fwp_tls_subject_free, why);
         if (k == G_DEC_BAD) {
             if (src->server) g_fail_call(GRPC_INVALID_ARGUMENT, why);
             g_trapf("bad response from %s: %s", src->what, why);
         }
         if (k == G_DEC_ERROR) {
-            if (first) { *err_value = x; *err_desc = src->dec.error; return 0; }
+            if (first) {
+                *err_value = x;
+                *err_desc = src->dec.error;
+                fwp_cleanup_pop(&decode_cleanup);
+                fwp_tls_subject_free(why);
+                fwp_cleanup_pop(&received_cleanup);
+                g_got_release(&g);
+                return 0;
+            }
             fwp_buf b = {0};
+            fwp_cleanup error_buffer;
+            fwp_cleanup_push(&error_buffer, fwp_file_buffer_cleanup, &b);
             fwp_write(&b, x, src->dec.error, 1);
             g_trapf("service call %s failed: error: %.*s", src->what, (int)b.len, b.d ? b.d : "");
         }
         g_cell *next = (g_cell *)fwp_mem_alloc(sizeof *next);
         next->src = src;
         r = fwp_some(fwp_tuple2(x, PTR(next)));
+        fwp_cleanup_pop(&decode_cleanup);
+        fwp_tls_subject_free(why);
     } else if (g.kind == G_END && g.code == 0) {
         r = FWP_NONE;
     } else {
@@ -1205,12 +1412,20 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             fwp_check_cancel();
         }
         int code = g.kind == G_END ? g.code : -1;
-        if (first) { f->code = code; f->text = g.text; return 0; }
+        if (first) {
+            f->code = code;
+            f->text = g.text;
+            g.text = 0;
+            fwp_cleanup_pop(&received_cleanup);
+            g_got_release(&g);
+            return 0;
+        }
         if (code == GRPC_INTERNAL && strncmp(g.text, "trap: ", 6) == 0) fwp_trap(g.text + 6);
         if (code >= 0) g_trapf("service call %s failed: gRPC status %d: %s", src->what, code, g.text);
         g_trapf("service call %s failed: %s", src->what, g.text);
     }
-    free(g.text);
+    fwp_cleanup_pop(&received_cleanup);
+    g_got_release(&g);
     cell->forced = 1;
     cell->memo = r;
     return r;
@@ -1270,7 +1485,14 @@ typedef struct {
     g_stream *s;
     V cur, enc;
     const fwp_remote *r;
+    g_serving *serving;
 } g_sender;
+
+static void g_sender_peer_finish(void *arg) {
+    g_sender *x = (g_sender *)arg;
+    g_serving_peer_release(x->serving);
+    x->serving = 0;
+}
 
 static void g_send_all(void *arg, int cancelled) {
     g_sender *x = (g_sender *)arg;
@@ -1303,8 +1525,11 @@ static void g_send_all(void *arg, int cancelled) {
         int ok;
         if (x->r) {
             h2_buf req = {0};
+            fwp_cleanup request_buffer;
+            fwp_cleanup_push(&request_buffer, g_h2_buffer_release, &req);
             g_encode_request(x->r, &v, &req);
             ok = g_send_msg(x->c, x->s, req.d, req.len, 0);
+            fwp_cleanup_pop(&request_buffer);
             h2b_free(&req);
         } else {
             V b = fwp_apply1(x->enc, v);
@@ -1327,23 +1552,45 @@ static void g_spawn_sender(g_conn *c, g_stream *s, V iter, V enc, const fwp_remo
     x->cur = iter;
     x->enc = enc;
     x->r = r;
-    fwp_spawn_task(0, g_send_all, x, 0, 1);
+    x->serving = g_ctx_of()->serving;
+    if (x->serving) {
+        if (x->serving->peer_users == SIZE_MAX) fwp_trap("too many serving context owners");
+        x->serving->peer_users++;
+    }
+    fwp_cleanup peer_cleanup;
+    fwp_cleanup_push(&peer_cleanup, g_sender_peer_finish, x);
+    fwp_task *t = fwp_spawn_task(0, g_send_all, x, 0, 1);
+    t->cfinish = g_sender_peer_finish;
+    fwp_cleanup_pop(&peer_cleanup);
 }
 
 /* ------------------------------------------------------------- client stubs */
 
-static void g_stub_fail(const fwp_remote *r, const char *addr, int code, const char *text) {
+/* Takes ownership of copied transport/status text before raising it. */
+static void g_stub_fail(const fwp_remote *r, const char *addr, int code, char *text) {
+    fwp_cleanup failure_text;
+    fwp_cleanup_push(&failure_text, fwp_tls_subject_free, text);
     if ((code == GRPC_INTERNAL || code < 0) && strncmp(text, "trap: ", 6) == 0) fwp_trap(text + 6);
     if (r->m.status_errors) g_grpc_error(code < 0 ? GRPC_UNAVAILABLE : code, text, r->m.grpc_error);
     if (code >= 0) g_trapf("service call %s (%s) failed: gRPC status %d: %s", r->what, addr, code, text);
     g_trapf("service call %s (%s) failed: %s", r->what, addr, text);
 }
 
+/* Transfer copied receive text out of the scoped buffer owner. */
+static void g_stub_got_fail(const fwp_remote *r, const char *addr, int code, g_got *g) {
+    char *text = g->text;
+    g->text = 0;
+    g_stub_fail(r, addr, code, text);
+}
+
 static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out) {
     fwp_buf canon = {0};
+    fwp_cleanup canonical_cleanup;
+    fwp_cleanup_push(&canonical_cleanup, fwp_file_buffer_cleanup, &canon);
     for (int i = 0; i < r->m.nreq; i++) fwp_encode(&canon, vals[i], r->m.req[i]);
     if (!pb_encode(r->m.schema, r->m.req_node, (const unsigned char *)canon.d, canon.len, out))
         g_trapf("cannot encode the arguments of %s: %s", r->what, h2_err);
+    fwp_cleanup_pop(&canonical_cleanup);
     free(canon.d);
 }
 
@@ -1358,6 +1605,8 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     g_stream *s = 0;
     g_got first;
     memset(&first, 0, sizeof first);
+    fwp_cleanup first_received;
+    fwp_cleanup_push(&first_received, g_got_release, &first);
     for (int attempt = 0;; attempt++) {
         int reused = 0;
         char *err = 0;
@@ -1365,8 +1614,11 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
         if (!s) g_stub_fail(r, addr, -1, err);
         if (r->m.input == 0) {
             h2_buf req = {0};
+            fwp_cleanup client_request;
+            fwp_cleanup_push(&client_request, g_h2_buffer_release, &req);
             g_encode_request(r, args, &req);
             g_send_msg(c, s, req.d, req.len, 1);
+            fwp_cleanup_pop(&client_request);
             h2b_free(&req);
         } else if (r->m.output != 0) {
             /* requests are sent as responses arrive */
@@ -1375,8 +1627,11 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
             V cur = args[0], x;
             while (g_iter_next(&cur, &x)) {
                 h2_buf req = {0};
+                fwp_cleanup client_request;
+                fwp_cleanup_push(&client_request, g_h2_buffer_release, &req);
                 g_encode_request(r, &x, &req);
                 int ok = g_send_msg(c, s, req.d, req.len, 0);
+                fwp_cleanup_pop(&client_request);
                 h2b_free(&req);
                 if (!ok) break;
             }
@@ -1384,39 +1639,58 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
         }
         if (r->m.output != 0) break;
         g_recv(c, s, deadline, &first);
-        if (first.kind == G_LOST && first.retry && reused && attempt == 0 && r->m.input == 0) continue;
+        if (first.kind == G_LOST && first.retry && reused && attempt == 0 && r->m.input == 0) {
+            g_got_release(&first);
+            continue;
+        }
         break;
     }
     if (r->m.output == 0) {
-        if (first.kind == G_LOST) g_stub_fail(r, addr, -1, first.text);
-        if (first.kind == G_END && first.code != 0) g_stub_fail(r, addr, first.code, first.text);
+        if (first.kind == G_LOST) g_stub_got_fail(r, addr, -1, &first);
+        if (first.kind == G_END && first.code != 0) g_stub_got_fail(r, addr, first.code, &first);
         if (first.kind == G_END) g_trapf("bad response from %s (%s): missing response message", r->what, addr);
         V v;
         char *why = 0;
         int k = g_decode(&dec, first.m->d, first.m->n, &v, &why);
         free(first.m);
+        first.m = 0;
+        fwp_cleanup decode_text;
+        fwp_cleanup_push(&decode_text, fwp_tls_subject_free, why);
         if (k == G_DEC_BAD) g_trapf("bad response from %s (%s): %s", r->what, addr, why);
-        g_got g;
+        fwp_cleanup_pop(&decode_text);
+        free(why);
+        g_got g = {0};
+        fwp_cleanup received;
+        fwp_cleanup_push(&received, g_got_release, &g);
         g_recv(c, s, deadline, &g);
         if (g.kind == G_MSG) {
             g_reset(c, s, 8);
             g_trapf("bad response from %s (%s): more than one response message", r->what, addr);
         }
-        if (g.kind == G_LOST) g_stub_fail(r, addr, -1, g.text);
-        if (g.code != 0) g_stub_fail(r, addr, g.code, g.text);
+        if (g.kind == G_LOST) g_stub_got_fail(r, addr, -1, &g);
+        if (g.code != 0) g_stub_got_fail(r, addr, g.code, &g);
         if (k == G_DEC_ERROR) fwp_fail(v, r->m.error);
+        fwp_cleanup_pop(&received);
+        g_got_release(&g);
+        fwp_cleanup_pop(&first_received);
+        g_got_release(&first);
         return v;
     }
     if (r->m.output == 2) {
         V ch = args[r->m.input == 1 ? 1 : r->m.nreq];
         for (;;) {
-            g_got g;
+            g_got g = {0};
+            fwp_cleanup received;
+            fwp_cleanup_push(&received, g_got_release, &g);
             g_recv(c, s, deadline, &g);
             if (g.kind == G_MSG) {
                 V v;
                 char *why = 0;
                 int k = g_decode(&dec, g.m->d, g.m->n, &v, &why);
                 free(g.m);
+                g.m = 0;
+                fwp_cleanup decode_text;
+                fwp_cleanup_push(&decode_text, fwp_tls_subject_free, why);
                 if (k == G_DEC_BAD) {
                     g_reset(c, s, 8);
                     g_trapf("bad response from %s (%s): %s", r->what, addr, why);
@@ -1425,11 +1699,19 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
                     g_reset(c, s, 8);
                     fwp_fail(v, r->m.error);
                 }
+                fwp_cleanup_pop(&decode_text);
+                free(why);
                 fwp_p_channel_send(ch, v);
+                fwp_cleanup_pop(&received);
+                g_got_release(&g);
                 continue;
             }
-            if (g.kind == G_LOST) g_stub_fail(r, addr, -1, g.text);
-            if (g.code != 0) g_stub_fail(r, addr, g.code, g.text);
+            if (g.kind == G_LOST) g_stub_got_fail(r, addr, -1, &g);
+            if (g.code != 0) g_stub_got_fail(r, addr, g.code, &g);
+            fwp_cleanup_pop(&received);
+            g_got_release(&g);
+            fwp_cleanup_pop(&first_received);
+            g_got_release(&first);
             return FWP_UNIT;
         }
     }
@@ -1452,6 +1734,8 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
         if (ed) fwp_fail(ev, ed);
         g_stub_fail(r, addr, f.code, f.text);
     }
+    fwp_cleanup_pop(&first_received);
+    g_got_release(&first);
     return fwp_apply1(fwp_pap((uint32_t)r->m.iter_fn, 0, 0), PTR(cell));
 }
 
@@ -1484,6 +1768,13 @@ typedef struct {
     g_serving sv;
     g_ctx ctx;
 } g_job;
+
+/* The serving context is inherited by children; dispose only after their join. */
+static void g_job_peer_finish(void *arg) {
+    g_job *j = (g_job *)arg;
+    g_serving_peer_release(&j->sv);
+}
+
 
 static const g_route *g_route_of(const g_server *srv, const char *path) {
     for (size_t i = 0; i < srv->n; i++)
@@ -1542,6 +1833,9 @@ static void g_start_call(g_conn *c, g_stream *s) {
     j->sv.headers = &s->headers;
     j->sv.code = -1;
     j->sv.peer = c->ssl ? fwp_tls_peer_subject(c->ssl) : 0;
+    j->sv.peer_users = 1;
+    fwp_cleanup peer_cleanup;
+    fwp_cleanup_push(&peer_cleanup, g_job_peer_finish, j);
     j->sv.s = s;
     /* responses are compressed like the requests */
     const char *enc = h2_get(&s->headers, "grpc-encoding");
@@ -1550,6 +1844,8 @@ static void g_start_call(g_conn *c, g_stream *s) {
     s->task = fwp_spawn_task(0, g_handle, j, g_parse_timeout(h2_get(&s->headers, "grpc-timeout")), 0);
     j->sv.task = s->task;
     s->task->gctx = &j->ctx;
+    s->task->cfinish = g_job_peer_finish;
+    fwp_cleanup_pop(&peer_cleanup);
 }
 
 /* end a served call with its status (code < 0: OK) */
@@ -1590,18 +1886,38 @@ static void g_finish(g_conn *c, g_stream *s, int code, const char *msg) {
 static g_msg *g_recv_one(g_job *j, int *code, char **msg) {
     g_got g;
     g_recv(j->c, j->s, 0, &g);
+    fwp_cleanup first_cleanup;
+    fwp_cleanup_push(&first_cleanup, g_got_release, &g);
     if (g.kind != G_MSG) {
         if (g.kind == G_LOST && !j->s->bad) { fwp_cancel_tree(fwp_cur); fwp_check_cancel(); }
         *code = GRPC_INVALID_ARGUMENT;
         *msg = g.kind == G_LOST ? g.text : strdup("missing request message");
+        if (g.kind == G_LOST) g.text = 0;
+        fwp_cleanup_pop(&first_cleanup);
+        g_got_release(&g);
         return 0;
     }
     g_got e;
     g_recv(j->c, j->s, 0, &e);
-    if (e.kind == G_END) { free(e.text); return g.m; }
+    fwp_cleanup second_cleanup;
+    fwp_cleanup_push(&second_cleanup, g_got_release, &e);
+    if (e.kind == G_END) {
+        g_msg *result = g.m;
+        g.m = 0;
+        fwp_cleanup_pop(&second_cleanup);
+        g_got_release(&e);
+        fwp_cleanup_pop(&first_cleanup);
+        g_got_release(&g);
+        return result;
+    }
     if (e.kind == G_LOST && !j->s->bad) { fwp_cancel_tree(fwp_cur); fwp_check_cancel(); }
     *code = GRPC_INVALID_ARGUMENT;
     *msg = e.kind == G_LOST ? e.text : strdup("expected one request message");
+    if (e.kind == G_LOST) e.text = 0;
+    fwp_cleanup_pop(&second_cleanup);
+    g_got_release(&e);
+    fwp_cleanup_pop(&first_cleanup);
+    g_got_release(&g);
     return 0;
 }
 
@@ -1621,7 +1937,7 @@ static int g_apply_user(V f, uint32_t n, V *args, V *out, V *err, const fwp_desc
         t->trap_jb = saved;
         t->trap_cleanup = saved_cleanup;
         fwp_handlers = h.prev;
-        fwp_state_len = h.state_depth;
+        fwp_state_restore(h.state_depth);
         return 2;
     }
     t->trap_jb = &tj;
@@ -1636,7 +1952,7 @@ static int g_apply_user(V f, uint32_t n, V *args, V *out, V *err, const fwp_desc
         return 0;
     }
     fwp_handlers = h.prev;
-    fwp_state_len = h.state_depth;
+    fwp_state_restore(h.state_depth);
     t->trap_jb = saved;
     t->trap_cleanup = saved_cleanup;
     *err = h.value;
@@ -1726,20 +2042,31 @@ static int g_run_method(g_job *j, char **msg) {
     if (code >= 0) return code;
     if (in_response) {
         fwp_buf canon = {0};
+        fwp_cleanup error_canonical;
+        fwp_cleanup_push(&error_canonical, fwp_file_buffer_cleanup, &canon);
         buf_putc(&canon, 1);
         fwp_encode(&canon, err, m->error);
         h2_buf b = {0};
+        fwp_cleanup response_buffer;
+        fwp_cleanup_push(&response_buffer, g_h2_buffer_release, &b);
         if (!pb_encode(m->schema, m->resp_node, (const unsigned char *)canon.d, canon.len, &b))
             g_trapf("cannot encode a message: %s", h2_err);
+        fwp_cleanup_pop(&response_buffer);
+        fwp_cleanup_pop(&error_canonical);
         free(canon.d);
+        fwp_cleanup_push(&response_buffer, g_h2_buffer_release, &b);
         g_send_msg(j->c, j->s, b.d, b.len, 0);
+        fwp_cleanup_pop(&response_buffer);
         h2b_free(&b);
         return -1;
     }
     if (m->output == 0) {
         h2_buf b = {0};
+        fwp_cleanup response_buffer;
+        fwp_cleanup_push(&response_buffer, g_h2_buffer_release, &b);
         g_encode(&enc, v, m->error != 0, &b);
         g_send_msg(j->c, j->s, b.d, b.len, 0);
+        fwp_cleanup_pop(&response_buffer);
         h2b_free(&b);
     } else if (m->output == 1 || m->output == 3) {
         /* forcing the iterator may trap */
@@ -1776,8 +2103,11 @@ static int g_run_method(g_job *j, char **msg) {
                 x = OBJ(x)->f[0];
             }
             h2_buf b = {0};
+            fwp_cleanup response_buffer;
+            fwp_cleanup_push(&response_buffer, g_h2_buffer_release, &b);
             g_encode(&enc, x, m->error != 0, &b);
             int ok = g_send_msg(j->c, j->s, b.d, b.len, 0);
+            fwp_cleanup_pop(&response_buffer);
             h2b_free(&b);
             if (!ok) { fwp_check_cancel(); break; }
         }
@@ -1910,7 +2240,7 @@ static int g_reflect(g_job *j, char **msg) {
     for (;;) {
         g_got g;
         g_recv(j->c, j->s, 0, &g);
-        if (g.kind == G_END) return -1;
+        if (g.kind == G_END) { free(g.text); return -1; }
         if (g.kind == G_LOST) {
             *msg = g.text;
             return GRPC_INVALID_ARGUMENT;
@@ -1947,6 +2277,7 @@ static void g_handle(void *arg, int cancelled) {
     } else if (j->sv.code >= 0) {
         code = j->sv.code;
         msg = j->sv.msg;
+        j->sv.msg = 0;
     } else if (j->s->reset || j->c->dead) {
         fflush(fwp_prog_out);
         if (logged) fprintf(stderr, "fwp: call cancelled by the client (in %s)\n", j->what);
@@ -1960,7 +2291,11 @@ static void g_handle(void *arg, int cancelled) {
         msg = strdup("cancelled");
     }
     fflush(fwp_prog_out);
+    fwp_cleanup message_cleanup;
+    fwp_cleanup_push(&message_cleanup, fwp_tls_subject_free, msg);
     g_finish(j->c, j->s, code, msg);
+    fwp_cleanup_pop(&message_cleanup);
+    fwp_tls_subject_free(msg);
 }
 
 /* accept connections and serve them, until the task is cancelled */
@@ -2174,10 +2509,20 @@ static V fwp_p_grpc_metadata(void) {
     return fwp_list_from(items, n);
 }
 
+typedef struct { fwp_task *task; void *saved, *held; } g_context_owner;
+static void g_context_restore(void *arg) {
+    g_context_owner *owner = (g_context_owner *)arg;
+    if (owner->held) { g_context_release(owner->held); owner->held = 0; }
+    owner->task->gctx = owner->saved;
+}
+
 /* run `f` with a context, restoring the task's afterwards */
 static V g_with_ctx(g_ctx *ctx, V f) {
     fwp_task *t = fwp_cur;
     void *saved = t->gctx;
+    g_context_owner owner = {t, saved, g_context_acquire(ctx)};
+    fwp_cleanup context_cleanup;
+    fwp_cleanup_push(&context_cleanup, g_context_restore, &owner);
     t->gctx = ctx;
     fwp_handler h;
     h.prev = fwp_handlers;
@@ -2187,12 +2532,14 @@ static V g_with_ctx(g_ctx *ctx, V f) {
     if (setjmp(h.jb) == 0) {
         V r = fwp_apply1(f, FWP_UNIT);
         fwp_handlers = h.prev;
-        t->gctx = saved;
+        fwp_cleanup_pop(&context_cleanup);
+        g_context_restore(&owner);
         return r;
     }
     fwp_handlers = h.prev;
-    fwp_state_len = h.state_depth;
-    t->gctx = saved;
+    fwp_state_restore(h.state_depth);
+    fwp_cleanup_pop(&context_cleanup);
+    g_context_restore(&owner);
     fwp_fail(h.value, h.desc);
     return 0;
 }
@@ -2255,17 +2602,23 @@ static V fwp_p_grpc_with_response_metadata(V f) {
     g_ctx *cur = g_ctx_of();
     g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
     *ctx = *cur;
-    h2_hdrs *cap = (h2_hdrs *)calloc(1, sizeof *cap);
+    g_capture *owner = (g_capture *)calloc(1, sizeof *owner);
+    owner->users = 1;
+    fwp_cleanup capture_cleanup;
+    fwp_cleanup_push(&capture_cleanup, g_capture_release, owner);
+    h2_hdrs *cap = &owner->headers;
     ctx->capture = cap;
+    ctx->capture_owner = owner;
     V r = g_with_ctx(ctx, f);
     if (cur->capture)
         for (size_t i = 0; i < cap->n; i++)
             h2_hdrs_add(cur->capture, cap->v[i].name, strlen(cap->v[i].name), cap->v[i].value,
                         strlen(cap->v[i].value));
     V md = g_pairs_value(cap);
-    h2_hdrs_free(cap);
-    free(cap);
-    return fwp_tuple2(r, md);
+    V result = fwp_tuple2(r, md);
+    fwp_cleanup_pop(&capture_cleanup);
+    g_capture_release(owner);
+    return result;
 }
 
 static V fwp_p_grpc_peer_subject(void) {
@@ -2286,7 +2639,13 @@ static V fwp_p_grpc_with_tls(V o, V f, int ica, int iins, int iname, int icert, 
     V *fs = OBJ(o)->f;
     ctx->tls = g_tls_new(g_opt_text(fs[ica]), fs[iins] == FWP_TRUE, g_opt_text(fs[iname]), g_opt_text(fs[icert]),
                          g_opt_text(fs[ikey]));
-    return g_with_ctx(ctx, f);
+    ((g_tls *)ctx->tls)->users = 1;
+    fwp_cleanup tls_cleanup;
+    fwp_cleanup_push(&tls_cleanup, g_tls_release, (void *)ctx->tls);
+    V result = g_with_ctx(ctx, f);
+    fwp_cleanup_pop(&tls_cleanup);
+    g_tls_release((void *)ctx->tls);
+    return result;
 }
 
 static V fwp_p_grpc_with_deadline(V d, V f) {

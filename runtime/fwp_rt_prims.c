@@ -982,6 +982,81 @@ static V fwp_p_list_ap(V fs, V xs) {
     return fwp_list_from(out, k);
 }
 
+/* Call every callback before rebuilding the flattened output, preserving
+ * function/input trap order. Returned chunks and copied aliases have distinct
+ * owners until each counted output node takes its element. */
+static V fwp_p_flat_map_owned(V f, V xs, void (*element_dup)(V), void (*element_drop)(V), void (*list_drop)(V)) {
+    size_t n;
+    V *items = fwp_map_items(xs, &n);
+    fwp_map_owner chunks = {items, 0, 0, list_drop, NULL};
+    fwp_cleanup chunks_cleanup;
+    fwp_map_protect(&chunks, &chunks_cleanup);
+    for (size_t i = 0; i < n; i++) {
+        items[i] = fwp_apply_borrowed(f, 1, &items[i]);
+        chunks.count++;
+    }
+    fwp_value_owner result = {0, list_drop};
+    fwp_cleanup result_cleanup;
+    fwp_value_protect(&result, &result_cleanup);
+    for (size_t i = n; i; i--) {
+        size_t count;
+        V *aliases = fwp_map_items(items[i - 1], &count);
+        fwp_map_owner copy = {aliases, 0, result.value, element_drop, list_drop};
+        fwp_cleanup copy_cleanup;
+        fwp_map_protect(&copy, &copy_cleanup);
+        result.value = 0;
+        for (size_t j = 0; j < count; j++) {
+            if (element_dup) element_dup(aliases[j]);
+            copy.count++;
+        }
+        result.value = fwp_map_finish_protected(&copy, &copy_cleanup);
+    }
+    /* The completed output stays protected while owned chunks are destroyed.
+     * The emptied chunk owner remains safe if destruction itself unwinds. */
+    fwp_map_release(&chunks);
+    V output = fwp_value_finish(&result, &result_cleanup);
+#if FWP_UNWIND
+    fwp_cleanup_pop(&chunks_cleanup);
+#endif
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(xs);
+    return output;
+}
+
+/* Own every completed Cartesian-product callback result until its list node
+ * takes it. Borrowed function/input scratch remains rooted and unwinds separately. */
+static size_t fwp_list_ap_count(size_t nf, size_t nx) {
+    size_t maximum = SIZE_MAX / sizeof(V) - 1;
+    if (nf && nx > maximum / nf) fwp_trap("list.ap too large");
+    return nf * nx;
+}
+static V fwp_p_list_ap_owned(V fs, V xs, void (*element_drop)(V), void (*list_drop)(V)) {
+    size_t nf, nx;
+    V *functions = fwp_map_items(fs, &nf);
+    fwp_cleanup functions_cleanup;
+    fwp_scratch_protect(&functions, &functions_cleanup);
+    V *inputs = fwp_map_items(xs, &nx);
+    fwp_cleanup inputs_cleanup;
+    fwp_scratch_protect(&inputs, &inputs_cleanup);
+    size_t count = fwp_list_ap_count(nf, nx);
+    V *out = (V *)fwp_mem_alloc((count + 1) * sizeof(V));
+    fwp_map_owner owner = {out, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
+    for (size_t i = 0; i < nf; i++) {
+        for (size_t j = 0; j < nx; j++) {
+            out[owner.count] = fwp_apply_borrowed(functions[i], 1, &inputs[j]);
+            owner.count++;
+        }
+    }
+    V result = fwp_map_finish_protected(&owner, &cleanup);
+    fwp_scratch_finish(&inputs, &inputs_cleanup);
+    fwp_scratch_finish(&functions, &functions_cleanup);
+    FWP_KEEP_ALIVE(fs);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
+
 /* ---------------------------------------------------------------- strings */
 
 static int fwp_is_space(char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r'; }
@@ -2387,16 +2462,143 @@ static V fwp_p_attempt(V f, V x) {
         return fwp_data(0, 1, &r);
     }
     fwp_handlers = h.prev;
-    fwp_state_len = h.state_depth;
+    fwp_state_restore(h.state_depth);
     V e = h.value;
     return fwp_data(1, 1, &e);
 }
 
+/* Both branches carry one typed owned value. Protect it if result boxing traps. */
+static V fwp_p_attempt_owned(V f, V x, void (*drop_result)(V), void (*drop_error)(V)) {
+    fwp_handler h;
+    h.prev = fwp_handlers;
+    h.state_depth = fwp_state_len;
+    h.cleanup = fwp_cleanups;
+    fwp_handlers = &h;
+    V value; uint32_t tag;
+    if (setjmp(h.jb) == 0) {
+        value = fwp_apply_borrowed(f, 1, &x);
+        tag = 0;
+    } else {
+        fwp_state_restore(h.state_depth);
+        value = h.value;
+        tag = 1;
+    }
+    fwp_handlers = h.prev;
+    fwp_value_owner owner = {value, tag ? drop_error : drop_result};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+    V result = fwp_rc_fresh(fwp_data(tag, 1, &value));
+    FWP_KEEP_ALIVE(f); FWP_KEEP_ALIVE(x);
+    fwp_value_finish(&owner, &cleanup);
+    return result;
+}
+
 static V fwp_p_get(void) { return fwp_state_len ? fwp_state[fwp_state_len - 1] : FWP_UNIT; }
 
-static V fwp_p_put(V s) {
-    if (fwp_state_len) fwp_state[fwp_state_len - 1] = s;
+/* A run-state activation owns its typed value independently of the scanned
+ * buffer. These records live on the task stack; switching tasks saves the head.
+ * Legacy untyped activations keep the shared compatibility convention. */
+static fwp_state_owner *fwp_state_current_owner(void) {
+    fwp_state_owner *owner = fwp_state_owners;
+    while (owner && owner->index + 1 != fwp_state_len) owner = owner->prev;
+    return owner;
+}
+
+static void fwp_state_owner_release(void *arg) {
+    fwp_state_owner *owner = arg;
+    V value = owner->value;
+    owner->value = 0;
+    /* Unlink before dropping captures: a destructor can itself recover a trap. */
+    fwp_state_owners = owner->prev;
+    if (owner->index < fwp_state_len) fwp_state[owner->index] = 0;
+    if (owner->drop && value) owner->drop(value);
+}
+
+static V fwp_p_get_owned(void (*duplicate)(V)) {
+    V value = fwp_p_get();
+    if (duplicate) duplicate(value);
+    return value;
+}
+
+static void fwp_state_install_owned(fwp_state_owner *owner, V value) {
+    V old = owner->value;
+    /* Install the new owner before old-value destruction can unwind. */
+    owner->value = value;
+    fwp_state[owner->index] = value;
+    if (owner->drop && old) owner->drop(old);
+}
+
+static V fwp_p_put_owned(V value, void (*duplicate)(V)) {
+    if (!fwp_state_len) return FWP_UNIT;
+    fwp_state_owner *owner = fwp_state_current_owner();
+    if (owner) {
+        if (owner->duplicate) owner->duplicate(value);
+        fwp_state_install_owned(owner, value);
+    } else {
+        /* Only pointer-bearing monomorphic values enter the legacy fallback. */
+        if (duplicate) fwp_rc_share(value);
+        fwp_state[fwp_state_len - 1] = value;
+    }
     return FWP_UNIT;
+}
+
+static V fwp_p_modify_owned(V function, void (*duplicate)(V), void (*drop)(V)) {
+    V current = fwp_p_get();
+    V result = fwp_apply_borrowed(function, 1, &current);
+    fwp_state_owner *owner = fwp_state_current_owner();
+    if (owner) fwp_state_install_owned(owner, result);
+    else if (fwp_state_len) {
+        if (duplicate) fwp_rc_share(result);
+        fwp_state[fwp_state_len - 1] = result;
+    } else if (drop && result) drop(result);
+    FWP_KEEP_ALIVE(function);
+    return FWP_UNIT;
+}
+
+static V fwp_p_run_state_owned(V initial, V function, V argument,
+        void (*duplicate)(V), void (*drop_state)(V), void (*drop_result)(V)) {
+    size_t depth = fwp_state_len;
+    fwp_handler handler;
+    handler.prev = fwp_handlers;
+    handler.state_depth = depth;
+    handler.cleanup = fwp_cleanups;
+    fwp_state_owner owner = {fwp_state_owners, depth, 0, duplicate, drop_state};
+    fwp_cleanup state_cleanup;
+    /* A failed retain leaves the borrowed initial value with its caller. */
+    if (duplicate) duplicate(initial);
+    owner.value = initial;
+    fwp_state_owners = &owner;
+    fwp_cleanup_push(&state_cleanup, fwp_state_owner_release, &owner);
+    fwp_state_push(initial);
+    fwp_handlers = &handler;
+    if (setjmp(handler.jb) == 0) {
+        V result = fwp_apply_borrowed(function, 1, &argument);
+        fwp_handlers = handler.prev;
+        fwp_value_owner result_owner = {result, drop_result};
+        fwp_cleanup result_cleanup;
+        fwp_value_protect(&result_owner, &result_cleanup);
+        V state = fwp_state_pop();
+        /* Both values remain owned across result-box allocation. */
+        V pair = fwp_rc_fresh(fwp_tuple2(result, state));
+        fwp_value_finish(&result_owner, &result_cleanup);
+        owner.value = 0;
+        fwp_state_owners = owner.prev;
+        fwp_cleanup_pop(&state_cleanup);
+        FWP_KEEP_ALIVE(initial);
+        FWP_KEEP_ALIVE(function);
+        FWP_KEEP_ALIVE(argument);
+        return pair;
+    }
+    /* Failure already unwound the typed owner before invalidating its frame. */
+    fwp_handlers = handler.prev;
+    fwp_state_restore(depth);
+    fwp_fail(handler.value, handler.desc);
+    return 0;
+}
+
+
+static V fwp_p_put(V s) {
+    return fwp_p_put_owned(s, NULL);
 }
 
 static V fwp_p_modify(V f) {
@@ -2417,11 +2619,11 @@ static V fwp_p_run_state(V s, V f, V x) {
     if (setjmp(h.jb) == 0) {
         V r = fwp_apply1(f, x);
         fwp_handlers = h.prev;
-        V st = fwp_state[--fwp_state_len];
+        V st = fwp_state_pop();
         return fwp_tuple2(r, st);
     }
     fwp_handlers = h.prev;
-    fwp_state_len = h.state_depth;
+    fwp_state_restore(h.state_depth);
     fwp_fail(h.value, h.desc);
     return 0;
 }
@@ -2453,6 +2655,43 @@ static V fwp_p_file_close(V h) {
     return FWP_UNIT;
 }
 
+/* Resource ownership is independent of tracing/count metadata. Explicit close
+ * closes the stream; dropping the last value owner also closes it. Unshared
+ * native storage is released after removing finalizers; shared/bump storage
+ * keeps its allocator lifetime. */
+static void fwp_file_dup(V h) {
+    if (!h) return;
+    fwp_file *file = (fwp_file *)(uintptr_t)h;
+    if (!file->refs) fwp_trap("internal: duplicate discarded file");
+    if (file->refs == UINT64_MAX) fwp_trap("reference count overflow");
+    file->refs++;
+}
+static void fwp_file_drop(V h) {
+    if (!h) return;
+    fwp_file *file = (fwp_file *)(uintptr_t)h;
+    if (!file->refs || --file->refs) return;
+    fwp_p_file_close(h);
+#ifdef FWP_LIBRARY
+    fwp_gc_forget_finalizer(file);
+#endif
+#if FWP_GC && !defined(FWP_RESOURCE_NO_FREE)
+    /* Unknown runtime sharing keeps storage under the collector's lifetime. */
+    if (!fwp_rc_last(h)) return;
+    if (fwp_reuse_verify < 0) {
+        const char *e = getenv("FWP_REUSE_VERIFY");
+        fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
+    }
+    if (fwp_reuse_verify) {
+        /* File is a leaf, but its header is not a String header. */
+        file->path[0] = 0;
+        return;
+    }
+    intptr_t before = fwp_gc.budget;
+    fwp_mem_free(file);
+    fwp_gc.freed += (double)(fwp_gc.budget - before);
+#endif
+}
+
 typedef struct { FILE *stream; V handle; } fwp_file_cleanup;
 static void fwp_close_scoped_file(void *arg) {
     fwp_file_cleanup *file = arg;
@@ -2460,20 +2699,34 @@ static void fwp_close_scoped_file(void *arg) {
     else fclose(file->stream); /* allocation failed before a handle existed */
 }
 
+/* Close while the constructor owner is still live, then release its storage. */
+static void fwp_close_owned_scoped_file(void *arg) {
+    fwp_file_cleanup *file = arg;
+    fwp_close_scoped_file(file);
+    V handle = file->handle;
+    file->handle = 0;
+    fwp_file_drop(handle);
+}
+
 static V fwp_file_value(FILE *f, const char *path) {
     fwp_file_cleanup file = {f, 0};
     fwp_cleanup cleanup;
-    fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);
-    fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file));
+    fwp_cleanup_push(&cleanup, fwp_close_owned_scoped_file, &file);
+    size_t len = strlen(path);
+    if (len > SIZE_MAX - sizeof(fwp_file) - 1) fwp_trap("file path too long");
+    /* No heap-valued children: the path belongs to this leaf allocation. */
+    fwp_file *h = (fwp_file *)fwp_alloc_leaf(sizeof(fwp_file) + len + 1);
     h->f = f;
-    h->path = path;
+    h->refs = 1;
+#if FWP_GC
+    /* The header's storage starts unshared; File owners use their own count. */
+    fwp_rc_fresh(PTR(h));
+#endif
     file.handle = PTR(h);
 #ifdef FWP_LIBRARY
     fwp_gc_finalizer(h, fwp_file_final);
 #endif
-    char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);
-    strcpy(p, path);
-    h->path = p;
+    memcpy(h->path, path, len + 1);
     FWP_KEEP_ALIVE(path);
     fwp_cleanup_pop(&cleanup);
     return PTR(h);
@@ -2489,6 +2742,14 @@ static void fwp_file_buffer_cleanup(void *arg) {
     fwp_buf *b = arg;
     free(b->d);
     b->d = 0;
+}
+
+static void fwp_file_text_drop(V value) {
+#ifdef FWP_RESOURCE_NO_FREE
+    fwp_rc_drop(value);
+#else
+    fwp_rc_free_obj(value);
+#endif
 }
 
 /* The temporary buffer belongs to the read, not to the borrowed File. */
@@ -2513,10 +2774,15 @@ static V fwp_p_file_read_all(V h, const fwp_desc *err) {
         fwp_file_buffer_cleanup(&b);
         return fwp_io_error("read", "stream did not contain valid UTF-8", err);
     }
-    V text = buf_to_str(&b);
+    V text = fwp_rc_fresh(buf_to_str(&b));
     b.d = 0;
+    fwp_value_owner text_owner = {text, fwp_file_text_drop};
+    fwp_cleanup text_cleanup;
+    fwp_value_protect(&text_owner, &text_cleanup);
     V result = fwp_tuple2(text, h);
+    fwp_rc_fresh(result);
     FWP_KEEP_ALIVE(h);
+    fwp_value_finish(&text_owner, &text_cleanup);
     fwp_cleanup_pop(&cleanup);
     return result;
 }
@@ -2528,6 +2794,26 @@ static V fwp_p_file_write(V s, V h, const fwp_desc *err) {
     if (f->f && (fwrite(STR(s)->d, 1, STR(s)->len, f->f) != STR(s)->len || fflush(f->f) != 0))
         return fwp_io_error("write", strerror(errno), err);
     return h;
+}
+
+/* Borrowed I/O inputs, owned File aliases in the returned value. Protect the
+ * completed extra reference while I/O/conversion can fail. */
+static V fwp_p_file_write_owned(V s, V h, const fwp_desc *err) {
+    fwp_file_dup(h);
+    fwp_value_owner owner = {h, fwp_file_drop};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+    fwp_p_file_write(s, h, err);
+    return fwp_value_finish(&owner, &cleanup);
+}
+static V fwp_p_file_read_all_owned(V h, const fwp_desc *err) {
+    fwp_file_dup(h);
+    fwp_value_owner owner = {h, fwp_file_drop};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+    V result = fwp_p_file_read_all(h, err);
+    fwp_value_finish(&owner, &cleanup);
+    return result;
 }
 
 static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
@@ -2549,6 +2835,40 @@ static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
         fwp_cleanup_pop(&cleanup);
         fwp_close_scoped_file(&file);
         return OBJ(r)->f[0];
+    }
+    fwp_handlers = hd.prev;
+    /* The failure unwind already closed the file. */
+    fwp_fail(hd.value, hd.desc);
+    return 0;
+}
+
+static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pair)(V), void (*dup_result)(V)) {
+    FILE *f = fopen(STR(path)->d, "r+b");
+    if (!f) f = fopen(STR(path)->d, "w+b");
+    if (!f) return fwp_io_error_path("open", STR(path)->d, err);
+    V h = fwp_file_value(f, STR(path)->d);
+    fwp_file_cleanup file = {f, h};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_close_owned_scoped_file, &file);
+    fwp_handler hd;
+    hd.prev = fwp_handlers;
+    hd.state_depth = fwp_state_len;
+    hd.cleanup = cleanup.prev; /* failure also releases this scoped file */
+    fwp_handlers = &hd;
+    if (setjmp(hd.jb) == 0) {
+        V r = fwp_apply_borrowed(fn, 1, &h);
+        fwp_handlers = hd.prev;
+        fwp_value_owner pair_owner = {r, drop_pair};
+        fwp_cleanup pair_cleanup;
+        fwp_value_protect(&pair_owner, &pair_cleanup);
+        V result = OBJ(r)->f[0];
+        if (dup_result) dup_result(result);
+        fwp_value_finish(&pair_owner, &pair_cleanup);
+        if (drop_pair) drop_pair(r);
+        fwp_cleanup_pop(&cleanup);
+        fwp_close_owned_scoped_file(&file);
+        FWP_KEEP_ALIVE(path); FWP_KEEP_ALIVE(fn);
+        return result;
     }
     fwp_handlers = hd.prev;
     /* The failure unwind already closed the file. */

@@ -144,6 +144,25 @@ main = [discard (), discard ()] | ignore | const "closed" | print
         4,
     ));
     assert_eq!(optimized.stdout, reference.stdout);
+    for opt in ["-O1", "-O2"] {
+        for flags in ["0", "1"] {
+            let exe = dir.0.join(format!("helper{opt}-{flags}"));
+            checked(
+                Command::new(fwp)
+                    .arg("build")
+                    .arg(&src)
+                    .args([opt, "-o"])
+                    .arg(&exe)
+                    .env("FWP_REUSE", flags)
+                    .env("FWP_FREE", flags),
+            );
+            let native = checked(limit_descriptors(
+                Command::new(&exe).env("FWP_GC", "off"),
+                4,
+            ));
+            assert_eq!(native.stdout, reference.stdout);
+        }
+    }
 }
 
 #[test]

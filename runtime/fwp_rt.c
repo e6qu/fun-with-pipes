@@ -100,7 +100,7 @@ typedef struct { uint32_t fn; uint32_t n; V a[]; } fwp_clo;
 typedef struct { uint64_t len; V d[]; } fwp_arr;
 /* map: len entries, keys and values interleaved; sets use values of 0 */
 typedef struct { uint64_t len; V d[]; } fwp_map;
-typedef struct { FILE *f; const char *path; } fwp_file;
+typedef struct { FILE *f; uint64_t refs; char path[]; } fwp_file;
 
 #define OBJ(v) ((fwp_obj *)(uintptr_t)(v))
 #define STR(v) ((fwp_str *)(uintptr_t)(v))
@@ -275,6 +275,14 @@ typedef struct fwp_handler {
 static fwp_handler *fwp_handlers = 0;
 static V *fwp_state = 0;
 static size_t fwp_state_len = 0, fwp_state_cap = 0;
+typedef struct fwp_state_owner {
+    struct fwp_state_owner *prev;
+    size_t index;
+    V value;
+    void (*duplicate)(V);
+    void (*drop)(V);
+} fwp_state_owner;
+static fwp_state_owner *fwp_state_owners = 0;
 
 static FILE *fwp_prog_out; /* where `print` writes (stderr in binary exec mode) */
 
@@ -328,6 +336,19 @@ static void fwp_fail(V value, const fwp_desc *d) {
     fwp_handlers->desc = d;
     fwp_cleanup_unwind(fwp_handlers->cleanup);
     longjmp(fwp_handlers->jb, 1);
+}
+
+/* Unused State slots must not remain conservative roots in this buffer. */
+static void fwp_state_restore(size_t depth) {
+    while (fwp_state_len > depth) fwp_state[--fwp_state_len] = 0;
+    fwp_state_len = depth;
+}
+
+static V fwp_state_pop(void) {
+    V value = fwp_state[fwp_state_len - 1];
+    fwp_state[fwp_state_len - 1] = 0;
+    fwp_state_len--;
+    return value;
 }
 
 static void fwp_state_push(V s) {

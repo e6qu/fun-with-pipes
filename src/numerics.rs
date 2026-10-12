@@ -59,9 +59,49 @@ struct Tape {
 
 static TAPES: Mutex<Vec<Tape>> = Mutex::new(Vec::new());
 
+thread_local! {
+    static TAPE_SCOPES: std::cell::RefCell<Vec<Vec<i64>>> = const {
+        std::cell::RefCell::new(Vec::new())
+    };
+}
+
+struct TapeScope;
+impl Drop for TapeScope {
+    fn drop(&mut self) {
+        let owned = TAPE_SCOPES.with(|scopes| scopes.borrow_mut().pop().unwrap());
+        let mut tapes = TAPES.lock().unwrap();
+        for base in owned {
+            if let Ok(slot) = slot_of(&tapes, base >> 32) {
+                let tape = std::mem::take(&mut tapes[slot]);
+                tapes[slot].gen = tape.gen;
+            }
+        }
+    }
+}
+
+/// Run a synchronous callback with exception-safe ownership of its new tapes.
+pub(crate) fn with_tape_scope<T>(callback: impl FnOnce() -> R<T>) -> R<T> {
+    TAPE_SCOPES.with(|scopes| scopes.borrow_mut().push(Vec::new()));
+    let _scope = TapeScope;
+    callback()
+}
+
+fn forget_scoped_tape(id: i64) {
+    TAPE_SCOPES.with(|scopes| {
+        for owned in scopes.borrow_mut().iter_mut().rev() {
+            if let Some(index) = owned.iter().position(|base| *base >> 32 == id) {
+                owned.swap_remove(index);
+                break;
+            }
+        }
+    });
+}
+
 const USED_OUTSIDE: &str =
     "autodiff: a reverse-mode value was used after the grad that made it returned";
 const MIXED: &str = "autodiff: values of two different grad computations were combined (nested reverse mode is not supported)";
+
+const INVALID_NODE: &str = "autodiff: invalid node index";
 
 /// The slot of a live tape id.
 fn slot_of(tapes: &[Tape], id: i64) -> R<usize> {
@@ -83,7 +123,7 @@ fn tape_new(n: i64) -> R<i64> {
         return trap("autodiff: too many inputs");
     }
     let mut tapes = TAPES.lock().unwrap();
-    let slot = match tapes.iter().position(|t| !t.live) {
+    let slot = match tapes.iter().position(|t| !t.live && t.gen < 32767) {
         Some(s) => s,
         None => {
             if tapes.len() >= 0xffff {
@@ -94,7 +134,7 @@ fn tape_new(n: i64) -> R<i64> {
         }
     };
     let t = &mut tapes[slot];
-    t.gen = t.gen % 32767 + 1;
+    t.gen += 1;
     t.live = true;
     t.leaves = n as usize;
     t.pa = vec![-1; n as usize];
@@ -102,7 +142,13 @@ fn tape_new(n: i64) -> R<i64> {
     t.da = vec![0.0; n as usize];
     t.db = vec![0.0; n as usize];
     let id = ((t.gen as i64) << 16) | (slot as i64 + 1);
-    Ok(id << 32)
+    let base = id << 32;
+    TAPE_SCOPES.with(|scopes| {
+        if let Some(owned) = scopes.borrow_mut().last_mut() {
+            owned.push(base);
+        }
+    });
+    Ok(base)
 }
 
 /// `ad.push (a, da, b, db)`: a node with the parents a and b (-1: none)
@@ -127,6 +173,9 @@ fn push(ra: i64, da: f64, rb: i64, db: f64) -> R<i64> {
     if idx >= i32::MAX as usize {
         return trap("autodiff: the tape is full");
     }
+    if (ra & 0xffff_ffff) as usize >= idx || (rb >= 0 && (rb & 0xffff_ffff) as usize >= idx) {
+        return trap(INVALID_NODE);
+    }
     t.pa.push((ra & 0xffff_ffff) as i32);
     t.da.push(da);
     t.pb.push(if rb < 0 {
@@ -147,6 +196,7 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
     let t = std::mem::take(&mut tapes[slot]);
     tapes[slot].gen = t.gen;
     drop(tapes);
+    forget_scoped_tape(id);
     let mut adj = vec![0.0f64; t.pa.len()];
     for (o, s) in outs.iter().zip(seeds.iter()) {
         if *o < 0 {
@@ -155,7 +205,11 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
         if (*o >> 32) != id {
             return trap(MIXED);
         }
-        adj[(*o & 0xffff_ffff) as usize] += *s;
+        let node = (*o & 0xffff_ffff) as usize;
+        if node >= adj.len() {
+            return trap(INVALID_NODE);
+        }
+        adj[node] += *s;
     }
     for i in (t.leaves..t.pa.len()).rev() {
         let a = adj[i];
@@ -861,5 +915,101 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
         Ok(Some(v)) => Some(Ok(v)),
         Ok(None) => None,
         Err(e) => Some(Err(e)),
+    }
+}
+
+#[cfg(test)]
+mod tape_validation_tests {
+    use super::*;
+    static TAPE_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    fn expect_trap<T>(result: R<T>, expected: &str) {
+        match result {
+            Err(Ctl::Trap(message)) => assert_eq!(message, expected),
+            _ => panic!("expected autodiff trap: {expected}"),
+        }
+    }
+
+    #[test]
+    fn invalid_nodes_preserve_push_state_and_consume_backward_tapes() {
+        let _serial = TAPE_TEST_LOCK.lock().unwrap();
+        let base = tape_new(2).unwrap();
+        let other = tape_new(1).unwrap();
+        for invalid in [base + 2, base | 0xffff_ffff] {
+            expect_trap(push(invalid, 1.0, -1, 0.0), INVALID_NODE);
+            expect_trap(push(base, 1.0, invalid, 1.0), INVALID_NODE);
+            expect_trap(push(-1, 0.0, invalid, 1.0), INVALID_NODE);
+        }
+        // Mixing computations retains precedence over checking node indices.
+        expect_trap(push(base + 2, 1.0, other, 1.0), MIXED);
+        let node = push(base, 4.0, base + 1, 5.0).unwrap();
+        assert_eq!(node, base + 2);
+        assert_eq!(
+            backward(base, &[node, base + 1], &[2.0, 3.0]).unwrap(),
+            [8.0, 13.0]
+        );
+        expect_trap(push(base, 1.0, -1, 0.0), USED_OUTSIDE);
+        expect_trap(backward(other, &[other + 1], &[1.0]), INVALID_NODE);
+        expect_trap(backward(other, &[], &[]), USED_OUTSIDE);
+
+        let base = tape_new(1).unwrap();
+        let other = tape_new(1).unwrap();
+        expect_trap(backward(base, &[other | 0xffff_ffff], &[1.0]), MIXED);
+        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
+        assert_eq!(backward(other, &[other], &[3.0]).unwrap(), [3.0]);
+
+        // Zip semantics ignore unpaired outputs and constant sentinels.
+        let base = tape_new(0).unwrap();
+        assert!(backward(base, &[-1, base | 0xffff_ffff], &[1.0])
+            .unwrap()
+            .is_empty());
+        assert_eq!(push(-1, 1.0, -2, 2.0).unwrap(), -1);
+
+        // Exhaust a generation without resetting its identity to an old token.
+        let slot = ((base >> 32) & 0xffff) as usize - 1;
+        TAPES.lock().unwrap()[slot].gen = 32766;
+        let last = tape_new(0).unwrap();
+        assert_eq!((last >> 32) & 0xffff, (base >> 32) & 0xffff);
+        assert_eq!(last >> 48, 32767);
+        assert!(backward(last, &[], &[]).unwrap().is_empty());
+        let next = tape_new(0).unwrap();
+        assert_ne!((next >> 32) & 0xffff, (last >> 32) & 0xffff);
+        expect_trap(backward(last, &[], &[]), USED_OUTSIDE);
+        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
+        assert!(backward(next, &[], &[]).unwrap().is_empty());
+    }
+    #[test]
+    fn scoped_callbacks_release_only_their_live_tapes() {
+        let _serial = TAPE_TEST_LOCK.lock().unwrap();
+        let mut base = 0;
+        with_tape_scope(|| {
+            base = tape_new(2)?;
+            Ok(())
+        })
+        .unwrap();
+        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
+        expect_trap(
+            with_tape_scope(|| {
+                base = tape_new(2)?;
+                trap::<()>("gradient callback control")
+            }),
+            "gradient callback control",
+        );
+        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
+        with_tape_scope(|| {
+            let outer = tape_new(1)?;
+            let inner = with_tape_scope(|| tape_new(1))?;
+            expect_trap(backward(inner, &[], &[]), USED_OUTSIDE);
+            assert_eq!(backward(outer, &[outer], &[2.0])?, [2.0]);
+            for _ in 0..64 {
+                let current = tape_new(1)?;
+                TAPE_SCOPES.with(|scopes| assert_eq!(scopes.borrow().last().unwrap().len(), 1));
+                backward(current, &[], &[])?;
+                TAPE_SCOPES.with(|scopes| assert!(scopes.borrow().last().unwrap().is_empty()));
+            }
+            Ok(())
+        })
+        .unwrap();
+        TAPE_SCOPES.with(|scopes| assert!(scopes.borrow().is_empty()));
     }
 }

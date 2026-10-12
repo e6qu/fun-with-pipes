@@ -83,8 +83,21 @@ still require Linux `/proc` or `strace`; Darwin-specific regressions in
 `tests/macos.rs` assert that collection is armed and really runs, rather
 than accepting a stress variable with collection disabled.
 
+The prepared resource/network bundle adds an exact-head primitive inventory
+before the regular Linux and ARM/Intel macOS gates. Its standalone Rust reader
+uses the actual ownership module; the Python audit compares declarations with
+the immutable prepared112 baseline and preserves observed rows on failure.
+Run it through the local guard when its limits permit, or on GitHub:
+`python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /tmp/fwp-inventory.json`.
+These files remain prepared until that bundle is accepted. Inventory agreement
+does not substitute for runtime alias/unwind controls or full CI.
+
 ## Rules the code follows
 
+- **Leave encountered code healthier.** Fix discovered bugs and issues even
+  when they are outside the current roadmap item. Preserve semantic regression
+  controls and record validation in the handoff. Group coherent fixes without
+  weakening the required CI gates or changing the roadmap's phase order.
 - **No third-party crates.** fwp depends only on Rust's standard library,
   so everything it needs is written here: HTTP/2, gzip, protobuf, JSON,
   YAML and the rest. The C runtime uses only the C library, pthreads,

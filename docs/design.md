@@ -124,6 +124,12 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   allowing callee effects in a larger ambient context without contaminating
   function-valued argument types. Pipe application, composition and ordinary
   application use this rule; required callback effects remain checked.
+- The prepared row-unifier repair refreshes tails after payload unification,
+  preserving required effects or fields bound by those payloads. Positive and
+  missing-IO State callback controls remain mandatory before acceptance.
+- Prepared callback argument comparison widens only the outer function effects
+  permitted by the parameter. It preserves nested input rows, rejects missing
+  required effects and reports the original value type on mismatches.
 - Tuples are records with numeric labels, and unit is the empty record.
 - Nominal records are distinct from each other but unify structurally with
   open rows, so `.name` accepts both `User {…}` and `{name = "x"}`.
@@ -153,9 +159,12 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   compiler solves `Eq`, `Ord`, `Hash`, `Display`, `Dup`, `Encode` and
   `Decode` structurally. Integer and float literals are classes that fall
   back to `FromInt` and `FromFloat`, so `Dual[F64]` accepts literals.
-- Every arrow carries an effect row. A closed row in a signature is opened
-  when instantiated, which gives subeffecting. Handlers (`attempt`, `try`,
-  `run-state`) remove labels by unification.
+- Every arrow carries an effect row. Signature instantiation opens result
+  spine rows for subeffecting. Actual calls reopen only their own closed row;
+  the prepared repair adds known ambient labels to a temporary open call row
+  so State does not recursively contaminate a stored function type. Existing
+  effect/type snapshots and simple closure State controls must pass before
+  acceptance. Handlers (`attempt`, `try`, `run-state`) remove labels by unification.
 - Only the last arrow of a binding may have effects, so effects happen
   exactly when a call is saturated. Top-level values that are not
   functions must be pure (`main` and tests aside).
@@ -239,6 +248,14 @@ retain elements and transfer them on receive; close preserves queued values.
 Explicit draining breaks the tested counted cycle; automatic unreachable-cycle
 reclamation remains unproved. Other resource boundaries stay prepared.
 
+PR123 accepts library input/result/unload ownership, scoped native and
+interpreter OpenCL teardown, TLS listener/cache/wire/connect cleanup and File
+construction/write/error/resource-frame protections. Fake OpenCL tests verify
+API lifetimes; GPU hardware coverage remains separate. Nine raw-memory primitive
+contracts borrow inputs; ptr.read-string returns an independent counted String.
+Unsigned pointer-width wrapping matches the interpreter and keeps ordinary
+checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
+
 ## Runtime
 
 - In C every value is a 64-bit word. Integers up to 64 bits and floats are
@@ -247,6 +264,13 @@ reclamation remains unproved. Other resource boundaries stay prepared.
 - A closure is a partial application of a known function. Tacit code has
   no free variables, so every function value can be serialized, which is
   how `comptime` results become static data.
+- Native State uses per-task scanned word storage. Prepared cleanup clears
+  inactive slots on return, error recovery and task exit, preserving active
+  suspended values and live aliases. This adds no surface syntax or counted
+  State contract. The separately verified typed State candidate retains values
+  with stack ownership records and typed duplicate/drop functions, saves scope
+  heads across task switches and releases them on failure/cancellation. Its
+  aggregate/escaping-closure cases and final production gates remain pending.
 - A type descriptor per monomorphic type drives equality, ordering,
   hashing, `Display`, text parsing, typed JSON and the binary protocol in
   C. For JSON, nominal records also carry their declaration order and the
@@ -419,7 +443,7 @@ Cleanup IDs are captured after helper generation, which can add definitions.
 Pattern bindings initialize payloads/fields from the current path's scrutinee.
 FWP_FRAME_FIELDS=0 preserves the boxed comparison path.
 
-Prepared match elimination carries nominal constructor-field context into
+Merged match elimination carries nominal constructor-field context into
 effectful discarded temporaries. If elimination cannot recover a safe type,
 it preserves the original typed binding rather than erasing its ownership.
 Inlined record projections similarly preserve the checked base type through
@@ -434,25 +458,24 @@ typed children; progressive retains and completed fields remain protected until
 boxing succeeds. Field reads that can reconstruct records participate in caller
 liveness cleanup. Scalars remain uncounted; full CI per final bundle is required.
 
-Prepared CAF ownership retains a typed cache owner and returns a separate
+Merged CAF ownership retains a typed cache owner and returns a separate
 owner on each call. Initialization retry and reentrant replacement preserve
 callers; executable teardown releases caches after finishing tasks. CAF
 evaluation is a call safe point that protects existing caller owners.
 Inlining treats a zero-argument function as an evaluation, preserving unused
 argument evaluation and trap order rather than duplicating or erasing it.
-Prepared task.spawn retains counted thunks until entry or cancellation.
+Merged task.spawn retains counted thunks until entry or cancellation.
 Fallible stack/scope preparation protects only the extra owner and publishes
-a task after preparation succeeds. Unknown closure metadata retains sharing;
-task results still use the shared graph fallback at this stage.
-Prepared deadline callbacks use the same retained owner through completion
+a task after preparation succeeds. Unknown closure metadata retains sharing.
+Merged deadline callbacks use the same retained owner through completion
 or cancellation and preserve external capture aliases.
-Prepared task.scope borrows its callback and protects its owned result
+Merged task.scope borrows its callback and protects its owned result
 through joining/cancellation checks; unwind cleanup restores handlers and
 scope state and releases scope storage.
-A later prepared task-handle contract owns typed cached results, with
+The merged task-handle contract owns typed cached results, with
 independent scheduler, scope, caller and await references; unknown/shared
 boundaries retain tracing fallback.
-Prepared typed channels own queued elements and transfer their references
+Merged typed channels own queued elements and transfer their references
 into receive results after successful Option allocation. Close preserves
 queued values; unknown sink/runtime boundaries still share, and cycles
 require the explicit lifetime policy described in ownership.md.

@@ -17,6 +17,12 @@ pub enum Argument {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ResultOwnership {
     Shared,
+    /// An owned resource or resource-bearing result prepared by the runtime.
+    OwnedResource,
+    /// Synchronous effect handler owns either callback result or error payload.
+    OwnedAttempt,
+    /// Typed State slots retain their own references and return owned aliases.
+    OwnedState,
     FreshContainer,
     /// A synchronous callback returns a typed owned value.
     OwnedCallback,
@@ -135,6 +141,27 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "get" | "put" => (&[B], ResultOwnership::OwnedState, None, &[]),
+        "modify" => (
+            &[B],
+            ResultOwnership::OwnedState,
+            Some(Callback::Borrowed(0)),
+            &[],
+        ),
+        "run-state" => (
+            &[B, B, B],
+            ResultOwnership::OwnedState,
+            Some(Callback::Borrowed(1)),
+            &[0, 1, 2],
+        ),
+        // Serializers and codecs copy their borrowed inputs into fresh leaves.
+        "json.encode" | "json.write" | "url.encode" | "int.to-hex" | "cli.help" | "zlib.gzip"
+        | "zlib.gzip-chunk" | "zlib.deflate" | "ws.accept" | "ws.deflate" => {
+            (&[B], ResultOwnership::FreshLeaf, None, &[])
+        }
+        "ws.key" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "zlib.gzip-end" | "ws.close-payload" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "ws.frame" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         // Raw address words are not managed owners. String conversion copies;
         // only read-string returns a fresh managed leaf.
         "mem.alloc" | "mem.free" | "mem.string" | "ptr.cast" | "ptr.address" | "ptr.read" => {
@@ -142,11 +169,42 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         }
         "ptr.at" | "ptr.write" => (&[B, B], R, None, &[]),
         "ptr.read-string" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "ad.tape" | "ad.push" => (&[B], ResultOwnership::Shared, None, &[]),
+        "ad.backward" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "task.spawn" => (
             &[B],
             ResultOwnership::OwnedTask,
             Some(Callback::Retained(0)),
             &[0],
+        ),
+        "fail" => (&[B], R, None, &[]),
+        "attempt" => (
+            &[B, B],
+            ResultOwnership::OwnedAttempt,
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
+        "file.open" | "file.create" => (&[B], ResultOwnership::OwnedResource, None, &[]),
+        "file.read-all" => (&[B], ResultOwnership::OwnedResource, None, &[0]),
+        "file.write" => (&[B, B], ResultOwnership::OwnedResource, None, &[1]),
+        "file.close" => (&[B], R, None, &[]),
+        "file.with" => (
+            &[B, B],
+            ResultOwnership::OwnedResource,
+            Some(Callback::Borrowed(1)),
+            &[1],
+        ),
+        "ad.scope2" => (
+            &[B, B, B],
+            ResultOwnership::OwnedCallback,
+            Some(Callback::Borrowed(0)),
+            &[0, 1, 2],
+        ),
+        "ad.scope" => (
+            &[B, B],
+            ResultOwnership::OwnedCallback,
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
         ),
         "task.scope" => (
             &[B],
@@ -197,6 +255,13 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "split" | "string.split-once" | "string.find" | "bytes.find" | "bytes.get" => {
             (&[B, B], ResultOwnership::FreshTree, None, &[])
         }
+        "list.ap" => (&[B, B], ResultOwnership::FreshSpine, None, &[0, 1]),
+        "list.flat-map" => (
+            &[B, B],
+            ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
         "map" => (
             &[B, B],
             ResultOwnership::FreshSpine,
@@ -468,6 +533,16 @@ mod tests {
 
     #[test]
     fn declared_collection_and_text_boundaries_have_consistent_contracts() {
+        let ap = primitive("list.ap").unwrap();
+        assert_eq!(ap.arguments, &[Argument::Borrow, Argument::Borrow]);
+        assert_eq!(ap.result, ResultOwnership::FreshSpine);
+        assert!(ap.callback.is_none());
+        assert_eq!(ap.aliases, &[0, 1]);
+        let flat_map = primitive("list.flat-map").unwrap();
+        assert_eq!(flat_map.arguments, &[Argument::Borrow, Argument::Borrow]);
+        assert_eq!(flat_map.result, ResultOwnership::FreshSpine);
+        assert_eq!(flat_map.callback, Some(Callback::Borrowed(0)));
+        assert_eq!(flat_map.aliases, &[0, 1]);
         for symbol in [
             "channel.make",
             "channel.send",
@@ -491,6 +566,12 @@ mod tests {
         assert!(scope.borrows_callback());
         assert_eq!(scope.argument(0), Argument::Borrow);
         assert_eq!(scope.result, ResultOwnership::OwnedCallback);
+        let ad_scope = primitive("ad.scope").unwrap();
+        assert_eq!(ad_scope.argument(0), Argument::Borrow);
+        assert_eq!(ad_scope.callback, Some(Callback::Borrowed(0)));
+        assert_eq!(ad_scope.result, ResultOwnership::OwnedCallback);
+        assert_eq!(ad_scope.argument(1), Argument::Borrow);
+        assert_eq!(ad_scope.aliases, &[0, 1]);
         let within = primitive("task.within").unwrap();
         assert_eq!(within.argument(1), Argument::Borrow);
         assert_eq!(within.callback, Some(Callback::Retained(1)));

@@ -181,14 +181,20 @@ struct fwp_task {
     fwp_cleanup *cleanups;
     V *st;
     size_t st_len, st_cap;
+    fwp_state_owner *state_owners;
     struct fwp_scope *scope;
     /* a task running C code (gRPC connections and calls): called with 0,
      * then again with 1 if the task was cancelled while running it */
     void (*cfn)(void *arg, int cancelled);
     void *carg;
+    /* Nonallocating, nonthrowing disposal after all inherited-context children finish. */
+    void (*cfinish)(void *arg);
     fwp_cleanup *trap_cleanup;
     jmp_buf *trap_jb;           /* traps recovered here (a served call) */
     void *gctx;                 /* gRPC context, inherited by children */
+#ifdef FWP_GCTX_OWNERS
+    void *gctx_owner;           /* retained original context, even if gctx changes */
+#endif
     /* links */
     fwp_task *next_ready;
     fwp_task *tprev, *tnext;    /* timer list */
@@ -239,6 +245,15 @@ static int64_t fwp_after(V d) {
 }
 
 /* a task is collected once it finished and nothing refers to it */
+#ifdef FWP_GCTX_OWNERS
+static void *(*fwp_gctx_acquire)(void *) = 0;
+static void (*fwp_gctx_release)(void *) = 0;
+static void fwp_gctx_pending_release(void *arg) {
+    void **held = (void **)arg;
+    if (*held) { fwp_gctx_release(*held); *held = 0; }
+}
+#endif
+
 static fwp_task *fwp_task_new(void) { return (fwp_task *)fwp_mem_alloc(sizeof(fwp_task)); }
 
 static fwp_task *fwp_gc_tasks = 0;
@@ -451,7 +466,7 @@ static void fwp_task_drop(V value) {
     t->st = 0;
     t->counted = 0;
     /* Task storage is mutable kind 2, not a record/variant header. */
-    fwp_rc_free_arr(value);
+    fwp_rc_resource_free_arr(value);
 }
 
 /* ----- switching */
@@ -495,6 +510,7 @@ static void fwp_enter(fwp_task *to) {
     fwp_state = to->st;
     fwp_state_len = to->st_len;
     fwp_state_cap = to->st_cap;
+    fwp_state_owners = to->state_owners;
 }
 
 static void fwp_switch(fwp_task *to) {
@@ -505,6 +521,7 @@ static void fwp_switch(fwp_task *to) {
     from->st = fwp_state;
     from->st_len = fwp_state_len;
     from->st_cap = fwp_state_cap;
+    from->state_owners = fwp_state_owners;
     fwp_enter(to);
 #if FWP_GC
     from->gc_sp = fwp_gc_sp();
@@ -729,20 +746,33 @@ static void fwp_task_main(void) {
     } else if (t->cfn) {
         t->unwinding = 1;
         fwp_handlers = 0;
-        fwp_state_len = 0;
+        fwp_state_restore(0);
         t->trap_jb = 0;
         t->trap_cleanup = 0;
         t->cfn(t->carg, 1);
     }
     t->unwinding = 1;
     fwp_handlers = 0;
+    fwp_state_restore(0);
     fwp_join_children();
+    if (t->cfinish) {
+        void (*finish)(void *) = t->cfinish;
+        t->cfinish = 0;
+        finish(t->carg);
+    }
     if (t->owns_thunk) {
         V thunk = t->thunk;
         t->thunk = 0;
         t->owns_thunk = 0;
         fwp_closure_drop(thunk);
     }
+#ifdef FWP_GCTX_OWNERS
+    if (t->gctx_owner) {
+        void *held = t->gctx_owner;
+        t->gctx_owner = 0;
+        fwp_gctx_release(held);
+    }
+#endif
     t->done = 1;
     t->cleanups = 0; /* no cleanup link may outlive its task stack */
     fwp_wake_all(&t->waiters);
@@ -780,6 +810,11 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     t->carg = carg;
     t->deadline = deadline;
     t->gctx = fwp_cur->gctx;
+#ifdef FWP_GCTX_OWNERS
+    void *context_hold = fwp_gctx_acquire ? fwp_gctx_acquire(t->gctx) : 0;
+    fwp_cleanup context_cleanup;
+    if (context_hold) fwp_cleanup_push(&context_cleanup, fwp_gctx_pending_release, &context_hold);
+#endif
     /* Reserve scope storage before allocating the stack. Publish no child
      * or runnable task until all fallible preparation has completed. */
     fwp_scope *s = detached ? 0 : fwp_cur->scope;
@@ -844,6 +879,12 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     t->ctx.uc_stack.ss_size = t->stack_size;
     t->ctx.uc_link = 0;
     makecontext(&t->ctx, fwp_task_main, 0);
+#endif
+#ifdef FWP_GCTX_OWNERS
+    if (context_hold) {
+        t->gctx_owner = context_hold;
+        fwp_cleanup_pop(&context_cleanup);
+    }
 #endif
     if (!detached) {
         t->parent = fwp_cur;
@@ -1030,7 +1071,7 @@ static V fwp_task_scope_impl(V body, int borrowed, void (*drop)(V)) {
         result_owner.value = r;
     } else {
         failed = 1;
-        fwp_state_len = h.state_depth;
+        fwp_state_restore(h.state_depth);
     }
     fwp_handlers = h.prev;
     t->scope = s.prev;
@@ -1105,7 +1146,7 @@ static void fwp_channel_drop(V value) {
     c->len = 0;
     fwp_mem_free(c->buf);
     c->buf = 0;
-    fwp_rc_free_arr(value);
+    fwp_rc_resource_free_arr(value);
 }
 
 static void fwp_chan_grow(fwp_chan *c) {
@@ -1844,6 +1885,7 @@ static void fwp_library_tasks_finish(void) {
     fwp_handlers = 0;
     fwp_state = 0;
     fwp_state_len = fwp_state_cap = 0;
+    fwp_state_owners = 0;
     struct sigaction current;
     if (fwp_saved_sigint && sigaction(SIGINT, 0, &current) == 0 &&
         !(current.sa_flags & SA_SIGINFO) && current.sa_handler == fwp_on_signal)

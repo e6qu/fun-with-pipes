@@ -20,20 +20,101 @@
 /* ------------------------------------------------------------------ tapes */
 
 typedef struct {
+    int32_t head;
+} fwp_tape_scope;
+
+typedef struct {
     uint32_t gen;
     int live;
     int64_t leaves, len, cap;
     int32_t *pa, *pb;
     double *da, *db;
+    fwp_tape_scope *scope;
+    int32_t scope_prev, scope_next;
 } fwp_tape;
 
 static fwp_tape *fwp_tapes = 0;
 static int64_t fwp_ntapes = 0;
 
+/* Slot indices remain stable when the tape registry reallocates. */
+static void fwp_tape_unlink_scope(fwp_tape *t) {
+    fwp_tape_scope *scope = t->scope;
+    if (!scope) return;
+    if (t->scope_prev >= 0) fwp_tapes[t->scope_prev].scope_next = t->scope_next;
+    else scope->head = t->scope_next;
+    if (t->scope_next >= 0) fwp_tapes[t->scope_next].scope_prev = t->scope_prev;
+    t->scope = 0;
+    t->scope_prev = t->scope_next = -1;
+}
+
+static void fwp_tape_scope_release(void *arg) {
+    fwp_tape_scope *scope = (fwp_tape_scope *)arg;
+    while (scope->head >= 0) {
+        fwp_tape *t = &fwp_tapes[scope->head];
+        fwp_tape_unlink_scope(t);
+        t->live = 0;
+        free(t->pa);free(t->pb);free(t->da);free(t->db);
+        t->pa = t->pb = 0;t->da = t->db = 0;
+        t->len = t->cap = t->leaves = 0;
+    }
+}
+
+/* The cleanup chain is already saved/restored by task context switches. */
+static void fwp_tape_link_scope(fwp_tape *t, int32_t slot) {
+    t->scope = 0;
+    t->scope_prev = t->scope_next = -1;
+    for (fwp_cleanup *c = fwp_cleanups; c; c = c->prev) {
+        if (c->release == fwp_tape_scope_release) {
+            fwp_tape_scope *scope = (fwp_tape_scope *)c->arg;
+            t->scope = scope;t->scope_next = scope->head;
+            if (scope->head >= 0) fwp_tapes[scope->head].scope_prev = slot;
+            scope->head = slot;
+            break;
+        }
+    }
+}
+
+static V fwp_ad_scope_apply(V callback, uint32_t argc, const V *args) {
+    fwp_tape_scope scope = {-1};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);
+    V result = fwp_apply_borrowed(callback, argc, args);
+    fwp_cleanup_pop(&cleanup);
+    fwp_tape_scope_release(&scope);
+    FWP_KEEP_ALIVE(callback);
+    FWP_KEEP_ALIVE(args);
+    return result;
+}
+
+static V fwp_p_ad_scope(V callback, V input) {
+    return fwp_ad_scope_apply(callback, 1, &input);
+}
+static V fwp_p_ad_scope2(V callback, V first, V second) {
+    V args[2] = {first, second};
+    return fwp_ad_scope_apply(callback, 2, args);
+}
+
 static const char *FWP_AD_OUTSIDE =
     "autodiff: a reverse-mode value was used after the grad that made it returned";
 static const char *FWP_AD_MIXED =
     "autodiff: values of two different grad computations were combined (nested reverse mode is not supported)";
+
+static const char *FWP_AD_INVALID_NODE = "autodiff: invalid node index";
+
+/* Own detached tape buffers until backward returns or unwinds. */
+typedef struct {
+    int32_t *pa, *pb;
+    double *da, *db, *adj;
+} fwp_tape_buffers;
+
+static void fwp_tape_buffers_release(void *arg) {
+    fwp_tape_buffers *b = (fwp_tape_buffers *)arg;
+    free(b->pa);
+    free(b->pb);
+    free(b->da);
+    free(b->db);
+    free(b->adj);
+}
 
 static void *fwp_k_malloc(size_t n) {
     void *p = malloc(n ? n : 1);
@@ -71,7 +152,7 @@ static V fwp_p_ad_tape(V nv) {
     int64_t n = (int64_t)nv;
     if (n < 0 || n > INT32_MAX) fwp_trap("autodiff: too many inputs");
     int64_t slot = 0;
-    while (slot < fwp_ntapes && fwp_tapes[slot].live) slot++;
+    while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;
     if (slot == fwp_ntapes) {
         if (fwp_ntapes >= 0xffff) fwp_trap("autodiff: too many grad computations at once");
         fwp_tapes = (fwp_tape *)realloc(fwp_tapes, (size_t)(fwp_ntapes + 1) * sizeof(fwp_tape));
@@ -83,7 +164,7 @@ static V fwp_p_ad_tape(V nv) {
         fwp_ntapes++;
     }
     fwp_tape *t = &fwp_tapes[slot];
-    t->gen = t->gen % 32767 + 1;
+    t->gen++;
     t->live = 1;
     t->leaves = n;
     t->len = 0;
@@ -95,6 +176,7 @@ static V fwp_p_ad_tape(V nv) {
         t->db[i] = 0.0;
     }
     t->len = n;
+    fwp_tape_link_scope(t, (int32_t)slot);
     int64_t id = ((int64_t)t->gen << 16) | (slot + 1);
     return (V)(id << 32);
 }
@@ -115,6 +197,8 @@ static V fwp_p_ad_push(V tup) {
     fwp_tape *t = fwp_tape_of(id);
     int64_t idx = t->len;
     if (idx >= INT32_MAX) fwp_trap("autodiff: the tape is full");
+    if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))
+        fwp_trap(FWP_AD_INVALID_NODE);
     fwp_tape_reserve(t, idx + 1);
     t->pa[idx] = (int32_t)(ra & 0xffffffff);
     t->da[idx] = da;
@@ -128,13 +212,20 @@ static V fwp_p_ad_push(V tup) {
 static V fwp_p_ad_backward(V base, V outs, V seeds) {
     int64_t id = (int64_t)base >> 32;
     fwp_tape *t = fwp_tape_of(id);
+    fwp_tape_unlink_scope(t);
     fwp_tape tp = *t;
     t->live = 0;
     t->pa = t->pb = 0;
     t->da = t->db = 0;
     t->len = t->cap = t->leaves = 0;
+    fwp_tape_buffers buffers = {tp.pa, tp.pb, tp.da, tp.db, 0};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tape_buffers_release, &buffers);
     double *adj = (double *)calloc((size_t)(tp.len ? tp.len : 1), sizeof(double));
+    buffers.adj = adj;
     if (!adj) {
+        fwp_cleanup_pop(&cleanup);
+        fwp_tape_buffers_release(&buffers);
         fprintf(stderr, "fwp: out of memory\n");
         exit(102);
     }
@@ -142,10 +233,8 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     for (size_t i = 0; i < m; i++) {
         int64_t o = (int64_t)ARR(outs)->d[i];
         if (o < 0) continue;
-        if ((o >> 32) != id) {
-            free(adj);
-            fwp_trap(FWP_AD_MIXED);
-        }
+        if ((o >> 32) != id) fwp_trap(FWP_AD_MIXED);
+        if ((o & 0xffffffff) >= tp.len) fwp_trap(FWP_AD_INVALID_NODE);
         adj[o & 0xffffffff] += fwp_f64(ARR(seeds)->d[i]);
     }
     for (int64_t i = tp.len - 1; i >= tp.leaves; i--) {
@@ -156,11 +245,8 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     }
     V r = fwp_arr_new((size_t)tp.leaves);
     for (int64_t i = 0; i < tp.leaves; i++) ARR(r)->d[i] = fwp_from_f64(adj[i]);
-    free(adj);
-    free(tp.pa);
-    free(tp.pb);
-    free(tp.da);
-    free(tp.db);
+    fwp_cleanup_pop(&cleanup);
+    fwp_tape_buffers_release(&buffers);
     return r;
 }
 

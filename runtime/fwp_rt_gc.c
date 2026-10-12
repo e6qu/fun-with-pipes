@@ -104,6 +104,92 @@ static void *fwp_mem_realloc(void *p, size_t old, size_t n) {
 static void fwp_mem_free(void *p) { free(p); }
 static void fwp_gc_start(void *top) { (void)top; }
 static void fwp_gc_finalizer(void *obj, void (*fn)(void *)) { (void)obj; (void)fn; }
+static void fwp_gc_forget_finalizer(void *obj) { (void)obj; }
+/* Resource programs need logical aggregate/task ownership even on the bump
+ * heap. Entries track live counted owners; value layouts and reuse stay unchanged.
+ * No counter operation reads arbitrary value words as allocation headers. */
+#ifdef FWP_RESOURCE_OWNERS
+#define FWP_WASM_RC_BUCKETS 4096
+typedef struct fwp_wasm_rc {
+    V value;
+    uint64_t count;
+    struct fwp_wasm_rc *next;
+    uint8_t slot;
+} fwp_wasm_rc;
+static fwp_wasm_rc *fwp_wasm_counts[FWP_WASM_RC_BUCKETS];
+static size_t fwp_wasm_counts_live;
+static fwp_wasm_rc **fwp_wasm_count_link(V value) {
+    uintptr_t hash = (uintptr_t)value >> 4;
+    hash ^= hash >> 13;
+    fwp_wasm_rc **link = &fwp_wasm_counts[hash & (FWP_WASM_RC_BUCKETS - 1)];
+    while (*link && (*link)->value != value) link = &(*link)->next;
+    return link;
+}
+static uint64_t fwp_wasm_count(fwp_wasm_rc *entry) {
+    /* Runtime code can clear/read the compact slot just as on native targets. */
+    if (entry->slot != 255) entry->count = entry->slot;
+    return entry->count;
+}
+static void fwp_wasm_set_count(fwp_wasm_rc *entry, uint64_t count) {
+    entry->count = count;
+    entry->slot = count < 255 ? (uint8_t)count : 255;
+}
+static inline uint8_t *fwp_rc_slot(V value) {
+    if (value < 4096) return NULL;
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    return entry ? &entry->slot : NULL;
+}
+static inline V fwp_rc_fresh(V value) {
+    if (value < 4096) return value;
+    fwp_wasm_rc **link = fwp_wasm_count_link(value);
+    if (!*link) {
+        fwp_wasm_rc *entry = (fwp_wasm_rc *)malloc(sizeof *entry);
+        if (!entry) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+        entry->value = value; entry->next = NULL;
+        *link = entry; fwp_wasm_counts_live++;
+    }
+    fwp_wasm_set_count(*link, 1);
+    return value;
+}
+static inline void fwp_rc_dup(V value) {
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    if (!entry) return;
+    uint64_t count = fwp_wasm_count(entry);
+    if (!count) return;
+    if (count == UINT64_MAX) fwp_trap("reference count overflow");
+    fwp_wasm_set_count(entry, count + 1);
+}
+static inline void fwp_rc_drop(V value) {
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    if (entry && fwp_wasm_count(entry) > 1) fwp_wasm_set_count(entry, entry->count - 1);
+}
+static inline void fwp_rc_share(V value) {
+    fwp_wasm_rc **link = fwp_wasm_count_link(value);
+    if (*link) {
+        fwp_wasm_rc *entry = *link; *link = entry->next;
+        free(entry); fwp_wasm_counts_live--;
+    }
+}
+static inline int fwp_rc_last(V value) {
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    return entry && fwp_wasm_count(entry) == 1;
+}
+static inline int fwp_rc_release_last(V value) {
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    if (!entry || !fwp_wasm_count(entry)) return 0;
+    if (entry->count == 1) return 1;
+    fwp_wasm_set_count(entry, entry->count - 1); return 0;
+}
+/* Logical destruction forgets its count; physical bump storage stays allocated. */
+static inline void fwp_rc_free_obj(V value) { if (fwp_rc_last(value)) fwp_rc_share(value); }
+static inline void fwp_rc_free_arr(V value) { if (fwp_rc_last(value)) fwp_rc_share(value); }
+static inline V fwp_rc_shared(V value) { fwp_rc_share(value); return value; }
+static inline int fwp_rc_unique(V value) { (void)value; return 0; }
+static inline int fwp_rc_unique_mut(V value) { (void)value; return 0; }
+static inline size_t fwp_rc_capacity(V value) { (void)value; return 0; }
+static inline void fwp_rc_poison(V value) { (void)value; }
+static inline int fwp_rc_young(V value) { (void)value; return 0; }
+#else
 /* without the collector's metadata, everything is shared */
 static inline V fwp_rc_fresh(V v) { return v; }
 static inline void fwp_rc_dup(V v) { (void)v; }
@@ -120,6 +206,8 @@ static inline void fwp_rc_poison(V v) { (void)v; }
 static inline V fwp_rc_shared(V v) { return v; }
 static inline int fwp_rc_young(V v) { (void)v; return 0; }
 static inline uint8_t *fwp_rc_slot(V v) { (void)v; return NULL; }
+
+#endif /* FWP_RESOURCE_OWNERS */
 
 #else /* FWP_GC */
 
@@ -702,6 +790,10 @@ static int fwp_reuse_verify = -1;
 /* 1: `v` has one reference and may be written in place; 2: it would be,
  * but is to be copied and poisoned (FWP_REUSE_VERIFY) */
 static inline int fwp_rc_unique(V v) {
+#ifdef FWP_NO_REUSE
+    (void)v; return 0;
+#endif
+
     uint8_t *c = fwp_rc_slot(v);
     if (!c || *c != 1) return 0;
     uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
@@ -720,6 +812,10 @@ static inline int fwp_rc_unique(V v) {
  * by every minor collection); 2: it would be, but is to be copied and
  * poisoned (FWP_REUSE_VERIFY) */
 static inline int fwp_rc_unique_mut(V v) {
+#ifdef FWP_NO_REUSE
+    (void)v; return 0;
+#endif
+
     uint8_t *c = fwp_rc_slot(v);
     if (!c || *c != 1) return 0;
     if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
@@ -970,13 +1066,27 @@ static int fwp_gc_marked(void *p) {
  * of gRPC connections and streams); they must not allocate. */
 static void fwp_gc_finalizer(void *obj, void (*fn)(void *)) {
     if (fwp_gc.nfins == fwp_gc.fins_cap) {
-        fwp_gc.fins_cap = fwp_gc.fins_cap ? fwp_gc.fins_cap * 2 : 64;
-        fwp_gc.fins = (gc_fin *)realloc(fwp_gc.fins, fwp_gc.fins_cap * sizeof(gc_fin));
-        if (!fwp_gc.fins) fwp_gc_oom();
+        if (fwp_gc.fins_cap > SIZE_MAX / sizeof(gc_fin) / 2) fwp_gc_oom();
+        size_t cap = fwp_gc.fins_cap ? fwp_gc.fins_cap * 2 : 64;
+        gc_fin *fins = (gc_fin *)realloc(fwp_gc.fins, cap * sizeof(gc_fin));
+        if (!fins) fwp_gc_oom();
+        /* Commit growth only after allocation succeeds. */
+        fwp_gc.fins = fins;
+        fwp_gc.fins_cap = cap;
     }
     fwp_gc.fins[fwp_gc.nfins].obj = obj;
     fwp_gc.fins[fwp_gc.nfins].fn = fn;
     fwp_gc.nfins++;
+}
+
+/* Explicit destruction must remove weak finalizer registrations before storage
+ * reuse. No allocation or callback occurs during removal. */
+static void fwp_gc_forget_finalizer(void *obj) {
+    for (size_t i = 0; i < fwp_gc.nfins;) {
+        if (fwp_gc.fins[i].obj == obj)
+            fwp_gc.fins[i] = fwp_gc.fins[--fwp_gc.nfins];
+        else i++;
+    }
 }
 
 static void fwp_gc_finalize(void) {
@@ -1306,6 +1416,24 @@ static void fwp_static_report(void) {
 
 #endif /* FWP_GC */
 
+/* A resource parent must finish its logical lifetime even when object storage
+ * is deliberately retained. On the bump heap this also disposes counter metadata;
+ * native disabled-free behavior continues to leave object storage untouched. */
+static inline void fwp_rc_resource_free_obj(V value) {
+#if FWP_GC && defined(FWP_RESOURCE_NO_FREE)
+    fwp_rc_drop(value);
+#else
+    fwp_rc_free_obj(value);
+#endif
+}
+static inline void fwp_rc_resource_free_arr(V value) {
+#if FWP_GC && defined(FWP_RESOURCE_NO_FREE)
+    fwp_rc_drop(value);
+#else
+    fwp_rc_free_arr(value);
+#endif
+}
+
 /* A reuse token owns only its emptied outer cell. Clear the ownership slot
  * first, so nested unwind registrations observing it cannot release it twice. */
 static void fwp_rc_cleanup_cell(void *arg) {
@@ -1377,6 +1505,17 @@ static void fwp_closure_drop_push(fwp_closure_drop_work *work, V f) {
     work->items[work->len++] = f;
 }
 
+/* A recovered allocation/type trap must not leave a pointer into this
+ * invocation's dead C stack. Pending unreachable values remain traceable;
+ * destroying a capture is not retried after its destructor has trapped. */
+static void fwp_closure_drop_release(void *arg) {
+    fwp_closure_drop_work *work = arg;
+    fwp_closure_drop_set(NULL);
+    if (work->items != work->local) free(work->items);
+    work->items = work->local;
+    work->len = 0;
+}
+
 static void fwp_closure_drop(V f) {
     if (!fwp_rc_release_last(f)) return;
     fwp_closure_drop_work *active = fwp_closure_drop_get();
@@ -1388,6 +1527,8 @@ static void fwp_closure_drop(V f) {
     work.items = work.local;
     work.len = 0;
     work.cap = sizeof work.local / sizeof *work.local;
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_closure_drop_release, &work);
     fwp_closure_drop_set(&work);
     fwp_closure_drop_push(&work, f);
     while (work.len) {
@@ -1396,8 +1537,8 @@ static void fwp_closure_drop(V f) {
         if (!owned) fwp_trap("internal: owned closure without capture types");
         owned->captures(next, 0);
     }
-    fwp_closure_drop_set(NULL);
-    if (work.items != work.local) free(work.items);
+    fwp_cleanup_pop(&cleanup);
+    fwp_closure_drop_release(&work);
 }
 
 #ifndef FWP_UNWIND

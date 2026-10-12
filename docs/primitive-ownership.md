@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #122. Arrays, maps and sets own typed elements.
+The tables describe main through PR #123. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -100,6 +100,13 @@ prepared-source classification, not main acceptance or a tracing-free guarantee.
 Counts and scope are recorded in
 [history](roadmap-history.md#portable-finite-ownership-inventory-2026-10-11).
 
+Final integration38179558348 verifies375 declarations,365 symbols,40 aliases,
+168 contracts,19 IR combinators,11 flat signatures and177 review declarations
+representing167 symbols in the PR124 candidate. It includes internal ad.scope
+and ad.scope2, raw-memory, AD, list, typed State and14 codec contracts. Final
+production gates and merged-source classification remain required. These counts
+classify boundaries and do not establish tracing-free eligibility.
+
 Unknown primitive, foreign and remote boundaries keep the explicit shared
 fallback in [src/ownership.rs](../src/ownership.rs). A successful result or a
 known descriptor does not establish ownership of every reconstructed node.
@@ -110,6 +117,8 @@ known descriptor does not establish ownership of every reconstructed node.
 | Descriptor-based text/binary decode | Normal scratch cleanup does not make returned trees counted; fresh nodes, aliases and partial construction require typed review |
 | Remote values and memoized decoding | Cached decoded results may have several readers; preserve a cache owner before returning independently owned aliases |
 | Foreign values and retained callbacks | Explicit sharing protects unknown retention; ownership requires a verified host/runtime lifetime and teardown contract |
+| list.flat-map and list.ap | Generic runtime application and list reconstruction retain the compatibility path; owned callback results, temporary storage and copied spines need explicit contracts before tracing-free eligibility |
+| State handlers | The PR124 candidate owns typed get/put/modify/run-state values and preserves per-task scope chains; focused nonlocal-exit and escaping-capture controls pass, while full production acceptance remains required |
 
 Source review of the same prepared head separates three concrete cases:
 
@@ -130,6 +139,33 @@ These are source-reviewed compatibility policies, not new runtime tests or
 verified deterministic reclamation. Keep them in the finite phase 2 exit review;
 changing a boundary requires interpreter/native, alias, partial-failure and
 retention/teardown evidence before removing sharing.
+
+The resource/network candidate will carry a baseline-pinned declaration audit
+in its regular Linux and ARM/Intel macOS jobs. It reads the actual shared
+contract module, checks the candidate commit identity and records all compiler,
+runtime and library source hashes. Expected changes are explicit; unknown
+declarations remain visible in the observed report even when the audit fails.
+The integrated candidate audit passes in finalization38163941948; its regular
+production gates and actual merged-source exit review remain required. A passing declaration audit establishes
+inventory consistency, not runtime retention, exceptional cleanup or tracing-free
+eligibility. Those still require the controls and lifetime policies above.
+
+The combined list.ap/list.flat-map candidate supplies borrowed inputs, owned
+synchronous callback results and counted spines, with scratch/result-prefix/
+partial-spine unwind controls. Flat-map copies retain typed element aliases and
+release the original callback chunks. Both repairs pass focused Linux/ARM/Intel evidence38160607296; final bundle
+gates remain required. The same candidate clears inactive
+State buffer words after pop, depth restoration and task exit; collector-scan,
+alias/error and real scheduler controls pass the same focused matrix. Clearing dead roots
+does not count or destroy live State values. Candidate typed State scope controls now pass; legacy/unmodeled fallbacks remain
+on the tracing compatibility path. See the handoff for candidate identities.
+
+Current list callback and typed State candidates have focused retention and
+cleanup evidence described above. The earlier main68f source observations are
+archived in [history](roadmap-history.md#historical-list-and-state-source-observations).
+Legacy/unmodeled states, reconstruction and unknown runtime callbacks still
+require explicit fallback classification. Preserve callback evaluation order
+and task/error/trap behavior when extending ownership.
 
 Keep these boundaries on tracing compatibility until their contracts and cleanup
 are proved. Phase2 records coverage and remaining fallback requirements; phase6
@@ -203,8 +239,12 @@ Merged PR102 owns fresh typed result wrappers from task.await, task.within and
 Channel receives. Wrappers retain pointer-bearing payload owners; scalar words
 do not select reference destructors. task.deadline borrows its typed argument
 and retains the returned alias instead of forcing it into runtime sharing.
-Retained task thunks and scheduler/queue lifetimes remain later preparations;
-these contracts do not establish complete ARC or tracing-free execution.
+PR122 also retains spawn/deadline captures through entry, completion or
+cancellation and protects scope results through joining and unwind. Counted
+task handles own typed cached results; repeated awaits return separate owners.
+Typed channels retain queued elements and transfer them on receive; close
+preserves the queue. These contracts do not establish automatic cycle
+reclamation, complete ARC or tracing-free execution.
 
 ## Compiled closures and synchronous callbacks
 
@@ -263,11 +303,11 @@ passed all six production gates and the documentation audit.
 
 ## Prepared refinements
 
-Bundle54–73 also prepares raw-memory contracts: address words borrow without
+PR123 accepts raw-memory contracts: address words borrow without
 managed counting; mem.string copies a borrowed managed String; ptr.read-string
 returns a fresh counted managed String independent of the raw buffer. Buffers
 from mem.alloc/mem.string require manual mem.free. These are locally checked
-candidate contracts, pending full production CI and merge. Numeric width and
+accepted contracts after all exact-head production gates. Numeric width and
 WebAssembly limitations remain in [ownership](ownership.md#phase-2-exit-gates).
 
 The remaining contracts below are prepared, with exact heads and immutable
@@ -279,31 +319,10 @@ prepared rows and acceptance evidence are in history.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 54 | C exports evaluate results once, release copied wrappers and preserve library-owned string pointers for the host | Bundle CI; conversion failure, nullable pointers, cached calls and host lifetimes |
-| 55 | C library strings/records are copied into owned inputs; partial conversion protects earlier arguments and fields until transfer | Bundle CI; invalid inputs, allocation/callee traps, scalar/pointer ABI and lengthless Bytes rejection |
-| 56 | Native library unload drains tasks, releases caches/runtime regions and restores host signal handlers; static archives clean at exit | Bundle CI; actual reload, finalizer order, descriptors, mappings and pthread cleanup metadata |
-| 57 | Native OpenCL initialization/teardown owns the loader handle, context and queue with ordered release on failure and exit | Bundle CI; fake API controls establish ownership, not real device execution |
-| 58 | Staged interpreter OpenCL owners release partial initialization before caching a failure; successful cache remains process-lived | Bundle CI; raw native/interpreter failure diagnostics and fake API lifetime controls |
-| 59 | TLS server context and ALPN owners survive listener stop and raw accepted-session transfer; last session releases them | Bundle CI; real OpenSSL failures, engine agreement and full TLS stress suites |
-| 60 | Library unload finalizes owned File/socket/HTTP2 descriptors and TLS sessions/caches without implicit shutdown traffic | Bundle CI; actual reload, explicit-close idempotence, host peers and cleanup omission controls |
-| 61 | gRPC service listener owners protect descriptors/TLS contexts through preparation and cancellation while accepted sessions retain protocol state | Bundle CI; source gRPC/TLS behavior and precise listener cleanup controls |
-| 62 | TLS client-cache publication preserves old entries and releases partial context/name owners on allocation failure; retry succeeds | Bundle CI; source TLS behavior, allocation controls and cached identity |
-| 63 | ALPN packing borrows list elements without collector scratch, checks wire length and allocation, and closes a newly connected socket on failure | Bundle CI; source TLS behavior, bounds and allocation/descriptor omission controls |
-| 64 | TCP preparation owns resolver results and pending descriptors through cancellation; TLS connection wrappers own sockets and SSL handshakes until transfer | Bundle CI; cancellation at each preparation boundary, refusal and cleanup omission controls |
-| 65 | Compatible complete worker calls transfer record fields directly; typed aliases and trap cleanup preserve ownership, with boxed partial/dynamic captures | Bundle CI; emitted box removal, interpreter agreement and field cleanup |
-| 66 | TLS peer subjects release acquired certificates, BIOs and native copy buffers on preparation failure or language String copy trap | Bundle CI; real handshakes, retry, Rust metadata agreement and omission controls |
-| 67 | TLS protocol String allocation keeps its owning connection live while reading SSL-owned bytes | Bundle CI; forced major trace, actual collection, session lifetime and missing-fence control |
-| 68 | Ownership probes pass valid GC metadata outputs; timer regressions exercise the merged join/drain/sort fixture under deliberate wake-order overtaking | Bundle CI; raw interpreter, preemption, stress and cleanup controls |
-| 69 | Rebuilt nested loop records remain flat; original owners, progressive retains and completed fields survive failed whole-result reconstruction | Bundle CI; alias matrices, scalar bits, retain/allocation traps and omission controls |
-| 70 | File construction owns raw streams before handle allocation and managed handles before path/finalizer preparation; failures close once and clear stale streams | Bundle CI; direct/scoped create/open, allocation/callback failures and finalization controls |
-| 71 | Native File writes flush stdio before returning so later descriptor reads see interpreter-equivalent bytes and flush errors preserve the borrowed handle | Bundle CI; immediate visibility, short-write/flush errors and omitted-flush controls |
-| 72 | File reads protect temporary buffers and owned streams, report read/write errors, and validate UTF-8 only for text; arbitrary byte reads remain binary | Bundle CI; raw interpreter errors, binary/text kinds, injected cleanup controls |
-| 73 | Original resource frames are anchored before optimization and remain observable through inlining; fusion cannot interleave their cleanup | Bundle CI; parameter/local/result/error lifetimes and pure-pipeline fusion control |
 | 74 | File logical alias counts live in the header independently of GC metadata; borrowed IO returns separately owned aliases and protects them during failures | Bundle CI; wide counts/overflow, GC-off close, IO traps and omission controls |
 | 75 | Mandatory resource ownership releases File aliases at original frame boundaries even when ordinary reuse/freeing is disabled | Bundle CI; descriptor-bound discard, preserved parameter lifetimes, aliases and omitted-frame-drop controls |
 | 76 | Scoped File callbacks return separately owned result aliases; task/loop results preserve File owners while disabled ordinary freeing still retains child storage | Bundle CI; raw interpreter/scoped/task/loop outputs, lost-owner and storage-free controls |
 | 77 | Bump-heap resource aggregates use logical count metadata and drop typed File children; count metadata releases while physical value storage remains | Bundle CI; required actual WASI fstat, wide counts/overflow and scalar-bit safety; host C is separate evidence |
-| 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Bundle CI; escapes, cancellation and actual host behavior |
 | 78 | Disabled-free aggregates/tasks/channels dispose logical metadata and File children while physical bump storage remains | Bundle CI; O1/O2 omission controls and required actual WASI in both free modes |
 | 79 | Eligible field-only original record holders retain typed children without a parent box; boxed holders retain the parent | Bundle CI; original lifetime, partial-retain unwind and parent-box count control |
 | 80 | File handle, count and inline path share one aligned leaf allocation; checked size includes terminator | Bundle CI; display/I/O agreement, one allocation versus two and constructor rollback |

@@ -47,8 +47,9 @@ allocations before counting is needed.
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
 | Arrays, maps, sets | Counted where supported; unique updates in place | More precise borrowing/results, typed storage and views |
 | Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
-| Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, temporary contexts and exceptional cleanup |
-| Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
+| Escaping closures | Compiled dynamic calls own heap closures and typed captures; selected synchronous callbacks borrow | Unmodeled retained callbacks, temporary contexts and exceptional cleanup |
+| Tasks and channels | Counted handles, retained task captures and typed channel queues | Broader runtime boundaries and explicit cycle lifetimes |
+| Networking and external callbacks | Selected C resources own storage; unmodeled value boundaries share | Resource bundle acceptance, retained value ownership and teardown |
 | AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
 
 Native executables still need a generational conservative collector for shared
@@ -125,11 +126,12 @@ requirements until phase 6 proves eligibility for execution without collection.
 | Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
-The prepared source 112 declaration review separates 134 explicit contracts,
-19 combinators lowered to ordinary owned IR functions, 12 flat concrete scalar
-signatures and 208 declarations requiring monomorphic/runtime review. These are
-373 declarations resolving to363 runtime symbols after40 explicit aliases,
-not a count of shared heap objects or ownership gaps.
+The PR124 final integration38179558348 verifies375 declarations resolving to365
+runtime symbols after40 aliases:168 explicit contracts,19 ordinary IR combinators,
+11 flat scalar signatures and177 review declarations representing167 symbols.
+This includes typed State, internal ad.scope/ad.scope2 and14 fresh codec leaves.
+These counts classify boundaries rather than heap objects or bugs. Full production
+acceptance is recorded in [the handoff](development-state.md).
 Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
 when no proven borrowing contract applies; scalar words remain uncounted.
 Reconstructed decode/parse values and retained network contexts can therefore
@@ -137,20 +139,17 @@ still require tracing even when their temporary C buffers reclaim deterministica
 Classify these conservative requirements explicitly before phase 3; phase 6 must
 prove eligibility separately. External AD/FFI state has its own lifetime contract.
 
-The nine raw-memory declarations need a separate review: mem.alloc/mem.string
-allocate C buffers released by mem.free; mem.string copies its input. Raw pointer
-casts, address arithmetic and memcpy-based numeric reads/writes do not establish
-managed-value ownership. ptr.read-string copies into a managed String. Verify
-borrowed input and fresh result contracts before claiming immediate reclamation.
-Compare pointer arithmetic and numeric widths with the interpreter, including
-boundary arithmetic without dereferencing addresses and WebAssembly pointer width.
-The existing raw interpreter reproducibly panics on a large I16 element offset;
-native code uses signed overflow-prone arithmetic. A separate pointer-width
-wrapping repair passes boundary/native/sanitizer controls on Linux and both
-macOS architectures; final bundle acceptance is pending. Bundle54–73 also
-prepares borrowed raw-memory contracts and counted ptr.read-string copies,
-with copy independence and last-owner native release controls.
-It does not establish F16/128-bit, WebAssembly or raw-buffer lifetime coverage.
+PR123 accepts borrowed arguments for all nine raw-memory declarations.
+mem.alloc/mem.string allocate raw C buffers released explicitly by mem.free;
+mem.string copies its input without changing managed input ownership.
+ptr.read-string makes an independent counted managed String. Native copy,
+last-owner release, omitted-sharing and omitted-fresh-owner controls pass along
+with raw interpreter agreement. Pointer arithmetic wraps at the native pointer
+width, with matching interpreter/native boundary checks and UBSan controls on
+Linux and both macOS architectures. Ordinary arithmetic remains checked.
+This acceptance does not establish F16/128-bit, WebAssembly pointer widths or
+automatic raw-buffer lifetime coverage. Unsafe raw reads/writes still require
+valid addresses supplied by the program.
 
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
 and reuse verification, with allocation/live-memory evidence for reclamation.
@@ -263,7 +262,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #122 includes the following contracts. Detailed primitive modes
+Main through PR #123 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -299,8 +298,11 @@ and measurements are in [history](roadmap-history.md).
   and immutable updates. Synchronous callbacks borrow inputs and adopt results;
   typed destruction releases children and storage. General unwind remains prepared.
 - Task result/deadline boundaries own fresh typed result wrappers and retain
-  aliases without treating scalar words as pointers. Retained task thunks,
-  scheduler handles and queue lifetimes remain later preparations.
+  aliases without treating scalar words as pointers. Spawn/deadline thunks retain
+  captures through entry, completion or cancellation, with preparation rollback.
+  Counted task handles own cached results; each await returns a separate owner.
+  Typed channels own queued elements and transfer them on receive. Closing
+  preserves queued values; unproved unreachable cycles still require tracing.
 - Eligible old counted storage is reclaimed at last release. Verification
   clears freed child words so stale conservative roots cannot retain reused cells;
   newly allocated cells become young. Shared graphs still require tracing.
@@ -349,11 +351,14 @@ in [the handoff](development-state.md), rather than a second priority list here.
 
 | Area | Prepared contract | Acceptance still required |
 |---|---|---|
-| Containers and callbacks | Typed elements, retained results, owning runtime boundaries and unwind cleanup | Bundle CI; aliases, traps and cancellation |
-| Aggregates and compiler temporaries | Typed constructors, reconstruction, worker/loop/variant conversion and CAF ownership | Bundle CI; ambiguous nominal contexts and nested holders |
-| Tasks, channels, libraries and devices | Owned handles/queues/caches, teardown, retained callbacks and library roots | Bundle CI; shared graph/cycle policy and actual device evidence |
+| Loop and resource aggregates | Remaining reconstruction/context protections and original resource holders | Bundle CI; partial retains, traps and nested holders |
+| Libraries and devices | Input/result/unload ownership, resource teardown and OpenCL loader lifetimes | Bundle CI; host aliases and actual device evidence |
+| Networking and retained contexts | TLS/HTTP2/gRPC owners, cancellation, caches and context restoration | Bundle CI; metadata roots, callback lifetimes and protocol behavior |
 | Files and original frames | Logical ownership, borrowed IO, original scope anchors and deterministic close | Bundle CI; all escaping/error/shared boundaries |
 | File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Bundle CI; shared/stale handles and actual WASI behavior |
+| Autodiff ownership | Scoped numeric buffers, validated/retired tokens and counted gradient arrays | Callback return/error/cancellation, nested scopes, GC/reuse and raw/native controls; equivalent steady-state allocation counts/bytes must not increase |
+| Applicative and flat-map callbacks | Borrowed inputs, owned results/chunks, retained copied aliases and counted spines; separate scratch/unwind owners | Raw/native aliases and order, callback trap/cancellation, partial spine and size controls; focused and full bundle gates |
+| State backing storage | Clear inactive scanned words on pop, handler restoration and task exit; preserve suspended active states | Actual collector scans, live aliases, nested failures, gRPC recovery and real task exit/cancellation; typed State ownership remains separate |
 | WASM resources | Logical aggregate/task counts and disposal metadata | Actual-WASI full gates; physical bump storage remains allocated |
 | Frame representation | Typed record fields and variant structs, per-path pattern initialization | Bundle CI; nested holders and partial-retain traps |
 

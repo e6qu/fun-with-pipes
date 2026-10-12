@@ -19,6 +19,8 @@ jobs:
       RUST_TEST_THREADS: 2
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -27,6 +29,22 @@ jobs:
           brew install openssl@3
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Generated standard-library docs preflight
+        run: |
+          CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
+          env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
+      - name: Exact-head primitive contract inventory
+        env:
+          FWP_INVENTORY_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/ownership-inventory"
+          rustc --version > "$RUNNER_TEMP/ownership-inventory/rustc.txt"
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output "$RUNNER_TEMP/ownership-inventory/candidate.json" 2>&1 | tee "$RUNNER_TEMP/ownership-inventory/audit.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ownership-inventory-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/ownership-inventory/
       - name: fmt
         run: cargo fmt --all -- --check
       - name: clippy
@@ -60,19 +78,37 @@ jobs:
       RUST_TEST_THREADS: 2
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
       - name: OpenSSL 3
         run: |
           brew install openssl@3
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Generated standard-library docs preflight
+        run: |
+          CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
+          env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: Full GC stress and verification golden suite
         run: cargo test --test gc golden_programs_under_gc_stress -- --exact --nocapture
+      - name: Preserve failed GC stress binaries, C and statuses
+        if: failure()
+        run: |
+          mkdir -p "$RUNNER_TEMP/gc-golden-failures"
+          find "${TMPDIR:-/tmp}" -maxdepth 1 -type f -name 'fwp-golden-gc-*' -exec cp {} "$RUNNER_TEMP/gc-golden-failures/" ";"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: gc-golden-failures-${{ matrix.runner }}
+          path: ${{ runner.temp }}/gc-golden-failures/
 
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -87,6 +123,22 @@ jobs:
         run: sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user musl-tools
       - name: binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)
         run: npm install -g binaryen
+      - name: Generated standard-library docs preflight
+        run: |
+          CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
+          env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
+      - name: Exact-head primitive contract inventory
+        env:
+          FWP_INVENTORY_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/ownership-inventory"
+          rustc --version > "$RUNNER_TEMP/ownership-inventory/rustc.txt"
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output "$RUNNER_TEMP/ownership-inventory/candidate.json" 2>&1 | tee "$RUNNER_TEMP/ownership-inventory/audit.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ownership-inventory-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/ownership-inventory/
       - name: fmt
         run: cargo fmt --all -- --check
       - name: clippy
@@ -94,6 +146,8 @@ jobs:
       - name: clippy (WebAssembly build)
         run: cargo clippy --target wasm32-wasip1 -- -D warnings
       - name: test
+        env:
+          FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"
         run: cargo test --all-targets --no-fail-fast
       - name: Preserve failed native golden binaries and C
         if: failure()
@@ -110,8 +164,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
       - name: OpenSSL headers (TLS)
         run: sudo apt-get update && sudo apt-get install -y libssl-dev
+      - name: Generated standard-library docs preflight
+        run: |
+          CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
+          env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: benchmarks against C and Rust (docs/benchmarks.md)
         run: cargo test --release --test bench -- --ignored --nocapture

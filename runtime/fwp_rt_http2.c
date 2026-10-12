@@ -255,8 +255,11 @@ static V fwp_p_http2_request(V call) {
     char *peer = k->c->ssl ? fwp_tls_peer_subject(k->c->ssl) : 0;
     V pv = FWP_NONE;
     if (peer) {
+        fwp_cleanup peer_cleanup;
+        fwp_cleanup_push(&peer_cleanup, fwp_tls_subject_free, peer);
         pv = fwp_some(fwp_cstr(peer));
-        free(peer);
+        fwp_cleanup_pop(&peer_cleanup);
+        fwp_tls_subject_free(peer);
     }
     const char *m = h2_get(h, ":method"), *p = h2_get(h, ":path");
     V f[5] = {fwp_cstr(m ? m : ""), fwp_cstr(p ? p : ""), hs, fwp_cstr(k->c->authority), pv};
@@ -271,12 +274,15 @@ static V w_err_code(int64_t code) {
 static V fwp_p_http2_body(V max, V timeout, V call) {
     g_call *k = WCALL(call);
     int64_t mx = (int64_t)max;
+    if (mx < 0) mx = 0;
     int64_t until = fwp_after(timeout);
     g_stream *s = k->s;
     for (;;) {
         if ((int64_t)s->data.len > mx) return w_err_code(413);
         if (s->remote_end) {
             V b = fwp_str_new((const char *)s->data.d, s->data.len);
+            /* Body bytes belong to the stream's malloc buffer, not the GC heap. */
+            FWP_KEEP_ALIVE(call);
             return fwp_data(0, 1, &b);
         }
         if (s->reset || k->c->dead) return w_err_code(0);
