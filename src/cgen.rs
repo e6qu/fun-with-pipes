@@ -775,9 +775,8 @@ impl Gen<'_> {
     }
 }
 
-/// Most fields of a record passed or returned as a C struct (two words
-/// come back in registers, more in the caller's frame, which the C ABI
-/// provides).
+/// Most fields of a record passed or returned as a C struct. The target
+/// C ABI determines register classes and caller-provided result storage.
 const MAX_UNBOXED: usize = 8;
 
 /// Most fields of a record returned as a struct whatever its tails: a
@@ -821,7 +820,11 @@ fn abi_of(prog: &Program, f: &Func) -> Option<Abi> {
         })
         .collect();
     let ret = small_record(prog, f.ty.params(f.arity as usize).1);
-    (ret.is_some() || params.iter().any(Option::is_some)).then_some(Abi {
+    let numeric = f.locals[..f.arity as usize]
+        .iter()
+        .any(|t| NativeNumber::of(t).is_some())
+        || NativeNumber::of(f.ty.params(f.arity as usize).1).is_some();
+    (numeric || ret.is_some() || params.iter().any(Option::is_some)).then_some(Abi {
         params,
         ret,
         vret: None,
@@ -976,19 +979,136 @@ fn variant_uses(e: &Expr, l: Local, returned: bool) -> bool {
     }
 }
 
+/// Native scalar types are confined to direct workers. Boxed values, runtime
+/// callbacks and external interfaces keep their established V representation.
+#[derive(Clone, Copy)]
+enum NativeNumber {
+    Signed(u8),
+    Unsigned(u8),
+    F32,
+    F64,
+}
+
+impl NativeNumber {
+    fn of(t: &MT) -> Option<Self> {
+        if std::env::var("FWP_TYPED_ABI").is_ok_and(|v| v == "0") {
+            return None;
+        }
+        let MT::Con(name, _) = t else { return None };
+        match name.as_str() {
+            "std::I8" => Some(Self::Signed(8)),
+            "std::I16" => Some(Self::Signed(16)),
+            "std::I32" => Some(Self::Signed(32)),
+            "std::I64" => Some(Self::Signed(64)),
+            "std::U8" => Some(Self::Unsigned(8)),
+            "std::U16" => Some(Self::Unsigned(16)),
+            "std::U32" => Some(Self::Unsigned(32)),
+            "std::U64" => Some(Self::Unsigned(64)),
+            "std::F32" => Some(Self::F32),
+            "std::F64" => Some(Self::F64),
+            _ => None,
+        }
+    }
+
+    fn c_type(self) -> String {
+        match self {
+            Self::Signed(n) => format!("int{n}_t"),
+            Self::Unsigned(n) => format!("uint{n}_t"),
+            Self::F32 => "float".into(),
+            Self::F64 => "double".into(),
+        }
+    }
+
+    fn decode_word(self, v: &str) -> String {
+        match self {
+            Self::F32 => format!("fwp_f32({v})"),
+            Self::F64 => format!("fwp_f64({v})"),
+            _ => format!("({})({v})", self.c_type()),
+        }
+    }
+
+    fn to_word(self, v: &str) -> String {
+        match self {
+            Self::F32 => format!("fwp_from_f32({v})"),
+            Self::F64 => format!("fwp_from_f64({v})"),
+            Self::Signed(_) => format!("(V)(int64_t)({v})"),
+            Self::Unsigned(_) => format!("(V)({v})"),
+        }
+    }
+}
+
 impl Abi {
-    fn sig(&self, id: FuncId) -> String {
-        let mut ps = Vec::new();
+    fn param_numbers(&self, prog: &Program, id: FuncId) -> Vec<Option<NativeNumber>> {
+        let f = &prog.funcs[id];
+        self.params
+            .iter()
+            .enumerate()
+            .flat_map(|(i, p)| match p {
+                Some(_) => record_fields(&prog.shapes, &f.locals[i])
+                    .expect("record ABI parameter")
+                    .iter()
+                    .map(|(_, t)| NativeNumber::of(t))
+                    .collect::<Vec<_>>(),
+                None => vec![NativeNumber::of(&f.locals[i])],
+            })
+            .collect()
+    }
+
+    fn result_numbers(&self, prog: &Program, id: FuncId) -> Vec<Option<NativeNumber>> {
+        let t = prog.funcs[id].ty.params(prog.funcs[id].arity as usize).1;
+        record_fields(&prog.shapes, t)
+            .expect("record ABI result")
+            .iter()
+            .map(|(_, t)| NativeNumber::of(t))
+            .collect()
+    }
+
+    fn args_decode_words(&self, prog: &Program, id: FuncId, words: Vec<String>) -> Vec<String> {
+        words
+            .into_iter()
+            .zip(self.param_numbers(prog, id))
+            .map(|(v, n)| n.map_or_else(|| v.clone(), |n| n.decode_word(&v)))
+            .collect()
+    }
+
+    fn result_words(&self, prog: &Program, id: FuncId, result: &str) -> Vec<String> {
+        self.result_numbers(prog, id)
+            .into_iter()
+            .enumerate()
+            .map(|(i, n)| {
+                let v = format!("{result}.f{i}");
+                n.map_or_else(|| v.clone(), |n| n.to_word(&v))
+            })
+            .collect()
+    }
+
+    fn scalar_result(&self, prog: &Program, id: FuncId) -> Option<NativeNumber> {
+        let f = &prog.funcs[id];
+        NativeNumber::of(f.ty.params(f.arity as usize).1)
+    }
+
+    fn sig(&self, prog: &Program, id: FuncId) -> String {
+        let mut names = Vec::new();
         for (i, p) in self.params.iter().enumerate() {
             match p {
-                Some(n) => ps.extend((0..*n).map(|k| format!("V l{}_{}", i, k))),
-                None => ps.push(format!("V l{}", i)),
+                Some(n) => names.extend((0..*n).map(|k| format!("l{i}_{k}"))),
+                None => names.push(format!("l{i}")),
             }
         }
+        let ps: Vec<_> = names
+            .into_iter()
+            .zip(self.param_numbers(prog, id))
+            .map(|(name, n)| match n {
+                Some(n) => format!("{} a{name}", n.c_type()),
+                None => format!("V {name}"),
+            })
+            .collect();
         let ret = match (self.ret, self.vret) {
-            (Some(n), _) => format!("fwp_r{}", n),
-            (None, Some(m)) => format!("fwp_u{}", m),
-            (None, None) => "V".into(),
+            (Some(_), _) => format!("fwp_wr{id}"),
+            (None, Some(m)) => format!("fwp_u{m}"),
+            (None, None) => self
+                .scalar_result(prog, id)
+                .map_or_else(|| "V".into(), NativeNumber::c_type),
         };
         format!("static {} w{}({})", ret, id, ps.join(", "))
     }
@@ -1522,13 +1642,16 @@ impl<'p> Gen<'p> {
         let container = matches!(mt, MT::Con(n, _) if crate::rc::is_container(n));
         if container {
             let mut elements = String::new();
+            if matches!(mt, MT::Con(name, _) if name == "std::Array") {
+                elements.push_str("        if (fwp_array_is_view(v)) { V owner = fwp_array_owner(v); fwp_rc_free_arr(v); v = owner; continue; }\n");
+            }
             if let MT::Con(name, types) = mt {
                 if name == "std::Array"
                     && types.len() == 1
                     && crate::rc::needs_rc(&self.prog.shapes, &types[0])
                 {
                     let child = self.drop_id(&types[0]);
-                    elements = format!("        for (uint64_t i = 0; i < ARR(v)->len; i++) fwp_drop{child}(ARR(v)->d[i]);\n");
+                    elements.push_str(&format!("        for (uint64_t i = 0; i < fwp_array_len(v); i++) fwp_drop{child}(ARR(v)->d[i]);\n"));
                 }
             }
             if let MT::Con(name, types) = mt {
@@ -1879,8 +2002,16 @@ impl<'p> Gen<'p> {
             }
             Value::Array(items) => {
                 let parts: Vec<String> = items.iter().map(|f| self.const_expr(f)).collect();
+                let kind = match items.first() {
+                    Some(Value::I8(_)) => "K_I8", Some(Value::U8(_)) => "K_U8",
+                    Some(Value::I16(_)) => "K_I16", Some(Value::U16(_)) => "K_U16",
+                    Some(Value::I32(_)) => "K_I32", Some(Value::U32(_)) => "K_U32",
+                    Some(Value::I64(_)) => "K_I64", Some(Value::U64(_)) => "K_U64",
+                    Some(Value::F32(_)) => "K_F32", Some(Value::F64(_)) => "K_F64",
+                    _ => "K_OPAQUE",
+                };
                 format!(
-                    "fwp_p_array_from_list(fwp_list_from((V[]){{{}}}, {}))",
+                    "fwp_array_from_words((V[]){{{}}}, {}, &(const fwp_desc){{.kind = {kind}}})",
                     if parts.is_empty() {
                         "0".into()
                     } else {
@@ -2387,7 +2518,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 None => out.push(self.arg(g, j, a)),
             }
         }
-        out
+        abi.args_decode_words(self.g.prog, g, out)
     }
 
     /// In a loop's step, a field of the state kept as its own fields: its
@@ -2446,10 +2577,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.tail_tokens(self.tail_calls.contains(&(e as *const Expr)));
                 let t = self.fresh();
                 let node = self.begin_call(e as *const Expr);
-                self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
+                self.line(&format!("fwp_wr{id} {t} = w{id}({});", xs.join(", ")));
                 self.end_call(node);
                 self.stack_args_finish(outer);
-                (0..n).map(|k| format!("{}.f[{}]", t, k)).collect()
+                abi.result_words(self.g.prog, *id, &t)
             }
             Expr::Let(x, v, b)
                 if !self.resource_slots.contains_key(x)
@@ -4356,16 +4487,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 Some(n) => {
                     let t = self.fresh();
                     let node = self.begin_call(key);
-                    self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
+                    self.line(&format!("fwp_wr{id} {t} = w{id}({});", xs.join(", ")));
                     self.end_call(node);
                     // a record compiled code owns, like any it builds
-                    let r = format!("fwp_record({}, {}.f)", n, t);
+                    let values = abi.result_words(self.g.prog, id, &t);
+                    let r = format!("fwp_record({}, {})", n, Self::array(&values));
                     let ty = self.ret_type(id);
                     let fields: Vec<_> = record_fields(&self.g.prog.shapes, &ty)
                         .expect("record ABI result")
                         .iter()
                         .enumerate()
-                        .map(|(i, (_, ty))| (format!("{t}.f[{i}]"), ty.clone()))
+                        .map(|(i, (_, ty))| (values[i].clone(), ty.clone()))
                         .collect();
                     let remaining = self.begin_call(key);
                     let pending = self.begin_values(&fields);
@@ -4388,7 +4520,13 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         self.end_call(remaining);
                         result
                     }
-                    None => self.bind_call(key, format!("w{}({})", id, xs.join(", "))),
+                    None => {
+                        let call = format!("w{}({})", id, xs.join(", "));
+                        let value = abi
+                            .scalar_result(self.g.prog, id)
+                            .map_or_else(|| call.clone(), |n| n.to_word(&call));
+                        self.bind_call(key, value)
+                    }
                 },
             };
         }
@@ -4826,6 +4964,27 @@ impl<'p> Gen<'p> {
         let (rk, rname, rw) = nk(&result);
         let sc = scalar(&result);
         let sp = scalar(&p(0));
+        if sym == "array.length" {
+            return Ok("return (V)(int64_t)fwp_array_len(l0);".into());
+        }
+        if matches!(sym, "array.from-list" | "array.to-list" | "array.get" | "array.set" |
+            "array.push" | "array.make" | "array.generate" | "array.map" | "array.fold" |
+            "array.slice" | "array.append" | "array.sort") {
+            let array = if matches!(sym, "array.from-list" | "array.make" | "array.generate" | "array.map") {
+                &result
+            } else {
+                params.last().expect("array primitive input")
+            };
+            let MT::Con(_, types) = array else { return Err(format!("array primitive `{sym}` has no element type")); };
+            let element = types.first().ok_or_else(|| format!("array primitive `{sym}` has no element type"))?;
+            let mut args: Vec<_> = (0..func.arity).map(|i| format!("l{i}")).collect();
+            args.push(self.desc(element));
+            if sym == "array.map" {
+                let MT::Con(_, input) = &params[1] else { return Err("array.map input has no element type".into()); };
+                args.push(self.desc(&input[0]));
+            }
+            return Ok(format!("return fwp_p_{}_with_elem({});", sym.replace(['.', '-'], "_"), args.join(", ")));
+        }
         let s = match sym {
             "prim.add" | "prim.sub" | "prim.mul" | "prim.div" | "prim.rem" if sc.is_some() => {
                 sc.unwrap().arith(sym, &Self::cstr(&rname))
@@ -4956,7 +5115,7 @@ impl<'p> Gen<'p> {
             ),
             "trits.pack" => "return fwp_p_trits_pack(l0);".into(),
             "trits.unpack" => "return fwp_p_trits_unpack(l0, l1);".into(),
-            "simd.splat" => format!("return fwp_p_simd_splat(l0, {});", vec_shape(&result).0),
+            "simd.splat" => format!("return fwp_p_simd_splat(l0, {}, {});", vec_shape(&result).0, self.desc(&vec_shape(&result).1)),
             "simd.from-array" => format!(
                 "return fwp_p_simd_from_array(l0, {});",
                 vec_shape(&elem(&result, 0)).0
@@ -4972,18 +5131,20 @@ impl<'p> Gen<'p> {
                     _ => "6",
                 };
                 format!(
-                    "return fwp_p_simd_op({}, {}, l1, l0, {}, {});",
+                    "return fwp_p_simd_op({}, {}, l1, l0, {}, {}, {});",
                     k,
                     op,
                     Self::cstr(&name),
-                    w
+                    w,
+                    self.desc(&vec_shape(&p(0)).1)
                 )
             }
             "simd.sum" => format!(
-                "return fwp_p_simd_sum({}, l0, {}, {});",
+                "return fwp_p_simd_sum({}, l0, {}, {}, {});",
                 rk,
                 Self::cstr(&rname),
-                rw
+                rw,
+                self.desc(&vec_shape(&p(0)).1)
             ),
             "wrapping.add" | "wrapping.sub" | "wrapping.mul" => {
                 format!("return fwp_wrapping({}, {}, l1, l0);", rk, op_code(sym))
@@ -6291,6 +6452,24 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                 if sym == "array.sort" {
                                     args.push(self.desc(element.as_ref().unwrap()));
                                 }
+                                if sym != "array.sort" {
+                                    let ty = if let Some(ty) = element.as_ref() {
+                                        ty.clone()
+                                    } else {
+                                        let array = if matches!(sym.as_str(), "array.generate" | "array.map") {
+                                            func.ty.params(func.arity as usize).1
+                                        } else {
+                                            &func.locals[func.arity as usize - 1]
+                                        };
+                                        let MT::Con(_, types) = array else { return Err("typed array element missing".into()); };
+                                        types[0].clone()
+                                    };
+                                    args.push(self.desc(&ty));
+                                }
+                                if sym == "array.map" {
+                                    let MT::Con(_, input) = &func.locals[1] else { return Err("typed array.map input missing".into()); };
+                                    args.push(self.desc(&input[0]));
+                                }
                                 s = format!(
                                     "return fwp_p_{}_typed({});",
                                     sym.replace(['.', '-'], "_"),
@@ -6524,7 +6703,24 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
     /// record result.
     fn worker(&mut self, id: FuncId, abi: &Abi, e: &Expr) -> String {
         let f = &self.prog.funcs[id];
-        let mut out = format!("/* {} : {} */\n{} {{\n", f.name, f.ty, abi.sig(id));
+        let mut out = format!(
+            "/* {} : {} */\n{} {{\n",
+            f.name,
+            f.ty,
+            abi.sig(self.prog, id)
+        );
+        let mut names = Vec::new();
+        for (i, p) in abi.params.iter().enumerate() {
+            match p {
+                Some(n) => names.extend((0..*n).map(|k| format!("l{i}_{k}"))),
+                None => names.push(format!("l{i}")),
+            }
+        }
+        for (name, n) in names.into_iter().zip(abi.param_numbers(self.prog, id)) {
+            if let Some(n) = n {
+                let _ = writeln!(out, "    V {name} = {};", n.to_word(&format!("a{name}")));
+            }
+        }
         for i in f.arity..f.nlocals() {
             let _ = writeln!(out, "    V l{} = 0;", i);
         }
@@ -6561,14 +6757,23 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         let ret = match (abi.ret, abi.vret) {
             (Some(n), _) => {
                 let fs = fg.expr_fields(e, n);
-                format!("(fwp_r{}){{{{{}}}}}", n, fs.join(", "))
+                let values: Vec<_> = fs
+                    .into_iter()
+                    .zip(abi.result_numbers(fg.g.prog, id))
+                    .map(|(v, n)| n.map_or_else(|| v.clone(), |n| n.decode_word(&v)))
+                    .collect();
+                format!("(fwp_wr{id}){{{}}}", values.join(", "))
             }
             (None, Some(m)) => {
                 let ty = fg.ret_type(id);
                 let (tag, fs) = fg.expr_variant(e, m, &ty);
                 format!("(fwp_u{}){{{}, {{{}}}}}", m, tag, fs.join(", "))
             }
-            (None, None) => fg.expr(e),
+            (None, None) => {
+                let v = fg.expr(e);
+                abi.scalar_result(fg.g.prog, id)
+                    .map_or_else(|| v.clone(), |n| n.decode_word(&v))
+            }
         };
         out.push_str(&fg.out);
         let _ = writeln!(out, "    return {};\n}}", ret);
@@ -6581,6 +6786,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 None => args.push(format!("l{}", i)),
             }
         }
+        let args = abi.args_decode_words(self.prog, id, args);
         let call = format!("w{}({})", id, args.join(", "));
         // The wrapper keeps boxed arguments, while the worker consumes
         // duplicated fields and other arguments. Protect originals before
@@ -6656,11 +6862,12 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         let body = match (abi.ret, abi.vret) {
             (Some(n), _) => {
                 let ty = f.ty.params(f.arity as usize).1.clone();
+                let values = abi.result_words(self.prog, id, "r");
                 let fields: Vec<_> = record_fields(&self.prog.shapes, &ty)
                     .expect("record ABI result")
                     .iter()
                     .enumerate()
-                    .map(|(i, (_, ty))| (format!("r.f[{i}]"), ty.clone()))
+                    .map(|(i, (_, ty))| (values[i].clone(), ty.clone()))
                     .collect();
                 let protect = self.protect_values(&fields, "pending_result", "boxing_cleanup");
                 let finish = if protect.is_empty() {
@@ -6668,8 +6875,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 } else {
                     "fwp_cleanup_pop(&boxing_cleanup);"
                 };
-                format!("{pre}fwp_r{n} r = {call}; {post}{protect} V result = {}; {finish}return result;",
-                    self.fresh(format!("fwp_record({n}, r.f)")))
+                format!("{pre}fwp_wr{id} r = {call}; {post}{protect} V result = {}; {finish}return result;",
+                    self.fresh(format!("fwp_record({n}, {})", FnGen::array(&values))))
             }
             (None, Some(m)) => {
                 let f = &self.prog.funcs[id];
@@ -6680,7 +6887,12 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     pre, m, call, post, k
                 )
             }
-            (None, None) => format!("{}V r = {}; {}return r;", pre, call, post),
+            (None, None) => {
+                let value = abi
+                    .scalar_result(self.prog, id)
+                    .map_or_else(|| call.clone(), |n| n.to_word(&call));
+                format!("{pre}V r = {value}; {post}return r;")
+            }
         };
         let _ = writeln!(
             out,
@@ -7843,6 +8055,8 @@ static const fwp_exec_spec exec_spec{i} = {{
         out.push_str("#define FWP_LIBRARY 1\n");
     }
     let _ = writeln!(out, "#define FWP_UNWIND {}", u8::from(g.unwind));
+    let packed = std::env::var("FWP_PACKED_ARRAYS").map_or(true, |v| v != "0");
+    let _ = writeln!(out, "#define FWP_PACKED_ARRAYS {}", u8::from(packed));
     if !free_enabled() {
         out.push_str("#define FWP_RESOURCE_NO_FREE 1\n");
     }
@@ -7950,13 +8164,29 @@ static const fwp_exec_spec exec_spec{i} = {{
         out.push_str(c);
         out.push('\n');
     }
-    // records returned in registers, and the workers that return them
+    // C aggregate worker results; the target ABI chooses their register classes.
     for n in 1..=MAX_UNBOXED {
         let _ = writeln!(out, "typedef struct {{ V f[{}]; }} fwp_r{};", n, n);
     }
     for (id, abi) in g.abis.iter().enumerate() {
+        if let Some(abi) = abi.as_ref().filter(|a| live[id] && a.ret.is_some()) {
+            let fields: Vec<_> = abi
+                .result_numbers(prog, id)
+                .into_iter()
+                .enumerate()
+                .map(|(i, n)| {
+                    format!(
+                        "{} f{i};",
+                        n.map_or_else(|| "V".into(), NativeNumber::c_type)
+                    )
+                })
+                .collect();
+            let _ = writeln!(out, "typedef struct {{ {} }} fwp_wr{id};", fields.join(" "));
+        }
+    }
+    for (id, abi) in g.abis.iter().enumerate() {
         if let Some(abi) = abi.as_ref().filter(|_| live[id]) {
-            let _ = writeln!(out, "{};", abi.sig(id));
+            let _ = writeln!(out, "{};", abi.sig(prog, id));
         }
     }
     // prototypes

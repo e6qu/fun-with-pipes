@@ -866,7 +866,7 @@ static void fwp_rc_free_arr(V v) {
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
     }
     if (fwp_reuse_verify) {
-        ARR(v)->len = 0;
+        memset((void *)(uintptr_t)v, 0, sizeof(uint64_t));
         return;
     }
     intptr_t before = fwp_gc.budget;

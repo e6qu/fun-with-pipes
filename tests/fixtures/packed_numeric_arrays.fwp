@@ -1,0 +1,32 @@
+# Numeric slices, immutable updates, signed narrow values and structural bridges.
+export views8 : Array[I8] -> (Array[I8], Array[I8], Option[Array[I8]], Array[I8], Array[I8])
+views8 = make { 0 = id, 1 = array.slice 1 2, 2 = array.set 1 12i8,
+    3 = array.push 7i8, 4 = array.sort }
+read8 : String -> Result[Array[I8], String]
+read8 = json.read
+read32 : String -> Result[Array[F32], String]
+read32 = json.read
+v4 : Array[F32] -> Option[Vec[4, F32]]
+v4 = simd.from-array
+main = [
+    [-128i8, -1i8, 0i8, 127i8] | array.from-list | views8 | echo,
+    [255u8, 0u8, 1u8] | array.from-list | array.slice 0 2 | array.to-list | echo,
+    [-32768i16, -1i16, 0i16, 32767i16] | array.from-list | array.slice 1 3 | array.slice 1 1 | array.to-list | echo,
+    [65535u16, 0u16, 1u16] | array.from-list | array.sort | array.to-list | echo,
+    [-2147483648i32, -1i32, 0i32, 2147483647i32] | array.from-list | array.slice 1 2 | array.to-list | echo,
+    [4294967295u32, 0u32, 1u32] | array.from-list | array.push 3u32 | array.get 3 | echo,
+    [1.25f32, -0.0f32, -2.5f32, 7.0f32] | array.from-list | array.slice 0 4 | v4
+        | option.map (simd.add (simd.splat 0.0f32) | simd.to-array | array.to-list) | echo,
+    [1.25f32, -0.0f32, -2.5f32] | array.from-list | array.slice 1 2 | both json.write hash | echo,
+    "[-128,-1,0,127]" | read8 | result.map (array.slice 1 2 | array.to-list) | echo,
+    "[1.25,-0.0,-2.5]" | read32 | result.map (array.slice 1 2 | array.to-list) | echo,
+    7 | flip array.generate (the-i32 | add 2i32) | array.slice 1 3 | array.to-list | echo,
+    [1i8, 2i8, 3i8] | array.from-list | array.slice 1 1 | array.append ([4i8, 5i8] | array.from-list) | array.to-list | echo,
+    [1i8, 2i8] | array.from-list | array.slice 99 1 | array.push 3i8 | array.to-list | echo,
+    [1i8, 2i8] | array.from-list | array.slice 1 -1 | array.length | echo,
+    [1i8, 2i8] | array.from-list | array.map (int.to-float | the-f32) | array.to-list | echo,
+] | ignore
+the-i32 : I64 -> I32
+the-i32 = int.convert | option.unwrap-or 0i32
+the-f32 : F32 -> F32
+the-f32 = id

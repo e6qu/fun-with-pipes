@@ -461,14 +461,14 @@ static V fwp_p_trits_unpack(V nv, V bs) {
 static V fwp_simd_wrap(V arr) { return fwp_record(1, &arr); }
 #define LANES(v) ARR(OBJ(v)->f[0])
 
-static V fwp_p_simd_splat(V x, size_t n) {
-    V a = fwp_arr_new(n);
-    for (size_t i = 0; i < n; i++) ARR(a)->d[i] = x;
+static V fwp_p_simd_splat(V x, size_t n, const fwp_desc *elem) {
+    V a = fwp_array_new_packed(n, elem);
+    for (size_t i = 0; i < n; i++) fwp_array_store(a, i, x, elem);
     return fwp_simd_wrap(a);
 }
 
 static V fwp_p_simd_from_array(V a, size_t n) {
-    if (ARR(a)->len != n) return FWP_NONE;
+    if (fwp_array_len(a) != n) return FWP_NONE;
     return fwp_some(fwp_simd_wrap(a));
 }
 
@@ -480,41 +480,40 @@ static int fwp_num_lt(int k, V a, V b) {
 }
 
 /* op: OP_ADD/OP_SUB/OP_MUL/OP_DIV, 5 = min, 6 = max; `subj` op `arg` */
-static V fwp_p_simd_op(int k, int op, V subj, V arg, const char *name, int w) {
+static V fwp_p_simd_op(int k, int op, V subj, V arg, const char *name, int w, const fwp_desc *elem) {
     fwp_arr *xs = LANES(subj), *ys = LANES(arg);
-    size_t n = xs->len < ys->len ? xs->len : ys->len;
+    size_t n = fwp_array_len(PTR(xs)) < fwp_array_len(PTR(ys)) ? fwp_array_len(PTR(xs)) : fwp_array_len(PTR(ys));
     int fl = k == K_F32 || k == K_F64;
-    V r = fwp_arr_new(n);
-    V *out = ARR(r)->d;
+    V r = fwp_array_new_packed(n, elem);
     if (k == K_F64 && op <= OP_DIV) {
         for (size_t i = 0; i < n; i++) {
-            double x = fwp_f64(xs->d[i]), y = fwp_f64(ys->d[i]), z;
+            double x = fwp_f64(fwp_array_load(PTR(xs), i, elem)), y = fwp_f64(fwp_array_load(PTR(ys), i, elem)), z;
             switch (op) {
             case OP_ADD: z = x + y; break;
             case OP_SUB: z = x - y; break;
             case OP_MUL: z = x * y; break;
             default: z = x / y;
             }
-            out[i] = fwp_from_f64(z);
+            fwp_array_store(r, i, fwp_from_f64(z), elem);
         }
         return fwp_simd_wrap(r);
     }
     for (size_t i = 0; i < n; i++) {
-        V x = xs->d[i], y = ys->d[i];
-        if (op == 5) out[i] = fwp_num_lt(k, y, x) ? y : x;
-        else if (op == 6) out[i] = fwp_num_lt(k, x, y) ? y : x;
-        else if (!fl && op != OP_DIV) out[i] = fwp_wrapping(k, op, x, y);
-        else out[i] = fwp_arith(k, op, x, y, name, w);
+        V x = fwp_array_load(PTR(xs), i, elem), y = fwp_array_load(PTR(ys), i, elem);
+        if (op == 5) fwp_array_store(r, i, fwp_num_lt(k, y, x) ? y : x, elem);
+        else if (op == 6) fwp_array_store(r, i, fwp_num_lt(k, x, y) ? y : x, elem);
+        else if (!fl && op != OP_DIV) fwp_array_store(r, i, fwp_wrapping(k, op, x, y), elem);
+        else fwp_array_store(r, i, fwp_arith(k, op, x, y, name, w), elem);
     }
     return fwp_simd_wrap(r);
 }
 
-static V fwp_p_simd_sum(int k, V v, const char *name, int w) {
+static V fwp_p_simd_sum(int k, V v, const char *name, int w, const fwp_desc *elem) {
     fwp_arr *xs = LANES(v);
-    if (xs->len == 0) return fwp_from_i128(k, 0, name, w);
+    if (fwp_array_len(PTR(xs)) == 0) return fwp_from_i128(k, 0, name, w);
     int fl = k == K_F32 || k == K_F64;
-    V acc = xs->d[0];
-    for (size_t i = 1; i < xs->len; i++)
-        acc = fl ? fwp_arith(k, OP_ADD, acc, xs->d[i], name, w) : fwp_wrapping(k, OP_ADD, acc, xs->d[i]);
+    V acc = fwp_array_load(PTR(xs), 0, elem);
+    for (size_t i = 1; i < fwp_array_len(PTR(xs)); i++)
+        acc = fl ? fwp_arith(k, OP_ADD, acc, fwp_array_load(PTR(xs), i, elem), name, w) : fwp_wrapping(k, OP_ADD, acc, fwp_array_load(PTR(xs), i, elem));
     return acc;
 }

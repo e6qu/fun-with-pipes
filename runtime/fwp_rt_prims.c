@@ -1624,176 +1624,358 @@ static V fwp_p_array_sort(V a, const fwp_desc *elem) {
     return r;
 }
 
+/* Descriptor-directed immutable boundaries when counted reuse is disabled. */
+static V fwp_array_from_words(const V *words, size_t n, const fwp_desc *elem) {
+    V r = fwp_array_new_packed(n, elem);
+    for (size_t i=0;i<n;i++) fwp_array_store(r,i,words[i],elem);
+    FWP_KEEP_ALIVE(words); return r;
+}
+static V fwp_p_array_from_list_with_elem(V xs, const fwp_desc *elem) {
+    V source=xs, r=fwp_array_new_packed(fwp_list_len(xs),elem);
+    for(size_t i=0;xs;i++,xs=OBJ(xs)->f[1]) fwp_array_store(r,i,OBJ(xs)->f[0],elem);
+    FWP_KEEP_ALIVE(source);return r;
+}
+static V fwp_p_array_to_list_with_elem(V a,const fwp_desc *elem) {
+    V r=0;for(size_t i=fwp_array_len(a);i;i--)r=fwp_cons(fwp_array_load(a,i-1,elem),r);
+    FWP_KEEP_ALIVE(a);return r;
+}
+static V fwp_p_array_get_with_elem(V i,V a,const fwp_desc *elem) {
+    if((int64_t)i<0 || (uint64_t)i>=fwp_array_len(a))return FWP_NONE;
+    V r=fwp_some(fwp_array_load(a,(size_t)i,elem));FWP_KEEP_ALIVE(a);return r;
+}
+static V fwp_array_copy_with_elem(V a,size_t extra,const fwp_desc *elem) {
+    size_t n=fwp_array_len(a);if(extra>SIZE_MAX-n)fwp_trap("array too large");
+    V r=fwp_array_new_packed(n+extra,elem);
+    for(size_t i=0;i<n;i++)fwp_array_store(r,i,fwp_array_load(a,i,elem),elem);
+    FWP_KEEP_ALIVE(a);return r;
+}
+static V fwp_p_array_set_with_elem(V i,V x,V a,const fwp_desc *elem) {
+    if((int64_t)i<0 || (uint64_t)i>=fwp_array_len(a))return FWP_NONE;
+    V r=fwp_array_copy_with_elem(a,0,elem);fwp_array_store(r,(size_t)i,x,elem);
+    V result=fwp_some(r);FWP_KEEP_ALIVE(x);return result;
+}
+static V fwp_p_array_push_with_elem(V x,V a,const fwp_desc *elem) {
+    size_t n=fwp_array_len(a);V r=fwp_array_copy_with_elem(a,1,elem);
+    fwp_array_store(r,n,x,elem);FWP_KEEP_ALIVE(x);return r;
+}
+static V fwp_p_array_make_with_elem(V n,V x,const fwp_desc *elem) {
+    size_t k=fwp_count_arg(n);V r=fwp_array_new_packed(k,elem);
+    for(size_t i=0;i<k;i++)fwp_array_store(r,i,x,elem);
+    FWP_KEEP_ALIVE(x);return r;
+}
+static V fwp_p_array_generate_with_elem(V n,V f,const fwp_desc *elem) {
+    size_t k=fwp_count_arg(n);V r=fwp_array_new_packed(k,elem);
+    for(size_t i=0;i<k;i++)fwp_array_store(r,i,fwp_apply1(f,(V)i),elem);
+    FWP_KEEP_ALIVE(f);return r;
+}
+static V fwp_p_array_map_with_elem(V f,V a,const fwp_desc *elem,const fwp_desc *input) {
+    size_t n=fwp_array_len(a);V r=fwp_array_new_packed(n,elem);
+    for(size_t i=0;i<n;i++)fwp_array_store(r,i,fwp_apply1(f,fwp_array_load(a,i,input)),elem);
+    FWP_KEEP_ALIVE(f);FWP_KEEP_ALIVE(a);return r;
+}
+static V fwp_p_array_fold_with_elem(V f,V z,V a,const fwp_desc *elem) {
+    for(size_t i=0;i<fwp_array_len(a);i++)z=fwp_apply2(f,z,fwp_array_load(a,i,elem));
+    FWP_KEEP_ALIVE(f);FWP_KEEP_ALIVE(a);return z;
+}
+static V fwp_p_array_slice_with_elem(V start,V len,V a,const fwp_desc *elem) {
+    size_t n=fwp_array_len(a),first=fwp_count_arg(start);if(first>n)first=n;
+    size_t count=fwp_count_arg(len);if(count>n-first)count=n-first;
+#if FWP_PACKED_ARRAYS
+    if(count && fwp_array_numeric(elem)) {
+        V owner=fwp_array_owner(a);const unsigned char *data=fwp_array_data(a)+first*fwp_array_stride(elem);
+        fwp_array_view *view=(fwp_array_view *)fwp_alloc_init(sizeof *view);
+        view->len=FWP_ARRAY_VIEW_FLAG|count;view->owner=owner;view->data=data;
+        fwp_rc_dup(owner);FWP_KEEP_ALIVE(a);return PTR(view);
+    }
+#endif
+    V r=fwp_array_new_packed(count,elem);
+    for(size_t i=0;i<count;i++)fwp_array_store(r,i,fwp_array_load(a,first+i,elem),elem);
+    FWP_KEEP_ALIVE(a);return r;
+}
+static V fwp_p_array_append_with_elem(V b,V a,const fwp_desc *elem) {
+    size_t n=fwp_array_len(a),m=fwp_array_len(b);if(m>SIZE_MAX-n)fwp_trap("array too large");
+    V r=fwp_array_new_packed(n+m,elem);
+    for(size_t i=0;i<n+m;i++)fwp_array_store(r,i,i<n?fwp_array_load(a,i,elem):fwp_array_load(b,i-n,elem),elem);
+    FWP_KEEP_ALIVE(a);FWP_KEEP_ALIVE(b);return r;
+}
+static V fwp_p_array_sort_with_elem(V a,const fwp_desc *elem) {
+    V r=fwp_array_copy_with_elem(a,0,elem);size_t n=fwp_array_len(a);
+    if(n>1){V *keys=(V *)fwp_mem_alloc((n+1)*sizeof(V));V *tk=(V *)fwp_mem_alloc((n+1)*sizeof(V));V *tv=(V *)fwp_mem_alloc((n+1)*sizeof(V));
+        for(size_t i=0;i<n;i++)keys[i]=fwp_array_load(r,i,elem);
+        fwp_msort(keys,keys,n,elem,tk,tv);
+        for(size_t i=0;i<n;i++)fwp_array_store(r,i,keys[i],elem);
+        FWP_KEEP_ALIVE(keys);FWP_KEEP_ALIVE(tk);FWP_KEEP_ALIVE(tv);
+        fwp_mem_free(tv);fwp_mem_free(tk);fwp_mem_free(keys);}
+    FWP_KEEP_ALIVE(a);return r;
+}
+
+/* Descriptor-directed immutable boundaries when counted reuse is disabled. */
+static V fwp_array_from_words(const V *words, size_t n, const fwp_desc *elem) {
+    V r = fwp_array_new_packed(n, elem);
+    for (size_t i=0;i<n;i++) fwp_array_store(r,i,words[i],elem);
+    FWP_KEEP_ALIVE(words); return r;
+}
+static V fwp_p_array_from_list_with_elem(V xs, const fwp_desc *elem) {
+    V source=xs, r=fwp_array_new_packed(fwp_list_len(xs),elem);
+    for(size_t i=0;xs;i++,xs=OBJ(xs)->f[1]) fwp_array_store(r,i,OBJ(xs)->f[0],elem);
+    FWP_KEEP_ALIVE(source);return r;
+}
+static V fwp_p_array_to_list_with_elem(V a,const fwp_desc *elem) {
+    V r=0;for(size_t i=fwp_array_len(a);i;i--)r=fwp_cons(fwp_array_load(a,i-1,elem),r);
+    FWP_KEEP_ALIVE(a);return r;
+}
+static V fwp_p_array_get_with_elem(V i,V a,const fwp_desc *elem) {
+    if((int64_t)i<0 || (uint64_t)i>=fwp_array_len(a))return FWP_NONE;
+    V r=fwp_some(fwp_array_load(a,(size_t)i,elem));FWP_KEEP_ALIVE(a);return r;
+}
+static V fwp_array_copy_with_elem(V a,size_t extra,const fwp_desc *elem) {
+    size_t n=fwp_array_len(a);if(extra>SIZE_MAX-n)fwp_trap("array too large");
+    V r=fwp_array_new_packed(n+extra,elem);
+    for(size_t i=0;i<n;i++)fwp_array_store(r,i,fwp_array_load(a,i,elem),elem);
+    FWP_KEEP_ALIVE(a);return r;
+}
+static V fwp_p_array_set_with_elem(V i,V x,V a,const fwp_desc *elem) {
+    if((int64_t)i<0 || (uint64_t)i>=fwp_array_len(a))return FWP_NONE;
+    V r=fwp_array_copy_with_elem(a,0,elem);fwp_array_store(r,(size_t)i,x,elem);
+    V result=fwp_some(r);FWP_KEEP_ALIVE(x);return result;
+}
+static V fwp_p_array_push_with_elem(V x,V a,const fwp_desc *elem) {
+    size_t n=fwp_array_len(a);V r=fwp_array_copy_with_elem(a,1,elem);
+    fwp_array_store(r,n,x,elem);FWP_KEEP_ALIVE(x);return r;
+}
+static V fwp_p_array_make_with_elem(V n,V x,const fwp_desc *elem) {
+    size_t k=fwp_count_arg(n);V r=fwp_array_new_packed(k,elem);
+    for(size_t i=0;i<k;i++)fwp_array_store(r,i,x,elem);
+    FWP_KEEP_ALIVE(x);return r;
+}
+static V fwp_p_array_generate_with_elem(V n,V f,const fwp_desc *elem) {
+    size_t k=fwp_count_arg(n);V r=fwp_array_new_packed(k,elem);
+    for(size_t i=0;i<k;i++)fwp_array_store(r,i,fwp_apply1(f,(V)i),elem);
+    FWP_KEEP_ALIVE(f);return r;
+}
+static V fwp_p_array_map_with_elem(V f,V a,const fwp_desc *elem,const fwp_desc *input) {
+    size_t n=fwp_array_len(a);V r=fwp_array_new_packed(n,elem);
+    for(size_t i=0;i<n;i++)fwp_array_store(r,i,fwp_apply1(f,fwp_array_load(a,i,input)),elem);
+    FWP_KEEP_ALIVE(f);FWP_KEEP_ALIVE(a);return r;
+}
+static V fwp_p_array_fold_with_elem(V f,V z,V a,const fwp_desc *elem) {
+    for(size_t i=0;i<fwp_array_len(a);i++)z=fwp_apply2(f,z,fwp_array_load(a,i,elem));
+    FWP_KEEP_ALIVE(f);FWP_KEEP_ALIVE(a);return z;
+}
+static V fwp_p_array_slice_with_elem(V start,V len,V a,const fwp_desc *elem) {
+    size_t n=fwp_array_len(a),first=fwp_count_arg(start);if(first>n)first=n;
+    size_t count=fwp_count_arg(len);if(count>n-first)count=n-first;
+#if FWP_PACKED_ARRAYS
+    if(count && fwp_array_numeric(elem)) {
+        V owner=fwp_array_owner(a);const unsigned char *data=fwp_array_data(a)+first*fwp_array_stride(elem);
+        fwp_array_view *view=(fwp_array_view *)fwp_alloc_init(sizeof *view);
+        view->len=FWP_ARRAY_VIEW_FLAG|count;view->owner=owner;view->data=data;
+        fwp_rc_dup(owner);FWP_KEEP_ALIVE(a);return PTR(view);
+    }
+#endif
+    V r=fwp_array_new_packed(count,elem);
+    for(size_t i=0;i<count;i++)fwp_array_store(r,i,fwp_array_load(a,first+i,elem),elem);
+    FWP_KEEP_ALIVE(a);return r;
+}
+static V fwp_p_array_append_with_elem(V b,V a,const fwp_desc *elem) {
+    size_t n=fwp_array_len(a),m=fwp_array_len(b);if(m>SIZE_MAX-n)fwp_trap("array too large");
+    V r=fwp_array_new_packed(n+m,elem);
+    for(size_t i=0;i<n+m;i++)fwp_array_store(r,i,i<n?fwp_array_load(a,i,elem):fwp_array_load(b,i-n,elem),elem);
+    FWP_KEEP_ALIVE(a);FWP_KEEP_ALIVE(b);return r;
+}
+static V fwp_p_array_sort_with_elem(V a,const fwp_desc *elem) {
+    V r=fwp_array_copy_with_elem(a,0,elem);size_t n=fwp_array_len(a);
+    if(n>1){V *keys=(V *)fwp_mem_alloc((n+1)*sizeof(V));V *tk=(V *)fwp_mem_alloc((n+1)*sizeof(V));V *tv=(V *)fwp_mem_alloc((n+1)*sizeof(V));
+        for(size_t i=0;i<n;i++)keys[i]=fwp_array_load(r,i,elem);
+        fwp_msort(keys,keys,n,elem,tk,tv);
+        for(size_t i=0;i<n;i++)fwp_array_store(r,i,keys[i],elem);
+        FWP_KEEP_ALIVE(keys);FWP_KEEP_ALIVE(tk);FWP_KEEP_ALIVE(tv);
+        fwp_mem_free(tv);fwp_mem_free(tk);fwp_mem_free(keys);}
+    FWP_KEEP_ALIVE(a);return r;
+}
+
 /* Typed array boundaries: storage owns each reference-bearing element.
  * Duplicate/drop operations come from the monomorphic compiler wrapper. */
-static V fwp_array_typed_new(size_t n) {
+static V fwp_array_typed_new(size_t n, const fwp_desc *elem) {
     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
-    return fwp_rc_fresh(fwp_arr_new(n));
+    return fwp_rc_fresh(fwp_array_new_packed(n, elem));
 }
-static V fwp_array_typed_copy(V a, size_t extra, void (*dup)(V)) {
-    size_t n = ARR(a)->len;
+static V fwp_array_typed_copy(V a, size_t extra, void (*dup)(V), const fwp_desc *elem) {
+    size_t n = fwp_array_len(a);
     if (extra > SIZE_MAX - n) fwp_trap("array too large");
-    V result = fwp_array_typed_new(n + extra);
+    V result = fwp_array_typed_new(n + extra, elem);
     for (size_t i = 0; i < n; i++) {
-        V value = ARR(a)->d[i];
+        V value = fwp_array_load(a, i, elem);
         if (dup) dup(value);
-        ARR(result)->d[i] = value;
+        fwp_array_store(result, i, value, elem);
     }
     FWP_KEEP_ALIVE(a);
     return result;
 }
-static V fwp_p_array_from_list_typed(V xs, void (*dup)(V)) {
+static V fwp_p_array_from_list_typed(V xs, void (*dup)(V), const fwp_desc *elem) {
     V source = xs;
-    V result = fwp_array_typed_new(fwp_list_len(xs));
+    V result = fwp_array_typed_new(fwp_list_len(xs), elem);
     for (size_t i = 0; xs; i++, xs = OBJ(xs)->f[1]) {
         V value = OBJ(xs)->f[0];
         if (dup) dup(value);
-        ARR(result)->d[i] = value;
+        fwp_array_store(result, i, value, elem);
     }
     FWP_KEEP_ALIVE(source);
     return result;
 }
-static V fwp_p_array_to_list_typed(V a, void (*dup)(V)) {
+static V fwp_p_array_to_list_typed(V a, void (*dup)(V), const fwp_desc *elem) {
     V result = 0;
-    for (size_t i = ARR(a)->len; i; i--) {
-        V value = ARR(a)->d[i - 1];
+    for (size_t i = fwp_array_len(a); i; i--) {
+        V value = fwp_array_load(a, i - 1, elem);
         if (dup) dup(value);
         result = fwp_rc_fresh(fwp_cons(value, result));
     }
     FWP_KEEP_ALIVE(a);
     return result;
 }
-static V fwp_p_array_get_typed(V i, V a, void (*dup)(V)) {
-    if ((int64_t)i < 0 || (uint64_t)(int64_t)i >= ARR(a)->len) return FWP_NONE;
-    V value = ARR(a)->d[(int64_t)i];
+static V fwp_p_array_get_typed(V i, V a, void (*dup)(V), const fwp_desc *elem) {
+    if ((int64_t)i < 0 || (uint64_t)(int64_t)i >= fwp_array_len(a)) return FWP_NONE;
+    V value = fwp_array_load(a, (int64_t)i, elem);
     if (dup) dup(value);
     V result = fwp_rc_fresh(fwp_some(value));
     FWP_KEEP_ALIVE(a);
     return result;
 }
 static V fwp_p_array_set_typed(V i, V x, V a, void (*dup)(V),
-                              void (*drop_element)(V), void (*drop_array)(V)) {
-    if ((int64_t)i < 0 || (uint64_t)(int64_t)i >= ARR(a)->len) {
+                              void (*drop_element)(V), void (*drop_array)(V), const fwp_desc *elem) {
+    if ((int64_t)i < 0 || (uint64_t)(int64_t)i >= fwp_array_len(a)) {
         drop_array(a);
         FWP_KEEP_ALIVE(x);
         return FWP_NONE;
     }
-    int unique = fwp_rc_unique_mut(a);
+    int unique = fwp_array_is_view(a) ? 0 : fwp_rc_unique_mut(a);
     V result = a;
     if (unique != 1) {
         /* A unique poison-copy transfers children; a shared copy retains them. */
-        result = fwp_array_typed_copy(a, 0, unique ? NULL : dup);
-        if (unique) ARR(a)->len = 0;
+        result = fwp_array_typed_copy(a, 0, unique ? NULL : dup, elem);
+        if (unique) fwp_array_set_len(a, 0);
         drop_array(a);
     }
     if (dup) dup(x);
-    V previous = ARR(result)->d[(int64_t)i];
-    ARR(result)->d[(int64_t)i] = x;
+    V previous = fwp_array_load(result, (int64_t)i, elem);
+    fwp_array_store(result, (int64_t)i, x, elem);
     if (drop_element) drop_element(previous);
     result = fwp_rc_fresh(fwp_some(result));
     FWP_KEEP_ALIVE(x);
     return result;
 }
 static V fwp_p_array_push_typed(V x, V a, void (*dup)(V),
-                               void (*drop_element)(V), void (*drop_array)(V)) {
+                               void (*drop_element)(V), void (*drop_array)(V), const fwp_desc *elem) {
     (void)drop_element;
-    size_t n = ARR(a)->len;
+    size_t n = fwp_array_len(a);
     if (n >= (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
-    int unique = fwp_rc_unique_mut(a);
-    if (unique == 1 && fwp_rc_capacity(a) >= sizeof(fwp_arr) + (n + 1) * sizeof(V)) {
+    int unique = fwp_array_is_view(a) ? 0 : fwp_rc_unique_mut(a);
+    if (unique == 1 && fwp_rc_capacity(a) >= sizeof(fwp_arr) + (n + 1) * fwp_array_stride(elem)) {
         if (dup) dup(x);
-        ARR(a)->d[n] = x;
-        ARR(a)->len = n + 1;
+        fwp_array_store(a, n, x, elem);
+        fwp_array_set_len(a, n + 1);
         return a;
     }
     size_t capacity = n + 1;
     if (unique && n <= (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V) / 2)
         capacity = n < 4 ? 4 : 2 * n;
-    V result = fwp_array_typed_copy(a, capacity - n, unique ? NULL : dup);
-    ARR(result)->len = n + 1;
+    V result = fwp_array_typed_copy(a, capacity - n, unique ? NULL : dup, elem);
+    fwp_array_set_len(result, n + 1);
     if (dup) dup(x);
-    ARR(result)->d[n] = x;
-    if (unique) ARR(a)->len = 0;
+    fwp_array_store(result, n, x, elem);
+    if (unique) fwp_array_set_len(a, 0);
     drop_array(a);
     FWP_KEEP_ALIVE(x);
     return result;
 }
-static V fwp_p_array_make_typed(V n, V x, void (*dup)(V)) {
+static V fwp_p_array_make_typed(V n, V x, void (*dup)(V), const fwp_desc *elem) {
     size_t count = fwp_count_arg(n);
-    V result = fwp_array_typed_new(count);
+    V result = fwp_array_typed_new(count, elem);
     for (size_t i = 0; i < count; i++) {
         if (dup) dup(x);
-        ARR(result)->d[i] = x;
+        fwp_array_store(result, i, x, elem);
     }
     FWP_KEEP_ALIVE(x);
     return result;
 }
-static V fwp_p_array_generate_typed(V n, V f) {
+static V fwp_p_array_generate_typed(V n, V f, const fwp_desc *elem) {
     size_t count = fwp_count_arg(n);
-    V result = fwp_array_typed_new(count);
+    V result = fwp_array_typed_new(count, elem);
     for (size_t i = 0; i < count; i++) {
         V index = (V)i;
-        ARR(result)->d[i] = fwp_apply_borrowed(f, 1, &index);
+        fwp_array_store(result, i, fwp_apply_borrowed(f, 1, &index), elem);
     }
     FWP_KEEP_ALIVE(f);
     return result;
 }
-static V fwp_p_array_map_typed(V f, V a) {
-    size_t count = ARR(a)->len;
-    V result = fwp_array_typed_new(count);
+static V fwp_p_array_map_typed(V f, V a, const fwp_desc *elem, const fwp_desc *input) {
+    size_t count = fwp_array_len(a);
+    V result = fwp_array_typed_new(count, elem);
     for (size_t i = 0; i < count; i++) {
-        V value = ARR(a)->d[i];
-        ARR(result)->d[i] = fwp_apply_borrowed(f, 1, &value);
+        V value = fwp_array_load(a, i, input);
+        fwp_array_store(result, i, fwp_apply_borrowed(f, 1, &value), elem);
     }
     FWP_KEEP_ALIVE(f);
     FWP_KEEP_ALIVE(a);
     return result;
 }
-static V fwp_p_array_fold_typed(V f, V z, V a) {
-    for (size_t i = 0; i < ARR(a)->len; i++) {
-        V args[] = {z, ARR(a)->d[i]};
+static V fwp_p_array_fold_typed(V f, V z, V a, const fwp_desc *elem) {
+    for (size_t i = 0; i < fwp_array_len(a); i++) {
+        V args[] = {z, fwp_array_load(a, i, elem)};
         z = fwp_apply_borrowed_prefix(f, 2, args, 1);
     }
     FWP_KEEP_ALIVE(f);
     FWP_KEEP_ALIVE(a);
     return z;
 }
-static V fwp_p_array_slice_typed(V start, V len, V a, void (*dup)(V)) {
-    size_t n = ARR(a)->len, first = fwp_count_arg(start);
+static V fwp_p_array_slice_typed(V start, V len, V a, void (*dup)(V), const fwp_desc *elem) {
+    size_t n = fwp_array_len(a), first = fwp_count_arg(start);
     if (first > n) first = n;
     size_t count = fwp_count_arg(len);
     if (count > n - first) count = n - first;
-    V result = fwp_array_typed_new(count);
+#if FWP_PACKED_ARRAYS
+    if (count && fwp_array_numeric(elem)) {
+        V owner = fwp_array_owner(a);
+        const unsigned char *data = fwp_array_data(a) + first * fwp_array_stride(elem);
+        fwp_array_view *view = (fwp_array_view *)fwp_alloc_init(sizeof *view);
+        view->len = FWP_ARRAY_VIEW_FLAG | count; view->owner = owner; view->data = data;
+        fwp_rc_dup(owner);
+        V result = fwp_rc_fresh(PTR(view));
+        FWP_KEEP_ALIVE(a); return result;
+    }
+#endif
+    V result = fwp_array_typed_new(count, elem);
     for (size_t i = 0; i < count; i++) {
-        V value = ARR(a)->d[first + i];
+        V value = fwp_array_load(a, first + i, elem);
         if (dup) dup(value);
-        ARR(result)->d[i] = value;
+        fwp_array_store(result, i, value, elem);
     }
     FWP_KEEP_ALIVE(a);
     return result;
 }
-static V fwp_p_array_append_typed(V b, V a, void (*dup)(V)) {
-    size_t n = ARR(a)->len, m = ARR(b)->len;
+static V fwp_p_array_append_typed(V b, V a, void (*dup)(V), const fwp_desc *elem) {
+    size_t n = fwp_array_len(a), m = fwp_array_len(b);
     if (m > SIZE_MAX - n) fwp_trap("array too large");
-    V result = fwp_array_typed_new(n + m);
+    V result = fwp_array_typed_new(n + m, elem);
     for (size_t i = 0; i < n + m; i++) {
-        V value = i < n ? ARR(a)->d[i] : ARR(b)->d[i - n];
+        V value = i < n ? fwp_array_load(a, i, elem) : fwp_array_load(b, i - n, elem);
         if (dup) dup(value);
-        ARR(result)->d[i] = value;
+        fwp_array_store(result, i, value, elem);
     }
     FWP_KEEP_ALIVE(a);
     FWP_KEEP_ALIVE(b);
     return result;
 }
 static V fwp_p_array_sort_typed(V a, void (*dup)(V), const fwp_desc *elem) {
-    V result = fwp_array_typed_copy(a, 0, dup);
-    size_t n = ARR(result)->len;
+    V result = fwp_array_typed_copy(a, 0, dup, elem);
+    size_t n = fwp_array_len(result);
     if (n > 1) {
         V *keys = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
         V *tk = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
         V *tv = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        memcpy(keys, ARR(result)->d, n * sizeof(V));
-        fwp_msort(keys, ARR(result)->d, n, elem, tk, tv);
+        for (size_t i = 0; i < n; i++) keys[i] = fwp_array_load(result, i, elem);
+        fwp_msort(keys, keys, n, elem, tk, tv);
+        for (size_t i = 0; i < n; i++) fwp_array_store(result, i, keys[i], elem);
         FWP_KEEP_ALIVE(keys);
         FWP_KEEP_ALIVE(tk);
         FWP_KEEP_ALIVE(tv);
@@ -3109,7 +3291,7 @@ static V fwp_p_syntax_show(V v) {
 
 static double *la_get(V arr, size_t n) {
     double *d = (double *)fwp_alloc_leaf((n + 1) * sizeof(double));
-    for (size_t i = 0; i < n; i++) d[i] = fwp_f64(ARR(arr)->d[i]);
+    for (size_t i = 0; i < n; i++) d[i] = fwp_f64(((const V *)fwp_array_data(arr))[i]);
     return d;
 }
 
@@ -3121,7 +3303,7 @@ static void la_check(const char *name, V arr, int64_t rows, int64_t cols) {
         snprintf(msg, sizeof msg, "%s: negative dimension", name);
         fwp_trap(msg);
     }
-    size_t len = ARR(arr)->len;
+    size_t len = fwp_array_len(arr);
     if ((i128)len != (i128)rows * (i128)cols) {
         snprintf(msg, sizeof msg, "%s: %zu elements given for a %lldx%lld matrix", name, len,
                  (long long)rows, (long long)cols);
