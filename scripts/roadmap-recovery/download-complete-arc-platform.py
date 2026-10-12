@@ -1,6 +1,6 @@
 from pathlib import Path
 import hashlib,io,json,subprocess,zipfile
-REPO='repos/e6qu/fun-with-pipes';RUN=38239726785;HEAD='a2500e0f68887412a80cd3ca00ae579b89bef560'
+REPO='repos/e6qu/fun-with-pipes';RUN=38242709162;HEAD='350500f2cbbfccbde57dbd85e9fb855e13088e7d'
 OUT=Path('/private/tmp/fwp-complete-arc-platform-evidence');assert not OUT.exists()
 def api(path):return json.loads(subprocess.check_output(['gh','api',REPO+path]))
 r=api('/actions/runs/'+str(RUN));assert r['head_sha']==HEAD and r['status']=='completed' and r['conclusion']=='success'

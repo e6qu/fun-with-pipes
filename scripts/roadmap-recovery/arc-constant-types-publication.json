@@ -1,0 +1,10 @@
+{
+  "head": "350500f2cbbfccbde57dbd85e9fb855e13088e7d",
+  "previous": "2d4bf66a8f815b13aa1c6ae28b0ca43e3ab5011c",
+  "tree": "fa7f5eaccd701a3911610717335dbab4d446004a",
+  "branch": "ownership-evidence-tracing-free",
+  "files": {
+    "src/opt.rs": "f25a4f6400c8d7b210c5a526dd63eadb12d45e9ae6c3e744907e7b5a673b4372",
+    ".github/workflows/tracing-free-preparation.yml": "0c0d9aae81d1949d704446ed9a1771df9b9c1caa6f6cbbf081daffd2e9bda6ff"
+  }
+}

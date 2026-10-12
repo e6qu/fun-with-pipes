@@ -1,0 +1,884 @@
+﻿2026-10-12T11:22:02.0338428Z Current runner version: '2.337.0'
+2026-10-12T11:22:02.0369552Z ##[group]Runner Image Provisioner
+2026-10-12T11:22:02.0370770Z Hosted Compute Agent
+2026-10-12T11:22:02.0371669Z Version: 20261002.596
+2026-10-12T11:22:02.0372582Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-12T11:22:02.0373261Z Build Date: 2026-10-02T22:28:27Z
+2026-10-12T11:22:02.0373881Z Worker ID: {3542aacc-6181-46b1-829b-57fdc4d1ea8d}
+2026-10-12T11:22:02.0374608Z Region: northcentralus
+2026-10-12T11:22:02.0375150Z Cloud: Azure
+2026-10-12T11:22:02.0375660Z ##[endgroup]
+2026-10-12T11:22:02.0376971Z ##[group]Operating System
+2026-10-12T11:22:02.0377573Z Ubuntu
+2026-10-12T11:22:02.0378126Z 24.04.5
+2026-10-12T11:22:02.0378610Z LTS
+2026-10-12T11:22:02.0379096Z ##[endgroup]
+2026-10-12T11:22:02.0379662Z ##[group]Runner Image
+2026-10-12T11:22:02.0380255Z Image: ubuntu-24.04
+2026-10-12T11:22:02.0380822Z Version: 20261004.327.1
+2026-10-12T11:22:02.0382280Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-12T11:22:02.0383726Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+2026-10-12T11:22:02.0384613Z ##[endgroup]
+2026-10-12T11:22:02.0385768Z ##[group]GITHUB_TOKEN Permissions
+2026-10-12T11:22:02.0387895Z Contents: read
+2026-10-12T11:22:02.0388481Z Metadata: read
+2026-10-12T11:22:02.0389015Z Packages: read
+2026-10-12T11:22:02.0389515Z ##[endgroup]
+2026-10-12T11:22:02.0392179Z Secret source: Actions
+2026-10-12T11:22:02.0392997Z Cache mode: write
+2026-10-12T11:22:02.0393911Z Prepare workflow directory
+2026-10-12T11:22:02.0843402Z Prepare all required actions
+2026-10-12T11:22:02.0910590Z Getting action download info
+2026-10-12T11:22:02.3126838Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-12T11:22:02.4045169Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:686976e191b89faba57d3206551f0f330d8cb249)
+2026-10-12T11:22:02.5483776Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-10-12T11:22:02.6614334Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-12T11:22:03.2735932Z Complete job name: numeric_fusion (ubuntu-latest)
+2026-10-12T11:22:03.3474775Z ##[group]Run actions/checkout@v7
+2026-10-12T11:22:03.3475701Z with:
+2026-10-12T11:22:03.3476624Z   repository: e6qu/fun-with-pipes
+2026-10-12T11:22:03.3480878Z   token: ***
+2026-10-12T11:22:03.3481675Z   ssh-strict: true
+2026-10-12T11:22:03.3482237Z   ssh-user: git
+2026-10-12T11:22:03.3482832Z   persist-credentials: true
+2026-10-12T11:22:03.3483425Z   clean: true
+2026-10-12T11:22:03.3483972Z   sparse-checkout-cone-mode: true
+2026-10-12T11:22:03.3484668Z   fetch-depth: 1
+2026-10-12T11:22:03.3485187Z   fetch-tags: false
+2026-10-12T11:22:03.3485758Z   show-progress: true
+2026-10-12T11:22:03.3486307Z   lfs: false
+2026-10-12T11:22:03.3486832Z   submodules: false
+2026-10-12T11:22:03.3487428Z   set-safe-directory: true
+2026-10-12T11:22:03.3488066Z   allow-unsafe-pr-checkout: false
+2026-10-12T11:22:03.3488974Z env:
+2026-10-12T11:22:03.3489466Z   CC: clang
+2026-10-12T11:22:03.3489964Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:03.3490626Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:03.3491251Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:03.3492142Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:03.3493001Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:03.3493801Z ##[endgroup]
+2026-10-12T11:22:03.4482346Z Syncing repository: e6qu/fun-with-pipes
+2026-10-12T11:22:03.4486033Z ##[group]Getting Git version info
+2026-10-12T11:22:03.4487369Z Working directory is '/home/runner/work/fun-with-pipes/fun-with-pipes'
+2026-10-12T11:22:03.4489391Z [command]/usr/bin/git version
+2026-10-12T11:22:03.4500428Z git version 2.55.0
+2026-10-12T11:22:03.4517884Z ##[endgroup]
+2026-10-12T11:22:03.4527314Z Temporarily overriding HOME='/home/runner/work/_temp/44cda7d4-a5b5-4130-b633-6a2aa9c199be' before making global git config changes
+2026-10-12T11:22:03.4529935Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-12T11:22:03.4532196Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/fun-with-pipes/fun-with-pipes
+2026-10-12T11:22:03.4578238Z Deleting the contents of '/home/runner/work/fun-with-pipes/fun-with-pipes'
+2026-10-12T11:22:03.4581033Z ##[group]Determining repository object format
+2026-10-12T11:22:03.4582953Z ##[endgroup]
+2026-10-12T11:22:03.4584693Z ##[group]Initializing the repository
+2026-10-12T11:22:03.4586359Z [command]/usr/bin/git init /home/runner/work/fun-with-pipes/fun-with-pipes
+2026-10-12T11:22:03.4692501Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-12T11:22:03.4694731Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-12T11:22:03.4696867Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-12T11:22:03.4700362Z hint: call:
+2026-10-12T11:22:03.4701641Z hint:
+2026-10-12T11:22:03.4703047Z hint: 	git config --global init.defaultBranch <name>
+2026-10-12T11:22:03.4704499Z hint:
+2026-10-12T11:22:03.4705355Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-12T11:22:03.4706652Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-12T11:22:03.4707622Z hint:
+2026-10-12T11:22:03.4708275Z hint: 	git branch -m <name>
+2026-10-12T11:22:03.4708952Z hint:
+2026-10-12T11:22:03.4709814Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-12T11:22:03.4711280Z Initialized empty Git repository in /home/runner/work/fun-with-pipes/fun-with-pipes/.git/
+2026-10-12T11:22:03.4727718Z [command]/usr/bin/git remote add origin https://github.com/e6qu/fun-with-pipes
+2026-10-12T11:22:03.5400498Z ##[endgroup]
+2026-10-12T11:22:03.5401856Z ##[group]Disabling automatic garbage collection
+2026-10-12T11:22:03.5406083Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-12T11:22:03.5989903Z ##[endgroup]
+2026-10-12T11:22:03.5991662Z ##[group]Setting up auth
+2026-10-12T11:22:03.5992622Z Removing SSH command configuration
+2026-10-12T11:22:03.5995352Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-12T11:22:03.6027566Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-12T11:22:03.9383779Z Removing HTTP extra header
+2026-10-12T11:22:03.9388875Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-12T11:22:03.9418279Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-12T11:22:03.9598505Z Removing includeIf entries pointing to credentials config files
+2026-10-12T11:22:03.9601824Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-12T11:22:03.9628976Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-12T11:22:03.9818418Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-9db6bf2a-80d9-4337-9e34-5a26cc5d1bad.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-12T11:22:03.9876891Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git.path /home/runner/work/_temp/git-credentials-9db6bf2a-80d9-4337-9e34-5a26cc5d1bad.config
+2026-10-12T11:22:04.0192841Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-9db6bf2a-80d9-4337-9e34-5a26cc5d1bad.config
+2026-10-12T11:22:04.0590488Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9db6bf2a-80d9-4337-9e34-5a26cc5d1bad.config
+2026-10-12T11:22:04.0985392Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9db6bf2a-80d9-4337-9e34-5a26cc5d1bad.config
+2026-10-12T11:22:04.1383041Z ##[endgroup]
+2026-10-12T11:22:04.1385710Z ##[group]Fetching the repository
+2026-10-12T11:22:04.1393396Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2d4bf66a8f815b13aa1c6ae28b0ca43e3ab5011c:refs/remotes/origin/ownership-evidence-tracing-free
+2026-10-12T11:22:05.4338056Z From https://github.com/e6qu/fun-with-pipes
+2026-10-12T11:22:05.4340253Z  * [new ref]         2d4bf66a8f815b13aa1c6ae28b0ca43e3ab5011c -> origin/ownership-evidence-tracing-free
+2026-10-12T11:22:05.4348064Z [command]/usr/bin/git branch --list --remote origin/ownership-evidence-tracing-free
+2026-10-12T11:22:05.4373332Z   origin/ownership-evidence-tracing-free
+2026-10-12T11:22:05.4380647Z [command]/usr/bin/git rev-parse refs/remotes/origin/ownership-evidence-tracing-free
+2026-10-12T11:22:05.4401846Z 2d4bf66a8f815b13aa1c6ae28b0ca43e3ab5011c
+2026-10-12T11:22:05.4404402Z ##[endgroup]
+2026-10-12T11:22:05.4405332Z ##[group]Determining the checkout info
+2026-10-12T11:22:05.4406255Z ##[endgroup]
+2026-10-12T11:22:05.4410272Z [command]/usr/bin/git sparse-checkout disable
+2026-10-12T11:22:05.5585316Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-12T11:22:05.6603278Z ##[group]Checking out the ref
+2026-10-12T11:22:05.6608470Z [command]/usr/bin/git checkout --progress --force -B ownership-evidence-tracing-free refs/remotes/origin/ownership-evidence-tracing-free
+2026-10-12T11:22:05.8279566Z Switched to a new branch 'ownership-evidence-tracing-free'
+2026-10-12T11:22:05.8294089Z branch 'ownership-evidence-tracing-free' set up to track 'origin/ownership-evidence-tracing-free'.
+2026-10-12T11:22:05.8301894Z ##[endgroup]
+2026-10-12T11:22:05.8346932Z [command]/usr/bin/git log -1 --format=%H
+2026-10-12T11:22:05.8373834Z 2d4bf66a8f815b13aa1c6ae28b0ca43e3ab5011c
+2026-10-12T11:22:05.8995204Z ##[group]Run dtolnay/rust-toolchain@stable
+2026-10-12T11:22:05.8995642Z with:
+2026-10-12T11:22:05.8995949Z   components: rustfmt, clippy
+2026-10-12T11:22:05.8996275Z   toolchain: stable
+2026-10-12T11:22:05.8996610Z env:
+2026-10-12T11:22:05.8996890Z   CC: clang
+2026-10-12T11:22:05.8997151Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:05.8997476Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:05.8997799Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:05.8998191Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:05.8998661Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:05.8999112Z ##[endgroup]
+2026-10-12T11:22:05.9071076Z ##[start-action display=Parse toolchain version;id=__dtolnay_rust-toolchain.parse]
+2026-10-12T11:22:05.9203258Z ##[group]Run if [[ -z $toolchain ]]; then
+2026-10-12T11:22:05.9203781Z [36;1mif [[ -z $toolchain ]]; then[0m
+2026-10-12T11:22:05.9204598Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+2026-10-12T11:22:05.9205209Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+2026-10-12T11:22:05.9205598Z [36;1m  exit 1[0m
+2026-10-12T11:22:05.9206018Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+2026-10-12T11:22:05.9206490Z [36;1m  if [[ Linux == macOS ]]; then[0m
+2026-10-12T11:22:05.9207093Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-10-12T11:22:05.9207710Z [36;1m  else[0m
+2026-10-12T11:22:05.9208184Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-10-12T11:22:05.9208695Z [36;1m  fi[0m
+2026-10-12T11:22:05.9209057Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+2026-10-12T11:22:05.9209877Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+2026-10-12T11:22:05.9210406Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+2026-10-12T11:22:05.9211034Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+2026-10-12T11:22:05.9211711Z [36;1melse[0m
+2026-10-12T11:22:05.9211988Z [36;1m  delimiter=EOF[0m
+2026-10-12T11:22:05.9212430Z [36;1m  while [[ $toolchain == *$delimiter* ]]; do delimiter+=_; done[0m
+2026-10-12T11:22:05.9212992Z [36;1m  printf 'toolchain<<%s\n%s\n%s\n' "$delimiter" "$toolchain" "$delimiter" >> $GITHUB_OUTPUT[0m
+2026-10-12T11:22:05.9213469Z [36;1mfi[0m
+2026-10-12T11:22:05.9530727Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:05.9531278Z env:
+2026-10-12T11:22:05.9531878Z   CC: clang
+2026-10-12T11:22:05.9532339Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:05.9532695Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:05.9533001Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:05.9533434Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:05.9533897Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:05.9534308Z   toolchain: stable
+2026-10-12T11:22:05.9534639Z ##[endgroup]
+2026-10-12T11:22:05.9724541Z ##[end-action id=__dtolnay_rust-toolchain.parse;outcome=success;conclusion=success;duration_ms=65]
+2026-10-12T11:22:05.9729107Z ##[start-action display=Set $CARGO_HOME;id=__dtolnay_rust-toolchain.__run]
+2026-10-12T11:22:06.0490648Z ##[group]Run echo CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV
+2026-10-12T11:22:06.0491217Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+2026-10-12T11:22:06.0531325Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:06.0531827Z env:
+2026-10-12T11:22:06.0532224Z   CC: clang
+2026-10-12T11:22:06.0532537Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:06.0532891Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:06.0533207Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:06.0533730Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:06.0534229Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:06.0534661Z ##[endgroup]
+2026-10-12T11:22:06.0697768Z ##[end-action id=__dtolnay_rust-toolchain.__run;outcome=success;conclusion=success;duration_ms=96]
+2026-10-12T11:22:06.0700407Z ##[start-action display=Install rustup if needed;id=__dtolnay_rust-toolchain.__run_2]
+2026-10-12T11:22:06.1086034Z ##[group]Run if ! command -v rustup &>/dev/null; then
+2026-10-12T11:22:06.1086524Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+2026-10-12T11:22:06.1087317Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+2026-10-12T11:22:06.1088099Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+2026-10-12T11:22:06.1088480Z [36;1mfi[0m
+2026-10-12T11:22:06.1127283Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:06.1127765Z env:
+2026-10-12T11:22:06.1128051Z   CC: clang
+2026-10-12T11:22:06.1128383Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:06.1128672Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:06.1129017Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:06.1129418Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:06.1129876Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:06.1130306Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:06.1130621Z ##[endgroup]
+2026-10-12T11:22:06.1698149Z ##[end-action id=__dtolnay_rust-toolchain.__run_2;outcome=success;conclusion=success;duration_ms=99]
+2026-10-12T11:22:06.1701022Z ##[start-action display=Install rustup if needed on windows;id=__dtolnay_rust-toolchain.__run_3]
+2026-10-12T11:22:06.1708697Z ##[end-action id=__dtolnay_rust-toolchain.__run_3;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-10-12T11:22:06.1724014Z ##[start-action display=rustup toolchain install stable;id=__dtolnay_rust-toolchain.__run_4]
+2026-10-12T11:22:06.2185256Z ##[group]Run set -f  # split targets and components on commas and whitespace, without glob expansion
+2026-10-12T11:22:06.2186052Z [36;1mset -f  # split targets and components on commas and whitespace, without glob expansion[0m
+2026-10-12T11:22:06.2186578Z [36;1mflags=()[0m
+2026-10-12T11:22:06.2186947Z [36;1mfor t in ${targets//,/ }; do flags+=(--target "$t"); done[0m
+2026-10-12T11:22:06.2187417Z [36;1mfor c in ${components//,/ }; do flags+=(--component "$c"); done[0m
+2026-10-12T11:22:06.2187959Z [36;1mif [[ $toolchain == nightly && -n $components ]]; then flags+=(--allow-downgrade); fi[0m
+2026-10-12T11:22:06.2188460Z [36;1mlog=$(mktemp)[0m
+2026-10-12T11:22:06.2188798Z [36;1mtrap 'rm -f "$log"' EXIT[0m
+2026-10-12T11:22:06.2189161Z [36;1mfor attempt in 1 2 3 4 5; do[0m
+2026-10-12T11:22:06.2189819Z [36;1m  if rustup toolchain install "$toolchain" "${flags[@]}" --profile minimal --no-self-update --force-non-host 2>&1 | tee "$log"; then[0m
+2026-10-12T11:22:06.2190412Z [36;1m    break[0m
+2026-10-12T11:22:06.2190733Z [36;1m  else[0m
+2026-10-12T11:22:06.2191039Z [36;1m    status=$?[0m
+2026-10-12T11:22:06.2191330Z [36;1m  fi[0m
+2026-10-12T11:22:06.2191994Z [36;1m  if [[ $attempt == 5 ]] || ! grep -Fq 'checksum failed for ' "$log" \[0m
+2026-10-12T11:22:06.2192606Z [36;1m      || ! grep -Fq 'this is likely due to an ongoing update of the official release server' "$log"; then[0m
+2026-10-12T11:22:06.2193172Z [36;1m    exit "$status"[0m
+2026-10-12T11:22:06.2193543Z [36;1m  fi[0m
+2026-10-12T11:22:06.2193964Z [36;1m  echo "Retrying rustup toolchain install in 30 seconds (retry $attempt of 4)" >&2[0m
+2026-10-12T11:22:06.2194461Z [36;1m  sleep 30[0m
+2026-10-12T11:22:06.2194742Z [36;1mdone[0m
+2026-10-12T11:22:06.2232129Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:06.2232606Z env:
+2026-10-12T11:22:06.2232903Z   CC: clang
+2026-10-12T11:22:06.2233208Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:06.2233537Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:06.2233999Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:06.2234417Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:06.2234879Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:06.2235310Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:06.2235652Z   toolchain: stable
+2026-10-12T11:22:06.2235962Z   targets: 
+2026-10-12T11:22:06.2236235Z   components: rustfmt, clippy
+2026-10-12T11:22:06.2236650Z   RUSTUP_PERMIT_COPY_RENAME: 1
+2026-10-12T11:22:06.2237034Z ##[endgroup]
+2026-10-12T11:22:06.6486402Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+2026-10-12T11:22:06.8683712Z info: latest update on 2026-10-01 for version 1.99.0 (b940084d7 2026-09-28)
+2026-10-12T11:22:06.8810816Z info: component clippy is up to date
+2026-10-12T11:22:06.8811862Z info: component rustfmt is up to date
+2026-10-12T11:22:06.8827236Z 
+2026-10-12T11:22:06.8908013Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.0 (b940084d7 2026-09-28)
+2026-10-12T11:22:06.8908626Z 
+2026-10-12T11:22:06.9295430Z ##[end-action id=__dtolnay_rust-toolchain.__run_4;outcome=success;conclusion=success;duration_ms=757]
+2026-10-12T11:22:06.9302441Z ##[start-action display=rustup default stable;id=__dtolnay_rust-toolchain.__run_5]
+2026-10-12T11:22:06.9484929Z ##[group]Run rustup default "$toolchain" --force-non-host
+2026-10-12T11:22:06.9485461Z [36;1mrustup default "$toolchain" --force-non-host[0m
+2026-10-12T11:22:06.9524546Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:06.9524976Z env:
+2026-10-12T11:22:06.9525234Z   CC: clang
+2026-10-12T11:22:06.9525546Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:06.9525872Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:06.9526194Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:06.9526583Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:06.9527035Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:06.9527590Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:06.9527989Z   toolchain: stable
+2026-10-12T11:22:06.9528272Z ##[endgroup]
+2026-10-12T11:22:06.9936350Z info: using existing install for stable-x86_64-unknown-linux-gnu
+2026-10-12T11:22:07.0470060Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+2026-10-12T11:22:07.0470508Z 
+2026-10-12T11:22:07.0547293Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.0 (b940084d7 2026-09-28)
+2026-10-12T11:22:07.0547822Z 
+2026-10-12T11:22:07.0561748Z ##[end-action id=__dtolnay_rust-toolchain.__run_5;outcome=success;conclusion=success;duration_ms=125]
+2026-10-12T11:22:07.0565988Z ##[start-action display=Create cachekey;id=__dtolnay_rust-toolchain.rustc-version]
+2026-10-12T11:22:07.0682503Z ##[group]Run DATE=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')
+2026-10-12T11:22:07.0683454Z [36;1mDATE=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+2026-10-12T11:22:07.0684183Z [36;1mHASH=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+2026-10-12T11:22:07.0684787Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+2026-10-12T11:22:07.0720470Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:07.0720892Z env:
+2026-10-12T11:22:07.0721168Z   CC: clang
+2026-10-12T11:22:07.0721783Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:07.0722092Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:07.0722391Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:07.0722806Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:07.0723319Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:07.0723747Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:07.0724073Z   toolchain: stable
+2026-10-12T11:22:07.0724400Z ##[endgroup]
+2026-10-12T11:22:07.1369424Z ##[end-action id=__dtolnay_rust-toolchain.rustc-version;outcome=success;conclusion=success;duration_ms=80]
+2026-10-12T11:22:07.1373754Z ##[start-action display=Disable incremental compilation;id=__dtolnay_rust-toolchain.__run_6]
+2026-10-12T11:22:07.1981767Z ##[group]Run if [ -z "${CARGO_INCREMENTAL+set}" ]; then
+2026-10-12T11:22:07.1982317Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+2026-10-12T11:22:07.1982701Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+2026-10-12T11:22:07.1983109Z [36;1mfi[0m
+2026-10-12T11:22:07.2018488Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:07.2018898Z env:
+2026-10-12T11:22:07.2019156Z   CC: clang
+2026-10-12T11:22:07.2019503Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:07.2019803Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:07.2020118Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:07.2020513Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:07.2020971Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:07.2021640Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:07.2021971Z ##[endgroup]
+2026-10-12T11:22:07.2099435Z ##[end-action id=__dtolnay_rust-toolchain.__run_6;outcome=success;conclusion=success;duration_ms=72]
+2026-10-12T11:22:07.2102554Z ##[start-action display=Enable colors in Cargo output;id=__dtolnay_rust-toolchain.__run_7]
+2026-10-12T11:22:07.2474352Z ##[group]Run if [ -z "${CARGO_TERM_COLOR+set}" ]; then
+2026-10-12T11:22:07.2474854Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+2026-10-12T11:22:07.2475259Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+2026-10-12T11:22:07.2475652Z [36;1mfi[0m
+2026-10-12T11:22:07.2508816Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:07.2509299Z env:
+2026-10-12T11:22:07.2509609Z   CC: clang
+2026-10-12T11:22:07.2509901Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:07.2510211Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:07.2510526Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:07.2510919Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:07.2511645Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:07.2512226Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:07.2512565Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:22:07.2512856Z ##[endgroup]
+2026-10-12T11:22:07.3015412Z ##[end-action id=__dtolnay_rust-toolchain.__run_7;outcome=success;conclusion=success;duration_ms=91]
+2026-10-12T11:22:07.3019501Z ##[start-action display=Enable Cargo sparse registry;id=__dtolnay_rust-toolchain.__run_8]
+2026-10-12T11:22:07.4488553Z ##[group]Run # implemented in 1.66, stabilized in 1.68, made default in 1.70
+2026-10-12T11:22:07.4489506Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+2026-10-12T11:22:07.4490648Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+2026-10-12T11:22:07.4491888Z [36;1m  if rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+2026-10-12T11:22:07.4492856Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-10-12T11:22:07.4493731Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+2026-10-12T11:22:07.4494557Z [36;1m  elif rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+2026-10-12T11:22:07.4495532Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-10-12T11:22:07.4496332Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+2026-10-12T11:22:07.4496953Z [36;1m  fi[0m
+2026-10-12T11:22:07.4497345Z [36;1mfi[0m
+2026-10-12T11:22:07.4536745Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:07.4537150Z env:
+2026-10-12T11:22:07.4537533Z   CC: clang
+2026-10-12T11:22:07.4537815Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:07.4538118Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:07.4538449Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:07.4538839Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:07.4539502Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:07.4539926Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:07.4540262Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:22:07.4540585Z   CARGO_TERM_COLOR: always
+2026-10-12T11:22:07.4540900Z   toolchain: stable
+2026-10-12T11:22:07.4541229Z ##[endgroup]
+2026-10-12T11:22:07.5133529Z ##[end-action id=__dtolnay_rust-toolchain.__run_8;outcome=success;conclusion=success;duration_ms=211]
+2026-10-12T11:22:07.5137102Z ##[start-action display=Work around spurious network errors in curl 8.0;id=__dtolnay_rust-toolchain.__run_9]
+2026-10-12T11:22:07.6491877Z ##[group]Run # https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation
+2026-10-12T11:22:07.6492680Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+2026-10-12T11:22:07.6493329Z [36;1mif rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+2026-10-12T11:22:07.6493938Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+2026-10-12T11:22:07.6494316Z [36;1mfi[0m
+2026-10-12T11:22:07.6530425Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:07.6530946Z env:
+2026-10-12T11:22:07.6531232Z   CC: clang
+2026-10-12T11:22:07.6531583Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:07.6531906Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:07.6532214Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:07.6532573Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:07.6533085Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:07.6533500Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:07.6533824Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:22:07.6534136Z   CARGO_TERM_COLOR: always
+2026-10-12T11:22:07.6534472Z   toolchain: stable
+2026-10-12T11:22:07.6534775Z ##[endgroup]
+2026-10-12T11:22:07.7316835Z ##[end-action id=__dtolnay_rust-toolchain.__run_9;outcome=success;conclusion=success;duration_ms=217]
+2026-10-12T11:22:07.7323053Z ##[start-action display=rustc +stable --version --verbose;id=__dtolnay_rust-toolchain.__run_10]
+2026-10-12T11:22:07.8082326Z ##[group]Run rustc +"$toolchain" --version --verbose
+2026-10-12T11:22:07.8082917Z [36;1mrustc +"$toolchain" --version --verbose[0m
+2026-10-12T11:22:07.8123379Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-12T11:22:07.8123883Z env:
+2026-10-12T11:22:07.8124161Z   CC: clang
+2026-10-12T11:22:07.8124422Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:07.8124740Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:07.8125048Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:07.8125444Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:07.8125901Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:07.8126334Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:07.8126684Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:22:07.8126979Z   CARGO_TERM_COLOR: always
+2026-10-12T11:22:07.8127325Z   toolchain: stable
+2026-10-12T11:22:07.8127616Z ##[endgroup]
+2026-10-12T11:22:07.8704145Z rustc 1.99.0 (b940084d7 2026-09-28)
+2026-10-12T11:22:07.8704785Z binary: rustc
+2026-10-12T11:22:07.8705379Z commit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4
+2026-10-12T11:22:07.8705953Z commit-date: 2026-09-28
+2026-10-12T11:22:07.8706381Z host: x86_64-unknown-linux-gnu
+2026-10-12T11:22:07.8706927Z release: 1.99.0
+2026-10-12T11:22:07.8707339Z LLVM version: 23.1.1
+2026-10-12T11:22:07.8719892Z ##[end-action id=__dtolnay_rust-toolchain.__run_10;outcome=success;conclusion=success;duration_ms=139]
+2026-10-12T11:22:07.9398567Z ##[group]Run actions/setup-node@v4
+2026-10-12T11:22:07.9398970Z with:
+2026-10-12T11:22:07.9399245Z   node-version: 24
+2026-10-12T11:22:07.9399537Z   always-auth: false
+2026-10-12T11:22:07.9399870Z   check-latest: false
+2026-10-12T11:22:07.9402388Z   token: ***
+2026-10-12T11:22:07.9402712Z env:
+2026-10-12T11:22:07.9402976Z   CC: clang
+2026-10-12T11:22:07.9403268Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:07.9403592Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:07.9403900Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:07.9404285Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:07.9404735Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:07.9405134Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:07.9405511Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:22:07.9405844Z   CARGO_TERM_COLOR: always
+2026-10-12T11:22:07.9406166Z ##[endgroup]
+2026-10-12T11:22:08.2695548Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+2026-10-12T11:22:08.2700780Z (node:2388) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-12T11:22:08.2702234Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-12T11:22:08.2704048Z ##[group]Environment details
+2026-10-12T11:22:08.6467983Z node: v24.21.0
+2026-10-12T11:22:08.6468394Z npm: 11.19.0
+2026-10-12T11:22:08.6468959Z yarn: 1.22.22
+2026-10-12T11:22:08.6470193Z ##[endgroup]
+2026-10-12T11:22:08.6600119Z ##[group]Run sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32
+2026-10-12T11:22:08.6600860Z [36;1msudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32[0m
+2026-10-12T11:22:08.6648602Z shell: /usr/bin/bash -e {0}
+2026-10-12T11:22:08.6648987Z env:
+2026-10-12T11:22:08.6649282Z   CC: clang
+2026-10-12T11:22:08.6649556Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:08.6649861Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:08.6650204Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:08.6650580Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:08.6651039Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:08.6651641Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:08.6652111Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:22:08.6652466Z   CARGO_TERM_COLOR: always
+2026-10-12T11:22:08.6652769Z ##[endgroup]
+2026-10-12T11:22:08.7331026Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-10-12T11:22:08.7608914Z Get:6 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+2026-10-12T11:22:08.7705874Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+2026-10-12T11:22:08.7719136Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+2026-10-12T11:22:08.7757707Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+2026-10-12T11:22:08.7783397Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+2026-10-12T11:22:08.8259763Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble/main all Packages [640 B]
+2026-10-12T11:22:08.8364781Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [549 kB]
+2026-10-12T11:22:08.8463407Z Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [492 kB]
+2026-10-12T11:22:08.8528229Z Get:10 https://packages.microsoft.com/ubuntu/24.04/prod noble/main armhf Packages [12.3 kB]
+2026-10-12T11:22:08.9248564Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1375 kB]
+2026-10-12T11:22:08.9344766Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [306 kB]
+2026-10-12T11:22:08.9402653Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1702 kB]
+2026-10-12T11:22:08.9452779Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [342 kB]
+2026-10-12T11:22:08.9462489Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1765 kB]
+2026-10-12T11:22:08.9563110Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [402 kB]
+2026-10-12T11:22:08.9612696Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [50.7 kB]
+2026-10-12T11:22:08.9614122Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse Translation-en [14.0 kB]
+2026-10-12T11:22:09.0252826Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1121 kB]
+2026-10-12T11:22:09.0305010Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [228 kB]
+2026-10-12T11:22:09.0740172Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1220 kB]
+2026-10-12T11:22:09.0807096Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [245 kB]
+2026-10-12T11:22:09.0825516Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1674 kB]
+2026-10-12T11:22:09.0933288Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [383 kB]
+2026-10-12T11:22:09.0953793Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [45.4 kB]
+2026-10-12T11:22:09.0973130Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse Translation-en [12.1 kB]
+2026-10-12T11:22:11.9102395Z Fetched 12.3 MB in 1s (9404 kB/s)
+2026-10-12T11:22:12.7101277Z Reading package lists...
+2026-10-12T11:22:12.7396840Z Reading package lists...
+2026-10-12T11:22:12.9002042Z Building dependency tree...
+2026-10-12T11:22:12.9008474Z Reading state information...
+2026-10-12T11:22:13.0719679Z The following NEW packages will be installed:
+2026-10-12T11:22:13.0726137Z   clang libclang-rt-18-dev-wasm32 lld wasi-libc
+2026-10-12T11:22:13.0886197Z 0 upgraded, 4 newly installed, 0 to remove and 23 not upgraded.
+2026-10-12T11:22:13.0886972Z Need to get 1076 kB of archives.
+2026-10-12T11:22:13.0887931Z After this operation, 3709 kB of additional disk space will be used.
+2026-10-12T11:22:13.0888669Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-10-12T11:22:13.1724762Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 clang amd64 1:18.0-59~exp2 [5846 B]
+2026-10-12T11:22:13.1966792Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 libclang-rt-18-dev-wasm32 all 1:18.1.3-1ubuntu1 [84.7 kB]
+2026-10-12T11:22:13.2660406Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 lld amd64 1:18.0-59~exp2 [5494 B]
+2026-10-12T11:22:13.2875445Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 wasi-libc all 0.0~git20230113.4362b18-3 [980 kB]
+2026-10-12T11:22:13.6000566Z Fetched 1076 kB in 0s (3811 kB/s)
+2026-10-12T11:22:13.6206643Z Selecting previously unselected package clang.
+2026-10-12T11:22:13.6407218Z (Reading database ... 
+2026-10-12T11:22:13.6408039Z (Reading database ... 5%
+2026-10-12T11:22:13.6408639Z (Reading database ... 10%
+2026-10-12T11:22:13.6409177Z (Reading database ... 15%
+2026-10-12T11:22:13.6409704Z (Reading database ... 20%
+2026-10-12T11:22:13.6411080Z (Reading database ... 25%
+2026-10-12T11:22:13.6411948Z (Reading database ... 30%
+2026-10-12T11:22:13.6412350Z (Reading database ... 35%
+2026-10-12T11:22:13.6412740Z (Reading database ... 40%
+2026-10-12T11:22:13.6413126Z (Reading database ... 45%
+2026-10-12T11:22:13.6413535Z (Reading database ... 50%
+2026-10-12T11:22:13.6455349Z (Reading database ... 55%
+2026-10-12T11:22:13.7477425Z (Reading database ... 60%
+2026-10-12T11:22:13.9553140Z (Reading database ... 65%
+2026-10-12T11:22:14.1613328Z (Reading database ... 70%
+2026-10-12T11:22:14.3469836Z (Reading database ... 75%
+2026-10-12T11:22:14.5083678Z (Reading database ... 80%
+2026-10-12T11:22:14.6480535Z (Reading database ... 85%
+2026-10-12T11:22:14.8048385Z (Reading database ... 90%
+2026-10-12T11:22:14.9145638Z (Reading database ... 95%
+2026-10-12T11:22:14.9146423Z (Reading database ... 100%
+2026-10-12T11:22:14.9147226Z (Reading database ... 203191 files and directories currently installed.)
+2026-10-12T11:22:14.9189971Z Preparing to unpack .../clang_1%3a18.0-59~exp2_amd64.deb ...
+2026-10-12T11:22:14.9301147Z Unpacking clang (1:18.0-59~exp2) ...
+2026-10-12T11:22:14.9487430Z Selecting previously unselected package libclang-rt-18-dev-wasm32.
+2026-10-12T11:22:14.9603583Z Preparing to unpack .../libclang-rt-18-dev-wasm32_1%3a18.1.3-1ubuntu1_all.deb ...
+2026-10-12T11:22:14.9614962Z Unpacking libclang-rt-18-dev-wasm32 (1:18.1.3-1ubuntu1) ...
+2026-10-12T11:22:14.9957789Z Selecting previously unselected package lld:amd64.
+2026-10-12T11:22:15.0075677Z Preparing to unpack .../lld_1%3a18.0-59~exp2_amd64.deb ...
+2026-10-12T11:22:15.0086866Z Unpacking lld:amd64 (1:18.0-59~exp2) ...
+2026-10-12T11:22:15.0428623Z Selecting previously unselected package wasi-libc.
+2026-10-12T11:22:15.0545729Z Preparing to unpack .../wasi-libc_0.0~git20230113.4362b18-3_all.deb ...
+2026-10-12T11:22:15.0555902Z Unpacking wasi-libc (0.0~git20230113.4362b18-3) ...
+2026-10-12T11:22:15.1209721Z Setting up libclang-rt-18-dev-wasm32 (1:18.1.3-1ubuntu1) ...
+2026-10-12T11:22:15.1232075Z Setting up lld:amd64 (1:18.0-59~exp2) ...
+2026-10-12T11:22:15.1250558Z Setting up clang (1:18.0-59~exp2) ...
+2026-10-12T11:22:15.1449518Z Setting up wasi-libc (0.0~git20230113.4362b18-3) ...
+2026-10-12T11:22:15.1471699Z Processing triggers for man-db (2.12.0-4build2) ...
+2026-10-12T11:22:15.1490809Z Not building database; man-db/auto-update is not 'true'.
+2026-10-12T11:22:15.6846322Z 
+2026-10-12T11:22:15.6847141Z Running kernel seems to be up-to-date.
+2026-10-12T11:22:15.6847600Z 
+2026-10-12T11:22:15.6847818Z No services need to be restarted.
+2026-10-12T11:22:15.6848080Z 
+2026-10-12T11:22:15.6848367Z No containers need to be restarted.
+2026-10-12T11:22:15.6848595Z 
+2026-10-12T11:22:15.6848900Z No user sessions are running outdated binaries.
+2026-10-12T11:22:15.6849193Z 
+2026-10-12T11:22:15.6849592Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-10-12T11:22:16.4574416Z ##[group]Run cargo fmt --all
+2026-10-12T11:22:16.4574798Z [36;1mcargo fmt --all[0m
+2026-10-12T11:22:16.4575170Z [36;1mcargo clippy --all-targets -- -D warnings[0m
+2026-10-12T11:22:16.4575586Z [36;1mcargo test --lib[0m
+2026-10-12T11:22:16.4615641Z shell: /usr/bin/bash -e {0}
+2026-10-12T11:22:16.4616009Z env:
+2026-10-12T11:22:16.4616376Z   CC: clang
+2026-10-12T11:22:16.4616657Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:16.4617079Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:16.4617431Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:16.4617820Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:16.4618316Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:16.4618748Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:16.4619078Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:22:16.4619426Z   CARGO_TERM_COLOR: always
+2026-10-12T11:22:16.4619725Z ##[endgroup]
+2026-10-12T11:22:18.3120344Z [1m[92m    Checking[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+2026-10-12T11:22:27.6871563Z [1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 9.60s
+2026-10-12T11:22:27.7499140Z [1m[92m   Compiling[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+2026-10-12T11:22:37.7512516Z [1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 10.03s
+2026-10-12T11:22:37.7521143Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/fwp-9a38a0d8d9915b2b)
+2026-10-12T11:22:37.7532238Z 
+2026-10-12T11:22:37.7532397Z running 73 tests
+2026-10-12T11:22:37.7535592Z test cli::tests::field_comments ... ok
+2026-10-12T11:22:37.7536203Z test cli::tests::names ... ok
+2026-10-12T11:22:37.7539561Z test csv::tests::quoting ... ok
+2026-10-12T11:22:37.7540684Z test escape::tests::applying_a_closure_does_not_let_it_escape ... ok
+2026-10-12T11:22:37.7542002Z test escape::tests::counts_around_an_argument_are_seen_through ... ok
+2026-10-12T11:22:37.7542878Z test escape::tests::match_aliases_are_followed ... ok
+2026-10-12T11:22:37.7544173Z test escape::tests::passing_on_follows_the_callee ... ok
+2026-10-12T11:22:37.7545174Z test escape::tests::reading_fields_does_not_escape ... ok
+2026-10-12T11:22:37.7563194Z test escape::tests::returning_or_storing_escapes ... ok
+2026-10-12T11:22:37.7567118Z test fmt::tests::comments_and_blank_lines ... ok
+2026-10-12T11:22:37.7567916Z test fmt::tests::layout ... ok
+2026-10-12T11:22:37.7569085Z test grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool ... ok
+2026-10-12T11:22:37.7570231Z test fmt::tests::spelling_and_ambiguities ... ok
+2026-10-12T11:22:37.7621313Z test grpc::web::tests::frames_round_trip ... ok
+2026-10-12T11:22:37.7622274Z test grpc::web::tests::sha1_and_accept ... ok
+2026-10-12T11:22:37.7636889Z test grpc::web::tests::websocket_messages_deflate_and_inflate ... ok
+2026-10-12T11:22:37.7642767Z test grpc::web::tests::zlib_round_trip ... ok
+2026-10-12T11:22:37.7654265Z test gzip::tests::chunks_make_one_stream ... ok
+2026-10-12T11:22:37.7655104Z test gzip::tests::crc ... ok
+2026-10-12T11:22:37.8756158Z test gzip::tests::others_read_ours ... ok
+2026-10-12T11:22:37.8758016Z test gzip::tests::reads_other_encoders ... ok
+2026-10-12T11:22:37.8763289Z test gzip::tests::rejects_bad_data ... ok
+2026-10-12T11:22:37.8882604Z test gzip::tests::round_trip ... ok
+2026-10-12T11:22:37.8883822Z test jsontype::tests::base64_round_trip ... ok
+2026-10-12T11:22:37.8884948Z test jsontype::tests::durations ... ok
+2026-10-12T11:22:37.8885726Z test jsontype::tests::exact_integers ... ok
+2026-10-12T11:22:37.8886476Z test lexer::tests::hyphen_vs_negative ... ok
+2026-10-12T11:22:37.8887362Z test lexer::tests::idents_and_selectors ... ok
+2026-10-12T11:22:37.8888175Z test lexer::tests::layout_flags ... ok
+2026-10-12T11:22:37.8888842Z test lexer::tests::numbers ... ok
+2026-10-12T11:22:37.8894267Z test lexer::tests::strings_comments_macros ... ok
+2026-10-12T11:22:37.8895988Z test numerics::tape_validation_tests::invalid_nodes_preserve_push_state_and_consume_backward_tapes ... ok
+2026-10-12T11:22:37.8897456Z test numerics::tape_validation_tests::scoped_callbacks_release_only_their_live_tapes ... ok
+2026-10-12T11:22:37.8909996Z test numerics::tape_validation_tests::workspace_reuse_clears_adjoint_and_preserves_token_lifetimes ... ok
+2026-10-12T11:22:37.8913838Z test ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts ... ok
+2026-10-12T11:22:37.8916456Z test rc::tests::a_borrowed_argument_lives_until_the_operation ... ok
+2026-10-12T11:22:37.8918285Z test rc::tests::a_match_dups_the_fields_an_arm_keeps_and_drops_the_rest ... ok
+2026-10-12T11:22:37.8919503Z test rc::tests::a_parameter_returned_is_moved ... ok
+2026-10-12T11:22:37.8921368Z test rc::tests::a_parameter_used_twice_is_duplicated_once ... ok
+2026-10-12T11:22:37.8923028Z test rc::tests::an_unused_parameter_is_dropped ... ok
+2026-10-12T11:22:37.8925457Z test rc::tests::borrowed_field_keeps_parent_through_a_later_consuming_argument ... ok
+2026-10-12T11:22:37.8926868Z test rc::tests::borrowed_pattern_values_are_not_unwind_owners ... ok
+2026-10-12T11:22:37.8928248Z test rc::tests::call_liveness_distinguishes_borrows_transfers_and_duplicate_owners ... ok
+2026-10-12T11:22:37.8929236Z test rc::tests::constructors_transfer_fields_and_keep_other_caller_owners ... ok
+2026-10-12T11:22:37.8930095Z test rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners ... ok
+2026-10-12T11:22:37.8933412Z test rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types ... ok
+2026-10-12T11:22:37.8934774Z test rc::tests::earlier_caf_owner_remains_owned_during_a_final_scalar_call ... ok
+2026-10-12T11:22:37.8936760Z test rc::tests::earlier_consumed_arguments_remain_owned_during_later_calls ... ok
+2026-10-12T11:22:37.8938435Z test rc::tests::earlier_duplicate_remains_owned_during_the_final_call ... ok
+2026-10-12T11:22:37.8940494Z test rc::tests::earlier_owner_remains_owned_during_a_final_scalar_call ... ok
+2026-10-12T11:22:37.8941768Z test rc::tests::matched_value_conversion_keeps_remaining_caller_owners ... ok
+2026-10-12T11:22:37.8943515Z test rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape ... ok
+2026-10-12T11:22:37.8944585Z test rc::tests::original_resource_parameters_enter_the_frame_before_dead_drops ... ok
+2026-10-12T11:22:37.8946178Z test rc::tests::parts_keep_their_order ... ok
+2026-10-12T11:22:37.8947350Z test rc::tests::retain_liveness_excludes_the_unfinished_extra_reference ... ok
+2026-10-12T11:22:37.8948185Z test rc::tests::scalars_are_not_counted ... ok
+2026-10-12T11:22:37.8949365Z test rc::tests::the_checker_rejects_mistakes ... ok
+2026-10-12T11:22:37.8951850Z test rc::tests::uninitialized_region_bindings_are_not_entry_owners ... ok
+2026-10-12T11:22:37.8952705Z test rc::tests::update_liveness_keeps_the_borrowed_base_and_remaining_owners ... ok
+2026-10-12T11:22:37.8956364Z test resource::tests::fusion_preserves_resource_stage_frames_even_with_pure_bodies ... ok
+2026-10-12T11:22:37.8957432Z test resource::tests::nominal_recursive_resource_graphs_and_nonowning_arrows ... ok
+2026-10-12T11:22:37.8958530Z test resource::tests::owner_metadata_rejects_missing_duplicate_and_scalar_slots ... ok
+2026-10-12T11:22:37.8962343Z test swagger::tests::converts_a_document ... ok
+2026-10-12T11:22:37.8963524Z test value::tests::floats_round_trip_shortest ... ok
+2026-10-12T11:22:37.8964086Z test value::tests::trits ... ok
+2026-10-12T11:22:37.8964914Z test yaml::tests::anchors ... ok
+2026-10-12T11:22:37.8966601Z test yaml::tests::block_collections ... ok
+2026-10-12T11:22:37.8967328Z test yaml::tests::block_scalars ... ok
+2026-10-12T11:22:37.8968132Z test yaml::tests::errors ... ok
+2026-10-12T11:22:37.8969094Z test yaml::tests::flow_over_lines ... ok
+2026-10-12T11:22:37.8972226Z test yaml::tests::reads_what_openapi_writes ... ok
+2026-10-12T11:22:37.8974544Z test yaml::tests::scalars ... ok
+2026-10-12T11:22:43.4515942Z test grpc::web::tests::body_bounds_and_error_order_agree_with_native ... ok
+2026-10-12T11:22:43.4516609Z 
+2026-10-12T11:22:43.4517226Z test result: ok. 73 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.70s
+2026-10-12T11:22:43.4517607Z 
+2026-10-12T11:22:43.4569705Z ##[group]Run cargo build
+2026-10-12T11:22:43.4570080Z [36;1mcargo build[0m
+2026-10-12T11:22:43.4570403Z [36;1mmkdir -p arc-evidence[0m
+2026-10-12T11:22:43.4570850Z [36;1mfor fixture in basics comptime fusion_iter fusion_lists; do[0m
+2026-10-12T11:22:43.4571861Z [36;1m  if FWP_DUMP_IR=rc target/debug/fwp build --gc arc --emit-c -O1 "tests/run/$fixture.fwp" -o "/tmp/$fixture.c" 2> "arc-evidence/types-$fixture.txt"; then[0m
+2026-10-12T11:22:43.4572718Z [36;1m    echo "$fixture accepted"[0m
+2026-10-12T11:22:43.4573049Z [36;1m  else[0m
+2026-10-12T11:22:43.4573696Z [36;1m    echo "$fixture rejected; retained IR diagnostic"[0m
+2026-10-12T11:22:43.4574107Z [36;1m  fi[0m
+2026-10-12T11:22:43.4574378Z [36;1mdone[0m
+2026-10-12T11:22:43.4614001Z shell: /usr/bin/bash -e {0}
+2026-10-12T11:22:43.4614401Z env:
+2026-10-12T11:22:43.4614697Z   CC: clang
+2026-10-12T11:22:43.4615002Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:43.4615346Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:43.4615783Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:43.4616187Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:43.4616650Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:43.4617083Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:43.4617445Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:22:43.4617764Z   CARGO_TERM_COLOR: always
+2026-10-12T11:22:43.4618095Z ##[endgroup]
+2026-10-12T11:22:43.4824072Z [1m[92m   Compiling[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+2026-10-12T11:22:55.4276388Z [1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 11.95s
+2026-10-12T11:22:56.3255261Z basics accepted
+2026-10-12T11:22:57.2116006Z comptime rejected; retained IR diagnostic
+2026-10-12T11:22:58.1716183Z fusion_iter accepted
+2026-10-12T11:22:59.0474172Z fusion_lists accepted
+2026-10-12T11:22:59.0508821Z ##[group]Run cargo test --test arc_execution --test arc_corpus
+2026-10-12T11:22:59.0509346Z [36;1mcargo test --test arc_execution --test arc_corpus[0m
+2026-10-12T11:22:59.0548735Z shell: /usr/bin/bash -e {0}
+2026-10-12T11:22:59.0549107Z env:
+2026-10-12T11:22:59.0549387Z   CC: clang
+2026-10-12T11:22:59.0549690Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:22:59.0550017Z   RUST_TEST_THREADS: 2
+2026-10-12T11:22:59.0550316Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:22:59.0550949Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:22:59.0551408Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:22:59.0552007Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:22:59.0552362Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:22:59.0552650Z   CARGO_TERM_COLOR: always
+2026-10-12T11:22:59.0552983Z ##[endgroup]
+2026-10-12T11:22:59.0892144Z [1m[92m   Compiling[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+2026-10-12T11:22:59.3921705Z [1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.31s
+2026-10-12T11:22:59.3927469Z [1m[92m     Running[0m tests/arc_corpus.rs (target/debug/deps/arc_corpus-9992b4e2625cfbe0)
+2026-10-12T11:22:59.3935149Z 
+2026-10-12T11:22:59.3935360Z running 1 test
+2026-10-12T11:23:59.3939488Z test eligible_golden_programs_preserve_semantics_and_reclaim_values has been running for over 60 seconds
+2026-10-12T11:24:55.2210702Z test eligible_golden_programs_preserve_semantics_and_reclaim_values ... FAILED
+2026-10-12T11:24:55.2212774Z 
+2026-10-12T11:24:55.2212940Z failures:
+2026-10-12T11:24:55.2213122Z 
+2026-10-12T11:24:55.2213540Z ---- eligible_golden_programs_preserve_semantics_and_reclaim_values stdout ----
+2026-10-12T11:24:55.2214274Z ARC golden corpus: rejected programs are not execution support
+2026-10-12T11:24:55.2215083Z executed	any_sized	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2216006Z rejected	array_in_place	"fwp build: --gc arc: `map.empty`: primitive `map.empty` returns an uncounted owner\n"
+2026-10-12T11:24:55.2217026Z rejected	autodiff_reverse	"fwp build: --gc arc: `ad.push`: primitive `ad.push` has no tracing-free lifetime policy\n"
+2026-10-12T11:24:55.2217797Z executed	basics	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2218435Z executed	case_of_case	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2219289Z rejected	cli_csv	"fwp build: --gc arc: `csv.parse-with`: primitive `csv.parse-with` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2220619Z rejected	cli_fs	"fwp build: --gc arc: `env.vars`: primitive `env.vars` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2221864Z rejected	cli_parse	"fwp build: --gc arc: `cli.parse`: primitive `cli.parse` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2222863Z rejected	cli_parse_more	"fwp build: --gc arc: `cli.parse`: primitive `cli.parse` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2223695Z rejected	cli_process	"fwp build: --gc arc: `process.call`: primitive `process.call` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2224496Z rejected	cli_prompt	"fwp build: --gc arc: `read-line`: primitive `read-line` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2225319Z rejected	cli_term	"fwp build: --gc arc: `term.is-tty`: primitive `term.is-tty` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2226149Z executed	collections_build	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2227023Z rejected	comptime	"fwp build: --gc arc: `comptime`: type `?` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2227916Z rejected	devices	"fwp build: --gc arc: `and`: primitive `and` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2228844Z rejected	effects	"fwp build: --gc arc: `run-state`: primitive `run-state` has no tracing-free lifetime policy\n"
+2026-10-12T11:24:55.2229603Z compile-error	err_comptime_fails	verified golden diagnostic
+2026-10-12T11:24:55.2230391Z compile-error	err_comptime_self	verified golden diagnostic
+2026-10-12T11:24:55.2230946Z compile-error	err_tint_too_wide	verified golden diagnostic
+2026-10-12T11:24:55.2232033Z rejected	exit_code_negative	"fwp build: --gc arc: `exit`: primitive `exit` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2233225Z rejected	exit_code_wraps	"fwp build: --gc arc: `exit`: primitive `exit` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2234277Z rejected	exit_in_callback	"fwp build: --gc arc: `exit`: primitive `exit` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2235209Z rejected	ffi	"fwp build: --gc arc: `main`: type `Ptr[U8]` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2236193Z rejected	float_edges	"fwp build: --gc arc: `main`: type `I128` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2236972Z executed	float_literals	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2237636Z executed	forward_aliases	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2238741Z rejected	fusion	"fwp build: --gc arc: `not`: primitive `not` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2239557Z executed	fusion_find_trap	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+2026-10-12T11:24:55.2240430Z executed	fusion_iter	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2240990Z executed	fusion_lists	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+2026-10-12T11:24:55.2241719Z executed	fusion_traps	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+2026-10-12T11:24:55.2242361Z rejected	http	"fwp build: --gc arc: `main`: type `Listener` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2243055Z rejected	int128_patterns	"fwp build: --gc arc: `main`: type `I128` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2243740Z rejected	json_typed	"fwp build: --gc arc: `main`: type `I128` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2244428Z rejected	known_hofs	"fwp build: --gc arc: `and`: primitive `and` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2245101Z rejected	lanes	"fwp build: --gc arc: `main`: type `TInt[2]` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2245844Z rejected	linalg	"fwp build: --gc arc: `list.transpose`: primitive `list.transpose` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2246552Z executed	loop_nested_state	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+2026-10-12T11:24:55.2247296Z rejected	loop_state	"fwp build: --gc arc: `fail`: primitive `fail` returns an uncounted owner\n"
+2026-10-12T11:24:55.2248018Z rejected	macros	"fwp build: --gc arc: `syntax.show`: primitive `syntax.show` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2248760Z rejected	map_in_place	"fwp build: --gc arc: `map.empty`: primitive `map.empty` returns an uncounted owner\n"
+2026-10-12T11:24:55.2249399Z executed	map_lookup_match	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2250023Z rejected	net	"fwp build: --gc arc: `main`: type `Listener` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2250683Z rejected	numerics	"fwp build: --gc arc: `main`: type `TInt[3]` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2251301Z executed	opt_constant_order	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+2026-10-12T11:24:55.2252148Z executed	optimizer	status=Some(0)	return-ledger=true	oracle=optimized-interpreter-and-golden
+2026-10-12T11:24:55.2252848Z rejected	preempt	"fwp build: --gc arc: `main`: type `Task[I64]` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2253519Z rejected	range_edges	"fwp build: --gc arc: `main`: type `I128` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2254122Z executed	reuse_aliasing	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2254872Z rejected	scalar_ops	"fwp build: --gc arc: `min`: primitive `min` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2255463Z executed	show_ints	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2256161Z rejected	sizes	"fwp build: --gc arc: `list.transpose`: primitive `list.transpose` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2256897Z rejected	stdlib_fixes	"fwp build: --gc arc: `main`: type `Trit` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2257576Z rejected	tasks	"fwp build: --gc arc: `main`: type `Channel[I64]` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2258269Z rejected	tasks_local	"fwp build: --gc arc: `main`: type `Channel[I64]` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2258958Z rejected	tint_widest	"fwp build: --gc arc: `main`: type `TInt[40]` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2259543Z executed	traits	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2260152Z rejected	trap_ffi_nul	"fwp build: --gc arc: `strlen`: foreign and remote boundaries require tracing\n"
+2026-10-12T11:24:55.2260783Z executed	trap_format_count	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+2026-10-12T11:24:55.2261734Z rejected	trap_linalg_shape	"fwp build: --gc arc: `linalg.det`: primitive `linalg.det` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2262629Z rejected	trap_overflow	"fwp build: --gc arc: `overflowing.add`: primitive `overflowing.add` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2263457Z rejected	trap_stack_overflow	"fwp build: --gc arc: `main`: type `Task[I64]` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2264267Z rejected	trap_tensor_fills	"fwp build: --gc arc: `prim.trap`: primitive `prim.trap` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2265094Z rejected	trap_tensor_length	"fwp build: --gc arc: `prim.trap`: primitive `prim.trap` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2265797Z executed	unboxed_records	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+2026-10-12T11:24:55.2266508Z rejected	utf8_input	"fwp build: --gc arc: `read-line`: primitive `read-line` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2267257Z rejected	variant_returns	"fwp build: --gc arc: `parse-int`: primitive `parse-int` returns an uncounted owner\n"
+2026-10-12T11:24:55.2267976Z rejected	vector_total	"fwp build: --gc arc: `max`: primitive `max` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2268746Z rejected	wide_records	"fwp build: --gc arc: `min`: primitive `min` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2269485Z rejected	wordfreq	"fwp build: --gc arc: `read-all`: primitive `read-all` has no tracing-free ownership contract\n"
+2026-10-12T11:24:55.2270148Z executed	optimizer_bounded	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+2026-10-12T11:24:55.2270622Z total=71 executed=20 rejected=48 compile-errors=3
+2026-10-12T11:24:55.2270831Z 
+2026-10-12T11:24:55.2270839Z 
+2026-10-12T11:24:55.2271273Z thread 'eligible_golden_programs_preserve_semantics_and_reclaim_values' (3668) panicked at tests/arc_corpus.rs:196:5:
+2026-10-12T11:24:55.2272269Z previously eligible ARC program comptime was rejected: fwp build: --gc arc: `comptime`: type `?` has no tracing-free ownership contract
+2026-10-12T11:24:55.2272718Z 
+2026-10-12T11:24:55.2272987Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-10-12T11:24:55.2273258Z 
+2026-10-12T11:24:55.2273264Z 
+2026-10-12T11:24:55.2273384Z failures:
+2026-10-12T11:24:55.2273697Z     eligible_golden_programs_preserve_semantics_and_reclaim_values
+2026-10-12T11:24:55.2273949Z 
+2026-10-12T11:24:55.2274289Z test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 115.83s
+2026-10-12T11:24:55.2274612Z 
+2026-10-12T11:24:55.2275165Z [1m[91merror[0m: test failed, to rerun pass `--test arc_corpus`
+2026-10-12T11:24:55.2285194Z ##[error]Process completed with exit code 101.
+2026-10-12T11:24:55.2348921Z ##[group]Run mkdir -p array-fusion-evidence/source
+2026-10-12T11:24:55.2349306Z [36;1mmkdir -p array-fusion-evidence/source[0m
+2026-10-12T11:24:55.2350722Z [36;1mcp src/opt.rs src/arc.rs src/ir.rs src/main.rs src/lib.rs tests/arc_execution.rs tests/arc_corpus.rs tests/loop_ownership.rs src/rc.rs src/fuse.rs src/cgen.rs src/numerics.rs src/mono.rs src/ownership.rs tests/autodiff_capacity_bounds.rs tests/numeric_array_fusion.rs tests/autodiff_workspace.rs tests/autodiff_library.rs tests/blocked_matrix.rs tests/wasm.rs tests/ad_tape_ownership.rs tests/ad_tape_scopes.rs array-fusion-evidence/source/[0m
+2026-10-12T11:24:55.2352530Z [36;1mcp runtime/fwp_rt_prims.c runtime/fwp_rt_gc.c runtime/fwp_rt_kernel.c array-fusion-evidence/source/[0m
+2026-10-12T11:24:55.2391806Z shell: /usr/bin/bash -e {0}
+2026-10-12T11:24:55.2392051Z env:
+2026-10-12T11:24:55.2392241Z   CC: clang
+2026-10-12T11:24:55.2392432Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:24:55.2392645Z   RUST_TEST_THREADS: 2
+2026-10-12T11:24:55.2392923Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:24:55.2393215Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:24:55.2393585Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:24:55.2393919Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:24:55.2394156Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:24:55.2394370Z   CARGO_TERM_COLOR: always
+2026-10-12T11:24:55.2394599Z ##[endgroup]
+2026-10-12T11:24:55.2535147Z ##[group]Run actions/upload-artifact@v7
+2026-10-12T11:24:55.2535440Z with:
+2026-10-12T11:24:55.2535690Z   name: numeric-array-fusion-evidence-ubuntu-latest
+2026-10-12T11:24:55.2536974Z   path: array-fusion-evidence/source/*.rs
+array-fusion-evidence/source/*.c
+array-fusion-evidence/*.json
+array-fusion-evidence/*.c
+array-fusion-evidence/*.asm
+array-fusion-evidence/workspaces/*.json
+array-fusion-evidence/performance/*.json
+array-fusion-evidence/performance/*.txt
+array-fusion-evidence/performance/*.c
+array-fusion-evidence/performance/*.asm
+
+2026-10-12T11:24:55.2538199Z   if-no-files-found: warn
+2026-10-12T11:24:55.2538428Z   compression-level: 6
+2026-10-12T11:24:55.2538640Z   overwrite: false
+2026-10-12T11:24:55.2538853Z   include-hidden-files: false
+2026-10-12T11:24:55.2539079Z   archive: true
+2026-10-12T11:24:55.2539266Z env:
+2026-10-12T11:24:55.2539439Z   CC: clang
+2026-10-12T11:24:55.2539623Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:24:55.2539825Z   RUST_TEST_THREADS: 2
+2026-10-12T11:24:55.2540077Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:24:55.2540468Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:24:55.2540937Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:24:55.2541262Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:24:55.2541633Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:24:55.2541849Z   CARGO_TERM_COLOR: always
+2026-10-12T11:24:55.2542067Z ##[endgroup]
+2026-10-12T11:24:55.3980156Z With the provided path, there will be 25 files uploaded
+2026-10-12T11:24:55.3985141Z Artifact name is valid!
+2026-10-12T11:24:55.3985702Z Root directory input is valid!
+2026-10-12T11:24:55.6367143Z Uploading artifact: numeric-array-fusion-evidence-ubuntu-latest.zip
+2026-10-12T11:24:55.6412534Z Beginning upload of artifact content to blob storage
+2026-10-12T11:24:55.8730708Z Uploaded bytes 253081
+2026-10-12T11:24:55.9011034Z Finished uploading artifact content to blob storage!
+2026-10-12T11:24:55.9012164Z SHA256 digest of uploaded artifact is edd15910c38a9724a160ad46089b0209f90807c75cb21e4c8fc2e56d2ccab0ae
+2026-10-12T11:24:55.9012924Z Finalizing artifact upload
+2026-10-12T11:24:56.2046515Z Artifact numeric-array-fusion-evidence-ubuntu-latest successfully finalized. Artifact ID 11743706164
+2026-10-12T11:24:56.2048030Z Artifact numeric-array-fusion-evidence-ubuntu-latest has been successfully uploaded! Final size is 253081 bytes. Artifact ID is 11743706164
+2026-10-12T11:24:56.2049982Z Artifact download URL: https://github.com/e6qu/fun-with-pipes/actions/runs/38242127912/artifacts/11743706164
+2026-10-12T11:24:56.2178813Z ##[group]Run actions/upload-artifact@v7
+2026-10-12T11:24:56.2179097Z with:
+2026-10-12T11:24:56.2179372Z   name: arc-evidence-ubuntu-latest
+2026-10-12T11:24:56.2179648Z   path: arc-evidence/
+2026-10-12T11:24:56.2179870Z   if-no-files-found: warn
+2026-10-12T11:24:56.2180100Z   compression-level: 6
+2026-10-12T11:24:56.2180315Z   overwrite: false
+2026-10-12T11:24:56.2180538Z   include-hidden-files: false
+2026-10-12T11:24:56.2180771Z   archive: true
+2026-10-12T11:24:56.2180963Z env:
+2026-10-12T11:24:56.2181141Z   CC: clang
+2026-10-12T11:24:56.2181349Z   CARGO_BUILD_JOBS: 2
+2026-10-12T11:24:56.2182234Z   RUST_TEST_THREADS: 2
+2026-10-12T11:24:56.2182463Z   FWP_ARC_ARTIFACTS: arc-evidence
+2026-10-12T11:24:56.2182750Z   FWP_ARRAY_FUSION_ARTIFACTS: array-fusion-evidence
+2026-10-12T11:24:56.2183118Z   FWP_AD_WORKSPACE_ARTIFACTS: array-fusion-evidence/workspaces
+2026-10-12T11:24:56.2183456Z   CARGO_HOME: /home/runner/.cargo
+2026-10-12T11:24:56.2183703Z   CARGO_INCREMENTAL: 0
+2026-10-12T11:24:56.2183972Z   CARGO_TERM_COLOR: always
+2026-10-12T11:24:56.2184194Z ##[endgroup]
+2026-10-12T11:24:56.3555605Z With the provided path, there will be 5 files uploaded
+2026-10-12T11:24:56.3565221Z Artifact name is valid!
+2026-10-12T11:24:56.3565825Z Root directory input is valid!
+2026-10-12T11:24:56.5878225Z Uploading artifact: arc-evidence-ubuntu-latest.zip
+2026-10-12T11:24:56.5916391Z Beginning upload of artifact content to blob storage
+2026-10-12T11:24:56.7595074Z Uploaded bytes 13254
+2026-10-12T11:24:56.7906761Z Finished uploading artifact content to blob storage!
+2026-10-12T11:24:56.7908000Z SHA256 digest of uploaded artifact is 5339b0eb6086b987fbeee0716cd7b8d606a5b6fcc6a9fec3bdaabf4e6a6b7cd5
+2026-10-12T11:24:56.7908891Z Finalizing artifact upload
+2026-10-12T11:24:57.0382509Z Artifact arc-evidence-ubuntu-latest successfully finalized. Artifact ID 11743506274
+2026-10-12T11:24:57.0383868Z Artifact arc-evidence-ubuntu-latest has been successfully uploaded! Final size is 13254 bytes. Artifact ID is 11743506274
+2026-10-12T11:24:57.0386983Z Artifact download URL: https://github.com/e6qu/fun-with-pipes/actions/runs/38242127912/artifacts/11743506274
+2026-10-12T11:24:57.0536106Z Post job cleanup.
+2026-10-12T11:24:57.1310181Z [command]/usr/bin/git version
+2026-10-12T11:24:57.1354633Z git version 2.55.0
+2026-10-12T11:24:57.1401566Z Temporarily overriding HOME='/home/runner/work/_temp/70a77960-a5b0-4afd-982e-86f0f349018b' before making global git config changes
+2026-10-12T11:24:57.1402542Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-12T11:24:57.1407359Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/fun-with-pipes/fun-with-pipes
+2026-10-12T11:24:57.1438183Z Removing SSH command configuration
+2026-10-12T11:24:57.1445091Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-12T11:24:57.1477789Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-12T11:24:57.1682050Z Removing HTTP extra header
+2026-10-12T11:24:57.1687681Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-12T11:24:57.1718714Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-12T11:24:57.1913458Z Removing includeIf entries pointing to credentials config files
+2026-10-12T11:24:57.1919941Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-12T11:24:57.1946136Z includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git.path
+2026-10-12T11:24:57.1946926Z includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git/worktrees/*.path
+2026-10-12T11:24:57.1947497Z includeif.gitdir:/github/workspace/.git.path
+2026-10-12T11:24:57.1947921Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-12T11:24:57.1957342Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git.path
+2026-10-12T11:24:57.1977295Z /home/runner/work/_temp/git-credentials-9db6bf2a-80d9-4337-9e34-5a26cc5d1bad.config
+2026-10-12T11:24:57.1989066Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-9db6bf2a\-80d9\-4337\-9e34\-5a26cc5d1bad\.config
+2026-10-12T11:24:57.2032962Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git/worktrees/*.path
+2026-10-12T11:24:57.2051351Z /home/runner/work/_temp/git-credentials-9db6bf2a-80d9-4337-9e34-5a26cc5d1bad.config
+2026-10-12T11:24:57.2059928Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/fun-with-pipes/fun-with-pipes/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-9db6bf2a\-80d9\-4337\-9e34\-5a26cc5d1bad\.config
+2026-10-12T11:24:57.2097376Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-12T11:24:57.2115916Z /github/runner_temp/git-credentials-9db6bf2a-80d9-4337-9e34-5a26cc5d1bad.config
+2026-10-12T11:24:57.2122445Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-9db6bf2a\-80d9\-4337\-9e34\-5a26cc5d1bad\.config
+2026-10-12T11:24:57.2152461Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-12T11:24:57.2170804Z /github/runner_temp/git-credentials-9db6bf2a-80d9-4337-9e34-5a26cc5d1bad.config
+2026-10-12T11:24:57.2177953Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-9db6bf2a\-80d9\-4337\-9e34\-5a26cc5d1bad\.config
+2026-10-12T11:24:57.2215575Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-12T11:24:57.2402638Z Removing credentials config '/home/runner/work/_temp/git-credentials-9db6bf2a-80d9-4337-9e34-5a26cc5d1bad.config'
+2026-10-12T11:24:57.2536302Z Cleaning up orphan processes
+2026-10-12T11:24:57.2742735Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -1,0 +1,5 @@
+{
+  "src/fuse.rs": "/tmp/fwp-phase6-arc-draft/fuse.rs",
+  "tests/arc_corpus.rs": "/tmp/fwp-phase6-arc-draft/arc_corpus.rs",
+  ".github/workflows/tracing-free-preparation.yml": "/tmp/fwp-phase6-arc-draft/type-context-preparation.yml"
+}

@@ -67,7 +67,9 @@ caller references stay protected until record/variant boxing succeeds. Worker
 argument preparation now protects original boxed arguments and each completed
 field duplicate until worker transfer. Multi-field retain cleanup releases
 completed extras on count overflow and protects existing caller owners before
-duplication. Nested constructor temporaries inherit known monomorphic context
+duplication. Fusion registers the fields of synthesized Step variants. Inlining preserves
+typed bindings for constructed and compile-time aggregates.
+Nested constructor temporaries inherit known monomorphic context
 for typed child cleanup; expression-inferred types remain authoritative. Boxed
 variant conversion keeps original boxed and remaining caller owners registered
 until typed payload retention succeeds. Record updates retain typed kept fields

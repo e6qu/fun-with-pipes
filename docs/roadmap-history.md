@@ -2241,3 +2241,88 @@ Actual merged-source acceptance subsequently passed in38238135536.
 PR127 subsequently merged at59af498c after all six exact-head jobs and docs passed.
 Actual merged-source acceptance38238135536 passes. The live handoff records the
 accepted source and directs work to the phases5–6 bundle.
+
+## ARC preparation through the lowered-type audit
+
+
+Independent branch ownership-evidence-tracing-free at
+a2500e0f68887412a80cd3ca00ae579b89bef560, runner38239726785 completed,
+adds explicit --gc arc/tracing build selection. ARC checks monomorphic value
+shapes and primitive ownership contracts; unsupported opaque/mutable graphs,
+retained callbacks, raw pointers, raw AD tape lifetimes, foreign/remote and executable-protocol/library
+boundaries diagnose instead of selecting tracing. The first supported target is
+native main programs. Counted immutable escapes and scoped File owners must
+reclaim physically. Collector implementation is excluded in ARC builds;
+conflicting GC/reuse-debug settings diagnose. A counted-to-uncounted promotion
+traps as an internal contract violation. Linux20adf795 passes38229919586. Extended85e2ead3 passes all three targets
+in38230592270: immutable escapes, File ownership, cycle-type rejection,
+missing-free/forced-collection controls, actual binary symbols/disassembly and
+existing closure/unwind/AD regressions. This remains preparation, not merged support.
+The native tests compare a raw interpreter with arrays/views, escaping closures
+and scoped files, check charged storage at return, and deliberately omit freeing.
+Initial f1a748 failed clippy for redundant diagnostic borrows; ff325009 passes
+compiler checks but rejects synthesized Step shapes;6c2344 admits Step and
+fails the ledger test's global rather than main-thread instrumentation anchor.
+Head20adf795 scopes that anchor, rejects unproved AD token lifetimes and
+includes the scalar-borrow production repair. Head0ab3d491 passes all three jobs in38231696023 and combines all
+numerical/AD/loop controls and benchmarks with ARC checks on the three platforms,
+adding native static-memory and explicit foreign/deployment rejection controls.
+Its export workflow is fwp-phase6-arc-draft/complete-preparation.yml. The three earlier
+failed preparations remain failures; none supplies an ARC acceptance gate. Broader eligibility head82ca8bb5 rejects boxed I128/U128, which lack counted owners,
+and user native declarations without checked signatures. Its new golden corpus
+passes compiler checks but fails38233842841 on all targets: case_of_case leaves
+16 charged bytes in format's managed rendering temporary. Head75981271 renders
+directly into one private output buffer and registers its recoverable-trap cleanup.
+The corpus now reports every semantic/reclamation failure in one run; it still
+fails if any mismatch remains and requires real exit codes. Source/proof:
+/private/tmp/fwp-phase6-arc-draft/format-files.json and fwp-arc-format-publication.json.
+Failure C/report: /private/tmp/fwp-arc-corpus-failure. Head75981271 passes case_of_case's
+return ledger, then fails38235361753 because the harness treats intentional err_
+compiler fixtures as unexpected failures. Head74f70ab2 verifies their exact golden
+diagnostics separately and records them as compile-errors, never ARC execution.
+ARC checks now run before the broad numerical suite for earlier failure feedback;
+all prior checks remain required. Head74f70ab2 fails38236264475 after evaluating all70 corpus entries:
+20 executed,47 rejected,3 expected compilation errors. Two executions disagree:
+optimizer exceeds the raw interpreter stack at100000 non-tail calls; traits
+leaves64 charged bytes. This is failure evidence, not20 verified ARC programs.
+The retained-C diagnosis35de2ce17 passes38237086329 and identifies four16-byte
+live cells (Options and a captured function). Inlining substitutes constructed
+aggregates without preserving parameter types, leaving stack-container children
+without typed releases. Headec866d57 preserves the existing typed local during
+inlining. It keeps the original deep recursion native/golden control and adds a
+100-call copy for raw interpreter comparison; no stack limits are increased.
+Source/receipt: fwp-phase6-arc-draft/typed-aggregate-files.json and
+fwp-arc-typed-aggregate-publication.json. Probe/failure evidence:
+/private/tmp/fwp-arc-full-corpus-failure and fwp-arc-traits-diagnostic.log.
+Headec866d57 passes all three complete jobs in38237738284, including the repaired
+ARC corpus and measurements. Final review found the checker ran before RC added
+its temporary locals. Heada2500e0f moves the same eligibility check after counted
+program construction, requiring ownership temporaries to have supported concrete
+types too. This strengthening is unverified; ec866d57 is retained as the full
+baseline, not as a gate for its successor. Source/receipt:
+fwp-phase6-arc-draft/lowered-eligibility-files.json and
+fwp-arc-lowered-eligibility-publication.json.
+Publication: fwp-arc-corpus-diagnostics-publication.json. Partial report:
+/private/tmp/fwp-arc-format-corpus.txt.
+Draft source map:
+/private/tmp/fwp-phase6-arc-draft/files.json, fwp-arc-ledger-fix-files.json,
+fwp-arc-platform-files.json and fwp-phase6-arc-draft/complete-files.json.
+Fix all failures;
+do not broaden eligibility without physical lifetime evidence. Source was
+prepared from exact accepted runtime/IR blobs plus the current phase5 compiler.
+Once coherent, phases5–6 may share the next production PR and full matrix to
+reduce cycle time, with each phase's criteria checked separately in order.
+
+Latest user constraint: avoid needless wrappers and fallbacks, magic, and
+unnecessary implicit behavior or defaults. Register spills are ordinary lowering, and protocol-defined
+options are peers. Runtime matrix.cast preserves fields and may create shape
+mismatches; the specialized path must preserve their existing list/zip behavior.
+The checked shape branch is semantic protection, not an allocation fallback.
+Dimensions and borrowed arrays cross internal primitives directly. The tile
+candidate has an explicit32-element name and24KiB three-tile payload rationale;
+measure it on each supported target before claiming performance. Caches and
+comparison switches are compiler/runtime implementation controls, not new Pipe
+syntax or implicit type conversions.
+
+
+The live handoff supersedes the next actions in this historical snapshot.

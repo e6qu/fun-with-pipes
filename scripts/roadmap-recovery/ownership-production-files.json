@@ -13,5 +13,6 @@
   "tests/arc_corpus.rs": "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/arc_corpus.rs",
   "tests/numeric_array_fusion.rs": "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/numeric_array_fusion.rs",
   "tests/fixtures/array_fusion_allocation_probe.c": "/private/tmp/fwp-ownership-production-draft/array_fusion_allocation_probe.c",
-  ".github/workflows/numerics.yml": "/private/tmp/fwp-ownership-production-draft/numerics.yml"
+  ".github/workflows/numerics.yml": "/private/tmp/fwp-ownership-production-draft/numerics.yml",
+  "src/fuse.rs": "/private/tmp/fwp-complete-ownership-platform-evidence/ubuntu-latest/source/fuse.rs"
 }

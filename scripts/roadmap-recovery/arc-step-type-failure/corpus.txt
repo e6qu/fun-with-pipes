@@ -1,0 +1,73 @@
+ARC golden corpus: rejected programs are not execution support
+executed	any_sized	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+rejected	array_in_place	"fwp build: --gc arc: `map.empty`: primitive `map.empty` returns an uncounted owner\n"
+rejected	autodiff_reverse	"fwp build: --gc arc: `ad.push`: primitive `ad.push` has no tracing-free lifetime policy\n"
+executed	basics	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+executed	case_of_case	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+rejected	cli_csv	"fwp build: --gc arc: `csv.parse-with`: primitive `csv.parse-with` has no tracing-free ownership contract\n"
+rejected	cli_fs	"fwp build: --gc arc: `env.vars`: primitive `env.vars` has no tracing-free ownership contract\n"
+rejected	cli_parse	"fwp build: --gc arc: `cli.parse`: primitive `cli.parse` has no tracing-free ownership contract\n"
+rejected	cli_parse_more	"fwp build: --gc arc: `cli.parse`: primitive `cli.parse` has no tracing-free ownership contract\n"
+rejected	cli_process	"fwp build: --gc arc: `process.call`: primitive `process.call` has no tracing-free ownership contract\n"
+rejected	cli_prompt	"fwp build: --gc arc: `read-line`: primitive `read-line` has no tracing-free ownership contract\n"
+rejected	cli_term	"fwp build: --gc arc: `term.is-tty`: primitive `term.is-tty` has no tracing-free ownership contract\n"
+executed	collections_build	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+rejected	comptime	"fwp build: --gc arc: `comptime`: type `?` has no tracing-free ownership contract\n"
+rejected	devices	"fwp build: --gc arc: `and`: primitive `and` has no tracing-free ownership contract\n"
+rejected	effects	"fwp build: --gc arc: `run-state`: primitive `run-state` has no tracing-free lifetime policy\n"
+compile-error	err_comptime_fails	verified golden diagnostic
+compile-error	err_comptime_self	verified golden diagnostic
+compile-error	err_tint_too_wide	verified golden diagnostic
+rejected	exit_code_negative	"fwp build: --gc arc: `exit`: primitive `exit` has no tracing-free ownership contract\n"
+rejected	exit_code_wraps	"fwp build: --gc arc: `exit`: primitive `exit` has no tracing-free ownership contract\n"
+rejected	exit_in_callback	"fwp build: --gc arc: `exit`: primitive `exit` has no tracing-free ownership contract\n"
+rejected	ffi	"fwp build: --gc arc: `main`: type `Ptr[U8]` has no tracing-free ownership contract\n"
+rejected	float_edges	"fwp build: --gc arc: `main`: type `I128` has no tracing-free ownership contract\n"
+executed	float_literals	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+executed	forward_aliases	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+rejected	fusion	"fwp build: --gc arc: `not`: primitive `not` has no tracing-free ownership contract\n"
+executed	fusion_find_trap	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+executed	fusion_iter	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+executed	fusion_lists	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+executed	fusion_traps	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+rejected	http	"fwp build: --gc arc: `main`: type `Listener` has no tracing-free ownership contract\n"
+rejected	int128_patterns	"fwp build: --gc arc: `main`: type `I128` has no tracing-free ownership contract\n"
+rejected	json_typed	"fwp build: --gc arc: `main`: type `I128` has no tracing-free ownership contract\n"
+rejected	known_hofs	"fwp build: --gc arc: `and`: primitive `and` has no tracing-free ownership contract\n"
+rejected	lanes	"fwp build: --gc arc: `main`: type `TInt[2]` has no tracing-free ownership contract\n"
+rejected	linalg	"fwp build: --gc arc: `list.transpose`: primitive `list.transpose` has no tracing-free ownership contract\n"
+executed	loop_nested_state	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+rejected	loop_state	"fwp build: --gc arc: `fail`: primitive `fail` returns an uncounted owner\n"
+rejected	macros	"fwp build: --gc arc: `syntax.show`: primitive `syntax.show` has no tracing-free ownership contract\n"
+rejected	map_in_place	"fwp build: --gc arc: `map.empty`: primitive `map.empty` returns an uncounted owner\n"
+executed	map_lookup_match	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+rejected	net	"fwp build: --gc arc: `main`: type `Listener` has no tracing-free ownership contract\n"
+rejected	numerics	"fwp build: --gc arc: `main`: type `TInt[3]` has no tracing-free ownership contract\n"
+executed	opt_constant_order	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+executed	optimizer	status=Some(0)	return-ledger=true	oracle=optimized-interpreter-and-golden
+rejected	preempt	"fwp build: --gc arc: `main`: type `Task[I64]` has no tracing-free ownership contract\n"
+rejected	range_edges	"fwp build: --gc arc: `main`: type `I128` has no tracing-free ownership contract\n"
+executed	reuse_aliasing	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+rejected	scalar_ops	"fwp build: --gc arc: `min`: primitive `min` has no tracing-free ownership contract\n"
+executed	show_ints	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+rejected	sizes	"fwp build: --gc arc: `list.transpose`: primitive `list.transpose` has no tracing-free ownership contract\n"
+rejected	stdlib_fixes	"fwp build: --gc arc: `main`: type `Trit` has no tracing-free ownership contract\n"
+rejected	tasks	"fwp build: --gc arc: `main`: type `Channel[I64]` has no tracing-free ownership contract\n"
+rejected	tasks_local	"fwp build: --gc arc: `main`: type `Channel[I64]` has no tracing-free ownership contract\n"
+rejected	tint_widest	"fwp build: --gc arc: `main`: type `TInt[40]` has no tracing-free ownership contract\n"
+executed	traits	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+rejected	trap_ffi_nul	"fwp build: --gc arc: `strlen`: foreign and remote boundaries require tracing\n"
+executed	trap_format_count	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+rejected	trap_linalg_shape	"fwp build: --gc arc: `linalg.det`: primitive `linalg.det` has no tracing-free ownership contract\n"
+rejected	trap_overflow	"fwp build: --gc arc: `overflowing.add`: primitive `overflowing.add` has no tracing-free ownership contract\n"
+rejected	trap_stack_overflow	"fwp build: --gc arc: `main`: type `Task[I64]` has no tracing-free ownership contract\n"
+rejected	trap_tensor_fills	"fwp build: --gc arc: `prim.trap`: primitive `prim.trap` has no tracing-free ownership contract\n"
+rejected	trap_tensor_length	"fwp build: --gc arc: `prim.trap`: primitive `prim.trap` has no tracing-free ownership contract\n"
+executed	unboxed_records	status=Some(101)	return-ledger=false	oracle=raw-interpreter
+rejected	utf8_input	"fwp build: --gc arc: `read-line`: primitive `read-line` has no tracing-free ownership contract\n"
+rejected	variant_returns	"fwp build: --gc arc: `parse-int`: primitive `parse-int` returns an uncounted owner\n"
+rejected	vector_total	"fwp build: --gc arc: `max`: primitive `max` has no tracing-free ownership contract\n"
+rejected	wide_records	"fwp build: --gc arc: `min`: primitive `min` has no tracing-free ownership contract\n"
+rejected	wordfreq	"fwp build: --gc arc: `read-all`: primitive `read-all` has no tracing-free ownership contract\n"
+executed	optimizer_bounded	status=Some(0)	return-ledger=true	oracle=raw-interpreter
+total=71 executed=20 rejected=48 compile-errors=3

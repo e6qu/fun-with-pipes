@@ -1,6 +1,6 @@
 from pathlib import Path
 import hashlib,io,json,subprocess,zipfile
-repo='repos/e6qu/fun-with-pipes';run=38239726785;head='a2500e0f68887412a80cd3ca00ae579b89bef560'
+repo='repos/e6qu/fun-with-pipes';run=38242709162;head='350500f2cbbfccbde57dbd85e9fb855e13088e7d'
 def api(p):return json.loads(subprocess.check_output(['gh','api',repo+p]))
 r=api('/actions/runs/'+str(run));assert r['head_sha']==head and r['status']=='completed' and r['conclusion']=='success'
 jobs=api('/actions/runs/'+str(run)+'/jobs')['jobs'];assert len(jobs)==3 and all(j['conclusion']=='success' for j in jobs)
