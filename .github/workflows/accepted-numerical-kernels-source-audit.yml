@@ -1,0 +1,34 @@
+name: Accepted numerical kernel source audit
+on:
+  push:
+    branches: [ownership-evidence-accepted-numerical-kernels]
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+jobs:
+  accept_numeric_source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+      - name: Retain acceptance instructions
+        run: |
+          cp scripts/audit-accepted-numerical-source.py "$RUNNER_TEMP/"
+          cp tests/fixtures/accepted-numerical-source.json "$RUNNER_TEMP/"
+          cp tests/fixtures/accepted-numerical-merge-proof.json "$RUNNER_TEMP/"
+      - uses: actions/checkout@v7
+        with:
+          ref: 59af498c32689dc4928e3681eb90dd453d8e57ce
+          fetch-depth: 0
+      - name: Retain immutable review references
+        run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Verify actual merged source and exact-head gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 "$RUNNER_TEMP/audit-accepted-numerical-source.py" --expected "$RUNNER_TEMP/accepted-numerical-source.json" --proof "$RUNNER_TEMP/accepted-numerical-merge-proof.json"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: accepted-numerical-kernels-source
+          path: numerical-kernels-acceptance/

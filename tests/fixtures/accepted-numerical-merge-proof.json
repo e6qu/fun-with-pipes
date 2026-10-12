@@ -1,0 +1,16 @@
+{
+  "sha": "59af498c32689dc4928e3681eb90dd453d8e57ce",
+  "acceptedHead": "8eb13370945b491cced1263ced290192e903acbb",
+  "tree": "8f5e908c8dc2a0ff60976e204d46260a27f7ee79",
+  "parents": [
+    "3a4582368f987ddb0233086be50c47995eb4ed3f"
+  ],
+  "pr": 127,
+  "mergedAt": "2026-10-12T10:43:08Z",
+  "subject": "Fuse numerical pipelines and reuse autodiff workspaces",
+  "message": "Fuse numerical pipelines and reuse autodiff workspaces",
+  "characters": 54,
+  "rawPayloadSha256": "9d56af9315e11d9e48b6359b0981795cb4a3cb078abc06105fd9d312ff4fbd9e",
+  "verification": "GitHub verified signed commit payload",
+  "stage": "Squash verified; actual merged-source phase4 audit remains required"
+}
