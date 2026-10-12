@@ -4734,17 +4734,29 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.record_update(e, r, &rv, sets, &xs)
             }
             Expr::Let(l, v, body) => {
-                // `let o = map.get k m in match o ...`, with only o's
-                // reference counts in the arms: no `Some` is built
-                if let Expr::Match(s, arms) = &**body {
-                    if matches!(**s, Expr::Local(x) if x == *l) {
-                        let stripped: Option<Vec<(Pat, Expr)>> = arms
-                            .iter()
-                            .map(|(p, b)| without_counts(b, *l).map(|b| (p.clone(), b)))
-                            .collect();
-                        if let Some(arms) = stripped {
-                            if let Some(r) = self.lookup_match(v, &arms) {
-                                return r;
+                // Lookup-only aliases need no Option box or reference counts.
+                let mut aliases = vec![*l];
+                let mut inner = &**body;
+                loop {
+                    match inner {
+                        Expr::Let(alias, value, next)
+                            if matches!(&**value, Expr::Local(x) if Some(x) == aliases.last()) => {
+                                aliases.push(*alias);
+                                inner = next;
+                            }
+                        Expr::Dup(x, next) | Expr::Drop(x, next) if aliases.contains(x) => inner = next,
+                        _ => break,
+                    }
+                }
+                if !aliases.iter().any(|x| self.resource_slots.contains_key(x)) {
+                    if let Expr::Match(scrutinee, arms) = inner {
+                        if matches!(&**scrutinee, Expr::Local(x) if Some(x) == aliases.last()) {
+                            let stripped: Option<Vec<(Pat, Expr)>> = arms.iter().map(|(pattern, arm)| {
+                                let body = aliases.iter().try_fold(arm.clone(), |body, local| without_counts(&body, *local));
+                                body.map(|body| (pattern.clone(), body))
+                            }).collect();
+                            if let Some(arms) = stripped {
+                                if let Some(result) = self.lookup_match(v, &arms) { return result; }
                             }
                         }
                     }
@@ -4799,10 +4811,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         };
         let f = &self.g.prog.funcs[*id];
-        if args.len() != 2 { return None; }
+        if args.len() != 2 {
+            return None;
+        }
         let array_element = match (&f.body, &f.locals[1]) {
-            (Body::Prim(s), MT::Con(n, elements)) if s == "array.get" && n == "std::Array"
-                && elements.len() == 1 && scalar(&elements[0]).is_some() => Some(elements[0].clone()),
+            (Body::Prim(s), MT::Con(n, elements))
+                if s == "array.get"
+                    && n == "std::Array"
+                    && elements.len() == 1
+                    && scalar(&elements[0]).is_some() =>
+            {
+                Some(elements[0].clone())
+            }
             _ => None,
         };
         if array_element.is_none() && !matches!(&f.body, Body::Prim(s) if s == "map.get") {
@@ -4817,7 +4837,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if !shapes {
             return None;
         }
-        let descriptor = array_element.clone().unwrap_or_else(|| f.ty.params(2).0[0].clone());
+        let descriptor = array_element
+            .clone()
+            .unwrap_or_else(|| f.ty.params(2).0[0].clone());
         let kd = self.g.desc(&descriptor);
         let mut e = scrut;
         while let Expr::Let(l, v, b) = e {
@@ -4829,23 +4851,27 @@ impl<'g, 'p> FnGen<'g, 'p> {
         let (found, at, v) = (self.fresh(), self.fresh(), self.fresh());
         if array_element.is_some() {
             self.line(&format!("int {found} = (int64_t){index} >= 0 && (uint64_t){index} < fwp_array_len({array});", index=xs[0], array=xs[1]));
-            self.line(&format!("V {v} = {found} ? fwp_array_load({array}, (size_t){index}, {kd}) : 0;", array=xs[1], index=xs[0]));
+            self.line(&format!(
+                "V {v} = {found} ? fwp_array_load({array}, (size_t){index}, {kd}) : 0;",
+                array = xs[1],
+                index = xs[0]
+            ));
         } else {
-        self.line(&format!(
-            "int {found}; uint64_t {at} = fwp_map_find({m}, {k}, {kd}, &{found});",
-            found = found,
-            at = at,
-            m = xs[1],
-            k = xs[0],
-            kd = kd
-        ));
-        self.line(&format!(
-            "V {v} = {found} ? MAP({m})->d[2 * {at} + 1] : 0;",
-            v = v,
-            found = found,
-            m = xs[1],
-            at = at
-        ));
+            self.line(&format!(
+                "int {found}; uint64_t {at} = fwp_map_find({m}, {k}, {kd}, &{found});",
+                found = found,
+                at = at,
+                m = xs[1],
+                k = xs[0],
+                kd = kd
+            ));
+            self.line(&format!(
+                "V {v} = {found} ? MAP({m})->d[2 * {at} + 1] : 0;",
+                v = v,
+                found = found,
+                m = xs[1],
+                at = at
+            ));
         }
         let value_type = array_element.or_else(|| match &f.locals[1] {
             MT::Con(name, fields) if name == "std::Map" && fields.len() == 2 => {
