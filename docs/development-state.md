@@ -208,3 +208,10 @@ source hashes. Helpers and compiler were not executed. Only bounded reports
 were downloaded into fwp-verified-archive-recovery-restoration; no local restore
 ran. Node24 checkout/upload pass there and in all three kernel preflights.
 Keep finalization metadata separate from binary control artifacts.
+
+Finite phase2 exit candidate: all177 remaining declarations explicitly retain
+tracing-compatible argument/result/callback, retention and teardown policies.
+The exact-source audit and checked buffer/array/bump/kernel/device controls pass together with codec
+aliases, type snapshots, format/stdlib docs and71 library units. This candidate
+still requires publication, all six exact-head jobs and roadmap_docs before
+acceptance; phase2 is not complete yet. Numeric representation remains next.
