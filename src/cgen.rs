@@ -5962,7 +5962,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         } else if record.is_none() {
             out.push_str("    V l0 = st[0];\n");
         }
-        let first_temporary = if unpacked_parameters { body_function.arity as usize } else { 1 };
+        let first_temporary = if unpacked_parameters { body_function.arity } else { 1 };
         for i in first_temporary..body_function.nlocals() {
             let _ = writeln!(out, "    V l{i} = 0;");
         }
