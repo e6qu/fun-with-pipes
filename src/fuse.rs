@@ -851,6 +851,35 @@ impl Fuser<'_> {
     /// Lists built by `map` and `filter` chains no consumer took: fused
     /// one by one, outermost first.
     fn lists(&mut self, e: Expr) -> Expr {
+        // Optimizer ANF binds stage results before the next stage/consumer.
+        // Rejoin an immediately consumed single-use value only when preceding
+        // arguments are total: this preserves eager initial-stage evaluation.
+        if let Expr::Let(local, value, body) = &e {
+            if crate::opt::uses(body, *local) == 1 {
+                let mut body = (**body).clone();
+                if let Expr::Call(id, args) = first_evaluated(&mut body) {
+                    if matches!(
+                        self.std_name(*id),
+                        Some(
+                            "std::iter.map"
+                                | "std::iter.filter"
+                                | "std::iter.take"
+                                | "std::iter.fold"
+                                | "std::iter.each"
+                                | "std::iter.find"
+                                | "std::iter.to-list"
+                        )
+                    ) && matches!(args.last(), Some(Expr::Local(l)) if l == local)
+                        && args[..args.len() - 1]
+                            .iter()
+                            .all(|a| self.beh.expr(a) == none())
+                    {
+                        *args.last_mut().unwrap() = (**value).clone();
+                        return self.lists(body);
+                    }
+                }
+            }
+        }
         if let Expr::Call(id, args) = &e {
             if let Some(r) = self.iter_consume(*id, args) {
                 return r;

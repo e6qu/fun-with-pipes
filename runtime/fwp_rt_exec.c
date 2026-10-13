@@ -55,12 +55,13 @@ static int tp_quoted(fwp_tp *p, V *out) {
     if (p->i >= p->n || p->s[p->i] != '"') return 0;
     p->i++;
     fwp_buf b = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
     for (;;) {
-        if (p->i >= p->n) { free(b.d); return 0; }
+        if (p->i >= p->n) { fwp_cleanup_pop(&cleanup); free(b.d); return 0; }
         char c = p->s[p->i++];
         if (c == '"') break;
         if (c != '\\') { buf_putc(&b, c); continue; }
-        if (p->i >= p->n) { free(b.d); return 0; }
+        if (p->i >= p->n) { fwp_cleanup_pop(&cleanup); free(b.d); return 0; }
         char e = p->s[p->i++];
         switch (e) {
         case 'n': buf_putc(&b, '\n'); break;
@@ -70,7 +71,7 @@ static int tp_quoted(fwp_tp *p, V *out) {
         case '"': buf_putc(&b, '"'); break;
         case '\\': buf_putc(&b, '\\'); break;
         case 'u': {
-            if (p->i >= p->n || p->s[p->i] != '{') { free(b.d); return 0; }
+            if (p->i >= p->n || p->s[p->i] != '{') { fwp_cleanup_pop(&cleanup); free(b.d); return 0; }
             p->i++;
             uint32_t cp = 0;
             int digits = 0;
@@ -80,18 +81,19 @@ static int tp_quoted(fwp_tp *p, V *out) {
                 digits++;
             }
             if (!digits || p->i >= p->n || p->s[p->i] != '}' || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
-                free(b.d);
+                fwp_cleanup_pop(&cleanup); free(b.d);
                 return 0;
             }
             p->i++;
             fwp_utf8_put(&b, cp);
             break;
         }
-        default: free(b.d); return 0;
+        default: fwp_cleanup_pop(&cleanup); free(b.d); return 0;
         }
     }
-    if (!fwp_valid_utf8((const unsigned char *)(b.d ? b.d : ""), b.len)) { free(b.d); return 0; }
-    *out = buf_to_str(&b);
+    if (!fwp_valid_utf8((const unsigned char *)(b.d ? b.d : ""), b.len)) { fwp_cleanup_pop(&cleanup); free(b.d); return 0; }
+    *out = fwp_str_new(b.d ? b.d : "", b.len);
+    fwp_cleanup_pop(&cleanup); free(b.d);
     return 1;
 }
 
@@ -103,15 +105,20 @@ static int tp_atom(fwp_tp *p, const fwp_desc *d, V *out) {
     if (p->i < p->n && p->s[p->i] == '(' && !tuple_like) {
         p->i++;
         if (!tp_value(p, d, 0, out)) return 0;
-        return tp_eat(p, ")");
+        if (tp_eat(p, ")")) return 1;
+        if (d->drop) d->drop(*out);
+        *out = 0;
+        return 0;
     }
     return tp_value(p, d, 0, out);
 }
 
-static int tp_record_body(fwp_tp *p, const fwp_desc *d, V *out) {
-    V *vals = (V *)fwp_alloc((size_t)(d->n + 1) * sizeof(V));
-    char *have = (char *)fwp_alloc_leaf((size_t)d->n + 1);
-    memset(have, 0, (size_t)d->n + 1);
+static int tp_record_body(fwp_tp *p, const fwp_desc *d, V *out, fwp_decode_fields *fields) {
+    fwp_decode_fields_begin(fields, (size_t)d->n, d->fields, (size_t)d->n, NULL);
+    V *vals = fields->values;
+    // Presence differs from value zero (unit, False, Nil and None).
+    unsigned char *have = fwp_mem_alloc((size_t)d->n + 1);
+    fields->scratch = have;
     if (!tp_eat(p, "{")) return 0;
     if (!tp_eat(p, "}")) {
         for (;;) {
@@ -120,6 +127,8 @@ static int tp_record_body(fwp_tp *p, const fwp_desc *d, V *out) {
             int idx = -1;
             for (int i = 0; i < d->n; i++) if (strcmp(d->names[i], name) == 0) idx = i;
             if (idx < 0 || !tp_eat(p, "=")) return 0;
+            if (have[idx] && d->fields[idx]->drop) d->fields[idx]->drop(vals[idx]);
+            vals[idx] = 0;
             if (!tp_value(p, d->fields[idx], 0, &vals[idx])) return 0;
             have[idx] = 1;
             if (tp_eat(p, "}")) break;
@@ -127,7 +136,7 @@ static int tp_record_body(fwp_tp *p, const fwp_desc *d, V *out) {
         }
     }
     for (int i = 0; i < d->n; i++) if (!have[i]) return 0;
-    *out = fwp_record((uint32_t)d->n, vals);
+    *out = fwp_decode_record(fields);
     return 1;
 }
 
@@ -135,11 +144,7 @@ static int tp_int(fwp_tp *p, const fwp_desc *d, V *out) {
     char t[128];
     size_t l = tp_token(p, t, sizeof t);
     if (l >= sizeof t) return 0;
-    V s = fwp_cstr(t);
-    V r = fwp_p_parse_int(s, d->kind, d->width);
-    if (r == FWP_NONE) return 0;
-    *out = OBJ(r)->f[0];
-    return 1;
+    return fwp_parse_integer_bytes(t, l, d->kind, d->width, out);
 }
 
 static int tp_float(fwp_tp *p, const fwp_desc *d, V *out) {
@@ -170,48 +175,40 @@ static int tp_list_of(fwp_tp *p, const char *open, const char *close, tp_item_fn
     }
 }
 
-typedef struct { const fwp_desc *d, *d2; V *items; size_t n, cap; int is_set; } tp_coll;
+typedef struct { const fwp_desc *d, *d2; fwp_decode_fields *owner; size_t n; int is_set; } tp_coll;
 
-static void tp_push(tp_coll *c, V v) {
-    if (c->n == c->cap) {
-        size_t old = c->cap;
-        c->cap = c->cap ? c->cap * 2 : 8;
-        c->items = (V *)fwp_mem_realloc(c->items, old * sizeof(V), c->cap * sizeof(V));
+static V *tp_slots(tp_coll *c, size_t n) {
+    if (n > SIZE_MAX - c->n) fwp_trap("text value too large");
+    size_t need = c->n + n;
+    if (need > c->owner->count) {
+        size_t count = c->owner->count;
+        if (count > SIZE_MAX / 2) fwp_trap("text value too large");
+        count = count ? 2 * count : 8;
+        if (count < need) count = need;
+        fwp_decode_fields_resize(c->owner, count);
     }
-    c->items[c->n++] = v;
+    V *slot = c->owner->values + c->n;
+    c->n = need;
+    return slot;
 }
-
 static int tp_elem_item(fwp_tp *p, void *ctx) {
-    tp_coll *c = (tp_coll *)ctx;
-    V v;
-    if (!tp_value(p, c->d, 0, &v)) return 0;
-    tp_push(c, v);
-    return 1;
+    tp_coll *c = ctx;
+    return tp_value(p, c->d, 0, tp_slots(c, 1));
 }
-
 static int tp_byte_item(fwp_tp *p, void *ctx) {
     static const fwp_desc u8d = {K_U8, "U8"};
-    tp_coll *c = (tp_coll *)ctx;
-    V v;
-    if (!tp_int(p, &u8d, &v)) return 0;
-    tp_push(c, v);
-    return 1;
+    tp_coll *c = ctx;
+    return tp_int(p, &u8d, tp_slots(c, 1));
 }
-
 static int tp_kv_item(fwp_tp *p, void *ctx) {
-    tp_coll *c = (tp_coll *)ctx;
-    V k, v = 0;
-    if (!tp_value(p, c->d, 0, &k)) return 0;
-    if (!c->is_set) {
-        if (!tp_eat(p, ":")) return 0;
-        if (!tp_value(p, c->d2, 0, &v)) return 0;
-    }
-    tp_push(c, k);
-    tp_push(c, v);
+    tp_coll *c = ctx;
+    V *pair = tp_slots(c, c->is_set ? 1 : 2);
+    if (!tp_value(p, c->d, 0, &pair[0])) return 0;
+    if (!c->is_set && (!tp_eat(p, ":") || !tp_value(p, c->d2, 0, &pair[1]))) return 0;
     return 1;
 }
 
-static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
+static int tp_value_inner(fwp_tp *p, const fwp_desc *d, int top, V *out, fwp_decode_fields *fields) {
     /* a top-level string is the text as it is, spaces included */
     if (!(top && d->kind == K_STR)) tp_ws(p);
     switch (d->kind) {
@@ -228,12 +225,15 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
         }
         return tp_quoted(p, out);
     case K_BYTES: {
-        tp_coll c = {0};
-        if (!tp_eat(p, "bytes") || !tp_list_of(p, "[", "]", tp_byte_item, &c)) { fwp_mem_free(c.items); return 0; }
+        static const fwp_desc byte = {.kind = K_U8};
+        fwp_decode_fields_begin(fields, 0, NULL, 0, &byte);
+        tp_coll c = {&byte, NULL, fields, 0, 0};
+        if (!tp_eat(p, "bytes") || !tp_list_of(p, "[", "]", tp_byte_item, &c)) return 0;
         fwp_buf b = {0};
-        for (size_t i = 0; i < c.n; i++) buf_putc(&b, (char)(uint8_t)c.items[i]);
-        fwp_mem_free(c.items);
-        *out = buf_to_str(&b);
+        fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
+        for (size_t i = 0; i < c.n; i++) buf_putc(&b, (char)(uint8_t)fields->values[i]);
+        *out = fwp_str_new(b.d ? b.d : "", b.len);
+        fwp_cleanup_pop(&cleanup); free(b.d);
         return 1;
     }
     case K_TINT: {
@@ -259,23 +259,22 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
         return 0;
     }
     case K_LIST: case K_ARRAY: {
-        tp_coll c = {d->elem};
+        fwp_decode_fields_begin(fields, 0, NULL, 0, d->elem);
+        tp_coll c = {d->elem, NULL, fields, 0, 0};
         if (d->kind == K_ARRAY && !tp_eat(p, "array")) return 0;
-        if (!tp_list_of(p, "[", "]", tp_elem_item, &c)) { fwp_mem_free(c.items); return 0; }
-        V l = fwp_list_from(c.items, c.n);
-        fwp_mem_free(c.items);
-        *out = d->kind == K_ARRAY ? fwp_p_array_from_list_with_elem(l, d->elem) : l;
+        if (!tp_list_of(p, "[", "]", tp_elem_item, &c)) return 0;
+        fields->count = c.n;
+        *out = fwp_decode_sequence(fields, d);
         return 1;
     }
     case K_MAP: case K_SET: {
-        tp_coll c = {d->elem, d->elem2};
-        c.is_set = d->kind == K_SET;
+        fields->local_types[0] = d->elem; fields->local_types[1] = d->elem2;
+        fwp_decode_fields_begin(fields, 0, fields->local_types, d->kind == K_SET ? 1 : 2, NULL);
+        tp_coll c = {d->elem, d->elem2, fields, 0, d->kind == K_SET};
         if (!tp_eat(p, c.is_set ? "set" : "map")) return 0;
-        if (!tp_list_of(p, "{", "}", tp_kv_item, &c)) { fwp_mem_free(c.items); return 0; }
-        V m = FWP_EMPTY_MAP;
-        for (size_t i = 0; i < c.n; i += 2) m = fwp_p_map_insert(c.items[i], c.items[i + 1], m, d->elem);
-        fwp_mem_free(c.items);
-        *out = m;
+        if (!tp_list_of(p, "{", "}", tp_kv_item, &c)) return 0;
+        fields->count = c.n;
+        *out = fwp_decode_map(fields, d);
         return 1;
     }
     case K_RECORD:
@@ -304,7 +303,7 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
                         x *= units[u].k;
                         if (x > INT64_MAX || x < INT64_MIN) return 0;
                         V f[1] = {(V)(int64_t)x};
-                        *out = fwp_record(1, f);
+                        *out = fwp_rc_fresh(fwp_record(1, f));
                         return 1;
                     }
                 }
@@ -317,14 +316,15 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
             return 1;
         }
         if (d->width && !d->name) {
-            V *vals = (V *)fwp_alloc((size_t)d->n * sizeof(V));
+            fwp_decode_fields_begin(fields, (size_t)d->n, d->fields, (size_t)d->n, NULL);
+            V *vals = fields->values;
             if (!tp_eat(p, "(")) return 0;
             for (int i = 0; i < d->n; i++) {
                 if (i > 0 && !tp_eat(p, ",")) return 0;
                 if (!tp_value(p, d->fields[i], 0, &vals[i])) return 0;
             }
             if (!tp_eat(p, ")")) return 0;
-            *out = fwp_record((uint32_t)d->n, vals);
+            *out = fwp_decode_record(fields);
             return 1;
         }
         if (d->name) {
@@ -332,7 +332,7 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
             size_t l = strlen(d->name);
             if (p->n - p->i >= l && memcmp(p->s + p->i, d->name, l) == 0) p->i += l;
         }
-        return tp_record_body(p, d, out);
+        return tp_record_body(p, d, out, fields);
     case K_ADT: {
         char name[256];
         tp_ident(p, name, sizeof name);
@@ -344,21 +344,33 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
         }
         if (tag < 0) return 0;
         int n = d->arity[tag];
-        V *fs = (V *)fwp_alloc((size_t)(n + 1) * sizeof(V));
+        fwp_decode_fields_begin(fields, (size_t)n, d->vfields[tag], (size_t)n, NULL);
+        V *fs = fields->values;
         for (int i = 0; i < n; i++)
             if (!tp_atom(p, d->vfields[tag][i], &fs[i])) return 0;
-        *out = fwp_data((uint32_t)tag, (uint32_t)n, fs);
+        *out = fwp_decode_variant(fields, (uint32_t)tag);
         return 1;
     }
     default: return 0;
     }
 }
 
+static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
+    fwp_decode_fields fields = {0};
+    int ok = tp_value_inner(p, d, top, out, &fields);
+    if (fields.active) fwp_decode_fields_end(&fields, 0);
+    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128)) fwp_rc_fresh(*out);
+    return ok;
+}
+
 static int fwp_parse_text(const char *s, size_t n, const fwp_desc *d, V *out) {
     fwp_tp p = {s, n, 0};
     if (!tp_value(&p, d, 1, out)) return 0;
     tp_ws(&p);
-    return p.i == p.n;
+    if (p.i == p.n) return 1;
+    if (d->drop) d->drop(*out);
+    *out = 0;
+    return 0;
 }
 
 /* ---------------------------------------------------------------- decode */
@@ -408,7 +420,8 @@ static int fwp_decode_count(fwp_rd *r,const fwp_desc *elem,int unique,uint64_t *
     return *count<=r->n;
 }
 
-static int fwp_decode(fwp_rd *r, const fwp_desc *d, V *out) {
+static int fwp_decode(fwp_rd *r, const fwp_desc *d, V *out);
+static int fwp_decode_inner(fwp_rd *r, const fwp_desc *d, V *out, fwp_decode_fields *fields) {
     uint64_t x;
     switch (d->kind) {
     case K_I8: if (!rd_le(r, 1, &x)) return 0; *out = (V)(int64_t)(int8_t)x; return 1;
@@ -437,51 +450,52 @@ static int fwp_decode(fwp_rd *r, const fwp_desc *d, V *out) {
     }
     case K_LIST: case K_ARRAY: {
         if (!fwp_decode_count(r, d->elem, 0, &x)) return 0;
-        if (d->kind == K_ARRAY) {
-            V array = fwp_array_new_packed((size_t)x, d->elem);
-            for (size_t i = 0; i < (size_t)x; i++) {
-                V value;
-                if (!fwp_decode(r, d->elem, &value)) return 0;
-                fwp_array_store(array, i, value, d->elem);
-            }
-            *out = array; FWP_KEEP_ALIVE(array); return 1;
-        }
-        V *items = (V *)fwp_alloc((size_t)(x + 1) * sizeof(V));
-        for (uint64_t i = 0; i < x; i++) if (!fwp_decode(r, d->elem, &items[i])) return 0;
-        V l = fwp_list_from(items, (size_t)x);
-        *out = l;
+        fwp_decode_fields_begin(fields, (size_t)x, NULL, 0, d->elem);
+        for (size_t i = 0; i < (size_t)x; i++) if (!fwp_decode(r, d->elem, &fields->values[i])) return 0;
+        *out = fwp_decode_sequence(fields, d);
         return 1;
     }
     case K_MAP: case K_SET: {
         int empty_values = d->kind == K_SET || fwp_wire_empty_inner(d->elem2, 0);
         if (!fwp_decode_count(r, d->elem, empty_values, &x) || (!empty_values && x > r->n)) return 0;
-        V m = FWP_EMPTY_MAP;
-        for (uint64_t i = 0; i < x; i++) {
-            V k, v = 0;
-            if (!fwp_decode(r, d->elem, &k)) return 0;
-            if (d->kind == K_MAP && !fwp_decode(r, d->elem2, &v)) return 0;
-            m = fwp_p_map_insert(k, v, m, d->elem);
+        size_t stride = d->kind == K_SET ? 1 : 2;
+        if (x > SIZE_MAX / stride / sizeof(V)) return 0;
+        fields->local_types[0] = d->elem; fields->local_types[1] = d->elem2;
+        fwp_decode_fields_begin(fields, (size_t)x * stride, fields->local_types, stride, NULL);
+        for (size_t i = 0; i < (size_t)x; i++) {
+            if (!fwp_decode(r, d->elem, &fields->values[i * stride])) return 0;
+            if (stride == 2 && !fwp_decode(r, d->elem2, &fields->values[i * stride + 1])) return 0;
         }
-        *out = m;
+        *out = fwp_decode_map(fields, d);
         return 1;
     }
     case K_RECORD: {
         if (d->n == 0) { *out = 0; return 1; }
-        V *fs = (V *)fwp_alloc((size_t)d->n * sizeof(V));
+        fwp_decode_fields_begin(fields, (size_t)d->n, d->fields, (size_t)d->n, NULL);
+        V *fs = fields->values;
         for (int i = 0; i < d->n; i++) if (!fwp_decode(r, d->fields[i], &fs[i])) return 0;
-        *out = fwp_record((uint32_t)d->n, fs);
+        *out = fwp_decode_record(fields);
         return 1;
     }
     case K_ADT: {
         if (!rd_leb(r, &x) || x >= (uint64_t)d->n) return 0;
         int n = d->arity[x];
-        V *fs = (V *)fwp_alloc((size_t)(n + 1) * sizeof(V));
+        fwp_decode_fields_begin(fields, (size_t)n, d->vfields[x], (size_t)n, NULL);
+        V *fs = fields->values;
         for (int i = 0; i < n; i++) if (!fwp_decode(r, d->vfields[x][i], &fs[i])) return 0;
-        *out = fwp_data((uint32_t)x, (uint32_t)n, fs);
+        *out = fwp_decode_variant(fields, (uint32_t)x);
         return 1;
     }
     default: return 0;
     }
+}
+
+static int fwp_decode(fwp_rd *r, const fwp_desc *d, V *out) {
+    fwp_decode_fields fields = {0};
+    int ok = fwp_decode_inner(r, d, out, &fields);
+    if (fields.active) fwp_decode_fields_end(&fields, 0);
+    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128)) fwp_rc_fresh(*out);
+    return ok;
 }
 
 /* ------------------------------------------------------------------ flags */
@@ -581,7 +595,10 @@ static int fwp_cli_value(const char *t, size_t n, const fwp_desc *d, const char 
         free(c.d);
         if (tag >= 0) { *out = (V)tag; return 1; }
         V cs = fwp_choices(d);
+        V *scratch = (V *)(uintptr_t)cs;
+        fwp_cleanup cleanup; fwp_scratch_protect(&scratch, &cleanup);
         *err = fwp_strf("`%.*s` is not one of %s", (int)n, t, STR(cs)->d);
+        fwp_scratch_finish(&scratch, &cleanup);
         return 0;
     }
     if (fwp_parse_text(t, n, d, out)) return 1;
@@ -1461,61 +1478,86 @@ static int fwp_blank(V t) {
 
 /* csv.decode: records of the record type `d` (its fields' displayed
  * types `tnames`; `rname` for a type that is not one) */
-static V fwp_p_csv_decode(V rows, const fwp_desc *d, const char *const *tnames, const char *rname) {
-    V err;
-    if (!rname) {
-        if (!rows) { V ok[1] = {0}; return fwp_data(0, 1, ok); }
+static V fwp_p_csv_decode(V rows, const fwp_desc *result_type, const char *const *tnames, const char *rname) {
+    const fwp_desc *list = result_type->vfields[0][0];
+    const fwp_desc *d = list->elem, *string = result_type->vfields[1][0];
+    fwp_decode_fields result;
+    fwp_decode_fields_begin(&result, 1, result_type->vfields[0], 1, NULL);
+    fwp_decode_fields records;
+    fwp_decode_fields_begin(&records, 0, NULL, 0, d);
+    V err = 0;
+    if (rname) { err = fwp_rc_fresh(fwp_strf("`%s` is not a record with named fields", rname)); goto finish; }
+    if (rows) {
         int nf = d->n;
         V header = OBJ(rows)->f[0];
-        size_t hn = fwp_list_len(header);
-        V *hs = (V *)fwp_alloc((hn + 1) * sizeof(V));
+        size_t hn = fwp_list_len(header), nr = fwp_list_len(OBJ(rows)->f[1]);
+        fwp_decode_fields_resize(&records, nr);
+        fwp_decode_fields headers;
+        fwp_decode_fields_begin(&headers, hn, NULL, 0, string);
         size_t k = 0;
-        for (V l = header; l; l = OBJ(l)->f[1]) hs[k++] = fwp_csv_column(OBJ(l)->f[0]);
-        int *cols = (int *)fwp_alloc_leaf((size_t)(nf + 1) * sizeof(int));
+        for (V l = header; l; l = OBJ(l)->f[1]) headers.values[k++] = fwp_rc_fresh(fwp_csv_column(OBJ(l)->f[0]));
+        int *cols = fwp_mem_alloc((size_t)(nf + 1) * sizeof(int));
+        headers.scratch = cols;
         for (int j = 0; j < nf; j++) {
             cols[j] = -1;
             for (size_t c = 0; c < hn && cols[j] < 0; c++)
-                if (strcmp(STR(hs[c])->d, d->names[j]) == 0) cols[j] = (int)c;
+                if (strcmp(STR(headers.values[c])->d, d->names[j]) == 0) cols[j] = (int)c;
             if (cols[j] < 0 && !fwp_is_option(d->fields[j])) {
-                err = fwp_strf("missing column `%s`", d->names[j]);
-                goto fail;
+                err = fwp_rc_fresh(fwp_strf("missing column `%s`", d->names[j]));
+                break;
             }
         }
-        V out = 0;
-        int r = 1;
-        for (V l = OBJ(rows)->f[1]; l; l = OBJ(l)->f[1]) {
-            r++;
+        size_t row_index = 0;
+        for (V l = OBJ(rows)->f[1]; l && !err; l = OBJ(l)->f[1], row_index++) {
             V row = OBJ(l)->f[0];
-            size_t rn = fwp_list_len(row);
-            V *cells = (V *)fwp_alloc((rn + 1) * sizeof(V));
+            fwp_decode_fields cells;
+            fwp_decode_fields_begin(&cells, fwp_list_len(row), NULL, 0, string);
+            cells.transferred = 1; /* borrowed cells, protected by rows */
             k = 0;
-            for (V c = row; c; c = OBJ(c)->f[1]) cells[k++] = OBJ(c)->f[0];
-            V *vals = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
+            for (V c = row; c; c = OBJ(c)->f[1]) cells.values[k++] = OBJ(c)->f[0];
+            fwp_decode_fields fields;
+            fwp_decode_fields_begin(&fields, (size_t)nf, d->fields, (size_t)nf, NULL);
             for (int j = 0; j < nf; j++) {
-                V t = cols[j] >= 0 && (size_t)cols[j] < rn ? cells[cols[j]] : fwp_cstr("");
+                V t = cols[j] >= 0 && (size_t)cols[j] < cells.count ? cells.values[cols[j]] : 0;
+                const char *text = t ? STR(t)->d : "";
+                size_t length = t ? STR(t)->len : 0;
                 const fwp_desc *fd = d->fields[j];
-                V m;
+                V message = 0;
                 int ok;
                 if (fwp_is_option(fd)) {
-                    if (fwp_blank(t)) { vals[j] = FWP_NONE; continue; }
-                    V v;
-                    ok = fwp_cli_value(STR(t)->d, STR(t)->len, fd->vfields[1][0], tnames[j], &v, &m);
-                    if (ok) { V x[1] = {v}; vals[j] = fwp_data(1, 1, x); }
+                    if (!t || fwp_blank(t)) { fields.values[j] = FWP_NONE; continue; }
+                    fwp_decode_fields option;
+                    fwp_decode_fields_begin(&option, 1, fd->vfields[1], 1, NULL);
+                    ok = fwp_cli_value(text, length, fd->vfields[1][0], tnames[j], &option.values[0], &message);
+                    if (ok) fields.values[j] = fwp_decode_variant(&option, 1);
+                    else fwp_decode_fields_end(&option, 0);
                 } else {
-                    ok = fwp_cli_value(STR(t)->d, STR(t)->len, fd, tnames[j], &vals[j], &m);
+                    ok = fwp_cli_value(text, length, fd, tnames[j], &fields.values[j], &message);
                 }
                 if (!ok) {
-                    err = fwp_strf("row %d: column `%s`: %s", r, d->names[j], STR(m)->d);
-                    goto fail;
+                    fwp_value_owner owner = {fwp_rc_fresh(message), string->drop};
+                    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);
+                    err = fwp_rc_fresh(fwp_strf("row %zu: column `%s`: %s", row_index + 2, d->names[j], STR(message)->d));
+                    fwp_value_finish(&owner, &cleanup);
+                    if (string->drop) string->drop(message);
+                    break;
                 }
             }
-            out = fwp_cons(fwp_record((uint32_t)nf, vals), out);
+            if (!err) records.values[row_index] = fwp_decode_record(&fields);
+            else fwp_decode_fields_end(&fields, 0);
+            fwp_decode_fields_end(&cells, 1);
         }
-        V ok[1] = {fwp_p_reverse(out)};
-        return fwp_data(0, 1, ok);
+        fwp_decode_fields_end(&headers, 0);
     }
-    err = fwp_strf("`%s` is not a record with named fields", rname);
-fail:;
-    V e[1] = {err};
-    return fwp_data(1, 1, e);
+finish:
+    if (err) {
+        fwp_decode_fields_end(&records, 0);
+        result.descs = result_type->vfields[1];
+        result.values[0] = err;
+    } else {
+        result.values[0] = fwp_decode_sequence(&records, list);
+    }
+    V value = fwp_decode_variant(&result, err ? 1 : 0);
+    FWP_KEEP_ALIVE(rows);
+    return value;
 }

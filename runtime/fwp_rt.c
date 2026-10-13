@@ -227,6 +227,7 @@ struct fwp_desc {
                                flags (Bool, Option, Json, Duration) */
     const int *order;       /* nominal record: fields in declaration order */
     const char *const *jnames; /* record: JSON names of the fields, if renamed */
+    void (*dup)(V), (*drop)(V); /* typed reconstruction ownership */
 };
 
 /* Array descriptors stay outside the payload header. Views retain only

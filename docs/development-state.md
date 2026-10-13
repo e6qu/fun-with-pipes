@@ -16,7 +16,7 @@ Windows remains deferred; universal binaries are not an objective.
 
 ## Remaining ownership deliveries
 
-The active seven-step bundle is in progress. No code extension is verified yet.
+The active seven-step bundle is in progress. Code extensions remain pending execution acceptance.
 
 - Docs: replaced obsolete PR #132 pending actions with its acceptance record.
 - Reconstruction: inspect typed CSV/JSON/protocol graphs and partial failures.
@@ -35,7 +35,22 @@ do not treat it as validation of this branch. Full builds, suites, benchmarks
 and large evidence generation run on GitHub. Local checks use
 `python3 scripts/local-guard.py COMMAND...`, serially within existing limits.
 
-Next: implement and test scoped State eligibility and decoder ownership;
+Focused CI 38393812709 found a Clippy clone warning; fixed in b1c2a57.
+Focused CI 38394225120 exercised the earlier changes and found an invalid State
+fixture and missing producer fusion through optimizer bindings. Both are
+corrected in the working tree; the new raw forcing-order regressions passed
+on Linux AMD64. Decoder ownership is now implemented in the working tree,
+including a new typed field cleanup runtime, JSON scratch arena, text/protocol
+partial cleanup and typed CSV results. Added typed decoder alias/error tests
+and injected construction/unwind controls; these need CI execution.
+
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-check-runtime.py`
+passed C syntax validation of the edited runtime (0.08 CPU seconds). The new
+decoder fixture ran in the old raw interpreter as an early syntax/oracle check;
+the State fixture needs the current compiler because the local binary predates
+the accepted higher-order State inference fix. This is not current-head validation.
+
+Next: run decoder/State/producer checks on the current branch;
 then producer specialization and wide-number lowering. Track actual outcomes
 here, replace resolved failures, and keep the PR open until all seven steps
 are accepted. Preserve raw interpreter/native semantics and inspect emitted C

@@ -13,10 +13,10 @@ import time
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = {
-    'fold': 'iter.take | apply (iter.count-from 0) | iter.fold add 0',
-    'each': 'iter.take | apply (iter.count-from 0) | run-state 0 (iter.each (add | modify)) | .1',
-    'find': 'iter.take | apply (iter.count-from 0) | iter.find (gt 25)',
-    'pipeline': 'iter.take | apply (iter.count-from 0) | iter.map (add 1) | iter.filter (rem 2 | eq 0) | iter.fold add 0',
+    'fold': 'both id (sub 1000 | iter.count-from) | uncurry iter.take | iter.fold add 0',
+    'each': 'both id (sub 1000 | iter.count-from) | uncurry iter.take | run-state 0 (iter.each (add | modify)) | .1',
+    'find': 'both id (sub 1000 | iter.count-from) | uncurry iter.take | iter.find (gt 25)',
+    'pipeline': 'both id (sub 1000 | iter.count-from) | uncurry iter.take | iter.map (add 1) | iter.filter (rem 2 | eq 0) | iter.fold add 0',
     'fold-until': 'range 0 | fold-until (add | flip compose (if (gt 100) Stop Again)) 0',
     'map-accum': 'range 0 | map-accum (add | flip compose (both id id)) 0 | .1',
 }

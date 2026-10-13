@@ -16,6 +16,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_prims.c"),
     include_str!("../runtime/fwp_rt_task.c"),
     include_str!("../runtime/fwp_rt_sys.c"),
+    include_str!("../runtime/fwp_rt_decode.c"),
     include_str!("../runtime/fwp_rt_json.c"),
     include_str!("../runtime/fwp_rt_web.c"),
     include_str!("../runtime/fwp_rt_pipe.c"),
@@ -1381,7 +1382,17 @@ impl<'p> Gen<'p> {
         let id = self.desc_defs.len();
         self.descs.insert(mt.clone(), id);
         self.desc_defs.push(String::new());
-        let def = self.desc_body(mt, id);
+        let mut def = self.desc_body(mt, id);
+        if self.reuse {
+            let drop = self.value_drop(mt);
+            let dup = if crate::rc::needs_rc(&self.prog.shapes, mt) {
+                self.value_dup(mt)
+            } else {
+                "NULL"
+            };
+            let end = def.rfind("};").expect("descriptor initializer");
+            def.insert_str(end, &format!(", .dup = {dup}, .drop = {drop}"));
+        }
         self.desc_defs[id] = def;
         id
     }
@@ -5560,9 +5571,10 @@ impl<'p> Gen<'p> {
                 let field_drop = self.value_drop(&MT::con("std::String"));
                 format!("return fwp_p_csv_parse_with(l0, l1, {row_drop}, {rows_drop}, {field_drop});")
             }
-            "json.read" => format!(
-                "return fwp_p_json_read(l0, {});",
-                self.desc(&elem(&result, 0))
+            "json.read" | "json.parse" => format!(
+                "return fwp_p_json_{}(l0, {});",
+                if sym == "json.read" { "read" } else { "parse" },
+                self.desc(&result)
             ),
             "format" => format!("return fwp_p_format(l0, l1, {});", self.desc(&p(1))),
             "fail" => {
@@ -5707,7 +5719,8 @@ impl<'p> Gen<'p> {
                         .any(|(l, _)| l.starts_with(|c: char| c.is_ascii_digit()));
                 if !named {
                     return Ok(format!(
-                        "return fwp_p_csv_decode(l0, 0, 0, {});",
+                        "return fwp_p_csv_decode(l0, {}, 0, {});",
+                        self.desc(&result),
                         c_string_literal(t.to_string().as_bytes())
                     ));
                 }
@@ -5721,7 +5734,7 @@ impl<'p> Gen<'p> {
                 format!(
                     "static const char *const names[] = {{{}}};\n    return fwp_p_csv_decode(l0, {}, names, 0);",
                     names.join(", "),
-                    self.desc(&t)
+                    self.desc(&result)
                 )
             }
             "cli.parse" | "cli.help" => {
@@ -5930,7 +5943,6 @@ impl<'p> Gen<'p> {
                     ("run-state", "fwp_p_run_state(l0, l1, l2)"),
                     ("file.close", "fwp_p_file_close(l0)"),
                     ("loop", "fwp_p_loop(l0, l1)"),
-                    ("json.parse", "fwp_p_json_parse(l0)"),
                     ("json.encode", "fwp_p_json_encode(l0)"),
                     ("string.split-once", "fwp_p_split_once(l0, l1)"),
                     ("bytes.find", "fwp_p_bytes_find(l0, l1)"),
@@ -8536,6 +8548,10 @@ static const fwp_exec_spec exec_spec{i} = {{
              u.tag = OBJ(v)->tag; for (uint32_t k = 0; k < OBJ(v)->n && k < {m}; k++) u.f[k] = OBJ(v)->f[k]; return u; }}",
             m = m
         );
+    }
+    // Descriptor-driven reconstruction uses the same typed drops as IR owners.
+    for i in 0..g.drop_defs.len() {
+        let _ = writeln!(out, "static void fwp_drop{}(V v);", i);
     }
     // tentative declarations, so descriptors can refer to each other
     for i in 0..g.desc_defs.len() {

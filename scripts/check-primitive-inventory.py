@@ -96,6 +96,8 @@ for symbol in ['prim.add', 'prim.sub', 'prim.mul', 'prim.div', 'prim.rem',
 bundle_contracts['int.to-float'] = (1, 'Shared', [])
 bundle_contracts['min'] = bundle_contracts['max'] = (2, 'SelectedArgument', [0, 1])
 bundle_contracts['csv.parse-with'] = (2, 'OwnedTree', [])
+for symbol in ['csv.decode', 'json.parse', 'json.read']:
+    bundle_contracts[symbol] = (1, 'OwnedTree', [])
 promoted = []
 changed_symbols = set()
 for row in rows:
