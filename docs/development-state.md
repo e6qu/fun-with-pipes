@@ -29,83 +29,76 @@ Windows or true half/quad support is claimed by that baseline.
 | 2 | In progress | Broader proved ownership, retained/foreign/protocol contexts, cycle policy and WASM reclamation |
 | 3 | In progress | Broader producer/worker specialization and reduced boxing/closure allocation |
 | 4 | Pending | Measured kernel/layout improvements, nested reverse mode and checkpointing |
-| 5 | Pending | Actual F16/BF16/F128 representations and coordinated protocol migration |
+| 5 | In progress | Actual F16/BF16/F128 representations and coordinated protocol migration |
 | 6 | In progress | Windows ARM64/AMD64 runtime, full native validation and separate packages |
 
 ## Implementation and validation
 
-Initial audit: the compiler's Rust scheduler, TLS and transport contain Unix
-interfaces; the C runtime needs native Windows allocation, scheduling, socket,
-process and loader support. Existing half/quad type names lower to F32/F64 in
-monomorphization, descriptors and protocol decoding. Item 5 must change both
-engines and protocol/storage together, rather than relabeling existing values.
-The first native Windows probe
-[38438260036](https://github.com/e6qu/fun-with-pipes/actions/runs/38438260036)
-failed on both architectures at Unix socket imports and descriptor access.
-The runner hosts are `aarch64-pc-windows-msvc` and `x86_64-pc-windows-msvc`.
+Scalar foreign-C ARC admission uses the actual ABI classifier and rejects
+managed strings, pointers and callbacks. Raw/native reclamation controls passed
+on all four Linux/macOS targets in [portability 38439707405](https://github.com/e6qu/fun-with-pipes/actions/runs/38439707405)
+at `217d6da`. Retained callbacks, protocols and cyclic runtime graphs still need
+proofs; this is not general collector-free execution.
 
-Implemented, awaiting runner execution: scalar foreign-C ARC admission based
-on actual ABI types, with managed-string/callback rejection and raw/native
-reclamation controls; native socket handles and WSAPoll; shared Windows/POSIX
-library loading for FFI, TLS and OpenCL; owned shim image/directory lifetimes;
-Windows DLL suffix and OpenSSL LLP64 signatures/socket errors. Loader and TCP
-readiness/shutdown unit tests exercise real OS operations. This does not yet
-port the generated C runtime or establish Windows support.
+WASM allocations use reclaimable libc storage. Typed last-owner destruction
+removes count metadata before freeing storage; unproved shared graphs remain
+retained. Physical-free observation across 10,000 cycles and 300 aliases, missing
+free and disabled-free controls, resource destruction and full actual WASI
+goldens passed on both Linux architectures in [38440780537](https://github.com/e6qu/fun-with-pipes/actions/runs/38440780537)
+at `fb199e7`. File-specific shared headers and cyclic graphs remain outstanding.
 
-Focused runner validation at `217d6da`:
-[portability 38439707405](https://github.com/e6qu/fun-with-pipes/actions/runs/38439707405)
-passed on all four Linux/macOS targets (compiler/unit, ARC, FFI and TLS).
-[Windows 38440769248](https://github.com/e6qu/fun-with-pipes/actions/runs/38440769248)
-at `fb199e7` passed all-target compilation, real socket readiness/EOF tests,
-DLL load/call/unload tests and compiler linking on both native architectures.
-The job's last command incorrectly required exit zero from `loop_state.fwp`,
-whose golden deliberately exits 101 after overflow; its output matched the
-expected trap. The next harness runs all raw interpreter goldens with proper
-stdout/stderr/status comparison. C foreign calls use the official LLVM-MinGW
-20261006 native UCRT toolchains, pinned by asset SHA-256. The generated C runtime
-is not yet ported, and Windows support is not accepted.
+Direct `iter.iterate` fusion preserves eager lookahead, effect/trap order,
+early stopping and owned String captures. Compiler checks, raw/native ownership
+regressions and allocation/instruction evidence passed on all four Linux/macOS
+targets in [38441649508](https://github.com/e6qu/fun-with-pipes/actions/runs/38441649508)
+at `277bf4a`. The 1,000-element probe uses 6 allocation requests versus 8,006
+unfused and 4,005 with only consumer fusion; the fused worker has no dynamic
+consumer calls, tail calls or state-record construction. All variants retain
+the 64-byte CLI baseline. [Permanent measurements](measurements/iterate-producer.json)
+record hardware, toolchains, flags, source hashes, memory and process timings;
+startup-inclusive timings do not establish a speedup.
 
-WebAssembly implementation in progress: value allocations now use reclaimable
-libc storage; typed last-owner destruction removes count metadata before freeing
-storage. Counted ownership is enabled for ordinary generated programs, while
-unproved shared graphs remain retained. Disabled freeing preserves storage and
-resource destruction still disposes metadata. The new test observes actual libc
-free across 10,000 cycles and 300 aliases, including a missing-free negative
-control and disabled-free control, on host and actual WASI. [WASI 38440780537](https://github.com/e6qu/fun-with-pipes/actions/runs/38440780537)
-at `fb199e7` passed physical/resource controls and full goldens on Linux AMD64;
-ARM64 is still running. File-specific shared headers and cyclic
-runtime graphs remain separate boundaries, not collector-free claims.
+Windows Rust APIs now use native socket handles/WSAPoll and owned Windows/POSIX
+libraries for FFI, TLS and OpenCL. Both native architectures passed all-target
+compilation, actual TCP readiness/EOF and DLL load/call/unload tests, and compiler
+linking at `fb199e7`. Full interpreter goldens at `277bf4a` in
+[38441636861](https://github.com/e6qu/fun-with-pipes/actions/runs/38441636861)
+failed: checkout CRLF changed expected output bytes; OS error wording differed;
+the Unix signal fixture assumed Unix process status; forcing raw mode conflicted
+with goldens for optimized deep recursion/preemption. Prepared fixes enforce LF
+text checkout, normalize known Windows I/O errors, retain Unix signal coverage
+in a Unix-specific raw/native test, and use normal optimizer settings for the
+full golden harness. Explicit raw/native semantic controls remain required.
+Generated C exit status is now explicitly modulo 256 on every OS. Windows full
+interpreter goldens need rerunning; generated C runtime and PE packaging remain
+unported. Native LLVM-MinGW UCRT toolchains are pinned by asset SHA-256.
 
-Iterator specialization is implemented but awaiting runner evidence: direct
-`iter.iterate` chains carry current/lookahead values and captured advancement
-functions through typed loop state. Eager first lookahead, trap order, early
-stopping and owned String captures have new raw/native controls. The existing
-iteration measurement script includes the new producer and compares allocations,
-live storage and native instructions with producer/consumer fusion disabled.
-No performance claim is made before the `iteration` runner suite passes.
+The exact-format bootstrap vendors the selected BSD-licensed Berkeley SoftFloat
+3e binary16/binary128 core. Cargo builds the same C source exposed for native
+and actual wasm32 tests; binary packages include both project and vendor
+licenses. Local bit-level controls pass for 113-bit precision, ties-even,
+subnormals, canonical arithmetic NaNs, raw payload preservation and direct
+quad-to-half narrowing without double rounding. CI must validate the Rust/C ABI
+on all six platforms and WASM. This core alone changes no language representation:
+F16/BF16 still lower to F32 and F128 to F64. BF16, exact decimal text/literals,
+transcendentals, descriptors/arrays/ABI and versioned protocol migration remain.
 
-Local guarded `cargo check --lib`, `cargo clippy --lib -- -D warnings`, formatting
-and the roadmap audit passed (the audit now accepts `In progress`). An extracted
-actual non-GC allocator probe passed ASan/UBSan with the 10,000-cycle/300-alias
-workload; command: `python3 scripts/local-guard.py python3
-/private/tmp/fwp-wasm-allocator-check.py`. Its first source concatenation failed
-before execution and was corrected; this is not actual WASI evidence.
-Production runs defer while the PR is a draft and start on `ready_for_review`;
-skipped production jobs are not acceptance. Focused runner suites are `windows`,
-`portability`, `wasm` and `iteration` in `numerics.yml`.
-
-Use `python3 scripts/local-guard.py COMMAND...` for serial focused checks.
-Full builds, suites, benchmarks and large regeneration stay on GitHub runners.
-Retain disk/RSS/CPU/deadline limits. Do not run the stale local fwp executable
-as an oracle for new code. Preserve raw interpreter/native agreement, exact-bit
-fixtures, ownership negative controls, stress/reuse checks and measured assembly.
+Local checks passed under `python3 scripts/local-guard.py`: `cargo fmt --all`,
+`cargo check --lib`, `cargo clippy --lib --test cli --test softfloat_core -- -D
+warnings`, and `python3 /private/tmp/fwp-test-softfloat-core.py` (four standalone
+arithmetic tests linked against the actual built C core). Earlier extracted
+non-GC allocator ASan/UBSan probe and roadmap audit passed. Full builds, suites,
+benchmarks and large regeneration stay on GitHub runners. Do not use the stale
+local fwp executable as an oracle. Preserve disk/RSS/CPU/deadline limits.
+Production CI defers draft PRs; skipped jobs are not acceptance. Focused suites
+are `windows`, `portability`, `wasm` and `iteration` in `numerics.yml`.
 
 ## Next action
 
-Next: run the updated native Windows and portability probes, fix their failures,
-and port the generated C runtime/resources. Continue additional ownership proofs
-and WASM reclamation. Establish portable exact float arithmetic and explicit
-protocol migration before changing representations. Items 4–5 remain pending;
-all six acceptance rows in PLAN remain required.
-Keep all six items in the same PR. Require full Linux/macOS and added Windows
-acceptance plus docs on its final head before squash merge.
+Next: publish the Windows golden fixes and exact-format core; run `windows`,
+`portability` and `wasm`, fixing all failures. Then continue generated C Windows
+runtime/resources and PE packages, actual floating representations/text/protocol,
+broader ownership/worker proofs, and nested reverse mode/checkpointing with
+measured layout improvements. Item 4 remains pending. All six acceptance rows
+in PLAN remain required in this same PR. Require full Linux/macOS and added
+Windows acceptance plus docs on the final head before squash merge.

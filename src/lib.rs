@@ -56,6 +56,7 @@ pub mod rest;
 pub mod rpc;
 pub mod sched;
 pub mod services;
+pub mod softfloat;
 pub mod solve;
 pub mod stdgen;
 pub mod swagger;

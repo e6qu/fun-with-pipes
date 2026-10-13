@@ -1234,3 +1234,36 @@ fn exposure() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[cfg(unix)]
+#[test]
+fn child_signal_status_matches_the_shell_in_both_engines() {
+    let dir = scratch("signal-status");
+    let source = dir.join("signal.fwp");
+    std::fs::write(
+        &source,
+        "main = [\"sh\", \"-c\", \"kill -9 $$\"] | process.run | .status | echo\n",
+    )
+    .unwrap();
+    let mut interpreter = Command::new(fwp());
+    interpreter
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&source);
+    assert_eq!(run(interpreter, &[], "", &dir), "137\n");
+    let binary = dir.join("signal");
+    let built = Command::new(fwp())
+        .arg("build")
+        .arg(&source)
+        .arg("-o")
+        .arg(&binary)
+        .output()
+        .unwrap();
+    assert!(
+        built.status.success(),
+        "{}",
+        String::from_utf8_lossy(&built.stderr)
+    );
+    assert_eq!(run(Command::new(binary), &[], "", &dir), "137\n");
+    std::fs::remove_dir_all(dir).unwrap();
+}

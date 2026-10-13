@@ -1,9 +1,10 @@
-# Floating-point representation decision
+# Floating-point representation and migration
 
 The current implementation keeps its existing precision and protocol bytes.
 `F16`, `BF16` and `F128` are distinct language types, but their names do not yet
-promise the corresponding physical format. This decision adds no implicit
-conversion, syntax, new backend or platform-dependent precision.
+promise the corresponding physical format. The active bundle implements the migration specified below. Until its acceptance
+checks pass, these remain the implemented representations. Keep conversion
+explicit and precision independent of the host.
 
 | Language type | Implemented arithmetic/payload | Protocol v1 bytes | Intended format after a coordinated migration |
 |---|---|---|---|
@@ -33,7 +34,7 @@ host C `long double`: its width, representation and ABI vary by target.
 
 ## Migration contract
 
-A future implementation must deliver these together before changing defaults:
+The active implementation must deliver these together before changing representations:
 
 - Literals, arithmetic and conversion round once to the destination format,
   using nearest, ties to even. Preserve signed zero, infinities and gradual
@@ -66,6 +67,6 @@ The intended bfloat treatment includes subnormals and nearest-even rounding;
 these are concrete choices consistent with the [ratified RISC-V BF16 specification](https://docs.riscv.org/reference/isa/unpriv/bfloat16.html), not assumptions
 that every device's bfloat instructions behave identically.
 
-Implementing that migration is future work beyond the active bundle's format
-**decision**. Current code and docs must continue to report the implemented
-precision until the migration passes the full contract above.
+The migration is item 5 of [the active plan](../PLAN.md). Code and docs must
+continue to report the implemented precision until the migration passes the full
+contract above on all six native platforms and the supported WebAssembly paths.

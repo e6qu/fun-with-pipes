@@ -1,0 +1,758 @@
+{
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38441649508",
+  "scope": "Direct iter.iterate allocation and native worker evidence. Final charged storage includes the 64-byte CLI baseline. Process timings include startup; no speedup claim. All four native jobs passed.",
+  "reports": [
+    {
+      "head": "277bf4ab6eb1dbe640e304c0a0144ad7703a5812",
+      "hardware": {
+        "system": "Darwin",
+        "node": "iad20-fj919-cf7cbaa8-d03e-4620-9072-4860f3d8e9fe-6ADC7F21CB9A.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "elements": 1000,
+      "scope": "Allocation-inclusive process timings include startup, runtime argument parsing and output. Memory probes are separate binaries; charged live storage excludes allocator metadata. Peak sampled after every managed allocation; zero collections required. No speed threshold or comparison with C/Rust is asserted.",
+      "results": {
+        "iterate": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 6,
+            "requestedBytes": 124,
+            "retains": 0,
+            "peakChargedBytes": 128,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            5380625,
+            6102667,
+            3825333,
+            3527250,
+            3482542
+          ],
+          "medianProcessWallNs": 3825333,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "54773d79af982ec34e88ad0d19e75c3392cc8b7cbba04d300ddf3bb6384295d6",
+          "consumerFusion": true,
+          "producerFusion": true,
+          "fusedLoopWorkers": [
+            {
+              "tailCallSites": 0,
+              "dynamicConsumerCallSites": 0,
+              "stateRecordConstructions": 0
+            }
+          ]
+        },
+        "iterate-consumer-only": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 4005,
+            "requestedBytes": 88084,
+            "retains": 5996,
+            "peakChargedBytes": 272,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            3439333,
+            2842500,
+            3808125,
+            4572459,
+            3628500
+          ],
+          "medianProcessWallNs": 3628500,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "f0f9fa31d77c9e12378d5171fad260df7cea364a4b177ee463b9d1100a80243b",
+          "consumerFusion": true,
+          "producerFusion": false,
+          "fusedLoopWorkers": [
+            {
+              "tailCallSites": 1,
+              "dynamicConsumerCallSites": 0,
+              "stateRecordConstructions": 0
+            }
+          ]
+        },
+        "iterate-unfused": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 8006,
+            "requestedBytes": 176108,
+            "retains": 9995,
+            "peakChargedBytes": 400,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            4771750,
+            5434916,
+            3813291,
+            3202542,
+            3719584
+          ],
+          "medianProcessWallNs": 3813291,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "68a9f010d066cdbab4d9f0e84bab6878aac218cb7349040c13ae54f2baf9542a",
+          "consumerFusion": false,
+          "producerFusion": false,
+          "fusedLoopWorkers": []
+        }
+      },
+      "comparisons": {
+        "iterate": {
+          "requests": 8000,
+          "requestedBytes": 175984,
+          "retains": 9995,
+          "peakChargedBytes": 272
+        }
+      }
+    },
+    {
+      "head": "277bf4ab6eb1dbe640e304c0a0144ad7703a5812",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sjc20-bb658-a53a9f8d-b935-477c-b59b-b080f71fc597-0243C57B378D.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "machine": "x86_64",
+        "processor": "i386"
+      },
+      "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "elements": 1000,
+      "scope": "Allocation-inclusive process timings include startup, runtime argument parsing and output. Memory probes are separate binaries; charged live storage excludes allocator metadata. Peak sampled after every managed allocation; zero collections required. No speed threshold or comparison with C/Rust is asserted.",
+      "results": {
+        "iterate": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 6,
+            "requestedBytes": 124,
+            "retains": 0,
+            "peakChargedBytes": 128,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            7376140,
+            7073480,
+            6171538,
+            6766977,
+            6614151
+          ],
+          "medianProcessWallNs": 6766977,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "54773d79af982ec34e88ad0d19e75c3392cc8b7cbba04d300ddf3bb6384295d6",
+          "consumerFusion": true,
+          "producerFusion": true,
+          "fusedLoopWorkers": [
+            {
+              "tailCallSites": 0,
+              "dynamicConsumerCallSites": 0,
+              "stateRecordConstructions": 0
+            }
+          ]
+        },
+        "iterate-consumer-only": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 4005,
+            "requestedBytes": 88084,
+            "retains": 5996,
+            "peakChargedBytes": 272,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            6491827,
+            7012869,
+            6640691,
+            7534164,
+            5829143
+          ],
+          "medianProcessWallNs": 6640691,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "f0f9fa31d77c9e12378d5171fad260df7cea364a4b177ee463b9d1100a80243b",
+          "consumerFusion": true,
+          "producerFusion": false,
+          "fusedLoopWorkers": [
+            {
+              "tailCallSites": 1,
+              "dynamicConsumerCallSites": 0,
+              "stateRecordConstructions": 0
+            }
+          ]
+        },
+        "iterate-unfused": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 8006,
+            "requestedBytes": 176108,
+            "retains": 9995,
+            "peakChargedBytes": 400,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            7434907,
+            7149616,
+            8007680,
+            6913865,
+            7208757
+          ],
+          "medianProcessWallNs": 7208757,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "68a9f010d066cdbab4d9f0e84bab6878aac218cb7349040c13ae54f2baf9542a",
+          "consumerFusion": false,
+          "producerFusion": false,
+          "fusedLoopWorkers": []
+        }
+      },
+      "comparisons": {
+        "iterate": {
+          "requests": 8000,
+          "requestedBytes": 175984,
+          "retains": 9995,
+          "peakChargedBytes": 272
+        }
+      }
+    },
+    {
+      "head": "277bf4ab6eb1dbe640e304c0a0144ad7703a5812",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmy3dvn",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "elements": 1000,
+      "scope": "Allocation-inclusive process timings include startup, runtime argument parsing and output. Memory probes are separate binaries; charged live storage excludes allocator metadata. Peak sampled after every managed allocation; zero collections required. No speed threshold or comparison with C/Rust is asserted.",
+      "results": {
+        "iterate": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 6,
+            "requestedBytes": 124,
+            "retains": 0,
+            "peakChargedBytes": 128,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            1312533,
+            989392,
+            1011025,
+            1054731,
+            991176
+          ],
+          "medianProcessWallNs": 1011025,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "54773d79af982ec34e88ad0d19e75c3392cc8b7cbba04d300ddf3bb6384295d6",
+          "consumerFusion": true,
+          "producerFusion": true,
+          "fusedLoopWorkers": [
+            {
+              "tailCallSites": 0,
+              "dynamicConsumerCallSites": 0,
+              "stateRecordConstructions": 0
+            }
+          ]
+        },
+        "iterate-consumer-only": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 4005,
+            "requestedBytes": 88084,
+            "retains": 5996,
+            "peakChargedBytes": 272,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            1433090,
+            1367431,
+            1379224,
+            1299749,
+            1351206
+          ],
+          "medianProcessWallNs": 1367431,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "f0f9fa31d77c9e12378d5171fad260df7cea364a4b177ee463b9d1100a80243b",
+          "consumerFusion": true,
+          "producerFusion": false,
+          "fusedLoopWorkers": [
+            {
+              "tailCallSites": 1,
+              "dynamicConsumerCallSites": 0,
+              "stateRecordConstructions": 0
+            }
+          ]
+        },
+        "iterate-unfused": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 8006,
+            "requestedBytes": 176108,
+            "retains": 9995,
+            "peakChargedBytes": 400,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            1630695,
+            1667601,
+            1590775,
+            1369613,
+            1650168
+          ],
+          "medianProcessWallNs": 1630695,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "68a9f010d066cdbab4d9f0e84bab6878aac218cb7349040c13ae54f2baf9542a",
+          "consumerFusion": false,
+          "producerFusion": false,
+          "fusedLoopWorkers": []
+        }
+      },
+      "comparisons": {
+        "iterate": {
+          "requests": 8000,
+          "requestedBytes": 175984,
+          "retains": 9995,
+          "peakChargedBytes": 272
+        }
+      }
+    },
+    {
+      "head": "277bf4ab6eb1dbe640e304c0a0144ad7703a5812",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmmprz5",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "elements": 1000,
+      "scope": "Allocation-inclusive process timings include startup, runtime argument parsing and output. Memory probes are separate binaries; charged live storage excludes allocator metadata. Peak sampled after every managed allocation; zero collections required. No speed threshold or comparison with C/Rust is asserted.",
+      "results": {
+        "iterate": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 6,
+            "requestedBytes": 124,
+            "retains": 0,
+            "peakChargedBytes": 128,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            1541306,
+            1326533,
+            1366950,
+            1652803,
+            1643729
+          ],
+          "medianProcessWallNs": 1541306,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "54773d79af982ec34e88ad0d19e75c3392cc8b7cbba04d300ddf3bb6384295d6",
+          "consumerFusion": true,
+          "producerFusion": true,
+          "fusedLoopWorkers": [
+            {
+              "tailCallSites": 0,
+              "dynamicConsumerCallSites": 0,
+              "stateRecordConstructions": 0
+            }
+          ]
+        },
+        "iterate-consumer-only": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 4005,
+            "requestedBytes": 88084,
+            "retains": 5996,
+            "peakChargedBytes": 272,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            1647492,
+            1722458,
+            1766037,
+            2027158,
+            1607861
+          ],
+          "medianProcessWallNs": 1722458,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-consumer-only-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "f0f9fa31d77c9e12378d5171fad260df7cea364a4b177ee463b9d1100a80243b",
+          "consumerFusion": true,
+          "producerFusion": false,
+          "fusedLoopWorkers": [
+            {
+              "tailCallSites": 1,
+              "dynamicConsumerCallSites": 0,
+              "stateRecordConstructions": 0
+            }
+          ]
+        },
+        "iterate-unfused": {
+          "output": "999000\n",
+          "counters": {
+            "requests": 8006,
+            "requestedBytes": 176108,
+            "retains": 9995,
+            "peakChargedBytes": 400,
+            "finalChargedBytes": 64,
+            "collections": 0
+          },
+          "processWallNs": [
+            1732796,
+            2064154,
+            2194285,
+            2132575,
+            1771695
+          ],
+          "medianProcessWallNs": 2064154,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-evidence/iterate-unfused-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "37824f74d7251d92f02665430e83d1b9748b2bd879aac2d0ae9e5c8325f30503",
+          "generatedSha256": "68a9f010d066cdbab4d9f0e84bab6878aac218cb7349040c13ae54f2baf9542a",
+          "consumerFusion": false,
+          "producerFusion": false,
+          "fusedLoopWorkers": []
+        }
+      },
+      "comparisons": {
+        "iterate": {
+          "requests": 8000,
+          "requestedBytes": 175984,
+          "retains": 9995,
+          "peakChargedBytes": 272
+        }
+      }
+    }
+  ]
+}

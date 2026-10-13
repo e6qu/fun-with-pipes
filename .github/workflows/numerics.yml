@@ -180,6 +180,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+      - name: Native C toolchain for foreign calls
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
       - name: Native Windows compiler check
         shell: pwsh
         run: |
@@ -193,15 +196,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --lib dylib::tests -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --lib softfloat::tests -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --test softfloat_core exact_format_core_runs_as_native_c -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo build --bin fwp
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Native C toolchain for foreign calls
+      - name: Interpreter golden outputs and exit statuses
         shell: pwsh
-        run: ./scripts/setup-windows.ps1
-      - name: Raw interpreter golden outputs and exit statuses
-        shell: pwsh
-        env:
-          FWP_NO_OPT: 1
         run: |
           cargo test --test golden_run interpreter_snapshots -- --nocapture
           exit $LASTEXITCODE
@@ -242,7 +244,7 @@ jobs:
           cargo clippy --all-targets -- -D warnings
           cargo test --lib
       - name: Ownership and foreign boundary regressions
-        run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls
+        run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls --test softfloat_core
       - name: Iterator forcing, ownership and specialization
         run: cargo test --test iterator_fusion --test iteration_consumers
       - name: Iterator allocation and instruction evidence
@@ -270,16 +272,21 @@ jobs:
       RUST_TEST_THREADS: 2
       FWP_REQUIRE_WASM_RESOURCE_COUNTS: 1
       FWP_REQUIRE_WASI_GOLDENS: 1
+      FWP_REQUIRE_FLOAT_WASI: 1
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip1
       - uses: actions/setup-node@v4
         with:
           node-version: 24
       - name: WASI toolchain
         run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32
+      - name: WebAssembly compiler target
+        run: cargo check --lib --target wasm32-wasip1
       - name: Physical reclamation and resource controls
-        run: cargo test --test wasm_resource_counts
+        run: cargo test --test wasm_resource_counts --test softfloat_core
       - name: Actual WASI semantic agreement
         if: ${{ !cancelled() }}
         run: cargo test --test wasm golden_programs_under_wasi

@@ -114,8 +114,10 @@ does not substitute for runtime alias/unwind controls or full CI.
   controls and record validation in the handoff. Group coherent fixes without
   weakening the required CI gates or changing the roadmap's phase order.
 - **No third-party crates.** fwp depends only on Rust's standard library,
-  so everything it needs is written here: HTTP/2, gzip, protobuf, JSON,
-  YAML and the rest. The C runtime uses only the C library, pthreads,
+  with a vendored BSD-licensed SoftFloat C core for exact half/quad arithmetic.
+  Building the compiler requires a C11 compiler and an archiver; `CC` and `AR`
+  select them. HTTP/2, gzip, protobuf, JSON and YAML are implemented here.
+  The C runtime uses the C library, pthreads,
   OpenSSL (for TLS) and the OpenCL loader (for devices, loaded when used).
 - **The interpreter is the reference.** Every feature works in both
   engines, the interpreter (`src/interp.rs`) and the C backend

@@ -458,7 +458,7 @@ error. See [protocol.md](protocol.md).
   [Ownership](ownership.md) specifies coverage and numeric representation limits;
   [PLAN](../PLAN.md) records the remaining efficiency gaps. C structs alone do
   not guarantee registers.
-- Windows on AMD64 and ARM64 is desired but deferred and remains unimplemented.
+- Windows on AMD64 and ARM64 is in active development. Interpreter platform probes pass, but the generated runtime and release packages are not yet verified.
   Linux/macOS have native CI on both architectures; see the
   [platform matrix](../PLAN.md#platform-objective-and-current-evidence) and handoff
   for actual acceptance gates. Cross-build/QEMU evidence remains distinct.

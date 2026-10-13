@@ -2517,7 +2517,7 @@ static V fwp_p_time_unix(void) {
 
 static V fwp_p_exit(V code) {
     fflush(stdout);
-    exit((int)(int32_t)code);
+    exit((int)(code & 255));
 }
 
 static uint64_t fwp_rng = 1;
