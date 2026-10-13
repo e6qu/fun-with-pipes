@@ -51,31 +51,19 @@ def check_subject(revision):
     assert not any(term in message.lower() for term in forbidden), (revision, message)
 
 
-def check_handoff(queue):
-    rows = set()
+def check_handoff():
     state = (ROOT / "docs/development-state.md").read_text()
-    heading = "## Remaining ownership deliveries\n"
+    plan = (ROOT / "PLAN.md").read_text()
+    heading = "## Active bundle\n"
     assert state.count(heading) == 1, "missing or duplicate live delivery section"
     live = state.split(heading, 1)[1].split("\n## ", 1)[0]
-    for row in live.splitlines():
-        match = re.match(r"^\| (\d+) [^|]+\|", row)
-        if not match:
-            continue
-        number = int(match[1])
-        fields = [field.strip().strip("`") for field in row.split("|")]
-        branch = fields[1].split(maxsplit=1)[1]
-        current, base = fields[2:4]
-        assert number not in rows, (number, "duplicate live handoff row")
-        rows.add(number)
-        assert number in queue, (number, "handoff row missing from queue")
-        queued_branch, queued_head = queue[number]
-        assert branch == queued_branch, (number, branch, queued_branch)
-        for revision in (current, base):
-            assert re.fullmatch(r"[0-9a-f]{12,40}", revision), (number, revision)
-        assert git("rev-parse", current).strip() == git("rev-parse", queued_head).strip(), (
-            number, "handoff head differs from queue", current, queued_head)
-        subprocess.run(["git", "merge-base", "--is-ancestor", base, current],
-                       cwd=ROOT, check=True)
+    planned = re.findall(r"^\| (\d+) \|", plan, re.M)
+    rows = re.findall(r"^\| (\d+) \| ([^|]+)\|", live, re.M)
+    assert planned and [number for number, _ in rows] == planned, "plan/handoff steps differ"
+    assert len(set(planned)) == len(planned), "duplicate plan step"
+    for number, status in rows:
+        assert status.strip() in {"Pending", "Implemented", "Verified"}, (number, status)
+    assert "Next:" in state, "handoff needs a concrete next action"
     return len(rows)
 
 
@@ -85,14 +73,12 @@ def main():
         check_links(name)
     revisions = {"HEAD"}
     rows = []
-    queue = {}
     for row in (ROOT / "docs/roadmap-queue.md").read_text().splitlines():
         if not re.match(r"\| \d+ \|", row):
             continue
         fields = [field.strip().strip("`") for field in row.split("|")]
         number = int(fields[1])
         current, old, parent = fields[4:7]
-        queue[number] = (fields[3], current)
         for revision in (current, old, parent):
             assert re.fullmatch(r"[0-9a-f]{12,40}", revision), (number, revision)
         subprocess.run(["git", "merge-base", "--is-ancestor", parent, old],
@@ -104,9 +90,9 @@ def main():
     assert rows == list(range(rows[0], rows[-1] + 1)), ("queue order", rows)
     for revision in sorted(revisions):
         check_subject(revision)
-    live = check_handoff(queue)
+    live = check_handoff()
     print(f"{len(files)} doc link sets, {len(rows)} immutable queue pairs/tags and "
-          f"{live} live heads/bases pass; commit messages pass")
+          f"{live} live plan steps pass; commit messages pass")
 
 
 if __name__ == "__main__":

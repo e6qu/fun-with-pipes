@@ -1,0 +1,102 @@
+//! Unboxed wide workers preserve checked arithmetic and owned generic boundaries.
+use std::process::{Command, Output};
+
+fn checked(command: &mut Command) -> Output {
+    let output = command.output().unwrap();
+    assert!(output.status.success(), "{command:?}: {output:?}");
+    output
+}
+
+#[test]
+fn wide_workers_match_raw_arithmetic_and_reclaim_boundaries() {
+    let dir = std::env::temp_dir().join(format!("fwp-wide-workers-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let cases = [
+        ("values", r#"
+rec sum-wide : I128 -> I128
+sum-wide = if (le 0i128) (const 0i128) (fork add id (sub 1i128 | sum-wide))
+rec sum-unsigned : U128 -> U128
+sum-unsigned = if (eq 0u128) (const 0u128) (fork add id (sub 1u128 | sum-unsigned))
+transform : I128 -> I128
+transform = add 7i128 | mul 3i128 | sub 2i128 | div 2i128 | rem 17i128 | neg | abs
+main = [
+    range 0i128 33i128 | map sum-wide | both id id | echo,
+    range 0u128 33u128 | map sum-unsigned | echo,
+    range -20i128 20i128 | map transform | echo,
+    range 0i128 17i128 | map (sum-wide | add) | map (apply 2i128) | echo,
+] | ignore
+"#),
+        ("overflow", "work : I128 -> I128\nwork = add 1i128 | mul 2i128\nmain = 170141183460469231731687303715884105727i128 | work | echo\n"),
+        ("division", "work : I128 -> I128\nwork = div -1i128\nmain = -170141183460469231731687303715884105728i128 | work | echo\n"),
+        ("zero", "work : U128 -> U128\nwork = div 0u128\nmain = 3u128 | work | echo\n"),
+    ];
+    for (name, source) in cases {
+        let input = dir.join(format!("{name}.fwp"));
+        std::fs::write(&input, source).unwrap();
+        let reference = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(
+            reference.status.success(),
+            name == "values",
+            "{reference:?}"
+        );
+        for workers in ["0", "1"] {
+            for gc in ["tracing", "arc"] {
+                let cfile = dir.join(format!("{name}-{workers}-{gc}.c"));
+                checked(
+                    Command::new(env!("CARGO_BIN_EXE_fwp"))
+                        .env_remove("FWP_NO_OPT")
+                        .env("FWP_WIDE_WORKERS", workers)
+                        .args(["build", "--gc", gc, "--emit-c"])
+                        .arg(&input)
+                        .arg("-o")
+                        .arg(&cfile),
+                );
+                let mut code = std::fs::read_to_string(cfile).unwrap();
+                if name == "values" {
+                    assert_eq!(code.contains("/* native wide worker:"), workers == "1");
+                    if workers == "1" {
+                        for section in code.split("/* native wide worker:").skip(1) {
+                            let body = section.split("\nstatic V f").next().unwrap();
+                            assert!(
+                                !body.contains("fwp_box_") && !body.contains("fwp_alloc"),
+                                "{body}"
+                            );
+                        }
+                    }
+                    let start = code
+                        .find("static void *fwp_main_thread(void *arg) {")
+                        .unwrap();
+                    let (runtime, main) = code.split_at(start);
+                    let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t wide_budget=fwp_gc.budget;\n")
+                        .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(!FWP_USE_GC && fwp_gc.budget<wide_budget) exit(193);\n");
+                    code = format!("{runtime}{main}");
+                    // ARC has no collector; tracing stress intentionally changes its budget.
+                    code = code.replace("!FWP_USE_GC", if gc == "arc" { "1" } else { "0" });
+                }
+                for opt in ["-O1", "-O2"] {
+                    let binary = dir.join(format!("{name}-{workers}-{gc}{opt}"));
+                    fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                    let actual = Command::new(binary)
+                        .env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
+                        .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
+                        .env("FWP_REUSE_VERIFY", if gc == "arc" { "0" } else { "1" })
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        actual.status.code(),
+                        reference.status.code(),
+                        "{name}/{workers}/{gc}/{opt}: {actual:?}"
+                    );
+                    assert_eq!(actual.stdout, reference.stdout);
+                    assert_eq!(actual.stderr, reference.stderr);
+                }
+            }
+        }
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}

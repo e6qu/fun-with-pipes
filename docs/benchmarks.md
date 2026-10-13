@@ -12,6 +12,10 @@ Roadmap measurements are recorded in:
   paired iterator controls on Linux/macOS ARM64/AMD64, actual checked register
   arithmetic, ARC scope omission controls and cold/warm workspace counts.
 
+- [Reconstruction and native workers](measurements/reconstruction-and-workers-2026-10-13.json):
+  direct producer/State allocation controls, I128/U128 native register arithmetic,
+  reconstruction ownership and refreshed numerical/AD evidence for PR #133.
+
 Reports distinguish preparation measurements from production acceptance.
 [History](roadmap-history.md) indexes accepted gates; [the handoff](development-state.md)
 records the latest tested source. These results do not establish universal C/Rust
@@ -19,8 +23,9 @@ parity. Iterator measurements use the current compiler, dynamic input and paired
 consumer-fusion controls. `scripts/measure-iteration.py` retains generated C,
 native instructions, allocation/retain counts, charged live storage and separate
 process timings on each Linux/macOS architecture. Timing includes startup and
-output; it is not kernel throughput. Producer Yield values and lazy tail closures
-still allocate; runtime State operations can still dispatch their update callback.
+output; it is not kernel throughput. Direct count-from/from-list chains avoid
+per-step producer allocation, and known State updates call their entries directly.
+Other lazy producers and dynamic callbacks retain their declared behavior.
 Fold-until and map-accum remain measured controls, without a
 claimed allocation improvement. The [handoff](development-state.md) records the
 measurement revisions and final acceptance gates.

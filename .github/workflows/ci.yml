@@ -203,6 +203,7 @@ jobs:
         env:
           FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"
           FWP_REQUIRE_WASI_COUNTS: "1"
+          FWP_REQUIRE_WASI_GOLDENS: "1"
         run: cargo test --all-targets --no-fail-fast
       - name: Build standalone compiler
         run: cargo build --release --bin fwp

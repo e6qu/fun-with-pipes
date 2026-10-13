@@ -909,8 +909,14 @@ static void fwp_root_cancelled(void) {
 
 /* the end of a root function (main or a test): wait for its tasks */
 static void fwp_tasks_finish(void) {
-    if (!fwp_cur) return;
-    fwp_join_children();
+    if (fwp_cur) fwp_join_children();
+    /* Root State storage is runtime scratch, not a permanent value owner. */
+    if (!fwp_state_len && !fwp_state_owners) {
+        fwp_mem_free(fwp_state);
+        fwp_state = NULL;
+        fwp_state_cap = 0;
+        if (fwp_cur) { fwp_cur->st = NULL; fwp_cur->st_cap = 0; }
+    }
 }
 
 /* a root function failed: cancel its tasks and wait for them */

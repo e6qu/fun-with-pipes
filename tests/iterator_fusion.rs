@@ -68,3 +68,60 @@ main = [
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn producer_lookahead_and_exhausted_stage_order_match_raw_interpreter() {
+    let dir = std::env::temp_dir().join(format!("fwp-producer-order-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let cases = [
+        "9223372036854775807 | iter.count-from | iter.take 0 | iter.fold add 0 | echo",
+        "9223372036854775806 | iter.count-from | iter.take 1 | iter.fold add 0 | echo",
+        "9223372036854775806 | iter.count-from | iter.take 2 | iter.fold add 0 | echo",
+        "0 | iter.count-from | iter.map (div 0) | iter.take 0 | iter.fold add 0 | echo",
+        "0 | iter.count-from | iter.filter (div 0 | eq 1) | iter.take 0 | iter.fold add 0 | echo",
+        "0 | iter.count-from | iter.take 0 | iter.map (div 0) | iter.fold add 0 | echo",
+        "0 | iter.count-from | iter.filter (gt 2) | iter.take 0 | iter.fold add 0 | echo",
+        "[1, 2, 3] | iter.from-list | iter.map (add 1) | iter.fold add 0 | echo",
+        "[1, 2, 3] | iter.from-list | iter.take 1 | iter.filter (gt 2) | iter.fold add 0 | echo",
+    ];
+    for (i, body) in cases.iter().enumerate() {
+        let input = dir.join(format!("case-{i}.fwp"));
+        std::fs::write(&input, format!("main = {body}\n")).unwrap();
+        let reference = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert!(
+            reference.status.success() || reference.status.code() == Some(101),
+            "{reference:?}"
+        );
+        for producers in ["0", "1"] {
+            let binary = dir.join(format!("case-{i}-{producers}"));
+            checked(
+                Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_ITER_PRODUCERS", producers)
+                    .args(["build", "-O2"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&binary),
+            );
+            let native = Command::new(&binary)
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", "1")
+                .output()
+                .unwrap();
+            assert_eq!(
+                native.status.code(),
+                reference.status.code(),
+                "case {i}/{producers}: {native:?}"
+            );
+            assert_eq!(native.stdout, reference.stdout, "case {i}/{producers}");
+            assert_eq!(native.stderr, reference.stderr, "case {i}/{producers}");
+        }
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}

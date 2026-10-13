@@ -26,6 +26,53 @@ main = [
 ] | ignore
 "#,
         ),
+        ("json-typed", include_str!("run/json_typed.fwp")),
+        (
+            "decoded-trees",
+            r#"
+Row = { name: String, tags: List[String], wide: I128, note: Option[String] }
+read-rows : String -> Result[List[Row], String]
+read-rows = csv.parse-records
+read-map : String -> Result[Map[String, List[String]], String]
+read-map = json.read
+read-array : String -> Result[Array[String], String]
+read-array = json.read
+main = [
+    range 0 33 | map (show | concat "{\"key\":[\"owned\",\"value\"],\"key\":[\"replacement\"]}" | json.parse | show) | length | echo,
+    "{\"key\":[\"owned\"],\"key\":[\"replacement\"]}" | read-map | both id id | echo,
+    "[\"first\",3]" | read-array | echo,
+    "{\"key\":[\"owned\"],\"bad\":[3]}" | read-map | echo,
+    "[\"first\",{\"partial\":[true,false,]" | json.parse | echo,
+    "[\"first\"] trailing" | json.parse | echo,
+    "name,tags,wide,note\nalice,[],170141183460469231731687303715884105727,hi\nbob,[],3,\n" | read-rows | both id id | echo,
+    "name,tags,wide,note\nalice,[],3,hello\nbob,[],bad,no\n" | read-rows | echo,
+    "name,tags,wide\nalice,[bad,3\n" | read-rows | echo,
+] | ignore
+"#,
+        ),
+        (
+            "state",
+            r#"
+read-state : () -> String ! {State[String]}
+read-state = get
+read-function : () -> String ! {State[(String -> String)]}
+read-function = get | apply "c"
+update-state : String -> () ! {State[String]}
+update-state = concat | modify
+fail-state : String -> () ! {State[String], Error[String]}
+fail-state = tap update-state | fail
+state-function : String -> (() -> String ! {State[String]})
+state-function = concat | compose get
+main = [
+    range 0 65 | map (show | run-state "initial" (tap update-state | const () | get)) | echo,
+    "next" | run-state "outer" (run-state "inner" update-state | echo | const () | get) | echo,
+    "failure" | attempt (run-state "old" fail-state) | echo,
+    () | run-state "fresh" (state-function "suffix") | echo,
+    range 0 33 | run-state 0 (each (add | modify)) | echo,
+    () | run-state ("a" | concat "b" | concat) read-function | .0 | echo,
+] | ignore
+"#,
+        ),
         (
             "wide",
             r#"

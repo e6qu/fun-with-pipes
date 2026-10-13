@@ -1,0 +1,17 @@
+# These types currently use F32/F64 precision. A real-format migration changes
+# this fixture together with docs/float-formats.md and the protocol version.
+half : F64 -> F16
+half = float.convert
+brain : F64 -> BF16
+brain = float.convert
+wide : F64 -> F128
+wide = float.convert
+main = [
+    1.0001f16 | gt 1.0f16 | echo,
+    1.001bf16 | gt 1.0bf16 | echo,
+    9007199254740993.0f128 | eq 9007199254740992.0f128 | echo,
+    1.0001 | half | gt 1.0f16 | echo,
+    1.001 | brain | gt 1.0bf16 | echo,
+    9007199254740993.0 | wide | eq 9007199254740992.0f128 | echo,
+    [1.0001f16, 2.0f16] | array.from-list | array.to-list | head | option.map (gt 1.0f16) | echo,
+] | ignore

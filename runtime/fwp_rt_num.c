@@ -74,6 +74,53 @@ static V fwp_from_i128(int k, i128 x, const char *name, int w) {
     return 0;
 }
 
+static int fwp_arith_u128(int op, u128 x, u128 y, u128 *out, int *err) {
+    *err = 0;
+    u128 r;
+    if ((op == OP_DIV || op == OP_REM) && y == 0) { *err = 2; return 0; }
+    int ovf = 0;
+    switch (op) {
+    case OP_ADD: ovf = __builtin_add_overflow(x, y, &r); break;
+    case OP_SUB: ovf = __builtin_sub_overflow(x, y, &r); break;
+    case OP_MUL: ovf = __builtin_mul_overflow(x, y, &r); break;
+    case OP_DIV: r = x / y; break;
+    default: r = x % y;
+    }
+    if (ovf) { *err = 1; return 0; }
+    *out = r;
+    return 1;
+}
+static int fwp_arith_i128(int op, i128 x, i128 y, i128 *out, int *err) {
+    *err = 0;
+    i128 r;
+    if ((op == OP_DIV || op == OP_REM) && y == 0) { *err = 2; return 0; }
+    int ovf = 0;
+    i128 mn = (i128)((u128)1 << 127);
+    switch (op) {
+    case OP_ADD: ovf = __builtin_add_overflow(x, y, &r); break;
+    case OP_SUB: ovf = __builtin_sub_overflow(x, y, &r); break;
+    case OP_MUL: {
+        /* Unsigned magnitudes include I128_MIN without signed negation.
+         * Clang's signed overflow builtin can require __muloti4, absent
+         * from libgcc on Linux ARM64; unsigned overflow lowers directly. */
+        int negative = (x < 0) != (y < 0);
+        u128 ax = x < 0 ? (u128)0 - (u128)x : (u128)x;
+        u128 ay = y < 0 ? (u128)0 - (u128)y : (u128)y;
+        u128 product;
+        ovf = __builtin_mul_overflow(ax, ay, &product);
+        u128 limit = ((u128)1 << 127) - (u128)!negative;
+        ovf |= product > limit;
+        r = (i128)(negative ? (u128)0 - product : product);
+        break;
+    }
+    case OP_DIV: if (x == mn && y == -1) ovf = 1; else r = x / y; break;
+    default: if (x == mn && y == -1) ovf = 1; else r = x % y;
+    }
+    if (ovf) { *err = 1; return 0; }
+    *out = r;
+    return 1;
+}
+
 /* a op b; returns 0 on overflow / division by zero (and sets *err: 1
  * overflow, 2 division by zero) */
 static int fwp_arith_raw(int k, int op, V a, V b, int w, V *out, int *err) {
@@ -103,48 +150,14 @@ static int fwp_arith_raw(int k, int op, V a, V b, int w, V *out, int *err) {
         return 1;
     }
     if (k == K_U128) {
-        u128 x = fwp_u128(a), y = fwp_u128(b), r;
-        if ((op == OP_DIV || op == OP_REM) && y == 0) { *err = 2; return 0; }
-        int ovf = 0;
-        switch (op) {
-        case OP_ADD: ovf = __builtin_add_overflow(x, y, &r); break;
-        case OP_SUB: ovf = __builtin_sub_overflow(x, y, &r); break;
-        case OP_MUL: ovf = __builtin_mul_overflow(x, y, &r); break;
-        case OP_DIV: r = x / y; break;
-        default: r = x % y;
-        }
-        if (ovf) { *err = 1; return 0; }
-        *out = fwp_box_u128(r);
-        return 1;
+        u128 value;
+        if (!fwp_arith_u128(op, fwp_u128(a), fwp_u128(b), &value, err)) return 0;
+        *out = fwp_box_u128(value); return 1;
     }
     if (k == K_I128) {
-        i128 x = fwp_i128(a), y = fwp_i128(b), r;
-        if ((op == OP_DIV || op == OP_REM) && y == 0) { *err = 2; return 0; }
-        int ovf = 0;
-        i128 mn = (i128)((u128)1 << 127);
-        switch (op) {
-        case OP_ADD: ovf = __builtin_add_overflow(x, y, &r); break;
-        case OP_SUB: ovf = __builtin_sub_overflow(x, y, &r); break;
-        case OP_MUL: {
-            /* Unsigned magnitudes include I128_MIN without signed negation.
-             * Clang's signed overflow builtin can require __muloti4, absent
-             * from libgcc on Linux ARM64; unsigned overflow lowers directly. */
-            int negative = (x < 0) != (y < 0);
-            u128 ax = x < 0 ? (u128)0 - (u128)x : (u128)x;
-            u128 ay = y < 0 ? (u128)0 - (u128)y : (u128)y;
-            u128 product;
-            ovf = __builtin_mul_overflow(ax, ay, &product);
-            u128 limit = ((u128)1 << 127) - (u128)!negative;
-            ovf |= product > limit;
-            r = (i128)(negative ? (u128)0 - product : product);
-            break;
-        }
-        case OP_DIV: if (x == mn && y == -1) ovf = 1; else r = x / y; break;
-        default: if (x == mn && y == -1) ovf = 1; else r = x % y;
-        }
-        if (ovf) { *err = 1; return 0; }
-        *out = fwp_box_i128(r);
-        return 1;
+        i128 value;
+        if (!fwp_arith_i128(op, fwp_i128(a), fwp_i128(b), &value, err)) return 0;
+        *out = fwp_box_i128(value); return 1;
     }
     /* integers up to 64 bits (and TInt) computed in i128 and range checked */
     i128 x = fwp_as_i128(k, a), y = fwp_as_i128(k, b), r;

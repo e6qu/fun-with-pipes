@@ -17,12 +17,54 @@ struct fwp_jr {
     size_t *klens;
 };
 
+/* Raw JSON nodes contain no managed values. A parse owns this scratch arena
+ * until conversion completes, including syntax errors and exceptional exits. */
+typedef struct fwp_json_block {
+    struct fwp_json_block *next;
+    size_t used, capacity;
+    max_align_t alignment;
+    unsigned char data[];
+} fwp_json_block;
+
 typedef struct {
     const unsigned char *s;
     size_t n, p;
     int depth;
     char err[96];
+    fwp_json_block *blocks;
+    fwp_cleanup cleanup;
 } fwp_jp;
+
+static void fwp_json_release(void *arg) {
+    fwp_jp *j = arg;
+    while (j->blocks) {
+        fwp_json_block *block = j->blocks;
+        j->blocks = block->next;
+        free(block);
+    }
+}
+static void *fwp_json_alloc(fwp_jp *j, size_t n) {
+    const size_t alignment = _Alignof(max_align_t);
+    if (n > SIZE_MAX - alignment) fwp_trap("JSON too large");
+    n = (n + alignment - 1) & ~(alignment - 1);
+    fwp_json_block *b = j->blocks;
+    if (!b || n > b->capacity - b->used) {
+        size_t capacity = n > 4096 ? n : 4096;
+        if (capacity > SIZE_MAX - sizeof *b) fwp_trap("JSON too large");
+        b = malloc(sizeof *b + capacity);
+        if (!b) fwp_trap("out of memory");
+        b->next = j->blocks; b->used = 0; b->capacity = capacity;
+        j->blocks = b;
+    }
+    void *result = b->data + b->used;
+    b->used += n;
+    memset(result, 0, n);
+    return result;
+}
+static void fwp_json_finish(fwp_jp *j) {
+    fwp_cleanup_pop(&j->cleanup);
+    fwp_json_release(j);
+}
 
 static int fwp_jerr(fwp_jp *j, const char *what, size_t at) {
     snprintf(j->err, sizeof j->err, "%s at byte %zu", what, at);
@@ -78,22 +120,24 @@ static int fwp_jhex4(fwp_jp *j, uint32_t *v) {
 static int fwp_jstring(fwp_jp *j, const char **s, size_t *len) {
     j->p++;
     fwp_buf b = {0};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
     for (;;) {
-        if (j->p >= j->n) { free(b.d); return fwp_jerr(j, "unexpected end of input", j->p); }
+        if (j->p >= j->n) { fwp_cleanup_pop(&cleanup); free(b.d); return fwp_jerr(j, "unexpected end of input", j->p); }
         unsigned char c = j->s[j->p];
         if (c == '"') {
             j->p++;
-            char *r = (char *)fwp_alloc_leaf(b.len + 1);
+            char *r = (char *)fwp_json_alloc(j, b.len + 1);
             if (b.len) memcpy(r, b.d, b.len);
             r[b.len] = 0;
             *s = r;
             *len = b.len;
-            free(b.d);
+            fwp_cleanup_pop(&cleanup); free(b.d);
             return 1;
         }
         if (c == '\\') {
             j->p++;
-            if (j->p >= j->n) { free(b.d); return fwp_jerr(j, "unexpected end of input", j->p); }
+            if (j->p >= j->n) { fwp_cleanup_pop(&cleanup); free(b.d); return fwp_jerr(j, "unexpected end of input", j->p); }
             unsigned char e = j->s[j->p];
             char simple = 0;
             switch (e) {
@@ -106,17 +150,17 @@ static int fwp_jstring(fwp_jp *j, const char **s, size_t *len) {
             case 'r': simple = '\r'; break;
             case 't': simple = '\t'; break;
             case 'u': break;
-            default: free(b.d); return fwp_jerr(j, "invalid escape", j->p);
+            default: fwp_cleanup_pop(&cleanup); free(b.d); return fwp_jerr(j, "invalid escape", j->p);
             }
             j->p++;
             if (simple) { buf_putc(&b, simple); continue; }
             uint32_t code;
-            if (!fwp_jhex4(j, &code)) { free(b.d); return 0; }
+            if (!fwp_jhex4(j, &code)) { fwp_cleanup_pop(&cleanup); free(b.d); return 0; }
             if (code >= 0xD800 && code < 0xDC00 && j->p + 1 < j->n && j->s[j->p] == '\\' && j->s[j->p + 1] == 'u') {
                 size_t save = j->p;
                 j->p += 2;
                 uint32_t low;
-                if (!fwp_jhex4(j, &low)) { free(b.d); return 0; }
+                if (!fwp_jhex4(j, &low)) { fwp_cleanup_pop(&cleanup); free(b.d); return 0; }
                 if (low >= 0xDC00 && low < 0xE000) code = 0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00);
                 else j->p = save;
             }
@@ -124,7 +168,7 @@ static int fwp_jstring(fwp_jp *j, const char **s, size_t *len) {
             fwp_utf8_put(&b, code);
             continue;
         }
-        if (c < 0x20) { free(b.d); return fwp_jerr(j, "unexpected character", j->p); }
+        if (c < 0x20) { fwp_cleanup_pop(&cleanup); free(b.d); return fwp_jerr(j, "unexpected character", j->p); }
         buf_putc(&b, (char)c);
         j->p++;
     }
@@ -149,9 +193,9 @@ static int fwp_jexpect(fwp_jp *j, char c) {
 static int fwp_jcontainer(fwp_jp *j, fwp_jr *out, int obj) {
     j->p++;
     size_t n = 0, cap = 8;
-    fwp_jr *items = (fwp_jr *)fwp_mem_alloc(cap * sizeof(fwp_jr));
-    const char **keys = obj ? (const char **)fwp_mem_alloc(cap * sizeof(char *)) : 0;
-    size_t *klens = obj ? (size_t *)malloc(cap * sizeof(size_t)) : 0;
+    fwp_jr *items = (fwp_jr *)fwp_json_alloc(j, cap * sizeof(fwp_jr));
+    const char **keys = obj ? (const char **)fwp_json_alloc(j, cap * sizeof(char *)) : 0;
+    size_t *klens = obj ? (size_t *)fwp_json_alloc(j, cap * sizeof(size_t)) : 0;
     int ok = 1;
     fwp_jws(j);
     char close = obj ? '}' : ']';
@@ -160,11 +204,15 @@ static int fwp_jcontainer(fwp_jp *j, fwp_jr *out, int obj) {
     } else {
         for (;;) {
             if (n == cap) {
+                if (cap > SIZE_MAX / 2 / sizeof(fwp_jr)) fwp_trap("JSON too large");
                 cap *= 2;
-                items = (fwp_jr *)fwp_mem_realloc(items, cap / 2 * sizeof(fwp_jr), cap * sizeof(fwp_jr));
+                fwp_jr *grown = fwp_json_alloc(j, cap * sizeof(fwp_jr));
+                memcpy(grown, items, n * sizeof(fwp_jr)); items = grown;
                 if (obj) {
-                    keys = (const char **)fwp_mem_realloc(keys, cap / 2 * sizeof(char *), cap * sizeof(char *));
-                    klens = (size_t *)realloc(klens, cap * sizeof(size_t));
+                    const char **grown_keys = fwp_json_alloc(j, cap * sizeof(char *));
+                    size_t *grown_lengths = fwp_json_alloc(j, cap * sizeof(size_t));
+                    memcpy(grown_keys, keys, n * sizeof(char *)); keys = grown_keys;
+                    memcpy(grown_lengths, klens, n * sizeof(size_t)); klens = grown_lengths;
                 }
             }
             memset(&items[n], 0, sizeof(fwp_jr));
@@ -182,20 +230,10 @@ static int fwp_jcontainer(fwp_jp *j, fwp_jr *out, int obj) {
     if (ok) {
         out->t = obj ? 5 : 4;
         out->n = n;
-        out->items = (fwp_jr *)fwp_alloc((n + 1) * sizeof(fwp_jr));
-        if (n) memcpy(out->items, items, n * sizeof(fwp_jr));
-        if (obj) {
-            out->keys = (const char **)fwp_alloc((n + 1) * sizeof(char *));
-            out->klens = (size_t *)fwp_alloc_leaf((n + 1) * sizeof(size_t));
-            if (n) {
-                memcpy(out->keys, keys, n * sizeof(char *));
-                memcpy(out->klens, klens, n * sizeof(size_t));
-            }
-        }
+        out->items = items;
+        out->keys = keys;
+        out->klens = klens;
     }
-    fwp_mem_free(items);
-    fwp_mem_free(keys);
-    free(klens);
     return ok;
 }
 
@@ -237,6 +275,8 @@ static int fwp_jraw(fwp_jp *j, fwp_jr *out) {
 
 /* parse a whole text; 0 with j->err on a syntax error */
 static int fwp_jparse_raw(V text, fwp_jp *j, fwp_jr *out) {
+    memset(j, 0, sizeof *j);
+    fwp_cleanup_push(&j->cleanup, fwp_json_release, j);
     j->s = (const unsigned char *)STR(text)->d;
     j->n = STR(text)->len;
     j->p = 0;
@@ -257,34 +297,47 @@ static double fwp_jnum_f64(const fwp_jr *r) {
     return x;
 }
 
-/* a parsed value as a `Json` value */
-static V fwp_jr_to_json(const fwp_jr *r) {
+/* Reconstruct Json with the generated descriptors, including recursive lists. */
+static V fwp_jr_to_json(const fwp_jr *r, const fwp_desc *d) {
+    if (!r->t) return 0;
+    const fwp_desc *payload = d->vfields[r->t][0];
+    fwp_decode_fields variant;
+    fwp_decode_fields_begin(&variant, 1, d->vfields[r->t], 1, NULL);
     switch (r->t) {
-    case 1: { V b = r->b ? FWP_TRUE : FWP_FALSE; return fwp_data(1, 1, &b); }
-    case 2: { V f = fwp_from_f64(fwp_jnum_f64(r)); return fwp_data(2, 1, &f); }
-    case 3: { V s = fwp_str_new(r->s, r->len); return fwp_data(3, 1, &s); }
-    case 4: case 5: {
-        V *items = (V *)fwp_alloc((r->n + 1) * sizeof(V));
+    case 1: variant.values[0] = r->b ? FWP_TRUE : FWP_FALSE; break;
+    case 2: variant.values[0] = fwp_from_f64(fwp_jnum_f64(r)); break;
+    case 3: variant.values[0] = fwp_rc_fresh(fwp_str_new(r->s, r->len)); break;
+    default: {
+        fwp_decode_fields items;
+        fwp_decode_fields_begin(&items, r->n, NULL, 0, payload->elem);
         for (size_t i = 0; i < r->n; i++) {
-            V x = fwp_jr_to_json(&r->items[i]);
-            items[i] = r->t == 4 ? x : fwp_tuple2(fwp_str_new(r->keys[i], r->klens[i]), x);
+            if (r->t == 4) items.values[i] = fwp_jr_to_json(&r->items[i], d);
+            else {
+                fwp_decode_fields pair;
+                fwp_decode_fields_begin(&pair, 2, payload->elem->fields, 2, NULL);
+                pair.values[0] = fwp_rc_fresh(fwp_str_new(r->keys[i], r->klens[i]));
+                pair.values[1] = fwp_jr_to_json(&r->items[i], d);
+                items.values[i] = fwp_decode_record(&pair);
+            }
         }
-        V l = fwp_list_from(items, r->n);
-        return fwp_data((uint32_t)r->t, 1, &l);
+        variant.values[0] = fwp_decode_sequence(&items, payload);
+        break;
     }
-    default: return 0;
     }
+    return fwp_decode_variant(&variant, (uint32_t)r->t);
 }
 
-static V fwp_p_json_parse(V text) {
+static V fwp_p_json_parse(V text, const fwp_desc *result_type) {
     fwp_jp j;
     fwp_jr r;
-    if (fwp_jparse_raw(text, &j, &r)) {
-        V v = fwp_jr_to_json(&r);
-        return fwp_data(0, 1, &v);
-    }
-    V e = fwp_cstr(j.err);
-    return fwp_data(1, 1, &e);
+    int ok = fwp_jparse_raw(text, &j, &r);
+    fwp_decode_fields result;
+    fwp_decode_fields_begin(&result, 1, result_type->vfields[!ok], 1, NULL);
+    result.values[0] = ok ? fwp_jr_to_json(&r, result_type->vfields[0][0]) : fwp_rc_fresh(fwp_cstr(j.err));
+    V value = fwp_decode_variant(&result, !ok);
+    fwp_json_finish(&j);
+    FWP_KEEP_ALIVE(text);
+    return value;
 }
 
 static void fwp_jescape_n(fwp_buf *b, const char *s, size_t n) {
@@ -779,7 +832,9 @@ static int fwp_jt_unb64(const char *s, size_t n, V *out) {
     if (body >= 2 && s[body - 1] == '=' && s[body - 2] == '=') body -= 2;
     else if (body >= 1 && s[body - 1] == '=') body -= 1;
     if (body % 4 == 1 || (body != n && n % 4 != 0)) return 0;
-    char *o = (char *)fwp_alloc_leaf(body * 3 / 4 + 1);
+    char *o = (char *)fwp_mem_alloc(body / 4 * 3 + (body % 4) * 3 / 4 + 1);
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_mem_free, o);
     size_t on = 0;
     uint32_t acc = 0;
     int bits = 0;
@@ -791,7 +846,7 @@ static int fwp_jt_unb64(const char *s, size_t n, V *out) {
         else if (ch >= '0' && ch <= '9') d = ch - '0' + 52;
         else if (ch == '+' || ch == '-') d = 62;
         else if (ch == '/' || ch == '_') d = 63;
-        else return 0;
+        else { fwp_cleanup_pop(&cleanup); fwp_mem_free(o); return 0; }
         acc = acc << 6 | (uint32_t)d;
         bits += 6;
         if (bits >= 8) {
@@ -801,6 +856,8 @@ static int fwp_jt_unb64(const char *s, size_t n, V *out) {
         }
     }
     *out = fwp_str_new(o, on);
+    fwp_cleanup_pop(&cleanup);
+    fwp_mem_free(o);
     return 1;
 }
 
@@ -897,18 +954,21 @@ static int fwp_jt_untagged(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out
     for (int t = 0; t < d->n; t++) {
         int n = d->arity[t];
         if (n == 0) continue;
-        V *fs = (V *)fwp_alloc((size_t)n * sizeof(V));
+        fwp_decode_fields fields;
+        fwp_decode_fields_begin(&fields, (size_t)n, d->vfields[t], (size_t)n, NULL);
+        V *fs = fields.values;
         int ok = n == 1 ? fwp_jt_read(c, r, d->vfields[t][0], &fs[0]) : fwp_jt_tuple(c, r, n, d->vfields[t], fs);
         fwp_jt_pop(c, path);
         c->err.len = err;
-        if (ok) { *out = fwp_data((uint32_t)t, (uint32_t)n, fs); return 1; }
+        if (ok) { *out = fwp_decode_variant(&fields, (uint32_t)t); return 1; }
+        fwp_decode_fields_end(&fields, 0);
     }
     char what[300];
     snprintf(what, sizeof what, "a value of one of the variants of %s", d->name);
     return fwp_jt_expected(c, what, r);
 }
 
-static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
+static int fwp_jt_read_inner(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out, fwp_decode_fields *fields) {
     switch (d->kind) {
     case K_I8: return fwp_jt_int(c, r, K_I8, "I8", out);
     case K_I16: return fwp_jt_int(c, r, K_I16, "I16", out);
@@ -921,25 +981,25 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
     case K_U64: return fwp_jt_int(c, r, K_U64, d->name, out);
     case K_U128: return fwp_jt_int(c, r, K_U128, "U128", out);
     case K_TINT: case K_TRIT: {
-        V x;
-        fwp_buf saved = c->err;
-        c->err = (fwp_buf){0};
-        int ok = fwp_jt_int(c, r, K_I128, "I128", &x);
-        free(c->err.d);
-        c->err = saved;
-        if (!ok) return fwp_jt_expected(c, "an integer", r);
-        i128 v = fwp_i128(x);
+        const char *s;
+        size_t n;
+        int neg;
+        u128 mag;
+        /* Preserve the signed-128 input boundary without a temporary box. */
+        if (!fwp_jt_numtext(r, &s, &n) || fwp_jt_exact(s, n, &neg, &mag) != 1 ||
+            mag > ((u128)1 << 127) - (neg ? 0 : 1))
+            return fwp_jt_expected(c, "an integer", r);
         int w = d->kind == K_TRIT ? 1 : (d->width > 40 ? 40 : d->width);
         i128 max = 1;
         for (int i = 0; i < w; i++) max *= 3;
         max = (max - 1) / 2;
-        if (v > max || v < -max) {
+        if (mag > (u128)max) {
             char ty[32];
             if (d->kind == K_TRIT) snprintf(ty, sizeof ty, "Trit");
             else snprintf(ty, sizeof ty, "TInt[%d]", d->width);
             return fwp_jt_range(c, r, ty);
         }
-        *out = (V)(int64_t)v;
+        *out = (V)(neg ? -(int64_t)mag : (int64_t)mag);
         return 1;
     }
     case K_F32: case K_F64: {
@@ -958,50 +1018,49 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
         return 1;
     case K_LIST: case K_ARRAY: case K_SET: {
         if (r->t != 4) return fwp_jt_expected(c, "an array", r);
-        V *items = (V *)fwp_alloc((r->n + 1) * sizeof(V));
+        int array = d->kind == K_ARRAY;
+        fwp_decode_fields_begin(fields, array ? 1 : r->n, NULL, 0, d->elem);
+        if (array) {
+            fields->aggregate_type = d;
+            fields->aggregate = fwp_rc_fresh(fwp_array_new_packed(r->n, d->elem));
+            fwp_array_set_len(fields->aggregate, 0);
+        }
         for (size_t i = 0; i < r->n; i++) {
             size_t len = c->path.len;
             fwp_jt_push_index(c, i);
-            if (!fwp_jt_read(c, &r->items[i], d->elem, &items[i])) return 0;
+            if (!fwp_jt_read(c, &r->items[i], d->elem, &fields->values[array ? 0 : i])) return 0;
+            if (array) {
+                fwp_array_store(fields->aggregate, i, fields->values[0], d->elem);
+                fwp_array_set_len(fields->aggregate, i + 1);
+                fields->values[0] = 0;
+            }
             fwp_jt_pop(c, len);
         }
-        if (d->kind == K_SET) {
-            V m = FWP_EMPTY_MAP;
-            for (size_t i = 0; i < r->n; i++) m = fwp_p_map_insert(items[i], 0, m, d->elem);
-            *out = m;
-            return 1;
-        }
-        V l = fwp_list_from(items, r->n);
-        *out = d->kind == K_ARRAY ? fwp_p_array_from_list_with_elem(l, d->elem) : l;
+        *out = d->kind == K_SET ? fwp_decode_map(fields, d) : fwp_decode_sequence(fields, d);
         return 1;
     }
     case K_MAP: {
-        V m = FWP_EMPTY_MAP;
-        if (d->elem->kind == K_STR) {
-            if (r->t != 5) return fwp_jt_expected(c, "an object", r);
-            for (size_t i = 0; i < r->n; i++) {
-                size_t len = c->path.len;
+        int object = d->elem->kind == K_STR;
+        if (r->t != (object ? 5 : 4)) return fwp_jt_expected(c, object ? "an object" : "an array of [key, value] pairs", r);
+        if (r->n > SIZE_MAX / 2) fwp_trap("JSON too large");
+        // Descriptors live in the outer frame for the whole recursive read.
+        fields->local_types[0] = d->elem; fields->local_types[1] = d->elem2;
+        fwp_decode_fields_begin(fields, 2 * r->n, fields->local_types, 2, NULL);
+        for (size_t i = 0; i < r->n; i++) {
+            size_t len = c->path.len;
+            if (object) {
                 fwp_jt_push_key(c, r->keys[i], r->klens[i]);
-                V v;
-                if (!fwp_jt_read(c, &r->items[i], d->elem2, &v)) return 0;
-                fwp_jt_pop(c, len);
-                m = fwp_p_map_insert(fwp_str_new(r->keys[i], r->klens[i]), v, m, d->elem);
-            }
-        } else {
-            if (r->t != 4) return fwp_jt_expected(c, "an array of [key, value] pairs", r);
-            for (size_t i = 0; i < r->n; i++) {
-                size_t len = c->path.len;
+                fields->values[2 * i] = fwp_rc_fresh(fwp_str_new(r->keys[i], r->klens[i]));
+                if (!fwp_jt_read(c, &r->items[i], d->elem2, &fields->values[2 * i + 1])) return 0;
+            } else {
                 fwp_jt_push_index(c, i);
                 const fwp_jr *kv = &r->items[i];
                 if (kv->t != 4 || kv->n != 2) return fwp_jt_expected(c, "a [key, value] pair", kv);
-                const fwp_desc *ds[2] = {d->elem, d->elem2};
-                V p[2];
-                if (!fwp_jt_tuple(c, kv, 2, ds, p)) return 0;
-                fwp_jt_pop(c, len);
-                m = fwp_p_map_insert(p[0], p[1], m, d->elem);
+                if (!fwp_jt_tuple(c, kv, 2, fields->local_types, &fields->values[2 * i])) return 0;
             }
+            fwp_jt_pop(c, len);
         }
-        *out = m;
+        *out = fwp_decode_map(fields, d);
         return 1;
     }
     case K_RECORD: {
@@ -1019,14 +1078,15 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
             }
             if (!ok) return fwp_jt_expected(c, "a duration", r);
             V f = (V)ns;
-            *out = fwp_record(1, &f);
+            *out = fwp_rc_fresh(fwp_record(1, &f));
             return 1;
         }
         if (d->n == 0) {
             if (r->t == 5 || r->t == 0 || (r->t == 4 && r->n == 0)) { *out = 0; return 1; }
             return fwp_jt_expected(c, "{}", r);
         }
-        V *fs = (V *)fwp_alloc((size_t)d->n * sizeof(V));
+        fwp_decode_fields_begin(fields, (size_t)d->n, d->fields, (size_t)d->n, NULL);
+        V *fs = fields->values;
         if (fwp_jt_is_tuple(d)) {
             if (!fwp_jt_tuple(c, r, d->n, d->fields, fs)) return 0;
         } else {
@@ -1047,7 +1107,7 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
                 fwp_jt_pop(c, len);
             }
         }
-        *out = fwp_record((uint32_t)d->n, fs);
+        *out = fwp_decode_record(fields);
         return 1;
     }
     case K_ADT: {
@@ -1057,21 +1117,22 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
             if (r->t == 3 && r->len == 5 && !memcmp(r->s, "false", 5)) { *out = FWP_FALSE; return 1; }
             return fwp_jt_expected(c, "true or false", r);
         }
-        if (d->width == FWP_ADT_JSON) { *out = fwp_jr_to_json(r); return 1; }
+        if (d->width == FWP_ADT_JSON) { *out = fwp_jr_to_json(r, d); return 1; }
         if (d->width == FWP_ADT_OPTION) {
             if (r->t == 0) { *out = FWP_NONE; return 1; }
             const fwp_desc *inner = d->vfields[1][0];
-            V x;
+            fwp_decode_fields_begin(fields, 1, d->vfields[1], 1, NULL);
+            V *x = fields->values;
             if (fwp_jt_is_option(inner)) {
                 if (r->t != 4 || r->n != 1) return fwp_jt_expected(c, "null or a one-element array", r);
                 size_t len = c->path.len;
                 fwp_jt_push_index(c, 0);
-                if (!fwp_jt_read(c, &r->items[0], inner, &x)) return 0;
+                if (!fwp_jt_read(c, &r->items[0], inner, x)) return 0;
                 fwp_jt_pop(c, len);
-            } else if (!fwp_jt_read(c, r, inner, &x)) {
+            } else if (!fwp_jt_read(c, r, inner, x)) {
                 return 0;
             }
-            *out = fwp_some(x);
+            *out = fwp_decode_variant(fields, 1);
             return 1;
         }
         if (d->width == FWP_ADT_UNTAGGED) return fwp_jt_untagged(c, r, d, out);
@@ -1098,14 +1159,15 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
         fwp_jt_push_key(c, "value", 5);
         const fwp_jr *val = fwp_jt_member(r, "value");
         if (!val) return fwp_jt_missing(c);
-        V *fs = (V *)fwp_alloc((size_t)n * sizeof(V));
+        fwp_decode_fields_begin(fields, (size_t)n, d->vfields[tag], (size_t)n, NULL);
+        V *fs = fields->values;
         if (n == 1) {
             if (!fwp_jt_read(c, val, d->vfields[tag][0], &fs[0])) return 0;
         } else if (!fwp_jt_tuple(c, val, n, d->vfields[tag], fs)) {
             return 0;
         }
         fwp_jt_pop(c, len);
-        *out = fwp_data((uint32_t)tag, (uint32_t)n, fs);
+        *out = fwp_decode_variant(fields, (uint32_t)tag);
         return 1;
     }
     default:
@@ -1115,19 +1177,37 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
     }
 }
 
-static V fwp_p_json_read(V text, const fwp_desc *d) {
+static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
+    fwp_decode_fields fields = {0};
+    int ok = fwp_jt_read_inner(c, r, d, out, &fields);
+    if (fields.active) fwp_decode_fields_end(&fields, 0);
+    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128)) fwp_rc_fresh(*out);
+    return ok;
+}
+
+static void fwp_jt_release(void *arg) {
+    fwp_jt *c = arg;
+    free(c->path.d); free(c->err.d);
+}
+static V fwp_p_json_read(V text, const fwp_desc *result_type) {
+    const fwp_desc *d = result_type->vfields[0][0];
     fwp_jp j;
     fwp_jr r;
-    if (!fwp_jparse_raw(text, &j, &r)) {
-        V e = fwp_cstr(j.err);
-        return fwp_data(1, 1, &e);
-    }
+    int parsed = fwp_jparse_raw(text, &j, &r);
     fwp_jt c = {{0}, {0}};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_jt_release, &c);
+    fwp_decode_fields result;
+    fwp_decode_fields_begin(&result, 1, result_type->vfields[0], 1, NULL);
     buf_puts(&c.path, "$");
-    V v;
-    int ok = fwp_jt_read(&c, &r, d, &v);
-    free(c.path.d);
-    if (ok) return fwp_data(0, 1, &v);
-    V e = buf_to_str(&c.err);
-    return fwp_data(1, 1, &e);
+    int ok = parsed && fwp_jt_read(&c, &r, d, &result.values[0]);
+    if (!ok) {
+        result.descs = result_type->vfields[1];
+        result.values[0] = fwp_rc_fresh(parsed ? fwp_str_new(c.err.d, c.err.len) : fwp_cstr(j.err));
+    }
+    V value = fwp_decode_variant(&result, !ok);
+    fwp_cleanup_pop(&cleanup); fwp_jt_release(&c);
+    fwp_json_finish(&j);
+    FWP_KEEP_ALIVE(text);
+    return value;
 }

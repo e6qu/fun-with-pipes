@@ -29,11 +29,37 @@ int main(void) {
     for(size_t i=0;i<3;i++)if(fwp_array_load(value,i,&i8)!=expected[i])return 160;
     reader=(fwp_rd){numeric,3,0};
     if(fwp_decode(&reader,&numbers,&value))return 161;
+    /* Wide counts still decode directly into the packed payload: no V vector. */
+    unsigned char large[259]={0x81,0x02};
+    for(size_t i=0;i<257;i++)large[i+2]=(unsigned char)(i%128);
+    calls=measured_calls;bytes=measured_bytes;
+    reader=(fwp_rd){large,sizeof large,0};
+    if(!fwp_decode(&reader,&numbers,&value) || fwp_array_len(value)!=257)return 164;
+    if(measured_calls-calls!=1 || measured_bytes-bytes!=sizeof(fwp_arr)+257*fwp_array_stride(&i8))return 165;
+    for(size_t i=0;i<257;i++)if(fwp_array_load(value,i,&i8)!=(V)(i%128))return 166;
     const unsigned char huge[]={255,255,255,255,255,255,255,255,255,1};
     reader=(fwp_rd){huge,sizeof huge,0};uint64_t count;
     if(fwp_decode_count(&reader,&unit,0,&count))return 155;
     const unsigned char duplicate[]={2};
     reader=(fwp_rd){duplicate,sizeof duplicate,0};
     if(fwp_decode_count(&reader,&unit,1,&count))return 162;
+    const fwp_desc trit={.kind=K_TRIT};
+    for(unsigned i=0;i<256;i++) {
+        unsigned char byte=(unsigned char)i;
+        reader=(fwp_rd){&byte,1,0};
+        if(fwp_decode(&reader,&trit,&value)!=(i==0 || i==1 || i==255))return 167;
+    }
+    const int widths[]={0,1,3,40};
+    for(size_t i=0;i<4;i++) {
+        fwp_desc tint={.kind=K_TINT,.width=widths[i]};
+        int64_t max=(int64_t)fwp_tint_max(widths[i]);
+        int64_t values[]={INT64_MIN,-max-1,-max,0,max,max+1,INT64_MAX};
+        for(size_t j=0;j<7;j++) {
+            unsigned char bytes[8];uint64_t bits=(uint64_t)values[j];
+            for(size_t k=0;k<8;k++)bytes[k]=(unsigned char)(bits>>(8*k));
+            reader=(fwp_rd){bytes,8,0};
+            if(fwp_decode(&reader,&tint,&value)!=(values[j]>=-max && values[j]<=max))return 168;
+        }
+    }
     return 0;
 }

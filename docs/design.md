@@ -23,9 +23,9 @@ lex → parse (offside layout) → macro expansion → name collection
 | Native code | Typed IR → C11 → the system C compiler. The same C goes to WebAssembly through `clang --target=wasm32-wasi` |
 | Ahead of time by default | `fwp run`, `exec`, `test`, `serve` and `pipe` compile to native executables, cached by content (`src/aot.rs`), and run them in place of `fwp`. The front end still runs on every start, so diagnostics do not depend on the cache. See [Compiled by default](reference.md#compiled-by-default) |
 | Interpreter | Runs the same typed IR. It powers `comptime`, macros, the WebAssembly build of fwp and `--interp`, and it is the oracle the native backend is tested against |
-| Scalars | Generic C entries use 64-bit `V` words: integers up to 64 bits sign- or zero-extended, floats by their bits, pointers or small tags. Direct numeric workers and numeric array payloads use concrete scalar types and natural widths, with bit-preserving bridges to generic entries. Arithmetic and comparisons of fixed-width integers, `F32` and `F64` are generated as typed C per type (`Scalar` in `src/cgen.rs`), checked like the interpreter's; 128-bit integers, `TInt` and `F16` go through the runtime's generic `fwp_arith` |
+| Scalars | Generic C entries use 64-bit `V` words: integers up to 64 bits sign- or zero-extended, floats by their bits, pointers or small tags. Direct numeric workers and numeric array payloads use concrete scalar types and natural widths, with bit-preserving bridges to generic entries. Arithmetic and comparisons of fixed-width integers, `F32` and `F64` are generated as typed C per type (`Scalar` in `src/cgen.rs`), checked like the interpreter's; eligible I128/U128 scalar workers use native wide arithmetic with explicit boxed generic boundaries; other wide paths, `TInt` and `F16` use runtime arithmetic |
 | Loops | A `loop` whose step is a known function with literal `Again x` and `Stop y` results compiles to a C loop (`loop_shape`, `Gen::loop_def` in `src/cgen.rs`): the step's body writes the next state into locals instead of allocating it, field by field when the state is a record the step only reads through fields, and a field that is itself a record of up to eight fields (a `fold`'s tuple accumulator) as its fields too, built only where it is read whole (`LoopGen::slots`); safe points are counted as in the generic loop |
-| List pipelines | A `fold` (so `sum`), `length` (so `count`) or `find` (so `any`, `all`) over `map` and `filter` stages of a `range` or a list becomes one `loop` whose state is the position, the accumulator and the captured values (`src/fuse.rs`), so no intermediate list is built. Fusing interleaves the stages, so it is done only when the stages are pure and terminating and can raise at most one trap message between them: then which stage traps first cannot be seen. `find` stops early, so its stages may raise none. `iter.to-list`, `iter.fold`, `iter.each` and `iter.find` fuse eligible `iter.map`, `iter.filter` and `iter.take` chains into flat loop state. Known consumer callbacks specialize; callbacks finish before forcing a tail, and find/take preserve early stopping. Lazy tails still dispatch and producer values can allocate. `FWP_ITER_CONSUMERS=0` disables only direct-consumer fusion for comparison |
+| List pipelines | A `fold` (so `sum`), `length` (so `count`) or `find` (so `any`, `all`) over `map` and `filter` stages of a `range` or a list becomes one `loop` whose state is the position, the accumulator and the captured values (`src/fuse.rs`), so no intermediate list is built. Fusing interleaves the stages, so it is done only when the stages are pure and terminating and can raise at most one trap message between them: then which stage traps first cannot be seen. `find` stops early, so its stages may raise none. `iter.to-list`, `iter.fold`, `iter.each` and `iter.find` fuse eligible `iter.map`, `iter.filter` and `iter.take` chains into flat loop state. Known consumer callbacks specialize; callbacks finish before forcing a tail, and find/take preserve early stopping. Direct count-from and from-list producer chains keep scalar/list state without tail closures. Count-from preserves eager checked successor construction. Other lazy tails still dispatch. `FWP_ITER_CONSUMERS=0` and `FWP_ITER_PRODUCERS=0` provide separate comparison controls |
 | Higher-order primitives | `map`, `filter`, `fold`, `fold-right`, `take-while`, `drop-while`, `zip-with` and `loop` called with a known function that captured nothing compile to `fwp_k_*` (runtime/fwp_rt_prims.c), which take a C function pointer and are always inlined, so the function is called directly. A known function applied to captured values (`map (mul 3)`) gets a specialized loop of its own, `fwp_hof<i>`, which takes the captured values and calls the function directly (`opt::specialize_hofs` in `src/opt.rs`, `hof_def` in `src/cgen.rs`); compiled dynamic calls use `fwp_apply_owned` with typed captures; runtime callbacks use the shared `fwp_apply` entry |
 | Records that do not escape | A record bound to a local and read only through its fields becomes one local per field (`only_fields` and `replace_fields` in `src/opt.rs`), and copies of locals and constants are propagated, so the tuples that `curry`, `uncurry` and `curry3` build are never allocated. A `match` on `map.get` branches on the lookup without building the `Some` (`lookup_match` in `src/cgen.rs`) |
 | Record workers | Direct numeric workers pass concrete C scalar parameters/results and use natural numeric aggregate fields with bit-preserving bridges to V entries. FWP_TYPED_ABI=0 retains V boundaries. A direct call passes a record of up to eight fields as its fields when the callee reads it only field by field, and a function returning such a record returns a C struct (numeric fwp_wr layouts preserve concrete field types; the target C ABI determines register or caller-storage return). A record of more than four fields is returned so only by a function whose every tail builds one, so that one it passes on is not read into a struct and built again (`wide_record_returns`). Return-origin and field tracking follow typed local aliases while preserving intervening effects. Its caller reads the struct's fields when it only reads fields (`let`, `.i`, a tail call), so recursion over pairs allocates nothing. Each such function has a worker with this convention (`w<id>`) and keeps its usual entry (`f<id>`), which boxes, for closures and primitives (`Abi` in `src/cgen.rs`). A function whose every tail builds a variant of a non-recursive type with up to eight fields per constructor (`Option`, `Result`, a parser's token), or calls such a function, returns its tag and fields as a struct (`fwp_u<m>`, `variant_returns`); a caller that only matches on the result keeps it as one, counting the fields' references by tag (`fwp_vdup<k>`, `fwp_vdrop<k>`), and any other builds it (`fwp_vbox<k>`). Lists and trees are left out, as their nodes are rebuilt in the cells of the old ones. `FWP_VRET=0` when compiling turns it off |
@@ -47,8 +47,8 @@ record-label evaluation order is preserved.
 `iter.fold`, `iter.each`, `iter.find` and list `fold-until` use the existing
 `loop` and Step constructors; `map-accum` uses a left fold followed by reverse.
 They introduce no primitives and do not widen iterator tail effects. Callback
-and tail evaluation order is tested against raw interpretation. This does not
-extend fusion eligibility or claim zero allocation for lazy iterator producers.
+and tail evaluation order is tested against raw interpretation. Producer fusion applies only to proven direct chains; arbitrary lazy producers
+retain their declared forcing behavior and may allocate.
 
 Merged synchronous callback entries borrow typed inputs and return owned results;
 map/filter own fresh spines and results without promoting input elements to sharing.
@@ -385,7 +385,7 @@ cover the private buffers separately from the managed result array.
 ## Checked native ARC execution
 
 The `fwp build --gc arc` mode admits immutable typed value graphs and
-scoped File owners, counted I128/U128 leaves and CSV parse trees whose
+scoped File/State owners, counted I128/U128 leaves and typed reconstructed trees whose
 compiler/runtime ownership contracts are established. The handoff distinguishes
 current implementation from accepted production gates.
 The checker visits monomorphic function/local types, ownership temporaries and
@@ -522,3 +522,21 @@ keep tracing compatibility. Channel close preserves queued values; explicit drai
 breaks the tested counted cycle, while unreachable shared cycles still require
 tracing. [Ownership coverage](ownership.md#ownership-coverage) and
 [the handoff](development-state.md) record the finite review and accepted scope.
+
+
+## Wide scalar workers and float formats
+
+Eligible closed I128/U128 arithmetic functions receive native wide arguments,
+keep native locals and call other eligible workers directly. Generic entries
+copy incoming bits before releasing typed boxes and box an escaping wide
+result. Containers and closures keep their established counted representations.
+Checked operations share the runtime's overflow/division rules. Arguments are
+evaluated into ordered temporaries before native calls, preserving trap order.
+`FWP_WIDE_WORKERS=0` disables this lowering for equivalent-workload controls.
+Unsupported expression shapes retain the ordinary lowering; this is a compile-time
+eligibility choice. C compilation decides register assignment and spills.
+
+[Float formats](float-formats.md) records the implemented F32/F64 representations
+of half/wide float names and the decision for a coordinated future format and
+protocol migration. Current native ownership/array claims do not imply true
+binary16, bfloat16 or binary128 arithmetic.

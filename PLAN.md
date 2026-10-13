@@ -1,7 +1,8 @@
 # Plan
 
 The original six-phase roadmap and accepted follow-ups are merged through
-PR #131. The desired platform matrix below includes deferred Windows support.
+PR #132. The seven-step extension is implemented in PR #133 and requires
+its final acceptance gates. The desired platform matrix below includes deferred Windows support.
 Earlier completion does not establish general
 GC-free execution, allocation-free abstractions or universal C/Rust parity.
 [The handoff](docs/development-state.md) records accepted source, checks and
@@ -32,7 +33,7 @@ are not an objective. Existing additional targets need not be removed.
 
 | OS | AMD64 | ARM64 |
 |---|---|---|
-| Linux | Native CI and standalone package checks | Native CI and standalone package checks; final bundle gates recorded in PR #132 |
+| Linux | Native CI and standalone package checks | Native CI and standalone package checks |
 | macOS | Accepted native support | Accepted native support |
 | Windows | Desired; deferred and not implemented | Desired; deferred and not implemented |
 
@@ -50,47 +51,51 @@ combinations. Cross-compilation between every host/target pair is not implied.
 |---|---|---|
 | Native macOS | ARM and Intel support, both engines and full platform gates | Separate binary per OS/architecture meets the packaging objective |
 | Runtime ownership | Typed Dup/Drop, reuse, aliases, cleanup on unwind/cancellation, scoped resources | Unproved runtime graphs and cycles still require tracing |
-| Numeric representation | Natural-width eligible arrays, retained views, typed scalar/aggregate ABI | I128/U128 remain boxed; half/wide floats retain existing representations |
+| Numeric representation | Natural-width eligible arrays, retained views, typed scalar/aggregate ABI | Generic I128/U128 boundaries remain boxed; half/wide floats retain existing representations |
 | Compiler and autodiff | Fused numerical loops, blocked matrices, bounded reusable AD workspaces | Fusion preserves effects, checked traps and floating-point order |
 | Performance evidence | Allocation/count/live-memory controls and scoped C/Rust comparisons | No universal speed or cache-efficiency claim |
 | Checked native ARC | Collector-free execution for admitted ownership graphs and scoped File owners | Explicit rejection outside the proved subset |
 | Tacit examples and CI | Explicit `const` explanations; balanced macOS test shards | Full coverage and resource limits preserved |
-| Iteration and records | `iter.fold`, `iter.each`, `iter.find`, `fold-until`, `map-accum`, `make { .field }` | Iterator state and callbacks can still allocate |
+| Iteration and records | `iter.fold`, `iter.each`, `iter.find`, `fold-until`, `map-accum`, `make { .field }` | Direct count/list producer chains and known State callbacks specialize; other lazy tails can allocate |
 
 Phases 1–6 were accepted through PR #128; documentation, examples/CI and
 iteration/projection follow-ups through #129–131. [History](docs/roadmap-history.md)
 indexes verification and measurements. [Preparation anchors](docs/roadmap-queue.md)
 remain immutable evidence, not work to repeat.
 
-## Ten-task bundle
+## Active seven-step bundle
 
-The user authorized all ten tasks below in one PR, including the pending docs
-cleanup. Keep the bundle open until every acceptance criterion is met; passing
-partial or superseded runs do not complete it. Windows remains deferred.
+The ten-task bundle was accepted in [PR #132](https://github.com/e6qu/fun-with-pipes/pull/132),
+squash `c67800ec8530e44501c54c69719af26b0585bedc`. All seven production jobs
+and documentation passed on tested head `7036ecebdbef50a5a8f851ed084378c830af1e79`;
+the squash has the same tree. Four native packages and allocation/disassembly
+artifacts were verified. [History](docs/roadmap-history.md) retains the evidence.
 
-| Task | Work | Acceptance |
+The user authorized these seven steps together in [PR #133](https://github.com/e6qu/fun-with-pipes/pull/133).
+All are implemented; final acceptance requires the complete exact-head gates
+recorded by that PR. The handoff is the single live validation record.
+
+| Step | Work | Acceptance |
 |---|---|---|
-| 1 | Finish docs cleanup | One current plan/handoff, valid links, immutable evidence preserved |
-| 2 | Native Linux ARM64 CI | Both engines, generated programs, GC stress and reuse execute natively |
-| 3 | Separate platform binaries | Linux/macOS ARM64/AMD64 artifacts validated outside build directory |
-| 4 | Current-compiler combinator measurements | Allocations/live memory, timing, generated C and actual native disassembly |
-| 5 | Remove avoidable callback dispatch | Known callbacks specialize with capture and evaluation order intact |
-| 6 | Remove avoidable loop-state allocations | Eligible tuple/record state stays scalar/stack; allocation and machine-code controls |
-| 7 | Fuse direct iterator consumers | Eligible lazy chains eliminate intermediate stages without extra forcing or reordered effects/traps |
-| 8 | ARC for a reconstructed-value boundary | A concrete parser/decoder owns nested results and cleans partial failures |
-| 9 | Counted I128/U128 owners | Construction, arithmetic, aliases, aggregates and cleanup verified before ARC admission |
-| 10 | Checked scoped autodiff | Supported tape/workspace lifetime subset, escapes and exceptional cleanup proved and measured |
+| 1 | Close out and streamline docs | Accepted PR #132 results replace pending actions; one current plan/handoff |
+| 2 | Expand reconstruction ownership | Typed CSV and JSON/protocol reconstruction have counted results, aliases and partial-failure cleanup controls |
+| 3 | Prove scoped State and callback lifetimes | ARC admits proven scoped owners; escape, replacement and unwind controls; unsupported cycles remain explicit |
+| 4 | Remove producer and callback overhead | Eligible lazy producers and known State updates avoid per-step closures/dispatch, preserving forcing/trap order |
+| 5 | Unbox wide integers where safe | Native worker/local I128/U128 representation with correct boxed boundaries, overflow and alias cleanup |
+| 6 | Measure and improve numerics/autodiff | Equivalent C/Rust kernels and bounded AD workspaces; packed decoding, direct formatting and smaller hot arithmetic frames; allocation/live-byte and native instruction evidence |
+| 7 | Settle float formats | Explicit F16/BF16/F128 precision, conversion and wire-format decision; docs distinguish implemented behavior from future formats |
 
-All ten implementations are in [PR #132](https://github.com/e6qu/fun-with-pipes/pull/132).
-[Four-platform focused evidence](docs/measurements/native-ownership-2026-10-13.json)
-records the measured subset. The handoff tracks final production acceptance:
-when that PR is squash-merged after its required gates, this bundle is closed.
-No additional implementation task is queued by this plan. Preserve raw
-interpreter/native semantics, checked arithmetic and floating-point order.
-No task authorizes general ARC eligibility without complete ownership contracts.
-Real half/128-bit float formats require a separate precision and wire-format
-decision. Windows, a new backend and new deployment interfaces remain deferred.
+Keep raw interpreter/native agreement, checked arithmetic and floating-point
+order. No task authorizes general ARC eligibility without complete ownership
+contracts. Windows, a new backend and new deployment interfaces remain deferred.
 Native ARC does not imply WebAssembly ownership support.
+
+After PR #133 passes and merges, this seven-step roadmap is complete. Remaining
+engineering directions are explicit future work: broader proved ownership
+(including foreign/protocol contexts and cycles), wider producer/worker shapes,
+true half/quad formats with protocol migration, further measured kernel/AD
+improvements, and deferred Windows. They are not unfinished acceptance items
+for this bundle or silently authorized new platform/backend work.
 
 ## Agreed syntax
 

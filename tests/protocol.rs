@@ -178,3 +178,73 @@ fn header_offers_the_transports() {
     );
     assert_eq!(proto::read_any_frame(&mut stream).unwrap(), None);
 }
+
+#[test]
+fn legacy_float_formats_keep_v1_widths_and_ieee_payload_bits() {
+    let prog = program();
+    assert_eq!(proto::VERSION, 1);
+    for name in ["F16", "BF16", "F32"] {
+        let ty = MT::con(&format!("std::{name}"));
+        for bits in [
+            0x3f800000_u32,
+            0x80000000,
+            0x7f800000,
+            0x00000001,
+            0x7fc01234,
+        ] {
+            let mut bytes = Vec::new();
+            proto::encode(&mut bytes, &Value::F32(f32::from_bits(bits)), &ty, &prog);
+            assert_eq!(bytes, bits.to_le_bytes());
+            let Value::F32(value) =
+                proto::decode(&mut proto::Reader::new(&bytes), &ty, &prog).unwrap()
+            else {
+                panic!("{name} representation changed")
+            };
+            assert_eq!(value.to_bits(), bits);
+        }
+    }
+    for name in ["F64", "F128"] {
+        let ty = MT::con(&format!("std::{name}"));
+        for bits in [
+            0x3ff0000000000000_u64,
+            0x8000000000000000,
+            0x7ff0000000000000,
+            1,
+            0x7ff8000000001234,
+        ] {
+            let mut bytes = Vec::new();
+            proto::encode(&mut bytes, &Value::F64(f64::from_bits(bits)), &ty, &prog);
+            assert_eq!(bytes, bits.to_le_bytes());
+            let Value::F64(value) =
+                proto::decode(&mut proto::Reader::new(&bytes), &ty, &prog).unwrap()
+            else {
+                panic!("{name} representation changed")
+            };
+            assert_eq!(value.to_bits(), bits);
+        }
+    }
+}
+
+#[test]
+fn ternary_wire_values_must_fit_the_declared_type() {
+    let prog = program();
+    let trit = MT::con("std::Trit");
+    for byte in 0_u8..=255 {
+        let bytes = [byte];
+        let decoded = proto::decode(&mut proto::Reader::new(&bytes), &trit, &prog);
+        assert_eq!(decoded.is_ok(), matches!(byte, 0 | 1 | 255));
+    }
+    for width in [0, 1, 3, 40] {
+        let ty = MT::Con("std::TInt".into(), vec![MT::Nat(width)]);
+        let max = ((3_i128.pow(width as u32) - 1) / 2) as i64;
+        for value in [i64::MIN, -max - 1, -max, 0, max, max + 1, i64::MAX] {
+            let bytes = value.to_le_bytes();
+            let decoded = proto::decode(&mut proto::Reader::new(&bytes), &ty, &prog);
+            assert_eq!(
+                decoded.is_ok(),
+                (-max..=max).contains(&value),
+                "{width}/{value}"
+            );
+        }
+    }
+}

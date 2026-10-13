@@ -1420,20 +1420,22 @@ static int fwp_valid_float(const char *s, size_t n) {
  * TInt); returns Option. */
 static V fwp_int_in_range(int neg, u128 mag, int k, int w, V *out);
 
-static V fwp_p_parse_int(V s, int kind, int w) {
-    const char *d = STR(s)->d;
-    size_t n = STR(s)->len;
-    if (!fwp_valid_int(d, n)) return FWP_NONE;
+static int fwp_parse_integer_bytes(const char *d, size_t n, int kind, int w, V *out) {
+    if (!fwp_valid_int(d, n)) return 0;
     int neg = d[0] == '-';
     size_t i = (d[0] == '-' || d[0] == '+') ? 1 : 0;
     u128 mag = 0;
     for (; i < n; i++) {
         u128 next = mag * 10 + (u128)(d[i] - '0');
-        if (next / 10 != mag) return FWP_NONE;
+        if (next / 10 != mag) return 0;
         mag = next;
     }
+    return fwp_int_in_range(neg, mag, kind, w, out);
+}
+
+static V fwp_p_parse_int(V s, int kind, int w) {
     V out;
-    if (!fwp_int_in_range(neg, mag, kind, w, &out)) return FWP_NONE;
+    if (!fwp_parse_integer_bytes(STR(s)->d, STR(s)->len, kind, w, &out)) return FWP_NONE;
     return fwp_some(out);
 }
 
@@ -2641,17 +2643,23 @@ static V fwp_p_put_owned(V value, void (*duplicate)(V)) {
     return FWP_UNIT;
 }
 
-static V fwp_p_modify_owned(V function, void (*duplicate)(V), void (*drop)(V)) {
-    V current = fwp_p_get();
-    V result = fwp_apply_borrowed(function, 1, &current);
+/* Both generic and statically known callbacks transfer their result here. */
+static V fwp_state_modify_result(V result, void (*duplicate)(V), void (*drop)(V)) {
     fwp_state_owner *owner = fwp_state_current_owner();
     if (owner) fwp_state_install_owned(owner, result);
     else if (fwp_state_len) {
         if (duplicate) fwp_rc_share(result);
         fwp_state[fwp_state_len - 1] = result;
     } else if (drop && result) drop(result);
-    FWP_KEEP_ALIVE(function);
     return FWP_UNIT;
+}
+
+static V fwp_p_modify_owned(V function, void (*duplicate)(V), void (*drop)(V)) {
+    V current = fwp_p_get();
+    V result = fwp_apply_borrowed(function, 1, &current);
+    V unit = fwp_state_modify_result(result, duplicate, drop);
+    FWP_KEEP_ALIVE(function);
+    return unit;
 }
 
 static V fwp_p_run_state_owned(V initial, V function, V argument,

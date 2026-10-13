@@ -78,8 +78,8 @@ complete exceptional ownership or tracing-free support.
 ## Conservative reconstruction and external boundaries
 
 The current inventory has 375 declarations, 365 runtime symbols and 40 aliases:
-204 ownership contracts, 19 ordinary IR combinators, 11 flat scalar signatures
-and 141 review declarations covering 131 symbols. Promotion checks preserve the
+207 ownership contracts, 19 ordinary IR combinators, 11 flat scalar signatures
+and 138 review declarations covering 128 symbols. Promotion checks preserve the
 immutable original baseline and verify each new numeric/CSV contract. Scalar
 signatures can still allocate external state; descriptors alone cannot establish
 counted reconstruction. The handoff records validation of the current revision.
@@ -91,13 +91,13 @@ boundary; it does not establish tracing-free eligibility.
 
 | Boundary | Current lifetime policy |
 |---|---|
-| JSON/typed CSV/protocol and descriptor decoding | Reconstructed or cached graphs retain compatibility roots; typed child transfer and partial-construction ownership require explicit contracts |
+| JSON/typed CSV/text/binary decoding | Descriptor Dup/Drop owns reconstructed children and partial field vectors; parse/read and typed CSV return OwnedTree. External protocol contexts remain separately unproved |
 | csv.parse / csv.parse-with | Counted String leaves and nested list spines; registered pending-field, partial-row and scratch cleanup; private spine reversal transfers existing owners |
 | Numeric I128/U128 results | Fresh leaf/aggregate ownership or explicitly retained selected aliases; scalar results remain inline |
 | Remote values and memoized decoding | Preserve retained context/cache owners and independent reader aliases; scratch cleanup alone does not count decoded nodes |
 | Foreign values and retained callbacks | Keep explicit sharing unless host lifetime and teardown are proved |
 | list.flat-map and list.ap | Borrow typed synchronous inputs, adopt owned callback results and own copied spines; partial results, scratch and unwind cleanup pass PR124 controls |
-| State handlers | Typed get/put/modify/run-state ownership and task scope chains pass PR124 aggregate, capture and nonlocal-exit controls; legacy/unmodeled payloads retain fallback |
+| State handlers | Typed get/put/modify/run-state owners; finite callback-flow proof admits State operations only under a handler. Returned closures require a fresh handler when called; unknown targets are rejected by ARC |
 | External resource contexts | Original scoped/task owners preserve teardown order; counted C context storage does not by itself prove ownership of every fwp graph |
 
 Channel close preserves queued values. Explicit drain breaks the tested counted

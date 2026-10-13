@@ -8,6 +8,9 @@ use std::fmt::Write;
 use crate::ir::*;
 use crate::value::Value;
 
+#[path = "cgen_wide.rs"]
+mod wide;
+
 const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt.c"),
     include_str!("../runtime/fwp_rt_gc.c"),
@@ -16,6 +19,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_prims.c"),
     include_str!("../runtime/fwp_rt_task.c"),
     include_str!("../runtime/fwp_rt_sys.c"),
+    include_str!("../runtime/fwp_rt_decode.c"),
     include_str!("../runtime/fwp_rt_json.c"),
     include_str!("../runtime/fwp_rt_web.c"),
     include_str!("../runtime/fwp_rt_pipe.c"),
@@ -422,6 +426,7 @@ struct Gen<'p> {
     hofs: Vec<(String, FuncId, usize)>,
     /// The unboxed calling convention of each function that has one.
     abis: Vec<Option<Abi>>,
+    wide_workers: Vec<bool>,
     /// Which parameters of each function do not escape (`src/escape.rs`):
     /// a record or variant passed there may live on the caller's stack.
     noesc: Vec<Vec<bool>>,
@@ -1381,7 +1386,17 @@ impl<'p> Gen<'p> {
         let id = self.desc_defs.len();
         self.descs.insert(mt.clone(), id);
         self.desc_defs.push(String::new());
-        let def = self.desc_body(mt, id);
+        let mut def = self.desc_body(mt, id);
+        if self.reuse {
+            let drop = self.value_drop(mt);
+            let dup = if crate::rc::needs_rc(&self.prog.shapes, mt) {
+                self.value_dup(mt)
+            } else {
+                "NULL"
+            };
+            let end = def.rfind("};").expect("descriptor initializer");
+            def.insert_str(end, &format!(", .dup = {dup}, .drop = {drop}"));
+        }
         self.desc_defs[id] = def;
         id
     }
@@ -4472,6 +4487,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         | "drop-while"
                         | "find"
                         | "loop"
+                        | "modify"
                 ) =>
             {
                 s.clone()
@@ -4495,6 +4511,29 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         }
         self.g.used_closures[g] = true;
+        if sym == "modify" {
+            let mut values = match &args[0] {
+                Expr::Func(_) => Vec::new(),
+                Expr::Local(l) => (0..n).map(|j| format!("CLO(l{l})->a[{j}]")).collect(),
+                Expr::Apply(_, captures) => self.args(captures),
+                _ => return None,
+            };
+            values.push("fwp_p_get()".into());
+            let arguments = self.fresh();
+            self.line(&format!("V {arguments}[] = {{{}}};", values.join(", ")));
+            self.line(&format!("fwp_args{g}({arguments}, 0, {});", n + 1));
+            let value = self.bind(format!("fwp_owned_entry{g}({arguments})"));
+            let state = self.g.prog.funcs[g].ty.params(n + 1).1.clone();
+            let duplicate = if crate::rc::needs_rc(&self.g.prog.shapes, &state) {
+                self.g.value_dup(&state)
+            } else {
+                "NULL"
+            };
+            let drop = self.g.value_drop(&state);
+            return Some(format!(
+                "fwp_state_modify_result({value}, {duplicate}, {drop})"
+            ));
+        }
         if sym == "loop" && n == 0 {
             if let Some(Some(width)) = loop_shape(&self.g.prog.funcs[g]) {
                 let flat = record_fields(&self.g.prog.shapes, &self.g.prog.funcs[g].locals[0])
@@ -5536,9 +5575,10 @@ impl<'p> Gen<'p> {
                 let field_drop = self.value_drop(&MT::con("std::String"));
                 format!("return fwp_p_csv_parse_with(l0, l1, {row_drop}, {rows_drop}, {field_drop});")
             }
-            "json.read" => format!(
-                "return fwp_p_json_read(l0, {});",
-                self.desc(&elem(&result, 0))
+            "json.read" | "json.parse" => format!(
+                "return fwp_p_json_{}(l0, {});",
+                if sym == "json.read" { "read" } else { "parse" },
+                self.desc(&result)
             ),
             "format" => format!("return fwp_p_format(l0, l1, {});", self.desc(&p(1))),
             "fail" => {
@@ -5683,7 +5723,8 @@ impl<'p> Gen<'p> {
                         .any(|(l, _)| l.starts_with(|c: char| c.is_ascii_digit()));
                 if !named {
                     return Ok(format!(
-                        "return fwp_p_csv_decode(l0, 0, 0, {});",
+                        "return fwp_p_csv_decode(l0, {}, 0, {});",
+                        self.desc(&result),
                         c_string_literal(t.to_string().as_bytes())
                     ));
                 }
@@ -5697,7 +5738,7 @@ impl<'p> Gen<'p> {
                 format!(
                     "static const char *const names[] = {{{}}};\n    return fwp_p_csv_decode(l0, {}, names, 0);",
                     names.join(", "),
-                    self.desc(&t)
+                    self.desc(&result)
                 )
             }
             "cli.parse" | "cli.help" => {
@@ -5906,7 +5947,6 @@ impl<'p> Gen<'p> {
                     ("run-state", "fwp_p_run_state(l0, l1, l2)"),
                     ("file.close", "fwp_p_file_close(l0)"),
                     ("loop", "fwp_p_loop(l0, l1)"),
-                    ("json.parse", "fwp_p_json_parse(l0)"),
                     ("json.encode", "fwp_p_json_encode(l0)"),
                     ("string.split-once", "fwp_p_split_once(l0, l1)"),
                     ("bytes.find", "fwp_p_bytes_find(l0, l1)"),
@@ -6310,6 +6350,40 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
     }
 
     fn func(&mut self, id: FuncId) -> Result<String, String> {
+        if self.wide_workers[id] {
+            let f = self.uncounted.funcs[id].clone();
+            let mut out = wide::worker(self.uncounted, &self.wide_workers, id, self.ticks);
+            let params = (0..f.arity)
+                .map(|i| format!("V a{i}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let _ = writeln!(out, "static V f{id}({params}) {{");
+            let (types, result) = f.ty.params(f.arity as usize);
+            // Copy native bits before releasing any aliased incoming boxes.
+            // Once copied, a trap in the worker has no pending managed owners.
+            for (i, ty) in types.iter().enumerate() {
+                let k = wide::Kind::of(ty).unwrap();
+                let _ = writeln!(out, "    {} n{i} = {};", k.c(), k.unbox(&format!("a{i}")));
+            }
+            if self.reuse {
+                for (i, ty) in types.iter().enumerate() {
+                    if wide::Kind::of(ty).unwrap().wide() {
+                        let drop = self.value_drop(ty);
+                        let _ = writeln!(out, "    {drop}(a{i});");
+                    }
+                }
+            }
+            let arguments = (0..f.arity)
+                .map(|i| format!("n{i}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let k = wide::Kind::of(result).unwrap();
+            let _ = writeln!(out, "    {} value = fwp_wide{id}({arguments});", k.c());
+            let value = k.boxed("value");
+            let value = if k.wide() { self.fresh(value) } else { value };
+            let _ = writeln!(out, "    return {value};\n}}");
+            return Ok(out);
+        }
         let f = &self.prog.funcs[id];
         let params: Vec<String> = (0..f.arity).map(|i| format!("V l{}", i)).collect();
         let sig = format!(
@@ -7817,6 +7891,12 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     if variant_returns_enabled() {
         variant_returns(prog, &mut abis);
     }
+    let wide_workers = wide::select(prog);
+    for (id, enabled) in wide_workers.iter().enumerate() {
+        if *enabled {
+            abis[id] = None;
+        }
+    }
     let resources = prog.funcs.iter().any(|f| {
         f.locals
             .iter()
@@ -7873,6 +7953,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         loops: Vec::new(),
         hofs: Vec::new(),
         abis,
+        wide_workers,
         noesc: crate::escape::params(prog),
         reuse,
         callbacks: Vec::new(),
@@ -8513,6 +8594,10 @@ static const fwp_exec_spec exec_spec{i} = {{
             m = m
         );
     }
+    // Descriptor-driven reconstruction uses the same typed drops as IR owners.
+    for i in 0..g.drop_defs.len() {
+        let _ = writeln!(out, "static void fwp_drop{}(V v);", i);
+    }
     // tentative declarations, so descriptors can refer to each other
     for i in 0..g.desc_defs.len() {
         let _ = writeln!(out, "static const fwp_desc d{};", i);
@@ -8580,6 +8665,11 @@ static const fwp_exec_spec exec_spec{i} = {{
     for (id, abi) in g.abis.iter().enumerate() {
         if let Some(abi) = abi.as_ref().filter(|_| live[id]) {
             let _ = writeln!(out, "{};", abi.sig(prog, id));
+        }
+    }
+    for (id, enabled) in g.wide_workers.iter().enumerate() {
+        if *enabled && live[id] {
+            let _ = writeln!(out, "{};", wide::signature(g.uncounted, id));
         }
     }
     // prototypes

@@ -419,6 +419,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[1],
         ),
         "csv.parse-with" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
+        "json.parse" | "json.read" | "csv.decode" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "parse-int" | "parse-float" | "length" => (&[B], R, None, &[]),
         "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
         "pad-left" | "pad-right" | "replace" => (

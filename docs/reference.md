@@ -18,7 +18,7 @@ library is listed in [stdlib.md](stdlib.md).
   for that type is a compile error.
 - **Float literals:** `1.5`, `2e-3`, with suffixes `f16`, `bf16`, `f32`,
   `f64`, `f128`. `F16` and `BF16` are computed at `F32` precision and
-  `F128` at `F64` precision.
+  `F128` at `F64` precision. See the [format and migration contract](float-formats.md).
 - **Duration literals:** `500ns`, `20us`, `250ms`, `2s`, `1.5s`, `5min`,
   `1h`. They are decimal and at most about 292 years. Durations implement
   `Add`, `Sub` and `Zero` (`2s | add 500ms`).

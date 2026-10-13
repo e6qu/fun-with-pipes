@@ -29,7 +29,9 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                 | "std::I16" | "std::I32" | "std::I64" | "std::I128" | "std::ISize" | "std::U8"
                 | "std::U16" | "std::U32" | "std::U64" | "std::U128" | "std::USize"
                 | "std::F16" | "std::BF16" | "std::F32" | "std::F64" | "std::F128"
-                | "std::Array" | "std::Map" | "std::Set" => return Ok(()),
+                | "std::TInt" | "std::Trit" | "std::Array" | "std::Map" | "std::Set" => {
+                    return Ok(())
+                }
                 _ => {}
             }
             match prog.shapes.get(ty) {
@@ -86,7 +88,6 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
             || symbol.starts_with("channel.")
             || symbol.starts_with("mem.")
             || symbol.starts_with("ptr.")
-            || symbol == "run-state"
         {
             return Err(reject(format!(
                 "primitive `{symbol}` has no tracing-free lifetime policy"
@@ -124,7 +125,10 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
         // boxed numerics need their own counted-result contract before admission.
         let arithmetic = matches!(
             symbol,
-            "prim.add"
+            "trit.from-sign"
+                | "trit.to-int"
+                | "tint.to-int"
+                | "prim.add"
                 | "prim.sub"
                 | "prim.mul"
                 | "prim.div"
