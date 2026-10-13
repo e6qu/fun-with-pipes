@@ -22,9 +22,8 @@ lend : Book -> Loan ! {Error[NotAvailable]}
 lend =
     if
         (.copies | gt 0)
-        (make Loan { isbn = .isbn, left = .copies | sub 1 })
-        (make NotAvailable { isbn = .isbn, reason = const "all copies are out" }
-            | fail)
+        (make Loan { .isbn, left = .copies | sub 1 })
+        (make NotAvailable { .isbn, reason = const "all copies are out" } | fail)
 
 export borrow : String -> Loan ! {Error[NotAvailable]}
 borrow = fork or-fail unknown book | lend

@@ -833,12 +833,12 @@ http.respond-to = if http.h2c-wanted http.upgrade-h2c (make Exchange {
 # internal
 http.request-of : Pending -> Request ! {Network}
 http.request-of = make Request {
-    method = .method,
+    .method,
     path = .target | http.path-of,
     query =
         .target | string.split-once "?" | option.map .1 | option.unwrap-or "",
-    version = .version,
-    headers = .headers,
+    .version,
+    .headers,
     body = fork http.bytes-take .length (.st | .buffer),
     params =
         .st
@@ -956,13 +956,8 @@ http.outcome = curry (match
 
 # internal
 http.next-served : ConnState -> ConnState
-http.next-served = make ConnState {
-    server = .server,
-    conn = .conn,
-    buffer = .buffer,
-    served = .served | add 1,
-    until = .until,
-}
+http.next-served =
+    make ConnState { .server, .conn, .buffer, served = .served | add 1, .until }
 
 # internal
 http.write-out : Out -> () ! {Async, Network, Error[IoError]}
@@ -977,11 +972,11 @@ http.checked =
         (.response | http.response-ok)
         id
         (make Out {
-            conn = .conn,
-            keep = .keep,
-            head-only = .head-only,
+            .conn,
+            .keep,
+            .head-only,
             response = const (http.text 500 "invalid response header"),
-            timeout = .timeout,
+            .timeout,
         })
 
 # internal
@@ -1581,8 +1576,8 @@ http.h2-checked =
         (.response | http.response-ok)
         id
         (make H2Out {
-            stream = .stream,
-            head-only = .head-only,
+            .stream,
+            .head-only,
             response = const (http.text 500 "invalid response header"),
         })
 
@@ -1752,11 +1747,11 @@ http.with-accept-encoding = curry (if
         (.1 | .headers | any (.0 | lower | eq "accept-encoding") | not))
     (.1
         | make ClientRequest {
-            method = .method,
-            url = .url,
+            .method,
+            .url,
             headers =
                 fork Cons (const ("accept-encoding", "gzip, deflate")) .headers,
-            body = .body,
+            .body,
         })
     .1)
 

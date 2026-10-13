@@ -513,7 +513,13 @@ impl Fmt<'_> {
                 }
                 let parts: Option<Vec<String>> = fs
                     .iter()
-                    .map(|(n, x)| Some(format!("{} = {}", n, self.flat(x)?)))
+                    .map(|(n, x)| {
+                        if projection_field(e, n, x) {
+                            Some(format!(".{}", n))
+                        } else {
+                            Some(format!("{} = {}", n, self.flat(x)?))
+                        }
+                    })
                     .collect();
                 format!("{} {} }}", open, parts?.join(", "))
             }
@@ -635,7 +641,12 @@ impl Fmt<'_> {
                 for (n, x) in fs {
                     s.push('\n');
                     s.push_str(&pad(indent + INDENT));
-                    s.push_str(&self.rhs(&format!("{} =", n), x, indent + INDENT));
+                    if projection_field(e, n, x) {
+                        s.push('.');
+                        s.push_str(n);
+                    } else {
+                        s.push_str(&self.rhs(&format!("{} =", n), x, indent + INDENT));
+                    }
                     s.push(',');
                 }
                 Some(format!("{}\n{}}}", s, pad(indent)))
@@ -812,6 +823,13 @@ fn arg_parens(args: &[Expr], i: usize, f: &Expr) -> bool {
     }
 }
 
+/// Only single named identity selectors abbreviate a make field.
+fn projection_field(record: &Expr, name: &str, value: &Expr) -> bool {
+    matches!(record.kind, ExprKind::Make(..))
+        && !name.chars().all(|c| c.is_ascii_digit())
+        && matches!(&value.kind, ExprKind::Selector(path) if path.len() == 1 && path[0] == name)
+}
+
 /// The opening text and fields of a record-like expression.
 fn fields_of(e: &Expr) -> Option<(String, &[(String, Expr)])> {
     Some(match &e.kind {
@@ -887,6 +905,72 @@ mod tests {
             fmt("rec f : I64 -> I64\nf = id\n"),
             "rec f : I64 -> I64\nf = id\n"
         );
+    }
+
+    #[test]
+    fn make_projection_shorthand() {
+        assert_eq!(
+            fmt("f = make Person { name = .name, age = .age, city = .address.city }\n"),
+            "f = make Person { .name, .age, city = .address.city }\n"
+        );
+        assert!(same_program(
+            "f = make { .name, age = .age | add 1 }\n",
+            "f = make { name = .name, age = .age | add 1 }\n"
+        ));
+        assert!(same_program(
+            "f = make { .if, ._private, .first-name }\n",
+            "f = make { if = .if, _private = ._private, first-name = .first-name }\n"
+        ));
+        let multiline = "f = make { .first, .second, .third, .fourth, .fifth, .sixth, .seventh, .eighth, .ninth }\n";
+        let formatted = fmt(multiline);
+        assert!(formatted.contains("\n    .first,"));
+        assert!(formatted.contains("\n    .ninth,"));
+        let comment = "f = make {\n    .name, # preserve this projection\n    .age,\n}\n";
+        assert_eq!(fmt(comment), comment);
+        for explicit in [
+            "f = make { 0 = .0 }\n",
+            "f = { name = .name }\n",
+            "f = update { name = .name }\n",
+            "f = with { name = .name }\n",
+        ] {
+            assert_eq!(fmt(explicit), explicit);
+        }
+    }
+
+    #[test]
+    fn invalid_projection_shorthand() {
+        for source in [
+            "f = make { .name, name = id }\n",
+            "f = make Person { name = id, .name }\n",
+            "f = make { .name, .name }\n",
+        ] {
+            assert_eq!(
+                format_source(source).unwrap_err().message,
+                "duplicate field `name`"
+            );
+        }
+        for source in [
+            "f = make { .address.city }\n",
+            "f = make { .0 }\n",
+            "f = make { .True }\n",
+            "f = make { .match }\n",
+            "f = make { ._ }\n",
+            "f = make { .0abc }\n",
+        ] {
+            assert!(format_source(source)
+                .unwrap_err()
+                .message
+                .contains("one named field"));
+        }
+        for source in [
+            "f = { .name }\n",
+            "f = Person { .name }\n",
+            "f = with { .name }\n",
+            "f = update { .name }\n",
+            "f = make { .name | upper }\n",
+        ] {
+            assert!(format_source(source).is_err(), "{source}");
+        }
     }
 
     #[test]

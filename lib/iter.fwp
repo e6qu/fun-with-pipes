@@ -73,6 +73,41 @@ rec iter.iterate = curry (fork
     .1
     (both .0 (uncurry id) | iter.later (uncurry iter.iterate)))
 
+# Keep tail forcing pure; consumer callback effects belong to the loop step.
+iter._force-tail : (() -> Iterator[a]) -> Iterator[a]
+iter._force-tail = apply ()
+
+# Fold left in constant stack space without building a list. The callback
+# takes state then element, and finishes before the next tail is forced.
+iter.fold : (s -> a -> s ! e) -> s -> Iterator[a] -> s ! e where Dup[s], Dup[a]
+iter.fold = curry3 (both (both .0 .1) .2 | loop iter._fold-step)
+iter._fold-step : ((s -> a -> s ! e, s), Iterator[a]) -> Step[((s -> a -> s ! e, s), Iterator[a]), s] ! e where Dup[s], Dup[a]
+iter._fold-step = match
+    (_, Done) -> .1 | Stop
+    (_, Yield _ _) -> curry3 (both
+            (both
+                (.0 | .0)
+                (both (.0 | .0 | uncurry) (both (.0 | .1) .1)
+                    | uncurry (flip apply)))
+            (.2 | iter._force-tail)
+        | Again)
+
+# Run the callback once per element, in order, without building a list.
+iter.each : (a -> () ! e) -> Iterator[a] -> () ! e where Dup[a]
+iter.each = const | iter.fold | apply ()
+
+# Return the first match, or None at the end. Never force the tail after
+# a match. A callback failure also leaves the next tail unforced.
+iter.find : (a -> Bool ! e) -> Iterator[a] -> Option[a] ! e where Dup[a]
+iter.find = curry (loop iter._find-step)
+iter._find-step : (a -> Bool ! e, Iterator[a]) -> Step[(a -> Bool ! e, Iterator[a]), Option[a]] ! e where Dup[a]
+iter._find-step = match
+    (_, Done) -> const (Stop None)
+    (_, Yield _ _) -> curry3 (if
+        (both .0 .1 | uncurry (flip apply))
+        (.1 | Some | Stop)
+        (both .0 (.2 | iter._force-tail) | Again))
+
 test "iter round trip" =
     [1, 2, 3] | iter.from-list | iter.to-list | eq [1, 2, 3]
 test "iter.count-from" =
@@ -119,3 +154,21 @@ test "iter.filter long rejected run" =
     | eq [300001]
 test "iter.iterate" =
     1 | iter.iterate (mul 3) | iter.take 4 | iter.to-list | eq [1, 3, 9, 27]
+
+test "iter.fold order" =
+    [1, 2, 3] | iter.from-list | iter.fold (flip sub) 10 | eq 4
+test "iter.fold empty" =
+    [] | list._test-ints | iter.from-list | iter.fold add 7 | eq 7
+test "iter.each order and count" =
+    [1, 2, 3]
+    | iter.from-list
+    | run-state [] (iter.each (Cons | modify))
+    | eq ((), [3, 2, 1])
+test "iter.find first" = 0 | iter.count-from | iter.find (gt 3) | eq (Some 4)
+test "iter.find absent" = [1, 2] | iter.from-list | iter.find (gt 3) | eq None
+test "iter.find empty" =
+    [] | list._test-ints | iter.from-list | iter.find (gt 3) | eq None
+test "iter.find forces no extra tail" =
+    Yield 1 (fork Yield (const 1 | div 0) (const (const Done)))
+    | iter.find (eq 1)
+    | eq (Some 1)

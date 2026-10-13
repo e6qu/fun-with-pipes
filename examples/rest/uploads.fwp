@@ -35,13 +35,12 @@ Entry = { name: String, message: String, stars: Option[I64] }
 # accepts: multipart
 # status: 201
 export upload : Batch -> Receipt
-upload =
-    make Receipt { title = .title, tags = .tags, files = .files | map summary }
+upload = make Receipt { .title, .tags, files = .files | map summary }
 
 summary : Upload -> Summary
 summary = make Summary {
-    filename = .filename,
-    content-type = .content-type,
+    .filename,
+    .content-type,
     size = .bytes | bytes.length,
     lines = .bytes | string.from-bytes | option.map (lines | length),
     checksum = .bytes | bytes.to-list | fold checksum-step 0,

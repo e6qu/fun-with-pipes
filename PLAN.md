@@ -83,17 +83,44 @@ Existing tracing-mode features remain available; ARC never switches to tracing
 when eligibility fails. Future coverage or performance work must start from the
 retained measurements and current handoff rather than an archived next action.
 
-## Requested follow-up: tacit examples
+## Completed follow-up: tacit examples and CI repair
 
-Rework examples into left-to-right tacit pipelines where the branch consumes
-only the computed result. Keep `if` where branches need the original input.
-Explain `const` as an explicit constant function, including function-valued
-results and captured pattern arguments; do not introduce implicit lifting.
-Nine programs and their tutorial excerpts are updated. Focused formatting,
-type checks, 36 original/revised interpreter/native executions, constant-function
-examples and the existing README consistency test pass with the available local
-compiler. Full checks of the PR source belong on CI; see the handoff for status.
-Two Intel CI attempts exceeded the job deadline without assertion failures.
-Divide ordinary integration targets between the existing regular and GC jobs
-on each macOS architecture, retaining every target and the separate stress run.
-Validate partition coverage and require all six jobs at the revised PR head.
+PR #130 delivers nine revised programs, matching tutorial excerpts and explicit
+`const` explanations. Ordinary macOS integration targets are split between the
+existing regular and GC jobs; coverage and limits are preserved. All six jobs
+and the documentation audit passed at the final head before squash merge.
+The handoff records the source, execution audit and merge evidence.
+
+## Agreed syntax guidance
+
+Keep the current grammar: tacit, curried, data-last functions; application binds
+more tightly than pipes; explicit parentheses group nested expressions. Existing
+layout still delimits declaration continuations and match arms. Do not add
+implicit argument grouping, a colon application operator or indentation-based
+argument groups. Keep `const` explicit and `()` as the unit value.
+
+Use short inline callbacks and meaningful names for larger or reusable stages;
+do not add names merely to eliminate parentheses. Keep tutorials focused on the
+constructs they teach. Grouping proposals are set aside. Performance work belongs in compilation and runtime
+representation, with measured evidence, rather than punctuation changes.
+
+## Active follow-up: iteration and record projections
+
+The user accepted this bundle after the prefix/piped syntax discussion. Keep
+prefix calls and infix pipes, and keep both `if` and `match`.
+
+- Add `iter.fold`, `iter.each` and `iter.find` as direct iterator consumers.
+  Callbacks run in order; `find` does not force the tail after a match.
+- Add list `fold-until`: the callback returns `Again state` or `Stop state`;
+  exhaustion returns the current state. No implicit finalizer.
+- Add `map-accum`: the callback takes state then element and returns
+  `(mapped value, next state)`; the result is `(mapped list, final state)`.
+- Expand `make { .name }` to `make { name = .name }` in the parser, including
+  nominal `make`. Keep nested paths explicitly named and other record forms
+  unchanged. Preserve field order and duplicate-field diagnostics.
+- Cover empty inputs, callback order/failure, early stopping, long traversal,
+  owned values and parser/formatter behavior. Compare raw interpreter/native
+  results and run all six CI jobs plus documentation before squash merge.
+
+Update the reference, generated library docs and live handoff in this bundle.
+No new runtime primitives, implicit grouping or implicit constant functions.

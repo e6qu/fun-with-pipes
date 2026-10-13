@@ -82,6 +82,7 @@ imported under the same name.
 | `Point { x = 1.0, y = 2.0 }` | a nominal record |
 | `.x`, `.x.y`, `.0` | field selector functions |
 | `make { f = g }`, `make T { f = g }` | build a record (or a `T`) from functions of the input; `make { 0 = f, 1 = g }` builds a tuple |
+| `make { .name, .age }` | project named fields; shorthand for `make { name = .name, age = .age }`, also in nominal `make` |
 | `update { f = g }` | apply `g` to field `f` |
 | `with { f = v }` | replace field `f` |
 | `match` arms, `match { P -> e, ... }` | pattern matching (below) |
@@ -101,6 +102,69 @@ Arguments come last: `sub 1` subtracts one, `div 2` halves, `lt 0` tests
 The meaning of `|` is decided by the type of its left side: application
 for values, left-to-right composition for functions. When the type is not
 yet known, the decision is deferred until it is.
+
+Function calls are already prefix. Application binds more tightly than `|`:
+`count (string.length | gt 3)` and `count (compose string.length (gt 3))`
+name the same function. `compose f g` runs `f` then `g`. Keep parentheses
+around nested arguments; indentation continues declarations and delimits
+match arms, but does not group function arguments.
+
+### Record projections
+
+`make { .name, .age }` copies just the named fields from its input. Mix
+projections with computed fields: `make Person { .name, age = .age | add 1 }`.
+The shorthand accepts one named selector. Use `city = .address.city` for a
+nested path and `0 = .0` for a tuple field. Duplicate output names are errors.
+Record literals, `with` and `update` still require explicit field assignments.
+
+This is a parser expansion, with the same types, ownership and evaluation as
+the explicit `make`. Field functions run in canonical record-label order,
+not their written order. Use a pipeline or `tap` when effects need sequencing.
+The formatter abbreviates single named identity projections in `make`.
+
+### Iteration and explicit state
+
+All these functions are curried and take their collection last:
+
+| Operation | Callback and result |
+|---|---|
+| `iter.fold step seed` | `step state element` returns the next state; exhaustion returns the final state |
+| `iter.each action` | calls `action element` once per element and returns `()` |
+| `iter.find predicate` | returns `Some` of the first matching element, or `None` |
+| `fold-until step seed` | list fold whose callback returns `Again state` or `Stop state`; exhaustion returns the current state |
+| `map-accum step seed` | list map whose callback returns `(mapped value, next state)`; returns `(mapped list, final state)` |
+
+Callbacks run left to right with tracked effects. Empty inputs call no
+callback. Iterator consumers traverse directly in constant stack space,
+without first building a list. They finish the current callback before
+forcing the next tail; `iter.find` leaves that tail unforced on success.
+A callback failure stops traversal immediately. Iterator producers still have
+pure, lazy tails; the consumers can have effectful callbacks. An infinite
+iterator needs a bound such as `iter.take`, or a predicate that eventually
+matches for `iter.find`.
+
+`fold-until` skips subsequent callbacks after `Stop`; its list argument has
+already been evaluated. `map-accum` preserves output order and includes the
+last callback's state in the result. For example:
+
+```fwp
+prefix-sums = map-accum (add | flip compose (both id id)) 0
+# [1, 2, 3] | prefix-sums  produces ([1, 3, 6], 6)
+first-large = iter.find (gt 100)
+# 0 | iter.count-from | first-large  produces Some 101
+```
+
+Use `run-state` with `get`, `put` and `modify` when a handler is convenient;
+use `map-accum` when the state transition and final state belong in the API.
+Existing `fold`, `scan`, `loop`, `each`, `count`, `any`, `all`, `filter-map`,
+`both`, `fork` and `tap` remain ordinary library tools. `if` remains useful for
+choosing a branch that receives the original input; `match` takes a value
+apart. Both are functions, and `if` lowers to the existing match IR.
+
+These APIs do not promise zero allocation. Lazy tails can allocate closures;
+`map-accum` builds the output in reverse and reverses it once. See the
+[standard library](stdlib.md) for explicit `Dup` constraints. Existing fusion
+restrictions still protect effect and trap order.
 
 ### Constant functions
 
