@@ -2,7 +2,7 @@
 
 Updated 2026-10-13. The user authorized all six remaining directions in
 [PLAN](../PLAN.md) as one combined PR, including Windows ARM64/AMD64 and real
-half/quad formats. Branch: `ownership-formats-windows`, [draft PR #134](https://github.com/e6qu/fun-with-pipes/pull/134). Publication, fixes and
+half/quad formats. Branch: `ownership-formats-windows`, [PR #134](https://github.com/e6qu/fun-with-pipes/pull/134). Publication, fixes and
 squash merge after passing final-head CI are authorized. Commit messages have
 one line, at most 80 characters, with no body, trailers or attribution.
 
@@ -116,7 +116,8 @@ under ASan/UBSan, allocation-failure controls and an omitted-release leak contro
 controls. The repository tests preserve these controls for native/WASI CI.
 Full builds, suites, benchmarks and large regeneration stay on GitHub runners.
 Do not use the stale local fwp executable as an oracle. Preserve disk/RSS/CPU/
-deadline limits. Production CI defers draft PRs; skipped jobs are not acceptance.
+deadline limits. PR #134 is now ready for review, so pushes run full production CI. Skipped jobs
+are not acceptance; unfinished implementation still prevents merging.
 
 ## Next action
 

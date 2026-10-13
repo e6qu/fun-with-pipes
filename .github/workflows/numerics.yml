@@ -288,7 +288,8 @@ jobs:
       - name: WebAssembly compiler and exact Rust arithmetic
         env:
           CARGO_TARGET_WASM32_WASIP1_RUNNER: node tests/wasm/wasi-run.mjs
-        run: cargo test --lib --target wasm32-wasip1 softfloat:: -- --test-threads=1
+        run: |
+          cargo test --lib --target wasm32-wasip1 softfloat:: -- --test-threads=1
       - name: Physical reclamation and resource controls
         run: cargo test --test wasm_resource_counts --test softfloat_core --test array_size_limits
       - name: Actual WASI semantic agreement
