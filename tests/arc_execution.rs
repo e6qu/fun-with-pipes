@@ -30,6 +30,13 @@ main = range 0 129 | map (choose | checks) | length | echo
         ("arrays", include_str!("fixtures/numeric_array_fusion.fwp")),
         ("closures", closures),
         ("files", files.as_str()),
+        // abs has a portable C int signature, including Windows LLP64.
+        // The surrounding list forces allocation/reclamation so the existing
+        // ledger also checks the foreign call inside an owned graph.
+        (
+            "foreign-scalars",
+            "foreign \"C\" abs : I32 -> I32\nmain = [-7, -3, 0, 11] | map abs | echo\n",
+        ),
     ];
     for (name, source) in sources {
         let input = dir.join(format!("{name}.fwp"));
@@ -175,7 +182,8 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     for (name,source,reason) in [
         ("tasks","main = task.yield ()\n","tracing-free lifetime policy"),
         ("custom-native","foreign \"fwp\" string.repeat : I64 -> I64 -> I64\nmain = 1 | string.repeat 2 | echo\n","no checked ownership signature"),
-        ("foreign","foreign \"C\" labs : I64 -> I64\nmain = -1 | labs | echo\n","foreign and remote boundaries require tracing"),
+        ("foreign-string","foreign \"C\" strlen : String -> USize\nmain = \"owned\" | strlen | echo\n","foreign boundary has no checked ownership contract"),
+        ("foreign-callback","foreign \"C\" invoke : (I64 -> I64) -> I64\nmain = invoke (add 1) | echo\n","foreign boundary has no checked ownership contract"),
         ("channel","text-channel : I64 -> Channel[String] ! {Async}\ntext-channel = channel.make\nmain = text-channel 1 | channel.close\n","tracing-free ownership contract"),
         ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
         ("input","main = read-all () | echo\n","tracing-free ownership contract"),

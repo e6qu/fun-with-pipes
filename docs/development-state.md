@@ -2,7 +2,7 @@
 
 Updated 2026-10-13. The user authorized all six remaining directions in
 [PLAN](../PLAN.md) as one combined PR, including Windows ARM64/AMD64 and real
-half/quad formats. Branch: `ownership-formats-windows`. Publication, fixes and
+half/quad formats. Branch: `ownership-formats-windows`, [draft PR #134](https://github.com/e6qu/fun-with-pipes/pull/134). Publication, fixes and
 squash merge after passing final-head CI are authorized. Commit messages have
 one line, at most 80 characters, with no body, trailers or attribution.
 
@@ -26,11 +26,11 @@ Windows or true half/quad support is claimed by that baseline.
 | Step | Status | Scope |
 |---|---|---|
 | 1 | Implemented | Accepted merge recorded; stale seven-step retry instructions replaced by this handoff |
-| 2 | Pending | Broader proved ownership, retained/foreign/protocol contexts, cycle policy and WASM reclamation |
+| 2 | In progress | Broader proved ownership, retained/foreign/protocol contexts, cycle policy and WASM reclamation |
 | 3 | Pending | Broader producer/worker specialization and reduced boxing/closure allocation |
 | 4 | Pending | Measured kernel/layout improvements, nested reverse mode and checkpointing |
 | 5 | Pending | Actual F16/BF16/F128 representations and coordinated protocol migration |
-| 6 | Pending | Windows ARM64/AMD64 runtime, full native validation and separate packages |
+| 6 | In progress | Windows ARM64/AMD64 runtime, full native validation and separate packages |
 
 ## Implementation and validation
 
@@ -39,11 +39,26 @@ interfaces; the C runtime needs native Windows allocation, scheduling, socket,
 process and loader support. Existing half/quad type names lower to F32/F64 in
 monomorphization, descriptors and protocol decoding. Item 5 must change both
 engines and protocol/storage together, rather than relabeling existing values.
-No implementation or Windows runner result for this bundle is accepted yet.
-The existing evidence workflow now has a `windows` suite using native AMD64
-and ARM64 runners. Production runs defer while this PR is a draft and start
-on `ready_for_review`; all final-head production jobs remain mandatory. This
-avoids restarting full suites on each preparatory change.
+The first native Windows probe
+[38438260036](https://github.com/e6qu/fun-with-pipes/actions/runs/38438260036)
+failed on both architectures at Unix socket imports and descriptor access.
+The runner hosts are `aarch64-pc-windows-msvc` and `x86_64-pc-windows-msvc`.
+
+Implemented, awaiting runner execution: scalar foreign-C ARC admission based
+on actual ABI types, with managed-string/callback rejection and raw/native
+reclamation controls; native socket handles and WSAPoll; shared Windows/POSIX
+library loading for FFI, TLS and OpenCL; owned shim image/directory lifetimes;
+Windows DLL suffix and OpenSSL LLP64 signatures/socket errors. Loader and TCP
+readiness/shutdown unit tests exercise real OS operations. This does not yet
+port the generated C runtime or establish Windows support.
+
+Local guarded `cargo check --lib` and `cargo clippy --lib -- -D warnings`
+passed after fixing the first check's reference/import errors; guarded formatting
+passed. Full validation is on runners. The `windows` diagnostic suite now also
+links and executes platform unit tests and the interpreter. The `portability`
+suite runs compiler/unit, ARC, foreign-call and TLS regressions on the existing
+four native Linux/macOS combinations. Production runs defer while the PR is a
+draft and start on `ready_for_review`; skipped production jobs are not acceptance.
 
 Use `python3 scripts/local-guard.py COMMAND...` for serial focused checks.
 Full builds, suites, benchmarks and large regeneration stay on GitHub runners.
@@ -53,10 +68,10 @@ fixtures, ownership negative controls, stress/reuse checks and measured assembly
 
 ## Next action
 
-Next: publish one draft PR with this six-item scope and early native Windows
-compile probes; implement the additional ownership contracts while runner
-failures identify porting work. Establish a portable exact float representation
-and explicit protocol migration before changing format defaults. Record actual
-checks and outstanding failures here after meaningful implementation progress.
+Next: run the updated native Windows and portability probes, fix their failures,
+and port the generated C runtime/resources. Continue additional ownership proofs
+and WASM reclamation. Establish portable exact float arithmetic and explicit
+protocol migration before changing representations. Items 3–5 remain pending;
+all six acceptance rows in PLAN remain required.
 Keep all six items in the same PR. Require full Linux/macOS and added Windows
 acceptance plus docs on its final head before squash merge.

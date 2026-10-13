@@ -143,6 +143,8 @@ pub fn native_is_macos() -> bool {
 pub fn shared_library_extension() -> &'static str {
     if native_is_macos() {
         "dylib"
+    } else if native_options().cross.is_none() && cfg!(windows) {
+        "dll"
     } else {
         "so"
     }

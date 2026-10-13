@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows]
+        options: [numerical, bundle, wide, windows, portability]
         default: numerical
 jobs:
   numeric_fusion:
@@ -186,6 +186,17 @@ jobs:
           rustc -vV | Tee-Object windows-host.txt
           cargo check --all-targets 2>&1 | Tee-Object windows-probe.log
           exit $LASTEXITCODE
+      - name: Native socket and library execution
+        shell: pwsh
+        run: |
+          cargo test --lib socket_tests -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --lib dylib::tests -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo build --bin fwp
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./target/debug/fwp.exe run --interp tests/run/loop_state.fwp
+          exit $LASTEXITCODE
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -193,3 +204,34 @@ jobs:
           path: |
             windows-host.txt
             windows-probe.log
+
+  portability:
+    if: inputs.suite == 'portability'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Compiler checks
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+          cargo test --lib
+      - name: Ownership and foreign boundary regressions
+        run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls

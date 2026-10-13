@@ -358,6 +358,13 @@ boundaries and cycle policy, with physical reclamation verified below.
 
 ## Checked ARC delivery
 
+Foreign C calls with only scalar numeric, Boolean and unit ABI values carry no
+language owners and are admitted by checked ARC. Admission uses the actual C
+signature classification. Strings, pointers, records and callbacks still need
+separate lifetime and result-adoption proofs; uncounted pointer bits alone are
+not a proof. The scalar-call regression compares raw interpretation with native
+O1/O2 execution and the physical reclamation ledger.
+
 The compiler checks `--gc arc` against monomorphic value shapes and
 primitive contracts, with the cycle policy described in [design](design.md#checked-native-arc-execution).
 Escaping closures, arrays/views and scoped File owners have native O1/O2

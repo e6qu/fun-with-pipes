@@ -25,7 +25,7 @@ use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, VecDeque};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream, ToSocketAddrs, UdpSocket};
-use std::os::fd::AsRawFd;
+
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering as AO};
 #[cfg(not(target_family = "wasm"))]
@@ -406,9 +406,23 @@ extern "C" fn on_signal(_: i32) {
     SHUTDOWN.store(true, AO::SeqCst);
 }
 
+#[cfg(not(windows))]
+pub type SocketHandle = std::os::fd::RawFd;
+#[cfg(windows)]
+pub type SocketHandle = std::os::windows::io::RawSocket;
+
+#[cfg(not(windows))]
+pub(crate) fn socket_handle(socket: &impl std::os::fd::AsRawFd) -> SocketHandle {
+    socket.as_raw_fd()
+}
+#[cfg(windows)]
+pub(crate) fn socket_handle(socket: &impl std::os::windows::io::AsRawSocket) -> SocketHandle {
+    socket.as_raw_socket()
+}
+
 #[repr(C)]
 struct PollFd {
-    fd: i32,
+    fd: SocketHandle,
     events: i16,
     revents: i16,
 }
@@ -419,21 +433,61 @@ type NFds = std::ffi::c_ulong;
 type NFds = std::ffi::c_uint;
 
 extern "C" {
+    #[cfg(not(windows))]
     fn poll(fds: *mut PollFd, n: NFds, timeout: i32) -> i32;
     #[cfg(not(target_family = "wasm"))]
     fn signal(sig: i32, handler: extern "C" fn(i32)) -> usize;
 }
 
-const POLLIN: i16 = 1;
-const POLLOUT: i16 = 4;
+#[cfg(windows)]
+#[link(name = "ws2_32")]
+extern "system" {
+    #[link_name = "WSAPoll"]
+    fn poll(fds: *mut PollFd, n: NFds, timeout: i32) -> i32;
+}
 
-pub(crate) fn poll_fd(fd: i32, write: bool, ms: i32) -> bool {
+#[cfg(not(windows))]
+const POLLIN: i16 = 1;
+#[cfg(not(windows))]
+const POLLOUT: i16 = 4;
+// Winsock uses different event bits from POSIX poll.
+#[cfg(windows)]
+const POLLIN: i16 = 0x0100; // POLLRDNORM
+#[cfg(windows)]
+const POLLOUT: i16 = 0x0010; // POLLWRNORM
+
+pub(crate) fn poll_fd(fd: SocketHandle, write: bool, ms: i32) -> bool {
     let mut p = PollFd {
         fd,
         events: if write { POLLOUT } else { POLLIN },
         revents: 0,
     };
     unsafe { poll(&mut p, 1, ms) > 0 }
+}
+
+#[cfg(all(test, not(target_family = "wasm")))]
+mod socket_tests {
+    use super::*;
+
+    #[test]
+    fn native_socket_poll_observes_data_and_shutdown() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let mut client = TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+        assert!(poll_fd(socket_handle(&listener), false, 1000));
+        let (mut server, _) = listener.accept().unwrap();
+        server.set_nonblocking(true).unwrap();
+        let handle = socket_handle(&server);
+        assert!(poll_fd(socket_handle(&client), true, 1000));
+        assert!(!poll_fd(handle, false, 0));
+        client.write_all(b"x").unwrap();
+        assert!(poll_fd(handle, false, 1000));
+        let mut buf = [0];
+        assert_eq!(server.read(&mut buf).unwrap(), 1);
+        assert_eq!(&buf, b"x");
+        client.shutdown(std::net::Shutdown::Write).unwrap();
+        assert!(poll_fd(handle, false, 1000));
+        assert_eq!(server.read(&mut buf).unwrap(), 0);
+    }
 }
 
 /// Output shared with the root task's writer.
@@ -607,7 +661,12 @@ impl<'p> Interp<'p> {
     /// Callers retry their operation either way, and so also notice a
     /// socket that another task closed meanwhile (whose descriptor number
     /// may already belong to a new socket).
-    pub(crate) fn wait_fd(&mut self, fd: i32, write: bool, timeout: Option<Instant>) -> R<bool> {
+    pub(crate) fn wait_fd(
+        &mut self,
+        fd: SocketHandle,
+        write: bool,
+        timeout: Option<Instant>,
+    ) -> R<bool> {
         self.check_cancel()?;
         let now = Instant::now();
         if let Some(t) = timeout {
@@ -841,9 +900,9 @@ impl<'p> Interp<'p> {
         }
     }
 
-    fn conn_fd(&self, v: &Value) -> R<i32> {
+    fn conn_fd(&self, v: &Value) -> R<SocketHandle> {
         match self.conn(v)?.borrow().as_ref() {
-            Some(s) => Ok(s.as_raw_fd()),
+            Some(s) => Ok(socket_handle(s)),
             None => Err(self.io_err("closed", "connection is closed")),
         }
     }
@@ -893,7 +952,7 @@ impl<'p> Interp<'p> {
         };
         loop {
             let (fd, r) = match cell.borrow().as_ref() {
-                Some(l) => (l.as_raw_fd(), l.accept()),
+                Some(l) => (socket_handle(l), l.accept()),
                 None => return Err(self.io_err("closed", "listener is closed")),
             };
             match r {
@@ -904,7 +963,7 @@ impl<'p> Interp<'p> {
                     // read or write, in the task that serves it
                     let session = match ctx {
                         Some(ctx) => Some(
-                            crate::tls::Session::server(ctx, s.as_raw_fd())
+                            crate::tls::Session::server(ctx, socket_handle(&s))
                                 .map_err(|e| self.io_err("tls", e))?,
                         ),
                         None => None,
@@ -1192,7 +1251,7 @@ impl<'p> Interp<'p> {
                         n => n.to_string(),
                     };
                     let session = crate::tls::Session::client(
-                        s.as_raw_fd(),
+                        socket_handle(&s),
                         &crate::tls::ClientOpts {
                             ca: a[0].as_str(),
                             verify: !a[1].as_bool(),
@@ -1280,7 +1339,7 @@ impl<'p> Interp<'p> {
                     loop {
                         let cell = self.udp(&sock)?;
                         let (fd, r) = match cell.borrow().as_ref() {
-                            Some(s) => (s.as_raw_fd(), s.send_to(&data, &addr)),
+                            Some(s) => (socket_handle(s), s.send_to(&data, &addr)),
                             None => return Err(self.io_err("closed", "socket is closed")),
                         };
                         match r {
@@ -1300,7 +1359,7 @@ impl<'p> Interp<'p> {
                     loop {
                         let cell = self.udp(&sock)?;
                         let (fd, r) = match cell.borrow().as_ref() {
-                            Some(s) => (s.as_raw_fd(), s.recv_from(&mut buf)),
+                            Some(s) => (socket_handle(s), s.recv_from(&mut buf)),
                             None => return Err(self.io_err("closed", "socket is closed")),
                         };
                         match r {

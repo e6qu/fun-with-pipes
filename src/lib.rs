@@ -15,6 +15,7 @@ pub mod cli_gen;
 pub mod csv;
 pub mod diag;
 pub mod driver;
+mod dylib;
 pub mod env;
 pub mod escape;
 pub mod exec;

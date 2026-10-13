@@ -20,7 +20,7 @@ use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
-use std::os::fd::AsRawFd;
+
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -31,7 +31,9 @@ use crate::ir::{FuncId, Program, RemoteFn, MT};
 use crate::proto::{self, Reader};
 use crate::protobuf::{MethodSchema, NodeId, Schema};
 use crate::rpc::{self, Input, Output, Shape};
-use crate::sched::{native, opt, poll_fd, wrap, ChanState, Native, TaskShared};
+use crate::sched::{
+    native, opt, poll_fd, socket_handle, wrap, ChanState, Native, SocketHandle, TaskShared,
+};
 use crate::tls::{self, Io};
 use crate::value::{Closure, Value};
 
@@ -197,7 +199,7 @@ struct Conn {
     sock: Option<TcpStream>,
     /// The TLS session of a TLS connection.
     tls: Option<tls::Session>,
-    fd: i32,
+    fd: SocketHandle,
     /// What the server serves (`None` for a client connection).
     server: Option<Rc<Server>>,
     authority: String,
@@ -251,7 +253,7 @@ struct Stream {
 
 impl Conn {
     fn new(sock: TcpStream, authority: String, server: Option<Rc<Server>>) -> Conn {
-        let fd = sock.as_raw_fd();
+        let fd = socket_handle(&sock);
         let client = server.is_none();
         let mut out = Vec::new();
         if client {
@@ -1009,7 +1011,7 @@ fn connect(it: &mut Interp, given: &str, key: &str) -> R<Result<ConnRef, String>
         // verified with the system's CA certificates (SSL_CERT_FILE,
         // SSL_CERT_DIR), offering h2
         match tls::Session::client(
-            sock.as_raw_fd(),
+            socket_handle(&sock),
             &tls::ClientOpts {
                 ca: &opts.ca,
                 verify: !opts.insecure,
@@ -2453,7 +2455,7 @@ fn accept_loop(
     server: Rc<Server>,
     ctx: Option<Rc<tls::Ctx>>,
 ) -> R<()> {
-    let fd = l.as_raw_fd();
+    let fd = socket_handle(&l);
     loop {
         match l.accept() {
             Ok((sock, peer)) => {
@@ -2462,7 +2464,7 @@ fn accept_loop(
                     continue;
                 }
                 let session = match &ctx {
-                    Some(ctx) => match tls::Session::server(ctx, sock.as_raw_fd()) {
+                    Some(ctx) => match tls::Session::server(ctx, socket_handle(&sock)) {
                         Ok(s) => Some(s),
                         Err(_) => continue,
                     },
