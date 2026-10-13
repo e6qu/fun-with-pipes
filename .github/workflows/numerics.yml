@@ -5,11 +5,11 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle]
+        options: [numerical, bundle, wide]
         default: numerical
 jobs:
   numeric_fusion:
-    if: inputs.suite != 'bundle'
+    if: inputs.suite == 'numerical'
     strategy:
       fail-fast: false
       matrix:
@@ -101,7 +101,7 @@ jobs:
           path: arc-evidence/
 
   bundle_preflight:
-    if: inputs.suite == 'bundle'
+    if: inputs.suite != 'numerical'
     strategy:
       fail-fast: false
       matrix:
@@ -134,22 +134,23 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy --all-targets -- -D warnings
       - name: Focused bundle regressions
+        if: inputs.suite == 'bundle'
         run: cargo test --no-fail-fast --lib --test protocol --test wide_workers --test decoder_partial --test arc_extensions --test arc_execution --test iteration_consumers --test iterator_fusion --test http2_body_roots --test list_generation_ownership --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace
       - name: GCC conservative-root omission control
-        if: runner.os == 'Linux'
+        if: inputs.suite == 'bundle' && runner.os == 'Linux'
         run: CC=gcc cargo test --test http2_body_roots
       - name: Build evidence compiler
         id: release
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: cargo build --release --bin fwp
       - name: Iterator allocation and instruction evidence
-        if: ${{ !cancelled() && steps.release.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.release.outcome == 'success' && inputs.suite == 'bundle' }}
         run: python3 scripts/measure-iteration.py --output bundle-evidence/iteration
       - name: Wide worker allocation and instruction evidence
         if: ${{ !cancelled() && steps.release.outcome == 'success' }}
         run: python3 scripts/measure-wide.py --output bundle-evidence/wide
       - name: Ownership inventory
-        if: ${{ !cancelled() && steps.release.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.release.outcome == 'success' && inputs.suite == 'bundle' }}
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output bundle-evidence/inventory.json
       - uses: actions/upload-artifact@v7
         if: always()

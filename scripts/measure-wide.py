@@ -33,8 +33,7 @@ def main():
         source = out / (suffix + '.fwp')
         source.write_text(f'''rec sum-wide : {kind} -> {kind}
 sum-wide = if (eq 0{suffix}) (const 0{suffix}) (fork add id (sub 1{suffix} | sum-wide))
-main = () | args | head | option.and-then parse-int | option.unwrap-or 256
-    | from-int | sum-wide | echo
+main = 256{suffix} | sum-wide | echo
 ''')
         reference = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1')).stdout
         assert reference == '32896\n', reference
@@ -60,10 +59,10 @@ main = () | args | head | option.and-then parse-int | option.unwrap-or 256
             samples = []
             for _ in range(5):
                 start = time.perf_counter_ns()
-                actual = run([out / label, '256'], env)
+                actual = run([out / label], env)
                 samples.append(time.perf_counter_ns() - start)
                 assert actual.stdout == reference
-            measured = run([out / (label + '-profile'), '256'], env)
+            measured = run([out / (label + '-profile')], env)
             assert measured.stdout == reference
             counters = json.loads(measured.stderr)
             assert counters['collections'] == 0 and counters['finalChargedBytes'] <= 0, counters
@@ -80,7 +79,7 @@ main = () | args | head | option.and-then parse-int | option.unwrap-or 256
         cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
         cc=run([cc, '--version']).stdout, rustc=run(['rustc', '--version', '--verbose']).stdout,
         elements=256, results=results,
-        scope='Equivalent checked arithmetic with worker lowering enabled/disabled. Process timings include startup, parsing and output; no speed threshold. Separate instrumented binaries count managed requests, retains and charged live storage, excluding allocator metadata. Native disassembly and symbols are retained. No universal C/Rust parity claim.')
+        scope='Equivalent checked arithmetic with worker lowering enabled/disabled. Fixed 256-element source workload. Process timings include startup and output; no speed threshold. Separate instrumented binaries count managed requests, retains and charged live storage, excluding allocator metadata. Native disassembly and symbols are retained. No universal C/Rust parity claim.')
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: r['counters'] for name, r in results.items()}, indent=2))
 
