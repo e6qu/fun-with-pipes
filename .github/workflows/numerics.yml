@@ -34,7 +34,7 @@ jobs:
           node-version: 24
       - name: WebAssembly toolchain
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32
       - name: OpenSSL 3
         if: runner.os == 'macOS'
         run: |
@@ -126,7 +126,7 @@ jobs:
           node-version: 24
       - name: Linux toolchains
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang lld libssl-dev wasi-libc libclang-rt-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld libssl-dev wasi-libc libclang-rt-18-dev-wasm32
       - name: OpenSSL on macOS
         if: runner.os == 'macOS'
         run: |
@@ -284,7 +284,7 @@ jobs:
         with:
           node-version: 24
       - name: WASI toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32
       - name: WebAssembly compiler target
         run: cargo check --lib --target wasm32-wasip1
       - name: Physical reclamation and resource controls

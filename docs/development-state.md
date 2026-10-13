@@ -112,7 +112,10 @@ are `windows`, `portability`, `wasm` and `iteration` in `numerics.yml`.
 
 Next: publish the Windows allocator, WASM File reclamation and bfloat core; run
 `windows`, `portability` and `wasm`, fixing all failures. The `106e7a2` portability
-and WASM checks are still running (38444625470 and 38444631690); macOS ARM passed.
+checks passed on all four targets (38444625470). Its WASM target build failed
+because `llvm-ar` was absent (38444631690); install the LLVM tools explicitly
+and rerun. Current `6f7b105` Windows/portability probes are 38446144465 and
+38446150831.
 Then continue generated C Windows
 runtime/resources and PE packages, actual floating representations/text/protocol,
 broader ownership/worker proofs, and nested reverse mode/checkpointing with

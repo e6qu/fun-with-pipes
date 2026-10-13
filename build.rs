@@ -27,7 +27,7 @@ fn append(path: &Path, seen: &mut BTreeSet<PathBuf>, output: &mut String) {
 fn checked(command: &mut Command) {
     let result = command
         .output()
-        .expect("run C toolchain for exact floating arithmetic");
+        .unwrap_or_else(|error| panic!("cannot run {command:?}: {error}"));
     assert!(
         result.status.success(),
         "{command:?}: {}",
