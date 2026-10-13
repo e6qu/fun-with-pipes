@@ -54,8 +54,7 @@ static V fwp_int_in_range(int neg, u128 mag, int k, int w, V *out) {
     }
     if (mag > (u128)1 << 127) return 0;
     if (!neg && mag == (u128)1 << 127) return 0;
-    i128 x = neg ? -(i128)mag : (i128)mag;
-    if (neg && mag == (u128)1 << 127) x = (i128)((u128)1 << 127);
+    i128 x = neg ? (i128)((u128)0 - mag) : (i128)mag;
     return (V)fwp_int_fits(x, k, w, out);
 }
 
@@ -126,7 +125,20 @@ static int fwp_arith_raw(int k, int op, V a, V b, int w, V *out, int *err) {
         switch (op) {
         case OP_ADD: ovf = __builtin_add_overflow(x, y, &r); break;
         case OP_SUB: ovf = __builtin_sub_overflow(x, y, &r); break;
-        case OP_MUL: ovf = __builtin_mul_overflow(x, y, &r); break;
+        case OP_MUL: {
+            /* Unsigned magnitudes include I128_MIN without signed negation.
+             * Clang's signed overflow builtin can require __muloti4, absent
+             * from libgcc on Linux ARM64; unsigned overflow lowers directly. */
+            int negative = (x < 0) != (y < 0);
+            u128 ax = x < 0 ? (u128)0 - (u128)x : (u128)x;
+            u128 ay = y < 0 ? (u128)0 - (u128)y : (u128)y;
+            u128 product;
+            ovf = __builtin_mul_overflow(ax, ay, &product);
+            u128 limit = ((u128)1 << 127) - (u128)!negative;
+            ovf |= product > limit;
+            r = (i128)(negative ? (u128)0 - product : product);
+            break;
+        }
         case OP_DIV: if (x == mn && y == -1) ovf = 1; else r = x / y; break;
         default: if (x == mn && y == -1) ovf = 1; else r = x % y;
         }
@@ -146,7 +158,14 @@ static int fwp_arith_raw(int k, int op, V a, V b, int w, V *out, int *err) {
     switch (op) {
     case OP_ADD: r = x + y; break;
     case OP_SUB: r = x - y; break;
-    case OP_MUL: r = x * y; break;
+    case OP_MUL:
+        /* A full U64 product fits unsigned, but not signed, 128 bits. */
+        if (k == K_U64) {
+            u128 product = (u128)x * (u128)y;
+            if (product > UINT64_MAX) { *err = 1; return 0; }
+            r = (i128)product;
+        } else r = x * y;
+        break;
     case OP_DIV: r = x / y; break;
     default: r = x % y;
     }
@@ -172,6 +191,16 @@ static V fwp_arith(int k, int op, V a, V b, const char *name, int w) {
 static V fwp_neg(int k, V v, const char *name, int w) {
     if (k == K_F32) return fwp_from_f32(-fwp_f32(v));
     if (k == K_F64) return fwp_from_f64(-fwp_f64(v));
+    if (k == K_I128) {
+        i128 result;
+        if (__builtin_sub_overflow((i128)0, fwp_i128(v), &result))
+            fwp_trap("arithmetic overflow in I128");
+        return fwp_box_i128(result);
+    }
+    if (k == K_U128) {
+        if (fwp_u128(v)) fwp_trap("arithmetic overflow in U128");
+        return fwp_box_u128(0);
+    }
     return fwp_arith(k, OP_SUB, fwp_from_i128(k, 0, name, w), v, name, w);
 }
 
@@ -254,10 +283,13 @@ static V fwp_saturating(int k, int op, V a, V b, const char *name) {
 }
 
 static V fwp_overflowing(int k, int op, V a, V b) {
-    V w = fwp_wrapping(k, op, a, b), out;
+    V out;
     int err;
     int ok = fwp_arith_raw(k, op, a, b, 0, &out, &err);
-    return fwp_tuple2(w, ok ? FWP_FALSE : FWP_TRUE);
+    /* The successful checked result already is the wrapped result. In the
+     * wide case allocating both would abandon one 16-byte numeric box. */
+    if (!ok) out = fwp_wrapping(k, op, a, b);
+    return fwp_tuple2(out, ok ? FWP_FALSE : FWP_TRUE);
 }
 
 static V fwp_bitop(int k, int which, V a, V b) {
@@ -346,7 +378,7 @@ static V fwp_abs(int k, V v, const char *name) {
     if (k == K_F32) return fwp_from_f32(fabsf(fwp_f32(v)));
     if (k == K_F64) return fwp_from_f64(fabs(fwp_f64(v)));
     i128 x = k == K_U128 ? 0 : fwp_as_i128(k, v);
-    if (x < 0) return fwp_arith(k, OP_SUB, fwp_from_i128(k, 0, name, 0), v, name, 0);
+    if (x < 0) return fwp_neg(k, v, name, 0);
     return v;
 }
 
@@ -372,25 +404,42 @@ static V fwp_p_range(int k, V lo, V hi) {
     return r;
 }
 
-/* Numeric payload representation is unchanged; only list nodes are owned. */
-static V fwp_p_range_owned(int k, V lo, V hi) {
-    V r = 0;
+/* Count wide numeric leaves as well as spine nodes. Registration keeps the
+ * current element and completed list owned if construction traps. */
+typedef struct { V list, element; void (*drop_element)(V), (*drop_list)(V); } fwp_range_owner;
+static void fwp_range_release(void *arg) {
+    fwp_range_owner *owner = (fwp_range_owner *)arg;
+    if (owner->drop_element) owner->drop_element(owner->element);
+    owner->drop_list(owner->list);
+}
+static V fwp_p_range_owned(int k, V lo, V hi,
+                          void (*drop_element)(V), void (*drop_list)(V)) {
+    fwp_range_owner owner = {0, 0, drop_element, drop_list};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_range_release, &owner);
     if (k == K_U128) {
         u128 a = fwp_u128(lo);
         for (u128 i = fwp_u128(hi); i > a;) {
             i--;
-            r = fwp_rc_fresh(fwp_cons(fwp_box_u128(i), r));
+            owner.element = fwp_rc_fresh(fwp_box_u128(i));
+            owner.list = fwp_rc_fresh(fwp_cons(owner.element, owner.list));
+            owner.element = 0;
         }
-        return r;
+    } else {
+        i128 a = fwp_as_i128(k, lo);
+        for (i128 i = fwp_as_i128(k, hi); i > a;) {
+            i--;
+            fwp_int_fits(i, k, 0, &owner.element);
+            if (k == K_I128) fwp_rc_fresh(owner.element);
+            owner.list = fwp_rc_fresh(fwp_cons(owner.element, owner.list));
+            owner.element = 0;
+        }
     }
-    i128 a = fwp_as_i128(k, lo);
-    for (i128 i = fwp_as_i128(k, hi); i > a;) {
-        i--;
-        V x;
-        fwp_int_fits(i, k, 0, &x);
-        r = fwp_rc_fresh(fwp_cons(x, r));
-    }
-    return r;
+    V result = owner.list;
+    owner.list = 0;
+    fwp_cleanup_pop(&cleanup);
+    FWP_KEEP_ALIVE(lo); FWP_KEEP_ALIVE(hi);
+    return result;
 }
 
 static int fwp_str_eq(V a, V b) {

@@ -79,6 +79,24 @@ baseline_rows = {(row['file'], row['declared']): row for row in baseline['rows']
 new_keys = {('lib/autodiff.fwp', 'ad.scope'), ('lib/autodiff.fwp', 'ad.scope2')}
 leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.help', 'zlib.gzip', 'zlib.gzip-chunk', 'zlib.deflate', 'ws.accept', 'ws.deflate', 'ws.key', 'zlib.gzip-end', 'ws.close-payload', 'ws.frame'}
 assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
+# This bundle promotes only these reviewed numeric and parsed-tree boundaries.
+bundle_contracts = {}
+for symbol in ['prim.zero', 'prim.one']:
+    bundle_contracts[symbol] = (0, 'Numeric', [])
+for symbol in ['prim.neg', 'prim.from-int', 'prim.from-float', 'bit.not', 'int.convert', 'float.to-int']:
+    bundle_contracts[symbol] = (1, 'Numeric', [])
+bundle_contracts['abs'] = (1, 'Numeric', [0])
+for symbol in ['prim.add', 'prim.sub', 'prim.mul', 'prim.div', 'prim.rem',
+               'wrapping.add', 'wrapping.sub', 'wrapping.mul',
+               'saturating.add', 'saturating.sub', 'saturating.mul',
+               'overflowing.add', 'overflowing.sub', 'overflowing.mul',
+               'checked.add', 'checked.sub', 'checked.mul', 'checked.div',
+               'bit.and', 'bit.or', 'bit.xor', 'bit.shl', 'bit.shr']:
+    bundle_contracts[symbol] = (2, 'Numeric', [])
+bundle_contracts['int.to-float'] = (1, 'Shared', [])
+bundle_contracts['min'] = bundle_contracts['max'] = (2, 'SelectedArgument', [0, 1])
+bundle_contracts['csv.parse-with'] = (2, 'OwnedTree', [])
+promoted = []
 changed_symbols = set()
 for row in rows:
     key = (row['file'], row['declared'])
@@ -93,6 +111,16 @@ for row in rows:
             contract='Some(Contract { arguments: ' + arguments + ', result: OwnedCallback, callback: Some(Borrowed(0)), aliases: ' + aliases + ' })')
         continue
     before = baseline_rows[key]
+    if row['symbol'] in bundle_contracts:
+        assert before['contract'] == 'None' and row['bucket'] == 'contract', (before, row)
+        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
+        arity, result, aliases = bundle_contracts[row['symbol']]
+        arguments = '[' + ', '.join(['Borrow'] * arity) + ']'
+        expected = f'Some(Contract {{ arguments: {arguments}, result: {result}, callback: None, aliases: {aliases} }})'
+        assert row['contract'] == expected, (row, expected)
+        promoted.append(before)
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] in leaf_symbols:
         assert before['contract'] == 'None' and before['bucket'] == 'runtime_or_specialization_review'
         assert row['bucket'] == 'contract'
@@ -143,15 +171,18 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state'}
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22
 expected_counts['flat_scalar_signature'] -= 1
+for before in promoted:
+    expected_counts[before['bucket']] -= 1
+    expected_counts['contract'] += 1
 assert counts == expected_counts, counts
 review = [row for row in rows if row['bucket'] == 'runtime_or_specialization_review']
 review_symbols = len({row['symbol'] for row in review})
-assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 22
+assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 22 - len({x['symbol'] for x in promoted if x['bucket'] == 'runtime_or_specialization_review'})
 report = {
     'head': head,
     'declarations': len(rows), 'distinctSymbols': len({row['symbol'] for row in rows}), 'explicitAliases': 40,

@@ -1346,10 +1346,13 @@ static int fwp_valid_utf8(const unsigned char *d, size_t n) {
 /* text from outside the program (stdin, arguments, the environment):
  * each maximal invalid subsequence becomes U+FFFD, exactly as Rust's
  * String::from_utf8_lossy */
+static void fwp_buf_release(void *arg) { free(((fwp_buf *)arg)->d); }
 static V fwp_str_lossy(const char *s, size_t n) {
     const unsigned char *d = (const unsigned char *)s;
     if (fwp_valid_utf8(d, n)) return fwp_str_new(s, n);
     fwp_buf b = {0};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
     size_t i = 0;
     while (i < n) {
         unsigned char c = d[i];
@@ -1372,7 +1375,9 @@ static V fwp_str_lossy(const char *s, size_t n) {
         else buf_puts(&b, "\xEF\xBF\xBD");
         i = j;
     }
-    return buf_to_str(&b);
+    V result = buf_to_str(&b);
+    fwp_cleanup_pop(&cleanup);
+    return result;
 }
 
 static V fwp_p_from_bytes(V b) {
@@ -1461,7 +1466,6 @@ static V fwp_p_parse_float(V s, int kind) {
 
 /* Formatting writes directly into one private buffer. The cleanup owns it
  * across recoverable traps; no managed strings or parts array are temporary. */
-static void fwp_format_release(void *arg) { free(((fwp_buf *)arg)->d); }
 static V fwp_p_format(V tmpl, V v, const fwp_desc *d) {
     int tuple = d->kind == K_RECORD && !d->name && d->n > 0;
     int np = tuple ? d->n : 1;
@@ -1475,7 +1479,7 @@ static V fwp_p_format(V tmpl, V v, const fwp_desc *d) {
     }
     fwp_buf b = {0};
     fwp_cleanup cleanup;
-    fwp_cleanup_push(&cleanup, fwp_format_release, &b);
+    fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
     if (holes != np) {
         char num[128];
         snprintf(num, sizeof num, "format: placeholder count (%d) does not match value count (%d) in \"", holes, np);

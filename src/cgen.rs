@@ -1465,7 +1465,8 @@ impl<'p> Gen<'p> {
         self.tree_owners.insert(mt.clone(), id);
         self.tree_owner_defs.push(String::new());
         let mut body = format!("static void fwp_own_tree{id}(V v) {{\n    for (;;) {{\n        uint8_t *c = fwp_rc_slot(v);\n        if (!c) return;\n        if (*c) fwp_trap(\"internal: aliased fresh result tree\");\n        fwp_rc_fresh(v);\n");
-        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes")) {
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128"))
+        {
             body.push_str("        return;\n    }\n}\n");
             self.tree_owner_defs[id] = body;
             return Ok(id);
@@ -1620,7 +1621,8 @@ impl<'p> Gen<'p> {
             mt.to_string().replace("*/", "* /"),
             id
         );
-        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes")) {
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128"))
+        {
             return format!(
                 "{}        fwp_rc_free_obj(v);\n        return;\n    }}\n}}\n",
                 head
@@ -5525,6 +5527,15 @@ impl<'p> Gen<'p> {
                 None => format!("return fwp_show(l0, {});", self.desc(&p(0))),
             },
             "json.write" => format!("return fwp_p_json_write(l0, {});", self.desc(&p(0))),
+            "csv.parse-with" => {
+                let MT::Con(_, fields) = &result else {
+                    return Err("parsed CSV has no row type".into());
+                };
+                let rows_drop = self.value_drop(&result);
+                let row_drop = self.value_drop(&fields[0]);
+                let field_drop = self.value_drop(&MT::con("std::String"));
+                format!("return fwp_p_csv_parse_with(l0, l1, {row_drop}, {rows_drop}, {field_drop});")
+            }
             "json.read" => format!(
                 "return fwp_p_json_read(l0, {});",
                 self.desc(&elem(&result, 0))
@@ -5873,7 +5884,6 @@ impl<'p> Gen<'p> {
                     ("ewrite", "fwp_p_ewrite(l0)"),
                     ("term.width", "fwp_p_term_width()"),
                     ("term.read-secret", "fwp_p_term_read_secret()"),
-                    ("csv.parse-with", "fwp_p_csv_parse_with(l0, l1)"),
                     ("read-line", "fwp_p_read_line()"),
                     ("read-all", "fwp_read_stdin_all()"),
                     ("read-lines", "fwp_p_read_lines()"),
@@ -6591,6 +6601,21 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                         &format!("fwp_p_{}_owned({args}, {ops})", runtime),
                                     );
                                 }
+                                if sym == "range" {
+                                    let result = func.ty.params(func.arity as usize).1.clone();
+                                    let MT::Con(_, types) = &result else {
+                                        return Err("range has no element type".into());
+                                    };
+                                    let drop_element =
+                                        if crate::rc::needs_rc(&self.prog.shapes, &types[0]) {
+                                            self.value_drop(&types[0])
+                                        } else {
+                                            "NULL".into()
+                                        };
+                                    let drop_list = self.value_drop(&result);
+                                    s = s.trim_end_matches(';').trim_end_matches(')').to_string()
+                                        + &format!(", {drop_element}, {drop_list});");
+                                }
                                 s = s
                                     .replace("fwp_p_range(", "fwp_p_range_owned(")
                                     .replace("fwp_p_scan(", "fwp_p_scan_owned(")
@@ -6884,6 +6909,26 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                 }
                                 body.push_str(" } } return result;");
                                 s = body;
+                            }
+                            ResultOwnership::Numeric | ResultOwnership::SelectedArgument => {
+                                let ty = func.ty.params(func.arity as usize).1.clone();
+                                if crate::rc::needs_rc(&self.prog.shapes, &ty) {
+                                    let (prefix, returned) =
+                                        s.rsplit_once("return ").ok_or_else(|| {
+                                            format!("numeric primitive `{sym}` has no return")
+                                        })?;
+                                    let value = returned.strip_suffix(';').ok_or_else(|| {
+                                        format!("numeric primitive `{sym}` has no result")
+                                    })?;
+                                    if contract.result == ResultOwnership::SelectedArgument {
+                                        s = format!("{prefix}V result = {value}; fwp_rc_dup(result); return result;");
+                                    } else if sym == "abs" {
+                                        s = format!("{prefix}V result = {value}; if (result == l0) fwp_rc_dup(result); else fwp_rc_fresh(result); return result;");
+                                    } else {
+                                        let owner = self.tree_owner_id(&ty)?;
+                                        s = format!("{prefix}V result = {value}; fwp_own_tree{owner}(result); return result;");
+                                    }
+                                }
                             }
                             ResultOwnership::FreshTree => {
                                 let result_type = func.ty.params(func.arity as usize).1.clone();

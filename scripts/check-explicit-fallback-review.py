@@ -15,8 +15,8 @@ key=lambda x:(x['file'],x['declared'])
 actual={key(x):x for x in rows};prepared={key(x):x for x in review['rows']}
 assert len(actual)==len(rows) and len(prepared)==len(review['rows'])
 assert actual.keys()==prepared.keys(), 'New or missing declaration needs explicit review'
-assert len(rows)==review['declarations']==177
-assert len({x['symbol'] for x in rows})==review['symbols']==167
+assert len(rows)==review['declarations']==141
+assert len({x['symbol'] for x in rows})==review['symbols']==131
 for k,x in actual.items():
  y=prepared[k]
  assert x['contract']=='None'

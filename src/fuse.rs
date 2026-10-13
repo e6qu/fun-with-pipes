@@ -406,14 +406,28 @@ impl Fuser<'_> {
         self.std_names.get(&id).map(String::as_str)
     }
 
-    /// `iter.to-list` over `iter.map`, `iter.filter` and `iter.take`
+    /// Direct iterator consumers over `iter.map`, `iter.filter` and `iter.take`
     /// stages of any iterator, as one loop that consumes the source one
     /// element at a time, without the stages' `Yield` cells and thunks.
     /// Iterators are lazy, so each element already goes through every
     /// stage in turn: the loop keeps that order exactly, effects and traps
     /// included, and forces the source's tail only when another element
     /// is wanted (so `iter.take n` forces nothing after the n-th).
-    fn iter_to_list(&mut self, to_list: FuncId, it: &Expr) -> Option<Expr> {
+    fn iter_consume(&mut self, consumer: FuncId, args: &[Expr]) -> Option<Expr> {
+        let kind = match (self.std_name(consumer)?, args.len()) {
+            ("std::iter.to-list", 1) => "list",
+            ("std::iter.fold", 3) => "fold",
+            ("std::iter.each", 2) => "each",
+            ("std::iter.find", 2) => "find",
+            _ => return None,
+        };
+        if kind != "list"
+            && (std::env::var("FWP_ITER_CONSUMERS").is_ok_and(|v| v == "0")
+                || !closure(self.funcs, &args[0]))
+        {
+            return None;
+        }
+        let it = args.last()?;
         // a stage's function: a closure built from known functions, which
         // the step applies to each element (and the optimizer then turns
         // into direct calls)
@@ -437,23 +451,34 @@ impl Fuser<'_> {
             raw.push((kind, &a[0], elem(funcs[*id].ty.params(2).1)?));
             cur = &a[1];
         }
-        if raw.is_empty() {
+        if raw.is_empty() && kind == "list" {
             return None;
         }
         let src_ty = self.ty_in(&self.locals, cur)?;
         let src_elem = elem(&src_ty)?;
-        let list_ty = funcs[to_list].ty.params(1).1.clone();
+        let result_ty = funcs[consumer].ty.params(args.len()).1.clone();
         let i64 = MT::con("std::I64");
         let lt = self.prim("lt", fun2(&i64, &i64, &MT::con("std::Bool")), 2);
         let subp = self.prim("prim.sub", fun2(&i64, &i64, &i64), 2);
-        let rev = self.prim(
-            "reverse",
-            MT::Fun(Box::new(list_ty.clone()), Box::new(list_ty.clone())),
-            1,
-        );
+        let rev = (kind == "list").then(|| {
+            self.prim(
+                "reverse",
+                MT::Fun(Box::new(result_ty.clone()), Box::new(result_ty.clone())),
+                1,
+            )
+        });
         // outer values in the unfused order: the stages' arguments
         // outermost first, then the source
         let mut binds: Vec<(Local, Expr)> = Vec::new();
+        let initial = match kind {
+            "fold" => {
+                let local = self.fresh(result_ty.clone());
+                binds.push((local, args[1].clone()));
+                Expr::Local(local)
+            }
+            "each" => Expr::Const(Value::unit()),
+            _ => Expr::Construct(0, vec![]),
+        };
         let mut stages: Vec<St> = Vec::new();
         let mut takes: Vec<Expr> = Vec::new();
         for (kind, arg, _) in &raw {
@@ -515,10 +540,11 @@ impl Fuser<'_> {
                 St::Take(_) => None,
             });
         }
+        let callback = (kind != "list").then(|| map_locals(&args[0], &mut field));
         let nout = outer.len();
         let mut fields = vec![
             ("0".to_string(), src_ty.clone()),
-            ("1".to_string(), list_ty.clone()),
+            ("1".to_string(), result_ty.clone()),
         ];
         fields.extend((0..nt).map(|i| ((i + 2).to_string(), i64.clone())));
         fields.extend(
@@ -599,7 +625,36 @@ impl Fuser<'_> {
                 _ => return None,
             }
         }
-        let mut body = go_on(Expr::Construct(1, vec![x, st(1)]), &counters);
+        let mut body = match kind {
+            "list" => go_on(Expr::Construct(1, vec![x, st(1)]), &counters),
+            "find" => Expr::Match(
+                Box::new(Expr::Apply(Box::new(callback?), vec![x.clone()])),
+                vec![
+                    (
+                        Pat::Construct(1, vec![]),
+                        Expr::Construct(1, vec![Expr::Construct(1, vec![x])]),
+                    ),
+                    (Pat::Wild, go_on(st(1), &counters)),
+                ],
+            ),
+            "fold" | "each" => {
+                // Finish the callback before forcing the tail. In particular,
+                // failure must not evaluate a poisonous next element.
+                let local = nl.len() as Local;
+                nl.push(result_ty.clone());
+                let inputs = if kind == "fold" {
+                    vec![st(1), x]
+                } else {
+                    vec![x]
+                };
+                Expr::Let(
+                    local,
+                    Box::new(Expr::Apply(Box::new(callback?), inputs)),
+                    Box::new(go_on(Expr::Local(local), &counters)),
+                )
+            }
+            _ => unreachable!(),
+        };
         for d in steps.into_iter().rev() {
             body = match d {
                 Do::Let(l, v) => Expr::Let(l, Box::new(v), Box::new(body)),
@@ -627,13 +682,16 @@ impl Fuser<'_> {
                 vec![(Pat::Construct(1, vec![]), stop.clone()), (Pat::Wild, body)],
             );
         }
-        let step_result = MT::Con("std::Step".into(), vec![state_ty.clone(), list_ty.clone()]);
+        let step_result = MT::Con(
+            "std::Step".into(),
+            vec![state_ty.clone(), result_ty.clone()],
+        );
         // Ownership lowering needs the fields of compiler-generated variants
         // just as it needs the fields registered during monomorphization.
         self.shapes.entry(step_result.clone()).or_insert_with(|| {
             TypeShape::Adt(vec![
                 ("Again".into(), vec![state_ty.clone()]),
-                ("Stop".into(), vec![list_ty.clone()]),
+                ("Stop".into(), vec![result_ty.clone()]),
             ])
         });
         let step_ty = MT::Fun(Box::new(state_ty.clone()), Box::new(step_result));
@@ -650,20 +708,17 @@ impl Fuser<'_> {
             "loop",
             MT::Fun(
                 Box::new(step_ty),
-                Box::new(MT::Fun(Box::new(state_ty), Box::new(list_ty))),
+                Box::new(MT::Fun(Box::new(state_ty), Box::new(result_ty))),
             ),
             2,
         );
-        let mut init = vec![src, Expr::Construct(0, vec![])];
+        let mut init = vec![src, initial];
         init.extend(takes);
         init.extend(outer.into_iter().map(Expr::Local));
-        let mut out = Expr::Call(
-            rev,
-            vec![Expr::Call(
-                loop_id,
-                vec![Expr::Func(step), Expr::Record(init)],
-            )],
-        );
+        let mut out = Expr::Call(loop_id, vec![Expr::Func(step), Expr::Record(init)]);
+        if let Some(rev) = rev {
+            out = Expr::Call(rev, vec![out]);
+        }
         for (l, v) in binds.into_iter().rev() {
             out = Expr::Let(l, Box::new(v), Box::new(out));
         }
@@ -731,10 +786,8 @@ impl Fuser<'_> {
     /// one by one, outermost first.
     fn lists(&mut self, e: Expr) -> Expr {
         if let Expr::Call(id, args) = &e {
-            if self.std_name(*id) == Some("std::iter.to-list") && args.len() == 1 {
-                if let Some(r) = self.iter_to_list(*id, &args[0]) {
-                    return r;
-                }
+            if let Some(r) = self.iter_consume(*id, args) {
+                return r;
             }
         }
         if let Expr::Call(id, _) = &e {

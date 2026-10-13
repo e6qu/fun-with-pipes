@@ -1,40 +1,19 @@
-# Prepared roadmap queue
+# Completed preparation anchors
 
-Updated 2026-10-12. This table preserves preparation ancestry. Current merge
-status, actual rewritten bases and checks live in [the handoff](development-state.md).
-A published preparation is not verified main support.
+The approved roadmap and follow-ups are merged through PR #131. This table
+preserves original preparation ancestry, not pending tasks. [PLAN](../PLAN.md)
+records delivered scope and remaining engineering gaps; [the handoff](development-state.md)
+records the latest accepted source and current work.
 
-Queue33 and35–112 are accepted through PR125; row34 is an accepted duplicate.
-Phase3 numeric storage/ABI is the active bundle recorded in the handoff. The table below retains immutable evidence and is not a live priority list.
+The historical branch/head columns are evidence references, not live branch tips.
+Immutable OLD heads are retained by tags `roadmap/preparation-007` through
+`roadmap/preparation-112`; their parents remain reachable through those tags.
+Fetch tags before checking a clean clone. Never move preparation or
+`roadmap/revision-NNN-SHA12` tags or rewrite OLD anchors. Ancestry checks use
+OLD parent → OLD head, which can differ from a later rewritten branch base.
 
-Deliver related preparations as coherent bundles, one production PR at a time.
-Open the next PR after the previous one passes all six exact-head jobs plus
-roadmap_docs and squash-merges. Run the full matrix once per final bundle head.
-Keep original commits and probes; preparation branches remain recovery anchors.
-Rebase bundles with `git rebase --onto NEW_MAIN ACTUAL_BASE BRANCH`.
-Immutable OLD heads are retained remotely by lightweight tags
-`roadmap/preparation-007` through `roadmap/preparation-112`. Their ancestor
-parents remain reachable through those tags. On a clean clone, fetch tags
-before ancestry verification. Never move these tags or rewrite OLD anchors.
-Before force-rewriting a published current head used by a handoff snapshot,
-retain it under `roadmap/revision-NNN-SHA12`; those tags are immutable too.
-This keeps earlier evidence snapshots verifiable after later branch rewrites.
-
-Use the current actual base from the handoff; immutable OLD parents describe
-original preparation and can differ after rewrites. Never replace OLD anchors.
-Resolve documentation conflicts with all 11 authoritative docs listed in the
-handoff, plus other modified tracked documents. Rerun focused
-checks and publish with an explicit lease against the actual remote current head.
-Every final PR needs all six production jobs and roadmap_docs at its exact head.
-Prior evidence and superseded queue instructions are preserved in [history](roadmap-history.md).
-
-Ancestry checks use OLD parent → OLD head. Prefixes uniquely resolve here;
-resolve full hashes before publication or merge. Checkout paths use
-`/private/tmp/fwp-NAME-worktree`; consult the handoff for exceptions.
-
-Row34 is an accepted duplicate: its argument/capture preparation repair moved
-into row28 and passed full acceptance in PR107. Its current docs-only head and
-immutable anchor remain for ancestry and regression evidence.
+Row 34 is an accepted duplicate: its repair was incorporated into row 28 and
+accepted in PR #107. It remains solely for ancestry and regression evidence.
 
 | Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|
@@ -144,8 +123,4 @@ immutable anchor remain for ancestry and regression evidence.
 | 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `bf297ac299ea` | `6f4bfba80ef3` | `d178d86dca2b` |
 | 111 | grpc-packed-options | `ownership-grpc-packed-options` | `5a01572cb2c6` | `2bb665596390` | `6f4bfba80ef3` |
 | 112 | grpc-connection-addresses | `ownership-grpc-connection-addresses` | `b45e93a71d40` | `edbc5e8d0e62` | `2bd17608388d` |
-
-The record-reconstruction branch `b21203da65d3` was incorporated into record-update
-`5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
-its workflow commits and equivalent baseline repairs never enter this chain.
 

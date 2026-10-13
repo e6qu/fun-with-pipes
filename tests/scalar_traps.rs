@@ -109,3 +109,84 @@ fn traps_agree() {
     let _ = std::fs::remove_dir_all(&dir);
     assert!(failures.is_empty(), "{}", failures.join("\n\n"));
 }
+
+#[test]
+fn full_width_unsigned_products_have_defined_overflow() {
+    if !have_cc() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("fwp-u64-products-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let input = dir.join("runtime.fwp");
+    let cfile = dir.join("products.c");
+    std::fs::write(&input, "main = ()\n").unwrap();
+    let emitted = Command::new(fwp())
+        .args(["build", "--emit-c"])
+        .arg(&input)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    // Exercise the shared checked-arithmetic runtime with actual dynamic
+    // operands. Language constant folding must not hide C undefined behavior.
+    let runtime = std::fs::read_to_string(&cfile).unwrap();
+    std::fs::write(
+        &cfile,
+        format!(
+            "#define main saved_main\n{runtime}\n#undef main\n{}",
+            r#"
+int main(int argc, char **argv) {
+    if (argc != 3) return 2;
+    V a = strtoull(argv[1], 0, 10), b = strtoull(argv[2], 0, 10), out = 0;
+    int err = 0, ok = fwp_arith_raw(K_U64, OP_MUL, a, b, 0, &out, &err);
+    printf("%d %d %llu\n", ok, err, (unsigned long long)out);
+    return 0;
+}
+"#
+        ),
+    )
+    .unwrap();
+    let values = [
+        0u64,
+        1,
+        2,
+        (1u64 << 32) - 1,
+        1u64 << 32,
+        1u64 << 63,
+        u64::MAX,
+    ];
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(format!("products{opt}"));
+        let compiled = Command::new(std::env::var("CC").unwrap_or_else(|_| "cc".into()))
+            .args([
+                opt,
+                "-w",
+                "-fsanitize=undefined",
+                "-fno-sanitize-recover=undefined",
+            ])
+            .arg(&cfile)
+            .arg("-o")
+            .arg(&binary)
+            .args(["-lm", "-lpthread"])
+            .output()
+            .unwrap();
+        assert!(compiled.status.success(), "{compiled:?}");
+        for a in values {
+            for b in values {
+                let expected = match a.checked_mul(b) {
+                    Some(product) => format!("1 0 {product}\n"),
+                    None => "0 1 0\n".into(),
+                };
+                let actual = Command::new(&binary)
+                    .args([a.to_string(), b.to_string()])
+                    .output()
+                    .unwrap();
+                assert!(actual.status.success(), "{opt}: {a} * {b}: {actual:?}");
+                assert_eq!(String::from_utf8_lossy(&actual.stdout), expected);
+                assert!(actual.stderr.is_empty(), "{actual:?}");
+            }
+        }
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}

@@ -231,16 +231,11 @@ int main(void) {
     .to_string();
     for (needle, placeholder) in [
         ("return fwp_p_repeat_owned(l0, l1, NULL);", "REPEAT_WRAPPER"),
-        ("return fwp_p_range_owned(0, l0, l1);", "RANGE_WRAPPER"),
+        ("return fwp_p_range_owned(", "RANGE_WRAPPER"),
     ] {
         // Numeric kinds are emitted as an integer literal; find the range
         // boundary independently of its kind's enum value.
-        let boundary = if placeholder == "RANGE_WRAPPER" {
-            emitted.find("return fwp_p_range_owned(")
-        } else {
-            emitted.find(needle)
-        }
-        .expect("missing actual scalar wrapper");
+        let boundary = emitted.find(needle).expect("missing actual scalar wrapper");
         let wrapper = emitted[..boundary]
             .rsplit("static V ")
             .next()

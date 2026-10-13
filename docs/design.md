@@ -25,7 +25,7 @@ lex → parse (offside layout) → macro expansion → name collection
 | Interpreter | Runs the same typed IR. It powers `comptime`, macros, the WebAssembly build of fwp and `--interp`, and it is the oracle the native backend is tested against |
 | Scalars | Generic C entries use 64-bit `V` words: integers up to 64 bits sign- or zero-extended, floats by their bits, pointers or small tags. Direct numeric workers and numeric array payloads use concrete scalar types and natural widths, with bit-preserving bridges to generic entries. Arithmetic and comparisons of fixed-width integers, `F32` and `F64` are generated as typed C per type (`Scalar` in `src/cgen.rs`), checked like the interpreter's; 128-bit integers, `TInt` and `F16` go through the runtime's generic `fwp_arith` |
 | Loops | A `loop` whose step is a known function with literal `Again x` and `Stop y` results compiles to a C loop (`loop_shape`, `Gen::loop_def` in `src/cgen.rs`): the step's body writes the next state into locals instead of allocating it, field by field when the state is a record the step only reads through fields, and a field that is itself a record of up to eight fields (a `fold`'s tuple accumulator) as its fields too, built only where it is read whole (`LoopGen::slots`); safe points are counted as in the generic loop |
-| List pipelines | A `fold` (so `sum`), `length` (so `count`) or `find` (so `any`, `all`) over `map` and `filter` stages of a `range` or a list becomes one `loop` whose state is the position, the accumulator and the captured values (`src/fuse.rs`), so no intermediate list is built. Fusing interleaves the stages, so it is done only when the stages are pure and terminating and can raise at most one trap message between them: then which stage traps first cannot be seen. `find` stops early, so its stages may raise none. `iter.to-list` over `iter.map`, `iter.filter` and `iter.take` is a loop too: iterators are lazy, so the order is unchanged and any stage may fuse |
+| List pipelines | A `fold` (so `sum`), `length` (so `count`) or `find` (so `any`, `all`) over `map` and `filter` stages of a `range` or a list becomes one `loop` whose state is the position, the accumulator and the captured values (`src/fuse.rs`), so no intermediate list is built. Fusing interleaves the stages, so it is done only when the stages are pure and terminating and can raise at most one trap message between them: then which stage traps first cannot be seen. `find` stops early, so its stages may raise none. `iter.to-list`, `iter.fold`, `iter.each` and `iter.find` fuse eligible `iter.map`, `iter.filter` and `iter.take` chains into flat loop state. Known consumer callbacks specialize; callbacks finish before forcing a tail, and find/take preserve early stopping. Lazy tails still dispatch and producer values can allocate. `FWP_ITER_CONSUMERS=0` disables only direct-consumer fusion for comparison |
 | Higher-order primitives | `map`, `filter`, `fold`, `fold-right`, `take-while`, `drop-while`, `zip-with` and `loop` called with a known function that captured nothing compile to `fwp_k_*` (runtime/fwp_rt_prims.c), which take a C function pointer and are always inlined, so the function is called directly. A known function applied to captured values (`map (mul 3)`) gets a specialized loop of its own, `fwp_hof<i>`, which takes the captured values and calls the function directly (`opt::specialize_hofs` in `src/opt.rs`, `hof_def` in `src/cgen.rs`); compiled dynamic calls use `fwp_apply_owned` with typed captures; runtime callbacks use the shared `fwp_apply` entry |
 | Records that do not escape | A record bound to a local and read only through its fields becomes one local per field (`only_fields` and `replace_fields` in `src/opt.rs`), and copies of locals and constants are propagated, so the tuples that `curry`, `uncurry` and `curry3` build are never allocated. A `match` on `map.get` branches on the lookup without building the `Some` (`lookup_match` in `src/cgen.rs`) |
 | Record workers | Direct numeric workers pass concrete C scalar parameters/results and use natural numeric aggregate fields with bit-preserving bridges to V entries. FWP_TYPED_ABI=0 retains V boundaries. A direct call passes a record of up to eight fields as its fields when the callee reads it only field by field, and a function returning such a record returns a C struct (numeric fwp_wr layouts preserve concrete field types; the target C ABI determines register or caller-storage return). A record of more than four fields is returned so only by a function whose every tail builds one, so that one it passes on is not read into a struct and built again (`wide_record_returns`). Return-origin and field tracking follow typed local aliases while preserving intervening effects. Its caller reads the struct's fields when it only reads fields (`let`, `.i`, a tail call), so recursion over pairs allocates nothing. Each such function has a worker with this convention (`w<id>`) and keeps its usual entry (`f<id>`), which boxes, for closures and primitives (`Abi` in `src/cgen.rs`). A function whose every tail builds a variant of a non-recursive type with up to eight fields per constructor (`Option`, `Result`, a parser's token), or calls such a function, returns its tag and fields as a struct (`fwp_u<m>`, `variant_returns`); a caller that only matches on the result keeps it as one, counting the fields' references by tag (`fwp_vdup<k>`, `fwp_vdrop<k>`), and any other builds it (`fwp_vbox<k>`). Lists and trees are left out, as their nodes are rebuilt in the cells of the old ones. `FWP_VRET=0` when compiling turns it off |
@@ -385,7 +385,9 @@ cover the private buffers separately from the managed result array.
 ## Checked native ARC execution
 
 The `fwp build --gc arc` mode admits immutable typed value graphs and
-scoped File owners whose compiler/runtime ownership contracts are established.
+scoped File owners, counted I128/U128 leaves and CSV parse trees whose
+compiler/runtime ownership contracts are established. The handoff distinguishes
+current implementation from accepted production gates.
 The checker visits monomorphic function/local types, ownership temporaries and
 primitive boundaries after reference-count insertion.
 Ordinary calls, records, variants, captured functions and numeric containers keep
@@ -402,11 +404,14 @@ released value storage returns to that allocator. Reserved pages and permanent
 program constants are separate from live temporary values.
 
 Eligibility excludes unproved mutable/cyclic runtime graphs, retained callbacks,
-raw pointers, raw reverse-mode tape tokens, boxed I128/U128 without counted
-owners, unchecked user native declarations, foreign/remote calls and unmodeled
-shared results. Native symbol names alone do not establish ownership signatures. Raw AD tokens need a scope proof in addition to their scalar
-representation; the normal numerical runtime retains the phase4 scoped AD
-workspace implementation. The initial checked mode supports native main programs;
+raw pointers, unscoped reverse-mode operations, unchecked user native declarations,
+foreign/remote calls and unmodeled shared results. Native symbol names alone do
+not establish ownership signatures. A finite closure-flow analysis proves that
+executed ad.tape/ad.push/ad.backward calls occur under ad.scope/ad.scope2. It
+tracks partial applications, returned callbacks and functions inside containers;
+ambiguous targets are rejected. Function names confer no exemption. Arguments
+evaluate before the scope callback, and escaped tokens retain stale-token checks.
+Scoped gradients use the same bounded workspace and exceptional cleanup. The initial checked mode supports native main programs;
 WebAssembly, executable protocol, library and service boundaries diagnose as
 unsupported. `--gc tracing` explicitly selects the existing compatibility mode;
 no ARC rejection silently selects it. The handoff records production acceptance.
@@ -447,12 +452,21 @@ error. See [protocol.md](protocol.md).
 
 ## Not implemented
 
-- Complete ownership of strings, bytes, escaping closures and runtime-shared
-  values; general execution without tracing GC. Numeric representation and remaining measured optimization gates are recorded in
-  [ownership.md](ownership.md). C structs alone do not guarantee registers.
-- Darwin cross-compilation and universal binaries, Clang PGO, and Windows.
+- General execution without tracing GC. Checked native ARC supports the proved
+  ownership subset; unproved reconstructed graphs, retained runtime/foreign
+  contexts, cycles and unproved AD lifetimes remain outside it.
+  [Ownership](ownership.md) specifies coverage and numeric representation limits;
+  [PLAN](../PLAN.md) records the remaining efficiency gaps. C structs alone do
+  not guarantee registers.
+- Windows on AMD64 and ARM64 is desired but deferred and remains unimplemented.
+  Linux/macOS have native CI on both architectures; see the
+  [platform matrix](../PLAN.md#platform-objective-and-current-evidence) and handoff
+  for actual acceptance gates. Cross-build/QEMU evidence remains distinct.
+- Darwin cross-compilation and Clang PGO.
   Native macOS passed both architecture suites and the Linux/benchmark gates
-  in PR #74; exact verification is recorded in [the handoff](development-state.md).
+  in PR #74; separate ARM and Intel binaries meet the packaging objective.
+  Universal binaries are outside scope. Verification is recorded in
+  [the handoff](development-state.md).
 
 - HTTP/3; HTTP/2 server push and
   WebSocket over HTTP/2 (RFC 8441); WebSocket extensions other than

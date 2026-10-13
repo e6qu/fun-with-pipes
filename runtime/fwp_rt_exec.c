@@ -1345,50 +1345,92 @@ static int fwp_exec_program(const char *name, const fwp_exec_spec *const *cmds, 
 /* ------------------------------------------------------------------- csv */
 /* As src/csv.rs: records of fields, a one-byte separator, `"` quotes. */
 
-static V fwp_p_csv_parse_with(V sepv, V text) {
+/* Private spines reverse in place. Allocate their cells as mutable so minor
+ * collections rescan older cells after reversal introduces younger links. */
+static V fwp_csv_cons_owned(V field, V tail) {
+    fwp_obj *cell = (fwp_obj *)fwp_alloc(sizeof(fwp_obj) + 2 * sizeof(V));
+    cell->tag = 1; cell->n = 2;
+    cell->f[0] = field; cell->f[1] = tail;
+    FWP_KEEP_ALIVE(field);
+    FWP_KEEP_ALIVE(tail);
+    return fwp_rc_fresh(PTR(cell));
+}
+static V fwp_csv_reverse_owned(V xs) {
+    V result = 0;
+    while (xs) {
+        V next = OBJ(xs)->f[1];
+        OBJ(xs)->f[1] = result;
+        result = xs;
+        xs = next;
+    }
+    return result;
+}
+typedef struct {
+    V rows, row, field;
+    fwp_buf buffer;
+    void (*drop_row)(V), (*drop_rows)(V), (*drop_field)(V);
+} fwp_csv_owner;
+static void fwp_csv_release(void *arg) {
+    fwp_csv_owner *o = (fwp_csv_owner *)arg;
+    o->drop_rows(o->rows);
+    o->drop_row(o->row);
+    o->drop_field(o->field);
+    free(o->buffer.d);
+}
+static V fwp_p_csv_parse_with(V sepv, V text,
+                            void (*drop_row)(V), void (*drop_rows)(V), void (*drop_field)(V)) {
     char sep = STR(sepv)->len ? STR(sepv)->d[0] : ',';
     const char *s = STR(text)->d;
     size_t n = STR(text)->len, i = 0;
-    V rows = 0, row = 0;
-    fwp_buf f = {0};
+    fwp_csv_owner owner = {0, 0, 0, {0}, drop_row, drop_rows, drop_field};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_csv_release, &owner);
     int at_start = 1, any = 0;
-#define CSV_FIELD() do { row = fwp_cons(fwp_str_lossy(f.d ? f.d : "", f.len), row); f.len = 0; } while (0)
-#define CSV_ROW() do { rows = fwp_cons(fwp_p_reverse(row), rows); row = 0; } while (0)
+#define CSV_OWNED_FIELD() do { \
+    owner.field = fwp_rc_fresh(fwp_str_lossy(owner.buffer.d ? owner.buffer.d : "", owner.buffer.len)); \
+    owner.row = fwp_csv_cons_owned(owner.field, owner.row); \
+    owner.field = 0; owner.buffer.len = 0; \
+} while (0)
+#define CSV_OWNED_ROW() do { \
+    owner.row = fwp_csv_reverse_owned(owner.row); \
+    owner.rows = fwp_csv_cons_owned(owner.row, owner.rows); \
+    owner.row = 0; \
+} while (0)
     while (i < n) {
         char c = s[i];
         if (at_start && c == '"') {
             i++;
             while (i < n) {
                 if (s[i] == '"') {
-                    if (i + 1 < n && s[i + 1] == '"') { buf_putc(&f, '"'); i += 2; continue; }
+                    if (i + 1 < n && s[i + 1] == '"') { buf_putc(&owner.buffer, '"'); i += 2; continue; }
                     i++;
                     break;
                 }
-                buf_putc(&f, s[i++]);
+                buf_putc(&owner.buffer, s[i++]);
             }
-            at_start = 0;
-            any = 1;
+            at_start = 0; any = 1;
             continue;
         }
-        if (c == sep) { CSV_FIELD(); at_start = 1; any = 1; i++; continue; }
+        if (c == sep) { CSV_OWNED_FIELD(); at_start = 1; any = 1; i++; continue; }
         if (c == '\n' || (c == '\r' && i + 1 < n && s[i + 1] == '\n')) {
             i += c == '\r' ? 2 : 1;
-            if (any) { CSV_FIELD(); CSV_ROW(); }
-            f.len = 0;
-            at_start = 1;
-            any = 0;
+            if (any) { CSV_OWNED_FIELD(); CSV_OWNED_ROW(); }
+            owner.buffer.len = 0; at_start = 1; any = 0;
             continue;
         }
-        buf_putc(&f, c);
-        at_start = 0;
-        any = 1;
-        i++;
+        buf_putc(&owner.buffer, c);
+        at_start = 0; any = 1; i++;
     }
-    if (any) { CSV_FIELD(); CSV_ROW(); }
-#undef CSV_FIELD
-#undef CSV_ROW
-    free(f.d);
-    return fwp_p_reverse(rows);
+    if (any) { CSV_OWNED_FIELD(); CSV_OWNED_ROW(); }
+#undef CSV_OWNED_FIELD
+#undef CSV_OWNED_ROW
+    V result = fwp_csv_reverse_owned(owner.rows);
+    owner.rows = 0;
+    fwp_cleanup_pop(&cleanup);
+    fwp_csv_release(&owner);
+    FWP_KEEP_ALIVE(sepv);
+    FWP_KEEP_ALIVE(text);
+    return result;
 }
 
 /* a header as a field name (src/csv.rs column_name) */

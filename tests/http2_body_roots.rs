@@ -26,10 +26,10 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "body_roots").unwrap();
-    // GCC and Clang on x86-64 can leave dead call/stream pointers in callee-saved
+    // GCC and Clang can leave dead call/stream pointers in callee-saved
     // registers. Isolate construction and clear those stale roots in the
     // copying frame; a live post-copy owner fence forces a surviving spill.
-    let clear_stale_roots = cfg!(target_arch = "x86_64");
+    let clear_stale_roots = cfg!(any(target_arch = "x86_64", target_arch = "aarch64"));
     let generated = if clear_stale_roots {
         let primitive = "static V fwp_p_http2_body(V max, V timeout, V call) {";
         assert_eq!(generated.matches(primitive).count(), 1);
@@ -69,9 +69,14 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
 static unsigned char *watched_body;
 static int copy_active,released;
 static void inspect_owner(void);
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(__aarch64__)
 static void clear_dead_stack(void);
+#endif
+#if defined(__x86_64__)
 #define clear_dead_registers() __asm__ volatile("xor %%ebx,%%ebx; xor %%r12d,%%r12d; xor %%r13d,%%r13d; xor %%r14d,%%r14d; xor %%r15d,%%r15d" : : : "rbx","r12","r13","r14","r15","memory")
+#elif defined(__aarch64__)
+/* x18 is reserved on Darwin; x29 remains the frame pointer. */
+#define clear_dead_registers() __asm__ volatile("mov x19,xzr; mov x20,xzr; mov x21,xzr; mov x22,xzr; mov x23,xzr; mov x24,xzr; mov x25,xzr; mov x26,xzr; mov x27,xzr; mov x28,xzr" : : : "x19","x20","x21","x22","x23","x24","x25","x26","x27","x28","memory")
 #endif
 "#;
     let fixture = r#"
@@ -119,7 +124,7 @@ static __attribute__((noinline)) void clear_dead_stack(void){
  volatile uintptr_t scratch[256];for(size_t i=0;i<256;i++)scratch[i]=0;
 }
 static __attribute__((noinline)) V body(void){
- /* Reserve rbp for the actual frame rather than an uncleared heap pointer. */
+ /* Reserve the frame pointer for the actual frame, not a stale heap root. */
  __asm__ volatile("" : : "r"(__builtin_frame_address(0)) : "memory");
  V call=make_call();clear_dead_stack();copy_active=1;
 "#,

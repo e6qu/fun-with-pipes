@@ -17,6 +17,9 @@ jobs:
       CC: clang
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
+      FWP_ARC_ARTIFACTS: ownership-evidence/arc
+      FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
+      FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
     steps:
       - uses: actions/checkout@v7
         with:
@@ -51,6 +54,22 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
       - name: Regular macOS test shard
         run: python3 scripts/run-macos-test-shard.py --shard regular
+      - name: Build standalone compiler
+        run: cargo build --release --bin fwp
+      - name: Iterator and state allocation and binary evidence
+        run: python3 scripts/measure-iteration.py --output "$RUNNER_TEMP/iteration-evidence"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: iteration-evidence-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/iteration-evidence/
+      - name: Verify separate native artifact outside checkout
+        run: python3 scripts/package-native.py --output "$RUNNER_TEMP/native-package"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fwp-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/native-package/
+          if-no-files-found: error
       - name: Preserve failed native golden binaries and C
         if: failure()
         run: |
@@ -61,6 +80,12 @@ jobs:
         with:
           name: golden-failures-${{ matrix.runner }}
           path: ${{ runner.temp }}/golden-failures/
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}
+          path: ownership-evidence/
 
   # Split the integration targets between the two existing macOS jobs.
   # Both shards exclude the stress test; this job runs it separately once.
@@ -76,6 +101,9 @@ jobs:
       CC: clang
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
+      FWP_ARC_ARTIFACTS: ownership-evidence/arc
+      FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
+      FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
     steps:
       - uses: actions/checkout@v7
         with:
@@ -91,7 +119,15 @@ jobs:
           CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: Full GC stress and verification golden suite
-        run: cargo test --test gc golden_programs_under_gc_stress -- --exact --nocapture
+        run: |
+          set -o pipefail
+          cargo test --test gc golden_programs_under_gc_stress -- --exact --nocapture 2>&1 | tee "$RUNNER_TEMP/gc-stress.log"
+      - name: Publish GC diagnostics before the remaining shard
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gc-stress-log-${{ matrix.runner }}
+          path: ${{ runner.temp }}/gc-stress.log
       - name: Second macOS test shard
         if: ${{ !cancelled() }}
         run: python3 scripts/run-macos-test-shard.py --shard gc
@@ -106,8 +142,22 @@ jobs:
           name: gc-golden-failures-${{ matrix.runner }}
           path: ${{ runner.temp }}/gc-golden-failures/
 
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ownership-evidence-gc-${{ runner.os }}-${{ runner.arch }}
+          path: ownership-evidence/
+
   test:
-    runs-on: ubuntu-latest
+    env:
+      FWP_ARC_ARTIFACTS: ownership-evidence/arc
+      FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
+      FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -123,6 +173,7 @@ jobs:
       - name: WebAssembly toolchain, OpenSSL headers (TLS)
         run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32 libssl-dev openssl
       - name: aarch64 cross compiler and qemu (tests/cross.rs)
+        if: runner.arch == 'X64'
         run: sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user musl-tools
       - name: binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)
         run: npm install -g binaryen
@@ -153,6 +204,22 @@ jobs:
           FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"
           FWP_REQUIRE_WASI_COUNTS: "1"
         run: cargo test --all-targets --no-fail-fast
+      - name: Build standalone compiler
+        run: cargo build --release --bin fwp
+      - name: Iterator and state allocation and binary evidence
+        run: python3 scripts/measure-iteration.py --output "$RUNNER_TEMP/iteration-evidence"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: iteration-evidence-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/iteration-evidence/
+      - name: Verify separate native artifact outside checkout
+        run: python3 scripts/package-native.py --output "$RUNNER_TEMP/native-package"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fwp-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/native-package/
+          if-no-files-found: error
       - name: Preserve failed native golden binaries and C
         if: failure()
         run: |
@@ -161,8 +228,14 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: golden-failures-linux
+          name: golden-failures-${{ matrix.runner }}
           path: ${{ runner.temp }}/golden-failures/
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ownership-evidence-linux-${{ runner.os }}-${{ runner.arch }}
+          path: ownership-evidence/
 
   bench:
     runs-on: ubuntu-latest

@@ -64,6 +64,12 @@ pub enum ResultOwnership {
     FreshLeaf,
     /// A tree of new counted allocations: no input aliases or internal sharing.
     FreshTree,
+    /// Runtime constructs an already-counted tree and cleans partial construction.
+    OwnedTree,
+    /// Numeric result: scalar bits, a fresh box, or a fresh aggregate of boxes.
+    Numeric,
+    /// One owned reference to whichever borrowed argument is selected.
+    SelectedArgument,
     /// An owned reference to the indicated argument's leaf allocation.
     AliasLeaf {
         argument: usize,
@@ -141,6 +147,17 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "prim.zero" | "prim.one" => (&[], ResultOwnership::Numeric, None, &[]),
+        "prim.neg" | "prim.from-int" | "prim.from-float" | "bit.not" | "int.convert"
+        | "float.to-int" => (&[B], ResultOwnership::Numeric, None, &[]),
+        "prim.add" | "prim.sub" | "prim.mul" | "prim.div" | "prim.rem" | "wrapping.add"
+        | "wrapping.sub" | "wrapping.mul" | "saturating.add" | "saturating.sub"
+        | "saturating.mul" | "overflowing.add" | "overflowing.sub" | "overflowing.mul"
+        | "checked.add" | "checked.sub" | "checked.mul" | "checked.div" | "bit.and" | "bit.or"
+        | "bit.xor" | "bit.shl" | "bit.shr" => (&[B, B], ResultOwnership::Numeric, None, &[]),
+        "abs" => (&[B], ResultOwnership::Numeric, None, &[0]),
+        "int.to-float" => (&[B], R, None, &[]),
+        "min" | "max" => (&[B, B], ResultOwnership::SelectedArgument, None, &[0, 1]),
         "get" | "put" => (&[B], ResultOwnership::OwnedState, None, &[]),
         "modify" => (
             &[B],
@@ -401,6 +418,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[1],
         ),
+        "csv.parse-with" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
         "parse-int" | "parse-float" | "length" => (&[B], R, None, &[]),
         "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
         "pad-left" | "pad-right" | "replace" => (

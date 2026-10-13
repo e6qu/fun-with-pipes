@@ -72,6 +72,9 @@ static void fwp_tape_link_scope(fwp_tape *t, int32_t slot) {
             break;
         }
     }
+#if FWP_ARC_ONLY
+    if (!t->scope) fwp_trap("internal: ARC autodiff tape has no proved scope");
+#endif
 }
 
 static V fwp_ad_scope_apply(V callback, uint32_t argc, const V *args) {

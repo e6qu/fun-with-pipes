@@ -902,8 +902,17 @@ fn rewrite_hofs(
     let Body::Prim(sym) = &prim_f.body else {
         return;
     };
-    let Some(n) = hof_arity(sym) else { return };
-    let Some(fexpr) = args.first() else { return };
+    // State handlers also benefit from specializing their known callback:
+    // the generated body exposes saturated iterator consumers to fusion.
+    let (callback, n) = if sym == "run-state" {
+        (1, 1)
+    } else {
+        let Some(n) = hof_arity(sym) else { return };
+        (0, n)
+    };
+    let Some(fexpr) = args.get(callback) else {
+        return;
+    };
     let o = Opt {
         funcs,
         shapes,
@@ -921,7 +930,7 @@ fn rewrite_hofs(
     // the closure over its captures, numbered from 0
     let renamed = rename_locals(fexpr, &caps);
     // the closure's function type, after its captures' types
-    let fn_ty = prim_f.ty.params(prim_f.arity as usize).0[0].clone();
+    let fn_ty = prim_f.ty.params(prim_f.arity as usize).0[callback].clone();
     let cap_tys: Vec<MT> = caps.iter().map(|l| locals[*l as usize].clone()).collect();
     let key = format!("{:?}|{}|{:?}", renamed, n, cap_tys);
     let h = match seen.iter().find(|(s, _)| *s == key) {
@@ -955,7 +964,7 @@ fn rewrite_hofs(
             h
         }
     };
-    args[0] = if k == 0 {
+    args[callback] = if k == 0 {
         Expr::Func(h)
     } else {
         Expr::Apply(

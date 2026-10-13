@@ -275,5 +275,8 @@ instruction/count total alone is not a timing guarantee.
 Aggregate-return and field analysis follow typed constructor aliases across
 intervening bindings, preserving ownership and effects without needless boxes. The ownership report records the
 original allocation controls separately from its earlier timing samples.
-The checked ARC subset currently excludes raw reverse-mode tape lifetimes;
-normal native autodiff continues to use the scoped bounded workspace above.
+Checked ARC requires a scope proof for reverse-mode operations. Proven scoped
+calls use the bounded workspace above; unscoped or ambiguous calls are rejected.
+[The handoff](development-state.md) records validation of this extension. Wide
+I128/U128 values retain their boxed representation with typed counted ownership;
+this does not claim unboxed wide arithmetic or native half/128-bit floats.

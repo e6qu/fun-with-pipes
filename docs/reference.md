@@ -608,8 +608,12 @@ Cross targets currently name 64-bit little-endian Linux systems. Native
 macOS on Apple Silicon and Intel passed the full native CI gate: use
 `--target native` with Apple Clang and consult
 [development-state.md](development-state.md) for verification. Shared libraries
-use `.dylib`; native `--static` linking is rejected. Darwin cross targets,
-universal binaries and Windows are not implemented; `--pgo` requires GCC.
+use `.dylib`; native `--static` linking is rejected. Build a separate binary
+for each supported OS/architecture; universal binaries are outside project scope.
+The desired platform matrix is Linux, macOS and Windows on ARM64 (`aarch64`)
+and AMD64 (`x86_64`); see [current acceptance](../PLAN.md#platform-objective-and-current-evidence).
+Windows is deferred and not implemented. Darwin cross targets are not implemented;
+`--pgo` requires GCC.
 For TLS set `FWP_OPENSSL_DIR` as described in [tls.md](tls.md#openssl).
 To try an ARM executable on an x86 machine,
 run it with qemu: `qemu-aarch64 -L /usr/aarch64-linux-gnu ./main`.

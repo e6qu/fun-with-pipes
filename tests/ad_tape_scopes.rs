@@ -31,7 +31,7 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
     let scratch = Scratch::new("unwind");
     let input = scratch.0.join("runtime.fwp");
     let cfile = scratch.0.join("runtime.c");
-    std::fs::write(&input,"finish : I64 -> Array[F64]\nfinish = make { 0 = id, 1 = singleton | array.from-list, 2 = const [1.0] | array.from-list } | uncurry3 ad.backward\nmain = 1 | ad.tape | finish | echo\n").unwrap();
+    std::fs::write(&input,"finish : I64 -> Array[F64]\nfinish = make { 0 = id, 1 = singleton | array.from-list, 2 = const [1.0] | array.from-list } | uncurry3 ad.backward\nmain = 1 | ad.scope (ad.tape | finish) | echo\n").unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
@@ -87,47 +87,59 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
     let fresh = "fwp_rc_fresh(fwp_p_ad_backward(l0, l1, l2))";
     assert_eq!(runtime.matches(fresh).count(), 1);
     let uncounted = runtime.replace(fresh, call);
-    for opt in ["-O1", "-O2"] {
-        for (label, source, expected) in [
-            ("scoped", &runtime, 0),
-            ("unlinked", &unlinked, 61),
-            ("unconsumed", &unconsumed, 62),
-            ("uncounted", &uncounted, 76),
-        ] {
-            let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
-            let code = format!("{source}\n{probe}");
-            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            for reuse in ["0", "1"] {
-                let output = Command::new(&executable)
-                    .env("FWP_AD_WORKSPACE", "0")
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .output()
-                    .unwrap();
-                if let Some(directory) = std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
-                    let directory = PathBuf::from(directory);
-                    std::fs::create_dir_all(&directory).unwrap();
-                    let prefix = directory.join(format!("{label}{}-reuse{reuse}", &opt[1..]));
-                    std::fs::copy(&executable, prefix.with_extension("bin")).unwrap();
-                    std::fs::write(prefix.with_extension("c"), &code).unwrap();
-                    std::fs::write(prefix.with_extension("stdout"), &output.stdout).unwrap();
-                    std::fs::write(prefix.with_extension("stderr"), &output.stderr).unwrap();
-                    std::fs::write(
-                        prefix.with_extension("status"),
-                        format!("{}\n", output.status),
-                    )
-                    .unwrap();
-                }
-                assert_eq!(
-                    output.status.code(),
-                    Some(expected),
-                    "{label} {opt} reuse={reuse}: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                if expected == 0 {
-                    assert!(String::from_utf8_lossy(&output.stdout)
-                        .starts_with("scoped autodiff releases callback tapes; tape="));
+    for arc in [0, 1] {
+        for opt in ["-O1", "-O2"] {
+            for (label, source, expected) in [
+                ("scoped", &runtime, 0),
+                ("unlinked", &unlinked, 61),
+                ("unconsumed", &unconsumed, 62),
+                ("uncounted", &uncounted, 76),
+            ] {
+                let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
+                let mode = if arc == 1 {
+                    "#define FWP_ARC_ONLY 1\n"
+                } else {
+                    ""
+                };
+                let code = format!("{mode}{source}\n{probe}");
+                fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+                for reuse in if arc == 1 {
+                    &["0"][..]
+                } else {
+                    &["0", "1"][..]
+                } {
+                    let output = Command::new(&executable)
+                        .env("FWP_AD_WORKSPACE", "0")
+                        .env("FWP_GC_STRESS", if arc == 1 { "0" } else { "1" })
+                        .env("FWP_GC_VERIFY", if arc == 1 { "0" } else { "1" })
+                        .env("FWP_REUSE_VERIFY", reuse)
+                        .output()
+                        .unwrap();
+                    if let Some(directory) = std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
+                        let directory = PathBuf::from(directory);
+                        std::fs::create_dir_all(&directory).unwrap();
+                        let prefix =
+                            directory.join(format!("{label}-arc{arc}-{}-reuse{reuse}", &opt[1..]));
+                        std::fs::copy(&executable, prefix.with_extension("bin")).unwrap();
+                        std::fs::write(prefix.with_extension("c"), &code).unwrap();
+                        std::fs::write(prefix.with_extension("stdout"), &output.stdout).unwrap();
+                        std::fs::write(prefix.with_extension("stderr"), &output.stderr).unwrap();
+                        std::fs::write(
+                            prefix.with_extension("status"),
+                            format!("{}\n", output.status),
+                        )
+                        .unwrap();
+                    }
+                    assert_eq!(
+                        output.status.code(),
+                        Some(expected),
+                        "{label} {opt} reuse={reuse}: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                    if expected == 0 {
+                        assert!(String::from_utf8_lossy(&output.stdout)
+                            .starts_with("scoped autodiff releases callback tapes; tape="));
+                    }
                 }
             }
         }

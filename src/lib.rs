@@ -6,6 +6,7 @@
 
 pub mod aot;
 mod arc;
+mod arc_scope;
 pub mod ast;
 pub mod asyncify;
 pub mod cgen;
