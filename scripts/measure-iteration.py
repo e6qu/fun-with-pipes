@@ -13,6 +13,7 @@ import time
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = {
+    'iterate': 'sub 1000 | iter.iterate (add 2) | iter.take 1000 | iter.fold add 0',
     'fold': 'sub 1000 | iter.count-from | iter.take 1000 | iter.fold add 0',
     'each': 'sub 1000 | run-state 0 (iter.count-from | iter.take 1000 | iter.each (add | modify)) | .1',
     'find': 'sub 1000 | iter.count-from | iter.take 1000 | iter.find (gt 25)',
@@ -106,14 +107,14 @@ def main():
         source = out / (name + '.fwp')
         source.write_text('main = () | args | head | option.and-then parse-int | option.unwrap-or 1000\n    | ' + expression + ' | echo\n')
         reference = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1')).stdout
-        variants = ((True, True), (True, False), (False, False)) if name in ('fold', 'each', 'find', 'pipeline') else ((True, True),)
+        variants = ((True, True), (True, False), (False, False)) if name in ('fold', 'each', 'find', 'pipeline', 'iterate') else ((True, True),)
         for fused, producers in variants:
             label = name if producers else name + ('-consumer-only' if fused else '-unfused')
             variant_env = dict(environment, FWP_ITER_CONSUMERS='1' if fused else '0', FWP_ITER_PRODUCERS='1' if producers else '0')
             cfile = out / (label + '.c')
             run([compiler, 'build', '-O2', '--emit-c', source, '-o', cfile], variant_env)
             workers = loop_evidence(cfile.read_text())
-            if name in ('fold', 'each', 'find', 'pipeline'):
+            if name in ('fold', 'each', 'find', 'pipeline', 'iterate'):
                 assert bool(workers) == fused, (name, fused, workers)
                 if producers:
                     assert all(w['tailCallSites'] == 0 for w in workers), (name, workers)
@@ -149,7 +150,7 @@ def main():
                   cc=run([cc, '--version']).stdout, rustc=run(['rustc', '--version', '--verbose']).stdout,
                   elements=1000, results=results,
                   scope='Allocation-inclusive process timings include startup, runtime argument parsing and output. Memory probes are separate binaries; charged live storage excludes allocator metadata. Peak sampled after every managed allocation; zero collections required. No speed threshold or comparison with C/Rust is asserted.')
-    report['comparisons'] = {name: {key: results[name + '-unfused']['counters'][key] - results[name]['counters'][key] for key in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes')} for name in ('fold', 'each', 'find', 'pipeline')}
+    report['comparisons'] = {name: {key: results[name + '-unfused']['counters'][key] - results[name]['counters'][key] for key in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes')} for name in ('fold', 'each', 'find', 'pipeline', 'iterate')}
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     for name, reduction in report['comparisons'].items():
         assert reduction['requests'] > 0, (name, reduction)

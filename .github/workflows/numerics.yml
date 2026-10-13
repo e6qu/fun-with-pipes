@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, portability, wasm]
+        options: [numerical, bundle, wide, windows, portability, wasm, iteration]
         default: numerical
 jobs:
   numeric_fusion:
@@ -195,7 +195,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo build --bin fwp
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          ./target/debug/fwp.exe run --interp tests/run/loop_state.fwp
+      - name: Native C toolchain for foreign calls
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
+      - name: Raw interpreter golden outputs and exit statuses
+        shell: pwsh
+        env:
+          FWP_NO_OPT: 1
+        run: |
+          cargo test --test golden_run interpreter_snapshots -- --nocapture
           exit $LASTEXITCODE
       - uses: actions/upload-artifact@v7
         if: always()
@@ -206,7 +214,7 @@ jobs:
             windows-probe.log
 
   portability:
-    if: inputs.suite == 'portability'
+    if: inputs.suite == 'portability' || inputs.suite == 'iteration'
     strategy:
       fail-fast: false
       matrix:
@@ -235,6 +243,18 @@ jobs:
           cargo test --lib
       - name: Ownership and foreign boundary regressions
         run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls
+      - name: Iterator forcing, ownership and specialization
+        run: cargo test --test iterator_fusion --test iteration_consumers
+      - name: Iterator allocation and instruction evidence
+        if: inputs.suite == 'iteration'
+        run: |
+          cargo build --release --bin fwp
+          python3 scripts/measure-iteration.py --output iteration-evidence
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'iteration'
+        with:
+          name: iteration-evidence-${{ matrix.runner }}
+          path: iteration-evidence/
 
   wasm_ownership:
     if: inputs.suite == 'wasm'

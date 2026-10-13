@@ -27,7 +27,7 @@ Windows or true half/quad support is claimed by that baseline.
 |---|---|---|
 | 1 | Implemented | Accepted merge recorded; stale seven-step retry instructions replaced by this handoff |
 | 2 | In progress | Broader proved ownership, retained/foreign/protocol contexts, cycle policy and WASM reclamation |
-| 3 | Pending | Broader producer/worker specialization and reduced boxing/closure allocation |
+| 3 | In progress | Broader producer/worker specialization and reduced boxing/closure allocation |
 | 4 | Pending | Measured kernel/layout improvements, nested reverse mode and checkpointing |
 | 5 | Pending | Actual F16/BF16/F128 representations and coordinated protocol migration |
 | 6 | In progress | Windows ARM64/AMD64 runtime, full native validation and separate packages |
@@ -54,12 +54,16 @@ port the generated C runtime or establish Windows support.
 
 Focused runner validation at `217d6da`:
 [portability 38439707405](https://github.com/e6qu/fun-with-pipes/actions/runs/38439707405)
-passed on macOS ARM64 and Linux ARM64; Intel macOS is running and Linux AMD64
-queued. [Windows 38439695491](https://github.com/e6qu/fun-with-pipes/actions/runs/38439695491)
-reached all-target checking on ARM64: the library compiled, then the Unix-only
-example process-group harness failed. Native handle/loader execution has not
-run yet. AMD64 is queued. The next patch ports that harness to Windows process
-groups/tree cleanup and native PATH separators.
+passed on all four Linux/macOS targets (compiler/unit, ARC, FFI and TLS).
+[Windows 38440769248](https://github.com/e6qu/fun-with-pipes/actions/runs/38440769248)
+at `fb199e7` passed all-target compilation, real socket readiness/EOF tests,
+DLL load/call/unload tests and compiler linking on both native architectures.
+The job's last command incorrectly required exit zero from `loop_state.fwp`,
+whose golden deliberately exits 101 after overflow; its output matched the
+expected trap. The next harness runs all raw interpreter goldens with proper
+stdout/stderr/status comparison. C foreign calls use the official LLVM-MinGW
+20261006 native UCRT toolchains, pinned by asset SHA-256. The generated C runtime
+is not yet ported, and Windows support is not accepted.
 
 WebAssembly implementation in progress: value allocations now use reclaimable
 libc storage; typed last-owner destruction removes count metadata before freeing
@@ -67,9 +71,18 @@ storage. Counted ownership is enabled for ordinary generated programs, while
 unproved shared graphs remain retained. Disabled freeing preserves storage and
 resource destruction still disposes metadata. The new test observes actual libc
 free across 10,000 cycles and 300 aliases, including a missing-free negative
-control and disabled-free control, on host and actual WASI. Full WASI goldens
-must pass before accepting this change. File-specific shared headers and cyclic
+control and disabled-free control, on host and actual WASI. [WASI 38440780537](https://github.com/e6qu/fun-with-pipes/actions/runs/38440780537)
+at `fb199e7` passed physical/resource controls and full goldens on Linux AMD64;
+ARM64 is still running. File-specific shared headers and cyclic
 runtime graphs remain separate boundaries, not collector-free claims.
+
+Iterator specialization is implemented but awaiting runner evidence: direct
+`iter.iterate` chains carry current/lookahead values and captured advancement
+functions through typed loop state. Eager first lookahead, trap order, early
+stopping and owned String captures have new raw/native controls. The existing
+iteration measurement script includes the new producer and compares allocations,
+live storage and native instructions with producer/consumer fusion disabled.
+No performance claim is made before the `iteration` runner suite passes.
 
 Local guarded `cargo check --lib`, `cargo clippy --lib -- -D warnings`, formatting
 and the roadmap audit passed (the audit now accepts `In progress`). An extracted
@@ -79,7 +92,7 @@ workload; command: `python3 scripts/local-guard.py python3
 before execution and was corrected; this is not actual WASI evidence.
 Production runs defer while the PR is a draft and start on `ready_for_review`;
 skipped production jobs are not acceptance. Focused runner suites are `windows`,
-`portability` and `wasm` in `numerics.yml`.
+`portability`, `wasm` and `iteration` in `numerics.yml`.
 
 Use `python3 scripts/local-guard.py COMMAND...` for serial focused checks.
 Full builds, suites, benchmarks and large regeneration stay on GitHub runners.
@@ -92,7 +105,7 @@ fixtures, ownership negative controls, stress/reuse checks and measured assembly
 Next: run the updated native Windows and portability probes, fix their failures,
 and port the generated C runtime/resources. Continue additional ownership proofs
 and WASM reclamation. Establish portable exact float arithmetic and explicit
-protocol migration before changing representations. Items 3–5 remain pending;
+protocol migration before changing representations. Items 4–5 remain pending;
 all six acceptance rows in PLAN remain required.
 Keep all six items in the same PR. Require full Linux/macOS and added Windows
 acceptance plus docs on its final head before squash merge.

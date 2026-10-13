@@ -458,33 +458,45 @@ impl Fuser<'_> {
         let src_elem = elem(&iterator_ty)?;
         let result_ty = funcs[consumer].ty.params(args.len()).1.clone();
         let i64 = MT::con("std::I64");
-        // Eliminate only producers whose construction/forcing order is known.
-        // count-from computes its successor while constructing each Yield,
-        // including the initial Yield even when take is already exhausted.
+        // Both count-from and iterate compute the next element while building
+        // the current Yield, even when the first take is already exhausted.
+        enum Source {
+            Successors { initial: Expr, advance: Expr },
+            List(Expr),
+        }
         let producer = if std::env::var("FWP_ITER_PRODUCERS").is_ok_and(|v| v == "0") {
             None
         } else if let Expr::Call(id, arguments) = cur {
             match (self.std_name(*id), arguments.as_slice()) {
                 (Some("std::iter.count-from"), [initial]) if src_elem == i64 => {
-                    Some(("count", initial.clone()))
+                    let add = self.prim("prim.add", fun2(&i64, &i64, &i64), 2);
+                    Some(Source::Successors {
+                        initial: initial.clone(),
+                        advance: Expr::Apply(
+                            Box::new(Expr::Func(add)),
+                            vec![Expr::Const(Value::I64(1))],
+                        ),
+                    })
                 }
-                (Some("std::iter.from-list"), [list]) => Some(("list", list.clone())),
+                (Some("std::iter.iterate"), [advance, initial]) if closure(funcs, advance) => {
+                    Some(Source::Successors {
+                        initial: initial.clone(),
+                        advance: advance.clone(),
+                    })
+                }
+                (Some("std::iter.from-list"), [list]) => Some(Source::List(list.clone())),
                 _ => None,
             }
         } else {
             None
         };
         let src_ty = match &producer {
-            Some(("count", _)) => {
-                MT::Record(vec![("0".into(), i64.clone()), ("1".into(), i64.clone())])
-            }
-            Some(("list", source)) => self.ty_in(&self.locals, source)?,
+            Some(Source::Successors { .. }) => MT::Record(vec![
+                ("0".into(), src_elem.clone()),
+                ("1".into(), src_elem.clone()),
+            ]),
+            Some(Source::List(source)) => self.ty_in(&self.locals, source)?,
             _ => iterator_ty.clone(),
-        };
-        let next_count = if matches!(producer, Some(("count", _))) {
-            Some(self.prim("prim.add", fun2(&i64, &i64, &i64), 2))
-        } else {
-            None
         };
         let lt = self.prim("lt", fun2(&i64, &i64, &MT::con("std::Bool")), 2);
         let subp = self.prim("prim.sub", fun2(&i64, &i64, &i64), 2);
@@ -537,18 +549,15 @@ impl Fuser<'_> {
         }
         stages.reverse(); // the source's side first
         let source = match &producer {
-            Some(("count", initial)) => {
-                let current = self.fresh(i64.clone());
+            Some(Source::Successors { initial, advance }) => {
+                let current = self.fresh(src_elem.clone());
                 binds.push((current, initial.clone()));
                 Expr::Record(vec![
                     Expr::Local(current),
-                    Expr::Call(
-                        next_count?,
-                        vec![Expr::Const(Value::I64(1)), Expr::Local(current)],
-                    ),
+                    Expr::Apply(Box::new(advance.clone()), vec![Expr::Local(current)]),
                 ])
             }
-            Some(("list", list)) => list.clone(),
+            Some(Source::List(list)) => list.clone(),
             _ => cur.clone(),
         };
         let src = {
@@ -584,6 +593,10 @@ impl Fuser<'_> {
             });
         }
         let callback = (kind != "list").then(|| map_locals(&args[0], &mut field));
+        let advance = match &producer {
+            Some(Source::Successors { advance, .. }) => Some(map_locals(advance, &mut field)),
+            _ => None,
+        };
         let nout = outer.len();
         let mut fields = vec![
             ("0".to_string(), src_ty.clone()),
@@ -603,10 +616,10 @@ impl Fuser<'_> {
         let (h, t) = (1 as Local, 2 as Local);
         let mut nl: Vec<MT> = vec![
             state_ty.clone(),
-            src_elem,
+            src_elem.clone(),
             match &producer {
-                Some(("count", _)) => i64.clone(),
-                Some(("list", _)) => src_ty.clone(),
+                Some(Source::Successors { .. }) => src_elem,
+                Some(Source::List(_)) => src_ty.clone(),
                 _ => MT::Fun(Box::new(MT::unit()), Box::new(iterator_ty.clone())),
             },
         ];
@@ -615,14 +628,14 @@ impl Fuser<'_> {
         // go on to the next element, or stop when a take is exhausted
         let go_on = |acc: Expr, counters: &[Expr], reached: &[usize]| {
             let tail = match &producer {
-                Some(("count", _)) => Expr::Record(vec![
+                Some(Source::Successors { .. }) => Expr::Record(vec![
                     Expr::Local(t),
-                    Expr::Call(
-                        next_count.expect("count increment"),
-                        vec![Expr::Const(Value::I64(1)), Expr::Local(t)],
+                    Expr::Apply(
+                        Box::new(advance.clone().expect("successor function")),
+                        vec![Expr::Local(t)],
                     ),
                 ]),
-                Some(("list", _)) => Expr::Local(t),
+                Some(Source::List(_)) => Expr::Local(t),
                 _ => Expr::Apply(Box::new(Expr::Local(t)), vec![unit.clone()]),
             };
             let mut fs = vec![tail, acc.clone()];
@@ -734,7 +747,7 @@ impl Fuser<'_> {
             };
         }
         let stop = Expr::Construct(1, vec![st(1)]);
-        let body = if matches!(producer, Some(("count", _))) {
+        let body = if matches!(producer, Some(Source::Successors { .. })) {
             // Read the pair as fields: matching a whole nested record would
             // reconstruct a box in the flattened loop worker on every step.
             Expr::Let(
