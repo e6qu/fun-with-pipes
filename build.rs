@@ -47,6 +47,8 @@ fn main() {
     let root = Path::new("vendor/softfloat");
     let out = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let target = env::var("TARGET").unwrap();
+    let target_cc = format!("CC_{}", target.replace('-', "_"));
+    println!("cargo:rerun-if-env-changed={target_cc}");
     let host = env::var("HOST").unwrap();
     let msvc = target.ends_with("-msvc");
     let mut sources: Vec<_> = fs::read_dir(root)
@@ -102,14 +104,16 @@ fn main() {
     let source = out.join("softfloat.c");
     fs::write(&source, code).unwrap();
     let object = out.join("softfloat.o");
-    let compiler = env::var_os("CC").unwrap_or_else(|| {
-        if target != host || msvc {
-            "clang".into()
-        } else {
-            "cc".into()
-        }
-    });
-    let mut command = Command::new(compiler);
+    let compiler = env::var_os(&target_cc)
+        .or_else(|| env::var_os("CC"))
+        .unwrap_or_else(|| {
+            if target != host || msvc {
+                "clang".into()
+            } else {
+                "cc".into()
+            }
+        });
+    let mut command = Command::new(&compiler);
     if target != host || msvc {
         let c_target = if target == "wasm32-wasip1" {
             "wasm32-wasi"
@@ -153,7 +157,7 @@ fn main() {
             println!("cargo:rerun-if-changed={}", source.display());
             let object = out.join(format!("{name}.o"));
             checked(
-                Command::new(env::var_os("CC").unwrap_or_else(|| "clang".into()))
+                Command::new(&compiler)
                     .args(["--target=wasm32-wasi", flag, "-c"])
                     .arg(source)
                     .arg("-o")

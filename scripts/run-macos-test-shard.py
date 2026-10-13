@@ -22,6 +22,9 @@ def command(metadata, shard):
         kinds = target["kind"]
         if kinds == ["test"]:
             names.append(target["name"])
+        elif kinds == ["custom-build"]:
+            # Cargo runs build scripts as dependencies of each selected target.
+            continue
         elif len(kinds) != 1 or kinds[0] not in UNIT_TARGETS:
             raise ValueError(f"unassigned Cargo target: {target['name']} {kinds}")
     if not names or len(names) != len(set(names)):

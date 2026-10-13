@@ -2,6 +2,13 @@
 # https://github.com/mstorsjo/llvm-mingw/releases/tag/20261006
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
+# The Rust MSVC target needs the SDK/UCRT headers and native TLS ABI. Keep its
+# C compiler explicit and separate from the MinGW generated-program toolchain.
+$rustCompiler = (Get-Command clang.exe -ErrorAction Stop).Source
+$rustTarget = (& rustc -vV | Select-String '^host: ').ToString().Substring(6)
+Add-Content $env:GITHUB_ENV "CC_$($rustTarget.Replace('-', '_'))=$rustCompiler"
+& $rustCompiler --version
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 switch ($env:RUNNER_ARCH) {
     'ARM64' {
         $architecture = 'aarch64'

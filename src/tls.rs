@@ -71,7 +71,9 @@ type Ptr = *mut c_void;
 /// The functions of libssl and libcrypto that fwp uses.
 #[allow(clippy::type_complexity)]
 struct Lib {
+    #[cfg(not(target_family = "wasm"))]
     _ssl_library: crate::dylib::Library,
+    #[cfg(not(target_family = "wasm"))]
     _crypto_library: crate::dylib::Library,
     tls_client_method: unsafe extern "C" fn() -> Ptr,
     tls_server_method: unsafe extern "C" fn() -> Ptr,

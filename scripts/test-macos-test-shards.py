@@ -22,6 +22,7 @@ def metadata(names):
                               {"name": "fwp", "kind": ["bin"]},
                               {"name": "demo", "kind": ["example"]},
                               {"name": "speed", "kind": ["bench"]},
+                              {"name": "build-script-build", "kind": ["custom-build"]},
                           ] + [{"name": name, "kind": ["test"]}
                                for name in names]}]}
 
@@ -38,6 +39,7 @@ class Coverage(unittest.TestCase):
                 self.assertEqual(output, SHARDS.command(
                     metadata(list(reversed(names))), shard))
                 args = output[0]
+                self.assertNotIn("build-script-build", args)
                 self.assertIn("--no-fail-fast", args)
                 self.assertEqual(args[-3:],
                                  ["--", "--skip", "golden_programs_under_gc_stress"])

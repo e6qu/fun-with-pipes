@@ -20,7 +20,9 @@ pub struct FfiLib {
     shims: HashMap<FuncId, ShimFn>,
     set_host: SetHostFn,
     // Unload before removing the DLL directory (Windows locks loaded images).
+    #[cfg(not(target_family = "wasm"))]
     _library: crate::dylib::Library,
+    #[cfg(not(target_family = "wasm"))]
     _directory: crate::cgen::TempDir,
 }
 
@@ -29,6 +31,7 @@ fn trap<T>(msg: impl Into<String>) -> R<T> {
 }
 
 /// Build and load the shim for every foreign C function of a program.
+#[cfg(not(target_family = "wasm"))]
 fn load(prog: &Program) -> Result<FfiLib, String> {
     let src = ffi::shim_source(prog)?;
     // The interpreter owns both the loaded image and its temporary files.
@@ -79,6 +82,11 @@ fn load(prog: &Program) -> Result<FfiLib, String> {
         _library: library,
         _directory: dir,
     })
+}
+
+#[cfg(target_family = "wasm")]
+fn load(_prog: &Program) -> Result<FfiLib, String> {
+    Err("foreign C calls are not supported by the WebAssembly interpreter".into())
 }
 
 /// State of one foreign call, reachable from callbacks.

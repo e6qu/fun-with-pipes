@@ -121,10 +121,21 @@ are not acceptance; unfinished implementation still prevents merging.
 
 ## Next action
 
-Next: publish the scoped decimal core and run `windows`, `portability` and
-`wasm`. WASI must now execute the Rust core tests as well as generated C, using
-the existing exception-based setjmp helpers for conversion-allocation cleanup.
-Fix any failures, then integrate the exact formats with language values/literals,
+Next: validate the CI integration fixes. Decimal runs at `367227a` exposed
+Windows MSVC compilation through a MinGW driver without SDK headers
+([38449712876](https://github.com/e6qu/fun-with-pipes/actions/runs/38449712876))
+and native loader references in the actual WASI Rust test binary
+([38449735363](https://github.com/e6qu/fun-with-pipes/actions/runs/38449735363)).
+Full CI at `4437af0` also rejected Cargo's new build-script metadata in the
+macOS test sharder and found an unused WASM loader variant. Fixes select a
+target-specific SDK-aware C compiler, exclude the native loader on WASM with
+an explicit unsupported foreign-call diagnostic, and accept build scripts as
+Cargo-managed dependencies without removing any test targets. Guarded shard
+regressions (3 tests), formatting and library clippy passed locally. All runner
+failures remain unresolved until the corrected code passes; the earlier focused
+successes are not final-head acceptance.
+
+Then integrate the exact formats with language values/literals,
 native arrays/workers and protocol versioning. Continue the generated C Windows
 task/resource/network port and PE packaging, broader ownership/worker proofs,
 and nested reverse mode/checkpointing with measured layout improvements.

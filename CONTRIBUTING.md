@@ -119,7 +119,10 @@ does not substitute for runtime alias/unwind controls or full CI.
   decimal conversion under its Lucent license. Both licenses and the recorded
   source modifications accompany distributions.
   Building the compiler requires a C11 compiler and an archiver; `CC` and `AR`
-  select them. HTTP/2, gzip, protobuf, JSON and YAML are implemented here.
+  select them. `CC_<target_with_underscores>` selects the compiler for a Rust
+  target independently of the generated-program `CC`. Windows CI uses SDK-aware
+  Clang for the Rust MSVC core and LLVM-MinGW for generated programs.
+  HTTP/2, gzip, protobuf, JSON and YAML are implemented here.
   The C runtime uses the C library, pthreads,
   OpenSSL (for TLS) and the OpenCL loader (for devices, loaded when used).
 - **The interpreter is the reference.** Every feature works in both

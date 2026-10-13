@@ -15,6 +15,7 @@ pub mod cli_gen;
 pub mod csv;
 pub mod diag;
 pub mod driver;
+#[cfg(not(target_family = "wasm"))]
 mod dylib;
 pub mod env;
 pub mod escape;
