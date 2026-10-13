@@ -1250,7 +1250,7 @@ fn child_signal_status_matches_the_shell_in_both_engines() {
         .env("FWP_NO_OPT", "1")
         .args(["run", "--interp"])
         .arg(&source);
-    assert_eq!(run(interpreter, &[], "", &dir), "137\n");
+    assert_eq!(run(interpreter, &[], "", &dir), "137\ncode=0");
     let binary = dir.join("signal");
     let built = Command::new(fwp())
         .arg("build")
@@ -1264,6 +1264,6 @@ fn child_signal_status_matches_the_shell_in_both_engines() {
         "{}",
         String::from_utf8_lossy(&built.stderr)
     );
-    assert_eq!(run(Command::new(binary), &[], "", &dir), "137\n");
+    assert_eq!(run(Command::new(binary), &[], "", &dir), "137\ncode=0");
     std::fs::remove_dir_all(dir).unwrap();
 }

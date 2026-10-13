@@ -136,9 +136,11 @@ allocator or C++ runtime dependencies locally. Build selection now supports
 Sixteen standalone Rust tests pass, including all half/bfloat inputs against
 wider independent math and quad precision/range controls. The shared C caller
 passes normally and under ASan/UBSan. A permanent omitted-guard control must
-reproduce the upstream full-width-shift UB found during testing. Native/WASI
-runner validation of this new math core is still pending; language math has
-not switched representations yet.
+reproduce the upstream full-width-shift UB found during testing. Both actual WASI jobs passed in
+[38455262012](https://github.com/e6qu/fun-with-pipes/actions/runs/38455262012)
+at `412a813`, including full WASI goldens. Native Linux ARM64 portability also
+passed at that head. Other native runner validation remains in progress;
+language math has not switched representations yet.
 The scalar core also supplies truncating remainder, integral rounding with
 ties away from zero, bit-preserving sign operations, classification and IEEE
 total ordering. All half/bfloat integral-rounding inputs and full-precision
@@ -162,7 +164,9 @@ Do not use the stale local fwp executable as an oracle. Preserve disk/RSS/CPU/
 deadline limits. PR #134 is a draft again while this six-item bundle is unfinished,
 to avoid launching a full matrix on every incremental push. Use focused runner
 checks during implementation; mark it ready and require full final-head gates
-before merging. Existing full runs continue. Skipped jobs are not acceptance.
+before merging. Retain one useful full run while focused repairs execute; cancel
+superseded duplicate matrices to avoid consuming runner capacity. Skipped or
+cancelled jobs are not acceptance.
 
 ## Runner validation
 
@@ -182,9 +186,9 @@ Published CI fixes are at `55b86f2`: full CI
 [38450820067](https://github.com/e6qu/fun-with-pipes/actions/runs/38450820067),
 Windows [38450846100](https://github.com/e6qu/fun-with-pipes/actions/runs/38450846100)
 and WASI [38450850527](https://github.com/e6qu/fun-with-pipes/actions/runs/38450850527)
-passed both Windows and both WASI jobs. Full Linux/macOS CI is running, with
-bench passed and the corrected
-macOS shards executing. Superseded full runs at `47dbe70` and `367227a` were cancelled to
+passed both Windows and both WASI jobs. The regular ARM macOS and bench jobs passed. Its remaining full jobs were
+cancelled after the newer `ebaff5a` matrix began covering the same code, to
+release runner capacity for current repairs. Superseded full runs at `47dbe70` and `367227a` were cancelled to
 avoid spending runners on known failures. Both full macOS GC stress suites at
 `4437af0` passed before their second shards encountered the corrected build-script
 metadata issue. None of these is the final merge gate.
@@ -192,7 +196,12 @@ metadata issue. None of these is the final merge gate.
 The integer/literal head `ebaff5a` passed both Windows jobs in
 [38453332518](https://github.com/e6qu/fun-with-pipes/actions/runs/38453332518).
 Its full [38453295129](https://github.com/e6qu/fun-with-pipes/actions/runs/38453295129)
-is still running/queued. Both WASI jobs passed in
+found a CLI regression-test assertion error on ARM macOS: the `run` helper
+returns stdout/stderr plus `code=0`, but the new signal-status test expected
+only `137\n`. Both raw/native assertions now include the outer program exit
+status. Guarded `cargo check --test cli` passed. The focused portability suite
+now runs this exact test on all four native Linux/macOS targets. Other full
+jobs remain running; the failed old head is not accepted. Both WASI jobs passed in
 [38453337836](https://github.com/e6qu/fun-with-pipes/actions/runs/38453337836).
 
 ## Next action
@@ -205,10 +214,13 @@ remain in progress except Windows: both architectures failed the native C++
 caller because the math source relied on a transitive `<type_traits>` include.
 The source now includes that header explicitly. Guarded `cargo check --lib` and
 `python3 /private/tmp/fwp-float-math-check.py` pass, including C-driver linking,
-dependency inspection and ASan/UBSan. Publish this repair and rerun the focused
-platform jobs; fix any further failures in those or the ongoing full CI runs.
-The regular ARM macOS job at `55b86f2` has passed; the remaining full jobs are
-not yet accepted.
+dependency inspection and ASan/UBSan. The repair is published at `02a802d`; both Windows jobs are running in
+[38457143007](https://github.com/e6qu/fun-with-pipes/actions/runs/38457143007).
+Both prior math WASI jobs passed, including full goldens. Native Linux ARM64
+portability passed at `412a813`; the other three portability jobs remain queued.
+Both repaired Windows jobs passed their compiler and native execution steps
+and are finishing interpreter goldens. Fix any further failures
+in these focused checks or the retained full matrix at `ebaff5a`.
 
 Next: integrate the exact formats with language values,
 native arrays/workers and protocol versioning. Continue the generated C Windows
