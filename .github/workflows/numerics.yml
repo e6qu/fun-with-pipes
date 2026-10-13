@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide]
+        options: [numerical, bundle, wide, windows]
         default: numerical
 jobs:
   numeric_fusion:
@@ -101,7 +101,7 @@ jobs:
           path: arc-evidence/
 
   bundle_preflight:
-    if: inputs.suite != 'numerical'
+    if: inputs.suite == 'bundle' || inputs.suite == 'wide'
     strategy:
       fail-fast: false
       matrix:
@@ -166,3 +166,30 @@ jobs:
         with:
           name: bundle-preflight-${{ matrix.runner }}
           path: bundle-evidence/
+
+  windows_probe:
+    if: inputs.suite == 'windows'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Native Windows compiler check
+        shell: pwsh
+        run: |
+          rustc -vV | Tee-Object windows-host.txt
+          cargo check --all-targets 2>&1 | Tee-Object windows-probe.log
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: windows-probe-${{ matrix.runner }}
+          path: |
+            windows-host.txt
+            windows-probe.log

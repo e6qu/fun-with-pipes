@@ -58,6 +58,10 @@ Retain any pre-amend revision referenced by a frozen documentation snapshot
 under a remote revision tag before publication. A local object alone does not
 prove that a fresh CI clone can resolve the recorded head.
 
+During a combined delivery, draft PRs use explicitly dispatched focused checks.
+Marking the PR ready runs the complete production matrix; every final-head
+production job must pass before merge. Draft skips are never acceptance gates.
+
 CI runs these, and all of them must pass:
 
 ```
@@ -76,8 +80,9 @@ All seven exact-head production jobs and the roadmap documentation audit are
 required before merging: Linux ARM64/AMD64, bench, regular macOS arm64/x86-64 and separate
 GC stress jobs on both macOS architectures.
 The desired platform matrix is Linux, macOS and Windows on ARM64 and AMD64,
-with separate binaries. Windows is deferred; Linux/macOS and efficiency work
-take priority. Windows is not covered. Full native Linux ARM64 acceptance
+with separate binaries. Windows implementation is now part of the active bundle. Add required native
+Windows gates on both architectures before claiming coverage; existing
+Linux/macOS results alone do not establish it. Full native Linux ARM64 acceptance
 requires a passing complete native job; see [the platform matrix](PLAN.md#platform-objective-and-current-evidence).
 For each macOS architecture, the two jobs split the integration targets using
 `scripts/run-macos-test-shard.py`: sorted Cargo target names alternate between

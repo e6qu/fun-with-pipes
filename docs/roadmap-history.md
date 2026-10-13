@@ -112,11 +112,21 @@ No general GC-free or zero-allocation claim follows from this acceptance.
 
 ## Seven-step reconstruction and numerics bundle (PR #133)
 
-[PR #133](https://github.com/e6qu/fun-with-pipes/pull/133) contains the complete
-seven-step implementation and records final exact-head production acceptance
-and squash merge. Its scope covers documentation closeout, typed reconstruction,
-scoped State, direct producers/callbacks, native wide workers, measured
-numerical/AD improvements and the float-format decision.
+[PR #133](https://github.com/e6qu/fun-with-pipes/pull/133) merged as
+`d14ec10d24765c2686dc4cfb0798012611c02a61`, with tree
+`e3d3f8aa5ddee7843fe9e00c85cf0ffb5b2304a0` identical to tested head
+`70de849771aff10a3af938746c82f9b975bc989b`. All seven production jobs in
+[38423073356](https://github.com/e6qu/fun-with-pipes/actions/runs/38423073356),
+all four preflight jobs in
+[38423088702](https://github.com/e6qu/fun-with-pipes/actions/runs/38423088702),
+[PR docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38423073506) and
+[merged docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38435135341)
+passed. Native Windows and true half/quad formats were outside that delivery.
+The complete squash message is `Complete reconstruction ownership and native numeric workers`.
+Temporary branches were removed. Duplicate main CI 38435135553 was cancelled
+after tree parity verification; it supplies no passing gate. Final fixes remove
+WASI managed/scratch allocator mismatches and preserve ternary JSON range errors
+at I128 minimum. Actual WASI goldens pass on both Linux architectures.
 
 The [measurement record](measurements/reconstruction-and-workers-2026-10-13.json)
 retains hardware, compiler, flags, workloads, allocations and charged live
