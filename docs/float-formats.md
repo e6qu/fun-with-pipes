@@ -58,6 +58,11 @@ The active implementation must deliver these together before changing representa
 - Arithmetic results round at each source operation. Fused multiply-add needs
   an explicit operation and contract; it cannot replace separate multiply/add.
   Comparisons and explicit float-to-integer conversions preserve language rules.
+- Addition, subtraction, multiplication, division and square root are correctly
+  rounded. `exp`, `ln`, `sin`, `cos`, `tan` and `pow` use format-specific software
+  math with an at-most-1-ULP accuracy contract. They preserve the declared input
+  range and result precision; F128 math cannot narrow through F64. These accuracy
+  bounds do not authorize reassociation, contraction or implicit widening.
 - Raw binary encoding transports all bits, including NaN payloads. Arithmetic
   may quiet NaNs; specify its payload policy in matching interpreter/native
   implementations before claiming conformance. Text JSON retains its separate

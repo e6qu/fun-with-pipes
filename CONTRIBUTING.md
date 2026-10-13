@@ -26,7 +26,7 @@ You need:
   to the output of `brew --prefix openssl@3` for native TLS builds and the
   interpreter. CI uses Apple Clang on Apple Silicon and Intel.
 - Optional, for the WebAssembly tests: clang with a WASI sysroot and lld
-  (Debian/Ubuntu: `clang llvm lld wasi-libc libclang-rt-18-dev-wasm32`), the
+  (Debian/Ubuntu: `clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32`), the
   `wasm32-wasip1` Rust target (`rustup target add wasm32-wasip1`), node 24,
   and binaryen's `wasm-opt` (`npm install -g binaryen`).
 - Optional, for the cross-compilation tests: an aarch64 C compiler and
@@ -116,12 +116,17 @@ does not substitute for runtime alias/unwind controls or full CI.
 - **No third-party crates.** fwp depends only on Rust's standard library,
   with a vendored BSD-licensed [SoftFloat core](vendor/softfloat/README.md) for
   exact arithmetic and a scoped [gdtoa core](vendor/gdtoa/README.md) for exact
-  decimal conversion under its Lucent license. Both licenses and the recorded
+  decimal conversion under its Lucent license, plus Boost-licensed
+  [TLFloat templates](vendor/tlfloat/README.md) for format-specific transcendental
+  functions. Their licenses and the recorded
   source modifications accompany distributions.
-  Building the compiler requires a C11 compiler and an archiver; `CC` and `AR`
-  select them. `CC_<target_with_underscores>` selects the compiler for a Rust
+  Building the compiler requires C11, C++20 headers/compiler support and an
+  archiver. `CC` and `AR` select the C toolchain; `CXX` can select the C++ compiler
+  separately. `CC_<target_with_underscores>` and `CXX_<target_with_underscores>`
+  select compilers for a Rust
   target independently of the generated-program `CC`. Windows CI uses SDK-aware
   Clang for the Rust MSVC core and LLVM-MinGW for generated programs.
+  The math object uses fixed-size integer storage and links without a C++ runtime.
   HTTP/2, gzip, protobuf, JSON and YAML are implemented here.
   The C runtime uses the C library, pthreads,
   OpenSSL (for TLS) and the OpenCL loader (for devices, loaded when used).

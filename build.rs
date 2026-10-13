@@ -15,12 +15,17 @@ fn append(path: &Path, seen: &mut BTreeSet<PathBuf>, output: &mut String) {
         .expect("exact floating source")
         .lines()
     {
-        if let Some(name) = line
+        let local = line
             .strip_prefix("#include \"")
             .and_then(|l| l.strip_suffix('"'))
             .filter(|name| path.parent().unwrap().join(name).is_file())
-        {
-            append(&path.parent().unwrap().join(name), seen, output);
+            .map(|name| path.parent().unwrap().join(name));
+        let math = line
+            .strip_prefix("#include <tlfloat/")
+            .and_then(|l| l.strip_suffix('>'))
+            .map(|name| Path::new("vendor/tlfloat").join(name));
+        if let Some(include) = local.or(math) {
+            append(&include, seen, output);
         } else {
             output.push_str(line);
             output.push('\n');
@@ -40,7 +45,7 @@ fn checked(command: &mut Command) {
 }
 
 fn main() {
-    for variable in ["CC", "AR"] {
+    for variable in ["CC", "CXX", "AR"] {
         println!("cargo:rerun-if-env-changed={variable}");
     }
     println!("cargo:rerun-if-changed=vendor/softfloat");
@@ -49,6 +54,8 @@ fn main() {
     let target = env::var("TARGET").unwrap();
     let target_cc = format!("CC_{}", target.replace('-', "_"));
     println!("cargo:rerun-if-env-changed={target_cc}");
+    let target_cxx = format!("CXX_{}", target.replace('-', "_"));
+    println!("cargo:rerun-if-env-changed={target_cxx}");
     let host = env::var("HOST").unwrap();
     let msvc = target.ends_with("-msvc");
     let mut sources: Vec<_> = fs::read_dir(root)
@@ -151,6 +158,45 @@ fn main() {
         }
     });
     let mut objects = vec![object];
+    let math_source = out.join("float_math.cpp");
+    let mut math_code = String::new();
+    append(
+        Path::new("runtime/fwp_float_math.cpp"),
+        &mut seen,
+        &mut math_code,
+    );
+    fs::write(&math_source, math_code).unwrap();
+    let math_object = out.join("float_math.o");
+    let cxx = env::var_os(&target_cxx)
+        .or_else(|| env::var_os("CXX"))
+        .unwrap_or_else(|| compiler.clone());
+    let mut math_command = Command::new(cxx);
+    if target != host || msvc {
+        math_command.arg(format!(
+            "--target={}",
+            if target == "wasm32-wasip1" {
+                "wasm32-wasi"
+            } else {
+                &target
+            }
+        ));
+    }
+    checked(
+        math_command
+            .args([
+                "-std=c++20",
+                "-O2",
+                "-fno-fast-math",
+                "-ffp-contract=off",
+                "-fno-exceptions",
+                "-fno-rtti",
+                "-c",
+            ])
+            .arg(math_source)
+            .arg("-o")
+            .arg(&math_object),
+    );
+    objects.push(math_object);
     if target == "wasm32-wasip1" {
         for (name, flag) in [("sjlj.c", "-O2"), ("longjmp.S", "-mexception-handling")] {
             let source = Path::new("runtime/wasm").join(name);

@@ -104,8 +104,8 @@ Linux/macOS portability jobs at `367227a` in
 [38449726111](https://github.com/e6qu/fun-with-pipes/actions/runs/38449726111).
 The public language representations remain F16/BF16 as F32
 and F128 as F64 until the coordinated migration is implemented and verified.
-Transcendentals, literal/value integration, descriptors/arrays/ABI and versioned
-protocol migration remain outstanding.
+Value integration, descriptors/arrays/ABI and versioned protocol migration
+remain outstanding.
 
 The shared core now converts full-width unsigned/signed integers to binary128
 and unsigned integers directly to half/bfloat without double rounding. Checked
@@ -126,9 +126,23 @@ double-rounding boundary. Six standalone lexer tests and generated library-doc
 checks passed locally; end-to-end runner validation is pending. Language F16,
 BF16 and F128 value representations have not changed yet.
 
+A format-specific TLFloat 1.15.0 core now supplies `exp`, `ln`, `sin`, `cos`,
+`tan` and `pow` for half/bfloat/quad, with the explicit 1-ULP math contract in
+[float formats](float-formats.md). The Boost-licensed headers, provenance hashes,
+configuration and zero-numerator normalization patch are vendored. C++20 templates
+use fixed-size integer storage; object inspection and C-driver linking found no
+allocator or C++ runtime dependencies locally. Build selection now supports
+`CXX` and target-specific `CXX_...`; WASI CI installs matching C++ headers.
+Fifteen standalone Rust tests pass, including all half/bfloat inputs against
+wider independent math and quad precision/range controls. The shared C caller
+passes normally and under ASan/UBSan. A permanent omitted-guard control must
+reproduce the upstream full-width-shift UB found during testing. Native/WASI
+runner validation of this new math core is still pending; language math has
+not switched representations yet.
+
 Local checks passed under `python3 scripts/local-guard.py`: formatting, focused
 clippy for the affected compiler and integration targets, and standalone core
-checks. `python3 /private/tmp/fwp-test-softfloat-core.py` passed 13 tests including
+checks. `python3 /private/tmp/fwp-test-softfloat-core.py` passed 15 tests including
 all non-NaN half/bfloat text round-trips, quad bit patterns and boundary goldens,
 independent Rust F32/F64 decimal oracles and concurrent conversion scopes.
 `python3 /private/tmp/fwp-float-text-check.py` passed the actual shared C core
@@ -137,14 +151,18 @@ under ASan/UBSan, allocation-failure controls and an omitted-release leak contro
 controls. The repository tests preserve these controls for native/WASI CI.
 `python3 /private/tmp/fwp-literal-front-check.py` ran the standalone lexer checks
 and regenerated/verified the small standard-library signature documentation.
+`python3 /private/tmp/fwp-float-math-check.py` passed native C linking, dependency
+inspection and ASan/UBSan execution after the zero-numerator correction.
 Full builds, suites, benchmarks and large regeneration stay on GitHub runners.
 Do not use the stale local fwp executable as an oracle. Preserve disk/RSS/CPU/
-deadline limits. PR #134 is now ready for review, so pushes run full production CI. Skipped jobs
-are not acceptance; unfinished implementation still prevents merging.
+deadline limits. PR #134 is a draft again while this six-item bundle is unfinished,
+to avoid launching a full matrix on every incremental push. Use focused runner
+checks during implementation; mark it ready and require full final-head gates
+before merging. Existing full runs continue. Skipped jobs are not acceptance.
 
-## Next action
+## Runner validation
 
-Next: validate the CI integration fixes. Decimal runs at `367227a` exposed
+CI repairs: decimal runs at `367227a` exposed
 Windows MSVC compilation through a MinGW driver without SDK headers
 ([38449712876](https://github.com/e6qu/fun-with-pipes/actions/runs/38449712876))
 and native loader references in the actual WASI Rust test binary
@@ -160,12 +178,23 @@ Published CI fixes are at `55b86f2`: full CI
 [38450820067](https://github.com/e6qu/fun-with-pipes/actions/runs/38450820067),
 Windows [38450846100](https://github.com/e6qu/fun-with-pipes/actions/runs/38450846100)
 and WASI [38450850527](https://github.com/e6qu/fun-with-pipes/actions/runs/38450850527)
-now show both Windows architectures passing, WASI ARM passing and WASI AMD still
-running. Full Linux/macOS CI is running, with bench passed and the corrected
+passed both Windows and both WASI jobs. Full Linux/macOS CI is running, with
+bench passed and the corrected
 macOS shards executing. Superseded full runs at `47dbe70` and `367227a` were cancelled to
 avoid spending runners on known failures. Both full macOS GC stress suites at
 `4437af0` passed before their second shards encountered the corrected build-script
 metadata issue. None of these is the final merge gate.
+
+The integer/literal head `ebaff5a` passed both Windows jobs in
+[38453332518](https://github.com/e6qu/fun-with-pipes/actions/runs/38453332518).
+Its full [38453295129](https://github.com/e6qu/fun-with-pipes/actions/runs/38453295129)
+and WASI [38453337836](https://github.com/e6qu/fun-with-pipes/actions/runs/38453337836)
+are still running/queued.
+
+## Next action
+
+Next: publish and validate the format-specific math core with `windows`, `wasm`
+and `portability`; fix any failures in those or the ongoing full CI runs.
 
 Then integrate the exact formats with language values/literals,
 native arrays/workers and protocol versioning. Continue the generated C Windows

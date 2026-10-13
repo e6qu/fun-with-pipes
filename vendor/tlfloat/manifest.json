@@ -1,0 +1,12 @@
+{
+  "release": "1.15.0",
+  "archive": "https://github.com/shibatch/tlfloat/archive/refs/tags/v1.15.0.tar.gz",
+  "sha256": "f96a19273111de3c8818965dc3d68cbd66edaba62f03bcd2c06525a22197c97b",
+  "upstreamFiles": {
+    "bigint.hpp": "033364b1e1c6cf395053392f437cb21e472f3cfefff3a9e4f00360ea90a0bc02",
+    "rpitab.hpp": "476fefcd79fa8c1b124d801de4c7a11712eabcc1926e08abcffdf47d5d0ae156",
+    "tlfloat.hpp": "d93e2daea9b4a77bd22966c4d192b8ed3cac4398dea434b5ca856d70fe43909b",
+    "tlmath.hpp": "65de040fd27bedbd2c4138b894fc5fdf860e6bf3c2ea70ddd43e17ead9eee03e",
+    "tlmathcoef.hpp": "1b10e7f1bcb70c0e1b150fdc801823e5d23c877db0365780a5a3a6c181bfe724"
+  }
+}

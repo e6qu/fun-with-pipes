@@ -1,0 +1,11 @@
+--- a/tlfloat.hpp
++++ b/tlfloat.hpp
+@@ -546,6 +546,8 @@
+ 	  if (lhs.isinf) return infinity(lhs.sign != rhs.sign);
+ 	}
+ 
++	// fwp: zero has a full-width leading-zero count; do not shift by it.
++	if (lhs.iszero) return zero(lhs.sign != rhs.sign);
+ 	int64_t exp = (int64_t)lhs.exp - rhs.exp + expoffset() - 1;
+ 	int sl = clz(lhs.mant);
+ 	int sr = clz(rhs.mant);

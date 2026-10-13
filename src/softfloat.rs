@@ -4,6 +4,7 @@ use std::ops::{Add, Div, Mul, Sub};
 
 /// The same portable core, available to the C backend and target ABI tests.
 pub const C_SOURCE: &str = include_str!(concat!(env!("OUT_DIR"), "/softfloat.c"));
+pub const MATH_SOURCE: &str = include_str!(concat!(env!("OUT_DIR"), "/float_math.cpp"));
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -227,10 +228,186 @@ binary_ops!(
     })
 );
 
+macro_rules! transcendental_ops {
+    ($ty:ty, $abi:ty, $unwrap:expr, $wrap:expr, $exp:ident, $ln:ident, $sin:ident, $cos:ident, $tan:ident, $pow:ident) => {
+        extern "C" {
+            fn $exp(a: $abi) -> $abi;
+            fn $ln(a: $abi) -> $abi;
+            fn $sin(a: $abi) -> $abi;
+            fn $cos(a: $abi) -> $abi;
+            fn $tan(a: $abi) -> $abi;
+            fn $pow(a: $abi, b: $abi) -> $abi;
+        }
+        impl $ty {
+            pub fn exp(self) -> Self {
+                ($wrap)(unsafe { $exp(($unwrap)(self)) })
+            }
+            pub fn ln(self) -> Self {
+                ($wrap)(unsafe { $ln(($unwrap)(self)) })
+            }
+            pub fn sin(self) -> Self {
+                ($wrap)(unsafe { $sin(($unwrap)(self)) })
+            }
+            pub fn cos(self) -> Self {
+                ($wrap)(unsafe { $cos(($unwrap)(self)) })
+            }
+            pub fn tan(self) -> Self {
+                ($wrap)(unsafe { $tan(($unwrap)(self)) })
+            }
+            pub fn pow(self, exponent: Self) -> Self {
+                ($wrap)(unsafe { $pow(($unwrap)(self), ($unwrap)(exponent)) })
+            }
+        }
+    };
+}
+transcendental_ops!(
+    Binary128,
+    Binary128,
+    |v| v,
+    |v| v,
+    fwp_f128_exp,
+    fwp_f128_ln,
+    fwp_f128_sin,
+    fwp_f128_cos,
+    fwp_f128_tan,
+    fwp_f128_pow
+);
+transcendental_ops!(
+    Binary16,
+    u16,
+    |v: Binary16| v.0,
+    Binary16,
+    fwp_f16_exp,
+    fwp_f16_ln,
+    fwp_f16_sin,
+    fwp_f16_cos,
+    fwp_f16_tan,
+    fwp_f16_pow
+);
+transcendental_ops!(
+    BFloat16,
+    u16,
+    |v: BFloat16| v.0,
+    BFloat16,
+    fwp_bf16_exp,
+    fwp_bf16_ln,
+    fwp_bf16_sin,
+    fwp_bf16_cos,
+    fwp_bf16_tan,
+    fwp_bf16_pow
+);
+
 #[cfg(test)]
 mod tests {
     use super::Binary128 as Q;
     const ONE: u128 = 0x3fff_0000_0000_0000_0000_0000_0000_0000;
+
+    #[test]
+    fn transcendentals_retain_the_declared_precision_and_range() {
+        use super::{parse_bits, BFloat16 as B, Binary16 as H, FloatFormat::F128};
+        // Independent mathematical constants, with more than binary128 precision.
+        for (actual, decimal) in [
+            (
+                Q::from_f64(1.0).exp(),
+                "2.71828182845904523536028747135266249775724709369995",
+            ),
+            (
+                Q::from_f64(2.0).ln(),
+                "0.69314718055994530941723212145817656807550013436026",
+            ),
+            (
+                Q::from_f64(1.0).sin(),
+                "0.84147098480789650665250232163029899962256306079837",
+            ),
+            (
+                Q::from_f64(1.0).cos(),
+                "0.54030230586813971740093660744297660373231042061792",
+            ),
+            (
+                Q::from_f64(1.0).tan(),
+                "1.5574077246549022305069748074583601730872507723815",
+            ),
+        ] {
+            let expected = parse_bits(decimal, F128).unwrap();
+            assert!(
+                actual.to_bits().abs_diff(expected) <= 1,
+                "{actual:?}: {decimal}"
+            );
+            assert_ne!(actual.to_bits(), Q::from_f64(actual.to_f64()).to_bits());
+        }
+        // Values near one and far beyond binary64's range cannot use host libm.
+        assert_eq!(
+            Q::from_bits(ONE + 1).ln().to_bits(),
+            0x3f8effffffffffffffffffffffffffff
+        );
+        assert_eq!(Q::from_bits(1).sin().to_bits(), 1);
+        assert_eq!(Q::from_bits(1 << 127).sin().to_bits(), 1 << 127);
+        let large = Q::from_f64(1000.0).exp();
+        assert!(large.to_bits() > 0x44000000000000000000000000000000);
+        assert!(large.to_bits() < 0x7fff0000000000000000000000000000);
+        assert!((large.ln().to_bits()).abs_diff(Q::from_f64(1000.0).to_bits()) <= 1);
+        assert_eq!(
+            Q::from_f64(2.0).pow(Q::from_f64(1000.0)).to_bits(),
+            (16383 + 1000) << 112
+        );
+        assert_eq!(H::from_bits(0x3c00).exp().to_bits(), 0x4170);
+        assert_eq!(B::from_bits(0x3f80).exp().to_bits(), 0x402e);
+        assert_eq!(
+            Q::from_f64(-1.0).ln().to_bits(),
+            0x7fff8000000000000000000000000000
+        );
+    }
+
+    #[test]
+    fn sixteen_bit_transcendentals_agree_with_wider_independent_math() {
+        use super::{BFloat16 as B, Binary16 as H};
+        for bits in 0u16..=u16::MAX {
+            for bfloat in [false, true] {
+                let quad = if bfloat {
+                    B::from_bits(bits).to_quad()
+                } else {
+                    H::from_bits(bits).to_quad()
+                };
+                let x = quad.to_f64(); // every half/bfloat value is exact in binary64
+                let reference = [x.exp(), x.ln(), x.sin(), x.cos(), x.tan()];
+                let actual = if bfloat {
+                    let x = B::from_bits(bits);
+                    [
+                        x.exp().to_bits(),
+                        x.ln().to_bits(),
+                        x.sin().to_bits(),
+                        x.cos().to_bits(),
+                        x.tan().to_bits(),
+                    ]
+                } else {
+                    let x = H::from_bits(bits);
+                    [
+                        x.exp().to_bits(),
+                        x.ln().to_bits(),
+                        x.sin().to_bits(),
+                        x.cos().to_bits(),
+                        x.tan().to_bits(),
+                    ]
+                };
+                for (operation, (result, reference)) in
+                    actual.into_iter().zip(reference).enumerate()
+                {
+                    let reference = Q::from_f64(reference);
+                    let expected = if bfloat {
+                        B::from_quad(reference).to_bits()
+                    } else {
+                        H::from_quad(reference).to_bits()
+                    };
+                    let canonical_nan = if bfloat { 0x7fc0 } else { 0x7e00 };
+                    if expected == canonical_nan {
+                        assert_eq!(result, expected, "NaN {bfloat} {bits:04x} {operation}");
+                    } else {
+                        assert!(result.abs_diff(expected) <= 1, "format bfloat={bfloat}, input={bits:04x}, op={operation}, result={result:04x}, expected={expected:04x}");
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn integer_conversion_rounds_once_and_checks_truncated_magnitude() {

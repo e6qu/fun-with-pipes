@@ -84,7 +84,8 @@ main =
 Requirements: Rust (stable) and a C compiler. For TLS (HTTPS, services over
 TLS): OpenSSL 3 (`libssl3`; to build native programs that use it, also
 `libssl-dev`). Optionally, for WebAssembly: clang with a WASI sysroot
-(Debian/Ubuntu: `wasi-libc`, `libclang-rt-18-dev-wasm32`, `lld`) and node.
+(Debian/Ubuntu: `wasi-libc`, `libclang-rt-18-dev-wasm32`,
+`libc++-18-dev-wasm32`, `lld`) and node.
 
 On macOS, install the Xcode command line tools (`xcode-select --install`).
 For TLS, install OpenSSL 3 (`brew install openssl@3`) and set

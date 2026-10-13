@@ -49,6 +49,7 @@ def main():
         licenses.mkdir()
         shutil.copy2(ROOT / 'vendor/softfloat/LICENSE.txt', licenses / 'SoftFloat.txt')
         shutil.copy2(ROOT / 'vendor/gdtoa/LICENSE.txt', licenses / 'gdtoa.txt')
+        shutil.copy2(ROOT / 'vendor/tlfloat/LICENSE.txt', licenses / 'TLFloat.txt')
         assert architecture(compiler) == arch
         source = work / 'smoke.fwp'
         source.write_text('main = range 0 10 | sum | echo\n')
