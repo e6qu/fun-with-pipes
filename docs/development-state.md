@@ -35,40 +35,64 @@ Native I128/U128 workers keep eligible arithmetic and recursive calls unboxed;
 generic boundaries retain typed boxing and release. These changes need runner
 acceptance, as do new wide-worker semantic and reclamation tests.
 
-Focused CI 38399147351 on 250b4c0 passed wide-worker enabled/disabled O1/O2
-semantics and reclamation, State scope rejection unit tests, decoder injected
-cleanup/truncation, legacy float wire bits and iterator forcing-order controls
-on Linux ARM64. It found a leaked TInt display buffer and a State measurement
-whose producer lived outside its consumer callback. Both are corrected. The
-measurement now puts the complete producer chain inside the State handler.
+## Evidence in progress
 
-Numerical CI 38399152455 also found leaked diagnostic formatting scratch in
-the newly admitted CSV corpus. Native allocation backtraces identified the
-TInt and diagnostic buffers; both now write directly into their destination.
-Guarded generated-C probes, using the runner's emitted programs with the exact
-edited runtime text, reclaim all storage for both failing CSV and JSON cases
-(0.66/1.98 CPU seconds, 1.67/4.30 elapsed). This is focused validation, not a
-replacement for current-head production gates.
+PR #133 remains at 08f4231ef9e5ac8fa3a2ad1852495879d47d23e5 while the
+last fixes are measured on temporary branch `ownership-numerics-evidence`.
+Publish that work to the same PR with the final documentation update; do not
+open another PR.
 
-Packed JSON/binary arrays now decode directly into their final payload, with
-partial typed ownership, instead of allocating an intermediate word vector.
-A 257-element binary allocation control and array construction/truncation tests
-cover this. JSON base64 scratch has unconditional unwind cleanup and checked
-size arithmetic. These latest changes still require CI execution.
+- Focused run [38401069936](https://github.com/e6qu/fun-with-pipes/actions/runs/38401069936):
+  all regressions, iterator allocation/instruction controls and inventory pass
+  on all four native platforms. Only the old wide measurement harness failed.
+- Corrected wide run [38402851452](https://github.com/e6qu/fun-with-pipes/actions/runs/38402851452)
+  passes all four platforms at 45ed2ce (compiler/runtime identical to 08f4231).
+  Both wide types reduce 513 requests to 2 and peak charged bytes 4096 to 32,
+  with zero retained storage or collections. The workload uses explicit input,
+  not unproved command-line IO.
+- Numerical run [38401073468](https://github.com/e6qu/fun-with-pipes/actions/runs/38401073468)
+  passes Linux ARM64/AMD64 and ARM macOS; Intel macOS is running. This covers
+  ARC corpus, packed arrays, C/Rust comparisons, AD ownership/workspaces and
+  actual WASI capacity on Linux.
+- Production run [38401077491](https://github.com/e6qu/fun-with-pipes/actions/runs/38401077491)
+  passes bench and ARM macOS GC shard. ARM macOS regular shard found a new
+  packed-array assertion ignoring the unpacked stride; the prepared fix passes
+  all four local packing/optimization probe modes. Other jobs are running.
+  Documentation run 38401077495 passes. No superseded run counts as a gate.
 
-The guarded documentation audit passes: 45 link sets, 106 immutable preparation
-pairs/tags, seven live plan steps and commit subjects. It now validates this
-handoff instead of requiring a retired preparation-branch table. Guarded
-all-target Clippy, test type checking, formatting and edited-runtime C syntax
-checks passed. Full builds, suites and evidence stay on GitHub.
+Prepared fixes also reject malformed binary Trit/TInt values consistently in
+Rust and native decoding, including partial graph cleanup. Overflow diagnostics
+now stay out of hot recursive arithmetic frames. A bounded generated-C ARM64
+probe measured 144 → 32 bytes per wide worker frame with unchanged output;
+runner stack-usage reports are required before generalizing this observation.
 
-PR #133 production CI 38399229957 on 250b4c0 has a passing benchmark job;
-other jobs are running and known corpus/doc failures are fixed in the working
-tree. No previous, skipped or superseded run is the final merge gate.
+Linux ARM64 1000-element iteration requests: fold 6005 → 6, State each 7009 → 8,
+map/filter/fold 9511 → 6. All preserve raw interpreter output and collect zero
+times. The measurements include CLI/printing overhead and retain 64 charged
+bytes from unproved command-line boundaries; they are not ARC reclamation claims.
+ARM64 disassembly shows checked arithmetic in registers with no allocation or
+indirect tail call inside the count/fold loop. Allocation source/hash, hardware,
+flags, live-memory and instruction artifacts accompany the run.
 
-Next: publish the batched fixes; finish the four-platform focused and numerical
-reports, fix any remaining failures, and inspect native instruction artifacts.
-Update the PR and handoff with actual results, require all seven production jobs
-plus docs on the final head, then squash merge with the prescribed one-line
-subject and empty body. Unsupported cycles and foreign/external protocol
-contexts remain explicit ARC exclusions.
+AD warm 129/257-leaf workspace calls allocate no native buffers; each returned
+gradient array allocates once (1040/2064 requested bytes). Oversized workspaces
+release rather than remain cached. Equivalent ARM64 array C/Rust/fwp kernel
+medians were 312822/321766/776215 ns; matrix medians 562299/779478/555891 ns.
+These are scoped shared-runner measurements, not universal parity claims.
+
+The earlier CSV/JSON/TInt corpus leaks are fixed. Bounded generated-C probes
+reclaimed all charged storage after direct destination formatting. Decoder
+arrays now fill final packed storage directly, with 257-element one-allocation
+and partial cleanup/truncation controls. Guarded lint/type/format/C syntax and
+roadmap checks passed. Latest bounded commands: `cargo clippy --all-targets --
+-D warnings`, `cargo fmt --all -- --check`, Python AST parsing of
+`scripts/measure-wide.py`, and the generated-C packed/protocol probe, all through
+`python3 scripts/local-guard.py`, passed. Local target data is 112 MiB; free disk about 104 GiB.
+
+Next: run bundle evidence on the prepared fixes, collect remaining production
+failures and address them. Inspect native instructions and stack reports. Update the final plan/history/PR,
+publish the prepared measurement fix and final docs together, then require all
+seven production jobs plus docs on that final head before squash merge.
+Use one explicit subject of at most 80 characters and an empty commit body.
+Unsupported cycles, foreign/external protocol contexts, true half/quad float
+implementation and Windows remain outside this bundle's scope.

@@ -224,3 +224,27 @@ fn legacy_float_formats_keep_v1_widths_and_ieee_payload_bits() {
         }
     }
 }
+
+#[test]
+fn ternary_wire_values_must_fit_the_declared_type() {
+    let prog = program();
+    let trit = MT::con("std::Trit");
+    for byte in 0_u8..=255 {
+        let bytes = [byte];
+        let decoded = proto::decode(&mut proto::Reader::new(&bytes), &trit, &prog);
+        assert_eq!(decoded.is_ok(), matches!(byte, 0 | 1 | 255));
+    }
+    for width in [0, 1, 3, 40] {
+        let ty = MT::Con("std::TInt".into(), vec![MT::Nat(width)]);
+        let max = ((3_i128.pow(width as u32) - 1) / 2) as i64;
+        for value in [i64::MIN, -max - 1, -max, 0, max, max + 1, i64::MAX] {
+            let bytes = value.to_le_bytes();
+            let decoded = proto::decode(&mut proto::Reader::new(&bytes), &ty, &prog);
+            assert_eq!(
+                decoded.is_ok(),
+                (-max..=max).contains(&value),
+                "{width}/{value}"
+            );
+        }
+    }
+}

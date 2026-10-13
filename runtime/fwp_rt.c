@@ -406,7 +406,8 @@ static V fwp_p_trap(V msg) {
     return 0;
 }
 
-static void fwp_trap_overflow(const char *ty) {
+/* Keep the diagnostic buffer out of hot arithmetic and recursive frames. */
+static __attribute__((cold, noinline)) void fwp_trap_overflow(const char *ty) {
     char buf[96];
     snprintf(buf, sizeof buf, "arithmetic overflow in %s", ty);
     fwp_trap(buf);

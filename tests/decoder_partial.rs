@@ -15,10 +15,10 @@ fn typed_decoder_cleanup_survives_every_injected_construction_exit() {
     std::fs::write(
         &input,
         r#"
-Row = { name: String, items: List[String], packed: Array[String] }
+Row = { name: String, items: List[String], packed: Array[String], sign: Trit }
 read : String -> Result[Row, String]
 read = json.read
-main = "{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"]}" | read | echo
+main = "{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"],\"sign\":0}" | read | echo
 "#,
     )
     .unwrap();
@@ -43,8 +43,8 @@ main = "{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"]
 static int decode_recover(void) {{ return 1; }}
 int main(void) {{
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
-    V text=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"]}}");
-    V invalid=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",3],\"packed\":[\"a\",\"b\"]}}");
+    V text=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"],\"sign\":0}}");
+    V invalid=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",3],\"packed\":[\"a\",\"b\"],\"sign\":0}}");
     intptr_t budget=fwp_gc.budget;
     jmp_buf trap; fwp_trap_jb=&trap; fwp_trap_cleanup=0; fwp_trap_recover=decode_recover;
     decode_probe_at=0; decode_probe_step=0;
@@ -70,6 +70,11 @@ int main(void) {{
         if(ok) row->drop(value);
         if(fwp_cleanups || fwp_gc.budget!=budget) return 197;
     }}
+    if(row->fields[row->n-1]->kind!=K_TRIT) return 198;
+    wire.d[wire.len-1]=2;
+    fwp_rd malformed={{(const unsigned char *)wire.d,wire.len,0}}; V rejected=0;
+    if(fwp_decode(&malformed,row,&rejected)) return 199;
+    if(fwp_cleanups || fwp_gc.budget!=budget) return 197;
     free(wire.d);
     result=fwp_p_json_read(invalid,{descriptor});
     if(fwp_tag(result)!=1) return 194;

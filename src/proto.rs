@@ -231,8 +231,27 @@ pub fn decode(r: &mut Reader, mt: &MT, prog: &Program) -> Result<Value, String> 
             "U128" => Value::U128(u128::from_le_bytes(r.arr()?)),
             "F32" | "F16" | "BF16" => Value::F32(f32::from_bits(u32::from_le_bytes(r.arr()?))),
             "F64" | "F128" => Value::F64(f64::from_bits(u64::from_le_bytes(r.arr()?))),
-            "TInt" => Value::TInt(i64::from_le_bytes(r.arr()?)),
-            "Trit" => Value::Trit(r.take(1)?[0] as i8),
+            "TInt" => {
+                let Some(MT::Nat(width)) = args.first() else {
+                    return Err("invalid TInt width".into());
+                };
+                if *width > crate::value::TINT_MAX_WIDTH {
+                    return Err("invalid TInt width".into());
+                }
+                let value = i64::from_le_bytes(r.arr()?);
+                let max = (3_i128.pow(*width as u32) - 1) / 2;
+                if (value as i128).abs() > max {
+                    return Err("TInt value out of range".into());
+                }
+                Value::TInt(value)
+            }
+            "Trit" => {
+                let value = r.take(1)?[0] as i8;
+                if !(-1..=1).contains(&value) {
+                    return Err("Trit value out of range".into());
+                }
+                Value::Trit(value)
+            }
             "String" => {
                 let n = usize::try_from(r.leb128()?).map_err(|_| "truncated value")?;
                 let b = r.take(n)?;

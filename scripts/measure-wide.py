@@ -53,9 +53,20 @@ main = 256{suffix} | sum-wide | echo
             profile.write_text(iteration.instrument(code))
             commands = []
             for path, executable in ((cfile, out / label), (profile, out / (label + '-profile'))):
-                command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w', path, '-o', executable, '-lm', '-lpthread']
-                run(command, env)
-                commands.append(list(map(str, command)))
+                obj = executable.with_suffix('.o')
+                compile_command = [cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-fstack-usage', '-w', '-c', path, '-o', obj]
+                link_command = [cc, obj, '-o', executable, '-lm', '-lpthread']
+                for command in (compile_command, link_command):
+                    run(command, env)
+                    commands.append(list(map(str, command)))
+            stack_usage = []
+            for line in (out / (label + '.su')).read_text().splitlines():
+                location, size, qualifier = line.split('\t')
+                function = location.rsplit(':', 1)[-1]
+                if function.startswith('fwp_wide'):
+                    stack_usage.append(dict(function=function, bytes=int(size), qualifier=qualifier))
+            if enabled == '1':
+                assert stack_usage, 'recursive native worker must retain stack evidence'
             samples = []
             for _ in range(5):
                 start = time.perf_counter_ns()
@@ -73,13 +84,14 @@ main = 256{suffix} | sum-wide | echo
             results[label] = dict(output=reference, counters=counters, commands=commands,
                 processWallNs=samples, medianProcessWallNs=statistics.median(samples),
                 sourceSha256=hashlib.sha256(source.read_bytes()).hexdigest(),
-                generatedSha256=hashlib.sha256(cfile.read_bytes()).hexdigest(), nativeWorkers=len(workers))
+                generatedSha256=hashlib.sha256(cfile.read_bytes()).hexdigest(), nativeWorkers=len(workers),
+                nativeWorkerStack=stack_usage)
         assert results[suffix + '-native']['counters']['requests'] < results[suffix + '-boxed']['counters']['requests']
     report = dict(head=run(['git', 'rev-parse', 'HEAD']).stdout.strip(), hardware=platform.uname()._asdict(),
         cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
         cc=run([cc, '--version']).stdout, rustc=run(['rustc', '--version', '--verbose']).stdout,
         elements=256, results=results,
-        scope='Equivalent checked arithmetic with worker lowering enabled/disabled. Fixed 256-element source workload. Process timings include startup and output; no speed threshold. Separate instrumented binaries count managed requests, retains and charged live storage, excluding allocator metadata. Native disassembly and symbols are retained. No universal C/Rust parity claim.')
+        scope='Equivalent checked arithmetic with worker lowering enabled/disabled. Fixed 256-element source workload. Process timings include startup and output; no speed threshold. Separate instrumented binaries count managed requests, retains and charged live storage, excluding allocator metadata. Native disassembly, symbols and compiler stack-usage reports are retained. Stack figures describe one invocation, not total recursive depth. No universal C/Rust parity claim.')
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: r['counters'] for name, r in results.items()}, indent=2))
 

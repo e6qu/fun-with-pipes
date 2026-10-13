@@ -427,13 +427,21 @@ static int fwp_decode_inner(fwp_rd *r, const fwp_desc *d, V *out, fwp_decode_fie
     case K_I8: if (!rd_le(r, 1, &x)) return 0; *out = (V)(int64_t)(int8_t)x; return 1;
     case K_I16: if (!rd_le(r, 2, &x)) return 0; *out = (V)(int64_t)(int16_t)x; return 1;
     case K_I32: if (!rd_le(r, 4, &x)) return 0; *out = (V)(int64_t)(int32_t)x; return 1;
-    case K_U8: case K_U16: case K_U32: case K_U64: case K_I64: case K_F32: case K_F64: case K_TINT: {
+    case K_U8: case K_U16: case K_U32: case K_U64: case K_I64: case K_F32: case K_F64: {
         int k = d->kind == K_U8 ? 1 : d->kind == K_U16 ? 2 : (d->kind == K_U32 || d->kind == K_F32) ? 4 : 8;
         if (!rd_le(r, k, &x)) return 0;
         *out = x;
         return 1;
     }
-    case K_TRIT: if (!rd_le(r, 1, &x)) return 0; *out = (V)(int64_t)(int8_t)x; return 1;
+    case K_TINT: {
+        if (d->width < 0 || d->width > 40 || !rd_le(r, 8, &x)) return 0;
+        i128 value = (int64_t)x, max = fwp_tint_max(d->width);
+        if (value < -max || value > max) return 0;
+        *out = x; return 1;
+    }
+    case K_TRIT:
+        if (!rd_le(r, 1, &x) || (x != 255 && x > 1)) return 0;
+        *out = (V)(int64_t)(int8_t)x; return 1;
     case K_I128: case K_U128: {
         uint64_t lo, hi;
         if (!rd_le(r, 8, &lo) || !rd_le(r, 8, &hi)) return 0;
