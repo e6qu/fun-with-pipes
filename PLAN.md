@@ -41,8 +41,8 @@ ownership and compiler performance. Each combination needs actual compiler/inter
 generated-program execution, runtime/ABI and dependency validation, ownership/GC
 stress and reuse checks, and an independently usable binary. Cross-build or
 emulated checks alone do not establish full native acceptance. Extend CI as
-platforms are implemented; the existing six jobs do not cover this six-target
-matrix. Cross-compilation between every host/target pair is not implied.
+platforms are implemented; the seven production jobs cover Linux/macOS, not the deferred Windows
+combinations. Cross-compilation between every host/target pair is not implied.
 
 ## Delivered
 
@@ -105,7 +105,7 @@ selectors without new runtime semantics.
 ## Delivery and validation
 
 [AGENTS.md](AGENTS.md) retains the standing authorization and workflow: coherent
-bundles, one PR at a time, fix encountered failures, all six exact-head CI jobs
+bundles, one PR at a time, fix encountered failures, all seven exact-head CI jobs
 plus documentation audit before squash, one-line commit messages of at most
 80 characters without bodies or trailers. Keep the handoff current; delete
 obsolete next actions instead of accumulating competing plans.

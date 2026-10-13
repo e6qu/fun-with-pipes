@@ -125,7 +125,20 @@ static int fwp_arith_raw(int k, int op, V a, V b, int w, V *out, int *err) {
         switch (op) {
         case OP_ADD: ovf = __builtin_add_overflow(x, y, &r); break;
         case OP_SUB: ovf = __builtin_sub_overflow(x, y, &r); break;
-        case OP_MUL: ovf = __builtin_mul_overflow(x, y, &r); break;
+        case OP_MUL: {
+            /* Unsigned magnitudes include I128_MIN without signed negation.
+             * Clang's signed overflow builtin can require __muloti4, absent
+             * from libgcc on Linux ARM64; unsigned overflow lowers directly. */
+            int negative = (x < 0) != (y < 0);
+            u128 ax = x < 0 ? (u128)0 - (u128)x : (u128)x;
+            u128 ay = y < 0 ? (u128)0 - (u128)y : (u128)y;
+            u128 product;
+            ovf = __builtin_mul_overflow(ax, ay, &product);
+            u128 limit = ((u128)1 << 127) - (u128)!negative;
+            ovf |= product > limit;
+            r = (i128)(negative ? (u128)0 - product : product);
+            break;
+        }
         case OP_DIV: if (x == mn && y == -1) ovf = 1; else r = x / y; break;
         default: if (x == mn && y == -1) ovf = 1; else r = x % y;
         }

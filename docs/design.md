@@ -385,7 +385,9 @@ cover the private buffers separately from the managed result array.
 ## Checked native ARC execution
 
 The `fwp build --gc arc` mode admits immutable typed value graphs and
-scoped File owners whose compiler/runtime ownership contracts are established.
+scoped File owners, counted I128/U128 leaves and CSV parse trees whose
+compiler/runtime ownership contracts are established. The handoff distinguishes
+current implementation from accepted production gates.
 The checker visits monomorphic function/local types, ownership temporaries and
 primitive boundaries after reference-count insertion.
 Ordinary calls, records, variants, captured functions and numeric containers keep
@@ -402,11 +404,14 @@ released value storage returns to that allocator. Reserved pages and permanent
 program constants are separate from live temporary values.
 
 Eligibility excludes unproved mutable/cyclic runtime graphs, retained callbacks,
-raw pointers, raw reverse-mode tape tokens, boxed I128/U128 without counted
-owners, unchecked user native declarations, foreign/remote calls and unmodeled
-shared results. Native symbol names alone do not establish ownership signatures. Raw AD tokens need a scope proof in addition to their scalar
-representation; the normal numerical runtime retains the phase4 scoped AD
-workspace implementation. The initial checked mode supports native main programs;
+raw pointers, unscoped reverse-mode operations, unchecked user native declarations,
+foreign/remote calls and unmodeled shared results. Native symbol names alone do
+not establish ownership signatures. A finite closure-flow analysis proves that
+executed ad.tape/ad.push/ad.backward calls occur under ad.scope/ad.scope2. It
+tracks partial applications, returned callbacks and functions inside containers;
+ambiguous targets are rejected. Function names confer no exemption. Arguments
+evaluate before the scope callback, and escaped tokens retain stale-token checks.
+Scoped gradients use the same bounded workspace and exceptional cleanup. The initial checked mode supports native main programs;
 WebAssembly, executable protocol, library and service boundaries diagnose as
 unsupported. `--gc tracing` explicitly selects the existing compatibility mode;
 no ARC rejection silently selects it. The handoff records production acceptance.
@@ -449,7 +454,7 @@ error. See [protocol.md](protocol.md).
 
 - General execution without tracing GC. Checked native ARC supports the proved
   ownership subset; unproved reconstructed graphs, retained runtime/foreign
-  contexts, cycles, boxed I128/U128 and raw reverse-mode tapes remain outside it.
+  contexts, cycles and unproved AD lifetimes remain outside it.
   [Ownership](ownership.md) specifies coverage and numeric representation limits;
   [PLAN](../PLAN.md) records the remaining efficiency gaps. C structs alone do
   not guarantee registers.

@@ -35,11 +35,16 @@ unsigned : I64 -> U128
 unsigned = from-int
 signed-result : Option[I128] -> Option[I128]
 signed-result = id
+products : I128 -> (Option[I128], Option[I128], Option[I128], (I128, Bool))
+products = make { 0 = checked.mul -170141183460469231731687303715884105728i128,
+    1 = checked.mul 170141183460469231731687303715884105727i128,
+    2 = checked.mul -7i128, 3 = overflowing.mul -170141183460469231731687303715884105728i128 }
 work : I128 -> (I128, I128, I128, Option[I128], (I128, Bool))
 work = make { 0 = add 2i128 | mul 3i128, 1 = neg | abs, 2 = abs,
     3 = checked.add 3i128, 4 = overflowing.mul 2i128 }
 main = [
     range 0 129 | map (signed | work | show) | length | echo,
+    range -3 4 | map (signed | products | show) | echo,
     range 0 129 | map (unsigned | add 1u128 | bit.shl 65 | show) | length | echo,
     range 0i128 33i128 | array.from-list | both id array.to-list | show | string.length | echo,
     range 0u128 33u128 | map (max 3u128 | min 30u128) | show | echo,

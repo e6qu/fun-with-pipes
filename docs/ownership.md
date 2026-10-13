@@ -43,7 +43,7 @@ allocations before counting is needed.
 
 | Category | Current treatment | Boundary |
 |---|---|---|
-| Scalars and nullary variants | Inline words; direct numeric workers use concrete C types | Boxed I128/U128 remain outside checked ARC |
+| Scalars and nullary variants | Inline words; direct numeric workers use concrete C types | I128/U128 use counted 16-byte boxes |
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Return aliases preserve field ownership; target C ABI selects registers or caller storage |
 | Arrays, maps, sets | Typed counted storage, numeric views and unique updates | ARC requires proved primitive argument/result contracts |
 | Strings and bytes | Proved copy/alias results count owners; leaf destruction frees storage | Unmodeled result families remain tracing boundaries |
@@ -107,10 +107,12 @@ requirements at unproved boundaries, which checked native ARC explicitly rejects
 | Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
-The accepted PR124 inventory verifies375 declarations resolving to365
-runtime symbols after40 aliases:168 explicit contracts,19 ordinary IR combinators,
-11 flat scalar signatures and177 review declarations representing167 symbols.
-This includes typed State, internal ad.scope/ad.scope2 and14 fresh codec leaves.
+The current inventory verifies 375 declarations resolving to 365 runtime symbols
+after 40 aliases: 204 explicit contracts, 19 ordinary IR combinators, 11 flat
+scalar signatures and 141 review declarations representing 131 symbols. The
+immutable baseline retains the original classification; exact promotion checks
+cover the 36 CSV/numeric additions. This includes typed State, internal
+ad.scope/ad.scope2 and 14 fresh codec leaves.
 These counts classify boundaries rather than heap objects or bugs. Full production
 acceptance is recorded in [the handoff](development-state.md).
 Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
@@ -311,9 +313,9 @@ lifetimes, shared graph ownership or general execution without tracing.
 
 ## Ownership coverage
 
-Phase2 is accepted against the actual merged source recorded in the handoff.
-All375 declarations are inventoried:168 contracts,19 IR combinators,11 flat
-signatures and177 explicit fallback declarations/167 symbols. Their argument,
+The handoff separates accepted phase 2 evidence from the active extensions.
+All 375 declarations are inventoried: 204 contracts, 19 IR combinators, 11 flat
+signatures and 141 explicit review declarations/131 symbols. Their argument,
 result, callback, retention, teardown and cycle policies are checked against the
 compiler and runtime. This establishes the documented compatibility model.
 
@@ -372,8 +374,27 @@ runtime types and owner boundaries fail eligibility instead of acquiring an
 implicit lifetime or tracing path. Existing unchecked `FWP_GC=off` diagnostics
 remain available in tracing-mode builds; they do not establish ARC eligibility.
 
-ARC eligibility also rejects boxed I128/U128 until their representation has counted
-owners. User native declarations cannot acquire a checked signature merely by
+I128/U128 have typed counted leaf owners. Numeric constructors and arithmetic
+adopt fresh boxes; abs/min/max retain selected input aliases; checked and
+overflowing results own their nested boxes. Range owns both the current element
+and completed spine while constructing it. Array/list/record copies retain wide
+aliases and destructors release them. Width, checked overflow and word-slot
+representation are unchanged.
+
+CSV parse-with builds counted String leaves and nested list spines directly.
+Registered cleanup owns pending fields, partial rows and scratch buffers through
+traps. Private spines reverse in place before ownership transfers to the caller.
+This contract applies to csv.parse and csv.parse-with, not typed csv.decode,
+JSON or protocol reconstruction.
+
+Scoped AD eligibility additionally proves callback reachability under a scope;
+unknown call targets and unscoped raw operations are rejected. Returned scalar
+tokens cannot keep a tape alive after its scope; stale use still traps. Cold/warm
+workspace controls count native buffers separately from managed gradient arrays.
+Normal/trap/cancellation cleanup and omission controls run with tracing enabled
+and compiled out. The active handoff records completed and pending validation.
+
+User native declarations cannot acquire a checked signature merely by
 naming a standard primitive. Eligibility checks the locals introduced by ownership
 lowering as well as source-derived types. Fusion registers synthesized variant
 fields, and inlining retains types for constructed and compile-time aggregates.

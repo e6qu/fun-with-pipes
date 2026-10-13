@@ -17,8 +17,9 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe accepted main through PR #125. Arrays, maps and sets own typed elements.
-The finite review records explicit compatibility fallbacks; [the queue](roadmap-queue.md) retains delivered preparation anchors.
+The tables describe current contracts. [The handoff](development-state.md)
+distinguishes implemented extensions from accepted production evidence. Arrays,
+maps and sets own typed elements; the finite review records unproved boundaries.
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
@@ -38,7 +39,7 @@ The finite review records explicit compatibility fallbacks; [the queue](roadmap-
 Array destruction releases typed children before outer storage; views release
 their retained backing owner at the last reference. Nested views flatten their
 backing owner, and small slices copy to limit retention. Scalar fields
-are skipped; boxed128-bit payloads retain their compatibility lifetime. Immutable
+are skipped; boxed I128/U128 payloads have typed leaf owners. Immutable
 updates preserve live aliases. Unmodeled callbacks retain explicit sharing and conservative roots.
 
 | Map/set primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -60,8 +61,8 @@ Comparison-only keys never escape into fwp_map_find or structural fwp_cmp;
 these functions read values, allocate nothing and invoke no user callbacks.
 Their wrappers omit fwp_rc_share(key). Typed destruction releases keys/elements
 before buffers and outer storage. Copies retain aliases; replacement/removal
-releases displaced owners. Scalar payloads are skipped and boxed128-bit values
-retain their compatibility lifetime. Ordering, key identity and immutable
+releases displaced owners. Scalar payloads are skipped; boxed I128/U128 values
+retain and release typed leaf references. Ordering, key identity and immutable
 aliases are preserved. Unmodeled callbacks retain explicit sharing and conservative roots.
 
 ## Registered unwind cleanup
@@ -70,20 +71,18 @@ The merged runtime cleanup stack releases registered owners and scoped files in
 LIFO order before failure, trap or cancellation invalidates their frames. It
 stops at the catching handler boundary; task switches preserve separate chains.
 Normal transfer unlinks registrations without releasing a transferred value.
-Compiler caller/reuse-token and runtime application/capture-preparation cleanup
-are merged through PR107 after all exact-head gates. Selected compiler, runtime and synchronous callback registrations are accepted
-through PR124. Unmodeled runtime boundaries retain compatibility roots; this is not
+Compiler caller/reuse-token, runtime application/capture preparation and
+synchronous callback registrations preserve partially acquired owners. Unmodeled runtime boundaries retain compatibility roots; this is not
 complete exceptional ownership or tracing-free support.
 
 ## Conservative reconstruction and external boundaries
 
-Accepted PR124 inventories375 declarations,365 runtime symbols and40 aliases:
-168 ownership contracts,19 combinators lowered to ordinary IR,11 flat scalar
-signatures and177 review declarations covering167 symbols. Scalar signatures can
-still allocate external state; descriptor availability does not prove counted
-ownership of a reconstructed graph. The declaration audit passes all production
-gates. The finite fallback classification passes against the actual accepted source;
-the handoff records its exact gates and acceptance proof.
+The current inventory has 375 declarations, 365 runtime symbols and 40 aliases:
+204 ownership contracts, 19 ordinary IR combinators, 11 flat scalar signatures
+and 141 review declarations covering 131 symbols. Promotion checks preserve the
+immutable original baseline and verify each new numeric/CSV contract. Scalar
+signatures can still allocate external state; descriptors alone cannot establish
+counted reconstruction. The handoff records validation of the current revision.
 
 Unknown primitive, foreign and remote boundaries keep explicit sharing in
 [src/ownership.rs](../src/ownership.rs). The finite review records argument,
@@ -92,7 +91,9 @@ boundary; it does not establish tracing-free eligibility.
 
 | Boundary | Current lifetime policy |
 |---|---|
-| JSON/CSV/protocol and descriptor decoding | Reconstructed or cached graphs retain compatibility roots; typed child transfer and partial-construction ownership require explicit contracts |
+| JSON/typed CSV/protocol and descriptor decoding | Reconstructed or cached graphs retain compatibility roots; typed child transfer and partial-construction ownership require explicit contracts |
+| csv.parse / csv.parse-with | Counted String leaves and nested list spines; registered pending-field, partial-row and scratch cleanup; private spine reversal transfers existing owners |
+| Numeric I128/U128 results | Fresh leaf/aggregate ownership or explicitly retained selected aliases; scalar results remain inline |
 | Remote values and memoized decoding | Preserve retained context/cache owners and independent reader aliases; scratch cleanup alone does not count decoded nodes |
 | Foreign values and retained callbacks | Keep explicit sharing unless host lifetime and teardown are proved |
 | list.flat-map and list.ap | Borrow typed synchronous inputs, adopt owned callback results and own copied spines; partial results, scratch and unwind cleanup pass PR124 controls |
@@ -101,10 +102,8 @@ boundary; it does not establish tracing-free eligibility.
 
 Channel close preserves queued values. Explicit drain breaks the tested counted
 cycle, while unreachable shared cycles still need tracing. Preserve callback,
-trap and task ordering when extending contracts. Phase2 verifies this documented
-compatibility model. Checked native ARC separately enforces its proved eligibility
-and cycle policy, rejecting these unproved shared boundaries. Older373-declaration classifications and prepared-only notes
-are archived in history rather than supplying current priorities.
+trap and task ordering when extending contracts. The finite review classifies this compatibility model. Checked native ARC separately enforces its proved eligibility
+and cycle policy, rejecting unproved shared boundaries.
 
 ## Complete runtime sharing
 
@@ -118,10 +117,8 @@ counts while recursing. Large fanout no longer forces automatic sharing.
 
 Eligible counted storage reclaims at last release at any age. Returning a cell
 clears old marks; verification clears stale child words before linking the free
-slot. In-place record reuse/updates retain their young-cell restriction. Shared
-runtime graphs remain on tracing. PR101 passed all six production gates and the
-documentation audit; the tracing churn fixture explicitly disables both counted
-freeing and reuse so real collection remains tested.
+slot. In-place record reuse/updates retain their young-cell restriction. Shared runtime graphs remain on tracing. The tracing churn fixture explicitly
+disables both counted freeing and reuse so real collection remains tested.
 
 ## Selected String/Bytes boundaries
 
@@ -221,34 +218,23 @@ FreshTree requires every reachable allocation to be new and independently owned.
 None needs no allocation. These contracts preserve aliasing and immutable values;
 they do not establish complete exception or retained-callback ownership.
 
-Merged repeat borrows value/count and retains each typed alias in fresh
-counted list nodes. Range borrows bounds and owns fresh counted nodes. Scalar
-words are never counted as pointers; boxed128-bit payloads retain the shared
-compatibility lifetime. Full six-job acceptance is recorded in the handoff.
-
-Merged arrays own typed elements. Get and copies retain aliases; map/generate
-adopt callback results; fold consumes its accumulator; set/push consume the
-container while preserving immutable aliases. Scalar bits are never treated as
-pointers. PR99 passed all six platform and GC gates.
-
-Merged maps/sets own typed keys/elements. Construction and copies retain aliases;
-lookup returns an owned Option; updates consume the container and release
-displaced owners. Synchronous callbacks borrow values and adopt results. PR100
-passed all six production gates and the documentation audit.
+Repeat borrows value/count and retains each typed alias in fresh counted list
+nodes. Range borrows bounds and owns fresh nodes and wide numeric elements;
+pending elements and completed spines release on unwind. Scalar words never
+select reference destructors.
 
 ## Accepted ownership review
 
-The finite177-declaration/167-symbol fallback review passes against the actual
-merged source. All168 explicit contracts and remaining IR/flat boundaries are
-inventoried. Original preparation and accepted binary/GC/reuse/omission controls
-are retained in history and the immutable queue. Natural-width numeric
-representation is accepted. Checked native ARC has a separate eligibility
-contract in [ownership](ownership.md); no blanket no-GC claim is established.
+The immutable baseline and exact contract promotions distinguish counted
+boundaries from reviewed tracing requirements. Preparation and historical
+binary/GC/reuse/omission controls remain in [history](roadmap-history.md).
+Checked native ARC has a separate [eligibility contract](ownership.md); no
+blanket no-GC claim is established.
 
 ## Validation and limits
 
-Merged contracts and the finite coverage review passed their exact-head full
-platform gates and actual merged-source acceptance. Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
+The handoff records the exact source and gates accepted for each delivery.
+Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,
 GC stress/verification and reuse poisoning. The interpreter/native comparison
 includes observable callback and trap order.
@@ -257,10 +243,5 @@ Detailed tests, failed controls, allocation/count measurements and compiler/
 hardware settings are preserved in
 [history](roadmap-history.md#archived-primitive-contract-notes-through-queue18).
 They are scoped reclamation evidence, not blanket speed, register-placement or
-no-GC claims. Dead projected fields, retained callbacks, exception/cancellation,
-unknown runtime boundaries and cycle policy remain part of phase2 acceptance.
-
-Merged scan/iterate boundaries borrow callbacks and inputs, own initial stored
-aliases and adopt subsequent callback results. Scratch storage is released
-after the state sequence is built. Unmodeled retained/runtime callbacks keep
-explicit sharing and conservative roots.
+no-GC claims. Retained callbacks, exception/cancellation, unknown runtime boundaries and
+cycles remain explicit acceptance concerns.

@@ -10,7 +10,7 @@ one binary per OS/architecture. Windows is desired but deferred on both
 architectures; prioritize Linux/macOS, ownership and compiler performance.
 Universal binaries are not an objective. Native macOS ARM64/AMD64 support is
 accepted; Linux ARM64 has cross-build/QEMU coverage but full native acceptance
-remains to establish. The existing six CI jobs do not prove all six targets.
+remains to establish. The expanded seven-job matrix covers Linux/macOS; Windows remains untested.
 
 ## Accepted source and gates
 
@@ -128,7 +128,12 @@ wide numeric reclamation, scoped gradients, iterator effects/forcing controls
 and the eligible ARC golden corpus. The prior 2,064-byte overflowing-arithmetic
 leak is fixed. The sole macOS ARM failure was an ill-typed returned-callback
 rejection fixture, corrected for the next run; it did not test scope rejection.
-Other runners are still executing; no bundle acceptance is claimed.
+Preflight 38370736725 at `6feb659` passes on Linux AMD64 and macOS ARM,
+including scope return/escape/trap/cancellation controls and traced/ARC cold/warm
+workspace profiles. Linux ARM finds Clang/libgcc missing __muloti4 for signed
+I128 overflow multiplication. The next revision computes signed overflow via
+unsigned magnitudes and adds dynamic sign/extreme-value controls. Intel macOS
+is still running. No bundle acceptance is claimed.
 
 The ARM report shows 4,003 allocation requests for both fold and map/filter/fold
 at 1,000 elements (baseline 6,005/9,511). Generated loop workers flatten state

@@ -12,8 +12,14 @@ The accepted roadmap measurements are recorded in:
 Reports distinguish preparation measurements from production acceptance.
 [History](roadmap-history.md) indexes accepted gates; [the handoff](development-state.md)
 records the latest tested source. These results do not establish universal C/Rust
-parity. New iterator/state combinators still need a current-head allocation and
-machine-code baseline, as recorded in [PLAN](../PLAN.md).
+parity. Iterator measurements use the current compiler, dynamic input and paired
+consumer-fusion controls. `scripts/measure-iteration.py` retains generated C,
+native instructions, allocation/retain counts, charged live storage and separate
+process timings on each Linux/macOS architecture. Timing includes startup and
+output; it is not kernel throughput. Producer Yield values and lazy tail closures
+still allocate. Fold-until and map-accum remain measured controls, without a
+claimed allocation improvement. The [handoff](development-state.md) records the
+measurement revisions and final acceptance gates.
 
 ## Running comparisons
 

@@ -64,10 +64,10 @@ representation choices and limits explicit and justify them.
   compiler, flags, allocations and live memory as well as elapsed time.
 - Every commit message is exactly one line, at most 80 characters, with no
   body, trailers or AI attribution. Use ordinary Git author metadata.
-  When authorized to merge, require all six exact-head jobs (Linux, bench,
-  regular ARM/Intel macOS and GC stress ARM/Intel) and squash-merge with an
+  When authorized to merge, require all seven exact-head jobs (Linux ARM64/AMD64,
+  bench, regular ARM/Intel macOS and GC stress ARM/Intel) and squash-merge with an
   explicitly supplied subject and empty body.
-  Extend required gates for the expanded platform matrix as support lands;
-  the existing six jobs do not establish Windows or native Linux ARM64 acceptance.
+  Require the documentation audit too. Windows remains deferred; these jobs
+  do not establish Windows support.
 
 Repository conventions and test locations are in [CONTRIBUTING.md](CONTRIBUTING.md).
