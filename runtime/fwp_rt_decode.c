@@ -6,6 +6,8 @@ typedef struct {
     size_t count, types;
     const fwp_desc *const *descs;
     const fwp_desc *element;
+    V aggregate;
+    const fwp_desc *aggregate_type;
     const fwp_desc *local_types[2];
     int active;
     void *scratch;
@@ -22,6 +24,9 @@ static void fwp_decode_fields_release(void *arg) {
         const fwp_desc *d = fwp_decode_field_type(f, i);
         if (d && d->drop) d->drop(f->values[i]);
     }
+    if (!f->transferred && f->aggregate_type && f->aggregate_type->drop)
+        f->aggregate_type->drop(f->aggregate);
+    f->aggregate = 0;
     if (f->values != f->local) fwp_mem_free(f->values);
     fwp_mem_free(f->scratch);
     f->scratch = NULL;
@@ -69,6 +74,11 @@ static V fwp_decode_variant(fwp_decode_fields *f, uint32_t tag) {
 }
 
 static V fwp_decode_sequence(fwp_decode_fields *f, const fwp_desc *d) {
+    if (f->aggregate_type) {
+        V result = f->aggregate;
+        fwp_decode_fields_end(f, 1);
+        return result;
+    }
     fwp_value_owner owner = {0, d->drop};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_value_release, &owner);

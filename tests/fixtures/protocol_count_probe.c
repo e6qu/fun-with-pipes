@@ -29,6 +29,14 @@ int main(void) {
     for(size_t i=0;i<3;i++)if(fwp_array_load(value,i,&i8)!=expected[i])return 160;
     reader=(fwp_rd){numeric,3,0};
     if(fwp_decode(&reader,&numbers,&value))return 161;
+    /* Wide counts still decode directly into the packed payload: no V vector. */
+    unsigned char large[259]={0x81,0x02};
+    for(size_t i=0;i<257;i++)large[i+2]=(unsigned char)(i%128);
+    calls=measured_calls;bytes=measured_bytes;
+    reader=(fwp_rd){large,sizeof large,0};
+    if(!fwp_decode(&reader,&numbers,&value) || fwp_array_len(value)!=257)return 164;
+    if(measured_calls-calls!=1 || measured_bytes-bytes!=sizeof(fwp_arr)+257)return 165;
+    for(size_t i=0;i<257;i++)if(fwp_array_load(value,i,&i8)!=(V)(i%128))return 166;
     const unsigned char huge[]={255,255,255,255,255,255,255,255,255,1};
     reader=(fwp_rd){huge,sizeof huge,0};uint64_t count;
     if(fwp_decode_count(&reader,&unit,0,&count))return 155;

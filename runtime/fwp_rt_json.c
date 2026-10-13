@@ -832,7 +832,7 @@ static int fwp_jt_unb64(const char *s, size_t n, V *out) {
     if (body >= 2 && s[body - 1] == '=' && s[body - 2] == '=') body -= 2;
     else if (body >= 1 && s[body - 1] == '=') body -= 1;
     if (body % 4 == 1 || (body != n && n % 4 != 0)) return 0;
-    char *o = (char *)fwp_mem_alloc(body * 3 / 4 + 1);
+    char *o = (char *)fwp_mem_alloc(body / 4 * 3 + (body % 4) * 3 / 4 + 1);
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_mem_free, o);
     size_t on = 0;
@@ -1019,11 +1019,22 @@ static int fwp_jt_read_inner(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *o
         return 1;
     case K_LIST: case K_ARRAY: case K_SET: {
         if (r->t != 4) return fwp_jt_expected(c, "an array", r);
-        fwp_decode_fields_begin(fields, r->n, NULL, 0, d->elem);
+        int array = d->kind == K_ARRAY;
+        fwp_decode_fields_begin(fields, array ? 1 : r->n, NULL, 0, d->elem);
+        if (array) {
+            fields->aggregate_type = d;
+            fields->aggregate = fwp_rc_fresh(fwp_array_new_packed(r->n, d->elem));
+            fwp_array_set_len(fields->aggregate, 0);
+        }
         for (size_t i = 0; i < r->n; i++) {
             size_t len = c->path.len;
             fwp_jt_push_index(c, i);
-            if (!fwp_jt_read(c, &r->items[i], d->elem, &fields->values[i])) return 0;
+            if (!fwp_jt_read(c, &r->items[i], d->elem, &fields->values[array ? 0 : i])) return 0;
+            if (array) {
+                fwp_array_store(fields->aggregate, i, fields->values[0], d->elem);
+                fwp_array_set_len(fields->aggregate, i + 1);
+                fields->values[0] = 0;
+            }
             fwp_jt_pop(c, len);
         }
         *out = d->kind == K_SET ? fwp_decode_map(fields, d) : fwp_decode_sequence(fields, d);

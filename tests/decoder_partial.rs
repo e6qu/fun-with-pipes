@@ -15,10 +15,10 @@ fn typed_decoder_cleanup_survives_every_injected_construction_exit() {
     std::fs::write(
         &input,
         r#"
-Row = { name: String, items: List[String] }
+Row = { name: String, items: List[String], packed: Array[String] }
 read : String -> Result[Row, String]
 read = json.read
-main = "{\"name\":\"owned\",\"items\":[\"one\",\"two\"]}" | read | echo
+main = "{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"]}" | read | echo
 "#,
     )
     .unwrap();
@@ -43,8 +43,8 @@ main = "{\"name\":\"owned\",\"items\":[\"one\",\"two\"]}" | read | echo
 static int decode_recover(void) {{ return 1; }}
 int main(void) {{
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
-    V text=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",\"two\"]}}");
-    V invalid=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",3]}}");
+    V text=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"]}}");
+    V invalid=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",3],\"packed\":[\"a\",\"b\"]}}");
     intptr_t budget=fwp_gc.budget;
     jmp_buf trap; fwp_trap_jb=&trap; fwp_trap_cleanup=0; fwp_trap_recover=decode_recover;
     decode_probe_at=0; decode_probe_step=0;
@@ -84,6 +84,7 @@ int main(void) {{
         .replace("    V result = fwp_rc_fresh(fwp_record((uint32_t)f->count, f->values));", "    decode_probe();\n    V result = fwp_rc_fresh(fwp_record((uint32_t)f->count, f->values));")
         .replace("    V result = fwp_rc_fresh(fwp_data(tag, (uint32_t)f->count, f->values));", "    decode_probe();\n    V result = fwp_rc_fresh(fwp_data(tag, (uint32_t)f->count, f->values));")
         .replace("            owner.value = fwp_rc_fresh(fwp_cons(f->values[i - 1], owner.value));", "            decode_probe();\n            owner.value = fwp_rc_fresh(fwp_cons(f->values[i - 1], owner.value));")
+        .replace("                fwp_array_store(fields->aggregate, i, fields->values[0], d->elem);", "                decode_probe();\n                fwp_array_store(fields->aggregate, i, fields->values[0], d->elem);")
         .replace("        b->next = j->blocks; b->used = 0; b->capacity = capacity;", "        decode_scratch_live += sizeof *b + capacity;\n        b->next = j->blocks; b->used = 0; b->capacity = capacity;")
         .replace("        free(block);", "        decode_scratch_live -= sizeof *block + block->capacity;\n        free(block);")
         .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");

@@ -450,8 +450,21 @@ static int fwp_decode_inner(fwp_rd *r, const fwp_desc *d, V *out, fwp_decode_fie
     }
     case K_LIST: case K_ARRAY: {
         if (!fwp_decode_count(r, d->elem, 0, &x)) return 0;
-        fwp_decode_fields_begin(fields, (size_t)x, NULL, 0, d->elem);
-        for (size_t i = 0; i < (size_t)x; i++) if (!fwp_decode(r, d->elem, &fields->values[i])) return 0;
+        int array = d->kind == K_ARRAY;
+        fwp_decode_fields_begin(fields, array ? 1 : (size_t)x, NULL, 0, d->elem);
+        if (array) {
+            fields->aggregate_type = d;
+            fields->aggregate = fwp_rc_fresh(fwp_array_new_packed((size_t)x, d->elem));
+            fwp_array_set_len(fields->aggregate, 0);
+        }
+        for (size_t i = 0; i < (size_t)x; i++) {
+            if (!fwp_decode(r, d->elem, &fields->values[array ? 0 : i])) return 0;
+            if (array) {
+                fwp_array_store(fields->aggregate, i, fields->values[0], d->elem);
+                fwp_array_set_len(fields->aggregate, i + 1);
+                fields->values[0] = 0;
+            }
+        }
         *out = fwp_decode_sequence(fields, d);
         return 1;
     }
@@ -528,11 +541,13 @@ static V fwp_strf(const char *fmt, ...) {
     va_start(ap, fmt);
     int n = vsnprintf(0, 0, fmt, ap);
     va_end(ap);
-    char *buf = (char *)fwp_alloc_leaf((size_t)n + 1);
+    if (n < 0) fwp_trap("cannot format string");
+    fwp_str *result = fwp_alloc_leaf(sizeof(fwp_str) + (size_t)n + 1);
+    result->len = (size_t)n;
     va_start(ap, fmt);
-    vsnprintf(buf, (size_t)n + 1, fmt, ap);
+    vsnprintf(result->d, (size_t)n + 1, fmt, ap);
     va_end(ap);
-    return fwp_str_new(buf, (size_t)n);
+    return PTR(result);
 }
 
 /* An enumeration: constructors without fields (not Bool). Its values are
@@ -596,9 +611,9 @@ static int fwp_cli_value(const char *t, size_t n, const fwp_desc *d, const char 
         if (tag >= 0) { *out = (V)tag; return 1; }
         V cs = fwp_choices(d);
         V *scratch = (V *)(uintptr_t)cs;
-        fwp_cleanup cleanup; fwp_scratch_protect(&scratch, &cleanup);
+        fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_scratch_release, &scratch);
         *err = fwp_strf("`%.*s` is not one of %s", (int)n, t, STR(cs)->d);
-        fwp_scratch_finish(&scratch, &cleanup);
+        fwp_cleanup_pop(&cleanup); fwp_scratch_release(&scratch);
         return 0;
     }
     if (fwp_parse_text(t, n, d, out)) return 1;

@@ -135,10 +135,10 @@ static void fwp_fmt_duration(char *out, i128 ns) {
     sprintf(out, "%sns", n);
 }
 
-/* balanced ternary digits of v, most significant first, as "0t..."
- * (widths are bounded at compile time, but the buffer is sized by width) */
+/* Balanced ternary digits, written directly into the destination buffer. */
 static void fwp_trits(fwp_buf *b, int64_t v, int width) {
-    char *tmp = (char *)fwp_alloc_leaf((size_t)width + 3);
+    buf_grow(b, (size_t)width + 2);
+    char *tmp = b->d + b->len;
     tmp[0] = '0';
     tmp[1] = 't';
     for (int i = 0; i < width; i++) {
@@ -153,8 +153,8 @@ static void fwp_trits(fwp_buf *b, int64_t v, int width) {
         if (v % 3 != 0 && v < 0) q -= 1; /* floor division */
         v = q + carry;
     }
-    tmp[2 + width] = 0;
-    buf_puts(b, tmp);
+    b->len += (size_t)width + 2;
+    b->d[b->len] = 0;
 }
 
 /* --------------------------------------------------------------- display */

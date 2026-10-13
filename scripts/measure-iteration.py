@@ -14,7 +14,7 @@ import time
 ROOT = Path(__file__).resolve().parent.parent
 CASES = {
     'fold': 'sub 1000 | iter.count-from | iter.take 1000 | iter.fold add 0',
-    'each': 'sub 1000 | iter.count-from | iter.take 1000 | run-state 0 (iter.each (add | modify)) | .1',
+    'each': 'sub 1000 | run-state 0 (iter.count-from | iter.take 1000 | iter.each (add | modify)) | .1',
     'find': 'sub 1000 | iter.count-from | iter.take 1000 | iter.find (gt 25)',
     'pipeline': 'sub 1000 | iter.count-from | iter.take 1000 | iter.map (add 1) | iter.filter (rem 2 | eq 0) | iter.fold add 0',
     'fold-until': 'range 0 | fold-until (add | flip compose (if (gt 100) Stop Again)) 0',
