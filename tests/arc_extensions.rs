@@ -99,9 +99,6 @@ main = [
             for opt in ["-O1", "-O2"] {
                 let binary = dir.join(format!("{name}-{stack}{opt}"));
                 fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
-                let actual = checked(&mut Command::new(&binary));
-                assert_eq!(actual.stdout, reference.stdout, "{name}/{stack}/{opt}");
-                assert!(actual.stderr.is_empty(), "{actual:?}");
                 if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
                     let root = std::path::PathBuf::from(root);
                     std::fs::create_dir_all(&root).unwrap();
@@ -122,6 +119,9 @@ main = [
                     std::fs::write(root.join(format!("{name}-{stack}{opt}.asm")), asm.stdout)
                         .unwrap();
                 }
+                let actual = checked(&mut Command::new(&binary));
+                assert_eq!(actual.stdout, reference.stdout, "{name}/{stack}/{opt}");
+                assert!(actual.stderr.is_empty(), "{actual:?}");
             }
             // Omitting physical freeing must fail the same live-storage ledger.
             let omitted = measured.replace(
@@ -149,7 +149,7 @@ fn raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments() {
         ("before-scope", "main = 1 | ad.tape | ad.scope id | echo\n"),
         (
             "returned-callback",
-            "main = () | ad.scope (const ad.tape) | apply 1 | echo\n",
+            "escaped : () -> I64 -> I64\nescaped = ad.scope (const ad.tape)\nmain = escaped () 1 | echo\n",
         ),
         (
             "container-callback",

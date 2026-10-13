@@ -1,9 +1,8 @@
 # Session handoff
 
 Updated 2026-10-13. The approved six-phase roadmap and accepted follow-ups are
-merged through PR #131. The current task is a roadmap audit and documentation
-cleanup. Broader efficiency gaps remain; [PLAN](../PLAN.md) separates them from
-completed deliveries and recommends a next scope. Read [design](design.md) and
+merged through PR #131. The current task is all ten tasks in the single PR #132 bundle.
+[PLAN](../PLAN.md) defines its acceptance criteria and deferred work. Read [design](design.md) and
 [ownership](ownership.md) for semantics and support boundaries.
 
 Desired platforms: Linux, macOS and Windows on ARM64 (aarch64) and AMD64 (x86_64),
@@ -36,7 +35,7 @@ merge, tree identity, parent and the entire one-line message. Temporary proofs:
 and fwp-iteration-merge-proof.json. Never rerun the completed merge helper.
 Earlier deliveries and recovery provenance are indexed in [history](roadmap-history.md).
 
-The current audit confirmed remote main at the squash above and no open PRs.
+Before PR #132, the audit confirmed remote main at the squash above.
 [Main roadmap_docs 38327360003](https://github.com/e6qu/fun-with-pipes/actions/runs/38327360003)
 is completed/success. Duplicate main CI 38327360005 was cancelled after verified
 tested-tree parity; cancellation supplies no passing gate.
@@ -59,7 +58,7 @@ tested-tree parity; cancellation supplies no passing gate.
 
 ## Performance and ownership limits
 
-The delivery adds ordinary library functions and parser expansion, without new
+PR #131 added ordinary library functions and parser expansion, without new
 runtime primitives or fusion eligibility rules. No allocation-free or universal
 speedup claim is established. A guarded native fold probe returned 4950 for
 100 elements and showed a fixed-frame loop with record allocations and callback
@@ -69,7 +68,7 @@ not current-head performance evidence. Temporary C, Mach-O and disassembly:
 accepting an optimization. The latest combined implementation is verified by
 the exact-head CI above, not by that exploratory probe.
 
-Checked ARC covers proved immutable graphs and scoped File owners. Unproved
+At the accepted PR #131 baseline, checked ARC covers proved immutable graphs and scoped File owners. Unproved
 cycles, reconstructed/runtime/foreign boundaries, boxed I128/U128 and raw
 reverse-mode lifetimes remain outside its coverage. Rejection never selects
 tracing. [Ownership](ownership.md) records the exact contracts, half/wide float
@@ -77,8 +76,8 @@ representation limits and the distinction between C ABI structure and registers.
 
 ## Remaining ownership deliveries
 
-None in the completed six-phase delivery queue. Broader ownership and performance
-gaps are listed in PLAN.md; do not reopen archived preparations. Windows, new
+The completed six-phase queue remains closed. The active bundle below extends
+CSV, wide-integer and scoped-AD ownership; do not reopen archived preparations. Windows, new
 deployment interfaces and a new backend remain deferred.
 
 ## Active bundle and workspace
@@ -118,19 +117,36 @@ and evidence generation remain on runners.
 
 ## Current runner findings
 
-Baseline macOS ARM regular job passed, including native artifact smoke checks and
-iterator measurements. Other baseline gates remain pending. Focused preflight
-38367368626 compiled successfully on completed runners; CSV reclamation and
-existing iterator semantic checks pass. It found a 2,064-byte wide-integer leak
-(129 iterations): overflowing arithmetic allocated and discarded a second box.
-The working revision reuses the successful result and replaces the obsolete
-blanket I128 rejection test. These fixes and the new AD scope proof await CI.
-CSV partial-construction trap tests and direct-consumer fusion controls are added.
+Baseline CI 38365626793 has passing benchmark and both macOS ARM jobs, including
+native artifact smoke checks and baseline iterator measurements. Intel macOS and
+Linux gates remain pending. Baseline artifacts retain hardware, current compiler,
+generated C and actual instructions; their head predates the implementation.
+
+Focused preflight 38369225440 at `ba69a3e21edfc3218fc48586b72adfdb02520820`
+compiles on all four runners. macOS ARM passes CSV normal/partial-trap cleanup,
+wide numeric reclamation, scoped gradients, iterator effects/forcing controls
+and the eligible ARC golden corpus. The prior 2,064-byte overflowing-arithmetic
+leak is fixed. The sole macOS ARM failure was an ill-typed returned-callback
+rejection fixture, corrected for the next run; it did not test scope rejection.
+Other runners are still executing; no bundle acceptance is claimed.
+
+The ARM report shows 4,003 allocation requests for both fold and map/filter/fold
+at 1,000 elements (baseline 6,005/9,511). Generated loop workers flatten state
+into locals and call the known fold callback directly; producer tail dispatch
+and Yield/closure allocation remain. Stateful each still had 7,009 requests:
+known run-state callbacks now specialize before fusion to expose that consumer.
+The next measurement run compares enabled/disabled fusion at the same head and
+requires fewer allocation requests and bytes. Process times include startup.
+
+Additional controls now cover ARC scope normal/trap/cancellation cleanup and
+cold/warm C workspace counts with tracing compiled out. These await validation.
+Guarded Python AST, rustfmt and whitespace checks passed (0.05s CPU / 0.26s).
 
 ## Next action
 
-Run focused runner validation for iterator/CSV/wide ownership changes and fix
-all failures. Implement scoped AD eligibility and its lifetime/escape controls;
-add allocation and semantic regression controls for the direct consumers.
-Retain actual baseline/final artifacts, update support docs with measured limits,
-then run the complete final matrix and merge only after all ten criteria pass.
+Publish the combined callback-specialization, corrected rejection fixture and
+stronger same-head allocation/ARC workspace controls, then run focused runner
+validation and fix all failures. Retain baseline/final evidence, update support
+docs with measured limits, then run the complete final matrix. Require all seven
+production jobs (both Linux architectures, bench, four macOS jobs) plus docs on
+the final head before merging PR #132 with the required one-line message.
