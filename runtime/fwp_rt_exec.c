@@ -1345,8 +1345,16 @@ static int fwp_exec_program(const char *name, const fwp_exec_spec *const *cmds, 
 /* ------------------------------------------------------------------- csv */
 /* As src/csv.rs: records of fields, a one-byte separator, `"` quotes. */
 
-/* The owned parser preserves the forgiving CSV grammar above. Its private
- * spines can reverse in place, transferring each link without aliases. */
+/* Private spines reverse in place. Allocate their cells as mutable so minor
+ * collections rescan older cells after reversal introduces younger links. */
+static V fwp_csv_cons_owned(V field, V tail) {
+    fwp_obj *cell = (fwp_obj *)fwp_alloc(sizeof(fwp_obj) + 2 * sizeof(V));
+    cell->tag = 1; cell->n = 2;
+    cell->f[0] = field; cell->f[1] = tail;
+    FWP_KEEP_ALIVE(field);
+    FWP_KEEP_ALIVE(tail);
+    return fwp_rc_fresh(PTR(cell));
+}
 static V fwp_csv_reverse_owned(V xs) {
     V result = 0;
     while (xs) {
@@ -1380,12 +1388,12 @@ static V fwp_p_csv_parse_with(V sepv, V text,
     int at_start = 1, any = 0;
 #define CSV_OWNED_FIELD() do { \
     owner.field = fwp_rc_fresh(fwp_str_lossy(owner.buffer.d ? owner.buffer.d : "", owner.buffer.len)); \
-    owner.row = fwp_rc_fresh(fwp_cons(owner.field, owner.row)); \
+    owner.row = fwp_csv_cons_owned(owner.field, owner.row); \
     owner.field = 0; owner.buffer.len = 0; \
 } while (0)
 #define CSV_OWNED_ROW() do { \
     owner.row = fwp_csv_reverse_owned(owner.row); \
-    owner.rows = fwp_rc_fresh(fwp_cons(owner.row, owner.rows)); \
+    owner.rows = fwp_csv_cons_owned(owner.row, owner.rows); \
     owner.row = 0; \
 } while (0)
     while (i < n) {

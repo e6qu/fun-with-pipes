@@ -62,10 +62,22 @@ zero-allocation, register-placement or C/Rust speed claim is made.
   magnitudes, including MIN/MAX and both signs, without an extra runtime library.
 - Focused 38372305868 at `f845fe4` passes both Linux jobs and macOS ARM;
   Intel also passes: all four focused platform jobs are successful.
-- Latest published head `2446c9010ae9bc239fc3bc9438302c01606a8ed8`, focused
+- Focused head `2446c9010ae9bc239fc3bc9438302c01606a8ed8`,
   run 38373379103, extends the HTTP/2 isolated-construction/register-clearing
   control to AArch64. Both Linux jobs (including Clang/GCC controls) and macOS
-  ARM pass; Intel is still running at this checkpoint.
+  ARM pass; Intel tests and measurements pass but artifact upload fails with
+  GitHub DNS ENOTFOUND. That job is failed, not an acceptance gate.
+- Full production run 38374972487 at `feadc13` passes benchmark and separate
+  docs gates; both macOS GC stress steps fail while remaining shards continue.
+  A bounded saved-C reproduction confirms CSV reversal violates generational
+  immutability: an old cell points to a young cell missed by minor collection.
+  CSV private cells now use mutable allocation. The old version aborts with GC
+  verification; the fix passes O1/O2 with stress/verification and reuse 0/1
+  (local guard: 0.44s CPU / 1.35s elapsed). Extended-owner tests now compare
+  tracing stress/reuse with the raw interpreter as well as ARC reclamation.
+  The completed macOS ARM regular shard fails only the CSV golden reuse check;
+  other full CI logs still need review. The fix needs runner gates.
+  CI now publishes the GC step log before running its remaining shard.
 
 The HTTP/2 omission control accidentally kept a dead owner pointer in a
 callee-saved register under native ARM GCC. Its positive owner fence remains;

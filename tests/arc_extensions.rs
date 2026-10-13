@@ -79,6 +79,29 @@ main = [
                 .args(["run", "--interp"])
                 .arg(&input),
         );
+        // The same counted owners coexist with generational tracing. In
+        // particular, CSV's private reversed spines can acquire younger links.
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join(format!("{name}-tracing{opt}"));
+            checked(
+                Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .env_remove("FWP_NO_OPT")
+                    .args(["build", "--gc", "tracing", opt])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&binary),
+            );
+            for reuse in ["0", "1"] {
+                let actual = checked(
+                    Command::new(&binary)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", reuse),
+                );
+                assert_eq!(actual.stdout, reference.stdout, "{name}/{opt}/{reuse}");
+                assert!(actual.stderr.is_empty(), "{actual:?}");
+            }
+        }
         for stack in ["0", "1"] {
             let cfile = dir.join(format!("{name}-{stack}.c"));
             checked(
@@ -240,12 +263,12 @@ int main(void) {{
             &format!("{declaration}static V fwp_p_csv_parse_with(V sepv"),
         )
         .replace(
-            "owner.row = fwp_rc_fresh(fwp_cons(owner.field, owner.row));",
-            "csv_probe_point(); owner.row = fwp_rc_fresh(fwp_cons(owner.field, owner.row));",
+            "owner.row = fwp_csv_cons_owned(owner.field, owner.row);",
+            "csv_probe_point(); owner.row = fwp_csv_cons_owned(owner.field, owner.row);",
         )
         .replace(
-            "owner.rows = fwp_rc_fresh(fwp_cons(owner.row, owner.rows));",
-            "csv_probe_point(); owner.rows = fwp_rc_fresh(fwp_cons(owner.row, owner.rows));",
+            "owner.rows = fwp_csv_cons_owned(owner.row, owner.rows);",
+            "csv_probe_point(); owner.rows = fwp_csv_cons_owned(owner.row, owner.rows);",
         )
         .replace(
             "int main(int argc, char **argv)",

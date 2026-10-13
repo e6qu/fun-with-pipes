@@ -119,7 +119,15 @@ jobs:
           CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: Full GC stress and verification golden suite
-        run: cargo test --test gc golden_programs_under_gc_stress -- --exact --nocapture
+        run: |
+          set -o pipefail
+          cargo test --test gc golden_programs_under_gc_stress -- --exact --nocapture 2>&1 | tee "$RUNNER_TEMP/gc-stress.log"
+      - name: Publish GC diagnostics before the remaining shard
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gc-stress-log-${{ matrix.runner }}
+          path: ${{ runner.temp }}/gc-stress.log
       - name: Second macOS test shard
         if: ${{ !cancelled() }}
         run: python3 scripts/run-macos-test-shard.py --shard gc

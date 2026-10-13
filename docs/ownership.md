@@ -384,6 +384,9 @@ representation are unchanged.
 CSV parse-with builds counted String leaves and nested list spines directly.
 Registered cleanup owns pending fields, partial rows and scratch buffers through
 traps. Private spines reverse in place before ownership transfers to the caller.
+Their cells use mutable allocation so minor collections rescan older cells after
+reversal introduces younger links; uniqueness alone does not establish this GC
+invariant.
 This contract applies to csv.parse and csv.parse-with, not typed csv.decode,
 JSON or protocol reconstruction.
 
