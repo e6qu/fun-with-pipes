@@ -277,6 +277,12 @@ intervening bindings, preserving ownership and effects without needless boxes. T
 original allocation controls separately from its earlier timing samples.
 Checked ARC requires a scope proof for reverse-mode operations. Proven scoped
 calls use the bounded workspace above; unscoped or ambiguous calls are rejected.
-[The handoff](development-state.md) records validation of this extension. Wide
-I128/U128 values retain their boxed representation with typed counted ownership;
-this does not claim unboxed wide arithmetic or native half/128-bit floats.
+[The handoff](development-state.md) records validation of this extension.
+Eligible closed I128/U128 functions use native wide arguments, locals and
+results, including recursive worker calls. Generic entries, closures and
+containers retain typed counted boxes with explicit ownership transfer.
+`FWP_WIDE_WORKERS=0` selects the boxed comparison control. Checked overflow,
+division and evaluation order agree with raw interpretation. Overflow message
+formatting stays outside hot arithmetic frames; recursive calls still use stack.
+The [float-format decision](float-formats.md) separately specifies existing
+F16/BF16/F128 behavior and the future precision and wire-format migration.

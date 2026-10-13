@@ -12,14 +12,18 @@ Do not treat an implemented change or a skipped test as verified support.
 ## Current direction
 
 The user authorized the active seven-step roadmap as one combined PR, with full
-CI before squash merge and the commit format below. This bundle includes the
-pending documentation cleanup; do not split its seven steps into separate PRs. Failing tests are tasks to fix; queued CI gates merging, not roadmap
+CI before squash merge and the commit format below. This bundle includes
+documentation cleanup; do not split its seven steps into separate PRs.
+Failing tests are tasks to fix; queued CI gates merging, not roadmap
 work. Diagnose failures and prepare the next task while CI runs. Keep later
 changes separate and open the next PR after the current one merges. This
 authorization covers roadmap branch publication, PR creation,
 fixes and merges; keep later sessions within that scope and do not request
 the same permission again. Maintain the plan and handoff throughout. A queued,
 skipped or superseded CI run is not a passing gate for the current PR head.
+Once PR #133 passes and merges, its seven-step bundle is complete. Use the
+remaining directions in PLAN.md for subsequent scope discussions, not as an
+instruction to reopen completed work or implement deferred platforms.
 
 The approved six-phase roadmap and iteration/projection follow-ups are merged.
 This completes their delivery scope, not general GC-free execution or every

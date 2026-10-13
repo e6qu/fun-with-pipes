@@ -43,7 +43,7 @@ allocations before counting is needed.
 
 | Category | Current treatment | Boundary |
 |---|---|---|
-| Scalars and nullary variants | Inline words; direct numeric workers use concrete C types | I128/U128 use counted 16-byte boxes |
+| Scalars and nullary variants | Inline words; direct numeric workers use concrete C types | I128/U128 use counted 16-byte boxes at generic boundaries; eligible direct workers use native wide values |
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Return aliases preserve field ownership; target C ABI selects registers or caller storage |
 | Arrays, maps, sets | Typed counted storage, numeric views and unique updates | ARC requires proved primitive argument/result contracts |
 | Strings and bytes | Proved copy/alias results count owners; leaf destruction frees storage | Unmodeled result families remain tracing boundaries |
@@ -390,11 +390,15 @@ reversal introduces younger links; uniqueness alone does not establish this GC
 invariant.
 Typed CSV, JSON, text and binary reconstruction use descriptor Dup/Drop
 operations. Partial field vectors own completed children until aggregate
-transfer; short vectors stay on the C stack. JSON parsing owns an independent
+transfer; short vectors stay on the C stack. Known-length JSON/binary arrays
+fill final packed storage directly; partial cleanup owns the completed prefix
+and pending element separately. JSON parsing owns an independent
 scratch arena, released on success, parse failure and nonlocal exit. Duplicate
 map keys release displaced values; untagged variant attempts release partial
 fields before trying the next declared alternative. Binary truncation and
-injected construction exits test the same cleanup contract. JSON parse/read
+injected construction exits test the same cleanup contract. Binary Trit and
+TInt values are range-checked consistently with the interpreter; malformed
+fields release already reconstructed owners. JSON parse/read
 and typed CSV have OwnedTree primitive results. This does not admit the
 external executable/remote protocol boundary to checked ARC; its retained
 contexts still require a separate proof.
@@ -404,7 +408,7 @@ in State. get/put/modify must execute under a proven handler; returning a
 closure does not extend that handler's lifetime. Immutable closures may escape
 and be called under a fresh scope. Known modify callbacks call native entries
 directly with typed argument preparation. Unknown targets remain rejected.
-Pending validation for these extensions is recorded in the handoff.
+The handoff records validation and production acceptance for these extensions.
 
 Scoped AD eligibility additionally proves callback reachability under a scope;
 unknown call targets and unscoped raw operations are rejected. Returned scalar
