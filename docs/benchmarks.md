@@ -1,6 +1,6 @@
 # Benchmarks
 
-The accepted roadmap measurements are recorded in:
+Roadmap measurements are recorded in:
 
 - [Numerical kernels](measurements/numerical-kernels-2026-10-12.json): equivalent
   numerical and autodiff workloads on Linux and ARM/Intel macOS, with runner,
@@ -8,6 +8,9 @@ The accepted roadmap measurements are recorded in:
 - [Ownership and checked ARC](measurements/ownership-and-arc-2026-10-12.json):
   allocation/live-memory and ownership controls, ARC executions and rejections,
   binary evidence and the aggregate-return regression follow-up.
+- [Native platform and ownership bundle](measurements/native-ownership-2026-10-13.json):
+  paired iterator controls on Linux/macOS ARM64/AMD64, actual checked register
+  arithmetic, ARC scope omission controls and cold/warm workspace counts.
 
 Reports distinguish preparation measurements from production acceptance.
 [History](roadmap-history.md) indexes accepted gates; [the handoff](development-state.md)

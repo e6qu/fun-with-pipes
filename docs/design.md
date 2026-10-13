@@ -459,9 +459,9 @@ error. See [protocol.md](protocol.md).
   [PLAN](../PLAN.md) records the remaining efficiency gaps. C structs alone do
   not guarantee registers.
 - Windows on AMD64 and ARM64 is desired but deferred and remains unimplemented.
-  Full native Linux ARM64 acceptance remains open;
-  existing cross-build/QEMU coverage is narrower. See the
-  [platform matrix](../PLAN.md#platform-objective-and-current-evidence).
+  Linux/macOS have native CI on both architectures; see the
+  [platform matrix](../PLAN.md#platform-objective-and-current-evidence) and handoff
+  for actual acceptance gates. Cross-build/QEMU evidence remains distinct.
 - Darwin cross-compilation and Clang PGO.
   Native macOS passed both architecture suites and the Linux/benchmark gates
   in PR #74; separate ARM and Intel binaries meet the packaging objective.

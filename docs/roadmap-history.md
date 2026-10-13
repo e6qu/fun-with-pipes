@@ -18,7 +18,7 @@ working documentation. Original records remain in the
 | Final ownership/ARC | [PR #128](https://github.com/e6qu/fun-with-pipes/pull/128), [measurement report](measurements/ownership-and-arc-2026-10-12.json) |
 | Completion documentation | [PR #129](https://github.com/e6qu/fun-with-pipes/pull/129) |
 | Tacit examples and macOS test shards | [PR #130](https://github.com/e6qu/fun-with-pipes/pull/130) |
-| Iterator consumers and record projections | [PR #131](https://github.com/e6qu/fun-with-pipes/pull/131), accepted source and exact-head gates in [the handoff](development-state.md) |
+| Iterator consumers and record projections | [PR #131](https://github.com/e6qu/fun-with-pipes/pull/131), source/gates below |
 
 PR #128 merged as `7350a5566fa991c89916ea67ab693c2a0bba9327`, tree
 `fcabfba0e0ca6b7a3e0ef0f7b99792bad7da8381`. All six jobs in
@@ -43,6 +43,16 @@ and [roadmap_docs 38312668877](https://github.com/e6qu/fun-with-pipes/actions/ru
 passed before merge. Completed logs verified all 170 ordinary integration
 targets once per macOS architecture, split 85/85, plus separate GC stress.
 PR #131 subsequently raised that coverage to 171 targets, split 86/85.
+
+PR #131 tested `a920caf9c3e84f039ac4e6850c607cb34dcf2585` and merged as
+`8ae361a43f7634bf818ec8415d8c1ea95fdb74ed` with identical tree
+`baeb50b1826a6593d838ff0ea7aa7bdc823d0ffb`. All six jobs in
+[CI 38322220083](https://github.com/e6qu/fun-with-pipes/actions/runs/38322220083)
+and [roadmap_docs 38322220076](https://github.com/e6qu/fun-with-pipes/actions/runs/38322220076)
+passed before merge. Main documentation audit 38327360003 passed; duplicate
+main CI 38327360005 was cancelled after verified tree parity and supplies no
+passing gate. The complete squash message was one line:
+`Add direct iterator consumers and record projection shorthand`.
 
 ## Archived numerics timing samples
 

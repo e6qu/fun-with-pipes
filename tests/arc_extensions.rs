@@ -45,6 +45,8 @@ work = make { 0 = add 2i128 | mul 3i128, 1 = neg | abs, 2 = abs,
 main = [
     range 0 129 | map (signed | work | show) | length | echo,
     range -3 4 | map (signed | products | show) | echo,
+    range 0 5 | map (signed | add) | both (map (apply 2i128)) (map (apply 3i128)) | echo,
+    range 0 17 | map (attempt (signed | tap (const "wide failure" | fail))) | length | echo,
     range 0 129 | map (unsigned | add 1u128 | bit.shl 65 | show) | length | echo,
     range 0i128 33i128 | array.from-list | both id array.to-list | show | string.length | echo,
     range 0u128 33u128 | map (max 3u128 | min 30u128) | show | echo,

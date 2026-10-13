@@ -32,7 +32,7 @@ are not an objective. Existing additional targets need not be removed.
 
 | OS | AMD64 | ARM64 |
 |---|---|---|
-| Linux | Existing native CI baseline | Cross-compilation/QEMU coverage; full native acceptance remains to establish |
+| Linux | Native CI and standalone package checks | Native CI and standalone package checks; final bundle gates recorded in PR #132 |
 | macOS | Accepted native support | Accepted native support |
 | Windows | Desired; deferred and not implemented | Desired; deferred and not implemented |
 
@@ -62,7 +62,7 @@ iteration/projection follow-ups through #129–131. [History](docs/roadmap-histo
 indexes verification and measurements. [Preparation anchors](docs/roadmap-queue.md)
 remain immutable evidence, not work to repeat.
 
-## Active ten-task bundle
+## Ten-task bundle
 
 The user authorized all ten tasks below in one PR, including the pending docs
 cleanup. Keep the bundle open until every acceptance criterion is met; passing
@@ -81,7 +81,11 @@ partial or superseded runs do not complete it. Windows remains deferred.
 | 9 | Counted I128/U128 owners | Construction, arithmetic, aliases, aggregates and cleanup verified before ARC admission |
 | 10 | Checked scoped autodiff | Supported tape/workspace lifetime subset, escapes and exceptional cleanup proved and measured |
 
-The handoff tracks implementation and actual evidence per task. Preserve raw
+All ten implementations are in [PR #132](https://github.com/e6qu/fun-with-pipes/pull/132).
+[Four-platform focused evidence](docs/measurements/native-ownership-2026-10-13.json)
+records the measured subset. The handoff tracks final production acceptance:
+when that PR is squash-merged after its required gates, this bundle is closed.
+No additional implementation task is queued by this plan. Preserve raw
 interpreter/native semantics, checked arithmetic and floating-point order.
 No task authorizes general ARC eligibility without complete ownership contracts.
 Real half/128-bit float formats require a separate precision and wire-format

@@ -247,3 +247,11 @@ copied from another project ("vendored") keeps its own license:
   the pull request.
 
 Contributions are accepted under the project's MIT license.
+
+Native CI publishes `fwp-{Linux,macOS}-{ARM64,X64}` artifacts containing one
+compiler archive for that OS/architecture. `scripts/package-native.py` checks
+ELF/Mach-O machine types and executes a copied compiler, raw interpreter and
+tracing/ARC generated programs outside the checkout. The archive includes its
+manifest and requirements: a system C toolchain for native compilation and
+OpenSSL 3 for TLS. `iteration-evidence-*` retains C/disassembly and paired
+measurements; `ownership-evidence-*` retains ARC and workspace controls.
