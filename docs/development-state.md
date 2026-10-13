@@ -192,8 +192,8 @@ metadata issue. None of these is the final merge gate.
 The integer/literal head `ebaff5a` passed both Windows jobs in
 [38453332518](https://github.com/e6qu/fun-with-pipes/actions/runs/38453332518).
 Its full [38453295129](https://github.com/e6qu/fun-with-pipes/actions/runs/38453295129)
-and WASI [38453337836](https://github.com/e6qu/fun-with-pipes/actions/runs/38453337836)
-are still running/queued.
+is still running/queued. Both WASI jobs passed in
+[38453337836](https://github.com/e6qu/fun-with-pipes/actions/runs/38453337836).
 
 ## Next action
 
@@ -201,7 +201,14 @@ The math head `412a813` is published with focused
 [Windows 38455258725](https://github.com/e6qu/fun-with-pipes/actions/runs/38455258725),
 [WASI 38455262012](https://github.com/e6qu/fun-with-pipes/actions/runs/38455262012)
 and [portability 38455264989](https://github.com/e6qu/fun-with-pipes/actions/runs/38455264989)
-queued. Fix any failures in those or the ongoing full CI runs.
+remain in progress except Windows: both architectures failed the native C++
+caller because the math source relied on a transitive `<type_traits>` include.
+The source now includes that header explicitly. Guarded `cargo check --lib` and
+`python3 /private/tmp/fwp-float-math-check.py` pass, including C-driver linking,
+dependency inspection and ASan/UBSan. Publish this repair and rerun the focused
+platform jobs; fix any further failures in those or the ongoing full CI runs.
+The regular ARM macOS job at `55b86f2` has passed; the remaining full jobs are
+not yet accepted.
 
 Next: integrate the exact formats with language values,
 native arrays/workers and protocol versioning. Continue the generated C Windows

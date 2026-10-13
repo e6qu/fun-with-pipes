@@ -1,6 +1,7 @@
 /* Format-specific transcendental functions. Only the arithmetic templates are
  * instantiated: no streams, strings, heap allocation or C++ runtime is used. */
 #define TLFLOAT_NO_LIBSTDCXX
+#include <type_traits>
 #include <tlfloat/tlmath.hpp>
 
 struct fwp_quad_bits { uint64_t words[2]; };
