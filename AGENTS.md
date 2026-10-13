@@ -11,9 +11,9 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-The user authorized completing the active roadmap automatically, one focused
-PR at a time, with full CI before each squash merge and the commit format
-below. Failing tests are tasks to fix; queued CI gates merging, not roadmap
+The user authorized the active ten-task roadmap as one combined PR, with full
+CI before squash merge and the commit format below. This bundle includes the
+pending documentation cleanup; do not split its ten tasks into separate PRs. Failing tests are tasks to fix; queued CI gates merging, not roadmap
 work. Diagnose failures and prepare the next task while CI runs. Keep later
 changes separate and open the next PR after the current one merges. This
 authorization covers roadmap branch publication, PR creation,
@@ -21,14 +21,19 @@ fixes and merges; keep later sessions within that scope and do not request
 the same permission again. Maintain the plan and handoff throughout. A queued,
 skipped or superseded CI run is not a passing gate for the current PR head.
 
-The implementation roadmap is complete: native macOS, runtime ownership,
-numeric representation, compiler/autodiff improvements and checked ARC are
-accepted. The active user-approved follow-up adds iterator consumers, an
-early-stopping list fold, state-threading map and `make` projection shorthand.
-Follow the live handoff; do not reopen archived preparations.
+The approved six-phase roadmap and iteration/projection follow-ups are merged.
+This completes their delivery scope, not general GC-free execution or every
+performance goal. PLAN.md records the remaining engineering gaps and recommended
+order; the live handoff records current work. Do not reopen archived preparations
+or implemented deliveries. The desired platform matrix is Linux, macOS and
+Windows, each on ARM64 (aarch64) and AMD64 (x86_64). Windows is deferred on both
+architectures; prioritize Linux/macOS, ownership and compiler performance.
+Do not treat the original roadmap's completion as universal platform acceptance.
 [docs/ownership.md](docs/ownership.md) records the memory design and its
-acceptance criteria. Windows, new deployment interfaces and a new compiler
-backend are deferred unless the user changes priorities.
+acceptance criteria. Windows, new deployment interfaces and a new compiler backend
+remain deferred.
+Package one binary per supported OS/architecture; universal binaries are not
+an objective and must not be listed as remaining roadmap work.
 
 Preserve tacit, curried, data-last pipes, immutable value semantics, tracked
 effects, checked arithmetic and observable evaluation/trap order. Infer
@@ -62,5 +67,7 @@ representation choices and limits explicit and justify them.
   When authorized to merge, require all six exact-head jobs (Linux, bench,
   regular ARM/Intel macOS and GC stress ARM/Intel) and squash-merge with an
   explicitly supplied subject and empty body.
+  Extend required gates for the expanded platform matrix as support lands;
+  the existing six jobs do not establish Windows or native Linux ARM64 acceptance.
 
 Repository conventions and test locations are in [CONTRIBUTING.md](CONTRIBUTING.md).

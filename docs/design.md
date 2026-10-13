@@ -447,12 +447,21 @@ error. See [protocol.md](protocol.md).
 
 ## Not implemented
 
-- Complete ownership of strings, bytes, escaping closures and runtime-shared
-  values; general execution without tracing GC. Numeric representation and remaining measured optimization gates are recorded in
-  [ownership.md](ownership.md). C structs alone do not guarantee registers.
-- Darwin cross-compilation and universal binaries, Clang PGO, and Windows.
+- General execution without tracing GC. Checked native ARC supports the proved
+  ownership subset; unproved reconstructed graphs, retained runtime/foreign
+  contexts, cycles, boxed I128/U128 and raw reverse-mode tapes remain outside it.
+  [Ownership](ownership.md) specifies coverage and numeric representation limits;
+  [PLAN](../PLAN.md) records the remaining efficiency gaps. C structs alone do
+  not guarantee registers.
+- Windows on AMD64 and ARM64 is desired but deferred and remains unimplemented.
+  Full native Linux ARM64 acceptance remains open;
+  existing cross-build/QEMU coverage is narrower. See the
+  [platform matrix](../PLAN.md#platform-objective-and-current-evidence).
+- Darwin cross-compilation and Clang PGO.
   Native macOS passed both architecture suites and the Linux/benchmark gates
-  in PR #74; exact verification is recorded in [the handoff](development-state.md).
+  in PR #74; separate ARM and Intel binaries meet the packaging objective.
+  Universal binaries are outside scope. Verification is recorded in
+  [the handoff](development-state.md).
 
 - HTTP/3; HTTP/2 server push and
   WebSocket over HTTP/2 (RFC 8441); WebSocket extensions other than

@@ -118,7 +118,8 @@ when no proven borrowing contract applies; scalar words remain uncounted.
 Reconstructed decode/parse values and retained network contexts can therefore
 still require tracing even when their temporary C buffers reclaim deterministically.
 These conservative requirements are explicitly classified in accepted phase2.
-Phase6 must prove tracing-free eligibility separately. External AD/FFI state has its own lifetime contract.
+Checked native ARC proves eligibility separately and rejects these unproved
+boundaries. External AD/FFI state has its own lifetime contract.
 
 PR123 accepts borrowed arguments for all nine raw-memory declarations.
 mem.alloc/mem.string allocate raw C buffers released explicitly by mem.free;
@@ -135,8 +136,8 @@ valid addresses supplied by the program.
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
 and reuse verification, with allocation/live-memory evidence for reclamation.
 Shared fallback is documented coverage, not deterministic reclamation or a
-collector-free guarantee. Phase 6 must reject unsupported claims about escapes,
-cycles and external lifetimes rather than inferring support from successful exit.
+collector-free guarantee. Checked native ARC rejects unproved escapes, cycles
+and external lifetimes; successful program exit alone does not prove coverage.
 
 ## Representation and numerics
 
@@ -191,13 +192,13 @@ Keep the [distinct-trap](../tests/run/fusion_traps.fwp) and
 fusion. AD tape operations retain their evaluation order even with pure public
 types; new fused gradient kernels need raw interpreter/native order checks.
 
-### Phase 3 delivery sequence
+### Accepted numeric representation
 
-This sequence is complete in accepted phase3. Source array/value types, pipe
+Phase 3 is complete. Source array/value types, pipe
 syntax and wire behavior remain unchanged. Representation is selected after
 monomorphization from concrete element/field types; generic and foreign
-boundaries retain explicit conversion contracts. Phases4–5 measure numerical
-performance using these representations.
+boundaries retain explicit conversion contracts. Accepted numerical and ownership
+measurements are indexed in [benchmarks](benchmarks.md).
 
 Direct numeric workers use concrete C scalar parameters/results and aggregate
 fields; boxing, closures, callbacks and foreign conversion keep bit-preserving
@@ -253,23 +254,11 @@ and measurements are in [history](roadmap-history.md).
 - Registered runtime owners and scoped files release exactly once before failure,
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.
-  Compiler live caller/pending-argument and incoming-parameter cleanup is
-  merged in PR106; runtime application and partial capture preparation in PR107.
-  Constructor fields and remaining caller references are registered before allocation
-  in PR113. Worker result fields and remaining caller references stay registered
-  until record/variant boxing succeeds in PR114. Worker argument preparation
-  protects original boxes and completed field duplicates until transfer in PR115;
-  flattened loop argument preparation protects original boxes and completed field
-  duplicates until transfer in PR116. Multi-field retains release completed extras
-  on count overflow in PR117, with caller owners registered before duplication.
-  Nested constructor temporaries inherit known monomorphic context for typed
-  child cleanup in PR118. Boxed variant conversion protects the original box
-  and remaining caller owners through typed retention in PR119. Record updates
-  retain typed kept fields, release replaced owners and protect replacement,
-  partial retains and unfinished copies in PR120; general copies preserve the
-  borrowed original. Boxed record conversion protects original boxes, remaining
-  caller owners and completed typed field retains in PR121, including matched
-  result checkpoints. Unmodeled callbacks retain shared fallback.
+  Caller, argument, constructor and worker-result owners remain registered until
+  transfer or boxing succeeds. Partial retains roll back on overflow or unwind;
+  record updates protect replacements and release replaced owners. Typed context
+  survives nested construction and boxed aggregate conversion. Unmodeled callbacks
+  retain shared fallback.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. Unmodeled payloads retain shared fallback.

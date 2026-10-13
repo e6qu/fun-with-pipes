@@ -1,126 +1,118 @@
 # Plan
 
-fwp implements the Pipe Language Compact Specification. [Design](docs/design.md)
-records the semantics and implementation. [The handoff](docs/development-state.md)
-records current work, exact heads, failures and validation; [the queue](docs/roadmap-queue.md)
-records immutable preparation anchors. [History](docs/roadmap-history.md) preserves
-prior deliveries and measurements, without supplying new priorities.
+The original six-phase roadmap and accepted follow-ups are merged through
+PR #131. The desired platform matrix below includes deferred Windows support.
+Earlier completion does not establish general
+GC-free execution, allocation-free abstractions or universal C/Rust parity.
+[The handoff](docs/development-state.md) records accepted source, checks and
+current work. [Design](docs/design.md) specifies the language;
+[ownership](docs/ownership.md) specifies memory contracts and limits.
 
-## Authorized execution
-
-Complete this roadmap automatically, one coherent bundle PR at a time. Group
-related prepared changes to reduce cycle time; preserve their original tests
-and run full CI once for each final bundle head. Fix failing tests;
-CI gates merging, not implementation or next-task preparation. Full builds,
-tests, benchmarks and large regeneration run on GitHub. Require all six passing
-jobs and the roadmap documentation audit for the current exact PR head before
-squash. Supply a single-line subject of at most 80 characters and an empty body,
-with no trailers or attribution.
-Keep the roadmap run going through queued CI: monitor results, fix failures
-and prepare independent work until every phase meets its exit criteria.
-Update the handoff and queue after meaningful progress. This authorization
-persists across sessions and compactions; no repeat approval is required.
-Apply the boy scout rule: fix issues and bugs encountered in this repository,
-including those outside the current roadmap item. Preserve regression controls,
-record the evidence and include coherent fixes in the next bundle. This does
-not change the phase order or defer a failing check as unrelated.
-
-## Direction and acceptance
+## Direction
 
 Preserve tacit, curried, data-last pipes, immutable values, tracked effects,
 checked arithmetic and observable evaluation/trap order. Infer ordinary types
 strongly; retain explicit generic signatures and compile-time specialization.
-Avoid needless wrappers and fallbacks, magic, and unnecessary implicit behavior
-or defaults. Register spills are ordinary lowering; protocol-defined alternatives
-are peers. Keep representation choices and limits explicit and justified.
-Prefer internal ownership over new language syntax. Compare the interpreter
-and native semantics; optimizer oracles must use `FWP_NO_OPT=1` explicitly.
+Prefer compiler-internal ownership over new surface syntax. Avoid needless
+wrappers, fallbacks, magic and implicit defaults. Register spills are ordinary
+lowering; protocol-defined alternatives are peers.
 
-The aim is efficient machine code with few heap allocations, natural numeric
-storage, suitable alignment and effective register/cache use. Tracing remains
-available. Explicit ARC mode requires checked ownership coverage and a supported
-cycle policy; rejection never selects tracing. Prepared branches do not establish
-merged support.
+Aim for few heap allocations, natural numeric storage, suitable alignment and
+effective register/cache use. Checked native `--gc arc` rejects unsupported
+ownership rather than switching to tracing. Performance claims require equivalent
+workloads and measurements of allocations and live memory alongside time.
+Inspect generated C and native instructions; source-level abstractions alone
+cannot establish efficient machine code.
 
-| Order | Status and work | Acceptance |
+Target Linux, macOS and Windows on both ARM64 (`aarch64`) and AMD64 (`x86_64`).
+Package a separate binary for each of these six combinations. Universal binaries
+are not an objective. Existing additional targets need not be removed.
+
+## Platform objective and current evidence
+
+| OS | AMD64 | ARM64 |
 |---|---|---|
-| 1 | Done: native macOS ARM/Intel support (#74) | Full platform gates; real collection; interpreter/native agreement; explicit unsupported options |
-| 2 | Done: typed ownership and explicit runtime compatibility fallbacks | Accepted merged-source coverage; callback/unwind/resource, alias, GC/reuse and reclamation controls |
-| 3 | Done: natural-width contiguous numeric storage, views, aggregate/scalar ABI and alignment | Narrow elements use natural width; fewer copies/boxes; arm64/x86-64 allocation/assembly evidence; ABI/FFI checks |
-| 4 | Done: fused numerical loops, blocked matrices, autodiff lifetimes and reusable buffers (#127) | Correct gradients and exceptional cleanup; equivalent C/Rust workloads; fixed floating-point behavior by default |
-| 5 | Done: ownership/performance regression evidence | Allocations, live memory, counts and collections alongside timing, hardware/compiler/flags recorded |
-| 6 | Done: checked native ARC execution for the proved ownership subset | Supported programs reclaim without collection, including escapes/runtime boundaries; explicit cycle lifetime policy |
+| Linux | Existing native CI baseline | Cross-compilation/QEMU coverage; full native acceptance remains to establish |
+| macOS | Accepted native support | Accepted native support |
+| Windows | Desired; deferred and not implemented | Desired; deferred and not implemented |
 
-## Completed roadmap
+Windows is desired on both architectures but deferred; prioritize Linux/macOS,
+ownership and compiler performance. Each combination needs actual compiler/interpreter and
+generated-program execution, runtime/ABI and dependency validation, ownership/GC
+stress and reuse checks, and an independently usable binary. Cross-build or
+emulated checks alone do not establish full native acceptance. Extend CI as
+platforms are implemented; the existing six jobs do not cover this six-target
+matrix. Cross-compilation between every host/target pair is not implied.
 
-Phases 1–6 are accepted on main through PR #128. Native macOS ARM/Intel support,
-runtime ownership contracts, packed numeric storage and views, typed aggregate
-ABI, fused numerical kernels, blocked matrices, bounded reusable autodiff
-workspaces, loop ownership improvements and checked native ARC execution pass
-their required gates. The handoff records the tested and merged sources,
-all six jobs, documentation and actual merged-source acceptance.
+## Delivered
 
-ARC support is explicit: admitted immutable graphs and scoped File owners
-reclaim without tracing. Unproved mutable cycles, boxed I128/U128 owners, raw
-reverse-mode tapes/pointers and external/deployment boundaries remain rejected.
-The retained C/Rust comparisons make no universal speedup or parity claim.
-No implementation task remains in this roadmap. Windows, new
-deployment interfaces and a new backend remain outside its scope.
+| Area | Accepted result | Boundary |
+|---|---|---|
+| Native macOS | ARM and Intel support, both engines and full platform gates | Separate binary per OS/architecture meets the packaging objective |
+| Runtime ownership | Typed Dup/Drop, reuse, aliases, cleanup on unwind/cancellation, scoped resources | Unproved runtime graphs and cycles still require tracing |
+| Numeric representation | Natural-width eligible arrays, retained views, typed scalar/aggregate ABI | I128/U128 remain boxed; half/wide floats retain existing representations |
+| Compiler and autodiff | Fused numerical loops, blocked matrices, bounded reusable AD workspaces | Fusion preserves effects, checked traps and floating-point order |
+| Performance evidence | Allocation/count/live-memory controls and scoped C/Rust comparisons | No universal speed or cache-efficiency claim |
+| Checked native ARC | Collector-free execution for admitted ownership graphs and scoped File owners | Explicit rejection outside the proved subset |
+| Tacit examples and CI | Explicit `const` explanations; balanced macOS test shards | Full coverage and resource limits preserved |
+| Iteration and records | `iter.fold`, `iter.each`, `iter.find`, `fold-until`, `map-accum`, `make { .field }` | Iterator state and callbacks can still allocate |
 
-## Validation limits
+Phases 1–6 were accepted through PR #128; documentation, examples/CI and
+iteration/projection follow-ups through #129–131. [History](docs/roadmap-history.md)
+indexes verification and measurements. [Preparation anchors](docs/roadmap-queue.md)
+remain immutable evidence, not work to repeat.
 
-Local focused workloads are serial, low priority, sampled and bounded: 1 GiB
-aggregate RSS, target data below 2 GiB, at least 64 GiB free disk and 180 seconds.
-Use the fwp guard documented in the handoff. Stop at limits and move work to CI;
-do not increase limits. The fun-refactor-specific guard applies to that other
-repository. Memory changes need actual GC stress/verification and reuse checks.
-Never call skipped, queued, superseded or cancelled runs passing support.
+## Active ten-task bundle
 
-## Completion boundary
+The user authorized all ten tasks below in one PR, including the pending docs
+cleanup. Keep the bundle open until every acceptance criterion is met; passing
+partial or superseded runs do not complete it. Windows remains deferred.
 
-Keep supported memory-mode boundaries and original Pipe semantics intact.
-Existing tracing-mode features remain available; ARC never switches to tracing
-when eligibility fails. Future coverage or performance work must start from the
-retained measurements and current handoff rather than an archived next action.
+| Task | Work | Acceptance |
+|---|---|---|
+| 1 | Finish docs cleanup | One current plan/handoff, valid links, immutable evidence preserved |
+| 2 | Native Linux ARM64 CI | Both engines, generated programs, GC stress and reuse execute natively |
+| 3 | Separate platform binaries | Linux/macOS ARM64/AMD64 artifacts validated outside build directory |
+| 4 | Current-compiler combinator measurements | Allocations/live memory, timing, generated C and actual native disassembly |
+| 5 | Remove avoidable callback dispatch | Known callbacks specialize with capture and evaluation order intact |
+| 6 | Remove avoidable loop-state allocations | Eligible tuple/record state stays scalar/stack; allocation and machine-code controls |
+| 7 | Fuse direct iterator consumers | Eligible lazy chains eliminate intermediate stages without extra forcing or reordered effects/traps |
+| 8 | ARC for a reconstructed-value boundary | A concrete parser/decoder owns nested results and cleans partial failures |
+| 9 | Counted I128/U128 owners | Construction, arithmetic, aliases, aggregates and cleanup verified before ARC admission |
+| 10 | Checked scoped autodiff | Supported tape/workspace lifetime subset, escapes and exceptional cleanup proved and measured |
 
-## Completed follow-up: tacit examples and CI repair
+The handoff tracks implementation and actual evidence per task. Preserve raw
+interpreter/native semantics, checked arithmetic and floating-point order.
+No task authorizes general ARC eligibility without complete ownership contracts.
+Real half/128-bit float formats require a separate precision and wire-format
+decision. Windows, a new backend and new deployment interfaces remain deferred.
+Native ARC does not imply WebAssembly ownership support.
 
-PR #130 delivers nine revised programs, matching tutorial excerpts and explicit
-`const` explanations. Ordinary macOS integration targets are split between the
-existing regular and GC jobs; coverage and limits are preserved. All six jobs
-and the documentation audit passed at the final head before squash merge.
-The handoff records the source, execution audit and merge evidence.
+## Agreed syntax
 
-## Agreed syntax guidance
+Keep prefix calls and infix pipes; application binds more tightly than pipes.
+Use explicit parentheses for nested arguments. Existing layout delimits
+continuations and match arms; indentation-based argument groups and colon
+application remain set aside. Keep `if` alongside `match`, explicit `const`
+(constant function construction), and `()` as the unit value. Values do not
+implicitly become constant functions. Tuple projections are zero-indexed.
 
-Keep the current grammar: tacit, curried, data-last functions; application binds
-more tightly than pipes; explicit parentheses group nested expressions. Existing
-layout still delimits declaration continuations and match arms. Do not add
-implicit argument grouping, a colon application operator or indentation-based
-argument groups. Keep `const` explicit and `()` as the unit value.
+Prefer short tacit callbacks and meaningful names for reusable stages; do not
+add names merely to remove parentheses. Iteration and state combinators remain
+ordinary library functions. Record projection shorthand expands to existing
+selectors without new runtime semantics.
 
-Use short inline callbacks and meaningful names for larger or reusable stages;
-do not add names merely to eliminate parentheses. Keep tutorials focused on the
-constructs they teach. Grouping proposals are set aside. Performance work belongs in compilation and runtime
-representation, with measured evidence, rather than punctuation changes.
+## Delivery and validation
 
-## Active follow-up: iteration and record projections
+[AGENTS.md](AGENTS.md) retains the standing authorization and workflow: coherent
+bundles, one PR at a time, fix encountered failures, all six exact-head CI jobs
+plus documentation audit before squash, one-line commit messages of at most
+80 characters without bodies or trailers. Keep the handoff current; delete
+obsolete next actions instead of accumulating competing plans.
 
-The user accepted this bundle after the prefix/piped syntax discussion. Keep
-prefix calls and infix pipes, and keep both `if` and `match`.
-
-- Add `iter.fold`, `iter.each` and `iter.find` as direct iterator consumers.
-  Callbacks run in order; `find` does not force the tail after a match.
-- Add list `fold-until`: the callback returns `Again state` or `Stop state`;
-  exhaustion returns the current state. No implicit finalizer.
-- Add `map-accum`: the callback takes state then element and returns
-  `(mapped value, next state)`; the result is `(mapped list, final state)`.
-- Expand `make { .name }` to `make { name = .name }` in the parser, including
-  nominal `make`. Keep nested paths explicitly named and other record forms
-  unchanged. Preserve field order and duplicate-field diagnostics.
-- Cover empty inputs, callback order/failure, early stopping, long traversal,
-  owned values and parser/formatter behavior. Compare raw interpreter/native
-  results and run all six CI jobs plus documentation before squash merge.
-
-Update the reference, generated library docs and live handoff in this bundle.
-No new runtime primitives, implicit grouping or implicit constant functions.
+Use `python3 scripts/local-guard.py COMMAND...` for focused serial local checks.
+Full builds, suites, benchmarks and large regeneration run on GitHub. Preserve
+64 GiB free disk, target data below 2 GiB, sampled workload RSS below 1 GiB and
+the 180-second deadline. Stop at limits. Memory changes require GC stress,
+verification and reuse controls; semantic changes require raw interpreter
+(`FWP_NO_OPT=1`) and native comparisons. Skipped or cancelled runs are not gates.

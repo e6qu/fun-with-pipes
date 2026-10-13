@@ -1,7 +1,10 @@
 # fwp ("foop")
 
-Native macOS support is merged. Current development completes runtime ownership,
-then numeric layouts and autodiff while preserving simple pipe semantics.
+The platform objective is Linux, macOS and Windows on ARM64 and AMD64, with one
+binary per OS/architecture. Linux and native macOS have existing support;
+full native Linux ARM64 acceptance remains to establish. Windows is desired on
+both architectures but deferred while Linux/macOS and efficiency work take priority.
+Ownership, numeric layouts and autodiff improvements preserve simple pipe semantics.
 See [PLAN.md](PLAN.md) for the ordered roadmap and
 [docs/development-state.md](docs/development-state.md) for the session handoff
 and actual validation status.

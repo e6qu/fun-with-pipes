@@ -75,6 +75,11 @@ Rust print different results.
 All six exact-head production jobs and the roadmap documentation audit are
 required before merging: Linux, bench, regular macOS arm64/x86-64 and separate
 GC stress jobs on both macOS architectures.
+The desired platform matrix is Linux, macOS and Windows on ARM64 and AMD64,
+with separate binaries. Windows is deferred; Linux/macOS and efficiency work
+take priority. These existing jobs do not yet establish Windows or
+full native Linux ARM64 acceptance. Add actual execution and memory/runtime gates
+as the missing support lands; see [the platform matrix](PLAN.md#platform-objective-and-current-evidence).
 For each macOS architecture, the two jobs split the integration targets using
 `scripts/run-macos-test-shard.py`: sorted Cargo target names alternate between
 the `regular` and `gc` shards. The regular job also runs unit, example and

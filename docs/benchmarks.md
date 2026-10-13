@@ -1,83 +1,47 @@
 # Benchmarks
 
-These tables record historical Linux measurements. Current priorities and
-verification are in [../PLAN.md](../PLAN.md) and
-[development-state.md](development-state.md). They do not establish macOS
-performance or general C/Rust parity.
+The accepted roadmap measurements are recorded in:
 
-The next evidence set adds numerics, gradients, escaping closures and
-allocation churn, with allocated/peak-live bytes, count operations and
-collection pauses alongside throughput. Separate allocation-inclusive and
-kernel-only times, record compiler/flags/hardware, and ensure equivalent
-work in comparisons: the string-length optimization below intentionally
-avoids formatting work that its existing C/Rust counterparts still do.
-Run full workloads on GitHub runners; assert results and stable allocation
-properties, not noisy elapsed-time thresholds.
+- [Numerical kernels](measurements/numerical-kernels-2026-10-12.json): equivalent
+  numerical and autodiff workloads on Linux and ARM/Intel macOS, with runner,
+  compiler, flags and measurement scope.
+- [Ownership and checked ARC](measurements/ownership-and-arc-2026-10-12.json):
+  allocation/live-memory and ownership controls, ARC executions and rejections,
+  binary evidence and the aggregate-return regression follow-up.
 
-`bench/<name>/` holds one program three times: `main.fwp`, `main.c` and
-`main.rs`, which print the same output. `tests/bench.rs` builds them with
-`fwp build -O2`, `cc -O2` and `rustc -O`, checks that the three agree,
-and reports the best of three runs of each:
+Reports distinguish preparation measurements from production acceptance.
+[History](roadmap-history.md) indexes accepted gates; [the handoff](development-state.md)
+records the latest tested source. These results do not establish universal C/Rust
+parity. New iterator/state combinators still need a current-head allocation and
+machine-code baseline, as recorded in [PLAN](../PLAN.md).
 
-```
+## Running comparisons
+
+Run full workloads on GitHub runners. `bench/<name>/` contains fwp, C and Rust
+programs with matching output. `tests/bench.rs` builds them with `fwp build -O2`,
+`cc -O2` and `rustc -O`, checks output agreement and reports the best of three runs:
+
+```sh
 cargo test --release --test bench -- --ignored --nocapture
 ```
 
-The table goes to standard output, to `target/bench.md`, and in CI (the
-`bench` job) to the job's summary. Timings are not asserted, because
-shared machines are too noisy for that; the outputs are.
+Results go to stdout, `target/bench.md` and the CI `bench` job summary. Assert
+outputs and stable allocation properties, not noisy shared-runner timing bounds.
+Record hardware, compiler/version, flags, input sizes, allocation/count totals,
+peak live memory and collections. Separate input construction and allocation
+from kernel-only timing where applicable.
 
-| Benchmark | What it measures |
+| Workload | Scope |
 |---|---|
-| `fib` | naive recursion: calls and integer arithmetic (`fib 35`) |
-| `loop` | a `loop` over a pair of integers, 100 million iterations |
-| `map` | an ordered map built from 500 000 pairs, then 2 million lookups |
-| `pipeline` | `range \| map \| filter \| sum` over a million elements, 20 times |
-| `strings` | formatting two numbers, concatenating, measuring, 2 million times |
+| `fib` | Recursive calls and integer arithmetic (`fib 35`) |
+| `loop` | Pair-state loop, 100 million iterations |
+| `map` | Build from 500,000 pairs, then 2 million lookups |
+| `pipeline` | `range \| map \| filter \| sum`, one million elements, 20 rounds |
+| `strings` | Format, concatenate and measure two numbers, 2 million rounds |
 
-On a 4-core x86-64 machine (GCC 13, Rust 1.99):
-
-| benchmark | C (cc -O2) | Rust (rustc -O) | fwp (fwp build -O2) | fwp / C |
-|---|--:|--:|--:|--:|
-| fib | 19 ms | 33 ms | 10 ms | 0.5× |
-| loop | 88 ms | 90 ms | 119 ms | 1.3× |
-| map | 543 ms | 407 ms | 599 ms | 1.1× |
-| pipeline | 40 ms | 25 ms | 32 ms | 0.8× |
-| strings | 155 ms | 160 ms | 16 ms | 0.1× |
-
-What the numbers say:
-
-- `fib` and `loop` are close to C: functions compile to C functions with
-  typed arithmetic, a known `loop` runs as a C loop with its state in
-  locals, and the optimizer inlines small recursive calls a few levels
-  deep (which, with GCC's own inlining, is why `fib` beats the C version
-  here). Integer arithmetic is checked for overflow in fwp, not in C. A
-  program without tasks has no safe points, so its loops count nothing
-  per iteration (`loop` took 227 ms while they did).
-- `map` is fwp's sorted-array map against C's sorted array and Rust's
-  B-tree. Integer keys are compared inline. The optimizer turns `key |
-  flip map.get table` into direct calls: a closure used once is
-  substituted where it is applied (after binding the constants it
-  captures, so they are still evaluated first), and a tuple built only to
-  be matched is never built, and a `match` on `map.get` branches on
-  whether the key was found instead of allocating a `Some`
-  (`lookup_match` in `src/cgen.rs`). What remains is the binary search's
-  cache misses, which C pays too. It took 1016 ms before these changes.
-- `pipeline` runs as one loop. `range | map | filter | sum` is fused
-  (`src/fuse.rs`), so no list is built, and the loop keeps its state in
-  C locals. Before fusion, each stage built a list of a million cells
-  (1.8 GB allocated over the run), and the benchmark took 1882 ms, 44
-  times as long as C. The outer `range 0 20 | map one-round | sum` is
-  fused too, with the inner pipeline fused inside its step.
-- `strings` builds no string at all. `string.length` of a `concat` is the
-  sum of the parts' lengths, and `string.length` of an integer's `show`
-  is its count of digits (`length_without_string` in `src/cgen.rs`).
-  The stages are total, so `map line | sum` is fused too. C and Rust
-  format into a buffer and measure it. Before these changes, fwp built
-  a string per number and per concatenation and took 631 ms (4.1×).
-  Integers are now shown without going through a type descriptor, which
-  helps every `show` of an integer.
-
-The benchmarks also found a bug: `map.from-list` and `set.from-list`
-inserted pairs one by one into a sorted array, copying it each time, so
-building a map of 500 000 entries never finished; they now sort once.
+Matching outputs do not ensure equivalent implementation work. The map comparison
+uses sorted arrays in fwp/C and a B-tree in Rust. The fwp string-length optimizer
+can avoid formatting that the C/Rust versions still perform. Those workloads
+cannot establish equal kernel throughput or a general language speed ratio.
+Use equivalent algorithms and actual work for optimization acceptance, and
+inspect native instructions when claiming eliminated allocation or dispatch.
