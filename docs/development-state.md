@@ -84,26 +84,42 @@ deployment interfaces and a new backend remain deferred.
 ## Active bundle and workspace
 
 The user authorized all ten tasks in PLAN.md as one PR, including docs cleanup.
+Draft PR #132: https://github.com/e6qu/fun-with-pipes/pull/132.
 Branch: `roadmap-status-audit`, base `8ae361a43f76`. Windows stays deferred.
-Task 1 is prepared locally. Tasks 2–4 now have CI/native artifact and measurement
-implementations awaiting runner execution; tasks 5–10 remain to implement.
-No task is accepted for this bundle yet. Earlier PR #131 gates above validate
-only its source, not these changes.
 
-Initial findings: Linux ARM64 currently uses cross-build/QEMU tests, not a native
-CI job. Wide integer boxes use leaf allocation without counted ownership. ARC
-rejects all AD primitives, so scoped eligibility requires an actual lifetime
-proof. Preserve these restrictions until replacement contracts are verified.
+| Task | Current state |
+|---|---|
+| 1 Docs | Cleanup prepared; final behavior/measurement docs still need verified results |
+| 2 Linux ARM64 | Native job added; baseline CI 38365626793 is running |
+| 3 Binaries | Four native artifact packages and outside-checkout smoke checks added; execution pending |
+| 4 Measurements | Current compiler, separate timing/profile binaries and disassembly script added; baseline pending |
+| 5 Callback dispatch | Known iterator callbacks carried into fused steps; draft awaiting compiler checks |
+| 6 Loop allocation | Direct consumers use flat generated loop state; measured reduction not yet established |
+| 7 Fusion | Existing iterator fuser generalized to fold/each/find; semantic verification pending |
+| 8 Reconstructed trees | CSV parser builds counted nested strings/lists with registered partial cleanup; tests pending |
+| 9 Wide integers | Typed I128/U128 owners, numeric contracts and range/negation lifetime fixes drafted; tests pending |
+| 10 Scoped AD | Not implemented; raw AD remains rejected pending scope proof |
 
-The preceding documentation-only audit passed guarded check-roadmap.py
-(44 link sets, 106 immutable pairs/tags, zero legacy live rows) and diff --check.
-The new Python script syntax, documentation and whitespace check also passed
-under local-guard (0.36s sampled CPU / 2.89s elapsed). Full builds, tests,
-benchmarks and evidence regeneration stay on GitHub runners.
+No task is accepted for this bundle yet. Baseline head
+`c9a86c6ccb8adafb312ab1bab80aa2f9801eee8e` contains tasks 1–4 infrastructure;
+its passing jobs cannot validate subsequent compiler changes. Use the Numerical
+and ownership evidence workflow with `suite=bundle` for focused runner checks.
+Intermediate preflight commits may skip automatic full CI to avoid repeated
+full matrices; the final head must run and pass every production job plus docs.
+
+Local validation is serial through `python3 scripts/local-guard.py`:
+Python syntax/docs/whitespace passed (0.36s sampled CPU / 2.89s elapsed).
+Rustfmt on edited modules passed (0.04s / 0.25s). The standalone primitive
+inventory passed (0.26s / 0.97s): 375 declarations, 365 symbols, 204 contracts,
+141 review declarations/131 symbols, 11 flat signatures, 19 IR combinators.
+An initial invocation omitted the required baseline argument; corrected before
+publication. The immutable original inventory is unchanged. Full builds/tests
+and evidence generation remain on runners.
 
 ## Next action
 
-Add native Linux ARM64 CI and independently runnable artifacts for all four
-current OS/architecture combinations, prepare baseline combinator evidence,
-then implement tasks 5–10. Publish one PR and require all final-head existing
-and newly added gates before the one-line, trailer-free squash merge.
+Run focused runner validation for iterator/CSV/wide ownership changes and fix
+all failures. Implement scoped AD eligibility and its lifetime/escape controls;
+add allocation and semantic regression controls for the direct consumers.
+Retain actual baseline/final artifacts, update support docs with measured limits,
+then run the complete final matrix and merge only after all ten criteria pass.

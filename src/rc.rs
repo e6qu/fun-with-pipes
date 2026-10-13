@@ -37,7 +37,7 @@ type Set = BTreeSet<Local>;
 /// Compiled dynamic applications own closures and typed captures; task
 /// handles own cached results, and channels own queued elements. Unknown
 /// callbacks and other runtime values
-/// remain shared. Never count integers, floats, `Bool`, `()` and other enumerations. A type this pass
+/// remain shared. Never count unboxed integers, floats, `Bool`, `()` and other enumerations. A type this pass
 /// does not know (`unknown`) is counted.
 pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
     match t {
@@ -47,7 +47,13 @@ pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
                 || is_container(n)
                 || matches!(
                     n.as_str(),
-                    "std::String" | "std::Bytes" | "std::Task" | "std::Channel" | "std::File"
+                    "std::String"
+                        | "std::Bytes"
+                        | "std::I128"
+                        | "std::U128"
+                        | "std::Task"
+                        | "std::Channel"
+                        | "std::File"
                 ) =>
         {
             true
