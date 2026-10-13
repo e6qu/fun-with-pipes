@@ -263,10 +263,13 @@ static V fwp_saturating(int k, int op, V a, V b, const char *name) {
 }
 
 static V fwp_overflowing(int k, int op, V a, V b) {
-    V w = fwp_wrapping(k, op, a, b), out;
+    V out;
     int err;
     int ok = fwp_arith_raw(k, op, a, b, 0, &out, &err);
-    return fwp_tuple2(w, ok ? FWP_FALSE : FWP_TRUE);
+    /* The successful checked result already is the wrapped result. In the
+     * wide case allocating both would abandon one 16-byte numeric box. */
+    if (!ok) out = fwp_wrapping(k, op, a, b);
+    return fwp_tuple2(out, ok ? FWP_FALSE : FWP_TRUE);
 }
 
 static V fwp_bitop(int k, int which, V a, V b) {

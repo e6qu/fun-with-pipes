@@ -8,7 +8,7 @@ fn checked(command: &mut Command) -> Output {
 }
 
 #[test]
-fn csv_and_wide_values_match_raw_interpreter_and_reclaim() {
+fn extended_owners_match_raw_interpreter_and_reclaim() {
     let dir = std::env::temp_dir().join(format!("fwp-arc-extensions-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let cases = [
@@ -22,6 +22,7 @@ main = [
     "" | csv.parse | echo,
     "a,b\r\n\n\"open" | csv.parse | echo,
     "a;b\nc;d" | csv.parse-with ";" | echo,
+    "aéb\ncé" | csv.parse-with "é" | echo,
 ] | ignore
 "#,
         ),
@@ -46,6 +47,18 @@ main = [
     170141183460469231731687303715884105727i128 | checked.add 1i128 | echo,
     340282366920938463463374607431768211455u128 | wrapping.add 1u128 | echo,
     42 | int.convert | signed-result | echo,
+] | ignore
+"#,
+        ),
+        (
+            "scoped-ad",
+            r#"
+loss : List[Rev[F64]] -> Rev[F64]
+loss = nth 0 | option.unwrap-or (rev.const 0.0) | fork mul id id
+main = [
+    range 0 33 | map (int.to-float | singleton | grad loss | sum) | sum | echo,
+    range 0 8 | map (ad.scope ad.tape) | length | echo,
+    [3.0] | value-and-grad loss | echo,
 ] | ignore
 "#,
         ),
@@ -77,6 +90,11 @@ main = [
             let (runtime, body) = emitted.split_at(main);
             let body = body.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t extension_budget = fwp_gc.budget;\n")
                 .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.budget < extension_budget) { fprintf(stderr, \"unreclaimed: %ld\\n\", (long)(extension_budget-fwp_gc.budget)); exit(193); }\n");
+            let body = if name == "scoped-ad" {
+                body.replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    for (int64_t i=0;i<fwp_ntapes;i++) if(fwp_tapes[i].live) exit(194);\n    if(fwp_tape_cached_bytes > FWP_AD_WORKSPACE_BUDGET) exit(195);\n")
+            } else {
+                body
+            };
             let measured = format!("{runtime}{body}");
             for opt in ["-O1", "-O2"] {
                 let binary = dir.join(format!("{name}-{stack}{opt}"));
@@ -118,6 +136,132 @@ main = [
                 Some(193)
             );
         }
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn raw_ad_cannot_escape_scope_proof_through_callbacks_or_arguments() {
+    let dir = std::env::temp_dir().join(format!("fwp-ad-scope-rejections-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    for (name, source) in [
+        ("direct", "main = 1 | ad.tape | echo\n"),
+        ("before-scope", "main = 1 | ad.tape | ad.scope id | echo\n"),
+        (
+            "returned-callback",
+            "main = () | ad.scope (const ad.tape) | apply 1 | echo\n",
+        ),
+        (
+            "container-callback",
+            "main = [1] | list.ap [ad.tape] | echo\n",
+        ),
+    ] {
+        let source_path = dir.join(format!("{name}.fwp"));
+        std::fs::write(&source_path, source).unwrap();
+        let result = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--gc", "arc", "--emit-c"])
+            .arg(&source_path)
+            .arg("-o")
+            .arg(dir.join("rejected.c"))
+            .output()
+            .unwrap();
+        assert!(!result.status.success(), "{name}");
+        let error = String::from_utf8_lossy(&result.stderr);
+        assert!(
+            error.contains("tracing-free lifetime policy"),
+            "{name}: {error}"
+        );
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn csv_partial_construction_releases_fields_rows_and_scratch_on_trap() {
+    let dir = std::env::temp_dir().join(format!("fwp-csv-unwind-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let input = dir.join("csv.fwp");
+    std::fs::write(&input, "main = \"a,b\\nc,d\" | csv.parse | echo\n").unwrap();
+    let cfile = dir.join("csv.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--gc", "arc", "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let call = code
+        .split("return fwp_p_csv_parse_with(")
+        .nth(1)
+        .unwrap()
+        .split(");")
+        .next()
+        .unwrap();
+    let args: Vec<_> = call.split(", ").collect();
+    assert_eq!(args.len(), 5);
+    let call = format!(
+        "fwp_p_csv_parse_with(separator, text, {}, {}, {})",
+        args[2], args[3], args[4]
+    );
+    let probe = format!(
+        r#"
+static int csv_recover(void) {{ return 1; }}
+int main(void) {{
+    fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    V separator=fwp_cstr(","), text=fwp_cstr("a,b\nc,d\ne,f");
+    intptr_t budget=fwp_gc.budget;
+    jmp_buf trap; fwp_trap_jb=&trap; fwp_trap_cleanup=0; fwp_trap_recover=csv_recover;
+    for(csv_probe_at=1;csv_probe_at<=6;csv_probe_at++) {{
+        csv_probe_step=0;
+        if(!setjmp(trap)) {{ (void){call}; return 191; }}
+        if(strcmp(fwp_trap_msg,"CSV construction control")) return 192;
+        if(fwp_cleanups || fwp_gc.budget!=budget) return 193;
+    }}
+    csv_probe_at=0;
+    V rows={call};
+    {drop_rows}(rows);
+    if(fwp_cleanups || fwp_gc.budget!=budget || fwp_gc.ncollect) return 194;
+    puts("CSV partial cleanup verified"); return 0;
+}}
+"#,
+        drop_rows = args[3]
+    );
+    let declaration = "static int csv_probe_at,csv_probe_step; static void csv_probe_point(void){if(++csv_probe_step==csv_probe_at)fwp_trap(\"CSV construction control\");}\n";
+    let code = code
+        .replace(
+            "static V fwp_p_csv_parse_with(V sepv",
+            &format!("{declaration}static V fwp_p_csv_parse_with(V sepv"),
+        )
+        .replace(
+            "owner.row = fwp_rc_fresh(fwp_cons(owner.field, owner.row));",
+            "csv_probe_point(); owner.row = fwp_rc_fresh(fwp_cons(owner.field, owner.row));",
+        )
+        .replace(
+            "owner.rows = fwp_rc_fresh(fwp_cons(owner.row, owner.rows));",
+            "csv_probe_point(); owner.rows = fwp_rc_fresh(fwp_cons(owner.row, owner.rows));",
+        )
+        .replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+    let code = format!("{code}\n{probe}");
+    let omitted = code.replace(
+        "    o->drop_field(o->field);",
+        "    /* omitted field release */",
+    );
+    assert_ne!(code, omitted);
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(opt);
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        assert_eq!(
+            checked(&mut Command::new(&binary)).stdout,
+            b"CSV partial cleanup verified\n"
+        );
+        fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
+        assert_eq!(
+            Command::new(&binary).output().unwrap().status.code(),
+            Some(193)
+        );
     }
     std::fs::remove_dir_all(dir).unwrap();
 }

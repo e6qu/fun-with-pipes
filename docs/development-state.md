@@ -98,7 +98,7 @@ Branch: `roadmap-status-audit`, base `8ae361a43f76`. Windows stays deferred.
 | 7 Fusion | Existing iterator fuser generalized to fold/each/find; semantic verification pending |
 | 8 Reconstructed trees | CSV parser builds counted nested strings/lists with registered partial cleanup; tests pending |
 | 9 Wide integers | Typed I128/U128 owners, numeric contracts and range/negation lifetime fixes drafted; tests pending |
-| 10 Scoped AD | Not implemented; raw AD remains rejected pending scope proof |
+| 10 Scoped AD | Finite closure-flow scope proof and escape/reclamation controls drafted; verification pending |
 
 No task is accepted for this bundle yet. Baseline head
 `c9a86c6ccb8adafb312ab1bab80aa2f9801eee8e` contains tasks 1–4 infrastructure;
@@ -115,6 +115,17 @@ inventory passed (0.26s / 0.97s): 375 declarations, 365 symbols, 204 contracts,
 An initial invocation omitted the required baseline argument; corrected before
 publication. The immutable original inventory is unchanged. Full builds/tests
 and evidence generation remain on runners.
+
+## Current runner findings
+
+Baseline macOS ARM regular job passed, including native artifact smoke checks and
+iterator measurements. Other baseline gates remain pending. Focused preflight
+38367368626 compiled successfully on completed runners; CSV reclamation and
+existing iterator semantic checks pass. It found a 2,064-byte wide-integer leak
+(129 iterations): overflowing arithmetic allocated and discarded a second box.
+The working revision reuses the successful result and replaces the obsolete
+blanket I128 rejection test. These fixes and the new AD scope proof await CI.
+CSV partial-construction trap tests and direct-consumer fusion controls are added.
 
 ## Next action
 

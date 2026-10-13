@@ -62,6 +62,7 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
             "--gc arc: native declaration `{name}` has no checked ownership signature"
         ));
     }
+    crate::arc_scope::check(prog)?;
     let mut seen = HashSet::new();
     for f in &prog.funcs {
         let reject = |reason: String| format!("--gc arc: `{}`: {reason}", f.name);
@@ -79,13 +80,12 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
             Body::Prim(symbol) => symbol.as_str(),
         };
         // Mutable cells, retained callbacks and raw addresses can form cycles or
-        // hide owners from the typed graph. Raw AD tokens also need a proved
-        // tape scope; a synchronous value contract alone is not enough.
+        // hide owners from the typed graph. AD scope reachability is proved
+        // separately above; a synchronous value contract alone is not enough.
         if symbol.starts_with("task.")
             || symbol.starts_with("channel.")
             || symbol.starts_with("mem.")
             || symbol.starts_with("ptr.")
-            || symbol.starts_with("ad.")
             || symbol == "run-state"
         {
             return Err(reject(format!(

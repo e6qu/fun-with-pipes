@@ -1,5 +1,5 @@
 # iter.to-list over iter.map, iter.filter and iter.take: one loop that
-# pulls the source one element at a time (src/fuse.rs, iter_to_list).
+# pulls the source one element at a time (src/fuse.rs, iter_consume).
 # The take of 0 never maps; the take of 1 never forces the division.
 
 main = [

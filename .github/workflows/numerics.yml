@@ -119,12 +119,14 @@ jobs:
           brew install openssl@3
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
       - name: Format and compiler checks
+        id: compiler
         run: |
           cargo fmt --all -- --check
           cargo clippy --all-targets -- -D warnings
       - name: Focused bundle regressions
-        run: cargo test --no-fail-fast --test arc_extensions --test arc_execution --test iteration_consumers --test list_generation_ownership --test arc_corpus --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace
+        run: cargo test --no-fail-fast --test arc_extensions --test arc_execution --test iteration_consumers --test iterator_fusion --test list_generation_ownership --test arc_corpus --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace
       - name: Compiler and allocation evidence
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
           cargo build --release --bin fwp
           python3 scripts/measure-iteration.py --output bundle-evidence/iteration
