@@ -1,4 +1,4 @@
-//! Finite closure-flow proof that every executed raw AD operation has a scope.
+//! Finite closure-flow proof for raw AD operations and typed State lifetimes.
 //!
 //! Function values are sets of (function, supplied-argument count). Captures and
 //! call summaries join monotonically. Aggregate fields conservatively share a
@@ -10,7 +10,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 type Closure = (FuncId, usize);
 type Targets = BTreeSet<Closure>;
-type Context = (FuncId, bool);
+type Context = (FuncId, u8);
+const AD: u8 = 1;
+const STATE: u8 = 2;
 
 struct Proof<'a> {
     program: &'a Program,
@@ -19,6 +21,7 @@ struct Proof<'a> {
     outputs: BTreeMap<Context, Targets>,
     changed: bool,
     validate: bool,
+    state_values: Targets,
 }
 
 fn join(destination: &mut Targets, source: &Targets) -> bool {
@@ -56,7 +59,7 @@ fn has_functions(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
 }
 
 impl Proof<'_> {
-    fn request(&mut self, id: FuncId, scoped: bool, args: &[Targets]) -> Targets {
+    fn request(&mut self, id: FuncId, scoped: u8, args: &[Targets]) -> Targets {
         let key = (id, scoped);
         if let std::collections::btree_map::Entry::Vacant(entry) = self.inputs.entry(key) {
             entry.insert(vec![Targets::new(); self.program.funcs[id].arity as usize]);
@@ -84,11 +87,11 @@ impl Proof<'_> {
         &mut self,
         functions: &Targets,
         args: &[Targets],
-        scoped: bool,
+        scoped: u8,
     ) -> Result<Targets, String> {
         if self.validate && functions.is_empty() {
             return Err(
-                "--gc arc: cannot prove the target of a call in an autodiff program".into(),
+                "--gc arc: cannot prove the target of a call in a scoped ownership program".into(),
             );
         }
         let mut result = Targets::new();
@@ -155,12 +158,7 @@ impl Proof<'_> {
         }
     }
 
-    fn expr(
-        &mut self,
-        expr: &Expr,
-        locals: &mut [Targets],
-        scoped: bool,
-    ) -> Result<Targets, String> {
+    fn expr(&mut self, expr: &Expr, locals: &mut [Targets], scoped: u8) -> Result<Targets, String> {
         let result = match expr {
             Expr::Local(local) => locals[*local as usize].clone(),
             Expr::Const(value) => self.constant(value),
@@ -217,7 +215,7 @@ impl Proof<'_> {
         Ok(result)
     }
 
-    fn function(&mut self, id: FuncId, scoped: bool, args: &[Targets]) -> Result<Targets, String> {
+    fn function(&mut self, id: FuncId, scoped: u8, args: &[Targets]) -> Result<Targets, String> {
         let function = &self.program.funcs[id];
         match &function.body {
             Body::Expr(body) => {
@@ -228,12 +226,38 @@ impl Proof<'_> {
                 self.expr(body, &mut locals, scoped)
             }
             Body::Prim(symbol) if matches!(symbol.as_str(), "ad.scope" | "ad.scope2") => {
-                self.apply(&args[0], &args[1..], true)
+                self.apply(&args[0], &args[1..], scoped | AD)
+            }
+            Body::Prim(symbol) if symbol == "run-state" => {
+                // State cells are stack owners, never captured addresses. A
+                // callback can return a closure, but that closure must execute
+                // under a fresh State scope before it uses get/put/modify.
+                self.changed |= join(&mut self.state_values, &args[0]);
+                let mut result = self.apply(&args[1], &args[2..], scoped | STATE)?;
+                result.extend(self.state_values.iter().copied());
+                Ok(result)
+            }
+            Body::Prim(symbol) if matches!(symbol.as_str(), "get" | "put" | "modify") => {
+                if scoped & STATE == 0 {
+                    return Err(format!("--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside a State scope"));
+                }
+                match symbol.as_str() {
+                    "get" => Ok(self.state_values.clone()),
+                    "put" => {
+                        self.changed |= join(&mut self.state_values, &args[0]);
+                        Ok(Targets::new())
+                    }
+                    _ => {
+                        let value = self.apply(&args[0], &[self.state_values.clone()], scoped)?;
+                        self.changed |= join(&mut self.state_values, &value);
+                        Ok(Targets::new())
+                    }
+                }
             }
             Body::Prim(symbol)
                 if matches!(symbol.as_str(), "ad.tape" | "ad.push" | "ad.backward") =>
             {
-                if !scoped {
+                if scoped & AD == 0 {
                     return Err(format!("--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside an autodiff scope"));
                 }
                 Ok(Targets::new())
@@ -261,7 +285,7 @@ impl Proof<'_> {
 }
 
 pub(crate) fn check(program: &Program) -> Result<(), String> {
-    if !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "ad.tape" | "ad.push" | "ad.backward"))) {
+    if !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "ad.tape" | "ad.push" | "ad.backward" | "run-state" | "get" | "put" | "modify"))) {
         return Ok(());
     }
     let mut proof = Proof {
@@ -271,11 +295,12 @@ pub(crate) fn check(program: &Program) -> Result<(), String> {
         outputs: BTreeMap::new(),
         changed: false,
         validate: false,
+        state_values: Targets::new(),
     };
     let main = program
         .main
-        .ok_or("--gc arc: scoped autodiff requires a native main entry")?;
-    proof.request(main, false, &[]);
+        .ok_or("--gc arc: scoped ownership requires a native main entry")?;
+    proof.request(main, 0, &[]);
     loop {
         proof.changed = false;
         for ((id, scoped), args) in proof.inputs.clone() {

@@ -83,7 +83,7 @@ def loop_evidence(code):
         # Only forcing a lazy source tail may remain dynamically dispatched in
         # these known-callback probes. Filter paths contain separate call sites.
         tail_calls = len(re.findall(r'fwp_apply_owned\([^,]+, 1, \(V\[\]\)\{\(V\)0\}\)', worker))
-        assert tail_calls > 0 and worker.count('fwp_apply_') == tail_calls
+        assert worker.count('fwp_apply_') == tail_calls
         assert 'fwp_record(' not in worker and 'fwp_closure(' not in worker
         workers.append(dict(tailCallSites=tail_calls, dynamicConsumerCallSites=0,
                             stateRecordConstructions=0))
@@ -106,15 +106,17 @@ def main():
         source = out / (name + '.fwp')
         source.write_text('main = () | args | head | option.and-then parse-int | option.unwrap-or 1000\n    | ' + expression + ' | echo\n')
         reference = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1')).stdout
-        variants = (True, False) if name in ('fold', 'each', 'find', 'pipeline') else (True,)
-        for fused in variants:
-            label = name if fused else name + '-unfused'
-            variant_env = dict(environment, FWP_ITER_CONSUMERS='1' if fused else '0')
+        variants = ((True, True), (True, False), (False, False)) if name in ('fold', 'each', 'find', 'pipeline') else ((True, True),)
+        for fused, producers in variants:
+            label = name if producers else name + ('-consumer-only' if fused else '-unfused')
+            variant_env = dict(environment, FWP_ITER_CONSUMERS='1' if fused else '0', FWP_ITER_PRODUCERS='1' if producers else '0')
             cfile = out / (label + '.c')
             run([compiler, 'build', '-O2', '--emit-c', source, '-o', cfile], variant_env)
             workers = loop_evidence(cfile.read_text())
             if name in ('fold', 'each', 'find', 'pipeline'):
                 assert bool(workers) == fused, (name, fused, workers)
+                if producers:
+                    assert all(w['tailCallSites'] == 0 for w in workers), (name, workers)
             profile = out / (label + '-profile.c')
             profile.write_text(instrument(cfile.read_text()))
             commands = []
@@ -140,7 +142,7 @@ def main():
                                  medianProcessWallNs=statistics.median(samples), commands=commands,
                                  sourceSha256=hashlib.sha256(source.read_bytes()).hexdigest(),
                                  generatedSha256=hashlib.sha256(cfile.read_bytes()).hexdigest(),
-                                 consumerFusion=fused, fusedLoopWorkers=workers)
+                                 consumerFusion=fused, producerFusion=producers, fusedLoopWorkers=workers)
     report = dict(head=run(['git', 'rev-parse', 'HEAD']).stdout.strip(),
                   hardware=platform.uname()._asdict(),
                   cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,

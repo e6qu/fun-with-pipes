@@ -4472,6 +4472,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         | "drop-while"
                         | "find"
                         | "loop"
+                        | "modify"
                 ) =>
             {
                 s.clone()
@@ -4495,6 +4496,29 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         }
         self.g.used_closures[g] = true;
+        if sym == "modify" {
+            let mut values = match &args[0] {
+                Expr::Func(_) => Vec::new(),
+                Expr::Local(l) => (0..n).map(|j| format!("CLO(l{l})->a[{j}]")).collect(),
+                Expr::Apply(_, captures) => self.args(captures),
+                _ => return None,
+            };
+            values.push("fwp_p_get()".into());
+            let arguments = self.fresh();
+            self.line(&format!("V {arguments}[] = {{{}}};", values.join(", ")));
+            self.line(&format!("fwp_args{g}({arguments}, 0, {});", n + 1));
+            let value = self.bind(format!("fwp_owned_entry{g}({arguments})"));
+            let state = self.g.prog.funcs[g].ty.params(n + 1).1.clone();
+            let duplicate = if crate::rc::needs_rc(&self.g.prog.shapes, &state) {
+                self.g.value_dup(&state)
+            } else {
+                "NULL"
+            };
+            let drop = self.g.value_drop(&state);
+            return Some(format!(
+                "fwp_state_modify_result({value}, {duplicate}, {drop})"
+            ));
+        }
         if sym == "loop" && n == 0 {
             if let Some(Some(width)) = loop_shape(&self.g.prog.funcs[g]) {
                 let flat = record_fields(&self.g.prog.shapes, &self.g.prog.funcs[g].locals[0])

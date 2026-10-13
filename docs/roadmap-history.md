@@ -89,3 +89,23 @@ covering 275 targets / 31,127,348 bytes. On recovery, query the branch tip and
 use its current-map.json and designated publisher. Restore through the
 hash-checking restore-roadmap-recovery.py procedure; never rerun completed
 publishers. The immutable snapshot above retains the detailed provenance.
+
+## Ten-task platform and ownership bundle (PR #132)
+
+Accepted 2026-10-13 in [PR #132](https://github.com/e6qu/fun-with-pipes/pull/132),
+squash `c67800ec8530e44501c54c69719af26b0585bedc`, tested head
+`7036ecebdbef50a5a8f851ed084378c830af1e79`, identical tree
+`0ea780f684a8da12baa549986a4f5bc4feebbc47`.
+[Production CI](https://github.com/e6qu/fun-with-pipes/actions/runs/38381034611)
+passed Linux ARM64/AMD64, bench and regular/GC macOS ARM/Intel jobs;
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38381034667) passed.
+Four separately packaged native compilers passed outside-checkout execution.
+The bundle delivered consumer fusion, known callback specialization, flat loop
+state, counted CSV trees and I128/U128 leaves, and scoped autodiff ARC proof.
+It fixed CSV generational root corruption, wide overflowing-result cleanup,
+portable signed 128-bit multiplication and U64 multiplication overflow.
+[Four-platform measurements](measurements/native-ownership-2026-10-13.json)
+retain focused controls. At 1,000 elements, paired map/filter/fold requests fell
+from 9,511 to 4,003; lazy producers still allocate. Warm AD workloads allocate
+no new native workspace buffers but still allocate managed result arrays.
+No general GC-free or zero-allocation claim follows from this acceptance.

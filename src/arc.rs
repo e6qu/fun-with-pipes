@@ -86,7 +86,6 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
             || symbol.starts_with("channel.")
             || symbol.starts_with("mem.")
             || symbol.starts_with("ptr.")
-            || symbol == "run-state"
         {
             return Err(reject(format!(
                 "primitive `{symbol}` has no tracing-free lifetime policy"

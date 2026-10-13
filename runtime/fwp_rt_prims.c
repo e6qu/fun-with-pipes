@@ -2641,17 +2641,23 @@ static V fwp_p_put_owned(V value, void (*duplicate)(V)) {
     return FWP_UNIT;
 }
 
-static V fwp_p_modify_owned(V function, void (*duplicate)(V), void (*drop)(V)) {
-    V current = fwp_p_get();
-    V result = fwp_apply_borrowed(function, 1, &current);
+/* Both generic and statically known callbacks transfer their result here. */
+static V fwp_state_modify_result(V result, void (*duplicate)(V), void (*drop)(V)) {
     fwp_state_owner *owner = fwp_state_current_owner();
     if (owner) fwp_state_install_owned(owner, result);
     else if (fwp_state_len) {
         if (duplicate) fwp_rc_share(result);
         fwp_state[fwp_state_len - 1] = result;
     } else if (drop && result) drop(result);
-    FWP_KEEP_ALIVE(function);
     return FWP_UNIT;
+}
+
+static V fwp_p_modify_owned(V function, void (*duplicate)(V), void (*drop)(V)) {
+    V current = fwp_p_get();
+    V result = fwp_apply_borrowed(function, 1, &current);
+    V unit = fwp_state_modify_result(result, duplicate, drop);
+    FWP_KEEP_ALIVE(function);
+    return unit;
 }
 
 static V fwp_p_run_state_owned(V initial, V function, V argument,

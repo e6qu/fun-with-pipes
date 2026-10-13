@@ -27,6 +27,27 @@ main = [
 "#,
         ),
         (
+            "state",
+            r#"
+read-state : () -> String ! {State[String]}
+read-state = get
+update-state : String -> () ! {State[String]}
+update-state = concat | modify
+fail-state : String -> () ! {State[String], Error[String]}
+fail-state = tap update-state | fail
+state-function : String -> (() -> String ! {State[String]})
+state-function = concat | compose get
+main = [
+    range 0 65 | map (show | run-state "initial" (tap update-state | const () | get)) | echo,
+    "next" | run-state "outer" (run-state "inner" update-state | echo | const () | get) | echo,
+    "failure" | attempt (run-state "old" fail-state) | echo,
+    "suffix" | state-function | flip (run-state "fresh") () | echo,
+    range 0 33 | run-state 0 (each (add | modify)) | echo,
+    () | run-state ("a" | concat "b" | concat) (get | apply "c") | .0 | echo,
+] | ignore
+"#,
+        ),
+        (
             "wide",
             r#"
 signed : I64 -> I128

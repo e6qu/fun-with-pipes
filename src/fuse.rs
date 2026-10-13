@@ -454,10 +454,38 @@ impl Fuser<'_> {
         if raw.is_empty() && kind == "list" {
             return None;
         }
-        let src_ty = self.ty_in(&self.locals, cur)?;
-        let src_elem = elem(&src_ty)?;
+        let iterator_ty = self.ty_in(&self.locals, cur)?;
+        let src_elem = elem(&iterator_ty)?;
         let result_ty = funcs[consumer].ty.params(args.len()).1.clone();
         let i64 = MT::con("std::I64");
+        // Eliminate only producers whose construction/forcing order is known.
+        // count-from computes its successor while constructing each Yield,
+        // including the initial Yield even when take is already exhausted.
+        let producer = if std::env::var("FWP_ITER_PRODUCERS").is_ok_and(|v| v == "0") {
+            None
+        } else if let Expr::Call(id, arguments) = cur {
+            match (self.std_name(*id), arguments.as_slice()) {
+                (Some("std::iter.count-from"), [initial]) if src_elem == i64 => {
+                    Some(("count", initial.clone()))
+                }
+                (Some("std::iter.from-list"), [list]) => Some(("list", list.clone())),
+                _ => None,
+            }
+        } else {
+            None
+        };
+        let src_ty = match &producer {
+            Some(("count", _)) => {
+                MT::Record(vec![("0".into(), i64.clone()), ("1".into(), i64.clone())])
+            }
+            Some(("list", source)) => self.ty_in(&self.locals, source)?,
+            _ => iterator_ty.clone(),
+        };
+        let next_count = if matches!(producer, Some(("count", _))) {
+            Some(self.prim("prim.add", fun2(&i64, &i64, &i64), 2))
+        } else {
+            None
+        };
         let lt = self.prim("lt", fun2(&i64, &i64, &MT::con("std::Bool")), 2);
         let subp = self.prim("prim.sub", fun2(&i64, &i64, &i64), 2);
         let rev = (kind == "list").then(|| {
@@ -508,9 +536,24 @@ impl Fuser<'_> {
             }
         }
         stages.reverse(); // the source's side first
+        let source = match &producer {
+            Some(("count", initial)) => {
+                let current = self.fresh(i64.clone());
+                binds.push((current, initial.clone()));
+                Expr::Record(vec![
+                    Expr::Local(current),
+                    Expr::Call(
+                        next_count?,
+                        vec![Expr::Const(Value::I64(1)), Expr::Local(current)],
+                    ),
+                ])
+            }
+            Some(("list", list)) => list.clone(),
+            _ => cur.clone(),
+        };
         let src = {
             let l = self.fresh(src_ty.clone());
-            binds.push((l, cur.clone()));
+            binds.push((l, source));
             Expr::Local(l)
         };
         // the state: the iterator, the list so far (reversed), the take
@@ -561,22 +604,34 @@ impl Fuser<'_> {
         let mut nl: Vec<MT> = vec![
             state_ty.clone(),
             src_elem,
-            MT::Fun(Box::new(MT::unit()), Box::new(src_ty.clone())),
+            match &producer {
+                Some(("count", _)) => i64.clone(),
+                Some(("list", _)) => src_ty.clone(),
+                _ => MT::Fun(Box::new(MT::unit()), Box::new(iterator_ty.clone())),
+            },
         ];
         let unit = Expr::Const(Value::unit());
         let less_than_one = |c: Expr| Expr::Call(lt, vec![Expr::Const(Value::I64(1)), c]);
         // go on to the next element, or stop when a take is exhausted
-        let go_on = |acc: Expr, counters: &[Expr]| {
-            let mut fs = vec![
-                Expr::Apply(Box::new(Expr::Local(t)), vec![unit.clone()]),
-                acc.clone(),
-            ];
+        let go_on = |acc: Expr, counters: &[Expr], reached: &[usize]| {
+            let tail = match &producer {
+                Some(("count", _)) => Expr::Record(vec![
+                    Expr::Local(t),
+                    Expr::Call(
+                        next_count.expect("count increment"),
+                        vec![Expr::Const(Value::I64(1)), Expr::Local(t)],
+                    ),
+                ]),
+                Some(("list", _)) => Expr::Local(t),
+                _ => Expr::Apply(Box::new(Expr::Local(t)), vec![unit.clone()]),
+            };
+            let mut fs = vec![tail, acc.clone()];
             fs.extend(counters.iter().cloned());
             fs.extend((0..nout).map(|i| st(2 + nt + i)));
             let mut e = Expr::Construct(0, vec![Expr::Record(fs)]);
-            for c in counters.iter().rev() {
+            for &k in reached.iter().rev() {
                 e = Expr::Match(
-                    Box::new(less_than_one(c.clone())),
+                    Box::new(less_than_one(counters[k].clone())),
                     vec![
                         (
                             Pat::Construct(1, vec![]),
@@ -592,9 +647,11 @@ impl Fuser<'_> {
         // built from the end, so collect the steps first
         enum Do {
             Let(Local, Expr),
-            Guard(Expr, Vec<Expr>),
+            Guard(Expr, Vec<Expr>, Vec<usize>),
+            Take(Expr),
         }
         let mut steps: Vec<Do> = Vec::new();
+        let mut reached = Vec::new();
         let mut x = Expr::Local(h);
         let mut counters: Vec<Expr> = (0..nt).map(|k| st(2 + k)).collect();
         let elems = raw.iter().rev().map(|(_, _, t)| t.clone());
@@ -611,9 +668,11 @@ impl Fuser<'_> {
                 }
                 (St::Filter(_), Some(f)) => {
                     let cond = Expr::Apply(Box::new(f.clone()), vec![x.clone()]);
-                    steps.push(Do::Guard(cond, counters.clone()));
+                    steps.push(Do::Guard(cond, counters.clone(), reached.clone()));
                 }
                 (St::Take(k), _) => {
+                    steps.push(Do::Take(less_than_one(counters[*k].clone())));
+                    reached.push(*k);
                     let l = nl.len() as Local;
                     nl.push(i64.clone());
                     steps.push(Do::Let(
@@ -626,7 +685,7 @@ impl Fuser<'_> {
             }
         }
         let mut body = match kind {
-            "list" => go_on(Expr::Construct(1, vec![x, st(1)]), &counters),
+            "list" => go_on(Expr::Construct(1, vec![x, st(1)]), &counters, &reached),
             "find" => Expr::Match(
                 Box::new(Expr::Apply(Box::new(callback?), vec![x.clone()])),
                 vec![
@@ -634,7 +693,7 @@ impl Fuser<'_> {
                         Pat::Construct(1, vec![]),
                         Expr::Construct(1, vec![Expr::Construct(1, vec![x])]),
                     ),
-                    (Pat::Wild, go_on(st(1), &counters)),
+                    (Pat::Wild, go_on(st(1), &counters, &reached)),
                 ],
             ),
             "fold" | "each" => {
@@ -650,7 +709,7 @@ impl Fuser<'_> {
                 Expr::Let(
                     local,
                     Box::new(Expr::Apply(Box::new(callback?), inputs)),
-                    Box::new(go_on(Expr::Local(local), &counters)),
+                    Box::new(go_on(Expr::Local(local), &counters, &reached)),
                 )
             }
             _ => unreachable!(),
@@ -658,30 +717,37 @@ impl Fuser<'_> {
         for d in steps.into_iter().rev() {
             body = match d {
                 Do::Let(l, v) => Expr::Let(l, Box::new(v), Box::new(body)),
-                Do::Guard(cond, cs) => Expr::Match(
+                Do::Take(exhausted) => Expr::Match(
+                    Box::new(exhausted),
+                    vec![
+                        (Pat::Construct(1, vec![]), Expr::Construct(1, vec![st(1)])),
+                        (Pat::Wild, body),
+                    ],
+                ),
+                Do::Guard(cond, cs, reached) => Expr::Match(
                     Box::new(cond),
                     vec![
                         (Pat::Construct(1, vec![]), body),
-                        (Pat::Wild, go_on(st(1), &cs)),
+                        (Pat::Wild, go_on(st(1), &cs, &reached)),
                     ],
                 ),
             };
         }
         let stop = Expr::Construct(1, vec![st(1)]);
-        let mut body = Expr::Match(
-            Box::new(st(0)),
-            vec![
-                (Pat::Construct(1, vec![Pat::Bind(h), Pat::Bind(t)]), body),
-                (Pat::Wild, stop.clone()),
-            ],
-        );
-        // an exhausted take stops before the source is looked at
-        for k in (0..nt).rev() {
-            body = Expr::Match(
-                Box::new(less_than_one(st(2 + k))),
-                vec![(Pat::Construct(1, vec![]), stop.clone()), (Pat::Wild, body)],
-            );
-        }
+        let body = if matches!(producer, Some(("count", _))) {
+            Expr::Match(
+                Box::new(st(0)),
+                vec![(Pat::Record(vec![Pat::Bind(h), Pat::Bind(t)]), body)],
+            )
+        } else {
+            Expr::Match(
+                Box::new(st(0)),
+                vec![
+                    (Pat::Construct(1, vec![Pat::Bind(h), Pat::Bind(t)]), body),
+                    (Pat::Wild, stop.clone()),
+                ],
+            )
+        };
         let step_result = MT::Con(
             "std::Step".into(),
             vec![state_ty.clone(), result_ty.clone()],

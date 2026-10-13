@@ -11,9 +11,9 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-The user authorized the active ten-task roadmap as one combined PR, with full
+The user authorized the active seven-step roadmap as one combined PR, with full
 CI before squash merge and the commit format below. This bundle includes the
-pending documentation cleanup; do not split its ten tasks into separate PRs. Failing tests are tasks to fix; queued CI gates merging, not roadmap
+pending documentation cleanup; do not split its seven steps into separate PRs. Failing tests are tasks to fix; queued CI gates merging, not roadmap
 work. Diagnose failures and prepare the next task while CI runs. Keep later
 changes separate and open the next PR after the current one merges. This
 authorization covers roadmap branch publication, PR creation,
