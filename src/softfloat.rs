@@ -290,3 +290,203 @@ mod tests {
         );
     }
 }
+
+/// Stable identifiers for the shared text ABI; BF16's identifier is not its width.
+#[repr(i32)]
+#[derive(Clone, Copy, Debug)]
+pub enum FloatFormat {
+    F16 = 16,
+    BF16 = 17,
+    F32 = 32,
+    F64 = 64,
+    F128 = 128,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FloatTextError {
+    Invalid,
+    OutOfMemory,
+}
+
+extern "C" {
+    fn fwp_decimal_parse(
+        text: *const std::ffi::c_char,
+        format: i32,
+        low: *mut u64,
+        high: *mut u64,
+    ) -> i32;
+    fn fwp_decimal_show(
+        low: u64,
+        high: u64,
+        format: i32,
+        buffer: *mut std::ffi::c_char,
+        capacity: usize,
+    ) -> i32;
+}
+
+/// Decimal input rounds directly to the requested format, including subnormals.
+pub fn parse_bits(text: &str, format: FloatFormat) -> Result<u128, FloatTextError> {
+    let text = std::ffi::CString::new(text).map_err(|_| FloatTextError::Invalid)?;
+    let (mut low, mut high) = (0, 0);
+    match unsafe { fwp_decimal_parse(text.as_ptr(), format as i32, &mut low, &mut high) } {
+        1 => Ok((high as u128) << 64 | low as u128),
+        0 => Err(FloatTextError::Invalid),
+        -1 => Err(FloatTextError::OutOfMemory),
+        code => panic!("unexpected exact float parser status {code}"),
+    }
+}
+
+/// Shortest round-trip digits in scientific notation; raw NaN payloads require
+/// binary transport. Both engines use this exact core during format migration.
+pub fn format_bits(bits: u128, format: FloatFormat) -> Result<String, FloatTextError> {
+    let mut buffer = [0u8; 64];
+    let length = unsafe {
+        fwp_decimal_show(
+            bits as u64,
+            (bits >> 64) as u64,
+            format as i32,
+            buffer.as_mut_ptr().cast(),
+            buffer.len(),
+        )
+    };
+    if length < 0 {
+        return Err(FloatTextError::OutOfMemory);
+    }
+    Ok(std::str::from_utf8(&buffer[..length as usize])
+        .expect("decimal ASCII")
+        .into())
+}
+
+#[cfg(test)]
+mod text_tests {
+    use super::{format_bits, parse_bits, FloatFormat::*, FloatTextError};
+
+    #[test]
+    fn decimal_rounds_once_at_the_requested_precision() {
+        assert_eq!(
+            parse_bits("1.0000000000000000000000000000000002", F128),
+            Ok(0x3fff0000000000000000000000000001)
+        );
+        assert_eq!(
+            parse_bits("1.0004882812500000000000000000000001", F16),
+            Ok(0x3c01)
+        );
+        assert_eq!(
+            parse_bits("1.0039062500000000000000000000000001", BF16),
+            Ok(0x3f81)
+        );
+        assert_eq!(parse_bits("4.5e-6", F16), Ok(0x004b));
+        assert_eq!(parse_bits("1.00048828125", F16), Ok(0x3c00));
+        assert_eq!(parse_bits("1.00146484375", F16), Ok(0x3c02));
+        assert_eq!(parse_bits("-0", F128), Ok(1 << 127));
+        assert_eq!(
+            parse_bits("1e100000", F128),
+            Ok(0x7fff0000000000000000000000000000)
+        );
+        assert_eq!(parse_bits("-1e-100000", F128), Ok(1 << 127));
+        for invalid in ["", "garbage", "1.2oops", "1\0", " 1", "1 ", "0x1p0"] {
+            assert_eq!(
+                parse_bits(invalid, F128),
+                Err(FloatTextError::Invalid),
+                "{invalid:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn decimal_controls_match_independent_standard_float_parsers() {
+        // Decimal strings are generated from integers, independently of gdtoa.
+        for mantissa in [1u64, 3, 75, 9999, 12345678901234567, u64::MAX] {
+            for exponent in -330..=310 {
+                let text = format!("{mantissa}e{exponent}");
+                assert_eq!(
+                    parse_bits(&text, F64).unwrap(),
+                    text.parse::<f64>().unwrap().to_bits() as u128,
+                    "F64 {text}"
+                );
+                assert_eq!(
+                    parse_bits(&text, F32).unwrap(),
+                    text.parse::<f32>().unwrap().to_bits() as u128,
+                    "F32 {text}"
+                );
+            }
+        }
+        assert_eq!(
+            parse_bits("6.4751751194380251109244389582276465525e-4966", F128),
+            Ok(1)
+        );
+        assert_eq!(
+            parse_bits("1.1897314953572317650857593266280070162e4932", F128),
+            Ok(0x7ffeffffffffffffffffffffffffffff)
+        );
+    }
+
+    #[test]
+    fn all_half_and_bfloat_values_round_trip_through_shortest_text() {
+        for (format, exp, frac) in [(F16, 0x7c00, 0x3ff), (BF16, 0x7f80, 0x7f)] {
+            for bits in 0u128..=0xffff {
+                if bits & exp == exp && bits & frac != 0 {
+                    continue;
+                }
+                let text = format_bits(bits, format).unwrap();
+                assert_eq!(
+                    parse_bits(&text, format).unwrap(),
+                    bits,
+                    "{format:?} {bits:x}: {text}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn quad_extremes_and_deterministic_bit_patterns_round_trip() {
+        let mut state = 0x123456789abcdef0u64;
+        let mut words = vec![
+            0,
+            1,
+            1 << 127,
+            (1 << 112) - 1,
+            1 << 112,
+            0x3fff0000000000000000000000000001,
+            0x7ffeffffffffffffffffffffffffffff,
+        ];
+        for _ in 0..1000 {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            let high = state;
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            words.push((high as u128) << 64 | state as u128);
+        }
+        for bits in words {
+            if bits >> 112 & 0x7fff == 0x7fff {
+                continue;
+            }
+            let text = format_bits(bits, F128).unwrap();
+            assert_eq!(parse_bits(&text, F128).unwrap(), bits, "{bits:x}: {text}");
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn conversion_scopes_are_independent_across_threads() {
+        let threads: Vec<_> = (0..4u128)
+            .map(|thread| {
+                std::thread::spawn(move || {
+                    for n in 0..128u128 {
+                        let bits = 0x3fff0000000000000000000000000000 + (thread << 20) + n;
+                        assert_eq!(
+                            parse_bits(&format_bits(bits, F128).unwrap(), F128).unwrap(),
+                            bits
+                        );
+                    }
+                })
+            })
+            .collect();
+        for thread in threads {
+            thread.join().unwrap();
+        }
+    }
+}

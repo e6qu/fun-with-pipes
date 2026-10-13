@@ -26,7 +26,7 @@ You need:
   to the output of `brew --prefix openssl@3` for native TLS builds and the
   interpreter. CI uses Apple Clang on Apple Silicon and Intel.
 - Optional, for the WebAssembly tests: clang with a WASI sysroot and lld
-  (Debian/Ubuntu: `clang lld wasi-libc libclang-rt-18-dev-wasm32`), the
+  (Debian/Ubuntu: `clang llvm lld wasi-libc libclang-rt-18-dev-wasm32`), the
   `wasm32-wasip1` Rust target (`rustup target add wasm32-wasip1`), node 24,
   and binaryen's `wasm-opt` (`npm install -g binaryen`).
 - Optional, for the cross-compilation tests: an aarch64 C compiler and
@@ -114,7 +114,10 @@ does not substitute for runtime alias/unwind controls or full CI.
   controls and record validation in the handoff. Group coherent fixes without
   weakening the required CI gates or changing the roadmap's phase order.
 - **No third-party crates.** fwp depends only on Rust's standard library,
-  with a vendored BSD-licensed SoftFloat C core for exact half/quad arithmetic.
+  with a vendored BSD-licensed [SoftFloat core](vendor/softfloat/README.md) for
+  exact arithmetic and a scoped [gdtoa core](vendor/gdtoa/README.md) for exact
+  decimal conversion under its Lucent license. Both licenses and the recorded
+  source modifications accompany distributions.
   Building the compiler requires a C11 compiler and an archiver; `CC` and `AR`
   select them. HTTP/2, gzip, protobuf, JSON and YAML are implemented here.
   The C runtime uses the C library, pthreads,

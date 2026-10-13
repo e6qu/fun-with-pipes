@@ -196,9 +196,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --lib dylib::tests -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --lib softfloat::tests -- --nocapture
+          cargo test --lib softfloat:: -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test softfloat_core exact_format_core_runs_as_native_c -- --nocapture
+          cargo test --test softfloat_core -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --test native_allocator -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -285,8 +285,10 @@ jobs:
           node-version: 24
       - name: WASI toolchain
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32
-      - name: WebAssembly compiler target
-        run: cargo check --lib --target wasm32-wasip1
+      - name: WebAssembly compiler and exact Rust arithmetic
+        env:
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: node tests/wasm/wasi-run.mjs
+        run: cargo test --lib --target wasm32-wasip1 softfloat:: -- --test-threads=1
       - name: Physical reclamation and resource controls
         run: cargo test --test wasm_resource_counts --test softfloat_core --test array_size_limits
       - name: Actual WASI semantic agreement

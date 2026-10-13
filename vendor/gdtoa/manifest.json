@@ -1,0 +1,21 @@
+{
+  "archive": "https://www.netlib.org/fp/gdtoa.tgz",
+  "sha256": "d3221a8e5c0a7a0e7b9f3557519afe6f41d430faa617b5545b988d907931a43c",
+  "upstreamFiles": {
+    "dmisc.c": "3c33bfc9f6a825120642448cdf5cf7138229af7cd5c114160ca631beb50f28a1",
+    "gdtoa.c": "a8f373ea38b228d08f1050aa091c557ac681ae513194b075416e8cd969cb0214",
+    "gdtoa.h": "3372242c70c188e1bdb90ca85225f63a727bc25dd11f4137f875268c39820080",
+    "gdtoaimp.h": "db109f8b4db99baf73c769b3a0561daac28b811b74ae7bbad392e9567f5b993a",
+    "gmisc.c": "39a52bd7651ae5281bc9a1e7b3d2a81f51ade634593772cd7f9237d6057902d8",
+    "misc.c": "4d7eb79def35bcd8af008b44672e37f35d2f7c1599849991dd9351e48b513d01",
+    "smisc.c": "6ebac0e3bbded854f9bc1ead59fff02474911435a27def8eaf093a3a3988ccee",
+    "strtodg.c": "5fb7cf6f6da2c3351813af9a4011f3060dd23a755948ab64f600ef69e1648d83",
+    "sum.c": "a188c260f78fcb0a386ec8763dec1327316b8963fc1525b7cd43cf86284f6869",
+    "ulp.c": "69e25108aa7c6d0c8ff0a63da291cc83fa4c25b60bc65b8d6ff82e9e3b2132e1"
+  },
+  "configuration": [
+    "arith.h",
+    "gd_qnan.h"
+  ],
+  "modifications": "fwp.patch"
+}

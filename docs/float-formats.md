@@ -2,8 +2,9 @@
 
 The current implementation keeps its existing precision and protocol bytes.
 `F16`, `BF16` and `F128` are distinct language types, but their names do not yet
-promise the corresponding physical format. The active bundle implements the migration specified below. Until its acceptance
-checks pass, these remain the implemented representations. Keep conversion
+promise the corresponding physical format. The active bundle implements the
+migration specified below. Until its acceptance checks pass, these remain the
+implemented representations. Keep conversion
 explicit and precision independent of the host.
 
 | Language type | Implemented arithmetic/payload | Protocol v1 bytes | Intended format after a coordinated migration |
@@ -27,6 +28,13 @@ does not save space over F32, and F128 does not supply extra precision over F64.
 Protocol golden-byte tests lock down widths, signed zero, infinities and NaN
 payload transport. Arithmetic regression fixtures distinguish today's precision
 from the intended formats. Neither test establishes native half/quad support.
+
+The migration now has shared binary16/bfloat16/binary128 arithmetic and exact
+decimal cores. Arithmetic/conversion NaNs are canonical positive quiet NaNs;
+raw bit transport preserves payloads. Decimal conversion uses explicit per-call
+scratch ownership, including cleanup on allocation failure. These cores do not
+yet change the language representations above. [The handoff](development-state.md)
+records their actual native/WASM validation and remaining integration work.
 
 Keep `float.convert` explicit. Preserve operation order and the existing policy
 against implicit reassociation or contraction. Do not silently substitute the
@@ -56,7 +64,7 @@ The active implementation must deliver these together before changing representa
   fingerprints together. Version 1 continues to mean the current 4/8-byte
   representations. Reject incompatible peers before payload decoding; do not
   guess a format from the payload or silently accept old bytes as new values.
-- Validate both engines and native Linux/macOS ARM64/AMD64: midpoint ties,
+- Validate both engines and native Linux/macOS/Windows ARM64/AMD64: midpoint ties,
   carry across exponents, normal/subnormal boundaries, signed zeros, maximum
   finite values, overflow, NaNs, explicit conversions, wire golden bytes and
   array stride/ownership. Measure allocations and native instructions before

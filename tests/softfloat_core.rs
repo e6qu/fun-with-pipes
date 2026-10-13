@@ -32,25 +32,40 @@ int main(void) {
         if ((bits & 0x7f80) == 0x7f80 && (bits & 0x7f)) continue;
         if (fwp_f128_to_bf16(fwp_bf16_to_f128((uint16_t)bits)) != bits) return 24;
     }
+    uint64_t low, high;
+    if (fwp_decimal_parse("1.0000000000000000000000000000000002", 128, &low, &high) != 1 ||
+        low != 1 || high != UINT64_C(0x3fff000000000000)) return 31;
+    if (fwp_decimal_parse("1.0004882812500000000000000000000001", 16, &low, &high) != 1 || low != 0x3c01 || high) return 32;
+    if (fwp_decimal_parse("1.0039062500000000000000000000000001", 17, &low, &high) != 1 || low != 0x3f81 || high) return 33;
+    if (fwp_decimal_parse("4.5e-6", 16, &low, &high) != 1 || low != 0x4b || high) return 34;
+    char text[64];
+    for (int format = 16; format <= 17; format++) {
+        uint32_t expmask = format == 16 ? 0x7c00 : 0x7f80, fracmask = format == 16 ? 0x3ff : 0x7f;
+        for (uint32_t bits = 0; bits <= 0xffff; bits++) {
+            if ((bits & expmask) == expmask && (bits & fracmask)) continue;
+            if (fwp_decimal_show(bits, 0, format, text, sizeof text) < 1) return 35;
+            if (fwp_decimal_parse(text, format, &low, &high) != 1 || low != bits || high) return 36;
+        }
+    }
+    if (fwp_decimal_show(1, UINT64_C(0x3fff000000000000), 128, text, sizeof text) < 1) return 37;
+    if (strcmp(text, "1.0000000000000000000000000000000002")) return 38;
+    uint64_t state = UINT64_C(0x123456789abcdef0);
+    for (unsigned i = 0; i < 1000; i++) {
+        state ^= state << 13; state ^= state >> 7; state ^= state << 17;
+        uint64_t original_high = state;
+        state ^= state << 13; state ^= state >> 7; state ^= state << 17;
+        uint64_t original_low = state;
+        if (((original_high >> 48) & 0x7fff) == 0x7fff) continue;
+        if (fwp_decimal_show(original_low, original_high, 128, text, sizeof text) < 1) return 48;
+        if (fwp_decimal_parse(text, 128, &low, &high) != 1 || low != original_low || high != original_high) return 49;
+    }
+    if (fwp_decimal_parse("6.4751751194380251109244389582276465525e-4966", 128, &low, &high) != 1 || low != 1 || high) return 39;
+    if (fwp_decimal_parse("1.1897314953572317650857593266280070162e4932", 128, &low, &high) != 1 || low != UINT64_MAX || high != UINT64_C(0x7ffeffffffffffff)) return 40;
     return 0;
 }
 "#;
 
-#[test]
-fn exact_format_core_runs_as_native_c() {
-    let dir = fwp::cgen::TempDir::new("fwp-softfloat-native").unwrap();
-    let binary = dir.join(if cfg!(windows) { "probe.exe" } else { "probe" });
-    let source = format!("{}\n{PROBE}", fwp::softfloat::C_SOURCE);
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&source, &binary, opt).unwrap();
-        let out = Command::new(&binary).output().unwrap();
-        assert!(out.status.success(), "{opt}: {out:?}");
-    }
-}
-
-#[test]
-fn exact_format_core_runs_as_wasm32() {
-    let dir = fwp::cgen::TempDir::new("fwp-softfloat-wasi").unwrap();
+fn wasi_available(dir: &fwp::cgen::TempDir) -> bool {
     let check = dir.join("check.c");
     std::fs::write(&check, "int main(void){return 0;}").unwrap();
     let available = Command::new(std::env::var("FWP_WASM_CC").unwrap_or_else(|_| "clang".into()))
@@ -68,6 +83,26 @@ fn exact_format_core_runs_as_wasm32() {
             std::env::var_os("FWP_REQUIRE_FLOAT_WASI").is_none(),
             "required wasm32 float core toolchain unavailable"
         );
+    }
+    available
+}
+
+#[test]
+fn exact_format_core_runs_as_native_c() {
+    let dir = fwp::cgen::TempDir::new("fwp-softfloat-native").unwrap();
+    let binary = dir.join(if cfg!(windows) { "probe.exe" } else { "probe" });
+    let source = format!("{}\n{PROBE}", fwp::softfloat::C_SOURCE);
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&source, &binary, opt).unwrap();
+        let out = Command::new(&binary).output().unwrap();
+        assert!(out.status.success(), "{opt}: {out:?}");
+    }
+}
+
+#[test]
+fn exact_format_core_runs_as_wasm32() {
+    let dir = fwp::cgen::TempDir::new("fwp-softfloat-wasi").unwrap();
+    if !wasi_available(&dir) {
         return;
     }
     let wasm = dir.join("probe.wasm");
@@ -81,5 +116,89 @@ fn exact_format_core_runs_as_wasm32() {
             .output()
             .unwrap();
         assert!(out.status.success(), "{opt}: {out:?}");
+    }
+}
+
+#[test]
+fn decimal_temporary_storage_is_released_on_success_and_every_allocation_failure() {
+    let observer = r#"
+#include <stdlib.h>
+static size_t live_blocks, attempts, fail_after = (size_t)-1;
+static void *observed_malloc(size_t bytes) {
+    if (attempts++ == fail_after) return NULL;
+    void *p = malloc(bytes);
+    if (p) live_blocks++;
+    return p;
+}
+static void observed_free(void *p) {
+    if (p) live_blocks--;
+    free(p);
+}
+#define malloc observed_malloc
+#define free observed_free
+"#;
+    let probe = r#"
+int main(void) {
+    uint64_t low, high;
+    char shown[64];
+    if (fwp_decimal_parse("1.25", 128, &low, &high) != 1 || attempts || live_blocks) return 41;
+    if (fwp_decimal_show(low, high, 128, shown, sizeof shown) < 1 || attempts || live_blocks) return 42;
+    char exact[5004]; exact[0] = '1'; exact[1] = '.';
+    memset(exact + 2, '0', 5000); exact[5002] = '1'; exact[5003] = 0;
+    attempts = 0;
+    if (fwp_decimal_parse(exact, 128, &low, &high) != 1 || low || high != UINT64_C(0x3fff000000000000) || live_blocks) return 43;
+    size_t allocations = attempts;
+    if (!allocations) return 44;
+    for (size_t fail = 0; fail < allocations; fail++) {
+        fail_after = fail; attempts = 0;
+        if (fwp_decimal_parse(exact, 128, &low, &high) != -1 || live_blocks) return 45;
+    }
+    fail_after = (size_t)-1; attempts = 0;
+    if (fwp_decimal_show(UINT64_MAX, UINT64_C(0x7ffeffffffffffff), 128, shown, sizeof shown) < 1 || live_blocks) return 46;
+    allocations = attempts;
+    for (size_t fail = 0; fail < allocations; fail++) {
+        fail_after = fail; attempts = 0;
+        if (fwp_decimal_show(UINT64_MAX, UINT64_C(0x7ffeffffffffffff), 128, shown, sizeof shown) != -1 || live_blocks) return 47;
+    }
+    return 0;
+}
+"#;
+    let dir = fwp::cgen::TempDir::new("fwp-decimal-storage").unwrap();
+    let binary = dir.join(if cfg!(windows) { "probe.exe" } else { "probe" });
+    let source = format!("{observer}\n{}\n{probe}", fwp::softfloat::C_SOURCE);
+    let leaked = source.replace(
+        "    fwp_decimal_release(&context);",
+        "    /* omit scoped release */",
+    );
+    assert_ne!(leaked, source);
+    let wasi = wasi_available(&dir);
+    for opt in ["-O1", "-O2"] {
+        for (code, expected) in [(&source, 0), (&leaked, 43)] {
+            fwp::cgen::compile_c(code, &binary, opt).unwrap();
+            let output = Command::new(&binary).output().unwrap();
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "native {opt}: {output:?}"
+            );
+            if wasi {
+                let wasm = dir.join("storage.wasm");
+                fwp::cgen::compile_for(code, &wasm, opt, fwp::cgen::Target::Wasi).unwrap();
+                let output = Command::new("node")
+                    .arg("--no-warnings")
+                    .arg(
+                        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                            .join("tests/wasm/wasi-run.mjs"),
+                    )
+                    .arg(wasm)
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "WASI {opt}: {output:?}"
+                );
+            }
+        }
     }
 }

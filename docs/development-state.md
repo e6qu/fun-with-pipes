@@ -45,7 +45,7 @@ removes count metadata before freeing storage; unproved shared graphs remain
 retained. Physical-free observation across 10,000 cycles and 300 aliases, missing
 free and disabled-free controls, resource destruction and full actual WASI
 goldens passed on both Linux architectures in [38440780537](https://github.com/e6qu/fun-with-pipes/actions/runs/38440780537)
-at `fb199e7`. File-specific shared headers and cyclic graphs remain outstanding.
+at `fb199e7`. Unproved shared headers and cyclic graphs remain retained.
 
 Direct `iter.iterate` fusion preserves eager lookahead, effect/trap order,
 early stopping and owned String captures. Compiler checks, raw/native ownership
@@ -72,53 +72,61 @@ The generated C allocator now has Windows virtual reservation/commit/reset/relea
 monotonic timing, working-set accounting and PE writable-section roots for the
 image containing the runtime. A focused native test observes actual commitment,
 alias counts, reclamation and unload; a missing-image-root control must fail.
-The same extracted probe passes locally on macOS, including the negative control.
-Windows execution, task contexts, resources/networking and PE packages remain
-outstanding. Linux root-range overflow now traps instead of silently losing roots.
+The probes, bfloat core and interpreter goldens passed on both native Windows
+architectures in [38446144465](https://github.com/e6qu/fun-with-pipes/actions/runs/38446144465)
+at `6f7b105`. Compiler/ownership/allocator regressions passed all four Linux/macOS
+targets in [38446150831](https://github.com/e6qu/fun-with-pipes/actions/runs/38446150831)
+at the same head. Full generated C task contexts, resources/networking and PE
+packages remain outstanding. Linux root-range overflow now traps instead of silently losing roots.
 
 File header reclamation now follows proved WASM ownership after stream close,
 including count disposal when physical freeing is disabled. Tests observe libc
 free without reading dead headers and reject a deliberate omitted-free variant.
-These changes await runner validation. The old bump-allocator size fixture was
+Actual WASI resource/free controls, bfloat arithmetic and full goldens passed
+on both Linux architectures in [38446752701](https://github.com/e6qu/fun-with-pipes/actions/runs/38446752701)
+at `4437af0`. Its explicit LLVM installation fixed the earlier missing-archiver
+failure; the superseded queued run was cancelled, not accepted. The old bump-allocator size fixture was
 stale after libc allocation replaced the bump allocator; its replacement checks
 actual zero-size handling, alignment, zeroed storage, unchanged request sizes
 and allocation failure with omitted-check controls under ASan/UBSan.
 
-The exact-format bootstrap vendors the selected BSD-licensed Berkeley SoftFloat
-3e binary16/binary128 core. Cargo builds the same C source exposed for native
-and actual wasm32 tests; binary packages include both project and vendor
-licenses. Local bit-level controls pass for 113-bit precision, ties-even,
-subnormals, canonical arithmetic NaNs, raw payload preservation and direct
-quad-to-half narrowing without double rounding. CI must validate the Rust/C ABI
-on all six platforms and WASM. This core alone changes no language representation:
-F16/BF16 still lower to F32 and F128 to F64. Binary16 and bfloat16 core operations and direct narrowing are now implemented,
-with exhaustive non-NaN half/bfloat bit round-trips and midpoint/subnormal
-controls. Exact decimal text/literals,
-transcendentals, descriptors/arrays/ABI and versioned protocol migration remain.
+The exact-format bootstrap vendors the BSD-licensed SoftFloat 3e arithmetic
+core and a Lucent-licensed scoped gdtoa decimal core, with provenance hashes,
+a patch against upstream and binary license packaging. Binary16/bfloat16/binary128
+arithmetic, direct narrowing, ties-even, subnormals and canonical arithmetic NaNs
+have bit-level controls. Raw bit constructors preserve payloads. Decimal parsing
+rounds directly to the requested format; formatting supplies shortest round-trip
+digits. Per-call contexts use 4 KiB stack scratch and release overflow blocks on
+success or allocation failure, without thread registries or retained caches.
+Three decimal corrections cover subnormal double rounding, normalized exponent
+adjustment and an unsigned exponent-bit shift. The new decimal core still needs
+runner acceptance; the public language representations remain F16/BF16 as F32
+and F128 as F64 until the coordinated migration is implemented and verified.
+Transcendentals, literal/value integration, descriptors/arrays/ABI and versioned
+protocol migration remain outstanding.
 
-Local checks passed under `python3 scripts/local-guard.py`: `cargo fmt --all`,
-`cargo check --lib`, focused clippy for `cli`, `native_allocator`,
-`wasm_resource_counts`, `softfloat_core` and `array_size_limits`,
-`python3 /private/tmp/fwp-native-allocator-check.py`, and
-`python3 /private/tmp/fwp-test-softfloat-core.py` (six standalone
-arithmetic tests linked against the actual built C core). Earlier extracted
-non-GC allocator ASan/UBSan probe and roadmap audit passed. Full builds, suites,
-benchmarks and large regeneration stay on GitHub runners. Do not use the stale
-local fwp executable as an oracle. Preserve disk/RSS/CPU/deadline limits.
-Production CI defers draft PRs; skipped jobs are not acceptance. Focused suites
-are `windows`, `portability`, `wasm` and `iteration` in `numerics.yml`.
+Local checks passed under `python3 scripts/local-guard.py`: formatting, focused
+clippy for the affected compiler and integration targets, and standalone core
+checks. `python3 /private/tmp/fwp-test-softfloat-core.py` passed 11 tests including
+all non-NaN half/bfloat text round-trips, quad bit patterns and boundary goldens,
+independent Rust F32/F64 decimal oracles and concurrent conversion scopes.
+`python3 /private/tmp/fwp-float-text-check.py` passed the actual shared C core
+under ASan/UBSan, allocation-failure controls and an omitted-release leak control.
+`python3 /private/tmp/fwp-native-allocator-check.py` passed allocator/image-root
+controls. The repository tests preserve these controls for native/WASI CI.
+Full builds, suites, benchmarks and large regeneration stay on GitHub runners.
+Do not use the stale local fwp executable as an oracle. Preserve disk/RSS/CPU/
+deadline limits. Production CI defers draft PRs; skipped jobs are not acceptance.
 
 ## Next action
 
-Next: publish the Windows allocator, WASM File reclamation and bfloat core; run
-`windows`, `portability` and `wasm`, fixing all failures. The `106e7a2` portability
-checks passed on all four targets (38444625470). Its WASM target build failed
-because `llvm-ar` was absent (38444631690); install the LLVM tools explicitly
-and rerun. Current `6f7b105` Windows/portability probes are 38446144465 and
-38446150831.
-Then continue generated C Windows
-runtime/resources and PE packages, actual floating representations/text/protocol,
-broader ownership/worker proofs, and nested reverse mode/checkpointing with
-measured layout improvements. Item 4 remains pending. All six acceptance rows
-in PLAN remain required in this same PR. Require full Linux/macOS and added
-Windows acceptance plus docs on the final head before squash merge.
+Next: publish the scoped decimal core and run `windows`, `portability` and
+`wasm`. WASI must now execute the Rust core tests as well as generated C, using
+the existing exception-based setjmp helpers for conversion-allocation cleanup.
+Fix any failures, then integrate the exact formats with language values/literals,
+native arrays/workers and protocol versioning. Continue the generated C Windows
+task/resource/network port and PE packaging, broader ownership/worker proofs,
+and nested reverse mode/checkpointing with measured layout improvements.
+Item 4 remains pending. All six acceptance rows in PLAN remain required in this
+same PR. Require full Linux/macOS and added Windows acceptance plus docs on the
+final head before squash merge.
