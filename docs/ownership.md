@@ -108,10 +108,10 @@ requirements at unproved boundaries, which checked native ARC explicitly rejects
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
 The current inventory verifies 375 declarations resolving to 365 runtime symbols
-after 40 aliases: 204 explicit contracts, 19 ordinary IR combinators, 11 flat
-scalar signatures and 141 review declarations representing 131 symbols. The
+after 40 aliases: 207 explicit contracts, 19 ordinary IR combinators, 11 flat
+scalar signatures and 138 review declarations representing 128 symbols. The
 immutable baseline retains the original classification; exact promotion checks
-cover the 36 CSV/numeric additions. This includes typed State, internal
+cover the 39 CSV/numeric/decoder additions. This includes typed State, internal
 ad.scope/ad.scope2 and 14 fresh codec leaves.
 These counts classify boundaries rather than heap objects or bugs. Full production
 acceptance is recorded in [the handoff](development-state.md).
@@ -225,10 +225,11 @@ unbounded retention for small results. Pointer/resource slices always copy to
 preserve disposal order. Natural alignment follows backing alignment and element
 stride; this is not a guarantee of cache-line or SIMD-register alignment.
 
-F16/BF16 currently retain their existing F32 representation and4-byte wire/storage
-format; F128 retains its existing F64 representation and8-byte format. They are
-not native half/128-bit floating formats. I128/U128 stay boxed in word slots.
-A new wide/half format requires a separate semantic and wire-format decision.
+F16/BF16 retain F32 precision and 4-byte payloads; F128 retains F64 precision
+and 8-byte payloads. [The format decision](float-formats.md) specifies the
+future precision, conversion and coordinated protocol migration. I128/U128
+remain boxed in generic word slots and containers; eligible scalar workers
+use native wide arguments, locals and results.
 The handoff records accepted source and its actual runner gates.
 
 ## Evidence required
@@ -314,8 +315,8 @@ lifetimes, shared graph ownership or general execution without tracing.
 ## Ownership coverage
 
 The handoff separates accepted phase 2 evidence from the active extensions.
-All 375 declarations are inventoried: 204 contracts, 19 IR combinators, 11 flat
-signatures and 141 explicit review declarations/131 symbols. Their argument,
+All 375 declarations are inventoried: 207 contracts, 19 IR combinators, 11 flat
+signatures and 138 explicit review declarations/128 symbols. Their argument,
 result, callback, retention, teardown and cycle policies are checked against the
 compiler and runtime. This establishes the documented compatibility model.
 
@@ -387,8 +388,23 @@ traps. Private spines reverse in place before ownership transfers to the caller.
 Their cells use mutable allocation so minor collections rescan older cells after
 reversal introduces younger links; uniqueness alone does not establish this GC
 invariant.
-This contract applies to csv.parse and csv.parse-with, not typed csv.decode,
-JSON or protocol reconstruction.
+Typed CSV, JSON, text and binary reconstruction use descriptor Dup/Drop
+operations. Partial field vectors own completed children until aggregate
+transfer; short vectors stay on the C stack. JSON parsing owns an independent
+scratch arena, released on success, parse failure and nonlocal exit. Duplicate
+map keys release displaced values; untagged variant attempts release partial
+fields before trying the next declared alternative. Binary truncation and
+injected construction exits test the same cleanup contract. JSON parse/read
+and typed CSV have OwnedTree primitive results. This does not admit the
+external executable/remote protocol boundary to checked ARC; its retained
+contexts still require a separate proof.
+
+Scoped State reachability tracks callback targets, captures and values stored
+in State. get/put/modify must execute under a proven handler; returning a
+closure does not extend that handler's lifetime. Immutable closures may escape
+and be called under a fresh scope. Known modify callbacks call native entries
+directly with typed argument preparation. Unknown targets remain rejected.
+Pending validation for these extensions is recorded in the handoff.
 
 Scoped AD eligibility additionally proves callback reachability under a scope;
 unknown call targets and unscoped raw operations are rejected. Returned scalar

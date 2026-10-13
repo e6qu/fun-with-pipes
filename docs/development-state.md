@@ -23,18 +23,24 @@ Native I128/U128 workers keep eligible arithmetic and recursive calls unboxed;
 generic boundaries retain typed boxing and release. These changes need runner
 acceptance, as do new wide-worker semantic and reclamation tests.
 
-Focused CI 38396286496 found three failures: partial list construction lacked an
-unconditional cleanup registration, ARC omitted inline TInt/Trit types, and the
-producer measurement used an uncurry/tuple path outside current specialization.
-Cleanup and type admission are fixed; the equivalent 1000-element measurement
-now uses a direct producer pipeline. Execution acceptance remains pending.
-Earlier forcing-order regressions passed; no queued or failed run is a gate.
+Focused CI 38398069125 passed decoder injected cleanup/truncation controls,
+iterator forcing-order regressions, AD scope/workspace tests and existing ARC
+execution tests on ARM macOS. It exposed an omitted scalar trit primitive,
+missing rec declarations in new wide fixtures, and a per-step pair box in
+count producer lowering. All three are corrected; execution rerun pending.
+The producer now reads pair fields directly so flattened loop state stays flat.
 
-Guarded C syntax validation passed after the decoder and wide-arithmetic edits
-(0.06 CPU seconds). Guarded all-target Clippy found a needless range loop in the
-new worker selection; corrected, rerun pending. Formatting passed. Existing
-local debug compiler predates iter.fold and State inference fixes; it is not a
-current-head oracle. Full builds, suites and evidence stay on GitHub.
+Float format decision and protocol/precision fixtures are written. Legacy
+F16/BF16 use F32 and F128 uses F64; actual format migration requires coordinated
+precision, array and versioned wire changes. Wide allocation/instruction
+measurement is added, and numerical evidence now targets four native runners.
+State proof has direct and escaped-callback rejection controls. JSON base64
+scratch now registers cleanup across result allocation.
+
+Guarded all-target Clippy passed before these last changes (6.56 CPU seconds,
+15.60 elapsed); guarded test type checking passed (6.26 CPU, 15.97 elapsed).
+C syntax and formatting passed. Full builds, suites and evidence stay on GitHub.
+Existing local compiler predates iteration/State fixes and is not an oracle.
 
 Next: validate this implementation on four native runners; fix every failure.
 Complete wide-worker allocation/instruction evidence and the numeric/AD suite,

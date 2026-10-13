@@ -833,6 +833,8 @@ static int fwp_jt_unb64(const char *s, size_t n, V *out) {
     else if (body >= 1 && s[body - 1] == '=') body -= 1;
     if (body % 4 == 1 || (body != n && n % 4 != 0)) return 0;
     char *o = (char *)fwp_mem_alloc(body * 3 / 4 + 1);
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_mem_free, o);
     size_t on = 0;
     uint32_t acc = 0;
     int bits = 0;
@@ -844,7 +846,7 @@ static int fwp_jt_unb64(const char *s, size_t n, V *out) {
         else if (ch >= '0' && ch <= '9') d = ch - '0' + 52;
         else if (ch == '+' || ch == '-') d = 62;
         else if (ch == '/' || ch == '_') d = 63;
-        else { fwp_mem_free(o); return 0; }
+        else { fwp_cleanup_pop(&cleanup); fwp_mem_free(o); return 0; }
         acc = acc << 6 | (uint32_t)d;
         bits += 6;
         if (bits >= 8) {
@@ -854,6 +856,7 @@ static int fwp_jt_unb64(const char *s, size_t n, V *out) {
         }
     }
     *out = fwp_str_new(o, on);
+    fwp_cleanup_pop(&cleanup);
     fwp_mem_free(o);
     return 1;
 }

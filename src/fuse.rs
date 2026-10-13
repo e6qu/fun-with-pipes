@@ -735,9 +735,16 @@ impl Fuser<'_> {
         }
         let stop = Expr::Construct(1, vec![st(1)]);
         let body = if matches!(producer, Some(("count", _))) {
-            Expr::Match(
-                Box::new(st(0)),
-                vec![(Pat::Record(vec![Pat::Bind(h), Pat::Bind(t)]), body)],
+            // Read the pair as fields: matching a whole nested record would
+            // reconstruct a box in the flattened loop worker on every step.
+            Expr::Let(
+                h,
+                Box::new(Expr::Field(Box::new(st(0)), 0)),
+                Box::new(Expr::Let(
+                    t,
+                    Box::new(Expr::Field(Box::new(st(0)), 1)),
+                    Box::new(body),
+                )),
             )
         } else {
             Expr::Match(

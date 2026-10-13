@@ -326,3 +326,111 @@ pub(crate) fn check(program: &Program) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ir::Func;
+
+    fn arrow(a: MT, b: MT) -> MT {
+        MT::Fun(Box::new(a), Box::new(b))
+    }
+    fn state_program(scoped: bool) -> Program {
+        let unit = MT::unit();
+        let string = MT::con("std::String");
+        let getter = arrow(unit.clone(), string.clone());
+        let pair = MT::Record(vec![
+            ("0".into(), string.clone()),
+            ("1".into(), string.clone()),
+        ]);
+        let handler = Expr::Call(
+            2,
+            vec![
+                Expr::Const(Value::str("initial")),
+                Expr::Func(1),
+                Expr::Const(Value::unit()),
+            ],
+        );
+        Program {
+            main: Some(0),
+            funcs: vec![
+                Func {
+                    name: "main".into(),
+                    arity: 0,
+                    locals: vec![],
+                    ty: if scoped { pair.clone() } else { string.clone() },
+                    body: Body::Expr(if scoped {
+                        handler
+                    } else {
+                        Expr::Call(1, vec![Expr::Const(Value::unit())])
+                    }),
+                },
+                Func {
+                    name: "get".into(),
+                    arity: 1,
+                    locals: vec![unit.clone()],
+                    ty: getter.clone(),
+                    body: Body::Prim("get".into()),
+                },
+                Func {
+                    name: "run-state".into(),
+                    arity: 3,
+                    locals: vec![string.clone(), getter.clone(), unit.clone()],
+                    ty: arrow(string, arrow(getter, arrow(unit, pair))),
+                    body: Body::Prim("run-state".into()),
+                },
+            ],
+            ..Program::default()
+        }
+    }
+
+    #[test]
+    fn state_primitive_needs_a_proven_handler_context() {
+        assert!(check(&state_program(true)).is_ok());
+        assert!(check(&state_program(false))
+            .unwrap_err()
+            .contains("tracing-free lifetime policy"));
+    }
+
+    #[test]
+    fn returning_a_getter_does_not_extend_the_handler_lifetime() {
+        let mut p = state_program(true);
+        let getter = p.funcs[1].ty.clone();
+        let unit = MT::unit();
+        let callback = arrow(unit.clone(), getter.clone());
+        let pair = MT::Record(vec![
+            ("0".into(), getter.clone()),
+            ("1".into(), MT::con("std::String")),
+        ]);
+        p.funcs.push(Func {
+            name: "return-getter".into(),
+            arity: 1,
+            locals: vec![unit.clone()],
+            ty: callback.clone(),
+            body: Body::Expr(Expr::Func(1)),
+        });
+        p.funcs[2].ty = arrow(
+            MT::con("std::String"),
+            arrow(callback.clone(), arrow(unit.clone(), pair)),
+        );
+        p.funcs[2].locals[1] = callback;
+        p.funcs[0].ty = MT::con("std::String");
+        p.funcs[0].body = Body::Expr(Expr::Apply(
+            Box::new(Expr::Field(
+                Box::new(Expr::Call(
+                    2,
+                    vec![
+                        Expr::Const(Value::str("initial")),
+                        Expr::Func(3),
+                        Expr::Const(Value::unit()),
+                    ],
+                )),
+                0,
+            )),
+            vec![Expr::Const(Value::unit())],
+        ));
+        assert!(check(&p)
+            .unwrap_err()
+            .contains("tracing-free lifetime policy"));
+    }
+}

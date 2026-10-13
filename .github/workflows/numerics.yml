@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, macos-15, macos-15-intel]
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     env:
@@ -126,7 +126,7 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy --all-targets -- -D warnings
       - name: Focused bundle regressions
-        run: cargo test --no-fail-fast --test wide_workers --test decoder_partial --test arc_extensions --test arc_execution --test iteration_consumers --test iterator_fusion --test http2_body_roots --test list_generation_ownership --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace
+        run: cargo test --no-fail-fast --lib --test protocol --test wide_workers --test decoder_partial --test arc_extensions --test arc_execution --test iteration_consumers --test iterator_fusion --test http2_body_roots --test list_generation_ownership --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace
       - name: GCC conservative-root omission control
         if: runner.os == 'Linux'
         run: CC=gcc cargo test --test http2_body_roots
@@ -135,6 +135,7 @@ jobs:
         run: |
           cargo build --release --bin fwp
           python3 scripts/measure-iteration.py --output bundle-evidence/iteration
+          python3 scripts/measure-wide.py --output bundle-evidence/wide
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output bundle-evidence/inventory.json
       - uses: actions/upload-artifact@v7
         if: always()

@@ -125,7 +125,10 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
         // boxed numerics need their own counted-result contract before admission.
         let arithmetic = matches!(
             symbol,
-            "prim.add"
+            "trit.from-sign"
+                | "trit.to-int"
+                | "tint.to-int"
+                | "prim.add"
                 | "prim.sub"
                 | "prim.mul"
                 | "prim.div"

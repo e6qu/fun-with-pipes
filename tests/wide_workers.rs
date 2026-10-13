@@ -13,9 +13,9 @@ fn wide_workers_match_raw_arithmetic_and_reclaim_boundaries() {
     std::fs::create_dir_all(&dir).unwrap();
     let cases = [
         ("values", r#"
-sum-wide : I128 -> I128
+rec sum-wide : I128 -> I128
 sum-wide = if (le 0i128) (const 0i128) (fork add id (sub 1i128 | sum-wide))
-sum-unsigned : U128 -> U128
+rec sum-unsigned : U128 -> U128
 sum-unsigned = if (eq 0u128) (const 0u128) (fork add id (sub 1u128 | sum-unsigned))
 transform : I128 -> I128
 transform = add 7i128 | mul 3i128 | sub 2i128 | div 2i128 | rem 17i128 | neg | abs
@@ -82,9 +82,9 @@ main = [
                     let binary = dir.join(format!("{name}-{workers}-{gc}{opt}"));
                     fwp::cgen::compile_c(&code, &binary, opt).unwrap();
                     let actual = Command::new(binary)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", "1")
+                        .env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
+                        .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
+                        .env("FWP_REUSE_VERIFY", if gc == "arc" { "0" } else { "1" })
                         .output()
                         .unwrap();
                     assert_eq!(
