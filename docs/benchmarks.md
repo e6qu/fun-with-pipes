@@ -17,7 +17,8 @@ consumer-fusion controls. `scripts/measure-iteration.py` retains generated C,
 native instructions, allocation/retain counts, charged live storage and separate
 process timings on each Linux/macOS architecture. Timing includes startup and
 output; it is not kernel throughput. Producer Yield values and lazy tail closures
-still allocate. Fold-until and map-accum remain measured controls, without a
+still allocate; runtime State operations can still dispatch their update callback.
+Fold-until and map-accum remain measured controls, without a
 claimed allocation improvement. The [handoff](development-state.md) records the
 measurement revisions and final acceptance gates.
 

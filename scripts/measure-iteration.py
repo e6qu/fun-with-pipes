@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import statistics
 import subprocess
 import time
@@ -74,6 +75,21 @@ static void iteration_sample(void){if(iteration_active){double live=iteration_ch
     return prefix + sample + body
 
 
+
+def loop_evidence(code):
+    workers = []
+    for section in code.split('/* loop of fused-iter')[1:]:
+        worker = section[:section.index('\n}\n')]
+        # Only forcing a lazy source tail may remain dynamically dispatched in
+        # these known-callback probes. Filter paths contain separate call sites.
+        tail_calls = len(re.findall(r'fwp_apply_owned\([^,]+, 1, \(V\[\]\)\{\(V\)0\}\)', worker))
+        assert tail_calls > 0 and worker.count('fwp_apply_') == tail_calls
+        assert 'fwp_record(' not in worker and 'fwp_closure(' not in worker
+        workers.append(dict(tailCallSites=tail_calls, dynamicConsumerCallSites=0,
+                            stateRecordConstructions=0))
+    return workers
+
+
 def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'full evidence runs on GitHub'
     parser = argparse.ArgumentParser(description=__doc__)
@@ -96,6 +112,9 @@ def main():
             variant_env = dict(environment, FWP_ITER_CONSUMERS='1' if fused else '0')
             cfile = out / (label + '.c')
             run([compiler, 'build', '-O2', '--emit-c', source, '-o', cfile], variant_env)
+            workers = loop_evidence(cfile.read_text())
+            if name in ('fold', 'each', 'find', 'pipeline'):
+                assert bool(workers) == fused, (name, fused, workers)
             profile = out / (label + '-profile.c')
             profile.write_text(instrument(cfile.read_text()))
             commands = []
@@ -121,7 +140,7 @@ def main():
                                  medianProcessWallNs=statistics.median(samples), commands=commands,
                                  sourceSha256=hashlib.sha256(source.read_bytes()).hexdigest(),
                                  generatedSha256=hashlib.sha256(cfile.read_bytes()).hexdigest(),
-                                 consumerFusion=fused)
+                                 consumerFusion=fused, fusedLoopWorkers=workers)
     report = dict(head=run(['git', 'rev-parse', 'HEAD']).stdout.strip(),
                   hardware=platform.uname()._asdict(),
                   cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,

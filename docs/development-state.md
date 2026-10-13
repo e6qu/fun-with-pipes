@@ -147,6 +147,14 @@ Additional controls now cover ARC scope normal/trap/cancellation cleanup and
 cold/warm C workspace counts with tracing compiled out. These await validation.
 Guarded Python AST, rustfmt and whitespace checks passed (0.05s CPU / 0.26s).
 
+The complete native Linux ARM baseline finishes with one failure: the HTTP/2
+borrowed-owner omission control kept a stale pointer in a callee-saved register
+under GCC, so omitting the real owner fence did not fail. The next revision
+extends the existing isolated-construction/register-clearing fixture to AArch64;
+positive GC/reuse checks remain unchanged. Focused Linux checks cover both Clang
+and GCC. Intel regular baseline tests and package smoke checks passed, but its
+package upload failed with GitHub DNS ENOTFOUND; that failed job is not a gate.
+
 ## Next action
 
 Publish the combined callback-specialization, corrected rejection fixture and
