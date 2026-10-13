@@ -74,10 +74,33 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
         }
         let symbol = match &f.body {
             Body::Expr(_) | Body::Ctor(_) => continue,
-            Body::ForeignC { .. } | Body::Remote(_) => {
+            Body::ForeignC { .. } => {
+                let (params, result) = crate::ffi::signature(prog, f).map_err(reject)?;
+                // Scalar C values carry no language owners or callable
+                // addresses. The foreign function may retain their bits, but
+                // cannot thereby extend a managed value's lifetime. Use the
+                // actual ABI classification, not just `needs_rc`: raw pointers
+                // are uncounted too, yet can hide managed owners.
+                let scalar = |ty: &crate::ffi::CType| {
+                    matches!(
+                        ty,
+                        crate::ffi::CType::Void
+                            | crate::ffi::CType::Int { .. }
+                            | crate::ffi::CType::F32
+                            | crate::ffi::CType::F64
+                            | crate::ffi::CType::Bool
+                    )
+                };
+                if params.iter().all(|(_, ty)| scalar(ty)) && scalar(&result) {
+                    continue;
+                }
                 return Err(reject(
-                    "foreign and remote boundaries require tracing".into(),
+                    "foreign boundary has no checked ownership contract for non-scalar values"
+                        .into(),
                 ));
+            }
+            Body::Remote(_) => {
+                return Err(reject("remote boundaries require tracing".into()));
             }
             Body::Prim(symbol) => symbol.as_str(),
         };

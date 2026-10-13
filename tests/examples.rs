@@ -176,8 +176,13 @@ struct Background(Vec<std::process::Child>);
 impl Drop for Background {
     fn drop(&mut self) {
         for child in &mut self.0 {
+            #[cfg(unix)]
             let _ = Command::new("kill")
                 .args(["-TERM", "--", &format!("-{}", child.id())])
+                .output();
+            #[cfg(windows)]
+            let _ = Command::new("taskkill")
+                .args(["/PID", &child.id().to_string(), "/T", "/F"])
                 .output();
             let _ = child.wait();
         }
@@ -200,7 +205,10 @@ fn shell(dir: &Path, path: &str, command: &str) -> Command {
 /// Run the sessions of a README in a copy of its directory: the outputs
 /// they print, by block and step.
 fn run_sessions(dir: &Path, blocks: &[Vec<Step>]) -> Vec<Vec<String>> {
+    #[cfg(unix)]
     use std::os::unix::process::CommandExt;
+    #[cfg(windows)]
+    use std::os::windows::process::CommandExt;
     let work = std::env::temp_dir().join(format!(
         "fwp-session-{}-{}",
         std::process::id(),
@@ -209,11 +217,12 @@ fn run_sessions(dir: &Path, blocks: &[Vec<Step>]) -> Vec<Vec<String>> {
     let _ = std::fs::remove_dir_all(&work);
     copy_dir(dir, &work);
     let bin = fwp().parent().unwrap().to_path_buf();
-    let path = format!(
-        "{}:{}",
-        bin.display(),
-        std::env::var("PATH").unwrap_or_default()
-    );
+    let inherited_path = std::env::var_os("PATH").unwrap_or_default();
+    let path =
+        std::env::join_paths(std::iter::once(bin).chain(std::env::split_paths(&inherited_path)))
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
     let bless = std::env::var("FWP_BLESS").is_ok();
     let mut background = Background(Vec::new());
     let mut out = Vec::new();
@@ -225,11 +234,13 @@ fn run_sessions(dir: &Path, blocks: &[Vec<Step>]) -> Vec<Vec<String>> {
             if step.background {
                 let log = work.join(format!(".session-{}-{}.log", b, i));
                 let file = std::fs::File::create(&log).unwrap();
-                let child = shell(&work, &path, &step.command)
-                    .stdout(file)
-                    .process_group(0)
-                    .spawn()
-                    .unwrap();
+                let mut command = shell(&work, &path, &step.command);
+                command.stdout(file);
+                #[cfg(unix)]
+                command.process_group(0);
+                #[cfg(windows)]
+                command.creation_flags(0x00000200); // CREATE_NEW_PROCESS_GROUP
+                let child = command.spawn().unwrap();
                 background.0.push(child);
                 // wait for the lines it should print (when blessing, its
                 // first line)

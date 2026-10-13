@@ -322,6 +322,14 @@ The effect rules:
 - A macro is a function from `Syntax` to `Syntax`. Names that a quote
   refers to resolve where the quote was written (hygiene).
 
+`SFloat` carries decimal text, for example `SFloat "1.25"`, so a macro can
+preserve precision until the expanded expression's type is inferred. Its text
+is one unsuffixed decimal float token, with a decimal point or lowercase `e`,
+without digit separators or surrounding whitespace. Quoting normalizes digit
+separators and exponent case; it does not round the value. Suffixed literals
+retain their suffix through `SOther`. Constructing `SFloat` with an `F64` value
+is no longer supported: use literal text to avoid losing digits in macros.
+
 ## C interop
 
 ```
@@ -612,7 +620,7 @@ use `.dylib`; native `--static` linking is rejected. Build a separate binary
 for each supported OS/architecture; universal binaries are outside project scope.
 The desired platform matrix is Linux, macOS and Windows on ARM64 (`aarch64`)
 and AMD64 (`x86_64`); see [current acceptance](../PLAN.md#platform-objective-and-current-evidence).
-Windows is deferred and not implemented. Darwin cross targets are not implemented;
+Windows ARM64/AMD64 support is in active development and is not yet accepted. Darwin cross targets are not implemented;
 `--pgo` requires GCC.
 For TLS set `FWP_OPENSSL_DIR` as described in [tls.md](tls.md#openssl).
 To try an ARM executable on an x86 machine,

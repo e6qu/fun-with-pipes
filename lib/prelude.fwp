@@ -64,7 +64,7 @@ Syntax =
     | SName String
     | SCtor String
     | SInt I64
-    | SFloat F64
+    | SFloat String
     | SStr String
     | SSelect List[String]
     | SApply Syntax List[Syntax]

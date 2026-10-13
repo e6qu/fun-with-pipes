@@ -1,13 +1,13 @@
 # Plan
 
-The original six-phase roadmap and accepted follow-ups are merged through
-PR #132. The seven-step extension is implemented in PR #133 and requires
-its final acceptance gates. The desired platform matrix below includes deferred Windows support.
-Earlier completion does not establish general
-GC-free execution, allocation-free abstractions or universal C/Rust parity.
-[The handoff](docs/development-state.md) records accepted source, checks and
-current work. [Design](docs/design.md) specifies the language;
-[ownership](docs/ownership.md) specifies memory contracts and limits.
+The original roadmap and both follow-up bundles are accepted through
+[PR #133](https://github.com/e6qu/fun-with-pipes/pull/133), squash `d14ec10`.
+The user authorized the six remaining directions below together in one new PR.
+Windows ARM64/AMD64 and real half/quad formats are now in scope.
+[The handoff](docs/development-state.md) records actual progress and checks;
+[history](docs/roadmap-history.md) retains completed delivery evidence.
+Completion of an earlier bundle does not establish general collector-free
+execution, allocation-free abstractions or universal C/Rust performance.
 
 ## Direction
 
@@ -35,15 +35,15 @@ are not an objective. Existing additional targets need not be removed.
 |---|---|---|
 | Linux | Native CI and standalone package checks | Native CI and standalone package checks |
 | macOS | Accepted native support | Accepted native support |
-| Windows | Desired; deferred and not implemented | Desired; deferred and not implemented |
+| Windows | Active implementation; not accepted yet | Active implementation; not accepted yet |
 
-Windows is desired on both architectures but deferred; prioritize Linux/macOS,
-ownership and compiler performance. Each combination needs actual compiler/interpreter and
-generated-program execution, runtime/ABI and dependency validation, ownership/GC
-stress and reuse checks, and an independently usable binary. Cross-build or
-emulated checks alone do not establish full native acceptance. Extend CI as
-platforms are implemented; the seven production jobs cover Linux/macOS, not the deferred Windows
-combinations. Cross-compilation between every host/target pair is not implied.
+Windows is now included on both architectures. Each combination needs actual
+interpreter and generated-program execution, runtime/ABI and dependency checks,
+ownership/GC stress and reuse verification, and an independently usable binary.
+Cross-builds, emulation and skipped suites do not establish native acceptance.
+Retain all seven Linux/macOS production jobs and add required native Windows
+coverage before claiming six-platform support. Cross-compilation between every
+host/target pair is not implied.
 
 ## Delivered
 
@@ -63,39 +63,35 @@ iteration/projection follow-ups through #129–131. [History](docs/roadmap-histo
 indexes verification and measurements. [Preparation anchors](docs/roadmap-queue.md)
 remain immutable evidence, not work to repeat.
 
-## Active seven-step bundle
+## Active six-item bundle
 
-The ten-task bundle was accepted in [PR #132](https://github.com/e6qu/fun-with-pipes/pull/132),
-squash `c67800ec8530e44501c54c69719af26b0585bedc`. All seven production jobs
-and documentation passed on tested head `7036ecebdbef50a5a8f851ed084378c830af1e79`;
-the squash has the same tree. Four native packages and allocation/disassembly
-artifacts were verified. [History](docs/roadmap-history.md) retains the evidence.
-
-The user authorized these seven steps together in [PR #133](https://github.com/e6qu/fun-with-pipes/pull/133).
-All are implemented; final acceptance requires the complete exact-head gates
-recorded by that PR. The handoff is the single live validation record.
+Keep these six items in one PR on `ownership-formats-windows`. The accepted
+baseline is PR #133; do not replay completed preparation branches. The scope
+below supersedes earlier Windows and floating-format deferrals.
 
 | Step | Work | Acceptance |
 |---|---|---|
-| 1 | Close out and streamline docs | Accepted PR #132 results replace pending actions; one current plan/handoff |
-| 2 | Expand reconstruction ownership | Typed CSV and JSON/protocol reconstruction have counted results, aliases and partial-failure cleanup controls |
-| 3 | Prove scoped State and callback lifetimes | ARC admits proven scoped owners; escape, replacement and unwind controls; unsupported cycles remain explicit |
-| 4 | Remove producer and callback overhead | Eligible lazy producers and known State updates avoid per-step closures/dispatch, preserving forcing/trap order |
-| 5 | Unbox wide integers where safe | Native worker/local I128/U128 representation with correct boxed boundaries, overflow and alias cleanup |
-| 6 | Measure and improve numerics/autodiff | Equivalent C/Rust kernels and bounded AD workspaces; packed decoding, direct formatting and smaller hot arithmetic frames; allocation/live-byte and native instruction evidence |
-| 7 | Settle float formats | Explicit F16/BF16/F128 precision, conversion and wire-format decision; docs distinguish implemented behavior from future formats |
+| 1 | Close out and streamline docs | Record PR #133's passing gates and squash, remove obsolete retry instructions, maintain one current six-item handoff |
+| 2 | Expand collector-free coverage | Prove additional foreign/protocol and retained-callback lifetimes; explicit cycle policy; replace unbounded WASM bump retention for supported owned graphs; alias, unwind, cancellation and physical-reclamation controls |
+| 3 | Remove allocation and dispatch overhead | Broader producer fusion and native worker/aggregate coverage; measured reductions in generic boxing and closure allocation; preserve forcing, effects and trap order |
+| 4 | Improve numerics and autodiff | Measured register/layout/cache improvements; nested reverse differentiation and checkpointing with explicit lifetime/precision contracts; raw/native agreement and bounded memory evidence |
+| 5 | Implement real half/quad formats | Actual F16/BF16/F128 arithmetic, literals, conversions, text, arrays and ABI; coordinated versioned protocol migration; exact-bit and rounding controls in both engines |
+| 6 | Support Windows ARM64 and AMD64 | Native interpreter/compiler/generated programs, platform resources/networking/TLS, ownership stress/reuse and standalone PE packages tested on both native architectures |
 
-Keep raw interpreter/native agreement, checked arithmetic and floating-point
-order. No task authorizes general ARC eligibility without complete ownership
-contracts. Windows, a new backend and new deployment interfaces remain deferred.
-Native ARC does not imply WebAssembly ownership support.
+Use [the float migration contract](docs/float-formats.md) for item 5. Software
+arithmetic must implement the declared format on targets without hardware
+instructions; reduced precision is not an alternative implementation. Keep
+ordinary typing strongly inferred and generic specialization explicit.
+Ownership coverage expands only with proofs and negative controls. Any residual
+unsupported boundary must remain an explicit diagnostic and be recorded in the
+handoff; it cannot silently acquire tracing or an implicit lifetime.
 
-After PR #133 passes and merges, this seven-step roadmap is complete. Remaining
-engineering directions are explicit future work: broader proved ownership
-(including foreign/protocol contexts and cycles), wider producer/worker shapes,
-true half/quad formats with protocol migration, further measured kernel/AD
-improvements, and deferred Windows. They are not unfinished acceptance items
-for this bundle or silently authorized new platform/backend work.
+The merge gate includes the existing seven production jobs, required native
+Windows suites on both architectures, and documentation on the final PR head.
+Use early focused runner checks while developing; run full final gates once the
+bundle is ready, fix all failures, and squash with one explicit subject of at
+most 80 characters and an empty body. A new backend, JIT and distributed
+execution are not part of this bundle.
 
 ## Agreed syntax
 
@@ -114,7 +110,7 @@ selectors without new runtime semantics.
 ## Delivery and validation
 
 [AGENTS.md](AGENTS.md) retains the standing authorization and workflow: coherent
-bundles, one PR at a time, fix encountered failures, all seven exact-head CI jobs
+bundles, one PR at a time, fix encountered failures, all existing Linux/macOS and added Windows exact-head CI jobs
 plus documentation audit before squash, one-line commit messages of at most
 80 characters without bodies or trailers. Keep the handoff current; delete
 obsolete next actions instead of accumulating competing plans.

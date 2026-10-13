@@ -11,33 +11,23 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-The user authorized the active seven-step roadmap as one combined PR, with full
-CI before squash merge and the commit format below. This bundle includes
-documentation cleanup; do not split its seven steps into separate PRs.
-Failing tests are tasks to fix; queued CI gates merging, not roadmap
-work. Diagnose failures and prepare the next task while CI runs. Keep later
-changes separate and open the next PR after the current one merges. This
-authorization covers roadmap branch publication, PR creation,
-fixes and merges; keep later sessions within that scope and do not request
-the same permission again. Maintain the plan and handoff throughout. A queued,
-skipped or superseded CI run is not a passing gate for the current PR head.
-Once PR #133 passes and merges, its seven-step bundle is complete. Use the
-remaining directions in PLAN.md for subsequent scope discussions, not as an
-instruction to reopen completed work or implement deferred platforms.
+The user authorized all six items in PLAN.md as one combined PR, including
+Windows ARM64/AMD64 and actual F16/BF16/F128 implementation. Keep the bundle
+together on `ownership-formats-windows`; do not split it into separate PRs.
+PR #133 is accepted at `d14ec10`; its roadmap is historical evidence.
 
-The approved six-phase roadmap and iteration/projection follow-ups are merged.
-This completes their delivery scope, not general GC-free execution or every
-performance goal. PLAN.md records the remaining engineering gaps and recommended
-order; the live handoff records current work. Do not reopen archived preparations
-or implemented deliveries. The desired platform matrix is Linux, macOS and
-Windows, each on ARM64 (aarch64) and AMD64 (x86_64). Windows is deferred on both
-architectures; prioritize Linux/macOS, ownership and compiler performance.
-Do not treat the original roadmap's completion as universal platform acceptance.
-[docs/ownership.md](docs/ownership.md) records the memory design and its
-acceptance criteria. Windows, new deployment interfaces and a new compiler backend
-remain deferred.
-Package one binary per supported OS/architecture; universal binaries are not
-an objective and must not be listed as remaining roadmap work.
+Authorization covers implementation, documentation, branch publication, PR
+creation, fixes and squash merge after passing final-head CI. Failing tests
+are tasks to fix. Queued CI gates merging, not independent implementation.
+Do not request the same permission again or reinterpret earlier deferrals as
+current scope: Windows and the float migration are now authorized. A new
+compiler backend, JIT and distributed execution remain outside this bundle.
+
+Retain all seven existing Linux/macOS production gates and add required native
+Windows ARM64/AMD64 tests, ownership/GC stress and standalone packaging before
+acceptance. Skipped or emulated tests do not establish native Windows support.
+Package one binary per OS/architecture; universal binaries are not an objective.
+[docs/ownership.md](docs/ownership.md) records memory contracts and evidence.
 
 Preserve tacit, curried, data-last pipes, immutable value semantics, tracked
 effects, checked arithmetic and observable evaluation/trap order. Infer
@@ -71,7 +61,7 @@ representation choices and limits explicit and justify them.
   When authorized to merge, require all seven exact-head jobs (Linux ARM64/AMD64,
   bench, regular ARM/Intel macOS and GC stress ARM/Intel) and squash-merge with an
   explicitly supplied subject and empty body.
-  Require the documentation audit too. Windows remains deferred; these jobs
-  do not establish Windows support.
+  Require the documentation audit and the added native Windows gates too.
+  The existing seven jobs alone do not establish Windows support.
 
 Repository conventions and test locations are in [CONTRIBUTING.md](CONTRIBUTING.md).

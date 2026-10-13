@@ -3,7 +3,7 @@
 The platform objective is Linux, macOS and Windows on ARM64 and AMD64, with one
 binary per OS/architecture. Native CI and standalone package checks cover
 Linux/macOS on both architectures; the handoff records their accepted gates.
-Windows remains desired but deferred.
+Windows ARM64/AMD64 support is in active development; native release support is not yet verified.
 Ownership, numeric layouts and autodiff improvements preserve simple pipe semantics.
 See [PLAN.md](PLAN.md) for the ordered roadmap and
 [docs/development-state.md](docs/development-state.md) for the session handoff
@@ -84,7 +84,8 @@ main =
 Requirements: Rust (stable) and a C compiler. For TLS (HTTPS, services over
 TLS): OpenSSL 3 (`libssl3`; to build native programs that use it, also
 `libssl-dev`). Optionally, for WebAssembly: clang with a WASI sysroot
-(Debian/Ubuntu: `wasi-libc`, `libclang-rt-18-dev-wasm32`, `lld`) and node.
+(Debian/Ubuntu: `wasi-libc`, `libclang-rt-18-dev-wasm32`,
+`libc++-18-dev-wasm32`, `lld`) and node.
 
 On macOS, install the Xcode command line tools (`xcode-select --install`).
 For TLS, install OpenSSL 3 (`brew install openssl@3`) and set

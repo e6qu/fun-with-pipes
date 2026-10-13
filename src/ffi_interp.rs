@@ -4,21 +4,13 @@
 //! results travel as 64-bit words. Callbacks re-enter the interpreter.
 
 use std::collections::HashMap;
-use std::ffi::{c_char, c_int, c_void, CStr, CString};
+use std::ffi::{c_char, c_void, CStr, CString};
 use std::rc::Rc;
 
 use crate::ffi::{self, CType};
 use crate::interp::{Ctl, Interp, R};
 use crate::ir::*;
 use crate::value::Value;
-
-extern "C" {
-    fn dlopen(path: *const c_char, flags: c_int) -> *mut c_void;
-    fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
-    fn dlerror() -> *const c_char;
-}
-
-const RTLD_NOW: c_int = 2;
 
 type ShimFn = unsafe extern "C" fn(*const u64, *mut u64);
 /// Sets the context of the current foreign call; returns the previous one.
@@ -27,6 +19,11 @@ type SetHostFn = unsafe extern "C" fn(*const c_void, *mut c_void) -> *mut c_void
 pub struct FfiLib {
     shims: HashMap<FuncId, ShimFn>,
     set_host: SetHostFn,
+    // Unload before removing the DLL directory (Windows locks loaded images).
+    #[cfg(not(target_family = "wasm"))]
+    _library: crate::dylib::Library,
+    #[cfg(not(target_family = "wasm"))]
+    _directory: crate::cgen::TempDir,
 }
 
 fn trap<T>(msg: impl Into<String>) -> R<T> {
@@ -34,10 +31,10 @@ fn trap<T>(msg: impl Into<String>) -> R<T> {
 }
 
 /// Build and load the shim for every foreign C function of a program.
+#[cfg(not(target_family = "wasm"))]
 fn load(prog: &Program) -> Result<FfiLib, String> {
     let src = ffi::shim_source(prog)?;
-    // removed (with the files in it) when this function returns: the
-    // library stays loaded
+    // The interpreter owns both the loaded image and its temporary files.
     let dir = crate::cgen::TempDir::new("fwp-ffi")?;
     let c_path = dir.join("shim.c");
     let so_path = dir.join(format!("shim.{}", crate::cgen::shared_library_extension()));
@@ -64,23 +61,11 @@ fn load(prog: &Program) -> Result<FfiLib, String> {
             &out,
         ));
     }
-    let path = CString::new(so_path.to_string_lossy().as_bytes()).unwrap();
-    let handle = unsafe { dlopen(path.as_ptr(), RTLD_NOW) };
-    let _ = std::fs::remove_file(&so_path);
-    if handle.is_null() {
-        let e = unsafe { CStr::from_ptr(dlerror()) }
-            .to_string_lossy()
-            .into_owned();
-        return Err(format!("cannot load the foreign function shim: {}", e));
-    }
+    let library = crate::dylib::Library::open(&so_path, crate::dylib::Scope::Local)
+        .map_err(|e| format!("cannot load the foreign function shim: {e}"))?;
     let sym = |name: &str| -> Result<*mut c_void, String> {
         let c = CString::new(name).unwrap();
-        let p = unsafe { dlsym(handle, c.as_ptr()) };
-        if p.is_null() {
-            Err(format!("shim symbol `{}` missing", name))
-        } else {
-            Ok(p)
-        }
+        unsafe { library.symbol(&c) }.map_err(|e| format!("shim symbol `{name}` missing: {e}"))
     };
     let mut shims = HashMap::new();
     for (id, f) in prog.funcs.iter().enumerate() {
@@ -91,7 +76,17 @@ fn load(prog: &Program) -> Result<FfiLib, String> {
     }
     let set_host =
         unsafe { std::mem::transmute::<*mut c_void, SetHostFn>(sym("fwp_shim_set_host")?) };
-    Ok(FfiLib { shims, set_host })
+    Ok(FfiLib {
+        shims,
+        set_host,
+        _library: library,
+        _directory: dir,
+    })
+}
+
+#[cfg(target_family = "wasm")]
+fn load(_prog: &Program) -> Result<FfiLib, String> {
+    Err("foreign C calls are not supported by the WebAssembly interpreter".into())
 }
 
 /// State of one foreign call, reachable from callbacks.

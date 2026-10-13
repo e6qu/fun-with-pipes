@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide]
+        options: [numerical, bundle, wide, windows, portability, wasm, iteration]
         default: numerical
 jobs:
   numeric_fusion:
@@ -34,7 +34,7 @@ jobs:
           node-version: 24
       - name: WebAssembly toolchain
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: OpenSSL 3
         if: runner.os == 'macOS'
         run: |
@@ -101,7 +101,7 @@ jobs:
           path: arc-evidence/
 
   bundle_preflight:
-    if: inputs.suite != 'numerical'
+    if: inputs.suite == 'bundle' || inputs.suite == 'wide'
     strategy:
       fail-fast: false
       matrix:
@@ -126,7 +126,7 @@ jobs:
           node-version: 24
       - name: Linux toolchains
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang lld libssl-dev wasi-libc libclang-rt-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld libssl-dev wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: OpenSSL on macOS
         if: runner.os == 'macOS'
         run: |
@@ -166,3 +166,134 @@ jobs:
         with:
           name: bundle-preflight-${{ matrix.runner }}
           path: bundle-evidence/
+
+  windows_probe:
+    if: inputs.suite == 'windows'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Native C toolchain for foreign calls
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
+      - name: Native Windows compiler check
+        shell: pwsh
+        run: |
+          rustc -vV | Tee-Object windows-host.txt
+          cargo check --all-targets 2>&1 | Tee-Object windows-probe.log
+          exit $LASTEXITCODE
+      - name: Native socket and library execution
+        shell: pwsh
+        run: |
+          cargo test --lib socket_tests -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --lib dylib::tests -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --lib softfloat:: -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --test softfloat_core --test float_math -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --test native_allocator -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo build --bin fwp
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Interpreter golden outputs and exit statuses
+        shell: pwsh
+        run: |
+          cargo test --test golden_run interpreter_snapshots -- --nocapture
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: windows-probe-${{ matrix.runner }}
+          path: |
+            windows-host.txt
+            windows-probe.log
+
+  portability:
+    if: inputs.suite == 'portability' || inputs.suite == 'iteration'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Compiler checks
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+          cargo test --lib
+      - name: Child signal status in both engines
+        run: cargo test --test cli child_signal_status_matches_the_shell_in_both_engines -- --exact
+      - name: Ownership and foreign boundary regressions
+        run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls --test softfloat_core --test float_math --test native_allocator --test file_runtime_ownership --test file_inline_path --test file_storage_disposal --test array_size_limits
+      - name: Iterator forcing, ownership and specialization
+        run: cargo test --test iterator_fusion --test iteration_consumers --test float_literals
+      - name: Iterator allocation and instruction evidence
+        if: inputs.suite == 'iteration'
+        run: |
+          cargo build --release --bin fwp
+          python3 scripts/measure-iteration.py --output iteration-evidence
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'iteration'
+        with:
+          name: iteration-evidence-${{ matrix.runner }}
+          path: iteration-evidence/
+
+  wasm_ownership:
+    if: inputs.suite == 'wasm'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_REQUIRE_WASM_RESOURCE_COUNTS: 1
+      FWP_REQUIRE_WASI_GOLDENS: 1
+      FWP_REQUIRE_FLOAT_WASI: 1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: WASI toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+      - name: WebAssembly compiler and exact Rust arithmetic
+        env:
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: node tests/wasm/wasi-run.mjs
+        run: |
+          cargo test --lib --target wasm32-wasip1 softfloat:: -- --test-threads=1
+      - name: Physical reclamation and resource controls
+        run: cargo test --test wasm_resource_counts --test softfloat_core --test float_math --test array_size_limits
+      - name: Actual WASI semantic agreement
+        if: ${{ !cancelled() }}
+        run: cargo test --test wasm golden_programs_under_wasi

@@ -1,0 +1,1 @@
+/* fwp handles NaN formatting and encoding explicitly. */

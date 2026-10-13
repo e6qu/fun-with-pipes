@@ -76,10 +76,9 @@ pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
             c(S_INT, vec![IR::Const(Value::I64(v))])
         }
         ExprKind::Float {
-            value,
+            decimal,
             suffix: None,
-            ..
-        } => c(S_FLOAT, vec![IR::Const(Value::F64(*value))]),
+        } => c(S_FLOAT, vec![s(decimal)]),
         ExprKind::Str(x) => c(S_STR, vec![s(x)]),
         ExprKind::Var(n) => c(S_NAME, vec![s(&cx.value_name(n))]),
         ExprKind::Ctor(n) => c(S_CTOR, vec![s(&cx.ctor_name(n))]),
@@ -326,14 +325,18 @@ impl Builder<'_> {
                 },
                 _ => return Err("malformed SInt".into()),
             },
-            S_FLOAT => match &fs[0] {
-                Value::F64(x) => ExprKind::Float {
-                    value: *x,
-                    value32: *x as f32,
-                    suffix: None,
-                },
-                _ => return Err("malformed SFloat".into()),
-            },
+            S_FLOAT => {
+                let decimal = Self::str_of(&fs[0])?;
+                let expr = crate::parser::parse_expr_text(&decimal, self.span.file, self.next_id)
+                    .map_err(|_| "SFloat needs an unsuffixed decimal float literal")?;
+                match &expr.kind {
+                    ExprKind::Float {
+                        decimal: parsed,
+                        suffix: None,
+                    } if *parsed == decimal => expr.kind,
+                    _ => return Err("SFloat needs an unsuffixed decimal float literal".into()),
+                }
+            }
             S_STR => ExprKind::Str(Self::str_of(&fs[0])?),
             S_SELECT => {
                 let mut path = Vec::new();

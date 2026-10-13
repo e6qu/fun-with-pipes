@@ -108,7 +108,18 @@ fn run(path: &Path) -> String {
 }
 
 #[test]
-fn run_snapshots() {
+fn interpreter_snapshots() {
+    snapshots(false);
+}
+
+#[test]
+fn native_snapshots() {
+    if have_cc() && std::env::var("FWP_BLESS").is_err() {
+        snapshots(true);
+    }
+}
+
+fn snapshots(native: bool) {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/run");
     let bless = std::env::var("FWP_BLESS").is_ok();
     let mut entries: Vec<_> = std::fs::read_dir(&dir)
@@ -118,33 +129,24 @@ fn run_snapshots() {
         .collect();
     entries.sort();
     let mut failures = Vec::new();
-    let native = have_cc();
     for path in entries {
-        let got = run(&path);
         let out = path.with_extension("out");
-        if bless {
-            std::fs::write(&out, &got).unwrap();
-            continue;
-        }
         let want = std::fs::read_to_string(&out).unwrap_or_default();
-        if got != want {
+        let got = if native {
+            run_native(&path, &want)
+        } else {
+            run(&path)
+        };
+        if bless && !native {
+            std::fs::write(&out, &got).unwrap();
+        } else if got != want {
+            let engine = if native { "native" } else { "interpreter" };
             failures.push(format!(
-                "{} (interpreter):\n--- expected\n{}--- got\n{}",
+                "{} ({engine}):\n--- expected\n{}--- got\n{}",
                 path.display(),
                 want,
                 got
             ));
-        }
-        if native {
-            let got = run_native(&path, &want);
-            if got != want {
-                failures.push(format!(
-                    "{} (native):\n--- expected\n{}--- got\n{}",
-                    path.display(),
-                    want,
-                    got
-                ));
-            }
         }
     }
     if !failures.is_empty() {

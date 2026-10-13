@@ -17,6 +17,8 @@ poison : Iterator[I64]
 poison = Yield 7 (fork Yield (const 1 | div 0) (const (const Done)))
 fail-step : I64 -> I64 -> I64 ! {Error[String]}
 fail-step = curry (const "callback first" | fail)
+strings : String -> String
+strings = concat | flip iter.iterate "seed" | iter.take 4 | iter.fold (flip concat) ""
 main = [
     0 | iter.count-from | iter.take 1000 | iter.map (add 1) | iter.filter (rem 2 | eq 0) | iter.fold add 0 | echo,
     poison | iter.map (add 1) | iter.find (eq 8) | echo,
@@ -27,6 +29,10 @@ main = [
     [1, 2, 3] | iter.from-list | iter.take 2 | run-state [] (iter.each (Cons | modify)) | echo,
     [1, 2, 3] | iter.from-list | iter.map (add 1) | run-state [] (iter.find (tap (Cons | modify) | gt 2)) | echo,
     [] | list._test-ints | iter.from-list | iter.fold add 17 | echo,
+    1 | iter.iterate (mul 3) | iter.take 6 | iter.fold add 0 | echo,
+    "seed" | iter.iterate (concat "x") | iter.take 8 | iter.fold (flip concat) "" | echo,
+    0 | iter.iterate (add 3) | iter.find (gt 19) | echo,
+    "x" | string.repeat 3 | strings | echo,
 ] | ignore
 "#).unwrap();
     let reference = checked(
@@ -81,6 +87,11 @@ fn producer_lookahead_and_exhausted_stage_order_match_raw_interpreter() {
         "0 | iter.count-from | iter.filter (div 0 | eq 1) | iter.take 0 | iter.fold add 0 | echo",
         "0 | iter.count-from | iter.take 0 | iter.map (div 0) | iter.fold add 0 | echo",
         "0 | iter.count-from | iter.filter (gt 2) | iter.take 0 | iter.fold add 0 | echo",
+        "0 | iter.iterate (div 0) | iter.take 0 | iter.fold add 0 | echo",
+        "9223372036854775806 | iter.iterate (add 1) | iter.take 1 | iter.fold add 0 | echo",
+        "9223372036854775806 | iter.iterate (add 1) | iter.take 2 | iter.fold add 0 | echo",
+        "9223372036854775806 | iter.iterate (add 1) | iter.find (const True) | echo",
+        "0 | iter.iterate (add 2) | iter.filter (div 0 | eq 1) | iter.take 0 | iter.fold add 0 | echo",
         "[1, 2, 3] | iter.from-list | iter.map (add 1) | iter.fold add 0 | echo",
         "[1, 2, 3] | iter.from-list | iter.take 1 | iter.filter (gt 2) | iter.fold add 0 | echo",
     ];

@@ -21,9 +21,8 @@ pub enum Tok {
         suffix: Option<String>,
     },
     Float {
-        value: f64,
-        /// The literal rounded once, directly to `F32` precision.
-        value32: f32,
+        /// Decimal source, including its sign, before destination rounding.
+        decimal: String,
         suffix: Option<String>,
     },
     /// Balanced ternary literal `0t+-0`, most significant trit first.
@@ -585,17 +584,11 @@ impl<'a> Lexer<'a> {
             if radix != 10 {
                 return self.err(line, col, "float literals must be decimal");
             }
-            let bad = |_| Diagnostic::error(self.span_from(line, col, s), "bad float");
-            let mut v: f64 = digits.parse().map_err(bad)?;
-            // parsed separately: rounding the f64 again would round twice
-            let mut v32: f32 = digits.parse().map_err(bad)?;
             if neg {
-                v = -v;
-                v32 = -v32;
+                digits.insert(0, '-');
             }
             return Ok(Tok::Float {
-                value: v,
-                value32: v32,
+                decimal: digits,
                 suffix,
             });
         }
@@ -731,13 +724,11 @@ mod tests {
                     suffix: Some("u8".into())
                 },
                 Tok::Float {
-                    value: 1.5,
-                    value32: 1.5,
+                    decimal: "1.5".into(),
                     suffix: Some("f32".into())
                 },
                 Tok::Float {
-                    value: 2000.0,
-                    value32: 2000.0,
+                    decimal: "2e3".into(),
                     suffix: None
                 },
                 Tok::Int {
@@ -801,6 +792,30 @@ mod tests {
                 (false, 3),
                 (false, 5),
                 (false, 6)
+            ]
+        );
+    }
+    #[test]
+    fn decimal_tokens_preserve_digits_before_destination_rounding() {
+        let decimal = "1.0000000000000000000000000000000002";
+        assert_eq!(
+            toks(&format!("-{decimal}f128")),
+            vec![
+                Tok::Float {
+                    decimal: format!("-{decimal}"),
+                    suffix: Some("f128".into()),
+                },
+                Tok::Eof
+            ]
+        );
+        assert_eq!(
+            toks("1_234.50E+2"),
+            vec![
+                Tok::Float {
+                    decimal: "1234.50e+2".into(),
+                    suffix: None,
+                },
+                Tok::Eof
             ]
         );
     }

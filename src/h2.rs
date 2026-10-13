@@ -623,6 +623,30 @@ pub fn pct_decode(s: &str) -> String {
 
 /// An I/O error as C's `strerror` words it (without Rust's "(os error N)").
 pub fn io_msg(e: &std::io::Error) -> String {
+    #[cfg(windows)]
+    {
+        use std::io::ErrorKind;
+        // Win32 messages vary with system language and differ from the C
+        // runtime's errno wording. Keep the language's existing common errors
+        // consistent across the interpreter and generated programs.
+        let message = match e.kind() {
+            ErrorKind::NotFound => Some("No such file or directory"),
+            ErrorKind::PermissionDenied => Some("Permission denied"),
+            ErrorKind::AlreadyExists => Some("File exists"),
+            ErrorKind::DirectoryNotEmpty => Some("Directory not empty"),
+            ErrorKind::NotADirectory => Some("Not a directory"),
+            ErrorKind::IsADirectory => Some("Is a directory"),
+            ErrorKind::ConnectionRefused => Some("Connection refused"),
+            ErrorKind::ConnectionReset => Some("Connection reset by peer"),
+            ErrorKind::ConnectionAborted => Some("Software caused connection abort"),
+            ErrorKind::AddrInUse => Some("Address already in use"),
+            ErrorKind::BrokenPipe => Some("Broken pipe"),
+            _ => None,
+        };
+        if let Some(message) = message {
+            return message.into();
+        }
+    }
     let s = e.to_string();
     match s.rfind(" (os error ") {
         Some(i) => s[..i].to_string(),

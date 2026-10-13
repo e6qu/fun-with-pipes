@@ -1,0 +1,6 @@
+# Source and golden outputs have identical bytes on every native runner.
+* text=auto eol=lf
+# Input fixtures include deliberately malformed UTF-8 and exact byte streams.
+*.in -text
+# Preserve the licensed upstream source bytes verbatim.
+vendor/softfloat/** -text

@@ -15,6 +15,8 @@ pub mod cli_gen;
 pub mod csv;
 pub mod diag;
 pub mod driver;
+#[cfg(not(target_family = "wasm"))]
+mod dylib;
 pub mod env;
 pub mod escape;
 pub mod exec;
@@ -55,6 +57,7 @@ pub mod rest;
 pub mod rpc;
 pub mod sched;
 pub mod services;
+pub mod softfloat;
 pub mod solve;
 pub mod stdgen;
 pub mod swagger;

@@ -1,101 +1,110 @@
 # Session handoff
 
-Updated 2026-10-13. The user authorized all seven steps in [PLAN](../PLAN.md)
-as one combined [PR #133](https://github.com/e6qu/fun-with-pipes/pull/133).
-This is its current implementation and validation handoff. The PR checks and merge record are
-the acceptance authority: require all seven exact-head production jobs and
-the documentation audit before squash merge. Commit messages have one line,
-at most 80 characters, no body, trailers or attribution.
+Updated 2026-10-13. Complete all six directions in [PLAN](../PLAN.md) together
+on `ownership-formats-windows`, [PR #134](https://github.com/e6qu/fun-with-pipes/pull/134).
+The PR is a draft. Publication, fixes and squash merge after passing final-head
+CI are authorized. Every commit has one line, at most 80 characters, with no
+body, trailers or attribution. Keep working while CI queues; failures are work
+to fix. Do not merge this unfinished bundle.
 
-## Accepted baseline
+## Baseline and scope
 
-PR #132 merged at `c67800ec8530e44501c54c69719af26b0585bedc`, with its complete
-seven-job gate and docs audit. Linux/macOS ARM64/AMD64 packages are verified.
-Windows remains deferred; universal binaries are not an objective.
-[History](roadmap-history.md) retains immutable delivery evidence.
+PR #133 is accepted at `d14ec10d24765c2686dc4cfb0798012611c02a61`, with a tree
+identical to tested head `70de849771aff10a3af938746c82f9b975bc989b`. All seven
+production, four preflight and documentation jobs passed.
+[History](roadmap-history.md) retains exact trees, runs and measurements.
+Linux/macOS ARM64/AMD64 packages are accepted. Native Windows and real half/quad
+language representations remain work in this bundle.
 
 ## Active bundle
 
-| Step | Status | Delivered scope |
+| Step | Status | Implemented and still required |
 |---|---|---|
-| 1 | Implemented | One current plan/handoff; historical evidence separated from live actions |
-| 2 | Implemented | Counted typed reconstruction, aliases, duplicate keys, partial failure and unwind; direct packed decoding |
-| 3 | Implemented | Scoped State callback proof, replacement, escaping immutable callbacks and cleanup |
-| 4 | Implemented | Direct count/list producer state and known modify entries, preserving forcing/trap order |
-| 5 | Implemented | Native I128/U128 workers with checked arithmetic and typed boxed boundaries |
-| 6 | Implemented | Allocation/live-memory, C/Rust, AD and native instruction controls; direct formatting and smaller hot frames |
-| 7 | Implemented | Explicit current/future float precision, conversion and protocol decision |
+| 1 | Implemented | One live handoff, accepted baseline and historical evidence; remove stale next actions |
+| 2 | In progress | Scalar foreign ARC and proved WASM/File freeing tested; retained callbacks, protocols and cyclic ownership proofs remain |
+| 3 | In progress | Direct iterate fusion measured; broader producer/worker/aggregate specialization remains |
+| 4 | Pending | Measured kernel/layout improvements, nested reverse differentiation and checkpointing |
+| 5 | In progress | Shared exact arithmetic/text/math cores and decimal-preserving syntax; value/storage/ABI/protocol migration remains |
+| 6 | In progress | Native Windows Rust and generated C allocator probes pass on both architectures; full C runtime/resources/networking/TLS and PE packages remain |
 
-The implementation is complete; acceptance is conditional on the PR's final
-checks and merge. A failed or skipped check does not establish support.
-After PR #133 is merged, all seven steps are delivered and there is no further
-active task in this bundle. Do not reopen historical preparation anchors.
+The [float contract](float-formats.md) is authoritative: F16/BF16 still use F32
+language values and F128 still uses F64. The shared exact cores do not yet
+change that public behavior. Migrate both engines, arrays/workers, ownership,
+foreign ABI, text and versioned wire encoding together; do not publish partial
+format support or silently narrow quad values. Nested reverse mode and
+checkpointing are not implemented.
 
-## Validation and evidence
+## Current implementation
 
-[History](roadmap-history.md#seven-step-reconstruction-and-numerics-bundle-pr-133)
-and the [measurement record](measurements/reconstruction-and-workers-2026-10-13.json)
-retain source heads, run links, hardware, compiler/flags, allocations, live bytes
-and measurement limits. Focused regression and iteration stages passed all four
-native platforms at 08f4231. Corrected wide measurements passed all four at
-45ed2ce, whose compiler/runtime sources are identical. Numerical run
-38401073468 passed all four platforms. Evidence run 38406723936 also passed
-all four at 615e224: malformed Trit/TInt binary rejection, partial-owner
-cleanup, packed/unpacked assertions and cold overflow formatting.
+Scalar foreign-C ARC admission follows the actual ABI classifier and rejects
+managed strings, pointers and callbacks. WASM typed last-owner destruction
+removes count metadata before libc free, including closed File headers.
+Unproved shared/cyclic graphs remain retained. Direct `iter.iterate` fusion
+preserves eager lookahead, effect/trap order, early stopping and owned captures.
+[History](roadmap-history.md#pr-134-development-evidence-not-final-acceptance)
+links the four-platform proofs and scoped allocation/instruction measurements.
 
-Production run 38407820810 on c1f8283 (documentation after 615e224) passed
-bench, regular ARM/Intel macOS and ARM macOS GC, but Linux ARM exposed an
-invalid free in the WASI `cli_csv` golden. Enum error choices used managed
-bump-heap storage as scratch. The current fix writes choices into a registered
-scratch buffer and appends help choices directly, removing the temporary
-managed allocation. The same allocator audit found a temporary I128 box in
-Trit/TInt JSON decoding. It now parses the exact scalar directly, preserving
-the signed-128 input boundary. Interpreter range checks also avoid overflowing
-`abs` on I128 minimum. The expanded `json_typed` golden covers fractional,
-negative/exponent, ternary range and signed-128 boundary inputs in both engines.
-The early bundle checks now require actual WASI golden
-programs on both Linux architectures; production requires them too. This
-supersedes that production run. All seven jobs and docs must pass again on the
-new PR head. The short 59cd3f7 runs were superseded by the complete allocator
-fix before acceptance. The earlier stride-assertion failure in 38401077491 was already
-fixed; cancelled or superseded runs are not merge gates.
+Windows Rust uses native socket handles/WSAPoll and owned DLL lifetimes.
+Generated C allocation uses VirtualAlloc/VirtualFree, actual commitment/reuse,
+monotonic timing, working-set accounting and PE writable-section roots with a
+missing-root negative control. LLVM-MinGW UCRT assets are hash-pinned; Rust's
+MSVC target separately uses SDK-aware Clang. Generated C task contexts and
+platform resources still need a complete native Windows port.
 
-Measured 1000-element requests: fold 6005 → 6, State each 7009 → 8,
-map/filter/fold 9511 → 6. Both 256-element wide workloads: requests 513 → 2,
-peak charged bytes 4096 → 32, zero retained charged storage or collections.
-Iterator CLI/printing overhead retains 64 charged bytes and is not an ARC
-reclamation claim. Warm AD workspaces allocate no native buffers; returned
-gradients allocate once. Cold overflow formatting reduced a bounded local ARM64
-wide-worker frame from 144 to 32 bytes; runner reports govern platform claims.
+SoftFloat 3e, scoped gdtoa and TLFloat 1.15.0 are vendored with licenses,
+provenance and recorded patches. The shared core has exact half/bfloat/quad
+arithmetic, direct decimal rounding/shortest text, full-width integer conversion,
+comparison, ties-away integral rounding and truncating remainder. Transcendentals
+have an explicit 1-ULP contract and fixed integer storage. Arithmetic NaNs are
+canonical; bit transport preserves payloads. Decimal calls use 4 KiB stack
+scratch and release overflow storage on success/failure. Math object checks
+reject allocator/C++ runtime dependencies; UBSan has an omitted-guard control.
 
-Focused local checks passed through `python3 scripts/local-guard.py`:
-`cargo clippy --all-targets -- -D warnings`, `cargo fmt --all -- --check`,
-Python syntax validation of the wide measurement script, roadmap/link audit,
-and bounded generated-C protocol/packing and stack probes. The protocol probe
-covers both packing modes at O1/O2 with stress/verification. A bounded generated-C enum probe
-(`python3 scripts/local-guard.py python3 /private/tmp/fwp-wasi-choice-probe.py`)
-passed O1/O2 for native and host bump allocators; the pre-fix interior bump
-allocation aborts at both optimization levels as a negative control. The
-matching guarded `/private/tmp/fwp-json-trits-probe.py` passes O1/O2 native and
-bump boundary checks, verifies zero managed temporaries and reproduces the
-pre-fix invalid free. Actual WASI execution
-remains a runner check. Local target data
-is about 112 MiB and free disk about 104 GiB. Full builds/suites remain on CI.
+Tokens/AST preserve decimal text until monomorphization. `SFloat` now carries
+an unsuffixed decimal String, with matching validation/rendering in both engines.
+The public macro API change is documented. `float_literals` checks formatting,
+macro expansion and raw/native O1/O2 behavior at a known F32 rounding boundary.
 
-## Resume and finish
+## CI repairs and current validation
 
-Next: inspect PR #133 and its exact head. If open, collect the WASI-fix preflight and replacement full
-production results, fix every failure, and require all seven production jobs plus
-docs on the latest head. Keep fixes in this PR; publish branch
-`ownership-numerics-next`. Temporary `ownership-numerics-evidence` is only a
-measurement branch, not another delivery. Squash with one explicit subject of
-at most 80 characters and an empty body, then verify merged-tree parity and the
-complete one-line message. If already merged, verify that record and stop this
-bundle: the roadmap is complete. Remove the temporary evidence branch after
-merge. No further implementation is implied by historical next-action lists.
+Published code head: `5bad4a6`.
 
-Remaining directions are explicitly outside this bundle: broader cyclic or
-foreign/external protocol ownership, other producer/worker shapes, true half/quad
-float implementation with protocol migration, further measured numerical/AD
-improvements, and deferred Windows. Pipe syntax and immutable/effect semantics
-remain unchanged.
+- `02a802d` fixes the Windows math build by explicitly including `<type_traits>`.
+  Both native Windows jobs passed in
+  [38457143007](https://github.com/e6qu/fun-with-pipes/actions/runs/38457143007),
+  including compiler, socket/DLL, exact Rust/C math, allocator and all interpreter
+  golden outputs/statuses. This is focused acceptance, not full Windows support.
+- `5bad4a6` fixes the signal-status regression assertion exposed by the ARM macOS
+  second shard in [full CI 38453295129](https://github.com/e6qu/fun-with-pipes/actions/runs/38453295129).
+  The helper returns stdout/stderr plus the outer exit status; both engine
+  assertions now expect `137\ncode=0`. The raw/native test runs early in
+  [four-platform repair validation 38458280091](https://github.com/e6qu/fun-with-pipes/actions/runs/38458280091).
+  Those repair jobs are queued; their results still need checking.
+- Math WASI compilation, C ABI/resource controls and full goldens passed on both
+  architectures at `412a813` in
+  [38455262012](https://github.com/e6qu/fun-with-pipes/actions/runs/38455262012).
+  Linux ARM64 portability passed at the same head in
+  [38455264989](https://github.com/e6qu/fun-with-pipes/actions/runs/38455264989);
+  remaining jobs in that older run are still running/queued.
+- The retained full matrix at `ebaff5a` continues; its known CLI assertion failure
+  is fixed on the branch, but the failed old head is not a passing gate. An older
+  duplicate matrix was cancelled to release runner capacity; details are in history.
+
+Focused local checks passed under `python3 scripts/local-guard.py`:
+`cargo check --lib`, `cargo check --test cli`, `cargo fmt --all -- --check`,
+`python3 scripts/check-roadmap.py`, and
+`python3 /private/tmp/fwp-float-math-check.py` (C linking, dependency inspection,
+ASan/UBSan). The permanent tests retain these checks for runners. Preserve the
+64 GiB free-disk, 2 GiB target, 1 GiB RSS and 180-second local limits. Do not use
+the stale local compiler as an oracle; full builds/suites/benchmarks stay on CI.
+
+## Next action
+
+Next: check the four-platform repair run and remaining full CI; fix further failures.
+Then continue the coordinated exact-format integration, complete the Windows C
+runtime and packages, and finish the remaining ownership/worker and nested-AD
+acceptance rows. All six remain in this same PR. During implementation use
+focused dispatched checks and cancel superseded duplicate work when appropriate.
+Once complete, mark the PR ready and require all existing Linux/macOS production
+jobs, added Windows acceptance jobs and docs on the final head before squash.
+Skipped, cancelled or superseded runs do not establish that gate.

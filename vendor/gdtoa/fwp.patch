@@ -1,0 +1,315 @@
+--- a/dmisc.c
++++ b/dmisc.c
+@@ -85,12 +85,10 @@
+ #ifdef KR_headers
+ freedtoa(s) char *s;
+ #else
+-freedtoa(char *s)
+-#endif
+-{
+-#ifdef MULTIPLE_THREADS
+-	ThInfo *TI = 0;
+-#endif
++freedtoa(char *s, ThInfo *TI)
++#endif
++{
++
+ 	Bigint *b = (Bigint *)((int *)s - 1);
+ 	b->maxwds = 1 << (b->k = *(int*)b);
+ 	Bfree(b MTb);
+--- a/gdtoa.c
++++ b/gdtoa.c
+@@ -115,7 +115,7 @@
+ 	CONST FPI *fpi; int be; ULong *bits;
+ 	int *kindp, mode, ndigits, *decpt; char **rve;
+ #else
+-	(CONST FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, int *decpt, char **rve)
++	(CONST FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, int *decpt, char **rve, ThInfo *TI)
+ #endif
+ {
+  /*	Arguments ndigits and decpt are similar to the second and third
+@@ -153,9 +153,7 @@
+ 		to hold the suppressed trailing zeros.
+ 	*/
+ 
+-#ifdef MULTIPLE_THREADS
+-	ThInfo *TI = 0;
+-#endif
++
+ 	int bbits, b2, b5, be0, dig, i, ieps, ilim, ilim0, ilim1, inex;
+ 	int j, j1, k, k0, k_check, kind, leftright, m2, m5, nbits;
+ 	int rdir, s2, s5, spec_case, try_quick;
+@@ -251,7 +249,7 @@
+ 		dval(&d) *= 1 << j1;
+ 	word0(&d) += j << Exp_shift - 2 & Exp_mask;
+ #else
+-	word0(&d) += (be + bbits - 1) << Exp_shift;
++	word0(&d) += (ULong)(be + bbits - 1) << Exp_shift;
+ #endif
+ 	if (k >= 0 && k <= Ten_pmax) {
+ 		if (dval(&d) < tens[k])
+--- a/gdtoa.h
++++ b/gdtoa.h
+@@ -104,14 +104,16 @@
+ extern "C" {
+ #endif
+ 
++typedef struct ThInfo ThInfo;
++
+ extern char* dtoa  ANSI((double d, int mode, int ndigits, int *decpt,
+ 			int *sign, char **rve));
+ extern char* gdtoa ANSI((CONST FPI *fpi, int be, ULong *bits, int *kindp,
+-			int mode, int ndigits, int *decpt, char **rve));
+-extern void freedtoa ANSI((char*));
++			int mode, int ndigits, int *decpt, char **rve, ThInfo *TI));
++extern void freedtoa ANSI((char*, ThInfo *TI));
+ extern float  strtof ANSI((CONST char *, char **));
+ extern double strtod ANSI((CONST char *, char **));
+-extern int strtodg ANSI((CONST char*, char**, CONST FPI*, Long*, ULong*));
++extern int strtodg ANSI((CONST char*, char**, CONST FPI*, Long*, ULong*, ThInfo *TI));
+ 
+ extern char*	g_ddfmt   ANSI((char*, double*, int, size_t));
+ extern char*	g_ddfmt_p ANSI((char*, double*,	int, size_t, int));
+--- a/gdtoaimp.h
++++ b/gdtoaimp.h
+@@ -487,9 +487,7 @@
+ #define MTb , &TI
+ #define MTd , ThInfo **PTI
+ #define MTk ThInfo **PTI;
+-extern void ACQUIRE_DTOA_LOCK ANSI((unsigned int));
+-extern void FREE_DTOA_LOCK ANSI((unsigned int));
+-extern unsigned int dtoa_get_threadno ANSI((void));
++
+ #else /*}{*/
+ #define ACQUIRE_DTOA_LOCK(n)	/*nothing*/
+ #define FREE_DTOA_LOCK(n)	/*nothing*/
+@@ -514,7 +512,13 @@
+ ThInfo {
+ 	Bigint *Freelist[Kmax+1];
+ 	Bigint *P5s;
++    /* fwp: one explicit conversion scope owns every temporary allocation. */
++    union fwp_decimal_block *blocks;
++    unsigned char *next, *end;
++    jmp_buf failure;
+ 	} ThInfo;
++static void *fwp_decimal_allocate(ThInfo *context, size_t bytes);
++
+ 
+ #ifdef NO_STRING_H
+ #ifdef DECLARE_SIZE_T
+--- a/misc.c
++++ b/misc.c
+@@ -39,55 +39,8 @@
+ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
+ #endif
+ 
+- static ThInfo TI0;
+-
+-#ifdef MULTIPLE_THREADS /*{{*/
+- static unsigned int maxthreads = 0;
+- static ThInfo *TI1;
+- static int TI0_used;
+-
+- void
+-set_max_gdtoa_threads(unsigned int n)
+-{
+-	size_t L;
+-
+-	if (n > maxthreads) {
+-		L = n*sizeof(ThInfo);
+-		if (TI1) {
+-			TI1 = (ThInfo*)REALLOC(TI1, L);
+-			memset(TI1 + maxthreads, 0, (n-maxthreads)*sizeof(ThInfo));
+-			}
+-		else {
+-			TI1 = (ThInfo*)MALLOC(L);
+-			if (TI0_used) {
+-				memcpy(TI1, &TI0, sizeof(ThInfo));
+-				if (n > 1)
+-					memset(TI1 + 1, 0, L - sizeof(ThInfo));
+-				memset(&TI0, 0, sizeof(ThInfo));
+-				}
+-			else
+-				memset(TI1, 0, L);
+-			}
+-		maxthreads = n;
+-		}
+-	}
+-
+- static ThInfo*
+-get_TI(void)
+-{
+-	unsigned int thno = dtoa_get_threadno();
+-	if (thno < maxthreads)
+-		return TI1 + thno;
+-	if (thno == 0)
+-		TI0_used = 1;
+-	return &TI0;
+-	}
+ #define freelist TI->Freelist
+ #define p5s TI->P5s
+-#else /*}{*/
+-#define freelist TI0.Freelist
+-#define p5s TI0.P5s
+-#endif /*}}*/
+ 
+  Bigint *
+ Balloc
+@@ -106,11 +59,9 @@
+ #ifdef MULTIPLE_THREADS
+ 	ThInfo *TI;
+ 
+-	if (!(TI = *PTI))
+-		*PTI = TI = get_TI();
+-	if (TI == &TI0)
+-		ACQUIRE_DTOA_LOCK(0);
+-#endif
++	TI = *PTI;
++#endif
++	if (k < 0 || k >= 30) longjmp(TI->failure, 1);
+ 	/* The k > Kmax case does not need ACQUIRE_DTOA_LOCK(0), */
+ 	/* but this case seems very unlikely. */
+ 	if (k <= Kmax && (rv = freelist[k]) !=0) {
+@@ -119,7 +70,7 @@
+ 	else {
+ 		x = 1 << k;
+ #ifdef Omit_Private_Memory
+-		rv = (Bigint *)MALLOC(sizeof(Bigint) + (x-1)*sizeof(ULong));
++		rv = (Bigint *)fwp_decimal_allocate(TI, sizeof(Bigint) + (x-1)*sizeof(ULong));
+ #else
+ 		len = (sizeof(Bigint) + (x-1)*sizeof(ULong) + sizeof(double) - 1)
+ 			/sizeof(double);
+@@ -138,48 +89,19 @@
+ 		rv->maxwds = x;
+ 		}
+ #ifdef MULTIPLE_THREADS
+-	if (TI == &TI0)
+-		FREE_DTOA_LOCK(0);
+ #endif
+ 	rv->sign = rv->wds = 0;
+ 	rv->next = 0;
+ 	return rv;
+ 	}
+ 
+- void
+-Bfree
+-#ifdef KR_headers
+-	(v MTa) Bigint *v; MTk
+-#else
+-	(Bigint *v MTd)
+-#endif
+-{
+-#ifdef MULTIPLE_THREADS
+-	ThInfo *TI;
+-#endif
+-	if (v) {
+-		if (v->k > Kmax)
+-#ifdef FREE
+-			FREE((void*)v);
+-#else
+-			free((void*)v);
+-#endif
+-		else {
+-#ifdef MULTIPLE_THREADS
+-			if (!(TI = *PTI))
+-				*PTI = TI = get_TI();
+-			if (TI == &TI0)
+-				ACQUIRE_DTOA_LOCK(0);
+-#endif
+-			v->next = freelist[v->k];
+-			freelist[v->k] = v;
+-#ifdef MULTIPLE_THREADS
+-			if (TI == &TI0)
+-				FREE_DTOA_LOCK(0);
+-#endif
+-			}
+-		}
+-	}
++ void Bfree(Bigint *v, ThInfo **PTI) {
++    if (v && v->k <= Kmax) {
++        ThInfo *TI = *PTI;
++        v->next = freelist[v->k];
++        freelist[v->k] = v;
++    }
++}
+ 
+  int
+ lo0bits
+@@ -467,20 +389,14 @@
+ 	if (!(k >>= 2))
+ 		return b;
+ #ifdef  MULTIPLE_THREADS
+-	if (!(TI = *PTI))
+-		*PTI = TI = get_TI();
++	TI = *PTI;
+ #endif
+ 	if ((p5 = p5s) == 0) {
+ 		/* first time */
+ #ifdef MULTIPLE_THREADS
+-		if (!(TI = *PTI))
+-			*PTI = TI = get_TI();
+-		if (TI == &TI0)
+-			ACQUIRE_DTOA_LOCK(1);
++		TI = *PTI;
+ 		if (!(p5 = p5s))
+ 			p5 = p5s = i2b(625 MTa);
+-		if (TI == &TI0)
+-			FREE_DTOA_LOCK(1);
+ #else
+ 		p5 = p5s = i2b(625);
+ #endif
+@@ -495,14 +411,9 @@
+ 			break;
+ 		if ((p51 = p5->next) == 0) {
+ #ifdef MULTIPLE_THREADS
+-			if (!TI && !(TI = *PTI))
+-				*PTI = TI = get_TI();
+-			if (TI == &TI0)
+-				ACQUIRE_DTOA_LOCK(1);
++			if (!TI) TI = *PTI;
+ 			if (!(p51 = p5->next))
+ 				p51 = p5->next = mult(p5,p5 MTa);
+-			if (TI == &TI0)
+-				FREE_DTOA_LOCK(1);
+ #else
+ 			p51 = p5->next = mult(p5,p5 MTa);
+ #endif
+--- a/strtodg.c
++++ b/strtodg.c
+@@ -185,6 +185,7 @@
+ 	b = d2b(dval(d), &e, &bdif MTa);
+ 	bdif -= nb = fpi->nbits;
+ 	e += bdif;
++	if (e < fpi->emin) goto ret; /* fwp: one subnormal rounding */
+ 	if (bdif <= 0) {
+ 		if (exact)
+ 			goto trunc;
+@@ -318,7 +319,7 @@
+ 	(s00, se, fpi, exp, bits)
+ 	CONST char *s00; char **se; CONST FPI *fpi; Long *exp; ULong *bits;
+ #else
+-	(CONST char *s00, char **se, CONST FPI *fpi, Long *exp, ULong *bits)
++	(CONST char *s00, char **se, CONST FPI *fpi, Long *exp, ULong *bits, ThInfo *TI)
+ #endif
+ {
+ 	int abe, abits, asub;
+@@ -332,9 +333,7 @@
+ 	U adj, rv;
+ 	ULong *b, *be, y, z;
+ 	Bigint *ab, *bb, *bb1, *bd, *bd0, *bs, *delta, *rvb, *rvb0;
+-#ifdef MULTIPLE_THREADS
+-	ThInfo *TI = 0;
+-#endif
++
+ #ifdef USE_LOCALE /*{{*/
+ #ifdef NO_LOCALE_CACHE
+ 	char *decimalpoint = localeconv()->decimal_point;
+@@ -852,7 +851,7 @@
+ 						sudden_underflow = 1;
+ 					break;
+ 					}
+-				rve -= nbits;
++				rve = rve1 - 1; /* fwp: account for normalized rvb */
+ 				rvb = set_ones(rvb, rvbits = nbits MTb);
+ 				break;
+ 				}

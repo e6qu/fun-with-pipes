@@ -10,7 +10,7 @@
 //! waits for it the way it waits for a plain socket, so only its task
 //! waits. A server session does its handshake on its first read or write.
 
-use std::ffi::{c_char, c_int, c_long, c_void, CStr, CString};
+use std::ffi::{c_char, c_int, c_long, c_ulong, c_void, CStr, CString};
 use std::sync::{Mutex, OnceLock};
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
@@ -23,13 +23,33 @@ extern "C" {
     #[link_name = "__error"]
     fn errno_ptr() -> *mut c_int;
 }
+#[cfg(windows)]
+extern "C" {
+    #[link_name = "_errno"]
+    fn errno_ptr() -> *mut c_int;
+}
+#[cfg(windows)]
+#[link(name = "ws2_32")]
+extern "system" {
+    fn WSASetLastError(error: c_int);
+    fn WSAGetLastError() -> c_int;
+}
 
 /// Reset `errno`, so that what it holds after an OpenSSL call is that
 /// call's.
 fn clear_errno() {
-    #[cfg(any(target_os = "linux", target_os = "android", target_vendor = "apple"))]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "android",
+        target_vendor = "apple",
+        windows
+    ))]
     unsafe {
         *errno_ptr() = 0
+    };
+    #[cfg(windows)]
+    unsafe {
+        WSASetLastError(0)
     };
 }
 
@@ -51,6 +71,10 @@ type Ptr = *mut c_void;
 /// The functions of libssl and libcrypto that fwp uses.
 #[allow(clippy::type_complexity)]
 struct Lib {
+    #[cfg(not(target_family = "wasm"))]
+    _ssl_library: crate::dylib::Library,
+    #[cfg(not(target_family = "wasm"))]
+    _crypto_library: crate::dylib::Library,
     tls_client_method: unsafe extern "C" fn() -> Ptr,
     tls_server_method: unsafe extern "C" fn() -> Ptr,
     ctx_new: unsafe extern "C" fn(Ptr) -> Ptr,
@@ -89,14 +113,14 @@ struct Lib {
     ssl_check_private_key: unsafe extern "C" fn(Ptr) -> c_int,
     ssl_get1_peer_certificate: unsafe extern "C" fn(Ptr) -> Ptr,
     x509_get_subject_name: unsafe extern "C" fn(Ptr) -> Ptr,
-    x509_name_print_ex: unsafe extern "C" fn(Ptr, Ptr, c_int, u64) -> c_int,
+    x509_name_print_ex: unsafe extern "C" fn(Ptr, Ptr, c_int, c_ulong) -> c_int,
     x509_free: unsafe extern "C" fn(Ptr),
     bio_s_mem: unsafe extern "C" fn() -> Ptr,
     bio_new: unsafe extern "C" fn(Ptr) -> Ptr,
     bio_ctrl: unsafe extern "C" fn(Ptr, c_int, c_long, Ptr) -> c_long,
     bio_free: unsafe extern "C" fn(Ptr) -> c_int,
-    err_get_error: unsafe extern "C" fn() -> u64,
-    err_reason_error_string: unsafe extern "C" fn(u64) -> *const c_char,
+    err_get_error: unsafe extern "C" fn() -> c_ulong,
+    err_reason_error_string: unsafe extern "C" fn(c_ulong) -> *const c_char,
     err_clear_error: unsafe extern "C" fn(),
 }
 
@@ -110,7 +134,7 @@ const SSL_VERIFY_NONE: c_int = 0;
 const SSL_VERIFY_PEER: c_int = 1;
 const SSL_VERIFY_FAIL_IF_NO_PEER_CERT: c_int = 2;
 /// XN_FLAG_RFC2253: names as `CN=alice,O=Example`.
-const XN_FLAG_RFC2253: u64 = 0x317 | 0x10000 | 0x100000 | 0x1000000;
+const XN_FLAG_RFC2253: c_ulong = 0x317 | 0x10000 | 0x100000 | 0x1000000;
 const BIO_CTRL_INFO: c_int = 3;
 const SSL_ERROR_SSL: c_int = 1;
 const SSL_ERROR_WANT_READ: c_int = 2;
@@ -129,24 +153,10 @@ const SSL_TLSEXT_ERR_OK: c_int = 0;
 const SSL_TLSEXT_ERR_NOACK: c_int = 3;
 
 #[cfg(not(target_family = "wasm"))]
-mod dl {
-    use std::ffi::{c_char, c_int, c_void};
-    extern "C" {
-        pub fn dlopen(path: *const c_char, flags: c_int) -> *mut c_void;
-        pub fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
-    }
-    pub const RTLD_NOW: c_int = 2;
-    #[cfg(target_vendor = "apple")]
-    pub const RTLD_GLOBAL: c_int = 0x8;
-    #[cfg(not(target_vendor = "apple"))]
-    pub const RTLD_GLOBAL: c_int = 0x100;
-}
-
-#[cfg(not(target_family = "wasm"))]
-fn open_lib(names: &[&str]) -> Option<Ptr> {
+fn open_lib(names: &[&str]) -> Option<crate::dylib::Library> {
     let mut paths = Vec::new();
     if let Some(prefix) = std::env::var_os("FWP_OPENSSL_DIR") {
-        let lib = std::path::PathBuf::from(prefix).join("lib");
+        let lib = std::path::PathBuf::from(prefix).join(if cfg!(windows) { "bin" } else { "lib" });
         paths.extend(
             names
                 .iter()
@@ -155,29 +165,38 @@ fn open_lib(names: &[&str]) -> Option<Ptr> {
     }
     paths.extend(names.iter().map(|n| n.to_string()));
     paths.iter().find_map(|n| {
-        let c = CString::new(n.as_str()).ok()?;
-        let h = unsafe { dl::dlopen(c.as_ptr(), dl::RTLD_NOW | dl::RTLD_GLOBAL) };
-        (!h.is_null()).then_some(h)
+        crate::dylib::Library::open(std::path::Path::new(n), crate::dylib::Scope::Global).ok()
     })
 }
 
 #[cfg(not(target_family = "wasm"))]
 fn load() -> Result<Lib, String> {
-    let missing = "TLS needs OpenSSL 3 (libssl.so.3), which could not be loaded";
+    let missing = "TLS needs OpenSSL 3, which could not be loaded";
     let crypto = open_lib(&[
+        "libcrypto-3-x64.dll",
+        "libcrypto-3-arm64.dll",
+        "libcrypto-3.dll",
         "libcrypto.so.3",
         "libcrypto.so",
         "libcrypto.3.dylib",
         "libcrypto.dylib",
     ])
     .ok_or(missing)?;
-    let ssl =
-        open_lib(&["libssl.so.3", "libssl.so", "libssl.3.dylib", "libssl.dylib"]).ok_or(missing)?;
+    let ssl = open_lib(&[
+        "libssl-3-x64.dll",
+        "libssl-3-arm64.dll",
+        "libssl-3.dll",
+        "libssl.so.3",
+        "libssl.so",
+        "libssl.3.dylib",
+        "libssl.dylib",
+    ])
+    .ok_or(missing)?;
     // a function pointer of the type the field it fills has
-    fn get<F: Copy>(h: Ptr, name: &str, missing: &str) -> Result<F, String> {
+    fn get<F: Copy>(h: &crate::dylib::Library, name: &str, missing: &str) -> Result<F, String> {
         assert_eq!(std::mem::size_of::<F>(), std::mem::size_of::<Ptr>());
         let c = CString::new(name).unwrap();
-        let p = unsafe { dl::dlsym(h, c.as_ptr()) };
+        let p = unsafe { h.symbol(&c) }.map_err(|e| format!("{missing} (no `{name}`: {e})"))?;
         if p.is_null() {
             Err(format!("{} (no `{}` in the OpenSSL found)", missing, name))
         } else {
@@ -186,7 +205,7 @@ fn load() -> Result<Lib, String> {
     }
     macro_rules! f {
         ($h:expr, $name:expr) => {
-            get($h, $name, missing)?
+            get(&$h, $name, missing)?
         };
     }
     Ok(Lib {
@@ -237,6 +256,8 @@ fn load() -> Result<Lib, String> {
         err_get_error: f!(crypto, "ERR_get_error"),
         err_reason_error_string: f!(crypto, "ERR_reason_error_string"),
         err_clear_error: f!(crypto, "ERR_clear_error"),
+        _ssl_library: ssl,
+        _crypto_library: crypto,
     })
 }
 
@@ -545,7 +566,7 @@ fn is_ip(s: &str) -> bool {
 impl Session {
     /// A client session on a connected socket; the handshake is still to
     /// be done (`handshake`).
-    pub fn client(fd: i32, o: &ClientOpts) -> Result<Session, String> {
+    pub fn client(fd: crate::sched::SocketHandle, o: &ClientOpts) -> Result<Session, String> {
         let l = lib()?;
         unsafe { (l.err_clear_error)() };
         let ctx = client_ctx(l, o.ca, o.verify)?;
@@ -564,7 +585,9 @@ impl Session {
         };
         let name = CString::new(o.name).map_err(|_| "invalid server name".to_string())?;
         unsafe {
-            (l.ssl_set_fd)(ssl, fd);
+            // OpenSSL documents the SOCKET-to-int cast on Windows. Keep
+            // the full native handle everywhere except this OpenSSL ABI.
+            (l.ssl_set_fd)(ssl, fd as c_int);
             (l.ssl_set_connect_state)(ssl);
             // SNI only for host names (RFC 6066)
             if !o.name.is_empty() && !is_ip(o.name) {
@@ -650,14 +673,19 @@ impl Session {
     }
 
     /// A server session on an accepted socket.
-    pub fn server(ctx: &std::rc::Rc<Ctx>, fd: i32) -> Result<Session, String> {
+    pub fn server(
+        ctx: &std::rc::Rc<Ctx>,
+        fd: crate::sched::SocketHandle,
+    ) -> Result<Session, String> {
         let l = lib()?;
         let ssl = unsafe { (l.ssl_new)(ctx.ptr) };
         if ssl.is_null() {
             return Err(format!("cannot create a TLS session: {}", reason(l)));
         }
         unsafe {
-            (l.ssl_set_fd)(ssl, fd);
+            // OpenSSL documents the SOCKET-to-int cast on Windows. Keep
+            // the full native handle everywhere except this OpenSSL ABI.
+            (l.ssl_set_fd)(ssl, fd as c_int);
             (l.ssl_set_accept_state)(ssl);
         }
         Ok(Session {
@@ -674,7 +702,10 @@ impl Session {
     /// What a failed call means; `during` is whether the handshake was
     /// still going on.
     fn outcome(&self, l: &Lib, r: c_int, during: bool) -> Io {
+        #[cfg(not(windows))]
         let errno = std::io::Error::last_os_error().raw_os_error().unwrap_or(0);
+        #[cfg(windows)]
+        let errno = unsafe { WSAGetLastError() };
         match unsafe { (l.ssl_get_error)(self.ssl, r) } {
             SSL_ERROR_WANT_READ => Io::Wait(false),
             SSL_ERROR_WANT_WRITE => Io::Wait(true),

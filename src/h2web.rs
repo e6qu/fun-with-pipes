@@ -192,7 +192,7 @@ fn serve(it: &mut Interp, a: &mut [Value]) -> R<Value> {
         _ => return Err(Ctl::Trap("internal: limits".into())),
     };
     let idle = duration(&limits[2]);
-    let fd = sock.as_raw_fd();
+    let fd = socket_handle(&sock);
     let peer = sock.peer_addr().map(|a| a.to_string()).unwrap_or_default();
     let mut conn = Conn::new(sock, peer, None);
     conn.out.clear();

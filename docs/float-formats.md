@@ -1,9 +1,11 @@
-# Floating-point representation decision
+# Floating-point representation and migration
 
 The current implementation keeps its existing precision and protocol bytes.
 `F16`, `BF16` and `F128` are distinct language types, but their names do not yet
-promise the corresponding physical format. This decision adds no implicit
-conversion, syntax, new backend or platform-dependent precision.
+promise the corresponding physical format. The active bundle implements the
+migration specified below. Until its acceptance checks pass, these remain the
+implemented representations. Keep conversion
+explicit and precision independent of the host.
 
 | Language type | Implemented arithmetic/payload | Protocol v1 bytes | Intended format after a coordinated migration |
 |---|---|---|---|
@@ -27,13 +29,27 @@ Protocol golden-byte tests lock down widths, signed zero, infinities and NaN
 payload transport. Arithmetic regression fixtures distinguish today's precision
 from the intended formats. Neither test establishes native half/quad support.
 
+The migration now has shared binary16/bfloat16/binary128 arithmetic and exact
+decimal cores. Arithmetic/conversion NaNs are canonical positive quiet NaNs;
+raw bit transport preserves payloads. Decimal conversion uses explicit per-call
+scratch ownership, including cleanup on allocation failure. These cores do not
+yet change the language representations above. [The handoff](development-state.md)
+records their actual native/WASM validation and remaining integration work.
+
 Keep `float.convert` explicit. Preserve operation order and the existing policy
 against implicit reassociation or contraction. Do not silently substitute the
 host C `long double`: its width, representation and ABI vary by target.
 
+The lexer and AST retain decimal literal text until monomorphization selects
+the destination format. Formatting and macro expansion preserve those digits;
+`SFloat` now carries a decimal `String`, as described in the
+[macro reference](reference.md#compile-time-evaluation-and-macros). This removes
+early F64 rounding from syntax without changing the implemented value formats
+in the table above.
+
 ## Migration contract
 
-A future implementation must deliver these together before changing defaults:
+The active implementation must deliver these together before changing representations:
 
 - Literals, arithmetic and conversion round once to the destination format,
   using nearest, ties to even. Preserve signed zero, infinities and gradual
@@ -42,6 +58,11 @@ A future implementation must deliver these together before changing defaults:
 - Arithmetic results round at each source operation. Fused multiply-add needs
   an explicit operation and contract; it cannot replace separate multiply/add.
   Comparisons and explicit float-to-integer conversions preserve language rules.
+- Addition, subtraction, multiplication, division and square root are correctly
+  rounded. `exp`, `ln`, `sin`, `cos`, `tan` and `pow` use format-specific software
+  math with an at-most-1-ULP accuracy contract. They preserve the declared input
+  range and result precision; F128 math cannot narrow through F64. These accuracy
+  bounds do not authorize reassociation, contraction or implicit widening.
 - Raw binary encoding transports all bits, including NaN payloads. Arithmetic
   may quiet NaNs; specify its payload policy in matching interpreter/native
   implementations before claiming conformance. Text JSON retains its separate
@@ -55,7 +76,7 @@ A future implementation must deliver these together before changing defaults:
   fingerprints together. Version 1 continues to mean the current 4/8-byte
   representations. Reject incompatible peers before payload decoding; do not
   guess a format from the payload or silently accept old bytes as new values.
-- Validate both engines and native Linux/macOS ARM64/AMD64: midpoint ties,
+- Validate both engines and native Linux/macOS/Windows ARM64/AMD64: midpoint ties,
   carry across exponents, normal/subnormal boundaries, signed zeros, maximum
   finite values, overflow, NaNs, explicit conversions, wire golden bytes and
   array stride/ownership. Measure allocations and native instructions before
@@ -66,6 +87,6 @@ The intended bfloat treatment includes subnormals and nearest-even rounding;
 these are concrete choices consistent with the [ratified RISC-V BF16 specification](https://docs.riscv.org/reference/isa/unpriv/bfloat16.html), not assumptions
 that every device's bfloat instructions behave identically.
 
-Implementing that migration is future work beyond the active bundle's format
-**decision**. Current code and docs must continue to report the implemented
-precision until the migration passes the full contract above.
+The migration is item 5 of [the active plan](../PLAN.md). Code and docs must
+continue to report the implemented precision until the migration passes the full
+contract above on all six native platforms and the supported WebAssembly paths.

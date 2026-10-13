@@ -538,26 +538,12 @@ fn sum(threads: usize, n: usize, k: &Kernel) -> f64 {
 
 #[cfg(not(target_family = "wasm"))]
 mod opencl {
-    use std::ffi::{c_char, c_int, c_void, CString};
+    use std::ffi::{c_char, c_void, CString};
     use std::sync::OnceLock;
 
     type Ptr = *mut c_void;
 
-    extern "C" {
-        fn dlopen(path: *const c_char, flags: c_int) -> *mut c_void;
-        fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
-        fn dlclose(handle: *mut c_void) -> c_int;
-    }
-
-    struct Library(Ptr);
-
-    impl Drop for Library {
-        fn drop(&mut self) {
-            unsafe {
-                dlclose(self.0);
-            }
-        }
-    }
+    use crate::dylib::{Library, Scope};
 
     #[allow(clippy::type_complexity)]
     struct Cl {
@@ -663,30 +649,26 @@ mod opencl {
             _ if cfg!(target_os = "macos") => {
                 vec!["/System/Library/Frameworks/OpenCL.framework/OpenCL".into()]
             }
+            _ if cfg!(windows) => vec!["OpenCL.dll".into()],
             _ => vec!["libOpenCL.so.1".into(), "libOpenCL.so".into()],
         }
     }
 
     fn load() -> Result<Gpu, String> {
         let names = library_names();
-        let handle = names
+        let library = names
             .iter()
-            .find_map(|n| {
-                let c = CString::new(n.as_str()).ok()?;
-                let h = unsafe { dlopen(c.as_ptr(), 2) };
-                (!h.is_null()).then_some(h)
-            })
+            .find_map(|n| Library::open(std::path::Path::new(n), Scope::Local).ok())
             .ok_or_else(|| {
                 format!(
                     "no OpenCL device: the OpenCL library ({}) could not be loaded",
                     names.join(", ")
                 )
             })?;
-        let library = Library(handle);
-        fn get<F: Copy>(h: Ptr, name: &str) -> Result<F, String> {
+        fn get<F: Copy>(h: &Library, name: &str) -> Result<F, String> {
             assert_eq!(std::mem::size_of::<F>(), std::mem::size_of::<Ptr>());
             let c = CString::new(name).unwrap();
-            let p = unsafe { dlsym(h, c.as_ptr()) };
+            let p = unsafe { h.symbol(&c) }?;
             if p.is_null() {
                 Err(format!(
                     "no OpenCL device: the OpenCL library has no `{}`",
@@ -697,25 +679,25 @@ mod opencl {
             }
         }
         let cl = Cl {
-            get_platforms: get(handle, "clGetPlatformIDs")?,
-            get_devices: get(handle, "clGetDeviceIDs")?,
-            device_info: get(handle, "clGetDeviceInfo")?,
-            create_context: get(handle, "clCreateContext")?,
-            create_queue: get(handle, "clCreateCommandQueue")?,
-            program_with_source: get(handle, "clCreateProgramWithSource")?,
-            build_program: get(handle, "clBuildProgram")?,
-            build_info: get(handle, "clGetProgramBuildInfo")?,
-            create_kernel: get(handle, "clCreateKernel")?,
-            create_buffer: get(handle, "clCreateBuffer")?,
-            set_arg: get(handle, "clSetKernelArg")?,
-            enqueue: get(handle, "clEnqueueNDRangeKernel")?,
-            read_buffer: get(handle, "clEnqueueReadBuffer")?,
-            finish: get(handle, "clFinish")?,
-            release_mem: get(handle, "clReleaseMemObject")?,
-            release_kernel: get(handle, "clReleaseKernel")?,
-            release_program: get(handle, "clReleaseProgram")?,
-            release_queue: get(handle, "clReleaseCommandQueue")?,
-            release_context: get(handle, "clReleaseContext")?,
+            get_platforms: get(&library, "clGetPlatformIDs")?,
+            get_devices: get(&library, "clGetDeviceIDs")?,
+            device_info: get(&library, "clGetDeviceInfo")?,
+            create_context: get(&library, "clCreateContext")?,
+            create_queue: get(&library, "clCreateCommandQueue")?,
+            program_with_source: get(&library, "clCreateProgramWithSource")?,
+            build_program: get(&library, "clBuildProgram")?,
+            build_info: get(&library, "clGetProgramBuildInfo")?,
+            create_kernel: get(&library, "clCreateKernel")?,
+            create_buffer: get(&library, "clCreateBuffer")?,
+            set_arg: get(&library, "clSetKernelArg")?,
+            enqueue: get(&library, "clEnqueueNDRangeKernel")?,
+            read_buffer: get(&library, "clEnqueueReadBuffer")?,
+            finish: get(&library, "clFinish")?,
+            release_mem: get(&library, "clReleaseMemObject")?,
+            release_kernel: get(&library, "clReleaseKernel")?,
+            release_program: get(&library, "clReleaseProgram")?,
+            release_queue: get(&library, "clReleaseCommandQueue")?,
+            release_context: get(&library, "clReleaseContext")?,
             _library: library,
         };
         let device = unsafe { pick_device(&cl) }?;

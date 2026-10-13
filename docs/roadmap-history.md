@@ -112,11 +112,21 @@ No general GC-free or zero-allocation claim follows from this acceptance.
 
 ## Seven-step reconstruction and numerics bundle (PR #133)
 
-[PR #133](https://github.com/e6qu/fun-with-pipes/pull/133) contains the complete
-seven-step implementation and records final exact-head production acceptance
-and squash merge. Its scope covers documentation closeout, typed reconstruction,
-scoped State, direct producers/callbacks, native wide workers, measured
-numerical/AD improvements and the float-format decision.
+[PR #133](https://github.com/e6qu/fun-with-pipes/pull/133) merged as
+`d14ec10d24765c2686dc4cfb0798012611c02a61`, with tree
+`e3d3f8aa5ddee7843fe9e00c85cf0ffb5b2304a0` identical to tested head
+`70de849771aff10a3af938746c82f9b975bc989b`. All seven production jobs in
+[38423073356](https://github.com/e6qu/fun-with-pipes/actions/runs/38423073356),
+all four preflight jobs in
+[38423088702](https://github.com/e6qu/fun-with-pipes/actions/runs/38423088702),
+[PR docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38423073506) and
+[merged docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38435135341)
+passed. Native Windows and true half/quad formats were outside that delivery.
+The complete squash message is `Complete reconstruction ownership and native numeric workers`.
+Temporary branches were removed. Duplicate main CI 38435135553 was cancelled
+after tree parity verification; it supplies no passing gate. Final fixes remove
+WASI managed/scratch allocator mismatches and preserve ternary JSON range errors
+at I128 minimum. Actual WASI goldens pass on both Linux architectures.
 
 The [measurement record](measurements/reconstruction-and-workers-2026-10-13.json)
 retains hardware, compiler, flags, workloads, allocations and charged live
@@ -147,3 +157,55 @@ The [float-format decision](float-formats.md) explicitly preserves current
 F16/BF16-as-F32 and F128-as-F64 behavior until a coordinated precision and wire
 migration. True formats, general cyclic/foreign ownership and Windows are
 future directions, not claimed deliveries of this bundle.
+
+
+## PR #134 development evidence (not final acceptance)
+
+These focused runs establish the listed boundaries on their recorded heads.
+The six-item bundle remains unfinished; use [the handoff](development-state.md)
+for current failures and next actions. No row replaces final-head production CI.
+
+| Head | Passed evidence | Boundary |
+|---|---|---|
+| `217d6da` | [Four native targets, scalar foreign ARC](https://github.com/e6qu/fun-with-pipes/actions/runs/38439707405) | ABI-classified scalar calls; managed strings, pointers and callbacks rejected |
+| `fb199e7` | [Both WASI targets](https://github.com/e6qu/fun-with-pipes/actions/runs/38440780537) | Actual freeing across 10,000 cycles and 300 aliases, omitted-free controls and full goldens; unproved graphs retained |
+| `277bf4a` | [Four native targets, iterate fusion](https://github.com/e6qu/fun-with-pipes/actions/runs/38441649508) | Eager lookahead, effects/traps, early stopping and owned captures; allocation/instruction evidence |
+| `106e7a2` | [Both native Windows targets](https://github.com/e6qu/fun-with-pipes/actions/runs/38444619376) | Rust compiler/socket/DLL execution, exact core and all interpreter goldens; not full generated C support |
+| `6f7b105` | [Windows allocator](https://github.com/e6qu/fun-with-pipes/actions/runs/38446144465), [four-platform portability](https://github.com/e6qu/fun-with-pipes/actions/runs/38446150831) | Actual Windows commitment/reuse, PE image roots and missing-root control; no complete Windows runtime claim |
+| `4437af0` | [Both WASI targets](https://github.com/e6qu/fun-with-pipes/actions/runs/38446752701) | File header destruction, libc free observations and omitted-free controls, full goldens |
+| `367227a` | [Four-platform decimal core](https://github.com/e6qu/fun-with-pipes/actions/runs/38449726111) | Direct rounding, shortest text, scoped allocation failure and leak controls |
+| `55b86f2` | [Both Windows targets](https://github.com/e6qu/fun-with-pipes/actions/runs/38450846100), [both WASI targets](https://github.com/e6qu/fun-with-pipes/actions/runs/38450850527) | SDK-aware compiler selection and actual WASI loader exclusion; full run superseded |
+| `ebaff5a` | [Both Windows targets](https://github.com/e6qu/fun-with-pipes/actions/runs/38453332518), [both WASI targets](https://github.com/e6qu/fun-with-pipes/actions/runs/38453337836) | Full-width integer core and decimal-preserving literal/macro goldens |
+| `412a813` | [Both WASI targets](https://github.com/e6qu/fun-with-pipes/actions/runs/38455262012), Linux ARM64 job in [portability](https://github.com/e6qu/fun-with-pipes/actions/runs/38455264989) | Fixed-storage transcendental math, native/WASI C ABI and full WASI goldens; other portability jobs were still pending at this record |
+| `02a802d` | [Both Windows targets](https://github.com/e6qu/fun-with-pipes/actions/runs/38457143007) | Explicit C++ type-traits dependency, rounding/remainder core, native C caller, allocator and all interpreter goldens |
+
+[Iteration measurements](measurements/iterate-producer.json) retain hardware,
+toolchains, flags, source hashes and memory counters. At 1,000 elements, direct
+iterate fusion uses 6 allocation requests versus 8,006 unfused and 4,005 with
+consumer fusion alone. The fused worker has no dynamic consumer/tail calls or
+state-record construction. All variants retain the 64-byte CLI baseline;
+startup-inclusive timings do not establish a speedup.
+
+CI repairs preserve coverage: the macOS sharder accepts Cargo-managed build
+scripts; WASM excludes native loader references with an explicit unsupported
+foreign-call diagnostic; Rust MSVC compilation uses SDK-aware Clang separately
+from LLVM-MinGW generated C. The reclaimed WASM allocator's old bump-size
+fixture was replaced with actual alignment, zeroing, request-size and failure
+controls under ASan/UBSan. Missing `llvm-ar` was fixed by installing LLVM.
+The Windows math C caller required an explicit `<type_traits>` include.
+
+[Full run 38450820067](https://github.com/e6qu/fun-with-pipes/actions/runs/38450820067)
+passed regular ARM macOS and bench before its remaining jobs were cancelled in
+favor of the newer full run and current repair checks. Superseded full runs
+38449448089 and 38449666918 were also cancelled. Both full macOS GC stress
+suites at `4437af0` passed before the second shards hit the repaired metadata
+issue. Cancelled, skipped and partially passing runs are not full acceptance.
+
+Local focused checks used `python3 scripts/local-guard.py`. Standalone helpers
+in `/private/tmp` ran the 16 scalar-core Rust tests, six lexer tests and library
+signature generation; C decimal/allocation-failure/leak controls, native allocator
+image-root controls and C++ math linking/dependency/sanitizer checks also passed.
+Permanent native/WASI controls live in `tests/softfloat_core.rs`,
+`tests/float_math.rs`, `tests/float_literals.rs` and the ownership tests; temporary
+helpers are not required repository dependencies. Formatting, focused clippy,
+sharder regressions and roadmap audits passed. Full builds stayed on runners.

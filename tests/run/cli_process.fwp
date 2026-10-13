@@ -4,7 +4,7 @@ main = [
     ["echo", "hello", "world"] | process.run | echo,
     ["tr", "a-z", "A-Z"] | process.run-input "shout\n" | .stdout | write,
     ["sh", "-c", "echo out; echo err >&2; exit 3"] | process.run | echo,
-    ["sh", "-c", "kill -9 $$"] | process.run | .status | echo,
+    ["sh", "-c", "exit 137"] | process.run | .status | echo,
     ["sh", "-c", "cat | wc -c"]
     | process.run-input (string.repeat 100000 "x")
     | .stdout

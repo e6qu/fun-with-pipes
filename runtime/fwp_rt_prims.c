@@ -2517,7 +2517,7 @@ static V fwp_p_time_unix(void) {
 
 static V fwp_p_exit(V code) {
     fflush(stdout);
-    exit((int)(int32_t)code);
+    exit((int)(code & 255));
 }
 
 static uint64_t fwp_rng = 1;
@@ -2764,7 +2764,7 @@ static V fwp_p_file_close(V h) {
 
 /* Resource ownership is independent of tracing/count metadata. Explicit close
  * closes the stream; dropping the last value owner also closes it. Unshared
- * native storage is released after removing finalizers; shared/bump storage
+ * storage is released after removing finalizers; unproved shared storage
  * keeps its allocator lifetime. */
 static void fwp_file_dup(V h) {
     if (!h) return;
@@ -2781,7 +2781,12 @@ static void fwp_file_drop(V h) {
 #ifdef FWP_LIBRARY
     fwp_gc_forget_finalizer(file);
 #endif
-#if FWP_GC && !defined(FWP_RESOURCE_NO_FREE)
+#if !FWP_GC
+    /* The independent resource count reached zero. Reclaim only storage whose
+     * ownership was not erased by an unproved runtime boundary. The helper
+     * also disposes metadata when physical freeing is explicitly disabled. */
+    fwp_rc_free_obj(h);
+#elif !defined(FWP_RESOURCE_NO_FREE)
     /* Unknown runtime sharing keeps storage under the collector's lifetime. */
     if (!fwp_rc_last(h)) return;
     if (fwp_reuse_verify < 0) {
@@ -2825,10 +2830,8 @@ static V fwp_file_value(FILE *f, const char *path) {
     fwp_file *h = (fwp_file *)fwp_alloc_leaf(sizeof(fwp_file) + len + 1);
     h->f = f;
     h->refs = 1;
-#if FWP_GC
     /* The header's storage starts unshared; File owners use their own count. */
     fwp_rc_fresh(PTR(h));
-#endif
     file.handle = PTR(h);
 #ifdef FWP_LIBRARY
     fwp_gc_finalizer(h, fwp_file_final);
@@ -3136,7 +3139,32 @@ static void sy_atom(fwp_buf *b, V v) {
     switch (fwp_tag(v)) {
     case SY_NAME: case SY_CTOR: sy_name(b, OBJ(v)->f[0]); return;
     case SY_INT: snprintf(t, sizeof t, "%lld", (long long)(int64_t)OBJ(v)->f[0]); buf_puts(b, t); return;
-    case SY_FLOAT: fwp_fmt_f64(t, fwp_f64(OBJ(v)->f[0])); buf_puts(b, t); return;
+    case SY_FLOAT: {
+        fwp_str *s = STR(OBJ(v)->f[0]);
+        size_t p = 0, start;
+        int fraction = 0, exponent = 0;
+        if (p < s->len && s->d[p] == '-') p++;
+        start = p;
+        while (p < s->len && s->d[p] >= '0' && s->d[p] <= '9') p++;
+        int valid = p > start;
+        if (p < s->len && s->d[p] == '.') {
+            fraction = 1;
+            start = ++p;
+            while (p < s->len && s->d[p] >= '0' && s->d[p] <= '9') p++;
+            valid &= p > start;
+        }
+        if (p < s->len && s->d[p] == 'e') {
+            exponent = 1;
+            p++;
+            if (p < s->len && (s->d[p] == '+' || s->d[p] == '-')) p++;
+            start = p;
+            while (p < s->len && s->d[p] >= '0' && s->d[p] <= '9') p++;
+            valid &= p > start;
+        }
+        if (valid && (fraction || exponent) && p == s->len) buf_put(b, s->d, s->len);
+        else buf_puts(b, "<SFloat needs an unsuffixed decimal float literal>");
+        return;
+    }
     case SY_STR: fwp_escape(b, STR(OBJ(v)->f[0])->d, STR(OBJ(v)->f[0])->len); return;
     case SY_SELECT:
         for (V xs = OBJ(v)->f[0]; xs != 0; xs = OBJ(xs)->f[1]) {
