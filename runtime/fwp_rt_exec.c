@@ -1536,9 +1536,9 @@ static V fwp_p_csv_decode(V rows, const fwp_desc *result_type, const char *const
                 }
                 if (!ok) {
                     fwp_value_owner owner = {fwp_rc_fresh(message), string->drop};
-                    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);
+                    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
                     err = fwp_rc_fresh(fwp_strf("row %zu: column `%s`: %s", row_index + 2, d->names[j], STR(message)->d));
-                    fwp_value_finish(&owner, &cleanup);
+                    fwp_cleanup_pop(&cleanup);
                     if (string->drop) string->drop(message);
                     break;
                 }

@@ -56,7 +56,7 @@ int main(void) {{
         decode_probe_step=0;
         if(!setjmp(trap)) {{ (void)fwp_p_json_read(text,{descriptor}); return 191; }}
         if(strcmp(fwp_trap_msg,"decoder construction control")) return 192;
-        if(fwp_cleanups || fwp_gc.budget!=budget || decode_scratch_live) return 193;
+        if(fwp_cleanups || fwp_gc.budget!=budget || decode_scratch_live) {{ fprintf(stderr,"point=%d charge=%lld scratch=%zu cleanups=%p\n",decode_probe_at,(long long)(budget-fwp_gc.budget),decode_scratch_live,(void*)fwp_cleanups); return 193; }}
     }}
     decode_probe_at=0;
     result=fwp_p_json_read(text,{descriptor});

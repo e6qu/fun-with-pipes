@@ -8,6 +8,9 @@ use std::fmt::Write;
 use crate::ir::*;
 use crate::value::Value;
 
+#[path = "cgen_wide.rs"]
+mod wide;
+
 const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt.c"),
     include_str!("../runtime/fwp_rt_gc.c"),
@@ -423,6 +426,7 @@ struct Gen<'p> {
     hofs: Vec<(String, FuncId, usize)>,
     /// The unboxed calling convention of each function that has one.
     abis: Vec<Option<Abi>>,
+    wide_workers: Vec<bool>,
     /// Which parameters of each function do not escape (`src/escape.rs`):
     /// a record or variant passed there may live on the caller's stack.
     noesc: Vec<Vec<bool>>,
@@ -6346,6 +6350,40 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
     }
 
     fn func(&mut self, id: FuncId) -> Result<String, String> {
+        if self.wide_workers[id] {
+            let f = self.uncounted.funcs[id].clone();
+            let mut out = wide::worker(self.uncounted, &self.wide_workers, id, self.ticks);
+            let params = (0..f.arity)
+                .map(|i| format!("V a{i}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let _ = writeln!(out, "static V f{id}({params}) {{");
+            let (types, result) = f.ty.params(f.arity as usize);
+            // Copy native bits before releasing any aliased incoming boxes.
+            // Once copied, a trap in the worker has no pending managed owners.
+            for (i, ty) in types.iter().enumerate() {
+                let k = wide::Kind::of(ty).unwrap();
+                let _ = writeln!(out, "    {} n{i} = {};", k.c(), k.unbox(&format!("a{i}")));
+            }
+            if self.reuse {
+                for (i, ty) in types.iter().enumerate() {
+                    if wide::Kind::of(ty).unwrap().wide() {
+                        let drop = self.value_drop(ty);
+                        let _ = writeln!(out, "    {drop}(a{i});");
+                    }
+                }
+            }
+            let arguments = (0..f.arity)
+                .map(|i| format!("n{i}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let k = wide::Kind::of(result).unwrap();
+            let _ = writeln!(out, "    {} value = fwp_wide{id}({arguments});", k.c());
+            let value = k.boxed("value");
+            let value = if k.wide() { self.fresh(value) } else { value };
+            let _ = writeln!(out, "    return {value};\n}}");
+            return Ok(out);
+        }
         let f = &self.prog.funcs[id];
         let params: Vec<String> = (0..f.arity).map(|i| format!("V l{}", i)).collect();
         let sig = format!(
@@ -7853,6 +7891,12 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     if variant_returns_enabled() {
         variant_returns(prog, &mut abis);
     }
+    let wide_workers = wide::select(prog);
+    for (id, enabled) in wide_workers.iter().enumerate() {
+        if *enabled {
+            abis[id] = None;
+        }
+    }
     let resources = prog.funcs.iter().any(|f| {
         f.locals
             .iter()
@@ -7909,6 +7953,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         loops: Vec::new(),
         hofs: Vec::new(),
         abis,
+        wide_workers,
         noesc: crate::escape::params(prog),
         reuse,
         callbacks: Vec::new(),
@@ -8620,6 +8665,11 @@ static const fwp_exec_spec exec_spec{i} = {{
     for (id, abi) in g.abis.iter().enumerate() {
         if let Some(abi) = abi.as_ref().filter(|_| live[id]) {
             let _ = writeln!(out, "{};", abi.sig(prog, id));
+        }
+    }
+    for (id, enabled) in g.wide_workers.iter().enumerate() {
+        if *enabled && live[id] {
+            let _ = writeln!(out, "{};", wide::signature(g.uncounted, id));
         }
     }
     // prototypes

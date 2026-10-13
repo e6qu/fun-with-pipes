@@ -71,7 +71,7 @@ static V fwp_decode_variant(fwp_decode_fields *f, uint32_t tag) {
 static V fwp_decode_sequence(fwp_decode_fields *f, const fwp_desc *d) {
     fwp_value_owner owner = {0, d->drop};
     fwp_cleanup cleanup;
-    fwp_value_protect(&owner, &cleanup);
+    fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
     if (d->kind == K_ARRAY) {
         owner.value = fwp_rc_fresh(fwp_array_new_packed(f->count, d->elem));
         fwp_array_set_len(owner.value, 0);
@@ -86,7 +86,9 @@ static V fwp_decode_sequence(fwp_decode_fields *f, const fwp_desc *d) {
             f->values[i - 1] = 0;
         }
     }
-    V result = fwp_value_finish(&owner, &cleanup);
+    fwp_cleanup_pop(&cleanup);
+    V result = owner.value;
+    owner.value = 0;
     fwp_decode_fields_end(f, 1);
     return result;
 }
@@ -98,12 +100,14 @@ static V fwp_decode_map(fwp_decode_fields *f, const fwp_desc *d) {
         d->elem->drop, d->elem2 ? d->elem2->drop : NULL, d->drop ? d->drop : fwp_rc_drop};
     fwp_value_owner owner = {FWP_EMPTY_MAP, d->drop};
     fwp_cleanup cleanup;
-    fwp_value_protect(&owner, &cleanup);
+    fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
     size_t stride = d->kind == K_SET ? 1 : 2;
     for (size_t i = 0; i < f->count; i += stride) {
         owner.value = fwp_p_map_insert_typed(f->values[i], stride == 1 ? 0 : f->values[i + 1], owner.value, &ops, d->elem);
     }
-    V result = fwp_value_finish(&owner, &cleanup);
+    fwp_cleanup_pop(&cleanup);
+    V result = owner.value;
+    owner.value = 0;
     fwp_decode_fields_end(f, 0);
     return result;
 }
