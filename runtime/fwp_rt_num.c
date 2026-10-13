@@ -158,7 +158,14 @@ static int fwp_arith_raw(int k, int op, V a, V b, int w, V *out, int *err) {
     switch (op) {
     case OP_ADD: r = x + y; break;
     case OP_SUB: r = x - y; break;
-    case OP_MUL: r = x * y; break;
+    case OP_MUL:
+        /* A full U64 product fits unsigned, but not signed, 128 bits. */
+        if (k == K_U64) {
+            u128 product = (u128)x * (u128)y;
+            if (product > UINT64_MAX) { *err = 1; return 0; }
+            r = (i128)product;
+        } else r = x * y;
+        break;
     case OP_DIV: r = x / y; break;
     default: r = x % y;
     }

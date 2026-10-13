@@ -33,6 +33,8 @@ signed : I64 -> I128
 signed = from-int
 unsigned : I64 -> U128
 unsigned = from-int
+unsigned-word : I64 -> U64
+unsigned-word = from-int
 signed-result : Option[I128] -> Option[I128]
 signed-result = id
 products : I128 -> (Option[I128], Option[I128], Option[I128], (I128, Bool))
@@ -48,6 +50,9 @@ main = [
     range 0 5 | map (signed | add) | both (map (apply 2i128)) (map (apply 3i128)) | echo,
     range 0 17 | map (attempt (signed | tap (const "wide failure" | fail))) | length | echo,
     range 0 129 | map (unsigned | add 1u128 | bit.shl 65 | show) | length | echo,
+    range 0 4 | map (unsigned-word | add 18446744073709551612u64
+        | make { 0 = fork checked.mul id id, 1 = fork saturating.mul id id,
+            2 = fork overflowing.mul id id }) | echo,
     range 0i128 33i128 | array.from-list | both id array.to-list | show | string.length | echo,
     range 0u128 33u128 | map (max 3u128 | min 30u128) | show | echo,
     -170141183460469231731687303715884105728i128 | show | echo,

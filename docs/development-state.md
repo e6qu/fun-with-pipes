@@ -75,9 +75,19 @@ zero-allocation, register-placement or C/Rust speed claim is made.
   verification; the fix passes O1/O2 with stress/verification and reuse 0/1
   (local guard: 0.44s CPU / 1.35s elapsed). Extended-owner tests now compare
   tracing stress/reuse with the raw interpreter as well as ARC reclamation.
-  The completed macOS ARM regular shard fails only the CSV golden reuse check;
-  other full CI logs still need review. The fix needs runner gates.
+  Both completed macOS regular shards fail only the CSV golden reuse check.
+  ARM GC also reports only CSV; its remaining shard passes, including wide
+  escaping-capture and caught-error controls. Other full CI logs still need
+  review. The fixes need runner gates.
   CI now publishes the GC step log before running its remaining shard.
+- Numeric review additionally finds U64 multiplication overflowing its signed
+  128-bit temporary before checking the U64 bound. UBSan reproduces this with
+  MAX × MAX. The path now uses an unsigned 128-bit product. A dynamic runtime
+  regression checks 49 boundary pairs at O1/O2 against Rust checked arithmetic;
+  language cases compare checked/saturating/overflowing results with the raw
+  interpreter. Local UBSan checks and regression compilation pass under the
+  guard (0.94s CPU / 2.50s elapsed). The superseded 38379382360/365 runs were
+  cancelled while still queued to avoid a wasted full cycle.
 
 The HTTP/2 omission control accidentally kept a dead owner pointer in a
 callee-saved register under native ARM GCC. Its positive owner fence remains;
