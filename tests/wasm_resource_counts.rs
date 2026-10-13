@@ -10,6 +10,19 @@ fn checked(command: &mut Command) -> Output {
     );
     out
 }
+// Count libc releases of the File header without dereferencing dead storage.
+const FILE_FREE_OBSERVER: &str = r#"
+#include <stdlib.h>
+static void *probe_file;
+static unsigned probe_file_frees;
+static void observe_file_free(void *p) {
+    int watched = p == probe_file;
+    free(p);
+    if (watched) probe_file_frees++;
+}
+#undef free
+#define free observe_file_free
+"#;
 fn probe(free: &str) -> (fwp::cgen::TempDir, String, String) {
     let dir = fwp::cgen::TempDir::new("fwp-wasm-resource-counts").unwrap();
     let src = dir.join("probe.fwp");
@@ -43,6 +56,7 @@ main = "unused" | flip file.with other | ignore
         .expect("generated typed File pair destructor")
         + marker.len();
     let drop_pair = generated[start..].split('(').next().unwrap();
+    let generated = format!("{FILE_FREE_OBSERVER}\n{generated}");
     let generated = generated.replace(
         "int main(int argc, char **argv)",
         "int program_main(int argc, char **argv)",
@@ -56,13 +70,19 @@ int main(int argc,char **argv) {
  for(int cycle=0;cycle<128;cycle++) {
   V h=fwp_p_file_open(fwp_cstr(argv[1]),0,0);
   fwp_file *file=(fwp_file *)(uintptr_t)h;int fd=fileno(file->f);
+  probe_file = file; unsigned before_free = probe_file_frees;
   fwp_file_dup(h);
   V pair=fwp_rc_fresh(fwp_tuple2(h,h));
   for(int i=0;i<300;i++)fwp_rc_dup(pair);
   for(int i=0;i<300;i++)DROP_PAIR(pair);
   if(file->refs!=2||fstat(fd,&descriptor_status)==-1)return 3;
   DROP_PAIR(pair);
-  if(file->refs||fstat(fd,&descriptor_status)!=-1||errno!=EBADF)return 4;
+  if(fstat(fd,&descriptor_status)!=-1||errno!=EBADF)return 4;
+#if defined(FWP_RESOURCE_OWNERS) && !defined(FWP_RESOURCE_NO_FREE)
+  if(probe_file_frees != before_free + 1)return 29;
+#else
+  if(probe_file_frees != before_free || file->refs)return 29;
+#endif
 #ifdef FWP_RESOURCE_OWNERS
   if(fwp_wasm_counts_live||fwp_rc_slot(pair))return 5;
 #endif
@@ -104,7 +124,9 @@ fn non_tracing_aggregate_counts_release_file_children() {
     std::fs::write(&data, "contents").unwrap();
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
-        for (code, expected) in [(&old, 4), (&generated, 0)] {
+        let leaked_file = generated.replace("    fwp_rc_free_obj(h);", "    fwp_rc_share(h);");
+        assert_ne!(leaked_file, generated);
+        for (code, expected) in [(&old, 4), (&leaked_file, 29), (&generated, 0)] {
             fwp::cgen::compile_c(&format!("#define __wasm__ 1\n{code}\n{fixture}"), &exe, opt)
                 .unwrap();
             let out = Command::new(&exe).arg(&data).output().unwrap();
@@ -159,10 +181,12 @@ fn wasi_aggregate_counts_release_file_children() {
         let omitted = generated.replace("fwp_rc_resource_free_obj(v);", "fwp_rc_drop(v);");
         let omitted_runtime =
             generated.replace("fwp_rc_resource_free_arr(value);", "fwp_rc_drop(value);");
+        let leaked_file = generated.replace("    fwp_rc_free_obj(h);", "    fwp_rc_share(h);");
+        assert_ne!(leaked_file, generated);
         let cases = if free == "0" {
             vec![(&omitted, 5), (&omitted_runtime, 9), (&generated, 0)]
         } else {
-            vec![(&old, 4), (&generated, 0)]
+            vec![(&old, 4), (&leaked_file, 29), (&generated, 0)]
         };
         for opt in ["-O1", "-O2"] {
             for &(code, expected) in &cases {
@@ -201,7 +225,7 @@ fn runtime_owners(fixture: String) -> String {
  V cached=fwp_rc_fresh(PTR(task));fwp_rc_dup(cached);fwp_task_drop(cached);
  if(file->refs!=1||fstat(fd,&descriptor_status)==-1)return 9;
  fwp_task_drop(cached);
- if(file->refs||fstat(fd,&descriptor_status)!=-1||fwp_wasm_counts_live)return 9;
+ if(fstat(fd,&descriptor_status)!=-1||fwp_wasm_counts_live)return 9;
  h=fwp_p_file_open(fwp_cstr(argv[1]),0,0);file=(fwp_file *)(uintptr_t)h;fd=fileno(file->f);
  V channel=fwp_p_channel_make_owned(1,fwp_file_drop,fwp_file_dup);
  fwp_chan *c=(fwp_chan *)(uintptr_t)channel;
@@ -209,7 +233,7 @@ fn runtime_owners(fixture: String) -> String {
  fwp_rc_dup(channel);fwp_channel_drop(channel);
  if(file->refs!=1||fstat(fd,&descriptor_status)==-1)return 10;
  fwp_channel_drop(channel);
- if(file->refs||fstat(fd,&descriptor_status)!=-1||fwp_wasm_counts_live)return 10;
+ if(fstat(fd,&descriptor_status)!=-1||fwp_wasm_counts_live)return 10;
 "#;
     fixture.replace(
         " /* Pointer-shaped",

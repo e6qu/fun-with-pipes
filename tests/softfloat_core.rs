@@ -19,6 +19,19 @@ int main(void) {
         float16_t half = {(uint16_t)bits};
         if (f128_to_f16(f16_to_f128(half)).v != bits) return 15;
     }
+    float128_t above_bfloat_midpoint = {{1, UINT64_C(0x3fff010000000000)}};
+    if (fwp_f128_to_bf16(above_bfloat_midpoint) != 0x3f81) return 16;
+    if (fwp_bf16_div(0x3f80, 0x4040) != 0x3eab) return 17;
+    if (fwp_bf16_sqrt(0x4000) != 0x3fb5) return 18;
+    if (fwp_bf16_add(0x3f80, 0x3b80) != 0x3f80) return 19;
+    if (fwp_bf16_add(0x3f81, 0x3b80) != 0x3f82) return 20;
+    if (fwp_bf16_div(1, 0x4000) != 0) return 21;
+    if (fwp_bf16_mul(0x7f7f, 0x4000) != 0x7f80) return 22;
+    if (softfloat_roundingMode != softfloat_round_near_even) return 23;
+    for (uint32_t bits = 0; bits <= 0xffff; bits++) {
+        if ((bits & 0x7f80) == 0x7f80 && (bits & 0x7f)) continue;
+        if (fwp_f128_to_bf16(fwp_bf16_to_f128((uint16_t)bits)) != bits) return 24;
+    }
     return 0;
 }
 "#;

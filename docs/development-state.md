@@ -58,20 +58,31 @@ the 64-byte CLI baseline. [Permanent measurements](measurements/iterate-producer
 record hardware, toolchains, flags, source hashes, memory and process timings;
 startup-inclusive timings do not establish a speedup.
 
-Windows Rust APIs now use native socket handles/WSAPoll and owned Windows/POSIX
+Windows Rust APIs use native socket handles/WSAPoll and owned Windows/POSIX
 libraries for FFI, TLS and OpenCL. Both native architectures passed all-target
-compilation, actual TCP readiness/EOF and DLL load/call/unload tests, and compiler
-linking at `fb199e7`. Full interpreter goldens at `277bf4a` in
-[38441636861](https://github.com/e6qu/fun-with-pipes/actions/runs/38441636861)
-failed: checkout CRLF changed expected output bytes; OS error wording differed;
-the Unix signal fixture assumed Unix process status; forcing raw mode conflicted
-with goldens for optimized deep recursion/preemption. Prepared fixes enforce LF
-text checkout, normalize known Windows I/O errors, retain Unix signal coverage
-in a Unix-specific raw/native test, and use normal optimizer settings for the
-full golden harness. Explicit raw/native semantic controls remain required.
-Generated C exit status is now explicitly modulo 256 on every OS. Windows full
-interpreter goldens need rerunning; generated C runtime and PE packaging remain
-unported. Native LLVM-MinGW UCRT toolchains are pinned by asset SHA-256.
+compilation, actual TCP readiness/EOF and DLL load/call/unload tests, compiler
+linking, the exact-format Rust/C core and **all interpreter golden outputs and
+statuses** in [38444619376](https://github.com/e6qu/fun-with-pipes/actions/runs/38444619376)
+at `106e7a2`. LF checkout, common OS errors, the portable child-exit fixture and
+normal golden optimizer settings fixed earlier failures. Unix signal behavior
+retains a separate explicit raw/native control. Native LLVM-MinGW UCRT toolchains
+are pinned by asset SHA-256. This does not yet establish generated C support.
+
+The generated C allocator now has Windows virtual reservation/commit/reset/release,
+monotonic timing, working-set accounting and PE writable-section roots for the
+image containing the runtime. A focused native test observes actual commitment,
+alias counts, reclamation and unload; a missing-image-root control must fail.
+The same extracted probe passes locally on macOS, including the negative control.
+Windows execution, task contexts, resources/networking and PE packages remain
+outstanding. Linux root-range overflow now traps instead of silently losing roots.
+
+File header reclamation now follows proved WASM ownership after stream close,
+including count disposal when physical freeing is disabled. Tests observe libc
+free without reading dead headers and reject a deliberate omitted-free variant.
+These changes await runner validation. The old bump-allocator size fixture was
+stale after libc allocation replaced the bump allocator; its replacement checks
+actual zero-size handling, alignment, zeroed storage, unchanged request sizes
+and allocation failure with omitted-check controls under ASan/UBSan.
 
 The exact-format bootstrap vendors the selected BSD-licensed Berkeley SoftFloat
 3e binary16/binary128 core. Cargo builds the same C source exposed for native
@@ -80,12 +91,16 @@ licenses. Local bit-level controls pass for 113-bit precision, ties-even,
 subnormals, canonical arithmetic NaNs, raw payload preservation and direct
 quad-to-half narrowing without double rounding. CI must validate the Rust/C ABI
 on all six platforms and WASM. This core alone changes no language representation:
-F16/BF16 still lower to F32 and F128 to F64. BF16, exact decimal text/literals,
+F16/BF16 still lower to F32 and F128 to F64. Binary16 and bfloat16 core operations and direct narrowing are now implemented,
+with exhaustive non-NaN half/bfloat bit round-trips and midpoint/subnormal
+controls. Exact decimal text/literals,
 transcendentals, descriptors/arrays/ABI and versioned protocol migration remain.
 
 Local checks passed under `python3 scripts/local-guard.py`: `cargo fmt --all`,
-`cargo check --lib`, `cargo clippy --lib --test cli --test softfloat_core -- -D
-warnings`, and `python3 /private/tmp/fwp-test-softfloat-core.py` (four standalone
+`cargo check --lib`, focused clippy for `cli`, `native_allocator`,
+`wasm_resource_counts`, `softfloat_core` and `array_size_limits`,
+`python3 /private/tmp/fwp-native-allocator-check.py`, and
+`python3 /private/tmp/fwp-test-softfloat-core.py` (six standalone
 arithmetic tests linked against the actual built C core). Earlier extracted
 non-GC allocator ASan/UBSan probe and roadmap audit passed. Full builds, suites,
 benchmarks and large regeneration stay on GitHub runners. Do not use the stale
@@ -95,8 +110,10 @@ are `windows`, `portability`, `wasm` and `iteration` in `numerics.yml`.
 
 ## Next action
 
-Next: publish the Windows golden fixes and exact-format core; run `windows`,
-`portability` and `wasm`, fixing all failures. Then continue generated C Windows
+Next: publish the Windows allocator, WASM File reclamation and bfloat core; run
+`windows`, `portability` and `wasm`, fixing all failures. The `106e7a2` portability
+and WASM checks are still running (38444625470 and 38444631690); macOS ARM passed.
+Then continue generated C Windows
 runtime/resources and PE packages, actual floating representations/text/protocol,
 broader ownership/worker proofs, and nested reverse mode/checkpointing with
 measured layout improvements. Item 4 remains pending. All six acceptance rows

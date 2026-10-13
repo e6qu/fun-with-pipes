@@ -2764,7 +2764,7 @@ static V fwp_p_file_close(V h) {
 
 /* Resource ownership is independent of tracing/count metadata. Explicit close
  * closes the stream; dropping the last value owner also closes it. Unshared
- * native storage is released after removing finalizers; shared/bump storage
+ * storage is released after removing finalizers; unproved shared storage
  * keeps its allocator lifetime. */
 static void fwp_file_dup(V h) {
     if (!h) return;
@@ -2781,7 +2781,12 @@ static void fwp_file_drop(V h) {
 #ifdef FWP_LIBRARY
     fwp_gc_forget_finalizer(file);
 #endif
-#if FWP_GC && !defined(FWP_RESOURCE_NO_FREE)
+#if !FWP_GC
+    /* The independent resource count reached zero. Reclaim only storage whose
+     * ownership was not erased by an unproved runtime boundary. The helper
+     * also disposes metadata when physical freeing is explicitly disabled. */
+    fwp_rc_free_obj(h);
+#elif !defined(FWP_RESOURCE_NO_FREE)
     /* Unknown runtime sharing keeps storage under the collector's lifetime. */
     if (!fwp_rc_last(h)) return;
     if (fwp_reuse_verify < 0) {
@@ -2825,10 +2830,8 @@ static V fwp_file_value(FILE *f, const char *path) {
     fwp_file *h = (fwp_file *)fwp_alloc_leaf(sizeof(fwp_file) + len + 1);
     h->f = f;
     h->refs = 1;
-#if FWP_GC
     /* The header's storage starts unshared; File owners use their own count. */
     fwp_rc_fresh(PTR(h));
-#endif
     file.handle = PTR(h);
 #ifdef FWP_LIBRARY
     fwp_gc_finalizer(h, fwp_file_final);

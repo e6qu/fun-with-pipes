@@ -58,6 +58,7 @@ fn main() {
     for source in sources {
         append(&source, &mut seen, &mut code);
     }
+    append(Path::new("runtime/fwp_float.c"), &mut seen, &mut code);
     let source = out.join("softfloat.c");
     fs::write(&source, code).unwrap();
     let object = out.join("softfloat.o");

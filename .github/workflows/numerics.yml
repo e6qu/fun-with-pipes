@@ -200,6 +200,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --test softfloat_core exact_format_core_runs_as_native_c -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --test native_allocator -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo build --bin fwp
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Interpreter golden outputs and exit statuses
@@ -244,7 +246,7 @@ jobs:
           cargo clippy --all-targets -- -D warnings
           cargo test --lib
       - name: Ownership and foreign boundary regressions
-        run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls --test softfloat_core
+        run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls --test softfloat_core --test native_allocator --test file_runtime_ownership --test file_inline_path --test file_storage_disposal --test array_size_limits
       - name: Iterator forcing, ownership and specialization
         run: cargo test --test iterator_fusion --test iteration_consumers
       - name: Iterator allocation and instruction evidence
@@ -286,7 +288,7 @@ jobs:
       - name: WebAssembly compiler target
         run: cargo check --lib --target wasm32-wasip1
       - name: Physical reclamation and resource controls
-        run: cargo test --test wasm_resource_counts --test softfloat_core
+        run: cargo test --test wasm_resource_counts --test softfloat_core --test array_size_limits
       - name: Actual WASI semantic agreement
         if: ${{ !cancelled() }}
         run: cargo test --test wasm golden_programs_under_wasi

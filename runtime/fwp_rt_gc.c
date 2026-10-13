@@ -214,8 +214,17 @@ static inline uint8_t *fwp_rc_slot(V v) { (void)v; return NULL; }
 
 #else /* FWP_GC */
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#define PSAPI_VERSION 2
+#include <psapi.h>
+#else
 #include <sys/mman.h>
 #include <unistd.h>
+#endif
 #ifdef __linux__
 #include <elf.h>
 #endif
@@ -355,8 +364,13 @@ static inline void fwp_rc_drop_slot(uint8_t *slot) {
 
 static void *fwp_gc_reserve(size_t *bytes) {
     for (size_t n = *bytes; n >= ((size_t)256 << 20); n /= 4) {
+#ifdef _WIN32
+        void *p = VirtualAlloc(NULL, n + GC_CHUNK, MEM_RESERVE, PAGE_NOACCESS);
+        if (p) {
+#else
         void *p = mmap(0, n + GC_CHUNK, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
         if (p != MAP_FAILED) {
+#endif
             *bytes = n;
             return p;
         }
@@ -393,8 +407,13 @@ static void fwp_gc_init(void) {
     fwp_gc.base = (char *)(((uintptr_t)r + GC_CHUNK - 1) & ~(uintptr_t)(GC_CHUNK - 1));
     fwp_gc.nchunks = bytes >> GC_SHIFT;
     fwp_gc.meta_bytes = fwp_gc.nchunks * sizeof(gc_chunk);
+#ifdef _WIN32
+    void *m = VirtualAlloc(NULL, fwp_gc.meta_bytes, MEM_RESERVE, PAGE_NOACCESS);
+    if (!m) fwp_gc_oom();
+#else
     void *m = mmap(0, fwp_gc.meta_bytes, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
     if (m == MAP_FAILED) fwp_gc_oom();
+#endif
     fwp_gc.meta = (gc_chunk *)m;
 #endif
     const char *e = getenv("FWP_GC");
@@ -434,13 +453,25 @@ static void fwp_gc_commit(size_t top) {
     if (top > fwp_gc.nchunks) fwp_gc_oom();
     size_t to = top + GC_COMMIT_STEP;
     if (to > fwp_gc.nchunks) to = fwp_gc.nchunks;
+#ifdef _WIN32
+    if (!VirtualAlloc(fwp_gc.base + (fwp_gc.committed << GC_SHIFT),
+                      (to - fwp_gc.committed) << GC_SHIFT, MEM_COMMIT, PAGE_READWRITE)) fwp_gc_oom();
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+    size_t pg = info.dwPageSize;
+#else
     if (mprotect(fwp_gc.base + (fwp_gc.committed << GC_SHIFT), (to - fwp_gc.committed) << GC_SHIFT,
                  PROT_READ | PROT_WRITE) != 0)
         fwp_gc_oom();
     size_t pg = (size_t)sysconf(_SC_PAGESIZE);
+#endif
     uintptr_t lo = (uintptr_t)(fwp_gc.meta + fwp_gc.committed) & ~(uintptr_t)(pg - 1);
     uintptr_t hi = ((uintptr_t)(fwp_gc.meta + to) + pg - 1) & ~(uintptr_t)(pg - 1);
+#ifdef _WIN32
+    if (!VirtualAlloc((void *)lo, hi - lo, MEM_COMMIT, PAGE_READWRITE)) fwp_gc_oom();
+#else
     if (mprotect((void *)lo, hi - lo, PROT_READ | PROT_WRITE) != 0) fwp_gc_oom();
+#endif
     fwp_gc.committed = to;
 }
 
@@ -1003,7 +1034,8 @@ static int fwp_gc_find_data(struct fwp_dl_info *info, size_t size, void *arg) {
     if (!mine) return 0;
     for (int i = 0; i < info->phnum; i++) {
         if (info->phdr[i].p_type != PT_LOAD || !(info->phdr[i].p_flags & PF_W)) continue;
-        if (fwp_gc.ndata == (int)(sizeof fwp_gc.data / sizeof fwp_gc.data[0])) break;
+        if (fwp_gc.ndata == (int)(sizeof fwp_gc.data / sizeof fwp_gc.data[0]))
+            fwp_trap("too many program data segments for the collector");
         fwp_gc.data[fwp_gc.ndata].p = (char *)(info->addr + info->phdr[i].p_vaddr);
         fwp_gc.data[fwp_gc.ndata].n = info->phdr[i].p_memsz;
         fwp_gc.ndata++;
@@ -1048,6 +1080,39 @@ static void fwp_gc_find_data(void) {
         return;
     }
 }
+#elif defined(_WIN32)
+/* The image owning this runtime can be either an executable or a DLL. Scan
+ * writable loaded sections, including zero-fill tails; do not infer an ELF
+ * address range or scan unrelated host libraries. */
+static void fwp_gc_find_data(void) {
+    HMODULE image = NULL;
+    if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCWSTR)(const void *)&fwp_gc, &image))
+        fwp_trap("cannot locate program image for the collector");
+    char *base = (char *)image;
+    const IMAGE_DOS_HEADER *dos = (const IMAGE_DOS_HEADER *)base;
+    if (dos->e_magic != IMAGE_DOS_SIGNATURE || dos->e_lfanew <= 0)
+        fwp_trap("invalid program DOS header for the collector");
+    const IMAGE_NT_HEADERS64 *nt = (const IMAGE_NT_HEADERS64 *)(base + dos->e_lfanew);
+    if (nt->Signature != IMAGE_NT_SIGNATURE || nt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+        fwp_trap("invalid program PE header for the collector");
+    const IMAGE_SECTION_HEADER *sections = IMAGE_FIRST_SECTION(nt);
+    for (unsigned i = 0; i < nt->FileHeader.NumberOfSections; i++) {
+        const IMAGE_SECTION_HEADER *section = sections + i;
+        DWORD required = IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
+        if ((section->Characteristics & required) != required ||
+            (section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE) || !section->Misc.VirtualSize) continue;
+        size_t offset = section->VirtualAddress, length = section->Misc.VirtualSize;
+        if (offset > nt->OptionalHeader.SizeOfImage || length > nt->OptionalHeader.SizeOfImage - offset)
+            fwp_trap("invalid program PE section for the collector");
+        if (fwp_gc.ndata == (int)(sizeof fwp_gc.data / sizeof fwp_gc.data[0]))
+            fwp_trap("too many program data segments for the collector");
+        fwp_gc.data[fwp_gc.ndata].p = base + offset;
+        fwp_gc.data[fwp_gc.ndata++].n = length;
+    }
+}
+
 #endif
 
 static void fwp_gc_scan_data(void) {
@@ -1134,8 +1199,13 @@ static void fwp_gc_finish(void) {
         }
     }
 #ifndef FWP_STATIC_MEMORY
+#ifdef _WIN32
+    if (fwp_gc.meta) VirtualFree(fwp_gc.meta, 0, MEM_RELEASE);
+    if (fwp_gc.reservation) VirtualFree(fwp_gc.reservation, 0, MEM_RELEASE);
+#else
     if (fwp_gc.meta) munmap(fwp_gc.meta, fwp_gc.meta_bytes);
     if (fwp_gc.reservation) munmap(fwp_gc.reservation, fwp_gc.reservation_bytes);
+#endif
 #endif
     memset(&fwp_gc, 0, sizeof fwp_gc);
     fwp_gc.budget = -1;
@@ -1208,7 +1278,14 @@ static void fwp_gc_sweep(void) {
             }
 #ifndef FWP_STATIC_MEMORY
             /* static memory keeps its pages: they were given at startup */
+#ifdef _WIN32
+            /* Retain the committed address range, discard its unused contents.
+             * Allocators initialize reused slots; MEM_RESET need not zero them. */
+            if (!VirtualAlloc(fwp_gc_chunk_addr(ci), run << GC_SHIFT, MEM_RESET, PAGE_NOACCESS))
+                fwp_gc_oom();
+#else
             madvise(fwp_gc_chunk_addr(ci), run << GC_SHIFT, MADV_DONTNEED);
+#endif
 #endif
         }
     }
@@ -1317,8 +1394,14 @@ static __attribute__((noinline)) void fwp_gc_collect(void) {
 #else
     if (fwp_gc.collecting) return;
     fwp_gc.collecting = 1;
+#ifdef _WIN32
+    LARGE_INTEGER t0, t1, frequency;
+    if (!QueryPerformanceFrequency(&frequency) || !QueryPerformanceCounter(&t0))
+        fwp_trap("cannot read monotonic clock");
+#else
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
+#endif
     fwp_gc.total_alloc += (double)(fwp_gc.budget_given - fwp_gc.budget);
     int major = !fwp_gc.generational || fwp_gc.major_next;
     if (major) fwp_gc_clear_marks();
@@ -1353,8 +1436,13 @@ static __attribute__((noinline)) void fwp_gc_collect(void) {
      * heap smaller */
     intptr_t b = (fwp_gc.generational ? 1 : 2) * (intptr_t)fwp_gc.live + (intptr_t)fwp_gc.root_bytes;
     fwp_gc.budget = fwp_gc.budget_given = b > GC_MIN_BUDGET ? b : GC_MIN_BUDGET;
+#ifdef _WIN32
+    if (!QueryPerformanceCounter(&t1)) fwp_trap("cannot read monotonic clock");
+    double ms = (double)(t1.QuadPart - t0.QuadPart) * 1e3 / (double)frequency.QuadPart;
+#else
     clock_gettime(CLOCK_MONOTONIC, &t1);
     double ms = (double)(t1.tv_sec - t0.tv_sec) * 1e3 + (double)(t1.tv_nsec - t0.tv_nsec) / 1e6;
+#endif
     fwp_gc.pause_total += ms;
     if (ms > fwp_gc.pause_max) fwp_gc.pause_max = ms;
     fwp_gc.collecting = 0;
@@ -1362,7 +1450,11 @@ static __attribute__((noinline)) void fwp_gc_collect(void) {
 }
 
 static long fwp_gc_status_kb(const char *key) {
-#ifdef __APPLE__
+#ifdef _WIN32
+    PROCESS_MEMORY_COUNTERS memory = {0};
+    if (strcmp(key, "VmHWM") != 0 || !GetProcessMemoryInfo(GetCurrentProcess(), &memory, sizeof memory)) return -1;
+    return (long)(memory.PeakWorkingSetSize / 1024);
+#elif defined(__APPLE__)
     struct rusage usage;
     if (strcmp(key, "VmHWM") != 0 || getrusage(RUSAGE_SELF, &usage) != 0) return -1;
     return usage.ru_maxrss / 1024; /* Darwin reports bytes, Linux KiB. */
@@ -1397,10 +1489,10 @@ static void fwp_gc_start(void *top) {
     fwp_gc.main_top = (char *)top;
 #ifdef __linux__
     dl_iterate_phdr(fwp_gc_find_data, 0);
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(_WIN32)
     fwp_gc_find_data();
 #endif
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
     fwp_gc.armed = fwp_gc.enabled && fwp_gc.ndata > 0;
 #endif
     if (fwp_gc.stats) atexit(fwp_gc_report);

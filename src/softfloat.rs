@@ -12,8 +12,12 @@ pub struct Binary128 {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy)]
-struct Binary16(u16);
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Binary16(u16);
+
+#[repr(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BFloat16(u16);
 #[repr(C)]
 #[derive(Clone, Copy)]
 struct Binary32(u32);
@@ -22,6 +26,18 @@ struct Binary32(u32);
 struct Binary64(u64);
 
 extern "C" {
+    fn f16_add(a: Binary16, b: Binary16) -> Binary16;
+    fn f16_sub(a: Binary16, b: Binary16) -> Binary16;
+    fn f16_mul(a: Binary16, b: Binary16) -> Binary16;
+    fn f16_div(a: Binary16, b: Binary16) -> Binary16;
+    fn f16_sqrt(a: Binary16) -> Binary16;
+    fn fwp_f128_to_bf16(a: Binary128) -> u16;
+    fn fwp_bf16_to_f128(a: u16) -> Binary128;
+    fn fwp_bf16_add(a: u16, b: u16) -> u16;
+    fn fwp_bf16_sub(a: u16, b: u16) -> u16;
+    fn fwp_bf16_mul(a: u16, b: u16) -> u16;
+    fn fwp_bf16_div(a: u16, b: u16) -> u16;
+    fn fwp_bf16_sqrt(a: u16) -> u16;
     fn f128_add(a: Binary128, b: Binary128) -> Binary128;
     fn f128_sub(a: Binary128, b: Binary128) -> Binary128;
     fn f128_mul(a: Binary128, b: Binary128) -> Binary128;
@@ -75,30 +91,96 @@ impl Binary128 {
     }
 }
 
-impl Add for Binary128 {
-    type Output = Self;
-    fn add(self, other: Self) -> Self {
-        unsafe { f128_add(self, other) }
+impl Binary16 {
+    pub const fn from_bits(bits: u16) -> Self {
+        Self(bits)
+    }
+    pub const fn to_bits(self) -> u16 {
+        self.0
+    }
+    pub fn from_quad(value: Binary128) -> Self {
+        unsafe { f128_to_f16(value) }
+    }
+    pub fn to_quad(self) -> Binary128 {
+        unsafe { f16_to_f128(self) }
+    }
+    pub fn sqrt(self) -> Self {
+        unsafe { f16_sqrt(self) }
     }
 }
-impl Sub for Binary128 {
-    type Output = Self;
-    fn sub(self, other: Self) -> Self {
-        unsafe { f128_sub(self, other) }
+
+impl BFloat16 {
+    pub const fn from_bits(bits: u16) -> Self {
+        Self(bits)
+    }
+    pub const fn to_bits(self) -> u16 {
+        self.0
+    }
+    pub fn from_quad(value: Binary128) -> Self {
+        Self(unsafe { fwp_f128_to_bf16(value) })
+    }
+    pub fn to_quad(self) -> Binary128 {
+        unsafe { fwp_bf16_to_f128(self.0) }
+    }
+    pub fn sqrt(self) -> Self {
+        Self(unsafe { fwp_bf16_sqrt(self.0) })
     }
 }
-impl Mul for Binary128 {
-    type Output = Self;
-    fn mul(self, other: Self) -> Self {
-        unsafe { f128_mul(self, other) }
-    }
+
+macro_rules! binary_ops {
+    ($ty:ty, $add:ident, $sub:ident, $mul:ident, $div:ident, $call:expr) => {
+        impl Add for $ty {
+            type Output = Self;
+            fn add(self, other: Self) -> Self {
+                ($call)($add, self, other)
+            }
+        }
+        impl Sub for $ty {
+            type Output = Self;
+            fn sub(self, other: Self) -> Self {
+                ($call)($sub, self, other)
+            }
+        }
+        impl Mul for $ty {
+            type Output = Self;
+            fn mul(self, other: Self) -> Self {
+                ($call)($mul, self, other)
+            }
+        }
+        impl Div for $ty {
+            type Output = Self;
+            fn div(self, other: Self) -> Self {
+                ($call)($div, self, other)
+            }
+        }
+    };
 }
-impl Div for Binary128 {
-    type Output = Self;
-    fn div(self, other: Self) -> Self {
-        unsafe { f128_div(self, other) }
-    }
-}
+binary_ops!(
+    Binary128,
+    f128_add,
+    f128_sub,
+    f128_mul,
+    f128_div,
+    |f: unsafe extern "C" fn(Binary128, Binary128) -> Binary128, a, b| unsafe { f(a, b) }
+);
+binary_ops!(
+    Binary16,
+    f16_add,
+    f16_sub,
+    f16_mul,
+    f16_div,
+    |f: unsafe extern "C" fn(Binary16, Binary16) -> Binary16, a, b| unsafe { f(a, b) }
+);
+binary_ops!(
+    BFloat16,
+    fwp_bf16_add,
+    fwp_bf16_sub,
+    fwp_bf16_mul,
+    fwp_bf16_div,
+    |f: unsafe extern "C" fn(u16, u16) -> u16, a: BFloat16, b: BFloat16| BFloat16(unsafe {
+        f(a.0, b.0)
+    })
+);
 
 #[cfg(test)]
 mod tests {
@@ -148,6 +230,53 @@ mod tests {
             }
             assert_eq!(Q::from_f16_bits(bits).to_f16_bits(), bits);
         }
+    }
+
+    #[test]
+    fn bfloat_conversion_and_arithmetic_round_once() {
+        use super::BFloat16 as B;
+        let one = B::from_bits(0x3f80);
+        // Midpoint between 1 and 1 + 2^-7, with one extra quad bit.
+        let above = Q::from_bits(ONE + (1 << 104) + 1);
+        assert_eq!(B::from_quad(above).to_bits(), 0x3f81);
+        assert_eq!(B::from_quad(Q::from_f64(above.to_f64())).to_bits(), 0x3f80);
+        assert_eq!((one / B::from_bits(0x4040)).to_bits(), 0x3eab); // 1/3
+        assert_eq!(B::from_bits(0x4000).sqrt().to_bits(), 0x3fb5); // sqrt(2)
+        let half_ulp = B::from_bits(0x3b80); // 2^-8
+        assert_eq!((one + half_ulp).to_bits(), 0x3f80);
+        assert_eq!((B::from_bits(0x3f81) + half_ulp).to_bits(), 0x3f82);
+        assert_eq!((B::from_bits(1) + B::from_bits(1)).to_bits(), 2);
+        assert_eq!((B::from_bits(1) / B::from_bits(0x4000)).to_bits(), 0);
+        assert_eq!(
+            (B::from_bits(0x7f7f) * B::from_bits(0x4000)).to_bits(),
+            0x7f80
+        );
+        assert_eq!(B::from_bits(0x8000).sqrt().to_bits(), 0x8000);
+        assert_eq!((B::from_bits(0xff81) + one).to_bits(), 0x7fc0);
+        for bits in 0u16..=u16::MAX {
+            if bits & 0x7f80 == 0x7f80 && bits & 0x007f != 0 {
+                continue;
+            }
+            assert_eq!(B::from_quad(B::from_bits(bits).to_quad()).to_bits(), bits);
+        }
+    }
+
+    #[test]
+    fn half_arithmetic_has_half_precision() {
+        use super::Binary16 as H;
+        let one = H::from_bits(0x3c00);
+        assert_eq!((one / H::from_bits(0x4200)).to_bits(), 0x3555); // 1/3
+        assert_eq!(H::from_bits(0x4000).sqrt().to_bits(), 0x3da8); // sqrt(2)
+        let half_ulp = H::from_bits(0x1000); // 2^-11
+        assert_eq!((one + half_ulp).to_bits(), 0x3c00);
+        assert_eq!((H::from_bits(0x3c01) + half_ulp).to_bits(), 0x3c02);
+        assert_eq!((H::from_bits(1) + H::from_bits(1)).to_bits(), 2);
+        assert_eq!((H::from_bits(1) / H::from_bits(0x4000)).to_bits(), 0);
+        assert_eq!(
+            (H::from_bits(0x7bff) * H::from_bits(0x4000)).to_bits(),
+            0x7c00
+        );
+        assert_eq!(H::from_bits(0x8000).sqrt().to_bits(), 0x8000);
     }
 
     #[test]

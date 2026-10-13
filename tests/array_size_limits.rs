@@ -233,48 +233,29 @@ fn generic_array_constructor_checks_before_multiplication() {
     std::fs::remove_dir_all(directory).unwrap();
 }
 #[test]
-fn bump_allocation_checks_alignment_overflow_and_empty_initialization() {
-    let directory = std::env::temp_dir().join(format!("fwp-bump-size-{}", std::process::id()));
+fn non_tracing_allocation_preserves_size_zeroing_alignment_and_failure() {
+    let directory = std::env::temp_dir().join(format!("fwp-wasm-size-{}", std::process::id()));
     std::fs::create_dir(&directory).unwrap();
     let source = include_str!("../runtime/fwp_rt_gc.c");
-    let start = source
-        .find("static char *fwp_heap_cur = 0, *fwp_heap_end = 0;")
-        .unwrap();
+    let start = source.find("static void *fwp_alloc(size_t n) {").unwrap();
     let end = source[start..]
         .find("static void *fwp_alloc_leaf(")
         .unwrap()
         + start;
     let allocator = &source[start..end];
-    let guard = "n > SIZE_MAX - 15";
-    let initialization = "!fwp_heap_cur || ";
-    assert_eq!(allocator.matches(guard).count(), 1);
-    assert_eq!(allocator.matches(initialization).count(), 1);
+    assert_eq!(allocator.matches("n ? n : 1").count(), 1);
+    assert_eq!(allocator.matches("if (!p)").count(), 1);
     let variants = [
         ("checked", allocator.to_string(), 102),
-        ("omit-alignment", allocator.replace(guard, "0"), 128),
-        (
-            "omit-initialization",
-            allocator
-                .replace(initialization, "")
-                // Keep the negative control's null-address arithmetic defined;
-                // removing initialization must fail independently of C pointer UB.
-                .replace(
-                    "fwp_heap_end - fwp_heap_cur",
-                    "(uintptr_t)fwp_heap_end - (uintptr_t)fwp_heap_cur",
-                )
-                .replace(
-                    "fwp_heap_cur += n;",
-                    "fwp_heap_cur = (char *)((uintptr_t)fwp_heap_cur + n);",
-                ),
-            129,
-        ),
+        ("omit-empty", allocator.replace("n ? n : 1", "n"), 131),
+        ("omit-failure", allocator.replace("if (!p)", "if (0)"), 128),
     ];
     for opt in ["-O1", "-O2"] {
         for (label, code, expected) in &variants {
             let cfile = directory.join(format!("{label}{}.c", &opt[1..]));
             let executable = cfile.with_extension("bin");
             let probe =
-                include_str!("fixtures/bump_size_probe.c").replace("/* BUMP_ALLOCATOR */", code);
+                include_str!("fixtures/wasm_size_probe.c").replace("/* WASM_ALLOCATOR */", code);
             std::fs::write(&cfile, &probe).unwrap();
             checked(
                 Command::new(std::env::var_os("CC").unwrap_or_else(|| "cc".into()))
@@ -287,7 +268,7 @@ fn bump_allocation_checks_alignment_overflow_and_empty_initialization() {
             if let Some(destination) = std::env::var_os("FWP_ARRAY_SIZE_ARTIFACTS") {
                 let destination = PathBuf::from(destination);
                 std::fs::create_dir_all(&destination).unwrap();
-                let prefix = destination.join(format!("bump-{label}{}", &opt[1..]));
+                let prefix = destination.join(format!("wasm-allocation-{label}{}", &opt[1..]));
                 std::fs::write(prefix.with_extension("c"), &probe).unwrap();
                 std::fs::copy(&executable, prefix.with_extension("bin")).unwrap();
                 std::fs::write(prefix.with_extension("stdout"), &output.stdout).unwrap();
