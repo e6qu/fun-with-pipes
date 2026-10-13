@@ -981,15 +981,7 @@ impl<'a> Parser<'a> {
         let span = t.span;
         let kind = match t.tok {
             Tok::Int { neg, mag, suffix } => ExprKind::Int { neg, mag, suffix },
-            Tok::Float {
-                value,
-                value32,
-                suffix,
-            } => ExprKind::Float {
-                value,
-                value32,
-                suffix,
-            },
+            Tok::Float { decimal, suffix } => ExprKind::Float { decimal, suffix },
             Tok::Str(s) => ExprKind::Str(s),
             Tok::Trits(t) => ExprKind::Trits(t),
             Tok::Duration(d) => ExprKind::Duration(d),

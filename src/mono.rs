@@ -226,11 +226,15 @@ pub fn int_value(mt: &MT, neg: bool, mag: u128) -> Option<Value> {
     })
 }
 
-pub fn float_value(mt: &MT, x: f64, x32: f32) -> Option<Value> {
+pub fn float_value(mt: &MT, decimal: &str) -> Option<Value> {
     match mt {
         MT::Con(n, _) => match n.as_str() {
-            "std::F32" | "std::F16" | "std::BF16" => Some(Value::F32(x32)),
-            "std::F64" | "std::F128" => Some(Value::F64(x)),
+            "std::F32" | "std::F16" | "std::BF16" => Some(Value::F32(
+                decimal.parse().expect("validated decimal literal"),
+            )),
+            "std::F64" | "std::F128" => Some(Value::F64(
+                decimal.parse().expect("validated decimal literal"),
+            )),
             _ => None,
         },
         _ => None,
@@ -1024,15 +1028,15 @@ impl<'a> Mono<'a> {
                     }
                 }
             }
-            ExprKind::Float { value, value32, .. } => {
+            ExprKind::Float { decimal, .. } => {
                 let mt = self.node_mt(e.id, s);
-                match float_value(&mt, *value, *value32) {
+                match float_value(&mt, decimal) {
                     Some(v) => Ok(Expr::Const(v)),
                     None => self.literal_via_trait(
                         "std::FromFloat",
                         "std::from-float",
                         &mt,
-                        Value::F64(*value),
+                        Value::F64(decimal.parse().expect("validated decimal literal")),
                         e.span,
                     ),
                 }

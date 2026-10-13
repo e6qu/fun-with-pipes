@@ -40,6 +40,13 @@ Keep `float.convert` explicit. Preserve operation order and the existing policy
 against implicit reassociation or contraction. Do not silently substitute the
 host C `long double`: its width, representation and ABI vary by target.
 
+The lexer and AST retain decimal literal text until monomorphization selects
+the destination format. Formatting and macro expansion preserve those digits;
+`SFloat` now carries a decimal `String`, as described in the
+[macro reference](reference.md#compile-time-evaluation-and-macros). This removes
+early F64 rounding from syntax without changing the implemented value formats
+in the table above.
+
 ## Migration contract
 
 The active implementation must deliver these together before changing representations:

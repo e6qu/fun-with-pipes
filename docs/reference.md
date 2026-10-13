@@ -322,6 +322,14 @@ The effect rules:
 - A macro is a function from `Syntax` to `Syntax`. Names that a quote
   refers to resolve where the quote was written (hygiene).
 
+`SFloat` carries decimal text, for example `SFloat "1.25"`, so a macro can
+preserve precision until the expanded expression's type is inferred. Its text
+is one unsuffixed decimal float token, with a decimal point or lowercase `e`,
+without digit separators or surrounding whitespace. Quoting normalizes digit
+separators and exponent case; it does not round the value. Suffixed literals
+retain their suffix through `SOther`. Constructing `SFloat` with an `F64` value
+is no longer supported: use literal text to avoid losing digits in macros.
+
 ## C interop
 
 ```

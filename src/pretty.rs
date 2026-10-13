@@ -221,10 +221,6 @@ fn int_lit(neg: bool, mag: u128) -> String {
     format!("{}{}", if neg { "-" } else { "" }, mag)
 }
 
-pub fn float_lit(v: f64) -> String {
-    crate::value::fmt_f64(v)
-}
-
 pub fn trits(ts: &[i8]) -> String {
     let mut s = String::from("0t");
     for t in ts {
@@ -293,8 +289,8 @@ pub fn atom(e: &Expr) -> String {
         ExprKind::Int { neg, mag, suffix } => {
             format!("{}{}", int_lit(*neg, *mag), suffix.as_deref().unwrap_or(""))
         }
-        ExprKind::Float { value, suffix, .. } => {
-            format!("{}{}", float_lit(*value), suffix.as_deref().unwrap_or(""))
+        ExprKind::Float { decimal, suffix } => {
+            format!("{}{}", decimal, suffix.as_deref().unwrap_or(""))
         }
         ExprKind::Str(s) => crate::value::escape_str(s),
         ExprKind::Trits(t) => trits(t),

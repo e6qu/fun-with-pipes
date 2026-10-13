@@ -248,7 +248,7 @@ jobs:
       - name: Ownership and foreign boundary regressions
         run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls --test softfloat_core --test native_allocator --test file_runtime_ownership --test file_inline_path --test file_storage_disposal --test array_size_limits
       - name: Iterator forcing, ownership and specialization
-        run: cargo test --test iterator_fusion --test iteration_consumers
+        run: cargo test --test iterator_fusion --test iteration_consumers --test float_literals
       - name: Iterator allocation and instruction evidence
         if: inputs.suite == 'iteration'
         run: |

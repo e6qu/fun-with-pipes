@@ -99,8 +99,10 @@ rounds directly to the requested format; formatting supplies shortest round-trip
 digits. Per-call contexts use 4 KiB stack scratch and release overflow blocks on
 success or allocation failure, without thread registries or retained caches.
 Three decimal corrections cover subnormal double rounding, normalized exponent
-adjustment and an unsigned exponent-bit shift. The new decimal core still needs
-runner acceptance; the public language representations remain F16/BF16 as F32
+adjustment and an unsigned exponent-bit shift. The decimal core passed all four
+Linux/macOS portability jobs at `367227a` in
+[38449726111](https://github.com/e6qu/fun-with-pipes/actions/runs/38449726111).
+The public language representations remain F16/BF16 as F32
 and F128 as F64 until the coordinated migration is implemented and verified.
 Transcendentals, literal/value integration, descriptors/arrays/ABI and versioned
 protocol migration remain outstanding.
@@ -114,6 +116,16 @@ conversion and include a bfloat midpoint where narrowing an already-rounded
 quad produces the wrong result. The shared native/WASI C probe carries the same
 boundary controls; their new runner acceptance is still pending.
 
+Literal tokens and AST nodes now retain decimal text until monomorphization;
+formatting and macros no longer round source text through F64. `SFloat` carries
+an unsuffixed decimal String instead of an F64 value, with matching validation
+and rendering in both engines. The macro reference documents this API change.
+The new golden fixture and `float_literals` regression compare original and
+formatted source, raw interpretation and O1/O2 native execution at a known F32
+double-rounding boundary. Six standalone lexer tests and generated library-doc
+checks passed locally; end-to-end runner validation is pending. Language F16,
+BF16 and F128 value representations have not changed yet.
+
 Local checks passed under `python3 scripts/local-guard.py`: formatting, focused
 clippy for the affected compiler and integration targets, and standalone core
 checks. `python3 /private/tmp/fwp-test-softfloat-core.py` passed 13 tests including
@@ -123,6 +135,8 @@ independent Rust F32/F64 decimal oracles and concurrent conversion scopes.
 under ASan/UBSan, allocation-failure controls and an omitted-release leak control.
 `python3 /private/tmp/fwp-native-allocator-check.py` passed allocator/image-root
 controls. The repository tests preserve these controls for native/WASI CI.
+`python3 /private/tmp/fwp-literal-front-check.py` ran the standalone lexer checks
+and regenerated/verified the small standard-library signature documentation.
 Full builds, suites, benchmarks and large regeneration stay on GitHub runners.
 Do not use the stale local fwp executable as an oracle. Preserve disk/RSS/CPU/
 deadline limits. PR #134 is now ready for review, so pushes run full production CI. Skipped jobs
@@ -140,19 +154,18 @@ macOS test sharder and found an unused WASM loader variant. Fixes select a
 target-specific SDK-aware C compiler, exclude the native loader on WASM with
 an explicit unsupported foreign-call diagnostic, and accept build scripts as
 Cargo-managed dependencies without removing any test targets. Guarded shard
-regressions (3 tests), formatting and library clippy passed locally. All runner
-failures remain unresolved until the corrected code passes; the earlier focused
-successes are not final-head acceptance.
+regressions (3 tests), formatting and library clippy passed locally.
 
 Published CI fixes are at `55b86f2`: full CI
 [38450820067](https://github.com/e6qu/fun-with-pipes/actions/runs/38450820067),
 Windows [38450846100](https://github.com/e6qu/fun-with-pipes/actions/runs/38450846100)
 and WASI [38450850527](https://github.com/e6qu/fun-with-pipes/actions/runs/38450850527)
-are queued. Superseded full runs at `47dbe70` and `367227a` were cancelled to
+now show both Windows architectures passing, WASI ARM passing and WASI AMD still
+running. Full Linux/macOS CI is running, with bench passed and the corrected
+macOS shards executing. Superseded full runs at `47dbe70` and `367227a` were cancelled to
 avoid spending runners on known failures. Both full macOS GC stress suites at
 `4437af0` passed before their second shards encountered the corrected build-script
-metadata issue. Decimal portability at `367227a` has passed Linux ARM/AMD and
-macOS ARM; Intel is still running. None of these is the final merge gate.
+metadata issue. None of these is the final merge gate.
 
 Then integrate the exact formats with language values/literals,
 native arrays/workers and protocol versioning. Continue the generated C Windows

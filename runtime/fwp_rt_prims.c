@@ -3139,7 +3139,32 @@ static void sy_atom(fwp_buf *b, V v) {
     switch (fwp_tag(v)) {
     case SY_NAME: case SY_CTOR: sy_name(b, OBJ(v)->f[0]); return;
     case SY_INT: snprintf(t, sizeof t, "%lld", (long long)(int64_t)OBJ(v)->f[0]); buf_puts(b, t); return;
-    case SY_FLOAT: fwp_fmt_f64(t, fwp_f64(OBJ(v)->f[0])); buf_puts(b, t); return;
+    case SY_FLOAT: {
+        fwp_str *s = STR(OBJ(v)->f[0]);
+        size_t p = 0, start;
+        int fraction = 0, exponent = 0;
+        if (p < s->len && s->d[p] == '-') p++;
+        start = p;
+        while (p < s->len && s->d[p] >= '0' && s->d[p] <= '9') p++;
+        int valid = p > start;
+        if (p < s->len && s->d[p] == '.') {
+            fraction = 1;
+            start = ++p;
+            while (p < s->len && s->d[p] >= '0' && s->d[p] <= '9') p++;
+            valid &= p > start;
+        }
+        if (p < s->len && s->d[p] == 'e') {
+            exponent = 1;
+            p++;
+            if (p < s->len && (s->d[p] == '+' || s->d[p] == '-')) p++;
+            start = p;
+            while (p < s->len && s->d[p] >= '0' && s->d[p] <= '9') p++;
+            valid &= p > start;
+        }
+        if (valid && (fraction || exponent) && p == s->len) buf_put(b, s->d, s->len);
+        else buf_puts(b, "<SFloat needs an unsuffixed decimal float literal>");
+        return;
+    }
     case SY_STR: fwp_escape(b, STR(OBJ(v)->f[0])->d, STR(OBJ(v)->f[0])->len); return;
     case SY_SELECT:
         for (V xs = OBJ(v)->f[0]; xs != 0; xs = OBJ(xs)->f[1]) {

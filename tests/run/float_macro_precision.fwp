@@ -1,0 +1,18 @@
+# Syntax carries digits until the destination type is known.
+macro preserve = id
+macro literal = const (SFloat "1.00000005960464477539062500001")
+
+f32 : F32 -> F32
+f32 = id
+
+main = [
+    preserve!(1.00000005960464477539062500001) | f32 | echo,
+    preserve!(1.00000005960464477539062500001f32) | echo,
+    preserve!(-1.00000005960464477539062500001) | f32 | echo,
+    literal!(()) | f32 | echo,
+    quote 1.0000000000000000000000000000000002 | syntax.show | print,
+    quote 1.0000000000000000000000000000000002f128 | syntax.show | print,
+    quote 1_234.50E+2 | syntax.show | print,
+    ["1.0", "-0.0", "1e+03", "1", " 1.0", "1.0 ", "1.0f32", "1.0 | add 2.0", "1_0.0", "1E2", "(1.0)", "1.0\0"]
+        | each (SFloat | syntax.show | print),
+] | ignore
