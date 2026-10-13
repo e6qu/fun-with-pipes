@@ -51,8 +51,9 @@
  * FWP_GC_VERIFY=1 checks each minor collection against a full trace and
  * stops at the first object it missed.
  *
- * WebAssembly keeps a bump allocator that never frees: the stack lives
- * partly in WebAssembly locals, which cannot be scanned. Libraries
+ * WebAssembly frees counted values through the typed ownership graph; shared
+ * unproved graphs remain retained because WebAssembly locals cannot be scanned.
+ * Libraries
  * (--staticlib, --cdylib) use the collector's allocator but never collect,
  * as the host's stacks are unknown. */
 
@@ -68,25 +69,12 @@
 
 #if !FWP_GC
 
-static char *fwp_heap_cur = 0, *fwp_heap_end = 0;
-
 static void *fwp_alloc(size_t n) {
-    if (n > SIZE_MAX - 15) {
+    void *p = calloc(1, n ? n : 1);
+    if (!p) {
         fprintf(stderr, "fwp: out of memory\n");
         exit(102);
     }
-    n = (n + 15) & ~(size_t)15;
-    if (!fwp_heap_cur || (size_t)(fwp_heap_end - fwp_heap_cur) < n) {
-        size_t chunk = n > (1 << 20) ? n : (1 << 20);
-        fwp_heap_cur = (char *)calloc(1, chunk);
-        if (!fwp_heap_cur) {
-            fprintf(stderr, "fwp: out of memory\n");
-            exit(102);
-        }
-        fwp_heap_end = fwp_heap_cur + chunk;
-    }
-    void *p = fwp_heap_cur;
-    fwp_heap_cur += n;
     return p;
 }
 
@@ -113,8 +101,7 @@ static void fwp_mem_free(void *p) { free(p); }
 static void fwp_gc_start(void *top) { (void)top; }
 static void fwp_gc_finalizer(void *obj, void (*fn)(void *)) { (void)obj; (void)fn; }
 static void fwp_gc_forget_finalizer(void *obj) { (void)obj; }
-/* Resource programs need logical aggregate/task ownership even on the bump
- * heap. Entries track live counted owners; value layouts and reuse stay unchanged.
+/* Entries track live counted owners; value layouts and reuse stay unchanged.
  * No counter operation reads arbitrary value words as allocation headers. */
 #ifdef FWP_RESOURCE_OWNERS
 #define FWP_WASM_RC_BUCKETS 4096
@@ -188,9 +175,17 @@ static inline int fwp_rc_release_last(V value) {
     if (entry->count == 1) return 1;
     fwp_wasm_set_count(entry, entry->count - 1); return 0;
 }
-/* Logical destruction forgets its count; physical bump storage stays allocated. */
-static inline void fwp_rc_free_obj(V value) { if (fwp_rc_last(value)) fwp_rc_share(value); }
-static inline void fwp_rc_free_arr(V value) { if (fwp_rc_last(value)) fwp_rc_share(value); }
+/* Only typed last-owner destruction reaches this path. Stack objects and
+ * shared runtime graphs have no count entry and cannot be freed here. Remove
+ * metadata before storage reuse so a recycled address never inherits owners. */
+static inline void fwp_rc_free_obj(V value) {
+    if (!fwp_rc_last(value)) return;
+    fwp_rc_share(value);
+#ifndef FWP_RESOURCE_NO_FREE
+    free((void *)(uintptr_t)value);
+#endif
+}
+static inline void fwp_rc_free_arr(V value) { fwp_rc_free_obj(value); }
 static inline V fwp_rc_shared(V value) { fwp_rc_share(value); return value; }
 static inline int fwp_rc_unique(V value) { (void)value; return 0; }
 static inline int fwp_rc_unique_mut(V value) { (void)value; return 0; }
@@ -1441,7 +1436,7 @@ static void fwp_static_report(void) {
 #endif /* FWP_GC */
 
 /* A resource parent must finish its logical lifetime even when object storage
- * is deliberately retained. On the bump heap this also disposes counter metadata;
+ * is deliberately retained. On WebAssembly this also disposes counter metadata;
  * native disabled-free behavior continues to leave object storage untouched. */
 static inline void fwp_rc_resource_free_obj(V value) {
 #if FWP_GC && defined(FWP_RESOURCE_NO_FREE)

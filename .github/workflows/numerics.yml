@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, portability]
+        options: [numerical, bundle, wide, windows, portability, wasm]
         default: numerical
 jobs:
   numeric_fusion:
@@ -235,3 +235,31 @@ jobs:
           cargo test --lib
       - name: Ownership and foreign boundary regressions
         run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls
+
+  wasm_ownership:
+    if: inputs.suite == 'wasm'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_REQUIRE_WASM_RESOURCE_COUNTS: 1
+      FWP_REQUIRE_WASI_GOLDENS: 1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: WASI toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32
+      - name: Physical reclamation and resource controls
+        run: cargo test --test wasm_resource_counts
+      - name: Actual WASI semantic agreement
+        if: ${{ !cancelled() }}
+        run: cargo test --test wasm golden_programs_under_wasi

@@ -93,7 +93,7 @@ int main(int argc,char **argv) {
     (dir, generated, fixture)
 }
 #[test]
-fn bump_heap_aggregate_counts_release_file_children() {
+fn non_tracing_aggregate_counts_release_file_children() {
     let (dir, generated, fixture) = probe("1");
     let old = generated.replace(
         "#define FWP_RESOURCE_OWNERS 1",
@@ -218,7 +218,7 @@ fn runtime_owners(fixture: String) -> String {
 }
 
 #[test]
-fn disabled_free_disposes_resource_counts_without_freeing_bump_storage() {
+fn disabled_free_disposes_resource_counts_without_freeing_storage() {
     let (dir, generated, fixture) = probe("0");
     let fixture = runtime_owners(fixture);
     assert!(generated.contains("#define FWP_RESOURCE_NO_FREE 1"));
@@ -241,6 +241,103 @@ fn disabled_free_disposes_resource_counts_without_freeing_bump_storage() {
                 "{opt}: {}",
                 String::from_utf8_lossy(&out.stderr)
             );
+        }
+    }
+}
+
+#[test]
+fn counted_wasm_storage_is_physically_reclaimed_after_the_last_alias() {
+    let (dir, generated, _) = probe("1");
+    // Observe the actual libc free, independently of the runtime's count table.
+    // Omitting physical reclamation must fail even when all metadata is gone.
+    let observer = r#"
+#include <stdlib.h>
+static void *probe_watched;
+static unsigned probe_frees;
+static void probe_free(void *p) {
+    int watched = p == probe_watched;
+    free(p);
+    if (watched) probe_frees++;
+}
+#define free probe_free
+"#;
+    let fixture = r#"
+int main(void) {
+    for (unsigned cycle = 0; cycle < 10000; cycle++) {
+        V value = fwp_rc_fresh(fwp_tuple2(31, 47));
+        probe_watched = (void *)(uintptr_t)value;
+        unsigned before = probe_frees;
+        for (unsigned i = 0; i < 300; i++) fwp_rc_dup(value);
+        for (unsigned i = 0; i < 300; i++) {
+            fwp_rc_free_obj(value);
+            if (fwp_rc_release_last(value)) return 11;
+            if (probe_frees != before) return 12;
+        }
+        if (!fwp_rc_last(value)) return 13;
+        if (OBJ(value)->f[0] != 31 || OBJ(value)->f[1] != 47) return 14;
+        fwp_rc_free_obj(value);
+        if (probe_frees != before + EXPECT_FREE) return 15;
+        if (fwp_wasm_counts_live) return 16;
+    }
+    return 0;
+}
+"#;
+    let needle = "    free((void *)(uintptr_t)value);";
+    assert_eq!(generated.matches(needle).count(), 1);
+    let omitted = generated.replace(needle, "    (void)value; /* omit physical free */");
+    let disabled = format!("#define FWP_RESOURCE_NO_FREE 1\n{generated}");
+    let cases = [(&generated, 1, 0), (&omitted, 1, 15), (&disabled, 0, 0)];
+    let wasm_cc = std::env::var("FWP_WASM_CC").unwrap_or_else(|_| "clang".into());
+    let probe_c = dir.join("toolchain.c");
+    std::fs::write(&probe_c, "int main(void){return 0;}").unwrap();
+    let wasi = Command::new(wasm_cc)
+        .args(["--target=wasm32-wasi", "-o"])
+        .arg(dir.join("toolchain.wasm"))
+        .arg(probe_c)
+        .output()
+        .is_ok_and(|o| o.status.success())
+        && Command::new("node")
+            .arg("--version")
+            .output()
+            .is_ok_and(|o| o.status.success());
+    assert!(
+        wasi || std::env::var_os("FWP_REQUIRE_WASM_RESOURCE_COUNTS").is_none(),
+        "required actual WASI reclamation evidence unavailable"
+    );
+    for opt in ["-O1", "-O2"] {
+        for (code, free, expected) in cases {
+            let code = format!(
+                "{observer}\n{code}\n{}",
+                fixture.replace("EXPECT_FREE", &free.to_string())
+            );
+            let exe = dir.join("reclaim");
+            fwp::cgen::compile_c(&format!("#define __wasm__ 1\n{code}"), &exe, opt).unwrap();
+            let out = Command::new(&exe).output().unwrap();
+            assert_eq!(
+                out.status.code(),
+                Some(expected),
+                "host {opt}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+            if wasi {
+                let wasm = dir.join("reclaim.wasm");
+                fwp::cgen::compile_for(&code, &wasm, opt, fwp::cgen::Target::Wasi).unwrap();
+                let out = Command::new("node")
+                    .arg("--no-warnings")
+                    .arg(
+                        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                            .join("tests/wasm/wasi-run.mjs"),
+                    )
+                    .arg(wasm)
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    out.status.code(),
+                    Some(expected),
+                    "WASI {opt}: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                );
+            }
         }
     }
 }

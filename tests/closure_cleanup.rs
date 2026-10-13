@@ -1,4 +1,5 @@
 //! Escaping closures transfer captures by type and keep retained aliases valid.
+#![cfg(unix)]
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
@@ -25,7 +26,6 @@ impl Drop for Scratch {
     }
 }
 
-#[cfg(unix)]
 #[test]
 fn deep_capture_cleanup_uses_bounded_c_stack() {
     use std::os::unix::process::ExitStatusExt;

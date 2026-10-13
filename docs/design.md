@@ -36,7 +36,7 @@ lex → parse (offside layout) → macro expansion → name collection
 | Primitives | A fixed set of primitives, implemented twice: in Rust (`src/prims_std.rs`, `src/web.rs`, `src/linalg.rs`, …) and in C (`runtime/fwp_rt*.c`). Everything else in the standard library is fwp code in `lib/` |
 | Polymorphism | Explicit and static: only a signature makes a definition generic, and whole-program monomorphization compiles each use to its own code. Traits resolve statically; there is no dictionary passing. Polymorphic recursion is rejected. See [Generics](#generics) |
 | Values on the stack | A record, variant or closure (a known function applied to fewer arguments than it takes) that does not escape lives in the C stack frame of the function that builds it: its local is read through fields, matched, copied with fields replaced, applied (which hands the function the closure's captured values, never the closure), or passed to a parameter that does not escape either (`src/escape.rs`, a fixed point over all functions), and never returned, stored, captured or given to a primitive. Its fields are on a stack the collector scans. The wrapper has no heap count slot; generated code tracks owned child references for eligible stack locals, aliases and consumed calls, and preserves their addresses through allocation. Unknown child types retain the fallback. A value the function builds is not passed to the function itself (a tail call becomes a jump that reuses the frame), while a parameter passed on to it may be (it lives in a caller's frame). `FWP_STACK=0` when compiling turns it off |
-| Memory | Native programs have a generational, non-moving mark-and-sweep collector with conservative roots (`runtime/fwp_rt_gc.c`, see [Runtime](#runtime)); with `--memory static` its heap, a `malloc` pool and every stack are mapped once at startup (`runtime/fwp_rt_static.c`, see [Static memory](reference.md#static-memory)); WebAssembly builds allocate from a bump heap that is never freed. The interpreter uses Rust reference counting |
+| Memory | Native programs have a generational, non-moving mark-and-sweep collector with conservative roots (`runtime/fwp_rt_gc.c`, see [Runtime](#runtime)); with `--memory static` its heap, a `malloc` pool and every stack are mapped once at startup (`runtime/fwp_rt_static.c`, see [Static memory](reference.md#static-memory)); WebAssembly builds free typed counted owners and retain unproved shared graphs. The interpreter uses Rust reference counting |
 
 `make { .field }` expands in the parser to the ordinary named selector field,
 including nominal builders. Nested and numeric selectors require an explicit
@@ -329,9 +329,9 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
   collects at every n-th allocation. `tests/gc.rs` runs every golden
   program with a collection at each allocation and `FWP_GC_VERIFY=1`,
   which checks each minor collection against a full trace from scratch
-  and stops at the first reachable object it did not mark. WebAssembly keeps
-  a bump allocator that never frees, because values in WebAssembly locals
-  are invisible to a stack scan; libraries (`--staticlib`, `--cdylib`)
+  and stops at the first reachable object it did not mark. WebAssembly frees
+  typed last-owner storage without tracing. Unproved shared graphs remain
+  retained because WebAssembly locals are invisible to a stack scan; libraries (`--staticlib`, `--cdylib`)
   use the collector's allocator but never collect, since the host's
   stacks are unknown. Linux finds program data segments with
   `dl_iterate_phdr`; the Darwin implementation finds the Mach-O image
@@ -507,7 +507,7 @@ Native File owners close at original frame boundaries independently of optional
 ordinary freeing. Inline paths use aligned leaf storage; constructor rollback
 closes streams and last-owner release removes library finalizers before freeing
 unshared headers. Shared headers keep compatibility lifetime. Actual WASI verifies
-logical aggregate/task resource counts; physical bump storage remains allocated.
+aggregate/task resource counts; typed last-owner storage is freed, while unproved shared graphs remain retained.
 
 HTTP/2 and gRPC owners protect metadata roots, dequeued/copied messages, status,
 encoding scratch, connections and inherited task contexts. TLS options/metadata

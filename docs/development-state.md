@@ -52,13 +52,34 @@ Windows DLL suffix and OpenSSL LLP64 signatures/socket errors. Loader and TCP
 readiness/shutdown unit tests exercise real OS operations. This does not yet
 port the generated C runtime or establish Windows support.
 
-Local guarded `cargo check --lib` and `cargo clippy --lib -- -D warnings`
-passed after fixing the first check's reference/import errors; guarded formatting
-passed. Full validation is on runners. The `windows` diagnostic suite now also
-links and executes platform unit tests and the interpreter. The `portability`
-suite runs compiler/unit, ARC, foreign-call and TLS regressions on the existing
-four native Linux/macOS combinations. Production runs defer while the PR is a
-draft and start on `ready_for_review`; skipped production jobs are not acceptance.
+Focused runner validation at `217d6da`:
+[portability 38439707405](https://github.com/e6qu/fun-with-pipes/actions/runs/38439707405)
+passed on macOS ARM64 and Linux ARM64; Intel macOS is running and Linux AMD64
+queued. [Windows 38439695491](https://github.com/e6qu/fun-with-pipes/actions/runs/38439695491)
+reached all-target checking on ARM64: the library compiled, then the Unix-only
+example process-group harness failed. Native handle/loader execution has not
+run yet. AMD64 is queued. The next patch ports that harness to Windows process
+groups/tree cleanup and native PATH separators.
+
+WebAssembly implementation in progress: value allocations now use reclaimable
+libc storage; typed last-owner destruction removes count metadata before freeing
+storage. Counted ownership is enabled for ordinary generated programs, while
+unproved shared graphs remain retained. Disabled freeing preserves storage and
+resource destruction still disposes metadata. The new test observes actual libc
+free across 10,000 cycles and 300 aliases, including a missing-free negative
+control and disabled-free control, on host and actual WASI. Full WASI goldens
+must pass before accepting this change. File-specific shared headers and cyclic
+runtime graphs remain separate boundaries, not collector-free claims.
+
+Local guarded `cargo check --lib`, `cargo clippy --lib -- -D warnings`, formatting
+and the roadmap audit passed (the audit now accepts `In progress`). An extracted
+actual non-GC allocator probe passed ASan/UBSan with the 10,000-cycle/300-alias
+workload; command: `python3 scripts/local-guard.py python3
+/private/tmp/fwp-wasm-allocator-check.py`. Its first source concatenation failed
+before execution and was corrected; this is not actual WASI evidence.
+Production runs defer while the PR is a draft and start on `ready_for_review`;
+skipped production jobs are not acceptance. Focused runner suites are `windows`,
+`portability` and `wasm` in `numerics.yml`.
 
 Use `python3 scripts/local-guard.py COMMAND...` for serial focused checks.
 Full builds, suites, benchmarks and large regeneration stay on GitHub runners.

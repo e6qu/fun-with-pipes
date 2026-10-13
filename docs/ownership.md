@@ -53,7 +53,7 @@ allocations before counting is needed.
 | AD tapes/kernel buffers | Scoped numeric owners with bounded reusable workspaces | Raw reverse-mode tape interfaces remain outside checked ARC |
 
 Tracing mode collects shared graphs; checked ARC rejects unproved shared
-boundaries. WebAssembly uses a bump allocator; native libraries do not trace
+boundaries. WebAssembly frees typed counted owners but retains unproved shared graphs; native libraries do not trace
 the host's unknown roots. `FWP_GC=off` disables collection without proving owner
 coverage. `--memory static` provisions bounded memory, not static lifetimes.
 Neither option establishes a general collector-free execution guarantee.
@@ -84,8 +84,8 @@ contract. Define how runtime cycles are broken before removing tracing.
 Immutable source values alone do not account for runtime cycles: a channel can
 queue a value containing that same channel. Closing must preserve queued values
 for later receives. Accepted regression controls verify explicit draining and typed destruction
-break the counted cycle. GC-off logical-count controls do not establish physical
-reclamation by the WebAssembly bump allocator. Losing
+break the counted cycle. Logical-count controls alone do not establish physical
+reclamation; the WebAssembly free-omission controls separately exercise it. Losing
 the last external handle without draining leaves an internal counted owner;
 this does not establish automatic cycle reclamation. Tracing-free eligibility
 therefore needs proved scoped/drained lifetimes or another explicit cycle policy;
