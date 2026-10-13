@@ -17,7 +17,8 @@ extern "C" Bits prefix##_ln(Bits value) { return prefix##_bits(tlfloat::log(std:
 extern "C" Bits prefix##_sin(Bits value) { return prefix##_bits(tlfloat::sin(std::bit_cast<Float>(value))); } \
 extern "C" Bits prefix##_cos(Bits value) { return prefix##_bits(tlfloat::cos(std::bit_cast<Float>(value))); } \
 extern "C" Bits prefix##_tan(Bits value) { return prefix##_bits(tlfloat::tan(std::bit_cast<Float>(value))); } \
-extern "C" Bits prefix##_pow(Bits a, Bits b) { return prefix##_bits(tlfloat::pow(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); }
+extern "C" Bits prefix##_pow(Bits a, Bits b) { return prefix##_bits(tlfloat::pow(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); } \
+extern "C" Bits prefix##_rem(Bits a, Bits b) { return prefix##_bits(tlfloat::fmod(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); }
 
 FWP_MATH_FORMAT(fwp_f16, tlfloat::Half, uint16_t, UINT16_C(0x7e00))
 FWP_MATH_FORMAT(fwp_bf16, tlfloat::BFloat16, uint16_t, UINT16_C(0x7fc0))

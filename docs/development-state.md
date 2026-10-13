@@ -133,16 +133,20 @@ configuration and zero-numerator normalization patch are vendored. C++20 templat
 use fixed-size integer storage; object inspection and C-driver linking found no
 allocator or C++ runtime dependencies locally. Build selection now supports
 `CXX` and target-specific `CXX_...`; WASI CI installs matching C++ headers.
-Fifteen standalone Rust tests pass, including all half/bfloat inputs against
+Sixteen standalone Rust tests pass, including all half/bfloat inputs against
 wider independent math and quad precision/range controls. The shared C caller
 passes normally and under ASan/UBSan. A permanent omitted-guard control must
 reproduce the upstream full-width-shift UB found during testing. Native/WASI
 runner validation of this new math core is still pending; language math has
 not switched representations yet.
+The scalar core also supplies truncating remainder, integral rounding with
+ties away from zero, bit-preserving sign operations, classification and IEEE
+total ordering. All half/bfloat integral-rounding inputs and full-precision
+quad remainder controls pass locally; the C caller also passes ASan/UBSan.
 
 Local checks passed under `python3 scripts/local-guard.py`: formatting, focused
 clippy for the affected compiler and integration targets, and standalone core
-checks. `python3 /private/tmp/fwp-test-softfloat-core.py` passed 15 tests including
+checks. `python3 /private/tmp/fwp-test-softfloat-core.py` passed 16 tests including
 all non-NaN half/bfloat text round-trips, quad bit patterns and boundary goldens,
 independent Rust F32/F64 decimal oracles and concurrent conversion scopes.
 `python3 /private/tmp/fwp-float-text-check.py` passed the actual shared C core
@@ -193,10 +197,13 @@ are still running/queued.
 
 ## Next action
 
-Next: publish and validate the format-specific math core with `windows`, `wasm`
-and `portability`; fix any failures in those or the ongoing full CI runs.
+The math head `412a813` is published with focused
+[Windows 38455258725](https://github.com/e6qu/fun-with-pipes/actions/runs/38455258725),
+[WASI 38455262012](https://github.com/e6qu/fun-with-pipes/actions/runs/38455262012)
+and [portability 38455264989](https://github.com/e6qu/fun-with-pipes/actions/runs/38455264989)
+queued. Fix any failures in those or the ongoing full CI runs.
 
-Then integrate the exact formats with language values/literals,
+Next: integrate the exact formats with language values,
 native arrays/workers and protocol versioning. Continue the generated C Windows
 task/resource/network port and PE packaging, broader ownership/worker proofs,
 and nested reverse mode/checkpointing with measured layout improvements.

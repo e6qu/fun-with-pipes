@@ -12,7 +12,7 @@ const PROBE: &str = r#"
 typedef struct { uint64_t words[2]; } Quad;
 #define DECLARE(prefix, Bits) \
 Bits prefix##_exp(Bits); Bits prefix##_ln(Bits); Bits prefix##_sin(Bits); \
-Bits prefix##_cos(Bits); Bits prefix##_tan(Bits); Bits prefix##_pow(Bits, Bits);
+Bits prefix##_cos(Bits); Bits prefix##_tan(Bits); Bits prefix##_pow(Bits, Bits); Bits prefix##_rem(Bits, Bits);
 DECLARE(fwp_f16, uint16_t)
 DECLARE(fwp_bf16, uint16_t)
 DECLARE(fwp_f128, Quad)
@@ -41,6 +41,11 @@ int main(void) {
     if (fwp_f16_tan(0x8000) != 0x8000 || fwp_bf16_tan(0x8000) != 0x8000) return 20;
     if (fwp_f16_cos(0) != 0x3c00 || fwp_bf16_cos(0) != 0x3f80) return 21;
     if (fwp_f16_pow(0x4000, 0x4200) != 0x4800 || fwp_bf16_pow(0x4000, 0x4040) != 0x4100) return 22;
+    if (fwp_f16_rem(0x4700, 0x4400) != 0x4200 || fwp_bf16_rem(0x40e0, 0x4080) != 0x4040) return 23;
+    Quad big = {{1, UINT64_C(0x4063000000000000)}}, three = {{0, UINT64_C(0x4000800000000000)}};
+    /* big is 2^100 + 2^-12: distinguish full quad mantissa from host double. */
+    x = fwp_f128_rem(big, three);
+    if (x.words[0] || x.words[1] != UINT64_C(0x3fff001000000000)) return 24;
     return 0;
 }
 "#;

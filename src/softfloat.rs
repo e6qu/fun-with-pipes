@@ -1,6 +1,6 @@
 //! Portable IEEE binary16/binary128 arithmetic. Language integration is separate
 //! from this bit-level core; no host extended-float representation is assumed.
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 /// The same portable core, available to the C backend and target ABI tests.
 pub const C_SOURCE: &str = include_str!(concat!(env!("OUT_DIR"), "/softfloat.c"));
@@ -27,6 +27,11 @@ struct Binary32(u32);
 struct Binary64(u64);
 
 extern "C" {
+    fn f16_roundToInt(value: Binary16, mode: u8, exact: bool) -> Binary16;
+    fn f128_roundToInt(value: Binary128, mode: u8, exact: bool) -> Binary128;
+    fn fwp_f16_rem(a: u16, b: u16) -> u16;
+    fn fwp_bf16_rem(a: u16, b: u16) -> u16;
+    fn fwp_f128_rem(a: Binary128, b: Binary128) -> Binary128;
     fn fwp_u128_to_f128(low: u64, high: u64) -> Binary128;
     fn fwp_u128_to_f16(low: u64, high: u64) -> u16;
     fn fwp_u128_to_bf16(low: u64, high: u64) -> u16;
@@ -62,7 +67,87 @@ extern "C" {
     fn f64_to_f128(a: Binary64) -> Binary128;
 }
 
+// Explicit ABI values from SoftFloat's rounding-mode enum. Language `round`
+// uses ties away from zero; ordinary arithmetic uses nearest, ties to even.
+const ROUND_DOWN: u8 = 2;
+const ROUND_UP: u8 = 3;
+const ROUND_NEAREST_AWAY: u8 = 4;
+
+macro_rules! float_bits {
+    ($ty:ty, $bits:ty, $sign:expr, $infinity:expr) => {
+        impl $ty {
+            pub fn abs(self) -> Self {
+                Self::from_bits(self.to_bits() & !$sign)
+            }
+            pub fn is_nan(self) -> bool {
+                (self.to_bits() & !$sign) > $infinity
+            }
+            pub fn is_infinite(self) -> bool {
+                (self.to_bits() & !$sign) == $infinity
+            }
+            pub fn is_finite(self) -> bool {
+                (self.to_bits() & !$sign) < $infinity
+            }
+            pub fn is_sign_negative(self) -> bool {
+                self.to_bits() & $sign != 0
+            }
+            pub fn total_cmp(self, other: Self) -> std::cmp::Ordering {
+                let key = |bits: $bits| {
+                    if bits & $sign != 0 {
+                        !bits
+                    } else {
+                        bits ^ $sign
+                    }
+                };
+                key(self.to_bits()).cmp(&key(other.to_bits()))
+            }
+        }
+        impl Neg for $ty {
+            type Output = Self;
+            fn neg(self) -> Self {
+                Self::from_bits(self.to_bits() ^ $sign)
+            }
+        }
+    };
+}
+float_bits!(
+    Binary128,
+    u128,
+    1u128 << 127,
+    0x7fff0000000000000000000000000000
+);
+float_bits!(Binary16, u16, 0x8000u16, 0x7c00);
+float_bits!(BFloat16, u16, 0x8000u16, 0x7f80);
+
+impl Rem for Binary128 {
+    type Output = Self;
+    fn rem(self, other: Self) -> Self {
+        unsafe { fwp_f128_rem(self, other) }
+    }
+}
+impl Rem for Binary16 {
+    type Output = Self;
+    fn rem(self, other: Self) -> Self {
+        Self(unsafe { fwp_f16_rem(self.0, other.0) })
+    }
+}
+impl Rem for BFloat16 {
+    type Output = Self;
+    fn rem(self, other: Self) -> Self {
+        Self(unsafe { fwp_bf16_rem(self.0, other.0) })
+    }
+}
+
 impl Binary128 {
+    pub fn floor(self) -> Self {
+        unsafe { f128_roundToInt(self, ROUND_DOWN, false) }
+    }
+    pub fn ceil(self) -> Self {
+        unsafe { f128_roundToInt(self, ROUND_UP, false) }
+    }
+    pub fn round(self) -> Self {
+        unsafe { f128_roundToInt(self, ROUND_NEAREST_AWAY, false) }
+    }
     pub fn from_u128(value: u128) -> Self {
         unsafe { fwp_u128_to_f128(value as u64, (value >> 64) as u64) }
     }
@@ -130,6 +215,15 @@ impl Binary128 {
 }
 
 impl Binary16 {
+    pub fn floor(self) -> Self {
+        unsafe { f16_roundToInt(self, ROUND_DOWN, false) }
+    }
+    pub fn ceil(self) -> Self {
+        unsafe { f16_roundToInt(self, ROUND_UP, false) }
+    }
+    pub fn round(self) -> Self {
+        unsafe { f16_roundToInt(self, ROUND_NEAREST_AWAY, false) }
+    }
     pub fn from_u128(value: u128) -> Self {
         Self(unsafe { fwp_u128_to_f16(value as u64, (value >> 64) as u64) })
     }
@@ -152,6 +246,18 @@ impl Binary16 {
 }
 
 impl BFloat16 {
+    // Bfloat values with a fractional part have at most seven integral bits;
+    // their rounded integer fits bfloat exactly. Wider bfloat values already
+    // are integral, so this widening introduces no intermediate rounding.
+    pub fn floor(self) -> Self {
+        Self::from_quad(self.to_quad().floor())
+    }
+    pub fn ceil(self) -> Self {
+        Self::from_quad(self.to_quad().ceil())
+    }
+    pub fn round(self) -> Self {
+        Self::from_quad(self.to_quad().round())
+    }
     pub fn from_u128(value: u128) -> Self {
         Self(unsafe { fwp_u128_to_bf16(value as u64, (value >> 64) as u64) })
     }
@@ -301,6 +407,69 @@ transcendental_ops!(
 mod tests {
     use super::Binary128 as Q;
     const ONE: u128 = 0x3fff_0000_0000_0000_0000_0000_0000_0000;
+
+    #[test]
+    fn integral_rounding_remainder_and_bit_order_preserve_language_rules() {
+        use super::{BFloat16 as B, Binary16 as H};
+        use std::cmp::Ordering::*;
+        assert_eq!(Q::from_f64(2.5).round(), Q::from_f64(3.0));
+        assert_eq!(Q::from_f64(-2.5).round(), Q::from_f64(-3.0));
+        assert_eq!(Q::from_f64(-0.5).ceil().to_bits(), 1 << 127);
+        assert_eq!(Q::from_f64(-0.5).floor(), Q::from_f64(-1.0));
+        assert_eq!((Q::from_f64(7.0) % Q::from_f64(4.0)), Q::from_f64(3.0));
+        assert_eq!(
+            (Q::from_u128((1 << 100) + 1) % Q::from_f64(3.0)),
+            Q::from_f64(2.0)
+        );
+        assert_eq!(
+            (H::from_bits(0x4700) % H::from_bits(0x4400)).to_bits(),
+            0x4200
+        );
+        assert_eq!(
+            (B::from_bits(0x40e0) % B::from_bits(0x4080)).to_bits(),
+            0x4040
+        );
+        assert_eq!(Q::from_bits(1 << 127).total_cmp(Q::from_bits(0)), Less);
+        let payload = 0x7fff0000000000000000000000001234;
+        assert!((-Q::from_bits(payload)).is_sign_negative());
+        assert_eq!((-Q::from_bits(payload)).abs().to_bits(), payload);
+        for bits in 0u16..=u16::MAX {
+            let h = H::from_bits(bits);
+            let b = B::from_bits(bits);
+            assert_eq!(h.is_nan(), h.to_quad().to_f64().is_nan());
+            assert_eq!(b.is_finite(), b.to_quad().to_f64().is_finite());
+            if !h.is_nan() {
+                let x = h.to_quad().to_f64();
+                assert_eq!(
+                    h.floor().to_bits(),
+                    H::from_quad(Q::from_f64(x.floor())).to_bits()
+                );
+                assert_eq!(
+                    h.ceil().to_bits(),
+                    H::from_quad(Q::from_f64(x.ceil())).to_bits()
+                );
+                assert_eq!(
+                    h.round().to_bits(),
+                    H::from_quad(Q::from_f64(x.round())).to_bits()
+                );
+            }
+            if !b.is_nan() {
+                let x = b.to_quad().to_f64();
+                assert_eq!(
+                    b.floor().to_bits(),
+                    B::from_quad(Q::from_f64(x.floor())).to_bits()
+                );
+                assert_eq!(
+                    b.ceil().to_bits(),
+                    B::from_quad(Q::from_f64(x.ceil())).to_bits()
+                );
+                assert_eq!(
+                    b.round().to_bits(),
+                    B::from_quad(Q::from_f64(x.round())).to_bits()
+                );
+            }
+        }
+    }
 
     #[test]
     fn transcendentals_retain_the_declared_precision_and_range() {
