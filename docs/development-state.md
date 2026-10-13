@@ -1,20 +1,21 @@
 # Session handoff
 
-Updated 2026-10-13. Complete all six directions in [PLAN](../PLAN.md) together
-on `ownership-formats-windows`, [PR #134](https://github.com/e6qu/fun-with-pipes/pull/134).
-The PR is a draft. Publication, fixes and squash merge after passing final-head
-CI are authorized. Every commit has one line, at most 80 characters, with no
-body, trailers or attribution. Keep working while CI queues; failures are work
-to fix. Do not merge this unfinished bundle.
+Updated 2026-10-14. The user merged [PR #134](https://github.com/e6qu/fun-with-pipes/pull/134).
+Continue the remaining directions in [PLAN](../PLAN.md) from that merged baseline
+on `roadmap-after-134`. No follow-up PR is open yet. Publication, fixes and squash
+merge after passing final-head CI remain authorized. Every commit has one line,
+at most 80 characters, with no body, trailers or attribution. Failing tests are
+work to fix; queued CI gates merging, not implementation.
 
 ## Baseline and scope
 
-PR #133 is accepted at `d14ec10d24765c2686dc4cfb0798012611c02a61`, with a tree
-identical to tested head `70de849771aff10a3af938746c82f9b975bc989b`. All seven
-production, four preflight and documentation jobs passed.
-[History](roadmap-history.md) retains exact trees, runs and measurements.
-Linux/macOS ARM64/AMD64 packages are accepted. Native Windows and real half/quad
-language representations remain work in this bundle.
+PR #134 merged as `5c0287c959ad705a6ceefebe83346015cb23fff5`; tree
+`f6f70ed9e41cde021ba223241f59b7cee745b4b0` equals tested head
+`29b48c31a7012c941d0bc555ee51d12c2c594b0b`. All seven Linux/macOS production
+jobs and documentation passed. [History](roadmap-history.md#pr-134-merge-closeout)
+records exact runs. The merge delivers the implemented subset, not completion
+of the original six-item scope. Linux/macOS ARM64/AMD64 packages remain supported;
+full Windows and true half/quad language formats remain unfinished.
 
 ## Active bundle
 
@@ -65,46 +66,46 @@ an unsuffixed decimal String, with matching validation/rendering in both engines
 The public macro API change is documented. `float_literals` checks formatting,
 macro expansion and raw/native O1/O2 behavior at a known F32 rounding boundary.
 
-## CI repairs and current validation
+## Validation
 
-Published code head: `5bad4a6`.
+- All seven final-head production jobs passed in
+  [38460359221](https://github.com/e6qu/fun-with-pipes/actions/runs/38460359221):
+  Linux ARM64/AMD64, regular and GC-stress macOS ARM/Intel, and bench.
+  [Final-head docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38458685467)
+  also passed. The merged tree is identical to this tested tree.
+- All four focused repair jobs passed at `5bad4a6` in
+  [38458280091](https://github.com/e6qu/fun-with-pipes/actions/runs/38458280091),
+  including the corrected raw/native child-signal status assertions.
+- Both native Windows diagnostic jobs passed at `02a802d` in
+  [38457143007](https://github.com/e6qu/fun-with-pipes/actions/runs/38457143007).
+  These cover Rust/compiler/socket/DLL, exact math C ABI, allocator and interpreter
+  goldens; they do not establish the unfinished Windows C runtime or packages.
+- Both focused WASI jobs passed at `412a813` in
+  [38455262012](https://github.com/e6qu/fun-with-pipes/actions/runs/38455262012),
+  including math C ABI, resource controls and full goldens. Final production CI
+  also passed its required WebAssembly checks.
 
-- `02a802d` fixes the Windows math build by explicitly including `<type_traits>`.
-  Both native Windows jobs passed in
-  [38457143007](https://github.com/e6qu/fun-with-pipes/actions/runs/38457143007),
-  including compiler, socket/DLL, exact Rust/C math, allocator and all interpreter
-  golden outputs/statuses. This is focused acceptance, not full Windows support.
-- `5bad4a6` fixes the signal-status regression assertion exposed by the ARM macOS
-  second shard in [full CI 38453295129](https://github.com/e6qu/fun-with-pipes/actions/runs/38453295129).
-  The helper returns stdout/stderr plus the outer exit status; both engine
-  assertions now expect `137\ncode=0`. The raw/native test runs early in
-  [four-platform repair validation 38458280091](https://github.com/e6qu/fun-with-pipes/actions/runs/38458280091).
-  Those repair jobs are queued; their results still need checking.
-- Math WASI compilation, C ABI/resource controls and full goldens passed on both
-  architectures at `412a813` in
-  [38455262012](https://github.com/e6qu/fun-with-pipes/actions/runs/38455262012).
-  Linux ARM64 portability passed at the same head in
-  [38455264989](https://github.com/e6qu/fun-with-pipes/actions/runs/38455264989);
-  remaining jobs in that older run are still running/queued.
-- The retained full matrix at `ebaff5a` continues; its known CLI assertion failure
-  is fixed on the branch, but the failed old head is not a passing gate. An older
-  duplicate matrix was cancelled to release runner capacity; details are in history.
+Merge-closeout local check passed: `python3 scripts/local-guard.py python3
+scripts/check-roadmap.py` (48 doc link sets, 106 immutable anchors, six plan
+steps and commit-message checks).
 
-Focused local checks passed under `python3 scripts/local-guard.py`:
-`cargo check --lib`, `cargo check --test cli`, `cargo fmt --all -- --check`,
-`python3 scripts/check-roadmap.py`, and
-`python3 /private/tmp/fwp-float-math-check.py` (C linking, dependency inspection,
-ASan/UBSan). The permanent tests retain these checks for runners. Preserve the
-64 GiB free-disk, 2 GiB target, 1 GiB RSS and 180-second local limits. Do not use
-the stale local compiler as an oracle; full builds/suites/benchmarks stay on CI.
+The known Windows header, sharder, WASI loader and CLI assertion failures are
+fixed. Older failures/cancellations remain historical evidence, not current next
+actions. Full builds/suites/benchmarks stay on runners. Local checks must use
+`python3 scripts/local-guard.py` and retain the 64 GiB free-disk, 2 GiB target,
+1 GiB RSS and 180-second limits. Do not use the stale local compiler as an oracle.
 
 ## Next action
 
-Next: check the four-platform repair run and remaining full CI; fix further failures.
-Then continue the coordinated exact-format integration, complete the Windows C
-runtime and packages, and finish the remaining ownership/worker and nested-AD
-acceptance rows. All six remain in this same PR. During implementation use
-focused dispatched checks and cancel superseded duplicate work when appropriate.
-Once complete, mark the PR ready and require all existing Linux/macOS production
-jobs, added Windows acceptance jobs and docs on the final head before squash.
-Skipped, cancelled or superseded runs do not establish that gate.
+Next: integrate the already-tested exact-format cores with language values,
+native arrays/workers, ownership/foreign ABI, text and a versioned protocol
+migration. Keep interpreter/native agreement and direct rounding throughout.
+Then complete the Windows C runtime and PE packages, broader ownership/worker
+proofs, and nested reverse differentiation/checkpointing with measured layout
+improvements. Documentation closeout is complete; five implementation areas
+remain. Do not replay the merged core/fusion/reclamation work.
+
+Use focused dispatched checks during implementation. Require all Linux/macOS
+production jobs, added Windows acceptance jobs and docs on the final follow-up
+head before squash. Skipped, cancelled or superseded runs do not establish that
+gate. No universal GC-free, allocation-free or C/Rust speed claim is justified.

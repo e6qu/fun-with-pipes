@@ -162,8 +162,8 @@ future directions, not claimed deliveries of this bundle.
 ## PR #134 development evidence (not final acceptance)
 
 These focused runs establish the listed boundaries on their recorded heads.
-The six-item bundle remains unfinished; use [the handoff](development-state.md)
-for current failures and next actions. No row replaces final-head production CI.
+PR #134 later merged the implemented subset; the six directions remain
+unfinished. Use [the handoff](development-state.md) for current next actions. No row replaces final-head production CI.
 
 | Head | Passed evidence | Boundary |
 |---|---|---|
@@ -209,3 +209,23 @@ Permanent native/WASI controls live in `tests/softfloat_core.rs`,
 `tests/float_math.rs`, `tests/float_literals.rs` and the ownership tests; temporary
 helpers are not required repository dependencies. Formatting, focused clippy,
 sharder regressions and roadmap audits passed. Full builds stayed on runners.
+
+
+## PR #134 merge closeout
+
+Merged by the user on 2026-10-13 at 21:40 UTC (2026-10-14 locally) as
+`5c0287c959ad705a6ceefebe83346015cb23fff5`. Tree
+`f6f70ed9e41cde021ba223241f59b7cee745b4b0` equals tested head
+`29b48c31a7012c941d0bc555ee51d12c2c594b0b`. All seven
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38460359221)
+and [final-head docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38458685467)
+passed. All four [focused repair jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38458280091)
+passed at `5bad4a6`. The squash subject is the single line
+`Expand ownership and numeric formats across native platforms (#134)`.
+
+This accepts the implemented scalar foreign ARC, typed WASM/File reclamation,
+direct iterate fusion, decimal-preserving syntax, exact-format software cores,
+and Windows interpreter/allocator foundations. It does not complete full Windows
+support, true half/quad language representations, remaining managed foreign and
+callback ownership, broader worker specialization, or nested reverse AD and
+checkpointing. These five implementation areas carry forward in PLAN.
