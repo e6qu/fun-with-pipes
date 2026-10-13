@@ -981,26 +981,25 @@ static int fwp_jt_read_inner(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *o
     case K_U64: return fwp_jt_int(c, r, K_U64, d->name, out);
     case K_U128: return fwp_jt_int(c, r, K_U128, "U128", out);
     case K_TINT: case K_TRIT: {
-        V x;
-        fwp_buf saved = c->err;
-        c->err = (fwp_buf){0};
-        int ok = fwp_jt_int(c, r, K_I128, "I128", &x);
-        free(c->err.d);
-        c->err = saved;
-        if (!ok) return fwp_jt_expected(c, "an integer", r);
-        i128 v = fwp_i128(x);
-        fwp_mem_free((void *)(uintptr_t)x);
+        const char *s;
+        size_t n;
+        int neg;
+        u128 mag;
+        /* Preserve the signed-128 input boundary without a temporary box. */
+        if (!fwp_jt_numtext(r, &s, &n) || fwp_jt_exact(s, n, &neg, &mag) != 1 ||
+            mag > ((u128)1 << 127) - (neg ? 0 : 1))
+            return fwp_jt_expected(c, "an integer", r);
         int w = d->kind == K_TRIT ? 1 : (d->width > 40 ? 40 : d->width);
         i128 max = 1;
         for (int i = 0; i < w; i++) max *= 3;
         max = (max - 1) / 2;
-        if (v > max || v < -max) {
+        if (mag > (u128)max) {
             char ty[32];
             if (d->kind == K_TRIT) snprintf(ty, sizeof ty, "Trit");
             else snprintf(ty, sizeof ty, "TInt[%d]", d->width);
             return fwp_jt_range(c, r, ty);
         }
-        *out = (V)(int64_t)v;
+        *out = (V)(neg ? -(int64_t)mag : (int64_t)mag);
         return 1;
     }
     case K_F32: case K_F64: {

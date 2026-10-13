@@ -783,7 +783,7 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
                 .map_err(|_| expected(path, "an integer", r))?
                 .as_i128()
                 .unwrap_or(0);
-            if v.abs() > max {
+            if v < -max || v > max {
                 return Err(format!(
                     "{}: {} is out of range for TInt[{}]",
                     path,
@@ -798,7 +798,7 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
                 .map_err(|_| expected(path, "an integer", r))?
                 .as_i128()
                 .unwrap_or(0);
-            if v.abs() > 1 {
+            if !(-1..=1).contains(&v) {
                 return Err(format!("{}: {} is out of range for Trit", path, got(r)));
             }
             Value::Trit(v as i8)

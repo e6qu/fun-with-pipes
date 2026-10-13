@@ -48,10 +48,16 @@ bench, regular ARM/Intel macOS and ARM macOS GC, but Linux ARM exposed an
 invalid free in the WASI `cli_csv` golden. Enum error choices used managed
 bump-heap storage as scratch. The current fix writes choices into a registered
 scratch buffer and appends help choices directly, removing the temporary
-managed allocation. The early bundle checks now require actual WASI golden
+managed allocation. The same allocator audit found a temporary I128 box in
+Trit/TInt JSON decoding. It now parses the exact scalar directly, preserving
+the signed-128 input boundary. Interpreter range checks also avoid overflowing
+`abs` on I128 minimum. The expanded `json_typed` golden covers fractional,
+negative/exponent, ternary range and signed-128 boundary inputs in both engines.
+The early bundle checks now require actual WASI golden
 programs on both Linux architectures; production requires them too. This
 supersedes that production run. All seven jobs and docs must pass again on the
-new PR head. The earlier stride-assertion failure in 38401077491 was already
+new PR head. The short 59cd3f7 runs were superseded by the complete allocator
+fix before acceptance. The earlier stride-assertion failure in 38401077491 was already
 fixed; cancelled or superseded runs are not merge gates.
 
 Measured 1000-element requests: fold 6005 → 6, State each 7009 → 8,
@@ -69,7 +75,10 @@ and bounded generated-C protocol/packing and stack probes. The protocol probe
 covers both packing modes at O1/O2 with stress/verification. A bounded generated-C enum probe
 (`python3 scripts/local-guard.py python3 /private/tmp/fwp-wasi-choice-probe.py`)
 passed O1/O2 for native and host bump allocators; the pre-fix interior bump
-allocation aborts in both modes as a negative control. Actual WASI execution
+allocation aborts at both optimization levels as a negative control. The
+matching guarded `/private/tmp/fwp-json-trits-probe.py` passes O1/O2 native and
+bump boundary checks, verifies zero managed temporaries and reproduces the
+pre-fix invalid free. Actual WASI execution
 remains a runner check. Local target data
 is about 112 MiB and free disk about 104 GiB. Full builds/suites remain on CI.
 
