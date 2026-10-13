@@ -62,7 +62,7 @@ def check_handoff():
     assert planned and [number for number, _ in rows] == planned, "plan/handoff steps differ"
     assert len(set(planned)) == len(planned), "duplicate plan step"
     for number, status in rows:
-        assert status.strip() in {"Pending", "Implemented", "Verified"}, (number, status)
+        assert status.strip() in {"Pending", "In progress", "Implemented", "Verified"}, (number, status)
     assert "Next:" in state, "handoff needs a concrete next action"
     return len(rows)
 
