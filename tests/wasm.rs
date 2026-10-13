@@ -64,6 +64,10 @@ fn build(path: &Path, target: &str, out: &Path) -> std::process::Output {
 #[test]
 fn golden_programs_under_wasi() {
     if !available() {
+        assert!(
+            std::env::var_os("FWP_REQUIRE_WASI_GOLDENS").is_none(),
+            "WASI golden programs require clang wasm32-wasi and node"
+        );
         return;
     }
     let mut ran = Vec::new();

@@ -2,7 +2,7 @@
 
 Updated 2026-10-13. The user authorized all seven steps in [PLAN](../PLAN.md)
 as one combined [PR #133](https://github.com/e6qu/fun-with-pipes/pull/133).
-This is its final implementation handoff. The PR checks and merge record are
+This is its current implementation and validation handoff. The PR checks and merge record are
 the acceptance authority: require all seven exact-head production jobs and
 the documentation audit before squash merge. Commit messages have one line,
 at most 80 characters, no body, trailers or attribution.
@@ -38,19 +38,21 @@ and the [measurement record](measurements/reconstruction-and-workers-2026-10-13.
 retain source heads, run links, hardware, compiler/flags, allocations, live bytes
 and measurement limits. Focused regression and iteration stages passed all four
 native platforms at 08f4231. Corrected wide measurements passed all four at
-45ed2ce, whose compiler/runtime sources are identical. The numerical run
-38401073468 passed Linux ARM64/AMD64 and ARM macOS at this snapshot; Intel macOS
-was still running. Its final result remains available at the linked run.
+45ed2ce, whose compiler/runtime sources are identical. Numerical run
+38401073468 passed all four platforms. Evidence run 38406723936 also passed
+all four at 615e224: malformed Trit/TInt binary rejection, partial-owner
+cleanup, packed/unpacked assertions and cold overflow formatting.
 
-Final code is 615e224: malformed Trit/TInt binary rejection in both engines,
-partial-owner rejection cleanup, a stride-aware packed/unpacked test assertion,
-and cold/noinline overflow formatting. Four-platform evidence run 38406723936
-validates these changes and records worker stack usage. Later changes in this
-candidate are documentation only. The earlier production run 38401077491
-passed bench and ARM macOS GC but exposed the now-fixed stride assertion; it
-was superseded and is not a merge gate. Require the replacement full run on
-this PR's final head, including both Linux jobs, bench and regular/GC shards
-on both macOS architectures.
+Production run 38407820810 on c1f8283 (documentation after 615e224) passed
+bench, regular ARM/Intel macOS and ARM macOS GC, but Linux ARM exposed an
+invalid free in the WASI `cli_csv` golden. Enum error choices used managed
+bump-heap storage as scratch. The current fix writes choices into a registered
+scratch buffer and appends help choices directly, removing the temporary
+managed allocation. The early bundle checks now require actual WASI golden
+programs on both Linux architectures; production requires them too. This
+supersedes that production run. All seven jobs and docs must pass again on the
+new PR head. The earlier stride-assertion failure in 38401077491 was already
+fixed; cancelled or superseded runs are not merge gates.
 
 Measured 1000-element requests: fold 6005 → 6, State each 7009 → 8,
 map/filter/fold 9511 → 6. Both 256-element wide workloads: requests 513 → 2,
@@ -64,13 +66,17 @@ Focused local checks passed through `python3 scripts/local-guard.py`:
 `cargo clippy --all-targets -- -D warnings`, `cargo fmt --all -- --check`,
 Python syntax validation of the wide measurement script, roadmap/link audit,
 and bounded generated-C protocol/packing and stack probes. The protocol probe
-covers both packing modes at O1/O2 with stress/verification. Local target data
+covers both packing modes at O1/O2 with stress/verification. A bounded generated-C enum probe
+(`python3 scripts/local-guard.py python3 /private/tmp/fwp-wasi-choice-probe.py`)
+passed O1/O2 for native and host bump allocators; the pre-fix interior bump
+allocation aborts in both modes as a negative control. Actual WASI execution
+remains a runner check. Local target data
 is about 112 MiB and free disk about 104 GiB. Full builds/suites remain on CI.
 
 ## Resume and finish
 
-Next: inspect PR #133 and its exact head. If open, collect final-fix and remaining
-numerical results, fix every failure, and require all seven production jobs plus
+Next: inspect PR #133 and its exact head. If open, collect the WASI-fix preflight and replacement full
+production results, fix every failure, and require all seven production jobs plus
 docs on the latest head. Keep fixes in this PR; publish branch
 `ownership-numerics-next`. Temporary `ownership-numerics-evidence` is only a
 measurement branch, not another delivery. Squash with one explicit subject of

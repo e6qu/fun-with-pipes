@@ -120,9 +120,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - name: OpenSSL on Linux
+      - uses: actions/setup-node@v4
+        if: inputs.suite == 'bundle' && runner.os == 'Linux'
+        with:
+          node-version: 24
+      - name: Linux toolchains
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang libssl-dev
+        run: sudo apt-get update && sudo apt-get install -y clang lld libssl-dev wasi-libc libclang-rt-18-dev-wasm32
       - name: OpenSSL on macOS
         if: runner.os == 'macOS'
         run: |
@@ -136,6 +140,11 @@ jobs:
       - name: Focused bundle regressions
         if: inputs.suite == 'bundle'
         run: cargo test --no-fail-fast --lib --test protocol --test wide_workers --test decoder_partial --test arc_extensions --test arc_execution --test iteration_consumers --test iterator_fusion --test http2_body_roots --test list_generation_ownership --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace
+      - name: Actual WASI golden programs
+        if: inputs.suite == 'bundle' && runner.os == 'Linux'
+        env:
+          FWP_REQUIRE_WASI_GOLDENS: 1
+        run: cargo test --test wasm golden_programs_under_wasi
       - name: GCC conservative-root omission control
         if: inputs.suite == 'bundle' && runner.os == 'Linux'
         run: CC=gcc cargo test --test http2_body_roots

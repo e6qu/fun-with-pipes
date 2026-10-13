@@ -594,13 +594,11 @@ static void fwp_loose(fwp_buf *b, const char *s, size_t n) {
 }
 
 /* the values of an enumeration: "json, text, csv" */
-static V fwp_choices(const fwp_desc *d) {
-    fwp_buf b = {0};
+static void fwp_choices(fwp_buf *b, const fwp_desc *d) {
     for (int i = 0; i < d->n; i++) {
-        if (i) buf_puts(&b, ", ");
-        fwp_kebab(&b, d->names[i]);
+        if (i) buf_puts(b, ", ");
+        fwp_kebab(b, d->names[i]);
     }
-    return buf_to_str(&b);
 }
 
 /* A value on the command line (src/cli.rs parse_value): 1, or 0 with
@@ -617,11 +615,11 @@ static int fwp_cli_value(const char *t, size_t n, const fwp_desc *d, const char 
         free(a.d);
         free(c.d);
         if (tag >= 0) { *out = (V)tag; return 1; }
-        V cs = fwp_choices(d);
-        V *scratch = (V *)(uintptr_t)cs;
-        fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_scratch_release, &scratch);
-        *err = fwp_strf("`%.*s` is not one of %s", (int)n, t, STR(cs)->d);
-        fwp_cleanup_pop(&cleanup); fwp_scratch_release(&scratch);
+        fwp_buf choices = {0};
+        fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &choices);
+        fwp_choices(&choices, d);
+        *err = fwp_strf("`%.*s` is not one of %s", (int)n, t, choices.d ? choices.d : "");
+        fwp_cleanup_pop(&cleanup); fwp_buf_release(&choices);
         return 0;
     }
     if (fwp_parse_text(t, n, d, out)) return 1;
@@ -845,9 +843,8 @@ static void fwp_flag_help(fwp_buf *b, const fwp_flag *f, V note) {
         if (t.len) buf_putc(&t, ' ');
         buf_putc(&t, '(');
         if (enm) {
-            V cs = fwp_choices(f->value);
             buf_puts(&t, "one of: ");
-            buf_put(&t, STR(cs)->d, STR(cs)->len);
+            fwp_choices(&t, f->value);
             if (note || f->kind == FL_REPEATED || f->post) buf_puts(&t, "; ");
         }
         if (f->kind == FL_REPEATED) buf_puts(&t, note ? "repeatable; default: " : "repeatable");
