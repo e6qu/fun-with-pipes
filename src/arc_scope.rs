@@ -248,7 +248,8 @@ impl Proof<'_> {
                         Ok(Targets::new())
                     }
                     _ => {
-                        let value = self.apply(&args[0], &[self.state_values.clone()], scoped)?;
+                        let state = self.state_values.clone();
+                        let value = self.apply(&args[0], std::slice::from_ref(&state), scoped)?;
                         self.changed |= join(&mut self.state_values, &value);
                         Ok(Targets::new())
                     }
