@@ -105,9 +105,18 @@ and F128 as F64 until the coordinated migration is implemented and verified.
 Transcendentals, literal/value integration, descriptors/arrays/ABI and versioned
 protocol migration remain outstanding.
 
+The shared core now converts full-width unsigned/signed integers to binary128
+and unsigned integers directly to half/bfloat without double rounding. Checked
+float-to-integer extraction preserves truncation-before-range-check semantics,
+and numeric comparison distinguishes IEEE zero/NaN behavior from raw-bit equality.
+Local Rust controls compare integer conversions with independent decimal
+conversion and include a bfloat midpoint where narrowing an already-rounded
+quad produces the wrong result. The shared native/WASI C probe carries the same
+boundary controls; their new runner acceptance is still pending.
+
 Local checks passed under `python3 scripts/local-guard.py`: formatting, focused
 clippy for the affected compiler and integration targets, and standalone core
-checks. `python3 /private/tmp/fwp-test-softfloat-core.py` passed 11 tests including
+checks. `python3 /private/tmp/fwp-test-softfloat-core.py` passed 13 tests including
 all non-NaN half/bfloat text round-trips, quad bit patterns and boundary goldens,
 independent Rust F32/F64 decimal oracles and concurrent conversion scopes.
 `python3 /private/tmp/fwp-float-text-check.py` passed the actual shared C core
@@ -134,6 +143,16 @@ Cargo-managed dependencies without removing any test targets. Guarded shard
 regressions (3 tests), formatting and library clippy passed locally. All runner
 failures remain unresolved until the corrected code passes; the earlier focused
 successes are not final-head acceptance.
+
+Published CI fixes are at `55b86f2`: full CI
+[38450820067](https://github.com/e6qu/fun-with-pipes/actions/runs/38450820067),
+Windows [38450846100](https://github.com/e6qu/fun-with-pipes/actions/runs/38450846100)
+and WASI [38450850527](https://github.com/e6qu/fun-with-pipes/actions/runs/38450850527)
+are queued. Superseded full runs at `47dbe70` and `367227a` were cancelled to
+avoid spending runners on known failures. Both full macOS GC stress suites at
+`4437af0` passed before their second shards encountered the corrected build-script
+metadata issue. Decimal portability at `367227a` has passed Linux ARM/AMD and
+macOS ARM; Intel is still running. None of these is the final merge gate.
 
 Then integrate the exact formats with language values/literals,
 native arrays/workers and protocol versioning. Continue the generated C Windows

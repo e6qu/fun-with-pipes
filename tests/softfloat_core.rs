@@ -61,6 +61,18 @@ int main(void) {
     }
     if (fwp_decimal_parse("6.4751751194380251109244389582276465525e-4966", 128, &low, &high) != 1 || low != 1 || high) return 39;
     if (fwp_decimal_parse("1.1897314953572317650857593266280070162e4932", 128, &low, &high) != 1 || low != UINT64_MAX || high != UINT64_C(0x7ffeffffffffffff)) return 40;
+    if (fwp_u128_to_bf16(1, UINT64_C(0x0101000000000000)) != 0x7b81) return 51;
+    if (fwp_f128_to_bf16(fwp_u128_to_f128(1, UINT64_C(0x0101000000000000))) != 0x7b80) return 52;
+    if (fwp_u128_to_f16(2051, 0) != 0x6802) return 53;
+    int negative;
+    float128_t p127 = fwp_u128_to_f128(0, UINT64_C(0x8000000000000000));
+    if (!fwp_f128_to_integer(p127, &low, &high, &negative) || low || high != UINT64_C(0x8000000000000000) || negative) return 54;
+    if (fwp_f128_to_integer(fwp_u128_to_f128(UINT64_MAX, UINT64_MAX), &low, &high, &negative)) return 55;
+    if (fwp_f128_compare(one, next) != -1 || fwp_f128_compare(next, one) != 1) return 56;
+    float128_t minus_zero = {{0, UINT64_C(0x8000000000000000)}}, zero = {{0, 0}};
+    if (fwp_f128_compare(minus_zero, zero)) return 57;
+    float128_t nan = {{1, UINT64_C(0x7fff000000000000)}};
+    if (fwp_f128_compare(nan, one) != 2 || fwp_f128_compare(one, nan) != 2) return 58;
     return 0;
 }
 "#;

@@ -26,6 +26,16 @@ struct Binary32(u32);
 struct Binary64(u64);
 
 extern "C" {
+    fn fwp_u128_to_f128(low: u64, high: u64) -> Binary128;
+    fn fwp_u128_to_f16(low: u64, high: u64) -> u16;
+    fn fwp_u128_to_bf16(low: u64, high: u64) -> u16;
+    fn fwp_f128_to_integer(
+        value: Binary128,
+        low: *mut u64,
+        high: *mut u64,
+        negative: *mut i32,
+    ) -> i32;
+    fn fwp_f128_compare(a: Binary128, b: Binary128) -> i32;
     fn f16_add(a: Binary16, b: Binary16) -> Binary16;
     fn f16_sub(a: Binary16, b: Binary16) -> Binary16;
     fn f16_mul(a: Binary16, b: Binary16) -> Binary16;
@@ -52,6 +62,33 @@ extern "C" {
 }
 
 impl Binary128 {
+    pub fn from_u128(value: u128) -> Self {
+        unsafe { fwp_u128_to_f128(value as u64, (value >> 64) as u64) }
+    }
+
+    pub fn from_i128(value: i128) -> Self {
+        let bits = Self::from_u128(value.unsigned_abs()).to_bits();
+        Self::from_bits(bits | ((value < 0) as u128) << 127)
+    }
+
+    /// Truncated sign/magnitude, or None for nonfinite values or |trunc(x)| >= 2^128.
+    pub fn trunc_integer(self) -> Option<(bool, u128)> {
+        let (mut low, mut high, mut negative) = (0, 0, 0);
+        (unsafe { fwp_f128_to_integer(self, &mut low, &mut high, &mut negative) } != 0)
+            .then_some((negative != 0, (high as u128) << 64 | low as u128))
+    }
+
+    pub fn numeric_cmp(self, other: Self) -> Option<std::cmp::Ordering> {
+        use std::cmp::Ordering::*;
+        match unsafe { fwp_f128_compare(self, other) } {
+            -1 => Some(Less),
+            0 => Some(Equal),
+            1 => Some(Greater),
+            2 => None,
+            _ => unreachable!("invalid binary128 comparison result"),
+        }
+    }
+
     pub const fn from_bits(bits: u128) -> Self {
         Self {
             words: [bits as u64, (bits >> 64) as u64],
@@ -92,6 +129,10 @@ impl Binary128 {
 }
 
 impl Binary16 {
+    pub fn from_u128(value: u128) -> Self {
+        Self(unsafe { fwp_u128_to_f16(value as u64, (value >> 64) as u64) })
+    }
+
     pub const fn from_bits(bits: u16) -> Self {
         Self(bits)
     }
@@ -110,6 +151,10 @@ impl Binary16 {
 }
 
 impl BFloat16 {
+    pub fn from_u128(value: u128) -> Self {
+        Self(unsafe { fwp_u128_to_bf16(value as u64, (value >> 64) as u64) })
+    }
+
     pub const fn from_bits(bits: u16) -> Self {
         Self(bits)
     }
@@ -186,6 +231,88 @@ binary_ops!(
 mod tests {
     use super::Binary128 as Q;
     const ONE: u128 = 0x3fff_0000_0000_0000_0000_0000_0000_0000;
+
+    #[test]
+    fn integer_conversion_rounds_once_and_checks_truncated_magnitude() {
+        use super::{parse_bits, BFloat16 as B, Binary16 as H, FloatFormat};
+        let midpoint = (1u128 << 120) + (1u128 << 112);
+        assert_eq!(B::from_u128(midpoint + 1).to_bits(), 0x7b81);
+        assert_eq!(B::from_quad(Q::from_u128(midpoint + 1)).to_bits(), 0x7b80);
+        assert_eq!(B::from_u128(midpoint).to_bits(), 0x7b80);
+        assert_eq!(B::from_u128(midpoint - 1).to_bits(), 0x7b80);
+        assert_eq!(H::from_u128(2049).to_bits(), 0x6800);
+        assert_eq!(H::from_u128(2051).to_bits(), 0x6802);
+        assert_eq!(
+            Q::from_i128(i128::MIN).trunc_integer(),
+            Some((true, 1 << 127))
+        );
+        assert_eq!(
+            Q::from_u128(u128::MAX).to_bits(),
+            0x407f0000000000000000000000000000
+        );
+        assert_eq!(Q::from_u128(u128::MAX).trunc_integer(), None);
+        assert_eq!(Q::from_f64(-0.5).trunc_integer(), Some((false, 0)));
+        assert_eq!(Q::from_f64(-3.75).trunc_integer(), Some((true, 3)));
+        for invalid in [f64::INFINITY, f64::NEG_INFINITY, f64::NAN] {
+            assert_eq!(Q::from_f64(invalid).trunc_integer(), None);
+        }
+        for exponent in 0..128 {
+            let power = 1u128 << exponent;
+            assert_eq!(Q::from_u128(power).trunc_integer(), Some((false, power)));
+            for value in [power - 1, power, power.saturating_add(1)] {
+                let decimal = value.to_string();
+                assert_eq!(
+                    Q::from_u128(value).to_bits(),
+                    parse_bits(&decimal, FloatFormat::F128).unwrap()
+                );
+                assert_eq!(
+                    B::from_u128(value).to_bits() as u128,
+                    parse_bits(&decimal, FloatFormat::BF16).unwrap()
+                );
+                assert_eq!(
+                    H::from_u128(value).to_bits() as u128,
+                    parse_bits(&decimal, FloatFormat::F16).unwrap()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn numeric_comparison_preserves_quad_bits_and_ieee_unordered_values() {
+        use std::cmp::Ordering::*;
+        let values = [
+            Q::from_f64(f64::NEG_INFINITY),
+            Q::from_f64(-1.0),
+            Q::from_bits((1 << 127) | 1),
+            Q::from_bits(0),
+            Q::from_bits(1),
+            Q::from_bits(ONE),
+            Q::from_bits(ONE + 1),
+            Q::from_f64(f64::INFINITY),
+        ];
+        for (i, a) in values.iter().enumerate() {
+            for (j, b) in values.iter().enumerate() {
+                assert_eq!(a.numeric_cmp(*b), Some(i.cmp(&j)));
+            }
+        }
+        assert_eq!(
+            Q::from_bits(0).numeric_cmp(Q::from_bits(1 << 127)),
+            Some(Equal)
+        );
+        assert_eq!(
+            Q::from_bits(ONE + 1).numeric_cmp(Q::from_bits(ONE)),
+            Some(Greater)
+        );
+        for bits in [
+            0x7fff0000000000000000000000000001,
+            0xffff8000000000000000000000001234,
+        ] {
+            for a in values {
+                assert_eq!(a.numeric_cmp(Q::from_bits(bits)), None);
+                assert_eq!(Q::from_bits(bits).numeric_cmp(a), None);
+            }
+        }
+    }
 
     #[test]
     fn quad_arithmetic_retains_bits_beyond_double_precision() {
