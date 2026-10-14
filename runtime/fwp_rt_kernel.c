@@ -27,7 +27,7 @@
 typedef struct fwp_owned_tape {
     struct fwp_owned_tape *prev, *next;
     const fwp_desc *elem;
-    fwp_task *task; /* NULL identifies the root before and after task startup. */
+    uint64_t task; /* Zero identifies the root before and after task startup. */
     V zero, add, mul, inactive_zero;
     V *weights, *adj;
     int64_t leaves, len, cap, nadj;
@@ -327,18 +327,21 @@ static V fwp_p_ad_tape_owned(V parameters, V inputs, const fwp_desc *elem) {
     fwp_owned_tape *owner = fwp_mem_alloc(sizeof *owner);
     memset(owner, 0, sizeof *owner);
     owner->elem = elem;
-    owner->task = fwp_cur == fwp_root ? NULL : fwp_cur;
-    owner->zero = OBJ(parameters)->f[0];
-    owner->add = OBJ(parameters)->f[1]; owner->mul = OBJ(parameters)->f[2];
-    owner->inactive_zero = OBJ(parameters)->f[3];
-    if (elem->dup) elem->dup(owner->zero);
-    fwp_rc_dup(owner->add); fwp_rc_dup(owner->mul); fwp_rc_dup(owner->inactive_zero);
-    owner->leaves = owner->len = n;
+    owner->task = fwp_cur == fwp_root ? 0 : fwp_cur->identity;
     owner->next = fwp_owned_tapes;
     if (owner->next) owner->next->prev = owner;
     fwp_owned_tapes = owner;
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_owned_tape_release, owner);
+    /* Publish each field only after its retain succeeds. Recovery must release
+     * exactly the completed prefix, without consuming borrowed parameters. */
+    V zero = OBJ(parameters)->f[0];
+    if (elem->dup) elem->dup(zero);
+    owner->zero = zero;
+    V callback = OBJ(parameters)->f[1]; fwp_rc_dup(callback); owner->add = callback;
+    callback = OBJ(parameters)->f[2]; fwp_rc_dup(callback); owner->mul = callback;
+    callback = OBJ(parameters)->f[3]; fwp_rc_dup(callback); owner->inactive_zero = callback;
+    owner->leaves = owner->len = n;
     V base = fwp_ad_tape_new((V)n, owner);
     fwp_cleanup_pop(&cleanup);
     FWP_KEEP_ALIVE(parameters);
@@ -432,7 +435,7 @@ static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {
     fwp_tape *t = fwp_tape_of(id);
     fwp_owned_tape *owner = t->owned;
     if (!owner || owner->elem != elem) fwp_trap(FWP_AD_REPRESENTATION);
-    if (owner->task != (fwp_cur == fwp_root ? NULL : fwp_cur))
+    if (owner->task != (fwp_cur == fwp_root ? 0 : fwp_cur->identity))
         fwp_trap("autodiff: managed tape belongs to another task");
     int64_t idx = t->len;
     if (idx >= fwp_tape_limit()) fwp_trap("autodiff: the tape is full");
@@ -461,7 +464,7 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
     fwp_tape *t = fwp_tape_of(id);
     fwp_owned_tape *owner = t->owned;
     if (!owner || owner->elem != list_type->elem) fwp_trap(FWP_AD_REPRESENTATION);
-    if (owner->task != (fwp_cur == fwp_root ? NULL : fwp_cur))
+    if (owner->task != (fwp_cur == fwp_root ? 0 : fwp_cur->identity))
         fwp_trap("autodiff: managed tape belongs to another task");
     fwp_tape_unlink_scope(t);
     fwp_tape tp = *t;

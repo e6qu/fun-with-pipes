@@ -70,8 +70,8 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   LLVM-MinGW and vcpkg/OpenSSL sources are pinned. TLS COFF linking, dependency
   architecture checks and standalone PE packages are implemented but unaccepted.
   Windows static-memory reservations, reusable worker/fiber pools and explicit
-  decimal scratch allocation are implemented locally with new native tests;
-  runner execution remains required. DLL/OS resource allocations are excluded
+  decimal scratch allocation pass the AMD64 native fixture; ARM64 and final
+  gates remain. DLL/OS resource allocations are excluded
   from the runtime storage budget.
 
 ## Current validation
@@ -89,12 +89,13 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   All measured storage is reclaimed without collection. Separate peaks are
   not necessarily simultaneous. Hardware/compiler/flags, timings, counts and
   hashes are in [the artifact](measurements/checkpoint-2026-10-14.json).
-- [Windows 38555042817@c5f9ff42](https://github.com/e6qu/fun-with-pipes/actions/runs/38555042817)
-  passes native foundations, interpreter goldens and generated resource/GC stress
-  on both architectures. Static-memory exhaustion and fatal task exits pass.
-  The reuse fixture failed before native execution at nonexistent `string.join`;
-  it now calls the existing `join`. Startup-only allocation, worker/fiber reuse,
-  pool scratch and negative allocation controls still require execution.
+- [Production 38558134779@09db8f25](https://github.com/e6qu/fun-with-pipes/actions/runs/38558134779)
+  is running all platform gates after a runner queue delay. Bench and docs pass.
+  Windows AMD64 passes native foundations, interpreter goldens, generated
+  resource/GC stress and all three static-memory tests, including startup-only
+  allocations, repeated workers/fibers, decimal scratch, exhaustion, fatal exits
+  and omission controls. The remaining jobs are running. Keep this run for
+  broad diagnostics while the next focused repairs are prepared.
 - [Full Windows 38552879801@e5fecb81](https://github.com/e6qu/fun-with-pipes/actions/runs/38552879801)
   passes both architectures' executable/CLI/foreign/task ownership, exact formats/protocol,
   native goldens and standalone packaging. TLS passes 9/10 cases: the remaining
@@ -112,6 +113,14 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   workflow lint, primitive inventory and roadmap/link/commit checks pass.
   Generated stdlib docs have been refreshed; old merged-main preflight failures
   require the final production run. Full builds/tests/measurements run on CI.
+- Further review found that task addresses and WASM host fiber slots can be
+  reused. Managed tapes now bind to nonrecycled task identities; a shared golden
+  fixture exercises completed-task isolation in native and WASM engines, and a
+  native constant-identity negative control must expose the bug. Managed seed
+  construction now protects the completed retain prefix before any later retain
+  can fail. Four new unwind stages and an omitted-owner control are added.
+  Guarded focused clippy and current-runtime C syntax pass; these new controls
+  still require runner execution. Do not claim their acceptance from 09db8f25.
 - Completed merged-main macOS ARM shard exposed three older harness failures:
   ARC corpus charged permanent scheduler root storage; CSV trap injection still
   named an old constructor; early task publication injection missed the new
@@ -132,11 +141,9 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
 
 ## Next action
 
-Next: inspect full production CI on the published follow-up head and fix every
-failure. Task-preparation reclamation, raw scheduling, Windows static storage
-and platform fixture repairs need runner results. The Windows static fixture
-constructs its numeric array directly to avoid irrelevant list construction
-under per-allocation GC. Update docs with actual acceptance results. Keep all work
+Next: run the task-identity and partial-tape construction controls, inspect the
+09db8f25 production run and fix every failure. Restore PR readiness after the
+focused fixes pass, then require all full gates on the final head. Keep all work
 in the follow-up to PR #135. Require all seven Linux/macOS production jobs, both native Windows
 acceptance jobs and docs on the final head before squash merge.
 

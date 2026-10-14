@@ -211,6 +211,10 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
                 5,
                 "        result.value = fwp_rc_fresh(fwp_cons(value, result.value));\n    }\n    fwp_cleanup_pop(&result_cleanup);\n    fwp_cleanup_pop(&value_cleanup);",
             ),
+            (7, "    V zero = OBJ(parameters)->f[0];"),
+            (8, "    owner->zero = zero;"),
+            (9, "    V callback = OBJ(parameters)->f[1]; fwp_rc_dup(callback); owner->add = callback;"),
+            (10, "    callback = OBJ(parameters)->f[2]; fwp_rc_dup(callback); owner->mul = callback;"),
         ] {
             assert_eq!(code.matches(marker).count(), 1, "stage {point}");
             let injected = if point == 5 {
@@ -234,7 +238,7 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
         for opt in ["-O1", "-O2"] {
             let binary = dir.join("unwind.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for mode in 0..=6 {
+            for mode in 0..=10 {
                 checked(
                     Command::new(&binary)
                         .arg(mode.to_string())
@@ -257,7 +261,69 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
                     .code(),
                 Some(195)
             );
+            let seed_cleanup = "    fwp_cleanup_push(&cleanup, fwp_owned_tape_release, owner);";
+            assert_eq!(code.matches(seed_cleanup).count(), 1);
+            let missing_seed_owner = code.replace(seed_cleanup, "");
+            fwp::cgen::compile_c(&missing_seed_owner, &binary, opt).unwrap();
+            assert_eq!(
+                Command::new(&binary)
+                    .arg("8")
+                    .env("FWP_AD_WORKSPACE", "0")
+                    .output()
+                    .unwrap()
+                    .status
+                    .code(),
+                Some(193)
+            );
         }
+    }
+}
+
+#[test]
+fn completed_task_identity_cannot_be_reused_by_a_later_task() {
+    let dir = fwp::cgen::TempDir::new("fwp-tape-task-reuse").unwrap();
+    let source = dir.join("reuse.fwp");
+    std::fs::write(&source, include_str!("run/ad_task_reuse.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .args(["run", "--interp"])
+        .arg(&source)
+        .env("FWP_NO_OPT", "1")
+        .output()
+        .unwrap();
+    assert_eq!(reference.status.code(), Some(101), "{reference:?}");
+    let cfile = dir.join("reuse.c");
+    checked(
+        Command::new(compiler)
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let identity = "    task->identity = ++fwp_task_identity;";
+    assert_eq!(code.matches(identity).count(), 1);
+    let broken = code.replace(
+        identity,
+        "    task->identity = 1; /* reuse a completed task identity */",
+    );
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join("reuse.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let actual = Command::new(&binary)
+            .env("FWP_GC_STRESS", "1")
+            .env("FWP_GC_VERIFY", "1")
+            .env("FWP_REUSE_VERIFY", "1")
+            .output()
+            .unwrap();
+        assert_eq!(actual.status.code(), reference.status.code(), "{actual:?}");
+        assert_eq!(actual.stdout, reference.stdout);
+        assert_eq!(actual.stderr, reference.stderr);
+        fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+        assert_eq!(
+            Command::new(&binary).output().unwrap().status.code(),
+            Some(0)
+        );
     }
 }
 

@@ -98,7 +98,9 @@ Managed tapes own their typed weights, scalar-operation closures and adjoints.
 Native storage stays in a scanned mutable root list while active or detached
 for backward, and releases on scope exit, failure or cancellation. Library
 teardown releases tapes before the managed heap. Managed weights belong to
-the creating task in both engines; cross-task use is rejected. A numeric zero with
+the creating task in both engines; identities do not reuse task addresses or
+host fiber slots. Cross-task use is rejected. Partial construction owns only
+the scalar and callbacks whose retains have completed. A numeric zero with
 an active derivative is not pruned: only recursively inactive constant zeros
 may skip propagation. Capturing or combining unrelated tape tokens remains an
 error; nesting does not relax stale-token or generation checks.

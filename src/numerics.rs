@@ -61,7 +61,7 @@ struct Tape {
 }
 
 struct OwnedTape {
-    fiber: usize,
+    fiber: u64,
     zero: Value,
     add: Value,
     mul: Value,
@@ -72,10 +72,10 @@ struct OwnedTape {
 
 // Native interpreter tasks have separate threads; WASM tasks share a thread
 // and must additionally match their fiber. Numeric IDs remain globally unique.
-fn tape_fiber() -> usize {
+fn tape_fiber() -> u64 {
     #[cfg(target_family = "wasm")]
     {
-        crate::fiber::current()
+        crate::fiber::identity()
     }
     #[cfg(not(target_family = "wasm"))]
     {

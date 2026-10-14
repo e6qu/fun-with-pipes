@@ -160,6 +160,7 @@ __asm__(FWP_CTX_BEGIN
 typedef struct { fwp_task *head; } fwp_wl;
 
 struct fwp_task {
+    uint64_t identity; /* Never reused when allocator slots or fibers are reused. */
 #ifdef _WIN32
     fwp_win_context ctx;
 #elif defined(FWP_OWN_CONTEXT)
@@ -256,7 +257,13 @@ static void fwp_gctx_pending_release(void *arg) {
 }
 #endif
 
-static fwp_task *fwp_task_new(void) { return (fwp_task *)fwp_mem_alloc(sizeof(fwp_task)); }
+static uint64_t fwp_task_identity;
+static fwp_task *fwp_task_new(void) {
+    if (fwp_task_identity == UINT64_MAX) fwp_trap("task identity exhausted");
+    fwp_task *task = fwp_mem_alloc(sizeof *task);
+    task->identity = ++fwp_task_identity;
+    return task;
+}
 
 static fwp_task *fwp_gc_tasks = 0;
 

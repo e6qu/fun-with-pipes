@@ -7,6 +7,7 @@ static void nested_point(int stage) {
     if (nested_hit || (nested_mode != stage && !(nested_mode == 6 && stage == 4))) return;
     nested_hit = stage;
     if (nested_mode == 6) {
+        nested_cancelled.identity = UINT64_MAX;
         nested_cancelled.cancelled = 1;
         fwp_check_cancel();
         abort();
