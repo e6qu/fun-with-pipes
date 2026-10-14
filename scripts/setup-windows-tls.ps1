@@ -9,7 +9,8 @@ $triplet = switch ($env:RUNNER_ARCH) {
 }
 $install = Join-Path $env:RUNNER_TEMP 'fwp-windows-deps'
 $prefix = Join-Path $install $triplet
-if (!(Test-Path (Join-Path $prefix 'tools/openssl/openssl.exe'))) {
+if (!(Test-Path (Join-Path $prefix 'tools/openssl/openssl.exe')) -or
+    !(Test-Path (Join-Path $prefix 'tools/curl/curl.exe'))) {
     $checkout = Join-Path $env:RUNNER_TEMP 'fwp-vcpkg'
     git init $checkout
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -22,19 +23,19 @@ if (!(Test-Path (Join-Path $prefix 'tools/openssl/openssl.exe'))) {
     & "$checkout/bootstrap-vcpkg.bat" -disableMetrics
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $env:VCPKG_MAX_CONCURRENCY = '2'
-    & "$checkout/vcpkg.exe" install "openssl[tools]:$triplet" "--host-triplet=$triplet" "--x-install-root=$install" --clean-after-build
+    & "$checkout/vcpkg.exe" install "openssl[tools]:$triplet" "curl[core,openssl,tool]:$triplet" "--host-triplet=$triplet" "--x-install-root=$install" --clean-after-build
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
+Add-Content $env:GITHUB_ENV 'FWP_WINDOWS_DEPS_READY=1'
 $env:PATH = "$prefix/bin;$prefix/tools/openssl;$env:PATH"
 Add-Content $env:GITHUB_ENV "FWP_OPENSSL_DIR=$prefix"
 Add-Content $env:GITHUB_ENV 'FWP_REQUIRE_TLS=1'
 Add-Content $env:GITHUB_PATH "$prefix/bin"
 Add-Content $env:GITHUB_PATH "$prefix/tools/openssl"
-# The system curl uses Schannel and does not accept these PEM client-key
-# fixtures. Use Git's explicitly identified OpenSSL client for peer tests.
-$gitRoot = Split-Path (Split-Path (Get-Command git.exe).Source)
-$curl = Join-Path $gitRoot 'mingw64/bin/curl.exe'
-if (!(Test-Path $curl)) { throw "Git OpenSSL curl not found: $curl" }
+# The system and Git curl use Schannel. Build the pinned native curl port
+# explicitly with OpenSSL for these PEM client-key peer fixtures.
+$curl = Join-Path $prefix 'tools/curl/curl.exe'
+if (!(Test-Path $curl)) { throw "Native OpenSSL curl not found: $curl" }
 $curlVersion = & $curl --version
 if ($LASTEXITCODE -ne 0 -or ($curlVersion -join "`n") -notmatch 'OpenSSL/') {
     throw "TLS peer tests require the OpenSSL curl client: $curlVersion"

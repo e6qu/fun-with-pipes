@@ -31,6 +31,9 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo test --no-fail-fast --lib --test autodiff_checkpoint --test autodiff_nested --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_capacity_bounds --test autodiff_library --test pipe_ownership
+      - run: cargo build --release --bin fwp
+      - name: Checkpoint recomputation and storage measurements
+        run: python3 scripts/measure-checkpoint.py --output autodiff-evidence/checkpoint
       - uses: actions/upload-artifact@v7
         if: always()
         with:

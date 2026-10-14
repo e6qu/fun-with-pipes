@@ -443,6 +443,12 @@ Scoped AD eligibility additionally proves callback reachability under a scope;
 unknown call targets and unscoped raw operations are rejected. Returned scalar
 tokens cannot keep a tape alive after its scope; stale use still traps. Cold/warm
 workspace controls count native buffers separately from managed gradient arrays.
+Nested reverse tapes retain typed weights, adjoints and scalar-operation
+closures. They remain rooted while a detached backward pass reenters an outer
+tape; partial products and result spines have separate unwind owners. Each tape
+belongs to its creating task. Library unload retires these owners before heap
+teardown. `tests/autodiff_nested.rs` and `tests/autodiff_library.rs` exercise
+recovered failure, cancellation, cross-task rejection and omitted releases.
 Normal/trap/cancellation cleanup and omission controls run with tracing enabled
 and compiled out. The active handoff records completed and pending validation.
 

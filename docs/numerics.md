@@ -68,8 +68,9 @@ that of the branch taken).
 
 **The tape.** The tape lives in the runtime, outside the program's values
 (`src/numerics.rs` for the interpreter, `runtime/fwp_rt_kernel.c` for
-native code): per node, two parent indices and two partial derivatives,
-in growable arrays of numbers. A `Rev` value refers to its node as
+native code): per node, two parent indices and two partial derivatives.
+Primitive-float tapes use numeric buffers; nested tapes use typed value buffers.
+A `Rev` value refers to its node as
 `(tape id << 32) | index`, with -1 for constants; the tape id is
 `(generation << 16) | (slot + 1)`. Operations call the primitive
 `ad.push`, which appends a node to the tape of its operands (an operation
@@ -96,13 +97,14 @@ and current failures are recorded in the handoff.
 Managed tapes own their typed weights, scalar-operation closures and adjoints.
 Native storage stays in a scanned mutable root list while active or detached
 for backward, and releases on scope exit, failure or cancellation. Library
-teardown releases tapes before the managed heap. Interpreter managed weights
-belong to the creating task; cross-task use is rejected. A numeric zero with
+teardown releases tapes before the managed heap. Managed weights belong to
+the creating task in both engines; cross-task use is rejected. A numeric zero with
 an active derivative is not pruned: only recursively inactive constant zeros
 may skip propagation. Capturing or combining unrelated tape tokens remains an
 error; nesting does not relax stale-token or generation checks.
-Reverse mode uses 24 bytes per operation before adjoint storage and capacity
-rounding. The active bundle adds segmented checkpointing below; its runner
+Base-float reverse mode uses 24 bytes per operation before adjoint storage and
+capacity rounding. Nested weights additionally own their scalar representation.
+The active bundle adds segmented checkpointing below; its runner
 acceptance is tracked in the handoff.
 
 `xs | vjp-checkpointed {steps = 1000, every = 32} step seeds` differentiates
@@ -253,7 +255,6 @@ disabled contraction while measuring SIMD, buffer reuse and fused gradients.
   kernels with its own Rust implementation of the same evaluator.
 - Distributed execution: sharding tensors across processes and
   collectives (`all-reduce`) over services.
-- Final acceptance and measurement of nested reverse mode and checkpointing.
 - Kernels other than elementwise expressions and sums (matrix products,
   reductions along an axis) on devices.
 

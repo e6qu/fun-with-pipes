@@ -24,22 +24,6 @@ jobs:
       - name: Native C toolchain for foreign calls
         shell: pwsh
         run: ./scripts/setup-windows.ps1
-      - uses: actions/cache/restore@v4
-        id: windows_tls_cache
-        if: inputs.full
-        with:
-          path: ${{ runner.temp }}/fwp-windows-deps
-          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
-      - name: Native OpenSSL dependencies
-        id: windows_tls
-        if: inputs.full
-        shell: pwsh
-        run: ./scripts/setup-windows-tls.ps1
-      - uses: actions/cache/save@v4
-        if: inputs.full && steps.windows_tls.outcome == 'success' && steps.windows_tls_cache.outputs.cache-hit != 'true'
-        with:
-          path: ${{ runner.temp }}/fwp-windows-deps
-          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: Native Windows compiler check
         id: native_compiler
         shell: pwsh
@@ -72,6 +56,22 @@ jobs:
         run: |
           cargo test --test windows_runtime --test windows_static_memory -- --nocapture
           exit $LASTEXITCODE
+      - uses: actions/cache/restore@v4
+        id: windows_tls_cache
+        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native OpenSSL dependencies
+        id: windows_tls
+        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v4
+        if: ${{ !cancelled() && inputs.full && env.FWP_WINDOWS_DEPS_READY == '1' && steps.windows_tls_cache.outputs.cache-hit != 'true' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: Native TLS and executable ownership
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh

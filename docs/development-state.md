@@ -82,7 +82,7 @@ autodiff signatures in `docs/stdlib.md`; final CI must check it without blessing
 Windows static tests now require task/worker reuse, no runtime VirtualAlloc/
 CreateThread/CreateFiberEx after startup, committed stack arguments, exhaustion
 diagnostics, GC stress/reuse and an injected allocation failure control.
-They have not executed yet. TLS tests explicitly select Git's OpenSSL curl for
+They have not executed yet. TLS tests explicitly build a native OpenSSL curl for
 PEM client keys and compare the limited Windows reset/alert failure category.
 
 - At merged head `5d6e96d8`, [autodiff 38550312989](https://github.com/e6qu/fun-with-pipes/actions/runs/38550312989)
@@ -96,12 +96,27 @@ PEM client keys and compare the limited Windows reset/alert failure category.
   goldens, runtime stress and standalone compiler/package step passed. The
   failures concern Schannel curl with PEM keys and TCP reset/alert differences.
 - [Windows 38551180442@c230a360](https://github.com/e6qu/fun-with-pipes/actions/runs/38551180442)
-  is running the TLS repairs and new static-memory implementation on both
-  native architectures. No Windows acceptance is claimed yet.
+  failed dependency peer setup: Git's curl also uses Schannel. The pinned vcpkg
+  build now explicitly requests `curl[core,openssl,tool]`; dependency caching
+  preserves a completed install even if a later validation fails. Static-memory
+  tests did not execute in that batch. No Windows acceptance is claimed yet.
 - New follow-up tests inject recovered failures at five managed-tape stages,
   cancel a task with a live product owner, and track managed storage across real
   shared-library unloads. Omitted releases must fail. Guarded formatting and
   focused lint pass; these new cases require runner execution.
+  At `2f70e2f8` in
+  [38551928641](https://github.com/e6qu/fun-with-pipes/actions/runs/38551928641).
+  managed library unload and omitted-free controls pass. The failure-injection
+  fixture matched a second unrelated result constructor; its marker is now
+  restricted to the managed backward result, and rerun is required.
+  A subsequent review found that native managed tapes lacked the interpreter's
+  task-owner check. Native task identity and WASM interpreter fiber identity
+  are now explicit, with a raw/native cross-task rejection test pending.
+- `scripts/measure-checkpoint.py` compares the same 4096-step additive VJP with
+  a full tape and intervals 16/32/64. It records compiler/hardware/flags,
+  managed and tape allocations/live bytes, process timings and native assembly;
+  runner measurements are pending. It requires reclamation and a smaller tape
+  peak, not a universal time improvement.
 - Both Windows architectures now share one reusable acceptance workflow between
   manual preflight and production CI, with explicit final-head checkout. It
   includes nested AD/ownership and packaging as well as native runtime stress.

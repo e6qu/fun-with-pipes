@@ -207,11 +207,16 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
             ),
             (
                 5,
-                "        result.value = fwp_rc_fresh(fwp_cons(value, result.value));",
+                "        result.value = fwp_rc_fresh(fwp_cons(value, result.value));\n    }\n    fwp_cleanup_pop(&result_cleanup);\n    fwp_cleanup_pop(&value_cleanup);",
             ),
         ] {
-            assert_eq!(code.matches(marker).count(), 1);
-            code = code.replace(marker, &format!("{marker}\n    nested_point({point});"));
+            assert_eq!(code.matches(marker).count(), 1, "stage {point}");
+            let injected = if point == 5 {
+                marker.replace("    }\n    fwp_cleanup_pop(&result_cleanup);", "        nested_point(5);\n    }\n    fwp_cleanup_pop(&result_cleanup);")
+            } else {
+                format!("{marker}\n    nested_point({point});")
+            };
+            code = code.replace(marker, &injected);
         }
         code = code.replace(
             "int main(int argc, char **argv)",
@@ -252,4 +257,53 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
             );
         }
     }
+}
+
+#[test]
+fn managed_tapes_reject_cross_task_use_in_both_engines() {
+    let dir = fwp::cgen::TempDir::new("fwp-nested-task").unwrap();
+    let source = dir.join("task.fwp");
+    std::fs::write(
+        &source,
+        r#"
+work : List[Rev[Rev[F64]]] -> () -> Rev[Rev[F64]]
+work = curry (.0 | head | option.unwrap-or zero | fork mul id id)
+main = [1.0] | rev._seed | .1 | rev._seed | .1
+    | work | task.spawn | task.await | ignore
+"#,
+    )
+    .unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .args(["run", "--interp"])
+        .arg(&source)
+        .env("FWP_NO_OPT", "1")
+        .output()
+        .unwrap();
+    assert_eq!(reference.status.code(), Some(101), "{reference:?}");
+    let message = "autodiff: managed tape belongs to another task";
+    assert!(
+        String::from_utf8_lossy(&reference.stderr).contains(message),
+        "{reference:?}"
+    );
+    let binary = dir.join("task.exe");
+    checked(
+        Command::new(compiler)
+            .args(["build", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&binary),
+    );
+    let actual = Command::new(binary)
+        .env("FWP_GC_STRESS", "1")
+        .env("FWP_GC_VERIFY", "1")
+        .env("FWP_REUSE_VERIFY", "1")
+        .output()
+        .unwrap();
+    assert_eq!(actual.status.code(), reference.status.code(), "{actual:?}");
+    assert_eq!(actual.stdout, reference.stdout);
+    assert!(
+        String::from_utf8_lossy(&actual.stderr).contains(message),
+        "{actual:?}"
+    );
 }
