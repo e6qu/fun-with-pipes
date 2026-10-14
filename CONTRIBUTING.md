@@ -80,8 +80,8 @@ All seven exact-head production jobs and the roadmap documentation audit are
 required before merging: Linux ARM64/AMD64, bench, regular macOS arm64/x86-64 and separate
 GC stress jobs on both macOS architectures.
 The desired platform matrix is Linux, macOS and Windows on ARM64 and AMD64,
-with separate binaries. Windows implementation is now part of the active bundle. Add required native
-Windows gates on both architectures before claiming coverage; existing
+with separate binaries. The reusable Windows workflow adds required native
+gates on both architectures before claiming coverage; existing
 Linux/macOS results alone do not establish it. Full native Linux ARM64 acceptance
 requires a passing complete native job; see [the platform matrix](PLAN.md#platform-objective-and-current-evidence).
 For each macOS architecture, the two jobs split the integration targets using

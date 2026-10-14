@@ -47,12 +47,12 @@ record-label evaluation order is preserved.
 `iter.fold`, `iter.each`, `iter.find` and list `fold-until` use the existing
 `loop` and Step constructors; `map-accum` uses a left fold followed by reverse.
 They introduce no primitives and do not widen iterator tail effects. Callback
-and tail evaluation order is tested against raw interpretation. The active PR
+and tail evaluation order is tested against raw interpretation. The compiler
 also lowers `array.to-list | iter.from-list` directly to an array owner and index,
 using checked element access without an intermediate list. Array construction
 still completes before any consumer callback; element aliases retain their
-owners. Raw/native, ARC reclamation and allocation/instruction controls await
-runner verification. Producer fusion applies only to proven direct chains; arbitrary lazy producers
+owners. Raw/native and ARC controls pass on four Linux/macOS hosts; the handoff
+records final platform acceptance. Producer fusion applies only to proven direct chains; arbitrary lazy producers
 retain their declared forcing behavior and may allocate.
 
 Merged synchronous callback entries borrow typed inputs and return owned results;
@@ -342,8 +342,9 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
   stacks are unknown. Linux finds program data segments with
   `dl_iterate_phdr`; the Darwin implementation finds the Mach-O image
   containing the runtime and scans its writable-at-load segments, including
-  `__DATA_CONST` and zero-fill storage. Other native systems do not arm
-  collection. Darwin validation is tracked in the session handoff.
+  `__DATA_CONST` and zero-fill storage. Windows scans writable PE image sections.
+  Other native systems do not arm collection. Platform acceptance is tracked
+  in the session handoff.
   Runtime value/string constructors and list traversals keep their source
   objects/buffers reachable until the last allocating operation: `FWP_KEEP_ALIVE` is a compiler lifetime fence.
   Optimized Clang can otherwise preload a short buffer and discard its
@@ -414,10 +415,10 @@ program constants are separate from live temporary values.
 
 Eligibility excludes unproved mutable/cyclic runtime graphs, external retained
 callbacks, raw pointers, unscoped reverse-mode operations, unchecked user native
-declarations, managed foreign/remote calls and unmodeled shared results. PR #135
-extends admission to typed retained-task captures and recursively pointer-free
+declarations, managed foreign/remote calls and unmodeled shared results. Checked
+admission includes typed retained-task captures and recursively pointer-free
 foreign C records, scoped text/byte borrows and synchronous foreign callbacks
-with copied C values, pending acceptance. The callback context follows the
+with copied C values. The handoff records platform validation. The callback context follows the
 calling task, with unwind cleanup. Child tasks start independent State/AD
 contexts; the closure-flow proof clears parent scope assumptions at spawn/within. Native symbol names alone do
 not establish ownership signatures. A finite closure-flow analysis proves that
@@ -476,7 +477,9 @@ error. See [protocol.md](protocol.md).
   [Ownership](ownership.md) specifies coverage and numeric representation limits;
   [PLAN](../PLAN.md) records the remaining efficiency gaps. C structs alone do
   not guarantee registers.
-- Windows on AMD64 and ARM64 is in active development. Interpreter platform probes pass, but the generated runtime and release packages are not yet verified.
+- Windows on AMD64 and ARM64 still requires full acceptance. Native goldens,
+  resource stress and standalone packages pass focused runs; remaining TLS,
+  static-storage and ownership controls are tracked in the handoff.
   Linux/macOS have native CI on both architectures; see the
   [platform matrix](../PLAN.md#platform-objective-and-current-evidence) and handoff
   for actual acceptance gates. Cross-build/QEMU evidence remains distinct.

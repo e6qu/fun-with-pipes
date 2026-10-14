@@ -70,7 +70,7 @@ depend on host `long double` or compiler-specific quad scalar types.
 
 ## Migration contract
 
-The active PR must deliver and validate these together before acceptance:
+Implementation and platform validation must satisfy these requirements together:
 
 - Literals, arithmetic and conversion round once to the destination format,
   using nearest, ties to even. Preserve signed zero, infinities and gradual

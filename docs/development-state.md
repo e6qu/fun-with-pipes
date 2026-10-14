@@ -96,12 +96,13 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   it now calls the existing `join`. Startup-only allocation, worker/fiber reuse,
   pool scratch and negative allocation controls still require execution.
 - [Full Windows 38552879801@e5fecb81](https://github.com/e6qu/fun-with-pipes/actions/runs/38552879801)
-  passes AMD64 executable/CLI/foreign/task ownership, exact formats/protocol,
+  passes both architectures' executable/CLI/foreign/task ownership, exact formats/protocol,
   native goldens and standalone packaging. TLS passes 9/10 cases: the remaining
   snapshot needs Windows peer-close normalization alongside reset/alert rejection.
   AD probe failures need CRLF handling and a Windows stack bound on the injected
   cancellation task. The older cross-task source typo is already fixed.
-  ARM64 is completing. Neither architecture is accepted yet.
+  ARM64 also reports a peer connection abort; the same Windows failure category
+  now includes it. Neither architecture is accepted yet.
 - The intermittent Windows allocator probe retained a stale mutator pointer to
   its supposed collector-only garbage. Its injection now creates that object
   inside the collector frame; a guarded current-runtime O1/O2 probe passes with
@@ -131,10 +132,11 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
 
 ## Next action
 
-Next: publish the batched platform/probe repairs, then inspect full production
-CI and fix every failure. The Windows static fixture now creates its numeric
-array directly to avoid irrelevant list construction under per-allocation GC. Run full production gates
-and streamline final docs with actual acceptance results. Keep all work
+Next: inspect full production CI on the published follow-up head and fix every
+failure. Task-preparation reclamation, raw scheduling, Windows static storage
+and platform fixture repairs need runner results. The Windows static fixture
+constructs its numeric array directly to avoid irrelevant list construction
+under per-allocation GC. Update docs with actual acceptance results. Keep all work
 in the follow-up to PR #135. Require all seven Linux/macOS production jobs, both native Windows
 acceptance jobs and docs on the final head before squash merge.
 

@@ -195,8 +195,7 @@ types; new fused gradient kernels need raw interpreter/native order checks.
 
 ### Accepted numeric representation
 
-Phase 3 is complete. Source array/value types, pipe
-syntax and wire behavior remain unchanged. Representation is selected after
+Representation is selected after
 monomorphization from concrete element/field types; generic and foreign
 boundaries retain explicit conversion contracts. Accepted numerical and ownership
 measurements are indexed in [benchmarks](benchmarks.md).
@@ -205,11 +204,12 @@ Direct numeric workers use concrete C scalar parameters/results and aggregate
 fields; boxing, closures, callbacks and foreign conversion keep bit-preserving
 V bridges. Natural fields distinguish layouts by their concrete types. The
 C ABI chooses register or caller-storage return: three F64 fields form an ARM
-floating-point aggregate, while the24-byte Intel result uses caller storage.
+floating-point aggregate, while the 24-byte Intel result uses caller storage.
 FWP_TYPED_ABI=0 preserves the previous V-worker boundary for comparisons.
 
-Numeric arrays retain an8-byte length header with descriptors outside the
-payload. I8/U8 use1 byte, I16/U16 use2, I32/U32/F32 use4, I64/U64/F64 use8.
+Numeric arrays retain an 8-byte length header with descriptors outside the
+payload. I8/U8 use 1 byte, I16/U16/F16/BF16 use 2, I32/U32/F32 use 4,
+I64/U64/F64 use 8, and F128 uses 16.
 Typed loads/stores use memcpy and preserve signed extension and float bits.
 Pointer-free numeric storage uses leaf allocations; pointer-bearing and boxed
 wide values keep word storage and typed teardown. The established count/trap
@@ -218,14 +218,13 @@ and copied slices for controlled comparisons.
 
 Numeric views have a tagged length, retained backing owner and byte address.
 Nested views retain the original backing directly. Immutable updates copy views;
-only an owning array may mutate in place. Slices with payload at most the24-byte
+only an owning array may mutate in place. Slices with payload at most the 24-byte
 view header or less than one quarter of backing length copy instead, avoiding
 unbounded retention for small results. Pointer/resource slices always copy to
 preserve disposal order. Natural alignment follows backing alignment and element
 stride; this is not a guarantee of cache-line or SIMD-register alignment.
 
-The active PR migrates F16/BF16 to two-byte payloads and F128 to inline
-16-byte array payloads. Quad array reads borrow internal bits; escaping scalars
+Quad array reads borrow internal bits; escaping scalars
 copy into independent owned boxes. Quad stride stays 16 even with narrow packing
 disabled. Generic quad values remain boxed; closed quad workers use bit structs.
 [The format contract](float-formats.md) records actual validation and the
@@ -371,7 +370,7 @@ boundaries and cycle policy, with physical reclamation verified below.
 ## Checked ARC delivery
 
 Foreign C calls with scalar numeric, Boolean and unit ABI values carry no
-language owners. PR #135 extends admission to recursively copied C records,
+language owners. Checked ARC also admits recursively copied C records,
 scoped String/Bytes borrows and synchronous callbacks with copied scalar C
 arguments/results. Foreign strings are copied into owned language results.
 Typed closure captures stay alive for the foreign call. Callback contexts live
@@ -430,8 +429,9 @@ and typed CSV have OwnedTree primitive results. CLI parsing now owns overwritten
 flags, repeated spines, defaults, optional fields, diagnostics and partial
 records. Native function executables have typed argument/frame/result owners,
 unwind cleanup and transport teardown. Checked ARC admits those executable
-entries; raw/native agreement and physical-reclamation controls are pending in
-the active PR. Remote and service contexts remain outside this admission.
+entries; raw/native agreement and physical-reclamation controls pass focused
+Linux/macOS and Windows runs. The handoff records final acceptance. Remote and
+service contexts remain outside this admission.
 
 Scoped State reachability tracks callback targets, captures and values stored
 in State. get/put/modify must execute under a proven handler; returning a

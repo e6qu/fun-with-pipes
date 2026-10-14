@@ -69,15 +69,16 @@ work; it does not claim universal collector-free execution or C/Rust performance
 
 PR #135 is merged. Continue from `ad37059e` on `roadmap-after-135`; do not reopen
 the merged PR or replay completed preparation work. Preserve the six direction
-identifiers below: documentation is maintained, while five implementation areas
-remain. The user authorized all remaining work together in one follow-up PR. The scope supersedes earlier Windows and floating-format deferrals.
+identifiers below: implementation is in place, while final platform validation
+and encountered failures remain. The user authorized all remaining work together
+in one follow-up PR. The scope supersedes earlier Windows and floating-format deferrals.
 
 | Step | Work | Acceptance |
 |---|---|---|
 | 1 | Close out and streamline docs | Record the PR #135 merge separately from acceptance and maintain one current handoff |
-| 2 | Expand collector-free coverage | Prove retained-callback and managed foreign/protocol lifetimes; establish an explicit cycle policy; extend coverage beyond the merged scalar foreign and typed WASM/File proofs, with alias/unwind/cancellation/reclamation controls |
-| 3 | Remove allocation and dispatch overhead | Broader producer fusion and native worker/aggregate coverage; measured reductions in generic boxing and closure allocation; preserve forcing, effects and trap order |
-| 4 | Improve numerics and autodiff | Measured register/layout/cache improvements; nested reverse differentiation and checkpointing with explicit lifetime/precision contracts; raw/native agreement and bounded memory evidence |
+| 2 | Expand collector-free coverage | Retained tasks, scoped foreign callbacks/records/strings and typed CLI/executable protocol owners; explicit rejection of unproved cycles; alias, preparation failure, unwind, cancellation and reclamation controls |
+| 3 | Remove allocation and dispatch overhead | Direct array producer fusion, numeric tail workers and wide scalar/aggregate workers; measured allocation reductions and native instruction evidence; preserve forcing, effects and trap order |
+| 4 | Improve numerics and autodiff | Nested reverse differentiation and explicit checkpointing; measured layout and tape/checkpoint costs; raw/native agreement, task isolation and bounded lifetime evidence |
 | 5 | Implement real half/quad formats | Actual F16/BF16/F128 arithmetic, literals, conversions, text, arrays and ABI; coordinated versioned protocol migration; exact-bit and rounding controls in both engines |
 | 6 | Support Windows ARM64 and AMD64 | Native interpreter/compiler/generated programs, platform resources/networking/TLS, ownership stress/reuse and standalone PE packages tested on both native architectures |
 

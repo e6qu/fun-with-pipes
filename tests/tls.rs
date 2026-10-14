@@ -315,6 +315,7 @@ fn stream_snapshot(text: &str) -> String {
             "sslv3 alert bad certificate",
             "wrong version number",
             "Connection reset by peer",
+            "Software caused connection abort",
             "connection closed",
         ] {
             result = result.replace(

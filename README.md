@@ -36,7 +36,8 @@ main =
   exhaustive matching.
 - **Explicit, zero-cost generics.** Only a signature makes a definition
   generic. Every generic is resolved at compile time and specialized for
-  each type it is used at, with no boxing and no dictionaries
+  each type it is used at, without runtime type dictionaries. Value
+  representations can still require boxing
   ([docs/design.md](docs/design.md#generics)).
 - **Tracked effects.** `IO`, `Error[E]`, `State[S]`, `Async`, `Network`
   appear in function types, with handlers and affine resources.
