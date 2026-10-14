@@ -73,7 +73,7 @@ remain immutable evidence, not work to repeat.
 PR #134 is merged. Continue from `5c0287c` on `roadmap-after-134`; do not reopen
 the merged PR or replay completed preparation work. Preserve the six direction
 identifiers below: documentation is maintained, while five implementation areas
-remain. The scope supersedes earlier Windows and floating-format deferrals.
+remain. The user authorized all remaining work together in one follow-up PR. The scope supersedes earlier Windows and floating-format deferrals.
 
 | Step | Work | Acceptance |
 |---|---|---|
