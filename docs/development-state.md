@@ -25,7 +25,7 @@ full Windows and true half/quad language formats remain unfinished.
 | 1 | Implemented | One live handoff, accepted baseline and historical evidence; remove stale next actions |
 | 2 | In progress | Retained-task/scoped foreign proofs pass four hosts; CLI/protocol owners and checked executable ARC implemented, runner proofs pending |
 | 3 | In progress | Wide numeric records measured on four hosts; tail loops and direct array producer fusion implemented, final verification remains |
-| 4 | Pending | Measured kernel/layout improvements, nested reverse differentiation and checkpointing |
+| 4 | In progress | Segmented checkpointing implemented, first execution pending; nested reverse differentiation and further measured kernel/layout improvements remain |
 | 5 | In progress | Exact scalar values, inline arrays, closed quad workers and protocol v2 implemented; C ABI, numeric record workers and complete ownership/platform acceptance remain under validation |
 | 6 | In progress | Native Windows allocator/fiber/socket probes pass both architectures; complete generated resources/runtime, TLS and PE acceptance remain |
 
@@ -34,8 +34,14 @@ baseline aliases F16/BF16 to F32 and F128 to F64. PR #135 is changing scalar
 values, parsing, math, text/JSON and protocol encoding to real formats; these
 changes are under development and not yet accepted by runner validation. Migrate both engines, arrays/workers, ownership,
 foreign ABI, text and versioned wire encoding together; do not publish partial
-format support or silently narrow quad values. Nested reverse mode and
-checkpointing are not implemented.
+format support or silently narrow quad values. Nested reverse mode is not
+implemented. Segmented checkpointing is implemented as an ordinary library
+combinator with explicit replay counts and segment precision, pending its first
+runner execution. Tests cover raw/native agreement, argument errors, zero work,
+dimension changes, exact float types, a bounded live tape and omitted retirement.
+Guarded `cargo fmt --all` and `cargo clippy --lib --tests -- -D warnings` pass;
+they do not execute or typecheck the language fixtures. The focused `autodiff`
+workflow runs those checks on four actual hosts.
 
 ## Current implementation
 

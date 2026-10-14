@@ -5,9 +5,31 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff]
         default: numerical
 jobs:
+  autodiff:
+    if: inputs.suite == 'autodiff'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_AD_WORKSPACE_ARTIFACTS: autodiff-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --no-fail-fast --test autodiff_checkpoint --test ad_tape_scopes --test autodiff_workspace
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: autodiff-${{ matrix.runner }}
+          path: autodiff-evidence/
   numeric_fusion:
     if: inputs.suite == 'numerical'
     strategy:

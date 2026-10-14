@@ -87,8 +87,27 @@ after its `grad` returned is a trap, and so is combining values of two
 different `grad`s. Nested reverse mode is not supported (`Rev[T]` needs
 a primitive float `T`); for second derivatives use `hessian` (nested
 forward mode).
-Reverse mode needs the tape's memory, 24 bytes per operation; there is no
-checkpointing.
+Reverse mode uses 24 bytes per operation before adjoint storage and capacity
+rounding. The active bundle adds segmented checkpointing below; its runner
+acceptance is tracked in the handoff.
+
+`xs | vjp-checkpointed {steps = 1000, every = 32} step seeds` differentiates
+1000 applications of a pure `step`. Both counts are explicit: `steps` must be
+nonnegative and `every` positive. The forward pass saves ordinary input values
+at segment boundaries and retires each segment's tape. The backward pass
+replays segments in reverse order and propagates their vector-Jacobian products.
+This uses roughly `steps / every` value snapshots plus one segment's tape,
+instead of retaining every operation. It evaluates each step twice, so it is
+appropriate when saved tape memory justifies recomputation. Zero steps return
+the seeds without calling the step. Seed length must match the final output.
+
+Each segment follows `vjp` precision: F64 adjoint accumulation followed by
+conversion to the element type. For a narrower type this rounds at segment
+boundaries; it need not equal a single unsegmented F64 accumulation bit for bit.
+Callback types remain pure, with the same primal step order; a primal trap
+stops the forward pass before backward replay. Captured values from unrelated
+active tapes still fail the normal mixed-tape checks. Checkpointing adds no
+syntax, implicit interval or automatic recomputation to ordinary `vjp`.
 
 Accepted PR124 registers detached tape buffers and adjoints for cleanup
 through normal return, mixed-tape errors, recoverable traps and cancellation.

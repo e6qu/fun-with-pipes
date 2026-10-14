@@ -351,6 +351,79 @@ rev._basis : I64 -> I64 -> List[t] where Zero[t], One[t]
 rev._basis = curry (both (.0 | eq | flip compose bool.to-num) (.1 | range 0)
     | uncurry map)
 
+# Checkpointed vector-Jacobian products for repeated pure steps. A checkpoint
+# stores ordinary values, not a live tape. Backward replays each segment once.
+# `steps` must be nonnegative and `every` positive; neither has an implicit
+# default. Each segment accumulates adjoints in F64, then converts its input
+# adjoints to t, exactly as an explicit sequence of `vjp` calls would.
+Checkpoint = { steps: I64, every: I64 }
+
+vjp-checkpointed : Checkpoint -> (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where Float[t], Dup[t]
+vjp-checkpointed = curry3 (rev._checkpoint-config | rev._checkpoint-run)
+
+# Validate before evaluating the step, including the zero-step case.
+rev._checkpoint-config : (Checkpoint, a, b) -> (Checkpoint, a, b) where Dup[a], Dup[b]
+rev._checkpoint-config = if (.0 | .steps | lt 0)
+    (const "autodiff: checkpoint steps must be nonnegative" | prim.trap)
+    (if (.0 | .every | lt 1)
+        (const "autodiff: checkpoint interval must be positive" | prim.trap)
+        id)
+
+rev._checkpoint-run : (Checkpoint, List[Rev[t]] -> List[Rev[t]], List[t]) -> List[t] -> List[t] where Float[t], Dup[t]
+rev._checkpoint-run = curry (if (.0 | .0 | .steps | eq 0)
+    (both (.1 | length) (.0 | .2) | uncurry rev._checkpoint-length)
+    (make {
+        0 = .0 | .1 | rev._checkpoint-back,
+        1 = .0 | .2,
+        2 = make { 0 = .0 | .0, 1 = .0 | .1, 2 = .1 }
+            | rev._checkpoints,
+    } | uncurry3 fold))
+
+# Replay exactly n steps in constant stack space, without retaining iterates.
+rev._replay : I64 -> (a -> a) -> a -> a where Dup[a]
+rev._replay = curry3 (loop (if (.0 | eq 0)
+    (.2 | Stop)
+    (make { 0 = .0 | sub 1, 1 = .1, 2 = both .1 .2 | uncurry id } | Again)))
+
+rev._checkpoint-values : I64 -> (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] where Dup[t]
+rev._checkpoint-values = curry3 (ad.scope (make {
+    0 = .0, 1 = .1, 2 = .2 | rev._seed | .1,
+} | uncurry3 rev._replay | map .value))
+
+# Newest checkpoint first, ready for the backward fold. The forward scope
+# retires even a tape whose outputs are constants or whose callback traps.
+rev._checkpoints : (Checkpoint, List[Rev[t]] -> List[Rev[t]], List[t]) -> List[(I64, List[t])] where Dup[t]
+rev._checkpoints = make {
+    0 = .0 | .steps, 1 = .0 | .every, 2 = .1, 3 = .2, 4 = const [],
+} | loop rev._checkpoint-step
+
+rev._checkpoint-step : (I64, I64, List[Rev[t]] -> List[Rev[t]], List[t], List[(I64, List[t])]) -> Step[(I64, I64, List[Rev[t]] -> List[Rev[t]], List[t], List[(I64, List[t])]), List[(I64, List[t])]] where Dup[t]
+rev._checkpoint-step = if (.0 | eq 0)
+    (.4 | Stop)
+    (both id (fork min .0 .1) | make {
+        0 = fork sub .1 (.0 | .0),
+        1 = .0 | .1,
+        2 = .0 | .2,
+        3 = make { 0 = .1, 1 = .0 | .2, 2 = .0 | .3 }
+            | uncurry3 rev._checkpoint-values,
+        4 = both (both .1 (.0 | .3)) (.0 | .4) | uncurry Cons,
+    } | Again)
+
+rev._checkpoint-length : I64 -> List[a] -> List[a] where Dup[a]
+rev._checkpoint-length = curry (if (fork eq .0 (.1 | length))
+    .1
+    (const "autodiff: checkpoint seed count differs from output count" | prim.trap))
+
+rev._checkpoint-back : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> (I64, List[t]) -> List[t] where Float[t], Dup[t]
+rev._checkpoint-back = curry3 (make {
+    0 = both
+            (both (.2 | .0) .0 | uncurry rev._replay)
+            (.1 | length | rev._checkpoint-length)
+        | uncurry compose,
+    1 = .1,
+    2 = .2 | .1,
+} | uncurry3 vjp)
+
 test "grad" =
     [1.0, 2.0]
     | grad (fork
