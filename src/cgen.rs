@@ -13,6 +13,7 @@ mod wide;
 
 const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt.c"),
+    include_str!("../runtime/fwp_rt_windows.c"),
     include_str!("../runtime/fwp_rt_gc.c"),
     include_str!("../runtime/fwp_rt_ops.c"),
     include_str!("../runtime/fwp_rt_num.c"),
@@ -21,6 +22,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_context_win.c"),
     include_str!("../runtime/fwp_rt_task.c"),
     include_str!("../runtime/fwp_rt_sys.c"),
+    include_str!("../runtime/fwp_rt_sys_windows.c"),
     include_str!("../runtime/fwp_rt_decode.c"),
     include_str!("../runtime/fwp_rt_json.c"),
     include_str!("../runtime/fwp_rt_web.c"),
@@ -144,7 +146,7 @@ pub fn native_is_macos() -> bool {
 
 fn native_runtime_links() -> &'static [&'static str] {
     if cfg!(windows) && native_options().cross.is_none() {
-        &["-lm", "-lpthread", "-lws2_32"]
+        &["-lm", "-lws2_32", "-lshell32"]
     } else {
         &["-lm", "-lpthread"]
     }
@@ -8187,7 +8189,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         // Darwin terminates dlopened images before archive destructors. The
         // guarded finish also runs at dynamic unload; repeated calls are safe.
         lib_defs.push_str(
-            "static int fwp_lib_ready = 0;\n#if FWP_GC\nstatic void fwp_lib_finish(void);\n#endif\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) return;\n#if FWP_GC\n    if (atexit(fwp_lib_finish)) fwp_trap(\"cannot register library cleanup\");\n    fwp_closure_drop_init();\n#endif\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
+            "static int fwp_lib_ready = 0;\n#if FWP_GC\nstatic void fwp_lib_finish(void);\n#endif\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) return;\n#if FWP_GC\n    if (atexit(fwp_lib_finish)) fwp_trap(\"cannot register library cleanup\");\n    fwp_closure_drop_init();\n#endif\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    fwp_start_time = fwp_now_ns();\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
         );
         for (cname, fid, ps, r) in export_sigs(prog)? {
             let mut all: Vec<crate::ffi::CType> = ps.iter().map(|(_, c)| c.clone()).collect();
@@ -9070,16 +9072,35 @@ static void *fwp_main_thread(void *arg) {{
     return 0;
 }}
 
+#ifdef _WIN32
+static DWORD WINAPI fwp_windows_main_thread(void *argument) {{
+    fwp_main_thread(argument);
+    return 0;
+}}
+#endif
+
 int main(int argc, char **argv) {{
+#ifdef _WIN32
+    argv = fwp_win_arguments(&argc);
+    if (_setmode(_fileno(stdin), _O_BINARY) < 0 || _setmode(_fileno(stdout), _O_BINARY) < 0)
+        fwp_trap("cannot configure binary standard streams");
+#endif
     fwp_fns = fwp_fn_table;
     fwp_prog_out = stdout;
     fwp_argc = argc;
     fwp_argv = argv;
-    clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);
+    fwp_start_time = fwp_now_ns();
     fwp_seed_rng();
     setvbuf(stdout, 0, _IOFBF, 1 << 16);
 #ifdef __wasi__
     fwp_main_thread(0);
+#elif defined(_WIN32)
+    HANDLE thread = CreateThread(NULL, fwp_main_stack, fwp_windows_main_thread, NULL,
+                                 STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
+    if (!thread) fwp_trap("cannot create main runtime thread");
+    if (WaitForSingleObject(thread, INFINITE) != WAIT_OBJECT_0) abort();
+    CloseHandle(thread);
+    free(argv);
 #else
     signal(SIGPIPE, SIG_IGN);
     pthread_attr_t attr;

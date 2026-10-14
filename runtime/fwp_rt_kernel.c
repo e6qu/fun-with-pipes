@@ -450,7 +450,12 @@ static void fwp_kjob_do(fwp_kjob *j) {
     }
 }
 
-#ifndef __wasi__
+#ifdef _WIN32
+static DWORD WINAPI fwp_kjob_thread(void *p) {
+    fwp_kjob_do((fwp_kjob *)p);
+    return 0;
+}
+#elif !defined(__wasi__)
 static void *fwp_kjob_thread(void *p) {
     fwp_kjob_do((fwp_kjob *)p);
     return 0;
@@ -474,7 +479,21 @@ static void fwp_kernel_parallel(const fwp_kernel *k, int sum, size_t n, size_t u
         jobs[i].hi = (i + 1) * units / t;
         jobs[i].out = out;
     }
-#ifndef __wasi__
+#ifdef _WIN32
+    HANDLE tids[256];
+    size_t started = 1;
+    for (; started < t; started++) {
+        tids[started] = CreateThread(NULL, (size_t)1 << 20, fwp_kjob_thread,
+                                     &jobs[started], STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
+        if (!tids[started]) break;
+    }
+    if (started == t) fwp_kjob_do(&jobs[0]);
+    for (size_t i = 1; i < started; i++) {
+        if (WaitForSingleObject(tids[i], INFINITE) != WAIT_OBJECT_0) abort();
+        CloseHandle(tids[i]);
+    }
+    if (started != t) fwp_trap("cannot create numerical worker thread");
+#elif !defined(__wasi__)
     pthread_t tids[256];
     int started[256] = {0};
 #ifdef FWP_STATIC_MEMORY

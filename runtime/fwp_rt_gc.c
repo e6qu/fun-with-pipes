@@ -1568,7 +1568,25 @@ typedef struct {
 /* WASI has no runtime threads. Native cleanup may enter through a host
  * callback, so its temporary work context is per thread. No safe point
  * or collected allocation occurs while processing this queue. */
-#if defined(FWP_LIBRARY) && !defined(__wasm__)
+#if defined(FWP_LIBRARY) && defined(_WIN32)
+static DWORD fwp_closure_drop_key = TLS_OUT_OF_INDEXES;
+static void fwp_closure_drop_init(void) {
+    if (fwp_closure_drop_key != TLS_OUT_OF_INDEXES) return;
+    fwp_closure_drop_key = TlsAlloc();
+    if (fwp_closure_drop_key == TLS_OUT_OF_INDEXES) fwp_trap("cannot create closure cleanup key");
+}
+static fwp_closure_drop_work *fwp_closure_drop_get(void) {
+    return fwp_closure_drop_key == TLS_OUT_OF_INDEXES ? NULL : TlsGetValue(fwp_closure_drop_key);
+}
+static void fwp_closure_drop_set(fwp_closure_drop_work *work) {
+    if (fwp_closure_drop_key == TLS_OUT_OF_INDEXES || !TlsSetValue(fwp_closure_drop_key, work)) abort();
+}
+static void fwp_closure_drop_finish(void) {
+    if (fwp_closure_drop_key == TLS_OUT_OF_INDEXES) return;
+    TlsFree(fwp_closure_drop_key);
+    fwp_closure_drop_key = TLS_OUT_OF_INDEXES;
+}
+#elif defined(FWP_LIBRARY) && !defined(__wasm__)
 /* A native TLS descriptor can keep a dylib resident after dlclose on Darwin.
  * Libraries use an explicitly deleted pthread key for the same per-thread
  * temporary context. Initialization happens before accepting any export call. */

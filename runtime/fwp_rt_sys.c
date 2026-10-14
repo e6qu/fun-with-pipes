@@ -2,6 +2,37 @@
  * the terminal and processes (mirrors src/sys.rs). Errors are IoErrors
  * whose message is "<path>: <strerror>". */
 
+static int fwp_cmp_cstr(const void *a, const void *b) {
+    const V x = *(const V *)a, y = *(const V *)b;
+    size_t n = STR(x)->len < STR(y)->len ? STR(x)->len : STR(y)->len;
+    int c = memcmp(STR(x)->d, STR(y)->d, n);
+    if (c) return c;
+    return STR(x)->len < STR(y)->len ? -1 : STR(x)->len > STR(y)->len;
+}
+
+static int fwp_cmp_env(const void *a, const void *b) {
+    V x = *(const V *)a, y = *(const V *)b;
+    int c = fwp_cmp_cstr(&OBJ(x)->f[0], &OBJ(y)->f[0]);
+    return c ? c : fwp_cmp_cstr(&OBJ(x)->f[1], &OBJ(y)->f[1]);
+}
+
+static V fwp_p_file_append(V path, V s, const fwp_desc *err) {
+    FILE *f = fwp_path_fopen(path, "ab");
+    if (!f) return fwp_io_error_path("write", STR(path)->d, err);
+    size_t n = fwrite(STR(s)->d, 1, STR(s)->len, f);
+    if (fclose(f) != 0 || n != STR(s)->len) return fwp_io_error_path("write", STR(path)->d, err);
+    return FWP_UNIT;
+}
+
+static V fwp_p_file_write_bytes(V path, V s, const fwp_desc *err) {
+    FILE *f = fwp_path_fopen(path, "wb");
+    if (!f) return fwp_io_error_path("write", STR(path)->d, err);
+    size_t n = fwrite(STR(s)->d, 1, STR(s)->len, f);
+    if (fclose(f) != 0 || n != STR(s)->len) return fwp_io_error_path("write", STR(path)->d, err);
+    return FWP_UNIT;
+}
+
+#ifndef _WIN32
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -54,30 +85,6 @@ static V fwp_p_file_rename(V to, V from, const fwp_desc *err) {
     return FWP_UNIT;
 }
 
-static V fwp_p_file_append(V path, V s, const fwp_desc *err) {
-    FILE *f = fopen(STR(path)->d, "ab");
-    if (!f) return fwp_io_error_path("write", STR(path)->d, err);
-    size_t n = fwrite(STR(s)->d, 1, STR(s)->len, f);
-    if (fclose(f) != 0 || n != STR(s)->len) return fwp_io_error_path("write", STR(path)->d, err);
-    return FWP_UNIT;
-}
-
-static V fwp_p_file_write_bytes(V path, V s, const fwp_desc *err) {
-    FILE *f = fopen(STR(path)->d, "wb");
-    if (!f) return fwp_io_error_path("write", STR(path)->d, err);
-    size_t n = fwrite(STR(s)->d, 1, STR(s)->len, f);
-    if (fclose(f) != 0 || n != STR(s)->len) return fwp_io_error_path("write", STR(path)->d, err);
-    return FWP_UNIT;
-}
-
-static int fwp_cmp_cstr(const void *a, const void *b) {
-    const V x = *(const V *)a, y = *(const V *)b;
-    size_t n = STR(x)->len < STR(y)->len ? STR(x)->len : STR(y)->len;
-    int c = memcmp(STR(x)->d, STR(y)->d, n);
-    if (c) return c;
-    return STR(x)->len < STR(y)->len ? -1 : STR(x)->len > STR(y)->len;
-}
-
 static V fwp_p_dir_list(V path, const fwp_desc *err) {
     DIR *d = opendir(STR(path)->d);
     if (!d) return fwp_io_error_path("list", STR(path)->d, err);
@@ -118,12 +125,6 @@ static V fwp_p_dir_create_all(V path, const fwp_desc *err) {
             return fwp_io_error_path("create", p, err);
     }
     return FWP_UNIT;
-}
-
-static int fwp_cmp_env(const void *a, const void *b) {
-    V x = *(const V *)a, y = *(const V *)b;
-    int c = fwp_cmp_cstr(&OBJ(x)->f[0], &OBJ(y)->f[0]);
-    return c ? c : fwp_cmp_cstr(&OBJ(x)->f[1], &OBJ(y)->f[1]);
 }
 
 static V fwp_p_env_vars(void) {
@@ -335,3 +336,5 @@ static V fwp_run_process(V argv, V input, int capture, const fwp_desc *err) {
 static V fwp_p_process_run_input(V input, V argv, const fwp_desc *err) { return fwp_run_process(argv, input, 1, err); }
 static V fwp_p_process_call(V argv, const fwp_desc *err) { return fwp_run_process(argv, 0, 0, err); }
 #endif /* __wasi__ */
+
+#endif /* !_WIN32 */

@@ -41,7 +41,7 @@ _Noreturn void longjmp(jmp_buf, int);
 #endif
 #include <math.h>
 #include <time.h>
-#ifndef __wasi__
+#if !defined(__wasi__) && !defined(_WIN32)
 #include <pthread.h>
 #endif
 #include <errno.h>

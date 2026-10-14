@@ -2579,27 +2579,51 @@ static V fwp_p_args(void) {
 }
 
 static V fwp_p_env_get(V name) {
+#ifdef _WIN32
+    return fwp_win_env_get(name);
+#else
     const char *v = getenv(STR(name)->d);
     return v ? fwp_some(fwp_str_lossy(v, strlen(v))) : FWP_NONE;
+#endif
 }
 
-static struct timespec fwp_start_time;
+static int64_t fwp_now_ns(void) {
+#ifdef _WIN32
+    LARGE_INTEGER counter, frequency;
+    if (!QueryPerformanceCounter(&counter) || !QueryPerformanceFrequency(&frequency))
+        fwp_trap("cannot read monotonic clock");
+    return (int64_t)((i128)counter.QuadPart * 1000000000 / frequency.QuadPart);
+#else
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (int64_t)t.tv_sec * 1000000000LL + t.tv_nsec;
+#endif
+}
+
+static int64_t fwp_unix_ns(void) {
+#ifdef _WIN32
+    FILETIME now;
+    GetSystemTimePreciseAsFileTime(&now);
+    uint64_t ticks = ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime;
+    i128 ns = ((i128)ticks - UINT64_C(116444736000000000)) * 100;
+    if (ns < INT64_MIN || ns > INT64_MAX) fwp_trap("system time exceeds Duration range");
+    return (int64_t)ns;
+#else
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+    return (int64_t)now.tv_sec * 1000000000LL + now.tv_nsec;
+#endif
+}
+
+static int64_t fwp_start_time;
 
 static V fwp_duration(int64_t ns) { V f[1] = {(V)ns}; return fwp_record(1, f); }
 
 static V fwp_p_time_monotonic(void) {
-    struct timespec t;
-    clock_gettime(CLOCK_MONOTONIC, &t);
-    int64_t ns = (int64_t)(t.tv_sec - fwp_start_time.tv_sec) * 1000000000LL +
-                 (t.tv_nsec - fwp_start_time.tv_nsec);
-    return fwp_duration(ns);
+    return fwp_duration(fwp_now_ns() - fwp_start_time);
 }
 
-static V fwp_p_time_unix(void) {
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    return fwp_duration((int64_t)t.tv_sec * 1000000000LL + t.tv_nsec);
-}
+static V fwp_p_time_unix(void) { return fwp_duration(fwp_unix_ns()); }
 
 static V fwp_p_exit(V code) {
     fflush(stdout);
@@ -2615,9 +2639,7 @@ static void fwp_seed_rng(void) {
     if (s && *s && (seed = strtoull(s, &end, 10), *end == 0) && s[0] != '-' && s[0] != '+') {
         fwp_rng = seed | 1;
     } else {
-        struct timespec t;
-        clock_gettime(CLOCK_REALTIME, &t);
-        fwp_rng = ((uint64_t)t.tv_sec * 1000000000ULL + (uint64_t)t.tv_nsec) | 1;
+        fwp_rng = (uint64_t)fwp_unix_ns() | 1;
     }
 }
 
@@ -2929,7 +2951,7 @@ static V fwp_file_value(FILE *f, const char *path) {
 }
 
 static V fwp_p_file_open(V path, int create, const fwp_desc *err) {
-    FILE *f = fopen(STR(path)->d, create ? "w+b" : "rb");
+    FILE *f = fwp_path_fopen(path, create ? "w+b" : "rb");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
     return fwp_file_value(f, STR(path)->d);
 }
@@ -3013,8 +3035,8 @@ static V fwp_p_file_read_all_owned(V h, const fwp_desc *err) {
 }
 
 static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
-    FILE *f = fopen(STR(path)->d, "r+b");
-    if (!f) f = fopen(STR(path)->d, "w+b");
+    FILE *f = fwp_path_fopen(path, "r+b");
+    if (!f) f = fwp_path_fopen(path, "w+b");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
     V h = fwp_file_value(f, STR(path)->d);
     fwp_file_cleanup file = {f, h};
@@ -3039,8 +3061,8 @@ static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
 }
 
 static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pair)(V), void (*dup_result)(V)) {
-    FILE *f = fopen(STR(path)->d, "r+b");
-    if (!f) f = fopen(STR(path)->d, "w+b");
+    FILE *f = fwp_path_fopen(path, "r+b");
+    if (!f) f = fwp_path_fopen(path, "w+b");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
     V h = fwp_file_value(f, STR(path)->d);
     fwp_file_cleanup file = {f, h};
@@ -3073,7 +3095,7 @@ static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pa
 }
 
 static V fwp_p_file_read_impl(V path, const fwp_desc *err, int text) {
-    FILE *f = fopen(STR(path)->d, "rb");
+    FILE *f = fwp_path_fopen(path, "rb");
     if (!f) return fwp_io_error_path("read", STR(path)->d, err);
     fwp_file_cleanup file = {f, 0};
     fwp_cleanup stream_cleanup;
@@ -3114,7 +3136,7 @@ static V fwp_p_file_read_bytes(V path, const fwp_desc *err) {
 }
 
 static V fwp_p_file_write_new(V path, V s, const fwp_desc *err) {
-    FILE *f = fopen(STR(path)->d, "wb");
+    FILE *f = fwp_path_fopen(path, "wb");
     if (!f) return fwp_io_error_path("write", STR(path)->d, err);
     int error = fwrite(STR(s)->d, 1, STR(s)->len, f) == STR(s)->len ? 0 : errno;
     if (fclose(f) != 0 && !error) error = errno;

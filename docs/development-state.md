@@ -27,7 +27,7 @@ full Windows and true half/quad language formats remain unfinished.
 | 3 | In progress | Direct iterate fusion measured; broader producer/worker/aggregate specialization remains |
 | 4 | Pending | Measured kernel/layout improvements, nested reverse differentiation and checkpointing |
 | 5 | In progress | Exact scalar values, inline arrays, closed quad workers and protocol v2 implemented; C ABI, numeric record workers and complete ownership/platform acceptance remain under validation |
-| 6 | In progress | Native Windows Rust and generated C allocator probes pass on both architectures; full C runtime/resources/networking/TLS and PE packages remain |
+| 6 | In progress | Native Windows allocator/fiber/socket probes pass both architectures; complete generated resources/runtime, TLS and PE acceptance remain |
 
 The [float contract](float-formats.md) is authoritative. The accepted PR #134
 baseline aliases F16/BF16 to F32 and F128 to F64. PR #135 is changing scalar
@@ -53,10 +53,12 @@ monotonic timing, working-set accounting and PE writable-section roots with a
 missing-root negative control. LLVM-MinGW UCRT assets are hash-pinned; Rust's
 MSVC target separately uses SDK-aware Clang. Generated C tasks now use Windows fibers with explicit suspended register/stack
 roots, demand-committed stacks, native console shutdown and overflow handling.
-A native probe checks each root range independently, floating-point state,
-reclamation and preservation of a host-owned fiber. Its runner execution is
-pending; generated networking, resources/processes, static memory and packaging
-still need the rest of the Windows port.
+Native probes pass both architectures for each root range independently,
+floating-point state, reclamation, host-owned fibers and full-width sockets.
+Windows UTF-16 filesystem/environment/arguments, binary standard streams, native
+threads/clocks and CreateProcessW capture are now implemented. Generated-program
+execution is pending; static-memory reservations, TLS dependencies and packaging
+remain unfinished.
 
 SoftFloat 3e, scoped gdtoa and TLFloat 1.15.0 are vendored with licenses,
 provenance and recorded patches. The shared core has exact half/bfloat/quad
@@ -110,7 +112,7 @@ half/bfloat worker fields use u16 bits. Closed quad numeric workers use direct
 bit-struct arithmetic without intermediate boxes. Generic quad values still box. Closed flat numeric record workers now carry
 F128/I128/U128 fields directly in C structs; boxed entry/exit copies bits, drops
 incoming owners and protects partial returned records. Raw/native/trap-order and physical lifetime checks pass four hosts.
-Allocation/stack/disassembly measurements still need the corrected runner script. Nested or
+Four-host measurements now pass, with permanent evidence below. Nested or
 non-numeric record fields continue through ordinary typed lowering.
 
 The C ABI uses explicit u16 half/bfloat bits and a two-word quad struct, including
@@ -139,18 +141,31 @@ external-callback admission is claimed.
 
 ## Active checks
 
-- Windows fibers at `ae57964` failed to compile in
-  [38530667115](https://github.com/e6qu/fun-with-pipes/actions/runs/38530667115):
-  the SDK hid `GetCurrentThreadStackLimits` without an explicit minimum API.
-  The generated runtime and standalone probe now declare Windows 10 APIs.
-  Execution of the correction is pending on both native architectures.
-- Native socket code now preserves full-width Windows handles, noninheritable
-  sockets, WSA errors and stream/datagram transfer widths, using WSAPoll for
-  readiness. HTTP/2 and gRPC carry the same handle type. A Windows OpenSSL BIO
-  carries the full socket handle instead of narrowing through `SSL_set_fd`.
-  TLS accept initialization failure now closes the connection. These paths
-  still need runner validation; Windows OpenSSL dependencies and complete
-  resource/process/static-memory runtime integration remain unfinished.
+- Both native Windows jobs passed at `4456bff` in
+  [38532228460](https://github.com/e6qu/fun-with-pipes/actions/runs/38532228460),
+  including actual fiber register/stack omission controls, host-fiber preservation,
+  full-width socket/error/transfer probes and the prior interpreter/math/allocator
+  checks. This corrects the earlier hidden SDK declaration. The next batch adds
+  complete generated numerics/tasks, Unicode files/arguments and simultaneous
+  stdin/stdout/stderr capture at O1/O2 with GC stress and reuse verification.
+- Four-host wide scalar/record measurements passed at `4456bff` in
+  [38532221118](https://github.com/e6qu/fun-with-pipes/actions/runs/38532221118).
+  [Permanent reports](measurements/wide-records-2026-10-14.json) retain hardware,
+  exact build commands, hashes, all counters and timings. The 256-step scalar
+  workloads reduce managed allocation requests from 513 to 2; mixed records from
+  3,878 to 48 and retains from 4,625 to 12. All finish with zero charged live
+  bytes and zero collections. Record peak live bytes remain 1,040 in both variants.
+  ARM macOS disassembly still has recursive 144-byte worker frames; Linux AMD64
+  makes a loop using registers and stack slots. This is not zero stack usage or
+  a universal speed claim. Broader fusion and explicit worker tail lowering remain.
+- That run passed both full focused Linux jobs and all ownership/socket controls
+  on macOS, but macOS TLS fixtures failed certificate verification. The bundle
+  workflow lacked the OpenSSL 3 CLI path that the passing portability workflow
+  already supplies. The path is corrected; fresh macOS execution is required.
+- Native socket code carries one full-width handle type through tasks, HTTP/2 and
+  gRPC. The Windows OpenSSL BIO preserves handles rather than narrowing them
+  through `SSL_set_fd`; TLS accept initialization failure closes its connection.
+  Complete Windows TLS acceptance still needs dependencies and native execution.
 - At `dfca8e6`, all four Linux/macOS hosts passed exact-format/protocol/array
   tests and all seven foreign ABI/export tests in
   [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).
@@ -160,7 +175,7 @@ external-callback admission is claimed.
   at `9aed34b` passed all combined task/foreign lifetime and numeric record
   worker regressions on all four hosts. Its measurement step expected fixed
   decimal text instead of the specified shortest quad text (`3.2896e4`). That
-  assertion is corrected; allocation/stack/disassembly evidence still needs a rerun.
+  assertion is corrected and the later measurement run above passes.
 - All four hosts passed manual exact-core linking and concurrent core-cache
   publication/reuse/eviction at `3800499` in
   [38526720651](https://github.com/e6qu/fun-with-pipes/actions/runs/38526720651).
@@ -176,15 +191,17 @@ external-callback admission is claimed.
   `float_linking`, `array_unwind_ownership` and `windows_context` targets.
   `python3 scripts/local-guard.py cargo fmt --all -- --check` and guarded
   concatenated runtime C syntax checking passed after the fiber integration.
-  The Windows-only probe is excluded on macOS; only native Windows execution
+  Guarded `cargo clippy --lib --bin fwp --test windows_runtime -- -D warnings`
+  and combined TLS/service runtime C syntax also pass for the resource port.
+  The Windows-only probes are excluded on macOS; only native Windows execution
   can verify it. Guarded Python syntax checking passed for `measure-wide.py`.
 
 ## Next action
 
-Next: run corrected quad measurements and native Windows fiber/socket probes,
-fix their failures, and preserve Linux/macOS network/TLS resource controls.
+Next: run complete generated Windows programs on both native architectures,
+fix failures, and rerun the macOS TLS controls with the corrected OpenSSL path.
 Finish managed protocol ownership and final-head ABI/cache acceptance. Keep raw/native agreement and exact rounding.
-Then complete the Windows C runtime and PE packages, broader ownership/worker
+Then complete Windows static memory/TLS/PE packages, broader ownership/worker
 proofs, and nested reverse differentiation/checkpointing with measured layout
 improvements. Documentation closeout is complete; five implementation areas
 remain. Do not replay the merged core/fusion/reclamation work.

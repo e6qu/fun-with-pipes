@@ -236,19 +236,6 @@ static struct sigaction fwp_prior_sigint, fwp_prior_sigterm;
 static int fwp_saved_sigint, fwp_saved_sigterm;
 #endif
 
-static int64_t fwp_now_ns(void) {
-#ifdef _WIN32
-    LARGE_INTEGER counter, frequency;
-    if (!QueryPerformanceCounter(&counter) || !QueryPerformanceFrequency(&frequency))
-        fwp_trap("cannot read monotonic clock");
-    return (int64_t)((i128)counter.QuadPart * 1000000000 / frequency.QuadPart);
-#else
-    struct timespec t;
-    clock_gettime(CLOCK_MONOTONIC, &t);
-    return (int64_t)t.tv_sec * 1000000000LL + t.tv_nsec;
-#endif
-}
-
 static int64_t fwp_dur_ns(V d) { return (int64_t)OBJ(d)->f[0]; }
 
 /* the monotonic time a duration from now, saturating instead of

@@ -8,7 +8,7 @@ it.
 
 Runtime ownership, natural-width numeric storage, numerical loop fusion,
 blocked matrix multiplication and bounded autodiff workspace reuse are accepted.
-[../PLAN.md](../PLAN.md) records the completed roadmap, retained performance
+[../PLAN.md](../PLAN.md) records the active roadmap, retained performance
 evidence and checked native ARC scope.
 [ownership.md](ownership.md) records the representation and floating-point
 contract; [development-state.md](development-state.md) records current evidence.
