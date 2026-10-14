@@ -225,9 +225,12 @@ unbounded retention for small results. Pointer/resource slices always copy to
 preserve disposal order. Natural alignment follows backing alignment and element
 stride; this is not a guarantee of cache-line or SIMD-register alignment.
 
-F16/BF16 retain F32 precision and 4-byte payloads; F128 retains F64 precision
-and 8-byte payloads. [The format decision](float-formats.md) specifies the
-future precision, conversion and coordinated protocol migration. I128/U128
+The active PR migrates F16/BF16 to two-byte payloads and F128 to inline
+16-byte array payloads. Quad array reads borrow internal bits; escaping scalars
+copy into independent owned boxes. Quad stride stays 16 even with narrow packing
+disabled. Generic quad values remain boxed; closed quad workers use bit structs.
+[The format contract](float-formats.md) records actual validation and the
+coordinated protocol v2 migration. I128/U128
 remain boxed in generic word slots and containers; eligible scalar workers
 use native wide arguments, locals and results.
 The handoff records accepted source and its actual runner gates.

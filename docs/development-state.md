@@ -26,7 +26,7 @@ full Windows and true half/quad language formats remain unfinished.
 | 2 | In progress | Scalar foreign ARC and proved WASM/File freeing tested; retained callbacks, protocols and cyclic ownership proofs remain |
 | 3 | In progress | Direct iterate fusion measured; broader producer/worker/aggregate specialization remains |
 | 4 | Pending | Measured kernel/layout improvements, nested reverse differentiation and checkpointing |
-| 5 | In progress | Shared exact arithmetic/text/math cores and decimal-preserving syntax; value/storage/ABI/protocol migration remains |
+| 5 | In progress | Exact scalar values, inline arrays, closed quad workers and protocol v2 implemented; C ABI, aggregate workers and complete ownership/platform acceptance remain under validation |
 | 6 | In progress | Native Windows Rust and generated C allocator probes pass on both architectures; full C runtime/resources/networking/TLS and PE packages remain |
 
 The [float contract](float-formats.md) is authoritative. The accepted PR #134
@@ -139,7 +139,25 @@ Foreign ABI integration is in progress: explicit u16 half/bfloat bits, two-word
 quad structs, shim field/result widths, callbacks, pointer widths and owned
 native returns. ARC and lowering now share a recursive pointer-free C value
 classifier. Managed pointers/callbacks still require further lifetime proofs.
-Focused FFI lint checks passed; new raw/native and ARC C-record tests await CI.
+Focused FFI lint checks passed. Run 38523331883 passed the scalar/protocol/worker
+checks on the first three completed hosts and the repaired array-bound controls,
+then the new FFI test exposed a generated cleanup-field assignment when unwind
+registration is omitted. That assignment now requires an emitted cleanup record;
+the correction needs CI.
+
+At `bb523a5`, both actual WASI jobs passed in
+[38523463736](https://github.com/e6qu/fun-with-pipes/actions/runs/38523463736),
+including the golden programs, core arithmetic/math and physical reclamation.
+Both native Windows foundation jobs passed in
+[38523466974](https://github.com/e6qu/fun-with-pipes/actions/runs/38523466974),
+including interpreter goldens; this remains narrower than full Windows support.
+
+Array unwind hardening now registers partial arrays through callbacks and failed
+retains, pending `get`/list elements, consumed update arrays and fold accumulators,
+view headers and sort scratch. A new ARC probe checks physical reclamation on
+callback failure and injected retain failure, with omitted-release controls.
+Guarded focused Rust lint and runtime C syntax checks pass; runner execution is
+pending. No allocation/performance claim is made from these checks.
 
 ## Next action
 

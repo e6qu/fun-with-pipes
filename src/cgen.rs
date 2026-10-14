@@ -6919,6 +6919,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     };
                                     args.push(self.desc(&input[0]));
                                 }
+                                if sym == "array.to-list" {
+                                    args.push(
+                                        self.value_drop(func.ty.params(func.arity as usize).1),
+                                    );
+                                }
+                                if sym == "array.fold" {
+                                    args.push(self.value_drop(&func.locals[1]));
+                                }
                                 s = format!(
                                     "return fwp_p_{}_typed({});",
                                     sym.replace(['.', '-'], "_"),
@@ -7456,7 +7464,7 @@ impl Gen<'_> {
                     converted
                 };
                 let _ = writeln!(out, "    {name}_fields[{index}] = {converted};");
-                if crate::rc::needs_rc(&self.prog.shapes, &types[*index].1) {
+                if !protect.is_empty() && crate::rc::needs_rc(&self.prog.shapes, &types[*index].1) {
                     let _ = writeln!(out, "    {ctx}.v{slot} = {name}_fields[{index}];");
                     slot += 1;
                 }

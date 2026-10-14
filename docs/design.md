@@ -188,8 +188,9 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   types are not `Dup`.
 - Numbers have explicit widths. Arithmetic traps on overflow and division
   by zero; `wrapping`, `saturating`, `overflowing` and `checked` give the
-  alternatives. There are no implicit conversions. `F16`, `BF16` and
-  `F128` are computed at `F32` or `F64` precision.
+  alternatives. There are no implicit conversions. The active format migration
+  gives `F16`, `BF16` and `F128` their declared precision through shared software
+  cores; [the format contract](float-formats.md) records integration and validation.
 
 ## Generics
 
