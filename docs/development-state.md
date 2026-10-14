@@ -23,7 +23,7 @@ full Windows and true half/quad language formats remain unfinished.
 | Step | Status | Implemented and still required |
 |---|---|---|
 | 1 | Implemented | One live handoff, accepted baseline and historical evidence; remove stale next actions |
-| 2 | In progress | Scalar foreign ARC and proved WASM/File freeing tested; retained callbacks, protocols and cyclic ownership proofs remain |
+| 2 | In progress | Scalar foreign ARC and proved WASM/File freeing tested; retained-task/scoped foreign proofs pass four hosts; protocol ownership remains |
 | 3 | In progress | Direct iterate fusion measured; broader producer/worker/aggregate specialization remains |
 | 4 | Pending | Measured kernel/layout improvements, nested reverse differentiation and checkpointing |
 | 5 | In progress | Exact scalar values, inline arrays, closed quad workers and protocol v2 implemented; C ABI, numeric record workers and complete ownership/platform acceptance remain under validation |
@@ -109,8 +109,8 @@ arrays store inline bits, with independent owned boxes at escaping boundaries;
 half/bfloat worker fields use u16 bits. Closed quad numeric workers use direct
 bit-struct arithmetic without intermediate boxes. Generic quad values still box. Closed flat numeric record workers now carry
 F128/I128/U128 fields directly in C structs; boxed entry/exit copies bits, drops
-incoming owners and protects partial returned records. Raw/native/trap-order
-checks and allocation/stack/disassembly measurements await runners. Nested or
+incoming owners and protects partial returned records. Raw/native/trap-order and physical lifetime checks pass four hosts.
+Allocation/stack/disassembly measurements still need the corrected runner script. Nested or
 non-numeric record fields continue through ordinary typed lowering.
 
 The C ABI uses explicit u16 half/bfloat bits and a two-word quad struct, including
@@ -119,17 +119,18 @@ C value classifier. Raw foreign pointers and callbacks returning managed C addre
 lifetime proofs. Scoped text/byte borrows, copied string results and synchronous
 callbacks carrying C value bits are now implemented with task-local contexts and
 unwind cleanup; physical-reclamation, reentry, suspension and cancellation
-controls need runner execution.
+controls pass the four-host focused run below; final-head acceptance remains.
 C/C++ core archives are keyed by source/toolchain/target/options; emitted C has
 companion core sources. Cache pinning protects already-open archives from concurrent
-eviction. Cache concurrency, manual linking and library exports need acceptance.
+eviction. Cache concurrency, manual linking and library exports pass focused four-host
+checks; final-head acceptance remains.
 
 Array builders protect initialized elements, temporary escaping elements and fold
 accumulators through failure. Consumed updates, view headers and sort scratch also
 have cleanup owners. The new nonreturning `fail` ownership contract corrects an
 ARC rejection for boxed result types; it does not manufacture a normal result.
 
-Retained-task ARC admission is under development. Child callbacks start with fresh
+Retained-task ARC controls now pass focused four-host execution. Child callbacks start with fresh
 State/AD contexts in the closure-flow proof. Typed handles/captures/results are
 acyclic when channels and raw pointer mutation remain excluded. New controls cover
 aliases, older captured handles, independent State, cancellation before/after entry,
@@ -138,15 +139,28 @@ external-callback admission is claimed.
 
 ## Active checks
 
+- Windows fibers at `ae57964` failed to compile in
+  [38530667115](https://github.com/e6qu/fun-with-pipes/actions/runs/38530667115):
+  the SDK hid `GetCurrentThreadStackLimits` without an explicit minimum API.
+  The generated runtime and standalone probe now declare Windows 10 APIs.
+  Execution of the correction is pending on both native architectures.
+- Native socket code now preserves full-width Windows handles, noninheritable
+  sockets, WSA errors and stream/datagram transfer widths, using WSAPoll for
+  readiness. HTTP/2 and gRPC carry the same handle type. A Windows OpenSSL BIO
+  carries the full socket handle instead of narrowing through `SSL_set_fd`.
+  TLS accept initialization failure now closes the connection. These paths
+  still need runner validation; Windows OpenSSL dependencies and complete
+  resource/process/static-memory runtime integration remain unfinished.
 - At `dfca8e6`, all four Linux/macOS hosts passed exact-format/protocol/array
   tests and all seven foreign ABI/export tests in
   [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).
   The only failures were reversed `compose` arguments in the new task and
   foreign lifetime fixtures. `9aed34b` corrects their left-to-right order.
 - [38528964109](https://github.com/e6qu/fun-with-pipes/actions/runs/38528964109)
-  at `9aed34b` is queued for the combined task/foreign lifetime, numeric record
-  worker and allocation/stack/disassembly checks. These new proofs have not
-  passed yet. Keep fixing actual failures before claiming acceptance.
+  at `9aed34b` passed all combined task/foreign lifetime and numeric record
+  worker regressions on all four hosts. Its measurement step expected fixed
+  decimal text instead of the specified shortest quad text (`3.2896e4`). That
+  assertion is corrected; allocation/stack/disassembly evidence still needs a rerun.
 - All four hosts passed manual exact-core linking and concurrent core-cache
   publication/reuse/eviction at `3800499` in
   [38526720651](https://github.com/e6qu/fun-with-pipes/actions/runs/38526720651).
@@ -167,9 +181,9 @@ external-callback admission is claimed.
 
 ## Next action
 
-Next: validate and fix array unwind, C ABI and retained-task ARC controls on
-all four Linux/macOS hosts. Finish quad record-worker measurements and ABI/cache acceptance, plus managed
-foreign/protocol ownership proofs. Keep raw/native agreement and exact rounding.
+Next: run corrected quad measurements and native Windows fiber/socket probes,
+fix their failures, and preserve Linux/macOS network/TLS resource controls.
+Finish managed protocol ownership and final-head ABI/cache acceptance. Keep raw/native agreement and exact rounding.
 Then complete the Windows C runtime and PE packages, broader ownership/worker
 proofs, and nested reverse differentiation/checkpointing with measured layout
 improvements. Documentation closeout is complete; five implementation areas

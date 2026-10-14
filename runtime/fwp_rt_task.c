@@ -224,6 +224,9 @@ static fwp_task *fwp_timers = 0;
 static int fwp_epfd = -1, fwp_io_waiting = 0;
 #ifdef FWP_FIBERS
 static volatile int fwp_shutdown = 0;
+#elif defined(_WIN32)
+#include <stdatomic.h>
+static _Atomic int fwp_shutdown = 0; /* console handlers run on another thread */
 #else
 static volatile sig_atomic_t fwp_shutdown = 0;
 #endif
@@ -456,7 +459,7 @@ static void fwp_wake_io(fwp_wl *wl) {
 /* A descriptor is about to be closed: unregister it and wake the tasks
  * waiting on it (they find the socket closed and fail). Closing first
  * would silently drop the descriptor from epoll and strand them. */
-static void fwp_fd_closing(int fd) {
+static void fwp_fd_closing(fwp_socket_t fd) {
 #ifdef __linux__
     if (fd < 0 || (size_t)fd >= fwp_nfdws || !fwp_fdws[fd]) return;
     fwp_fdw *w = fwp_fdws[fd];
@@ -1325,7 +1328,7 @@ static V fwp_p_channel_close(V ch) {
 
 /* kind: 0 listener, 1 conn, 2 udp; tls: a listener's TLS context, a
  * connection's TLS session (fwp_rt_tls.c), or 0 */
-typedef struct { int fd; int kind; void *tls; } fwp_sock;
+typedef struct { fwp_socket_t fd; int kind; void *tls; } fwp_sock;
 
 #ifdef FWP_TLS
 /* TLS sessions (fwp_rt_tls.c, embedded in programs that use TLS): like
@@ -1337,19 +1340,20 @@ static ssize_t fwp_tls_send(void *ssl, const char *buf, size_t n, int *ww);
 static void fwp_tls_free(void *ssl);
 static void fwp_tls_dispose(void *ssl);
 static void fwp_tls_server_drop(void *ctx);
-static void *fwp_tls_accepted(void *ctx, int fd);
+static void *fwp_tls_accepted(void *ctx, fwp_socket_t fd);
 #endif
 
 static V fwp_os_error(const char *kind, const char *what, const fwp_desc *d) {
-    char buf[1024];
+    char buf[1024], message[768];
     int e = errno;
-    if (what) snprintf(buf, sizeof buf, "%s: %s (os error %d)", what, strerror(e), e);
-    else snprintf(buf, sizeof buf, "%s (os error %d)", strerror(e), e);
+    const char *detail = fwp_socket_message(e, message, sizeof message);
+    if (what) snprintf(buf, sizeof buf, "%s: %s (os error %d)", what, detail, e);
+    else snprintf(buf, sizeof buf, "%s (os error %d)", detail, e);
     return fwp_io_error(kind, buf, d);
 }
 
 /* Wait until fd is ready; 0 when `at` passed first. */
-static int fwp_wait_fd(int fd, int write, int64_t at) {
+static int fwp_wait_fd(fwp_socket_t fd, int write, int64_t at) {
     fwp_tasks_init();
     fwp_check_cancel();
     if (at && fwp_now_ns() >= at) return 0;
@@ -1371,11 +1375,17 @@ static int fwp_wait_fd(int fd, int write, int64_t at) {
     fwp_fd_sync(fd);
     int ready = fwp_cur->io_ready;
 #else
-    /* poll fallback: re-check every 10ms */
+    /* poll/WSAPoll scheduler: re-check readiness every 10ms. */
     int ready = 0;
     for (;;) {
+#ifdef _WIN32
+        WSAPOLLFD p = {fd, (short)(write ? POLLWRNORM : POLLRDNORM), 0};
+        int result = WSAPoll(&p, 1, 0);
+#else
         struct pollfd p = {fd, (short)(write ? POLLOUT : POLLIN), 0};
-        if (poll(&p, 1, 0) > 0) { ready = 1; break; }
+        int result = poll(&p, 1, 0);
+#endif
+        if (result != 0) { ready = 1; break; }
         int64_t slice = fwp_now_ns() + 10000000LL;
         if (at && at < slice) slice = at;
         fwp_io_waiting++;
@@ -1388,11 +1398,6 @@ static int fwp_wait_fd(int fd, int write, int64_t at) {
     return ready || !(at && fwp_now_ns() >= at);
 }
 
-static void fwp_nonblock(int fd) {
-    int fl = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, fl | O_NONBLOCK);
-    fcntl(fd, F_SETFD, FD_CLOEXEC);
-}
 
 #ifdef FWP_LIBRARY
 /* Implicit teardown must not send close_notify or alter host SIGPIPE policy. */
@@ -1405,11 +1410,11 @@ static void fwp_sock_final(void *p) {
         s->tls = 0;
     }
 #endif
-    if (s->fd >= 0) { close(s->fd); s->fd = -1; }
+    if (s->fd != FWP_INVALID_SOCKET) { fwp_socket_close(s->fd); s->fd = FWP_INVALID_SOCKET; }
 }
 #endif
 
-static V fwp_sock_new(int fd, int kind) {
+static V fwp_sock_new(fwp_socket_t fd, int kind) {
     fwp_sock *s = (fwp_sock *)fwp_mem_alloc(sizeof(fwp_sock));
     s->fd = fd;
     s->kind = kind;
@@ -1447,6 +1452,7 @@ static int fwp_split_addr(const char *addr, char *host, size_t hn, char *port, s
 
 static struct addrinfo *fwp_resolve(const char *addr, int socktype, int passive, const char *kind,
                                     const fwp_desc *err) {
+    if (fwp_sockets_init()) { fwp_os_error(kind, addr, err); return NULL; }
     char host[256], port[32], buf[512];
     if (!fwp_split_addr(addr, host, sizeof host, port, sizeof port)) {
         snprintf(buf, sizeof buf, "%s: invalid socket address", addr);
@@ -1482,22 +1488,25 @@ static void fwp_fmt_addr(const struct sockaddr *sa, char *out, size_t n) {
 
 static V fwp_p_tcp_listen(V addr, const fwp_desc *err) {
     struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_STREAM, 1, "listen", err);
-    int fd = -1;
+    fwp_socket_t fd = FWP_INVALID_SOCKET;
     errno = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
-        fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-        if (fd < 0) continue;
+        fd = fwp_socket_open(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+        if (fd == FWP_INVALID_SOCKET) continue;
         int one = 1;
-        setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof one);
-        if (bind(fd, ai->ai_addr, ai->ai_addrlen) == 0 && listen(fd, 1024) == 0) break;
+        setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&one, sizeof one);
+        if (fwp_socket_bind(fd, ai->ai_addr, ai->ai_addrlen) == 0 && fwp_socket_listen(fd, 1024) == 0) break;
         int e = errno;
-        close(fd);
+        fwp_socket_close(fd);
         errno = e;
-        fd = -1;
+        fd = FWP_INVALID_SOCKET;
     }
     freeaddrinfo(res);
-    if (fd < 0) return fwp_os_error("listen", STR(addr)->d, err);
-    fwp_nonblock(fd);
+    if (fd == FWP_INVALID_SOCKET) return fwp_os_error("listen", STR(addr)->d, err);
+    if (fwp_socket_nonblock(fd)) {
+        int error = errno; fwp_socket_close(fd); errno = error;
+        return fwp_os_error("listen", STR(addr)->d, err);
+    }
     return fwp_sock_new(fd, 0);
 }
 
@@ -1505,7 +1514,7 @@ static V fwp_p_local_addr(V s) {
     struct sockaddr_storage ss;
     socklen_t len = sizeof ss;
     char buf[128] = "";
-    if (SOCK(s)->fd >= 0 && getsockname(SOCK(s)->fd, (struct sockaddr *)&ss, &len) == 0)
+    if (SOCK(s)->fd != FWP_INVALID_SOCKET && getsockname(SOCK(s)->fd, (struct sockaddr *)&ss, &len) == 0)
         fwp_fmt_addr((struct sockaddr *)&ss, buf, sizeof buf);
     return fwp_cstr(buf);
 }
@@ -1514,7 +1523,7 @@ static V fwp_p_peer_addr(V s) {
     struct sockaddr_storage ss;
     socklen_t len = sizeof ss;
     char buf[128] = "";
-    if (SOCK(s)->fd >= 0 && getpeername(SOCK(s)->fd, (struct sockaddr *)&ss, &len) == 0)
+    if (SOCK(s)->fd != FWP_INVALID_SOCKET && getpeername(SOCK(s)->fd, (struct sockaddr *)&ss, &len) == 0)
         fwp_fmt_addr((struct sockaddr *)&ss, buf, sizeof buf);
     return fwp_cstr(buf);
 }
@@ -1528,22 +1537,32 @@ static V fwp_closed_error(const char *what, const fwp_desc *err) {
 /* `at` = 0: no timeout; returns 0 (no connection) on timeout */
 static V fwp_accept(V l, int64_t at, const fwp_desc *err) {
     for (;;) {
-        int lfd = SOCK(l)->fd;
-        if (lfd < 0) return fwp_closed_error("listener", err);
-        int fd = accept(lfd, 0, 0);
-        if (fd >= 0) {
-            fwp_nonblock(fd);
+        fwp_socket_t lfd = SOCK(l)->fd;
+        if (lfd == FWP_INVALID_SOCKET) return fwp_closed_error("listener", err);
+        fwp_socket_t fd = fwp_socket_accept(lfd, 0, 0);
+        if (fd != FWP_INVALID_SOCKET) {
+            if (fwp_socket_nonblock(fd)) {
+                int error = errno; fwp_socket_close(fd); errno = error;
+                return fwp_os_error("accept", 0, err);
+            }
             int one = 1;
-            setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
+            setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof one);
             V c = fwp_sock_new(fd, 1);
 #ifdef FWP_TLS
             /* the handshake happens on the first read or write, in the
              * task that serves the connection */
-            if (SOCK(l)->tls) SOCK(c)->tls = fwp_tls_accepted(SOCK(l)->tls, fd);
+            if (SOCK(l)->tls) {
+                SOCK(c)->tls = fwp_tls_accepted(SOCK(l)->tls, fd);
+                if (!SOCK(c)->tls) {
+                    SOCK(c)->fd = FWP_INVALID_SOCKET;
+                    fwp_socket_close(fd);
+                    return fwp_io_error("tls", fwp_tls_err, err);
+                }
+            }
 #endif
             return c;
         }
-        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ECONNABORTED) {
+        if (fwp_socket_again(errno) || fwp_socket_aborted(errno)) {
             if (!fwp_wait_fd(lfd, 0, at)) return 0;
             continue;
         }
@@ -1559,11 +1578,11 @@ static V fwp_p_tcp_accept_for(V d, V l, const fwp_desc *err) {
 }
 
 static V fwp_p_tcp_stop(V l) {
-    if (SOCK(l)->fd >= 0) {
-        int fd = SOCK(l)->fd;
-        SOCK(l)->fd = -1;
+    if (SOCK(l)->fd != FWP_INVALID_SOCKET) {
+        fwp_socket_t fd = SOCK(l)->fd;
+        SOCK(l)->fd = FWP_INVALID_SOCKET;
         fwp_fd_closing(fd);
-        close(fd);
+        fwp_socket_close(fd);
     }
 #ifdef FWP_TLS
     if (SOCK(l)->tls) { fwp_tls_server_drop(SOCK(l)->tls); SOCK(l)->tls = 0; }
@@ -1571,15 +1590,15 @@ static V fwp_p_tcp_stop(V l) {
     return FWP_UNIT;
 }
 
-typedef struct { int fd; struct addrinfo *addresses; } fwp_connect_owner;
+typedef struct { fwp_socket_t fd; struct addrinfo *addresses; } fwp_connect_owner;
 static void fwp_connect_finish(void *p) {
     fwp_connect_owner *owner = (fwp_connect_owner *)p;
     int saved = errno;
-    if (owner->fd >= 0) {
-        int fd = owner->fd;
-        owner->fd = -1;
+    if (owner->fd != FWP_INVALID_SOCKET) {
+        fwp_socket_t fd = owner->fd;
+        owner->fd = FWP_INVALID_SOCKET;
         fwp_fd_closing(fd);
-        close(fd);
+        fwp_socket_close(fd);
     }
     if (owner->addresses) { freeaddrinfo(owner->addresses); owner->addresses = 0; }
     errno = saved;
@@ -1588,44 +1607,44 @@ static void fwp_connect_finish(void *p) {
 static V fwp_p_tcp_connect(V addr, const fwp_desc *err) {
     fwp_tasks_init();
     fwp_check_cancel();
-    fwp_connect_owner owner = {-1, 0};
+    fwp_connect_owner owner = {FWP_INVALID_SOCKET, 0};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_connect_finish, &owner);
     struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_STREAM, 0, "connect", err);
     owner.addresses = res;
-    int fd = -1;
+    fwp_socket_t fd = FWP_INVALID_SOCKET;
     errno = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
-        fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+        fd = fwp_socket_open(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
         owner.fd = fd;
-        if (fd < 0) continue;
-        fwp_nonblock(fd);
-        if (connect(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
-        if (errno == EINPROGRESS) {
+        if (fd == FWP_INVALID_SOCKET) continue;
+        if (fwp_socket_nonblock(fd)) {
+            int error = errno; fwp_socket_close(fd); errno = error;
+            owner.fd = fd = FWP_INVALID_SOCKET;
+            continue;
+        }
+        if (fwp_socket_connect(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
+        if (fwp_socket_pending(errno)) {
             fwp_wait_fd(fd, 1, 0);
-            int e = 0;
-            socklen_t el = sizeof e;
-            getsockopt(fd, SOL_SOCKET, SO_ERROR, &e, &el);
-            if (e == 0) break;
-            errno = e;
+            if (fwp_socket_connect_error(fd) == 0) break;
         }
         int e = errno;
-        owner.fd = -1;
+        owner.fd = FWP_INVALID_SOCKET;
         fwp_fd_closing(fd);
-        close(fd);
+        fwp_socket_close(fd);
         errno = e;
-        fd = -1;
+        fd = FWP_INVALID_SOCKET;
     }
     freeaddrinfo(res);
     owner.addresses = 0;
-    if (fd < 0) {
+    if (fd == FWP_INVALID_SOCKET) {
         fwp_cleanup_pop(&cleanup);
         return fwp_os_error("connect", STR(addr)->d, err);
     }
     int one = 1;
-    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
+    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof one);
     V result = fwp_sock_new(fd, 1);
-    owner.fd = -1; /* the socket wrapper now owns it */
+    owner.fd = FWP_INVALID_SOCKET; /* the socket wrapper now owns it */
     fwp_cleanup_pop(&cleanup);
     return result;
 }
@@ -1636,15 +1655,15 @@ static V fwp_tcp_read(V nv, V c, int64_t at, const fwp_desc *err) {
     if (n < 1) n = 1;
     char *buf = (char *)malloc((size_t)n);
     for (;;) {
-        int fd = SOCK(c)->fd;
-        if (fd < 0) { free(buf); return fwp_closed_error("connection", err); }
+        fwp_socket_t fd = SOCK(c)->fd;
+        if (fd == FWP_INVALID_SOCKET) { free(buf); return fwp_closed_error("connection", err); }
         int ww = 0;
         ssize_t k;
 #ifdef FWP_TLS
         if (SOCK(c)->tls) k = fwp_tls_recv(SOCK(c)->tls, buf, (size_t)n, &ww);
         else
 #endif
-            k = read(fd, buf, (size_t)n);
+            k = fwp_socket_recv(fd, buf, (size_t)n, 0);
         if (k >= 0) {
             V r = fwp_str_new(buf, (size_t)k);
             free(buf);
@@ -1653,7 +1672,7 @@ static V fwp_tcp_read(V nv, V c, int64_t at, const fwp_desc *err) {
 #ifdef FWP_TLS
         if (k == -2) { free(buf); return fwp_io_error("tls", fwp_tls_err, err); }
 #endif
-        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+        if (fwp_socket_again(errno)) {
             if (!fwp_wait_fd(fd, ww, at)) { free(buf); return 0; }
             continue;
         }
@@ -1673,20 +1692,20 @@ static V fwp_p_tcp_read_for(V d, V n, V c, const fwp_desc *err) {
 static V fwp_tcp_write(V data, V c, int64_t at, const fwp_desc *err) {
     size_t off = 0, len = STR(data)->len;
     while (off < len) {
-        int fd = SOCK(c)->fd;
-        if (fd < 0) return fwp_closed_error("connection", err);
+        fwp_socket_t fd = SOCK(c)->fd;
+        if (fd == FWP_INVALID_SOCKET) return fwp_closed_error("connection", err);
         int ww = 1;
         ssize_t k;
 #ifdef FWP_TLS
         if (SOCK(c)->tls) k = fwp_tls_send(SOCK(c)->tls, STR(data)->d + off, len - off, &ww);
         else
 #endif
-            k = send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);
+            k = fwp_socket_send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);
         if (k > 0) { off += (size_t)k; continue; }
 #ifdef FWP_TLS
         if (k == -2) return fwp_io_error("tls", fwp_tls_err, err);
 #endif
-        if (k < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
+        if (k < 0 && (fwp_socket_again(errno))) {
             if (!fwp_wait_fd(fd, ww, at)) return fwp_io_error("timeout", "write timed out", err);
             continue;
         }
@@ -1703,46 +1722,49 @@ static V fwp_p_tcp_write_for(V d, V data, V c, const fwp_desc *err) {
 }
 
 static V fwp_p_sock_close(V c) {
-    if (SOCK(c)->fd >= 0) {
-        int fd = SOCK(c)->fd;
-        SOCK(c)->fd = -1;
+    if (SOCK(c)->fd != FWP_INVALID_SOCKET) {
+        fwp_socket_t fd = SOCK(c)->fd;
+        SOCK(c)->fd = FWP_INVALID_SOCKET;
         fwp_fd_closing(fd);
 #ifdef FWP_TLS
         if (SOCK(c)->kind == 1 && SOCK(c)->tls) { fwp_tls_free(SOCK(c)->tls); SOCK(c)->tls = 0; }
 #endif
         if (SOCK(c)->kind == 1) shutdown(fd, SHUT_RDWR);
-        close(fd);
+        fwp_socket_close(fd);
     }
     return FWP_UNIT;
 }
 
 static V fwp_p_udp_bind(V addr, const fwp_desc *err) {
     struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_DGRAM, 1, "bind", err);
-    int fd = -1;
+    fwp_socket_t fd = FWP_INVALID_SOCKET;
     errno = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
-        fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-        if (fd < 0) continue;
-        if (bind(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
+        fd = fwp_socket_open(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+        if (fd == FWP_INVALID_SOCKET) continue;
+        if (fwp_socket_bind(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
         int e = errno;
-        close(fd);
+        fwp_socket_close(fd);
         errno = e;
-        fd = -1;
+        fd = FWP_INVALID_SOCKET;
     }
     freeaddrinfo(res);
-    if (fd < 0) return fwp_os_error("bind", STR(addr)->d, err);
-    fwp_nonblock(fd);
+    if (fd == FWP_INVALID_SOCKET) return fwp_os_error("bind", STR(addr)->d, err);
+    if (fwp_socket_nonblock(fd)) {
+        int error = errno; fwp_socket_close(fd); errno = error;
+        return fwp_os_error("bind", STR(addr)->d, err);
+    }
     return fwp_sock_new(fd, 2);
 }
 
 static V fwp_p_udp_send_to(V addr, V data, V s, const fwp_desc *err) {
     struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_DGRAM, 0, "send", err);
     for (;;) {
-        int fd = SOCK(s)->fd;
-        if (fd < 0) { freeaddrinfo(res); return fwp_closed_error("socket", err); }
-        ssize_t k = sendto(fd, STR(data)->d, STR(data)->len, 0, res->ai_addr, res->ai_addrlen);
+        fwp_socket_t fd = SOCK(s)->fd;
+        if (fd == FWP_INVALID_SOCKET) { freeaddrinfo(res); return fwp_closed_error("socket", err); }
+        ssize_t k = fwp_socket_sendto(fd, STR(data)->d, STR(data)->len, 0, res->ai_addr, res->ai_addrlen);
         if (k >= 0) break;
-        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+        if (fwp_socket_again(errno)) {
             fwp_wait_fd(fd, 1, 0);
             continue;
         }
@@ -1758,11 +1780,11 @@ static V fwp_p_udp_recv_from(V nv, V s, const fwp_desc *err) {
     if (n < 1) n = 1;
     char *buf = (char *)malloc((size_t)n);
     for (;;) {
-        int fd = SOCK(s)->fd;
-        if (fd < 0) { free(buf); return fwp_closed_error("socket", err); }
+        fwp_socket_t fd = SOCK(s)->fd;
+        if (fd == FWP_INVALID_SOCKET) { free(buf); return fwp_closed_error("socket", err); }
         struct sockaddr_storage ss;
         socklen_t len = sizeof ss;
-        ssize_t k = recvfrom(fd, buf, (size_t)n, 0, (struct sockaddr *)&ss, &len);
+        ssize_t k = fwp_socket_recvfrom(fd, buf, (size_t)n, 0, (struct sockaddr *)&ss, &len);
         if (k >= 0) {
             char a[128];
             fwp_fmt_addr((struct sockaddr *)&ss, a, sizeof a);
@@ -1770,7 +1792,7 @@ static V fwp_p_udp_recv_from(V nv, V s, const fwp_desc *err) {
             free(buf);
             return r;
         }
-        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+        if (fwp_socket_again(errno)) {
             fwp_wait_fd(fd, 0, 0);
             continue;
         }
@@ -1780,6 +1802,7 @@ static V fwp_p_udp_recv_from(V nv, V s, const fwp_desc *err) {
 }
 
 static V fwp_p_dns_resolve(V host, const fwp_desc *err) {
+    if (fwp_sockets_init()) return fwp_os_error("resolve", STR(host)->d, err);
     struct addrinfo hints, *res = 0;
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;

@@ -184,7 +184,7 @@ int main(int argc,char **argv){
             1,
         ),
         (
-            "    if (c->fd >= 0) { close(c->fd); c->fd = -1; }",
+            "    if (c->fd != FWP_INVALID_SOCKET) { fwp_socket_close(c->fd); c->fd = FWP_INVALID_SOCKET; }",
             "    /* omit transferred fd */",
             1,
         ),

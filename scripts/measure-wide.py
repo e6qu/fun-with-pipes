@@ -45,7 +45,7 @@ main = 256{decimal}{suffix} | sum-wide | echo
         source.write_text(text)
         reference = run([compiler, 'run', '--interp', source], dict(environment, FWP_NO_OPT='1')).stdout
         if suffix != 'records':
-            assert reference == ('32896.0\n' if suffix == 'f128' else '32896\n'), reference
+            assert reference == ('3.2896e4\n' if suffix == 'f128' else '32896\n'), reference
         for enabled in ('0', '1'):
             label = suffix + ('-native' if enabled == '1' else '-boxed')
             env = dict(environment, FWP_WIDE_WORKERS=enabled)

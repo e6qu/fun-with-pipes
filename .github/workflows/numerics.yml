@@ -142,7 +142,7 @@ jobs:
         run: cargo test --no-fail-fast --lib --test protocol --test wide_workers --test decoder_partial --test arc_extensions --test arc_execution --test iteration_consumers --test iterator_fusion --test http2_body_roots --test list_generation_ownership --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace
       - name: Wide scalar and record ownership regressions
         if: inputs.suite == 'wide'
-        run: cargo test --no-fail-fast --lib --test wide_workers --test unboxed_worker_locals --test arc_tasks --test foreign_callback_ownership
+        run: cargo test --no-fail-fast --lib --test wide_workers --test unboxed_worker_locals --test arc_tasks --test foreign_callback_ownership --test native_sockets --test tls --test connect_cleanup --test tls_listener_ownership --test grpc_server_ownership --test library_resources
       - name: Actual WASI golden programs
         if: inputs.suite == 'bundle' && runner.os == 'Linux'
         env:
@@ -203,7 +203,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --test softfloat_core --test float_math -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test native_allocator --test windows_context -- --nocapture
+          cargo test --test native_allocator --test windows_context --test native_sockets -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo build --bin fwp
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -28,7 +28,7 @@ fn cancelling_grpc_server_releases_listener_and_preserves_accepted_owners() {
     let (generated, _header) = fwp::cgen::generate_library(&p, "resources").unwrap();
     let generated = generated
         .replace("    if (failed) return 1;", "    if (failed) return 1; watched_ctx=tls;if(tls){fwp_tls_server_owner *o=SSL_CTX_get_app_data(tls);watched_wire=o->alpn.w;watched_owner=o;}")
-        .replace("int fd = h2_listen(hostport, bound, sizeof bound);", "int fd = h2_listen(hostport, bound, sizeof bound); watched_fd=fd;")
+        .replace("fwp_socket_t fd = h2_listen(hostport, bound, sizeof bound);", "fwp_socket_t fd = h2_listen(hostport, bound, sizeof bound); watched_fd=fd;")
         .replace("    fwp_cleanup_push(&cleanup, g_listener_finish, &listener);", "    fwp_cleanup_push(&cleanup, g_listener_finish, &listener); if(fail_stage==1){fwp_cancel_tree(fwp_cur);fwp_check_cancel();}")
         .replace("    g_server *srv = (g_server *)fwp_mem_alloc(sizeof *srv);", "    if(fail_stage==2){fwp_cancel_tree(fwp_cur);fwp_check_cancel();} g_server *srv = (g_server *)fwp_mem_alloc(sizeof *srv);");
     let hooks = r#"
@@ -152,8 +152,8 @@ int main(int argc,char **argv){
             1,
         ),
         (
-            "        owner->fd = -1;\n        fwp_fd_closing(fd);\n        close(fd);",
-            "        owner->fd = -1; /* omit listener close */",
+            "        owner->fd = FWP_INVALID_SOCKET;\n        fwp_fd_closing(fd);\n        fwp_socket_close(fd);",
+            "        owner->fd = FWP_INVALID_SOCKET; /* omit listener close */",
             1,
         ),
         (

@@ -85,7 +85,7 @@ struct g_stream {
 typedef struct g_server g_server;
 
 struct g_conn {
-    int fd, refs;
+    fwp_socket_t fd; int refs;
     SSL *ssl;                  /* the TLS session of a TLS connection */
     const g_server *server;    /* 0 for a client connection */
     char *authority;           /* full address, stored after this header */
@@ -278,7 +278,7 @@ static void g_conn_final(void *p) {
 #ifdef FWP_TLS
     if (c->ssl) { fwp_tls_dispose(c->ssl); c->ssl = 0; }
 #endif
-    if (c->fd >= 0) { close(c->fd); c->fd = -1; }
+    if (c->fd != FWP_INVALID_SOCKET) { fwp_socket_close(c->fd); c->fd = FWP_INVALID_SOCKET; }
 #endif
     h2_hpack_free(&c->dec);
     h2b_free(&c->in);
@@ -303,7 +303,7 @@ static void g_set_reset(g_stream *s, const char *why) {
     if (!s->reset) s->reset = strdup(why);
 }
 
-static g_conn *g_conn_new(int fd, const char *authority, const g_server *server) {
+static g_conn *g_conn_new(fwp_socket_t fd, const char *authority, const g_server *server) {
     size_t n = strlen(authority);
     if (n > SIZE_MAX - sizeof(g_conn) - 1) fwp_trap("connection address too large");
     g_conn *c = (g_conn *)fwp_mem_alloc(sizeof *c + n + 1);
@@ -350,13 +350,13 @@ static void g_addr(const char *addr, int *tls, char *out, size_t n) {
 static ssize_t g_io_recv(g_conn *c, void *buf, size_t n, int *ww) {
     *ww = 0;
     if (c->ssl) return fwp_tls_recv(c->ssl, (char *)buf, n, ww);
-    return recv(c->fd, buf, n, 0);
+    return fwp_socket_recv(c->fd, buf, n, 0);
 }
 
 static ssize_t g_io_send(g_conn *c, const void *buf, size_t n, int *ww) {
     *ww = 1;
     if (c->ssl) return fwp_tls_send(c->ssl, (const char *)buf, n, ww);
-    return send(c->fd, buf, n, MSG_NOSIGNAL);
+    return fwp_socket_send(c->fd, buf, n, MSG_NOSIGNAL);
 }
 
 /* --------------------------------------------------------- reading frames */
@@ -613,8 +613,8 @@ static void g_conn_release(g_conn *c) {
     if (--c->refs > 0) return;
     fwp_fd_closing(c->fd);
     if (c->ssl) { fwp_tls_free(c->ssl); c->ssl = 0; }
-    close(c->fd);
-    c->fd = -1;
+    fwp_socket_close(c->fd);
+    c->fd = FWP_INVALID_SOCKET;
     h2b_free(&c->in);
     h2b_free(&c->out);
 }
@@ -671,7 +671,7 @@ static void g_reader(void *arg, int cancelled) {
             g_conn_dead(c, m);
             break;
         }
-        if (k == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
+        if (k == -1 && (fwp_socket_again(errno))) {
             fwp_wait_fd(c->fd, ww, 0);
             continue;
         }
@@ -700,7 +700,7 @@ static void g_writer(void *arg, int cancelled) {
             fwp_wake_all(&c->space_wl);
             continue;
         }
-        if (k == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
+        if (k == -1 && (fwp_socket_again(errno))) {
             fwp_wait_fd(c->fd, ww, 0);
             continue;
         }
@@ -1044,42 +1044,45 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_NUMERICSERV;
+    if (fwp_sockets_init()) { *err = g_strdupf("cannot initialize sockets: %d", errno); return 0; }
     int rc = getaddrinfo(host, port, &hints, &res);
     if (rc != 0) {
         *err = g_strdupf("cannot connect to %s: failed to lookup address information: %s", addr, gai_strerror(rc));
         return 0;
     }
-    fwp_connect_owner owner = {-1, res};
+    fwp_connect_owner owner = {FWP_INVALID_SOCKET, res};
     fwp_cleanup connect_cleanup;
     fwp_cleanup_push(&connect_cleanup, fwp_connect_finish, &owner);
-    int fd = -1, e = 0;
+    fwp_socket_t fd = FWP_INVALID_SOCKET;
+    int e = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
-        fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+        fd = fwp_socket_open(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
         owner.fd = fd;
-        if (fd < 0) { e = errno; continue; }
-        fwp_nonblock(fd);
-        if (connect(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
-        e = errno;
-        if (e == EINPROGRESS) {
-            fwp_wait_fd(fd, 1, 0);
-            socklen_t el = sizeof e;
-            getsockopt(fd, SOL_SOCKET, SO_ERROR, &e, &el);
-            if (e == 0) break;
+        if (fd == FWP_INVALID_SOCKET) { e = errno; continue; }
+        if (fwp_socket_nonblock(fd)) {
+            e = errno; fwp_socket_close(fd); owner.fd = fd = FWP_INVALID_SOCKET; continue;
         }
-        owner.fd = -1;
+        if (fwp_socket_connect(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
+        e = errno;
+        if (fwp_socket_pending(e)) {
+            fwp_wait_fd(fd, 1, 0);
+            if (fwp_socket_connect_error(fd) == 0) break;
+            e = errno;
+        }
+        owner.fd = FWP_INVALID_SOCKET;
         fwp_fd_closing(fd);
-        close(fd);
-        fd = -1;
+        fwp_socket_close(fd);
+        fd = FWP_INVALID_SOCKET;
     }
     freeaddrinfo(res);
     owner.addresses = 0;
-    if (fd < 0) {
+    if (fd == FWP_INVALID_SOCKET) {
         *err = g_strdupf("cannot connect to %s: %s", addr, strerror(e));
         fwp_cleanup_pop(&connect_cleanup);
         return 0;
     }
     int one = 1;
-    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
+    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof one);
     SSL *ssl = 0;
     fwp_cleanup ssl_cleanup;
     fwp_cleanup_push(&ssl_cleanup, g_connect_ssl_release, &ssl);
@@ -1102,7 +1105,7 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     c->ssl = ssl;
     ssl = 0;
     fwp_cleanup_pop(&ssl_cleanup);
-    owner.fd = -1;
+    owner.fd = FWP_INVALID_SOCKET;
     fwp_cleanup_pop(&connect_cleanup);
     if (opts) {
         c->tlskey_len = opts->key_len;
@@ -2299,27 +2302,34 @@ static void g_handle(void *arg, int cancelled) {
 }
 
 /* accept connections and serve them, until the task is cancelled */
-static void g_accept_loop(int lfd, const g_server *srv) {
-    fwp_nonblock(lfd);
+static void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {
+    if (fwp_socket_nonblock(lfd)) fwp_trap("cannot make listener nonblocking");
     fwp_trap_recover = g_trap_recover;
     for (;;) {
         struct sockaddr_storage ss;
         socklen_t sl = sizeof ss;
-        int fd = accept(lfd, (struct sockaddr *)&ss, &sl);
-        if (fd >= 0) {
-            fwp_nonblock(fd);
+        fwp_socket_t fd = fwp_socket_accept(lfd, (struct sockaddr *)&ss, &sl);
+        if (fd != FWP_INVALID_SOCKET) {
+            if (fwp_socket_nonblock(fd)) { fwp_socket_close(fd); continue; }
             int one = 1;
-            setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
+            setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof one);
             char peer[128];
             fwp_fmt_addr((struct sockaddr *)&ss, peer, sizeof peer);
             g_conn *c = g_conn_new(fd, peer, srv);
-            if (srv->tls) c->ssl = (SSL *)fwp_tls_accepted(srv->tls, fd);
+            if (srv->tls) {
+                c->ssl = (SSL *)fwp_tls_accepted(srv->tls, fd);
+                if (!c->ssl) {
+                    c->fd = FWP_INVALID_SOCKET;
+                    fwp_socket_close(fd);
+                    continue;
+                }
+            }
             /* the reader starts the writer (after a TLS handshake) */
             c->refs = 1;
             fwp_spawn_task(0, g_reader, c, 0, 0);
             continue;
         }
-        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ECONNABORTED) {
+        if (fwp_socket_again(errno) || fwp_socket_aborted(errno)) {
             fwp_wait_fd(lfd, 0, 0);
             continue;
         }
@@ -2377,14 +2387,14 @@ static SSL_CTX *g_server_tls(const char *cert, const char *key, const char *ca, 
     return ctx;
 }
 
-typedef struct { int fd; SSL_CTX *tls; } g_listener_owner;
+typedef struct { fwp_socket_t fd; SSL_CTX *tls; } g_listener_owner;
 static void g_listener_finish(void *p) {
     g_listener_owner *owner = (g_listener_owner *)p;
-    if (owner->fd >= 0) {
-        int fd = owner->fd;
-        owner->fd = -1;
+    if (owner->fd != FWP_INVALID_SOCKET) {
+        fwp_socket_t fd = owner->fd;
+        owner->fd = FWP_INVALID_SOCKET;
         fwp_fd_closing(fd);
-        close(fd);
+        fwp_socket_close(fd);
     }
     if (owner->tls) {
         SSL_CTX *ctx = owner->tls;
@@ -2414,7 +2424,7 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
     int failed;
     SSL_CTX *tls = g_server_tls(cert, key, ca, &failed);
     if (failed) return 1;
-    g_listener_owner listener = {-1, tls};
+    g_listener_owner listener = {FWP_INVALID_SOCKET, tls};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, g_listener_finish, &listener);
     if (!listen_at) {
@@ -2435,9 +2445,9 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
         return 1;
     }
     char bound[300];
-    int fd = h2_listen(hostport, bound, sizeof bound);
+    fwp_socket_t fd = h2_listen(hostport, bound, sizeof bound);
     listener.fd = fd;
-    if (fd < 0) {
+    if (fd == FWP_INVALID_SOCKET) {
         fprintf(stderr, "fwp serve: %s\n", h2_err);
         fwp_cleanup_pop(&cleanup);
         g_listener_finish(&listener);

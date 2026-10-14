@@ -15,6 +15,15 @@
  *   - closures: pointer to {fn, n, args} (partial application)
  */
 
+#ifdef _WIN32
+/* Windows 10 is the generated runtime's minimum SDK/API contract. */
+#if defined(_WIN32_WINNT) && _WIN32_WINNT < 0x0a00
+#error "fwp requires the Windows 10 API contract"
+#endif
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0a00
+#endif
+#endif
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>

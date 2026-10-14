@@ -17,6 +17,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_ops.c"),
     include_str!("../runtime/fwp_rt_num.c"),
     include_str!("../runtime/fwp_rt_prims.c"),
+    include_str!("../runtime/fwp_rt_socket.c"),
     include_str!("../runtime/fwp_rt_context_win.c"),
     include_str!("../runtime/fwp_rt_task.c"),
     include_str!("../runtime/fwp_rt_sys.c"),
@@ -139,6 +140,14 @@ fn target_arch() -> String {
 /// Cross targets currently name Linux systems; otherwise use the host.
 pub fn native_is_macos() -> bool {
     native_options().cross.is_none() && cfg!(target_os = "macos")
+}
+
+fn native_runtime_links() -> &'static [&'static str] {
+    if cfg!(windows) && native_options().cross.is_none() {
+        &["-lm", "-lpthread", "-lws2_32"]
+    } else {
+        &["-lm", "-lpthread"]
+    }
 }
 
 pub fn shared_library_extension() -> &'static str {
@@ -8980,7 +8989,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     if let Mode::Library = mode {
         let _ = write!(
             out,
-            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    fwp_cl_finish();\n    fwp_gc_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n}}\n#endif\n",
+            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    fwp_cl_finish();\n    fwp_gc_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n    fwp_sockets_finish();\n}}\n#endif\n",
             g.const_init, lib_defs
         );
         return Ok(out);
@@ -9501,7 +9510,7 @@ pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Resul
                 .args(&floats)
                 .args(crate::ffi::links())
                 .args(tls_links(c_source))
-                .args(["-lm", "-lpthread"]),
+                .args(native_runtime_links()),
             &cc.0,
         );
         let _ = std::fs::remove_file(&dpath);
@@ -9585,7 +9594,7 @@ pub fn compile_library(
                     .args(&floats)
                     .args(crate::ffi::links())
                     .args(tls_links(c_source))
-                    .args(["-lm", "-lpthread"]),
+                    .args(native_runtime_links()),
                 &cc.0,
             ),
         };
@@ -9734,7 +9743,7 @@ pub fn compile_for(
                             .args(&floats)
                             .args(crate::ffi::links())
                             .args(tls_links(c_source))
-                            .args(["-lm", "-lpthread"]),
+                            .args(native_runtime_links()),
                         &cc.0,
                     )
                 })
@@ -9754,8 +9763,7 @@ pub fn compile_for(
                     .args(&floats)
                     .args(crate::ffi::links())
                     .args(tls_links(c_source))
-                    .arg("-lm")
-                    .arg("-lpthread"),
+                    .args(native_runtime_links()),
                 &cc.0,
             ),
         }
