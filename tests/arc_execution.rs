@@ -180,10 +180,9 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     let dir = std::env::temp_dir().join(format!("fwp-arc-reject-{}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
     for (name,source,reason) in [
-        ("tasks","main = task.yield ()\n","tracing-free lifetime policy"),
         ("custom-native","foreign \"fwp\" string.repeat : I64 -> I64 -> I64\nmain = 1 | string.repeat 2 | echo\n","no checked ownership signature"),
-        ("foreign-string","foreign \"C\" strlen : String -> USize\nmain = \"owned\" | strlen | echo\n","foreign boundary has no checked ownership contract"),
-        ("foreign-callback","foreign \"C\" invoke : (I64 -> I64) -> I64\nmain = invoke (add 1) | echo\n","foreign boundary has no checked ownership contract"),
+        ("foreign-callback","foreign \"C\" invoke : (I64 -> String) -> I64\nmain = invoke show | echo\n","foreign boundary has no checked ownership contract"),
+        ("foreign-address","foreign \"C\" lookup : () -> Ptr[I64]\nmain = lookup () | ignore\n","tracing-free ownership contract"),
         ("channel","text-channel : I64 -> Channel[String] ! {Async}\ntext-channel = channel.make\nmain = text-channel 1 | channel.close\n","tracing-free ownership contract"),
         ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
         ("input","main = read-all () | echo\n","tracing-free ownership contract"),
@@ -197,7 +196,7 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     }
     let input = dir.join("valid.fwp");
     std::fs::write(&input, "main = 42 | echo\n").unwrap();
-    for boundary in [["--target", "wasm32-wasi"], ["--fn", "main"]] {
+    for boundary in [&["--target", "wasm32-wasi"][..], &["--staticlib"]] {
         let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .args(["build", "--gc=arc", "--emit-c"])
             .args(boundary)
@@ -208,7 +207,7 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
             .unwrap();
         assert!(!out.status.success());
         assert!(String::from_utf8_lossy(&out.stderr)
-            .contains("--gc arc currently requires a native main program"));
+            .contains("--gc arc requires a native main or function executable"));
     }
     for flag in ["FWP_FREE", "FWP_REUSE"] {
         let out = Command::new(env!("CARGO_BIN_EXE_fwp"))

@@ -1,4 +1,6 @@
 //! Actual dynamic unload must retire cached and live private tape owners.
+#[path = "support/c_instrument.rs"]
+mod c_instrument;
 use std::process::Command;
 #[test]
 fn autodiff_library_unload_releases_live_and_cached_buffers() {
@@ -30,12 +32,13 @@ fn autodiff_library_unload_releases_live_and_cached_buffers() {
     let b = a + source[a..]
         .find("/* ---------------------------------------------------------------- kernels */")
         .unwrap();
-    let tape = source[a..b]
-        .replace("realloc(", "library_realloc(")
-        .replace("free(", "library_free(")
-        .replace("(double *)calloc(", "(double *)library_calloc(");
+    let tape = c_instrument::calls(
+        &source[a..b],
+        &[("realloc", "library_realloc"), ("free", "library_free")],
+    )
+    .replace("(double *)calloc(", "(double *)library_calloc(");
     let code=format!("{}\nstatic void *library_realloc(void *,size_t);\nstatic void *library_calloc(size_t,size_t);\nstatic void library_free(void *);\nstatic void library_finished(void);\n{}{}\n{}",&source[..a],tape,&source[b..],include_str!("fixtures/autodiff_library_ledger.c"))
-        .replace("static void __attribute__((destructor)) fwp_tape_library_finish(void) {\n    fwp_tape_finish();","static void __attribute__((destructor)) fwp_tape_library_finish(void) {\n    fwp_tape_finish();library_finished();");
+        .replace("    fwp_tape_finish();\n    fwp_gc_finish();", "    fwp_tape_finish();library_finished();\n    fwp_gc_finish();");
     assert!(code.contains("fwp_tape_finish();library_finished();"));
     let host = dir.join("host.c");
     let exe = dir.join("host");

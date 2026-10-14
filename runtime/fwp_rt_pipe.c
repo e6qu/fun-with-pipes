@@ -352,6 +352,7 @@ static void fwp_pipe_out_end(void) {
 
 static int fwp_pi_kind = FWP_T_STDIO, fwp_pi_sock = -1;
 static fwp_ring *fwp_pi_ring = 0;
+static size_t fwp_pi_mapping = 0;
 static unsigned char fwp_pi_buf[1 << 16];
 static size_t fwp_pi_pos = 0, fwp_pi_len = 0;
 
@@ -399,10 +400,25 @@ static int fwp_pipe_in_switch(const unsigned char *pl, size_t len) {
     msg.msg_control = u.b;
     msg.msg_controllen = sizeof u.b;
     if (recvmsg(fwp_pi_sock, &msg, MSG_CMSG_CLOEXEC) != 1) return 0;
-    struct cmsghdr *c = CMSG_FIRSTHDR(&msg);
-    if (!c || c->cmsg_type != SCM_RIGHTS) return 0;
-    int fd;
-    memcpy(&fd, CMSG_DATA(c), sizeof fd);
+    int fd = -1;
+    size_t received = 0;
+    for (struct cmsghdr *c = CMSG_FIRSTHDR(&msg); c; c = CMSG_NXTHDR(&msg, c)) {
+        if (c->cmsg_level != SOL_SOCKET || c->cmsg_type != SCM_RIGHTS ||
+            c->cmsg_len < CMSG_LEN(sizeof(int))) continue;
+        size_t count = (c->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+        for (size_t i = 0; i < count; i++) {
+            int next;
+            memcpy(&next, CMSG_DATA(c) + i * sizeof(int), sizeof next);
+            if (!received++) fd = next;
+            else close(next);
+        }
+    }
+    /* Every received descriptor is ours even when the peer's offer is invalid.
+     * CMSG_SPACE padding can hold a second fd; never lose that owner. */
+    if (received != 1 || (msg.msg_flags & MSG_CTRUNC) || one != 'S') {
+        if (fd >= 0) close(fd);
+        return 0;
+    }
     struct stat st;
     void *m = MAP_FAILED;
     if (fstat(fd, &st) == 0 && (size_t)st.st_size > FWP_RING_DATA)
@@ -412,9 +428,12 @@ static int fwp_pipe_in_switch(const unsigned char *pl, size_t len) {
     fwp_ring *r = (fwp_ring *)m;
     uint64_t cap = r->cap;
     if (memcmp(r->magic, "FWPS", 4) != 0 || r->version != 1 || !cap || (cap & (cap - 1)) ||
-        cap > (uint64_t)st.st_size - FWP_RING_DATA)
+        cap > (uint64_t)st.st_size - FWP_RING_DATA) {
+        munmap(m, (size_t)st.st_size);
         return 0;
+    }
     fwp_pi_ring = r;
+    fwp_pi_mapping = (size_t)st.st_size;
     fwp_pi_kind = FWP_T_SHM;
     fwp_pipe_report("SHM_V1");
     return 1;
@@ -458,6 +477,30 @@ static size_t fwp_pipe_read(unsigned char *buf, size_t n) {
     return fread(buf, 1, n, stdin);
 }
 
+/* The command owns both endpoints. Early parse/output failures must release
+ * sockets and mappings too; closing wakes peers even without an end frame. */
+static void fwp_pipe_finish(void) {
+    if (fwp_po_ring) {
+        __atomic_store_n(&fwp_po_ring->closed, 1, __ATOMIC_RELEASE);
+        fwp_ring_wake(&fwp_po_ring->data_seq, &fwp_po_ring->cons_wait);
+    }
+    if (fwp_po_listen >= 0) close(fwp_po_listen);
+    if (fwp_po_sock >= 0) close(fwp_po_sock);
+    if (fwp_pi_sock >= 0) close(fwp_pi_sock);
+    if (fwp_pi_ring) {
+        fwp_ring_wake(&fwp_pi_ring->space_seq, &fwp_pi_ring->prod_wait);
+        munmap(fwp_pi_ring, fwp_pi_mapping);
+    }
+    if (fwp_po_ring) munmap(fwp_po_ring, FWP_RING_DATA + (size_t)FWP_RING_CAP);
+    fwp_po_ring = fwp_pi_ring = NULL;
+    fwp_pi_mapping = 0;
+    fwp_po_listen = fwp_po_sock = fwp_pi_sock = -1;
+    fwp_po_kind = fwp_pi_kind = FWP_T_STDIO;
+    fwp_po_len = fwp_pi_pos = fwp_pi_len = 0;
+    fwp_po_gone = 0; fwp_po_frames = 0;
+    fwp_po_next_check = fwp_po_give_up = 0;
+}
+
 #else /* no transports: the stream stays on stdio */
 
 static void fwp_pipe_out_start(void) {}
@@ -469,5 +512,6 @@ static void fwp_pipe_out_end(void) { fflush(stdout); }
 static void fwp_pipe_in_offer(void) {}
 static int fwp_pipe_in_switch(const unsigned char *pl, size_t len) { (void)pl; (void)len; return 0; }
 static size_t fwp_pipe_read(unsigned char *buf, size_t n) { return fread(buf, 1, n, stdin); }
+static void fwp_pipe_finish(void) {}
 
 #endif

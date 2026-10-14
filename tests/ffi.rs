@@ -89,6 +89,167 @@ word_count = 4
 ";
 
 #[test]
+fn exact_float_abi_preserves_bits_and_owned_value_records() {
+    let temp = fwp::cgen::TempDir::new("fwp-exact-ffi").unwrap();
+    let c = temp.join("bits.c");
+    std::fs::write(&c, r#"
+#include <stdint.h>
+struct fwp_binary128 { uint64_t low, high; };
+struct fwp_c_Pack { struct fwp_binary128 q; uint16_t h, b; };
+uint16_t echo_half(uint16_t x) { return x; }
+uint16_t half_nan(void) { return UINT16_C(0x7c35); }
+uint16_t bfloat_nan(void) { return UINT16_C(0x7f95); }
+uint64_t half_bits(uint16_t x) { return x; }
+struct fwp_binary128 echo_quad(struct fwp_binary128 x) { return x; }
+struct fwp_binary128 quad_nan(void) { return (struct fwp_binary128){UINT64_C(0x1234),UINT64_C(0x7fff000000000000)}; }
+uint64_t quad_low(struct fwp_binary128 x) { return x.low; }
+struct fwp_c_Pack echo_pack(struct fwp_c_Pack x) { return x; }
+struct fwp_binary128 invoke_quad(struct fwp_binary128 (*f)(struct fwp_binary128), struct fwp_binary128 x) { return f(x); }
+"#).unwrap();
+    for callbacks in [false, true] {
+        let source = temp.join(format!("bits-{callbacks}.fwp"));
+        let callback = if callbacks {
+            "    1.0000000000000000000000000000000002f128 | invoke-quad id | gt 1.0f128 | echo,\n"
+        } else {
+            ""
+        };
+        let callback_decl = if callbacks {
+            "foreign \"C\" invoke-quad : (F128 -> F128) -> F128 -> F128 = \"invoke_quad\"\n"
+        } else {
+            ""
+        };
+        std::fs::write(&source, format!(r#"
+repr(C) Pack = {{ q: F128, h: F16, b: BF16 }}
+foreign "C" echo-half : F16 -> F16 = "echo_half"
+foreign "C" echo-bfloat : BF16 -> BF16 = "echo_half"
+foreign "C" echo-quad : F128 -> F128 = "echo_quad"
+foreign "C" echo-pack : Pack -> Pack = "echo_pack"
+foreign "C" half-nan : () -> F16 = "half_nan"
+foreign "C" bfloat-nan : () -> BF16 = "bfloat_nan"
+foreign "C" half-bits : F16 -> U64 = "half_bits"
+foreign "C" bfloat-bits : BF16 -> U64 = "half_bits"
+foreign "C" quad-nan : () -> F128 = "quad_nan"
+foreign "C" quad-low : F128 -> U64 = "quad_low"
+{callback_decl}
+main = [
+    1.0f16 | echo-half | eq 1.0f16 | echo,
+    1.0bf16 | echo-bfloat | eq 1.0bf16 | echo,
+    1.0000000000000000000000000000000002f128 | echo-quad | gt 1.0f128 | echo,
+    {{ q = 1.0000000000000000000000000000000002f128, h = 1.0f16, b = 2.0bf16 }} | echo-pack | .q | gt 1.0f128 | echo,
+    () | half-nan | echo-half | half-bits | eq 31797u64 | echo,
+    () | bfloat-nan | echo-bfloat | bfloat-bits | eq 32661u64 | echo,
+    () | quad-nan | echo-quad | quad-low | eq 4660u64 | echo,
+{callback}] | ignore
+"#)).unwrap();
+        let expected = "True\n".repeat(if callbacks { 8 } else { 7 });
+        let mut interpreted = Command::new(fwp());
+        interpreted
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp", "--link"])
+            .arg(&c)
+            .arg(&source);
+        assert_eq!(stdout(interpreted), expected);
+        for gc in ["tracing", "arc"] {
+            let binary = temp.join(format!("bits-{callbacks}-{gc}"));
+            let mut build = Command::new(fwp());
+            build
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--gc", gc, "--link"])
+                .arg(&c)
+                .arg(&source)
+                .arg("-o")
+                .arg(&binary);
+            stdout(build);
+            let mut run = Command::new(binary);
+            let verify = if gc == "arc" { "0" } else { "1" };
+            run.env("FWP_GC_STRESS", verify)
+                .env("FWP_GC_VERIFY", verify)
+                .env("FWP_REUSE_VERIFY", verify);
+            assert_eq!(stdout(run), expected);
+        }
+    }
+}
+
+#[test]
+fn exact_float_exports_link_from_static_and_shared_libraries() {
+    let temp = fwp::cgen::TempDir::new("fwp-float-exports").unwrap();
+    let source = temp.join("bits.fwp");
+    std::fs::write(
+        &source,
+        r#"
+repr(C) Pack = { q: F128, h: F16, b: BF16 }
+export quad-id : F128 -> F128
+quad-id = id
+export quad-double : F128 -> F128
+quad-double = mul 2.0f128
+export quad-sqrt : F128 -> F128
+quad-sqrt = sqrt
+export pack-id : Pack -> Pack
+pack-id = id
+"#,
+    )
+    .unwrap();
+    let host = temp.join("host.c");
+    std::fs::write(&host, r#"
+#include "libbits.h"
+_Static_assert(sizeof(struct fwp_binary128)==16,"quad ABI width");
+_Static_assert(_Alignof(struct fwp_binary128)==8,"quad ABI alignment");
+int main(void) {
+    struct fwp_binary128 q={1,UINT64_C(0x3fff000000000000)};
+    struct fwp_binary128 nan={UINT64_C(0x1234),UINT64_C(0x7fff000000000000)};
+    for(int i=0;i<2048;i++) {
+        struct fwp_binary128 r=quad_double(q);
+        if(r.low!=1 || r.high!=UINT64_C(0x4000000000000000)) return 1;
+        r=quad_id(nan);
+        if(r.low!=nan.low || r.high!=nan.high) return 2;
+        r=quad_sqrt((struct fwp_binary128){0,UINT64_C(0x4001000000000000)});
+        if(r.low || r.high!=UINT64_C(0x4000000000000000)) return 3;
+        Pack p=pack_id((Pack){nan,UINT16_C(0x7c35),UINT16_C(0x7f95)});
+        if(p.q.low!=nan.low || p.q.high!=nan.high || p.h!=UINT16_C(0x7c35) || p.b!=UINT16_C(0x7f95)) return 4;
+    }
+    return 0;
+}
+"#).unwrap();
+    for kind in ["--staticlib", "--cdylib"] {
+        let extension = if kind == "--staticlib" {
+            "a"
+        } else {
+            fwp::cgen::shared_library_extension()
+        };
+        let library = temp.join(format!("libbits.{extension}"));
+        let mut build = Command::new(fwp());
+        build
+            .args(["build", kind])
+            .arg(&source)
+            .arg("-o")
+            .arg(&library);
+        stdout(build);
+        let binary = temp.join("host");
+        let mut link = Command::new(cc());
+        link.arg("-std=c11")
+            .arg(&host)
+            .arg(&library)
+            .arg(format!("-Wl,-rpath,{}", temp.path().display()))
+            .args(["-lm", "-lpthread", "-o"])
+            .arg(&binary);
+        stdout(link);
+        let mut run = Command::new(binary);
+        run.env("FWP_GC_STRESS", "1")
+            .env("FWP_GC_VERIFY", "1")
+            .env("FWP_REUSE_VERIFY", "1");
+        stdout(run);
+        if kind == "--staticlib" {
+            let mut members = Command::new(std::env::var("AR").unwrap_or_else(|_| "ar".into()));
+            members.arg("t").arg(&library);
+            let members = stdout(members);
+            assert!(members.lines().any(|m| m == "float.c.o"));
+            assert!(members.lines().any(|m| m == "float.cpp.o"));
+            assert!(!members.lines().any(|m| m.ends_with(".a")));
+        }
+    }
+}
+
+#[test]
 fn static_library_from_rust() {
     if !have(&cc()) || !have("rustc") {
         return;

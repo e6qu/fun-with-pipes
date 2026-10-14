@@ -69,21 +69,30 @@ observed = dict(head=head, baselineHead=baseline['head'], baselineSha256=baselin
                 lowered=lowered, rows=rows, sourceHashes=source_hashes,
                 status='Observed candidate; contract assertions have not passed')
 args.output.with_suffix('.observed.json').write_text(json.dumps(observed, indent=2) + '\n')
-assert len(rows) == len(baseline['rows']) + 2
+assert len(rows) == len(baseline['rows']) + 5
 assert len({(row['file'], row['declared']) for row in rows}) == len(rows)
-assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 2
+assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5
 assert sum(row['aliased'] for row in rows) == 40
 raw_symbols = {'mem.alloc', 'mem.free', 'mem.string', 'ptr.cast', 'ptr.at',
                'ptr.read', 'ptr.write', 'ptr.read-string', 'ptr.address'}
 baseline_rows = {(row['file'], row['declared']): row for row in baseline['rows']}
-new_keys = {('lib/autodiff.fwp', 'ad.scope'), ('lib/autodiff.fwp', 'ad.scope2')}
+scope_keys = {('lib/autodiff.fwp', 'ad.scope'), ('lib/autodiff.fwp', 'ad.scope2')}
+owned_tapes = {
+    'ad.tape-owned': (2, 'Shared', '(t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]'),
+    'ad.push-owned': (1, 'Shared', '(I64, t, I64, t) -> I64 where Dup[t]'),
+    'ad.backward-owned': (3, 'OwnedTree', 'I64 -> List[I64] -> List[t] -> List[t] where Dup[t]'),
+}
+new_keys = scope_keys | {('lib/autodiff.fwp', name) for name in owned_tapes}
 leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.help', 'zlib.gzip', 'zlib.gzip-chunk', 'zlib.deflate', 'ws.accept', 'ws.deflate', 'ws.key', 'zlib.gzip-end', 'ws.close-payload', 'ws.frame'}
 assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
 # This bundle promotes only these reviewed numeric and parsed-tree boundaries.
 bundle_contracts = {}
+bundle_contracts['not'] = (1, 'Shared', [])
+bundle_contracts['prim.trap'] = (1, 'Never', [])
 for symbol in ['prim.zero', 'prim.one']:
     bundle_contracts[symbol] = (0, 'Numeric', [])
-for symbol in ['prim.neg', 'prim.from-int', 'prim.from-float', 'bit.not', 'int.convert', 'float.to-int']:
+for symbol in ['prim.neg', 'prim.from-int', 'prim.from-float', 'bit.not', 'int.convert', 'float.to-int',
+               'float.convert', 'int.to-float', 'sqrt', 'exp', 'ln', 'sin', 'cos', 'tan', 'floor', 'ceil', 'round']:
     bundle_contracts[symbol] = (1, 'Numeric', [])
 bundle_contracts['abs'] = (1, 'Numeric', [0])
 for symbol in ['prim.add', 'prim.sub', 'prim.mul', 'prim.div', 'prim.rem',
@@ -91,18 +100,25 @@ for symbol in ['prim.add', 'prim.sub', 'prim.mul', 'prim.div', 'prim.rem',
                'saturating.add', 'saturating.sub', 'saturating.mul',
                'overflowing.add', 'overflowing.sub', 'overflowing.mul',
                'checked.add', 'checked.sub', 'checked.mul', 'checked.div',
-               'bit.and', 'bit.or', 'bit.xor', 'bit.shl', 'bit.shr']:
+               'bit.and', 'bit.or', 'bit.xor', 'bit.shl', 'bit.shr', 'pow']:
     bundle_contracts[symbol] = (2, 'Numeric', [])
-bundle_contracts['int.to-float'] = (1, 'Shared', [])
 bundle_contracts['min'] = bundle_contracts['max'] = (2, 'SelectedArgument', [0, 1])
 bundle_contracts['csv.parse-with'] = (2, 'OwnedTree', [])
+bundle_contracts['cli.parse'] = (2, 'OwnedTree', [])
 for symbol in ['csv.decode', 'json.parse', 'json.read']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
 promoted = []
 changed_symbols = set()
 for row in rows:
     key = (row['file'], row['declared'])
-    if key in new_keys:
+    if row['symbol'] in owned_tapes:
+        arity, result, signature = owned_tapes[row['symbol']]
+        arguments = '[' + ', '.join(['Borrow'] * arity) + ']'
+        assert row == dict(file='lib/autodiff.fwp', declared=row['symbol'], symbol=row['symbol'],
+            aliased=False, bucket='contract', signature=signature,
+            contract='Some(Contract { arguments: ' + arguments + ', result: ' + result + ', callback: None, aliases: [] })')
+        continue
+    if key in scope_keys:
         name = key[1]
         arity = 2 if name == 'ad.scope' else 3
         signature = '(a -> b) -> a -> b where Dup[a]' if arity == 2 else '(a -> b -> c) -> a -> b -> c where Dup[a], Dup[b]'
@@ -113,6 +129,13 @@ for row in rows:
             contract='Some(Contract { arguments: ' + arguments + ', result: OwnedCallback, callback: Some(Borrowed(0)), aliases: ' + aliases + ' })')
         continue
     before = baseline_rows[key]
+    if row['symbol'] in {'fail', 'parse-int', 'parse-float'}:
+        assert before['contract'] == 'Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })'
+        assert all(row[name] == before[name] for name in fields if name != 'contract')
+        result = 'Never' if row['symbol'] == 'fail' else 'FreshTree'
+        assert row['contract'] == 'Some(Contract { arguments: [Borrow], result: ' + result + ', callback: None, aliases: [] })'
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] in bundle_contracts:
         assert before['contract'] == 'None' and row['bucket'] == 'contract', (before, row)
         assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
@@ -168,14 +191,15 @@ for row in rows:
     assert all(row[key] == before[key] for key in fields
                if key not in {'bucket', 'contract'})
     arguments = '[Borrow, Borrow]' if row['symbol'] in {'ptr.at', 'ptr.write'} else '[Borrow]'
-    result = 'FreshLeaf' if row['symbol'] == 'ptr.read-string' else 'Shared'
+    result = ('FreshLeaf' if row['symbol'] == 'ptr.read-string' else
+              'Numeric' if row['symbol'] == 'ptr.read' else 'Shared')
     expected = ('Contract { arguments: ' + arguments + ', result: ' + result +
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
 expected_counts = dict(baseline['counts'])
-expected_counts['contract'] += len(raw_symbols) + 25
+expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22
 expected_counts['flat_scalar_signature'] -= 1
 for before in promoted:
@@ -192,7 +216,7 @@ report = {
     'baselineHead': baseline['head'],
     'baselineSha256': baseline_hash,
     'changedContractSymbols': sorted(changed_symbols),
-    'addedContractSymbols': ['ad.scope', 'ad.scope2'],
+    'addedContractSymbols': sorted(name for _, name in new_keys),
     'sourceHashes': source_hashes,
     'rows': rows,
     'status': 'Expected contract changes verified',

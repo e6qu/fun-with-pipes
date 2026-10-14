@@ -25,6 +25,7 @@ pub mod ffi;
 pub mod ffi_interp;
 #[cfg(target_family = "wasm")]
 pub mod fiber;
+pub mod float_codegen;
 pub mod fmt;
 pub mod fuse;
 pub mod grpc;

@@ -58,14 +58,30 @@ static V fwp_int_in_range(int neg, u128 mag, int k, int w, V *out) {
     return (V)fwp_int_fits(x, k, w, out);
 }
 
-static V fwp_float_of(int k, double x) { return k == K_F32 ? fwp_from_f32((float)x) : fwp_from_f64(x); }
+static V fwp_float_of(int k, double x) {
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F16 || k == K_BF16 || k == K_F128) return fwp_quad_float(k, f64_to_f128((float64_t){fwp_from_f64(x)}));
+#endif
+    return k == K_F32 ? fwp_from_f32((float)x) : fwp_from_f64(x);
+}
+static V fwp_integer_float(int k, int negative, u128 magnitude) {
+#ifdef FWP_EXACT_FLOAT
+    uint64_t low = (uint64_t)magnitude, high = (uint64_t)(magnitude >> 64);
+    uint16_t sign = negative && magnitude ? 0x8000 : 0;
+    if (k == K_F16) return fwp_u128_to_f16(low, high) ^ sign;
+    if (k == K_BF16) return fwp_u128_to_bf16(low, high) ^ sign;
+    if (k == K_F128) { float128_t x = fwp_u128_to_f128(low, high); x.v[1] ^= (uint64_t)sign << 48; return fwp_box_f128(x); }
+#endif
+    if (k == K_F32) { float x = (float)magnitude; return fwp_from_f32(negative && magnitude ? -x : x); }
+    double x = (double)magnitude; return fwp_from_f64(negative && magnitude ? -x : x);
+}
 
 static void fwp_fmt_i128(char *out, i128 x);
 
 /* integer constant of kind k (traps when out of range) */
 static V fwp_from_i128(int k, i128 x, const char *name, int w) {
     V out;
-    if (k == K_F32 || k == K_F64) return fwp_float_of(k, (double)x);
+    if (fwp_float_kind(k)) return fwp_integer_float(k, x < 0, x < 0 ? (u128)0 - (u128)x : (u128)x);
     if (fwp_int_fits(x, k, w, &out)) return out;
     char n[64], buf[160];
     fwp_fmt_i128(n, x);
@@ -125,6 +141,41 @@ static int fwp_arith_i128(int op, i128 x, i128 y, i128 *out, int *err) {
  * overflow, 2 division by zero) */
 static int fwp_arith_raw(int k, int op, V a, V b, int w, V *out, int *err) {
     *err = 0;
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F16) {
+        float16_t x = (float16_t){(uint16_t)a}, y = (float16_t){(uint16_t)b}, r;
+        switch (op) {
+        case OP_ADD: r = f16_add(x, y); break;
+        case OP_SUB: r = f16_sub(x, y); break;
+        case OP_MUL: r = f16_mul(x, y); break;
+        case OP_DIV: r = f16_div(x, y); break;
+        default: r = (float16_t){fwp_f16_rem(x.v, y.v)};
+        }
+        *out = r.v; return 1;
+    }
+    if (k == K_BF16) {
+        uint16_t x = (uint16_t)a, y = (uint16_t)b, r;
+        switch (op) {
+        case OP_ADD: r = fwp_bf16_add(x, y); break;
+        case OP_SUB: r = fwp_bf16_sub(x, y); break;
+        case OP_MUL: r = fwp_bf16_mul(x, y); break;
+        case OP_DIV: r = fwp_bf16_div(x, y); break;
+        default: r = fwp_bf16_rem(x, y);
+        }
+        *out = r; return 1;
+    }
+    if (k == K_F128) {
+        float128_t x = fwp_f128(a), y = fwp_f128(b), r;
+        switch (op) {
+        case OP_ADD: r = f128_add(x, y); break;
+        case OP_SUB: r = f128_sub(x, y); break;
+        case OP_MUL: r = f128_mul(x, y); break;
+        case OP_DIV: r = f128_div(x, y); break;
+        default: r = fwp_f128_rem(x, y);
+        }
+        *out = fwp_box_f128(r); return 1;
+    }
+#endif
     if (k == K_F32) {
         float x = fwp_f32(a), y = fwp_f32(b), r;
         switch (op) {
@@ -202,6 +253,10 @@ static V fwp_arith(int k, int op, V a, V b, const char *name, int w) {
 
 /* floats flip the sign (so neg 0.0 is -0.0); integers are checked 0 - x */
 static V fwp_neg(int k, V v, const char *name, int w) {
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F16 || k == K_BF16) return v ^ UINT64_C(0x8000);
+    if (k == K_F128) { float128_t x = fwp_f128(v); x.v[1] ^= UINT64_C(1) << 63; return fwp_box_f128(x); }
+#endif
     if (k == K_F32) return fwp_from_f32(-fwp_f32(v));
     if (k == K_F64) return fwp_from_f64(-fwp_f64(v));
     if (k == K_I128) {
@@ -340,11 +395,19 @@ static V fwp_int_convert(int ks, int kt, V v) {
 }
 
 static V fwp_int_to_float(int ks, int kt, V v) {
-    double x = ks == K_U128 ? (double)fwp_u128(v) : (double)fwp_as_i128(ks, v);
-    return fwp_float_of(kt, x);
+    if (ks == K_U128) return fwp_integer_float(kt, 0, fwp_u128(v));
+    i128 x = fwp_as_i128(ks, v);
+    return fwp_integer_float(kt, x < 0, x < 0 ? (u128)0 - (u128)x : (u128)x);
 }
 
 static V fwp_float_to_int(int ks, int kt, V v) {
+#ifdef FWP_EXACT_FLOAT
+    if (ks == K_F16 || ks == K_BF16 || ks == K_F128) {
+        uint64_t low, high; int negative; V out;
+        if (!fwp_f128_to_integer(fwp_float_quad(ks, v), &low, &high, &negative)) return FWP_NONE;
+        return fwp_int_in_range(negative, ((u128)high << 64) | low, kt, 0, &out) ? fwp_some(out) : FWP_NONE;
+    }
+#endif
     double x = fwp_as_f64(ks, v);
     V out;
     if (!isfinite(x)) return FWP_NONE;
@@ -362,6 +425,50 @@ static V fwp_float_to_int(int ks, int kt, V v) {
 enum { FM_SQRT, FM_EXP, FM_LN, FM_SIN, FM_COS, FM_TAN, FM_FLOOR, FM_CEIL, FM_ROUND };
 
 static V fwp_fmath(int k, int f, V v) {
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F16) {
+        uint16_t x = (uint16_t)v, r;
+        uint_fast8_t mode = f == FM_FLOOR ? softfloat_round_min : f == FM_CEIL ? softfloat_round_max : softfloat_round_near_maxMag;
+        switch (f) {
+        case FM_SQRT: r = f16_sqrt((float16_t){x}).v; break;
+        case FM_EXP: r = fwp_f16_exp(x); break;
+        case FM_LN: r = fwp_f16_ln(x); break;
+        case FM_SIN: r = fwp_f16_sin(x); break;
+        case FM_COS: r = fwp_f16_cos(x); break;
+        case FM_TAN: r = fwp_f16_tan(x); break;
+        default: r = f16_roundToInt((float16_t){x}, mode, false).v;
+        }
+        return r;
+    }
+    if (k == K_BF16) {
+        uint16_t x = (uint16_t)v, r;
+        uint_fast8_t mode = f == FM_FLOOR ? softfloat_round_min : f == FM_CEIL ? softfloat_round_max : softfloat_round_near_maxMag;
+        switch (f) {
+        case FM_SQRT: r = fwp_bf16_sqrt(x); break;
+        case FM_EXP: r = fwp_bf16_exp(x); break;
+        case FM_LN: r = fwp_bf16_ln(x); break;
+        case FM_SIN: r = fwp_bf16_sin(x); break;
+        case FM_COS: r = fwp_bf16_cos(x); break;
+        case FM_TAN: r = fwp_bf16_tan(x); break;
+        default: r = fwp_f128_to_bf16(f128_roundToInt(fwp_bf16_to_f128(x), mode, false));
+        }
+        return r;
+    }
+    if (k == K_F128) {
+        float128_t x = fwp_f128(v), r;
+        uint_fast8_t mode = f == FM_FLOOR ? softfloat_round_min : f == FM_CEIL ? softfloat_round_max : softfloat_round_near_maxMag;
+        switch (f) {
+        case FM_SQRT: r = f128_sqrt(x); break;
+        case FM_EXP: r = fwp_f128_exp(x); break;
+        case FM_LN: r = fwp_f128_ln(x); break;
+        case FM_SIN: r = fwp_f128_sin(x); break;
+        case FM_COS: r = fwp_f128_cos(x); break;
+        case FM_TAN: r = fwp_f128_tan(x); break;
+        default: r = f128_roundToInt(x, mode, false);
+        }
+        return fwp_box_f128(r);
+    }
+#endif
     if (k == K_F32) {
         float x = fwp_f32(v);
         switch (f) {
@@ -387,7 +494,27 @@ static V fwp_fmath(int k, int f, V v) {
     return fwp_float_of(k, y);
 }
 
+static V fwp_float_convert(int source, int target, V v) {
+#ifdef FWP_EXACT_FLOAT
+    if (source == K_F16 || source == K_BF16 || source == K_F128 || target == K_F16 || target == K_BF16 || target == K_F128)
+        return fwp_quad_float(target, fwp_float_quad(source, v));
+#endif
+    return fwp_float_of(target, fwp_as_f64(source, v));
+}
+static V fwp_pow(int k, V base, V exponent) {
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F16) return fwp_f16_pow((uint16_t)base, (uint16_t)exponent);
+    if (k == K_BF16) return fwp_bf16_pow((uint16_t)base, (uint16_t)exponent);
+    if (k == K_F128) return fwp_box_f128(fwp_f128_pow(fwp_f128(base), fwp_f128(exponent)));
+#endif
+    return fwp_float_of(k, pow(fwp_as_f64(k, base), fwp_as_f64(k, exponent)));
+}
+
 static V fwp_abs(int k, V v, const char *name) {
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F16 || k == K_BF16) return v & UINT64_C(0x7fff);
+    if (k == K_F128) { float128_t x = fwp_f128(v); x.v[1] &= UINT64_C(0x7fffffffffffffff); return fwp_box_f128(x); }
+#endif
     if (k == K_F32) return fwp_from_f32(fabsf(fwp_f32(v)));
     if (k == K_F64) return fwp_from_f64(fabs(fwp_f64(v)));
     i128 x = k == K_U128 ? 0 : fwp_as_i128(k, v);
@@ -535,6 +662,9 @@ static V fwp_p_simd_from_array(V a, size_t n) {
 }
 
 static int fwp_num_lt(int k, V a, V b) {
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F16 || k == K_BF16 || k == K_F128) return fwp_f128_compare(fwp_float_quad(k, a), fwp_float_quad(k, b)) == -1;
+#endif
     if (k == K_F32 || k == K_F64) return fwp_as_f64(k, a) < fwp_as_f64(k, b);
     if (k == K_U128) return fwp_u128(a) < fwp_u128(b);
     if (k == K_I128) return fwp_i128(a) < fwp_i128(b);
@@ -545,7 +675,7 @@ static int fwp_num_lt(int k, V a, V b) {
 static V fwp_p_simd_op(int k, int op, V subj, V arg, const char *name, int w, const fwp_desc *elem) {
     fwp_arr *xs = LANES(subj), *ys = LANES(arg);
     size_t n = fwp_array_len(PTR(xs)) < fwp_array_len(PTR(ys)) ? fwp_array_len(PTR(xs)) : fwp_array_len(PTR(ys));
-    int fl = k == K_F32 || k == K_F64;
+    int fl = fwp_float_kind(k);
     V r = fwp_array_new_packed(n, elem);
     if (k == K_F64 && op <= OP_DIV) {
         for (size_t i = 0; i < n; i++) {
@@ -573,7 +703,16 @@ static V fwp_p_simd_op(int k, int op, V subj, V arg, const char *name, int w, co
 static V fwp_p_simd_sum(int k, V v, const char *name, int w, const fwp_desc *elem) {
     fwp_arr *xs = LANES(v);
     if (fwp_array_len(PTR(xs)) == 0) return fwp_from_i128(k, 0, name, w);
-    int fl = k == K_F32 || k == K_F64;
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F128) {
+        float128_t sum = fwp_f128(fwp_array_load(PTR(xs), 0, elem));
+        for (size_t i = 1; i < fwp_array_len(PTR(xs)); i++)
+            sum = f128_add(sum, fwp_f128(fwp_array_load(PTR(xs), i, elem)));
+        V result = fwp_box_f128(sum);
+        FWP_KEEP_ALIVE(v); return result;
+    }
+#endif
+    int fl = fwp_float_kind(k);
     V acc = fwp_array_load(PTR(xs), 0, elem);
     for (size_t i = 1; i < fwp_array_len(PTR(xs)); i++)
         acc = fl ? fwp_arith(k, OP_ADD, acc, fwp_array_load(PTR(xs), i, elem), name, w) : fwp_wrapping(k, OP_ADD, acc, fwp_array_load(PTR(xs), i, elem));

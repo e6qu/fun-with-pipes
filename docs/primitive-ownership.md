@@ -4,7 +4,7 @@
 native code generation. Its container inventory covers every array/map/set
 primitive declared in `lib/collections.fwp`; a coverage check detects newly
 added declarations without contracts. All 31 string-module declarations and seven byte primitives now have contracts;
-selected typed result ownership is listed below. Other primitives, foreign
+selected typed result ownership is listed below. Unmodeled primitives, foreign
 functions and remote calls retain the conservative default: borrow arguments, promote counted
 values to runtime sharing, and return runtime-shared values. Further inventories
 must refine that default before extending deterministic reclamation.
@@ -15,7 +15,15 @@ storage. Consume is checked by `src/rc.rs`; share is emitted by `src/cgen.rs`.
 Result metadata distinguishes shared results, owned leaf copies/aliases, fresh outer containers and
 containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
-Every failure path still consumes its specified reference.
+The nonreturning `fail` contract has no normal result; its error value is
+retained by the handler. Every failure path still consumes its specified reference.
+
+Scoped foreign contracts use the ABI classifier: text/bytes are borrowed during
+the call, string results are copied, and synchronous callbacks transfer typed
+C value arguments/results through task-local contexts with unwind cleanup.
+Raw pointers and callbacks returning managed C addresses remain unproved.
+Retained task callbacks own their immutable captures and typed cached results;
+channels and raw mutable backedges remain outside checked ARC admission.
 
 The tables describe current contracts. [The handoff](development-state.md)
 distinguishes implemented extensions from accepted production evidence. Arrays,
@@ -77,10 +85,9 @@ complete exceptional ownership or tracing-free support.
 
 ## Conservative reconstruction and external boundaries
 
-The current inventory has 375 declarations, 365 runtime symbols and 40 aliases:
-207 ownership contracts, 19 ordinary IR combinators, 11 flat scalar signatures
-and 138 review declarations covering 128 symbols. Promotion checks preserve the
-immutable original baseline and verify each new numeric/CSV contract. Scalar
+The inventory checks declarations, runtime symbols and aliases against the
+immutable original baseline, including each numeric/CSV/CLI promotion and the
+nonreturning failure contract. Its generated report records current counts. Scalar
 signatures can still allocate external state; descriptors alone cannot establish
 counted reconstruction. The handoff records validation of the current revision.
 
@@ -93,6 +100,7 @@ boundary; it does not establish tracing-free eligibility.
 |---|---|
 | JSON/typed CSV/text/binary decoding | Descriptor Dup/Drop owns reconstructed children and partial field vectors; parse/read and typed CSV return OwnedTree. External protocol contexts remain separately unproved |
 | csv.parse / csv.parse-with | Counted String leaves and nested list spines; registered pending-field, partial-row and scratch cleanup; private spine reversal transfers existing owners |
+| cli.parse / cli.help | Borrow defaults and input strings; reconstruct owned flag records/positional lists, retain aliases, release displaced flags and partial values; help and diagnostics own their scratch/text |
 | Numeric I128/U128 results | Fresh leaf/aggregate ownership or explicitly retained selected aliases; scalar results remain inline |
 | Remote values and memoized decoding | Preserve retained context/cache owners and independent reader aliases; scratch cleanup alone does not count decoded nodes |
 | Foreign values and retained callbacks | Keep explicit sharing unless host lifetime and teardown are proved |

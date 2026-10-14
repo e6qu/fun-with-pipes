@@ -1,4 +1,6 @@
 //! Check bounded AD workspace reuse and exact owners at actual native boundaries.
+#[path = "support/c_instrument.rs"]
+mod c_instrument;
 use std::process::Command;
 #[test]
 fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
@@ -27,14 +29,15 @@ fn autodiff_workspaces_reuse_bounded_storage_and_release_every_private_owner() {
         + source[start..]
             .find("/* ---------------------------------------------------------------- kernels */")
             .unwrap();
-    let tape = source[start..end]
-        .replace("realloc(", "workspace_realloc(")
-        .replace("free(", "workspace_free(")
-        .replace("(double *)calloc(", "(double *)workspace_calloc(")
-        .replace(
-            "V r = fwp_arr_new((size_t)tp.leaves);",
-            "V r = workspace_result_array((size_t)tp.leaves);",
-        );
+    let tape = c_instrument::calls(
+        &source[start..end],
+        &[("realloc", "workspace_realloc"), ("free", "workspace_free")],
+    )
+    .replace("(double *)calloc(", "(double *)workspace_calloc(")
+    .replace(
+        "V r = fwp_arr_new((size_t)tp.leaves);",
+        "V r = workspace_result_array((size_t)tp.leaves);",
+    );
     assert!(tape.contains("V r = workspace_result_array((size_t)tp.leaves);"));
     let declarations="static void *workspace_realloc(void *,size_t);\nstatic void *workspace_calloc(size_t,size_t);\nstatic void workspace_free(void *);\nstatic V workspace_result_array(size_t);\n";
     let runtime=format!("{}{}{}{}",&source[..start],declarations,tape,&source[end..])

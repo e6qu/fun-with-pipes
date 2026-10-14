@@ -1,6 +1,36 @@
 /* Standalone function executables (mirrors src/exec.rs, src/textio.rs and
  * the decoding half of src/proto.rs). */
 
+/* Temporary textual diagnostics own ordinary counted string leaves. */
+static void fwp_cli_text_drop(V value) {
+    if (!fwp_rc_release_last(value)) return;
+#ifdef FWP_RESOURCE_NO_FREE
+    fwp_rc_drop(value);
+#else
+    fwp_rc_free_obj(value);
+#endif
+}
+
+/* Private spines reverse in place. Allocate their cells as mutable so minor
+ * collections rescan older cells after reversal introduces younger links. */
+static V fwp_private_cons_owned(V field, V tail) {
+    fwp_obj *cell = (fwp_obj *)fwp_alloc(sizeof(fwp_obj) + 2 * sizeof(V));
+    cell->tag = 1; cell->n = 2;
+    cell->f[0] = field; cell->f[1] = tail;
+    FWP_KEEP_ALIVE(field);
+    FWP_KEEP_ALIVE(tail);
+    return fwp_rc_fresh(PTR(cell));
+}
+static V fwp_private_reverse_owned(V xs) {
+    V result = 0;
+    while (xs) {
+        V next = OBJ(xs)->f[1];
+        OBJ(xs)->f[1] = result;
+        result = xs;
+        xs = next;
+    }
+    return result;
+}
 /* ------------------------------------------------------------- text parse */
 
 typedef struct { const char *s; size_t n, i; } fwp_tp;
@@ -151,6 +181,12 @@ static int tp_float(fwp_tp *p, const fwp_desc *d, V *out) {
     char t[128];
     size_t l = tp_token(p, t, sizeof t);
     if (l >= sizeof t) return 0;
+#ifdef FWP_EXACT_FLOAT
+    if (d->kind == K_F16 || d->kind == K_BF16 || d->kind == K_F128) {
+        if (strcmp(t, "inf") && strcmp(t, "-inf") && strcmp(t, "NaN") && !fwp_valid_float(t, l)) return 0;
+        return fwp_parse_exact(t, d->kind, out);
+    }
+#endif
     double x;
     if (strcmp(t, "inf") == 0) x = INFINITY;
     else if (strcmp(t, "-inf") == 0) x = -INFINITY;
@@ -215,7 +251,7 @@ static int tp_value_inner(fwp_tp *p, const fwp_desc *d, int top, V *out, fwp_dec
     case K_I8: case K_I16: case K_I32: case K_I64: case K_I128:
     case K_U8: case K_U16: case K_U32: case K_U64: case K_U128:
         return tp_int(p, d, out);
-    case K_F32: case K_F64: return tp_float(p, d, out);
+    case K_F16: case K_BF16: case K_F128: case K_F32: case K_F64: return tp_float(p, d, out);
     case K_STR:
         if (top) {
             if (!fwp_valid_utf8((const unsigned char *)p->s + p->i, p->n - p->i)) return 0;
@@ -359,7 +395,7 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
     fwp_decode_fields fields = {0};
     int ok = tp_value_inner(p, d, top, out, &fields);
     if (fields.active) fwp_decode_fields_end(&fields, 0);
-    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128)) fwp_rc_fresh(*out);
+    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128 || d->kind == K_F128)) fwp_rc_fresh(*out);
     return ok;
 }
 
@@ -442,6 +478,14 @@ static int fwp_decode_inner(fwp_rd *r, const fwp_desc *d, V *out, fwp_decode_fie
     case K_TRIT:
         if (!rd_le(r, 1, &x) || (x != 255 && x > 1)) return 0;
         *out = (V)(int64_t)(int8_t)x; return 1;
+#ifdef FWP_EXACT_FLOAT
+    case K_F16: case K_BF16: if (!rd_le(r, 2, &x)) return 0; *out = x; return 1;
+    case K_F128: {
+        uint64_t lo, hi;
+        if (!rd_le(r, 8, &lo) || !rd_le(r, 8, &hi)) return 0;
+        *out = fwp_box_f128((float128_t){{lo, hi}}); return 1;
+    }
+#endif
     case K_I128: case K_U128: {
         uint64_t lo, hi;
         if (!rd_le(r, 8, &lo) || !rd_le(r, 8, &hi)) return 0;
@@ -468,7 +512,7 @@ static int fwp_decode_inner(fwp_rd *r, const fwp_desc *d, V *out, fwp_decode_fie
         for (size_t i = 0; i < (size_t)x; i++) {
             if (!fwp_decode(r, d->elem, &fields->values[array ? 0 : i])) return 0;
             if (array) {
-                fwp_array_store(fields->aggregate, i, fields->values[0], d->elem);
+                fwp_array_store_owned(fields->aggregate, i, fields->values[0], d->elem);
                 fwp_array_set_len(fields->aggregate, i + 1);
                 fields->values[0] = 0;
             }
@@ -515,7 +559,7 @@ static int fwp_decode(fwp_rd *r, const fwp_desc *d, V *out) {
     fwp_decode_fields fields = {0};
     int ok = fwp_decode_inner(r, d, out, &fields);
     if (fields.active) fwp_decode_fields_end(&fields, 0);
-    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128)) fwp_rc_fresh(*out);
+    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128 || d->kind == K_F128)) fwp_rc_fresh(*out);
     return ok;
 }
 
@@ -606,14 +650,17 @@ static void fwp_choices(fwp_buf *b, const fwp_desc *d) {
 static int fwp_cli_value(const char *t, size_t n, const fwp_desc *d, const char *dname, V *out, V *err) {
     if (fwp_is_enum(d)) {
         fwp_buf a = {0}, c = {0};
+        fwp_cleanup ca, cc;
+        fwp_cleanup_push(&ca, fwp_buf_release, &a);
+        fwp_cleanup_push(&cc, fwp_buf_release, &c);
         fwp_loose(&a, t, n);
         int tag = -1;
         for (int i = 0; i < d->n && tag < 0 && a.len; i++) {
             fwp_loose(&c, d->names[i], strlen(d->names[i]));
             if (c.len == a.len && memcmp(c.d, a.d, a.len) == 0) tag = i;
         }
-        free(a.d);
-        free(c.d);
+        fwp_cleanup_pop(&cc); free(c.d);
+        fwp_cleanup_pop(&ca); free(a.d);
         if (tag >= 0) { *out = (V)tag; return 1; }
         fwp_buf choices = {0};
         fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &choices);
@@ -650,12 +697,19 @@ static int fwp_flag_by_short(const fwp_flag *fl, int nf, int c) {
 static int fwp_flag_set(const fwp_flag *f, int k, const char *t, size_t n, V *vals, char *state, V *err) {
     V v, m;
     if (!fwp_cli_value(t, n, f->value, f->value_name, &v, &m)) {
+        fwp_value_owner message = {fwp_rc_fresh(m), fwp_cli_text_drop};
+        fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &message);
         *err = fwp_strf("option `--%s`: %s", f->name, STR(m)->d);
+        fwp_cleanup_pop(&cleanup); fwp_value_release(&message);
         return 0;
     }
     if (f->kind == FL_REPEATED) {
-        vals[k] = fwp_cons(v, state[k] ? vals[k] : 0);
+        fwp_value_owner pending = {v, f->value->drop};
+        fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &pending);
+        vals[k] = fwp_private_cons_owned(v, vals[k]);
+        fwp_cleanup_pop(&cleanup); /* the new cell takes v and the previous tail */
     } else {
+        if (state[k] && f->value->drop) f->value->drop(vals[k]);
         vals[k] = v;
     }
     state[k] = 1;
@@ -754,50 +808,73 @@ static int fwp_cli_parse(const fwp_flag *fl, int nf, int special, int version, i
  * env_value): 1 with *out, 0 when unset or empty, -1 with *err. */
 static int fwp_flag_env(const fwp_flag *f, V *out, V *err) {
     if (!f->env) return 0;
+#ifdef _WIN32
+    V value;
+    if (!fwp_win_env_text(f->env, strlen(f->env), &value)) return 0;
+    fwp_value_owner text = {fwp_rc_fresh(value), fwp_cli_text_drop};
+    if (!STR(value)->len) { fwp_value_release(&text); return 0; }
+#else
     const char *e = getenv(f->env);
     if (!e || !*e) return 0;
-    V t = fwp_str_lossy(e, strlen(e));
-    const char *s = STR(t)->d;
-    size_t n = STR(t)->len;
+    fwp_value_owner text = {fwp_rc_fresh(fwp_str_lossy(e, strlen(e))), fwp_cli_text_drop};
+#endif
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &text);
+    const char *s = STR(text.value)->d;
+    size_t n = STR(text.value)->len;
     if (f->kind == FL_SWITCH && n == 1 && (s[0] == '1' || s[0] == '0')) {
         s = s[0] == '1' ? "true" : "false";
         n = strlen(s);
     }
     V v, m;
     if (!fwp_cli_value(s, n, f->value, f->value_name, &v, &m)) {
+        fwp_value_owner message = {fwp_rc_fresh(m), fwp_cli_text_drop};
+        fwp_cleanup message_cleanup; fwp_cleanup_push(&message_cleanup, fwp_value_release, &message);
         *err = fwp_strf("environment variable `%s`: %s", f->env, STR(m)->d);
+        fwp_cleanup_pop(&message_cleanup); fwp_value_release(&message);
+        fwp_cleanup_pop(&cleanup); fwp_value_release(&text);
         return -1;
     }
-    if (f->kind == FL_OPTIONAL) { V x[1] = {v}; v = fwp_data(1, 1, x); }
-    else if (f->kind == FL_REPEATED) v = fwp_cons(v, 0);
+    fwp_value_owner pending = {v, f->value->drop};
+    fwp_cleanup pending_cleanup; fwp_cleanup_push(&pending_cleanup, fwp_value_release, &pending);
+    if (f->kind == FL_OPTIONAL) v = fwp_rc_fresh(fwp_some(v));
+    else if (f->kind == FL_REPEATED) v = fwp_private_cons_owned(v, 0);
+    fwp_cleanup_pop(&pending_cleanup);
     *out = v;
+    fwp_cleanup_pop(&cleanup); fwp_value_release(&text);
     return 1;
 }
 
 /* The options record from parsed values, environment variables (with
  * `env`) and defaults (have_def[k]: defs[k] is the default). 0 with *err
  * for a missing required flag or a bad environment variable. */
-static int fwp_cli_record(const fwp_flag *fl, int nf, int nfields, const V *vals, const char *state,
+static int fwp_cli_record(const fwp_flag *fl, int nf, int nfields, V *vals, const char *state,
                           const V *defs, const char *have_def, int env, V *out, V *err) {
-    V *fs = (V *)fwp_alloc((size_t)(nfields + 1) * sizeof(V));
-    char *present = (char *)fwp_alloc_leaf((size_t)nf + 1);
+    const fwp_desc *types[nfields ? nfields : 1];
+    memset(types, 0, sizeof types);
+    for (int k = 0; k < nf; k++) types[fl[k].index] = fl[k].field;
+    fwp_decode_fields fields;
+    fwp_decode_fields_begin(&fields, (size_t)nfields, types, (size_t)nfields, NULL);
+    V *fs = fields.values;
+    char *present = fields.scratch = fwp_mem_alloc((size_t)nf + 1);
     for (int k = 0; k < nf; k++) {
         const fwp_flag *f = &fl[k];
         V v;
         int e = 0;
-        if (!state[k] && env && (e = fwp_flag_env(f, &v, err)) < 0) return 0;
+        if (!state[k] && env && (e = fwp_flag_env(f, &v, err)) < 0) goto failure;
         present[k] = state[k] || e;
         if (state[k]) {
-            if (f->kind == FL_OPTIONAL) { V x[1] = {vals[k]}; v = fwp_data(1, 1, x); }
-            else if (f->kind == FL_REPEATED) v = fwp_p_reverse(vals[k]);
+            if (f->kind == FL_OPTIONAL) v = fwp_rc_fresh(fwp_some(vals[k]));
+            else if (f->kind == FL_REPEATED) v = fwp_private_reverse_owned(vals[k]);
             else v = vals[k];
+            vals[k] = 0; /* the field takes the parsed owner */
         } else if (e) {
             /* from the environment */
         } else if (have_def[k]) {
             v = defs[k];
+            if (f->field->dup) f->field->dup(v);
         } else if (f->kind == FL_SINGLE) {
             *err = fwp_strf("missing option `--%s`", f->name);
-            return 0;
+            goto failure;
         } else {
             v = 0; /* False, None, [] */
         }
@@ -809,34 +886,44 @@ static int fwp_cli_record(const fwp_flag *fl, int nf, int nfields, const V *vals
         for (const int *c = fl[k].conflicts; c && *c >= 0; c++)
             if (present[*c]) {
                 *err = fwp_strf("option `--%s` cannot be used with `--%s`", fl[k].name, fl[*c].name);
-                return 0;
+                goto failure;
             }
         for (const int *r = fl[k].requires; r && *r >= 0; r++)
             if (!present[*r]) {
                 *err = fwp_strf("option `--%s` needs `--%s`", fl[k].name, fl[*r].name);
-                return 0;
+                goto failure;
             }
     }
-    *out = fwp_record((uint32_t)nfields, fs);
+    *out = fwp_decode_record(&fields);
     return 1;
+failure:
+    fwp_decode_fields_end(&fields, 0);
+    return 0;
 }
 
 /* help text of a default value (as src/cli.rs default_note), or 0 */
 static V fwp_flag_default_note(const fwp_flag *f, V v) {
     fwp_buf b = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
     switch (f->kind) {
-    case FL_SWITCH: if (v == FWP_FALSE) return 0; fwp_write(&b, v, f->field, 0); break;
-    case FL_OPTIONAL: if (v == FWP_NONE) return 0; fwp_show_value(&b, OBJ(v)->f[0], f->value); break;
-    case FL_REPEATED: if (v == 0) return 0; fwp_write(&b, v, f->field, 0); break;
+    case FL_SWITCH: if (v == FWP_FALSE) goto empty; fwp_write(&b, v, f->field, 0); break;
+    case FL_OPTIONAL: if (v == FWP_NONE) goto empty; fwp_show_value(&b, OBJ(v)->f[0], f->value); break;
+    case FL_REPEATED: if (v == 0) goto empty; fwp_write(&b, v, f->field, 0); break;
     default: fwp_show_value(&b, v, f->field);
     }
-    return buf_to_str(&b);
+    V result = fwp_str_new(b.d ? b.d : "", b.len);
+    fwp_cleanup_pop(&cleanup); free(b.d);
+    return result;
+empty:
+    fwp_cleanup_pop(&cleanup); free(b.d);
+    return 0;
 }
 
 /* the help line of a flag, with its default note (src/cli.rs rows,
  * without the environment variable) */
 static void fwp_flag_help(fwp_buf *b, const fwp_flag *f, V note) {
     fwp_buf t = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &t);
     buf_puts(&t, f->doc);
     int enm = fwp_is_enum(f->value);
     if (note || f->kind == FL_REPEATED || enm || f->post) {
@@ -862,40 +949,72 @@ static void fwp_flag_help(fwp_buf *b, const fwp_flag *f, V note) {
         buf_put(b, t.d, t.len);
     }
     buf_putc(b, '\n');
-    free(t.d);
+    fwp_cleanup_pop(&cleanup); free(t.d);
 }
 
 /* cli.parse: the options record (every field with the default of `defs`)
  * and the positional arguments, or an error message. */
-static V fwp_p_cli_parse(V defs, V args, const fwp_flag *fl, int nf, int nfields) {
-    size_t n = 0;
-    for (V l = args; l; l = OBJ(l)->f[1]) n++;
-    V *argv = (V *)fwp_alloc((n + 1) * sizeof(V));
-    n = 0;
-    for (V l = args; l; l = OBJ(l)->f[1]) argv[n++] = OBJ(l)->f[0];
-    V *vals = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
-    V *dv = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
-    char *state = (char *)fwp_alloc_leaf((size_t)nf + 1);
-    char *have = (char *)fwp_alloc_leaf((size_t)nf + 1);
-    V *pos = (V *)fwp_alloc((n + 1) * sizeof(V));
-    int npos;
-    V err = 0, rec;
+static V fwp_p_cli_parse(V defs, V args, const fwp_flag *fl, int nf, int nfields, const fwp_desc *result_type) {
+    const fwp_desc *pair_type = result_type->vfields[0][0];
+    const fwp_desc *list_type = pair_type->fields[1];
+    fwp_decode_fields result;
+    fwp_decode_fields_begin(&result, 1, result_type->vfields[0], 1, NULL);
+    size_t n = fwp_list_len(args);
+    if (n > INT_MAX || n > (SIZE_MAX / sizeof(V) - (size_t)nf - 2) / 2)
+        fwp_trap("too many command-line arguments");
+    const fwp_desc *types[nf ? nf : 1];
+    for (int k = 0; k < nf; k++) types[k] = fl[k].kind == FL_REPEATED ? fl[k].field : fl[k].value;
+    fwp_decode_fields parsed;
+    fwp_decode_fields_begin(&parsed, (size_t)nf, types, (size_t)nf, NULL);
+    size_t words = 2 * (n + 1) + (size_t)nf;
+    size_t bytes = words * sizeof(V);
+    if ((size_t)nf + 1 > (SIZE_MAX - bytes) / 2) fwp_trap("too many command-line flags");
+    V *argv = parsed.scratch = fwp_mem_alloc(bytes + 2 * ((size_t)nf + 1));
+    V *pos = argv + n + 1, *dv = pos + n + 1;
+    char *state = (char *)(argv + words), *have = state + nf + 1;
+    size_t i = 0;
+    for (V l = args; l; l = OBJ(l)->f[1]) argv[i++] = OBJ(l)->f[0];
     for (int k = 0; k < nf; k++) { dv[k] = OBJ(defs)->f[fl[k].index]; have[k] = 1; }
-    if (fwp_cli_parse(fl, nf, 0, 0, (int)n, argv, vals, state, pos, &npos, &err) != 0 ||
-        !fwp_cli_record(fl, nf, nfields, vals, state, dv, have, 0, &rec, &err)) {
-        V e[1] = {err};
-        return fwp_data(1, 1, e);
+    int npos;
+    V err = 0;
+    int failed = fwp_cli_parse(fl, nf, 0, 0, (int)n, argv, parsed.values, state, pos, &npos, &err) != 0;
+    fwp_decode_fields pair;
+    fwp_decode_fields_begin(&pair, 2, pair_type->fields, 2, NULL);
+    if (!failed) failed = !fwp_cli_record(fl, nf, nfields, parsed.values, state, dv, have, 0, &pair.values[0], &err);
+    if (failed) {
+        result.descs = result_type->vfields[1];
+        result.values[0] = fwp_rc_fresh(err);
+        fwp_decode_fields_end(&pair, 0);
+    } else {
+        fwp_decode_fields positional;
+        fwp_decode_fields_begin(&positional, (size_t)npos, NULL, 0, list_type->elem);
+        for (int k = 0; k < npos; k++) {
+            if (list_type->elem->dup) list_type->elem->dup(pos[k]);
+            positional.values[k] = pos[k];
+        }
+        pair.values[1] = fwp_decode_sequence(&positional, list_type);
+        result.values[0] = fwp_decode_record(&pair);
     }
-    V t[2] = {rec, fwp_list_from(pos, (size_t)npos)};
-    V ok[1] = {fwp_record(2, t)};
-    return fwp_data(0, 1, ok);
+    fwp_decode_fields_end(&parsed, 0);
+    V value = fwp_decode_variant(&result, failed ? 1 : 0);
+    FWP_KEEP_ALIVE(defs); FWP_KEEP_ALIVE(args);
+    return value;
 }
 
 /* cli.help: the help lines of the flags with the defaults of `defs` */
 static V fwp_p_cli_help(V defs, const fwp_flag *fl, int nf) {
     fwp_buf b = {0};
-    for (int k = 0; k < nf; k++) fwp_flag_help(&b, &fl[k], fwp_flag_default_note(&fl[k], OBJ(defs)->f[fl[k].index]));
-    return buf_to_str(&b);
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
+    for (int k = 0; k < nf; k++) {
+        fwp_value_owner note = {fwp_rc_fresh(fwp_flag_default_note(&fl[k], OBJ(defs)->f[fl[k].index])), fwp_cli_text_drop};
+        fwp_cleanup note_cleanup; fwp_cleanup_push(&note_cleanup, fwp_value_release, &note);
+        fwp_flag_help(&b, &fl[k], note.value);
+        fwp_cleanup_pop(&note_cleanup); fwp_value_release(&note);
+    }
+    V result = fwp_str_new(b.d ? b.d : "", b.len);
+    fwp_cleanup_pop(&cleanup); free(b.d);
+    FWP_KEEP_ALIVE(defs);
+    return result;
 }
 
 /* ------------------------------------------------------------------ exec */
@@ -916,7 +1035,6 @@ typedef struct {
     const char *export_name;
     const char *usage;
     const char *help;
-    uint32_t fn;
     int arity;
     const fwp_desc *const *params;
     const char *const *param_names;   /* displayed parameter types */
@@ -940,6 +1058,8 @@ typedef struct {
     const char *in_type;
     const unsigned char *in_fp;
     V (*caf)(void);
+    V callable; /* immutable static closure; call borrows it and its arguments */
+    const fwp_desc *result; /* complete result, before output projections */
 } fwp_exec_spec;
 
 static int fwp_exec_binary_out = 0;
@@ -952,12 +1072,13 @@ static int fwp_cli_single = 0; /* a single command: it has these too */
 static void fwp_emit(const fwp_exec_spec *s, V v) {
     if (fwp_exec_binary_out) {
         fwp_buf b = {0};
+        fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
         fwp_encode(&b, v, s->out_elem);
         unsigned char hdr[5] = {1, (unsigned char)(b.len & 0xff), (unsigned char)((b.len >> 8) & 0xff),
                                 (unsigned char)((b.len >> 16) & 0xff), (unsigned char)((b.len >> 24) & 0xff)};
         fwp_pipe_write(hdr, 5);
         if (b.len) fwp_pipe_write(b.d, b.len);
-        free(b.d);
+        fwp_cleanup_pop(&cleanup); free(b.d);
         fwp_pipe_frame_done();
     } else if (!(s->out_elem->kind == K_RECORD && s->out_elem->n == 0 && !s->out_elem->name)) {
         fwp_display_top(v, s->out_elem, stdout);
@@ -981,6 +1102,8 @@ static void fwp_exec_error(const fwp_exec_spec *s, V v, const fwp_desc *d) {
 /* write a result; -1 when it is an Err (reported), else the exit status
  * of an Outcome (or 0) */
 static int fwp_emit_result(const fwp_exec_spec *s, V v) {
+    fwp_value_owner owner = {v, s->result->drop};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
     int status = 0;
     if (s->res_outcome) {
         int64_t st = (int64_t)(int32_t)OBJ(v)->f[s->res_status];
@@ -988,11 +1111,11 @@ static int fwp_emit_result(const fwp_exec_spec *s, V v) {
         v = OBJ(v)->f[s->res_output];
     }
     if (s->res_err) {
-        if (fwp_tag(v) != 0) { fwp_exec_error(s, OBJ(v)->f[0], s->res_err); return -1; }
+        if (fwp_tag(v) != 0) { fwp_exec_error(s, OBJ(v)->f[0], s->res_err); status = -1; goto finish; }
         v = OBJ(v)->f[0];
     }
     if (s->res_option) {
-        if (v == FWP_NONE) return status;
+        if (v == FWP_NONE) goto finish;
         v = OBJ(v)->f[0];
     }
     if (s->res_list) {
@@ -1000,6 +1123,8 @@ static int fwp_emit_result(const fwp_exec_spec *s, V v) {
     } else {
         fwp_emit(s, v);
     }
+finish:
+    fwp_cleanup_pop(&cleanup); fwp_value_release(&owner);
     return status;
 }
 
@@ -1012,16 +1137,22 @@ static V fwp_exec_call(const fwp_exec_spec *s, V *args, int n, int *failed) {
     h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
-        V r = n == 0 ? s->caf() : fwp_apply(fwp_pap(s->fn, 0, 0), (uint32_t)n, args);
-        fwp_handlers = h.prev;
+        V r = n == 0 ? s->caf() : fwp_apply_borrowed(s->callable, (uint32_t)n, args);
+        fwp_value_owner owner = {r, s->result->drop};
+        fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
         fwp_tasks_finish();
+        fwp_cleanup_pop(&cleanup);
+        fwp_handlers = h.prev;
         *failed = 0;
         return r;
     }
     fwp_handlers = h.prev;
+    fwp_value_owner owner = {h.value, h.desc->drop};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
     fwp_tasks_abort();
     fwp_flush();
     fwp_exec_error(s, h.value, h.desc);
+    fwp_cleanup_pop(&cleanup); fwp_value_release(&owner);
     *failed = 1;
     return 0;
 }
@@ -1089,6 +1220,7 @@ static int fwp_read_text_line(fwp_buf *b) {
 static int fwp_usage_error(const fwp_exec_spec *s, V msg) {
     if (msg) fprintf(stderr, "%s: %.*s\n", s->name, (int)STR(msg)->len, STR(msg)->d);
     fprintf(stderr, "%s\n", s->usage);
+    if (msg) fwp_cli_text_drop(fwp_rc_fresh(msg));
     return 2;
 }
 
@@ -1096,6 +1228,7 @@ static int fwp_parse_arg(const fwp_exec_spec *s, int i, V a, const fwp_desc *d, 
     V err;
     if (fwp_cli_value(STR(a)->d, STR(a)->len, d, dname, out, &err)) return 1;
     fprintf(stderr, "%s: argument %d: %s\n", s->name, i + 1, STR(err)->d);
+    fwp_cli_text_drop(fwp_rc_fresh(err));
     return 0;
 }
 
@@ -1122,6 +1255,7 @@ static int fwp_generated(const char *name, const fwp_flag *fl, int nf, int argc,
         if (strcmp(shell, shells[i]) == 0) { fputs(fwp_cli_scripts[i], stdout); return 0; }
     V sh = fwp_str_lossy(shell, strlen(shell));
     fprintf(stderr, "%s: unknown shell `%s` (bash, zsh or fish)\n", name, STR(sh)->d);
+    fwp_cli_text_drop(fwp_rc_fresh(sh));
     return 2;
 }
 
@@ -1150,43 +1284,92 @@ static int fwp_bind_positional(const fwp_exec_spec *s, V *pos, int k, V *args, i
             if (i < k) {
                 V v;
                 if (!fwp_parse_arg(s, i, pos[i], p->value, p->value_name, &v)) return 2;
-                if (p->kind == POS_OPTIONAL) { V x[1] = {v}; v = fwp_data(1, 1, x); }
+                fwp_value_owner pending = {v, p->value->drop};
+                fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &pending);
+                if (p->kind == POS_OPTIONAL) v = fwp_rc_fresh(fwp_some(v));
                 *slot = v;
+                fwp_cleanup_pop(&cleanup);
                 i++;
             } else if (p->kind == POS_OPTIONAL) {
                 *slot = FWP_NONE;
             } else if (!fwp_parse_text(p->def, strlen(p->def), p->param, slot)) {
-                *slot = FWP_UNIT;
+                fwp_trap("invalid compiled command-line default");
             }
             break;
         default: {
-            V *rest = (V *)fwp_alloc((size_t)(k + 1) * sizeof(V));
-            int r = 0;
-            for (; i < k; i++, r++)
-                if (!fwp_parse_arg(s, i, pos[i], p->value, p->value_name, &rest[r])) return 2;
-            if (r == 0 && p->def && fwp_parse_text(p->def, strlen(p->def), p->param, slot)) break;
-            *slot = fwp_list_from(rest, (size_t)r);
+            if (i == k && p->def) {
+                if (!fwp_parse_text(p->def, strlen(p->def), p->param, slot))
+                    fwp_trap("invalid compiled command-line default");
+                break;
+            }
+            fwp_decode_fields rest;
+            fwp_decode_fields_begin(&rest, (size_t)(k - i), NULL, 0, p->value);
+            for (int r = 0; i < k; i++, r++)
+                if (!fwp_parse_arg(s, i, pos[i], p->value, p->value_name, &rest.values[r])) {
+                    fwp_decode_fields_end(&rest, 0); return 2;
+                }
+            *slot = fwp_decode_sequence(&rest, p->param);
         }
         }
     }
     return 0;
 }
 
-static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
+/* One command owns parsed arguments, defaults, decoded values and scratch.
+ * Early usage/header failures and nonlocal exits use the same cleanup. */
+typedef struct {
+    const fwp_exec_spec *spec;
+    int argc, nflags;
+    V *av, *args, *vals, *defs, *pos, *items;
+    char *state, *have, *header;
+    unsigned char *payload;
+    size_t count;
+    V input, text;
+    fwp_buf line;
+    FILE *previous_output;
+} fwp_exec_owner;
+static void fwp_exec_release(void *pointer) {
+    fwp_exec_owner *owner = pointer;
+    const fwp_exec_spec *s = owner->spec;
+    if (owner->args) for (int i = 0; i < s->arity; i++)
+        if (s->params[i]->drop) s->params[i]->drop(owner->args[i]);
+    if (owner->av) for (int i = 0; i < owner->argc; i++) fwp_cli_text_drop(owner->av[i]);
+    for (int i = 0; i < owner->nflags; i++) {
+        const fwp_flag *f = &s->flags[i];
+        const fwp_desc *parsed = f->kind == FL_REPEATED ? f->field : f->value;
+        if (owner->vals && parsed->drop) parsed->drop(owner->vals[i]);
+        if (owner->defs && f->field->drop) f->field->drop(owner->defs[i]);
+    }
+    if (s->in_elem->drop) {
+        s->in_elem->drop(owner->input);
+        for (size_t i = 0; i < owner->count; i++) s->in_elem->drop(owner->items[i]);
+    }
+    fwp_cli_text_drop(owner->text);
+    fwp_mem_free(owner->av); fwp_mem_free(owner->args);
+    fwp_mem_free(owner->vals); fwp_mem_free(owner->defs);
+    fwp_mem_free(owner->pos); fwp_mem_free(owner->items);
+    fwp_mem_free(owner->state); fwp_mem_free(owner->have);
+    fwp_mem_free(owner->header); fwp_mem_free(owner->payload);
+    free(owner->line.d);
+    fwp_pipe_finish();
+    fwp_prog_out = owner->previous_output;
+}
+
+static int fwp_exec_run(const fwp_exec_spec *s, int argc, char **argv, fwp_exec_owner *owner) {
     int n = s->arity;
     int na = argc - 1;
     if (fwp_cli_single) {
         int g = fwp_generated(s->name, s->flags, s->has_options ? s->nflags : 0, na, argv + 1);
         if (g >= 0) return g;
     }
-    V *av = (V *)fwp_alloc((size_t)(na + 1) * sizeof(V));
-    for (int i = 0; i < na; i++) av[i] = fwp_str_lossy(argv[i + 1], strlen(argv[i + 1]));
+    V *av = owner->av = (V *)fwp_mem_alloc((size_t)(na + 1) * sizeof(V));
+    for (int i = 0; i < na; i++) av[i] = fwp_rc_fresh(fwp_str_lossy(argv[i + 1], strlen(argv[i + 1])));
     /* flags, unless a record parameter is given as before */
     int flags_mode = s->has_options && (!s->record_fallback || (na > 0 && STR(av[0])->d[0] == '-'));
-    int nf = flags_mode ? s->nflags : 0;
-    V *vals = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
-    char *state = (char *)fwp_alloc_leaf((size_t)nf + 1);
-    V *pos = (V *)fwp_alloc((size_t)(na + 1) * sizeof(V));
+    int nf = owner->nflags = flags_mode ? s->nflags : 0;
+    V *vals = owner->vals = (V *)fwp_mem_alloc((size_t)(nf + 1) * sizeof(V));
+    char *state = owner->state = (char *)fwp_mem_alloc((size_t)nf + 1);
+    V *pos = owner->pos = (V *)fwp_mem_alloc((size_t)(na + 1) * sizeof(V));
     int k;
     V err = 0;
     int r = fwp_cli_parse(flags_mode ? s->flags : 0, nf, 1, fwp_cli_version != 0, na, av, vals, state, pos, &k, &err);
@@ -1198,15 +1381,16 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
         fflush(stdout);
         return 0;
     }
-    V *args = (V *)fwp_alloc((size_t)(n + 1) * sizeof(V));
+    V *args = owner->args = (V *)fwp_mem_alloc((size_t)(n + 1) * sizeof(V));
     int first = 0;
     if (flags_mode) {
-        V *defs = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
-        char *have = (char *)fwp_alloc_leaf((size_t)nf + 1);
+        V *defs = owner->defs = (V *)fwp_mem_alloc((size_t)(nf + 1) * sizeof(V));
+        char *have = owner->have = (char *)fwp_mem_alloc((size_t)nf + 1);
         for (int j = 0; j < nf; j++) {
             const fwp_flag *f = &s->flags[j];
             have[j] = f->def != 0;
-            if (f->def && !fwp_parse_text(f->def, strlen(f->def), f->field, &defs[j])) have[j] = 0;
+            if (f->def && !fwp_parse_text(f->def, strlen(f->def), f->field, &defs[j]))
+                fwp_trap("invalid compiled command-line default");
         }
         if (!fwp_cli_record(s->flags, nf, s->nfields, vals, state, defs, have, 1, &args[0], &err))
             return fwp_usage_error(s, err);
@@ -1254,9 +1438,14 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             uint64_t ncaps, l;
             unsigned char fp[16];
             if (!fwp_read_exact(&ver, 1)) goto bad_header;
+            if (ver != 2) {
+                fprintf(stderr, "%s: unsupported protocol version %d\n", s->name, ver);
+                return 3;
+            }
             if ((ok = fwp_stdin_leb(&ncaps)) != 1) goto header_error;
             int uds = 0;
-            for (uint64_t i = 0; i < ncaps && i < 64; i++) {
+            if (ncaps > 64) goto bad_header;
+            for (uint64_t i = 0; i < ncaps; i++) {
                 if ((ok = fwp_stdin_name_len(&l)) != 1) goto header_error;
                 unsigned char tmp[256];
                 if (l == 6) {
@@ -1272,30 +1461,27 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             }
             if (!fwp_read_exact(fp, 16)) goto bad_header;
             if ((ok = fwp_stdin_name_len(&l)) != 1) goto header_error;
-            char *tname = (char *)fwp_alloc_leaf((size_t)l + 1);
+            char *tname = owner->header = (char *)fwp_mem_alloc((size_t)l + 1);
             if (l && !fwp_read_exact((unsigned char *)tname, (size_t)l)) goto bad_header;
             tname[l] = 0;
-            if (ver != 1) {
-                fprintf(stderr, "%s: unsupported protocol version %d\n", s->name, ver);
-                return 3;
-            }
             if (memcmp(fp, s->in_fp, 16) != 0) {
                 fprintf(stderr, "%s: input type mismatch: expected `%s`, got `%s`\n", s->name, s->in_type, tname);
                 return 3;
             }
+            fwp_mem_free(owner->header); owner->header = NULL;
             if (uds) fwp_pipe_in_offer();
         }
-        size_t cap = 16, cnt = 0;
-        V *items = s->last_is_list ? (V *)fwp_mem_alloc(cap * sizeof(V)) : 0;
-        fwp_buf line = {0};
+        size_t cap = 16;
+        if (s->last_is_list) owner->items = (V *)fwp_mem_alloc(cap * sizeof(V));
         for (;;) {
-            V v;
+            fwp_mem_free(owner->payload); owner->payload = NULL;
+            fwp_cli_text_drop(owner->text); owner->text = 0;
             if (binary) {
                 unsigned char hdr[5];
                 if (!fwp_read_exact(hdr, 1)) break;
                 if (!fwp_read_exact(hdr + 1, 4)) { fprintf(stderr, "%s: truncated frame\n", s->name); code = 3; break; }
                 size_t len = (size_t)hdr[1] | ((size_t)hdr[2] << 8) | ((size_t)hdr[3] << 16) | ((size_t)hdr[4] << 24);
-                unsigned char *pl = (unsigned char *)fwp_alloc_leaf(len + 1);
+                unsigned char *pl = owner->payload = (unsigned char *)fwp_mem_alloc(len + 1);
                 if (len && !fwp_read_exact(pl, len)) { fprintf(stderr, "%s: truncated frame\n", s->name); code = 3; break; }
                 if (hdr[0] == 0) break;
                 if (hdr[0] == 2) {
@@ -1305,11 +1491,11 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
                     break;
                 }
                 fwp_rd rd = {pl, len, 0};
-                if (!fwp_decode(&rd, s->in_elem, &v)) { fprintf(stderr, "%s: malformed value\n", s->name); code = 3; break; }
+                if (!fwp_decode(&rd, s->in_elem, &owner->input)) { fprintf(stderr, "%s: malformed value\n", s->name); code = 3; break; }
             } else {
-                if (!fwp_read_text_line(&line)) break;
-                V t = fwp_str_lossy(line.d ? line.d : "", line.len);
-                if (!fwp_parse_text(STR(t)->d, STR(t)->len, s->in_elem, &v)) {
+                if (!fwp_read_text_line(&owner->line)) break;
+                V t = owner->text = fwp_rc_fresh(fwp_str_lossy(owner->line.d ? owner->line.d : "", owner->line.len));
+                if (!fwp_parse_text(STR(t)->d, STR(t)->len, s->in_elem, &owner->input)) {
                     fprintf(stderr, "%s: cannot parse input `%.*s` as %s\n", s->name, (int)STR(t)->len,
                             STR(t)->d, s->in_type);
                     code = 3;
@@ -1317,10 +1503,16 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
                 }
             }
             if (s->last_is_list) {
-                if (cnt == cap) { cap *= 2; items = (V *)fwp_mem_realloc(items, cap / 2 * sizeof(V), cap * sizeof(V)); }
-                items[cnt++] = v;
+                if (owner->count == cap) {
+                    if (cap > SIZE_MAX / 2 / sizeof(V)) fwp_trap("too many input values");
+                    owner->items = (V *)fwp_mem_realloc(owner->items, cap * sizeof(V), cap * 2 * sizeof(V));
+                    cap *= 2;
+                }
+                owner->items[owner->count++] = owner->input;
+                owner->input = 0;
             } else {
-                args[m - 1] = v;
+                if (s->params[m - 1]->drop) s->params[m - 1]->drop(args[m - 1]);
+                args[m - 1] = owner->input; owner->input = 0;
                 V r = fwp_exec_call(s, args, n, &failed);
                 fflush(fwp_prog_out);
                 if (failed) { code = 1; break; }
@@ -1331,14 +1523,15 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             }
         }
         if (s->last_is_list && code == 0) {
-            args[m - 1] = fwp_list_from(items, cnt);
+            for (size_t i = owner->count; i > 0; i--) {
+                args[m - 1] = fwp_rc_fresh(fwp_cons(owner->items[i - 1], args[m - 1]));
+                owner->items[i - 1] = 0;
+            }
             V r = fwp_exec_call(s, args, n, &failed);
             fflush(fwp_prog_out);
             if (failed) code = 1;
             else if ((code = fwp_emit_result(s, r)) < 0) code = 1;
         }
-        fwp_mem_free(items);
-        free(line.d);
     }
     if (fwp_exec_binary_out) {
         static const unsigned char end[5] = {0, 0, 0, 0, 0};
@@ -1355,6 +1548,14 @@ header_error:
 bad_header:
     fprintf(stderr, "%s: truncated header\n", s->name);
     return 3;
+}
+
+static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
+    fwp_exec_owner owner = {.spec = s, .argc = argc - 1, .previous_output = fwp_prog_out};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_exec_release, &owner);
+    int result = fwp_exec_run(s, argc, argv, &owner);
+    fwp_cleanup_pop(&cleanup); fwp_exec_release(&owner);
+    return result;
 }
 
 /* A multi-command program: the first argument names the command. */
@@ -1376,32 +1577,13 @@ static int fwp_exec_program(const char *name, const fwp_exec_spec *const *cmds, 
     }
     V f = fwp_str_lossy(first, strlen(first));
     fprintf(stderr, "%s: unknown command `%.*s`\n%s\n", name, (int)STR(f)->len, STR(f)->d, usage);
+    fwp_cli_text_drop(fwp_rc_fresh(f));
     return 2;
 }
 
 /* ------------------------------------------------------------------- csv */
 /* As src/csv.rs: records of fields, a one-byte separator, `"` quotes. */
 
-/* Private spines reverse in place. Allocate their cells as mutable so minor
- * collections rescan older cells after reversal introduces younger links. */
-static V fwp_csv_cons_owned(V field, V tail) {
-    fwp_obj *cell = (fwp_obj *)fwp_alloc(sizeof(fwp_obj) + 2 * sizeof(V));
-    cell->tag = 1; cell->n = 2;
-    cell->f[0] = field; cell->f[1] = tail;
-    FWP_KEEP_ALIVE(field);
-    FWP_KEEP_ALIVE(tail);
-    return fwp_rc_fresh(PTR(cell));
-}
-static V fwp_csv_reverse_owned(V xs) {
-    V result = 0;
-    while (xs) {
-        V next = OBJ(xs)->f[1];
-        OBJ(xs)->f[1] = result;
-        result = xs;
-        xs = next;
-    }
-    return result;
-}
 typedef struct {
     V rows, row, field;
     fwp_buf buffer;
@@ -1425,12 +1607,12 @@ static V fwp_p_csv_parse_with(V sepv, V text,
     int at_start = 1, any = 0;
 #define CSV_OWNED_FIELD() do { \
     owner.field = fwp_rc_fresh(fwp_str_lossy(owner.buffer.d ? owner.buffer.d : "", owner.buffer.len)); \
-    owner.row = fwp_csv_cons_owned(owner.field, owner.row); \
+    owner.row = fwp_private_cons_owned(owner.field, owner.row); \
     owner.field = 0; owner.buffer.len = 0; \
 } while (0)
 #define CSV_OWNED_ROW() do { \
-    owner.row = fwp_csv_reverse_owned(owner.row); \
-    owner.rows = fwp_csv_cons_owned(owner.row, owner.rows); \
+    owner.row = fwp_private_reverse_owned(owner.row); \
+    owner.rows = fwp_private_cons_owned(owner.row, owner.rows); \
     owner.row = 0; \
 } while (0)
     while (i < n) {
@@ -1461,7 +1643,7 @@ static V fwp_p_csv_parse_with(V sepv, V text,
     if (any) { CSV_OWNED_FIELD(); CSV_OWNED_ROW(); }
 #undef CSV_OWNED_FIELD
 #undef CSV_OWNED_ROW
-    V result = fwp_csv_reverse_owned(owner.rows);
+    V result = fwp_private_reverse_owned(owner.rows);
     owner.rows = 0;
     fwp_cleanup_pop(&cleanup);
     fwp_csv_release(&owner);

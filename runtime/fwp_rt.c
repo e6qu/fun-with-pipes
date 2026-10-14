@@ -15,6 +15,15 @@
  *   - closures: pointer to {fn, n, args} (partial application)
  */
 
+#ifdef _WIN32
+/* Windows 10 is the generated runtime's minimum SDK/API contract. */
+#if defined(_WIN32_WINNT) && _WIN32_WINNT < 0x0a00
+#error "fwp requires the Windows 10 API contract"
+#endif
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0a00
+#endif
+#endif
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -32,12 +41,20 @@ _Noreturn void longjmp(jmp_buf, int);
 #endif
 #include <math.h>
 #include <time.h>
-#ifndef __wasi__
+#if !defined(__wasi__) && !defined(_WIN32)
 #include <pthread.h>
 #endif
 #include <errno.h>
 #include <stdarg.h>
 #include <ctype.h>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#endif
 
 typedef uint64_t V;
 typedef __int128 i128;
@@ -204,13 +221,60 @@ static V fwp_box_u128(u128 x) {
 }
 static inline u128 fwp_u128(V v) { return *(u128 *)(uintptr_t)v; }
 
+#ifdef FWP_EXACT_FLOAT
+#ifndef FWP_BINARY128_DEFINED
+#define FWP_BINARY128_DEFINED
+struct fwp_binary128 { uint64_t low, high; };
+#endif
+static V fwp_box_f128(float128_t x) {
+    float128_t *p = (float128_t *)fwp_alloc_leaf(sizeof x);
+    *p = x; return PTR(p);
+}
+static inline float128_t fwp_f128(V v) { float128_t x; memcpy(&x, (void *)(uintptr_t)v, sizeof x); return x; }
+static struct fwp_binary128 fwp_to_c_quad(V v) { float128_t x=fwp_f128(v); return (struct fwp_binary128){x.v[0],x.v[1]}; }
+static V fwp_from_c_quad(struct fwp_binary128 x) { return fwp_box_f128((float128_t){{x.low,x.high}}); }
+#endif
+
 /* ------------------------------------------------------------- descriptors */
 
 enum {
     K_I8, K_I16, K_I32, K_I64, K_I128, K_U8, K_U16, K_U32, K_U64, K_U128,
     K_F32, K_F64, K_STR, K_BYTES, K_ADT, K_LIST, K_RECORD, K_ARRAY, K_MAP,
-    K_SET, K_TINT, K_TRIT, K_FUN, K_FILE, K_OPAQUE, K_NATIVE
+    K_SET, K_TINT, K_TRIT, K_FUN, K_FILE, K_OPAQUE, K_NATIVE, K_F16, K_BF16, K_F128
 };
+
+static int fwp_float_kind(int k) { return k == K_F16 || k == K_BF16 || k == K_F32 || k == K_F64 || k == K_F128; }
+#ifdef FWP_EXACT_FLOAT
+static float128_t fwp_float_quad(int k, V v) {
+    switch (k) {
+    case K_F16: return f16_to_f128((float16_t){(uint16_t)v});
+    case K_BF16: return fwp_bf16_to_f128((uint16_t)v);
+    case K_F32: return f32_to_f128((float32_t){(uint32_t)v});
+    case K_F64: return f64_to_f128((float64_t){v});
+    case K_F128: return fwp_f128(v);
+    default: fwp_trap("invalid float kind"); return (float128_t){{0, 0}};
+    }
+}
+static V fwp_quad_float(int k, float128_t x) {
+    switch (k) {
+    case K_F16: return f128_to_f16(x).v;
+    case K_BF16: return fwp_f128_to_bf16(x);
+    case K_F32: return f128_to_f32(x).v;
+    case K_F64: return f128_to_f64(x).v;
+    case K_F128: return fwp_box_f128(x);
+    default: fwp_trap("invalid float kind"); return 0;
+    }
+}
+static int fwp_exact_format(int k) { return k == K_F16 ? 16 : k == K_BF16 ? 17 : 128; }
+static int fwp_parse_exact(const char *s, int k, V *out) {
+    uint64_t low, high;
+    int status = fwp_decimal_parse(s, fwp_exact_format(k), &low, &high);
+    if (status < 0) fwp_trap("out of memory");
+    if (!status) return 0;
+    *out = k == K_F128 ? fwp_box_f128((float128_t){{low, high}}) : low;
+    return 1;
+}
+#endif
 
 typedef struct fwp_desc fwp_desc;
 struct fwp_desc {
@@ -260,15 +324,17 @@ static inline int fwp_array_numeric(const fwp_desc *elem) {
     switch (elem->kind) {
     case K_I8: case K_I16: case K_I32: case K_I64:
     case K_U8: case K_U16: case K_U32: case K_U64:
-    case K_F32: case K_F64: return 1;
+    case K_F16: case K_BF16: case K_F32: case K_F64: case K_F128: return 1;
     default: return 0;
     }
 }
 static inline size_t fwp_array_stride(const fwp_desc *elem) {
+    /* Quad values cannot fit in a V even when narrow packing is disabled. */
+    if (elem && elem->kind == K_F128) return 16;
 #if FWP_PACKED_ARRAYS
     if (elem) switch (elem->kind) {
     case K_I8: case K_U8: return 1;
-    case K_I16: case K_U16: return 2;
+    case K_I16: case K_U16: case K_F16: case K_BF16: return 2;
     case K_I32: case K_U32: case K_F32: return 4;
     default: break;
     }
@@ -288,6 +354,9 @@ static inline int fwp_array_should_view(V a, size_t count, const fwp_desc *elem)
 static inline V fwp_array_load(V a, size_t i, const fwp_desc *elem) {
     size_t stride = fwp_array_stride(elem);
     const unsigned char *p = fwp_array_data(a) + i * stride;
+    /* This is a borrowed view, valid only while the array owner stays alive.
+     * Escaping values must copy the bits into their own scalar box. */
+    if (stride == 16) return PTR(p);
     if (stride == sizeof(V)) { V word; memcpy(&word, p, sizeof word); return word; }
     if (stride == 1) {
         uint8_t word; memcpy(&word, p, sizeof word);
@@ -304,6 +373,7 @@ static inline void fwp_array_store(V a, size_t i, V value, const fwp_desc *elem)
     if (fwp_array_is_view(a)) fwp_trap("internal: mutating an array view");
     size_t stride = fwp_array_stride(elem);
     unsigned char *p = (unsigned char *)(uintptr_t)a + sizeof(fwp_arr) + i * stride;
+    if (stride == 16) { memmove(p, (const void *)(uintptr_t)value, 16); return; }
     if (stride == sizeof(V)) { memcpy(p, &value, sizeof value); return; }
     if (stride == 1) { uint8_t word = (uint8_t)value; memcpy(p, &word, sizeof word); return; }
     if (stride == 2) { uint16_t word = (uint16_t)value; memcpy(p, &word, sizeof word); return; }
@@ -312,9 +382,17 @@ static inline void fwp_array_store(V a, size_t i, V value, const fwp_desc *elem)
 static V fwp_array_new_packed(size_t n, const fwp_desc *elem) {
     /* Preserve the established count/trap boundary in every layout mode. */
     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
+    if (fwp_array_stride(elem) > sizeof(V) && n > (SIZE_MAX - sizeof(fwp_arr)) / fwp_array_stride(elem)) fwp_trap("array too large");
     size_t bytes = sizeof(fwp_arr) + n * fwp_array_stride(elem);
     void *storage = fwp_array_numeric(elem) ? fwp_alloc_leaf(bytes) : fwp_alloc(bytes);
     V result = PTR(storage); uint64_t len = n; memcpy(storage, &len, sizeof len); return result;
+}
+
+static V fwp_array_escape(V value, const fwp_desc *elem) {
+#ifdef FWP_EXACT_FLOAT
+    if (elem && elem->kind == K_F128) return fwp_box_f128(fwp_f128(value));
+#endif
+    return value;
 }
 
 static int fwp_is_signed_kind(int k) { return k == K_I8 || k == K_I16 || k == K_I32 || k == K_I64; }
@@ -351,6 +429,26 @@ static void fwp_cleanup_unwind(fwp_cleanup *stop) {
         fwp_cleanups = c->prev;
         c->release(c->arg);
     }
+}
+
+/* Foreign callback borrows belong to the active task and C call. The frames
+ * live on that call's stack; unwind/cancellation restores the previous frame. */
+typedef struct fwp_foreign_callback {
+    struct fwp_foreign_callback *prev;
+    uint32_t function, parameter;
+    V closure;
+} fwp_foreign_callback;
+static fwp_foreign_callback *fwp_foreign_callbacks;
+static void fwp_foreign_callback_release(void *arg) {
+    fwp_foreign_callback *frame = arg;
+    if (fwp_foreign_callbacks != frame) abort();
+    fwp_foreign_callbacks = frame->prev;
+}
+static V fwp_foreign_callback_get(uint32_t function, uint32_t parameter) {
+    for (fwp_foreign_callback *f = fwp_foreign_callbacks; f; f = f->prev)
+        if (f->function == function && f->parameter == parameter) return f->closure;
+    fwp_trap("foreign callback invoked outside its calling task and call");
+    return 0;
 }
 
 typedef struct fwp_handler {

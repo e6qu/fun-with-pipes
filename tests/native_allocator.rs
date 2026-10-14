@@ -33,3 +33,57 @@ fn native_pages_image_roots_counts_and_release() {
         }
     }
 }
+
+#[test]
+fn collector_scratch_is_excluded_from_the_mutator_root_range() {
+    let source = include_str!("../runtime/fwp_rt_gc.c");
+    let end = source.find("#endif /* FWP_GC */").unwrap() + "#endif /* FWP_GC */".len();
+    let allocator = source[..end]
+        .replace("    fwp_gc_scan_data();", "")
+        .replace(
+            "    fwp_gc_scan_stacks(stack_start);",
+            "    volatile V scratch[32] = {0};\n    scratch[0] = garbage;\n    __asm__ volatile(\"\" : : \"m\"(scratch) : \"memory\");\n    fwp_gc_scan_stacks(stack_start);\n    __asm__ volatile(\"\" : : \"m\"(scratch) : \"memory\");",
+        );
+    let old_range = allocator.replace(
+        "    fwp_gc_scan_stacks(stack_start);",
+        "    fwp_gc_scan_stacks(fwp_gc_sp());",
+    );
+    assert_ne!(old_range, allocator);
+    let prefix = include_str!("fixtures/native_allocator_probe.c")
+        .split("/* NATIVE_ALLOCATOR */")
+        .next()
+        .unwrap();
+    let probe = r#"
+static void fwp_gc_scan_stacks(char *sp) { fwp_gc_scan_root(sp, fwp_gc.main_top); }
+static __attribute__((noinline)) void seed_garbage(void) {
+    garbage = (V)(uintptr_t)fwp_alloc_leaf(64);
+}
+int main(void) {
+    fwp_gc_start(__builtin_frame_address(0));
+    seed_garbage();
+    volatile V live = (V)(uintptr_t)fwp_alloc_leaf(32);
+    fwp_gc.major_next = 1;
+    fwp_gc_collect();
+    __asm__ volatile("" : : "m"(live) : "memory");
+    if (!fwp_gc_marked((void *)(uintptr_t)live)) return 24;
+    if (fwp_gc_marked((void *)(uintptr_t)garbage)) return 23;
+    fwp_gc_finish();
+    return 0;
+}
+"#;
+    let dir = fwp::cgen::TempDir::new("collector-stack").unwrap();
+    let binary = dir.join(if cfg!(windows) { "probe.exe" } else { "probe" });
+    for opt in ["-O1", "-O2"] {
+        for (runtime, expected) in [(&allocator, 0), (&old_range, 23)] {
+            let c = format!("{prefix}\nstatic volatile V garbage;\n{runtime}{probe}");
+            fwp::cgen::compile_c(&c, &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .env("FWP_GC", "on")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "1")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+        }
+    }
+}

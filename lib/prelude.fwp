@@ -271,6 +271,30 @@ impl Floating[F32] =
     cos = prim.cos
     tan = prim.tan
 
+impl Floating[F16] =
+    sqrt = prim.sqrt
+    exp = prim.exp
+    ln = prim.ln
+    sin = prim.sin
+    cos = prim.cos
+    tan = prim.tan
+
+impl Floating[BF16] =
+    sqrt = prim.sqrt
+    exp = prim.exp
+    ln = prim.ln
+    sin = prim.sin
+    cos = prim.cos
+    tan = prim.tan
+
+impl Floating[F128] =
+    sqrt = prim.sqrt
+    exp = prim.exp
+    ln = prim.ln
+    sin = prim.sin
+    cos = prim.cos
+    tan = prim.tan
+
 foreign "fwp" pow : a -> a -> a where Float[a]
 foreign "fwp" floor : a -> a where Float[a]
 foreign "fwp" ceil : a -> a where Float[a]

@@ -9,6 +9,7 @@
  *
  * <schema> is a comma-separated list of integers (Schema::flatten). */
 
+#include "../../runtime/fwp_rt_socket.c"
 #include "../../runtime/fwp_rt_h2.c"
 
 static size_t unhex(const char *s, unsigned char *out) {

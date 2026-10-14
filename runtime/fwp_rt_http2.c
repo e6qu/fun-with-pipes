@@ -113,10 +113,10 @@ static void w_start(g_conn *c, g_stream *s) {
 }
 
 /* the conn's socket and TLS session, which the HTTP/2 connection takes */
-static int w_take(V conn, SSL **ssl) {
-    int fd = SOCK(conn)->fd;
+static fwp_socket_t w_take(V conn, SSL **ssl) {
+    fwp_socket_t fd = SOCK(conn)->fd;
     *ssl = (SSL *)SOCK(conn)->tls;
-    SOCK(conn)->fd = -1;
+    SOCK(conn)->fd = FWP_INVALID_SOCKET;
     SOCK(conn)->tls = 0;
     return fd;
 }
@@ -127,8 +127,8 @@ static void w_upgraded(g_conn *c, V r, g_slist *fresh);
  * brings its request, (method, target, headers, body), as stream 1 */
 static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
     SSL *ssl;
-    int fd = w_take(conn, &ssl);
-    if (fd < 0) return FWP_UNIT;
+    fwp_socket_t fd = w_take(conn, &ssl);
+    if (fd == FWP_INVALID_SOCKET) return FWP_UNIT;
     char peer[128] = "";
     struct sockaddr_storage ss;
     socklen_t sl = sizeof ss;
@@ -378,8 +378,8 @@ static V fwp_p_http2_send(V key, V conn, V req, const fwp_desc *err) {
     g_conn *c;
     if (conn != FWP_NONE) {
         SSL *ssl;
-        int fd = w_take(OBJ(conn)->f[0], &ssl);
-        if (fd < 0) return fwp_io_error("closed", "connection is closed", err);
+        fwp_socket_t fd = w_take(OBJ(conn)->f[0], &ssl);
+        if (fd == FWP_INVALID_SOCKET) return fwp_io_error("closed", "connection is closed", err);
         char k[1200];
         snprintf(k, sizeof k, "http2 %s", STR(key)->d);
         c = g_conn_new(fd, k, 0);
@@ -622,7 +622,12 @@ static uint32_t w_mask_key(void) {
     if (!x) {
         struct timespec t;
         clock_gettime(CLOCK_REALTIME, &t);
-        x = ((uint64_t)t.tv_sec * 1000000000ull + (uint64_t)t.tv_nsec) ^ ((uint64_t)getpid() << 32) | 1;
+#ifdef _WIN32
+        uint64_t pid = (uint64_t)GetCurrentProcessId();
+#else
+        uint64_t pid = (uint64_t)getpid();
+#endif
+        x = (((uint64_t)t.tv_sec * 1000000000ull + (uint64_t)t.tv_nsec) ^ (pid << 32)) | 1;
     }
     x ^= x << 13;
     x ^= x >> 7;

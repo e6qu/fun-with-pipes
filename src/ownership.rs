@@ -17,6 +17,8 @@ pub enum Argument {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ResultOwnership {
     Shared,
+    /// Transfers control to an effect handler; no normal result exists.
+    Never,
     /// An owned resource or resource-bearing result prepared by the runtime.
     OwnedResource,
     /// Synchronous effect handler owns either callback result or error payload.
@@ -147,16 +149,20 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        // Bool tags are immortal immediates; negation allocates nothing.
+        "not" => (&[B], R, None, &[]),
         "prim.zero" | "prim.one" => (&[], ResultOwnership::Numeric, None, &[]),
         "prim.neg" | "prim.from-int" | "prim.from-float" | "bit.not" | "int.convert"
-        | "float.to-int" => (&[B], ResultOwnership::Numeric, None, &[]),
+        | "float.to-int" | "float.convert" | "int.to-float" | "sqrt" | "exp" | "ln" | "sin"
+        | "cos" | "tan" | "floor" | "ceil" | "round" => (&[B], ResultOwnership::Numeric, None, &[]),
         "prim.add" | "prim.sub" | "prim.mul" | "prim.div" | "prim.rem" | "wrapping.add"
         | "wrapping.sub" | "wrapping.mul" | "saturating.add" | "saturating.sub"
         | "saturating.mul" | "overflowing.add" | "overflowing.sub" | "overflowing.mul"
         | "checked.add" | "checked.sub" | "checked.mul" | "checked.div" | "bit.and" | "bit.or"
-        | "bit.xor" | "bit.shl" | "bit.shr" => (&[B, B], ResultOwnership::Numeric, None, &[]),
+        | "bit.xor" | "bit.shl" | "bit.shr" | "pow" => {
+            (&[B, B], ResultOwnership::Numeric, None, &[])
+        }
         "abs" => (&[B], ResultOwnership::Numeric, None, &[0]),
-        "int.to-float" => (&[B], R, None, &[]),
         "min" | "max" => (&[B, B], ResultOwnership::SelectedArgument, None, &[0, 1]),
         "get" | "put" => (&[B], ResultOwnership::OwnedState, None, &[]),
         "modify" => (
@@ -180,23 +186,29 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "zlib.gzip-end" | "ws.close-payload" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
         "ws.frame" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         // Raw address words are not managed owners. String conversion copies;
-        // only read-string returns a fresh managed leaf.
-        "mem.alloc" | "mem.free" | "mem.string" | "ptr.cast" | "ptr.address" | "ptr.read" => {
+        // wide scalar reads and read-string copy into owned language storage.
+        "mem.alloc" | "mem.free" | "mem.string" | "ptr.cast" | "ptr.address" => {
             (&[B], R, None, &[])
         }
+        "ptr.read" => (&[B], ResultOwnership::Numeric, None, &[]),
         "ptr.at" | "ptr.write" => (&[B, B], R, None, &[]),
         "ptr.read-string" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
         "matrix._valid-f64" => (&[B, B, B, B, B, B], R, None, &[]),
         "matrix._mul-f64" => (&[B, B, B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "ad.tape" | "ad.push" => (&[B], ResultOwnership::Shared, None, &[]),
         "ad.backward" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
+        // The scalar-operation tuple owns embedded callbacks until scoped tape
+        // retirement. arc_scope proves these container callbacks explicitly.
+        "ad.tape-owned" => (&[B, B], ResultOwnership::Shared, None, &[]),
+        "ad.push-owned" => (&[B], ResultOwnership::Shared, None, &[]),
+        "ad.backward-owned" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
         "task.spawn" => (
             &[B],
             ResultOwnership::OwnedTask,
             Some(Callback::Retained(0)),
             &[0],
         ),
-        "fail" => (&[B], R, None, &[]),
+        "fail" | "prim.trap" => (&[B], ResultOwnership::Never, None, &[]),
         "attempt" => (
             &[B, B],
             ResultOwnership::OwnedAttempt,
@@ -419,8 +431,10 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[1],
         ),
         "csv.parse-with" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
+        "cli.parse" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
         "json.parse" | "json.read" | "csv.decode" => (&[B], ResultOwnership::OwnedTree, None, &[]),
-        "parse-int" | "parse-float" | "length" => (&[B], R, None, &[]),
+        "parse-int" | "parse-float" => (&[B], ResultOwnership::FreshTree, None, &[]),
+        "length" => (&[B], R, None, &[]),
         "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
         "pad-left" | "pad-right" | "replace" => (
             &[B, B, B],

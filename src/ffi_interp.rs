@@ -128,6 +128,11 @@ fn value_of(prog: &Program, t: &CType, mt: &MT, w: &[u64]) -> R<Value> {
         CType::Int { bits, signed } => int_value(mt, w[0], *bits, *signed)?,
         CType::F32 => Value::F32(f32::from_bits(w[0] as u32)),
         CType::F64 => Value::F64(f64::from_bits(w[0])),
+        CType::F16 => Value::F16(crate::softfloat::Binary16::from_bits(w[0] as u16)),
+        CType::BF16 => Value::BF16(crate::softfloat::BFloat16::from_bits(w[0] as u16)),
+        CType::F128 => Value::F128(crate::softfloat::Binary128::from_bits(
+            (w[1] as u128) << 64 | w[0] as u128,
+        )),
         CType::Bool => Value::bool(w[0] != 0),
         CType::Str => {
             if w[0] == 0 {
@@ -150,8 +155,11 @@ fn value_of(prog: &Program, t: &CType, mt: &MT, w: &[u64]) -> R<Value> {
         CType::Struct { fields, .. } => {
             let fmts = field_mts(prog, mt);
             let mut vals = vec![Value::unit(); fmts.len()];
-            for (k, (_, idx, ft)) in fields.iter().enumerate() {
-                vals[*idx] = value_of(prog, ft, &fmts[*idx], &w[k..k + 1])?;
+            let mut offset = 0;
+            for (_, idx, ft) in fields {
+                let count = ffi::result_words(ft);
+                vals[*idx] = value_of(prog, ft, &fmts[*idx], &w[offset..offset + count])?;
+                offset += count;
             }
             Value::tuple(vals)
         }
@@ -169,6 +177,20 @@ fn word_of(t: &CType, v: &Value, keep: &mut Keep) -> R<u64> {
             _ => (v.as_f64().unwrap_or(0.0) as f32).to_bits() as u64,
         },
         CType::F64 => v.as_f64().unwrap_or(0.0).to_bits(),
+        CType::F16 => match v {
+            Value::F16(x) => x.to_bits() as u64,
+            _ => return trap("internal: expected F16"),
+        },
+        CType::BF16 => match v {
+            Value::BF16(x) => x.to_bits() as u64,
+            _ => return trap("internal: expected BF16"),
+        },
+        CType::F128 => {
+            let words = result_words(t, v, keep)?;
+            let pointer = words.as_ptr() as usize as u64;
+            keep.structs.push(words);
+            pointer
+        }
         CType::Bool => v.as_bool() as u64,
         CType::Str => {
             let Ok(c) = CString::new(v.as_str()) else {
@@ -193,7 +215,7 @@ fn word_of(t: &CType, v: &Value, keep: &mut Keep) -> R<u64> {
             };
             let mut ws = Vec::with_capacity(fields.len());
             for (_, idx, ft) in fields {
-                ws.push(word_of(ft, &fs[*idx], keep)?);
+                ws.extend(result_words(ft, &fs[*idx], keep)?);
             }
             let p = ws.as_ptr() as usize as u64;
             keep.structs.push(ws);
@@ -201,6 +223,21 @@ fn word_of(t: &CType, v: &Value, keep: &mut Keep) -> R<u64> {
         }
         CType::Callback { .. } => 0,
     })
+}
+
+fn result_words(t: &CType, value: &Value, keep: &mut Keep) -> R<Vec<u64>> {
+    match (t, value) {
+        (CType::F128, Value::F128(x)) => Ok(vec![x.to_bits() as u64, (x.to_bits() >> 64) as u64]),
+        (CType::F128, _) => trap("internal: expected F128"),
+        (CType::Struct { fields, .. }, Value::Record(values)) => {
+            let mut words = Vec::new();
+            for (_, index, ty) in fields {
+                words.extend(result_words(ty, &values[*index], keep)?);
+            }
+            Ok(words)
+        }
+        _ => Ok(vec![word_of(t, value, keep)?]),
+    }
 }
 
 unsafe extern "C" fn host_call(ctx: *mut c_void, slot: u32, args: *const u64, ret: *mut u64) {
@@ -225,28 +262,19 @@ unsafe extern "C" fn host_call(ctx: *mut c_void, slot: u32, args: *const u64, re
             if ct == CType::Void {
                 vals.push(Value::unit());
             } else {
-                vals.push(value_of(
-                    prog,
-                    &ct,
-                    a,
-                    std::slice::from_raw_parts(args.add(k), 1),
-                )?);
+                let words = if ct == CType::F128 {
+                    std::slice::from_raw_parts(*args.add(k) as usize as *const u64, 2)
+                } else {
+                    std::slice::from_raw_parts(args.add(k), 1)
+                };
+                vals.push(value_of(prog, &ct, a, words)?);
                 k += 1;
             }
             cur = b;
         }
         let v = it.apply(closure, vals)?;
-        match &*cret {
-            CType::Struct { fields, .. } => {
-                let Value::Record(fs) = &v else {
-                    return trap("internal: struct is not a record");
-                };
-                for (j, (_, idx, ft)) in fields.iter().enumerate() {
-                    *ret.add(j) = word_of(ft, &fs[*idx], ctx.keep)?;
-                }
-            }
-            t => *ret = word_of(t, &v, ctx.keep)?,
-        }
+        let words = result_words(&cret, &v, ctx.keep)?;
+        std::ptr::copy_nonoverlapping(words.as_ptr(), ret, words.len());
         Ok(())
     })();
     if let Err(e) = r {
@@ -310,7 +338,8 @@ fn elem_size(mt: &MT) -> usize {
     match mt {
         MT::Con(n, _) => match n.as_str() {
             "std::I8" | "std::U8" => 1,
-            "std::I16" | "std::U16" => 2,
+            "std::I16" | "std::U16" | "std::F16" | "std::BF16" => 2,
+            "std::F128" => 16,
             "std::I32" | "std::U32" | "std::F32" => 4,
             _ => 8,
         },
@@ -360,6 +389,13 @@ pub fn pointer_prim(sym: &str, a: &[Value], params: &[MT], result: &MT) -> R<Val
             }
             "ptr.read" => {
                 let p = addr(&a[0]) as *const u8;
+                if ffi::classify_scalar(result) == CType::F128 {
+                    let mut bits = [0u8; 16];
+                    std::ptr::copy_nonoverlapping(p, bits.as_mut_ptr(), 16);
+                    return Ok(Value::F128(crate::softfloat::Binary128::from_bits(
+                        u128::from_le_bytes(bits),
+                    )));
+                }
                 let mut b = [0u8; 8];
                 let size = elem_size(result);
                 std::ptr::copy_nonoverlapping(p, b.as_mut_ptr(), size);
@@ -370,6 +406,11 @@ pub fn pointer_prim(sym: &str, a: &[Value], params: &[MT], result: &MT) -> R<Val
             "ptr.write" => {
                 let mt = &params[0];
                 let t = ffi::classify_scalar(mt);
+                if let (CType::F128, Value::F128(x)) = (&t, &a[0]) {
+                    let bits = x.to_bits().to_le_bytes();
+                    std::ptr::copy_nonoverlapping(bits.as_ptr(), addr(&a[1]) as *mut u8, 16);
+                    return Ok(Value::unit());
+                }
                 let mut keep = Keep::default();
                 let w = word_of(&t, &a[0], &mut keep)?;
                 let size = elem_size(mt);
@@ -397,6 +438,8 @@ fn value_of_scalar(t: &CType, mt: &MT, w: u64) -> R<Value> {
         CType::Int { bits, signed } => int_value(mt, w, *bits, *signed),
         CType::F32 => Ok(Value::F32(f32::from_bits(w as u32))),
         CType::F64 => Ok(Value::F64(f64::from_bits(w))),
+        CType::F16 => Ok(Value::F16(crate::softfloat::Binary16::from_bits(w as u16))),
+        CType::BF16 => Ok(Value::BF16(crate::softfloat::BFloat16::from_bits(w as u16))),
         _ => trap("internal: not a scalar"),
     }
 }

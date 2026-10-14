@@ -184,21 +184,10 @@ impl<'a> P<'a> {
 
     fn float(&mut self, mt: &MT) -> R<Value> {
         let t = self.token();
-        let x: f64 = match t {
-            "inf" => f64::INFINITY,
-            "-inf" => f64::NEG_INFINITY,
-            "NaN" => f64::NAN,
-            _ if valid_float(t) => t.parse().unwrap_or(f64::NAN),
-            _ => return Err(format!("`{}` is not a number", t)),
-        };
-        Ok(match prim(mt) {
-            "F32" | "F16" | "BF16" => Value::F32(if valid_float(t) {
-                t.parse().unwrap_or(f32::NAN)
-            } else {
-                x as f32
-            }),
-            _ => Value::F64(x),
-        })
+        if !matches!(t, "inf" | "-inf" | "NaN") && !valid_float(t) {
+            return Err(format!("`{}` is not a number", t));
+        }
+        crate::mono::float_value(mt, t).ok_or_else(|| "invalid float type".into())
     }
 
     /// A value in argument position (constructor fields): parenthesized

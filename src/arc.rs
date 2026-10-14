@@ -29,9 +29,8 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                 | "std::I16" | "std::I32" | "std::I64" | "std::I128" | "std::ISize" | "std::U8"
                 | "std::U16" | "std::U32" | "std::U64" | "std::U128" | "std::USize"
                 | "std::F16" | "std::BF16" | "std::F32" | "std::F64" | "std::F128"
-                | "std::TInt" | "std::Trit" | "std::Array" | "std::Map" | "std::Set" => {
-                    return Ok(())
-                }
+                | "std::TInt" | "std::Trit" | "std::Array" | "std::Map" | "std::Set"
+                | "std::Task" => return Ok(()),
                 _ => {}
             }
             match prog.shapes.get(ty) {
@@ -58,13 +57,13 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
     }
 }
 
-pub(crate) fn check(prog: &Program) -> Result<(), String> {
+pub(crate) fn check(prog: &Program, entries: &[crate::ir::FuncId]) -> Result<(), String> {
     if let Some(name) = prog.unchecked_native_declarations.first() {
         return Err(format!(
             "--gc arc: native declaration `{name}` has no checked ownership signature"
         ));
     }
-    crate::arc_scope::check(prog)?;
+    crate::arc_scope::check(prog, entries)?;
     let mut seen = HashSet::new();
     for f in &prog.funcs {
         let reject = |reason: String| format!("--gc arc: `{}`: {reason}", f.name);
@@ -76,26 +75,17 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
             Body::Expr(_) | Body::Ctor(_) => continue,
             Body::ForeignC { .. } => {
                 let (params, result) = crate::ffi::signature(prog, f).map_err(reject)?;
-                // Scalar C values carry no language owners or callable
-                // addresses. The foreign function may retain their bits, but
-                // cannot thereby extend a managed value's lifetime. Use the
-                // actual ABI classification, not just `needs_rc`: raw pointers
-                // are uncounted too, yet can hide managed owners.
-                let scalar = |ty: &crate::ffi::CType| {
-                    matches!(
-                        ty,
-                        crate::ffi::CType::Void
-                            | crate::ffi::CType::Int { .. }
-                            | crate::ffi::CType::F32
-                            | crate::ffi::CType::F64
-                            | crate::ffi::CType::Bool
-                    )
-                };
-                if params.iter().all(|(_, ty)| scalar(ty)) && scalar(&result) {
+                // Check the actual C ABI: scoped borrows and copied results
+                // cannot publish managed pointers after this call returns.
+                // Raw pointers and callbacks returning managed C addresses
+                // still lack a checked retention policy.
+                if params.iter().all(|(_, ty)| crate::ffi::scoped_argument(ty))
+                    && crate::ffi::copied_result(&result)
+                {
                     continue;
                 }
                 return Err(reject(
-                    "foreign boundary has no checked ownership contract for non-scalar values"
+                    "foreign boundary has no checked ownership contract for escaping pointers or callbacks"
                         .into(),
                 ));
             }
@@ -104,11 +94,10 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
             }
             Body::Prim(symbol) => symbol.as_str(),
         };
-        // Mutable cells, retained callbacks and raw addresses can form cycles or
-        // hide owners from the typed graph. AD scope reachability is proved
-        // separately above; a synchronous value contract alone is not enough.
-        if symbol.starts_with("task.")
-            || symbol.starts_with("channel.")
+        // Child tasks get fresh dynamic scopes (proved above); their immutable
+        // captures can only refer to already-created handles. Channels and raw
+        // addresses can publish a mutable back-edge and remain excluded.
+        if symbol.starts_with("channel.")
             || symbol.starts_with("mem.")
             || symbol.starts_with("ptr.")
         {
@@ -121,7 +110,8 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
             if matches!(
                 contract.callback,
                 Some(Callback::Shared(_) | Callback::Retained(_))
-            ) {
+            ) && !matches!(symbol, "task.spawn" | "task.within")
+            {
                 return Err(reject(format!(
                     "primitive `{symbol}` retains an unproved callback graph"
                 )));

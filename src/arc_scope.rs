@@ -19,6 +19,7 @@ struct Proof<'a> {
     captures: BTreeMap<Closure, Vec<Targets>>,
     inputs: BTreeMap<Context, Vec<Targets>>,
     outputs: BTreeMap<Context, Targets>,
+    callback_values: BTreeMap<Context, Targets>,
     changed: bool,
     validate: bool,
     state_values: Targets,
@@ -228,6 +229,14 @@ impl Proof<'_> {
             Body::Prim(symbol) if matches!(symbol.as_str(), "ad.scope" | "ad.scope2") => {
                 self.apply(&args[0], &args[1..], scoped | AD)
             }
+            Body::Prim(symbol) if matches!(symbol.as_str(), "task.spawn" | "task.within") => {
+                // A child starts with independent State and AD stacks. Carry
+                // callable captures, but never its parent's dynamic scopes.
+                // Channels/raw addresses remain excluded by ARC eligibility,
+                // so no mutable back-edge can publish this task to its thunk.
+                let callback = usize::from(symbol == "task.within");
+                self.apply(&args[callback], &[Targets::new()], 0)
+            }
             Body::Prim(symbol) if symbol == "run-state" => {
                 // State cells are stack owners, never captured addresses. A
                 // callback can return a closure, but that closure must execute
@@ -256,37 +265,120 @@ impl Proof<'_> {
                 }
             }
             Body::Prim(symbol)
-                if matches!(symbol.as_str(), "ad.tape" | "ad.push" | "ad.backward") =>
+                if matches!(
+                    symbol.as_str(),
+                    "ad.tape"
+                        | "ad.push"
+                        | "ad.backward"
+                        | "ad.tape-owned"
+                        | "ad.push-owned"
+                        | "ad.backward-owned"
+                ) =>
             {
                 if scoped & AD == 0 {
                     return Err(format!("--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside an autodiff scope"));
                 }
+                if symbol == "ad.tape-owned" {
+                    // Stored scalar operations may execute during a later
+                    // backward call. They inherit only the proved AD scope,
+                    // never the creator's transient State context.
+                    if self.validate && args[0].is_empty() {
+                        return Err("--gc arc: cannot prove managed tape callbacks".into());
+                    }
+                    for &(target, supplied) in &args[0] {
+                        let count = self.program.funcs[target].arity as usize - supplied;
+                        self.apply(
+                            &BTreeSet::from([(target, supplied)]),
+                            &vec![Targets::new(); count],
+                            AD,
+                        )?;
+                    }
+                }
                 Ok(Targets::new())
             }
-            Body::Prim(_) => {
-                // Include callbacks inside containers (list.ap, for example),
-                // not only primitives with a top-level callback argument.
+            Body::Prim(symbol) => {
+                // A closure carried in loop state or a collection is data until
+                // an actual invocation reaches it. Invoking every such closure
+                // here would incorrectly run scoped work in its caller's scope.
                 let mut result: Targets = args.iter().flatten().copied().collect();
-                let functions = result.clone();
+                let callback = if symbol == "list.ap" {
+                    Some(0) // The first list contains the functions to apply.
+                } else {
+                    crate::ownership::primitive(symbol).and_then(|c| {
+                        c.callback.map(|callback| match callback {
+                            crate::ownership::Callback::Borrowed(i)
+                            | crate::ownership::Callback::Retained(i)
+                            | crate::ownership::Callback::Shared(i) => i,
+                        })
+                    })
+                };
+                let Some(callback) = callback else {
+                    // Unknown runtime boundaries retain the conservative proof.
+                    if crate::ownership::primitive(symbol).is_some() {
+                        return Ok(result);
+                    }
+                    for &(target, supplied) in &result.clone() {
+                        let count = self.program.funcs[target].arity as usize - supplied;
+                        result.extend(self.apply(
+                            &BTreeSet::from([(target, supplied)]),
+                            &vec![result.clone(); count],
+                            scoped,
+                        )?);
+                    }
+                    return Ok(result);
+                };
+                let functions = args[callback].clone();
+                let mut data: Targets = args
+                    .iter()
+                    .enumerate()
+                    .filter(|(index, _)| *index != callback)
+                    .flat_map(|(_, value)| value.iter().copied())
+                    .collect();
+                data.extend(
+                    self.callback_values
+                        .get(&(id, scoped))
+                        .into_iter()
+                        .flatten()
+                        .copied(),
+                );
                 for &(target, supplied) in &functions {
                     let count = self.program.funcs[target].arity as usize - supplied;
-                    let values = vec![functions.clone(); count];
-                    result.extend(self.apply(
-                        &BTreeSet::from([(target, supplied)]),
-                        &values,
-                        scoped,
-                    )?);
+                    let values = vec![data.clone(); count];
+                    let returned =
+                        self.apply(&BTreeSet::from([(target, supplied)]), &values, scoped)?;
+                    // A fold/loop may feed a returned closure into a later
+                    // iteration even if its eventual result contains none.
+                    self.changed |= join(
+                        self.callback_values.entry((id, scoped)).or_default(),
+                        &returned,
+                    );
+                    result.extend(returned);
                 }
                 Ok(result)
             }
             Body::Ctor(_) => Ok(args.iter().flatten().copied().collect()),
-            Body::ForeignC { .. } | Body::Remote(_) => Ok(Targets::new()),
+            Body::ForeignC { .. } => {
+                let (params, _) = crate::ffi::signature(self.program, function)?;
+                for (index, ty) in params {
+                    if matches!(ty, crate::ffi::CType::Callback { .. }) {
+                        let mut count = 0;
+                        let mut ty = &function.locals[index];
+                        while let MT::Fun(_, result) = ty {
+                            count += 1;
+                            ty = result;
+                        }
+                        self.apply(&args[index], &vec![Targets::new(); count], scoped)?;
+                    }
+                }
+                Ok(Targets::new())
+            }
+            Body::Remote(_) => Ok(Targets::new()),
         }
     }
 }
 
-pub(crate) fn check(program: &Program) -> Result<(), String> {
-    if !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "ad.tape" | "ad.push" | "ad.backward" | "run-state" | "get" | "put" | "modify"))) {
+pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String> {
+    if !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "ad.tape" | "ad.push" | "ad.backward" | "ad.tape-owned" | "ad.push-owned" | "ad.backward-owned" | "run-state" | "get" | "put" | "modify"))) {
         return Ok(());
     }
     let mut proof = Proof {
@@ -294,14 +386,16 @@ pub(crate) fn check(program: &Program) -> Result<(), String> {
         captures: BTreeMap::new(),
         inputs: BTreeMap::new(),
         outputs: BTreeMap::new(),
+        callback_values: BTreeMap::new(),
         changed: false,
         validate: false,
         state_values: Targets::new(),
     };
-    let main = program
-        .main
-        .ok_or("--gc arc: scoped ownership requires a native main entry")?;
-    proof.request(main, 0, &[]);
+    for &entry in entries {
+        // Protocol inputs contain no known language closures. Any attempted
+        // dynamic callback call through an input remains an unproved target.
+        proof.request(entry, 0, &[]);
+    }
     loop {
         proof.changed = false;
         for ((id, scoped), args) in proof.inputs.clone() {
@@ -386,10 +480,65 @@ mod tests {
 
     #[test]
     fn state_primitive_needs_a_proven_handler_context() {
-        assert!(check(&state_program(true)).is_ok());
-        assert!(check(&state_program(false))
+        assert!(check(&state_program(true), &[0]).is_ok());
+        assert!(check(&state_program(false), &[0])
             .unwrap_err()
             .contains("tracing-free lifetime policy"));
+    }
+
+    #[test]
+    fn retained_task_callbacks_do_not_inherit_dynamic_scopes() {
+        // Check the lowered graph directly: the public effect checker already
+        // excludes a bare State callback from spawn's closed effect signature.
+        // The ownership proof must independently protect that invariant.
+        for symbol in ["task.spawn", "task.within"] {
+            let mut p = state_program(true);
+            let unit = MT::unit();
+            let getter = p.funcs[1].ty.clone();
+            let string = MT::con("std::String");
+            let task = MT::Con("std::Task".into(), vec![string.clone()]);
+            let mut args = vec![Expr::Func(1)];
+            let mut locals = vec![getter.clone()];
+            let mut ty = arrow(getter, task.clone());
+            if symbol == "task.within" {
+                args.insert(0, Expr::Const(Value::unit()));
+                locals.insert(0, unit.clone());
+                ty = arrow(unit.clone(), ty);
+            }
+            p.funcs.push(Func {
+                name: symbol.into(),
+                arity: args.len() as u32,
+                locals,
+                ty,
+                body: Body::Prim(symbol.into()),
+            });
+            p.funcs.push(Func {
+                name: "spawn-in-parent-state".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: arrow(unit.clone(), task.clone()),
+                body: Body::Expr(Expr::Call(3, args)),
+            });
+            let pair = MT::Record(vec![
+                ("0".into(), task.clone()),
+                ("1".into(), string.clone()),
+            ]);
+            p.funcs[2].ty = arrow(
+                string,
+                arrow(arrow(unit.clone(), task), arrow(unit, pair.clone())),
+            );
+            p.funcs[0].ty = pair;
+            let Body::Expr(Expr::Call(_, args)) = &mut p.funcs[0].body else {
+                unreachable!()
+            };
+            args[1] = Expr::Func(4);
+            assert!(
+                check(&p, &[0])
+                    .unwrap_err()
+                    .contains("outside a State scope"),
+                "{symbol}"
+            );
+        }
     }
 
     #[test]
@@ -429,8 +578,59 @@ mod tests {
             )),
             vec![Expr::Const(Value::unit())],
         ));
-        assert!(check(&p)
+        assert!(check(&p, &[0])
             .unwrap_err()
             .contains("tracing-free lifetime policy"));
+    }
+
+    #[test]
+    fn every_entry_starts_without_a_dynamic_scope() {
+        let p = state_program(true);
+        assert!(check(&p, &[0]).is_ok());
+        assert!(check(&p, &[0, 1])
+            .unwrap_err()
+            .contains("outside a State scope"));
+    }
+
+    #[test]
+    fn loop_can_carry_a_callback_without_executing_it() {
+        let mut p = state_program(false);
+        let getter = p.funcs[1].ty.clone();
+        let step = MT::Con("std::Step".into(), vec![getter.clone(), getter.clone()]);
+        let callback = arrow(getter.clone(), step.clone());
+        p.shapes.insert(
+            step.clone(),
+            TypeShape::Adt(vec![
+                ("Again".into(), vec![getter.clone()]),
+                ("Stop".into(), vec![getter.clone()]),
+            ]),
+        );
+        p.funcs.push(Func {
+            name: "carry".into(),
+            arity: 1,
+            locals: vec![getter.clone()],
+            ty: callback.clone(),
+            body: Body::Expr(Expr::Construct(1, vec![Expr::Local(0)])),
+        });
+        p.funcs.push(Func {
+            name: "loop".into(),
+            arity: 2,
+            locals: vec![callback.clone(), getter.clone()],
+            ty: arrow(callback, arrow(getter.clone(), getter.clone())),
+            body: Body::Prim("loop".into()),
+        });
+        let carry = Expr::Call(4, vec![Expr::Func(3), Expr::Func(1)]);
+        p.funcs[0].ty = getter;
+        p.funcs[0].body = Body::Expr(carry.clone());
+        assert!(check(&p, &[0]).is_ok());
+        // The same closure is still rejected when actually called unscoped.
+        p.funcs[0].ty = MT::con("std::String");
+        p.funcs[0].body = Body::Expr(Expr::Apply(
+            Box::new(carry),
+            vec![Expr::Const(Value::unit())],
+        ));
+        assert!(check(&p, &[0])
+            .unwrap_err()
+            .contains("outside a State scope"));
     }
 }

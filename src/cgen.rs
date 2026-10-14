@@ -13,12 +13,16 @@ mod wide;
 
 const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt.c"),
+    include_str!("../runtime/fwp_rt_windows.c"),
     include_str!("../runtime/fwp_rt_gc.c"),
     include_str!("../runtime/fwp_rt_ops.c"),
     include_str!("../runtime/fwp_rt_num.c"),
     include_str!("../runtime/fwp_rt_prims.c"),
+    include_str!("../runtime/fwp_rt_socket.c"),
+    include_str!("../runtime/fwp_rt_context_win.c"),
     include_str!("../runtime/fwp_rt_task.c"),
     include_str!("../runtime/fwp_rt_sys.c"),
+    include_str!("../runtime/fwp_rt_sys_windows.c"),
     include_str!("../runtime/fwp_rt_decode.c"),
     include_str!("../runtime/fwp_rt_json.c"),
     include_str!("../runtime/fwp_rt_web.c"),
@@ -140,6 +144,14 @@ pub fn native_is_macos() -> bool {
     native_options().cross.is_none() && cfg!(target_os = "macos")
 }
 
+fn native_runtime_links() -> &'static [&'static str] {
+    if cfg!(windows) && native_options().cross.is_none() {
+        &["-lm", "-lws2_32", "-lshell32"]
+    } else {
+        &["-lm", "-lpthread"]
+    }
+}
+
 pub fn shared_library_extension() -> &'static str {
     if native_is_macos() {
         "dylib"
@@ -220,7 +232,9 @@ fn cc_command(cc: &(String, Vec<String>)) -> std::process::Command {
             let prefix = std::path::PathBuf::from(prefix);
             c.arg("-I").arg(prefix.join("include"));
             c.arg("-L").arg(prefix.join("lib"));
-            c.arg(format!("-Wl,-rpath,{}", prefix.join("lib").display()));
+            if !cfg!(windows) {
+                c.arg(format!("-Wl,-rpath,{}", prefix.join("lib").display()));
+            }
         }
     }
     c
@@ -228,7 +242,7 @@ fn cc_command(cc: &(String, Vec<String>)) -> std::process::Command {
 
 /// The archiver for static libraries: `AR`, or for a cross target
 /// `<triple>-ar` (else `llvm-ar`), or `ar`.
-fn archiver() -> String {
+pub(crate) fn archiver() -> String {
     if let Ok(a) = std::env::var("AR") {
         return a;
     }
@@ -258,7 +272,7 @@ pub fn set_native_options(o: NativeOptions) {
     *NATIVE_OPTIONS.lock().unwrap() = Some(o);
 }
 
-fn native_options() -> NativeOptions {
+pub(crate) fn native_options() -> NativeOptions {
     NATIVE_OPTIONS.lock().unwrap().clone().unwrap_or_default()
 }
 
@@ -306,12 +320,21 @@ fn wasm_links(c_source: &str) -> &'static [&'static str] {
 }
 
 /// Libraries to link generated C with.
-fn tls_links(c_source: &str) -> &'static [&'static str] {
-    if c_source.contains(TLS_MARK) {
-        &["-lssl", "-lcrypto"]
-    } else {
-        &[]
+fn tls_links(c_source: &str) -> Vec<std::ffi::OsString> {
+    if !c_source.contains(TLS_MARK) {
+        return Vec::new();
     }
+    if cfg!(windows) && native_options().cross.is_none() {
+        if let Some(prefix) = std::env::var_os("FWP_OPENSSL_DIR") {
+            // Windows OpenSSL's documented import libraries use COFF, which
+            // LLVM-MinGW can link directly; PE has no ELF/Mach-O rpath.
+            let lib = std::path::PathBuf::from(prefix).join("lib");
+            return ["libssl.lib", "libcrypto.lib"]
+                .map(|name| lib.join(name).into_os_string())
+                .into();
+        }
+    }
+    vec!["-lssl".into(), "-lcrypto".into()]
 }
 
 /// Runtime parts embedded only in programs that call or serve services.
@@ -1000,6 +1023,7 @@ impl NativeNumber {
             "std::U64" => Some(Self::Unsigned(64)),
             "std::F32" => Some(Self::F32),
             "std::F64" => Some(Self::F64),
+            "std::F16" | "std::BF16" => Some(Self::Unsigned(16)),
             _ => None,
         }
     }
@@ -1123,8 +1147,11 @@ fn num_kind(mt: &MT) -> Option<(&'static str, String, u64)> {
         "U32" => "K_U32",
         "U64" | "USize" => "K_U64",
         "U128" => "K_U128",
-        "F32" | "F16" | "BF16" => "K_F32",
-        "F64" | "F128" => "K_F64",
+        "F16" => "K_F16",
+        "BF16" => "K_BF16",
+        "F32" => "K_F32",
+        "F128" => "K_F128",
+        "F64" => "K_F64",
         "TInt" => "K_TINT",
         "Trit" => "K_TRIT",
         _ => return None,
@@ -1482,7 +1509,7 @@ impl<'p> Gen<'p> {
         self.tree_owners.insert(mt.clone(), id);
         self.tree_owner_defs.push(String::new());
         let mut body = format!("static void fwp_own_tree{id}(V v) {{\n    for (;;) {{\n        uint8_t *c = fwp_rc_slot(v);\n        if (!c) return;\n        if (*c) fwp_trap(\"internal: aliased fresh result tree\");\n        fwp_rc_fresh(v);\n");
-        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128"))
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128" | "std::F128"))
         {
             body.push_str("        return;\n    }\n}\n");
             self.tree_owner_defs[id] = body;
@@ -1638,7 +1665,7 @@ impl<'p> Gen<'p> {
             mt.to_string().replace("*/", "* /"),
             id
         );
-        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128"))
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128" | "std::F128"))
         {
             return format!(
                 "{}        fwp_rc_free_obj(v);\n        return;\n    }}\n}}\n",
@@ -1655,6 +1682,7 @@ impl<'p> Gen<'p> {
                 if name == "std::Array"
                     && types.len() == 1
                     && crate::rc::needs_rc(&self.prog.shapes, &types[0])
+                    && !matches!(&types[0], MT::Con(n, _) if n == "std::F128")
                 {
                     let child = self.drop_id(&types[0]);
                     elements.push_str(&format!("        for (uint64_t i = 0; i < fwp_array_len(v); i++) fwp_drop{child}(ARR(v)->d[i]);\n"));
@@ -1970,6 +1998,8 @@ impl<'p> Gen<'p> {
             Value::U64(x) => format!("(V){}ULL", x),
             Value::F32(x) => format!("(V)0x{:x}U", x.to_bits()),
             Value::F64(x) => format!("(V)0x{:x}ULL", x.to_bits()),
+            Value::F16(x) => format!("(V)0x{:x}U", x.to_bits()),
+            Value::BF16(x) => format!("(V)0x{:x}U", x.to_bits()),
             Value::TInt(x) => format!("(V)(int64_t){}LL", x),
             Value::Trit(x) => format!("(V)(int64_t){}", x),
             Value::Str(s) => self.string_const(s.as_bytes()),
@@ -1996,6 +2026,11 @@ impl<'p> Gen<'p> {
                 let (hi, lo) = ((x >> 64) as u64, *x as u64);
                 format!("fwp_box_u128(((u128){}ULL << 64) | {}ULL)", hi, lo)
             }
+            Value::F128(x) => format!(
+                "fwp_box_f128((float128_t){{{{{}ULL, {}ULL}}}})",
+                x.to_bits() as u64,
+                (x.to_bits() >> 64) as u64
+            ),
             Value::Data(tag, fs) => {
                 let parts: Vec<String> = fs.iter().map(|f| self.const_expr(f)).collect();
                 format!(
@@ -2022,6 +2057,9 @@ impl<'p> Gen<'p> {
                     Some(Value::U64(_)) => "K_U64",
                     Some(Value::F32(_)) => "K_F32",
                     Some(Value::F64(_)) => "K_F64",
+                    Some(Value::F16(_)) => "K_F16",
+                    Some(Value::BF16(_)) => "K_BF16",
+                    Some(Value::F128(_)) => "K_F128",
                     _ => "K_OPAQUE",
                 };
                 format!(
@@ -5208,6 +5246,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     Value::F64(x) => {
                         format!("fwp_f64({}) == fwp_f64((V)0x{:x}ULL)", v, x.to_bits())
                     }
+                    Value::F16(x) => format!("fwp_f128_compare(f16_to_f128((float16_t){{(uint16_t){v}}}), f16_to_f128((float16_t){{{}U}})) == 0", x.to_bits()),
+                    Value::BF16(x) => format!("fwp_f128_compare(fwp_bf16_to_f128((uint16_t){v}), fwp_bf16_to_f128({}U)) == 0", x.to_bits()),
+                    Value::F128(x) => format!("fwp_f128_compare(fwp_f128({v}), (float128_t){{{{{}ULL, {}ULL}}}}) == 0", x.to_bits() as u64, (x.to_bits() >> 64) as u64),
                     Value::I128(x) => {
                         let (hi, lo) = ((*x as u128 >> 64) as u64, *x as u128 as u64);
                         format!(
@@ -5260,6 +5301,24 @@ impl<'p> Gen<'p> {
         let sp = scalar(&p(0));
         if sym == "array.length" {
             return Ok("return (V)(int64_t)fwp_array_len(l0);".into());
+        }
+        if matches!(sym, "ad.tape-owned" | "ad.push-owned") {
+            let MT::Record(fields) = &params[0] else {
+                return Err(format!("{sym} requires a scalar operation tuple"));
+            };
+            let index = usize::from(sym == "ad.push-owned");
+            let descriptor = self.desc(&fields[index].1);
+            return Ok(if sym == "ad.tape-owned" {
+                format!("return fwp_p_ad_tape_owned(l0, l1, {descriptor});")
+            } else {
+                format!("return fwp_p_ad_push_owned(l0, {descriptor});")
+            });
+        }
+        if sym == "ad.backward-owned" {
+            let descriptor = self.desc(&result);
+            return Ok(format!(
+                "return fwp_p_ad_backward_owned(l0, l1, l2, {descriptor});"
+            ));
         }
         if matches!(
             sym,
@@ -5512,13 +5571,13 @@ impl<'p> Gen<'p> {
             }
             "float.convert" => {
                 let (ks, _, _) = nk(&p(0));
-                format!("return fwp_float_of({}, fwp_as_f64({}, l0));", rk, ks)
+                format!("return fwp_float_convert({}, {}, l0);", ks, rk)
             }
             "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" => {
                 format!("return fwp_fmath({}, FM_{}, l0);", rk, sym.to_uppercase())
             }
             "pow" => format!(
-                "return fwp_float_of({rk}, pow(fwp_as_f64({rk}, l1), fwp_as_f64({rk}, l0)));",
+                "return fwp_pow({rk}, l1, l0);",
                 rk = rk
             ),
             "abs" => format!("return fwp_abs({}, l0, {});", rk, Self::cstr(&rname)),
@@ -5749,7 +5808,8 @@ impl<'p> Gen<'p> {
                     return Ok(if sym == "cli.parse" {
                         let msg = format!("`{}` is not a record of options", p(0));
                         format!(
-                            "return fwp_data(1, 1, (V[]){{fwp_cstr({})}});",
+                            "fwp_decode_fields error; fwp_decode_fields_begin(&error, 1, ({})->vfields[1], 1, NULL);\n    error.values[0] = fwp_rc_fresh(fwp_cstr({}));\n    return fwp_decode_variant(&error, 1);",
+                            self.desc(&result),
                             c_string_literal(msg.as_bytes())
                         )
                     } else {
@@ -5759,10 +5819,11 @@ impl<'p> Gen<'p> {
                 let t = self.flag_table(&o, &[]);
                 if sym == "cli.parse" {
                     format!(
-                        "return fwp_p_cli_parse(l0, l1, {}, {}, {});",
+                        "return fwp_p_cli_parse(l0, l1, {}, {}, {}, {});",
                         t,
                         o.flags.len(),
-                        o.nfields
+                        o.nfields,
+                        self.desc(&result)
                     )
                 } else {
                     format!("return fwp_p_cli_help(l0, {}, {});", t, o.flags.len())
@@ -6364,12 +6425,12 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             // Copy native bits before releasing any aliased incoming boxes.
             // Once copied, a trap in the worker has no pending managed owners.
             for (i, ty) in types.iter().enumerate() {
-                let k = wide::Kind::of(ty).unwrap();
+                let k = wide::Shape::of(self.uncounted, ty).unwrap();
                 let _ = writeln!(out, "    {} n{i} = {};", k.c(), k.unbox(&format!("a{i}")));
             }
             if self.reuse {
                 for (i, ty) in types.iter().enumerate() {
-                    if wide::Kind::of(ty).unwrap().wide() {
+                    if crate::rc::needs_rc(&self.prog.shapes, ty) {
                         let drop = self.value_drop(ty);
                         let _ = writeln!(out, "    {drop}(a{i});");
                     }
@@ -6379,11 +6440,48 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 .map(|i| format!("n{i}"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            let k = wide::Kind::of(result).unwrap();
+            let k = wide::Shape::of(self.uncounted, result).unwrap();
             let _ = writeln!(out, "    {} value = fwp_wide{id}({arguments});", k.c());
-            let value = k.boxed("value");
-            let value = if k.wide() { self.fresh(value) } else { value };
-            let _ = writeln!(out, "    return {value};\n}}");
+            match k {
+                wide::Shape::Scalar(k) => {
+                    let value = k.boxed("value");
+                    let value = if k.wide() { self.fresh(value) } else { value };
+                    let _ = writeln!(out, "    return {value};\n}}");
+                }
+                wide::Shape::Record(kinds) => {
+                    let fields = record_fields(&self.prog.shapes, result).unwrap().to_vec();
+                    let empty: Vec<_> = fields
+                        .iter()
+                        .map(|(_, ty)| ("0".into(), ty.clone()))
+                        .collect();
+                    let protect = self.protect_values(&empty, "wide_result", "wide_result_cleanup");
+                    out.push_str(&protect);
+                    let _ = writeln!(out, "    V fields[{}] = {{0}};", fields.len());
+                    let mut slot = 0;
+                    for (i, (kind, (_, ty))) in kinds.iter().zip(&fields).enumerate() {
+                        let value = kind.boxed(&format!("value.f{i}"));
+                        let value = if kind.wide() {
+                            self.fresh(value)
+                        } else {
+                            value
+                        };
+                        let _ = writeln!(out, "    fields[{i}] = {value};");
+                        if !protect.is_empty() && crate::rc::needs_rc(&self.prog.shapes, ty) {
+                            let _ = writeln!(out, "    wide_result.v{slot} = fields[{i}];");
+                            slot += 1;
+                        }
+                    }
+                    let _ = writeln!(
+                        out,
+                        "    V result = {};",
+                        self.fresh(format!("fwp_record({}, fields)", fields.len()))
+                    );
+                    if !protect.is_empty() {
+                        out.push_str("    fwp_cleanup_pop(&wide_result_cleanup);\n");
+                    }
+                    out.push_str("    return result;\n}\n");
+                }
+            }
             return Ok(out);
         }
         let f = &self.prog.funcs[id];
@@ -6408,9 +6506,20 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 Body::Prim(s) => s.as_str(),
                 _ => "",
             };
+            let scoped_foreign = matches!(f.body, Body::ForeignC { .. })
+                && crate::ffi::signature(self.prog, f).is_ok_and(|(params, result)| {
+                    params.iter().all(|(_, ty)| crate::ffi::scoped_argument(ty))
+                        && crate::ffi::copied_result(&result)
+                });
             for i in 0..f.arity {
+                let foreign_borrow = matches!(f.body, Body::ForeignC { .. })
+                    && crate::ffi::classify(self.prog, &f.locals[i as usize]).is_ok_and(|ty| {
+                        crate::ffi::by_value(&ty)
+                            || scoped_foreign && crate::ffi::scoped_argument(&ty)
+                    });
                 if crate::rc::needs_rc(&self.prog.shapes, &f.locals[i as usize])
                     && !crate::rc::prim_reads_only(sym, i as usize)
+                    && !foreign_borrow
                 {
                     let _ = writeln!(out, "    fwp_rc_share(l{});", i);
                 }
@@ -6897,6 +7006,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     };
                                     args.push(self.desc(&input[0]));
                                 }
+                                if sym == "array.to-list" {
+                                    args.push(
+                                        self.value_drop(func.ty.params(func.arity as usize).1),
+                                    );
+                                }
+                                if sym == "array.fold" {
+                                    args.push(self.value_drop(&func.locals[1]));
+                                }
                                 s = format!(
                                     "return fwp_p_{}_typed({});",
                                     sym.replace(['.', '-'], "_"),
@@ -7359,6 +7476,8 @@ fn ffi_to_c(t: &crate::ffi::CType, v: &str) -> String {
         CType::Int { .. } => format!("({})(int64_t)({})", crate::ffi::c_name(t), v),
         CType::F32 => format!("fwp_f32({})", v),
         CType::F64 => format!("fwp_f64({})", v),
+        CType::F16 | CType::BF16 => format!("(uint16_t)({v})"),
+        CType::F128 => format!("fwp_to_c_quad({v})"),
         CType::Bool => format!("(({}) == FWP_TRUE)", v),
         CType::Str => format!("fwp_c_str_arg({})", v),
         CType::Bytes => format!("((const uint8_t *)STR({})->d)", v),
@@ -7380,6 +7499,8 @@ fn ffi_from_c(t: &crate::ffi::CType, e: &str) -> String {
         CType::Int { signed: false, .. } => format!("(V)({})", e),
         CType::F32 => format!("fwp_from_f32({})", e),
         CType::F64 => format!("fwp_from_f64({})", e),
+        CType::F16 | CType::BF16 => format!("(V)({e})"),
+        CType::F128 => format!("fwp_from_c_quad({e})"),
         CType::Bool => format!("(({}) ? FWP_TRUE : FWP_FALSE)", e),
         CType::Str => format!("fwp_c_string({})", e),
         CType::Ptr | CType::Bytes | CType::Callback { .. } => format!("(V)(uintptr_t)({})", e),
@@ -7424,13 +7545,13 @@ impl Gen<'_> {
             let mut slot = 0;
             for (field, index, ft) in fields {
                 let converted = ffi_from_c(ft, &format!("{value}.{field}"));
-                let converted = if matches!(ft, CType::Str | CType::OptPtr) {
+                let converted = if matches!(ft, CType::Str | CType::OptPtr | CType::F128) {
                     self.fresh(converted)
                 } else {
                     converted
                 };
                 let _ = writeln!(out, "    {name}_fields[{index}] = {converted};");
-                if crate::rc::needs_rc(&self.prog.shapes, &types[*index].1) {
+                if !protect.is_empty() && crate::rc::needs_rc(&self.prog.shapes, &types[*index].1) {
                     let _ = writeln!(out, "    {ctx}.v{slot} = {name}_fields[{index}];");
                     slot += 1;
                 }
@@ -7445,7 +7566,7 @@ impl Gen<'_> {
             }
         } else {
             let converted = ffi_from_c(c, value);
-            let converted = if matches!(c, CType::Str | CType::OptPtr) {
+            let converted = if matches!(c, CType::Str | CType::OptPtr | CType::F128) {
                 self.fresh(converted)
             } else {
                 converted
@@ -7538,73 +7659,129 @@ impl Gen<'_> {
                 ret: cr,
             } = c
             {
-                // trampoline: C arguments to words, apply the closure
-                let _ = writeln!(self.ffi_decls, "static V fwp_cbslot_{}_{};", id, k);
+                let owned = self.reuse && ffi::scoped_callback(c);
                 let decl: Vec<String> = cps
                     .iter()
                     .enumerate()
-                    .map(|(j, p)| format!("{} a{}", ffi::c_name(p), j))
+                    .map(|(j, p)| format!("{} a{j}", ffi::c_name(p)))
                     .collect();
-                let _ = writeln!(
-                    self.ffi_decls,
-                    "static {} fwp_cb_{}_{}({}) {{",
+                let mut trampoline = format!(
+                    "static {} fwp_cb_{id}_{k}({}) {{\n",
                     ffi::c_name(cr),
-                    id,
-                    k,
                     if decl.is_empty() {
                         "void".into()
                     } else {
                         decl.join(", ")
                     }
                 );
-                // the closure's own parameters, unit ones included
-                let mut cargs = Vec::new();
+                // Prepare callback arguments in declaration order. Copied quad
+                // boxes own their bits; partial preparation must unwind them.
+                let mut mts = Vec::new();
                 let mut cur = &pmts[*i];
-                let mut j = 0;
                 while let MT::Fun(a, b) = cur {
-                    if ffi::classify(self.prog, a).ok() == Some(CType::Void) {
-                        cargs.push("FWP_UNIT".to_string());
-                    } else {
-                        cargs.push(ffi_from_c(&cps[j], &format!("a{}", j)));
-                        j += 1;
-                    }
+                    mts.push((**a).clone());
                     cur = b;
                 }
+                let empty: Vec<_> = mts.iter().map(|t| ("0".into(), t.clone())).collect();
+                let protection = if owned {
+                    self.protect_values(&empty, "inputs", "inputs_cleanup")
+                } else {
+                    String::new()
+                };
+                trampoline.push_str(&protection);
+                let mut cargs = Vec::new();
+                let (mut j, mut slot) = (0, 0);
+                for (argument, ty) in mts.iter().enumerate() {
+                    let name = format!("input{argument}");
+                    let ct = ffi::classify(self.prog, ty)?;
+                    if ct == CType::Void {
+                        let _ = writeln!(trampoline, "    V {name} = FWP_UNIT;");
+                    } else {
+                        if owned {
+                            self.library_arg(&mut trampoline, &name, &cps[j], ty, &format!("a{j}"));
+                        } else {
+                            let _ = writeln!(
+                                trampoline,
+                                "    V {name} = {};",
+                                ffi_from_c(&cps[j], &format!("a{j}"))
+                            );
+                        }
+                        j += 1;
+                    }
+                    if !protection.is_empty() && crate::rc::needs_rc(&self.prog.shapes, ty) {
+                        let _ = writeln!(trampoline, "    inputs.v{slot} = {name};");
+                        slot += 1;
+                    }
+                    cargs.push(name);
+                }
                 let _ = writeln!(
-                    self.ffi_decls,
-                    "    V a[{}] = {{{}}};\n    V r = fwp_apply(fwp_cbslot_{}_{}, {}, a);",
+                    trampoline,
+                    "    V a[{}] = {{{}}};",
                     cargs.len().max(1),
                     if cargs.is_empty() {
                         "0".into()
                     } else {
                         cargs.join(", ")
-                    },
-                    id,
-                    k,
-                    cargs.len()
+                    }
                 );
-                if **cr == CType::Void {
-                    self.ffi_decls.push_str("    (void)r;\n}\n");
-                } else {
-                    let _ = writeln!(self.ffi_decls, "    return {};\n}}", ffi_to_c(cr, "r"));
+                if !protection.is_empty() {
+                    trampoline.push_str("    fwp_cleanup_pop(&inputs_cleanup);\n");
                 }
-                // saved and restored around the call: a callback may call
-                // this function again (C calling fwp calling C)
-                let _ = writeln!(
-                    body,
-                    "    V fwp_saved_{k} = fwp_cbslot_{id}_{k};\n    fwp_cbslot_{id}_{k} = l{i};",
-                    id = id,
-                    k = k,
-                    i = i
-                );
-                restore.push(format!("    fwp_cbslot_{}_{} = fwp_saved_{};\n", id, k, k));
+                let callback = format!("fwp_foreign_callback_get({id}, {k})");
+                let application = if owned {
+                    format!(
+                        "fwp_apply_borrowed_span({callback}, {}, a, 0, {})",
+                        cargs.len(),
+                        cargs.len()
+                    )
+                } else {
+                    format!("fwp_apply({callback}, {}, a)", cargs.len())
+                };
+                let _ = writeln!(trampoline, "    V r = {application};");
+                if **cr == CType::Void {
+                    trampoline.push_str("    (void)r;\n}\n");
+                } else {
+                    let _ = writeln!(
+                        trampoline,
+                        "    {} result = {};",
+                        ffi::c_name(cr),
+                        ffi_to_c(cr, "r")
+                    );
+                    if owned && crate::rc::needs_rc(&self.prog.shapes, cur) {
+                        let drop = self.value_drop(cur);
+                        let _ = writeln!(
+                            trampoline,
+                            "    {drop}(r); /* foreign callback result owner */"
+                        );
+                    }
+                    trampoline.push_str("    return result;\n}\n");
+                }
+                self.ffi_decls.push_str(&trampoline);
+                // Frames follow the active task across suspension. Registered
+                // cleanup restores nesting after errors, traps and cancellation.
+                let _ = writeln!(body,"    fwp_foreign_callback callback{k} = {{fwp_foreign_callbacks, {id}, {k}, l{i}}};\n    fwp_foreign_callbacks = &callback{k};\n    fwp_cleanup callback_cleanup{k};\n    fwp_cleanup_push(&callback_cleanup{k}, fwp_foreign_callback_release, &callback{k});");
+                restore.push(format!("    fwp_cleanup_pop(&callback_cleanup{k}); fwp_foreign_callback_release(&callback{k});\n"));
                 args.push(format!("(void *)fwp_cb_{}_{}", id, k));
             } else {
                 args.push(ffi_to_c(c, &format!("l{}", i)));
             }
         }
         let call = format!("{}({})", cname, args.join(", "));
-        let restore = restore.concat();
+        let restore = restore.into_iter().rev().collect::<String>();
+        let result_type = f.ty.params(f.arity as usize).1;
+        if self.reuse
+            && ffi::copied_result(&ret)
+            && crate::rc::needs_rc(&self.prog.shapes, result_type)
+        {
+            let _ = write!(
+                body,
+                "    {} c_result = {call};\n{restore}",
+                ffi::c_name(&ret)
+            );
+            self.library_arg(&mut body, "result", &ret, result_type, "c_result");
+            body.push_str("    return result;\n");
+            return Ok(body);
+        }
         if ret == CType::Void {
             let _ = write!(body, "    {};\n{}    return FWP_UNIT;\n", call, restore);
         } else if restore.is_empty() {
@@ -7704,7 +7881,7 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
     }
     let mut seen = Vec::new();
     crate::ffi::struct_defs(&all, &mut h, &mut seen);
-    for n in &seen {
+    for n in seen.iter().filter(|n| n.as_str() != "@binary128") {
         let _ = writeln!(h, "typedef struct fwp_c_{n} {n};", n = n);
     }
     if !seen.is_empty() {
@@ -7874,8 +8051,8 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let arc = native_options().arc;
     if arc {
-        if !matches!(mode, Mode::Main) {
-            return Err("--gc arc currently requires a native main program".into());
+        if !matches!(mode, Mode::Main | Mode::Exec(..)) {
+            return Err("--gc arc requires a native main or function executable".into());
         }
         if !reuse_enabled() || !free_enabled() {
             return Err(
@@ -7916,7 +8093,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     // Ownership lowering introduces temporaries. Check their concrete types
     // as well as source locals before claiming a tracing-free ownership graph.
     if arc {
-        crate::arc::check(prog)?;
+        let entries = match &mode {
+            Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
+            _ => vec![main],
+        };
+        crate::arc::check(prog, &entries)?;
     }
     let mut g = Gen {
         prog,
@@ -7948,10 +8129,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             || uses_services(prog)
             || tests
             || matches!(mode, Mode::Library | Mode::Service | Mode::Exec(..))
-            || prog
-                .funcs
-                .iter()
-                .any(|f| matches!(&f.body, Body::Prim(s) if s == "attempt" || s == "run-state")),
+            || prog.funcs.iter().any(|f| {
+                matches!(&f.body, Body::Prim(s) if s == "attempt" || s == "run-state")
+                    || matches!(&f.body, Body::ForeignC { .. })
+                        && f.locals.iter().any(|t| matches!(t, MT::Fun(..)))
+            }),
         loops: Vec::new(),
         hofs: Vec::new(),
         abis,
@@ -7966,6 +8148,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let mut roots = Vec::new();
     if let Mode::Exec(cmds, _) = &mode {
         roots.extend(cmds.iter().map(|c| c.fid));
+        for command in cmds {
+            if prog.funcs[command.fid].arity > 0 {
+                g.used_closures[command.fid] = true;
+            }
+        }
     }
     let live = live_functions(prog, &roots);
     let mut bodies = String::new();
@@ -8042,7 +8229,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         // Darwin terminates dlopened images before archive destructors. The
         // guarded finish also runs at dynamic unload; repeated calls are safe.
         lib_defs.push_str(
-            "static int fwp_lib_ready = 0;\n#if FWP_GC\nstatic void fwp_lib_finish(void);\n#endif\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) return;\n#if FWP_GC\n    if (atexit(fwp_lib_finish)) fwp_trap(\"cannot register library cleanup\");\n    fwp_closure_drop_init();\n#endif\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
+            "static int fwp_lib_ready = 0;\n#if FWP_GC\nstatic void fwp_lib_finish(void);\n#endif\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) return;\n#if FWP_GC\n    if (atexit(fwp_lib_finish)) fwp_trap(\"cannot register library cleanup\");\n    fwp_closure_drop_init();\n#endif\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    fwp_start_time = fwp_now_ns();\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
         );
         for (cname, fid, ps, r) in export_sigs(prog)? {
             let mut all: Vec<crate::ffi::CType> = ps.iter().map(|(_, c)| c.clone()).collect();
@@ -8167,6 +8354,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                 .collect();
             let out = &c.output;
             let od = g.desc(&out.elem);
+            let result_desc = g.desc(prog.funcs[fid].ty.params(n).1);
             let idd = g.desc(&in_elem);
             let header = crate::proto::header(&out.elem, prog);
             let fp = crate::proto::fingerprint(&crate::proto::canonical_type(&in_elem, prog));
@@ -8205,10 +8393,10 @@ static const unsigned char exec_out_header{i}[] = {header};
 static const unsigned char exec_in_fp{i}[16] = {fp};
 static V exec_caf{i}(void) {{ return {entry}; }}
 static const fwp_exec_spec exec_spec{i} = {{
-    {name}, {export}, {usage}, {help}, {fid}, {arity}, exec_params{i}, exec_param_names{i},
+    {name}, {export}, {usage}, {help}, {arity}, exec_params{i}, exec_param_names{i},
     {has_opts}, {fallback}, {nflags}, {nfields}, {flags}, exec_pos{i}, {npos}, {nreq}, {variadic}, {unit_last},
     {outcome}, {ro}, {rs}, {err}, {ropt}, {rlist}, {od}, exec_out_header{i}, sizeof exec_out_header{i}, {llist}, {idd},
-    {itype}, exec_in_fp{i}, exec_caf{i}}};
+    {itype}, exec_in_fp{i}, exec_caf{i}, {callable}, {result_desc}}};
 "#,
                 i = i,
                 pd = if pd.is_empty() {
@@ -8233,8 +8421,12 @@ static const fwp_exec_spec exec_spec{i} = {{
                 export = c_string_literal(c.command.as_bytes()),
                 usage = c_string_literal(c.usage.as_bytes()),
                 help = c_string_literal(c.help.as_bytes()),
-                fid = fid,
                 arity = n,
+                callable = if n == 0 {
+                    "0".into()
+                } else {
+                    format!("PTR(&fc{fid})")
+                },
                 has_opts = c.options.is_some() as u8,
                 fallback = c.record_fallback as u8,
                 nflags = nflags,
@@ -8524,6 +8716,40 @@ static const fwp_exec_spec exec_spec{i} = {{
     };
     let mut out = String::new();
     out.push_str("/* Generated by fwp. */\n");
+    // Exact-format headers can include CRT headers before the runtime does.
+    // Select the same API contract before any such header chooses a default.
+    out.push_str(
+        "#if defined(_WIN32) && !defined(_WIN32_WINNT)\n#define _WIN32_WINNT 0x0a00\n#endif\n",
+    );
+    fn exact_type(t: &MT) -> bool {
+        match t {
+            MT::Con(n, a) => {
+                matches!(n.as_str(), "std::F16" | "std::BF16" | "std::F128")
+                    || a.iter().any(exact_type)
+            }
+            MT::Record(fields) => fields.iter().any(|(_, t)| exact_type(t)),
+            MT::Fun(a, b) => exact_type(a) || exact_type(b),
+            MT::Nat(_) => false,
+        }
+    }
+    let exact = g.descs.keys().any(exact_type)
+        || prog
+            .funcs
+            .iter()
+            .enumerate()
+            .any(|(i, f)| live[i] && (exact_type(&f.ty) || f.locals.iter().any(exact_type)));
+    if exact {
+        out.push_str("#ifndef _GNU_SOURCE\n#define _GNU_SOURCE\n#endif\n");
+        out.push_str(crate::float_codegen::MARK);
+        let _ = writeln!(
+            out,
+            "/* Exact float core {}. Link the emitted .float.c and .float.cpp companions. */",
+            crate::float_codegen::source_stamp()
+        );
+        out.push_str(crate::softfloat::C_HEADER);
+        out.push('\n');
+    }
+
     if arc {
         out.push_str("#define FWP_ARC_ONLY 1\n");
     }
@@ -8669,6 +8895,7 @@ static const fwp_exec_spec exec_spec{i} = {{
             let _ = writeln!(out, "{};", abi.sig(prog, id));
         }
     }
+    out.push_str(&wide::declarations(g.uncounted, &g.wide_workers));
     for (id, enabled) in g.wide_workers.iter().enumerate() {
         if *enabled && live[id] {
             let _ = writeln!(out, "{};", wide::signature(g.uncounted, id));
@@ -8814,7 +9041,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     if let Mode::Library = mode {
         let _ = write!(
             out,
-            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    fwp_cl_finish();\n    fwp_gc_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n}}\n#endif\n",
+            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    fwp_cl_finish();\n    fwp_tape_finish();\n    fwp_gc_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n    fwp_sockets_finish();\n}}\n#endif\n",
             g.const_init, lib_defs
         );
         return Ok(out);
@@ -8895,16 +9122,36 @@ static void *fwp_main_thread(void *arg) {{
     return 0;
 }}
 
+#ifdef _WIN32
+static DWORD WINAPI fwp_windows_main_thread(void *argument) {{
+    fwp_main_thread(argument);
+    return 0;
+}}
+#endif
+
 int main(int argc, char **argv) {{
+#ifdef _WIN32
+    argv = fwp_win_arguments(&argc);
+    if (_setmode(_fileno(stdin), _O_BINARY) < 0 || _setmode(_fileno(stdout), _O_BINARY) < 0 ||
+        _setmode(_fileno(stderr), _O_BINARY) < 0)
+        fwp_trap("cannot configure binary standard streams");
+#endif
     fwp_fns = fwp_fn_table;
     fwp_prog_out = stdout;
     fwp_argc = argc;
     fwp_argv = argv;
-    clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);
+    fwp_start_time = fwp_now_ns();
     fwp_seed_rng();
     setvbuf(stdout, 0, _IOFBF, 1 << 16);
 #ifdef __wasi__
     fwp_main_thread(0);
+#elif defined(_WIN32)
+    HANDLE thread = CreateThread(NULL, fwp_main_stack, fwp_windows_main_thread, NULL,
+                                 STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
+    if (!thread) fwp_trap("cannot create main runtime thread");
+    if (WaitForSingleObject(thread, INFINITE) != WAIT_OBJECT_0) abort();
+    CloseHandle(thread);
+    free(argv);
 #else
     signal(SIGPIPE, SIG_IGN);
     pthread_attr_t attr;
@@ -9056,9 +9303,12 @@ pub struct TempDir {
 
 impl TempDir {
     pub fn new(prefix: &str) -> Result<TempDir, String> {
+        Self::in_parent(&std::env::temp_dir(), prefix)
+    }
+
+    pub(crate) fn in_parent(base: &std::path::Path, prefix: &str) -> Result<TempDir, String> {
         #[cfg(unix)]
         use std::os::unix::fs::DirBuilderExt;
-        let base = std::env::temp_dir();
         let mut last = String::new();
         for attempt in 0..16u32 {
             let path = base.join(format!("{}-{}", prefix, random_suffix(attempt)));
@@ -9274,6 +9524,7 @@ pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Resul
     let c_path = dir.join("fat-program.c");
     std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
     let cc = c_compiler()?;
+    let floats = crate::float_codegen::link_archives(c_source, &cc, opt, false, dir.path())?;
     let variants = fat_variants();
     let mut objs = Vec::new();
     let mut result = Ok(());
@@ -9328,9 +9579,10 @@ pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Resul
                 .arg(output)
                 .arg(&dpath)
                 .args(&objs)
+                .args(&floats)
                 .args(crate::ffi::links())
                 .args(tls_links(c_source))
-                .args(["-lm", "-lpthread"]),
+                .args(native_runtime_links()),
             &cc.0,
         );
         let _ = std::fs::remove_file(&dpath);
@@ -9364,6 +9616,7 @@ pub fn compile_library(
     std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
     std::fs::write(output.with_extension("h"), header).map_err(|e| e.to_string())?;
     let cc = c_compiler()?;
+    let floats = crate::float_codegen::link_archives(c_source, &cc, opt, false, dir.path())?;
     let mut result = run_cc(
         cc_command(&cc)
             .args([
@@ -9384,11 +9637,23 @@ pub fn compile_library(
             LibKind::Static => {
                 let _ = std::fs::remove_file(output);
                 let ar = archiver();
+                let mut members = vec![obj.clone()];
+                for archive in &floats {
+                    run_cc(
+                        std::process::Command::new(&ar)
+                            .current_dir(dir.path())
+                            .arg("x")
+                            .arg(archive),
+                        &ar,
+                    )?;
+                    members.push(dir.join("float.c.o"));
+                    members.push(dir.join("float.cpp.o"));
+                }
                 run_cc(
                     std::process::Command::new(&ar)
                         .arg("rcs")
                         .arg(output)
-                        .arg(&obj),
+                        .args(&members),
                     &ar,
                 )
             }
@@ -9398,9 +9663,10 @@ pub fn compile_library(
                     .arg("-o")
                     .arg(output)
                     .arg(&obj)
+                    .args(&floats)
                     .args(crate::ffi::links())
                     .args(tls_links(c_source))
-                    .args(["-lm", "-lpthread"]),
+                    .args(native_runtime_links()),
                 &cc.0,
             ),
         };
@@ -9436,6 +9702,9 @@ pub fn compile_for(
     std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
     let result = if target.is_wasm() {
         let cc = std::env::var("FWP_WASM_CC").unwrap_or_else(|_| "clang".into());
+        let float_cc = (cc.clone(), vec!["--target=wasm32-wasi".into()]);
+        let floats =
+            crate::float_codegen::link_archives(c_source, &float_cc, opt, true, dir.path())?;
         let obj = dir.join(format!("{}.o", stem));
         let lj_src = dir.join("fwp-longjmp.S");
         let lj_obj = dir.join("fwp-longjmp.o");
@@ -9481,6 +9750,7 @@ pub fn compile_for(
                     .arg(&obj)
                     .arg(&lj_obj)
                     .arg(&sj_obj)
+                    .args(&floats)
                     .args(crate::ffi::links())
                     .args(wasm_links(c_source))
                     .args(["-lm", "-Wl,-z,stack-size=33554432"]),
@@ -9507,6 +9777,7 @@ pub fn compile_for(
         result
     } else {
         let cc = c_compiler()?;
+        let floats = crate::float_codegen::link_archives(c_source, &cc, opt, false, dir.path())?;
         let native = native_options();
         let link_static: &[&str] = if native.static_link {
             &["-static"]
@@ -9541,9 +9812,10 @@ pub fn compile_for(
                             .arg("-o")
                             .arg(output)
                             .arg(&obj)
+                            .args(&floats)
                             .args(crate::ffi::links())
                             .args(tls_links(c_source))
-                            .args(["-lm", "-lpthread"]),
+                            .args(native_runtime_links()),
                         &cc.0,
                     )
                 })
@@ -9560,10 +9832,10 @@ pub fn compile_for(
                     .arg("-o")
                     .arg(output)
                     .arg(&c_path)
+                    .args(&floats)
                     .args(crate::ffi::links())
                     .args(tls_links(c_source))
-                    .arg("-lm")
-                    .arg("-lpthread"),
+                    .args(native_runtime_links()),
                 &cc.0,
             ),
         }

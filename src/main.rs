@@ -628,16 +628,8 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: --static is unavailable on macOS; use ordinary native linking or a Linux cross target");
         return ExitCode::from(2);
     }
-    if arc
-        && (target.is_wasm()
-            || lib.is_some()
-            || cli
-            || rest
-            || mcp
-            || func.is_some()
-            || !services.is_empty())
-    {
-        eprintln!("fwp build: --gc arc currently requires a native main program; executable protocol, library and service boundaries are not yet eligible");
+    if arc && (target.is_wasm() || lib.is_some() || rest || mcp || !services.is_empty()) {
+        eprintln!("fwp build: --gc arc requires a native main or function executable; library, WebAssembly and service boundaries are not yet eligible");
         return ExitCode::from(2);
     }
     fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
@@ -745,7 +737,10 @@ fn build(args: &[String]) -> ExitCode {
                 .unwrap_or_default();
             let built = fwp::cgen::generate_library(&prog, &name).and_then(|(c, h)| {
                 if emit_c {
-                    std::fs::write(out.with_extension("c"), c).map_err(|e| e.to_string())?;
+                    std::fs::write(out.with_extension("c"), &c).map_err(|e| e.to_string())?;
+                    if c.contains(fwp::float_codegen::MARK) {
+                        fwp::float_codegen::emit_sources(&out.with_extension("c"))?;
+                    }
                     std::fs::write(out.with_extension("h"), h).map_err(|e| e.to_string())
                 } else {
                     fwp::cgen::compile_library(&c, &h, &out, &opt, kind)
@@ -783,6 +778,12 @@ fn build(args: &[String]) -> ExitCode {
             if let Err(e) = std::fs::write(&cpath, &csrc) {
                 eprintln!("fwp build: cannot write {}: {}", cpath.display(), e);
                 return 1;
+            }
+            if csrc.contains(fwp::float_codegen::MARK) {
+                if let Err(e) = fwp::float_codegen::emit_sources(&cpath) {
+                    eprintln!("fwp build: {e}");
+                    return 1;
+                }
             }
             return 0;
         }
@@ -948,7 +949,15 @@ fn build_split(
                 }
             };
             let done = if emit_c {
-                std::fs::write(exe.with_extension("c"), &csrc).map_err(|e| e.to_string())
+                std::fs::write(exe.with_extension("c"), &csrc)
+                    .map_err(|e| e.to_string())
+                    .and_then(|_| {
+                        if csrc.contains(fwp::float_codegen::MARK) {
+                            fwp::float_codegen::emit_sources(&exe.with_extension("c"))
+                        } else {
+                            Ok(())
+                        }
+                    })
             } else if fat {
                 fwp::cgen::compile_fat(&csrc, &exe, &opt)
             } else {

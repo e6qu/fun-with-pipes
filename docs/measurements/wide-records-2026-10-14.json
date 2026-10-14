@@ -1,0 +1,2446 @@
+{
+  "scope": "PR #135 focused implementation evidence, not final production acceptance. Four hosts passed measurements. The same run had macOS TLS fixture failures from the OpenSSL CLI selection; corrected separately. Allocations include boxed entry/output boundaries. Managed live-byte counters exclude allocator metadata and external libraries. Process timings include startup and output.",
+  "run": 38532221118,
+  "reports": {
+    "macos-15": {
+      "head": "4456bff02d25bf70a8d78e775203b03126c10a00",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sjc20-bb711-4b09b3df-8a1e-4c82-8b74-541d814dfbf3-D68EF6AE790B.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "cxx": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "coreCommands": [
+        [
+          "clang",
+          "-O2",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-std=c11",
+          "-c",
+          "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.float.c",
+          "-o",
+          "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o"
+        ],
+        [
+          "clang",
+          "-O2",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-std=c++20",
+          "-fno-exceptions",
+          "-fno-rtti",
+          "-c",
+          "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.float.cpp",
+          "-o",
+          "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o"
+        ]
+      ],
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "recursiveSteps": 256,
+      "results": {
+        "i128-boxed": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8206,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            4040167,
+            4701458,
+            4481625,
+            3975458,
+            6534333
+          ],
+          "medianProcessWallNs": 4481625,
+          "sourceSha256": "42bff773543bdf10647d94a2144064a120724415438f83fbd7849a69e1d0a6a0",
+          "generatedSha256": "69901c98b772ae717e4c018e15988e9d040798b790357d40dae6577de38ff19d",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "i128-native": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 30,
+            "retains": 0,
+            "peakChargedBytes": 32,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            6222459,
+            7377166,
+            6672625,
+            4482042,
+            3745584
+          ],
+          "medianProcessWallNs": 6222459,
+          "sourceSha256": "42bff773543bdf10647d94a2144064a120724415438f83fbd7849a69e1d0a6a0",
+          "generatedSha256": "f79af21d8db132d54d21416886bcf3969b4697b9c91ddfe992a8b18a550807e3",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 32,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "u128-boxed": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8206,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            11539291,
+            4782334,
+            7541042,
+            7230167,
+            4946958
+          ],
+          "medianProcessWallNs": 7230167,
+          "sourceSha256": "69f59c3c8f86236fe6a2d7ff64fb8f5d9f738882aa6f4f4f0813110ed2e25464",
+          "generatedSha256": "91b0850fb18bed3638c1b5bfdcf21a95dc3449520c085f18e1467d748b5a0b34",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "u128-native": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 30,
+            "retains": 0,
+            "peakChargedBytes": 32,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            4739750,
+            4800000,
+            4333416,
+            4400250,
+            5049917
+          ],
+          "medianProcessWallNs": 4739750,
+          "sourceSha256": "69f59c3c8f86236fe6a2d7ff64fb8f5d9f738882aa6f4f4f0813110ed2e25464",
+          "generatedSha256": "336e804b38a64277de97c80f88c016659eca6087144a3f4d6eedbf0e2748ccfe",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 32,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "f128-boxed": {
+          "output": "3.2896e4\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8209,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            4859250,
+            4401000,
+            4318042,
+            4667875,
+            4392625
+          ],
+          "medianProcessWallNs": 4401000,
+          "sourceSha256": "40134e8cf2b9f54200544485151610d42a37202f19d565c775ec8e95b96574aa",
+          "generatedSha256": "f822673c3901b95da30a801f63e8a8a0f002ef2045ec484ecd3a20da42ccd878",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "f128-native": {
+          "output": "3.2896e4\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 33,
+            "retains": 0,
+            "peakChargedBytes": 48,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            9066875,
+            6416958,
+            5331333,
+            5285792,
+            5411709
+          ],
+          "medianProcessWallNs": 5411709,
+          "sourceSha256": "40134e8cf2b9f54200544485151610d42a37202f19d565c775ec8e95b96574aa",
+          "generatedSha256": "f872069e4ca431c6f4d76c9791e00fe4d26fd49b2f1eaff11495e604264ff6e7",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 32,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "records-boxed": {
+          "output": "[(Point {remaining = 0, total = 1792, x = 2.5600000000000000000000000000000005e2, y = 0.0}, 2.5600000000000000000000000000000005e2), (Point {remaining = 0, total = 1792, x = 2.5700000000000000000000000000000005e2, y = 2.4010008506236818859974943210377966e45}, 2.4010008506236818859974943210377966e45), (Point {remaining = 0, total = 1792, x = 2.5350000000000000000000000000000002e2, y = -6.002502126559204714993735802594488e45}, -6.002502126559204714993735802594488e45)]\n([(3.0, 1), (2.5, -1)], [(3.0, 1), (2.5, -1)])\n",
+          "counters": {
+            "requests": 3878,
+            "requestedBytes": 99742,
+            "retains": 4625,
+            "peakChargedBytes": 1040,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            12587292,
+            13665583,
+            6236333,
+            5977583,
+            12479458
+          ],
+          "medianProcessWallNs": 12479458,
+          "sourceSha256": "90b84877e4b9518cb551d7665ba6a7449a0ba87479c97dd5445d0e71811cf21a",
+          "generatedSha256": "3dcb32c89b6e99bfbfc380304562e47bc8d25a983cf3459b86e42cb69ad461ff",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "records-native": {
+          "output": "[(Point {remaining = 0, total = 1792, x = 2.5600000000000000000000000000000005e2, y = 0.0}, 2.5600000000000000000000000000000005e2), (Point {remaining = 0, total = 1792, x = 2.5700000000000000000000000000000005e2, y = 2.4010008506236818859974943210377966e45}, 2.4010008506236818859974943210377966e45), (Point {remaining = 0, total = 1792, x = 2.5350000000000000000000000000000002e2, y = -6.002502126559204714993735802594488e45}, -6.002502126559204714993735802594488e45)]\n([(3.0, 1), (2.5, -1)], [(3.0, 1), (2.5, -1)])\n",
+          "counters": {
+            "requests": 48,
+            "requestedBytes": 1590,
+            "retains": 12,
+            "peakChargedBytes": 1040,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            9194041,
+            14614291,
+            15533750,
+            13599166,
+            7295625
+          ],
+          "medianProcessWallNs": 13599166,
+          "sourceSha256": "90b84877e4b9518cb551d7665ba6a7449a0ba87479c97dd5445d0e71811cf21a",
+          "generatedSha256": "fc931615cd9d2284abbf3511b470e0306c3f0f012a2f80115c1300af0873884d",
+          "nativeWorkers": 2,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide8",
+              "bytes": 144,
+              "qualifier": "static"
+            },
+            {
+              "function": "fwp_wide8.cold.1",
+              "bytes": 16,
+              "qualifier": "static"
+            },
+            {
+              "function": "fwp_wide8.cold.2",
+              "bytes": 16,
+              "qualifier": "static"
+            }
+          ]
+        }
+      },
+      "scope": "Equivalent checked arithmetic with worker lowering enabled/disabled. Fixed 256-step scalar sums and numeric record walks. Exact quad software arithmetic is linked identically in both variants. Process timings include startup and output; no speed threshold. Separate instrumented binaries count managed requests, retains and charged live storage, excluding allocator metadata. Native disassembly, symbols and compiler stack-usage reports are retained. Stack figures describe one invocation, not total recursive depth. No universal C/Rust parity claim."
+    },
+    "macos-15-intel": {
+      "head": "4456bff02d25bf70a8d78e775203b03126c10a00",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sjc20-bb658-4a0acf78-0ef4-4d7a-be95-6c7dce8bb2da-925B2FB10B50.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "machine": "x86_64",
+        "processor": "i386"
+      },
+      "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "cxx": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "coreCommands": [
+        [
+          "clang",
+          "-O2",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-std=c11",
+          "-c",
+          "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.float.c",
+          "-o",
+          "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o"
+        ],
+        [
+          "clang",
+          "-O2",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-std=c++20",
+          "-fno-exceptions",
+          "-fno-rtti",
+          "-c",
+          "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.float.cpp",
+          "-o",
+          "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o"
+        ]
+      ],
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "recursiveSteps": 256,
+      "results": {
+        "i128-boxed": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8206,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            7556323,
+            7188937,
+            7469991,
+            7622318,
+            6936221
+          ],
+          "medianProcessWallNs": 7469991,
+          "sourceSha256": "42bff773543bdf10647d94a2144064a120724415438f83fbd7849a69e1d0a6a0",
+          "generatedSha256": "69901c98b772ae717e4c018e15988e9d040798b790357d40dae6577de38ff19d",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "i128-native": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 30,
+            "retains": 0,
+            "peakChargedBytes": 32,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            7910616,
+            7760321,
+            7646022,
+            8281704,
+            8415693
+          ],
+          "medianProcessWallNs": 7910616,
+          "sourceSha256": "42bff773543bdf10647d94a2144064a120724415438f83fbd7849a69e1d0a6a0",
+          "generatedSha256": "f79af21d8db132d54d21416886bcf3969b4697b9c91ddfe992a8b18a550807e3",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 24,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "u128-boxed": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8206,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            7939784,
+            7762238,
+            7529685,
+            8201515,
+            6988455
+          ],
+          "medianProcessWallNs": 7762238,
+          "sourceSha256": "69f59c3c8f86236fe6a2d7ff64fb8f5d9f738882aa6f4f4f0813110ed2e25464",
+          "generatedSha256": "91b0850fb18bed3638c1b5bfdcf21a95dc3449520c085f18e1467d748b5a0b34",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "u128-native": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 30,
+            "retains": 0,
+            "peakChargedBytes": 32,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            6665247,
+            7660424,
+            6787595,
+            6934312,
+            6431652
+          ],
+          "medianProcessWallNs": 6787595,
+          "sourceSha256": "69f59c3c8f86236fe6a2d7ff64fb8f5d9f738882aa6f4f4f0813110ed2e25464",
+          "generatedSha256": "336e804b38a64277de97c80f88c016659eca6087144a3f4d6eedbf0e2748ccfe",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 24,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "f128-boxed": {
+          "output": "3.2896e4\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8209,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            7895481,
+            7780562,
+            7278598,
+            7280505,
+            7303921
+          ],
+          "medianProcessWallNs": 7303921,
+          "sourceSha256": "40134e8cf2b9f54200544485151610d42a37202f19d565c775ec8e95b96574aa",
+          "generatedSha256": "f822673c3901b95da30a801f63e8a8a0f002ef2045ec484ecd3a20da42ccd878",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "f128-native": {
+          "output": "3.2896e4\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 33,
+            "retains": 0,
+            "peakChargedBytes": 48,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            8360085,
+            7951232,
+            7731020,
+            7657844,
+            8571407
+          ],
+          "medianProcessWallNs": 7951232,
+          "sourceSha256": "40134e8cf2b9f54200544485151610d42a37202f19d565c775ec8e95b96574aa",
+          "generatedSha256": "f872069e4ca431c6f4d76c9791e00fe4d26fd49b2f1eaff11495e604264ff6e7",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 40,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "records-boxed": {
+          "output": "[(Point {remaining = 0, total = 1792, x = 2.5600000000000000000000000000000005e2, y = 0.0}, 2.5600000000000000000000000000000005e2), (Point {remaining = 0, total = 1792, x = 2.5700000000000000000000000000000005e2, y = 2.4010008506236818859974943210377966e45}, 2.4010008506236818859974943210377966e45), (Point {remaining = 0, total = 1792, x = 2.5350000000000000000000000000000002e2, y = -6.002502126559204714993735802594488e45}, -6.002502126559204714993735802594488e45)]\n([(3.0, 1), (2.5, -1)], [(3.0, 1), (2.5, -1)])\n",
+          "counters": {
+            "requests": 3878,
+            "requestedBytes": 99742,
+            "retains": 4625,
+            "peakChargedBytes": 1040,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            6654233,
+            6255222,
+            6370671,
+            6887896,
+            6575368
+          ],
+          "medianProcessWallNs": 6575368,
+          "sourceSha256": "90b84877e4b9518cb551d7665ba6a7449a0ba87479c97dd5445d0e71811cf21a",
+          "generatedSha256": "3dcb32c89b6e99bfbfc380304562e47bc8d25a983cf3459b86e42cb69ad461ff",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "records-native": {
+          "output": "[(Point {remaining = 0, total = 1792, x = 2.5600000000000000000000000000000005e2, y = 0.0}, 2.5600000000000000000000000000000005e2), (Point {remaining = 0, total = 1792, x = 2.5700000000000000000000000000000005e2, y = 2.4010008506236818859974943210377966e45}, 2.4010008506236818859974943210377966e45), (Point {remaining = 0, total = 1792, x = 2.5350000000000000000000000000000002e2, y = -6.002502126559204714993735802594488e45}, -6.002502126559204714993735802594488e45)]\n([(3.0, 1), (2.5, -1)], [(3.0, 1), (2.5, -1)])\n",
+          "counters": {
+            "requests": 48,
+            "requestedBytes": 1590,
+            "retains": 12,
+            "peakChargedBytes": 1040,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.o"
+            ],
+            [
+              "clang",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            8490234,
+            8983451,
+            8383821,
+            8771146,
+            9532683
+          ],
+          "medianProcessWallNs": 8771146,
+          "sourceSha256": "90b84877e4b9518cb551d7665ba6a7449a0ba87479c97dd5445d0e71811cf21a",
+          "generatedSha256": "fc931615cd9d2284abbf3511b470e0306c3f0f012a2f80115c1300af0873884d",
+          "nativeWorkers": 2,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide8",
+              "bytes": 200,
+              "qualifier": "static"
+            },
+            {
+              "function": "fwp_wide8.cold.1",
+              "bytes": 8,
+              "qualifier": "static"
+            },
+            {
+              "function": "fwp_wide8.cold.2",
+              "bytes": 8,
+              "qualifier": "static"
+            }
+          ]
+        }
+      },
+      "scope": "Equivalent checked arithmetic with worker lowering enabled/disabled. Fixed 256-step scalar sums and numeric record walks. Exact quad software arithmetic is linked identically in both variants. Process timings include startup and output; no speed threshold. Separate instrumented binaries count managed requests, retains and charged live storage, excluding allocator metadata. Native disassembly, symbols and compiler stack-usage reports are retained. Stack figures describe one invocation, not total recursive depth. No universal C/Rust parity claim."
+    },
+    "ubuntu-24.04-arm": {
+      "head": "4456bff02d25bf70a8d78e775203b03126c10a00",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmy3dvn",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "cxx": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "coreCommands": [
+        [
+          "clang",
+          "-O2",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-std=c11",
+          "-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.float.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o"
+        ],
+        [
+          "clang",
+          "-O2",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-std=c++20",
+          "-fno-exceptions",
+          "-fno-rtti",
+          "-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.float.cpp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o"
+        ]
+      ],
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "recursiveSteps": 256,
+      "results": {
+        "i128-boxed": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8206,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1115909,
+            904938,
+            971325,
+            1440592,
+            1052368
+          ],
+          "medianProcessWallNs": 1052368,
+          "sourceSha256": "42bff773543bdf10647d94a2144064a120724415438f83fbd7849a69e1d0a6a0",
+          "generatedSha256": "69901c98b772ae717e4c018e15988e9d040798b790357d40dae6577de38ff19d",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "i128-native": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 30,
+            "retains": 0,
+            "peakChargedBytes": 32,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1186960,
+            985604,
+            1090262,
+            961518,
+            970765
+          ],
+          "medianProcessWallNs": 985604,
+          "sourceSha256": "42bff773543bdf10647d94a2144064a120724415438f83fbd7849a69e1d0a6a0",
+          "generatedSha256": "f79af21d8db132d54d21416886bcf3969b4697b9c91ddfe992a8b18a550807e3",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 32,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "u128-boxed": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8206,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1226974,
+            1085318,
+            1000347,
+            1022506,
+            1020914
+          ],
+          "medianProcessWallNs": 1022506,
+          "sourceSha256": "69f59c3c8f86236fe6a2d7ff64fb8f5d9f738882aa6f4f4f0813110ed2e25464",
+          "generatedSha256": "91b0850fb18bed3638c1b5bfdcf21a95dc3449520c085f18e1467d748b5a0b34",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "u128-native": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 30,
+            "retains": 0,
+            "peakChargedBytes": 32,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1167914,
+            1003419,
+            1042361,
+            963126,
+            985188
+          ],
+          "medianProcessWallNs": 1003419,
+          "sourceSha256": "69f59c3c8f86236fe6a2d7ff64fb8f5d9f738882aa6f4f4f0813110ed2e25464",
+          "generatedSha256": "336e804b38a64277de97c80f88c016659eca6087144a3f4d6eedbf0e2748ccfe",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 32,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "f128-boxed": {
+          "output": "3.2896e4\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8209,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1278810,
+            1101789,
+            1003995,
+            1061792,
+            1804218
+          ],
+          "medianProcessWallNs": 1101789,
+          "sourceSha256": "40134e8cf2b9f54200544485151610d42a37202f19d565c775ec8e95b96574aa",
+          "generatedSha256": "f822673c3901b95da30a801f63e8a8a0f002ef2045ec484ecd3a20da42ccd878",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "f128-native": {
+          "output": "3.2896e4\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 33,
+            "retains": 0,
+            "peakChargedBytes": 48,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1234885,
+            1010139,
+            1064671,
+            1104772,
+            1093014
+          ],
+          "medianProcessWallNs": 1093014,
+          "sourceSha256": "40134e8cf2b9f54200544485151610d42a37202f19d565c775ec8e95b96574aa",
+          "generatedSha256": "f872069e4ca431c6f4d76c9791e00fe4d26fd49b2f1eaff11495e604264ff6e7",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 32,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "records-boxed": {
+          "output": "[(Point {remaining = 0, total = 1792, x = 2.5600000000000000000000000000000005e2, y = 0.0}, 2.5600000000000000000000000000000005e2), (Point {remaining = 0, total = 1792, x = 2.5700000000000000000000000000000005e2, y = 2.4010008506236818859974943210377966e45}, 2.4010008506236818859974943210377966e45), (Point {remaining = 0, total = 1792, x = 2.5350000000000000000000000000000002e2, y = -6.002502126559204714993735802594488e45}, -6.002502126559204714993735802594488e45)]\n([(3.0, 1), (2.5, -1)], [(3.0, 1), (2.5, -1)])\n",
+          "counters": {
+            "requests": 3878,
+            "requestedBytes": 99742,
+            "retains": 4625,
+            "peakChargedBytes": 1040,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1568945,
+            1203462,
+            1451360,
+            1207927,
+            1044488
+          ],
+          "medianProcessWallNs": 1207927,
+          "sourceSha256": "90b84877e4b9518cb551d7665ba6a7449a0ba87479c97dd5445d0e71811cf21a",
+          "generatedSha256": "3dcb32c89b6e99bfbfc380304562e47bc8d25a983cf3459b86e42cb69ad461ff",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "records-native": {
+          "output": "[(Point {remaining = 0, total = 1792, x = 2.5600000000000000000000000000000005e2, y = 0.0}, 2.5600000000000000000000000000000005e2), (Point {remaining = 0, total = 1792, x = 2.5700000000000000000000000000000005e2, y = 2.4010008506236818859974943210377966e45}, 2.4010008506236818859974943210377966e45), (Point {remaining = 0, total = 1792, x = 2.5350000000000000000000000000000002e2, y = -6.002502126559204714993735802594488e45}, -6.002502126559204714993735802594488e45)]\n([(3.0, 1), (2.5, -1)], [(3.0, 1), (2.5, -1)])\n",
+          "counters": {
+            "requests": 48,
+            "requestedBytes": 1590,
+            "retains": 12,
+            "peakChargedBytes": 1040,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1347030,
+            1012059,
+            1051392,
+            1072198,
+            1007867
+          ],
+          "medianProcessWallNs": 1051392,
+          "sourceSha256": "90b84877e4b9518cb551d7665ba6a7449a0ba87479c97dd5445d0e71811cf21a",
+          "generatedSha256": "fc931615cd9d2284abbf3511b470e0306c3f0f012a2f80115c1300af0873884d",
+          "nativeWorkers": 2,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide8",
+              "bytes": 128,
+              "qualifier": "static"
+            }
+          ]
+        }
+      },
+      "scope": "Equivalent checked arithmetic with worker lowering enabled/disabled. Fixed 256-step scalar sums and numeric record walks. Exact quad software arithmetic is linked identically in both variants. Process timings include startup and output; no speed threshold. Separate instrumented binaries count managed requests, retains and charged live storage, excluding allocator metadata. Native disassembly, symbols and compiler stack-usage reports are retained. Stack figures describe one invocation, not total recursive depth. No universal C/Rust parity claim."
+    },
+    "ubuntu-latest": {
+      "head": "4456bff02d25bf70a8d78e775203b03126c10a00",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmmprz5",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.26\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "cxx": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "coreCommands": [
+        [
+          "clang",
+          "-O2",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-std=c11",
+          "-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.float.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o"
+        ],
+        [
+          "clang",
+          "-O2",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-std=c++20",
+          "-fno-exceptions",
+          "-fno-rtti",
+          "-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.float.cpp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o"
+        ]
+      ],
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "recursiveSteps": 256,
+      "results": {
+        "i128-boxed": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8206,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1074481,
+            960544,
+            1138078,
+            1238544,
+            1325226
+          ],
+          "medianProcessWallNs": 1138078,
+          "sourceSha256": "42bff773543bdf10647d94a2144064a120724415438f83fbd7849a69e1d0a6a0",
+          "generatedSha256": "69901c98b772ae717e4c018e15988e9d040798b790357d40dae6577de38ff19d",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "i128-native": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 30,
+            "retains": 0,
+            "peakChargedBytes": 32,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/i128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1130576,
+            1456369,
+            1210397,
+            1121022,
+            1157748
+          ],
+          "medianProcessWallNs": 1157748,
+          "sourceSha256": "42bff773543bdf10647d94a2144064a120724415438f83fbd7849a69e1d0a6a0",
+          "generatedSha256": "f79af21d8db132d54d21416886bcf3969b4697b9c91ddfe992a8b18a550807e3",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 24,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "u128-boxed": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8206,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1117872,
+            948612,
+            1588687,
+            1205810,
+            1350202
+          ],
+          "medianProcessWallNs": 1205810,
+          "sourceSha256": "69f59c3c8f86236fe6a2d7ff64fb8f5d9f738882aa6f4f4f0813110ed2e25464",
+          "generatedSha256": "91b0850fb18bed3638c1b5bfdcf21a95dc3449520c085f18e1467d748b5a0b34",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "u128-native": {
+          "output": "32896\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 30,
+            "retains": 0,
+            "peakChargedBytes": 32,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/u128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1083331,
+            1029729,
+            1209841,
+            1093515,
+            1105363
+          ],
+          "medianProcessWallNs": 1093515,
+          "sourceSha256": "69f59c3c8f86236fe6a2d7ff64fb8f5d9f738882aa6f4f4f0813110ed2e25464",
+          "generatedSha256": "336e804b38a64277de97c80f88c016659eca6087144a3f4d6eedbf0e2748ccfe",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 24,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "f128-boxed": {
+          "output": "3.2896e4\n",
+          "counters": {
+            "requests": 513,
+            "requestedBytes": 8209,
+            "retains": 0,
+            "peakChargedBytes": 4096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1273082,
+            1865566,
+            1468796,
+            1213752,
+            1151398
+          ],
+          "medianProcessWallNs": 1273082,
+          "sourceSha256": "40134e8cf2b9f54200544485151610d42a37202f19d565c775ec8e95b96574aa",
+          "generatedSha256": "f822673c3901b95da30a801f63e8a8a0f002ef2045ec484ecd3a20da42ccd878",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "f128-native": {
+          "output": "3.2896e4\n",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 33,
+            "retains": 0,
+            "peakChargedBytes": 48,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/f128-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1207307,
+            1107842,
+            1220867,
+            1500595,
+            1352842
+          ],
+          "medianProcessWallNs": 1220867,
+          "sourceSha256": "40134e8cf2b9f54200544485151610d42a37202f19d565c775ec8e95b96574aa",
+          "generatedSha256": "f872069e4ca431c6f4d76c9791e00fe4d26fd49b2f1eaff11495e604264ff6e7",
+          "nativeWorkers": 1,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide1",
+              "bytes": 24,
+              "qualifier": "static"
+            }
+          ]
+        },
+        "records-boxed": {
+          "output": "[(Point {remaining = 0, total = 1792, x = 2.5600000000000000000000000000000005e2, y = 0.0}, 2.5600000000000000000000000000000005e2), (Point {remaining = 0, total = 1792, x = 2.5700000000000000000000000000000005e2, y = 2.4010008506236818859974943210377966e45}, 2.4010008506236818859974943210377966e45), (Point {remaining = 0, total = 1792, x = 2.5350000000000000000000000000000002e2, y = -6.002502126559204714993735802594488e45}, -6.002502126559204714993735802594488e45)]\n([(3.0, 1), (2.5, -1)], [(3.0, 1), (2.5, -1)])\n",
+          "counters": {
+            "requests": 3878,
+            "requestedBytes": 99742,
+            "retains": 4625,
+            "peakChargedBytes": 1040,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-boxed-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1331650,
+            1547190,
+            1475402,
+            1314960,
+            1272416
+          ],
+          "medianProcessWallNs": 1331650,
+          "sourceSha256": "90b84877e4b9518cb551d7665ba6a7449a0ba87479c97dd5445d0e71811cf21a",
+          "generatedSha256": "3dcb32c89b6e99bfbfc380304562e47bc8d25a983cf3459b86e42cb69ad461ff",
+          "nativeWorkers": 0,
+          "nativeWorkerStack": []
+        },
+        "records-native": {
+          "output": "[(Point {remaining = 0, total = 1792, x = 2.5600000000000000000000000000000005e2, y = 0.0}, 2.5600000000000000000000000000000005e2), (Point {remaining = 0, total = 1792, x = 2.5700000000000000000000000000000005e2, y = 2.4010008506236818859974943210377966e45}, 2.4010008506236818859974943210377966e45), (Point {remaining = 0, total = 1792, x = 2.5350000000000000000000000000000002e2, y = -6.002502126559204714993735802594488e45}, -6.002502126559204714993735802594488e45)]\n([(3.0, 1), (2.5, -1)], [(3.0, 1), (2.5, -1)])\n",
+          "counters": {
+            "requests": 48,
+            "requestedBytes": 1590,
+            "retains": 12,
+            "peakChargedBytes": 1040,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-fstack-usage",
+              "-w",
+              "-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.o"
+            ],
+            [
+              "clang",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.c.o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/float.cpp.o",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/bundle-evidence/wide/records-native-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            1249015,
+            1291685,
+            1708188,
+            1378571,
+            1333192
+          ],
+          "medianProcessWallNs": 1333192,
+          "sourceSha256": "90b84877e4b9518cb551d7665ba6a7449a0ba87479c97dd5445d0e71811cf21a",
+          "generatedSha256": "fc931615cd9d2284abbf3511b470e0306c3f0f012a2f80115c1300af0873884d",
+          "nativeWorkers": 2,
+          "nativeWorkerStack": [
+            {
+              "function": "fwp_wide8",
+              "bytes": 200,
+              "qualifier": "static"
+            }
+          ]
+        }
+      },
+      "scope": "Equivalent checked arithmetic with worker lowering enabled/disabled. Fixed 256-step scalar sums and numeric record walks. Exact quad software arithmetic is linked identically in both variants. Process timings include startup and output; no speed threshold. Separate instrumented binaries count managed requests, retains and charged live storage, excluding allocator metadata. Native disassembly, symbols and compiler stack-usage reports are retained. Stack figures describe one invocation, not total recursive depth. No universal C/Rust parity claim."
+    }
+  }
+}

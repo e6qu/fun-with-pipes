@@ -1,5 +1,7 @@
 //! Gradients own active tape buffers across callback return and nonlocal exits.
 use std::path::PathBuf;
+#[path = "support/c_instrument.rs"]
+mod c_instrument;
 use std::process::{Command, Output};
 struct Scratch(PathBuf);
 impl Scratch {
@@ -64,8 +66,7 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
         + start;
     let declarations =
         "static void scope_probe_free(void *);\nstatic void *scope_probe_calloc(size_t,size_t);\n";
-    let tape_code = original[start..end]
-        .replace("free(", "scope_probe_free(")
+    let tape_code = c_instrument::calls(&original[start..end], &[("free", "scope_probe_free")])
         .replace("(double *)calloc(", "(double *)scope_probe_calloc(");
     let runtime = format!(
         "{}{}{}{}",
@@ -79,11 +80,14 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
         "int original_main(int argc, char **argv)",
     );
     let link = "    fwp_tape_link_scope(t, (int32_t)slot);";
-    let unlink = "    fwp_tape_unlink_scope(t);\n    fwp_tape tp = *t;";
+    let unlink = "    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);\n    fwp_tape_unlink_scope(t);\n    fwp_tape tp = *t;";
     assert_eq!(runtime.matches(link).count(), 1);
     assert_eq!(runtime.matches(unlink).count(), 1);
     let unlinked = runtime.replace(link, "");
-    let unconsumed = runtime.replace(unlink, "    fwp_tape tp = *t;");
+    let unconsumed = runtime.replace(
+        unlink,
+        "    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);\n    fwp_tape tp = *t;",
+    );
     let fresh = "fwp_rc_fresh(fwp_p_ad_backward(l0, l1, l2))";
     assert_eq!(runtime.matches(fresh).count(), 1);
     let uncounted = runtime.replace(fresh, call);

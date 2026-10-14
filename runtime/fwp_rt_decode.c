@@ -86,7 +86,7 @@ static V fwp_decode_sequence(fwp_decode_fields *f, const fwp_desc *d) {
         owner.value = fwp_rc_fresh(fwp_array_new_packed(f->count, d->elem));
         fwp_array_set_len(owner.value, 0);
         for (size_t i = 0; i < f->count; i++) {
-            fwp_array_store(owner.value, i, f->values[i], d->elem);
+            fwp_array_store_owned(owner.value, i, f->values[i], d->elem);
             fwp_array_set_len(owner.value, i + 1);
             f->values[i] = 0;
         }

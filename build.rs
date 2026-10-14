@@ -108,6 +108,16 @@ fn main() {
     for name in macros {
         code.push_str(&format!("\n#undef {name}\n"));
     }
+    let mut header = String::from("#include <stddef.h>\n");
+    let mut header_seen = BTreeSet::new();
+    append(&root.join("platform.h"), &mut header_seen, &mut header);
+    append(&root.join("softfloat.h"), &mut header_seen, &mut header);
+    append(
+        Path::new("runtime/fwp_float_abi.h"),
+        &mut header_seen,
+        &mut header,
+    );
+    fs::write(out.join("float_abi.h"), header).unwrap();
     let source = out.join("softfloat.c");
     fs::write(&source, code).unwrap();
     let object = out.join("softfloat.o");

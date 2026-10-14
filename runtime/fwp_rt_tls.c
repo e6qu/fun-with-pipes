@@ -276,7 +276,7 @@ static int fwp_is_ip(const char *s) {
  * (SNI and verification; "" for none), the protocols to offer, and a
  * client certificate chain and key ("" for none; the key may be in the
  * certificate's file) */
-static SSL *fwp_tls_client_new(int fd, const char *ca, int verify, const char *name, const unsigned char *alpn,
+static SSL *fwp_tls_client_new(fwp_socket_t fd, const char *ca, int verify, const char *name, const unsigned char *alpn,
                                unsigned alpn_n, const char *cert, const char *key) {
     ERR_clear_error();
     SSL_CTX *ctx = fwp_tls_client_ctx(ca, verify);
@@ -290,7 +290,13 @@ static SSL *fwp_tls_client_new(int fd, const char *ca, int verify, const char *n
         snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot create a TLS session: %s", fwp_tls_reason());
         return 0;
     }
-    SSL_set_fd(ssl, fd);
+    /* OpenSSL documents this Windows SOCKET cast; retain the native width
+     * everywhere else. https://docs.openssl.org/3.5/man3/SSL_set_fd/ */
+    if (!SSL_set_fd(ssl, (int)fd)) {
+        snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot attach a TLS socket: %s", fwp_tls_reason());
+        SSL_free(ssl);
+        return 0;
+    }
     SSL_set_connect_state(ssl);
     /* SNI only for host names (RFC 6066) */
     if (*name && !fwp_is_ip(name)) SSL_set_tlsext_host_name(ssl, name);
@@ -427,21 +433,30 @@ static void fwp_tls_free(void *p) {
     fwp_tls_dispose(p);
 }
 
-static void *fwp_tls_accepted(void *ctx, int fd) {
+static void *fwp_tls_accepted(void *ctx, fwp_socket_t fd) {
     fwp_tls_server_owner *owner = (fwp_tls_server_owner *)SSL_CTX_get_app_data((SSL_CTX *)ctx);
     if (!owner || !owner->refs) abort();
     if (owner->refs == SIZE_MAX) fwp_trap("too many TLS context references");
     SSL *ssl = SSL_new((SSL_CTX *)ctx);
-    if (!ssl) return 0;
+    if (!ssl) {
+        snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot create a TLS session: %s", fwp_tls_reason());
+        return 0;
+    }
+    /* OpenSSL documents this Windows SOCKET cast; retain the native width
+     * everywhere else. https://docs.openssl.org/3.5/man3/SSL_set_fd/ */
+    if (!SSL_set_fd(ssl, (int)fd)) {
+        snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot attach a TLS socket: %s", fwp_tls_reason());
+        SSL_free(ssl);
+        return 0;
+    }
     owner->refs++;
-    SSL_set_fd(ssl, fd);
     SSL_set_accept_state(ssl);
     return ssl;
 }
 
 /* finish the handshake, waiting in the task: 1, or 0 with the reason in
  * fwp_tls_err (or `at` passed: "timeout") */
-static int fwp_tls_finish(SSL *ssl, int fd, int64_t at) {
+static int fwp_tls_finish(SSL *ssl, fwp_socket_t fd, int64_t at) {
     for (;;) {
         int ww = 0;
         ssize_t k = fwp_tls_step(ssl, &ww);
@@ -526,7 +541,7 @@ static V fwp_p_tls_listen(V cert, V key, V protos, V client_ca, V addr, const fw
 }
 
 static V fwp_p_tls_handshake(V c, const fwp_desc *err) {
-    if (SOCK(c)->fd < 0) return fwp_closed_error("connection", err);
+    if (SOCK(c)->fd == FWP_INVALID_SOCKET) return fwp_closed_error("connection", err);
     if (!SOCK(c)->tls || SOCK(c)->kind != 1 || SSL_is_init_finished((SSL *)SOCK(c)->tls)) return FWP_UNIT;
     if (!fwp_tls_finish((SSL *)SOCK(c)->tls, SOCK(c)->fd, 0)) return fwp_io_error("tls", fwp_tls_err, err);
     return FWP_UNIT;

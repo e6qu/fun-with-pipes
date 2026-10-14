@@ -1,3 +1,6 @@
+#ifdef _WIN32
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>

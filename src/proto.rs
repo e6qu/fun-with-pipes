@@ -7,6 +7,7 @@
 //! and lists, arrays, maps and sets are a count followed by their elements.
 
 use crate::ir::{Program, TypeShape, MT};
+use crate::softfloat::{BFloat16, Binary128, Binary16};
 use crate::value::Value;
 
 pub fn leb128(out: &mut Vec<u8>, mut x: u64) {
@@ -44,6 +45,10 @@ pub fn encode(out: &mut Vec<u8>, v: &Value, mt: &MT, prog: &Program) {
         Value::U128(x) => out.extend_from_slice(&x.to_le_bytes()),
         Value::F32(x) => out.extend_from_slice(&x.to_bits().to_le_bytes()),
         Value::F64(x) => out.extend_from_slice(&x.to_bits().to_le_bytes()),
+        Value::F16(x) => out.extend_from_slice(&x.to_bits().to_le_bytes()),
+        Value::BF16(x) => out.extend_from_slice(&x.to_bits().to_le_bytes()),
+        Value::F128(x) => out.extend_from_slice(&x.to_bits().to_le_bytes()),
+
         Value::TInt(x) => out.extend_from_slice(&x.to_le_bytes()),
         Value::Trit(x) => out.push(*x as u8),
         Value::Str(s) => {
@@ -229,8 +234,12 @@ pub fn decode(r: &mut Reader, mt: &MT, prog: &Program) -> Result<Value, String> 
             "U32" => Value::U32(u32::from_le_bytes(r.arr()?)),
             "U64" | "USize" => Value::U64(u64::from_le_bytes(r.arr()?)),
             "U128" => Value::U128(u128::from_le_bytes(r.arr()?)),
-            "F32" | "F16" | "BF16" => Value::F32(f32::from_bits(u32::from_le_bytes(r.arr()?))),
-            "F64" | "F128" => Value::F64(f64::from_bits(u64::from_le_bytes(r.arr()?))),
+            "F32" => Value::F32(f32::from_bits(u32::from_le_bytes(r.arr()?))),
+            "F64" => Value::F64(f64::from_bits(u64::from_le_bytes(r.arr()?))),
+            "F16" => Value::F16(Binary16::from_bits(u16::from_le_bytes(r.arr()?))),
+            "BF16" => Value::BF16(BFloat16::from_bits(u16::from_le_bytes(r.arr()?))),
+            "F128" => Value::F128(Binary128::from_bits(u128::from_le_bytes(r.arr()?))),
+
             "TInt" => {
                 let Some(MT::Nat(width)) = args.first() else {
                     return Err("invalid TInt width".into());
@@ -406,8 +415,8 @@ pub fn canonical_type(mt: &MT, prog: &Program) -> String {
 
 /// 128-bit fingerprint of a canonical type string (little-endian halves).
 pub fn fingerprint(canonical: &str) -> [u8; 16] {
-    let a = fnv1a64(canonical.as_bytes());
-    let b = fnv1a64(format!("fwp:{}", canonical).as_bytes());
+    let a = fnv1a64(format!("fwp:{VERSION}:{canonical}").as_bytes());
+    let b = fnv1a64(format!("fwp:{VERSION}:type:{canonical}").as_bytes());
     let mut out = [0u8; 16];
     out[..8].copy_from_slice(&a.to_le_bytes());
     out[8..].copy_from_slice(&b.to_le_bytes());
@@ -417,7 +426,7 @@ pub fn fingerprint(canonical: &str) -> [u8; 16] {
 // ------------------------------------------------------------------- framing
 
 pub const MAGIC: &[u8; 4] = b"FWP1";
-pub const VERSION: u8 = 1;
+pub const VERSION: u8 = 2;
 /// Capabilities this implementation offers: the stream itself, and
 /// switching it to a Unix domain socket or to shared memory
 /// (`src/transport.rs`); other reserved names are listed in
@@ -501,9 +510,15 @@ pub fn read_header(r: &mut impl std::io::Read) -> Result<Header, String> {
         Ok(n as usize)
     };
     let version = byte(r, &mut b1)?;
+    if version != VERSION {
+        return Err(format!("unsupported protocol version {version}"));
+    }
     let ncaps = leb(r)?;
     let mut capabilities = Vec::new();
-    for _ in 0..ncaps.min(64) {
+    if ncaps > 64 {
+        return Err("too many protocol capabilities".into());
+    }
+    for _ in 0..ncaps {
         let n = name_len(r)?;
         let mut s = vec![0u8; n];
         r.read_exact(&mut s).map_err(|_| "truncated header")?;

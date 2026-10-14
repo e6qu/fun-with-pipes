@@ -107,13 +107,12 @@ requirements at unproved boundaries, which checked native ARC explicitly rejects
 | Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
-The current inventory verifies 375 declarations resolving to 365 runtime symbols
-after 40 aliases: 207 explicit contracts, 19 ordinary IR combinators, 11 flat
-scalar signatures and 138 review declarations representing 128 symbols. The
-immutable baseline retains the original classification; exact promotion checks
-cover the 39 CSV/numeric/decoder additions. This includes typed State, internal
-ad.scope/ad.scope2 and 14 fresh codec leaves.
-These counts classify boundaries rather than heap objects or bugs. Full production
+The executable inventory verifies every declaration, resolved runtime symbol and
+alias against the immutable original classification. Explicit promotion checks
+cover CSV, numeric, decoder and CLI ownership plus nonreturning failure. It also
+checks typed State, internal ad.scope/ad.scope2 and fresh codec leaves. The
+generated report records current counts; these classify boundaries rather than
+heap objects or bugs. Full production
 acceptance is recorded in [the handoff](development-state.md).
 Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
 when no proven borrowing contract applies; scalar words remain uncounted.
@@ -225,9 +224,12 @@ unbounded retention for small results. Pointer/resource slices always copy to
 preserve disposal order. Natural alignment follows backing alignment and element
 stride; this is not a guarantee of cache-line or SIMD-register alignment.
 
-F16/BF16 retain F32 precision and 4-byte payloads; F128 retains F64 precision
-and 8-byte payloads. [The format decision](float-formats.md) specifies the
-future precision, conversion and coordinated protocol migration. I128/U128
+The active PR migrates F16/BF16 to two-byte payloads and F128 to inline
+16-byte array payloads. Quad array reads borrow internal bits; escaping scalars
+copy into independent owned boxes. Quad stride stays 16 even with narrow packing
+disabled. Generic quad values remain boxed; closed quad workers use bit structs.
+[The format contract](float-formats.md) records actual validation and the
+coordinated protocol v2 migration. I128/U128
 remain boxed in generic word slots and containers; eligible scalar workers
 use native wide arguments, locals and results.
 The handoff records accepted source and its actual runner gates.
@@ -315,8 +317,8 @@ lifetimes, shared graph ownership or general execution without tracing.
 ## Ownership coverage
 
 The handoff separates accepted phase 2 evidence from the active extensions.
-All 375 declarations are inventoried: 207 contracts, 19 IR combinators, 11 flat
-signatures and 138 explicit review declarations/128 symbols. Their argument,
+All declarations are inventoried as contracts, ordinary IR combinators, flat
+signatures or explicit review boundaries. Their argument,
 result, callback, retention, teardown and cycle policies are checked against the
 compiler and runtime. This establishes the documented compatibility model.
 
@@ -325,6 +327,15 @@ a typed contract proves their complete graph and teardown. Channel close preserv
 queued values; draining breaks the tested counted cycle. Unreachable shared cycles
 still require tracing. Natural numeric storage/views and optimized kernels
 must preserve these lifetimes. Checked native ARC has the eligibility boundaries below.
+
+PR #135 also admits immutable retained-task graphs in checked ARC, pending runner
+acceptance. Scheduler, scope and caller references have separate owners; task
+results retain typed references for repeated awaits. A child starts fresh State/AD
+stacks, and closure-flow validation cannot inherit its parent's dynamic lifetimes.
+Captures can reference older task handles; channels, raw pointers and unknown
+external callbacks cannot publish a mutable back-edge in this admitted subset.
+Unproved cyclic graphs remain a compile-time diagnostic in ARC. Tracing remains
+an explicitly selected mode for programs that need those graphs.
 
 ## Original resource semantics
 
@@ -358,12 +369,20 @@ boundaries and cycle policy, with physical reclamation verified below.
 
 ## Checked ARC delivery
 
-Foreign C calls with only scalar numeric, Boolean and unit ABI values carry no
-language owners and are admitted by checked ARC. Admission uses the actual C
-signature classification. Strings, pointers, records and callbacks still need
-separate lifetime and result-adoption proofs; uncounted pointer bits alone are
-not a proof. The scalar-call regression compares raw interpretation with native
-O1/O2 execution and the physical reclamation ledger.
+Foreign C calls with scalar numeric, Boolean and unit ABI values carry no
+language owners. PR #135 extends admission to recursively copied C records,
+scoped String/Bytes borrows and synchronous callbacks with copied scalar C
+arguments/results. Foreign strings are copied into owned language results.
+Typed closure captures stay alive for the foreign call. Callback contexts live
+on that task's C stack and are restored after reentry, suspension, failure and
+cancellation. Callback inputs and results own typed temporary boxes, including
+quad values. Partial argument construction releases initialized owners.
+
+This relies on the declared C ABI contract: C must copy borrowed strings/bytes
+before retaining them and invoke callbacks only on the calling task before
+return. Raw pointers and callbacks returning managed C addresses are explicitly
+rejected by ARC; pointer bits alone cannot establish a pointee lifetime. Runner
+acceptance of these extensions remains recorded in the handoff.
 
 The compiler checks `--gc arc` against monomorphic value shapes and
 primitive contracts, with the cycle policy described in [design](design.md#checked-native-arc-execution).
@@ -406,9 +425,12 @@ fields before trying the next declared alternative. Binary truncation and
 injected construction exits test the same cleanup contract. Binary Trit and
 TInt values are range-checked consistently with the interpreter; malformed
 fields release already reconstructed owners. JSON parse/read
-and typed CSV have OwnedTree primitive results. This does not admit the
-external executable/remote protocol boundary to checked ARC; its retained
-contexts still require a separate proof.
+and typed CSV have OwnedTree primitive results. CLI parsing now owns overwritten
+flags, repeated spines, defaults, optional fields, diagnostics and partial
+records. Native function executables have typed argument/frame/result owners,
+unwind cleanup and transport teardown. Checked ARC admits those executable
+entries; raw/native agreement and physical-reclamation controls are pending in
+the active PR. Remote and service contexts remain outside this admission.
 
 Scoped State reachability tracks callback targets, captures and values stored
 in State. get/put/modify must execute under a proven handler; returning a

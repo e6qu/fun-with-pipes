@@ -458,6 +458,15 @@ static void fwp_jt_write(fwp_buf *b, V v, const fwp_desc *d) {
     case K_U128: fwp_fmt_u128(t, fwp_u128(v)); buf_putc(b, '"'); buf_puts(b, t); buf_putc(b, '"'); return;
     case K_F32: fwp_fmt_f32(t, fwp_f32(v)); fwp_jt_float(b, (double)fwp_f32(v), t); return;
     case K_F64: fwp_fmt_f64(t, fwp_f64(v)); fwp_jt_float(b, fwp_f64(v), t); return;
+#ifdef FWP_EXACT_FLOAT
+    case K_F16: case K_BF16: case K_F128:
+        fwp_fmt_exact(t, d->kind, v);
+        if (!strcmp(t, "NaN")) buf_puts(b, "\"NaN\"");
+        else if (!strcmp(t, "inf")) buf_puts(b, "\"Infinity\"");
+        else if (!strcmp(t, "-inf")) buf_puts(b, "\"-Infinity\"");
+        else buf_puts(b, t);
+        return;
+#endif
     case K_STR: fwp_jescape(b, v); return;
     case K_BYTES: {
         const unsigned char *s = (const unsigned char *)STR(v)->d;
@@ -1002,6 +1011,14 @@ static int fwp_jt_read_inner(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *o
         *out = (V)(neg ? -(int64_t)mag : (int64_t)mag);
         return 1;
     }
+#ifdef FWP_EXACT_FLOAT
+    case K_F16: case K_BF16: case K_F128: {
+        char *t = fwp_jt_floattext(c, r);
+        if (!t) return 0;
+        int ok = fwp_parse_exact(t, d->kind, out);
+        free(t); return ok;
+    }
+#endif
     case K_F32: case K_F64: {
         char *t = fwp_jt_floattext(c, r);
         if (!t) return 0;
@@ -1030,7 +1047,7 @@ static int fwp_jt_read_inner(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *o
             fwp_jt_push_index(c, i);
             if (!fwp_jt_read(c, &r->items[i], d->elem, &fields->values[array ? 0 : i])) return 0;
             if (array) {
-                fwp_array_store(fields->aggregate, i, fields->values[0], d->elem);
+                fwp_array_store_owned(fields->aggregate, i, fields->values[0], d->elem);
                 fwp_array_set_len(fields->aggregate, i + 1);
                 fields->values[0] = 0;
             }
@@ -1181,7 +1198,7 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
     fwp_decode_fields fields = {0};
     int ok = fwp_jt_read_inner(c, r, d, out, &fields);
     if (fields.active) fwp_decode_fields_end(&fields, 0);
-    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128)) fwp_rc_fresh(*out);
+    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128 || d->kind == K_F128)) fwp_rc_fresh(*out);
     return ok;
 }
 

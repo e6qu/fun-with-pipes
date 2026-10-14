@@ -463,6 +463,7 @@ impl Fuser<'_> {
         enum Source {
             Successors { initial: Expr, advance: Expr },
             List(Expr),
+            Array(Expr),
         }
         let producer = if std::env::var("FWP_ITER_PRODUCERS").is_ok_and(|v| v == "0") {
             None
@@ -484,7 +485,17 @@ impl Fuser<'_> {
                         advance: advance.clone(),
                     })
                 }
-                (Some("std::iter.from-list"), [list]) => Some(Source::List(list.clone())),
+                (Some("std::iter.from-list"), [list]) => {
+                    if let Expr::Call(convert, input) = list {
+                        if prim_sym(funcs, *convert) == Some("array.to-list") && input.len() == 1 {
+                            Some(Source::Array(input[0].clone()))
+                        } else {
+                            Some(Source::List(list.clone()))
+                        }
+                    } else {
+                        Some(Source::List(list.clone()))
+                    }
+                }
                 _ => None,
             }
         } else {
@@ -496,7 +507,30 @@ impl Fuser<'_> {
                 ("1".into(), src_elem.clone()),
             ]),
             Some(Source::List(source)) => self.ty_in(&self.locals, source)?,
+            Some(Source::Array(source)) => MT::Record(vec![
+                ("0".into(), self.ty_in(&self.locals, source)?),
+                ("1".into(), i64.clone()),
+            ]),
             _ => iterator_ty.clone(),
+        };
+        // An immutable array has no observable work when converted to a list
+        // except allocating that list. Keep its owner and read in index order;
+        // an option match preserves the existing checked access operation.
+        let array_access = if let Some(Source::Array(source)) = &producer {
+            let array = self.ty_in(&self.locals, source)?;
+            let option = MT::Con("std::Option".into(), vec![src_elem.clone()]);
+            self.shapes.entry(option.clone()).or_insert_with(|| {
+                TypeShape::Adt(vec![
+                    ("None".into(), vec![]),
+                    ("Some".into(), vec![src_elem.clone()]),
+                ])
+            });
+            Some((
+                self.prim("array.get", fun2(&i64, &array, &option), 2),
+                self.prim("prim.add", fun2(&i64, &i64, &i64), 2),
+            ))
+        } else {
+            None
         };
         let lt = self.prim("lt", fun2(&i64, &i64, &MT::con("std::Bool")), 2);
         let subp = self.prim("prim.sub", fun2(&i64, &i64, &i64), 2);
@@ -558,6 +592,9 @@ impl Fuser<'_> {
                 ])
             }
             Some(Source::List(list)) => list.clone(),
+            Some(Source::Array(array)) => {
+                Expr::Record(vec![array.clone(), Expr::Const(Value::I64(0))])
+            }
             _ => cur.clone(),
         };
         let src = {
@@ -620,6 +657,7 @@ impl Fuser<'_> {
             match &producer {
                 Some(Source::Successors { .. }) => src_elem,
                 Some(Source::List(_)) => src_ty.clone(),
+                Some(Source::Array(_)) => i64.clone(),
                 _ => MT::Fun(Box::new(MT::unit()), Box::new(iterator_ty.clone())),
             },
         ];
@@ -636,6 +674,9 @@ impl Fuser<'_> {
                     ),
                 ]),
                 Some(Source::List(_)) => Expr::Local(t),
+                Some(Source::Array(_)) => {
+                    Expr::Record(vec![Expr::Field(Box::new(st(0)), 0), Expr::Local(t)])
+                }
                 _ => Expr::Apply(Box::new(Expr::Local(t)), vec![unit.clone()]),
             };
             let mut fs = vec![tail, acc.clone()];
@@ -758,6 +799,25 @@ impl Fuser<'_> {
                     Box::new(Expr::Field(Box::new(st(0)), 1)),
                     Box::new(body),
                 )),
+            )
+        } else if let Some((get, next)) = array_access {
+            let index = Expr::Field(Box::new(st(0)), 1);
+            Expr::Match(
+                Box::new(Expr::Call(
+                    get,
+                    vec![index.clone(), Expr::Field(Box::new(st(0)), 0)],
+                )),
+                vec![
+                    (
+                        Pat::Construct(1, vec![Pat::Bind(h)]),
+                        Expr::Let(
+                            t,
+                            Box::new(Expr::Call(next, vec![Expr::Const(Value::I64(1)), index])),
+                            Box::new(body),
+                        ),
+                    ),
+                    (Pat::Wild, stop.clone()),
+                ],
             )
         } else {
             Expr::Match(

@@ -1296,8 +1296,8 @@ static void fwp_gc_sweep(void) {
 /* a stack address below the caller's frame */
 static __attribute__((noinline)) char *fwp_gc_sp(void) { return (char *)__builtin_frame_address(0); }
 
-static __attribute__((noinline)) void fwp_gc_mark_all(void) {
-    fwp_gc_scan_stacks(fwp_gc_sp());
+static __attribute__((noinline)) void fwp_gc_mark_all(char *stack_start) {
+    fwp_gc_scan_stacks(stack_start);
     fwp_gc_drain();
     fwp_gc_scan_data();
     fwp_gc_drain();
@@ -1335,7 +1335,7 @@ static void fwp_gc_scan_old_filled(void) {
 
 /* FWP_GC_VERIFY: after a minor collection's marking, trace everything
  * again from scratch; an object reachable then must have been marked */
-static void fwp_gc_verify_minor(void) {
+static void fwp_gc_verify_minor(char *stack_start) {
     size_t n = fwp_gc.top;
     uint64_t(*saved)[GC_CHUNK / 16 / 64] = malloc(n * sizeof *saved);
     uint8_t *saved_big = malloc(n ? n : 1);
@@ -1345,7 +1345,7 @@ static void fwp_gc_verify_minor(void) {
         saved_big[ci] = fwp_gc.meta[ci].mark;
     }
     fwp_gc_clear_marks();
-    fwp_gc_mark_all();
+    fwp_gc_mark_all(stack_start);
     for (size_t ci = 0; ci < n; ci++) {
         gc_chunk *m = &fwp_gc.meta[ci];
         int missed = 0;
@@ -1410,11 +1410,17 @@ static __attribute__((noinline)) void fwp_gc_collect(void) {
     jmp_buf regs;
     __builtin_unwind_init();
     setjmp(regs);
+    /* Both traces must see the same mutator stack range. Collector frames
+     * contain transient heap addresses while scanning metadata; treating those
+     * addresses as new roots during verification can resurrect dead objects
+     * and report a false missed root. Keep the saved registers in the range,
+     * but exclude marking, old-generation scanning and verifier frames. */
+    char *stack_start = fwp_gc_sp();
     fwp_gc.root_bytes = 0;
-    fwp_gc_mark_all();
+    fwp_gc_mark_all(stack_start);
     if (!major) {
         fwp_gc_scan_old_filled();
-        if (fwp_gc.verify) fwp_gc_verify_minor();
+        if (fwp_gc.verify) fwp_gc_verify_minor(stack_start);
     }
     fwp_gc_finalize();
     fwp_gc_sweep();
@@ -1486,7 +1492,16 @@ static void fwp_gc_report(void) {
 /* called at the top of the main thread: collection may start */
 static void fwp_gc_start(void *top) {
     if (!fwp_gc.ready) fwp_gc_init();
+#ifdef _WIN32
+    /* Windows frame pointers may sit near the bottom of a large frame.
+     * Its higher locals are roots too; use the OS thread/fiber stack bound. */
+    (void)top;
+    ULONG_PTR low, high;
+    GetCurrentThreadStackLimits(&low, &high);
+    fwp_gc.main_top = (char *)high;
+#else
     fwp_gc.main_top = (char *)top;
+#endif
 #ifdef __linux__
     dl_iterate_phdr(fwp_gc_find_data, 0);
 #elif defined(__APPLE__) || defined(_WIN32)
@@ -1568,7 +1583,25 @@ typedef struct {
 /* WASI has no runtime threads. Native cleanup may enter through a host
  * callback, so its temporary work context is per thread. No safe point
  * or collected allocation occurs while processing this queue. */
-#if defined(FWP_LIBRARY) && !defined(__wasm__)
+#if defined(FWP_LIBRARY) && defined(_WIN32)
+static DWORD fwp_closure_drop_key = TLS_OUT_OF_INDEXES;
+static void fwp_closure_drop_init(void) {
+    if (fwp_closure_drop_key != TLS_OUT_OF_INDEXES) return;
+    fwp_closure_drop_key = TlsAlloc();
+    if (fwp_closure_drop_key == TLS_OUT_OF_INDEXES) fwp_trap("cannot create closure cleanup key");
+}
+static fwp_closure_drop_work *fwp_closure_drop_get(void) {
+    return fwp_closure_drop_key == TLS_OUT_OF_INDEXES ? NULL : TlsGetValue(fwp_closure_drop_key);
+}
+static void fwp_closure_drop_set(fwp_closure_drop_work *work) {
+    if (fwp_closure_drop_key == TLS_OUT_OF_INDEXES || !TlsSetValue(fwp_closure_drop_key, work)) abort();
+}
+static void fwp_closure_drop_finish(void) {
+    if (fwp_closure_drop_key == TLS_OUT_OF_INDEXES) return;
+    TlsFree(fwp_closure_drop_key);
+    fwp_closure_drop_key = TLS_OUT_OF_INDEXES;
+}
+#elif defined(FWP_LIBRARY) && !defined(__wasm__)
 /* A native TLS descriptor can keep a dylib resident after dlclose on Darwin.
  * Libraries use an explicitly deleted pthread key for the same per-thread
  * temporary context. Initialization happens before accepting any export call. */

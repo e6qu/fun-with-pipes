@@ -19,6 +19,47 @@
 
 /* ------------------------------------------------------------------ tapes */
 
+/* Nested reverse weights are language values. Keep them in scanned mutable
+ * storage with explicit typed owners, rooted independently of the reallocable
+ * numeric registry. Detached backward passes stay on this list across reentry. */
+typedef struct fwp_owned_tape {
+    struct fwp_owned_tape *prev, *next;
+    const fwp_desc *elem;
+    V zero, add, mul, inactive_zero;
+    V *weights, *adj;
+    int64_t leaves, len, cap, nadj;
+} fwp_owned_tape;
+static fwp_owned_tape *fwp_owned_tapes;
+
+static void fwp_owned_tape_release(void *pointer) {
+    fwp_owned_tape *owner = pointer;
+    if (!owner) return;
+    if (owner->prev) owner->prev->next = owner->next;
+    else fwp_owned_tapes = owner->next;
+    if (owner->next) owner->next->prev = owner->prev;
+    if (owner->elem->drop) {
+        for (int64_t i = owner->leaves; i < owner->len; i++) {
+            owner->elem->drop(owner->weights[2*i]);
+            owner->elem->drop(owner->weights[2*i+1]);
+        }
+        for (int64_t i = 0; i < owner->nadj; i++) owner->elem->drop(owner->adj[i]);
+        owner->elem->drop(owner->zero);
+    }
+    fwp_closure_drop(owner->add); fwp_closure_drop(owner->mul);
+    fwp_closure_drop(owner->inactive_zero);
+    fwp_mem_free(owner->weights); fwp_mem_free(owner->adj); fwp_mem_free(owner);
+}
+
+static void fwp_owned_tape_reserve(fwp_owned_tape *owner, int64_t cap) {
+    if (cap <= owner->cap) return;
+    if ((uint64_t)cap > (size_t)PTRDIFF_MAX / (2 * sizeof(V)))
+        fwp_trap("autodiff: the tape is full");
+    V *weights = fwp_mem_realloc(owner->weights, (size_t)owner->cap * 2 * sizeof(V),
+                               (size_t)cap * 2 * sizeof(V));
+    memset(weights + 2 * owner->cap, 0, (size_t)(cap - owner->cap) * 2 * sizeof(V));
+    owner->weights = weights; owner->cap = cap;
+}
+
 typedef struct {
     int32_t head;
 } fwp_tape_scope;
@@ -32,6 +73,7 @@ typedef struct {
     int64_t adjcap;
     fwp_tape_scope *scope;
     int32_t scope_prev, scope_next;
+    fwp_owned_tape *owned;
 } fwp_tape;
 
 static fwp_tape *fwp_tapes = 0;
@@ -77,7 +119,7 @@ static void fwp_tape_link_scope(fwp_tape *t, int32_t slot) {
 #endif
 }
 
-static V fwp_ad_scope_apply(V callback, uint32_t argc, const V *args) {
+static V fwp_ad_scope_apply(V callback, uint32_t argc, V *args) {
     fwp_tape_scope scope = {-1};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);
@@ -100,7 +142,8 @@ static V fwp_p_ad_scope2(V callback, V first, V second) {
 static const char *FWP_AD_OUTSIDE =
     "autodiff: a reverse-mode value was used after the grad that made it returned";
 static const char *FWP_AD_MIXED =
-    "autodiff: values of two different grad computations were combined (nested reverse mode is not supported)";
+    "autodiff: values of two different grad computations were combined";
+static const char *FWP_AD_REPRESENTATION = "autodiff: tape scalar representation mismatch";
 
 static const char *FWP_AD_INVALID_NODE = "autodiff: invalid node index";
 
@@ -119,7 +162,8 @@ static int fwp_tape_workspace_enabled(void) {
     const char *setting = getenv("FWP_AD_WORKSPACE");
     return !setting || strcmp(setting, "0") != 0;
 }
-static void fwp_tape_buffers_dispose(fwp_tape_buffers *b) {
+static void fwp_tape_buffers_dispose(void *pointer) {
+    fwp_tape_buffers *b = pointer;
     free(b->pa);
     free(b->pb);
     free(b->da);
@@ -145,9 +189,13 @@ static void fwp_tape_buffers_release(void *arg) {
 }
 static void fwp_tape_retire(fwp_tape *t) {
     fwp_tape_buffers buffers = {t->pa, t->pb, t->da, t->db, t->adj, t->cap, t->adjcap};
+    fwp_owned_tape *owned = t->owned; t->owned = NULL;
     t->pa = t->pb = 0;t->da = t->db = t->adj = 0;
     t->live = 0;t->len = t->cap = t->leaves = t->adjcap = 0;
-    fwp_tape_buffers_release(&buffers);
+    if (owned) {
+        fwp_tape_buffers_dispose(&buffers);
+        fwp_owned_tape_release(owned);
+    } else fwp_tape_buffers_release(&buffers);
 }
 static void fwp_tape_finish(void) {
     /* Shutdown releases both the bounded cache and unscoped live tapes. */
@@ -156,17 +204,12 @@ static void fwp_tape_finish(void) {
         fwp_tape *t = &fwp_tapes[i];
         fwp_tape_buffers buffers = {t->pa, t->pb, t->da, t->db, t->adj, t->cap, t->adjcap};
         fwp_tape_buffers_dispose(&buffers);
+        fwp_owned_tape_release(t->owned); t->owned = NULL;
     }
     free(fwp_tapes);fwp_tapes = 0;fwp_ntapes = 0;
 }
 
-#ifdef FWP_LIBRARY
-/* Private tape buffers have library lifetime, including GC-disabled libraries.
- * An explicit unload hook avoids keeping a separate process-exit owner. */
-static void __attribute__((destructor)) fwp_tape_library_finish(void) {
-    fwp_tape_finish();
-}
-#endif
+/* Library teardown calls this before freeing the managed heap. */
 
 static void *fwp_k_malloc(size_t n) {
     void *p = malloc(n ? n : 1);
@@ -204,6 +247,11 @@ static void fwp_tape_reserve(fwp_tape *t, int64_t n) {
     next = realloc(t->pb, (size_t)cap * sizeof(int32_t));
     if (!next) goto oom;
     t->pb = (int32_t *)next;
+    if (t->owned) {
+        fwp_owned_tape_reserve(t->owned, cap);
+        t->cap = cap;
+        return;
+    }
     next = realloc(t->da, (size_t)cap * sizeof(double));
     if (!next) goto oom;
     t->da = (double *)next;
@@ -221,7 +269,7 @@ oom:
     exit(102);
 }
 
-static V fwp_p_ad_tape(V nv) {
+static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
     int64_t n = (int64_t)nv;
     if (n < 0 || n > fwp_tape_limit()) fwp_trap("autodiff: too many inputs");
 #ifndef FWP_LIBRARY
@@ -245,7 +293,8 @@ static V fwp_p_ad_tape(V nv) {
         fwp_ntapes++;
     }
     fwp_tape *t = &fwp_tapes[slot];
-    if (fwp_tape_workspace_enabled() && fwp_tape_cached_bytes) {
+    t->owned = owned;
+    if (!owned && fwp_tape_workspace_enabled() && fwp_tape_cached_bytes) {
         t->pa = fwp_tape_workspace.pa;t->pb = fwp_tape_workspace.pb;
         t->da = fwp_tape_workspace.da;t->db = fwp_tape_workspace.db;t->adj = fwp_tape_workspace.adj;
         t->cap = fwp_tape_workspace.cap;t->adjcap = fwp_tape_workspace.adjcap;
@@ -259,13 +308,38 @@ static V fwp_p_ad_tape(V nv) {
     for (int64_t i = 0; i < n; i++) {
         t->pa[i] = -1;
         t->pb[i] = -1;
-        t->da[i] = 0.0;
-        t->db[i] = 0.0;
+        if (!owned) { t->da[i] = 0.0; t->db[i] = 0.0; }
     }
     t->len = n;
     fwp_tape_link_scope(t, (int32_t)slot);
     int64_t id = ((int64_t)t->gen << 16) | (slot + 1);
     return (V)(id << 32);
+}
+
+static V fwp_p_ad_tape(V nv) { return fwp_ad_tape_new(nv, NULL); }
+
+static V fwp_p_ad_tape_owned(V parameters, V inputs, const fwp_desc *elem) {
+    int64_t n = (int64_t)fwp_list_len(inputs);
+    if (n < 0 || n > fwp_tape_limit()) fwp_trap("autodiff: too many inputs");
+    fwp_owned_tape *owner = fwp_mem_alloc(sizeof *owner);
+    memset(owner, 0, sizeof *owner);
+    owner->elem = elem;
+    owner->zero = OBJ(parameters)->f[0];
+    owner->add = OBJ(parameters)->f[1]; owner->mul = OBJ(parameters)->f[2];
+    owner->inactive_zero = OBJ(parameters)->f[3];
+    if (elem->dup) elem->dup(owner->zero);
+    fwp_rc_dup(owner->add); fwp_rc_dup(owner->mul); fwp_rc_dup(owner->inactive_zero);
+    owner->leaves = owner->len = n;
+    owner->next = fwp_owned_tapes;
+    if (owner->next) owner->next->prev = owner;
+    fwp_owned_tapes = owner;
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_owned_tape_release, owner);
+    V base = fwp_ad_tape_new((V)n, owner);
+    fwp_cleanup_pop(&cleanup);
+    FWP_KEEP_ALIVE(parameters);
+    FWP_KEEP_ALIVE(inputs);
+    return base;
 }
 
 /* (a, da, b, db): a node with parents a and b (-1: none) */
@@ -282,6 +356,7 @@ static V fwp_p_ad_push(V tup) {
     }
     int64_t id = ra >> 32;
     fwp_tape *t = fwp_tape_of(id);
+    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);
     int64_t idx = t->len;
     if (idx >= fwp_tape_limit()) fwp_trap("autodiff: the tape is full");
     if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))
@@ -299,6 +374,7 @@ static V fwp_p_ad_push(V tup) {
 static V fwp_p_ad_backward(V base, V outs, V seeds) {
     int64_t id = (int64_t)base >> 32;
     fwp_tape *t = fwp_tape_of(id);
+    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);
     fwp_tape_unlink_scope(t);
     fwp_tape tp = *t;
     t->live = 0;
@@ -342,6 +418,99 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     fwp_cleanup_pop(&cleanup);
     fwp_tape_buffers_release(&buffers);
     return r;
+}
+
+static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {
+    int64_t ra = (int64_t)OBJ(tuple)->f[0], rb = (int64_t)OBJ(tuple)->f[2];
+    if (ra < 0 && rb < 0) return (V)(int64_t)-1;
+    if (ra >= 0 && rb >= 0 && (ra >> 32) != (rb >> 32)) fwp_trap(FWP_AD_MIXED);
+    int64_t id = (ra >= 0 ? ra : rb) >> 32;
+    fwp_tape *t = fwp_tape_of(id);
+    fwp_owned_tape *owner = t->owned;
+    if (!owner || owner->elem != elem) fwp_trap(FWP_AD_REPRESENTATION);
+    int64_t idx = t->len;
+    if (idx >= fwp_tape_limit()) fwp_trap("autodiff: the tape is full");
+    if ((ra >= 0 && (ra & 0xffffffff) >= idx) || (rb >= 0 && (rb & 0xffffffff) >= idx))
+        fwp_trap(FWP_AD_INVALID_NODE);
+    fwp_tape_reserve(t, idx + 1);
+    V da = OBJ(tuple)->f[1], db = OBJ(tuple)->f[3];
+    if (elem->dup) { elem->dup(da); elem->dup(db); }
+    owner->weights[2*idx] = da; owner->weights[2*idx+1] = db;
+    t->pa[idx] = ra < 0 ? -1 : (int32_t)(ra & 0xffffffff);
+    t->pb[idx] = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
+    owner->len = t->len = idx + 1;
+    FWP_KEEP_ALIVE(tuple);
+    return (V)((id << 32) | idx);
+}
+
+static V fwp_owned_tape_add(fwp_owned_tape *owner, V value, V old) {
+    V args[2] = {value, old};
+    V result = fwp_apply_borrowed(owner->add, 2, args);
+    if (owner->elem->drop) owner->elem->drop(old);
+    return result;
+}
+
+static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_type) {
+    int64_t id = (int64_t)base >> 32;
+    fwp_tape *t = fwp_tape_of(id);
+    fwp_owned_tape *owner = t->owned;
+    if (!owner || owner->elem != list_type->elem) fwp_trap(FWP_AD_REPRESENTATION);
+    fwp_tape_unlink_scope(t);
+    fwp_tape tp = *t;
+    t->owned = NULL; t->live = 0;
+    t->pa = t->pb = NULL; t->da = t->db = t->adj = NULL;
+    t->len = t->cap = t->leaves = t->adjcap = 0;
+    fwp_tape_buffers buffers = {tp.pa, tp.pb, tp.da, tp.db, tp.adj, tp.cap, tp.adjcap};
+    fwp_cleanup tape_cleanup, value_cleanup;
+    fwp_cleanup_push(&tape_cleanup, fwp_tape_buffers_dispose, &buffers);
+    fwp_cleanup_push(&value_cleanup, fwp_owned_tape_release, owner);
+    if (fwp_list_len(outs) != fwp_list_len(seeds))
+        fwp_trap("autodiff: seed count differs from output count");
+    owner->adj = fwp_mem_alloc((size_t)(tp.len ? tp.len : 1) * sizeof(V));
+    memset(owner->adj, 0, (size_t)(tp.len ? tp.len : 1) * sizeof(V));
+    for (int64_t i = 0; i < tp.len; i++) {
+        if (owner->elem->dup) owner->elem->dup(owner->zero);
+        owner->adj[i] = owner->zero; owner->nadj = i + 1;
+    }
+    V output_cursor = outs, seed_cursor = seeds;
+    while (output_cursor) {
+        int64_t o = (int64_t)OBJ(output_cursor)->f[0];
+        V seed = OBJ(seed_cursor)->f[0];
+        if (o >= 0) {
+            if ((o >> 32) != id) fwp_trap(FWP_AD_MIXED);
+            int64_t node = o & 0xffffffff;
+            if (node >= tp.len) fwp_trap(FWP_AD_INVALID_NODE);
+            owner->adj[node] = fwp_owned_tape_add(owner, seed, owner->adj[node]);
+        }
+        output_cursor = OBJ(output_cursor)->f[1]; seed_cursor = OBJ(seed_cursor)->f[1];
+    }
+    for (int64_t i = tp.len - 1; i >= tp.leaves; i--) {
+        V a = owner->adj[i];
+        if (fwp_apply_borrowed(owner->inactive_zero, 1, &a) == FWP_TRUE) continue;
+        for (int side = 0; side < 2; side++) {
+            int32_t parent = side ? tp.pb[i] : tp.pa[i];
+            if (parent < 0) continue;
+            V args[2] = {owner->weights[2*i+side], a};
+            fwp_value_owner product = {fwp_apply_borrowed(owner->mul, 2, args), owner->elem->drop};
+            fwp_cleanup product_cleanup;
+            fwp_cleanup_push(&product_cleanup, fwp_value_release, &product);
+            owner->adj[parent] = fwp_owned_tape_add(owner, product.value, owner->adj[parent]);
+            fwp_cleanup_pop(&product_cleanup); fwp_value_release(&product);
+        }
+    }
+    fwp_value_owner result = {0, list_type->drop};
+    fwp_cleanup result_cleanup;
+    fwp_cleanup_push(&result_cleanup, fwp_value_release, &result);
+    for (int64_t i = tp.leaves; i; i--) {
+        V value = owner->adj[i - 1];
+        if (owner->elem->dup) owner->elem->dup(value);
+        result.value = fwp_rc_fresh(fwp_cons(value, result.value));
+    }
+    fwp_cleanup_pop(&result_cleanup);
+    fwp_cleanup_pop(&value_cleanup); fwp_owned_tape_release(owner);
+    fwp_cleanup_pop(&tape_cleanup); fwp_tape_buffers_dispose(&buffers);
+    FWP_KEEP_ALIVE(outs); FWP_KEEP_ALIVE(seeds);
+    return result.value;
 }
 
 /* ---------------------------------------------------------------- kernels */
@@ -450,7 +619,12 @@ static void fwp_kjob_do(fwp_kjob *j) {
     }
 }
 
-#ifndef __wasi__
+#ifdef _WIN32
+static DWORD WINAPI fwp_kjob_thread(void *p) {
+    fwp_kjob_do((fwp_kjob *)p);
+    return 0;
+}
+#elif !defined(__wasi__)
 static void *fwp_kjob_thread(void *p) {
     fwp_kjob_do((fwp_kjob *)p);
     return 0;
@@ -474,7 +648,21 @@ static void fwp_kernel_parallel(const fwp_kernel *k, int sum, size_t n, size_t u
         jobs[i].hi = (i + 1) * units / t;
         jobs[i].out = out;
     }
-#ifndef __wasi__
+#ifdef _WIN32
+    HANDLE tids[256];
+    size_t started = 1;
+    for (; started < t; started++) {
+        tids[started] = CreateThread(NULL, (size_t)1 << 20, fwp_kjob_thread,
+                                     &jobs[started], STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
+        if (!tids[started]) break;
+    }
+    if (started == t) fwp_kjob_do(&jobs[0]);
+    for (size_t i = 1; i < started; i++) {
+        if (WaitForSingleObject(tids[i], INFINITE) != WAIT_OBJECT_0) abort();
+        CloseHandle(tids[i]);
+    }
+    if (started != t) fwp_trap("cannot create numerical worker thread");
+#elif !defined(__wasi__)
     pthread_t tids[256];
     int started[256] = {0};
 #ifdef FWP_STATIC_MEMORY

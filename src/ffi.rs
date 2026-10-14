@@ -32,6 +32,10 @@ pub enum CType {
     },
     F32,
     F64,
+    /// Raw IEEE bits, never the host's half/long-double calling convention.
+    F16,
+    BF16,
+    F128,
     Bool,
     Str,
     Bytes,
@@ -47,6 +51,50 @@ pub enum CType {
         params: Vec<CType>,
         ret: Box<CType>,
     },
+}
+
+/// These C values copy all payload bits; retaining them cannot retain a managed
+/// language pointer. Apply the same classifier to ARC admission and lowering.
+pub fn by_value(ty: &CType) -> bool {
+    match ty {
+        CType::Void
+        | CType::Int { .. }
+        | CType::F16
+        | CType::BF16
+        | CType::F32
+        | CType::F64
+        | CType::F128
+        | CType::Bool => true,
+        CType::Struct { fields, .. } => fields.iter().all(|(_, _, field)| by_value(field)),
+        _ => false,
+    }
+}
+
+/// A callback is synchronous on the calling task. Its C arguments and result
+/// carry copied bits; its managed closure stays borrowed for the foreign call.
+pub fn scoped_callback(ty: &CType) -> bool {
+    matches!(ty, CType::Callback { params, ret } if params.iter().all(by_value) && by_value(ret))
+}
+
+/// C borrows text/byte storage until return. Raw pointers have an independent,
+/// unproved pointee lifetime and are deliberately outside this contract.
+pub fn scoped_argument(ty: &CType) -> bool {
+    match ty {
+        CType::Str | CType::Bytes => true,
+        CType::Struct { fields, .. } => fields.iter().all(|(_, _, field)| scoped_argument(field)),
+        CType::Callback { .. } => scoped_callback(ty),
+        _ => by_value(ty),
+    }
+}
+
+/// Foreign strings are copied before returning to language code. No pointer
+/// into host storage enters the owned result graph.
+pub fn copied_result(ty: &CType) -> bool {
+    match ty {
+        CType::Str => true,
+        CType::Struct { fields, .. } => fields.iter().all(|(_, _, field)| copied_result(field)),
+        _ => by_value(ty),
+    }
 }
 
 /// Extra inputs for the C compiler and linker (`--link`): `-lname`,
@@ -111,6 +159,9 @@ pub fn classify(prog: &Program, mt: &MT) -> Result<CType, String> {
                 "std::USize" => int(0, false),
                 "std::F32" => Ok(CType::F32),
                 "std::F64" => Ok(CType::F64),
+                "std::F16" => Ok(CType::F16),
+                "std::BF16" => Ok(CType::BF16),
+                "std::F128" => Ok(CType::F128),
                 "std::Bool" => Ok(CType::Bool),
                 "std::String" => Ok(CType::Str),
                 "std::Bytes" => Ok(CType::Bytes),
@@ -171,6 +222,9 @@ pub fn classify_scalar(mt: &MT) -> CType {
             "std::U64" | "std::USize" => int(64, false),
             "std::F32" => CType::F32,
             "std::F64" => CType::F64,
+            "std::F16" => CType::F16,
+            "std::BF16" => CType::BF16,
+            "std::F128" => CType::F128,
             _ => int(64, true),
         },
         _ => int(64, true),
@@ -205,6 +259,8 @@ pub fn c_name(t: &CType) -> String {
         }
         CType::F32 => "float".into(),
         CType::F64 => "double".into(),
+        CType::F16 | CType::BF16 => "uint16_t".into(),
+        CType::F128 => "struct fwp_binary128".into(),
         CType::Bool => "_Bool".into(),
         CType::Str => "const char *".into(),
         CType::Bytes => "const uint8_t *".into(),
@@ -217,11 +273,18 @@ pub fn c_name(t: &CType) -> String {
 pub fn struct_defs(types: &[CType], out: &mut String, seen: &mut Vec<String>) {
     for t in types {
         match t {
+            CType::F128 if !seen.iter().any(|s| s == "@binary128") => {
+                seen.push("@binary128".into());
+                out.push_str("#ifndef FWP_BINARY128_DEFINED\n#define FWP_BINARY128_DEFINED\nstruct fwp_binary128 { uint64_t low, high; };\n#endif\n");
+            }
             CType::Struct { name, fields } => {
                 if seen.contains(name) {
                     continue;
                 }
                 seen.push(name.clone());
+                for (_, _, field) in fields {
+                    struct_defs(std::slice::from_ref(field), out, seen);
+                }
                 let _ = writeln!(out, "struct fwp_c_{} {{", name);
                 for (f, _, ft) in fields {
                     let _ = writeln!(out, "    {} {};", c_name(ft), f);
@@ -273,6 +336,8 @@ fn from_word(t: &CType, w: &str) -> String {
         CType::Int { .. } => format!("({})({})", c_name(t), w),
         CType::F32 => format!("fwp_w2f({})", w),
         CType::F64 => format!("fwp_w2d({})", w),
+        CType::F16 | CType::BF16 => format!("(uint16_t)({w})"),
+        CType::F128 => format!("fwp_w2q((const uint64_t *)(uintptr_t)({w}))"),
         CType::Bool => format!("(({}) != 0)", w),
         CType::Str | CType::Bytes | CType::Ptr | CType::OptPtr => {
             format!("(({})(uintptr_t)({}))", c_name(t), w)
@@ -292,6 +357,9 @@ fn to_word(t: &CType, e: &str) -> String {
         CType::Int { signed: false, .. } => format!("(uint64_t)({})", e),
         CType::F32 => format!("fwp_f2w({})", e),
         CType::F64 => format!("fwp_d2w({})", e),
+        CType::F16 | CType::BF16 => format!("(uint64_t)({e})"),
+        // Only used for callback/struct lvalues. Results use `store_words`.
+        CType::F128 => format!("(uint64_t)(uintptr_t)&({e})"),
         CType::Bool => format!("(uint64_t)(({}) != 0)", e),
         _ => format!("(uint64_t)(uintptr_t)({})", e),
     }
@@ -300,8 +368,29 @@ fn to_word(t: &CType, e: &str) -> String {
 /// Number of result words for a type.
 pub fn result_words(t: &CType) -> usize {
     match t {
-        CType::Struct { fields, .. } => fields.len().max(1),
+        CType::F128 => 2,
+        CType::Struct { fields, .. } => fields
+            .iter()
+            .map(|(_, _, t)| result_words(t))
+            .sum::<usize>()
+            .max(1),
         _ => 1,
+    }
+}
+
+fn store_words(t: &CType, value: &str, output: &str) -> String {
+    match t {
+        CType::F128 => format!("fwp_q2w({value}, {output});"),
+        CType::Struct { name, .. } => format!("fwp_s2w_{name}({value}, {output});"),
+        _ => format!("*({output}) = {};", to_word(t, value)),
+    }
+}
+
+fn from_result(t: &CType, words: &str) -> String {
+    match t {
+        CType::F128 => format!("fwp_w2q({words})"),
+        CType::Struct { name, .. } => format!("fwp_w2s_{name}({words})"),
+        _ => from_word(t, &format!("({words})[0]")),
     }
 }
 
@@ -359,13 +448,15 @@ void *fwp_shim_set_host(void *f, void *ctx) {
                     "static struct fwp_c_{n} fwp_w2s_{n}(const uint64_t *w) {{\n    struct fwp_c_{n} s;",
                     n = name
                 );
-                for (i, (fname, _, ft)) in fields.iter().enumerate() {
+                let mut offset = 0;
+                for (fname, _, ft) in fields {
                     let _ = writeln!(
                         convs,
                         "    s.{} = {};",
                         fname,
-                        from_word(ft, &format!("w[{}]", i))
+                        from_result(ft, &format!("w + {offset}"))
                     );
+                    offset += result_words(ft);
                 }
                 convs.push_str("    return s;\n}\n");
                 let _ = writeln!(
@@ -373,13 +464,14 @@ void *fwp_shim_set_host(void *f, void *ctx) {
                     "static void fwp_s2w_{n}(struct fwp_c_{n} s, uint64_t *w) {{",
                     n = name
                 );
-                for (i, (fname, _, ft)) in fields.iter().enumerate() {
+                let mut offset = 0;
+                for (fname, _, ft) in fields {
                     let _ = writeln!(
                         convs,
-                        "    w[{}] = {};",
-                        i,
-                        to_word(ft, &format!("s.{}", fname))
+                        "    {}",
+                        store_words(ft, &format!("s.{fname}"), &format!("w + {offset}"))
                     );
+                    offset += result_words(ft);
                 }
                 convs.push_str("}\n");
             }
@@ -422,7 +514,7 @@ void *fwp_shim_set_host(void *f, void *ctx) {
                         let _ = writeln!(body, "    return fwp_w2s_{}(r);", name);
                     }
                     t => {
-                        let _ = writeln!(body, "    return {};", from_word(t, "r[0]"));
+                        let _ = writeln!(body, "    return {};", from_result(t, "r"));
                     }
                 }
                 body.push_str("}\n");
@@ -450,10 +542,13 @@ void *fwp_shim_set_host(void *f, void *ctx) {
                 let _ = writeln!(body, "    fwp_s2w_{}({}, ret);", name, call);
             }
             t => {
-                let _ = writeln!(body, "    ret[0] = {};", to_word(t, &call));
+                let _ = writeln!(body, "    {}", store_words(t, &call, "ret"));
             }
         }
         body.push_str("}\n");
+    }
+    if seen.iter().any(|s| s == "@binary128") {
+        out.push_str("static struct fwp_binary128 fwp_w2q(const uint64_t *w) { return (struct fwp_binary128){w[0], w[1]}; }\nstatic void fwp_q2w(struct fwp_binary128 q, uint64_t *w) { w[0]=q.low; w[1]=q.high; }\n");
     }
     out.push_str(&convs);
     out.push_str(&body);

@@ -47,7 +47,12 @@ record-label evaluation order is preserved.
 `iter.fold`, `iter.each`, `iter.find` and list `fold-until` use the existing
 `loop` and Step constructors; `map-accum` uses a left fold followed by reverse.
 They introduce no primitives and do not widen iterator tail effects. Callback
-and tail evaluation order is tested against raw interpretation. Producer fusion applies only to proven direct chains; arbitrary lazy producers
+and tail evaluation order is tested against raw interpretation. The active PR
+also lowers `array.to-list | iter.from-list` directly to an array owner and index,
+using checked element access without an intermediate list. Array construction
+still completes before any consumer callback; element aliases retain their
+owners. Raw/native, ARC reclamation and allocation/instruction controls await
+runner verification. Producer fusion applies only to proven direct chains; arbitrary lazy producers
 retain their declared forcing behavior and may allocate.
 
 Merged synchronous callback entries borrow typed inputs and return owned results;
@@ -188,8 +193,9 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   types are not `Dup`.
 - Numbers have explicit widths. Arithmetic traps on overflow and division
   by zero; `wrapping`, `saturating`, `overflowing` and `checked` give the
-  alternatives. There are no implicit conversions. `F16`, `BF16` and
-  `F128` are computed at `F32` or `F64` precision.
+  alternatives. There are no implicit conversions. The active format migration
+  gives `F16`, `BF16` and `F128` their declared precision through shared software
+  cores; [the format contract](float-formats.md) records integration and validation.
 
 ## Generics
 
@@ -350,7 +356,9 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
 - Native tasks are green threads on an event loop: epoll on
   Linux, poll elsewhere. glibc uses `ucontext`; musl and Darwin use the
   runtime's custom x86-64/AArch64 context switch, with ELF and Mach-O
-  symbol/directive conventions respectively. Interpreter tasks are OS threads that pass a
+  symbol/directive conventions respectively. The active Windows port uses native
+  fibers with explicit saved-register and stack root ranges; the OS owns stack
+  reservation, commitment and ABI restoration. Native acceptance remains pending. Interpreter tasks are OS threads that pass a
   baton, so only one runs at a time. Function-entry preemption preserves
   deterministic ready-task interleaving across backends; relative wall-clock
   timers do not establish an order between independent effects. Use channels
@@ -403,16 +411,25 @@ The native allocator still maintains allocation and reference-count metadata;
 released value storage returns to that allocator. Reserved pages and permanent
 program constants are separate from live temporary values.
 
-Eligibility excludes unproved mutable/cyclic runtime graphs, retained callbacks,
-raw pointers, unscoped reverse-mode operations, unchecked user native declarations,
-foreign/remote calls and unmodeled shared results. Native symbol names alone do
+Eligibility excludes unproved mutable/cyclic runtime graphs, external retained
+callbacks, raw pointers, unscoped reverse-mode operations, unchecked user native
+declarations, managed foreign/remote calls and unmodeled shared results. PR #135
+extends admission to typed retained-task captures and recursively pointer-free
+foreign C records, scoped text/byte borrows and synchronous foreign callbacks
+with copied C values, pending acceptance. The callback context follows the
+calling task, with unwind cleanup. Child tasks start independent State/AD
+contexts; the closure-flow proof clears parent scope assumptions at spawn/within. Native symbol names alone do
 not establish ownership signatures. A finite closure-flow analysis proves that
 executed ad.tape/ad.push/ad.backward calls occur under ad.scope/ad.scope2. It
 tracks partial applications, returned callbacks and functions inside containers;
 ambiguous targets are rejected. Function names confer no exemption. Arguments
 evaluate before the scope callback, and escaped tokens retain stale-token checks.
-Scoped gradients use the same bounded workspace and exceptional cleanup. The initial checked mode supports native main programs;
-WebAssembly, executable protocol, library and service boundaries diagnose as
+Scoped gradients use the same bounded workspace and exceptional cleanup. Checked
+mode supports native main and function executables, including CLI commands. Each
+exported entry starts without an assumed State/AD scope. Typed command owners
+cover arguments, defaults, frames and results, including early exits; transport
+teardown closes descriptors and releases mappings. These additions await runner
+acceptance. WebAssembly, library, remote and service boundaries remain
 unsupported. `--gc tracing` explicitly selects the existing compatibility mode;
 no ARC rejection silently selects it. The handoff records production acceptance.
 

@@ -72,6 +72,7 @@ fn certs() -> Option<&'static Path> {
     static DIR: OnceLock<Option<PathBuf>> = OnceLock::new();
     DIR.get_or_init(|| {
         if !have("openssl", "version") {
+            assert!(std::env::var_os("FWP_REQUIRE_TLS").is_none(), "required OpenSSL CLI is missing");
             eprintln!("skipping: no openssl command");
             return None;
         }
@@ -138,6 +139,7 @@ fn certs() -> Option<&'static Path> {
                 std::fs::write(d.join("both.pem"), both).is_ok()
             };
         if !ok {
+            assert!(std::env::var_os("FWP_REQUIRE_TLS").is_none(), "required TLS certificates could not be generated");
             eprintln!("skipping: openssl could not make the test certificates");
             return None;
         }
@@ -339,7 +341,19 @@ fn mutual_tls() {
     for (i, mut cmd) in both_ways(&file, &d, "mutual").into_iter().enumerate() {
         cmd.current_dir(certs);
         let o = run(cmd, 120);
-        let got = text(&o);
+        // TLS 1.3 clients can finish their handshake before receiving the
+        // server's certificate rejection. Both handshake and subsequent read
+        // failure are valid here; require the server rejection and all success
+        // cases exactly, without imposing socket-delivery timing on the test.
+        let got = text(&o)
+            .replace(
+                "without a certificate\nclient: read error\n",
+                "without a certificate\nclient: tls error\n",
+            )
+            .replace(
+                "with a certificate of another CA\nclient: read error\n",
+                "with a certificate of another CA\nclient: tls error\n",
+            );
         assert!(
             o.status.success(),
             "{}{}",

@@ -110,7 +110,7 @@ fn hex(bytes: &[u8]) -> String {
 
 /// The cache key of an executable: the C source, the compiler and its
 /// options, the C code and libraries it links, and this version of fwp.
-fn key(c_source: &str, opt: &str) -> String {
+fn key(c_source: &str, opt: &str) -> Result<String, String> {
     let mut k = Vec::new();
     for part in [env!("CARGO_PKG_VERSION"), &cc(), opt, c_source] {
         k.extend_from_slice(part.as_bytes());
@@ -129,7 +129,13 @@ fn key(c_source: &str, opt: &str) -> String {
         }
         k.push(0);
     }
-    hex(&crate::grpc::web::sha1(&k))
+    if c_source.contains(crate::float_codegen::MARK) {
+        k.extend(crate::float_codegen::compiler_identity(
+            &crate::cgen::c_compiler()?,
+            false,
+        )?);
+    }
+    Ok(hex(&crate::grpc::web::sha1(&k)))
 }
 
 /// Why there is no executable.
@@ -145,7 +151,7 @@ pub fn executable(c_source: &str, opt: &str) -> Result<PathBuf, Error> {
     let dir = cache_dir().join("native");
     std::fs::create_dir_all(&dir)
         .map_err(|e| Error::Failed(format!("cannot create the cache {}: {}", dir.display(), e)))?;
-    let exe = dir.join(key(c_source, opt));
+    let exe = dir.join(key(c_source, opt).map_err(Error::Failed)?);
     if exe.is_file() {
         // used now: the cache drops the least recently used first. Open the
         // executable read-only: a writable open can make concurrent native
@@ -177,7 +183,7 @@ pub fn executable(c_source: &str, opt: &str) -> Result<PathBuf, Error> {
 }
 
 /// Remove the least recently used executables beyond the cache's size.
-fn prune(dir: &Path, keep: &Path) {
+pub(crate) fn prune(dir: &Path, keep: &Path) {
     let Ok(rd) = std::fs::read_dir(dir) else {
         return;
     };
@@ -207,15 +213,18 @@ pub fn cache_command(args: &[String]) -> i32 {
             0
         }
         Some("clean") => {
-            let dir = cache_dir().join("native");
-            match std::fs::remove_dir_all(&dir) {
-                Ok(()) => 0,
-                Err(e) if e.kind() == std::io::ErrorKind::NotFound => 0,
-                Err(e) => {
-                    eprintln!("fwp cache: cannot remove {}: {}", dir.display(), e);
-                    1
+            for name in ["native", "float"] {
+                let dir = cache_dir().join(name);
+                match std::fs::remove_dir_all(&dir) {
+                    Ok(()) => {}
+                    Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+                    Err(e) => {
+                        eprintln!("fwp cache: cannot remove {}: {}", dir.display(), e);
+                        return 1;
+                    }
                 }
             }
+            0
         }
         _ => {
             eprintln!("fwp cache: usage: fwp cache dir | fwp cache clean");

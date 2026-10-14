@@ -17,8 +17,9 @@ library is listed in [stdlib.md](stdlib.md).
   suffix, the literal takes the type it is used at; a literal out of range
   for that type is a compile error.
 - **Float literals:** `1.5`, `2e-3`, with suffixes `f16`, `bf16`, `f32`,
-  `f64`, `f128`. `F16` and `BF16` are computed at `F32` precision and
-  `F128` at `F64` precision. See the [format and migration contract](float-formats.md).
+  `f64`, `f128`. The working branch uses binary16, bfloat16, binary32,
+  binary64 and binary128 respectively, with direct rounding from decimal text.
+  See the [format contract and validation status](float-formats.md).
 - **Duration literals:** `500ns`, `20us`, `250ms`, `2s`, `1.5s`, `5min`,
   `1h`. They are decimal and at most about 292 years. Durations implement
   `Add`, `Sub` and `Zero` (`2s | add 500ms`).
@@ -347,6 +348,8 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
 |---|---|
 | integers | `intN_t`, `uintN_t`; `ISize`/`USize` are `ptrdiff_t`/`size_t` |
 | `F32`, `F64`, `Bool` | `float`, `double`, `_Bool` |
+| `F16`, `BF16` | `uint16_t` containing the raw format bits |
+| `F128` | `struct fwp_binary128 { uint64_t low, high; }` containing raw bits |
 | `()` | `void` |
 | `String` | `const char *` |
 | `Bytes` | `const uint8_t *` (parameters only) |
@@ -355,12 +358,25 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
 | `repr(C)` record | a struct |
 | function | a callback |
 
+The half/bfloat/quad ABI is part of the [active format migration](float-formats.md)
+and awaits native acceptance. C code receives bits in the declared structs or
+integers; it must explicitly convert to a numeric C type if needed. Quad does
+not use the host's `long double` ABI. `repr(C)` fields, exported headers and
+pointer element widths use the same representation (2/2/16 bytes).
+
 - Foreign functions take their arguments in C order, not data-last, and
   should not reuse a standard name (`div` above would shadow fwp's own).
 - Raw memory: `mem.alloc`, `mem.free`, `mem.string`, `ptr.read`,
   `ptr.write`, `ptr.at` and `ptr.read-string`, under `Unsafe`.
-- A callback may only be used while the foreign call that received it is
-  running.
+- C borrows `String`/`Bytes` arguments and string fields only for the call;
+  it must copy data it wants to retain. Returned C strings are copied into
+  owned language values before the call boundary finishes.
+- A callback may only be used on the calling task while the foreign call that
+  received it is running. Native callback frames follow that task across
+  suspension and are restored after nested calls, failure and cancellation.
+  Checked ARC admits callbacks with copied numeric/Boolean/unit C arguments and
+  results; raw pointers and callbacks returning managed C addresses remain
+  outside that ownership contract.
 - The interpreter reaches C through a generated shim library, built with
   the system C compiler and loaded with `dlsym`.
 - `--link` adds C sources, objects or libraries (`-lm`, `-L/dir`,

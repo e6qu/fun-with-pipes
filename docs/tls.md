@@ -35,6 +35,14 @@ in the native compile-cache key. It is ignored for Linux cross builds,
 which need the target's libraries. Current Darwin validation is recorded
 in [development-state.md](development-state.md).
 
+The Windows implementation uses LLVM-MinGW for generated programs and matching
+OpenSSL 3 COFF import libraries (`lib/libssl.lib`, `lib/libcrypto.lib`) under
+`FWP_OPENSSL_DIR`, with headers in `include` and DLLs in `bin`. Add that `bin`
+directory to `PATH` for generated programs; PE has no embedded rpath. The
+interpreter loads DLLs from the prefix's `bin` directory. The Windows runner
+setup pins a vcpkg revision, verifies native PE architectures and requires TLS
+execution; acceptance remains recorded in the handoff.
+
 | | |
 |---|---|
 | interpreter (`--interp`) | loads `libssl.so.3` and `libcrypto.so.3` with `dlopen` the first time a program uses TLS; the `fwp` executable does not link them, so it runs (and programs without TLS run) where they are missing, and TLS then fails with an `IoError` of kind `"tls"`: `TLS needs OpenSSL 3 (libssl.so.3), which could not be loaded` |
@@ -302,6 +310,7 @@ needs the `openssl` command and skips without it.
   client certificates; use `http.send-with` with `tls.with-cert` by hand.
 * No DTLS (TLS over UDP) and no QUIC.
 * OpenSSL 3 only, found under its usual names (`libssl.so.3`, then
-  `libssl.so`; `libssl.3.dylib` on macOS), or under `FWP_OPENSSL_DIR/lib`.
+  `libssl.so`; `libssl.3.dylib` on macOS), or under `FWP_OPENSSL_DIR/lib`
+  (`FWP_OPENSSL_DIR/bin` on Windows).
   macOS CI installs OpenSSL 3 for both architectures. Error reasons are OpenSSL's, and may differ between its
   versions.

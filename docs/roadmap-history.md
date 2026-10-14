@@ -162,8 +162,8 @@ future directions, not claimed deliveries of this bundle.
 ## PR #134 development evidence (not final acceptance)
 
 These focused runs establish the listed boundaries on their recorded heads.
-The six-item bundle remains unfinished; use [the handoff](development-state.md)
-for current failures and next actions. No row replaces final-head production CI.
+PR #134 later merged the implemented subset; the six directions remain
+unfinished. Use [the handoff](development-state.md) for current next actions. No row replaces final-head production CI.
 
 | Head | Passed evidence | Boundary |
 |---|---|---|
@@ -209,3 +209,58 @@ Permanent native/WASI controls live in `tests/softfloat_core.rs`,
 `tests/float_math.rs`, `tests/float_literals.rs` and the ownership tests; temporary
 helpers are not required repository dependencies. Formatting, focused clippy,
 sharder regressions and roadmap audits passed. Full builds stayed on runners.
+
+
+## PR #134 merge closeout
+
+Merged by the user on 2026-10-13 at 21:40 UTC (2026-10-14 locally) as
+`5c0287c959ad705a6ceefebe83346015cb23fff5`. Tree
+`f6f70ed9e41cde021ba223241f59b7cee745b4b0` equals tested head
+`29b48c31a7012c941d0bc555ee51d12c2c594b0b`. All seven
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38460359221)
+and [final-head docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38458685467)
+passed. All four [focused repair jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38458280091)
+passed at `5bad4a6`. The squash subject is the single line
+`Expand ownership and numeric formats across native platforms (#134)`.
+
+This accepts the implemented scalar foreign ARC, typed WASM/File reclamation,
+direct iterate fusion, decimal-preserving syntax, exact-format software cores,
+and Windows interpreter/allocator foundations. It does not complete full Windows
+support, true half/quad language representations, remaining managed foreign and
+callback ownership, broader worker specialization, or nested reverse AD and
+checkpointing. These five implementation areas carry forward in PLAN.
+
+
+## PR #135 development evidence
+
+These focused runs preceded final acceptance and do not establish a passing
+merge gate. Current work and failures live only in the session handoff.
+
+- At `dfca8e6`, [four hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040)
+  passed exact-format/protocol/array and all seven foreign ABI/export checks.
+  Reversed compose arguments in two new fixtures were corrected by `9aed34b`.
+- At `9aed34b`, [all four hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/38528964109)
+  passed retained-task/scoped foreign ownership and wide-record controls.
+  The measurement assertion was corrected to the specified shortest quad text.
+- At `4456bff`, [wide measurements](https://github.com/e6qu/fun-with-pipes/actions/runs/38532221118)
+  passed on all four hosts. [Permanent counters](measurements/wide-records-2026-10-14.json)
+  show I128/U128 sum requests 513→2, requested bytes 8206→30 and peak bytes
+  4096→32; F128 requests 513→2, bytes 8209→33, peak 4096→48. Mixed records
+  reduced requests 3878→48, bytes 99742→1590 and retains 4625→12, with peak
+  1040 unchanged. Charged live bytes and collections finished at zero.
+  macOS ARM instructions exposed recursive wide-worker calls, motivating
+  explicit self-tail loops; source structs alone did not prove stack bounds.
+- At `55addedb`, the [macOS ARM focused job](https://github.com/e6qu/fun-with-pipes/actions/runs/38538182945)
+  passed corrected numeric tail/preemption, TLS and existing ownership checks.
+  Its new executable fixture failed on lowercase cons; the fixture and its
+  overly permissive reference status check were repaired.
+- [Windows at 55addedb](https://github.com/e6qu/fun-with-pipes/actions/runs/38538174843)
+  passed ARM and repaired AMD64 process stress, but AMD64 task verification
+  still found a missed root. Sharing the application stack bound between
+  marking and verification excluded collector scratch; [6fde679d](https://github.com/e6qu/fun-with-pipes/actions/runs/38542607906)
+  passes generated resource/task/process stress on both architectures.
+- At `3800499`, [all four hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/38526720651)
+  passed exact-core companion linking and concurrent cache publication/eviction.
+- At `bb523a5`, [both actual WASI jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38523463736)
+  passed goldens, math cores and physical reclamation; [Windows foundations](https://github.com/e6qu/fun-with-pipes/actions/runs/38523466974)
+  also passed both native architectures. Later changes need fresh final gates.

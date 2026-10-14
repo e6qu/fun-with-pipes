@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#ifndef _WIN32
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -30,6 +31,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#endif
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
@@ -513,10 +515,10 @@ static void h2_pct_decode(char *s) {
 /* -------------------------------------------------------------- listening */
 
 /* bind "host:port"; the bound address is written to `bound` */
-static int h2_listen(const char *addr, char *bound, size_t bn) {
+static fwp_socket_t h2_listen(const char *addr, char *bound, size_t bn) {
     char host[256];
     const char *colon = strrchr(addr, ':');
-    if (!colon || (size_t)(colon - addr) >= sizeof host) { h2_fail("bad address `%s`", addr); return -1; }
+    if (!colon || (size_t)(colon - addr) >= sizeof host) { h2_fail("bad address `%s`", addr); return FWP_INVALID_SOCKET; }
     memcpy(host, addr, (size_t)(colon - addr));
     host[colon - addr] = 0;
     char *h = host;
@@ -526,34 +528,36 @@ static int h2_listen(const char *addr, char *bound, size_t bn) {
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
+    if (fwp_sockets_init()) { h2_fail("cannot initialize sockets: %d", errno); return FWP_INVALID_SOCKET; }
     int rc = getaddrinfo(*h ? h : 0, colon + 1, &hints, &res);
-    if (rc != 0) { h2_fail("cannot resolve %s: %s", addr, gai_strerror(rc)); return -1; }
-    int fd = -1, err = 0;
+    if (rc != 0) { h2_fail("cannot resolve %s: %s", addr, gai_strerror(rc)); return FWP_INVALID_SOCKET; }
+    fwp_socket_t fd = FWP_INVALID_SOCKET;
+    int err = 0;
     for (struct addrinfo *a = res; a; a = a->ai_next) {
 #ifdef SOCK_CLOEXEC
-        fd = socket(a->ai_family, a->ai_socktype | SOCK_CLOEXEC, a->ai_protocol);
+        fd = fwp_socket_open(a->ai_family, a->ai_socktype | SOCK_CLOEXEC, a->ai_protocol);
 #else
-        fd = socket(a->ai_family, a->ai_socktype, a->ai_protocol);
+        fd = fwp_socket_open(a->ai_family, a->ai_socktype, a->ai_protocol);
 #endif
-        if (fd < 0) { err = errno; continue; }
-#ifndef SOCK_CLOEXEC
+        if (fd == FWP_INVALID_SOCKET) { err = errno; continue; }
+#if !defined(SOCK_CLOEXEC) && !defined(_WIN32)
         int flags = fcntl(fd, F_GETFD);
         if (flags < 0 || fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0) {
             err = errno;
-            close(fd);
-            fd = -1;
+            fwp_socket_close(fd);
+            fd = FWP_INVALID_SOCKET;
             continue;
         }
 #endif
         int one = 1;
-        setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof one);
-        if (bind(fd, a->ai_addr, a->ai_addrlen) == 0 && listen(fd, 128) == 0) break;
+        setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&one, sizeof one);
+        if (fwp_socket_bind(fd, a->ai_addr, a->ai_addrlen) == 0 && fwp_socket_listen(fd, 128) == 0) break;
         err = errno;
-        close(fd);
-        fd = -1;
+        fwp_socket_close(fd);
+        fd = FWP_INVALID_SOCKET;
     }
     freeaddrinfo(res);
-    if (fd < 0) { h2_fail("cannot listen on %s: %s", addr, strerror(err)); return -1; }
+    if (fd == FWP_INVALID_SOCKET) { h2_fail("cannot listen on %s: %s", addr, strerror(err)); return FWP_INVALID_SOCKET; }
     struct sockaddr_storage ss;
     socklen_t sl = sizeof ss;
     char hb[128], pb[16];

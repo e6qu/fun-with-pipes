@@ -24,6 +24,7 @@ int main(int argc,char **argv) {
     fwp_arr *a=(fwp_arr *)(uintptr_t)fwp_array_new_packed(3,&elem);
     if(a->len!=3 || requested!=sizeof(fwp_arr)+3*elem.width)return 132;
     free(a);
-    a=(fwp_arr *)(uintptr_t)fwp_array_new_packed((SIZE_MAX-sizeof(fwp_arr))/sizeof(V)+1,&elem);
+    size_t limit_width=elem.width>sizeof(V)?elem.width:sizeof(V);
+    a=(fwp_arr *)(uintptr_t)fwp_array_new_packed((SIZE_MAX-sizeof(fwp_arr))/limit_width+1,&elem);
     free(a);return 129;
 }

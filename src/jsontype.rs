@@ -47,6 +47,7 @@ pub enum Shape {
     Wide(String),
     F32,
     F64,
+    ExactFloat(crate::softfloat::FloatFormat),
     /// `TInt[n]`.
     TInt(u64),
     Trit,
@@ -108,8 +109,11 @@ pub fn shape(mt: &MT, prog: &Program) -> Shape {
                     "I8" | "I16" | "I32" | "I64" | "ISize" | "U8" | "U16" | "U32" | "U64"
                     | "USize" => return Shape::Int(short.to_string()),
                     "I128" | "U128" => return Shape::Wide(short.to_string()),
-                    "F32" | "F16" | "BF16" => return Shape::F32,
-                    "F64" | "F128" => return Shape::F64,
+                    "F32" => return Shape::F32,
+                    "F16" => return Shape::ExactFloat(crate::softfloat::FloatFormat::F16),
+                    "BF16" => return Shape::ExactFloat(crate::softfloat::FloatFormat::BF16),
+                    "F128" => return Shape::ExactFloat(crate::softfloat::FloatFormat::F128),
+                    "F64" => return Shape::F64,
                     "TInt" => {
                         return Shape::TInt(match args.first() {
                             Some(MT::Nat(w)) => *w,
@@ -269,6 +273,26 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
         Shape::F64 => {
             let x = v.as_f64().unwrap_or(0.0);
             float_text(out, x, crate::value::fmt_f64(x));
+        }
+        Shape::ExactFloat(format) => {
+            let x = v.as_quad().expect("typed float");
+            if x.is_nan() {
+                out.push_str("\"NaN\"");
+            } else if x.is_infinite() {
+                out.push_str(if x.is_sign_negative() {
+                    "\"-Infinity\""
+                } else {
+                    "\"Infinity\""
+                });
+            } else {
+                let bits = match v {
+                    Value::F16(v) => v.to_bits() as u128,
+                    Value::BF16(v) => v.to_bits() as u128,
+                    Value::F128(v) => v.to_bits(),
+                    _ => unreachable!("typed exact float"),
+                };
+                out.push_str(&crate::value::fmt_exact(bits, format));
+            }
         }
         Shape::Str => json::escape(v.as_str(), out),
         Shape::Bytes => {
@@ -805,6 +829,9 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
         }
         Shape::F32 => Value::F32(decode_float(r, path)?.parse().unwrap_or(0.0)),
         Shape::F64 => Value::F64(decode_float(r, path)?.parse().unwrap_or(0.0)),
+        Shape::ExactFloat(_) => {
+            crate::mono::float_value(mt, &decode_float(r, path)?).expect("typed float")
+        }
         Shape::Str => match r {
             Raw::Str(s) => Value::str(s),
             _ => return Err(expected(path, "a string", r)),
