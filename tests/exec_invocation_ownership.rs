@@ -17,7 +17,7 @@ fn executable_invocations_release_projected_results_and_raised_errors() {
 export plain : String -> String
 plain = id
 export wrapped : String -> Outcome[Result[Option[List[String]], String]]
-wrapped = fork cons id (string.repeat 2 | singleton) | Some | Ok | outcome.exit 7
+wrapped = fork Cons id (string.repeat 2 | singleton) | Some | Ok | outcome.exit 7
 export rejected : String -> Outcome[Result[Option[List[String]], String]]
 rejected = string.repeat 2 | Err | outcome.exit 9
 export absent : String -> Outcome[Result[Option[List[String]], String]]
@@ -40,10 +40,13 @@ raised = string.repeat 2 | fail
                 .args([name, "owned"])
                 .output()
                 .unwrap();
-            assert!(
-                matches!(output.status.code(), Some(0 | 1 | 3 | 7)),
-                "{name}: {output:?}"
-            );
+            let expected = match name {
+                "plain" => 0,
+                "wrapped" => 7,
+                "absent" => 3,
+                _ => 1,
+            };
+            assert_eq!(output.status.code(), Some(expected), "{name}: {output:?}");
             stdout.extend(output.stdout);
             stderr.extend(output.stderr);
             stderr.extend(format!("status:{}\n", output.status.code().unwrap()).bytes());

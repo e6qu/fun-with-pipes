@@ -212,8 +212,17 @@ external-callback admission is claimed.
   root under GC verification; investigate the marking/root snapshot before
   acceptance. ARM execution passed. The four-host run
   [38538182945](https://github.com/e6qu/fun-with-pipes/actions/runs/38538182945)
-  was still running when checked; its macOS ARM regression step failed and
-  needs log inspection. Neither run is a passing final-head gate.
+  was still running when checked. Its macOS ARM tail/preemption, existing
+  ownership and TLS tests passed; the new invocation fixture used `cons`
+  instead of `Cons`. That fixture and its loose reference status assertion are
+  corrected. Neither run is a passing final-head gate.
+- GC marking and minor verification now use the same application stack range.
+  Previously the second trace included deeper collector frames and their
+  transient heap addresses. A native probe deliberately puts an unreachable
+  address in collector scratch, checks that real caller roots survive, and
+  restores the old range as a negative control. This candidate fix needs native
+  execution, including the Windows AMD64 task stress failure. Guarded allocator
+  lint, formatting and combined runtime C syntax passed.
 - CLI/protocol local checks passed under `python3 scripts/local-guard.py`:
   `cargo clippy --lib --bin fwp --test cli_ownership --test exec_protocol_ownership
   --test exec_invocation_ownership --test arc_execution -- -D warnings`,

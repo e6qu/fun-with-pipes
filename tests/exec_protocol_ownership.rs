@@ -277,7 +277,7 @@ fn arc_checks_each_exported_entry_for_unscoped_effects() {
         ),
         (
             "tape",
-            "export unsafe : F64 -> String\nunsafe = ad.tape | show\n",
+            "export unsafe : I64 -> String\nunsafe = ad.tape | show\n",
         ),
     ] {
         let input = dir.join(format!("{name}.fwp"));

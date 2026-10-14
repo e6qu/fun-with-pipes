@@ -1296,8 +1296,8 @@ static void fwp_gc_sweep(void) {
 /* a stack address below the caller's frame */
 static __attribute__((noinline)) char *fwp_gc_sp(void) { return (char *)__builtin_frame_address(0); }
 
-static __attribute__((noinline)) void fwp_gc_mark_all(void) {
-    fwp_gc_scan_stacks(fwp_gc_sp());
+static __attribute__((noinline)) void fwp_gc_mark_all(char *stack_start) {
+    fwp_gc_scan_stacks(stack_start);
     fwp_gc_drain();
     fwp_gc_scan_data();
     fwp_gc_drain();
@@ -1335,7 +1335,7 @@ static void fwp_gc_scan_old_filled(void) {
 
 /* FWP_GC_VERIFY: after a minor collection's marking, trace everything
  * again from scratch; an object reachable then must have been marked */
-static void fwp_gc_verify_minor(void) {
+static void fwp_gc_verify_minor(char *stack_start) {
     size_t n = fwp_gc.top;
     uint64_t(*saved)[GC_CHUNK / 16 / 64] = malloc(n * sizeof *saved);
     uint8_t *saved_big = malloc(n ? n : 1);
@@ -1345,7 +1345,7 @@ static void fwp_gc_verify_minor(void) {
         saved_big[ci] = fwp_gc.meta[ci].mark;
     }
     fwp_gc_clear_marks();
-    fwp_gc_mark_all();
+    fwp_gc_mark_all(stack_start);
     for (size_t ci = 0; ci < n; ci++) {
         gc_chunk *m = &fwp_gc.meta[ci];
         int missed = 0;
@@ -1410,11 +1410,17 @@ static __attribute__((noinline)) void fwp_gc_collect(void) {
     jmp_buf regs;
     __builtin_unwind_init();
     setjmp(regs);
+    /* Both traces must see the same mutator stack range. Collector frames
+     * contain transient heap addresses while scanning metadata; treating those
+     * addresses as new roots during verification can resurrect dead objects
+     * and report a false missed root. Keep the saved registers in the range,
+     * but exclude marking, old-generation scanning and verifier frames. */
+    char *stack_start = fwp_gc_sp();
     fwp_gc.root_bytes = 0;
-    fwp_gc_mark_all();
+    fwp_gc_mark_all(stack_start);
     if (!major) {
         fwp_gc_scan_old_filled();
-        if (fwp_gc.verify) fwp_gc_verify_minor();
+        if (fwp_gc.verify) fwp_gc_verify_minor(stack_start);
     }
     fwp_gc_finalize();
     fwp_gc_sweep();
