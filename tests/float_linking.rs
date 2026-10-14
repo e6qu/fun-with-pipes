@@ -45,13 +45,19 @@ fn emitted_companions_link_without_a_cpp_runtime() {
         checked(compile.arg("-c").arg(input).arg("-o").arg(&object));
         objects.push(object);
     }
-    let binary = dir.join("manual");
-    checked(
-        Command::new(cc)
-            .args(objects)
-            .args(["-lm", "-lpthread", "-o"])
-            .arg(&binary),
-    );
+    let binary = dir.join(if cfg!(windows) {
+        "manual.exe"
+    } else {
+        "manual"
+    });
+    let mut link = Command::new(cc);
+    link.args(objects).arg("-lm");
+    if cfg!(windows) {
+        link.args(["-lws2_32", "-lshell32"]);
+    } else {
+        link.arg("-lpthread");
+    }
+    checked(link.arg("-o").arg(&binary));
     assert_eq!(checked(&mut Command::new(binary)).stdout, b"True\n");
 }
 

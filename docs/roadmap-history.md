@@ -229,3 +229,38 @@ and Windows interpreter/allocator foundations. It does not complete full Windows
 support, true half/quad language representations, remaining managed foreign and
 callback ownership, broader worker specialization, or nested reverse AD and
 checkpointing. These five implementation areas carry forward in PLAN.
+
+
+## PR #135 development evidence
+
+These focused runs preceded final acceptance and do not establish a passing
+merge gate. Current work and failures live only in the session handoff.
+
+- At `dfca8e6`, [four hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040)
+  passed exact-format/protocol/array and all seven foreign ABI/export checks.
+  Reversed compose arguments in two new fixtures were corrected by `9aed34b`.
+- At `9aed34b`, [all four hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/38528964109)
+  passed retained-task/scoped foreign ownership and wide-record controls.
+  The measurement assertion was corrected to the specified shortest quad text.
+- At `4456bff`, [wide measurements](https://github.com/e6qu/fun-with-pipes/actions/runs/38532221118)
+  passed on all four hosts. [Permanent counters](measurements/wide-records-2026-10-14.json)
+  show I128/U128 sum requests 513→2, requested bytes 8206→30 and peak bytes
+  4096→32; F128 requests 513→2, bytes 8209→33, peak 4096→48. Mixed records
+  reduced requests 3878→48, bytes 99742→1590 and retains 4625→12, with peak
+  1040 unchanged. Charged live bytes and collections finished at zero.
+  macOS ARM instructions exposed recursive wide-worker calls, motivating
+  explicit self-tail loops; source structs alone did not prove stack bounds.
+- At `55addedb`, the [macOS ARM focused job](https://github.com/e6qu/fun-with-pipes/actions/runs/38538182945)
+  passed corrected numeric tail/preemption, TLS and existing ownership checks.
+  Its new executable fixture failed on lowercase cons; the fixture and its
+  overly permissive reference status check were repaired.
+- [Windows at 55addedb](https://github.com/e6qu/fun-with-pipes/actions/runs/38538174843)
+  passed ARM and repaired AMD64 process stress, but AMD64 task verification
+  still found a missed root. Sharing the application stack bound between
+  marking and verification excluded collector scratch; [6fde679d](https://github.com/e6qu/fun-with-pipes/actions/runs/38542607906)
+  passes generated resource/task/process stress on both architectures.
+- At `3800499`, [all four hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/38526720651)
+  passed exact-core companion linking and concurrent cache publication/eviction.
+- At `bb523a5`, [both actual WASI jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38523463736)
+  passed goldens, math cores and physical reclamation; [Windows foundations](https://github.com/e6qu/fun-with-pipes/actions/runs/38523466974)
+  also passed both native architectures. Later changes need fresh final gates.

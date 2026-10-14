@@ -40,31 +40,6 @@ fn compare(source: &Path, dir: &Path, expected_exit: i32) {
                 .current_dir(dir)
                 .output()
                 .unwrap();
-            if actual.status.code() != expected.status.code() {
-                let cfile = dir.join("failure.c");
-                checked(
-                    Command::new(compiler)
-                        .args(["build", "--emit-c"])
-                        .arg(source)
-                        .arg("-o")
-                        .arg(&cfile),
-                );
-                let c = std::fs::read_to_string(&cfile).unwrap().replace(
-                    "int ok = fwp_win_quote(command, &used, wide.text);",
-                    "fprintf(stderr, \"quote: used=%zu units=%zu text=%ls\\n\", used, wcslen(wide.text), wide.text);\n        int ok = fwp_win_quote(command, &used, wide.text);",
-                );
-                let diagnostic = dir.join("failure.exe");
-                fwp::cgen::compile_c(&c, &diagnostic, opt).unwrap();
-                let output = Command::new(diagnostic)
-                    .env("FWP_SEED", "42")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress)
-                    .current_dir(dir)
-                    .output()
-                    .unwrap();
-                eprintln!("diagnostic rerun: {output:?}");
-            }
             assert_eq!(
                 actual.status.code(),
                 expected.status.code(),

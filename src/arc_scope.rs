@@ -19,6 +19,7 @@ struct Proof<'a> {
     captures: BTreeMap<Closure, Vec<Targets>>,
     inputs: BTreeMap<Context, Vec<Targets>>,
     outputs: BTreeMap<Context, Targets>,
+    callback_values: BTreeMap<Context, Targets>,
     changed: bool,
     validate: bool,
     state_values: Targets,
@@ -271,19 +272,63 @@ impl Proof<'_> {
                 }
                 Ok(Targets::new())
             }
-            Body::Prim(_) => {
-                // Include callbacks inside containers (list.ap, for example),
-                // not only primitives with a top-level callback argument.
+            Body::Prim(symbol) => {
+                // A closure carried in loop state or a collection is data until
+                // an actual invocation reaches it. Invoking every such closure
+                // here would incorrectly run scoped work in its caller's scope.
                 let mut result: Targets = args.iter().flatten().copied().collect();
-                let functions = result.clone();
+                let callback = if symbol == "list.ap" {
+                    Some(0) // The first list contains the functions to apply.
+                } else {
+                    crate::ownership::primitive(symbol).and_then(|c| {
+                        c.callback.map(|callback| match callback {
+                            crate::ownership::Callback::Borrowed(i)
+                            | crate::ownership::Callback::Retained(i)
+                            | crate::ownership::Callback::Shared(i) => i,
+                        })
+                    })
+                };
+                let Some(callback) = callback else {
+                    // Unknown runtime boundaries retain the conservative proof.
+                    if crate::ownership::primitive(symbol).is_some() {
+                        return Ok(result);
+                    }
+                    for &(target, supplied) in &result.clone() {
+                        let count = self.program.funcs[target].arity as usize - supplied;
+                        result.extend(self.apply(
+                            &BTreeSet::from([(target, supplied)]),
+                            &vec![result.clone(); count],
+                            scoped,
+                        )?);
+                    }
+                    return Ok(result);
+                };
+                let functions = args[callback].clone();
+                let mut data: Targets = args
+                    .iter()
+                    .enumerate()
+                    .filter(|(index, _)| *index != callback)
+                    .flat_map(|(_, value)| value.iter().copied())
+                    .collect();
+                data.extend(
+                    self.callback_values
+                        .get(&(id, scoped))
+                        .into_iter()
+                        .flatten()
+                        .copied(),
+                );
                 for &(target, supplied) in &functions {
                     let count = self.program.funcs[target].arity as usize - supplied;
-                    let values = vec![functions.clone(); count];
-                    result.extend(self.apply(
-                        &BTreeSet::from([(target, supplied)]),
-                        &values,
-                        scoped,
-                    )?);
+                    let values = vec![data.clone(); count];
+                    let returned =
+                        self.apply(&BTreeSet::from([(target, supplied)]), &values, scoped)?;
+                    // A fold/loop may feed a returned closure into a later
+                    // iteration even if its eventual result contains none.
+                    self.changed |= join(
+                        self.callback_values.entry((id, scoped)).or_default(),
+                        &returned,
+                    );
+                    result.extend(returned);
                 }
                 Ok(result)
             }
@@ -317,6 +362,7 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
         captures: BTreeMap::new(),
         inputs: BTreeMap::new(),
         outputs: BTreeMap::new(),
+        callback_values: BTreeMap::new(),
         changed: false,
         validate: false,
         state_values: Targets::new(),
@@ -518,6 +564,48 @@ mod tests {
         let p = state_program(true);
         assert!(check(&p, &[0]).is_ok());
         assert!(check(&p, &[0, 1])
+            .unwrap_err()
+            .contains("outside a State scope"));
+    }
+
+    #[test]
+    fn loop_can_carry_a_callback_without_executing_it() {
+        let mut p = state_program(false);
+        let getter = p.funcs[1].ty.clone();
+        let step = MT::Con("std::Step".into(), vec![getter.clone(), getter.clone()]);
+        let callback = arrow(getter.clone(), step.clone());
+        p.shapes.insert(
+            step.clone(),
+            TypeShape::Adt(vec![
+                ("Again".into(), vec![getter.clone()]),
+                ("Stop".into(), vec![getter.clone()]),
+            ]),
+        );
+        p.funcs.push(Func {
+            name: "carry".into(),
+            arity: 1,
+            locals: vec![getter.clone()],
+            ty: callback.clone(),
+            body: Body::Expr(Expr::Construct(1, vec![Expr::Local(0)])),
+        });
+        p.funcs.push(Func {
+            name: "loop".into(),
+            arity: 2,
+            locals: vec![callback.clone(), getter.clone()],
+            ty: arrow(callback, arrow(getter.clone(), getter.clone())),
+            body: Body::Prim("loop".into()),
+        });
+        let carry = Expr::Call(4, vec![Expr::Func(3), Expr::Func(1)]);
+        p.funcs[0].ty = getter;
+        p.funcs[0].body = Body::Expr(carry.clone());
+        assert!(check(&p, &[0]).is_ok());
+        // The same closure is still rejected when actually called unscoped.
+        p.funcs[0].ty = MT::con("std::String");
+        p.funcs[0].body = Body::Expr(Expr::Apply(
+            Box::new(carry),
+            vec![Expr::Const(Value::unit())],
+        ));
+        assert!(check(&p, &[0])
             .unwrap_err()
             .contains("outside a State scope"));
     }

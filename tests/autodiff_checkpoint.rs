@@ -19,9 +19,9 @@ main = [
     [0.5, 0.75] | fork close
         (vjp (rev._replay 17 nonlinear) [1.0, 2.0])
         (vjp-checkpointed {steps = 17, every = 4} nonlinear [1.0, 2.0]) | echo,
-    [1.0f128] | vjp-checkpointed {steps = 3, every = 2} (map (mul 2.0f128)) [1.0f128] | echo,
-    [1.0f16] | vjp-checkpointed {steps = 3, every = 2} (map (mul 2.0f16)) [1.0f16] | echo,
-    [1.0bf16] | vjp-checkpointed {steps = 3, every = 2} (map (mul 2.0bf16)) [1.0bf16] | echo,
+    [1.0f128] | vjp-checkpointed {steps = 3, every = 2} (map (mul 2.0)) [1.0f128] | eq [8.0f128] | echo,
+    [1.0f16] | vjp-checkpointed {steps = 3, every = 2} (map (mul 2.0)) [1.0f16] | eq [8.0f16] | echo,
+    [1.0bf16] | vjp-checkpointed {steps = 3, every = 2} (map (mul 2.0)) [1.0bf16] | eq [8.0bf16] | echo,
     [1.0, 2.0] | vjp-checkpointed {steps = 3, every = 2} (map (mul 2.0) | Cons 1.0) [1.0, 1.0, 1.0, 1.0, 1.0] | echo,
 ] | ignore
 "#;
@@ -35,12 +35,12 @@ fn checkpointed_vjp_matches_explicit_segment_precision_and_raw_execution() {
     let reference = checked(
         Command::new(compiler)
             .env("FWP_NO_OPT", "1")
-            .arg("run")
+            .args(["run", "--interp"])
             .arg(&source),
     );
     assert_eq!(
         String::from_utf8_lossy(&reference.stdout),
-        "[2.0, 3.0]\n[4.0, 5.0]\n[8.0]\nTrue\n[8.0]\n[8.0]\n[8.0]\n[8.0, 8.0]\n"
+        "[2.0, 3.0]\n[4.0, 5.0]\n[8.0]\nTrue\nTrue\nTrue\nTrue\n[8.0, 8.0]\n"
     );
     assert!(reference.stderr.is_empty());
     for mode in ["tracing", "arc"] {
@@ -98,7 +98,7 @@ fn checkpoint_arguments_fail_before_replay_and_reject_wrong_seed_counts() {
         .unwrap();
         let reference = Command::new(compiler)
             .env("FWP_NO_OPT", "1")
-            .arg("run")
+            .args(["run", "--interp"])
             .arg(&source)
             .output()
             .unwrap();

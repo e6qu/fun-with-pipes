@@ -82,7 +82,7 @@ def main():
         source.write_text('main = [range 0 10 | sum | echo, 0.125f128 | add 0.25f128 | echo, 1.5f16 | echo] | ignore\n')
         env = dict(os.environ, FWP_NO_OPT='1')
         reference = run([str(compiler), 'run', '--interp', str(source)], work, env)
-        assert reference == '45\n0.375\n1.5\n', reference
+        assert reference == '45\n3.75e-1\n1.5\n', reference
         env = dict(os.environ)
         env.pop('FWP_NO_OPT', None)
         executions = {}
