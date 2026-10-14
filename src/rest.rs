@@ -304,6 +304,7 @@ pub fn is_scalar(mt: &MT, prog: &Program) -> bool {
             | Shape::Wide(_)
             | Shape::F32
             | Shape::F64
+            | Shape::ExactFloat(_)
             | Shape::TInt(_)
             | Shape::Trit
             | Shape::Str

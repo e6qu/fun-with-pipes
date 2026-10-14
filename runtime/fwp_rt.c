@@ -204,13 +204,54 @@ static V fwp_box_u128(u128 x) {
 }
 static inline u128 fwp_u128(V v) { return *(u128 *)(uintptr_t)v; }
 
+#ifdef FWP_EXACT_FLOAT
+static V fwp_box_f128(float128_t x) {
+    float128_t *p = (float128_t *)fwp_alloc_leaf(sizeof x);
+    *p = x; return PTR(p);
+}
+static inline float128_t fwp_f128(V v) { float128_t x; memcpy(&x, (void *)(uintptr_t)v, sizeof x); return x; }
+#endif
+
 /* ------------------------------------------------------------- descriptors */
 
 enum {
     K_I8, K_I16, K_I32, K_I64, K_I128, K_U8, K_U16, K_U32, K_U64, K_U128,
     K_F32, K_F64, K_STR, K_BYTES, K_ADT, K_LIST, K_RECORD, K_ARRAY, K_MAP,
-    K_SET, K_TINT, K_TRIT, K_FUN, K_FILE, K_OPAQUE, K_NATIVE
+    K_SET, K_TINT, K_TRIT, K_FUN, K_FILE, K_OPAQUE, K_NATIVE, K_F16, K_BF16, K_F128
 };
+
+static int fwp_float_kind(int k) { return k == K_F16 || k == K_BF16 || k == K_F32 || k == K_F64 || k == K_F128; }
+#ifdef FWP_EXACT_FLOAT
+static float128_t fwp_float_quad(int k, V v) {
+    switch (k) {
+    case K_F16: return f16_to_f128((float16_t){(uint16_t)v});
+    case K_BF16: return fwp_bf16_to_f128((uint16_t)v);
+    case K_F32: return f32_to_f128((float32_t){(uint32_t)v});
+    case K_F64: return f64_to_f128((float64_t){v});
+    case K_F128: return fwp_f128(v);
+    default: fwp_trap("invalid float kind"); return (float128_t){{0, 0}};
+    }
+}
+static V fwp_quad_float(int k, float128_t x) {
+    switch (k) {
+    case K_F16: return f128_to_f16(x).v;
+    case K_BF16: return fwp_f128_to_bf16(x);
+    case K_F32: return f128_to_f32(x).v;
+    case K_F64: return f128_to_f64(x).v;
+    case K_F128: return fwp_box_f128(x);
+    default: fwp_trap("invalid float kind"); return 0;
+    }
+}
+static int fwp_exact_format(int k) { return k == K_F16 ? 16 : k == K_BF16 ? 17 : 128; }
+static int fwp_parse_exact(const char *s, int k, V *out) {
+    uint64_t low, high;
+    int status = fwp_decimal_parse(s, fwp_exact_format(k), &low, &high);
+    if (status < 0) fwp_trap("out of memory");
+    if (!status) return 0;
+    *out = k == K_F128 ? fwp_box_f128((float128_t){{low, high}}) : low;
+    return 1;
+}
+#endif
 
 typedef struct fwp_desc fwp_desc;
 struct fwp_desc {
@@ -260,7 +301,7 @@ static inline int fwp_array_numeric(const fwp_desc *elem) {
     switch (elem->kind) {
     case K_I8: case K_I16: case K_I32: case K_I64:
     case K_U8: case K_U16: case K_U32: case K_U64:
-    case K_F32: case K_F64: return 1;
+    case K_F16: case K_BF16: case K_F32: case K_F64: return 1;
     default: return 0;
     }
 }
@@ -268,7 +309,7 @@ static inline size_t fwp_array_stride(const fwp_desc *elem) {
 #if FWP_PACKED_ARRAYS
     if (elem) switch (elem->kind) {
     case K_I8: case K_U8: return 1;
-    case K_I16: case K_U16: return 2;
+    case K_I16: case K_U16: case K_F16: case K_BF16: return 2;
     case K_I32: case K_U32: case K_F32: return 4;
     default: break;
     }

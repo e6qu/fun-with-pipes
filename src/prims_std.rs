@@ -453,24 +453,21 @@ impl<'p> Interp<'p> {
                     let s = a[0].as_str();
                     let t = inner(result);
                     if let Some(x) = special_float(s) {
-                        some(match t {
-                            MT::Con(n, _) if n == "std::F32" => Value::F32(x as f32),
-                            _ => Value::F64(x),
-                        })
-                    } else if !valid_float(s) {
-                        none()
+                        let text = if x.is_nan() {
+                            "NaN"
+                        } else if x.is_sign_negative() {
+                            "-inf"
+                        } else {
+                            "inf"
+                        };
+                        opt(crate::mono::float_value(&t, text))
+                    } else if valid_float(s) {
+                        opt(crate::mono::float_value(&t, s))
                     } else {
-                        let x: f64 = s.parse().unwrap_or(f64::NAN);
-                        some(match t {
-                            MT::Con(n, _)
-                                if matches!(n.as_str(), "std::F32" | "std::F16" | "std::BF16") =>
-                            {
-                                Value::F32(s.parse().unwrap_or(f32::NAN))
-                            }
-                            _ => Value::F64(x),
-                        })
+                        none()
                     }
                 }
+
                 "format" => {
                     let tmpl = a[0].as_str().to_string();
                     let mt = &params[1];
@@ -595,7 +592,7 @@ impl<'p> Interp<'p> {
                         None => crate::interp::zero_of(result)?,
                     };
                     for x in xs.iter().skip(1) {
-                        acc = if x.as_f64().is_some() {
+                        acc = if x.is_float() {
                             arith(Op::Add, &acc, x, result)?
                         } else {
                             wrapping(Op::Add, &acc, x)?
@@ -937,7 +934,7 @@ fn simd_lane(sym: &str, x: &Value, y: &Value, vt: &MT) -> R<Value> {
         MT::Con(_, args) => args.get(1).cloned().unwrap_or(MT::unit()),
         _ => MT::unit(),
     };
-    let float = x.as_f64().is_some();
+    let float = x.is_float();
     Ok(match sym {
         "simd.add" if !float => wrapping(Op::Add, x, y)?,
         "simd.sub" if !float => wrapping(Op::Sub, x, y)?,
@@ -947,14 +944,19 @@ fn simd_lane(sym: &str, x: &Value, y: &Value, vt: &MT) -> R<Value> {
         "simd.mul" => arith(Op::Mul, x, y, &elem)?,
         "simd.div" => arith(Op::Div, x, y, &elem)?,
         "simd.min" => {
-            if y < x && !float || float && y.as_f64() < x.as_f64() {
+            if y < x && !float
+                || float && crate::interp::fwp_partial_cmp(y, x) == Some(std::cmp::Ordering::Less)
+            {
                 y.clone()
             } else {
                 x.clone()
             }
         }
         _ => {
-            if y > x && !float || float && y.as_f64() > x.as_f64() {
+            if y > x && !float
+                || float
+                    && crate::interp::fwp_partial_cmp(y, x) == Some(std::cmp::Ordering::Greater)
+            {
                 y.clone()
             } else {
                 x.clone()

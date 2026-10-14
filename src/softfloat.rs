@@ -4,6 +4,7 @@ use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 /// The same portable core, available to the C backend and target ABI tests.
 pub const C_SOURCE: &str = include_str!(concat!(env!("OUT_DIR"), "/softfloat.c"));
+pub const C_HEADER: &str = include_str!(concat!(env!("OUT_DIR"), "/float_abi.h"));
 pub const MATH_SOURCE: &str = include_str!(concat!(env!("OUT_DIR"), "/float_math.cpp"));
 
 #[repr(C)]

@@ -275,17 +275,17 @@ fn malformed_inputs() -> Vec<(&'static str, Vec<u8>, String)> {
         ),
         (
             "normalize",
-            [b"FWP1\x01".to_vec(), leb(0), vec![0; 16], huge.clone()].concat(),
+            [b"FWP1\x02".to_vec(), leb(0), vec![0; 16], huge.clone()].concat(),
             bad("bad header"),
         ),
         (
             "normalize",
-            [b"FWP1\x01".to_vec(), leb(1), leb(1 << 40)].concat(),
+            [b"FWP1\x02".to_vec(), leb(1), leb(1 << 40)].concat(),
             bad("bad header"),
         ),
         (
             "normalize",
-            [b"FWP1\x01".to_vec(), leb(1)].concat(),
+            [b"FWP1\x02".to_vec(), leb(1)].concat(),
             bad("truncated header"),
         ),
         // a switch to another transport that nobody asked for

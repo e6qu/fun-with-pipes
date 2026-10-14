@@ -83,14 +83,18 @@ frame   := 0x01 len:u32le payload               one encoded value
 end     := 0x00 0x00 0x00 0x00 0x00
 ```
 
-* `version` is 1. The capabilities offered are `PIPE_V1` and the
+* `version` is 2. Version 1 peers are rejected immediately after the version
+  byte, before decoding capabilities or payloads. The `FWP1` magic identifies
+  the stream family; capability versions identify transports independently.
+  The capabilities offered are `PIPE_V1` and the
   [transports](#transports) `UDS_V1` and `SHM_V1`; `GRPC_V1`,
   `STREAMING`, `TLS` and `ZSTD` are reserved names. A reader ignores
   capabilities it does not know. The transport never changes the meaning
   of a program. (Calls between [services](services.md) use gRPC instead,
   with the same value encoding and fingerprints underneath.)
 * The **fingerprint** is two little-endian FNV-1a 64-bit hashes, of the
-  canonical structural type string and of `"fwp:"` followed by it. The
+  `"fwp:2:"` followed by the canonical structural type string, and of
+  `"fwp:2:type:"` followed by that string. The
   canonical string includes module-qualified names *and the structure* of
   nominal types (fields and variants), so programs agree only when their
   types really are the same. A consumer whose expected input type has a
@@ -107,6 +111,7 @@ architecture-independent:
 |---|---|
 | `I8`..`I128`, `U8`..`U128` | fixed width little-endian (`ISize`/`USize` as 64 bits) |
 | `F32`, `F64` | IEEE 754 bits, little-endian |
+| `F16`, `BF16`, `F128` | binary16, bfloat16 and binary128 bits: 2, 2 and 16 bytes, little-endian |
 | `TInt[N]` | 64-bit little-endian value; `Trit` one byte |
 | `String`, `Bytes` | length (LEB128) then bytes (UTF-8 for strings) |
 | records, tuples | fields in canonical order (numeric labels first, then names) |
@@ -116,6 +121,12 @@ architecture-independent:
 
 `hash` is FNV-1a 64 over the same encoding, so it is stable across runs,
 backends and machines.
+
+Version 2 changes the half/bfloat/quad payloads and every type fingerprint.
+Version 1 used binary32 for F16/BF16 and binary64 for F128. There is no implicit
+wire upgrade; rebuild both peers together. Raw encoding preserves signed zeros
+and NaN payload bits; arithmetic has a separate canonical-NaN contract. See the
+[format migration status](float-formats.md) for the unfinished integration gates.
 
 Decoding is strict, and fails the same way in both backends (exit 3):
 

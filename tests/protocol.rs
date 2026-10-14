@@ -136,7 +136,7 @@ fn golden_bytes() {
     assert_eq!(proto::frame(&[1, 2]), vec![1, 2, 0, 0, 0, 1, 2]);
     assert_eq!(proto::end_frame(), vec![0, 0, 0, 0, 0]);
     let h = proto::header(&MT::con("std::I64"), &prog);
-    assert_eq!(&h[..5], b"FWP1\x01");
+    assert_eq!(&h[..5], b"FWP1\x02");
 }
 
 #[test]
@@ -180,10 +180,39 @@ fn header_offers_the_transports() {
 }
 
 #[test]
-fn legacy_float_formats_keep_v1_widths_and_ieee_payload_bits() {
+fn float_formats_keep_v2_widths_and_ieee_payload_bits() {
     let prog = program();
-    assert_eq!(proto::VERSION, 1);
-    for name in ["F16", "BF16", "F32"] {
+    assert_eq!(proto::VERSION, 2);
+    for name in ["F16", "BF16", "F128"] {
+        let ty = MT::con(&format!("std::{name}"));
+        let bits: &[u128] = match name {
+            "F16" => &[0x3c00, 0x8000, 0x7c00, 1, 0x7e42, 0xfe31],
+            "BF16" => &[0x3f80, 0x8000, 0x7f80, 1, 0x7fc2, 0xffc1],
+            _ => &[
+                0x3fff0000000000000000000000000000,
+                1 << 127,
+                0x7fff0000000000000000000000000000,
+                1,
+                0x7fff8000000000000000000000001234,
+            ],
+        };
+        for &bits in bits {
+            let value = match name {
+                "F16" => Value::F16(fwp::softfloat::Binary16::from_bits(bits as u16)),
+                "BF16" => Value::BF16(fwp::softfloat::BFloat16::from_bits(bits as u16)),
+                _ => Value::F128(fwp::softfloat::Binary128::from_bits(bits)),
+            };
+            let mut bytes = Vec::new();
+            proto::encode(&mut bytes, &value, &ty, &prog);
+            assert_eq!(
+                bytes,
+                bits.to_le_bytes()[..if name == "F128" { 16 } else { 2 }]
+            );
+            let decoded = proto::decode(&mut proto::Reader::new(&bytes), &ty, &prog).unwrap();
+            assert_eq!(decoded, value);
+        }
+    }
+    for name in ["F32"] {
         let ty = MT::con(&format!("std::{name}"));
         for bits in [
             0x3f800000_u32,
@@ -203,7 +232,7 @@ fn legacy_float_formats_keep_v1_widths_and_ieee_payload_bits() {
             assert_eq!(value.to_bits(), bits);
         }
     }
-    for name in ["F64", "F128"] {
+    for name in ["F64"] {
         let ty = MT::con(&format!("std::{name}"));
         for bits in [
             0x3ff0000000000000_u64,
@@ -247,4 +276,15 @@ fn ternary_wire_values_must_fit_the_declared_type() {
             );
         }
     }
+}
+
+#[test]
+fn old_protocol_is_rejected_before_reading_any_payload() {
+    assert_eq!(
+        proto::read_header(&mut &[1u8][..]).err().unwrap(),
+        "unsupported protocol version 1"
+    );
+    let canonical = "std::F128";
+    let old_first_half = proto::fnv1a64(canonical.as_bytes()).to_le_bytes();
+    assert_ne!(&proto::fingerprint(canonical)[..8], &old_first_half);
 }

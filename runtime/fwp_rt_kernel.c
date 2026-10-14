@@ -77,7 +77,7 @@ static void fwp_tape_link_scope(fwp_tape *t, int32_t slot) {
 #endif
 }
 
-static V fwp_ad_scope_apply(V callback, uint32_t argc, const V *args) {
+static V fwp_ad_scope_apply(V callback, uint32_t argc, V *args) {
     fwp_tape_scope scope = {-1};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);

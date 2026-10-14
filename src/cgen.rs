@@ -228,7 +228,7 @@ fn cc_command(cc: &(String, Vec<String>)) -> std::process::Command {
 
 /// The archiver for static libraries: `AR`, or for a cross target
 /// `<triple>-ar` (else `llvm-ar`), or `ar`.
-fn archiver() -> String {
+pub(crate) fn archiver() -> String {
     if let Ok(a) = std::env::var("AR") {
         return a;
     }
@@ -258,7 +258,7 @@ pub fn set_native_options(o: NativeOptions) {
     *NATIVE_OPTIONS.lock().unwrap() = Some(o);
 }
 
-fn native_options() -> NativeOptions {
+pub(crate) fn native_options() -> NativeOptions {
     NATIVE_OPTIONS.lock().unwrap().clone().unwrap_or_default()
 }
 
@@ -1123,8 +1123,11 @@ fn num_kind(mt: &MT) -> Option<(&'static str, String, u64)> {
         "U32" => "K_U32",
         "U64" | "USize" => "K_U64",
         "U128" => "K_U128",
-        "F32" | "F16" | "BF16" => "K_F32",
-        "F64" | "F128" => "K_F64",
+        "F16" => "K_F16",
+        "BF16" => "K_BF16",
+        "F32" => "K_F32",
+        "F128" => "K_F128",
+        "F64" => "K_F64",
         "TInt" => "K_TINT",
         "Trit" => "K_TRIT",
         _ => return None,
@@ -1482,7 +1485,7 @@ impl<'p> Gen<'p> {
         self.tree_owners.insert(mt.clone(), id);
         self.tree_owner_defs.push(String::new());
         let mut body = format!("static void fwp_own_tree{id}(V v) {{\n    for (;;) {{\n        uint8_t *c = fwp_rc_slot(v);\n        if (!c) return;\n        if (*c) fwp_trap(\"internal: aliased fresh result tree\");\n        fwp_rc_fresh(v);\n");
-        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128"))
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128" | "std::F128"))
         {
             body.push_str("        return;\n    }\n}\n");
             self.tree_owner_defs[id] = body;
@@ -1638,7 +1641,7 @@ impl<'p> Gen<'p> {
             mt.to_string().replace("*/", "* /"),
             id
         );
-        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128"))
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128" | "std::F128"))
         {
             return format!(
                 "{}        fwp_rc_free_obj(v);\n        return;\n    }}\n}}\n",
@@ -1970,6 +1973,8 @@ impl<'p> Gen<'p> {
             Value::U64(x) => format!("(V){}ULL", x),
             Value::F32(x) => format!("(V)0x{:x}U", x.to_bits()),
             Value::F64(x) => format!("(V)0x{:x}ULL", x.to_bits()),
+            Value::F16(x) => format!("(V)0x{:x}U", x.to_bits()),
+            Value::BF16(x) => format!("(V)0x{:x}U", x.to_bits()),
             Value::TInt(x) => format!("(V)(int64_t){}LL", x),
             Value::Trit(x) => format!("(V)(int64_t){}", x),
             Value::Str(s) => self.string_const(s.as_bytes()),
@@ -1996,6 +2001,11 @@ impl<'p> Gen<'p> {
                 let (hi, lo) = ((x >> 64) as u64, *x as u64);
                 format!("fwp_box_u128(((u128){}ULL << 64) | {}ULL)", hi, lo)
             }
+            Value::F128(x) => format!(
+                "fwp_box_f128((float128_t){{{{{}ULL, {}ULL}}}})",
+                x.to_bits() as u64,
+                (x.to_bits() >> 64) as u64
+            ),
             Value::Data(tag, fs) => {
                 let parts: Vec<String> = fs.iter().map(|f| self.const_expr(f)).collect();
                 format!(
@@ -2022,6 +2032,9 @@ impl<'p> Gen<'p> {
                     Some(Value::U64(_)) => "K_U64",
                     Some(Value::F32(_)) => "K_F32",
                     Some(Value::F64(_)) => "K_F64",
+                    Some(Value::F16(_)) => "K_F16",
+                    Some(Value::BF16(_)) => "K_BF16",
+                    Some(Value::F128(_)) => "K_F128",
                     _ => "K_OPAQUE",
                 };
                 format!(
@@ -5208,6 +5221,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     Value::F64(x) => {
                         format!("fwp_f64({}) == fwp_f64((V)0x{:x}ULL)", v, x.to_bits())
                     }
+                    Value::F16(x) => format!("fwp_f128_compare(f16_to_f128((float16_t){{(uint16_t){v}}}), f16_to_f128((float16_t){{{}U}})) == 0", x.to_bits()),
+                    Value::BF16(x) => format!("fwp_f128_compare(fwp_bf16_to_f128((uint16_t){v}), fwp_bf16_to_f128({}U)) == 0", x.to_bits()),
+                    Value::F128(x) => format!("fwp_f128_compare(fwp_f128({v}), (float128_t){{{{{}ULL, {}ULL}}}}) == 0", x.to_bits() as u64, (x.to_bits() >> 64) as u64),
                     Value::I128(x) => {
                         let (hi, lo) = ((*x as u128 >> 64) as u64, *x as u128 as u64);
                         format!(
@@ -5512,13 +5528,13 @@ impl<'p> Gen<'p> {
             }
             "float.convert" => {
                 let (ks, _, _) = nk(&p(0));
-                format!("return fwp_float_of({}, fwp_as_f64({}, l0));", rk, ks)
+                format!("return fwp_float_convert({}, {}, l0);", ks, rk)
             }
             "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" => {
                 format!("return fwp_fmath({}, FM_{}, l0);", rk, sym.to_uppercase())
             }
             "pow" => format!(
-                "return fwp_float_of({rk}, pow(fwp_as_f64({rk}, l1), fwp_as_f64({rk}, l0)));",
+                "return fwp_pow({rk}, l1, l0);",
                 rk = rk
             ),
             "abs" => format!("return fwp_abs({}, l0, {});", rk, Self::cstr(&rname)),
@@ -8524,6 +8540,35 @@ static const fwp_exec_spec exec_spec{i} = {{
     };
     let mut out = String::new();
     out.push_str("/* Generated by fwp. */\n");
+    fn exact_type(t: &MT) -> bool {
+        match t {
+            MT::Con(n, a) => {
+                matches!(n.as_str(), "std::F16" | "std::BF16" | "std::F128")
+                    || a.iter().any(exact_type)
+            }
+            MT::Record(fields) => fields.iter().any(|(_, t)| exact_type(t)),
+            MT::Fun(a, b) => exact_type(a) || exact_type(b),
+            MT::Nat(_) => false,
+        }
+    }
+    let exact = g.descs.keys().any(exact_type)
+        || prog
+            .funcs
+            .iter()
+            .enumerate()
+            .any(|(i, f)| live[i] && (exact_type(&f.ty) || f.locals.iter().any(exact_type)));
+    if exact {
+        out.push_str("#ifndef _GNU_SOURCE\n#define _GNU_SOURCE\n#endif\n");
+        out.push_str(crate::float_codegen::MARK);
+        let _ = writeln!(
+            out,
+            "/* Exact float core {}. Link the emitted .float.c and .float.cpp companions. */",
+            crate::float_codegen::source_stamp()
+        );
+        out.push_str(crate::softfloat::C_HEADER);
+        out.push('\n');
+    }
+
     if arc {
         out.push_str("#define FWP_ARC_ONLY 1\n");
     }
@@ -9056,9 +9101,12 @@ pub struct TempDir {
 
 impl TempDir {
     pub fn new(prefix: &str) -> Result<TempDir, String> {
+        Self::in_parent(&std::env::temp_dir(), prefix)
+    }
+
+    pub(crate) fn in_parent(base: &std::path::Path, prefix: &str) -> Result<TempDir, String> {
         #[cfg(unix)]
         use std::os::unix::fs::DirBuilderExt;
-        let base = std::env::temp_dir();
         let mut last = String::new();
         for attempt in 0..16u32 {
             let path = base.join(format!("{}-{}", prefix, random_suffix(attempt)));
@@ -9274,6 +9322,7 @@ pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Resul
     let c_path = dir.join("fat-program.c");
     std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
     let cc = c_compiler()?;
+    let floats = crate::float_codegen::link_archives(c_source, &cc, opt, false, dir.path())?;
     let variants = fat_variants();
     let mut objs = Vec::new();
     let mut result = Ok(());
@@ -9328,6 +9377,7 @@ pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Resul
                 .arg(output)
                 .arg(&dpath)
                 .args(&objs)
+                .args(&floats)
                 .args(crate::ffi::links())
                 .args(tls_links(c_source))
                 .args(["-lm", "-lpthread"]),
@@ -9364,6 +9414,7 @@ pub fn compile_library(
     std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
     std::fs::write(output.with_extension("h"), header).map_err(|e| e.to_string())?;
     let cc = c_compiler()?;
+    let floats = crate::float_codegen::link_archives(c_source, &cc, opt, false, dir.path())?;
     let mut result = run_cc(
         cc_command(&cc)
             .args([
@@ -9384,11 +9435,23 @@ pub fn compile_library(
             LibKind::Static => {
                 let _ = std::fs::remove_file(output);
                 let ar = archiver();
+                let mut members = vec![obj.clone()];
+                for archive in &floats {
+                    run_cc(
+                        std::process::Command::new(&ar)
+                            .current_dir(dir.path())
+                            .arg("x")
+                            .arg(archive),
+                        &ar,
+                    )?;
+                    members.push(dir.join("float.c.o"));
+                    members.push(dir.join("float.cpp.o"));
+                }
                 run_cc(
                     std::process::Command::new(&ar)
                         .arg("rcs")
                         .arg(output)
-                        .arg(&obj),
+                        .args(&members),
                     &ar,
                 )
             }
@@ -9398,6 +9461,7 @@ pub fn compile_library(
                     .arg("-o")
                     .arg(output)
                     .arg(&obj)
+                    .args(&floats)
                     .args(crate::ffi::links())
                     .args(tls_links(c_source))
                     .args(["-lm", "-lpthread"]),
@@ -9436,6 +9500,9 @@ pub fn compile_for(
     std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
     let result = if target.is_wasm() {
         let cc = std::env::var("FWP_WASM_CC").unwrap_or_else(|_| "clang".into());
+        let float_cc = (cc.clone(), vec!["--target=wasm32-wasi".into()]);
+        let floats =
+            crate::float_codegen::link_archives(c_source, &float_cc, opt, true, dir.path())?;
         let obj = dir.join(format!("{}.o", stem));
         let lj_src = dir.join("fwp-longjmp.S");
         let lj_obj = dir.join("fwp-longjmp.o");
@@ -9481,6 +9548,7 @@ pub fn compile_for(
                     .arg(&obj)
                     .arg(&lj_obj)
                     .arg(&sj_obj)
+                    .args(&floats)
                     .args(crate::ffi::links())
                     .args(wasm_links(c_source))
                     .args(["-lm", "-Wl,-z,stack-size=33554432"]),
@@ -9507,6 +9575,7 @@ pub fn compile_for(
         result
     } else {
         let cc = c_compiler()?;
+        let floats = crate::float_codegen::link_archives(c_source, &cc, opt, false, dir.path())?;
         let native = native_options();
         let link_static: &[&str] = if native.static_link {
             &["-static"]
@@ -9541,6 +9610,7 @@ pub fn compile_for(
                             .arg("-o")
                             .arg(output)
                             .arg(&obj)
+                            .args(&floats)
                             .args(crate::ffi::links())
                             .args(tls_links(c_source))
                             .args(["-lm", "-lpthread"]),
@@ -9560,6 +9630,7 @@ pub fn compile_for(
                     .arg("-o")
                     .arg(output)
                     .arg(&c_path)
+                    .args(&floats)
                     .args(crate::ffi::links())
                     .args(tls_links(c_source))
                     .arg("-lm")

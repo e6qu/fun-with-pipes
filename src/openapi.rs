@@ -292,6 +292,18 @@ impl Gen<'_> {
                 ("type", Json::str("number")),
                 ("format", Json::str("double")),
             ]),
+            Shape::ExactFloat(format) => obj(vec![
+                ("type", Json::str("number")),
+                (
+                    "format",
+                    Json::str(match format {
+                        crate::softfloat::FloatFormat::F16 => "float16",
+                        crate::softfloat::FloatFormat::BF16 => "bfloat16",
+                        crate::softfloat::FloatFormat::F128 => "float128",
+                        _ => unreachable!("exact float schema"),
+                    }),
+                ),
+            ]),
             Shape::TInt(w) => {
                 let max = (3i128.pow(w.min(40) as u32) - 1) / 2;
                 obj(vec![

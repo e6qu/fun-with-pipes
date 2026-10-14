@@ -1457,11 +1457,16 @@ static V fwp_p_parse_float(V s, int kind) {
      * optional sign */
     if (fwp_word_ci(d + o, n - o, "inf") || fwp_word_ci(d + o, n - o, "infinity")) {
         double x = d[0] == '-' ? -INFINITY : INFINITY;
-        return fwp_some(kind == K_F32 ? fwp_from_f32((float)x) : fwp_from_f64(x));
+        return fwp_some(fwp_float_of(kind, x));
     }
     if (fwp_word_ci(d, n, "nan"))
-        return fwp_some(kind == K_F32 ? fwp_from_f32(NAN) : fwp_from_f64(NAN));
+        return fwp_some(fwp_float_of(kind, NAN));
     if (!fwp_valid_float(STR(s)->d, STR(s)->len)) return FWP_NONE;
+#ifdef FWP_EXACT_FLOAT
+    if (kind == K_F16 || kind == K_BF16 || kind == K_F128) {
+        V out; return fwp_parse_exact(d, kind, &out) ? fwp_some(out) : FWP_NONE;
+    }
+#endif
     if (kind == K_F32) return fwp_some(fwp_from_f32(strtof(STR(s)->d, 0)));
     return fwp_some(fwp_from_f64(strtod(STR(s)->d, 0)));
 }

@@ -99,6 +99,20 @@ static void fwp_fmt_f32(char *out, float x) {
     fwp_finish_float(out);
 }
 
+#ifdef FWP_EXACT_FLOAT
+static void fwp_fmt_exact(char *out, int k, V v) {
+    float128_t bits = k == K_F128 ? fwp_f128(v) : (float128_t){{v, 0}};
+    if (fwp_decimal_show(bits.v[0], bits.v[1], fwp_exact_format(k), out, 64) < 0) fwp_trap("out of memory");
+    fwp_finish_float(out);
+}
+static u128 fwp_float_total_key(int k, V v) {
+    u128 bits, sign;
+    if (k == K_F128) { float128_t x = fwp_f128(v); bits = ((u128)x.v[1] << 64) | x.v[0]; sign = (u128)1 << 127; }
+    else { bits = v; sign = (u128)1 << 15; }
+    return bits & sign ? (~bits & (sign | (sign - 1))) : bits ^ sign;
+}
+#endif
+
 static void fwp_fmt_u128(char *out, u128 x) {
     char tmp[64];
     int i = 0;
@@ -188,6 +202,10 @@ static int fwp_is_negative(V v, const fwp_desc *d) {
     case K_I128: return fwp_i128(v) < 0;
     case K_F32: return signbit(fwp_f32(v)) != 0;
     case K_F64: return signbit(fwp_f64(v)) != 0;
+#ifdef FWP_EXACT_FLOAT
+    case K_F16: case K_BF16: return (v & 0x8000) != 0;
+    case K_F128: return (fwp_f128(v).v[1] >> 63) != 0;
+#endif
     default: return 0;
     }
 }
@@ -209,6 +227,9 @@ static void fwp_write(fwp_buf *b, V v, const fwp_desc *d, int top) {
     case K_U128: fwp_fmt_u128(t, fwp_u128(v)); buf_puts(b, t); return;
     case K_F32: fwp_fmt_f32(t, fwp_f32(v)); buf_puts(b, t); return;
     case K_F64: fwp_fmt_f64(t, fwp_f64(v)); buf_puts(b, t); return;
+#ifdef FWP_EXACT_FLOAT
+    case K_F16: case K_BF16: case K_F128: fwp_fmt_exact(t, d->kind, v); buf_puts(b, t); return;
+#endif
     case K_TINT: fwp_trits(b, (int64_t)v, d->width); return;
     case K_TRIT: buf_puts(b, (int64_t)v == 1 ? "+1" : (int64_t)v == -1 ? "-1" : "0"); return;
     case K_FUN: buf_puts(b, "<function>"); return;
@@ -379,6 +400,9 @@ static int fwp_cmp(V a, V b, const fwp_desc *d) {
     case K_U128: return CMP(fwp_u128(a), fwp_u128(b));
     case K_F32: return CMP(fwp_total_key32(fwp_f32(a)), fwp_total_key32(fwp_f32(b)));
     case K_F64: return CMP(fwp_total_key64(fwp_f64(a)), fwp_total_key64(fwp_f64(b)));
+#ifdef FWP_EXACT_FLOAT
+    case K_F16: case K_BF16: case K_F128: return CMP(fwp_float_total_key(d->kind, a), fwp_float_total_key(d->kind, b));
+#endif
     case K_STR: case K_BYTES: {
         uint64_t la = STR(a)->len, lb = STR(b)->len;
         int c = memcmp(STR(a)->d, STR(b)->d, la < lb ? la : lb);
@@ -438,6 +462,9 @@ static int fwp_eq(V a, V b, const fwp_desc *d) {
     switch (d->kind) {
     case K_F32: return fwp_f32(a) == fwp_f32(b);
     case K_F64: return fwp_f64(a) == fwp_f64(b);
+#ifdef FWP_EXACT_FLOAT
+    case K_F16: case K_BF16: case K_F128: return fwp_f128_compare(fwp_float_quad(d->kind, a), fwp_float_quad(d->kind, b)) == 0;
+#endif
     case K_LIST:
         for (;;) {
             if (a == 0 || b == 0) return a == b;
@@ -467,6 +494,10 @@ static int fwp_eq(V a, V b, const fwp_desc *d) {
 
 /* IEEE partial order for lt/le/gt/ge at the top level (2 = unordered). */
 static int fwp_partial_cmp(V a, V b, const fwp_desc *d) {
+#ifdef FWP_EXACT_FLOAT
+    if (d->kind == K_F16 || d->kind == K_BF16 || d->kind == K_F128)
+        return fwp_f128_compare(fwp_float_quad(d->kind, a), fwp_float_quad(d->kind, b));
+#endif
     if (d->kind == K_F64) {
         double x = fwp_f64(a), y = fwp_f64(b);
         if (isnan(x) || isnan(y)) return 2;
@@ -498,9 +529,12 @@ static void fwp_le(fwp_buf *b, uint64_t x, int n) {
 static void fwp_encode(fwp_buf *b, V v, const fwp_desc *d) {
     switch (d->kind) {
     case K_I8: case K_U8: case K_TRIT: fwp_le(b, v, 1); return;
-    case K_I16: case K_U16: fwp_le(b, v, 2); return;
+    case K_I16: case K_U16: case K_F16: case K_BF16: fwp_le(b, v, 2); return;
     case K_I32: case K_U32: case K_F32: fwp_le(b, v, 4); return;
     case K_I64: case K_U64: case K_F64: case K_TINT: fwp_le(b, v, 8); return;
+#ifdef FWP_EXACT_FLOAT
+    case K_F128: { float128_t x = fwp_f128(v); fwp_le(b, x.v[0], 8); fwp_le(b, x.v[1], 8); return; }
+#endif
     case K_I128: case K_U128: {
         u128 x = d->kind == K_I128 ? (u128)fwp_i128(v) : fwp_u128(v);
         fwp_le(b, (uint64_t)x, 8);

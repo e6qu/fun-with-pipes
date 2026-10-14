@@ -247,6 +247,8 @@ jobs:
           cargo test --lib
       - name: Child signal status in both engines
         run: cargo test --test cli child_signal_status_matches_the_shell_in_both_engines -- --exact
+      - name: Exact language formats and protocol migration
+        run: cargo test --test float_formats --test protocol
       - name: Ownership and foreign boundary regressions
         run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls --test softfloat_core --test float_math --test native_allocator --test file_runtime_ownership --test file_inline_path --test file_storage_disposal --test array_size_limits
       - name: Iterator forcing, ownership and specialization

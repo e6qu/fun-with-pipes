@@ -7,6 +7,7 @@ use std::io::{Read, Write};
 use std::rc::Rc;
 
 use crate::ir::*;
+use crate::softfloat::{BFloat16, Binary128, Binary16};
 use crate::value::*;
 
 /// Non-local control flow.
@@ -336,6 +337,10 @@ impl<'p> Interp<'p> {
             "prim.neg" => match &a[0] {
                 Value::F32(x) => Ok(Value::F32(-x)),
                 Value::F64(x) => Ok(Value::F64(-x)),
+                Value::F16(x) => Ok(Value::F16(-*x)),
+                Value::BF16(x) => Ok(Value::BF16(-*x)),
+                Value::F128(x) => Ok(Value::F128(-*x)),
+
                 x => arith(Op::Sub, &zero_of(&result)?, x, &result),
             },
             "prim.zero" => zero_of(&result),
@@ -392,36 +397,62 @@ impl<'p> Interp<'p> {
                 }
             }
             "int.to-float" => {
-                let x = match &a[0] {
-                    Value::U128(x) => *x as f64,
-                    v => v.as_i128().unwrap() as f64,
+                let (negative, magnitude) = match &a[0] {
+                    Value::U128(x) => (false, *x),
+                    v => {
+                        let x = v.as_i128().unwrap();
+                        (x < 0, x.unsigned_abs())
+                    }
                 };
-                float_of(&result, x)
+                crate::mono::int_value(&result, negative, magnitude)
+                    .ok_or_else(|| Ctl::Trap("invalid integer-to-float destination".into()))
             }
             "float.to-int" => {
-                let x = a[0].as_f64().unwrap();
                 let r = option_inner(&result);
-                if !x.is_finite() {
-                    return Ok(Value::nullary(0));
-                }
-                // exact bounds: [-2^127, 2^127) converts through i128,
-                // [2^127, 2^128) only to U128
-                let t = x.trunc();
-                let p127 = 2f64.powi(127);
-                let v = if t < -p127 || t >= 2.0 * p127 {
-                    None
-                } else if t >= p127 {
-                    u128_to(&r, t as u128)
-                } else {
-                    checked_int(&r, t as i128)
-                };
+                let v =
+                    a[0].as_quad()
+                        .unwrap()
+                        .trunc_integer()
+                        .and_then(|(negative, magnitude)| {
+                            if negative {
+                                if magnitude > (1u128 << 127) {
+                                    None
+                                } else {
+                                    checked_int(&r, (magnitude as i128).wrapping_neg())
+                                }
+                            } else {
+                                u128_to(&r, magnitude)
+                            }
+                        });
                 Ok(match v {
                     Some(v) => Value::data(1, vec![v]),
                     None => Value::nullary(0),
                 })
             }
-            "float.convert" => float_of(&result, a[0].as_f64().unwrap()),
+            "float.convert" => float_of_quad(&result, a[0].as_quad().unwrap()),
             "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" => {
+                macro_rules! exact_math {
+                    ($x:expr, $v:ident) => {
+                        return Ok(Value::$v(match sym {
+                            "sqrt" => $x.sqrt(),
+                            "exp" => $x.exp(),
+                            "ln" => $x.ln(),
+                            "sin" => $x.sin(),
+                            "cos" => $x.cos(),
+                            "tan" => $x.tan(),
+                            "floor" => $x.floor(),
+                            "ceil" => $x.ceil(),
+                            "round" => $x.round(),
+                            _ => unreachable!(),
+                        }))
+                    };
+                }
+                match &a[0] {
+                    Value::F16(x) => exact_math!(x, F16),
+                    Value::BF16(x) => exact_math!(x, BF16),
+                    Value::F128(x) => exact_math!(x, F128),
+                    _ => {}
+                }
                 let x = a[0].as_f64().unwrap();
                 let y = match sym {
                     "sqrt" => x.sqrt(),
@@ -446,12 +477,22 @@ impl<'p> Interp<'p> {
                 }
             }
             "pow" => {
+                match (&a[1], &a[0]) {
+                    (Value::F16(b), Value::F16(e)) => return Ok(Value::F16(b.pow(*e))),
+                    (Value::BF16(b), Value::BF16(e)) => return Ok(Value::BF16(b.pow(*e))),
+                    (Value::F128(b), Value::F128(e)) => return Ok(Value::F128(b.pow(*e))),
+                    _ => {}
+                }
                 let (e, b) = (a[0].as_f64().unwrap(), a[1].as_f64().unwrap());
                 float_of(&result, b.powf(e))
             }
             "abs" => match &a[0] {
                 Value::F32(x) => Ok(Value::F32(x.abs())),
                 Value::F64(x) => Ok(Value::F64(x.abs())),
+                Value::F16(x) => Ok(Value::F16(x.abs())),
+                Value::BF16(x) => Ok(Value::BF16(x.abs())),
+                Value::F128(x) => Ok(Value::F128(x.abs())),
+
                 v => {
                     let x = v.as_i128().unwrap();
                     if x < 0 {
@@ -868,10 +909,13 @@ fn bind(p: &Pat, v: &Value, locals: &mut [Value]) -> bool {
 }
 
 /// IEEE-style partial order used by `lt`, `le`, `gt`, `ge`.
-fn fwp_partial_cmp(a: &Value, b: &Value) -> Option<Ordering> {
+pub(crate) fn fwp_partial_cmp(a: &Value, b: &Value) -> Option<Ordering> {
     match (a, b) {
         (Value::F32(x), Value::F32(y)) => x.partial_cmp(y),
         (Value::F64(x), Value::F64(y)) => x.partial_cmp(y),
+        (Value::F16(x), Value::F16(y)) => x.to_quad().numeric_cmp(y.to_quad()),
+        (Value::BF16(x), Value::BF16(y)) => x.to_quad().numeric_cmp(y.to_quad()),
+        (Value::F128(x), Value::F128(y)) => x.numeric_cmp(*y),
         _ => Some(a.cmp(b)),
     }
 }
@@ -935,8 +979,9 @@ pub fn from_i128(mt: &MT, x: i128) -> R<Value> {
         return Ok(v);
     }
     match prim_name(mt) {
-        "F32" | "F16" | "BF16" => Ok(Value::F32(x as f32)),
-        "F64" | "F128" => Ok(Value::F64(x as f64)),
+        "F16" | "BF16" | "F32" | "F64" | "F128" => {
+            Ok(crate::mono::int_value(mt, x < 0, x.unsigned_abs()).unwrap())
+        }
         n => trap(format!(
             "integer {} does not fit in {}",
             x,
@@ -959,7 +1004,7 @@ pub(crate) fn checked_int(mt: &MT, x: i128) -> Option<Value> {
         "U128" => Value::U128(u128::try_from(x).ok()?),
         "TInt" => {
             let w = tint_width(mt);
-            if x.abs() > tint_max(w) {
+            if x.unsigned_abs() > tint_max(w) as u128 {
                 return None;
             }
             Value::TInt(x as i64)
@@ -976,10 +1021,18 @@ fn u128_to(mt: &MT, x: u128) -> Option<Value> {
 }
 
 fn float_of(mt: &MT, x: f64) -> R<Value> {
-    match prim_name(mt) {
-        "F32" | "F16" | "BF16" => Ok(Value::F32(x as f32)),
-        _ => Ok(Value::F64(x)),
-    }
+    float_of_quad(mt, Binary128::from_f64(x))
+}
+
+fn float_of_quad(mt: &MT, x: Binary128) -> R<Value> {
+    Ok(match prim_name(mt) {
+        "F16" => Value::F16(Binary16::from_quad(x)),
+        "BF16" => Value::BF16(BFloat16::from_quad(x)),
+        "F32" => Value::F32(x.to_f32()),
+        "F64" => Value::F64(x.to_f64()),
+        "F128" => Value::F128(x),
+        _ => return trap("invalid float destination"),
+    })
 }
 
 macro_rules! int_cases {
@@ -1011,6 +1064,33 @@ pub fn arith(op: Op, a: &Value, b: &Value, mt: &MT) -> R<Value> {
                 Op::Mul => x * y,
                 Op::Div => x / y,
                 Op::Rem => x % y,
+            }))
+        }
+        (F16(x), F16(y)) => {
+            return Ok(F16(match op {
+                Op::Add => *x + *y,
+                Op::Sub => *x - *y,
+                Op::Mul => *x * *y,
+                Op::Div => *x / *y,
+                Op::Rem => *x % *y,
+            }))
+        }
+        (BF16(x), BF16(y)) => {
+            return Ok(BF16(match op {
+                Op::Add => *x + *y,
+                Op::Sub => *x - *y,
+                Op::Mul => *x * *y,
+                Op::Div => *x / *y,
+                Op::Rem => *x % *y,
+            }))
+        }
+        (F128(x), F128(y)) => {
+            return Ok(F128(match op {
+                Op::Add => *x + *y,
+                Op::Sub => *x - *y,
+                Op::Mul => *x * *y,
+                Op::Div => *x / *y,
+                Op::Rem => *x % *y,
             }))
         }
         (TInt(x), TInt(y)) => {

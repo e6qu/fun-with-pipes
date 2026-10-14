@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use crate::ir::{FuncId, TypeShape, MT};
+use crate::softfloat::{BFloat16, Binary128, Binary16, FloatFormat};
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -22,6 +23,9 @@ pub enum Value {
     U128(u128),
     F32(f32),
     F64(f64),
+    F16(Binary16),
+    BF16(BFloat16),
+    F128(Binary128),
     Str(Rc<str>),
     /// ADT value: constructor tag and fields.
     Data(u32, Rc<[Value]>),
@@ -156,10 +160,32 @@ impl Value {
 
     pub fn as_f64(&self) -> Option<f64> {
         match self {
+            Value::F16(x) => Some(x.to_quad().to_f64()),
+            Value::BF16(x) => Some(x.to_quad().to_f64()),
             Value::F32(x) => Some(*x as f64),
             Value::F64(x) => Some(*x),
             _ => None,
         }
+    }
+
+    /// Exact widening for comparisons and explicit float conversion.
+    /// Quad values never implicitly narrow through `as_f64`.
+    pub fn as_quad(&self) -> Option<Binary128> {
+        match self {
+            Value::F16(x) => Some(x.to_quad()),
+            Value::BF16(x) => Some(x.to_quad()),
+            Value::F32(x) => Some(Binary128::from_f32(*x)),
+            Value::F64(x) => Some(Binary128::from_f64(*x)),
+            Value::F128(x) => Some(*x),
+            _ => None,
+        }
+    }
+
+    pub fn is_float(&self) -> bool {
+        matches!(
+            self,
+            Value::F16(_) | Value::BF16(_) | Value::F32(_) | Value::F64(_) | Value::F128(_)
+        )
     }
 
     /// Build a list value (prelude `List`: Nil = 0, Cons = 1).
@@ -206,7 +232,10 @@ impl Value {
             Value::Trit(_) => 19,
             Value::File(_) => 20,
             Value::Native(_) => 21,
-            Value::Bytes(_) => 21,
+            Value::Bytes(_) => 22,
+            Value::F16(_) => 23,
+            Value::BF16(_) => 24,
+            Value::F128(_) => 25,
         }
     }
 }
@@ -229,6 +258,10 @@ impl Ord for Value {
             (U128(a), U128(b)) => a.cmp(b),
             (F32(a), F32(b)) => a.total_cmp(b),
             (F64(a), F64(b)) => a.total_cmp(b),
+            (F16(a), F16(b)) => a.total_cmp(*b),
+            (BF16(a), BF16(b)) => a.total_cmp(*b),
+            (F128(a), F128(b)) => a.total_cmp(*b),
+
             (Str(a), Str(b)) => a.as_bytes().cmp(b.as_bytes()),
             (Data(t1, f1), Data(t2, f2)) => t1.cmp(t2).then_with(|| f1.iter().cmp(f2.iter())),
             (Record(a), Record(b)) => a.iter().cmp(b.iter()),
@@ -265,6 +298,9 @@ pub fn fwp_eq(a: &Value, b: &Value) -> bool {
     match (a, b) {
         (F32(x), F32(y)) => x == y,
         (F64(x), F64(y)) => x == y,
+        (F16(x), F16(y)) => x.to_quad().numeric_cmp(y.to_quad()) == Some(Ordering::Equal),
+        (BF16(x), BF16(y)) => x.to_quad().numeric_cmp(y.to_quad()) == Some(Ordering::Equal),
+        (F128(x), F128(y)) => x.numeric_cmp(*y) == Some(Ordering::Equal),
         (Data(t1, f1), Data(t2, f2)) => {
             t1 == t2 && f1.len() == f2.len() && f1.iter().zip(f2.iter()).all(|(x, y)| fwp_eq(x, y))
         }
@@ -320,6 +356,10 @@ fn finish_float(s: String) -> String {
     } else {
         format!("{}.0", s)
     }
+}
+
+pub fn fmt_exact(bits: u128, format: FloatFormat) -> String {
+    finish_float(crate::softfloat::format_bits(bits, format).expect("float text allocation"))
 }
 
 /// Shortest round-trip decimal form of an `F64`.
@@ -451,6 +491,8 @@ fn needs_parens(v: &Value, mt: &MT, shapes: &dyn Shapes) -> bool {
         _ => {
             if let Some(i) = v.as_i128() {
                 i < 0 && !matches!(v, Value::TInt(_) | Value::Trit(_))
+            } else if let Value::F128(f) = v {
+                f.is_sign_negative()
             } else if let Some(f) = v.as_f64() {
                 f.is_sign_negative()
             } else {
@@ -474,6 +516,10 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
         Value::U128(x) => out.push_str(&x.to_string()),
         Value::F32(x) => out.push_str(&fmt_f32(*x)),
         Value::F64(x) => out.push_str(&fmt_f64(*x)),
+        Value::F16(x) => out.push_str(&fmt_exact(x.to_bits() as u128, FloatFormat::F16)),
+        Value::BF16(x) => out.push_str(&fmt_exact(x.to_bits() as u128, FloatFormat::BF16)),
+        Value::F128(x) => out.push_str(&fmt_exact(x.to_bits(), FloatFormat::F128)),
+
         Value::Str(s) => {
             if top {
                 out.push_str(s)

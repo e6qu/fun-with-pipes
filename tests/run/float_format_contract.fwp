@@ -1,5 +1,5 @@
-# These types currently use F32/F64 precision. A real-format migration changes
-# this fixture together with docs/float-formats.md and the protocol version.
+# Declared half/bfloat/quad formats round at their own precision.
+# Explicitly widening an F64 preserves the precision already lost at its source.
 half : F64 -> F16
 half = float.convert
 brain : F64 -> BF16

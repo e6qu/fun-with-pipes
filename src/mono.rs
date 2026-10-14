@@ -1,6 +1,7 @@
 //! Monomorphization: lowers type-checked bindings to IR functions, one per
 //! concrete instantiation, resolving trait methods to impls statically.
 
+use crate::softfloat::{BFloat16, Binary128, Binary16, FloatFormat};
 use std::collections::HashMap;
 
 use crate::ast::{self, ExprKind, NodeId, PatKind};
@@ -212,16 +213,28 @@ pub fn int_value(mt: &MT, neg: bool, mag: u128) -> Option<Value> {
         "U128" => Value::U128(mag),
         // from the magnitude, which may be 2^127 or more (one rounding)
         // (an integer zero has no sign)
-        "F32" | "F16" | "BF16" => Value::F32(if neg && mag != 0 {
+        "F32" => Value::F32(if neg && mag != 0 {
             -(mag as f32)
         } else {
             mag as f32
         }),
-        "F64" | "F128" => Value::F64(if neg && mag != 0 {
+        "F64" => Value::F64(if neg && mag != 0 {
             -(mag as f64)
         } else {
             mag as f64
         }),
+        "F16" => {
+            let x = Binary16::from_u128(mag);
+            Value::F16(if neg && mag != 0 { -x } else { x })
+        }
+        "BF16" => {
+            let x = BFloat16::from_u128(mag);
+            Value::BF16(if neg && mag != 0 { -x } else { x })
+        }
+        "F128" => {
+            let x = Binary128::from_u128(mag);
+            Value::F128(if neg && mag != 0 { -x } else { x })
+        }
         _ => return None,
     })
 }
@@ -229,12 +242,24 @@ pub fn int_value(mt: &MT, neg: bool, mag: u128) -> Option<Value> {
 pub fn float_value(mt: &MT, decimal: &str) -> Option<Value> {
     match mt {
         MT::Con(n, _) => match n.as_str() {
-            "std::F32" | "std::F16" | "std::BF16" => Some(Value::F32(
+            "std::F32" => Some(Value::F32(
                 decimal.parse().expect("validated decimal literal"),
             )),
-            "std::F64" | "std::F128" => Some(Value::F64(
+            "std::F64" => Some(Value::F64(
                 decimal.parse().expect("validated decimal literal"),
             )),
+            "std::F16" => Some(Value::F16(Binary16::from_bits(
+                crate::softfloat::parse_bits(decimal, FloatFormat::F16)
+                    .expect("validated decimal literal") as u16,
+            ))),
+            "std::BF16" => Some(Value::BF16(BFloat16::from_bits(
+                crate::softfloat::parse_bits(decimal, FloatFormat::BF16)
+                    .expect("validated decimal literal") as u16,
+            ))),
+            "std::F128" => Some(Value::F128(Binary128::from_bits(
+                crate::softfloat::parse_bits(decimal, FloatFormat::F128)
+                    .expect("validated decimal literal"),
+            ))),
             _ => None,
         },
         _ => None,

@@ -151,6 +151,12 @@ static int tp_float(fwp_tp *p, const fwp_desc *d, V *out) {
     char t[128];
     size_t l = tp_token(p, t, sizeof t);
     if (l >= sizeof t) return 0;
+#ifdef FWP_EXACT_FLOAT
+    if (d->kind == K_F16 || d->kind == K_BF16 || d->kind == K_F128) {
+        if (strcmp(t, "inf") && strcmp(t, "-inf") && strcmp(t, "NaN") && !fwp_valid_float(t, l)) return 0;
+        return fwp_parse_exact(t, d->kind, out);
+    }
+#endif
     double x;
     if (strcmp(t, "inf") == 0) x = INFINITY;
     else if (strcmp(t, "-inf") == 0) x = -INFINITY;
@@ -215,7 +221,7 @@ static int tp_value_inner(fwp_tp *p, const fwp_desc *d, int top, V *out, fwp_dec
     case K_I8: case K_I16: case K_I32: case K_I64: case K_I128:
     case K_U8: case K_U16: case K_U32: case K_U64: case K_U128:
         return tp_int(p, d, out);
-    case K_F32: case K_F64: return tp_float(p, d, out);
+    case K_F16: case K_BF16: case K_F128: case K_F32: case K_F64: return tp_float(p, d, out);
     case K_STR:
         if (top) {
             if (!fwp_valid_utf8((const unsigned char *)p->s + p->i, p->n - p->i)) return 0;
@@ -442,6 +448,14 @@ static int fwp_decode_inner(fwp_rd *r, const fwp_desc *d, V *out, fwp_decode_fie
     case K_TRIT:
         if (!rd_le(r, 1, &x) || (x != 255 && x > 1)) return 0;
         *out = (V)(int64_t)(int8_t)x; return 1;
+#ifdef FWP_EXACT_FLOAT
+    case K_F16: case K_BF16: if (!rd_le(r, 2, &x)) return 0; *out = x; return 1;
+    case K_F128: {
+        uint64_t lo, hi;
+        if (!rd_le(r, 8, &lo) || !rd_le(r, 8, &hi)) return 0;
+        *out = fwp_box_f128((float128_t){{lo, hi}}); return 1;
+    }
+#endif
     case K_I128: case K_U128: {
         uint64_t lo, hi;
         if (!rd_le(r, 8, &lo) || !rd_le(r, 8, &hi)) return 0;
@@ -1254,9 +1268,14 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             uint64_t ncaps, l;
             unsigned char fp[16];
             if (!fwp_read_exact(&ver, 1)) goto bad_header;
+            if (ver != 2) {
+                fprintf(stderr, "%s: unsupported protocol version %d\n", s->name, ver);
+                return 3;
+            }
             if ((ok = fwp_stdin_leb(&ncaps)) != 1) goto header_error;
             int uds = 0;
-            for (uint64_t i = 0; i < ncaps && i < 64; i++) {
+            if (ncaps > 64) goto bad_header;
+            for (uint64_t i = 0; i < ncaps; i++) {
                 if ((ok = fwp_stdin_name_len(&l)) != 1) goto header_error;
                 unsigned char tmp[256];
                 if (l == 6) {
@@ -1275,10 +1294,6 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             char *tname = (char *)fwp_alloc_leaf((size_t)l + 1);
             if (l && !fwp_read_exact((unsigned char *)tname, (size_t)l)) goto bad_header;
             tname[l] = 0;
-            if (ver != 1) {
-                fprintf(stderr, "%s: unsupported protocol version %d\n", s->name, ver);
-                return 3;
-            }
             if (memcmp(fp, s->in_fp, 16) != 0) {
                 fprintf(stderr, "%s: input type mismatch: expected `%s`, got `%s`\n", s->name, s->in_type, tname);
                 return 3;

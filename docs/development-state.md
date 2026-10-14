@@ -2,7 +2,8 @@
 
 Updated 2026-10-14. The user merged [PR #134](https://github.com/e6qu/fun-with-pipes/pull/134).
 Continue the remaining directions in [PLAN](../PLAN.md) from that merged baseline
-on `roadmap-after-134`. No follow-up PR is open yet. Publication, fixes and squash
+on `roadmap-after-134`, [PR #135](https://github.com/e6qu/fun-with-pipes/pull/135).
+The user authorized all remaining work together in this one draft PR. Publication, fixes and squash
 merge after passing final-head CI remain authorized. Every commit has one line,
 at most 80 characters, with no body, trailers or attribution. Failing tests are
 work to fix; queued CI gates merging, not implementation.
@@ -28,9 +29,10 @@ full Windows and true half/quad language formats remain unfinished.
 | 5 | In progress | Shared exact arithmetic/text/math cores and decimal-preserving syntax; value/storage/ABI/protocol migration remains |
 | 6 | In progress | Native Windows Rust and generated C allocator probes pass on both architectures; full C runtime/resources/networking/TLS and PE packages remain |
 
-The [float contract](float-formats.md) is authoritative: F16/BF16 still use F32
-language values and F128 still uses F64. The shared exact cores do not yet
-change that public behavior. Migrate both engines, arrays/workers, ownership,
+The [float contract](float-formats.md) is authoritative. The accepted PR #134
+baseline aliases F16/BF16 to F32 and F128 to F64. PR #135 is changing scalar
+values, parsing, math, text/JSON and protocol encoding to real formats; these
+changes are under development and not yet accepted by runner validation. Migrate both engines, arrays/workers, ownership,
 foreign ABI, text and versioned wire encoding together; do not publish partial
 format support or silently narrow quad values. Nested reverse mode and
 checkpointing are not implemented.
@@ -95,9 +97,29 @@ actions. Full builds/suites/benchmarks stay on runners. Local checks must use
 `python3 scripts/local-guard.py` and retain the 64 GiB free-disk, 2 GiB target,
 1 GiB RSS and 180-second limits. Do not use the stale local compiler as an oracle.
 
+## Active implementation
+
+Exact scalar values and arithmetic now use the shared cores; protocol version 2
+uses 2/2/16-byte payloads and version-sensitive fingerprints, with early v1
+rejection. Native scalar lowering/text/JSON and C ABI declarations are in place.
+C/C++ core archives are cached per source/toolchain/target/options, with emitted
+C companions for manual builds. Guarded library/binary checks passed; actual
+concatenated runtime C passed a focused syntax check. A const-correctness warning
+in the AD callback helper was corrected. No fresh fwp executable was built locally.
+The focused guarded `cargo clippy --lib --bin fwp --test float_formats --test
+protocol --test exec -- -D warnings` passed, as did the runtime syntax recheck
+and `scripts/check-roadmap.py`. Cache pinning now opens the archive before copying,
+so concurrent eviction cannot invalidate a successful open; a missing entry is
+rebuilt. These are implementation checks, not raw/native semantic acceptance.
+
+Still incomplete: natural-width F128 arrays, direct scalar/aggregate workers,
+foreign ABI admission and full ownership controls. The native F128 generic
+boundary currently boxes values. New raw/native scalar and v2 wire tests need
+runner execution; do not treat compilation as semantic acceptance.
+
 ## Next action
 
-Next: integrate the already-tested exact-format cores with language values,
+Next: run and fix focused scalar/protocol tests, then finish integration with
 native arrays/workers, ownership/foreign ABI, text and a versioned protocol
 migration. Keep interpreter/native agreement and direct rounding throughout.
 Then complete the Windows C runtime and PE packages, broader ownership/worker

@@ -51,6 +51,7 @@ pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
                         | "std::Bytes"
                         | "std::I128"
                         | "std::U128"
+                        | "std::F128"
                         | "std::Task"
                         | "std::Channel"
                         | "std::File"
