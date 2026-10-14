@@ -8113,6 +8113,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let mut roots = Vec::new();
     if let Mode::Exec(cmds, _) = &mode {
         roots.extend(cmds.iter().map(|c| c.fid));
+        for command in cmds {
+            if prog.funcs[command.fid].arity > 0 {
+                g.used_closures[command.fid] = true;
+            }
+        }
     }
     let live = live_functions(prog, &roots);
     let mut bodies = String::new();
@@ -8314,6 +8319,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                 .collect();
             let out = &c.output;
             let od = g.desc(&out.elem);
+            let result_desc = g.desc(prog.funcs[fid].ty.params(n).1);
             let idd = g.desc(&in_elem);
             let header = crate::proto::header(&out.elem, prog);
             let fp = crate::proto::fingerprint(&crate::proto::canonical_type(&in_elem, prog));
@@ -8352,10 +8358,10 @@ static const unsigned char exec_out_header{i}[] = {header};
 static const unsigned char exec_in_fp{i}[16] = {fp};
 static V exec_caf{i}(void) {{ return {entry}; }}
 static const fwp_exec_spec exec_spec{i} = {{
-    {name}, {export}, {usage}, {help}, {fid}, {arity}, exec_params{i}, exec_param_names{i},
+    {name}, {export}, {usage}, {help}, {arity}, exec_params{i}, exec_param_names{i},
     {has_opts}, {fallback}, {nflags}, {nfields}, {flags}, exec_pos{i}, {npos}, {nreq}, {variadic}, {unit_last},
     {outcome}, {ro}, {rs}, {err}, {ropt}, {rlist}, {od}, exec_out_header{i}, sizeof exec_out_header{i}, {llist}, {idd},
-    {itype}, exec_in_fp{i}, exec_caf{i}}};
+    {itype}, exec_in_fp{i}, exec_caf{i}, {callable}, {result_desc}}};
 "#,
                 i = i,
                 pd = if pd.is_empty() {
@@ -8380,8 +8386,12 @@ static const fwp_exec_spec exec_spec{i} = {{
                 export = c_string_literal(c.command.as_bytes()),
                 usage = c_string_literal(c.usage.as_bytes()),
                 help = c_string_literal(c.help.as_bytes()),
-                fid = fid,
                 arity = n,
+                callable = if n == 0 {
+                    "0".into()
+                } else {
+                    format!("PTR(&fc{fid})")
+                },
                 has_opts = c.options.is_some() as u8,
                 fallback = c.record_fallback as u8,
                 nflags = nflags,

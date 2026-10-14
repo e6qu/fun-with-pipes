@@ -31,11 +31,22 @@ main = [
     )
     .unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
+    // Raw evaluation has a finite recursive stack. Use a shallow odd count
+    // for the semantic reference; the native case separately proves 32769
+    // iterations fit the deliberately bounded task stack with the same swap.
+    let reference_source = dir.join("reference.fwp");
+    std::fs::write(
+        &reference_source,
+        std::fs::read_to_string(&source)
+            .unwrap()
+            .replace("work 32769", "work 33"),
+    )
+    .unwrap();
     let expected = checked(
         Command::new(compiler)
             .env("FWP_NO_OPT", "1")
             .args(["run", "--interp"])
-            .arg(&source),
+            .arg(&reference_source),
     );
     assert!(String::from_utf8_lossy(&expected.stdout).ends_with("None\n"));
     let cfile = dir.join("tail.c");

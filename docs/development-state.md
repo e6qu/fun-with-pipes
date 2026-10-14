@@ -162,29 +162,43 @@ external-callback admission is claimed.
 - That run passed both full focused Linux jobs and all ownership/socket controls
   on macOS, but macOS TLS fixtures failed certificate verification. The bundle
   workflow lacked the OpenSSL 3 CLI path that the passing portability workflow
-  already supplies. The path is corrected; fresh macOS execution is required.
+  already supplies. The corrected path passes the later macOS ARM focused job;
+  final-head gates on both macOS architectures remain required.
 - Native socket code carries one full-width handle type through tasks, HTTP/2 and
   gRPC. TLS uses OpenSSL's documented Windows `SSL_set_fd` cast at its ABI
   boundary, matching the interpreter; the unnecessary custom BIO is removed.
   Both engines now check attachment failures and release the session.
   TLS accept initialization failure closes its connection.
   Complete Windows TLS acceptance still needs dependencies and native execution.
-- Complete generated Windows programs failed at `a089ad1` in
-  [38534588705](https://github.com/e6qu/fun-with-pipes/actions/runs/38534588705).
-  This includes the UTF-16 filesystem/environment/argv and CreateProcessW port,
-  native threads and clocks, binary standard streams and no pthread DLL dependency.
-  The harness wrongly required success from the numeric golden's deliberate
-  overflow; it now compares the expected exit 101 and both output streams.
-  Native stderr now uses binary mode too. AMD64 also rejected a short process
-  command as exceeding the UTF-16 limit; added per-mode and quote diagnostics
-  must locate and fix the cause. ARM64 process capture passed all four modes.
-- Direct numeric self-tail calls now evaluate every argument into temporaries
-  before updating parameters and jumping to the worker entry. Task ticks remain
-  on each iteration. New runner controls compare raw execution, restrict task
-  stacks to 1 MiB, and deliberately restore recursion or omit ticks to require
-  stack-overflow/preemption failures. Focused guarded compiler/test lint and
-  formatting pass; execution is running at `0fe4e2f` in
-  [38535804207](https://github.com/e6qu/fun-with-pipes/actions/runs/38535804207).
+- Native Windows ARM64 passed complete generated numeric/task/filesystem and
+  Unicode process capture checks at O1/O2 with stress/reuse controls at `a6f4875`
+  in [38536578700](https://github.com/e6qu/fun-with-pipes/actions/runs/38536578700).
+  AMD64 passed ordinary execution but failed GC stress: the process argument
+  list became cyclic before quoting, and tasks reported missed live roots.
+  Windows frame pointers can sit below higher locals in large frames. The
+  collector now uses the OS stack upper bound even before task initialization;
+  a native omitted-bound control independently checks a higher live stack slot.
+  This fix still needs native execution. The earlier harness wrongly required
+  success from the numeric golden's deliberate exit 101; corrected comparisons
+  cover status and both streams. Native stderr now uses binary mode too.
+- Direct numeric self-tail calls evaluate every argument into temporaries before
+  updating parameters and jumping to the worker entry, with a tick per iteration.
+  [38535804207](https://github.com/e6qu/fun-with-pipes/actions/runs/38535804207)
+  at `0fe4e2f` exposed the raw interpreter's recursive stack limit in the new deep
+  test. The reference now uses 33 swaps; native execution must produce the same
+  odd-swap result for 32769 iterations on a 1 MiB task stack. Deliberately restored
+  recursion and omitted ticks remain required negative controls. The inspected
+  macOS ARM job passed the corrected TLS checks and new allocation measurements;
+  the corrected tail test still needs execution on all four hosts.
+- Executable calls now borrow typed inputs through immutable static closures,
+  preserve owned results while joining tasks, and release the complete result
+  after projecting/printing nested Outcome/Result/Option/list payloads. Raised
+  error values and binary encoding scratch also have unwind cleanup. A new
+  raw/native test checks repeated borrowed input aliases, physical allocation
+  balance without collection, GC stress and an omitted-result-drop control.
+  Guarded focused lint and runtime syntax pass; runner proof is pending.
+  CLI argument/default/frame ownership remains unfinished, so executable
+  protocol builds still explicitly reject checked ARC.
 - At `dfca8e6`, all four Linux/macOS hosts passed exact-format/protocol/array
   tests and all seven foreign ABI/export tests in
   [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).
@@ -217,9 +231,9 @@ external-callback admission is claimed.
 
 ## Next action
 
-Next: run complete generated Windows programs on both native architectures,
-fix failures, and run the numeric tail-loop/measurement batch with macOS TLS
-controls using the corrected OpenSSL path.
+Next: rerun native Windows with the OS stack-bound fix; require AMD64 stress
+and the independent omitted-bound control to pass. Run executable invocation
+ownership and corrected numeric tail/preemption controls on all four Unix hosts.
 Finish managed protocol ownership and final-head ABI/cache acceptance. Keep raw/native agreement and exact rounding.
 Then complete Windows static memory/TLS/PE packages, broader ownership/worker
 proofs, and nested reverse differentiation/checkpointing with measured layout

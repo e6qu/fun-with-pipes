@@ -930,7 +930,6 @@ typedef struct {
     const char *export_name;
     const char *usage;
     const char *help;
-    uint32_t fn;
     int arity;
     const fwp_desc *const *params;
     const char *const *param_names;   /* displayed parameter types */
@@ -954,6 +953,8 @@ typedef struct {
     const char *in_type;
     const unsigned char *in_fp;
     V (*caf)(void);
+    V callable; /* immutable static closure; call borrows it and its arguments */
+    const fwp_desc *result; /* complete result, before output projections */
 } fwp_exec_spec;
 
 static int fwp_exec_binary_out = 0;
@@ -966,12 +967,13 @@ static int fwp_cli_single = 0; /* a single command: it has these too */
 static void fwp_emit(const fwp_exec_spec *s, V v) {
     if (fwp_exec_binary_out) {
         fwp_buf b = {0};
+        fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
         fwp_encode(&b, v, s->out_elem);
         unsigned char hdr[5] = {1, (unsigned char)(b.len & 0xff), (unsigned char)((b.len >> 8) & 0xff),
                                 (unsigned char)((b.len >> 16) & 0xff), (unsigned char)((b.len >> 24) & 0xff)};
         fwp_pipe_write(hdr, 5);
         if (b.len) fwp_pipe_write(b.d, b.len);
-        free(b.d);
+        fwp_cleanup_pop(&cleanup); free(b.d);
         fwp_pipe_frame_done();
     } else if (!(s->out_elem->kind == K_RECORD && s->out_elem->n == 0 && !s->out_elem->name)) {
         fwp_display_top(v, s->out_elem, stdout);
@@ -995,6 +997,8 @@ static void fwp_exec_error(const fwp_exec_spec *s, V v, const fwp_desc *d) {
 /* write a result; -1 when it is an Err (reported), else the exit status
  * of an Outcome (or 0) */
 static int fwp_emit_result(const fwp_exec_spec *s, V v) {
+    fwp_value_owner owner = {v, s->result->drop};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
     int status = 0;
     if (s->res_outcome) {
         int64_t st = (int64_t)(int32_t)OBJ(v)->f[s->res_status];
@@ -1002,11 +1006,11 @@ static int fwp_emit_result(const fwp_exec_spec *s, V v) {
         v = OBJ(v)->f[s->res_output];
     }
     if (s->res_err) {
-        if (fwp_tag(v) != 0) { fwp_exec_error(s, OBJ(v)->f[0], s->res_err); return -1; }
+        if (fwp_tag(v) != 0) { fwp_exec_error(s, OBJ(v)->f[0], s->res_err); status = -1; goto finish; }
         v = OBJ(v)->f[0];
     }
     if (s->res_option) {
-        if (v == FWP_NONE) return status;
+        if (v == FWP_NONE) goto finish;
         v = OBJ(v)->f[0];
     }
     if (s->res_list) {
@@ -1014,6 +1018,8 @@ static int fwp_emit_result(const fwp_exec_spec *s, V v) {
     } else {
         fwp_emit(s, v);
     }
+finish:
+    fwp_cleanup_pop(&cleanup); fwp_value_release(&owner);
     return status;
 }
 
@@ -1026,16 +1032,22 @@ static V fwp_exec_call(const fwp_exec_spec *s, V *args, int n, int *failed) {
     h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
-        V r = n == 0 ? s->caf() : fwp_apply(fwp_pap(s->fn, 0, 0), (uint32_t)n, args);
-        fwp_handlers = h.prev;
+        V r = n == 0 ? s->caf() : fwp_apply_borrowed(s->callable, (uint32_t)n, args);
+        fwp_value_owner owner = {r, s->result->drop};
+        fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
         fwp_tasks_finish();
+        fwp_cleanup_pop(&cleanup);
+        fwp_handlers = h.prev;
         *failed = 0;
         return r;
     }
     fwp_handlers = h.prev;
+    fwp_value_owner owner = {h.value, h.desc->drop};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
     fwp_tasks_abort();
     fwp_flush();
     fwp_exec_error(s, h.value, h.desc);
+    fwp_cleanup_pop(&cleanup); fwp_value_release(&owner);
     *failed = 1;
     return 0;
 }

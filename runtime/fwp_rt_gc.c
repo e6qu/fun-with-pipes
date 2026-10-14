@@ -1486,7 +1486,16 @@ static void fwp_gc_report(void) {
 /* called at the top of the main thread: collection may start */
 static void fwp_gc_start(void *top) {
     if (!fwp_gc.ready) fwp_gc_init();
+#ifdef _WIN32
+    /* Windows frame pointers may sit near the bottom of a large frame.
+     * Its higher locals are roots too; use the OS thread/fiber stack bound. */
+    (void)top;
+    ULONG_PTR low, high;
+    GetCurrentThreadStackLimits(&low, &high);
+    fwp_gc.main_top = (char *)high;
+#else
     fwp_gc.main_top = (char *)top;
+#endif
 #ifdef __linux__
     dl_iterate_phdr(fwp_gc_find_data, 0);
 #elif defined(__APPLE__) || defined(_WIN32)
