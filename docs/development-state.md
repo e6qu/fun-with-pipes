@@ -58,7 +58,7 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   mode now uses `ReverseScalar` specialization and typed owned tape weights;
   adjoint arithmetic records into the enclosing tape. Controls cover second/
   third derivatives, active zeros, stale/mixed tokens, exact floats and physical
-  reclamation. This implementation has not yet executed on runners.
+  reclamation. Raw and tracing-native semantics pass; ARC acceptance is pending.
 - Windows uses UTF-16 native paths/environment/arguments, CreateProcessW with
   explicit inherited handles, concurrent output capture, native threads/fibers,
   full-width sockets/WSAPoll and PE roots. Root scanning and minor verification
@@ -118,8 +118,15 @@ Historical development runs and measured wide-record reductions are in
   runner execution; no nested/checkpoint lifetime acceptance is claimed yet.
 - Guarded local `cargo fmt --all` and `cargo clippy --lib --tests -- -D warnings`
   pass. These do not execute the language fixtures. The guarded primitive
-  inventory audit passes with 375 declarations and 219 contracts; frozen
+  inventory audit passed with 378 declarations and 223 contracts before the
+  Boolean `not` contract below; frozen
   baseline evidence is unchanged. Full builds/tests/measurements stay on runners.
+- At `59da2033`, [autodiff](https://github.com/e6qu/fun-with-pipes/actions/runs/38549214020)
+  passes raw/tracing nested semantics, active-zero and stale/mixed controls,
+  checkpoint capacity/errors and library unload. ARC checkpoint compilation
+  needs the immortal Bool `not` contract; ARC tests must disable tracing-only
+  reuse quarantine, and the numeric scope omission probe must distinguish the
+  new managed backward function. All three repairs are implemented for rerun.
 
 ## Next action
 

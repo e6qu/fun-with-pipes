@@ -72,7 +72,7 @@ fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
                     .env("FWP_AD_WORKSPACE", "0")
                     .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
                     .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", "1"),
+                    .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" }),
             );
             assert_eq!(output.stdout, reference.stdout, "arc={arc} {opt}");
             assert_eq!(output.stderr, reference.stderr, "arc={arc} {opt}");

@@ -80,11 +80,14 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
         "int original_main(int argc, char **argv)",
     );
     let link = "    fwp_tape_link_scope(t, (int32_t)slot);";
-    let unlink = "    fwp_tape_unlink_scope(t);\n    fwp_tape tp = *t;";
+    let unlink = "    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);\n    fwp_tape_unlink_scope(t);\n    fwp_tape tp = *t;";
     assert_eq!(runtime.matches(link).count(), 1);
     assert_eq!(runtime.matches(unlink).count(), 1);
     let unlinked = runtime.replace(link, "");
-    let unconsumed = runtime.replace(unlink, "    fwp_tape tp = *t;");
+    let unconsumed = runtime.replace(
+        unlink,
+        "    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);\n    fwp_tape tp = *t;",
+    );
     let fresh = "fwp_rc_fresh(fwp_p_ad_backward(l0, l1, l2))";
     assert_eq!(runtime.matches(fresh).count(), 1);
     let uncounted = runtime.replace(fresh, call);

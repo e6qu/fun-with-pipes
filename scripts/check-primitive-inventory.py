@@ -87,6 +87,7 @@ leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.he
 assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
 # This bundle promotes only these reviewed numeric and parsed-tree boundaries.
 bundle_contracts = {}
+bundle_contracts['not'] = (1, 'Shared', [])
 bundle_contracts['prim.trap'] = (1, 'Never', [])
 for symbol in ['prim.zero', 'prim.one']:
     bundle_contracts[symbol] = (0, 'Numeric', [])

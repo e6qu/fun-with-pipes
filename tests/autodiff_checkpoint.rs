@@ -56,7 +56,7 @@ fn checkpointed_vjp_matches_explicit_segment_precision_and_raw_execution() {
                 Command::new(&binary)
                     .env("FWP_GC_STRESS", if mode == "arc" { "0" } else { "1" })
                     .env("FWP_GC_VERIFY", if mode == "arc" { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", "1"),
+                    .env("FWP_REUSE_VERIFY", if mode == "arc" { "0" } else { "1" }),
             );
             assert_eq!(output.stdout, reference.stdout, "{mode} {opt}");
             assert_eq!(output.stderr, reference.stderr, "{mode} {opt}");
