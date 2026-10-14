@@ -20,10 +20,14 @@ sleeping : String -> () -> String ! {Async}
 sleeping = curry (.0 | tap (const 1h | task.sleep))
 awaiting : Task[String] -> () -> Option[String] ! {Async}
 awaiting = curry (.0 | task.await)
+start-sleeping : String -> Task[String] ! {Async}
+start-sleeping = compose task.spawn sleeping
+start-value : String -> Task[String] ! {Async}
+start-value = compose task.spawn value
 own-state : () -> String
 own-state = run-state "initial" (const "owned" | tap put | const () | get) | .0
 scope-failure : () -> () ! {Async, Error[String]}
-scope-failure = tap (const "scope" | string.repeat 2 | sleeping | task.spawn | ignore)
+scope-failure = tap (const "scope" | string.repeat 2 | start-sleeping | ignore)
     | const "expected" | fail
 main = [
     task.spawn (value ("input" | string.repeat 2)) | both task.await task.await | echo,
@@ -31,10 +35,10 @@ main = [
     task.spawn (sleeping ("entered" | string.repeat 2))
         | tap (const () | task.yield) | tap task.cancel | task.await | echo,
     task.within 1h (value ("within" | string.repeat 2)) | echo,
-    task.spawn (value ("older" | string.repeat 2)) | awaiting | task.spawn | task.await | echo,
+    task.spawn (awaiting (task.spawn (value ("older" | string.repeat 2)))) | task.await | echo,
     task.spawn own-state | task.await | echo,
     () | attempt (const scope-failure | task.scope) | echo,
-    task.scope (const "joined" | string.repeat 2 | value | task.spawn | ignore),
+    task.scope (const "joined" | string.repeat 2 | start-value | ignore),
     range 0 65 | map show | task.map (string.repeat 3) | length | echo,
 ] | ignore
 "#,

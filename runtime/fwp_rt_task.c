@@ -179,6 +179,7 @@ struct fwp_task {
     /* saved runtime state */
     fwp_handler *handlers;
     fwp_cleanup *cleanups;
+    fwp_foreign_callback *foreign_callbacks;
     V *st;
     size_t st_len, st_cap;
     fwp_state_owner *state_owners;
@@ -507,6 +508,7 @@ static void fwp_enter(fwp_task *to) {
 #endif
     fwp_handlers = to->handlers;
     fwp_cleanups = to->cleanups;
+    fwp_foreign_callbacks = to->foreign_callbacks;
     fwp_state = to->st;
     fwp_state_len = to->st_len;
     fwp_state_cap = to->st_cap;
@@ -518,6 +520,7 @@ static void fwp_switch(fwp_task *to) {
     if (to == from) return;
     from->handlers = fwp_handlers;
     from->cleanups = fwp_cleanups;
+    from->foreign_callbacks = fwp_foreign_callbacks;
     from->st = fwp_state;
     from->st_len = fwp_state_len;
     from->st_cap = fwp_state_cap;
@@ -1888,6 +1891,7 @@ static void fwp_library_tasks_finish(void) {
     fwp_cur = fwp_root = fwp_zombie = 0;
     fwp_gc_tasks = fwp_ready_head = fwp_ready_tail = fwp_timers = 0;
     fwp_cleanups = 0;
+    fwp_foreign_callbacks = 0;
     fwp_handlers = 0;
     fwp_state = 0;
     fwp_state_len = fwp_state_cap = 0;

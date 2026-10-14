@@ -368,8 +368,15 @@ pointer element widths use the same representation (2/2/16 bytes).
   should not reuse a standard name (`div` above would shadow fwp's own).
 - Raw memory: `mem.alloc`, `mem.free`, `mem.string`, `ptr.read`,
   `ptr.write`, `ptr.at` and `ptr.read-string`, under `Unsafe`.
-- A callback may only be used while the foreign call that received it is
-  running.
+- C borrows `String`/`Bytes` arguments and string fields only for the call;
+  it must copy data it wants to retain. Returned C strings are copied into
+  owned language values before the call boundary finishes.
+- A callback may only be used on the calling task while the foreign call that
+  received it is running. Native callback frames follow that task across
+  suspension and are restored after nested calls, failure and cancellation.
+  Checked ARC admits callbacks with copied numeric/Boolean/unit C arguments and
+  results; raw pointers and callbacks returning managed C addresses remain
+  outside that ownership contract.
 - The interpreter reaches C through a generated shim library, built with
   the system C compiler and loaded with `dlsym`.
 - `--link` adds C sources, objects or libraries (`-lm`, `-L/dir`,

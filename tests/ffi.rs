@@ -149,11 +149,7 @@ main = [
             .arg(&c)
             .arg(&source);
         assert_eq!(stdout(interpreted), expected);
-        for gc in if callbacks {
-            vec!["tracing"]
-        } else {
-            vec!["tracing", "arc"]
-        } {
+        for gc in ["tracing", "arc"] {
             let binary = temp.join(format!("bits-{callbacks}-{gc}"));
             let mut build = Command::new(fwp());
             build

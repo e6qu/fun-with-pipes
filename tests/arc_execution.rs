@@ -181,8 +181,8 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     std::fs::create_dir(&dir).unwrap();
     for (name,source,reason) in [
         ("custom-native","foreign \"fwp\" string.repeat : I64 -> I64 -> I64\nmain = 1 | string.repeat 2 | echo\n","no checked ownership signature"),
-        ("foreign-string","foreign \"C\" strlen : String -> USize\nmain = \"owned\" | strlen | echo\n","foreign boundary has no checked ownership contract"),
-        ("foreign-callback","foreign \"C\" invoke : (I64 -> I64) -> I64\nmain = invoke (add 1) | echo\n","foreign boundary has no checked ownership contract"),
+        ("foreign-callback","foreign \"C\" invoke : (I64 -> String) -> I64\nmain = invoke show | echo\n","foreign boundary has no checked ownership contract"),
+        ("foreign-address","foreign \"C\" lookup : () -> Ptr[I64]\nmain = lookup () | ignore\n","tracing-free ownership contract"),
         ("channel","text-channel : I64 -> Channel[String] ! {Async}\ntext-channel = channel.make\nmain = text-channel 1 | channel.close\n","tracing-free ownership contract"),
         ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
         ("input","main = read-all () | echo\n","tracing-free ownership contract"),

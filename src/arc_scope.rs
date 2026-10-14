@@ -288,7 +288,22 @@ impl Proof<'_> {
                 Ok(result)
             }
             Body::Ctor(_) => Ok(args.iter().flatten().copied().collect()),
-            Body::ForeignC { .. } | Body::Remote(_) => Ok(Targets::new()),
+            Body::ForeignC { .. } => {
+                let (params, _) = crate::ffi::signature(self.program, function)?;
+                for (index, ty) in params {
+                    if matches!(ty, crate::ffi::CType::Callback { .. }) {
+                        let mut count = 0;
+                        let mut ty = &function.locals[index];
+                        while let MT::Fun(_, result) = ty {
+                            count += 1;
+                            ty = result;
+                        }
+                        self.apply(&args[index], &vec![Targets::new(); count], scoped)?;
+                    }
+                }
+                Ok(Targets::new())
+            }
+            Body::Remote(_) => Ok(Targets::new()),
         }
     }
 }

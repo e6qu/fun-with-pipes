@@ -70,6 +70,33 @@ pub fn by_value(ty: &CType) -> bool {
     }
 }
 
+/// A callback is synchronous on the calling task. Its C arguments and result
+/// carry copied bits; its managed closure stays borrowed for the foreign call.
+pub fn scoped_callback(ty: &CType) -> bool {
+    matches!(ty, CType::Callback { params, ret } if params.iter().all(by_value) && by_value(ret))
+}
+
+/// C borrows text/byte storage until return. Raw pointers have an independent,
+/// unproved pointee lifetime and are deliberately outside this contract.
+pub fn scoped_argument(ty: &CType) -> bool {
+    match ty {
+        CType::Str | CType::Bytes => true,
+        CType::Struct { fields, .. } => fields.iter().all(|(_, _, field)| scoped_argument(field)),
+        CType::Callback { .. } => scoped_callback(ty),
+        _ => by_value(ty),
+    }
+}
+
+/// Foreign strings are copied before returning to language code. No pointer
+/// into host storage enters the owned result graph.
+pub fn copied_result(ty: &CType) -> bool {
+    match ty {
+        CType::Str => true,
+        CType::Struct { fields, .. } => fields.iter().all(|(_, _, field)| copied_result(field)),
+        _ => by_value(ty),
+    }
+}
+
 /// Extra inputs for the C compiler and linker (`--link`): `-lname`,
 /// `-Ldir`, C sources, objects and archives.
 static LINKS: Mutex<Vec<String>> = Mutex::new(Vec::new());

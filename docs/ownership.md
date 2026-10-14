@@ -370,12 +370,20 @@ boundaries and cycle policy, with physical reclamation verified below.
 
 ## Checked ARC delivery
 
-Foreign C calls with only scalar numeric, Boolean and unit ABI values carry no
-language owners and are admitted by checked ARC. Admission uses the actual C
-signature classification. PR #135 extends this classifier to recursively pointer-free C records. Strings,
-pointers and callbacks still need separate lifetime and result-adoption proofs; uncounted pointer bits alone are
-not a proof. The scalar-call regression compares raw interpretation with native
-O1/O2 execution and the physical reclamation ledger.
+Foreign C calls with scalar numeric, Boolean and unit ABI values carry no
+language owners. PR #135 extends admission to recursively copied C records,
+scoped String/Bytes borrows and synchronous callbacks with copied scalar C
+arguments/results. Foreign strings are copied into owned language results.
+Typed closure captures stay alive for the foreign call. Callback contexts live
+on that task's C stack and are restored after reentry, suspension, failure and
+cancellation. Callback inputs and results own typed temporary boxes, including
+quad values. Partial argument construction releases initialized owners.
+
+This relies on the declared C ABI contract: C must copy borrowed strings/bytes
+before retaining them and invoke callbacks only on the calling task before
+return. Raw pointers and callbacks returning managed C addresses are explicitly
+rejected by ARC; pointer bits alone cannot establish a pointee lifetime. Runner
+acceptance of these extensions remains recorded in the handoff.
 
 The compiler checks `--gc arc` against monomorphic value shapes and
 primitive contracts, with the cycle policy described in [design](design.md#checked-native-arc-execution).

@@ -6426,13 +6426,20 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 Body::Prim(s) => s.as_str(),
                 _ => "",
             };
+            let scoped_foreign = matches!(f.body, Body::ForeignC { .. })
+                && crate::ffi::signature(self.prog, f).is_ok_and(|(params, result)| {
+                    params.iter().all(|(_, ty)| crate::ffi::scoped_argument(ty))
+                        && crate::ffi::copied_result(&result)
+                });
             for i in 0..f.arity {
-                let foreign_bits = matches!(f.body, Body::ForeignC { .. })
-                    && crate::ffi::classify(self.prog, &f.locals[i as usize])
-                        .is_ok_and(|ty| crate::ffi::by_value(&ty));
+                let foreign_borrow = matches!(f.body, Body::ForeignC { .. })
+                    && crate::ffi::classify(self.prog, &f.locals[i as usize]).is_ok_and(|ty| {
+                        crate::ffi::by_value(&ty)
+                            || scoped_foreign && crate::ffi::scoped_argument(&ty)
+                    });
                 if crate::rc::needs_rc(&self.prog.shapes, &f.locals[i as usize])
                     && !crate::rc::prim_reads_only(sym, i as usize)
-                    && !foreign_bits
+                    && !foreign_borrow
                 {
                     let _ = writeln!(out, "    fwp_rc_share(l{});", i);
                 }
@@ -7572,75 +7579,119 @@ impl Gen<'_> {
                 ret: cr,
             } = c
             {
-                // trampoline: C arguments to words, apply the closure
-                let _ = writeln!(self.ffi_decls, "static V fwp_cbslot_{}_{};", id, k);
+                let owned = self.reuse && ffi::scoped_callback(c);
                 let decl: Vec<String> = cps
                     .iter()
                     .enumerate()
-                    .map(|(j, p)| format!("{} a{}", ffi::c_name(p), j))
+                    .map(|(j, p)| format!("{} a{j}", ffi::c_name(p)))
                     .collect();
-                let _ = writeln!(
-                    self.ffi_decls,
-                    "static {} fwp_cb_{}_{}({}) {{",
+                let mut trampoline = format!(
+                    "static {} fwp_cb_{id}_{k}({}) {{\n",
                     ffi::c_name(cr),
-                    id,
-                    k,
                     if decl.is_empty() {
                         "void".into()
                     } else {
                         decl.join(", ")
                     }
                 );
-                // the closure's own parameters, unit ones included
-                let mut cargs = Vec::new();
+                // Prepare callback arguments in declaration order. Copied quad
+                // boxes own their bits; partial preparation must unwind them.
+                let mut mts = Vec::new();
                 let mut cur = &pmts[*i];
-                let mut j = 0;
                 while let MT::Fun(a, b) = cur {
-                    if ffi::classify(self.prog, a).ok() == Some(CType::Void) {
-                        cargs.push("FWP_UNIT".to_string());
-                    } else {
-                        cargs.push(ffi_from_c(&cps[j], &format!("a{}", j)));
-                        j += 1;
-                    }
+                    mts.push((**a).clone());
                     cur = b;
                 }
+                let empty: Vec<_> = mts.iter().map(|t| ("0".into(), t.clone())).collect();
+                let protection = if owned {
+                    self.protect_values(&empty, "inputs", "inputs_cleanup")
+                } else {
+                    String::new()
+                };
+                trampoline.push_str(&protection);
+                let mut cargs = Vec::new();
+                let (mut j, mut slot) = (0, 0);
+                for (argument, ty) in mts.iter().enumerate() {
+                    let name = format!("input{argument}");
+                    let ct = ffi::classify(self.prog, ty)?;
+                    if ct == CType::Void {
+                        let _ = writeln!(trampoline, "    V {name} = FWP_UNIT;");
+                    } else {
+                        if owned {
+                            self.library_arg(&mut trampoline, &name, &cps[j], ty, &format!("a{j}"));
+                        } else {
+                            let _ = writeln!(
+                                trampoline,
+                                "    V {name} = {};",
+                                ffi_from_c(&cps[j], &format!("a{j}"))
+                            );
+                        }
+                        j += 1;
+                    }
+                    if !protection.is_empty() && crate::rc::needs_rc(&self.prog.shapes, ty) {
+                        let _ = writeln!(trampoline, "    inputs.v{slot} = {name};");
+                        slot += 1;
+                    }
+                    cargs.push(name);
+                }
                 let _ = writeln!(
-                    self.ffi_decls,
-                    "    V a[{}] = {{{}}};\n    V r = fwp_apply(fwp_cbslot_{}_{}, {}, a);",
+                    trampoline,
+                    "    V a[{}] = {{{}}};",
                     cargs.len().max(1),
                     if cargs.is_empty() {
                         "0".into()
                     } else {
                         cargs.join(", ")
-                    },
-                    id,
-                    k,
-                    cargs.len()
+                    }
                 );
-                if **cr == CType::Void {
-                    self.ffi_decls.push_str("    (void)r;\n}\n");
-                } else {
-                    let _ = writeln!(self.ffi_decls, "    return {};\n}}", ffi_to_c(cr, "r"));
+                if !protection.is_empty() {
+                    trampoline.push_str("    fwp_cleanup_pop(&inputs_cleanup);\n");
                 }
-                // saved and restored around the call: a callback may call
-                // this function again (C calling fwp calling C)
-                let _ = writeln!(
-                    body,
-                    "    V fwp_saved_{k} = fwp_cbslot_{id}_{k};\n    fwp_cbslot_{id}_{k} = l{i};",
-                    id = id,
-                    k = k,
-                    i = i
-                );
-                restore.push(format!("    fwp_cbslot_{}_{} = fwp_saved_{};\n", id, k, k));
+                let callback = format!("fwp_foreign_callback_get({id}, {k})");
+                let application = if owned {
+                    format!(
+                        "fwp_apply_borrowed_span({callback}, {}, a, 0, {})",
+                        cargs.len(),
+                        cargs.len()
+                    )
+                } else {
+                    format!("fwp_apply({callback}, {}, a)", cargs.len())
+                };
+                let _ = writeln!(trampoline, "    V r = {application};");
+                if **cr == CType::Void {
+                    trampoline.push_str("    (void)r;\n}\n");
+                } else {
+                    let _ = writeln!(
+                        trampoline,
+                        "    {} result = {};",
+                        ffi::c_name(cr),
+                        ffi_to_c(cr, "r")
+                    );
+                    if owned && crate::rc::needs_rc(&self.prog.shapes, cur) {
+                        let drop = self.value_drop(cur);
+                        let _ = writeln!(
+                            trampoline,
+                            "    {drop}(r); /* foreign callback result owner */"
+                        );
+                    }
+                    trampoline.push_str("    return result;\n}\n");
+                }
+                self.ffi_decls.push_str(&trampoline);
+                // Frames follow the active task across suspension. Registered
+                // cleanup restores nesting after errors, traps and cancellation.
+                let _ = writeln!(body,"    fwp_foreign_callback callback{k} = {{fwp_foreign_callbacks, {id}, {k}, l{i}}};\n    fwp_foreign_callbacks = &callback{k};\n    fwp_cleanup callback_cleanup{k};\n    fwp_cleanup_push(&callback_cleanup{k}, fwp_foreign_callback_release, &callback{k});");
+                restore.push(format!("    fwp_cleanup_pop(&callback_cleanup{k}); fwp_foreign_callback_release(&callback{k});\n"));
                 args.push(format!("(void *)fwp_cb_{}_{}", id, k));
             } else {
                 args.push(ffi_to_c(c, &format!("l{}", i)));
             }
         }
         let call = format!("{}({})", cname, args.join(", "));
-        let restore = restore.concat();
+        let restore = restore.into_iter().rev().collect::<String>();
         let result_type = f.ty.params(f.arity as usize).1;
-        if self.reuse && ffi::by_value(&ret) && crate::rc::needs_rc(&self.prog.shapes, result_type)
+        if self.reuse
+            && ffi::copied_result(&ret)
+            && crate::rc::needs_rc(&self.prog.shapes, result_type)
         {
             let _ = write!(
                 body,
@@ -7994,10 +8045,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             || uses_services(prog)
             || tests
             || matches!(mode, Mode::Library | Mode::Service | Mode::Exec(..))
-            || prog
-                .funcs
-                .iter()
-                .any(|f| matches!(&f.body, Body::Prim(s) if s == "attempt" || s == "run-state")),
+            || prog.funcs.iter().any(|f| {
+                matches!(&f.body, Body::Prim(s) if s == "attempt" || s == "run-state")
+                    || matches!(&f.body, Body::ForeignC { .. })
+                        && f.locals.iter().any(|t| matches!(t, MT::Fun(..)))
+            }),
         loops: Vec::new(),
         hofs: Vec::new(),
         abis,

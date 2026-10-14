@@ -252,7 +252,7 @@ jobs:
         run: cargo test --no-fail-fast --test float_formats --test float_linking --test protocol --test wide_workers --test array_unwind_ownership
       - name: Ownership and foreign boundary regressions
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
-        run: cargo test --no-fail-fast --test arc_execution --test arc_tasks --test ffi --test tls --test softfloat_core --test float_math --test native_allocator --test file_runtime_ownership --test file_inline_path --test file_storage_disposal --test array_size_limits
+        run: cargo test --no-fail-fast --test arc_execution --test arc_tasks --test ffi --test foreign_callback_ownership --test tls --test softfloat_core --test float_math --test native_allocator --test file_runtime_ownership --test file_inline_path --test file_storage_disposal --test array_size_limits
       - name: Iterator forcing, ownership and specialization
         run: cargo test --test iterator_fusion --test iteration_consumers --test float_literals
       - name: Iterator allocation and instruction evidence

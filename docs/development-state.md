@@ -108,7 +108,11 @@ quad aggregate workers remain unfinished.
 
 The C ABI uses explicit u16 half/bfloat bits and a two-word quad struct, including
 shim records/callbacks and pointer widths. ARC uses the same recursive pointer-free
-C value classifier. Managed foreign pointers/callbacks still need lifetime proofs.
+C value classifier. Raw foreign pointers and callbacks returning managed C addresses still need
+lifetime proofs. Scoped text/byte borrows, copied string results and synchronous
+callbacks carrying C value bits are now implemented with task-local contexts and
+unwind cleanup; physical-reclamation, reentry, suspension and cancellation
+controls need runner execution.
 C/C++ core archives are keyed by source/toolchain/target/options; emitted C has
 companion core sources. Cache pinning protects already-open archives from concurrent
 eviction. Cache concurrency, manual linking and library exports need acceptance.
@@ -127,6 +131,12 @@ external-callback admission is claimed.
 
 ## Active checks
 
+- Scoped foreign lowering, ARC admission and callback controls passed guarded
+  `cargo clippy --lib --bin fwp --test ffi --test arc_execution --test arc_tasks
+  --test foreign_callback_ownership -- -D warnings`, formatting, concatenated
+  runtime C syntax and the roadmap audit. Execution remains pending. The new
+  tests require raw/native agreement, physical freeing, task-context restoration
+  and omitted-context/result-release failures.
 - `python3 scripts/local-guard.py cargo clippy --lib --bin fwp --test arc_tasks
   --test array_unwind_ownership --test arc_execution -- -D warnings` passed for
   retained-task and nonreturning-error changes. Guarded formatting and
@@ -159,7 +169,12 @@ external-callback admission is claimed.
   correction and new retained-task controls is pending.
 - Those corrections and task controls are running at `7db7da5` in
   [38525878654](https://github.com/e6qu/fun-with-pipes/actions/runs/38525878654).
-  The array unwind stage passed on both Linux hosts; remaining stages are pending.
+  All four hosts passed the array unwind/scalar/protocol/worker stage. The ownership
+  stage found two test setup errors: an incorrectly composed task thunk and
+  tracing/poison flags in an ARC ABI run. Both are corrected. The exported-header
+  and manual-link/cache controls are running at `3800499` in
+  [38526720651](https://github.com/e6qu/fun-with-pipes/actions/runs/38526720651);
+  the exact-format stage passed on both Linux hosts and ARM macOS so far.
 
 ## Next action
 

@@ -75,17 +75,17 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
             Body::Expr(_) | Body::Ctor(_) => continue,
             Body::ForeignC { .. } => {
                 let (params, result) = crate::ffi::signature(prog, f).map_err(reject)?;
-                // Scalar C values carry no language owners or callable
-                // addresses. The foreign function may retain their bits, but
-                // cannot thereby extend a managed value's lifetime. Use the
-                // actual ABI classification, not just `needs_rc`: raw pointers
-                // are uncounted too, yet can hide managed owners.
-                let scalar = crate::ffi::by_value;
-                if params.iter().all(|(_, ty)| scalar(ty)) && scalar(&result) {
+                // Check the actual C ABI: scoped borrows and copied results
+                // cannot publish managed pointers after this call returns.
+                // Raw pointers and callbacks returning managed C addresses
+                // still lack a checked retention policy.
+                if params.iter().all(|(_, ty)| crate::ffi::scoped_argument(ty))
+                    && crate::ffi::copied_result(&result)
+                {
                     continue;
                 }
                 return Err(reject(
-                    "foreign boundary has no checked ownership contract for non-scalar values"
+                    "foreign boundary has no checked ownership contract for escaping pointers or callbacks"
                         .into(),
                 ));
             }

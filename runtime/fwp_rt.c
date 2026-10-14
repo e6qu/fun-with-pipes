@@ -414,6 +414,26 @@ static void fwp_cleanup_unwind(fwp_cleanup *stop) {
     }
 }
 
+/* Foreign callback borrows belong to the active task and C call. The frames
+ * live on that call's stack; unwind/cancellation restores the previous frame. */
+typedef struct fwp_foreign_callback {
+    struct fwp_foreign_callback *prev;
+    uint32_t function, parameter;
+    V closure;
+} fwp_foreign_callback;
+static fwp_foreign_callback *fwp_foreign_callbacks;
+static void fwp_foreign_callback_release(void *arg) {
+    fwp_foreign_callback *frame = arg;
+    if (fwp_foreign_callbacks != frame) abort();
+    fwp_foreign_callbacks = frame->prev;
+}
+static V fwp_foreign_callback_get(uint32_t function, uint32_t parameter) {
+    for (fwp_foreign_callback *f = fwp_foreign_callbacks; f; f = f->prev)
+        if (f->function == function && f->parameter == parameter) return f->closure;
+    fwp_trap("foreign callback invoked outside its calling task and call");
+    return 0;
+}
+
 typedef struct fwp_handler {
     jmp_buf jb;
     struct fwp_handler *prev;
