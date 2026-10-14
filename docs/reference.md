@@ -541,18 +541,20 @@ The [ownership contract](ownership.md#checked-arc-delivery) and
 
 ### Static memory
 
-`fwp build --memory static` builds a native executable that maps all the
-memory it will use when it starts, in one populated mapping, and asks the
-operating system for none after that, in the spirit of TigerBeetle's
-static allocation. The mapping holds:
+`fwp build --memory static` bounds runtime-owned memory using storage reserved,
+committed and touched at startup. Linux places the heap, buffers and stacks in
+one mapping. The Windows implementation under validation commits stacks
+separately and reuses precreated task fibers and worker threads. External DLL
+allocations and Windows resources are outside this budget; touched pages can
+still be paged out by the OS. The configured parts are:
 
 | Part | Option | Default | What uses it |
 |---|---|---|---|
 | heap | `--heap S` | 64M | fwp values; still collected, but it never grows: when it is full the collector runs before giving up |
-| pool | `--pool S` | 32M | `malloc`, `calloc`, `realloc` and `free`, which the program defines, so the runtime's buffers and the C library's own allocations come from it |
+| pool | `--pool S` | 32M | Runtime buffers and decimal overflow scratch; Linux interposes allocation functions, Windows uses a private allocator |
 | main stack | `--stack S` | 16M | the main task |
 | task stacks | `--tasks N`, `--task-stack S` | 64 of 1M | tasks: at most N run at once, each with a guard page |
-| thread stacks | `--threads N` | 8 of 1M | the threads of `CpuParallel` kernels (more are not started; results do not depend on their number) |
+| thread stacks | `--threads N` | 8 of 1M | `CpuParallel` workers; Windows also uses these workers for process output capture (two slots per capture) |
 
 Sizes take `K`, `M` and `G`. Running out of a part ends the program with
 exit code 102 and names the option to raise:
@@ -573,8 +575,9 @@ fwp: static memory: 124448 KiB mapped at startup
 
 Pipes between fwp programs stay on the Unix socket transport (`UDS_V1`)
 rather than the shared-memory ring, which would be new memory. Static
-memory is for native executables on Linux; WebAssembly and libraries
-keep the usual allocator. `tests/static_memory.rs` checks the golden
+memory is verified on Linux; the Windows port is under validation in
+`tests/windows_static_memory.rs`. WebAssembly and libraries keep the usual
+allocator. `tests/static_memory.rs` checks the Linux golden
 programs with it, and, with `strace`, that a program with tasks, a
 parallel kernel and plenty of allocation makes no memory system call after
 startup.

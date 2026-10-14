@@ -2309,28 +2309,49 @@ jacobian : (List[Dual[t]] -> List[Dual[t]]) -> List[t] -> List[List[t]] where Ze
 hessian : (List[Dual[Dual[t]]] -> Dual[Dual[t]]) -> List[t] -> List[List[t]] where Zero[t], One[t], Dup[t]
 Rev[T] = { value: T, vertex: I64 }
 
+# The scalar protocol selects its tape representation at specialization time.
+# Primitive floats retain F64 adjoint accumulation. Nested Rev scalars retain
+# typed weights and evaluate their backward arithmetic on the enclosing tape.
+trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
+    rev._seed : List[T] -> (I64, List[Rev[T]])
+    rev._push : (I64, T, I64, T) -> I64
+    rev._backward : I64 -> List[I64] -> List[T] -> List[T]
+    rev._inactive-zero : T -> Bool
+ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]
+ad.push-owned : (I64, t, I64, t) -> I64 where Dup[t]
+ad.backward-owned : I64 -> List[I64] -> List[t] -> List[t] where Dup[t]
+
 # a constant: no gradient flows through it
 rev.const : t -> Rev[t]
 
 # The value of a scalar function and its gradient at a point, in one
 # forward and one backward pass.
-value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]
+value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where ReverseScalar[t], One[t], Dup[t]
 
 # All partial derivatives of a scalar function at a point (reverse mode;
 # the same numbers as `gradient`, for any number of inputs at the cost of
 # about one evaluation).
-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where Float[t], One[t], Dup[t]
+grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where ReverseScalar[t], One[t], Dup[t]
 
 # `grad` of a function of a vector
-grad-vector : (Vector[Rev[t], n] -> Rev[t]) -> Vector[t, n] -> Vector[t, n] where Float[t], One[t], Dup[t]
+grad-vector : (Vector[Rev[t], n] -> Rev[t]) -> Vector[t, n] -> Vector[t, n] where ReverseScalar[t], One[t], Dup[t]
 
 # Vector-Jacobian product: `xs | vjp f v` is vᵀ·J where J is the Jacobian
 # of f at xs (one backward pass, whatever the number of outputs).
-vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where Float[t], Dup[t]
+vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where ReverseScalar[t], Dup[t]
 
 # The Jacobian in reverse mode, one backward pass per output (rows are
 # outputs, columns are inputs, as for `jacobian`).
-rev.jacobian : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[List[t]] where Float[t], Zero[t], One[t], Dup[t]
+rev.jacobian : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[List[t]] where ReverseScalar[t], Zero[t], One[t], Dup[t]
+
+# Checkpointed vector-Jacobian products for repeated pure steps. A checkpoint
+# stores ordinary values, not a live tape. Backward replays each segment once.
+# `steps` must be nonnegative and `every` positive; neither has an implicit
+# default. Each segment accumulates adjoints in F64, then converts its input
+# adjoints to t, exactly as an explicit sequence of `vjp` calls would. At a
+# nested reverse level those arithmetic operations use the enclosing scalar.
+Checkpoint = { steps: I64, every: I64 }
+vjp-checkpointed : Checkpoint -> (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where ReverseScalar[t], Dup[t]
 ```
 
 ## Tensor expressions

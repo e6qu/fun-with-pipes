@@ -261,7 +261,7 @@ jobs:
       - name: Generated programs with native resources and ownership stress
         shell: pwsh
         run: |
-          cargo test --test windows_runtime -- --nocapture
+          cargo test --test windows_runtime --test windows_static_memory -- --nocapture
           exit $LASTEXITCODE
       - name: Native TLS and executable ownership
         if: ${{ !cancelled() && inputs.suite == 'windows-full' && steps.native_compiler.outcome == 'success' }}

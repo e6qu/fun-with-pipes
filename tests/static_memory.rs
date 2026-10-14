@@ -108,11 +108,15 @@ fn golden_programs_with_static_memory() {
                     &[]
                 };
                 let exe = dir.0.join(&name);
-                if !build(&path, &exe, opts).status.success() {
-                    continue; // compile errors are covered by tests/golden_run.rs
-                }
-                let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
-                let got = render(&run(&exe, path.parent().unwrap(), &input));
+                let built = build(&path, &exe, opts);
+                let got = if built.status.success() {
+                    let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
+                    render(&run(&exe, path.parent().unwrap(), &input))
+                } else {
+                    // Expected language diagnostics still match their snapshot;
+                    // an unexpected native compilation failure must fail here.
+                    render(&built)
+                };
                 let want = std::fs::read_to_string(path.with_extension("out")).unwrap_or_default();
                 if got != want {
                     failures.lock().unwrap().push(format!(

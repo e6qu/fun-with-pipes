@@ -14,6 +14,8 @@ int fwp_f128_to_integer(float128_t, uint64_t *, uint64_t *, int *);
 int fwp_f128_compare(float128_t, float128_t);
 int fwp_decimal_parse(const char *, int, uint64_t *, uint64_t *);
 int fwp_decimal_show(uint64_t, uint64_t, int, char *, size_t);
+/* Configure overflow scratch before starting runtime threads/conversions. */
+void fwp_decimal_set_allocator(void *(*)(size_t), void (*)(void *));
 #define FWP_DECLARE_MATH(prefix, Bits) \
 Bits prefix##_exp(Bits); Bits prefix##_ln(Bits); Bits prefix##_sin(Bits); \
 Bits prefix##_cos(Bits); Bits prefix##_tan(Bits); \

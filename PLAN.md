@@ -1,9 +1,11 @@
 # Plan
 
 The original roadmap and follow-up bundles are accepted through PR #133.
-[PR #134](https://github.com/e6qu/fun-with-pipes/pull/134) merged as `5c0287c`
-with full Linux/macOS CI passing. It delivered further ownership, iteration,
-exact-format core and Windows foundations; it did not finish all six directions.
+[PR #135](https://github.com/e6qu/fun-with-pipes/pull/135) was merged by the user
+as `ad37059e` before final platform acceptance. It delivered further ownership,
+array fusion, exact formats, checkpointing/nested AD and Windows implementation;
+it did not finish all six directions. Focused passing checks remain scoped
+evidence, and Windows TLS failures are still work to fix.
 The remaining scope below carries forward, including Windows ARM64/AMD64 and
 real half/quad language formats.
 [The handoff](docs/development-state.md) records actual progress and checks;
@@ -70,14 +72,14 @@ remain immutable evidence, not work to repeat.
 
 ## Remaining roadmap
 
-PR #134 is merged. Continue from `5c0287c` on `roadmap-after-134`; do not reopen
+PR #135 is merged. Continue from `ad37059e` on `roadmap-after-135`; do not reopen
 the merged PR or replay completed preparation work. Preserve the six direction
 identifiers below: documentation is maintained, while five implementation areas
 remain. The user authorized all remaining work together in one follow-up PR. The scope supersedes earlier Windows and floating-format deferrals.
 
 | Step | Work | Acceptance |
 |---|---|---|
-| 1 | Close out and streamline docs | Maintain the accepted PR #134 baseline and one current handoff; remove stale merge/retry instructions |
+| 1 | Close out and streamline docs | Record the PR #135 merge separately from acceptance and maintain one current handoff |
 | 2 | Expand collector-free coverage | Prove retained-callback and managed foreign/protocol lifetimes; establish an explicit cycle policy; extend coverage beyond the merged scalar foreign and typed WASM/File proofs, with alias/unwind/cancellation/reclamation controls |
 | 3 | Remove allocation and dispatch overhead | Broader producer fusion and native worker/aggregate coverage; measured reductions in generic boxing and closure allocation; preserve forcing, effects and trap order |
 | 4 | Improve numerics and autodiff | Measured register/layout/cache improvements; nested reverse differentiation and checkpointing with explicit lifetime/precision contracts; raw/native agreement and bounded memory evidence |

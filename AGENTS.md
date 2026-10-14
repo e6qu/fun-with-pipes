@@ -12,8 +12,9 @@ Do not treat an implemented change or a skipped test as verified support.
 ## Current direction
 
 The user authorized all six items in PLAN.md as one combined PR, including
-Windows ARM64/AMD64 and actual F16/BF16/F128 implementation. PR #134 merged the implemented subset at `5c0287c`. Keep all remaining work
-together on `roadmap-after-134` in one follow-up PR; do not split it into
+Windows ARM64/AMD64 and actual F16/BF16/F128 implementation. The user merged
+PR #135 at `ad37059e` before final platform acceptance. Keep all remaining work
+together on `roadmap-after-135` in one follow-up PR; do not split it into
 separate PRs or reopen the merged PR. Earlier deliveries are historical evidence.
 
 Authorization covers implementation, documentation, branch publication, PR

@@ -1,8 +1,8 @@
 # Session handoff
 
-Updated 2026-10-14. Continue all remaining work in **one draft PR**:
-[PR #135](https://github.com/e6qu/fun-with-pipes/pull/135), branch
-`roadmap-after-134`. Publication, fixes and squash merge after passing final-head
+Updated 2026-10-14. Continue all remaining work in **one follow-up PR**, branch
+`roadmap-after-135`. The user merged PR #135 and explicitly asked to continue.
+Publication, fixes and squash merge after passing final-head
 CI remain authorized. Do not merge a partial bundle or narrow its scope.
 Every commit has one line, at most 80 characters, with no body or trailers.
 Failing tests are work to fix; queued CI gates merging, not implementation.
@@ -13,8 +13,10 @@ The user merged PR #134 as `5c0287c959ad705a6ceefebe83346015cb23fff5`.
 Its tree equals tested head `29b48c31a7012c941d0bc555ee51d12c2c594b0b`;
 all seven Linux/macOS production jobs and docs passed.
 [History](roadmap-history.md#pr-134-merge-closeout) preserves this acceptance.
-PR #135 changes are under development. Earlier passing focused runs do not
-establish final-head acceptance or completion of the six remaining directions.
+The user merged PR #135 as `ad37059e5769a54911ee05ee3b7a11faf90f3480`.
+Its tree equals head `5d6e96d895b80d8d4e9c142944a7016453e84f40` exactly.
+This was a user merge before final platform acceptance; remaining work and
+unresolved checks continue on `roadmap-after-135` without replaying merged code.
 
 ## Active bundle
 
@@ -65,9 +67,22 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   now share the same application stack bound, excluding collector scratch.
   LLVM-MinGW and vcpkg/OpenSSL sources are pinned. TLS COFF linking, dependency
   architecture checks and standalone PE packages are implemented but unaccepted.
-  Windows static-memory reservations and reusable worker/fiber pools remain.
+  Windows static-memory reservations, reusable worker/fiber pools and explicit
+  decimal scratch allocation are implemented locally with new native tests;
+  runner execution remains required. DLL/OS resource allocations are excluded
+  from the runtime storage budget.
 
 ## Current validation
+
+Follow-up local checks: guarded `cargo fmt --all`, `cargo clippy --lib --tests
+-- -D warnings` (23.4 seconds), runtime C syntax and `check-roadmap.py` pass.
+The standalone guarded `tests/stdlib_doc.rs` generator refreshed the merged
+autodiff signatures in `docs/stdlib.md`; final CI must check it without blessing.
+Windows static tests now require task/worker reuse, no runtime VirtualAlloc/
+CreateThread/CreateFiberEx after startup, committed stack arguments, exhaustion
+diagnostics, GC stress/reuse and an injected allocation failure control.
+They have not executed yet. TLS tests explicitly select Git's OpenSSL curl for
+PEM client keys and compare the limited Windows reset/alert failure category.
 
 Historical development runs and measured wide-record reductions are in
 [history](roadmap-history.md#pr-135-development-evidence) and
@@ -135,7 +150,7 @@ inspect the Windows portability batch, and fix every failure. Complete managed
 tape failure/cancellation/library-unload proofs and Windows static memory.
 Wire both native Windows acceptance jobs into production CI, finish remaining
 measurement/ABI/ownership validation and streamline final docs. Keep all work
-in PR #135. Require all seven Linux/macOS production jobs, both native Windows
+in the follow-up to PR #135. Require all seven Linux/macOS production jobs, both native Windows
 acceptance jobs and docs on the final head before squash merge.
 
 Use `python3 scripts/local-guard.py COMMAND...` for serial focused local work.

@@ -30,6 +30,17 @@ Add-Content $env:GITHUB_ENV "FWP_OPENSSL_DIR=$prefix"
 Add-Content $env:GITHUB_ENV 'FWP_REQUIRE_TLS=1'
 Add-Content $env:GITHUB_PATH "$prefix/bin"
 Add-Content $env:GITHUB_PATH "$prefix/tools/openssl"
+# The system curl uses Schannel and does not accept these PEM client-key
+# fixtures. Use Git's explicitly identified OpenSSL client for peer tests.
+$gitRoot = Split-Path (Split-Path (Get-Command git.exe).Source)
+$curl = Join-Path $gitRoot 'mingw64/bin/curl.exe'
+if (!(Test-Path $curl)) { throw "Git OpenSSL curl not found: $curl" }
+$curlVersion = & $curl --version
+if ($LASTEXITCODE -ne 0 -or ($curlVersion -join "`n") -notmatch 'OpenSSL/') {
+    throw "TLS peer tests require the OpenSSL curl client: $curlVersion"
+}
+Write-Output $curlVersion
+Add-Content $env:GITHUB_ENV "FWP_TEST_CURL=$curl"
 & "$prefix/tools/openssl/openssl.exe" version -a
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 python scripts/check-windows-tls.py $prefix
