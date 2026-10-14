@@ -77,7 +77,7 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
 ## Current validation
 
 - [Production 38558134779@09db8f25](https://github.com/e6qu/fun-with-pipes/actions/runs/38558134779):
-  macOS ARM GC, bench and docs pass. The complete macOS ARM regular test shard
+  Both macOS GC jobs, both Windows jobs, bench and docs pass. The complete macOS ARM regular test shard
   passes except for library formatting; current-source formatting now preserves
   the syntax tree and is idempotent. Both Windows architectures pass foundations,
   interpreter goldens, generated runtime/GC stress, static-memory controls,
@@ -115,13 +115,11 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   pass (0.64s/0.52s). Compiling the current formatter modules and formatting
   `lib/autodiff.fwp`/`tests/run/ad_task_reuse.fwp` pass (1.15s/1.13s), with unchanged
   syntax trees. Full builds/tests/measurements remain on CI.
-- To reduce CI duration, REST and examples move from the GC shard to regular
-  macOS. They took 458s/297s in Intel run 38550733670; the GC job also runs the
-  full stress golden suite. Guarded `python3 scripts/test-macos-test-shards.py`
-  passes (0.16s); a guarded check of current Cargo metadata confirms all 194
-  integration targets appear exactly once (99 regular, 95 GC). Job timeouts,
-  stress coverage and failure propagation are unchanged; new elapsed times
-  require the final runner results.
+- Intel GC finished in 66 minutes; its regular shard is still running. The
+  tentative move of REST/examples to the regular shard is reverted because
+  current timings show it would lengthen Intel's slower job. The established
+  partition, timeouts and complete stress coverage remain unchanged. Guarded
+  partition coverage/failure tests pass; all integration targets are retained.
 - Earlier development evidence and wide-record reductions remain in
   [history](roadmap-history.md#pr-135-development-evidence) and
   [the measurement artifact](measurements/wide-records-2026-10-14.json).

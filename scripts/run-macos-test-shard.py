@@ -9,10 +9,6 @@ import subprocess
 ROOT = Path(__file__).resolve().parent.parent
 SHARDS = {"regular": 0, "gc": 1}
 UNIT_TARGETS = {"lib", "bin", "example", "bench"}
-# The GC job also runs the full stress golden suite. In Intel run 38550733670,
-# REST and examples took 458s and 297s; put them in the shorter regular job.
-# Keep the other assignments unchanged, and never duplicate or omit a target.
-REGULAR_TARGETS = {"rest", "examples"}
 
 
 def command(metadata, shard):
@@ -33,9 +29,7 @@ def command(metadata, shard):
             raise ValueError(f"unassigned Cargo target: {target['name']} {kinds}")
     if not names or len(names) != len(set(names)):
         raise ValueError("expected nonempty, unique integration test targets")
-    selected = [name for index, name in enumerate(sorted(names))
-                if (0 if name in REGULAR_TARGETS else index % len(SHARDS))
-                == SHARDS[shard]]
+    selected = sorted(names)[SHARDS[shard]::len(SHARDS)]
     if not selected:
         raise ValueError(f"empty integration test shard: {shard}")
     args = ["cargo", "test", "--no-fail-fast"]
