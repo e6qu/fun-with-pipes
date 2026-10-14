@@ -196,7 +196,7 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     }
     let input = dir.join("valid.fwp");
     std::fs::write(&input, "main = 42 | echo\n").unwrap();
-    for boundary in [["--target", "wasm32-wasi"], ["--fn", "main"]] {
+    for boundary in [&["--target", "wasm32-wasi"][..], &["--staticlib"]] {
         let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .args(["build", "--gc=arc", "--emit-c"])
             .args(boundary)
@@ -207,7 +207,7 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
             .unwrap();
         assert!(!out.status.success());
         assert!(String::from_utf8_lossy(&out.stderr)
-            .contains("--gc arc currently requires a native main program"));
+            .contains("--gc arc requires a native main or function executable"));
     }
     for flag in ["FWP_FREE", "FWP_REUSE"] {
         let out = Command::new(env!("CARGO_BIN_EXE_fwp"))

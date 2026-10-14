@@ -5779,7 +5779,8 @@ impl<'p> Gen<'p> {
                     return Ok(if sym == "cli.parse" {
                         let msg = format!("`{}` is not a record of options", p(0));
                         format!(
-                            "return fwp_data(1, 1, (V[]){{fwp_cstr({})}});",
+                            "fwp_decode_fields error; fwp_decode_fields_begin(&error, 1, ({})->vfields[1], 1, NULL);\n    error.values[0] = fwp_rc_fresh(fwp_cstr({}));\n    return fwp_decode_variant(&error, 1);",
+                            self.desc(&result),
                             c_string_literal(msg.as_bytes())
                         )
                     } else {
@@ -5789,10 +5790,11 @@ impl<'p> Gen<'p> {
                 let t = self.flag_table(&o, &[]);
                 if sym == "cli.parse" {
                     format!(
-                        "return fwp_p_cli_parse(l0, l1, {}, {}, {});",
+                        "return fwp_p_cli_parse(l0, l1, {}, {}, {}, {});",
                         t,
                         o.flags.len(),
-                        o.nfields
+                        o.nfields,
+                        self.desc(&result)
                     )
                 } else {
                     format!("return fwp_p_cli_help(l0, {}, {});", t, o.flags.len())
@@ -8020,8 +8022,8 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let arc = native_options().arc;
     if arc {
-        if !matches!(mode, Mode::Main) {
-            return Err("--gc arc currently requires a native main program".into());
+        if !matches!(mode, Mode::Main | Mode::Exec(..)) {
+            return Err("--gc arc requires a native main or function executable".into());
         }
         if !reuse_enabled() || !free_enabled() {
             return Err(
@@ -8062,7 +8064,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     // Ownership lowering introduces temporaries. Check their concrete types
     // as well as source locals before claiming a tracing-free ownership graph.
     if arc {
-        crate::arc::check(prog)?;
+        let entries = match &mode {
+            Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
+            _ => vec![main],
+        };
+        crate::arc::check(prog, &entries)?;
     }
     let mut g = Gen {
         prog,

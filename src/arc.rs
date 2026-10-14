@@ -57,13 +57,13 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
     }
 }
 
-pub(crate) fn check(prog: &Program) -> Result<(), String> {
+pub(crate) fn check(prog: &Program, entries: &[crate::ir::FuncId]) -> Result<(), String> {
     if let Some(name) = prog.unchecked_native_declarations.first() {
         return Err(format!(
             "--gc arc: native declaration `{name}` has no checked ownership signature"
         ));
     }
-    crate::arc_scope::check(prog)?;
+    crate::arc_scope::check(prog, entries)?;
     let mut seen = HashSet::new();
     for f in &prog.funcs {
         let reject = |reason: String| format!("--gc arc: `{}`: {reason}", f.name);

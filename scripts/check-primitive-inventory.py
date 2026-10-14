@@ -83,7 +83,8 @@ assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row 
 bundle_contracts = {}
 for symbol in ['prim.zero', 'prim.one']:
     bundle_contracts[symbol] = (0, 'Numeric', [])
-for symbol in ['prim.neg', 'prim.from-int', 'prim.from-float', 'bit.not', 'int.convert', 'float.to-int']:
+for symbol in ['prim.neg', 'prim.from-int', 'prim.from-float', 'bit.not', 'int.convert', 'float.to-int',
+               'float.convert', 'int.to-float', 'sqrt', 'exp', 'ln', 'sin', 'cos', 'tan', 'floor', 'ceil', 'round']:
     bundle_contracts[symbol] = (1, 'Numeric', [])
 bundle_contracts['abs'] = (1, 'Numeric', [0])
 for symbol in ['prim.add', 'prim.sub', 'prim.mul', 'prim.div', 'prim.rem',
@@ -91,11 +92,11 @@ for symbol in ['prim.add', 'prim.sub', 'prim.mul', 'prim.div', 'prim.rem',
                'saturating.add', 'saturating.sub', 'saturating.mul',
                'overflowing.add', 'overflowing.sub', 'overflowing.mul',
                'checked.add', 'checked.sub', 'checked.mul', 'checked.div',
-               'bit.and', 'bit.or', 'bit.xor', 'bit.shl', 'bit.shr']:
+               'bit.and', 'bit.or', 'bit.xor', 'bit.shl', 'bit.shr', 'pow']:
     bundle_contracts[symbol] = (2, 'Numeric', [])
-bundle_contracts['int.to-float'] = (1, 'Shared', [])
 bundle_contracts['min'] = bundle_contracts['max'] = (2, 'SelectedArgument', [0, 1])
 bundle_contracts['csv.parse-with'] = (2, 'OwnedTree', [])
+bundle_contracts['cli.parse'] = (2, 'OwnedTree', [])
 for symbol in ['csv.decode', 'json.parse', 'json.read']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
 promoted = []
@@ -113,6 +114,12 @@ for row in rows:
             contract='Some(Contract { arguments: ' + arguments + ', result: OwnedCallback, callback: Some(Borrowed(0)), aliases: ' + aliases + ' })')
         continue
     before = baseline_rows[key]
+    if row['symbol'] == 'fail':
+        assert before['contract'] == 'Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })'
+        assert all(row[name] == before[name] for name in fields if name != 'contract')
+        assert row['contract'] == 'Some(Contract { arguments: [Borrow], result: Never, callback: None, aliases: [] })'
+        changed_symbols.add('fail')
+        continue
     if row['symbol'] in bundle_contracts:
         assert before['contract'] == 'None' and row['bucket'] == 'contract', (before, row)
         assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
@@ -173,7 +180,7 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail'}
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22

@@ -308,7 +308,7 @@ impl Proof<'_> {
     }
 }
 
-pub(crate) fn check(program: &Program) -> Result<(), String> {
+pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String> {
     if !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "ad.tape" | "ad.push" | "ad.backward" | "run-state" | "get" | "put" | "modify"))) {
         return Ok(());
     }
@@ -321,10 +321,11 @@ pub(crate) fn check(program: &Program) -> Result<(), String> {
         validate: false,
         state_values: Targets::new(),
     };
-    let main = program
-        .main
-        .ok_or("--gc arc: scoped ownership requires a native main entry")?;
-    proof.request(main, 0, &[]);
+    for &entry in entries {
+        // Protocol inputs contain no known language closures. Any attempted
+        // dynamic callback call through an input remains an unproved target.
+        proof.request(entry, 0, &[]);
+    }
     loop {
         proof.changed = false;
         for ((id, scoped), args) in proof.inputs.clone() {

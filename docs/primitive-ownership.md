@@ -85,10 +85,9 @@ complete exceptional ownership or tracing-free support.
 
 ## Conservative reconstruction and external boundaries
 
-The current inventory has 375 declarations, 365 runtime symbols and 40 aliases:
-207 ownership contracts, 19 ordinary IR combinators, 11 flat scalar signatures
-and 138 review declarations covering 128 symbols. Promotion checks preserve the
-immutable original baseline and verify each new numeric/CSV contract. Scalar
+The inventory checks declarations, runtime symbols and aliases against the
+immutable original baseline, including each numeric/CSV/CLI promotion and the
+nonreturning failure contract. Its generated report records current counts. Scalar
 signatures can still allocate external state; descriptors alone cannot establish
 counted reconstruction. The handoff records validation of the current revision.
 
@@ -101,6 +100,7 @@ boundary; it does not establish tracing-free eligibility.
 |---|---|
 | JSON/typed CSV/text/binary decoding | Descriptor Dup/Drop owns reconstructed children and partial field vectors; parse/read and typed CSV return OwnedTree. External protocol contexts remain separately unproved |
 | csv.parse / csv.parse-with | Counted String leaves and nested list spines; registered pending-field, partial-row and scratch cleanup; private spine reversal transfers existing owners |
+| cli.parse / cli.help | Borrow defaults and input strings; reconstruct owned flag records/positional lists, retain aliases, release displaced flags and partial values; help and diagnostics own their scratch/text |
 | Numeric I128/U128 results | Fresh leaf/aggregate ownership or explicitly retained selected aliases; scalar results remain inline |
 | Remote values and memoized decoding | Preserve retained context/cache owners and independent reader aliases; scratch cleanup alone does not count decoded nodes |
 | Foreign values and retained callbacks | Keep explicit sharing unless host lifetime and teardown are proved |

@@ -419,8 +419,12 @@ executed ad.tape/ad.push/ad.backward calls occur under ad.scope/ad.scope2. It
 tracks partial applications, returned callbacks and functions inside containers;
 ambiguous targets are rejected. Function names confer no exemption. Arguments
 evaluate before the scope callback, and escaped tokens retain stale-token checks.
-Scoped gradients use the same bounded workspace and exceptional cleanup. The initial checked mode supports native main programs;
-WebAssembly, executable protocol, library and service boundaries diagnose as
+Scoped gradients use the same bounded workspace and exceptional cleanup. Checked
+mode supports native main and function executables, including CLI commands. Each
+exported entry starts without an assumed State/AD scope. Typed command owners
+cover arguments, defaults, frames and results, including early exits; transport
+teardown closes descriptors and releases mappings. These additions await runner
+acceptance. WebAssembly, library, remote and service boundaries remain
 unsupported. `--gc tracing` explicitly selects the existing compatibility mode;
 no ARC rejection silently selects it. The handoff records production acceptance.
 

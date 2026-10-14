@@ -23,7 +23,7 @@ full Windows and true half/quad language formats remain unfinished.
 | Step | Status | Implemented and still required |
 |---|---|---|
 | 1 | Implemented | One live handoff, accepted baseline and historical evidence; remove stale next actions |
-| 2 | In progress | Scalar foreign ARC and proved WASM/File freeing tested; retained-task/scoped foreign proofs pass four hosts; protocol ownership remains |
+| 2 | In progress | Retained-task/scoped foreign proofs pass four hosts; CLI/protocol owners and checked executable ARC implemented, runner proofs pending |
 | 3 | In progress | Direct iterate fusion measured; broader producer/worker/aggregate specialization remains |
 | 4 | Pending | Measured kernel/layout improvements, nested reverse differentiation and checkpointing |
 | 5 | In progress | Exact scalar values, inline arrays, closed quad workers and protocol v2 implemented; C ABI, numeric record workers and complete ownership/platform acceptance remain under validation |
@@ -197,8 +197,28 @@ external-callback admission is claimed.
   raw/native test checks repeated borrowed input aliases, physical allocation
   balance without collection, GC stress and an omitted-result-drop control.
   Guarded focused lint and runtime syntax pass; runner proof is pending.
-  CLI argument/default/frame ownership remains unfinished, so executable
-  protocol builds still explicitly reject checked ARC.
+  CLI parsing and executable commands now also own arguments, overwritten flags,
+  defaults, diagnostics, streamed values, frame buffers and partial results.
+  Command scope cleanup closes transport sockets and releases SHM mappings,
+  including a fixed invalid-header mapping leak. Checked ARC admits native main
+  and function executables and analyzes every exported entry without assumed
+  State/AD context. Tests compare raw CLI behavior, malformed input, repeated
+  streams and early help/error returns, with physical reclamation and omitted
+  release controls. Focused lint and runtime syntax pass; execution is pending.
+  Remote, service, library and WASM boundaries remain outside this admission.
+- [38538174843](https://github.com/e6qu/fun-with-pipes/actions/runs/38538174843)
+  at `55addedb` passes the new Windows active-stack-bound probe on AMD64 and
+  fixes its process argument stress failure. AMD64 tasks still report a missed
+  root under GC verification; investigate the marking/root snapshot before
+  acceptance. ARM execution passed. The four-host run
+  [38538182945](https://github.com/e6qu/fun-with-pipes/actions/runs/38538182945)
+  was still running when checked; its macOS ARM regression step failed and
+  needs log inspection. Neither run is a passing final-head gate.
+- CLI/protocol local checks passed under `python3 scripts/local-guard.py`:
+  `cargo clippy --lib --bin fwp --test cli_ownership --test exec_protocol_ownership
+  --test exec_invocation_ownership --test arc_execution -- -D warnings`,
+  `cargo fmt --all`, combined TLS/service runtime C syntax, and
+  `python3 scripts/check-roadmap.py` (48 link sets, 106 anchors, six steps).
 - At `dfca8e6`, all four Linux/macOS hosts passed exact-format/protocol/array
   tests and all seven foreign ABI/export tests in
   [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).
@@ -231,10 +251,11 @@ external-callback admission is claimed.
 
 ## Next action
 
-Next: rerun native Windows with the OS stack-bound fix; require AMD64 stress
-and the independent omitted-bound control to pass. Run executable invocation
-ownership and corrected numeric tail/preemption controls on all four Unix hosts.
-Finish managed protocol ownership and final-head ABI/cache acceptance. Keep raw/native agreement and exact rounding.
+Next: fix the remaining native Windows AMD64 task GC verification failure.
+Run full CLI/protocol ownership and corrected numeric tail/preemption controls
+on all four Unix hosts, including physical reclamation and omitted-release
+controls; prove Linux transport descriptor/mapping teardown separately. Finish
+final-head ABI/cache acceptance. Keep raw/native agreement and exact rounding.
 Then complete Windows static memory/TLS/PE packages, broader ownership/worker
 proofs, and nested reverse differentiation/checkpointing with measured layout
 improvements. Documentation closeout is complete; five implementation areas

@@ -107,13 +107,12 @@ requirements at unproved boundaries, which checked native ARC explicitly rejects
 | Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
-The current inventory verifies 375 declarations resolving to 365 runtime symbols
-after 40 aliases: 207 explicit contracts, 19 ordinary IR combinators, 11 flat
-scalar signatures and 138 review declarations representing 128 symbols. The
-immutable baseline retains the original classification; exact promotion checks
-cover the 39 CSV/numeric/decoder additions. This includes typed State, internal
-ad.scope/ad.scope2 and 14 fresh codec leaves.
-These counts classify boundaries rather than heap objects or bugs. Full production
+The executable inventory verifies every declaration, resolved runtime symbol and
+alias against the immutable original classification. Explicit promotion checks
+cover CSV, numeric, decoder and CLI ownership plus nonreturning failure. It also
+checks typed State, internal ad.scope/ad.scope2 and fresh codec leaves. The
+generated report records current counts; these classify boundaries rather than
+heap objects or bugs. Full production
 acceptance is recorded in [the handoff](development-state.md).
 Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
 when no proven borrowing contract applies; scalar words remain uncounted.
@@ -318,8 +317,8 @@ lifetimes, shared graph ownership or general execution without tracing.
 ## Ownership coverage
 
 The handoff separates accepted phase 2 evidence from the active extensions.
-All 375 declarations are inventoried: 207 contracts, 19 IR combinators, 11 flat
-signatures and 138 explicit review declarations/128 symbols. Their argument,
+All declarations are inventoried as contracts, ordinary IR combinators, flat
+signatures or explicit review boundaries. Their argument,
 result, callback, retention, teardown and cycle policies are checked against the
 compiler and runtime. This establishes the documented compatibility model.
 
@@ -426,9 +425,12 @@ fields before trying the next declared alternative. Binary truncation and
 injected construction exits test the same cleanup contract. Binary Trit and
 TInt values are range-checked consistently with the interpreter; malformed
 fields release already reconstructed owners. JSON parse/read
-and typed CSV have OwnedTree primitive results. This does not admit the
-external executable/remote protocol boundary to checked ARC; its retained
-contexts still require a separate proof.
+and typed CSV have OwnedTree primitive results. CLI parsing now owns overwritten
+flags, repeated spines, defaults, optional fields, diagnostics and partial
+records. Native function executables have typed argument/frame/result owners,
+unwind cleanup and transport teardown. Checked ARC admits those executable
+entries; raw/native agreement and physical-reclamation controls are pending in
+the active PR. Remote and service contexts remain outside this admission.
 
 Scoped State reachability tracks callback targets, captures and values stored
 in State. get/put/modify must execute under a proven handler; returning a
