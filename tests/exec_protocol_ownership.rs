@@ -123,7 +123,7 @@ fn arc_commands_reclaim_arguments_frames_defaults_and_errors() {
             vec!["render", "--password=secret", "word"],
             vec![],
             false,
-            "ann",
+            "ann-λ-雪-🙂",
             "high",
         ),
         (vec!["render", "word"], vec![], false, "", "nonsense"),

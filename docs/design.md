@@ -47,7 +47,12 @@ record-label evaluation order is preserved.
 `iter.fold`, `iter.each`, `iter.find` and list `fold-until` use the existing
 `loop` and Step constructors; `map-accum` uses a left fold followed by reverse.
 They introduce no primitives and do not widen iterator tail effects. Callback
-and tail evaluation order is tested against raw interpretation. Producer fusion applies only to proven direct chains; arbitrary lazy producers
+and tail evaluation order is tested against raw interpretation. The active PR
+also lowers `array.to-list | iter.from-list` directly to an array owner and index,
+using checked element access without an intermediate list. Array construction
+still completes before any consumer callback; element aliases retain their
+owners. Raw/native, ARC reclamation and allocation/instruction controls await
+runner verification. Producer fusion applies only to proven direct chains; arbitrary lazy producers
 retain their declared forcing behavior and may allocate.
 
 Merged synchronous callback entries borrow typed inputs and return owned results;

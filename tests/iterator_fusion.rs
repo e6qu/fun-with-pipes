@@ -33,6 +33,17 @@ main = [
     "seed" | iter.iterate (concat "x") | iter.take 8 | iter.fold (flip concat) "" | echo,
     0 | iter.iterate (add 3) | iter.find (gt 19) | echo,
     "x" | string.repeat 3 | strings | echo,
+    array.generate 129 id | array.to-list | iter.from-list | iter.map (mul 2) | iter.filter (rem 3 | eq 0) | iter.fold add 0 | echo,
+    array.generate 0 id | array.to-list | iter.from-list | iter.find (div 0 | eq 1) | echo,
+    array.generate 16 (show | string.repeat 3)
+        | both id (array.to-list | iter.from-list | iter.take 3 | iter.fold (flip concat) "")
+        | both (.0 | array.to-list) .1 | echo,
+    [0.1f128, 0.2f128, 0.3f128] | array.from-list | array.slice 1 2
+        | array.to-list | iter.from-list | iter.fold add 0.0f128 | echo,
+    [1, 2, 3] | array.from-list | array.to-list | iter.from-list
+        | run-state [] (iter.each (Cons | modify)) | echo,
+    [1, 2] | array.from-list | array.to-list | iter.from-list
+        | attempt (iter.fold fail-step 0) | echo,
 ] | ignore
 "#).unwrap();
     let reference = checked(
@@ -94,6 +105,10 @@ fn producer_lookahead_and_exhausted_stage_order_match_raw_interpreter() {
         "0 | iter.iterate (add 2) | iter.filter (div 0 | eq 1) | iter.take 0 | iter.fold add 0 | echo",
         "[1, 2, 3] | iter.from-list | iter.map (add 1) | iter.fold add 0 | echo",
         "[1, 2, 3] | iter.from-list | iter.take 1 | iter.filter (gt 2) | iter.fold add 0 | echo",
+        "array.generate 2 (div 0) | array.to-list | iter.from-list | iter.take 0 | iter.fold add 0 | echo",
+        "array.generate 2 id | array.to-list | iter.from-list | iter.map (div 0) | iter.take 0 | iter.fold add 0 | echo",
+        "array.generate 2 id | array.to-list | iter.from-list | iter.take 0 | iter.map (div 0) | iter.fold add 0 | echo",
+        "array.generate 2 id | array.to-list | iter.from-list | iter.take 1 | iter.filter (gt 2) | iter.fold add 0 | echo",
     ];
     for (i, body) in cases.iter().enumerate() {
         let input = dir.join(format!("case-{i}.fwp"));
@@ -135,4 +150,79 @@ fn producer_lookahead_and_exhausted_stage_order_match_raw_interpreter() {
         }
     }
     std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn array_producers_reclaim_owners_after_early_stop_and_failure() {
+    let dir = fwp::cgen::TempDir::new("fwp-array-producers").unwrap();
+    let input = dir.join("arrays.fwp");
+    std::fs::write(&input, r#"
+words : I64 -> Array[String]
+words = flip array.generate (show | string.repeat 2)
+selected : Array[String] -> String
+selected = array.to-list | iter.from-list | iter.take 3 | iter.fold (flip concat) "seed"
+rejected : String -> String -> String ! {Error[String]}
+rejected = curry (.1 | string.repeat 2 | fail)
+main = [
+    range 1 65 | map (words | both selected (array.to-list | length)) | echo,
+    range 1 65 | map (words | array.to-list | iter.from-list | attempt (iter.fold rejected "")) | echo,
+] | ignore
+"#).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    for producers in ["0", "1"] {
+        let cfile = dir.join("arrays.c");
+        checked(
+            Command::new(compiler)
+                .env("FWP_ITER_PRODUCERS", producers)
+                .args(["build", "--gc", "arc", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        let start = code
+            .find("static void *fwp_main_thread(void *arg) {")
+            .unwrap();
+        let (runtime, main) = code.split_at(start);
+        let measured = format!("{runtime}{}", main
+            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t array_budget=fwp_gc.budget;\n")
+            .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < array_budget) exit(193);\n"));
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join(if cfg!(windows) {
+                "arrays.exe"
+            } else {
+                "arrays"
+            });
+            fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
+            let output = checked(
+                Command::new(&binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0"),
+            );
+            assert_eq!(output.stdout, reference.stdout, "{producers} {opt}");
+            assert_eq!(output.stderr, reference.stderr, "{producers} {opt}");
+            if producers == "1" {
+                let needle = "    fwp_mem_free((void *)(uintptr_t)v);";
+                assert!(measured.contains(needle));
+                let omitted = measured.replace(needle, "/* omit physical release */");
+                fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
+                let output = Command::new(binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert_eq!(output.status.code(), Some(193), "omitted free: {output:?}");
+            }
+        }
+    }
 }

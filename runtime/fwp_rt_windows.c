@@ -64,15 +64,17 @@ static FILE *fwp_path_fopen(V path, const char *mode) {
     errno = error;
     return file;
 }
-static V fwp_win_env_get(V name) {
+static int fwp_win_env_text(const char *name, size_t length, V *out) {
     fwp_win_text wide;
-    if (!fwp_win_text_init(&wide, STR(name)->d, STR(name)->len)) return FWP_NONE;
+    if (!fwp_win_text_init(&wide, name, length)) return 0;
     SetLastError(ERROR_SUCCESS);
     DWORD size = GetEnvironmentVariableW(wide.text, NULL, 0);
     if (!size) {
         DWORD error = GetLastError();
         fwp_win_text_finish(&wide);
-        return error != ERROR_SUCCESS ? FWP_NONE : fwp_some(fwp_cstr(""));
+        if (error != ERROR_SUCCESS) return 0;
+        *out = fwp_cstr("");
+        return 1;
     }
     wchar_t *value = (wchar_t *)malloc((size_t)size * sizeof *value);
     if (!value) { fwp_win_text_finish(&wide); fwp_trap("out of memory reading environment"); }
@@ -80,14 +82,18 @@ static V fwp_win_env_get(V name) {
     DWORD got = GetEnvironmentVariableW(wide.text, value, size);
     DWORD error = GetLastError();
     fwp_win_text_finish(&wide);
-    if (!got && error != ERROR_SUCCESS) { free(value); return FWP_NONE; }
+    if (!got && error != ERROR_SUCCESS) { free(value); return 0; }
     if (got >= size) { free(value); fwp_trap("environment changed while reading a value"); }
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_win_free, value);
-    V result = fwp_some(fwp_win_string(value, got));
+    *out = fwp_win_string(value, got);
     fwp_cleanup_pop(&cleanup);
     free(value);
-    return result;
+    return 1;
+}
+static V fwp_win_env_get(V name) {
+    V value;
+    return fwp_win_env_text(STR(name)->d, STR(name)->len, &value) ? fwp_some(value) : FWP_NONE;
 }
 
 /* argv is one owned allocation, with UTF-8 strings following its pointers. */

@@ -808,9 +808,16 @@ static int fwp_cli_parse(const fwp_flag *fl, int nf, int special, int version, i
  * env_value): 1 with *out, 0 when unset or empty, -1 with *err. */
 static int fwp_flag_env(const fwp_flag *f, V *out, V *err) {
     if (!f->env) return 0;
+#ifdef _WIN32
+    V value;
+    if (!fwp_win_env_text(f->env, strlen(f->env), &value)) return 0;
+    fwp_value_owner text = {fwp_rc_fresh(value), fwp_cli_text_drop};
+    if (!STR(value)->len) { fwp_value_release(&text); return 0; }
+#else
     const char *e = getenv(f->env);
     if (!e || !*e) return 0;
     fwp_value_owner text = {fwp_rc_fresh(fwp_str_lossy(e, strlen(e))), fwp_cli_text_drop};
+#endif
     fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &text);
     const char *s = STR(text.value)->d;
     size_t n = STR(text.value)->len;

@@ -24,7 +24,7 @@ full Windows and true half/quad language formats remain unfinished.
 |---|---|---|
 | 1 | Implemented | One live handoff, accepted baseline and historical evidence; remove stale next actions |
 | 2 | In progress | Retained-task/scoped foreign proofs pass four hosts; CLI/protocol owners and checked executable ARC implemented, runner proofs pending |
-| 3 | In progress | Direct iterate fusion measured; broader producer/worker/aggregate specialization remains |
+| 3 | In progress | Wide numeric records measured on four hosts; tail loops and direct array producer fusion implemented, final verification remains |
 | 4 | Pending | Measured kernel/layout improvements, nested reverse differentiation and checkpointing |
 | 5 | In progress | Exact scalar values, inline arrays, closed quad workers and protocol v2 implemented; C ABI, numeric record workers and complete ownership/platform acceptance remain under validation |
 | 6 | In progress | Native Windows allocator/fiber/socket probes pass both architectures; complete generated resources/runtime, TLS and PE acceptance remain |
@@ -242,6 +242,33 @@ external-callback admission is claimed.
   non-system DLL dependencies in standalone compiler/generated smoke binaries;
   release Rust uses a static C runtime. These checks are implemented, unverified.
   Guarded TLS/compiler lint, Python syntax and formatting passed.
+- Direct `array.to-list | iter.from-list` chains now retain the source array
+  and advance an index, removing list materialization and tail dispatch.
+  Array construction still precedes consumer work. Controls cover empty arrays,
+  retained aliases, quad views, callback failure, State order and early stopping;
+  checked ARC must reclaim arrays/children without collection, and omitted
+  physical freeing must fail. Measurements compare producer/consumer switches
+  and inspect generated loops plus native instructions. Implementation pending
+  runner execution; guarded focused compiler/test lint passed.
+- Linux transport ownership now has a native descriptor/mapping probe: real
+  socketpair/SCM_RIGHTS transfers, repeated ring teardown, rejected headers and
+  changed peer capacity. Invalid descriptor messages now close every received
+  descriptor, including a second descriptor fitting in control-message padding
+  and truncated multi-descriptor offers. Restoring omitted unmap/socket/extra-fd
+  cleanup must fail.
+  This is a pending proof, alongside full executable pipeline regressions.
+- CLI environment flags now share the Windows UTF-16 conversion used by ordinary
+  environment reads; an explicit Unicode fixture checks raw/native agreement.
+  All parsed text remains counted and releases on success and failure. Pending
+  Windows execution; combined runtime C syntax passes locally under the guard.
+- Current runner batches at `6fde679d` are
+  [38542604291](https://github.com/e6qu/fun-with-pipes/actions/runs/38542604291)
+  (four-host ownership) and
+  [38542607906](https://github.com/e6qu/fun-with-pipes/actions/runs/38542607906)
+  (native Windows TLS/resources/packages). Both were running when checked.
+  The later array-producer, transport-omission and Unicode-flag changes still
+  need their own head execution. Guarded `cargo clippy --lib --tests -- -D warnings`
+  and formatting pass after those changes; full execution stays on runners.
 - At `dfca8e6`, all four Linux/macOS hosts passed exact-format/protocol/array
   tests and all seven foreign ABI/export tests in
   [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).

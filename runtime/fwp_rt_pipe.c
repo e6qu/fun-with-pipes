@@ -400,11 +400,25 @@ static int fwp_pipe_in_switch(const unsigned char *pl, size_t len) {
     msg.msg_control = u.b;
     msg.msg_controllen = sizeof u.b;
     if (recvmsg(fwp_pi_sock, &msg, MSG_CMSG_CLOEXEC) != 1) return 0;
-    struct cmsghdr *c = CMSG_FIRSTHDR(&msg);
-    if (!c || c->cmsg_level != SOL_SOCKET || c->cmsg_type != SCM_RIGHTS ||
-        c->cmsg_len < CMSG_LEN(sizeof(int))) return 0;
-    int fd;
-    memcpy(&fd, CMSG_DATA(c), sizeof fd);
+    int fd = -1;
+    size_t received = 0;
+    for (struct cmsghdr *c = CMSG_FIRSTHDR(&msg); c; c = CMSG_NXTHDR(&msg, c)) {
+        if (c->cmsg_level != SOL_SOCKET || c->cmsg_type != SCM_RIGHTS ||
+            c->cmsg_len < CMSG_LEN(sizeof(int))) continue;
+        size_t count = (c->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+        for (size_t i = 0; i < count; i++) {
+            int next;
+            memcpy(&next, CMSG_DATA(c) + i * sizeof(int), sizeof next);
+            if (!received++) fd = next;
+            else close(next);
+        }
+    }
+    /* Every received descriptor is ours even when the peer's offer is invalid.
+     * CMSG_SPACE padding can hold a second fd; never lose that owner. */
+    if (received != 1 || (msg.msg_flags & MSG_CTRUNC) || one != 'S') {
+        if (fd >= 0) close(fd);
+        return 0;
+    }
     struct stat st;
     void *m = MAP_FAILED;
     if (fstat(fd, &st) == 0 && (size_t)st.st_size > FWP_RING_DATA)
