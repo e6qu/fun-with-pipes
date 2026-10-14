@@ -294,4 +294,4 @@ jobs:
         run: cargo test --test wasm_resource_counts --test softfloat_core --test float_math --test array_size_limits
       - name: Actual WASI semantic agreement
         if: ${{ !cancelled() }}
-        run: cargo test --test wasm golden_programs_under_wasi
+        run: cargo test --no-fail-fast --test wasm --test browser --test exec_invocation_ownership

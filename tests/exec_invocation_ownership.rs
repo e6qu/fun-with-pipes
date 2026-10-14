@@ -74,7 +74,7 @@ raised = string.repeat 2 | fail
         const fwp_exec_spec *spec = NULL;
         for (size_t i = 0; i < sizeof exec_cmds / sizeof *exec_cmds; i++)
             if (!strcmp(exec_cmds[i]->export_name, names[name])) spec = exec_cmds[i];
-        if (!spec || !spec->callable || !fwp_fns[CLO(spec->callable)->fn].owned) exit(190);
+        if (!spec || !spec->callable || !fwp_fns[spec->callable->fn].owned) exit(190);
         V input;
         if (!fwp_parse_text("owned", 5, spec->params[0], &input)) exit(191);
         for (int repeat = 0; repeat < 2; repeat++) {

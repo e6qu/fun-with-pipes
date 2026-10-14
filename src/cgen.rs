@@ -8425,7 +8425,7 @@ static const fwp_exec_spec exec_spec{i} = {{
                 callable = if n == 0 {
                     "0".into()
                 } else {
-                    format!("PTR(&fc{fid})")
+                    format!("&fc{fid}")
                 },
                 has_opts = c.options.is_some() as u8,
                 fallback = c.record_fallback as u8,

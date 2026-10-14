@@ -358,9 +358,10 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
 - Native tasks are green threads on an event loop: epoll on
   Linux, poll elsewhere. glibc uses `ucontext`; musl and Darwin use the
   runtime's custom x86-64/AArch64 context switch, with ELF and Mach-O
-  symbol/directive conventions respectively. The active Windows port uses native
+  symbol/directive conventions respectively. Windows uses native
   fibers with explicit saved-register and stack root ranges; the OS owns stack
-  reservation, commitment and ABI restoration. Native acceptance remains pending. Interpreter tasks are OS threads that pass a
+  reservation, commitment and ABI restoration. The handoff records platform
+  validation. Interpreter tasks are OS threads that pass a
   baton, so only one runs at a time. Function-entry preemption preserves
   deterministic ready-task interleaving across backends at the same optimization
   setting. Inlining changes the function-entry count. Relative wall-clock
@@ -478,12 +479,6 @@ error. See [protocol.md](protocol.md).
   [Ownership](ownership.md) specifies coverage and numeric representation limits;
   [PLAN](../PLAN.md) records the remaining efficiency gaps. C structs alone do
   not guarantee registers.
-- Windows on AMD64 and ARM64 still requires full acceptance. Native goldens,
-  resource stress and standalone packages pass focused runs; remaining TLS,
-  static-storage and ownership controls are tracked in the handoff.
-  Linux/macOS have native CI on both architectures; see the
-  [platform matrix](../PLAN.md#platform-objective-and-current-evidence) and handoff
-  for actual acceptance gates. Cross-build/QEMU evidence remains distinct.
 - Darwin cross-compilation and Clang PGO.
   Native macOS passed both architecture suites and the Linux/benchmark gates
   in PR #74; separate ARM and Intel binaries meet the packaging objective.

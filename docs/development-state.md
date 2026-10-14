@@ -81,9 +81,10 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   passes except for library formatting; current-source formatting now preserves
   the syntax tree and is idempotent. Both Windows architectures pass foundations,
   interpreter goldens, generated runtime/GC stress, static-memory controls,
-  TLS/executable ownership and native nested AD. Their native goldens/package
-  steps and remaining Linux/Intel jobs are running. This older head is diagnostic
-  evidence, not the final merge gate.
+  TLS/executable ownership, native nested AD, native goldens and standalone
+  packages: both Windows jobs are green. Linux AMD64 completed with the same
+  formatting failures and a WASM CLI static-initializer error. Other Linux/Intel
+  jobs are running. This older head is diagnostic evidence, not the final gate.
 - [Focused 38560981174@b4d072bb](https://github.com/e6qu/fun-with-pipes/actions/runs/38560981174):
   all four Linux/macOS hosts pass the latest nested AD, completed-task identity,
   partial-retain unwind and omitted-release controls, numeric tape scopes,
@@ -125,10 +126,20 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   [history](roadmap-history.md#pr-135-development-evidence) and
   [the measurement artifact](measurements/wide-records-2026-10-14.json).
 
+- Linux's WASM CLI failure came from widening a 32-bit closure address into a
+  static 64-bit value initializer. Executable descriptors now keep a typed
+  `fwp_clo` pointer and convert it only when invoking the existing borrowed call.
+  Guarded clang wasm32 syntax accepts the corrected shape and rejects the old
+  initializer (0.15s); focused clippy (17.17s), current-runtime C syntax (0.39s)
+  and formatting pass. The focused WASM workflow now runs CLI/browser semantics
+  and native executable ownership too. Run 38564481965@a85e0ab2 was cancelled
+  while still queued because it lacks this repair; it is not a gate.
+
 ## Next action
 
-Next: publish this final repair/documentation batch, restore PR #136 readiness
-and monitor its final production run. Also collect remaining 09db8f25 diagnostics
+Next: publish the WASM descriptor repair, restore PR #136 readiness and run
+focused WASM checks alongside the final production matrix. Collect remaining
+09db8f25 diagnostics
 and fix every failure. Require all seven Linux/macOS production jobs, both native
 Windows acceptance jobs and docs on the final head before squash merge. Use an
 explicit one-line subject of at most 80 characters and an empty body.
