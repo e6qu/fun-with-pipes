@@ -11,22 +11,21 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-The user authorized all six items in PLAN.md as one combined PR, including
-Windows ARM64/AMD64 and actual F16/BF16/F128 implementation. The user merged
-PR #135 at `ad37059e` before final platform acceptance. Keep all remaining work
-together on `roadmap-after-135` in one follow-up PR; do not split it into
-separate PRs or reopen the merged PR. Earlier deliveries are historical evidence.
+The six-step roadmap is implemented; PR #136 delivers its final
+closeout. At a session restart, inspect that PR and the handoff first. If it is
+open, keep its remaining documentation, validation and fixes together on
+`roadmap-after-135`, require all final-head gates, and squash merge. If it is
+merged with passing gates, this roadmap is complete: do not replay historical
+preparation entries or start another implementation PR without new user direction.
 
-Authorization covers implementation, documentation, branch publication, PR
-creation, fixes and squash merge after passing final-head CI. Failing tests
-are tasks to fix. Queued CI gates merging, not independent implementation.
-Do not request the same permission again or reinterpret earlier deferrals as
-current scope: Windows and the float migration are now authorized. A new
-compiler backend, JIT and distributed execution remain outside this bundle.
+The user's authorization covers this closeout, publication, fixes and merge.
+Failing tests are tasks to fix. Queued CI gates merging, not independent work.
+Do not request the same permission again. A new backend, JIT and distributed
+execution remain outside this bundle.
 
-Retain all seven existing Linux/macOS production gates and add required native
-Windows ARM64/AMD64 tests, ownership/GC stress and standalone packaging before
-acceptance. Skipped or emulated tests do not establish native Windows support.
+Retain all nine production gates: Linux ARM64/AMD64, regular and GC-stress
+ARM/Intel macOS, C/Rust benchmarks and native Windows ARM64/AMD64, plus the
+documentation audit. Skipped or emulated tests do not establish native support.
 Package one binary per OS/architecture; universal binaries are not an objective.
 [docs/ownership.md](docs/ownership.md) records memory contracts and evidence.
 

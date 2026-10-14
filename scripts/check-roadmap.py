@@ -54,8 +54,8 @@ def check_subject(revision):
 def check_handoff():
     state = (ROOT / "docs/development-state.md").read_text()
     plan = (ROOT / "PLAN.md").read_text()
-    heading = "## Active bundle\n"
-    assert state.count(heading) == 1, "missing or duplicate live delivery section"
+    heading = "## Roadmap status\n"
+    assert state.count(heading) == 1, "missing or duplicate roadmap status section"
     live = state.split(heading, 1)[1].split("\n## ", 1)[0]
     planned = re.findall(r"^\| (\d+) \|", plan, re.M)
     rows = re.findall(r"^\| (\d+) \| ([^|]+)\|", live, re.M)
@@ -92,7 +92,7 @@ def main():
         check_subject(revision)
     live = check_handoff()
     print(f"{len(files)} doc link sets, {len(rows)} immutable queue pairs/tags and "
-          f"{live} live plan steps pass; commit messages pass")
+          f"{live} roadmap steps pass; commit messages pass")
 
 
 if __name__ == "__main__":

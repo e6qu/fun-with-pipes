@@ -86,7 +86,8 @@ Linux/macOS results alone do not establish it. Full native Linux ARM64 acceptanc
 requires a passing complete native job; see [the platform matrix](PLAN.md#platform-objective-and-current-evidence).
 For each macOS architecture, the two jobs split the integration targets using
 `scripts/run-macos-test-shard.py`: sorted Cargo target names alternate between
-the `regular` and `gc` shards. The regular job also runs unit, example and
+the `regular` and `gc` shards, with REST and wide workers assigned to regular
+to leave room for the separate stress suite. The regular job also runs unit, example and
 benchmark targets. Both shards exclude `golden_programs_under_gc_stress`; the
 GC job runs that test separately, once, before its ordinary shard. Together
 they cover the full native test gate with OpenSSL within the existing

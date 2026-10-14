@@ -1,8 +1,8 @@
 # Floating-point representation and migration
 
 PR #135 merged actual F16/BF16/F128 implementation and protocol version 2.
-Focused scalar, array, foreign ABI and ownership tests pass on Linux/macOS;
-PR #136 completes remaining platform and lifetime acceptance. Keep conversion
+[PR #136](https://github.com/e6qu/fun-with-pipes/pull/136) records platform and
+lifetime verification, including native Windows ARM64/AMD64. Keep conversion
 explicit and precision independent of the host.
 
 | Language type | Arithmetic format | Protocol v2 payload |
@@ -36,16 +36,14 @@ boundaries box once and register partially constructed results for unwind.
 The C boundary maps half/bfloat to u16 bits and quad to `struct fwp_binary128`,
 including record fields, callbacks and pointer access. The handoff records
 which native ABI/export checks have completed.
-Final acceptance still requires the full platform gates. Protocol
-golden-byte tests cover widths, signed zero, infinities and NaN payload transport;
-the handoff links raw/native regression results and remaining acceptance gates.
+Protocol golden-byte tests cover widths, signed zero, infinities and NaN payload
+transport. The handoff links raw/native regressions and production verification.
 
 The migration now has shared binary16/bfloat16/binary128 arithmetic and exact
 decimal cores. Arithmetic/conversion NaNs are canonical positive quiet NaNs;
 raw bit transport preserves payloads. Decimal conversion uses explicit per-call
-scratch ownership, including cleanup on allocation failure. These cores do not
-by themselves establish complete language support. [The handoff](development-state.md)
-records actual checks and remaining integration work.
+scratch ownership, including cleanup on allocation failure. [The handoff](development-state.md) records language integration and native
+verification alongside the core arithmetic checks.
 
 Keep `float.convert` explicit. Preserve operation order and the existing policy
 against implicit reassociation or contraction. Do not silently substitute the

@@ -328,8 +328,8 @@ still require tracing. Natural numeric storage/views and optimized kernels
 must preserve these lifetimes. Checked native ARC has the eligibility boundaries below.
 
 Checked ARC also admits immutable retained-task graphs. Focused ownership
-controls pass on four Linux/macOS hosts; final platform acceptance is tracked
-in the handoff. Scheduler, scope and caller references have separate owners; task
+controls pass on four Linux/macOS hosts; production verification, including
+native Windows, is linked from the handoff. Scheduler, scope and caller references have separate owners; task
 results retain typed references for repeated awaits. A child starts fresh State/AD
 stacks, and closure-flow validation cannot inherit its parent's dynamic lifetimes.
 Captures can reference older task handles; channels, raw pointers and unknown
@@ -429,8 +429,8 @@ and typed CSV have OwnedTree primitive results. CLI parsing now owns overwritten
 flags, repeated spines, defaults, optional fields, diagnostics and partial
 records. Native function executables have typed argument/frame/result owners,
 unwind cleanup and transport teardown. Checked ARC admits those executable
-entries; raw/native agreement and physical-reclamation controls pass focused
-Linux/macOS and Windows runs. The handoff records final acceptance. Remote and
+entries; raw/native agreement and physical-reclamation controls pass Linux/macOS
+and native Windows gates. The handoff records verification. Remote and
 service contexts remain outside this admission.
 
 Scoped State reachability tracks callback targets, captures and values stored
@@ -451,7 +451,7 @@ belongs to its creating task. Library unload retires these owners before heap
 teardown. `tests/autodiff_nested.rs` and `tests/autodiff_library.rs` exercise
 recovered failure, cancellation, cross-task rejection and omitted releases.
 Normal/trap/cancellation cleanup and omission controls run with tracing enabled
-and compiled out. The active handoff records completed and pending validation.
+and compiled out. The handoff links the completed validation and delivery gate.
 
 User native declarations cannot acquire a checked signature merely by
 naming a standard primitive. Eligibility checks the locals introduced by ownership
