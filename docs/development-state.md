@@ -26,7 +26,7 @@ unresolved checks continue on `roadmap-after-135` without replaying merged code.
 | 1 | Implemented | One live handoff and immutable historical evidence; keep docs accurate through final acceptance |
 | 2 | In progress | Four-host retained-task/scoped foreign proofs pass; CLI/protocol ownership and executable ARC implemented, new fixture repairs under validation; cycle boundaries remain explicit |
 | 3 | In progress | Four-host wide record allocation measurements pass; numeric tail loops and direct array producer fusion implemented, latest ownership/transport/instruction checks running |
-| 4 | In progress | Four-host nested/checkpoint semantic and ARC controls pass; new managed lifetime proofs pass Linux AMD64; measurements and final gates remain |
+| 4 | In progress | Four-host nested/checkpoint semantic and ARC controls pass; managed failure/task/unload and checkpoint measurements pass four hosts; final gates remain |
 | 5 | In progress | Actual F16/BF16/F128 values, text, arrays, closed workers, foreign ABI and protocol v2 implemented; final precision/ownership/platform gates remain |
 | 6 | In progress | Windows native allocator/fiber/socket, interpreter goldens and generated resource/task stress passed both architectures; static memory/TLS repairs under validation; production gates are wired |
 
@@ -76,85 +76,46 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
 
 ## Current validation
 
-Follow-up local checks: guarded `cargo fmt --all`, `cargo clippy --lib --tests
--- -D warnings` (23.4 seconds), runtime C syntax and `check-roadmap.py` pass.
-The standalone guarded `tests/stdlib_doc.rs` generator refreshed the merged
-autodiff signatures in `docs/stdlib.md`; final CI must check it without blessing.
-Windows static tests now require task/worker reuse, no runtime VirtualAlloc/
-CreateThread/CreateFiberEx after startup, committed stack arguments, exhaustion
-diagnostics, GC stress/reuse and an injected allocation failure control.
-They have not executed yet. TLS tests explicitly build a native OpenSSL curl for
-PEM client keys and compare the limited Windows reset/alert failure category.
-
-- At merged head `5d6e96d8`, [autodiff 38550312989](https://github.com/e6qu/fun-with-pipes/actions/runs/38550312989)
-  **passes all four Linux/macOS hosts**: nested analytical derivatives, active
-  zeros, stale/mixed tokens, checkpoint capacity/errors, ARC physical releases,
-  callback scope controls, existing tape failure/cancellation/unload and Linux
-  pipe descriptor/mapping proofs. The three earlier harness/contract failures
-  are fixed. This is focused evidence, not a full production gate.
-- Windows [38546869551@fc697328](https://github.com/e6qu/fun-with-pipes/actions/runs/38546869551)
-  failed TLS on both architectures. Native foundations, interpreter/generated
-  goldens, runtime stress and standalone compiler/package step passed. The
-  failures concern Schannel curl with PEM keys and TCP reset/alert differences.
-- [Windows 38551180442@c230a360](https://github.com/e6qu/fun-with-pipes/actions/runs/38551180442)
-  failed dependency peer setup: Git's curl also uses Schannel. The pinned vcpkg
-  build now explicitly requests `curl[core,openssl,tool]`; dependency caching
-  preserves a completed install even if a later validation fails. Static-memory
-  tests did not execute in that batch. No Windows acceptance is claimed yet.
-- New follow-up tests inject recovered failures at five managed-tape stages,
-  cancel a task with a live product owner, and track managed storage across real
-  shared-library unloads. Omitted releases must fail. Guarded formatting and
-  focused lint pass; these new cases require runner execution.
-  At `2f70e2f8` in
-  [38551928641](https://github.com/e6qu/fun-with-pipes/actions/runs/38551928641),
-  managed library unload and omitted-free controls pass. The failure-injection
-  fixture matched a second unrelated result constructor; its marker is now
-  restricted to the managed backward result, and rerun is required.
-  A subsequent review found that native managed tapes lacked the interpreter's
-  task-owner check. Native task identity and WASM interpreter fiber identity
-  are now explicit, with a raw/native cross-task rejection test pending.
-- At `e5fecb81`, [38552876157](https://github.com/e6qu/fun-with-pipes/actions/runs/38552876157)
-  passes managed failure/cancellation and unload controls on Linux AMD64.
-  Cross-task testing failed before execution because the function-producing
-  fixture needed explicit `compose work task.spawn`; that is repaired. Root
-  identity is stable across later scheduler startup without allocating task
-  storage merely to differentiate. A positive regression covers this case.
-  [Windows 38552879801](https://github.com/e6qu/fun-with-pipes/actions/runs/38552879801)
-  is running native foundations before the pinned OpenSSL/curl dependency build.
-- The guarded exact-head primitive audit passes at `e5fecb81`: 378 declarations,
-  224 explicit contracts and unchanged frozen baseline evidence. Generated
-  library documentation caused the merged main CI to fail its preflight;
-  `c230a360` already regenerates it in this PR. Remaining full gates must rerun.
-- `scripts/measure-checkpoint.py` compares the same 4096-step additive VJP with
-  a full tape and intervals 16/32/64. It records compiler/hardware/flags,
-  managed and tape allocations/live bytes, process timings and native assembly;
-  runner measurements are pending. It requires reclamation and a smaller tape
-  peak, not a universal time improvement.
-- At `e455a033`, [38553589302](https://github.com/e6qu/fun-with-pipes/actions/runs/38553589302)
-  passes the complete focused autodiff suite on Linux AMD64, including managed
-  failure/cancellation/unload and task identity controls. Measurement failed
-  because an instrumentation marker also matched a non-main cleanup call. It
-  now targets only main; a guarded C syntax check using that runner's emitted
-  C passes. Other hosts and the repaired measurement require completion.
-  The next revision adds managed tape growth beyond 254 shared zero references,
-  pool-owned `strdup` for Windows TLS/gRPC scratch, and early Windows log uploads.
-  Linux ARM64 and Intel macOS now also pass the focused tests and fail only the
-  same measurement marker. Workflow lint passed after one automatic approval
-  timeout and a successful retry. The obsolete unreferenced 141-row fallback
-  review/script were removed; frozen baseline and immutable Git anchors remain.
-- Both Windows architectures now share one reusable acceptance workflow between
-  manual preflight and production CI, with explicit final-head checkout. It
-  includes nested AD/ownership and packaging as well as native runtime stress.
-  It is required alongside all seven existing Linux/macOS jobs and docs.
-- Historical development runs and measured wide-record reductions remain in
+- [Autodiff 38554877275@c5f9ff42](https://github.com/e6qu/fun-with-pipes/actions/runs/38554877275)
+  passes on Linux AMD64/ARM64 and macOS Intel/ARM: all library tests, nested
+  second/third derivatives, active zeros, stale/mixed/task identity, managed
+  tape growth and wide reference counts, recovered failure/cancellation and
+  real library unload. Omitted releases fail the controls. Existing numeric
+  tape scopes/workspaces/capacity, checkpoint errors and Linux pipe teardown
+  controls also pass. This is focused evidence, not final production acceptance.
+- The same four-host run measures the 4096-step additive VJP at checkpoint
+  intervals 16/32/64. Interval 32 cuts peak tape storage 262,248 → 2,152 bytes,
+  increases managed peak 336 → 12,816 bytes and does more allocations and work.
+  All measured storage is reclaimed without collection. Separate peaks are
+  not necessarily simultaneous. Hardware/compiler/flags, timings, counts and
+  hashes are in [the artifact](measurements/checkpoint-2026-10-14.json).
+- [Windows 38555042817@c5f9ff42](https://github.com/e6qu/fun-with-pipes/actions/runs/38555042817)
+  passes native foundations, interpreter goldens and generated resource/GC stress
+  on both architectures. Static-memory exhaustion and fatal task exits pass.
+  The reuse fixture failed before native execution at nonexistent `string.join`;
+  it now calls the existing `join`. Startup-only allocation, worker/fiber reuse,
+  pool scratch and negative allocation controls still require execution.
+- [Full Windows 38552879801@e5fecb81](https://github.com/e6qu/fun-with-pipes/actions/runs/38552879801)
+  is completing TLS/ownership/packaging. Its AMD64 foundation failure and both
+  TLS outcomes still need diagnosis. Later c5 foundation checks pass both hosts;
+  this does not erase the earlier failure. Native OpenSSL/curl dependencies
+  are now built and cached, replacing incompatible Schannel peers in TLS tests.
+- Guarded local formatting, focused clippy, runtime and measurement C syntax,
+  workflow lint, primitive inventory and roadmap/link/commit checks pass.
+  Generated stdlib docs have been refreshed; old merged-main preflight failures
+  require the final production run. Full builds/tests/measurements run on CI.
+- Both Windows architectures share one reusable acceptance workflow, including
+  native nested AD, ownership, exact formats and standalone PE packaging.
+  Require these plus all seven Linux/macOS production jobs and documentation.
+- Earlier development evidence and wide-record reductions remain in
   [history](roadmap-history.md#pr-135-development-evidence) and
   [the measurement artifact](measurements/wide-records-2026-10-14.json).
 
 ## Next action
 
-Next: execute the new managed-tape failure/cancellation/unload controls, inspect
-the Windows static-memory/TLS batch and fix every failure. Finish remaining
-measurement/ABI/ownership validation and streamline final docs. Keep all work
+Next: rerun the repaired Windows static-memory fixture, inspect the full
+Windows TLS/ownership batch and fix every failure. Run full production gates
+and streamline final docs with actual acceptance results. Keep all work
 in the follow-up to PR #135. Require all seven Linux/macOS production jobs, both native Windows
 acceptance jobs and docs on the final head before squash merge.
 

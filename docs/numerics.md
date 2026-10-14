@@ -104,8 +104,6 @@ may skip propagation. Capturing or combining unrelated tape tokens remains an
 error; nesting does not relax stale-token or generation checks.
 Base-float reverse mode uses 24 bytes per operation before adjoint storage and
 capacity rounding. Nested weights additionally own their scalar representation.
-The active bundle adds segmented checkpointing below; its runner
-acceptance is tracked in the handoff.
 
 `xs | vjp-checkpointed {steps = 1000, every = 32} step seeds` differentiates
 1000 applications of a pure `step`. Both counts are explicit: `steps` must be
@@ -124,6 +122,17 @@ Callback types remain pure, with the same primal step order; a primal trap
 stops the forward pass before backward replay. Captured values from unrelated
 active tapes still fail the normal mixed-tape checks. Checkpointing adds no
 syntax, implicit interval or automatic recomputation to ordinary `vjp`.
+
+[Four-host measurements](measurements/checkpoint-2026-10-14.json) compare a
+4096-step additive VJP under ARC, with workspace reuse disabled. Interval 32
+reduces peak tape storage from 262,248 to 2,152 bytes while increasing peak
+managed storage from 336 to 12,816 bytes. These separate peaks need not coincide.
+Tape allocation requests rise from 34 to 1,153 and managed requests from 16,410
+to 38,408; all measured storage is released without collection. Process time
+increases on all four hosts in this workload. The artifact records hardware,
+compiler, flags, counts, timings and emitted-source hashes; runner artifacts
+also retain generated C and native assembly. Checkpointing is an explicit
+memory/recomputation tradeoff, not a general speed optimization.
 
 Accepted PR124 registers detached tape buffers and adjoints for cleanup
 through normal return, mixed-tape errors, recoverable traps and cancellation.

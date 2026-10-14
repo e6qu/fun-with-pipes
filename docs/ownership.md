@@ -328,8 +328,9 @@ queued values; draining breaks the tested counted cycle. Unreachable shared cycl
 still require tracing. Natural numeric storage/views and optimized kernels
 must preserve these lifetimes. Checked native ARC has the eligibility boundaries below.
 
-PR #135 also admits immutable retained-task graphs in checked ARC, pending runner
-acceptance. Scheduler, scope and caller references have separate owners; task
+Checked ARC also admits immutable retained-task graphs. Focused ownership
+controls pass on four Linux/macOS hosts; final platform acceptance is tracked
+in the handoff. Scheduler, scope and caller references have separate owners; task
 results retain typed references for repeated awaits. A child starts fresh State/AD
 stacks, and closure-flow validation cannot inherit its parent's dynamic lifetimes.
 Captures can reference older task handles; channels, raw pointers and unknown

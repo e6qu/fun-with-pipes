@@ -1,0 +1,974 @@
+{
+  "scope": "Focused four-host checkpoint evidence, not final production acceptance. The same 4096-step additive VJP runs under checked ARC with tape workspace reuse disabled. Native builds use -O2 and -ffp-contract=off. Managed and tape counters exclude allocator metadata and OS/library storage; their separate peaks need not coincide. Process timings include startup and output. Checkpointing exchanges retained tape storage for managed checkpoints, allocations and recomputation; no universal speed claim follows.",
+  "run": 38554877275,
+  "reports": {
+    "macos-15": {
+      "head": "c5f9ff421f1269c41377b7cf17ab812a72cefdb4",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sat12-bq160-4f921168-5fab-4d93-bdb2-be94ce4d70f4-827DF624CB34.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "steps": 4096,
+      "results": {
+        "full-tape": {
+          "interval": null,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 34,
+            "tapeRequestedBytes": 457320,
+            "peakTapeBytes": 262248,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 16410,
+            "requestedBytes": 426518,
+            "retains": 20491,
+            "peakChargedBytes": 336,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            3815500,
+            3394542,
+            3174583,
+            3375125,
+            3652500,
+            3582083,
+            3565666
+          ],
+          "medianProcessWallNs": 3565666,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "562503497ba250ff385246e4bd84f01ca0210f1b479f4bf93926e487b272afc8",
+          "generatedSha256": "e72d26194e16e02bea814e5e5be83bde5fe0a04bd6bd667cd89a846c94ad5fdd"
+        },
+        "checkpoint-16": {
+          "interval": 16,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 2305,
+            "tapeRequestedBytes": 917608,
+            "peakTapeBytes": 2152,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 44040,
+            "requestedBytes": 1097902,
+            "retains": 52491,
+            "peakChargedBytes": 25104,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            6285167,
+            7098042,
+            6154833,
+            6907291,
+            7313375,
+            10255000,
+            5693375
+          ],
+          "medianProcessWallNs": 6907291,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "a01cef349630cf083a8b5d5b2f4ca6b13543f23d98e7251ac7e02fc657f4ce88",
+          "generatedSha256": "1684f43b6ab921d79a0bc6c468761711069ba6fb723b42ca07db0b85c3a55ff6"
+        },
+        "checkpoint-32": {
+          "interval": 32,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 1153,
+            "tapeRequestedBytes": 458856,
+            "peakTapeBytes": 2152,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 38408,
+            "requestedBytes": 975022,
+            "retains": 46731,
+            "peakChargedBytes": 12816,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            4981167,
+            4540000,
+            5149250,
+            4432833,
+            4417583,
+            4436166,
+            4344250
+          ],
+          "medianProcessWallNs": 4436166,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "31d2b6145ec440642e54fde5131c2d7233eafdc27f7588d4baf6a0de713c5f0d",
+          "generatedSha256": "78afa4142a389f86c429a9b677caf0d2b07f635ccad197daeaf8711bb9f40c66"
+        },
+        "checkpoint-64": {
+          "interval": 64,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 1089,
+            "tapeRequestedBytes": 655464,
+            "peakTapeBytes": 4200,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 35592,
+            "requestedBytes": 913582,
+            "retains": 43851,
+            "peakChargedBytes": 6672,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            4802000,
+            4273167,
+            4261750,
+            4230000,
+            4422209,
+            4461125,
+            5274959
+          ],
+          "medianProcessWallNs": 4422209,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "db678bdba67c1114cb30228874761bb16512acd6991631bb5750e8f0e321435f",
+          "generatedSha256": "81a3fe5beceae1d52dcb76cce61704f3d921c2853ce05c314e286f03c763112c"
+        }
+      },
+      "scope": "ARC, no workspace cache. Equivalent additive VJPs with explicit recomputation intervals. Separate profiles count managed allocation requests and charged live bytes plus actual C tape buffers. Process timings include startup and output; no speedup threshold. Allocator metadata and OS reservations are excluded."
+    },
+    "macos-15-intel": {
+      "head": "c5f9ff421f1269c41377b7cf17ab812a72cefdb4",
+      "hardware": {
+        "system": "Darwin",
+        "node": "iad01-ar515-9dac0153-4659-434c-bb76-d18cd55c9d82-52435CFBE3F4.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "machine": "x86_64",
+        "processor": "i386"
+      },
+      "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "steps": 4096,
+      "results": {
+        "full-tape": {
+          "interval": null,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 34,
+            "tapeRequestedBytes": 457320,
+            "peakTapeBytes": 262248,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 16410,
+            "requestedBytes": 426518,
+            "retains": 20491,
+            "peakChargedBytes": 336,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            9186891,
+            8780916,
+            9279714,
+            9915195,
+            11118596,
+            10074835,
+            9897746
+          ],
+          "medianProcessWallNs": 9897746,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "562503497ba250ff385246e4bd84f01ca0210f1b479f4bf93926e487b272afc8",
+          "generatedSha256": "e72d26194e16e02bea814e5e5be83bde5fe0a04bd6bd667cd89a846c94ad5fdd"
+        },
+        "checkpoint-16": {
+          "interval": 16,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 2305,
+            "tapeRequestedBytes": 917608,
+            "peakTapeBytes": 2152,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 44040,
+            "requestedBytes": 1097902,
+            "retains": 52491,
+            "peakChargedBytes": 25104,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            10998142,
+            12813114,
+            11027970,
+            10069923,
+            10888560,
+            10270157,
+            9827211
+          ],
+          "medianProcessWallNs": 10888560,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "a01cef349630cf083a8b5d5b2f4ca6b13543f23d98e7251ac7e02fc657f4ce88",
+          "generatedSha256": "1684f43b6ab921d79a0bc6c468761711069ba6fb723b42ca07db0b85c3a55ff6"
+        },
+        "checkpoint-32": {
+          "interval": 32,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 1153,
+            "tapeRequestedBytes": 458856,
+            "peakTapeBytes": 2152,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 38408,
+            "requestedBytes": 975022,
+            "retains": 46731,
+            "peakChargedBytes": 12816,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            11188696,
+            11929074,
+            9696869,
+            11589621,
+            12450287,
+            11515009,
+            12289028
+          ],
+          "medianProcessWallNs": 11589621,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "31d2b6145ec440642e54fde5131c2d7233eafdc27f7588d4baf6a0de713c5f0d",
+          "generatedSha256": "78afa4142a389f86c429a9b677caf0d2b07f635ccad197daeaf8711bb9f40c66"
+        },
+        "checkpoint-64": {
+          "interval": 64,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 1089,
+            "tapeRequestedBytes": 655464,
+            "peakTapeBytes": 4200,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 35592,
+            "requestedBytes": 913582,
+            "retains": 43851,
+            "peakChargedBytes": 6672,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            13734902,
+            11087067,
+            12477233,
+            9471962,
+            10732059,
+            11860375,
+            9460900
+          ],
+          "medianProcessWallNs": 11087067,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "db678bdba67c1114cb30228874761bb16512acd6991631bb5750e8f0e321435f",
+          "generatedSha256": "81a3fe5beceae1d52dcb76cce61704f3d921c2853ce05c314e286f03c763112c"
+        }
+      },
+      "scope": "ARC, no workspace cache. Equivalent additive VJPs with explicit recomputation intervals. Separate profiles count managed allocation requests and charged live bytes plus actual C tape buffers. Process timings include startup and output; no speedup threshold. Allocator metadata and OS reservations are excluded."
+    },
+    "ubuntu-24.04-arm": {
+      "head": "c5f9ff421f1269c41377b7cf17ab812a72cefdb4",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmidgih",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "steps": 4096,
+      "results": {
+        "full-tape": {
+          "interval": null,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 34,
+            "tapeRequestedBytes": 457320,
+            "peakTapeBytes": 262248,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 16410,
+            "requestedBytes": 426518,
+            "retains": 20491,
+            "peakChargedBytes": 336,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            1792495,
+            1699340,
+            1540638,
+            1590561,
+            1566856,
+            1514246,
+            1785814
+          ],
+          "medianProcessWallNs": 1590561,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "562503497ba250ff385246e4bd84f01ca0210f1b479f4bf93926e487b272afc8",
+          "generatedSha256": "e72d26194e16e02bea814e5e5be83bde5fe0a04bd6bd667cd89a846c94ad5fdd"
+        },
+        "checkpoint-16": {
+          "interval": 16,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 2305,
+            "tapeRequestedBytes": 917608,
+            "peakTapeBytes": 2152,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 44040,
+            "requestedBytes": 1097902,
+            "retains": 52491,
+            "peakChargedBytes": 25104,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            2694625,
+            2525301,
+            2485971,
+            2477963,
+            2462579,
+            2491155,
+            2436338
+          ],
+          "medianProcessWallNs": 2485971,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "a01cef349630cf083a8b5d5b2f4ca6b13543f23d98e7251ac7e02fc657f4ce88",
+          "generatedSha256": "1684f43b6ab921d79a0bc6c468761711069ba6fb723b42ca07db0b85c3a55ff6"
+        },
+        "checkpoint-32": {
+          "interval": 32,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 1153,
+            "tapeRequestedBytes": 458856,
+            "peakTapeBytes": 2152,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 38408,
+            "requestedBytes": 975022,
+            "retains": 46731,
+            "peakChargedBytes": 12816,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            2443858,
+            2255341,
+            2246276,
+            2303542,
+            2195234,
+            2275277,
+            2246500
+          ],
+          "medianProcessWallNs": 2255341,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "31d2b6145ec440642e54fde5131c2d7233eafdc27f7588d4baf6a0de713c5f0d",
+          "generatedSha256": "78afa4142a389f86c429a9b677caf0d2b07f635ccad197daeaf8711bb9f40c66"
+        },
+        "checkpoint-64": {
+          "interval": 64,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 1089,
+            "tapeRequestedBytes": 655464,
+            "peakTapeBytes": 4200,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 35592,
+            "requestedBytes": 913582,
+            "retains": 43851,
+            "peakChargedBytes": 6672,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            2314623,
+            2117048,
+            2161162,
+            2177131,
+            2190963,
+            2161145,
+            2195083
+          ],
+          "medianProcessWallNs": 2177131,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "db678bdba67c1114cb30228874761bb16512acd6991631bb5750e8f0e321435f",
+          "generatedSha256": "81a3fe5beceae1d52dcb76cce61704f3d921c2853ce05c314e286f03c763112c"
+        }
+      },
+      "scope": "ARC, no workspace cache. Equivalent additive VJPs with explicit recomputation intervals. Separate profiles count managed allocation requests and charged live bytes plus actual C tape buffers. Process timings include startup and output; no speedup threshold. Allocator metadata and OS reservations are excluded."
+    },
+    "ubuntu-latest": {
+      "head": "c5f9ff421f1269c41377b7cf17ab812a72cefdb4",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmmprz5",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.27\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "steps": 4096,
+      "results": {
+        "full-tape": {
+          "interval": null,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 34,
+            "tapeRequestedBytes": 457320,
+            "peakTapeBytes": 262248,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 16410,
+            "requestedBytes": 426518,
+            "retains": 20491,
+            "peakChargedBytes": 336,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            2887422,
+            3522879,
+            3069195,
+            2419396,
+            2438845,
+            2706634,
+            2769324
+          ],
+          "medianProcessWallNs": 2769324,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/full-tape-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "562503497ba250ff385246e4bd84f01ca0210f1b479f4bf93926e487b272afc8",
+          "generatedSha256": "e72d26194e16e02bea814e5e5be83bde5fe0a04bd6bd667cd89a846c94ad5fdd"
+        },
+        "checkpoint-16": {
+          "interval": 16,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 2305,
+            "tapeRequestedBytes": 917608,
+            "peakTapeBytes": 2152,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 44040,
+            "requestedBytes": 1097902,
+            "retains": 52491,
+            "peakChargedBytes": 25104,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            4702115,
+            5785928,
+            3322962,
+            3178739,
+            3013782,
+            3181360,
+            3746886
+          ],
+          "medianProcessWallNs": 3322962,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-16-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "a01cef349630cf083a8b5d5b2f4ca6b13543f23d98e7251ac7e02fc657f4ce88",
+          "generatedSha256": "1684f43b6ab921d79a0bc6c468761711069ba6fb723b42ca07db0b85c3a55ff6"
+        },
+        "checkpoint-32": {
+          "interval": 32,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 1153,
+            "tapeRequestedBytes": 458856,
+            "peakTapeBytes": 2152,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 38408,
+            "requestedBytes": 975022,
+            "retains": 46731,
+            "peakChargedBytes": 12816,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            3587316,
+            3504216,
+            3159717,
+            4413747,
+            2925939,
+            3421055,
+            2885273
+          ],
+          "medianProcessWallNs": 3421055,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-32-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "31d2b6145ec440642e54fde5131c2d7233eafdc27f7588d4baf6a0de713c5f0d",
+          "generatedSha256": "78afa4142a389f86c429a9b677caf0d2b07f635ccad197daeaf8711bb9f40c66"
+        },
+        "checkpoint-64": {
+          "interval": 64,
+          "output": "[1.0]\n",
+          "tape": {
+            "tapeRequests": 1089,
+            "tapeRequestedBytes": 655464,
+            "peakTapeBytes": 4200,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 35592,
+            "requestedBytes": 913582,
+            "retains": 43851,
+            "peakChargedBytes": 6672,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "processWallNs": [
+            4252573,
+            4062152,
+            2804652,
+            2802037,
+            3287564,
+            2825644,
+            2916525
+          ],
+          "medianProcessWallNs": 2916525,
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/checkpoint/checkpoint-64-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "sourceSha256": "db678bdba67c1114cb30228874761bb16512acd6991631bb5750e8f0e321435f",
+          "generatedSha256": "81a3fe5beceae1d52dcb76cce61704f3d921c2853ce05c314e286f03c763112c"
+        }
+      },
+      "scope": "ARC, no workspace cache. Equivalent additive VJPs with explicit recomputation intervals. Separate profiles count managed allocation requests and charged live bytes plus actual C tape buffers. Process timings include startup and output; no speedup threshold. Allocator metadata and OS reservations are excluded."
+    }
+  }
+}

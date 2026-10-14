@@ -348,8 +348,9 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
   objects/buffers reachable until the last allocating operation: `FWP_KEEP_ALIVE` is a compiler lifetime fence.
   Optimized Clang can otherwise preload a short buffer and discard its
   only root while its elements are still needed.
-- Reverse-mode autodiff records operations on tapes kept by the runtime
-  outside the program's values (numbers only), and tensor kernels run on
+- Reverse-mode autodiff records base-float operations in private numeric tapes;
+  nested differentiation owns typed weights and adjoints in managed tapes.
+  Tensor kernels run on
   OS threads that never touch the collected heap; both are implemented
   twice, with the same operation order (`src/numerics.rs`,
   `runtime/fwp_rt_kernel.c`, see [numerics.md](numerics.md)).

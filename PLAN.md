@@ -57,7 +57,7 @@ host/target pair is not implied.
 | Ownership | Typed Dup/Drop, reuse, scoped File/State owners, retained tasks, synchronous foreign callbacks, CLI/protocol lifetimes | Checked ARC rejects unproved cycles and resource graphs; final follow-up gates remain |
 | Numeric storage | Natural-width arrays, retained views, wide scalar/record workers, actual F16/BF16/F128 and protocol v2 | Four-host exact-format/ABI proofs and wide-record measurements pass; final six-platform gates remain |
 | Iteration | Tacit data-last combinators, direct count/list/iterate/array producer fusion, known State callbacks and numeric self-tail loops | Allocation and instruction probes preserve effects, forcing and traps; some general lazy tails still allocate |
-| Autodiff | Nested reverse mode, explicit segmented checkpointing and bounded numeric workspaces | Analytical, ARC and checkpoint controls pass four hosts; new managed failure/task/unload and measurement checks are running |
+| Autodiff | Nested reverse mode, explicit segmented checkpointing and bounded numeric workspaces | Analytical, ARC, managed failure/task/unload and checkpoint measurements pass four hosts; final platform gates remain |
 | Language design | Strong ordinary inference, explicit generic specialization, checked arithmetic, immutable values and tracked effects | Pipe semantics and explicit `const` remain stable; no new parser mechanism is needed for these runtime improvements |
 
 [History](docs/roadmap-history.md) retains prior acceptance and measurements.

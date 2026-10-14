@@ -59,7 +59,7 @@ main = [
         | both .status (both (.stdout | string.length) (.stderr | string.length)) | echo),
     "6.4751751194380251109244389582276465525e-4966" | parse-float
         | option.unwrap-or 0.0f128 | show | echo,
-    ["1.", string.repeat 5000 "0", "1"] | string.join "" | parse-float
+    ["1.", string.repeat 5000 "0", "1"] | join "" | parse-float
         | option.unwrap-or 0.0f128 | eq 1.0f128 | echo,
 ] | ignore
 "#,
