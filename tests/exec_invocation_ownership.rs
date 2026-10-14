@@ -13,7 +13,8 @@ fn executable_invocations_release_projected_results_and_raised_errors() {
     let source = dir.join("owners.fwp");
     std::fs::write(
         &source,
-        r#"
+        r#"# expose: cli
+
 export plain : String -> String
 plain = id
 export wrapped : String -> Outcome[Result[Option[List[String]], String]]

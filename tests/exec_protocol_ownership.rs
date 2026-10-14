@@ -20,8 +20,8 @@ fn checked(command: &mut Command) -> Output {
     output
 }
 
-const SOURCE: &str = r#"
-# expose: cli
+const SOURCE: &str = r#"# expose: cli
+
 Level = | Low | High
 Options = {
     title: String,

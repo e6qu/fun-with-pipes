@@ -301,7 +301,20 @@ external-callback admission is claimed.
 
 ## Next action
 
-Next: fix the remaining native Windows AMD64 task GC verification failure.
+The `6fde679d` Windows AMD64 job now passes generated resources/tasks with
+GC stress and reuse verification: the stable application-stack marking range
+fixes the outstanding task failure. Both Windows dependency builds and native
+allocator/context/socket probes pass; TLS and package jobs remain in progress.
+The four-host batch exposed missing module CLI exposure in two new test
+fixtures and stale `ptr.read`/numeric parser inventory expectations. Both
+fixtures now use a first-line module comment separated from declarations;
+the audit explicitly verifies all three numeric ownership contracts and passes
+under `python3 scripts/local-guard.py python3 scripts/check-primitive-inventory.py
+--output /private/tmp/fwp-inventory-current.json --baseline
+tests/fixtures/primitive-inventory-baseline.json` (375 declarations, 219 contracts).
+
+Next: validate the repaired CLI/protocol fixtures and latest fusion/transport
+changes on runners, and diagnose the ongoing Windows TLS/package batch.
 Run full CLI/protocol ownership and corrected numeric tail/preemption controls
 on all four Unix hosts, including physical reclamation and omitted-release
 controls; prove Linux transport descriptor/mapping teardown separately. Finish

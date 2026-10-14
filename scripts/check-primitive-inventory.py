@@ -114,11 +114,12 @@ for row in rows:
             contract='Some(Contract { arguments: ' + arguments + ', result: OwnedCallback, callback: Some(Borrowed(0)), aliases: ' + aliases + ' })')
         continue
     before = baseline_rows[key]
-    if row['symbol'] == 'fail':
+    if row['symbol'] in {'fail', 'parse-int', 'parse-float'}:
         assert before['contract'] == 'Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })'
         assert all(row[name] == before[name] for name in fields if name != 'contract')
-        assert row['contract'] == 'Some(Contract { arguments: [Borrow], result: Never, callback: None, aliases: [] })'
-        changed_symbols.add('fail')
+        result = 'Never' if row['symbol'] == 'fail' else 'FreshTree'
+        assert row['contract'] == 'Some(Contract { arguments: [Borrow], result: ' + result + ', callback: None, aliases: [] })'
+        changed_symbols.add(row['symbol'])
         continue
     if row['symbol'] in bundle_contracts:
         assert before['contract'] == 'None' and row['bucket'] == 'contract', (before, row)
@@ -175,12 +176,13 @@ for row in rows:
     assert all(row[key] == before[key] for key in fields
                if key not in {'bucket', 'contract'})
     arguments = '[Borrow, Borrow]' if row['symbol'] in {'ptr.at', 'ptr.write'} else '[Borrow]'
-    result = 'FreshLeaf' if row['symbol'] == 'ptr.read-string' else 'Shared'
+    result = ('FreshLeaf' if row['symbol'] == 'ptr.read-string' else
+              'Numeric' if row['symbol'] == 'ptr.read' else 'Shared')
     expected = ('Contract { arguments: ' + arguments + ', result: ' + result +
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22
