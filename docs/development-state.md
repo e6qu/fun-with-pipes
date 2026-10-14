@@ -112,10 +112,19 @@ and `scripts/check-roadmap.py`. Cache pinning now opens the archive before copyi
 so concurrent eviction cannot invalidate a successful open; a missing entry is
 rebuilt. These are implementation checks, not raw/native semantic acceptance.
 
-Still incomplete: natural-width F128 arrays, direct scalar/aggregate workers,
-foreign ABI admission and full ownership controls. The native F128 generic
-boundary currently boxes values. New raw/native scalar and v2 wire tests need
-runner execution; do not treat compilation as semantic acceptance.
+Focused run [38520980906](https://github.com/e6qu/fun-with-pipes/actions/runs/38520980906)
+passed compiler checks on all four Linux/macOS hosts, then failed the new scalar
+test because `Floating[F128]` had no library instance. Instances for all three
+formats are now added; the correction needs runner validation.
+
+F128 array payloads now use 16-byte inline bits with borrowed internal reads and
+independent boxes at escaping `get`/list/callback boundaries. Typed stores release
+consumed temporary boxes; decoder leaf ownership and numeric primitive contracts
+include quad results. Half/bfloat worker parameters and aggregate fields use u16
+bits. New tests cover raw/native O1/O2 execution, GC stress, reuse verification,
+quad array bytes and an omitted-copy negative control. These changes are not yet
+verified on runners. Direct quad scalar/aggregate workers, foreign ABI admission
+and complete ownership/exception controls remain. Generic F128 values stay boxed.
 
 ## Next action
 

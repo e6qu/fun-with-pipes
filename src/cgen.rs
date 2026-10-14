@@ -1000,6 +1000,7 @@ impl NativeNumber {
             "std::U64" => Some(Self::Unsigned(64)),
             "std::F32" => Some(Self::F32),
             "std::F64" => Some(Self::F64),
+            "std::F16" | "std::BF16" => Some(Self::Unsigned(16)),
             _ => None,
         }
     }
@@ -1658,6 +1659,7 @@ impl<'p> Gen<'p> {
                 if name == "std::Array"
                     && types.len() == 1
                     && crate::rc::needs_rc(&self.prog.shapes, &types[0])
+                    && !matches!(&types[0], MT::Con(n, _) if n == "std::F128")
                 {
                     let child = self.drop_id(&types[0]);
                     elements.push_str(&format!("        for (uint64_t i = 0; i < fwp_array_len(v); i++) fwp_drop{child}(ARR(v)->d[i]);\n"));

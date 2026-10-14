@@ -301,11 +301,13 @@ static inline int fwp_array_numeric(const fwp_desc *elem) {
     switch (elem->kind) {
     case K_I8: case K_I16: case K_I32: case K_I64:
     case K_U8: case K_U16: case K_U32: case K_U64:
-    case K_F16: case K_BF16: case K_F32: case K_F64: return 1;
+    case K_F16: case K_BF16: case K_F32: case K_F64: case K_F128: return 1;
     default: return 0;
     }
 }
 static inline size_t fwp_array_stride(const fwp_desc *elem) {
+    /* Quad values cannot fit in a V even when narrow packing is disabled. */
+    if (elem && elem->kind == K_F128) return 16;
 #if FWP_PACKED_ARRAYS
     if (elem) switch (elem->kind) {
     case K_I8: case K_U8: return 1;
@@ -329,6 +331,9 @@ static inline int fwp_array_should_view(V a, size_t count, const fwp_desc *elem)
 static inline V fwp_array_load(V a, size_t i, const fwp_desc *elem) {
     size_t stride = fwp_array_stride(elem);
     const unsigned char *p = fwp_array_data(a) + i * stride;
+    /* This is a borrowed view, valid only while the array owner stays alive.
+     * Escaping values must copy the bits into their own scalar box. */
+    if (stride == 16) return PTR(p);
     if (stride == sizeof(V)) { V word; memcpy(&word, p, sizeof word); return word; }
     if (stride == 1) {
         uint8_t word; memcpy(&word, p, sizeof word);
@@ -345,6 +350,7 @@ static inline void fwp_array_store(V a, size_t i, V value, const fwp_desc *elem)
     if (fwp_array_is_view(a)) fwp_trap("internal: mutating an array view");
     size_t stride = fwp_array_stride(elem);
     unsigned char *p = (unsigned char *)(uintptr_t)a + sizeof(fwp_arr) + i * stride;
+    if (stride == 16) { memmove(p, (const void *)(uintptr_t)value, 16); return; }
     if (stride == sizeof(V)) { memcpy(p, &value, sizeof value); return; }
     if (stride == 1) { uint8_t word = (uint8_t)value; memcpy(p, &word, sizeof word); return; }
     if (stride == 2) { uint16_t word = (uint16_t)value; memcpy(p, &word, sizeof word); return; }
@@ -353,9 +359,17 @@ static inline void fwp_array_store(V a, size_t i, V value, const fwp_desc *elem)
 static V fwp_array_new_packed(size_t n, const fwp_desc *elem) {
     /* Preserve the established count/trap boundary in every layout mode. */
     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
+    if (n > (SIZE_MAX - sizeof(fwp_arr)) / fwp_array_stride(elem)) fwp_trap("array too large");
     size_t bytes = sizeof(fwp_arr) + n * fwp_array_stride(elem);
     void *storage = fwp_array_numeric(elem) ? fwp_alloc_leaf(bytes) : fwp_alloc(bytes);
     V result = PTR(storage); uint64_t len = n; memcpy(storage, &len, sizeof len); return result;
+}
+
+static V fwp_array_escape(V value, const fwp_desc *elem) {
+#ifdef FWP_EXACT_FLOAT
+    if (elem && elem->kind == K_F128) return fwp_box_f128(fwp_f128(value));
+#endif
+    return value;
 }
 
 static int fwp_is_signed_kind(int k) { return k == K_I8 || k == K_I16 || k == K_I32 || k == K_I64; }

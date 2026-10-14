@@ -149,14 +149,16 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
     ) = match symbol {
         "prim.zero" | "prim.one" => (&[], ResultOwnership::Numeric, None, &[]),
         "prim.neg" | "prim.from-int" | "prim.from-float" | "bit.not" | "int.convert"
-        | "float.to-int" => (&[B], ResultOwnership::Numeric, None, &[]),
+        | "float.to-int" | "float.convert" | "int.to-float" | "sqrt" | "exp" | "ln" | "sin"
+        | "cos" | "tan" | "floor" | "ceil" | "round" => (&[B], ResultOwnership::Numeric, None, &[]),
         "prim.add" | "prim.sub" | "prim.mul" | "prim.div" | "prim.rem" | "wrapping.add"
         | "wrapping.sub" | "wrapping.mul" | "saturating.add" | "saturating.sub"
         | "saturating.mul" | "overflowing.add" | "overflowing.sub" | "overflowing.mul"
         | "checked.add" | "checked.sub" | "checked.mul" | "checked.div" | "bit.and" | "bit.or"
-        | "bit.xor" | "bit.shl" | "bit.shr" => (&[B, B], ResultOwnership::Numeric, None, &[]),
+        | "bit.xor" | "bit.shl" | "bit.shr" | "pow" => {
+            (&[B, B], ResultOwnership::Numeric, None, &[])
+        }
         "abs" => (&[B], ResultOwnership::Numeric, None, &[0]),
-        "int.to-float" => (&[B], R, None, &[]),
         "min" | "max" => (&[B, B], ResultOwnership::SelectedArgument, None, &[0, 1]),
         "get" | "put" => (&[B], ResultOwnership::OwnedState, None, &[]),
         "modify" => (
@@ -420,7 +422,8 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         ),
         "csv.parse-with" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
         "json.parse" | "json.read" | "csv.decode" => (&[B], ResultOwnership::OwnedTree, None, &[]),
-        "parse-int" | "parse-float" | "length" => (&[B], R, None, &[]),
+        "parse-int" | "parse-float" => (&[B], ResultOwnership::FreshTree, None, &[]),
+        "length" => (&[B], R, None, &[]),
         "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
         "pad-left" | "pad-right" | "replace" => (
             &[B, B, B],

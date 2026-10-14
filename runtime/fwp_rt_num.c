@@ -703,6 +703,15 @@ static V fwp_p_simd_op(int k, int op, V subj, V arg, const char *name, int w, co
 static V fwp_p_simd_sum(int k, V v, const char *name, int w, const fwp_desc *elem) {
     fwp_arr *xs = LANES(v);
     if (fwp_array_len(PTR(xs)) == 0) return fwp_from_i128(k, 0, name, w);
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F128) {
+        float128_t sum = fwp_f128(fwp_array_load(PTR(xs), 0, elem));
+        for (size_t i = 1; i < fwp_array_len(PTR(xs)); i++)
+            sum = f128_add(sum, fwp_f128(fwp_array_load(PTR(xs), i, elem)));
+        V result = fwp_box_f128(sum);
+        FWP_KEEP_ALIVE(v); return result;
+    }
+#endif
     int fl = fwp_float_kind(k);
     V acc = fwp_array_load(PTR(xs), 0, elem);
     for (size_t i = 1; i < fwp_array_len(PTR(xs)); i++)

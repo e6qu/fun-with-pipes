@@ -1047,7 +1047,7 @@ static int fwp_jt_read_inner(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *o
             fwp_jt_push_index(c, i);
             if (!fwp_jt_read(c, &r->items[i], d->elem, &fields->values[array ? 0 : i])) return 0;
             if (array) {
-                fwp_array_store(fields->aggregate, i, fields->values[0], d->elem);
+                fwp_array_store_owned(fields->aggregate, i, fields->values[0], d->elem);
                 fwp_array_set_len(fields->aggregate, i + 1);
                 fields->values[0] = 0;
             }
@@ -1198,7 +1198,7 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
     fwp_decode_fields fields = {0};
     int ok = fwp_jt_read_inner(c, r, d, out, &fields);
     if (fields.active) fwp_decode_fields_end(&fields, 0);
-    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128)) fwp_rc_fresh(*out);
+    if (ok && (d->kind == K_STR || d->kind == K_BYTES || d->kind == K_I128 || d->kind == K_U128 || d->kind == K_F128)) fwp_rc_fresh(*out);
     return ok;
 }
 
