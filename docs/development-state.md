@@ -164,19 +164,27 @@ external-callback admission is claimed.
   workflow lacked the OpenSSL 3 CLI path that the passing portability workflow
   already supplies. The path is corrected; fresh macOS execution is required.
 - Native socket code carries one full-width handle type through tasks, HTTP/2 and
-  gRPC. The Windows OpenSSL BIO preserves handles rather than narrowing them
-  through `SSL_set_fd`; TLS accept initialization failure closes its connection.
+  gRPC. TLS uses OpenSSL's documented Windows `SSL_set_fd` cast at its ABI
+  boundary, matching the interpreter; the unnecessary custom BIO is removed.
+  Both engines now check attachment failures and release the session.
+  TLS accept initialization failure closes its connection.
   Complete Windows TLS acceptance still needs dependencies and native execution.
-- Complete generated Windows programs are running at `a089ad1` in
+- Complete generated Windows programs failed at `a089ad1` in
   [38534588705](https://github.com/e6qu/fun-with-pipes/actions/runs/38534588705).
   This includes the UTF-16 filesystem/environment/argv and CreateProcessW port,
   native threads and clocks, binary standard streams and no pthread DLL dependency.
+  The harness wrongly required success from the numeric golden's deliberate
+  overflow; it now compares the expected exit 101 and both output streams.
+  Native stderr now uses binary mode too. AMD64 also rejected a short process
+  command as exceeding the UTF-16 limit; added per-mode and quote diagnostics
+  must locate and fix the cause. ARM64 process capture passed all four modes.
 - Direct numeric self-tail calls now evaluate every argument into temporaries
   before updating parameters and jumping to the worker entry. Task ticks remain
   on each iteration. New runner controls compare raw execution, restrict task
   stacks to 1 MiB, and deliberately restore recursion or omit ticks to require
   stack-overflow/preemption failures. Focused guarded compiler/test lint and
-  formatting pass; execution is pending.
+  formatting pass; execution is running at `0fe4e2f` in
+  [38535804207](https://github.com/e6qu/fun-with-pipes/actions/runs/38535804207).
 - At `dfca8e6`, all four Linux/macOS hosts passed exact-format/protocol/array
   tests and all seven foreign ABI/export tests in
   [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).

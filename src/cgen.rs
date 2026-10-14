@@ -9082,7 +9082,8 @@ static DWORD WINAPI fwp_windows_main_thread(void *argument) {{
 int main(int argc, char **argv) {{
 #ifdef _WIN32
     argv = fwp_win_arguments(&argc);
-    if (_setmode(_fileno(stdin), _O_BINARY) < 0 || _setmode(_fileno(stdout), _O_BINARY) < 0)
+    if (_setmode(_fileno(stdin), _O_BINARY) < 0 || _setmode(_fileno(stdout), _O_BINARY) < 0 ||
+        _setmode(_fileno(stderr), _O_BINARY) < 0)
         fwp_trap("cannot configure binary standard streams");
 #endif
     fwp_fns = fwp_fn_table;

@@ -587,7 +587,9 @@ impl Session {
         unsafe {
             // OpenSSL documents the SOCKET-to-int cast on Windows. Keep
             // the full native handle everywhere except this OpenSSL ABI.
-            (l.ssl_set_fd)(ssl, fd as c_int);
+            if (l.ssl_set_fd)(ssl, fd as c_int) != 1 {
+                return Err(format!("cannot attach a TLS socket: {}", reason(l)));
+            }
             (l.ssl_set_connect_state)(ssl);
             // SNI only for host names (RFC 6066)
             if !o.name.is_empty() && !is_ip(o.name) {
@@ -685,7 +687,11 @@ impl Session {
         unsafe {
             // OpenSSL documents the SOCKET-to-int cast on Windows. Keep
             // the full native handle everywhere except this OpenSSL ABI.
-            (l.ssl_set_fd)(ssl, fd as c_int);
+            if (l.ssl_set_fd)(ssl, fd as c_int) != 1 {
+                let message = format!("cannot attach a TLS socket: {}", reason(l));
+                (l.ssl_free)(ssl);
+                return Err(message);
+            }
             (l.ssl_set_accept_state)(ssl);
         }
         Ok(Session {

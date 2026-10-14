@@ -13,58 +13,6 @@
 #include <openssl/err.h>
 #include <openssl/x509.h>
 
-#ifdef _WIN32
-/* SSL_set_fd accepts int. A Windows SOCKET is pointer-width: preserve it
- * in BIO data, with socket ownership remaining in the runtime resource. */
-static BIO_METHOD *fwp_tls_socket_method;
-static int fwp_tls_bio_create(BIO *bio) {
-    BIO_set_init(bio, 1);
-    BIO_set_data(bio, (void *)(uintptr_t)INVALID_SOCKET);
-    return 1;
-}
-static int fwp_tls_bio_destroy(BIO *bio) { (void)bio; return 1; }
-static int fwp_tls_bio_read(BIO *bio, char *data, int size) {
-    BIO_clear_retry_flags(bio);
-    if (size <= 0) return 0;
-    int result = (int)fwp_socket_recv((SOCKET)(uintptr_t)BIO_get_data(bio), data, (size_t)size, 0);
-    if (result < 0 && fwp_socket_again(errno)) BIO_set_retry_read(bio);
-    return result;
-}
-static int fwp_tls_bio_write(BIO *bio, const char *data, int size) {
-    BIO_clear_retry_flags(bio);
-    if (size <= 0) return 0;
-    int result = (int)fwp_socket_send((SOCKET)(uintptr_t)BIO_get_data(bio), data, (size_t)size, 0);
-    if (result < 0 && fwp_socket_again(errno)) BIO_set_retry_write(bio);
-    return result;
-}
-static long fwp_tls_bio_ctrl(BIO *bio, int command, long number, void *pointer) {
-    (void)bio; (void)number; (void)pointer;
-    return command == BIO_CTRL_FLUSH || command == BIO_CTRL_DUP ? 1 : 0;
-}
-static int fwp_tls_bind_socket(SSL *ssl, fwp_socket_t fd) {
-    if (!fwp_tls_socket_method) {
-        BIO_METHOD *method = BIO_meth_new(BIO_TYPE_SOURCE_SINK | BIO_get_new_index(), "fwp Windows socket");
-        if (!method) return 0;
-        if (!BIO_meth_set_create(method, fwp_tls_bio_create) ||
-            !BIO_meth_set_destroy(method, fwp_tls_bio_destroy) ||
-            !BIO_meth_set_read(method, fwp_tls_bio_read) ||
-            !BIO_meth_set_write(method, fwp_tls_bio_write) ||
-            !BIO_meth_set_ctrl(method, fwp_tls_bio_ctrl)) {
-            BIO_meth_free(method);
-            return 0;
-        }
-        fwp_tls_socket_method = method;
-    }
-    BIO *bio = BIO_new(fwp_tls_socket_method);
-    if (!bio) return 0;
-    BIO_set_data(bio, (void *)(uintptr_t)fd);
-    SSL_set_bio(ssl, bio, bio); /* transfers the single BIO owner */
-    return 1;
-}
-#else
-#define fwp_tls_bind_socket SSL_set_fd
-#endif
-
 /* fwp_tls_err (declared in fwp_rt_task.c) holds the message of the last
  * failure, for operations that return -2 */
 
@@ -275,10 +223,6 @@ static void fwp_tls_clients_finish(void) {
     free(fwp_tls_clients);
     fwp_tls_clients = 0;
     fwp_tls_nclients = 0;
-#ifdef _WIN32
-    BIO_meth_free(fwp_tls_socket_method);
-    fwp_tls_socket_method = NULL;
-#endif
 }
 #endif
 
@@ -346,7 +290,9 @@ static SSL *fwp_tls_client_new(fwp_socket_t fd, const char *ca, int verify, cons
         snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot create a TLS session: %s", fwp_tls_reason());
         return 0;
     }
-    if (!fwp_tls_bind_socket(ssl, fd)) {
+    /* OpenSSL documents this Windows SOCKET cast; retain the native width
+     * everywhere else. https://docs.openssl.org/3.5/man3/SSL_set_fd/ */
+    if (!SSL_set_fd(ssl, (int)fd)) {
         snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot attach a TLS socket: %s", fwp_tls_reason());
         SSL_free(ssl);
         return 0;
@@ -496,7 +442,9 @@ static void *fwp_tls_accepted(void *ctx, fwp_socket_t fd) {
         snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot create a TLS session: %s", fwp_tls_reason());
         return 0;
     }
-    if (!fwp_tls_bind_socket(ssl, fd)) {
+    /* OpenSSL documents this Windows SOCKET cast; retain the native width
+     * everywhere else. https://docs.openssl.org/3.5/man3/SSL_set_fd/ */
+    if (!SSL_set_fd(ssl, (int)fd)) {
         snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot attach a TLS socket: %s", fwp_tls_reason());
         SSL_free(ssl);
         return 0;

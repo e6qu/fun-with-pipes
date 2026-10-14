@@ -9,16 +9,17 @@ fn checked(command: &mut Command) -> Output {
     result
 }
 
-fn compare(source: &Path, dir: &Path) {
+fn compare(source: &Path, dir: &Path, expected_exit: i32) {
     let compiler = env!("CARGO_BIN_EXE_fwp");
-    let expected = checked(
-        Command::new(compiler)
-            .env("FWP_NO_OPT", "1")
-            .env("FWP_SEED", "42")
-            .args(["run", "--interp"])
-            .arg(source)
-            .current_dir(dir),
-    );
+    let expected = Command::new(compiler)
+        .env("FWP_NO_OPT", "1")
+        .env("FWP_SEED", "42")
+        .args(["run", "--interp"])
+        .arg(source)
+        .current_dir(dir)
+        .output()
+        .unwrap();
+    assert_eq!(expected.status.code(), Some(expected_exit), "{expected:?}");
     for opt in ["-O1", "-O2"] {
         let binary = dir.join("generated.exe");
         checked(
@@ -30,13 +31,45 @@ fn compare(source: &Path, dir: &Path) {
                 .current_dir(dir),
         );
         for stress in ["0", "1"] {
-            let actual = checked(
-                Command::new(&binary)
+            eprintln!("running {} {opt} stress={stress}", source.display());
+            let actual = Command::new(&binary)
+                .env("FWP_SEED", "42")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .current_dir(dir)
+                .output()
+                .unwrap();
+            if actual.status.code() != expected.status.code() {
+                let cfile = dir.join("failure.c");
+                checked(
+                    Command::new(compiler)
+                        .args(["build", "--emit-c"])
+                        .arg(source)
+                        .arg("-o")
+                        .arg(&cfile),
+                );
+                let c = std::fs::read_to_string(&cfile).unwrap().replace(
+                    "int ok = fwp_win_quote(command, &used, wide.text);",
+                    "fprintf(stderr, \"quote: used=%zu units=%zu text=%ls\\n\", used, wcslen(wide.text), wide.text);\n        int ok = fwp_win_quote(command, &used, wide.text);",
+                );
+                let diagnostic = dir.join("failure.exe");
+                fwp::cgen::compile_c(&c, &diagnostic, opt).unwrap();
+                let output = Command::new(diagnostic)
                     .env("FWP_SEED", "42")
                     .env("FWP_GC_STRESS", stress)
                     .env("FWP_GC_VERIFY", stress)
                     .env("FWP_REUSE_VERIFY", stress)
-                    .current_dir(dir),
+                    .current_dir(dir)
+                    .output()
+                    .unwrap();
+                eprintln!("diagnostic rerun: {output:?}");
+            }
+            assert_eq!(
+                actual.status.code(),
+                expected.status.code(),
+                "{} {opt} stress={stress}: {actual:?}",
+                source.display()
             );
             assert_eq!(
                 actual.stdout,
@@ -63,7 +96,11 @@ fn generated_numerics_tasks_and_unicode_files_match_raw_execution() {
         let text = text.replace("cli_fs.tmp", "fwp-λ-目录");
         let source = dir.join(format!("{name}.fwp"));
         std::fs::write(&source, text).unwrap();
-        compare(&source, dir.path());
+        compare(
+            &source,
+            dir.path(),
+            if name == "numerics" { 101 } else { 0 },
+        );
     }
 }
 
@@ -95,5 +132,5 @@ main = [
         ),
     )
     .unwrap();
-    compare(&source, dir.path());
+    compare(&source, dir.path(), 0);
 }
