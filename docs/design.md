@@ -404,9 +404,12 @@ The native allocator still maintains allocation and reference-count metadata;
 released value storage returns to that allocator. Reserved pages and permanent
 program constants are separate from live temporary values.
 
-Eligibility excludes unproved mutable/cyclic runtime graphs, retained callbacks,
-raw pointers, unscoped reverse-mode operations, unchecked user native declarations,
-foreign/remote calls and unmodeled shared results. Native symbol names alone do
+Eligibility excludes unproved mutable/cyclic runtime graphs, external retained
+callbacks, raw pointers, unscoped reverse-mode operations, unchecked user native
+declarations, managed foreign/remote calls and unmodeled shared results. PR #135
+extends admission to typed retained-task captures and recursively pointer-free
+foreign C records, pending acceptance. Child tasks start independent State/AD
+contexts; the closure-flow proof clears parent scope assumptions at spawn/within. Native symbol names alone do
 not establish ownership signatures. A finite closure-flow analysis proves that
 executed ad.tape/ad.push/ad.backward calls occur under ad.scope/ad.scope2. It
 tracks partial applications, returned callbacks and functions inside containers;

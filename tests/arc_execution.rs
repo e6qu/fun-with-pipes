@@ -180,7 +180,6 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     let dir = std::env::temp_dir().join(format!("fwp-arc-reject-{}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
     for (name,source,reason) in [
-        ("tasks","main = task.yield ()\n","tracing-free lifetime policy"),
         ("custom-native","foreign \"fwp\" string.repeat : I64 -> I64 -> I64\nmain = 1 | string.repeat 2 | echo\n","no checked ownership signature"),
         ("foreign-string","foreign \"C\" strlen : String -> USize\nmain = \"owned\" | strlen | echo\n","foreign boundary has no checked ownership contract"),
         ("foreign-callback","foreign \"C\" invoke : (I64 -> I64) -> I64\nmain = invoke (add 1) | echo\n","foreign boundary has no checked ownership contract"),

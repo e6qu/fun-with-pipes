@@ -228,6 +228,14 @@ impl Proof<'_> {
             Body::Prim(symbol) if matches!(symbol.as_str(), "ad.scope" | "ad.scope2") => {
                 self.apply(&args[0], &args[1..], scoped | AD)
             }
+            Body::Prim(symbol) if matches!(symbol.as_str(), "task.spawn" | "task.within") => {
+                // A child starts with independent State and AD stacks. Carry
+                // callable captures, but never its parent's dynamic scopes.
+                // Channels/raw addresses remain excluded by ARC eligibility,
+                // so no mutable back-edge can publish this task to its thunk.
+                let callback = usize::from(symbol == "task.within");
+                self.apply(&args[callback], &[Targets::new()], 0)
+            }
             Body::Prim(symbol) if symbol == "run-state" => {
                 // State cells are stack owners, never captured addresses. A
                 // callback can return a closure, but that closure must execute
@@ -390,6 +398,59 @@ mod tests {
         assert!(check(&state_program(false))
             .unwrap_err()
             .contains("tracing-free lifetime policy"));
+    }
+
+    #[test]
+    fn retained_task_callbacks_do_not_inherit_dynamic_scopes() {
+        // Check the lowered graph directly: the public effect checker already
+        // excludes a bare State callback from spawn's closed effect signature.
+        // The ownership proof must independently protect that invariant.
+        for symbol in ["task.spawn", "task.within"] {
+            let mut p = state_program(true);
+            let unit = MT::unit();
+            let getter = p.funcs[1].ty.clone();
+            let string = MT::con("std::String");
+            let task = MT::Con("std::Task".into(), vec![string.clone()]);
+            let mut args = vec![Expr::Func(1)];
+            let mut locals = vec![getter.clone()];
+            let mut ty = arrow(getter, task.clone());
+            if symbol == "task.within" {
+                args.insert(0, Expr::Const(Value::unit()));
+                locals.insert(0, unit.clone());
+                ty = arrow(unit.clone(), ty);
+            }
+            p.funcs.push(Func {
+                name: symbol.into(),
+                arity: args.len() as u32,
+                locals,
+                ty,
+                body: Body::Prim(symbol.into()),
+            });
+            p.funcs.push(Func {
+                name: "spawn-in-parent-state".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: arrow(unit.clone(), task.clone()),
+                body: Body::Expr(Expr::Call(3, args)),
+            });
+            let pair = MT::Record(vec![
+                ("0".into(), task.clone()),
+                ("1".into(), string.clone()),
+            ]);
+            p.funcs[2].ty = arrow(
+                string,
+                arrow(arrow(unit.clone(), task), arrow(unit, pair.clone())),
+            );
+            p.funcs[0].ty = pair;
+            let Body::Expr(Expr::Call(_, args)) = &mut p.funcs[0].body else {
+                unreachable!()
+            };
+            args[1] = Expr::Func(4);
+            assert!(
+                check(&p).unwrap_err().contains("outside a State scope"),
+                "{symbol}"
+            );
+        }
     }
 
     #[test]

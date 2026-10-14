@@ -99,71 +99,65 @@ actions. Full builds/suites/benchmarks stay on runners. Local checks must use
 
 ## Active implementation
 
-Exact scalar values and arithmetic now use the shared cores; protocol version 2
-uses 2/2/16-byte payloads and version-sensitive fingerprints, with early v1
-rejection. Native scalar lowering/text/JSON and C ABI declarations are in place.
-C/C++ core archives are cached per source/toolchain/target/options, with emitted
-C companions for manual builds. Guarded library/binary checks passed; actual
-concatenated runtime C passed a focused syntax check. A const-correctness warning
-in the AD callback helper was corrected. No fresh fwp executable was built locally.
-The focused guarded `cargo clippy --lib --bin fwp --test float_formats --test
-protocol --test exec -- -D warnings` passed, as did the runtime syntax recheck
-and `scripts/check-roadmap.py`. Cache pinning now opens the archive before copying,
-so concurrent eviction cannot invalidate a successful open; a missing entry is
-rebuilt. These are implementation checks, not raw/native semantic acceptance.
+PR #135 includes exact scalar values/arithmetic, direct decimal rounding,
+text/JSON, 2/2/16-byte protocol v2 payloads and versioned fingerprints. F128
+arrays store inline bits, with independent owned boxes at escaping boundaries;
+half/bfloat worker fields use u16 bits. Closed quad numeric workers use direct
+bit-struct arithmetic without intermediate boxes. Generic quad values still box;
+quad aggregate workers remain unfinished.
 
-Focused run [38520980906](https://github.com/e6qu/fun-with-pipes/actions/runs/38520980906)
-passed compiler checks on all four Linux/macOS hosts, then failed the new scalar
-test because `Floating[F128]` had no library instance. Instances for all three
-formats are now added; the correction needs runner validation.
+The C ABI uses explicit u16 half/bfloat bits and a two-word quad struct, including
+shim records/callbacks and pointer widths. ARC uses the same recursive pointer-free
+C value classifier. Managed foreign pointers/callbacks still need lifetime proofs.
+C/C++ core archives are keyed by source/toolchain/target/options; emitted C has
+companion core sources. Cache pinning protects already-open archives from concurrent
+eviction. Cache concurrency, manual linking and library exports need acceptance.
 
-F128 array payloads now use 16-byte inline bits with borrowed internal reads and
-independent boxes at escaping `get`/list/callback boundaries. Typed stores release
-consumed temporary boxes; decoder leaf ownership and numeric primitive contracts
-include quad results. Half/bfloat worker parameters and aggregate fields use u16
-bits. New tests cover raw/native O1/O2 execution, GC stress, reuse verification,
-quad array bytes and an omitted-copy negative control. These changes are not yet
-verified on runners. The existing closed wide-expression workers now also lower
-F128 arithmetic, comparisons and elementary math to direct bit-struct calls,
-without boxing between selected workers. The wide-worker suite adds quad raw/
-native comparisons with workers enabled/disabled and tracing/ARC reclamation.
-Focused lint checks pass; execution is pending in run 38522527293 at `957f797`.
-Quad aggregate workers and complete ownership/exception controls remain. Generic
-F128 values stay boxed. Run 38521759189 tests the preceding array/trait change at
-`1454d11`; its scalar/protocol/array tests passed on the first three completed
-hosts, then an existing omitted-array-bound control found a duplicate guard for
-eight-byte elements. The new wide guard now applies only to widths over eight;
-the regression includes a separate omitted-wide-bound control at width 16.
+Array builders protect initialized elements, temporary escaping elements and fold
+accumulators through failure. Consumed updates, view headers and sort scratch also
+have cleanup owners. The new nonreturning `fail` ownership contract corrects an
+ARC rejection for boxed result types; it does not manufacture a normal result.
 
-Foreign ABI integration is in progress: explicit u16 half/bfloat bits, two-word
-quad structs, shim field/result widths, callbacks, pointer widths and owned
-native returns. ARC and lowering now share a recursive pointer-free C value
-classifier. Managed pointers/callbacks still require further lifetime proofs.
-Focused FFI lint checks passed. Run 38523331883 passed the scalar/protocol/worker
-checks on the first three completed hosts and the repaired array-bound controls,
-then the new FFI test exposed a generated cleanup-field assignment when unwind
-registration is omitted. That assignment now requires an emitted cleanup record;
-the correction needs CI.
+Retained-task ARC admission is under development. Child callbacks start with fresh
+State/AD contexts in the closure-flow proof. Typed handles/captures/results are
+acyclic when channels and raw pointer mutation remain excluded. New controls cover
+aliases, older captured handles, independent State, cancellation before/after entry,
+scope failure and physical reclamation without collection. No general cyclic or
+external-callback admission is claimed.
 
-At `bb523a5`, both actual WASI jobs passed in
-[38523463736](https://github.com/e6qu/fun-with-pipes/actions/runs/38523463736),
-including the golden programs, core arithmetic/math and physical reclamation.
-Both native Windows foundation jobs passed in
-[38523466974](https://github.com/e6qu/fun-with-pipes/actions/runs/38523466974),
-including interpreter goldens; this remains narrower than full Windows support.
+## Active checks
 
-Array unwind hardening now registers partial arrays through callbacks and failed
-retains, pending `get`/list elements, consumed update arrays and fold accumulators,
-view headers and sort scratch. A new ARC probe checks physical reclamation on
-callback failure and injected retain failure, with omitted-release controls.
-Guarded focused Rust lint and runtime C syntax checks pass; runner execution is
-pending. No allocation/performance claim is made from these checks.
+- `python3 scripts/local-guard.py cargo clippy --lib --bin fwp --test arc_tasks
+  --test array_unwind_ownership --test arc_execution -- -D warnings` passed for
+  retained-task and nonreturning-error changes. Guarded formatting and
+  `python3 scripts/local-guard.py python3 scripts/check-roadmap.py` also passed.
+- Guarded focused Rust checks/lint and actual concatenated runtime C syntax passed
+  for scalar, ABI, array and worker changes. No fresh compiler executable was built
+  locally; generated-program execution stays on runners.
+- All four hosts passed exact scalar/protocol/quad worker stages at `957f797` in
+  [38522527293](https://github.com/e6qu/fun-with-pipes/actions/runs/38522527293).
+  The run failed a duplicate array-bound omission control; that guard is corrected.
+- Run [38523331883](https://github.com/e6qu/fun-with-pipes/actions/runs/38523331883)
+  at `bb523a5` passed those stages and repaired bounds, then failed the new foreign
+  ABI test because a cleanup field was assigned when no cleanup record was emitted.
+  The emitter correction is in `88fdc5c`; fresh execution is still required.
+- At `bb523a5`, both actual WASI jobs passed in
+  [38523463736](https://github.com/e6qu/fun-with-pipes/actions/runs/38523463736),
+  including golden programs, core math and physical reclamation. Both native Windows
+  foundation jobs passed in
+  [38523466974](https://github.com/e6qu/fun-with-pipes/actions/runs/38523466974).
+  These Windows checks do not establish the unfinished generated runtime/packages.
+- Run [38524765543](https://github.com/e6qu/fun-with-pipes/actions/runs/38524765543)
+  at `88fdc5c` exposed the incorrect ARC result contract for `fail` in the new array
+  unwind test. The contract is corrected in the current work. The test also now
+  disables reuse poison in ARC, as required for physical freeing. Execution of the
+  correction and new retained-task controls is pending.
 
 ## Next action
 
-Next: run and fix focused scalar/protocol tests, then finish integration with
-native arrays/workers, ownership/foreign ABI, text and a versioned protocol
-migration. Keep interpreter/native agreement and direct rounding throughout.
+Next: validate and fix array unwind, C ABI and retained-task ARC controls on
+all four Linux/macOS hosts. Finish quad aggregate/ABI/cache acceptance and managed
+foreign/protocol ownership proofs. Keep raw/native agreement and exact rounding.
 Then complete the Windows C runtime and PE packages, broader ownership/worker
 proofs, and nested reverse differentiation/checkpointing with measured layout
 improvements. Documentation closeout is complete; five implementation areas

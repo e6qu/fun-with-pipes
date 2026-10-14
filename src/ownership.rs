@@ -17,6 +17,8 @@ pub enum Argument {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ResultOwnership {
     Shared,
+    /// Transfers control to an effect handler; no normal result exists.
+    Never,
     /// An owned resource or resource-bearing result prepared by the runtime.
     OwnedResource,
     /// Synchronous effect handler owns either callback result or error payload.
@@ -199,7 +201,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Retained(0)),
             &[0],
         ),
-        "fail" => (&[B], R, None, &[]),
+        "fail" => (&[B], ResultOwnership::Never, None, &[]),
         "attempt" => (
             &[B, B],
             ResultOwnership::OwnedAttempt,

@@ -329,6 +329,15 @@ queued values; draining breaks the tested counted cycle. Unreachable shared cycl
 still require tracing. Natural numeric storage/views and optimized kernels
 must preserve these lifetimes. Checked native ARC has the eligibility boundaries below.
 
+PR #135 also admits immutable retained-task graphs in checked ARC, pending runner
+acceptance. Scheduler, scope and caller references have separate owners; task
+results retain typed references for repeated awaits. A child starts fresh State/AD
+stacks, and closure-flow validation cannot inherit its parent's dynamic lifetimes.
+Captures can reference older task handles; channels, raw pointers and unknown
+external callbacks cannot publish a mutable back-edge in this admitted subset.
+Unproved cyclic graphs remain a compile-time diagnostic in ARC. Tracing remains
+an explicitly selected mode for programs that need those graphs.
+
 ## Original resource semantics
 
 File values stay affine: no duplication trait or resource capture is added.
@@ -363,8 +372,8 @@ boundaries and cycle policy, with physical reclamation verified below.
 
 Foreign C calls with only scalar numeric, Boolean and unit ABI values carry no
 language owners and are admitted by checked ARC. Admission uses the actual C
-signature classification. Strings, pointers, records and callbacks still need
-separate lifetime and result-adoption proofs; uncounted pointer bits alone are
+signature classification. PR #135 extends this classifier to recursively pointer-free C records. Strings,
+pointers and callbacks still need separate lifetime and result-adoption proofs; uncounted pointer bits alone are
 not a proof. The scalar-call regression compares raw interpretation with native
 O1/O2 execution and the physical reclamation ledger.
 

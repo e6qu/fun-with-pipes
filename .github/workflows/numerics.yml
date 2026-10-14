@@ -241,6 +241,7 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - name: Compiler checks
+        id: compiler
         run: |
           cargo fmt --all -- --check
           cargo clippy --all-targets -- -D warnings
@@ -248,9 +249,10 @@ jobs:
       - name: Child signal status in both engines
         run: cargo test --test cli child_signal_status_matches_the_shell_in_both_engines -- --exact
       - name: Exact language formats and protocol migration
-        run: cargo test --test float_formats --test protocol --test wide_workers --test array_unwind_ownership
+        run: cargo test --no-fail-fast --test float_formats --test protocol --test wide_workers --test array_unwind_ownership
       - name: Ownership and foreign boundary regressions
-        run: cargo test --no-fail-fast --test arc_execution --test ffi --test tls --test softfloat_core --test float_math --test native_allocator --test file_runtime_ownership --test file_inline_path --test file_storage_disposal --test array_size_limits
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: cargo test --no-fail-fast --test arc_execution --test arc_tasks --test ffi --test tls --test softfloat_core --test float_math --test native_allocator --test file_runtime_ownership --test file_inline_path --test file_storage_disposal --test array_size_limits
       - name: Iterator forcing, ownership and specialization
         run: cargo test --test iterator_fusion --test iteration_consumers --test float_literals
       - name: Iterator allocation and instruction evidence
