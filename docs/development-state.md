@@ -123,8 +123,14 @@ consumed temporary boxes; decoder leaf ownership and numeric primitive contracts
 include quad results. Half/bfloat worker parameters and aggregate fields use u16
 bits. New tests cover raw/native O1/O2 execution, GC stress, reuse verification,
 quad array bytes and an omitted-copy negative control. These changes are not yet
-verified on runners. Direct quad scalar/aggregate workers, foreign ABI admission
-and complete ownership/exception controls remain. Generic F128 values stay boxed.
+verified on runners. The existing closed wide-expression workers now also lower
+F128 arithmetic, comparisons and elementary math to direct bit-struct calls,
+without boxing between selected workers. The wide-worker suite adds quad raw/
+native comparisons with workers enabled/disabled and tracing/ARC reclamation.
+Focused lint checks pass; execution is pending. Quad aggregate workers, foreign
+ABI admission and complete ownership/exception controls remain. Generic F128
+values stay boxed. Run 38521759189 tests the preceding array/trait change at
+`1454d11`; it does not include the new direct quad workers.
 
 ## Next action
 

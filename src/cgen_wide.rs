@@ -1,5 +1,5 @@
-//! Native scalar workers for closed integer expressions. Generic entries keep
-//! word values; only proven worker-to-worker paths use unboxed wide integers.
+//! Native scalar workers for closed wide numeric expressions. Generic entries
+//! keep word values; proven worker-to-worker paths keep full-width native bits.
 use crate::ir::{type_of, Body, Expr, FuncId, Pat, Program, MT};
 use crate::value::Value;
 use std::fmt::Write;
@@ -8,6 +8,7 @@ use std::fmt::Write;
 pub(super) enum Kind {
     I128,
     U128,
+    F128,
     I64,
     U64,
     Bool,
@@ -22,6 +23,7 @@ impl Kind {
         Some(match name.as_str() {
             "std::I128" => Self::I128,
             "std::U128" => Self::U128,
+            "std::F128" => Self::F128,
             "std::I64" => Self::I64,
             "std::U64" => Self::U64,
             "std::Bool" => Self::Bool,
@@ -29,25 +31,30 @@ impl Kind {
         })
     }
     pub(super) fn wide(self) -> bool {
-        matches!(self, Self::I128 | Self::U128)
+        matches!(self, Self::I128 | Self::U128 | Self::F128)
     }
     pub(super) fn c(self) -> &'static str {
         match self {
             Self::I128 => "i128",
             Self::U128 => "u128",
+            Self::F128 => "float128_t",
             Self::I64 => "int64_t",
             Self::U64 | Self::Bool | Self::Unit => "uint64_t",
         }
     }
     pub(super) fn unbox(self, word: &str) -> String {
-        if self.wide() {
+        if self == Self::F128 {
+            format!("fwp_f128({word})")
+        } else if self.wide() {
             format!("fwp_{}({word})", self.c())
         } else {
             format!("({})({word})", self.c())
         }
     }
     pub(super) fn boxed(self, value: &str) -> String {
-        if self.wide() {
+        if self == Self::F128 {
+            format!("fwp_box_f128({value})")
+        } else if self.wide() {
             format!("fwp_box_{}({value})", self.c())
         } else {
             format!("(V)({value})")
@@ -81,6 +88,11 @@ impl Emitter<'_> {
     fn temporary(&mut self, kind: Kind, value: &str) -> String {
         let name = format!("w{}", self.next);
         self.next += 1;
+        let value = if kind == Kind::F128 && value == "0" {
+            "{{0, 0}}"
+        } else {
+            value
+        };
         writeln!(self.output, "    {} {name} = {value};", kind.c()).unwrap();
         name
     }
@@ -102,6 +114,11 @@ impl Emitter<'_> {
                 *n as u64
             ),
             Value::U128(n) => format!("((u128){}ULL << 64) | {}ULL", (n >> 64) as u64, *n as u64),
+            Value::F128(n) => format!(
+                "(float128_t){{{{{}ULL, {}ULL}}}}",
+                n.to_bits() as u64,
+                (n.to_bits() >> 64) as u64
+            ),
             Value::I64(n) => format!("(int64_t){}ULL", *n as u64),
             Value::U64(n) => format!("{}ULL", n),
             Value::Data(tag, fields) if fields.is_empty() && kind == Kind::Bool => tag.to_string(),
@@ -164,6 +181,9 @@ impl Emitter<'_> {
                         Pat::Construct(tag, fields) if fields.is_empty() && sk == Kind::Bool => {
                             format!("{value} == {tag}")
                         }
+                        Pat::Lit(v) if sk == Kind::F128 => {
+                            format!("fwp_f128_compare({value}, {}) == 0", Self::constant(v, sk)?)
+                        }
                         Pat::Lit(v) => format!("{value} == ({})", Self::constant(v, sk)?),
                         _ => return None,
                     };
@@ -203,6 +223,9 @@ impl Emitter<'_> {
         ks: &[Kind],
         result: Kind,
     ) -> Option<String> {
+        if result == Kind::F128 || ks.contains(&Kind::F128) {
+            return self.quad_primitive(sym, v, ks, result);
+        }
         if !ks.iter().any(|k| k.wide()) && !result.wide() {
             if !matches!(
                 sym,
@@ -300,6 +323,69 @@ impl Emitter<'_> {
         }
         None
     }
+
+    fn quad_primitive(
+        &mut self,
+        sym: &str,
+        v: &[String],
+        ks: &[Kind],
+        result: Kind,
+    ) -> Option<String> {
+        if v.is_empty() && result == Kind::F128 {
+            return match sym {
+                "prim.zero" => Some("(float128_t){{0, 0}}".into()),
+                "prim.one" => Some("(float128_t){{0, UINT64_C(0x3fff000000000000)}}".into()),
+                _ => None,
+            };
+        }
+        if ks == [Kind::F128, Kind::F128] {
+            let (x, y) = (&v[1], &v[0]);
+            if result == Kind::Bool {
+                let comparison = format!("fwp_f128_compare({x}, {y})");
+                return Some(match sym {
+                    "eq" => format!("({comparison} == 0)"),
+                    "ne" => format!("({comparison} != 0)"),
+                    "lt" => format!("({comparison} == -1)"),
+                    "le" => format!("({comparison} <= 0)"),
+                    "gt" => format!("({comparison} == 1)"),
+                    "ge" => format!("((unsigned){comparison} <= 1)"),
+                    _ => return None,
+                });
+            }
+            if result != Kind::F128 {
+                return None;
+            }
+            let call = match sym {
+                "prim.add" => "f128_add",
+                "prim.sub" => "f128_sub",
+                "prim.mul" => "f128_mul",
+                "prim.div" => "f128_div",
+                "prim.rem" => "fwp_f128_rem",
+                "pow" => "fwp_f128_pow",
+                _ => return None,
+            };
+            return Some(format!("{call}({x}, {y})"));
+        }
+        if ks == [Kind::F128] && result == Kind::F128 {
+            let x = &v[0];
+            return Some(match sym {
+                "float.convert" => x.clone(),
+                "prim.neg" => {
+                    format!("(float128_t){{{{{x}.v[0], {x}.v[1] ^ UINT64_C(0x8000000000000000)}}}}")
+                }
+                "abs" => {
+                    format!("(float128_t){{{{{x}.v[0], {x}.v[1] & UINT64_C(0x7fffffffffffffff)}}}}")
+                }
+                "sqrt" => format!("f128_sqrt({x})"),
+                "exp" | "ln" | "sin" | "cos" | "tan" => format!("fwp_f128_{sym}({x})"),
+                "floor" => format!("f128_roundToInt({x}, softfloat_round_min, false)"),
+                "ceil" => format!("f128_roundToInt({x}, softfloat_round_max, false)"),
+                "round" => format!("f128_roundToInt({x}, softfloat_round_near_maxMag, false)"),
+                _ => return None,
+            });
+        }
+        None
+    }
 }
 
 fn body(program: &Program, enabled: &[bool], id: FuncId) -> Option<String> {
@@ -317,7 +403,13 @@ fn body(program: &Program, enabled: &[bool], id: FuncId) -> Option<String> {
     };
     for (i, ty) in f.locals.iter().enumerate().skip(f.arity as usize) {
         if let Some(k) = Kind::of(ty) {
-            writeln!(emitter.output, "    {} l{i} = 0;", k.c()).unwrap();
+            writeln!(
+                emitter.output,
+                "    {} l{i} = {};",
+                k.c(),
+                if k == Kind::F128 { "{{0, 0}}" } else { "0" }
+            )
+            .unwrap();
         }
     }
     let value = emitter.expression(expr, kind)?;

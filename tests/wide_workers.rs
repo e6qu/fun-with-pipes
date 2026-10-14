@@ -26,6 +26,17 @@ main = [
     range 0i128 17i128 | map (sum-wide | add) | map (apply 2i128) | echo,
 ] | ignore
 "#),
+        ("quad", r#"
+rec sum-quad : F128 -> F128
+sum-quad = if (le 0.0f128) (const 0.0f128) (fork add id (sub 1.0f128 | sum-quad))
+transform : F128 -> F128
+transform = abs | add 1.0f128 | sqrt | ln | exp | sin | cos | tan | round | neg
+main = [
+    [0.0f128, 1.0f128, 9.0f128, 32.0f128] | map sum-quad | both id id | echo,
+    [-0.0f128, -2.5f128, 1.0000000000000000000000000000000002f128] | map transform | echo,
+    [0.0f128, 5.0f128] | map (sum-quad | add) | map (apply 2.0f128) | echo,
+] | ignore
+"#),
         ("overflow", "work : I128 -> I128\nwork = add 1i128 | mul 2i128\nmain = 170141183460469231731687303715884105727i128 | work | echo\n"),
         ("division", "work : I128 -> I128\nwork = div -1i128\nmain = -170141183460469231731687303715884105728i128 | work | echo\n"),
         ("zero", "work : U128 -> U128\nwork = div 0u128\nmain = 3u128 | work | echo\n"),
@@ -41,7 +52,7 @@ main = [
             .unwrap();
         assert_eq!(
             reference.status.success(),
-            name == "values",
+            matches!(name, "values" | "quad"),
             "{reference:?}"
         );
         for workers in ["0", "1"] {
@@ -57,7 +68,7 @@ main = [
                         .arg(&cfile),
                 );
                 let mut code = std::fs::read_to_string(cfile).unwrap();
-                if name == "values" {
+                if matches!(name, "values" | "quad") {
                     assert_eq!(code.contains("/* native wide worker:"), workers == "1");
                     if workers == "1" {
                         for section in code.split("/* native wide worker:").skip(1) {
