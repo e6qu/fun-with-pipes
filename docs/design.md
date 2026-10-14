@@ -5,6 +5,13 @@ This page records how fwp is built and why. It covers the decisions the
 described in the [reference](reference.md); this page is for people working
 on the compiler.
 
+Numeric reverse-mode backward passes validate seeded outputs in order and bound
+adjoint storage and scans to their last recorded node, retaining every input.
+Parent indices precede children, so the later suffix cannot contribute. Forward
+recording is unchanged; runtime cleanup owns all detached buffers before any
+validation or allocation can fail. See [numerics](numerics.md) for the contract
+and [the handoff](development-state.md) for current verification.
+
 ## Pipeline
 
 The active priorities are in [../PLAN.md](../PLAN.md), the ownership and

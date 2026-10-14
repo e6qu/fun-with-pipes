@@ -391,10 +391,25 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     fwp_tape_buffers buffers = {tp.pa, tp.pb, tp.da, tp.db, tp.adj, tp.cap, tp.adjcap};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tape_buffers_release, &buffers);
-    int64_t needed = tp.len ? tp.len : 1;
+    /* Parents precede their children. Nodes after the last seeded output
+     * cannot contribute; retain every input even when no output is active.
+     * Validate before indexing and keep the detached buffers owned on traps. */
+    int64_t active = tp.leaves;
+    size_t no = fwp_array_len(outs), ns = fwp_array_len(seeds), m = no < ns ? no : ns;
+    for (size_t i = 0; i < m; i++) {
+        int64_t o = (int64_t)fwp_array_load(outs, i, NULL);
+        if (o < 0) continue;
+        if ((o >> 32) != id) fwp_trap(FWP_AD_MIXED);
+        int64_t node = o & 0xffffffff;
+        if (node >= tp.len) fwp_trap(FWP_AD_INVALID_NODE);
+        if (node >= active) active = node + 1;
+    }
+    int64_t needed = active ? active : 1;
     double *adj = buffers.adj;
     if (buffers.adjcap < needed) {
-        int64_t capacity = tp.cap > needed ? tp.cap : needed;
+        int64_t capacity = buffers.adjcap ? buffers.adjcap : needed;
+        while (capacity < needed)
+            capacity = capacity > fwp_tape_limit() / 2 ? needed : capacity * 2;
         adj = buffers.adj ? (double *)realloc(buffers.adj, (size_t)capacity * sizeof(double))
                           : (double *)calloc((size_t)capacity, sizeof(double));
         if (adj) { buffers.adj = adj;buffers.adjcap = capacity; }
@@ -406,15 +421,12 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
         exit(102);
     }
     memset(adj, 0, (size_t)needed * sizeof(double));
-    size_t no = fwp_array_len(outs), ns = fwp_array_len(seeds), m = no < ns ? no : ns;
     for (size_t i = 0; i < m; i++) {
         int64_t o = (int64_t)fwp_array_load(outs, i, NULL);
         if (o < 0) continue;
-        if ((o >> 32) != id) fwp_trap(FWP_AD_MIXED);
-        if ((o & 0xffffffff) >= tp.len) fwp_trap(FWP_AD_INVALID_NODE);
         adj[o & 0xffffffff] += fwp_f64(fwp_array_load(seeds, i, NULL));
     }
-    for (int64_t i = tp.len - 1; i >= tp.leaves; i--) {
+    for (int64_t i = active - 1; i >= tp.leaves; i--) {
         double a = adj[i];
         if (a == 0.0) continue;
         if (tp.pa[i] >= 0) adj[tp.pa[i]] += a * tp.da[i];

@@ -37,6 +37,9 @@ jobs:
       - name: Checkpoint recomputation and storage measurements
         if: ${{ !cancelled() && steps.checkpoint_compiler.outcome == 'success' }}
         run: python3 scripts/measure-checkpoint.py --output autodiff-evidence/checkpoint
+      - name: Numeric backward prefix storage and binary measurements
+        if: ${{ !cancelled() && steps.checkpoint_compiler.outcome == 'success' }}
+        run: python3 scripts/measure-ad-prefix.py --output autodiff-evidence/prefix
       - uses: actions/upload-artifact@v7
         if: always()
         with:
