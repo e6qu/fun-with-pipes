@@ -104,6 +104,13 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   workflow lint, primitive inventory and roadmap/link/commit checks pass.
   Generated stdlib docs have been refreshed; old merged-main preflight failures
   require the final production run. Full builds/tests/measurements run on CI.
+- Completed merged-main macOS ARM shard exposed three older harness failures:
+  ARC corpus charged permanent scheduler root storage; CSV trap injection still
+  named an old constructor; early task publication injection missed the new
+  Windows conditional. The fixtures now initialize the scheduler baseline and
+  assert current injection markers. A guarded O1 compile/run of the runner's
+  emitted preemption program confirms balanced charged bytes after the baseline
+  repair; current compiler/raw agreement and all controls require CI.
 - Both Windows architectures share one reusable acceptance workflow, including
   native nested AD, ownership, exact formats and standalone PE packaging.
   Require these plus all seven Linux/macOS production jobs and documentation.

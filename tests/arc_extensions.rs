@@ -309,18 +309,24 @@ int main(void) {{
         drop_rows = args[3]
     );
     let declaration = "static int csv_probe_at,csv_probe_step; static void csv_probe_point(void){if(++csv_probe_step==csv_probe_at)fwp_trap(\"CSV construction control\");}\n";
+    for marker in [
+        "owner.row = fwp_private_cons_owned(owner.field, owner.row);",
+        "owner.rows = fwp_private_cons_owned(owner.row, owner.rows);",
+    ] {
+        assert_eq!(code.matches(marker).count(), 1);
+    }
     let code = code
         .replace(
             "static V fwp_p_csv_parse_with(V sepv",
             &format!("{declaration}static V fwp_p_csv_parse_with(V sepv"),
         )
         .replace(
-            "owner.row = fwp_csv_cons_owned(owner.field, owner.row);",
-            "csv_probe_point(); owner.row = fwp_csv_cons_owned(owner.field, owner.row);",
+            "owner.row = fwp_private_cons_owned(owner.field, owner.row);",
+            "csv_probe_point(); owner.row = fwp_private_cons_owned(owner.field, owner.row);",
         )
         .replace(
-            "owner.rows = fwp_csv_cons_owned(owner.row, owner.rows);",
-            "csv_probe_point(); owner.rows = fwp_csv_cons_owned(owner.row, owner.rows);",
+            "owner.rows = fwp_private_cons_owned(owner.row, owner.rows);",
+            "csv_probe_point(); owner.rows = fwp_private_cons_owned(owner.row, owner.rows);",
         )
         .replace(
             "int main(int argc, char **argv)",

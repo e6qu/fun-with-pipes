@@ -200,12 +200,15 @@ int main(void){
     }
     if (s) s->tasks[s->n++] = t;
 "#;
-    assert!(runtime.contains(publish));
+    assert_eq!(runtime.matches(publish).count(), 1);
+    let stack_start = "#ifdef _WIN32\n#ifdef FWP_STATIC_MEMORY\n    if (!fwp_static.ntask_free)";
+    assert_eq!(runtime.matches(stack_start).count(), 1);
     let early = runtime.replacen(publish, "", 1).replacen(
-        "#ifdef FWP_FIBERS\n    if (!fwp_hooks.sw)",
-        &format!("{publish}#ifdef FWP_FIBERS\n    if (!fwp_hooks.sw)"),
+        stack_start,
+        &format!("{publish}{stack_start}"),
         1,
     );
+    assert_eq!(early.matches(publish).count(), 1);
     let extra = runtime
         .replacen(
             "fwp_value_protect(&owner, &cleanup);\n    fwp_task *t = fwp_spawn(thunk, deadline);",
