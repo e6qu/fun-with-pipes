@@ -2,8 +2,8 @@
 
 PR #134 is the accepted baseline: F16/BF16 used F32 arithmetic and F128 used
 F64 arithmetic. The active PR #135 migrates these types to their actual formats
-and changes the protocol version to 2. Scalar integration is under development;
-array/worker/foreign-ABI integration and native acceptance remain incomplete.
+and changes the protocol version to 2. Scalar, array and foreign ABI integration
+has focused runner coverage; complete ownership and six-platform acceptance remain.
 Keep conversion explicit and precision independent of the host.
 
 | Language type | Accepted PR #134 arithmetic/payload | Protocol v1 bytes | PR #135 format and v2 payload |
@@ -25,12 +25,16 @@ and protocol encoding use binary16/bfloat16/binary128. Half and bfloat native
 arrays use two-byte elements. F128 generic values are boxed 16-byte leaves;
 arrays now store 16-byte elements at eight-byte alignment, copying into an owned
 box when a scalar escapes. Half/bfloat workers use u16 bits. Closed quad workers
-now use direct bit-struct arithmetic; their execution checks are pending. The C
-boundary maps half/bfloat to u16 bits and quad to `struct fwp_binary128`, including
-record fields, callbacks and pointer access. Its runner validation is pending.
+use direct bit-struct arithmetic, with passing four-host execution controls.
+Closed flat numeric records now carry quad/wide values in C structs between
+workers; their new ownership and measurement controls are pending. Generic
+boundaries box once and register partially constructed results for unwind.
+The C boundary maps half/bfloat to u16 bits and quad to `struct fwp_binary128`,
+including record fields, callbacks and pointer access. The handoff records
+which native ABI/export checks have completed.
 This partial integration does not establish accepted format support. Protocol
 golden-byte tests cover widths, signed zero, infinities and NaN payload transport;
-raw/native regression fixtures require runner validation.
+the handoff links raw/native regression results and remaining acceptance gates.
 
 The migration now has shared binary16/bfloat16/binary128 arithmetic and exact
 decimal cores. Arithmetic/conversion NaNs are canonical positive quiet NaNs;

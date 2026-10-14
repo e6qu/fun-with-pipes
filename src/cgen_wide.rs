@@ -2,9 +2,10 @@
 //! keep word values; proven worker-to-worker paths keep full-width native bits.
 use crate::ir::{type_of, Body, Expr, FuncId, Pat, Program, MT};
 use crate::value::Value;
+use std::collections::BTreeSet;
 use std::fmt::Write;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum Kind {
     I128,
     U128,
@@ -13,6 +14,102 @@ pub(super) enum Kind {
     U64,
     Bool,
     Unit,
+}
+
+/// Closed numeric records use a C struct through worker calls. Their generic
+/// boundary still owns a record and any boxed numeric leaves.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub(super) enum Shape {
+    Scalar(Kind),
+    Record(Vec<Kind>),
+}
+impl Shape {
+    pub(super) fn of(program: &Program, ty: &MT) -> Option<Self> {
+        if let Some(kind) = Kind::of(ty) {
+            return Some(Self::Scalar(kind));
+        }
+        let fields = super::record_fields(&program.shapes, ty)?;
+        Some(Self::Record(
+            fields
+                .iter()
+                .map(|(_, field)| Kind::of(field))
+                .collect::<Option<_>>()?,
+        ))
+    }
+    pub(super) fn c(&self) -> String {
+        match self {
+            Self::Scalar(kind) => kind.c().into(),
+            Self::Record(fields) => format!(
+                "fwp_wide_record_{}",
+                fields
+                    .iter()
+                    .map(|kind| match kind {
+                        Kind::I128 => "i128",
+                        Kind::U128 => "u128",
+                        Kind::F128 => "f128",
+                        Kind::I64 => "i64",
+                        Kind::U64 => "u64",
+                        Kind::Bool => "bool",
+                        Kind::Unit => "unit",
+                    })
+                    .collect::<Vec<_>>()
+                    .join("_")
+            ),
+        }
+    }
+    fn wide(&self) -> bool {
+        match self {
+            Self::Scalar(k) => k.wide(),
+            Self::Record(fields) => fields.iter().any(|k| k.wide()),
+        }
+    }
+    pub(super) fn unbox(&self, word: &str) -> String {
+        match self {
+            Self::Scalar(k) => k.unbox(word),
+            Self::Record(fields) => format!(
+                "({}){{{}}}",
+                self.c(),
+                fields
+                    .iter()
+                    .enumerate()
+                    .map(|(i, k)| k.unbox(&format!("OBJ({word})->f[{i}]")))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        }
+    }
+}
+
+pub(super) fn declarations(program: &Program, enabled: &[bool]) -> String {
+    let mut shapes = BTreeSet::new();
+    for (_, function) in program
+        .funcs
+        .iter()
+        .enumerate()
+        .filter(|(id, _)| enabled[*id])
+    {
+        for ty in function.locals.iter().chain(std::iter::once(
+            function.ty.params(function.arity as usize).1,
+        )) {
+            if let Some(shape @ Shape::Record(_)) = Shape::of(program, ty) {
+                shapes.insert(shape);
+            }
+        }
+    }
+    let mut out = String::new();
+    for shape in shapes {
+        let Shape::Record(fields) = &shape else {
+            unreachable!()
+        };
+        let fields = fields
+            .iter()
+            .enumerate()
+            .map(|(i, k)| format!("{} f{i};", k.c()))
+            .collect::<Vec<_>>()
+            .join(" ");
+        writeln!(out, "typedef struct {{ {fields} }} {};", shape.c()).unwrap();
+    }
+    out
 }
 impl Kind {
     pub(super) fn of(ty: &MT) -> Option<Self> {
@@ -68,12 +165,12 @@ pub(super) fn signature(program: &Program, id: FuncId) -> String {
     let args = args
         .iter()
         .enumerate()
-        .map(|(i, t)| format!("{} l{i}", Kind::of(t).unwrap().c()))
+        .map(|(i, t)| format!("{} l{i}", Shape::of(program, t).unwrap().c()))
         .collect::<Vec<_>>()
         .join(", ");
     format!(
         "static {} fwp_wide{id}({args})",
-        Kind::of(result).unwrap().c()
+        Shape::of(program, result).unwrap().c()
     )
 }
 
@@ -96,16 +193,6 @@ impl Emitter<'_> {
         writeln!(self.output, "    {} {name} = {value};", kind.c()).unwrap();
         name
     }
-    fn kind(&self, e: &Expr) -> Option<Kind> {
-        type_of(
-            &|id| &self.program.funcs[id].ty,
-            &self.program.shapes,
-            self.locals,
-            e,
-        )
-        .as_ref()
-        .and_then(Kind::of)
-    }
     fn constant(value: &Value, kind: Kind) -> Option<String> {
         Some(match value {
             Value::I128(n) => format!(
@@ -126,92 +213,232 @@ impl Emitter<'_> {
             _ => return None,
         })
     }
-    fn expression(&mut self, e: &Expr, kind: Kind) -> Option<String> {
-        match e {
-            Expr::Local(l) if Kind::of(&self.locals[*l as usize]) == Some(kind) => {
-                Some(format!("l{l}"))
+    fn shape(&self, e: &Expr) -> Option<Shape> {
+        type_of(
+            &|id| &self.program.funcs[id].ty,
+            &self.program.shapes,
+            self.locals,
+            e,
+        )
+        .as_ref()
+        .and_then(|ty| Shape::of(self.program, ty))
+    }
+    fn shape_temporary(&mut self, shape: &Shape, value: &str) -> String {
+        let name = format!("w{}", self.next);
+        self.next += 1;
+        writeln!(
+            self.output,
+            "    {} {name} = {};",
+            shape.c(),
+            if value == "0" { "{0}" } else { value }
+        )
+        .unwrap();
+        name
+    }
+    fn condition(
+        &self,
+        pattern: &Pat,
+        shape: &Shape,
+        value: &str,
+        bindings: &mut String,
+    ) -> Option<String> {
+        Some(match pattern {
+            Pat::Wild => "1".into(),
+            Pat::Bind(local) => {
+                if Shape::of(self.program, &self.locals[*local as usize]).as_ref() != Some(shape) {
+                    return None;
+                }
+                writeln!(bindings, "    l{local} = {value};").unwrap();
+                "1".into()
             }
-            Expr::Const(v) => Self::constant(v, kind),
-            Expr::Construct(tag, fields) if fields.is_empty() && kind == Kind::Bool => {
+            Pat::Construct(tag, fields)
+                if fields.is_empty() && *shape == Shape::Scalar(Kind::Bool) =>
+            {
+                format!("{value} == {tag}")
+            }
+            Pat::Lit(v) => {
+                let Shape::Scalar(kind) = shape else {
+                    return None;
+                };
+                let constant = Self::constant(v, *kind)?;
+                if *kind == Kind::F128 {
+                    format!("fwp_f128_compare({value}, {constant}) == 0")
+                } else {
+                    format!("{value} == ({constant})")
+                }
+            }
+            Pat::Record(patterns) => {
+                let Shape::Record(fields) = shape else {
+                    return None;
+                };
+                if fields.len() != patterns.len() {
+                    return None;
+                }
+                patterns
+                    .iter()
+                    .zip(fields)
+                    .enumerate()
+                    .map(|(i, (pattern, kind))| {
+                        self.condition(
+                            pattern,
+                            &Shape::Scalar(*kind),
+                            &format!("{value}.f{i}"),
+                            bindings,
+                        )
+                    })
+                    .collect::<Option<Vec<_>>>()?
+                    .join(" && ")
+            }
+            _ => return None,
+        })
+    }
+    fn expression(&mut self, e: &Expr, shape: &Shape) -> Option<String> {
+        match e {
+            Expr::Local(local)
+                if Shape::of(self.program, &self.locals[*local as usize]).as_ref()
+                    == Some(shape) =>
+            {
+                Some(format!("l{local}"))
+            }
+            Expr::Const(value) => match (value, shape) {
+                (_, Shape::Scalar(kind)) => Self::constant(value, *kind),
+                (Value::Record(values), Shape::Record(kinds)) if values.len() == kinds.len() => {
+                    Some(format!(
+                        "({}){{{}}}",
+                        shape.c(),
+                        values
+                            .iter()
+                            .zip(kinds)
+                            .map(|(v, k)| Self::constant(v, *k))
+                            .collect::<Option<Vec<_>>>()?
+                            .join(", ")
+                    ))
+                }
+                _ => None,
+            },
+            Expr::Construct(tag, fields)
+                if fields.is_empty() && *shape == Shape::Scalar(Kind::Bool) =>
+            {
                 Some(tag.to_string())
             }
-            Expr::Record(fields) if fields.is_empty() && kind == Kind::Unit => Some("0".into()),
-            Expr::Let(l, value, body) => {
-                let ty = Kind::of(&self.locals[*l as usize])?;
-                let value = self.expression(value, ty)?;
-                writeln!(self.output, "    l{l} = {value};").unwrap();
-                self.expression(body, kind)
+            Expr::Record(fields) if fields.is_empty() && *shape == Shape::Scalar(Kind::Unit) => {
+                Some("0".into())
+            }
+            Expr::Record(fields) => {
+                let Shape::Record(kinds) = shape else {
+                    return None;
+                };
+                if fields.len() != kinds.len() {
+                    return None;
+                }
+                let mut values = Vec::new();
+                for (field, kind) in fields.iter().zip(kinds) {
+                    let field_shape = Shape::Scalar(*kind);
+                    let value = self.expression(field, &field_shape)?;
+                    values.push(self.shape_temporary(&field_shape, &value));
+                }
+                Some(format!("({}){{{}}}", shape.c(), values.join(", ")))
+            }
+            Expr::Field(record, index) => {
+                let record_shape = self.shape(record)?;
+                let Shape::Record(fields) = &record_shape else {
+                    return None;
+                };
+                if *shape != Shape::Scalar(*fields.get(*index as usize)?) {
+                    return None;
+                }
+                let value = self.expression(record, &record_shape)?;
+                let record = self.shape_temporary(&record_shape, &value);
+                Some(format!("{record}.f{index}"))
+            }
+            Expr::SetFields(record, updates) => {
+                let Shape::Record(fields) = shape else {
+                    return None;
+                };
+                let value = self.expression(record, shape)?;
+                let record = self.shape_temporary(shape, &value);
+                for (index, expr) in updates {
+                    let value =
+                        self.expression(expr, &Shape::Scalar(*fields.get(*index as usize)?))?;
+                    writeln!(self.output, "    {record}.f{index} = {value};").unwrap();
+                }
+                Some(record)
+            }
+            Expr::Let(local, value, body) => {
+                let local_shape = Shape::of(self.program, &self.locals[*local as usize])?;
+                let value = self.expression(value, &local_shape)?;
+                writeln!(self.output, "    l{local} = {value};").unwrap();
+                self.expression(body, shape)
             }
             Expr::Call(id, args) => {
                 let f = &self.program.funcs[*id];
                 let (params, result) = f.ty.params(args.len());
-                if Kind::of(result)? != kind || args.len() != f.arity as usize {
+                if Shape::of(self.program, result).as_ref() != Some(shape)
+                    || args.len() != f.arity as usize
+                {
                     return None;
                 }
                 let mut values = Vec::new();
-                let mut kinds = Vec::new();
-                // Separate temporaries preserve argument and checked-trap order.
+                let mut shapes = Vec::new();
+                // Each argument finishes before the next one can trap.
                 for (arg, ty) in args.iter().zip(params) {
-                    let k = Kind::of(ty)?;
-                    let value = self.expression(arg, k)?;
-                    values.push(self.temporary(k, &value));
-                    kinds.push(k);
+                    let arg_shape = Shape::of(self.program, ty)?;
+                    let value = self.expression(arg, &arg_shape)?;
+                    values.push(self.shape_temporary(&arg_shape, &value));
+                    shapes.push(arg_shape);
                 }
                 let call = if let Body::Prim(symbol) = &f.body {
-                    self.primitive(*id, symbol, &values, &kinds, kind)?
+                    let Shape::Scalar(kind) = shape else {
+                        return None;
+                    };
+                    let kinds = shapes
+                        .iter()
+                        .map(|s| match s {
+                            Shape::Scalar(k) => Some(*k),
+                            _ => None,
+                        })
+                        .collect::<Option<Vec<_>>>()?;
+                    self.primitive(*id, symbol, &values, &kinds, *kind)?
                 } else if self.enabled[*id] {
                     format!("fwp_wide{id}({})", values.join(", "))
                 } else {
                     return None;
                 };
-                Some(self.temporary(kind, &call))
+                Some(self.shape_temporary(shape, &call))
             }
             Expr::Match(scrutinee, arms) => {
-                let sk = self.kind(scrutinee).or_else(|| {
+                let scrutinee_shape = self.shape(scrutinee).or_else(|| {
                     arms.iter()
                         .all(|(p, _)| matches!(p, Pat::Wild | Pat::Construct(0..=1, _)))
-                        .then_some(Kind::Bool)
+                        .then_some(Shape::Scalar(Kind::Bool))
                 })?;
-                let value = self.expression(scrutinee, sk)?;
-                let value = self.temporary(sk, &value);
-                let result = self.temporary(kind, "0");
+                let value = self.expression(scrutinee, &scrutinee_shape)?;
+                let value = self.shape_temporary(&scrutinee_shape, &value);
+                let result = self.shape_temporary(shape, "0");
                 for (i, (pattern, body)) in arms.iter().enumerate() {
-                    let condition = match pattern {
-                        Pat::Wild | Pat::Bind(_) => "1".into(),
-                        Pat::Construct(tag, fields) if fields.is_empty() && sk == Kind::Bool => {
-                            format!("{value} == {tag}")
-                        }
-                        Pat::Lit(v) if sk == Kind::F128 => {
-                            format!("fwp_f128_compare({value}, {}) == 0", Self::constant(v, sk)?)
-                        }
-                        Pat::Lit(v) => format!("{value} == ({})", Self::constant(v, sk)?),
-                        _ => return None,
-                    };
+                    let mut bindings = String::new();
+                    let condition =
+                        self.condition(pattern, &scrutinee_shape, &value, &mut bindings)?;
                     writeln!(
                         self.output,
                         "    {}if ({condition}) {{",
                         if i == 0 { "" } else { "else " }
                     )
                     .unwrap();
-                    if let Pat::Bind(l) = pattern {
-                        if Kind::of(&self.locals[*l as usize]) != Some(sk) {
-                            return None;
-                        }
-                        writeln!(self.output, "    l{l} = {value};").unwrap();
-                    }
-                    let v = self.expression(body, kind)?;
-                    writeln!(self.output, "    {result} = {v};\n    }}").unwrap();
+                    self.output.push_str(&bindings);
+                    let value = self.expression(body, shape)?;
+                    writeln!(self.output, "    {result} = {value};\n    }}").unwrap();
                 }
                 self.output
                     .push_str("    else fwp_trap(\"internal: no match arm applies\");\n");
                 Some(result)
             }
-            Expr::Dup(_, body) | Expr::Drop(_, body) => self.expression(body, kind),
+            Expr::Dup(_, body) | Expr::Drop(_, body) => self.expression(body, shape),
             Expr::ResourceRegion {
                 parameters,
                 bindings,
                 body,
-            } if parameters.is_empty() && bindings.is_empty() => self.expression(body, kind),
+            } if parameters.is_empty() && bindings.is_empty() => self.expression(body, shape),
             _ => None,
         }
     }
@@ -393,7 +620,7 @@ fn body(program: &Program, enabled: &[bool], id: FuncId) -> Option<String> {
     let Body::Expr(expr) = &f.body else {
         return None;
     };
-    let kind = Kind::of(f.ty.params(f.arity as usize).1)?;
+    let shape = Shape::of(program, f.ty.params(f.arity as usize).1)?;
     let mut emitter = Emitter {
         program,
         enabled,
@@ -402,17 +629,11 @@ fn body(program: &Program, enabled: &[bool], id: FuncId) -> Option<String> {
         next: 0,
     };
     for (i, ty) in f.locals.iter().enumerate().skip(f.arity as usize) {
-        if let Some(k) = Kind::of(ty) {
-            writeln!(
-                emitter.output,
-                "    {} l{i} = {};",
-                k.c(),
-                if k == Kind::F128 { "{{0, 0}}" } else { "0" }
-            )
-            .unwrap();
+        if let Some(shape) = Shape::of(program, ty) {
+            writeln!(emitter.output, "    {} l{i} = {{0}};", shape.c()).unwrap();
         }
     }
-    let value = emitter.expression(expr, kind)?;
+    let value = emitter.expression(expr, &shape)?;
     writeln!(emitter.output, "    return {value};").unwrap();
     Some(emitter.output)
 }
@@ -425,12 +646,12 @@ pub(super) fn select(program: &Program) -> Vec<bool> {
             let (args, result) = f.ty.params(f.arity as usize);
             f.arity > 0
                 && matches!(f.body, Body::Expr(_))
-                && Kind::of(result).is_some()
-                && args.iter().all(|t| Kind::of(t).is_some())
+                && Shape::of(program, result).is_some()
+                && args.iter().all(|t| Shape::of(program, t).is_some())
                 && args
                     .iter()
                     .chain(std::iter::once(&result))
-                    .any(|t| Kind::of(t).is_some_and(Kind::wide))
+                    .any(|t| Shape::of(program, t).is_some_and(|shape| shape.wide()))
                 && std::env::var("FWP_WIDE_WORKERS").as_deref() != Ok("0")
         })
         .collect();

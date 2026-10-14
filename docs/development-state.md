@@ -26,7 +26,7 @@ full Windows and true half/quad language formats remain unfinished.
 | 2 | In progress | Scalar foreign ARC and proved WASM/File freeing tested; retained callbacks, protocols and cyclic ownership proofs remain |
 | 3 | In progress | Direct iterate fusion measured; broader producer/worker/aggregate specialization remains |
 | 4 | Pending | Measured kernel/layout improvements, nested reverse differentiation and checkpointing |
-| 5 | In progress | Exact scalar values, inline arrays, closed quad workers and protocol v2 implemented; C ABI, aggregate workers and complete ownership/platform acceptance remain under validation |
+| 5 | In progress | Exact scalar values, inline arrays, closed quad workers and protocol v2 implemented; C ABI, numeric record workers and complete ownership/platform acceptance remain under validation |
 | 6 | In progress | Native Windows Rust and generated C allocator probes pass on both architectures; full C runtime/resources/networking/TLS and PE packages remain |
 
 The [float contract](float-formats.md) is authoritative. The accepted PR #134
@@ -103,8 +103,11 @@ PR #135 includes exact scalar values/arithmetic, direct decimal rounding,
 text/JSON, 2/2/16-byte protocol v2 payloads and versioned fingerprints. F128
 arrays store inline bits, with independent owned boxes at escaping boundaries;
 half/bfloat worker fields use u16 bits. Closed quad numeric workers use direct
-bit-struct arithmetic without intermediate boxes. Generic quad values still box;
-quad aggregate workers remain unfinished.
+bit-struct arithmetic without intermediate boxes. Generic quad values still box. Closed flat numeric record workers now carry
+F128/I128/U128 fields directly in C structs; boxed entry/exit copies bits, drops
+incoming owners and protects partial returned records. Raw/native/trap-order
+checks and allocation/stack/disassembly measurements await runners. Nested or
+non-numeric record fields continue through ordinary typed lowering.
 
 The C ABI uses explicit u16 half/bfloat bits and a two-word quad struct, including
 shim records/callbacks and pointer widths. ARC uses the same recursive pointer-free
@@ -131,6 +134,11 @@ external-callback admission is claimed.
 
 ## Active checks
 
+- Closed numeric record workers passed guarded `cargo clippy --lib --bin fwp
+  --test wide_workers -- -D warnings`, formatting and Python syntax checking for
+  `scripts/measure-wide.py`. Runner measurements now include quad scalars and
+  mixed quad/wide records with exact cores linked identically in both variants.
+  These local checks establish neither allocation savings nor native semantics.
 - Scoped foreign lowering, ARC admission and callback controls passed guarded
   `cargo clippy --lib --bin fwp --test ffi --test arc_execution --test arc_tasks
   --test foreign_callback_ownership -- -D warnings`, formatting, concatenated
@@ -174,12 +182,17 @@ external-callback admission is claimed.
   tracing/poison flags in an ARC ABI run. Both are corrected. The exported-header
   and manual-link/cache controls are running at `3800499` in
   [38526720651](https://github.com/e6qu/fun-with-pipes/actions/runs/38526720651);
-  the exact-format stage passed on both Linux hosts and ARM macOS so far.
+  all four hosts passed its exact-format stage. The only failure on the completed
+  Linux ARM job was the stale task thunk fixture, corrected in `dfca8e6`.
+- Scoped foreign ownership and corrected task controls are running at `dfca8e6`
+  in [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).
+  The callback proof includes copied quad inputs/results and omitted-result-release
+  and omitted-task-context controls. These results remain pending.
 
 ## Next action
 
 Next: validate and fix array unwind, C ABI and retained-task ARC controls on
-all four Linux/macOS hosts. Finish quad aggregate/ABI/cache acceptance and managed
+all four Linux/macOS hosts. Finish quad record-worker measurements and ABI/cache acceptance, plus managed
 foreign/protocol ownership proofs. Keep raw/native agreement and exact rounding.
 Then complete the Windows C runtime and PE packages, broader ownership/worker
 proofs, and nested reverse differentiation/checkpointing with measured layout

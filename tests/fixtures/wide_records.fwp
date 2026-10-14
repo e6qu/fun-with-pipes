@@ -1,0 +1,29 @@
+Point = { x: F128, y: F128, remaining: I64, total: I128 }
+
+start : F128 -> Point
+start = make Point { x = id, y = mul 2.0f128, remaining = const 8, total = const 0i128 }
+
+step : Point -> Point
+step = make Point {
+    x = .x | add 1.0000000000000000000000000000000002f128,
+    y = .y | mul 1.5f128,
+    remaining = .remaining | sub 1,
+    total = .total | add 7i128,
+}
+
+rec walk : Point -> Point
+walk = if (.remaining | eq 0) id (step | walk)
+
+score : Point -> F128
+score = both .x .y | uncurry add
+
+pair : (F128, I128) -> (F128, I128)
+pair = if (.1 | gt 0i128)
+    (make { 0 = .0 | mul 2.0f128, 1 = .1 | sub 1i128 })
+    id
+
+main = [
+    [0.0f128, 1.0000000000000000000000000000000002f128, -2.5f128]
+        | map (start | walk | both id score) | echo,
+    [(1.5f128, 2i128), (2.5f128, -1i128)] | map pair | both id id | echo,
+] | ignore

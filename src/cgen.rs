@@ -6382,12 +6382,12 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             // Copy native bits before releasing any aliased incoming boxes.
             // Once copied, a trap in the worker has no pending managed owners.
             for (i, ty) in types.iter().enumerate() {
-                let k = wide::Kind::of(ty).unwrap();
+                let k = wide::Shape::of(self.uncounted, ty).unwrap();
                 let _ = writeln!(out, "    {} n{i} = {};", k.c(), k.unbox(&format!("a{i}")));
             }
             if self.reuse {
                 for (i, ty) in types.iter().enumerate() {
-                    if wide::Kind::of(ty).unwrap().wide() {
+                    if crate::rc::needs_rc(&self.prog.shapes, ty) {
                         let drop = self.value_drop(ty);
                         let _ = writeln!(out, "    {drop}(a{i});");
                     }
@@ -6397,11 +6397,48 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 .map(|i| format!("n{i}"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            let k = wide::Kind::of(result).unwrap();
+            let k = wide::Shape::of(self.uncounted, result).unwrap();
             let _ = writeln!(out, "    {} value = fwp_wide{id}({arguments});", k.c());
-            let value = k.boxed("value");
-            let value = if k.wide() { self.fresh(value) } else { value };
-            let _ = writeln!(out, "    return {value};\n}}");
+            match k {
+                wide::Shape::Scalar(k) => {
+                    let value = k.boxed("value");
+                    let value = if k.wide() { self.fresh(value) } else { value };
+                    let _ = writeln!(out, "    return {value};\n}}");
+                }
+                wide::Shape::Record(kinds) => {
+                    let fields = record_fields(&self.prog.shapes, result).unwrap().to_vec();
+                    let empty: Vec<_> = fields
+                        .iter()
+                        .map(|(_, ty)| ("0".into(), ty.clone()))
+                        .collect();
+                    let protect = self.protect_values(&empty, "wide_result", "wide_result_cleanup");
+                    out.push_str(&protect);
+                    let _ = writeln!(out, "    V fields[{}] = {{0}};", fields.len());
+                    let mut slot = 0;
+                    for (i, (kind, (_, ty))) in kinds.iter().zip(&fields).enumerate() {
+                        let value = kind.boxed(&format!("value.f{i}"));
+                        let value = if kind.wide() {
+                            self.fresh(value)
+                        } else {
+                            value
+                        };
+                        let _ = writeln!(out, "    fields[{i}] = {value};");
+                        if !protect.is_empty() && crate::rc::needs_rc(&self.prog.shapes, ty) {
+                            let _ = writeln!(out, "    wide_result.v{slot} = fields[{i}];");
+                            slot += 1;
+                        }
+                    }
+                    let _ = writeln!(
+                        out,
+                        "    V result = {};",
+                        self.fresh(format!("fwp_record({}, fields)", fields.len()))
+                    );
+                    if !protect.is_empty() {
+                        out.push_str("    fwp_cleanup_pop(&wide_result_cleanup);\n");
+                    }
+                    out.push_str("    return result;\n}\n");
+                }
+            }
             return Ok(out);
         }
         let f = &self.prog.funcs[id];
@@ -8796,6 +8833,7 @@ static const fwp_exec_spec exec_spec{i} = {{
             let _ = writeln!(out, "{};", abi.sig(prog, id));
         }
     }
+    out.push_str(&wide::declarations(g.uncounted, &g.wide_workers));
     for (id, enabled) in g.wide_workers.iter().enumerate() {
         if *enabled && live[id] {
             let _ = writeln!(out, "{};", wide::signature(g.uncounted, id));

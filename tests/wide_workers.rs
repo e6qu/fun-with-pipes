@@ -12,6 +12,7 @@ fn wide_workers_match_raw_arithmetic_and_reclaim_boundaries() {
     let dir = std::env::temp_dir().join(format!("fwp-wide-workers-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let cases = [
+        ("records", include_str!("fixtures/wide_records.fwp")),
         ("values", r#"
 rec sum-wide : I128 -> I128
 sum-wide = if (le 0i128) (const 0i128) (fork add id (sub 1i128 | sum-wide))
@@ -40,6 +41,7 @@ main = [
         ("overflow", "work : I128 -> I128\nwork = add 1i128 | mul 2i128\nmain = 170141183460469231731687303715884105727i128 | work | echo\n"),
         ("division", "work : I128 -> I128\nwork = div -1i128\nmain = -170141183460469231731687303715884105728i128 | work | echo\n"),
         ("zero", "work : U128 -> U128\nwork = div 0u128\nmain = 3u128 | work | echo\n"),
+        ("record-traps", "work : (I128, I128) -> (I128, I128)\nwork = make { 0 = .0 | add 1i128, 1 = .1 | div 0i128 }\nmain = (170141183460469231731687303715884105727i128, 0i128) | work | echo\n"),
     ];
     for (name, source) in cases {
         let input = dir.join(format!("{name}.fwp"));
@@ -52,7 +54,7 @@ main = [
             .unwrap();
         assert_eq!(
             reference.status.success(),
-            matches!(name, "values" | "quad"),
+            matches!(name, "values" | "quad" | "records"),
             "{reference:?}"
         );
         for workers in ["0", "1"] {
@@ -68,9 +70,13 @@ main = [
                         .arg(&cfile),
                 );
                 let mut code = std::fs::read_to_string(cfile).unwrap();
-                if matches!(name, "values" | "quad") {
+                if matches!(name, "values" | "quad" | "records") {
                     assert_eq!(code.contains("/* native wide worker:"), workers == "1");
                     if workers == "1" {
+                        if name == "records" {
+                            assert!(code.contains("fwp_wide_record_"));
+                            assert!(code.contains("/* native wide worker: walk */"));
+                        }
                         for section in code.split("/* native wide worker:").skip(1) {
                             let body = section.split("\nstatic V f").next().unwrap();
                             assert!(
