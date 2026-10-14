@@ -131,6 +131,11 @@ external-callback admission is claimed.
   --test array_unwind_ownership --test arc_execution -- -D warnings` passed for
   retained-task and nonreturning-error changes. Guarded formatting and
   `python3 scripts/local-guard.py python3 scripts/check-roadmap.py` also passed.
+- Guarded `cargo clippy --lib --bin fwp --test float_linking --test ffi --
+  -D warnings` and formatting passed for manual core linking, concurrent cache
+  publication/reuse/eviction and static/shared quad exports. Header generation no
+  longer emits the internal quad marker as a C typedef. These new execution
+  controls need runners; this is not library/cache acceptance yet.
 - Guarded focused Rust checks/lint and actual concatenated runtime C syntax passed
   for scalar, ABI, array and worker changes. No fresh compiler executable was built
   locally; generated-program execution stays on runners.
@@ -152,6 +157,9 @@ external-callback admission is claimed.
   unwind test. The contract is corrected in the current work. The test also now
   disables reuse poison in ARC, as required for physical freeing. Execution of the
   correction and new retained-task controls is pending.
+- Those corrections and task controls are running at `7db7da5` in
+  [38525878654](https://github.com/e6qu/fun-with-pipes/actions/runs/38525878654).
+  The array unwind stage passed on both Linux hosts; remaining stages are pending.
 
 ## Next action
 

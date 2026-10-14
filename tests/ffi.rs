@@ -165,10 +165,90 @@ main = [
                 .arg(&binary);
             stdout(build);
             let mut run = Command::new(binary);
-            run.env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", "1");
+            let verify = if gc == "arc" { "0" } else { "1" };
+            run.env("FWP_GC_STRESS", verify)
+                .env("FWP_GC_VERIFY", verify)
+                .env("FWP_REUSE_VERIFY", verify);
             assert_eq!(stdout(run), expected);
+        }
+    }
+}
+
+#[test]
+fn exact_float_exports_link_from_static_and_shared_libraries() {
+    let temp = fwp::cgen::TempDir::new("fwp-float-exports").unwrap();
+    let source = temp.join("bits.fwp");
+    std::fs::write(
+        &source,
+        r#"
+repr(C) Pack = { q: F128, h: F16, b: BF16 }
+export quad-id : F128 -> F128
+quad-id = id
+export quad-double : F128 -> F128
+quad-double = mul 2.0f128
+export quad-sqrt : F128 -> F128
+quad-sqrt = sqrt
+export pack-id : Pack -> Pack
+pack-id = id
+"#,
+    )
+    .unwrap();
+    let host = temp.join("host.c");
+    std::fs::write(&host, r#"
+#include "libbits.h"
+_Static_assert(sizeof(struct fwp_binary128)==16,"quad ABI width");
+_Static_assert(_Alignof(struct fwp_binary128)==8,"quad ABI alignment");
+int main(void) {
+    struct fwp_binary128 q={1,UINT64_C(0x3fff000000000000)};
+    struct fwp_binary128 nan={UINT64_C(0x1234),UINT64_C(0x7fff000000000000)};
+    for(int i=0;i<2048;i++) {
+        struct fwp_binary128 r=quad_double(q);
+        if(r.low!=1 || r.high!=UINT64_C(0x4000000000000000)) return 1;
+        r=quad_id(nan);
+        if(r.low!=nan.low || r.high!=nan.high) return 2;
+        r=quad_sqrt((struct fwp_binary128){0,UINT64_C(0x4001000000000000)});
+        if(r.low || r.high!=UINT64_C(0x4000000000000000)) return 3;
+        Pack p=pack_id((Pack){nan,UINT16_C(0x7c35),UINT16_C(0x7f95)});
+        if(p.q.low!=nan.low || p.q.high!=nan.high || p.h!=UINT16_C(0x7c35) || p.b!=UINT16_C(0x7f95)) return 4;
+    }
+    return 0;
+}
+"#).unwrap();
+    for kind in ["--staticlib", "--cdylib"] {
+        let extension = if kind == "--staticlib" {
+            "a"
+        } else {
+            fwp::cgen::shared_library_extension()
+        };
+        let library = temp.join(format!("libbits.{extension}"));
+        let mut build = Command::new(fwp());
+        build
+            .args(["build", kind])
+            .arg(&source)
+            .arg("-o")
+            .arg(&library);
+        stdout(build);
+        let binary = temp.join("host");
+        let mut link = Command::new(cc());
+        link.arg("-std=c11")
+            .arg(&host)
+            .arg(&library)
+            .arg(format!("-Wl,-rpath,{}", temp.path().display()))
+            .args(["-lm", "-lpthread", "-o"])
+            .arg(&binary);
+        stdout(link);
+        let mut run = Command::new(binary);
+        run.env("FWP_GC_STRESS", "1")
+            .env("FWP_GC_VERIFY", "1")
+            .env("FWP_REUSE_VERIFY", "1");
+        stdout(run);
+        if kind == "--staticlib" {
+            let mut members = Command::new(std::env::var("AR").unwrap_or_else(|_| "ar".into()));
+            members.arg("t").arg(&library);
+            let members = stdout(members);
+            assert!(members.lines().any(|m| m == "float.c.o"));
+            assert!(members.lines().any(|m| m == "float.cpp.o"));
+            assert!(!members.lines().any(|m| m.ends_with(".a")));
         }
     }
 }

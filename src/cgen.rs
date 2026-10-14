@@ -7750,7 +7750,7 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
     }
     let mut seen = Vec::new();
     crate::ffi::struct_defs(&all, &mut h, &mut seen);
-    for n in &seen {
+    for n in seen.iter().filter(|n| n.as_str() != "@binary128") {
         let _ = writeln!(h, "typedef struct fwp_c_{n} {n};", n = n);
     }
     if !seen.is_empty() {

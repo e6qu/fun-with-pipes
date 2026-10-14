@@ -177,3 +177,18 @@ fn pin_cached(archive: &Path, build_dir: &Path) -> Result<Option<PathBuf>, Strin
     std::io::copy(&mut input, &mut output).map_err(|e| format!("{}: {e}", archive.display()))?;
     Ok(Some(pinned))
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn private_archive_survives_public_eviction() {
+        let dir = crate::cgen::TempDir::new("fwp-float-pin").unwrap();
+        let archive = dir.join("cache.a");
+        assert!(super::pin_cached(&archive, dir.path()).unwrap().is_none());
+        std::fs::write(&archive, b"complete archive").unwrap();
+        let pinned = super::pin_cached(&archive, dir.path()).unwrap().unwrap();
+        std::fs::remove_file(&archive).unwrap();
+        assert_eq!(std::fs::read(pinned).unwrap(), b"complete archive");
+        assert!(super::pin_cached(&archive, dir.path()).unwrap().is_none());
+    }
+}
