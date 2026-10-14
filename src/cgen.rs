@@ -17,6 +17,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_ops.c"),
     include_str!("../runtime/fwp_rt_num.c"),
     include_str!("../runtime/fwp_rt_prims.c"),
+    include_str!("../runtime/fwp_rt_context_win.c"),
     include_str!("../runtime/fwp_rt_task.c"),
     include_str!("../runtime/fwp_rt_sys.c"),
     include_str!("../runtime/fwp_rt_decode.c"),

@@ -203,7 +203,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --test softfloat_core --test float_math -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test native_allocator -- --nocapture
+          cargo test --test native_allocator --test windows_context -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo build --bin fwp
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

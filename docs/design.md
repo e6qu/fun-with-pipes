@@ -351,7 +351,9 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
 - Native tasks are green threads on an event loop: epoll on
   Linux, poll elsewhere. glibc uses `ucontext`; musl and Darwin use the
   runtime's custom x86-64/AArch64 context switch, with ELF and Mach-O
-  symbol/directive conventions respectively. Interpreter tasks are OS threads that pass a
+  symbol/directive conventions respectively. The active Windows port uses native
+  fibers with explicit saved-register and stack root ranges; the OS owns stack
+  reservation, commitment and ABI restoration. Native acceptance remains pending. Interpreter tasks are OS threads that pass a
   baton, so only one runs at a time. Function-entry preemption preserves
   deterministic ready-task interleaving across backends; relative wall-clock
   timers do not establish an order between independent effects. Use channels

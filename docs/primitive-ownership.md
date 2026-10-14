@@ -4,7 +4,7 @@
 native code generation. Its container inventory covers every array/map/set
 primitive declared in `lib/collections.fwp`; a coverage check detects newly
 added declarations without contracts. All 31 string-module declarations and seven byte primitives now have contracts;
-selected typed result ownership is listed below. Other primitives, foreign
+selected typed result ownership is listed below. Unmodeled primitives, foreign
 functions and remote calls retain the conservative default: borrow arguments, promote counted
 values to runtime sharing, and return runtime-shared values. Further inventories
 must refine that default before extending deterministic reclamation.
@@ -15,7 +15,15 @@ storage. Consume is checked by `src/rc.rs`; share is emitted by `src/cgen.rs`.
 Result metadata distinguishes shared results, owned leaf copies/aliases, fresh outer containers and
 containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
-Every failure path still consumes its specified reference.
+The nonreturning `fail` contract has no normal result; its error value is
+retained by the handler. Every failure path still consumes its specified reference.
+
+Scoped foreign contracts use the ABI classifier: text/bytes are borrowed during
+the call, string results are copied, and synchronous callbacks transfer typed
+C value arguments/results through task-local contexts with unwind cleanup.
+Raw pointers and callbacks returning managed C addresses remain unproved.
+Retained task callbacks own their immutable captures and typed cached results;
+channels and raw mutable backedges remain outside checked ARC admission.
 
 The tables describe current contracts. [The handoff](development-state.md)
 distinguishes implemented extensions from accepted production evidence. Arrays,

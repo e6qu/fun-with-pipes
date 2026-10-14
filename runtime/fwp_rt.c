@@ -38,6 +38,14 @@ _Noreturn void longjmp(jmp_buf, int);
 #include <errno.h>
 #include <stdarg.h>
 #include <ctype.h>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#endif
 
 typedef uint64_t V;
 typedef __int128 i128;

@@ -39,8 +39,8 @@ checkpointing are not implemented.
 
 ## Current implementation
 
-Scalar foreign-C ARC admission follows the actual ABI classifier and rejects
-managed strings, pointers and callbacks. WASM typed last-owner destruction
+The merged baseline admits scalar foreign-C ARC via the ABI classifier; the
+active bundle extends scoped strings and callbacks as described below. WASM typed last-owner destruction
 removes count metadata before libc free, including closed File headers.
 Unproved shared/cyclic graphs remain retained. Direct `iter.iterate` fusion
 preserves eager lookahead, effect/trap order, early stopping and owned captures.
@@ -51,8 +51,12 @@ Windows Rust uses native socket handles/WSAPoll and owned DLL lifetimes.
 Generated C allocation uses VirtualAlloc/VirtualFree, actual commitment/reuse,
 monotonic timing, working-set accounting and PE writable-section roots with a
 missing-root negative control. LLVM-MinGW UCRT assets are hash-pinned; Rust's
-MSVC target separately uses SDK-aware Clang. Generated C task contexts and
-platform resources still need a complete native Windows port.
+MSVC target separately uses SDK-aware Clang. Generated C tasks now use Windows fibers with explicit suspended register/stack
+roots, demand-committed stacks, native console shutdown and overflow handling.
+A native probe checks each root range independently, floating-point state,
+reclamation and preservation of a host-owned fiber. Its runner execution is
+pending; generated networking, resources/processes, static memory and packaging
+still need the rest of the Windows port.
 
 SoftFloat 3e, scoped gdtoa and TLFloat 1.15.0 are vendored with licenses,
 provenance and recorded patches. The shared core has exact half/bfloat/quad
@@ -134,63 +138,32 @@ external-callback admission is claimed.
 
 ## Active checks
 
-- Closed numeric record workers passed guarded `cargo clippy --lib --bin fwp
-  --test wide_workers -- -D warnings`, formatting and Python syntax checking for
-  `scripts/measure-wide.py`. Runner measurements now include quad scalars and
-  mixed quad/wide records with exact cores linked identically in both variants.
-  These local checks establish neither allocation savings nor native semantics.
-- Scoped foreign lowering, ARC admission and callback controls passed guarded
-  `cargo clippy --lib --bin fwp --test ffi --test arc_execution --test arc_tasks
-  --test foreign_callback_ownership -- -D warnings`, formatting, concatenated
-  runtime C syntax and the roadmap audit. Execution remains pending. The new
-  tests require raw/native agreement, physical freeing, task-context restoration
-  and omitted-context/result-release failures.
-- `python3 scripts/local-guard.py cargo clippy --lib --bin fwp --test arc_tasks
-  --test array_unwind_ownership --test arc_execution -- -D warnings` passed for
-  retained-task and nonreturning-error changes. Guarded formatting and
-  `python3 scripts/local-guard.py python3 scripts/check-roadmap.py` also passed.
-- Guarded `cargo clippy --lib --bin fwp --test float_linking --test ffi --
-  -D warnings` and formatting passed for manual core linking, concurrent cache
-  publication/reuse/eviction and static/shared quad exports. Header generation no
-  longer emits the internal quad marker as a C typedef. These new execution
-  controls need runners; this is not library/cache acceptance yet.
-- Guarded focused Rust checks/lint and actual concatenated runtime C syntax passed
-  for scalar, ABI, array and worker changes. No fresh compiler executable was built
-  locally; generated-program execution stays on runners.
-- All four hosts passed exact scalar/protocol/quad worker stages at `957f797` in
-  [38522527293](https://github.com/e6qu/fun-with-pipes/actions/runs/38522527293).
-  The run failed a duplicate array-bound omission control; that guard is corrected.
-- Run [38523331883](https://github.com/e6qu/fun-with-pipes/actions/runs/38523331883)
-  at `bb523a5` passed those stages and repaired bounds, then failed the new foreign
-  ABI test because a cleanup field was assigned when no cleanup record was emitted.
-  The emitter correction is in `88fdc5c`; fresh execution is still required.
+- At `dfca8e6`, all four Linux/macOS hosts passed exact-format/protocol/array
+  tests and all seven foreign ABI/export tests in
+  [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).
+  The only failures were reversed `compose` arguments in the new task and
+  foreign lifetime fixtures. `9aed34b` corrects their left-to-right order.
+- [38528964109](https://github.com/e6qu/fun-with-pipes/actions/runs/38528964109)
+  at `9aed34b` is queued for the combined task/foreign lifetime, numeric record
+  worker and allocation/stack/disassembly checks. These new proofs have not
+  passed yet. Keep fixing actual failures before claiming acceptance.
+- All four hosts passed manual exact-core linking and concurrent core-cache
+  publication/reuse/eviction at `3800499` in
+  [38526720651](https://github.com/e6qu/fun-with-pipes/actions/runs/38526720651).
+  Later scalar/ABI changes still need final-head production verification.
 - At `bb523a5`, both actual WASI jobs passed in
   [38523463736](https://github.com/e6qu/fun-with-pipes/actions/runs/38523463736),
-  including golden programs, core math and physical reclamation. Both native Windows
+  including goldens, core math and physical reclamation. Both native Windows
   foundation jobs passed in
   [38523466974](https://github.com/e6qu/fun-with-pipes/actions/runs/38523466974).
-  These Windows checks do not establish the unfinished generated runtime/packages.
-- Run [38524765543](https://github.com/e6qu/fun-with-pipes/actions/runs/38524765543)
-  at `88fdc5c` exposed the incorrect ARC result contract for `fail` in the new array
-  unwind test. The contract is corrected in the current work. The test also now
-  disables reuse poison in ARC, as required for physical freeing. Execution of the
-  correction and new retained-task controls is pending.
-- Those corrections and task controls are running at `7db7da5` in
-  [38525878654](https://github.com/e6qu/fun-with-pipes/actions/runs/38525878654).
-  All four hosts passed the array unwind/scalar/protocol/worker stage. The ownership
-  stage found two test setup errors: an incorrectly composed task thunk and
-  tracing/poison flags in an ARC ABI run. Both are corrected. The exported-header
-  and manual-link/cache controls are running at `3800499` in
-  [38526720651](https://github.com/e6qu/fun-with-pipes/actions/runs/38526720651);
-  all four hosts passed its exact-format stage. The only failure on the completed
-  Linux ARM job was the stale task thunk fixture, corrected in `dfca8e6`.
-- Scoped foreign ownership and corrected task controls are running at `dfca8e6`
-  in [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).
-  The callback proof includes copied quad inputs/results and omitted-result-release
-  and omitted-task-context controls. Native ARM macOS passed all seven foreign
-  ABI/export tests, including ARC quad callbacks. The two new lifetime fixtures
-  reversed `compose` arguments; both now follow its declared left-to-right order.
-  Their execution and record-worker evidence will run together in the next batch.
+  These Windows checks do not establish the generated runtime or packages.
+- Guarded focused lint passed for the compiler and the `wide_workers`,
+  `arc_tasks`, `foreign_callback_ownership`, `arc_execution`, `ffi`,
+  `float_linking`, `array_unwind_ownership` and `windows_context` targets.
+  `python3 scripts/local-guard.py cargo fmt --all -- --check` and guarded
+  concatenated runtime C syntax checking passed after the fiber integration.
+  The Windows-only probe is excluded on macOS; only native Windows execution
+  can verify it. Guarded Python syntax checking passed for `measure-wide.py`.
 
 ## Next action
 

@@ -28,6 +28,8 @@
 #include <limits.h>
 #ifdef __wasi__
 #define FWP_FIBERS 1
+#elif defined(_WIN32)
+#include <signal.h>
 #else
 #if !defined(__GLIBC__) && (defined(__x86_64__) || defined(__aarch64__)) && !defined(FWP_OWN_CONTEXT)
 #define FWP_OWN_CONTEXT 1
@@ -158,7 +160,9 @@ __asm__(FWP_CTX_BEGIN
 typedef struct { fwp_task *head; } fwp_wl;
 
 struct fwp_task {
-#ifdef FWP_OWN_CONTEXT
+#ifdef _WIN32
+    fwp_win_context ctx;
+#elif defined(FWP_OWN_CONTEXT)
     fwp_ctx_t ctx;
 #elif !defined(FWP_FIBERS)
     ucontext_t ctx;
@@ -224,15 +228,22 @@ static volatile int fwp_shutdown = 0;
 static volatile sig_atomic_t fwp_shutdown = 0;
 #endif
 static int fwp_signals_installed = 0;
-#if defined(FWP_LIBRARY) && !defined(FWP_FIBERS)
+#if defined(FWP_LIBRARY) && !defined(FWP_FIBERS) && !defined(_WIN32)
 static struct sigaction fwp_prior_sigint, fwp_prior_sigterm;
 static int fwp_saved_sigint, fwp_saved_sigterm;
 #endif
 
 static int64_t fwp_now_ns(void) {
+#ifdef _WIN32
+    LARGE_INTEGER counter, frequency;
+    if (!QueryPerformanceCounter(&counter) || !QueryPerformanceFrequency(&frequency))
+        fwp_trap("cannot read monotonic clock");
+    return (int64_t)((i128)counter.QuadPart * 1000000000 / frequency.QuadPart);
+#else
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
     return (int64_t)t.tv_sec * 1000000000LL + t.tv_nsec;
+#endif
 }
 
 static int64_t fwp_dur_ns(V d) { return (int64_t)OBJ(d)->f[0]; }
@@ -267,18 +278,29 @@ static fwp_task *fwp_gc_tasks = 0;
 #define FWP_TASK_LOW(t) ((t)->gc_sp)
 #endif
 static void fwp_gc_scan_stacks(char *sp) {
+#ifdef _WIN32
+    char *top = fwp_cur ? fwp_cur->ctx.top : fwp_gc.main_top;
+    fwp_gc_scan_root(sp, top);
+    for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next)
+        if (t != fwp_cur) fwp_win_context_scan(&t->ctx);
+    if (fwp_root && fwp_cur != fwp_root) fwp_win_context_scan(&fwp_root->ctx);
+#else
     char *top = fwp_cur && fwp_cur->stack ? fwp_cur->stack + fwp_cur->stack_size : fwp_gc.main_top;
     fwp_gc_scan_root(sp, top);
     for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next)
         if (t != fwp_cur && t->stack && t->gc_sp) fwp_gc_scan_root(FWP_TASK_LOW(t), t->stack + t->stack_size);
     if (fwp_root && fwp_cur != fwp_root && fwp_root->gc_sp)
         fwp_gc_scan_root(FWP_TASK_LOW(fwp_root), fwp_gc.main_top);
+#endif
 }
 #endif
 
 static void fwp_tasks_init(void) {
     if (fwp_cur) return;
     fwp_root = fwp_task_new();
+#ifdef _WIN32
+    fwp_win_context_root(&fwp_root->ctx);
+#endif
     fwp_cur = fwp_root;
 }
 
@@ -479,6 +501,10 @@ static int fwp_stack_pool_n = 0;
 
 static void fwp_free_zombie(void) {
     if (fwp_zombie && fwp_zombie != fwp_cur) {
+#ifdef _WIN32
+        DeleteFiber(fwp_zombie->ctx.fiber);
+        memset(&fwp_zombie->ctx, 0, sizeof fwp_zombie->ctx);
+#else
 #ifdef FWP_STATIC_MEMORY
         if (1) fwp_static_task_stack_free(fwp_zombie->stack);
         else
@@ -488,6 +514,7 @@ static void fwp_free_zombie(void) {
         else free(fwp_zombie->stack);
 #else
         else munmap(fwp_zombie->stack, fwp_zombie->stack_size);
+#endif
 #endif
         fwp_zombie->stack = 0;
         if (fwp_zombie->gc_prev) fwp_zombie->gc_prev->gc_next = fwp_zombie->gc_next;
@@ -531,6 +558,8 @@ static void fwp_switch(fwp_task *to) {
 #endif
 #ifdef FWP_FIBERS
     ((int (*)(int))(uintptr_t)fwp_hooks.sw)(fwp_fiber_id(to));
+#elif defined(_WIN32)
+    fwp_win_context_switch(&from->ctx, &to->ctx);
 #elif defined(FWP_OWN_CONTEXT)
     fwp_ctx_swap(&from->ctx.sp, to->ctx.sp);
 #else
@@ -557,6 +586,9 @@ static void fwp_poll_events(void) {
     }
 #if defined(FWP_FIBERS)
     if (timeout > 0) fwp_fiber_idle(timeout);
+#elif defined(_WIN32)
+    if (timeout > 0 || fwp_io_waiting)
+        Sleep((DWORD)(fwp_io_waiting && (timeout < 0 || timeout > 10) ? 10 : timeout));
 #elif defined(__linux__)
     if (fwp_io_waiting) {
         struct epoll_event evs[64];
@@ -804,6 +836,14 @@ static void fwp_task_main(void) {
 /* where a new task's first switch returns to */
 static void fwp_ctx_entry(void) { fwp_task_main(); }
 #endif
+#ifdef _WIN32
+static void CALLBACK fwp_win_task_entry(void *arg) {
+    fwp_task *task = (fwp_task *)arg;
+    fwp_win_context_started(&task->ctx);
+    fwp_task_main();
+    abort();
+}
+#endif
 
 static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, int64_t deadline, int detached) {
     fwp_tasks_init();
@@ -829,7 +869,11 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         s->tasks = tasks;
         s->cap = cap;
     }
-#ifdef FWP_FIBERS
+#ifdef _WIN32
+    t->ctx.fiber = CreateFiberEx(65536, FWP_NATIVE_TASK_STACK,
+        FIBER_FLAG_FLOAT_SWITCH, fwp_win_task_entry, t);
+    if (!t->ctx.fiber) fwp_trap("cannot allocate a task stack");
+#elif defined(FWP_FIBERS)
     if (!fwp_hooks.sw)
         fwp_trap("tasks need a WebAssembly host with JavaScript Promise Integration (JSPI), such as the fwp loader in a recent browser");
     /* WebAssembly keeps most locals off this stack (in the engine's own,
@@ -876,7 +920,7 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         memcpy(sp + FWP_CTX_RET, &entry, sizeof entry);
         t->ctx.sp = sp;
     }
-#elif !defined(FWP_FIBERS)
+#elif !defined(FWP_FIBERS) && !defined(_WIN32)
     getcontext(&t->ctx);
     t->ctx.uc_stack.ss_sp = t->stack;
     t->ctx.uc_stack.ss_size = t->stack_size;
@@ -1773,6 +1817,22 @@ static V fwp_p_dns_resolve(V host, const fwp_desc *err) {
 
 #ifdef FWP_FIBERS
 static V fwp_p_shutdown_requested(void) { return fwp_shutdown ? FWP_TRUE : FWP_FALSE; }
+#elif defined(_WIN32)
+static BOOL WINAPI fwp_on_console_signal(DWORD signal) {
+    if (signal != CTRL_C_EVENT && signal != CTRL_BREAK_EVENT && signal != CTRL_CLOSE_EVENT)
+        return FALSE;
+    fwp_shutdown = 1;
+    return TRUE;
+}
+
+static V fwp_p_shutdown_requested(void) {
+    if (!fwp_signals_installed) {
+        if (!SetConsoleCtrlHandler(fwp_on_console_signal, TRUE))
+            fwp_trap("cannot install shutdown handler");
+        fwp_signals_installed = 1;
+    }
+    return fwp_shutdown ? FWP_TRUE : FWP_FALSE;
+}
 #else
 static void fwp_on_signal(int sig) {
     (void)sig;
@@ -1878,10 +1938,14 @@ static void fwp_library_tasks_finish(void) {
         }
     }
     fwp_free_zombie();
-#ifndef FWP_STATIC_MEMORY
+#ifdef _WIN32
+    if (fwp_root) fwp_win_context_root_finish(&fwp_root->ctx);
+#elif !defined(FWP_STATIC_MEMORY)
     while (fwp_stack_pool_n) munmap(fwp_stack_pool[--fwp_stack_pool_n], FWP_NATIVE_TASK_STACK);
 #endif
+#ifndef _WIN32
     if (fwp_epfd >= 0) close(fwp_epfd);
+#endif
     fwp_epfd = -1;
 #ifdef __linux__
     fwp_fdws = 0;
@@ -1896,6 +1960,10 @@ static void fwp_library_tasks_finish(void) {
     fwp_state = 0;
     fwp_state_len = fwp_state_cap = 0;
     fwp_state_owners = 0;
+#ifdef _WIN32
+    if (fwp_signals_installed) SetConsoleCtrlHandler(fwp_on_console_signal, FALSE);
+    fwp_signals_installed = 0;
+#else
     struct sigaction current;
     if (fwp_saved_sigint && sigaction(SIGINT, 0, &current) == 0 &&
         !(current.sa_flags & SA_SIGINFO) && current.sa_handler == fwp_on_signal)
@@ -1904,6 +1972,7 @@ static void fwp_library_tasks_finish(void) {
         !(current.sa_flags & SA_SIGINFO) && current.sa_handler == fwp_on_signal)
         sigaction(SIGTERM, &fwp_prior_sigterm, 0);
     fwp_saved_sigint = fwp_saved_sigterm = fwp_signals_installed = 0;
+#endif
     fwp_shutdown = 0;
     for (size_t i = 0; i < fwp_nmetrics; i++) free(fwp_metrics[i].name);
     free(fwp_metrics);
@@ -1917,6 +1986,22 @@ static void fwp_library_tasks_finish(void) {
 #ifdef FWP_FIBERS
 /* the engine reports an exhausted stack (web/fibers.js and the loaders) */
 static void fwp_stack_guard_init(size_t size) { (void)size; }
+#elif defined(_WIN32)
+static LONG CALLBACK fwp_stack_exception(EXCEPTION_POINTERS *exception) {
+    if (exception->ExceptionRecord->ExceptionCode != EXCEPTION_STACK_OVERFLOW)
+        return EXCEPTION_CONTINUE_SEARCH;
+    static const char message[] = "fwp: trap: stack overflow\n";
+    DWORD written;
+    WriteFile(GetStdHandle(STD_ERROR_HANDLE), message, sizeof message - 1, &written, NULL);
+    ExitProcess(101);
+}
+
+static void fwp_stack_guard_init(size_t size) {
+    (void)size;
+    ULONG guarantee = 65536;
+    if (!SetThreadStackGuarantee(&guarantee) || !AddVectoredExceptionHandler(1, fwp_stack_exception))
+        fwp_trap("cannot install stack overflow handler");
+}
 #else
 /*
  * A fault next to the end of the running stack (the main thread's, of
