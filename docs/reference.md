@@ -437,7 +437,7 @@ fwp build file.fwp [options]                  compile
     --gc arc         checked native main programs with counted ownership;
                      unsupported value/runtime boundaries diagnose
     --gc tracing     existing tracing compatibility mode (the default)
-    --memory static  all memory mapped once at startup (see below), with
+    --memory static  bounded runtime storage and stacks at startup, with
                      --heap S, --pool S, --stack S, --tasks N,
                      --task-stack S and --threads N
     --wasm-async A   jspi (default) or asyncify: how tasks switch on WebAssembly

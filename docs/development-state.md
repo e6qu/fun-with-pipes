@@ -105,13 +105,25 @@ PEM client keys and compare the limited Windows reset/alert failure category.
   shared-library unloads. Omitted releases must fail. Guarded formatting and
   focused lint pass; these new cases require runner execution.
   At `2f70e2f8` in
-  [38551928641](https://github.com/e6qu/fun-with-pipes/actions/runs/38551928641).
+  [38551928641](https://github.com/e6qu/fun-with-pipes/actions/runs/38551928641),
   managed library unload and omitted-free controls pass. The failure-injection
   fixture matched a second unrelated result constructor; its marker is now
   restricted to the managed backward result, and rerun is required.
   A subsequent review found that native managed tapes lacked the interpreter's
   task-owner check. Native task identity and WASM interpreter fiber identity
   are now explicit, with a raw/native cross-task rejection test pending.
+- At `e5fecb81`, [38552876157](https://github.com/e6qu/fun-with-pipes/actions/runs/38552876157)
+  passes managed failure/cancellation and unload controls on Linux AMD64.
+  Cross-task testing failed before execution because the function-producing
+  fixture needed explicit `compose work task.spawn`; that is repaired. Root
+  identity is stable across later scheduler startup without allocating task
+  storage merely to differentiate. A positive regression covers this case.
+  [Windows 38552879801](https://github.com/e6qu/fun-with-pipes/actions/runs/38552879801)
+  is running native foundations before the pinned OpenSSL/curl dependency build.
+- The guarded exact-head primitive audit passes at `e5fecb81`: 378 declarations,
+  224 explicit contracts and unchanged frozen baseline evidence. Generated
+  library documentation caused the merged main CI to fail its preflight;
+  `c230a360` already regenerates it in this PR. Remaining full gates must rerun.
 - `scripts/measure-checkpoint.py` compares the same 4096-step additive VJP with
   a full tape and intervals 16/32/64. It records compiler/hardware/flags,
   managed and tape allocations/live bytes, process timings and native assembly;

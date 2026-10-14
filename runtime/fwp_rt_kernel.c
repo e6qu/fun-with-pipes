@@ -27,7 +27,7 @@
 typedef struct fwp_owned_tape {
     struct fwp_owned_tape *prev, *next;
     const fwp_desc *elem;
-    fwp_task *task;
+    fwp_task *task; /* NULL identifies the root before and after task startup. */
     V zero, add, mul, inactive_zero;
     V *weights, *adj;
     int64_t leaves, len, cap, nadj;
@@ -322,13 +322,12 @@ static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
 static V fwp_p_ad_tape(V nv) { return fwp_ad_tape_new(nv, NULL); }
 
 static V fwp_p_ad_tape_owned(V parameters, V inputs, const fwp_desc *elem) {
-    fwp_tasks_init();
     int64_t n = (int64_t)fwp_list_len(inputs);
     if (n < 0 || n > fwp_tape_limit()) fwp_trap("autodiff: too many inputs");
     fwp_owned_tape *owner = fwp_mem_alloc(sizeof *owner);
     memset(owner, 0, sizeof *owner);
     owner->elem = elem;
-    owner->task = fwp_cur;
+    owner->task = fwp_cur == fwp_root ? NULL : fwp_cur;
     owner->zero = OBJ(parameters)->f[0];
     owner->add = OBJ(parameters)->f[1]; owner->mul = OBJ(parameters)->f[2];
     owner->inactive_zero = OBJ(parameters)->f[3];
@@ -433,7 +432,8 @@ static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {
     fwp_tape *t = fwp_tape_of(id);
     fwp_owned_tape *owner = t->owned;
     if (!owner || owner->elem != elem) fwp_trap(FWP_AD_REPRESENTATION);
-    if (owner->task != fwp_cur) fwp_trap("autodiff: managed tape belongs to another task");
+    if (owner->task != (fwp_cur == fwp_root ? NULL : fwp_cur))
+        fwp_trap("autodiff: managed tape belongs to another task");
     int64_t idx = t->len;
     if (idx >= fwp_tape_limit()) fwp_trap("autodiff: the tape is full");
     if ((ra >= 0 && (ra & 0xffffffff) >= idx) || (rb >= 0 && (rb & 0xffffffff) >= idx))
@@ -461,7 +461,8 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
     fwp_tape *t = fwp_tape_of(id);
     fwp_owned_tape *owner = t->owned;
     if (!owner || owner->elem != list_type->elem) fwp_trap(FWP_AD_REPRESENTATION);
-    if (owner->task != fwp_cur) fwp_trap("autodiff: managed tape belongs to another task");
+    if (owner->task != (fwp_cur == fwp_root ? NULL : fwp_cur))
+        fwp_trap("autodiff: managed tape belongs to another task");
     fwp_tape_unlink_scope(t);
     fwp_tape tp = *t;
     t->owned = NULL; t->live = 0;

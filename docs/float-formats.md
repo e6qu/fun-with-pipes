@@ -1,38 +1,42 @@
 # Floating-point representation and migration
 
-PR #134 is the accepted baseline: F16/BF16 used F32 arithmetic and F128 used
-F64 arithmetic. The active PR #135 migrates these types to their actual formats
-and changes the protocol version to 2. Scalar, array and foreign ABI integration
-has focused runner coverage; complete ownership and six-platform acceptance remain.
-Keep conversion explicit and precision independent of the host.
+PR #135 merged actual F16/BF16/F128 implementation and protocol version 2.
+Focused scalar, array, foreign ABI and ownership tests pass on Linux/macOS;
+PR #136 completes remaining platform and lifetime acceptance. Keep conversion
+explicit and precision independent of the host.
 
-| Language type | Accepted PR #134 arithmetic/payload | Protocol v1 bytes | PR #135 format and v2 payload |
-|---|---|---|---|
-| F16 | binary32, 24 significant bits | 4, little endian | binary16: 1 sign, 5 exponent, 10 fraction bits; 2 bytes |
-| BF16 | binary32, 24 significant bits | 4, little endian | bfloat16: 1 sign, 8 exponent, 7 fraction bits; 2 bytes |
-| F32 | binary32 | 4, little endian | Unchanged |
-| F64 | binary64 | 8, little endian | Unchanged |
-| F128 | binary64, 53 significant bits | 8, little endian | binary128: 1 sign, 15 exponent, 112 fraction bits; 16 bytes |
+| Language type | Arithmetic format | Protocol v2 payload |
+|---|---|---|
+| F16 | binary16: 1 sign, 5 exponent, 10 fraction bits | 2 bytes, little endian |
+| BF16 | bfloat16: 1 sign, 8 exponent, 7 fraction bits | 2 bytes, little endian |
+| F32 | binary32: 24 significant bits | 4 bytes, little endian |
+| F64 | binary64: 53 significant bits | 8 bytes, little endian |
+| F128 | binary128: 1 sign, 15 exponent, 112 fraction bits | 16 bytes, little endian |
 
-These intended formats follow the [LLVM floating-point type definitions](https://llvm.org/docs/LangRef.html#floating-point-types).
+Protocol v1 used wider half payloads and a narrower quad payload; version 2
+rejects that incompatible wire format. Prior representation evidence remains
+in [history](roadmap-history.md), not as an alternative arithmetic mode.
+
+These formats follow the [LLVM floating-point type definitions](https://llvm.org/docs/LangRef.html#floating-point-types).
 The half and bfloat layouts are also specified in [Clang's type documentation](https://clang.llvm.org/docs/LanguageExtensions.html#half-precision-floating-point).
 This is a representation decision, not a decision to replace the C backend.
 
 ## Current contract
 
-On the working branch, interpreter values, native scalar arithmetic, text/JSON
+Interpreter values, native scalar arithmetic, text/JSON
 and protocol encoding use binary16/bfloat16/binary128. Half and bfloat native
 arrays use two-byte elements. F128 generic values are boxed 16-byte leaves;
 arrays now store 16-byte elements at eight-byte alignment, copying into an owned
 box when a scalar escapes. Half/bfloat workers use u16 bits. Closed quad workers
 use direct bit-struct arithmetic, with passing four-host execution controls.
 Closed flat numeric records now carry quad/wide values in C structs between
-workers; their new ownership and measurement controls are pending. Generic
+workers; four-host ownership controls and measured allocation reductions are
+recorded in [the measurement artifact](measurements/wide-records-2026-10-14.json). Generic
 boundaries box once and register partially constructed results for unwind.
 The C boundary maps half/bfloat to u16 bits and quad to `struct fwp_binary128`,
 including record fields, callbacks and pointer access. The handoff records
 which native ABI/export checks have completed.
-This partial integration does not establish accepted format support. Protocol
+Final acceptance still requires the full platform gates. Protocol
 golden-byte tests cover widths, signed zero, infinities and NaN payload transport;
 the handoff links raw/native regression results and remaining acceptance gates.
 

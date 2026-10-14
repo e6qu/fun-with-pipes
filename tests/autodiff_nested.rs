@@ -269,7 +269,7 @@ fn managed_tapes_reject_cross_task_use_in_both_engines() {
 work : List[Rev[Rev[F64]]] -> () -> Rev[Rev[F64]]
 work = curry (.0 | head | option.unwrap-or zero | fork mul id id)
 main = [1.0] | rev._seed | .1 | rev._seed | .1
-    | work | task.spawn | task.await | ignore
+    | compose work task.spawn | task.await | ignore
 "#,
     )
     .unwrap();
@@ -294,7 +294,7 @@ main = [1.0] | rev._seed | .1 | rev._seed | .1
             .arg("-o")
             .arg(&binary),
     );
-    let actual = Command::new(binary)
+    let actual = Command::new(&binary)
         .env("FWP_GC_STRESS", "1")
         .env("FWP_GC_VERIFY", "1")
         .env("FWP_REUSE_VERIFY", "1")
@@ -306,4 +306,36 @@ main = [1.0] | rev._seed | .1 | rev._seed | .1
         String::from_utf8_lossy(&actual.stderr).contains(message),
         "{actual:?}"
     );
+    // Starting the scheduler later must not change the root tape's identity.
+    std::fs::write(
+        &source,
+        r#"
+main = [1.0] | rev._seed | .1 | rev._seed | .1
+    | tap (compose (const (const ())) task.spawn | task.await | ignore)
+    | head | option.unwrap-or zero | fork mul id id | .value | .value | echo
+"#,
+    )
+    .unwrap();
+    let reference = checked(
+        Command::new(compiler)
+            .args(["run", "--interp"])
+            .arg(&source)
+            .env("FWP_NO_OPT", "1"),
+    );
+    assert_eq!(reference.stdout, b"1.0\n");
+    checked(
+        Command::new(compiler)
+            .args(["build", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&binary),
+    );
+    let actual = checked(
+        Command::new(&binary)
+            .env("FWP_GC_STRESS", "1")
+            .env("FWP_GC_VERIFY", "1")
+            .env("FWP_REUSE_VERIFY", "1"),
+    );
+    assert_eq!(actual.stdout, reference.stdout);
+    assert_eq!(actual.stderr, reference.stderr);
 }

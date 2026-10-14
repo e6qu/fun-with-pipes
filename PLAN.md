@@ -49,26 +49,21 @@ Retain all seven Linux/macOS production jobs and add required native Windows
 coverage before claiming six-platform support. Cross-compilation between every
 host/target pair is not implied.
 
-## Delivered
+## Implemented so far
 
-| Area | Accepted result | Boundary |
+| Area | Current implementation | Verification boundary |
 |---|---|---|
-| Native macOS | ARM and Intel support, both engines and full platform gates | Separate binary per OS/architecture meets the packaging objective |
-| Runtime ownership | Typed Dup/Drop, reuse, aliases, cleanup on unwind/cancellation, scoped resources | Unproved runtime graphs and cycles still require tracing |
-| Numeric representation | Natural-width eligible arrays, retained views, typed scalar/aggregate ABI | Generic I128/U128 boundaries remain boxed; half/wide floats retain existing representations |
-| Compiler and autodiff | Fused numerical loops, blocked matrices, bounded reusable AD workspaces | Fusion preserves effects, checked traps and floating-point order |
-| Performance evidence | Allocation/count/live-memory controls and scoped C/Rust comparisons | No universal speed or cache-efficiency claim |
-| Checked native ARC | Collector-free execution for admitted ownership graphs, scoped File owners and scalar foreign-C calls | Managed foreign pointers/callbacks and unproved graphs remain outside the proved subset |
-| WASM reclamation | Physical freeing of proved typed owners and closed File headers | Unproved shared/cyclic graphs remain retained |
-| Exact-format foundations | Shared half/bfloat/quad arithmetic, decimal and math cores; literal text preserved through macros | Language values/storage/ABI/protocol have not migrated |
-| Windows foundations | Native Rust interpreter goldens, sockets/DLLs and C allocator/PE root probes on both architectures | Complete generated C runtime and standalone packages remain |
-| Tacit examples and CI | Explicit `const` explanations; balanced macOS test shards | Full coverage and resource limits preserved |
-| Iteration and records | `iter.fold`, `iter.each`, `iter.find`, `fold-until`, `map-accum`, `make { .field }` | Direct count/list/iterate producer chains and known State callbacks specialize; other lazy tails can allocate |
+| Native platforms | Linux/macOS ARM64 and AMD64; Windows allocator, fibers, sockets, Unicode paths/processes, TLS and PE packages | Linux/macOS support accepted previously; Windows static storage and TLS peer repairs need native acceptance |
+| Ownership | Typed Dup/Drop, reuse, scoped File/State owners, retained tasks, synchronous foreign callbacks, CLI/protocol lifetimes | Checked ARC rejects unproved cycles and resource graphs; final follow-up gates remain |
+| Numeric storage | Natural-width arrays, retained views, wide scalar/record workers, actual F16/BF16/F128 and protocol v2 | Four-host exact-format/ABI proofs and wide-record measurements pass; final six-platform gates remain |
+| Iteration | Tacit data-last combinators, direct count/list/iterate/array producer fusion, known State callbacks and numeric self-tail loops | Allocation and instruction probes preserve effects, forcing and traps; some general lazy tails still allocate |
+| Autodiff | Nested reverse mode, explicit segmented checkpointing and bounded numeric workspaces | Analytical, ARC and checkpoint controls pass four hosts; new managed failure/task/unload and measurement checks are running |
+| Language design | Strong ordinary inference, explicit generic specialization, checked arithmetic, immutable values and tracked effects | Pipe semantics and explicit `const` remain stable; no new parser mechanism is needed for these runtime improvements |
 
-Phases 1–6 were accepted through PR #128; documentation, examples/CI and
-iteration/projection follow-ups through #129–131. [History](docs/roadmap-history.md)
-indexes verification and measurements. [Preparation anchors](docs/roadmap-queue.md)
-remain immutable evidence, not work to repeat.
+[History](docs/roadmap-history.md) retains prior acceptance and measurements.
+[Preparation anchors](docs/roadmap-queue.md) remain immutable evidence, not work
+to repeat. The table distinguishes implementation from the remaining acceptance
+work; it does not claim universal collector-free execution or C/Rust performance.
 
 ## Remaining roadmap
 

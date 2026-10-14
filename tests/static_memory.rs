@@ -1,6 +1,6 @@
 //! Static memory (`fwp build --memory static`, runtime/fwp_rt_static.c):
-//! every golden program behaves the same with all of its memory mapped at
-//! startup; nothing is asked of the operating system after that (checked
+//! Linux golden programs behave the same with runtime storage mapped at
+//! startup; the standalone workload makes no later memory mappings (checked
 //! with strace where it is installed); a loop that allocates far more than
 //! the heap runs in it; and running out of a part says which option to
 //! raise.

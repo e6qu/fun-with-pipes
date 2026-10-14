@@ -32,9 +32,9 @@ usage:
                                  exposed as `rest` an
                                  endpoint of one HTTP server, with JSON
                                  and an OpenAPI document (see docs/rest.md);
-                                 --memory static maps all of the program's
-                                 memory once at startup, of the given sizes
-                                 (such as 64M), and none after it;
+                                 --memory static bounds runtime storage
+                                 and stacks at startup, with sizes such as
+                                 64M; DLL and OS resources are separate;
                                  --target aarch64-linux (or another
                                  64-bit Linux: x86_64, riscv64, ...)
                                  cross-compiles with that system's C

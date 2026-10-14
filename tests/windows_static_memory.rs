@@ -169,3 +169,23 @@ fn fixed_storage_exhaustion_names_the_configured_part() {
         );
     }
 }
+
+#[test]
+fn fatal_task_traps_keep_their_exit_status_with_static_fibers() {
+    let dir = fwp::cgen::TempDir::new("windows-static-trap").unwrap();
+    let source = dir.join("trap.fwp");
+    std::fs::write(&source, "bad : () -> I64\nbad = const \"static task trap\" | prim.trap\nmain = task.spawn bad | task.await | ignore\n").unwrap();
+    for gc in ["tracing", "arc"] {
+        let binary = dir.join("trap.exe");
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["build", "--memory", "static", "--gc", gc, "-O2"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&binary),
+        );
+        let out = Command::new(binary).output().unwrap();
+        assert_eq!(out.status.code(), Some(101), "{gc}: {out:?}");
+        assert_eq!(out.stderr, b"fwp: trap: static task trap\n");
+    }
+}

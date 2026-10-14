@@ -872,9 +872,13 @@ static void CALLBACK fwp_win_task_entry(void *arg) {
     for (;;) fwp_task_main();
 }
 static void fwp_static_fibers_finish(void) {
+    /* Normally the runtime thread has joined; detached fibers can remain
+     * suspended. A fatal exit can instead originate on a fiber: Windows owns
+     * that current stack until process exit, so never delete it underneath us. */
+    void *current = IsThreadAFiber() ? GetCurrentFiber() : NULL;
     for (int i = 0; i < FWP_STATIC_TASKS; i++) {
-        if (fwp_static_fibers[i].busy) abort();
-        DeleteFiber(fwp_static_fibers[i].fiber);
+        if (fwp_static_fibers[i].fiber != current)
+            DeleteFiber(fwp_static_fibers[i].fiber);
         fwp_static_fibers[i].fiber = NULL;
     }
 }
