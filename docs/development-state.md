@@ -1,7 +1,7 @@
 # Session handoff
 
 Updated 2026-10-14. The user requested continued development after PR #136
-completed the six-step roadmap. Current branch: `autodiff-active-prefix`.
+completed the six-step roadmap. Current branch: `autodiff-active-prefix`, [PR #137](https://github.com/e6qu/fun-with-pipes/pull/137) (draft).
 Publication, fixes and squash merge after all final-head gates remain authorized.
 
 ## Roadmap status
@@ -51,6 +51,12 @@ idempotence validation of `ad_unused_suffix.fwp` (0.52s), measurement-script
 syntax (0.15s), and `python3 scripts/check-roadmap.py` (48 link sets, 106 anchors,
 7 steps, 2.87s) pass. Full native/WASM suites and measurements remain on runners.
 
+Workspace growth refinement: all four focused interpreter tests pass again
+(13.52s). New native controls exercise cold/warm storage with GC and reuse
+verification and reject full-storage/full-scan regressions. Growing an existing
+adjoint workspace retains geometric growth; a cold workspace uses only the
+required prefix. Workflow lint passes (0.89s).
+
 ## Boundaries
 
 Checked native ARC still rejects unproved cycles, mutable/retained graphs and
@@ -61,9 +67,10 @@ allocate. Checkpointing trades work for memory; prior measurements remain in
 
 ## Next action
 
-Next: publish this branch as a draft PR and dispatch the `autodiff` focused
-workflow, which includes prefix allocation/scan negative controls and four-host
-equivalent-workload measurements.
+Next: dispatch and monitor the `autodiff` and `wasm` focused workflows for the
+current head. Initial runs 38600695264/38600698982 at `5f2aeac0` were cancelled
+while queued because they predate the workspace growth refinement. They are
+not final evidence.
 Fix every failure, record measured results, then require all nine production
 jobs plus docs on the final head before squash merge with one line of at most
 80 characters and an empty body. Keep this follow-up together in one PR.

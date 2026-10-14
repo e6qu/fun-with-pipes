@@ -104,6 +104,6 @@ int main(void) {
     fwp_p_ad_backward(selected_base,outputs,seeds);
     if (fwp_cleanups) return 51;
     fwp_trap_recover=0;fwp_trap_jb=0;
-    puts("autodiff releases five detached buffers on return, trap and task cancellation");
+    puts("autodiff releases allocated detached buffers on return, trap and task cancellation");
     return 0;
 }

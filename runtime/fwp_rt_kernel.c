@@ -407,7 +407,9 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     int64_t needed = active ? active : 1;
     double *adj = buffers.adj;
     if (buffers.adjcap < needed) {
-        int64_t capacity = needed;
+        int64_t capacity = buffers.adjcap ? buffers.adjcap : needed;
+        while (capacity < needed)
+            capacity = capacity > fwp_tape_limit() / 2 ? needed : capacity * 2;
         adj = buffers.adj ? (double *)realloc(buffers.adj, (size_t)capacity * sizeof(double))
                           : (double *)calloc((size_t)capacity, sizeof(double));
         if (adj) { buffers.adj = adj;buffers.adjcap = capacity; }

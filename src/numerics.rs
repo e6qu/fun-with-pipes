@@ -331,7 +331,10 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
         active = active.max(node + 1);
     }
     if t.adj.capacity() < active {
-        t.adj.reserve_exact(active - t.adj.len());
+        let capacity = active
+            .max(t.adj.capacity().saturating_mul(2))
+            .min(tape_limit());
+        t.adj.reserve_exact(capacity - t.adj.len());
     }
     t.adj.resize(active, 0.0);
     t.adj.fill(0.0);
@@ -1303,6 +1306,20 @@ mod tape_validation_tests {
         let base = tape_new(3).unwrap();
         let result = backward(base, &[-1], &[f64::NAN]).unwrap();
         assert!(result.iter().all(|value| value.to_bits() == 0));
+        if workspace_enabled() {
+            let mut previous = 4;
+            let mut growths = 0;
+            for leaves in 5..=33 {
+                let base = tape_new(leaves).unwrap();
+                assert!(backward(base, &[], &[]).unwrap().iter().all(|v| *v == 0.0));
+                let pool = TAPE_WORKSPACE.lock().unwrap();
+                let capacity = pool.as_ref().unwrap().adj.capacity();
+                assert!(capacity >= leaves as usize && capacity < 2 * leaves as usize);
+                growths += usize::from(capacity != previous);
+                previous = capacity;
+            }
+            assert_eq!(growths, 4);
+        }
         let base = tape_new(1).unwrap();
         assert_eq!(
             backward(base, &[base, base, base], &[1e16, 1.0, -1e16]).unwrap(),

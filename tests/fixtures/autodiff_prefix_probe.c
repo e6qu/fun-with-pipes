@@ -39,6 +39,21 @@ int main(void) {
     int result=prefix_case(3,0);if(result)return result;
     result=prefix_case(3,1);if(result)return result;
     result=prefix_case(0,1);if(result)return result;
+    if(fwp_tape_workspace_enabled()) {
+        V outs=fwp_rc_fresh(fwp_arr_new(0)),seeds=fwp_rc_fresh(fwp_arr_new(0));
+        size_t previous=0;int growths=0;
+        for(int64_t n=1;n<=65;n++) {
+            V base=fwp_p_ad_tape((V)n);
+            V values=fwp_rc_fresh(fwp_p_ad_backward(base,outs,seeds));
+            if(ARR(values)->len!=(size_t)n)return 242;
+            for(int64_t i=0;i<n;i++)if(fwp_f64(ARR(values)->d[i])!=0.0)return 243;
+            fwp_rc_free_arr(values);
+            if(prefix_adj_bytes<(size_t)n*8 || prefix_adj_bytes>=(size_t)n*16)return 246;
+            growths+=prefix_adj_bytes!=previous;previous=prefix_adj_bytes;
+        }
+        if(growths!=8)return 246;
+        fwp_rc_free_arr(outs);fwp_rc_free_arr(seeds);fwp_tape_finish();
+    }
     puts("numeric backward prefix preserves inputs and bounds adjoints and scans");
     return 0;
 }

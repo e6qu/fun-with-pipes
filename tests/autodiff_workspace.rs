@@ -157,9 +157,9 @@ fn backward_prefix_bounds_actual_native_storage_and_scans() {
             let binary = directory.join(name);
             let code = format!("{code}\n{probe}");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for reuse in ["0", "1"] {
+            for (cache, reuse) in [("0", "0"), ("0", "1"), ("1", "0"), ("1", "1")] {
                 let output = Command::new(&binary)
-                    .env("FWP_AD_WORKSPACE", "0")
+                    .env("FWP_AD_WORKSPACE", cache)
                     .env("FWP_GC_STRESS", "1")
                     .env("FWP_GC_VERIFY", "1")
                     .env("FWP_REUSE_VERIFY", reuse)
@@ -168,12 +168,13 @@ fn backward_prefix_bounds_actual_native_storage_and_scans() {
                 assert_eq!(
                     output.status.code(),
                     Some(status),
-                    "{name} {opt} {reuse}: {output:?}"
+                    "{name} {opt} cache={cache} reuse={reuse}: {output:?}"
                 );
                 if let Some(destination) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
                     let destination = std::path::PathBuf::from(destination);
                     std::fs::create_dir_all(&destination).unwrap();
-                    let prefix = destination.join(format!("prefix-{name}-{opt}-reuse{reuse}"));
+                    let prefix =
+                        destination.join(format!("prefix-{name}-{opt}-cache{cache}-reuse{reuse}"));
                     std::fs::write(prefix.with_extension("c"), &code).unwrap();
                     std::fs::write(prefix.with_extension("status"), format!("{output:?}\n"))
                         .unwrap();
