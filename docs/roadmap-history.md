@@ -318,3 +318,15 @@ peak tape bytes 262,248 → 2,152 while increasing managed peak 336 → 12,816,
 allocations and elapsed time. These separate peaks need not coincide. All
 measured storage is reclaimed without collection; neither result establishes
 universal allocation-free execution or C/Rust performance parity.
+
+
+## PR #136 merge acceptance
+
+Merged as `2684241dfb474fd489ec2e3e328627b1c143bed0`, tree-identical to
+`26f2c68adab671ec54c29dbf2bc02df251a679b6`.
+[Production 38583750060](https://github.com/e6qu/fun-with-pipes/actions/runs/38583750060)
+passes all nine jobs and [docs 38583749770](https://github.com/e6qu/fun-with-pipes/actions/runs/38583749770)
+passes at that head. Intel GC finishes in 73 minutes after rebalancing REST and
+wide-worker tests, with complete coverage and unchanged limits. This accepts
+all six roadmap steps. The squash message has one line and no body or trailers.
+Later work follows the user's subsequent request to continue.

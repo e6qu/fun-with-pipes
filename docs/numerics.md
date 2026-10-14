@@ -107,6 +107,16 @@ error; nesting does not relax stale-token or generation checks.
 Base-float reverse mode uses 24 bytes per operation before adjoint storage and
 capacity rounding. Nested weights additionally own their scalar representation.
 
+Numeric backward passes retain adjoints for every input and for the tape prefix
+through the last seeded output. Later recorded nodes cannot contribute because
+parents precede children. This bounds adjoint allocation and reverse scans;
+forward evaluation still runs in full, including traps. Duplicate seeds accumulate
+in their original order. Validation still consumes the tape and checks output
+identity/bounds in order before allocating new adjoint storage. A cached larger
+workspace can remain allocated within its existing budget. Managed nested tapes
+retain their existing callback propagation rules. The current handoff records
+validation and measured costs for this follow-up.
+
 `xs | vjp-checkpointed {steps = 1000, every = 32} step seeds` differentiates
 1000 applications of a pure `step`. Both counts are explicit: `steps` must be
 nonnegative and `every` positive. The forward pass saves ordinary input values

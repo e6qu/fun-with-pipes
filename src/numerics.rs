@@ -314,13 +314,10 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
     forget_scoped_tape(id);
     let mut owner = TapeOwner(t);
     let t = &mut owner.0;
-    if t.adj.capacity() < t.pa.len() {
-        t.adj.reserve_exact(t.pa.len() - t.adj.len());
-    }
-    t.adj.resize(t.pa.len(), 0.0);
-    t.adj.fill(0.0);
-    let adj = &mut t.adj;
-    for (o, s) in outs.iter().zip(seeds.iter()) {
+    // Parents precede children, so no node after the last seeded output can
+    // contribute. Preserve all input adjoints and output validation order.
+    let mut active = t.leaves;
+    for o in outs.iter().take(seeds.len()) {
         if *o < 0 {
             continue;
         }
@@ -328,12 +325,25 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
             return trap(MIXED);
         }
         let node = (*o & 0xffff_ffff) as usize;
-        if node >= adj.len() {
+        if node >= t.pa.len() {
             return trap(INVALID_NODE);
         }
+        active = active.max(node + 1);
+    }
+    if t.adj.capacity() < active {
+        t.adj.reserve_exact(active - t.adj.len());
+    }
+    t.adj.resize(active, 0.0);
+    t.adj.fill(0.0);
+    let adj = &mut t.adj;
+    for (o, s) in outs.iter().zip(seeds.iter()) {
+        if *o < 0 {
+            continue;
+        }
+        let node = (*o & 0xffff_ffff) as usize;
         adj[node] += *s;
     }
-    for i in (t.leaves..t.pa.len()).rev() {
+    for i in (t.leaves..active).rev() {
         let a = adj[i];
         if a == 0.0 {
             continue;
@@ -1267,6 +1277,48 @@ mod tape_validation_tests {
             Err(Ctl::Trap(message)) => assert_eq!(message, expected),
             _ => panic!("expected autodiff trap: {expected}"),
         }
+    }
+
+    #[test]
+    fn backward_ignores_unseeded_suffix_and_preserves_input_and_seed_order() {
+        let _serial = TAPE_TEST_LOCK.lock().unwrap();
+        *TAPE_WORKSPACE.lock().unwrap() = None;
+        let base = tape_new(3).unwrap();
+        let early = push(base, 2.0, base + 1, 3.0).unwrap();
+        let mut tail = early;
+        for _ in 0..4096 {
+            tail = push(tail, f64::NAN, -1, 0.0).unwrap();
+        }
+        assert_eq!(
+            backward(base, &[early, base, early, -1], &[2.0, 7.0, 1.0, f64::NAN]).unwrap(),
+            [13.0, 9.0, 0.0]
+        );
+        if workspace_enabled() {
+            let pool = TAPE_WORKSPACE.lock().unwrap();
+            let cached = pool.as_ref().unwrap();
+            assert_eq!(cached.adj.capacity(), 4);
+            assert!(cached.pa.capacity() >= 4100);
+        }
+        // Reusing a larger workspace must clear the retained input prefix.
+        let base = tape_new(3).unwrap();
+        let result = backward(base, &[-1], &[f64::NAN]).unwrap();
+        assert!(result.iter().all(|value| value.to_bits() == 0));
+        let base = tape_new(1).unwrap();
+        assert_eq!(
+            backward(base, &[base, base, base], &[1e16, 1.0, -1e16]).unwrap(),
+            [0.0]
+        );
+        let base = tape_new(0).unwrap();
+        assert!(backward(base, &[], &[]).unwrap().is_empty());
+        // Earlier invalid indices keep precedence over later foreign tapes.
+        let base = tape_new(1).unwrap();
+        let other = tape_new(1).unwrap();
+        expect_trap(
+            backward(base, &[base + 1, other], &[1.0, 1.0]),
+            INVALID_NODE,
+        );
+        assert_eq!(backward(other, &[other], &[2.0]).unwrap(), [2.0]);
+        *TAPE_WORKSPACE.lock().unwrap() = None;
     }
 
     #[test]

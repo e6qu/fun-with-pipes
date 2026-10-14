@@ -1,0 +1,12 @@
+# Recording later operations must not change the derivative of earlier outputs.
+unused : List[Rev[F64]] -> List[Rev[F64]]
+unused = tap (rev._replay 64 (map (add 1.0)) | ignore)
+early : List[Rev[F64]] -> List[Rev[F64]]
+early = map (mul 2.0) | unused
+main = [
+    [2.0, 3.0, 4.0] | vjp unused [1.0, 2.0, 3.0] | echo,
+    [2.0, 3.0, 4.0] | vjp early [1.0, 2.0, 3.0] | echo,
+    [] | vjp unused [] | echo,
+    [2.0, 3.0] | vjp (unused | const [rev.const 5.0]) [1.0] | echo,
+    [0.0] | vjp (map (mul 0.0) | unused) [1.0] | echo,
+] | ignore

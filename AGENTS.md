@@ -11,17 +11,17 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-The six-step roadmap is implemented; PR #136 delivers its final
-closeout. At a session restart, inspect that PR and the handoff first. If it is
-open, keep its remaining documentation, validation and fixes together on
-`roadmap-after-135`, require all final-head gates, and squash merge. If it is
-merged with passing gates, this roadmap is complete: do not replay historical
-preparation entries or start another implementation PR without new user direction.
+PR #136 completed the six-step platform/ownership roadmap as `2684241d`, with
+all nine production jobs and docs passing. The user requested continued work.
+The current follow-up bounds numeric backward-pass storage and scans to the
+seeded prefix; keep its implementation, regression controls, measurements and
+docs together on `autodiff-active-prefix`. Follow the live plan and handoff.
 
-The user's authorization covers this closeout, publication, fixes and merge.
-Failing tests are tasks to fix. Queued CI gates merging, not independent work.
-Do not request the same permission again. A new backend, JIT and distributed
-execution remain outside this bundle.
+Standing authorization covers publication, fixes and squash merge after all
+final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,
+not independent work. Do not request the same permission again. Historical
+preparation entries are not new work. A new backend, JIT and distributed
+execution remain outside scope.
 
 Retain all nine production gates: Linux ARM64/AMD64, regular and GC-stress
 ARM/Intel macOS, C/Rust benchmarks and native Windows ARM64/AMD64, plus the

@@ -1,17 +1,15 @@
 # Plan
 
-The six-step roadmap is implemented. [PR #136](https://github.com/e6qu/fun-with-pipes/pull/136)
-delivers its final repairs and documentation after the user merged PR #135.
-Eight production jobs and documentation pass at `01c686d1`; Intel macOS GC
-reached its time limit without a failed assertion. Its partition is rebalanced
-for the final gate. [The handoff](docs/development-state.md) and
-[history](docs/roadmap-history.md) record the evidence and acceptance rule.
+The six-step platform/ownership roadmap was accepted in
+[PR #136](https://github.com/e6qu/fun-with-pipes/pull/136), merged as `2684241d`.
+All nine production jobs and documentation passed at its tree-identical head
+`26f2c68a`. The user subsequently requested continued development.
 
-There is no remaining implementation task in this bundle. Delivery completes
-when PR #136 is merged after all required checks pass on its final head.
-At a session restart, inspect that PR first: if it is open, finish its gates
-and squash merge; if it is merged with passing gates, this roadmap is complete.
-Do not turn historical preparation entries into new work.
+The current follow-up reduces numeric reverse-mode adjoint storage and scans
+for unused tape suffixes. Preserve output validation, arithmetic order,
+reclamation and task/scope behavior in both engines. Keep this bounded change,
+its measured binary/memory evidence and documentation together in one PR.
+[The handoff](docs/development-state.md) records current checks and next actions.
 
 ## Direction
 
@@ -71,6 +69,17 @@ live storage and timings. [History](docs/roadmap-history.md) preserves earlier
 acceptance; [preparation anchors](docs/roadmap-queue.md) are evidence, not a queue
 to replay.
 
+## Current follow-up
+
+| Step | Work | Acceptance |
+|---|---|---|
+| 7 | Bound numeric backward work to the seeded prefix | Raw/native agreement, validation precedence, empty/constant/duplicate outputs, workspace reuse, unwind controls, measured adjoint storage and native binary evidence; all nine production jobs and docs |
+
+The optimization retains all input adjoints and all nodes through the greatest
+seeded output index. Parent indices precede their children, so later nodes
+cannot contribute. Forward evaluation and nested managed-tape semantics remain
+unchanged. Do not claim a speedup before equivalent-workload measurements.
+
 ## Agreed syntax
 
 Keep prefix calls and infix pipes; application binds more tightly than pipes.
@@ -87,11 +96,11 @@ selectors without new runtime semantics.
 
 ## Delivery and validation
 
-[AGENTS.md](AGENTS.md) retains the standing authorization: keep the remaining
-closeout in PR #136, fix encountered failures and require all nine production
-jobs plus documentation on its final head. Squash with one explicit subject of
-at most 80 characters and an empty body, without trailers or attribution.
-Once merged, no automatic implementation task remains from this roadmap.
+[AGENTS.md](AGENTS.md) retains the standing authorization: publish, fix encountered
+failures and require all nine production jobs plus documentation on the final
+head before squash merge. Use one explicit subject of at most 80 characters and
+an empty body, without trailers or attribution. Historical preparation entries
+are evidence, not an automatic task queue.
 
 Use `python3 scripts/local-guard.py COMMAND...` for focused serial local checks.
 Full builds, suites, benchmarks and large regeneration run on GitHub. Preserve
