@@ -1,4 +1,6 @@
 //! Check actual native tape growth and allocator-failure ownership without giant allocations.
+#[path = "support/c_instrument.rs"]
+mod c_instrument;
 use std::process::Command;
 #[test]
 fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
@@ -27,14 +29,15 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
         + source[start..]
             .find("/* ---------------------------------------------------------------- kernels */")
             .unwrap();
-    let tape = source[start..end]
-        .replace("PTRDIFF_MAX", "INT32_MAX")
-        .replace("realloc(", "capacity_realloc(")
-        .replace("free(", "capacity_free(")
-        .replace("exit(102)", "capacity_exit(102)")
-        // Faults recover instead of exiting; an invalid-registry negative
-        // control must not run real process shutdown after returning its code.
-        .replace("atexit(fwp_tape_finish)", "0");
+    let tape = c_instrument::calls(
+        &source[start..end],
+        &[("realloc", "capacity_realloc"), ("free", "capacity_free")],
+    )
+    .replace("PTRDIFF_MAX", "INT32_MAX")
+    .replace("exit(102)", "capacity_exit(102)")
+    // Faults recover instead of exiting; an invalid-registry negative
+    // control must not run real process shutdown after returning its code.
+    .replace("atexit(fwp_tape_finish)", "0");
     let declarations="static void *capacity_realloc(void *,size_t);\nstatic void capacity_free(void *);\nstatic void capacity_exit(int);\n";
     let runtime = format!(
         "{}{}{}{}",

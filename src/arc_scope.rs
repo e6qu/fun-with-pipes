@@ -265,10 +265,34 @@ impl Proof<'_> {
                 }
             }
             Body::Prim(symbol)
-                if matches!(symbol.as_str(), "ad.tape" | "ad.push" | "ad.backward") =>
+                if matches!(
+                    symbol.as_str(),
+                    "ad.tape"
+                        | "ad.push"
+                        | "ad.backward"
+                        | "ad.tape-owned"
+                        | "ad.push-owned"
+                        | "ad.backward-owned"
+                ) =>
             {
                 if scoped & AD == 0 {
                     return Err(format!("--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside an autodiff scope"));
+                }
+                if symbol == "ad.tape-owned" {
+                    // Stored scalar operations may execute during a later
+                    // backward call. They inherit only the proved AD scope,
+                    // never the creator's transient State context.
+                    if self.validate && args[0].is_empty() {
+                        return Err("--gc arc: cannot prove managed tape callbacks".into());
+                    }
+                    for &(target, supplied) in &args[0] {
+                        let count = self.program.funcs[target].arity as usize - supplied;
+                        self.apply(
+                            &BTreeSet::from([(target, supplied)]),
+                            &vec![Targets::new(); count],
+                            AD,
+                        )?;
+                    }
                 }
                 Ok(Targets::new())
             }
@@ -354,7 +378,7 @@ impl Proof<'_> {
 }
 
 pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String> {
-    if !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "ad.tape" | "ad.push" | "ad.backward" | "run-state" | "get" | "put" | "modify"))) {
+    if !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "ad.tape" | "ad.push" | "ad.backward" | "ad.tape-owned" | "ad.push-owned" | "ad.backward-owned" | "run-state" | "get" | "put" | "modify"))) {
         return Ok(());
     }
     let mut proof = Proof {

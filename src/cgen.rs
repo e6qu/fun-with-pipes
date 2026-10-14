@@ -5302,6 +5302,24 @@ impl<'p> Gen<'p> {
         if sym == "array.length" {
             return Ok("return (V)(int64_t)fwp_array_len(l0);".into());
         }
+        if matches!(sym, "ad.tape-owned" | "ad.push-owned") {
+            let MT::Record(fields) = &params[0] else {
+                return Err(format!("{sym} requires a scalar operation tuple"));
+            };
+            let index = usize::from(sym == "ad.push-owned");
+            let descriptor = self.desc(&fields[index].1);
+            return Ok(if sym == "ad.tape-owned" {
+                format!("return fwp_p_ad_tape_owned(l0, l1, {descriptor});")
+            } else {
+                format!("return fwp_p_ad_push_owned(l0, {descriptor});")
+            });
+        }
+        if sym == "ad.backward-owned" {
+            let descriptor = self.desc(&result);
+            return Ok(format!(
+                "return fwp_p_ad_backward_owned(l0, l1, l2, {descriptor});"
+            ));
+        }
         if matches!(
             sym,
             "array.from-list"
@@ -9023,7 +9041,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     if let Mode::Library = mode {
         let _ = write!(
             out,
-            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    fwp_cl_finish();\n    fwp_gc_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n    fwp_sockets_finish();\n}}\n#endif\n",
+            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    fwp_cl_finish();\n    fwp_tape_finish();\n    fwp_gc_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n    fwp_sockets_finish();\n}}\n#endif\n",
             g.const_init, lib_defs
         );
         return Ok(out);

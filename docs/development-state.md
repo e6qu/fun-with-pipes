@@ -23,7 +23,7 @@ establish final-head acceptance or completion of the six remaining directions.
 | 1 | Implemented | One live handoff and immutable historical evidence; keep docs accurate through final acceptance |
 | 2 | In progress | Four-host retained-task/scoped foreign proofs pass; CLI/protocol ownership and executable ARC implemented, new fixture repairs under validation; cycle boundaries remain explicit |
 | 3 | In progress | Four-host wide record allocation measurements pass; numeric tail loops and direct array producer fusion implemented, latest ownership/transport/instruction checks running |
-| 4 | In progress | Segmented checkpointing implemented, first execution running; nested reverse differentiation and remaining measured kernel/layout work remain |
+| 4 | In progress | Segmented checkpointing and nested reverse differentiation implemented, runner proofs pending; remaining measured kernel/layout work and acceptance remain |
 | 5 | In progress | Actual F16/BF16/F128 values, text, arrays, closed workers, foreign ABI and protocol v2 implemented; final precision/ownership/platform gates remain |
 | 6 | In progress | Windows native allocator/fiber/socket, interpreter goldens and generated resource/task stress pass both architectures; TLS/package fixes pending, static memory and required production gates remain |
 
@@ -55,7 +55,10 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
 - `vjp-checkpointed {steps, every} step seeds` stores ordinary checkpoints and
   replays one bounded segment per backward pass. Counts and segment precision
   are explicit; zero work and invalid seed sizes have controls. Nested reverse
-  mode is still unimplemented. Checkpointing fixtures await runner results.
+  mode now uses `ReverseScalar` specialization and typed owned tape weights;
+  adjoint arithmetic records into the enclosing tape. Controls cover second/
+  third derivatives, active zeros, stale/mixed tokens, exact floats and physical
+  reclamation. This implementation has not yet executed on runners.
 - Windows uses UTF-16 native paths/environment/arguments, CreateProcessW with
   explicit inherited handles, concurrent output capture, native threads/fibers,
   full-width sockets/WSAPoll and PE roots. Root scanning and minor verification
@@ -93,6 +96,19 @@ Historical development runs and measured wide-record reductions are in
   IR control accepts a carried getter but rejects its actual unscoped call.
   Updated fixtures check raw/native behavior, errors, exact float types, ARC
   reclamation, tape bounds and omitted retirement; rerun remains required.
+- At `fc697328`, [checkpointing](https://github.com/e6qu/fun-with-pipes/actions/runs/38546865567)
+  passes raw and tracing-native semantic checks before ARC rejects the missing
+  `prim.trap` contract. The contract is now explicitly Never; the native
+  implementation unwinds its borrowed message. The macOS job also exposed a
+  missing OpenSSL setup for library tests, now added. The new owned tape
+  primitives and trap contract pass the guarded frozen-baseline audit
+  (378 declarations, 223 contracts). Runtime C syntax and focused lint pass.
+- The `72959c75` macOS ARM ownership/fusion batch passed. Linux ARM failed only
+  because the standalone pipe probe omitted `fwp_static_memory`; the fixture
+  now defines the dynamic-memory setting explicitly. Windows repairs are
+  running at `fc697328` in [38546869551](https://github.com/e6qu/fun-with-pipes/actions/runs/38546869551).
+  Dependency caches now save immediately after successful setup so later test
+  failures do not force another OpenSSL source build.
 - Guarded local `cargo fmt --all` and `cargo clippy --lib --tests -- -D warnings`
   pass. These do not execute the language fixtures. The guarded primitive
   inventory audit passes with 375 declarations and 219 contracts; frozen
@@ -100,9 +116,9 @@ Historical development runs and measured wide-record reductions are in
 
 ## Next action
 
-Next: publish and run the Windows portability repairs, inspect the running
-ownership/checkpointing jobs, and fix every failure. Complete nested reverse
-AD and Windows static memory with actual lifetime/precision/resource proofs.
+Next: run the nested reverse implementation and repaired checkpoint/pipe proofs,
+inspect the Windows portability batch, and fix every failure. Complete managed
+tape failure/cancellation/library-unload proofs and Windows static memory.
 Wire both native Windows acceptance jobs into production CI, finish remaining
 measurement/ABI/ownership validation and streamline final docs. Keep all work
 in PR #135. Require all seven Linux/macOS production jobs, both native Windows

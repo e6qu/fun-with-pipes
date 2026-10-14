@@ -1,5 +1,7 @@
 //! Gradients own active tape buffers across callback return and nonlocal exits.
 use std::path::PathBuf;
+#[path = "support/c_instrument.rs"]
+mod c_instrument;
 use std::process::{Command, Output};
 struct Scratch(PathBuf);
 impl Scratch {
@@ -64,8 +66,7 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
         + start;
     let declarations =
         "static void scope_probe_free(void *);\nstatic void *scope_probe_calloc(size_t,size_t);\n";
-    let tape_code = original[start..end]
-        .replace("free(", "scope_probe_free(")
+    let tape_code = c_instrument::calls(&original[start..end], &[("free", "scope_probe_free")])
         .replace("(double *)calloc(", "(double *)scope_probe_calloc(");
     let runtime = format!(
         "{}{}{}{}",

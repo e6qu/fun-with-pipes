@@ -24,7 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test --no-fail-fast --lib --test autodiff_checkpoint --test ad_tape_scopes --test autodiff_workspace
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - run: cargo test --no-fail-fast --lib --test autodiff_checkpoint --test autodiff_nested --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_capacity_bounds --test autodiff_library --test pipe_ownership
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -209,15 +215,22 @@ jobs:
       - name: Native C toolchain for foreign calls
         shell: pwsh
         run: ./scripts/setup-windows.ps1
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
+        id: windows_tls_cache
         if: inputs.suite == 'windows-full'
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: Native OpenSSL dependencies
+        id: windows_tls
         if: inputs.suite == 'windows-full'
         shell: pwsh
         run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v4
+        if: inputs.suite == 'windows-full' && steps.windows_tls.outcome == 'success' && steps.windows_tls_cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: Native Windows compiler check
         id: native_compiler
         shell: pwsh

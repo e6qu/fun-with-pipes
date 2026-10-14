@@ -55,8 +55,11 @@ small constant times one evaluation, where `gradient` costs n.
 | `rev.jacobian f xs` | the Jacobian (rows are outputs), one backward pass per output |
 | `rev.const x` | a constant: no gradient flows through it |
 
-`T` is a float type (`F64`, `F32`, ...); adjoints are accumulated in `F64` and converted
-back. Since `Rev` implements `Add`, `Sub`, `Mul`, `Div`, `Neg`, `Zero`,
+`T` implements `ReverseScalar`: the five float types and recursively `Rev[T]`.
+Primitive float adjoints accumulate in `F64` and convert back. Nested reverse
+levels retain typed weights and perform backward arithmetic on the enclosing
+tape. Generic callers of `grad`/`vjp` declare `ReverseScalar[T]`; a `Float[T]`
+constraint alone describes primitive float operations. Since `Rev` implements `Add`, `Sub`, `Mul`, `Div`, `Neg`, `Zero`,
 `One`, `FromInt`, `FromFloat`, `Ring`, `Field` and `Floating`, generic
 code over lists, `Vector`s and `Matrix`es (`dot`, `norm`, `matmul`,
 `matrix.apply`, ...) differentiates unchanged. Comparisons (`lt`, `max`)
@@ -84,9 +87,20 @@ node is only reachable through the value returned for it.
 
 **Limits.** A `Rev` value belongs to the `grad` that made it: using one
 after its `grad` returned is a trap, and so is combining values of two
-different `grad`s. Nested reverse mode is not supported (`Rev[T]` needs
-a primitive float `T`); for second derivatives use `hessian` (nested
-forward mode).
+different same-level `grad`s. The active bundle implements nested reverse mode:
+`[0.0] | grad (grad square | sum)` differentiates a gradient by recording its
+backward arithmetic on the enclosing tape. `hessian` remains the nested forward
+combinator; `rev.jacobian (grad f)` expresses a reverse Hessian. Runner acceptance
+and current failures are recorded in the handoff.
+
+Managed tapes own their typed weights, scalar-operation closures and adjoints.
+Native storage stays in a scanned mutable root list while active or detached
+for backward, and releases on scope exit, failure or cancellation. Library
+teardown releases tapes before the managed heap. Interpreter managed weights
+belong to the creating task; cross-task use is rejected. A numeric zero with
+an active derivative is not pruned: only recursively inactive constant zeros
+may skip propagation. Capturing or combining unrelated tape tokens remains an
+error; nesting does not relax stale-token or generation checks.
 Reverse mode uses 24 bytes per operation before adjoint storage and capacity
 rounding. The active bundle adds segmented checkpointing below; its runner
 acceptance is tracked in the handoff.
@@ -239,7 +253,7 @@ disabled contraction while measuring SIMD, buffer reuse and fused gradients.
   kernels with its own Rust implementation of the same evaluator.
 - Distributed execution: sharding tensors across processes and
   collectives (`all-reduce`) over services.
-- Nested reverse mode and checkpointing.
+- Final acceptance and measurement of nested reverse mode and checkpointing.
 - Kernels other than elementwise expressions and sums (matrix products,
   reductions along an axis) on devices.
 

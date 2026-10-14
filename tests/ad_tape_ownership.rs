@@ -1,5 +1,7 @@
 //! Detached numeric tape buffers follow the runtime unwind chain.
 use std::path::PathBuf;
+#[path = "support/c_instrument.rs"]
+mod c_instrument;
 use std::process::{Command, Output};
 
 struct Scratch(PathBuf);
@@ -50,8 +52,7 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
         .find("/* ---------------------------------------------------------------- kernels */")
         .unwrap()
         + start;
-    let tape_code = original[start..end]
-        .replace("free(", "probe_free(")
+    let tape_code = c_instrument::calls(&original[start..end], &[("free", "probe_free")])
         .replace("(double *)calloc(", "(double *)probe_calloc(")
         .replace(
             "V r = fwp_arr_new((size_t)tp.leaves);",

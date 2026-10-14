@@ -14,6 +14,7 @@
 
 use std::rc::Rc;
 use std::sync::Mutex;
+use std::{cell::RefCell, collections::BTreeMap};
 
 use crate::interp::{Ctl, R};
 use crate::value::Value;
@@ -56,6 +57,22 @@ struct Tape {
     da: Vec<f64>,
     db: Vec<f64>,
     adj: Vec<f64>,
+    owned: bool,
+}
+
+struct OwnedTape {
+    zero: Value,
+    add: Value,
+    mul: Value,
+    inactive_zero: Value,
+    da: Vec<Value>,
+    db: Vec<Value>,
+}
+
+// Interpreter tasks have independent OS threads. Numeric IDs remain globally
+// unique; managed weights stay on the creating task, like its dynamic scopes.
+thread_local! {
+    static OWNED_TAPES: RefCell<BTreeMap<i64, OwnedTape>> = const { RefCell::new(BTreeMap::new()) };
 }
 
 static TAPES: Mutex<Vec<Tape>> = Mutex::new(Vec::new());
@@ -84,7 +101,7 @@ impl Tape {
 }
 
 fn recycle_workspace(mut tape: Tape) {
-    if !workspace_enabled() || tape.workspace_bytes() > TAPE_WORKSPACE_BUDGET {
+    if tape.owned || !workspace_enabled() || tape.workspace_bytes() > TAPE_WORKSPACE_BUDGET {
         return;
     }
     tape.gen = 0;
@@ -118,8 +135,10 @@ fn reserve_nodes(tape: &mut Tape, required: usize) {
     }
     grow!(pa);
     grow!(pb);
-    grow!(da);
-    grow!(db);
+    if !tape.owned {
+        grow!(da);
+        grow!(db);
+    }
 }
 
 thread_local! {
@@ -134,6 +153,7 @@ impl Drop for TapeScope {
         let owned = TAPE_SCOPES.with(|scopes| scopes.borrow_mut().pop().unwrap());
         let mut tapes = TAPES.lock().unwrap();
         for base in owned {
+            OWNED_TAPES.with(|owners| owners.borrow_mut().remove(&(base >> 32)));
             if let Ok(slot) = slot_of(&tapes, base >> 32) {
                 let tape = std::mem::take(&mut tapes[slot]);
                 tapes[slot].gen = tape.gen;
@@ -163,7 +183,8 @@ fn forget_scoped_tape(id: i64) {
 
 const USED_OUTSIDE: &str =
     "autodiff: a reverse-mode value was used after the grad that made it returned";
-const MIXED: &str = "autodiff: values of two different grad computations were combined (nested reverse mode is not supported)";
+const MIXED: &str = "autodiff: values of two different grad computations were combined";
+const REPRESENTATION: &str = "autodiff: tape scalar representation mismatch";
 
 const INVALID_NODE: &str = "autodiff: invalid node index";
 
@@ -245,6 +266,9 @@ fn push(ra: i64, da: f64, rb: i64, db: f64) -> R<i64> {
     let mut tapes = TAPES.lock().unwrap();
     let slot = slot_of(&tapes, id)?;
     let t = &mut tapes[slot];
+    if t.owned {
+        return trap(REPRESENTATION);
+    }
     let idx = t.pa.len();
     if idx >= tape_limit() {
         return trap("autodiff: the tape is full");
@@ -270,6 +294,9 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
     let id = base >> 32;
     let mut tapes = TAPES.lock().unwrap();
     let slot = slot_of(&tapes, id)?;
+    if tapes[slot].owned {
+        return trap(REPRESENTATION);
+    }
     let t = std::mem::take(&mut tapes[slot]);
     tapes[slot].gen = t.gen;
     drop(tapes);
@@ -308,6 +335,147 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
         }
     }
     Ok(adj[..t.leaves].to_vec())
+}
+
+pub(crate) fn tape_owned(parameters: &Value, n: &Value) -> R<Value> {
+    let Value::Record(fields) = parameters else {
+        return trap("ad.tape-owned: expected scalar operations");
+    };
+    if fields.len() != 4 {
+        return trap("ad.tape-owned: expected four scalar operations");
+    }
+    let base = tape_new(int(n))?;
+    let id = base >> 32;
+    let mut tapes = TAPES.lock().unwrap();
+    let slot = slot_of(&tapes, id)?;
+    let t = &mut tapes[slot];
+    t.owned = true;
+    t.da = Vec::new();
+    t.db = Vec::new();
+    t.adj = Vec::new();
+    let owner = OwnedTape {
+        zero: fields[0].clone(),
+        add: fields[1].clone(),
+        mul: fields[2].clone(),
+        inactive_zero: fields[3].clone(),
+        da: vec![fields[0].clone(); t.leaves],
+        db: vec![fields[0].clone(); t.leaves],
+    };
+    OWNED_TAPES.with(|owners| owners.borrow_mut().insert(id, owner));
+    Ok(Value::I64(base))
+}
+
+pub(crate) fn push_owned(value: &Value) -> R<Value> {
+    let Value::Record(fields) = value else {
+        return trap("ad.push-owned: expected a tuple");
+    };
+    if fields.len() != 4 {
+        return trap("ad.push-owned: expected four fields");
+    }
+    let (ra, rb) = (int(&fields[0]), int(&fields[2]));
+    if ra < 0 && rb < 0 {
+        return Ok(Value::I64(-1));
+    }
+    if ra >= 0 && rb >= 0 && ra >> 32 != rb >> 32 {
+        return trap(MIXED);
+    }
+    let id = (if ra >= 0 { ra } else { rb }) >> 32;
+    let mut tapes = TAPES.lock().unwrap();
+    let slot = slot_of(&tapes, id)?;
+    let t = &mut tapes[slot];
+    if !t.owned {
+        return trap(REPRESENTATION);
+    }
+    let idx = t.pa.len();
+    if idx >= tape_limit() {
+        return trap("autodiff: the tape is full");
+    }
+    for parent in [ra, rb] {
+        if parent >= 0 && (parent & 0xffff_ffff) as usize >= idx {
+            return trap(INVALID_NODE);
+        }
+    }
+    OWNED_TAPES.with(|owners| -> R<()> {
+        let mut owners = owners.borrow_mut();
+        let Some(owner) = owners.get_mut(&id) else {
+            return trap("autodiff: managed tape belongs to another task");
+        };
+        owner.da.push(fields[1].clone());
+        owner.db.push(fields[3].clone());
+        Ok(())
+    })?;
+    reserve_nodes(t, idx + 1);
+    t.pa.push(if ra < 0 {
+        -1
+    } else {
+        (ra & 0xffff_ffff) as i32
+    });
+    t.pb.push(if rb < 0 {
+        -1
+    } else {
+        (rb & 0xffff_ffff) as i32
+    });
+    Ok(Value::I64((id << 32) | idx as i64))
+}
+
+pub(crate) fn backward_owned(
+    base: &Value,
+    outs: &Value,
+    seeds: &Value,
+    mut apply: impl FnMut(Value, Vec<Value>) -> R<Value>,
+) -> R<Value> {
+    let id = int(base) >> 32;
+    let mut tapes = TAPES.lock().unwrap();
+    let slot = slot_of(&tapes, id)?;
+    if !tapes[slot].owned {
+        return trap(REPRESENTATION);
+    }
+    let Some(owner) = OWNED_TAPES.with(|owners| owners.borrow_mut().remove(&id)) else {
+        return trap("autodiff: managed tape belongs to another task");
+    };
+    let t = std::mem::take(&mut tapes[slot]);
+    tapes[slot].gen = t.gen;
+    drop(tapes);
+    forget_scoped_tape(id);
+    // Detached Rust owners survive reentrant callbacks and drop on every error.
+    let mut adj = vec![owner.zero.clone(); t.pa.len()];
+    let outs = outs.list_items();
+    let seeds = seeds.list_items();
+    if outs.len() != seeds.len() {
+        return trap("autodiff: seed count differs from output count");
+    }
+    for (out, seed) in outs.iter().zip(seeds) {
+        let out = int(out);
+        if out < 0 {
+            continue;
+        }
+        if out >> 32 != id {
+            return trap(MIXED);
+        }
+        let node = (out & 0xffff_ffff) as usize;
+        if node >= adj.len() {
+            return trap(INVALID_NODE);
+        }
+        adj[node] = apply(owner.add.clone(), vec![seed, adj[node].clone()])?;
+    }
+    for i in (t.leaves..t.pa.len()).rev() {
+        let a = adj[i].clone();
+        if apply(owner.inactive_zero.clone(), vec![a.clone()])?.as_bool() {
+            continue;
+        }
+        for (parent, weight) in [(t.pa[i], &owner.da[i]), (t.pb[i], &owner.db[i])] {
+            if parent < 0 {
+                continue;
+            }
+            let product = apply(owner.mul.clone(), vec![weight.clone(), a.clone()])?;
+            adj[parent as usize] = apply(
+                owner.add.clone(),
+                vec![product, adj[parent as usize].clone()],
+            )?;
+        }
+    }
+    adj.truncate(t.leaves);
+    Ok(Value::list(adj))
 }
 
 // ---------------------------------------------------------------- kernels
