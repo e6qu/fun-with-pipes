@@ -337,14 +337,23 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
     Ok(adj[..t.leaves].to_vec())
 }
 
-pub(crate) fn tape_owned(parameters: &Value, n: &Value) -> R<Value> {
+pub(crate) fn tape_owned(parameters: &Value, inputs: &Value) -> R<Value> {
     let Value::Record(fields) = parameters else {
         return trap("ad.tape-owned: expected scalar operations");
     };
     if fields.len() != 4 {
         return trap("ad.tape-owned: expected four scalar operations");
     }
-    let base = tape_new(int(n))?;
+    let mut count = 0;
+    let mut tail = inputs;
+    while let Value::Data(1, fields) = tail {
+        if count == tape_limit() {
+            return trap("autodiff: too many inputs");
+        }
+        count += 1;
+        tail = &fields[1];
+    }
+    let base = tape_new(count as i64)?;
     let id = base >> 32;
     let mut tapes = TAPES.lock().unwrap();
     let slot = slot_of(&tapes, id)?;

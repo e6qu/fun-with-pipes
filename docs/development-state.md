@@ -109,6 +109,13 @@ Historical development runs and measured wide-record reductions are in
   running at `fc697328` in [38546869551](https://github.com/e6qu/fun-with-pipes/actions/runs/38546869551).
   Dependency caches now save immediately after successful setup so later test
   failures do not force another OpenSSL source build.
+- [First nested batch](https://github.com/e6qu/fun-with-pipes/actions/runs/38548685796)
+  at `b4a28f47` passed the library unit tests (including callback-flow controls)
+  and the Linux pipe descriptor/mapping proof. Language fixtures failed on an
+  ambiguous owned-tape scalar: passing only a count erased its type connection.
+  `ad.tape-owned` now borrows the typed input list and counts it without copying;
+  its operation tuple is inferred from that element type. This repair needs
+  runner execution; no nested/checkpoint lifetime acceptance is claimed yet.
 - Guarded local `cargo fmt --all` and `cargo clippy --lib --tests -- -D warnings`
   pass. These do not execute the language fixtures. The guarded primitive
   inventory audit passes with 375 declarations and 219 contracts; frozen

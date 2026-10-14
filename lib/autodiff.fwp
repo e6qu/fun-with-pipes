@@ -169,7 +169,7 @@ trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
     rev._backward : I64 -> List[I64] -> List[T] -> List[T]
     rev._inactive-zero : T -> Bool
 
-foreign "fwp" ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> I64 -> I64 where Dup[t]
+foreign "fwp" ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]
 foreign "fwp" ad.push-owned : (I64, t, I64, t) -> I64 where Dup[t]
 foreign "fwp" ad.backward-owned : I64 -> List[I64] -> List[t] -> List[t] where Dup[t]
 
@@ -178,7 +178,7 @@ rev._push-float = make { 0 = .0, 1 = .1 | float.convert, 2 = .2, 3 = .3 | float.
 
 rev._seed-owned : List[t] -> (I64, List[Rev[t]]) where ReverseScalar[t]
 rev._seed-owned = both
-        (length | ad.tape-owned (zero, add, mul, rev._inactive-zero))
+        (ad.tape-owned (zero, add, mul, rev._inactive-zero))
         enumerate
     | both .0 (both (.0 | rev._leaf) .1 | uncurry map)
 

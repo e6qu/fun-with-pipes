@@ -318,8 +318,8 @@ static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
 
 static V fwp_p_ad_tape(V nv) { return fwp_ad_tape_new(nv, NULL); }
 
-static V fwp_p_ad_tape_owned(V parameters, V nv, const fwp_desc *elem) {
-    int64_t n = (int64_t)nv;
+static V fwp_p_ad_tape_owned(V parameters, V inputs, const fwp_desc *elem) {
+    int64_t n = (int64_t)fwp_list_len(inputs);
     if (n < 0 || n > fwp_tape_limit()) fwp_trap("autodiff: too many inputs");
     fwp_owned_tape *owner = fwp_mem_alloc(sizeof *owner);
     memset(owner, 0, sizeof *owner);
@@ -335,9 +335,10 @@ static V fwp_p_ad_tape_owned(V parameters, V nv, const fwp_desc *elem) {
     fwp_owned_tapes = owner;
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_owned_tape_release, owner);
-    V base = fwp_ad_tape_new(nv, owner);
+    V base = fwp_ad_tape_new((V)n, owner);
     fwp_cleanup_pop(&cleanup);
     FWP_KEEP_ALIVE(parameters);
+    FWP_KEEP_ALIVE(inputs);
     return base;
 }
 
