@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, portability, wasm, iteration]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration]
         default: numerical
 jobs:
   numeric_fusion:
@@ -172,13 +172,13 @@ jobs:
           path: bundle-evidence/
 
   windows_probe:
-    if: inputs.suite == 'windows'
+    if: inputs.suite == 'windows' || inputs.suite == 'windows-full'
     strategy:
       fail-fast: false
       matrix:
         runner: [windows-2025, windows-11-arm]
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 20
+    timeout-minutes: 60
     env:
       CARGO_BUILD_JOBS: 2
     steps:
@@ -187,7 +187,17 @@ jobs:
       - name: Native C toolchain for foreign calls
         shell: pwsh
         run: ./scripts/setup-windows.ps1
+      - uses: actions/cache@v4
+        if: inputs.suite == 'windows-full'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native OpenSSL dependencies
+        if: inputs.suite == 'windows-full'
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
       - name: Native Windows compiler check
+        id: native_compiler
         shell: pwsh
         run: |
           rustc -vV | Tee-Object windows-host.txt
@@ -218,6 +228,34 @@ jobs:
         run: |
           cargo test --test windows_runtime -- --nocapture
           exit $LASTEXITCODE
+      - name: Native TLS and executable ownership
+        if: ${{ !cancelled() && inputs.suite == 'windows-full' && steps.native_compiler.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          cargo test --no-fail-fast --test tls --test cli_ownership --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test foreign_callback_ownership --test float_formats --test float_linking --test protocol
+          exit $LASTEXITCODE
+      - name: Complete native golden programs
+        if: ${{ !cancelled() && inputs.suite == 'windows-full' && steps.native_compiler.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          cargo test --test golden_run native_snapshots -- --exact
+          exit $LASTEXITCODE
+      - name: Build standalone compiler with static C runtime
+        if: ${{ !cancelled() && inputs.suite == 'windows-full' && steps.native_compiler.outcome == 'success' }}
+        shell: pwsh
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: |
+          cargo build --release --bin fwp
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/package-native.py --output "$env:RUNNER_TEMP/native-package"
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v7
+        if: inputs.suite == 'windows-full' && success()
+        with:
+          name: fwp-Windows-${{ runner.arch }}
+          path: ${{ runner.temp }}/native-package/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v7
         if: always()
         with:

@@ -72,6 +72,7 @@ fn certs() -> Option<&'static Path> {
     static DIR: OnceLock<Option<PathBuf>> = OnceLock::new();
     DIR.get_or_init(|| {
         if !have("openssl", "version") {
+            assert!(std::env::var_os("FWP_REQUIRE_TLS").is_none(), "required OpenSSL CLI is missing");
             eprintln!("skipping: no openssl command");
             return None;
         }
@@ -138,6 +139,7 @@ fn certs() -> Option<&'static Path> {
                 std::fs::write(d.join("both.pem"), both).is_ok()
             };
         if !ok {
+            assert!(std::env::var_os("FWP_REQUIRE_TLS").is_none(), "required TLS certificates could not be generated");
             eprintln!("skipping: openssl could not make the test certificates");
             return None;
         }

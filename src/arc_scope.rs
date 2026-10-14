@@ -410,8 +410,8 @@ mod tests {
 
     #[test]
     fn state_primitive_needs_a_proven_handler_context() {
-        assert!(check(&state_program(true)).is_ok());
-        assert!(check(&state_program(false))
+        assert!(check(&state_program(true), &[0]).is_ok());
+        assert!(check(&state_program(false), &[0])
             .unwrap_err()
             .contains("tracing-free lifetime policy"));
     }
@@ -463,7 +463,9 @@ mod tests {
             };
             args[1] = Expr::Func(4);
             assert!(
-                check(&p).unwrap_err().contains("outside a State scope"),
+                check(&p, &[0])
+                    .unwrap_err()
+                    .contains("outside a State scope"),
                 "{symbol}"
             );
         }
@@ -506,8 +508,17 @@ mod tests {
             )),
             vec![Expr::Const(Value::unit())],
         ));
-        assert!(check(&p)
+        assert!(check(&p, &[0])
             .unwrap_err()
             .contains("tracing-free lifetime policy"));
+    }
+
+    #[test]
+    fn every_entry_starts_without_a_dynamic_scope() {
+        let p = state_program(true);
+        assert!(check(&p, &[0]).is_ok());
+        assert!(check(&p, &[0, 1])
+            .unwrap_err()
+            .contains("outside a State scope"));
     }
 }

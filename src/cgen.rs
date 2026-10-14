@@ -232,7 +232,9 @@ fn cc_command(cc: &(String, Vec<String>)) -> std::process::Command {
             let prefix = std::path::PathBuf::from(prefix);
             c.arg("-I").arg(prefix.join("include"));
             c.arg("-L").arg(prefix.join("lib"));
-            c.arg(format!("-Wl,-rpath,{}", prefix.join("lib").display()));
+            if !cfg!(windows) {
+                c.arg(format!("-Wl,-rpath,{}", prefix.join("lib").display()));
+            }
         }
     }
     c
@@ -318,12 +320,21 @@ fn wasm_links(c_source: &str) -> &'static [&'static str] {
 }
 
 /// Libraries to link generated C with.
-fn tls_links(c_source: &str) -> &'static [&'static str] {
-    if c_source.contains(TLS_MARK) {
-        &["-lssl", "-lcrypto"]
-    } else {
-        &[]
+fn tls_links(c_source: &str) -> Vec<std::ffi::OsString> {
+    if !c_source.contains(TLS_MARK) {
+        return Vec::new();
     }
+    if cfg!(windows) && native_options().cross.is_none() {
+        if let Some(prefix) = std::env::var_os("FWP_OPENSSL_DIR") {
+            // Windows OpenSSL's documented import libraries use COFF, which
+            // LLVM-MinGW can link directly; PE has no ELF/Mach-O rpath.
+            let lib = std::path::PathBuf::from(prefix).join("lib");
+            return ["libssl.lib", "libcrypto.lib"]
+                .map(|name| lib.join(name).into_os_string())
+                .into();
+        }
+    }
+    vec!["-lssl".into(), "-lcrypto".into()]
 }
 
 /// Runtime parts embedded only in programs that call or serve services.

@@ -57,8 +57,9 @@ Native probes pass both architectures for each root range independently,
 floating-point state, reclamation, host-owned fibers and full-width sockets.
 Windows UTF-16 filesystem/environment/arguments, binary standard streams, native
 threads/clocks and CreateProcessW capture are now implemented. Generated-program
-execution is pending; static-memory reservations, TLS dependencies and packaging
-remain unfinished.
+execution passes ARM64; AMD64 has the task GC verification failure below.
+Windows OpenSSL dependency setup, COFF linking and PE package inspection are now
+implemented, pending native execution. Static-memory reservations remain unfinished.
 
 SoftFloat 3e, scoped gdtoa and TLFloat 1.15.0 are vendored with licenses,
 provenance and recorded patches. The shared core has exact half/bfloat/quad
@@ -228,6 +229,19 @@ external-callback admission is claimed.
   --test exec_invocation_ownership --test arc_execution -- -D warnings`,
   `cargo fmt --all`, combined TLS/service runtime C syntax, and
   `python3 scripts/check-roadmap.py` (48 link sets, 106 anchors, six steps).
+- Runs [38541513652](https://github.com/e6qu/fun-with-pipes/actions/runs/38541513652)
+  and [38541517041](https://github.com/e6qu/fun-with-pipes/actions/runs/38541517041)
+  at `75274a5` found four stale unit-test callers after executable ARC added
+  explicit entry lists. They are fixed, with an independent-entry scope test;
+  guarded `cargo clippy --lib --tests -- -D warnings` now passes. Those failed
+  compiler checks did not execute the collector repair or ownership proofs.
+- Windows full preflight now pins vcpkg/OpenSSL sources, requires TLS fixtures,
+  verifies dependency PE architectures and links COFF import libraries without
+  rpath. It adds complete native goldens and out-of-checkout package execution
+  for tracing/ARC plus exact half/quad arithmetic. PE inspection rejects
+  non-system DLL dependencies in standalone compiler/generated smoke binaries;
+  release Rust uses a static C runtime. These checks are implemented, unverified.
+  Guarded TLS/compiler lint, Python syntax and formatting passed.
 - At `dfca8e6`, all four Linux/macOS hosts passed exact-format/protocol/array
   tests and all seven foreign ABI/export tests in
   [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).
