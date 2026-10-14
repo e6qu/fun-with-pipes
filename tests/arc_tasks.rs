@@ -21,9 +21,9 @@ sleeping = curry (.0 | tap (const 1h | task.sleep))
 awaiting : Task[String] -> () -> Option[String] ! {Async}
 awaiting = curry (.0 | task.await)
 start-sleeping : String -> Task[String] ! {Async}
-start-sleeping = compose task.spawn sleeping
+start-sleeping = compose sleeping task.spawn
 start-value : String -> Task[String] ! {Async}
-start-value = compose task.spawn value
+start-value = compose value task.spawn
 own-state : () -> String
 own-state = run-state "initial" (const "owned" | tap put | const () | get) | .0
 scope-failure : () -> () ! {Async, Error[String]}

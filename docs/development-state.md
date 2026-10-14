@@ -187,7 +187,10 @@ external-callback admission is claimed.
 - Scoped foreign ownership and corrected task controls are running at `dfca8e6`
   in [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).
   The callback proof includes copied quad inputs/results and omitted-result-release
-  and omitted-task-context controls. These results remain pending.
+  and omitted-task-context controls. Native ARM macOS passed all seven foreign
+  ABI/export tests, including ARC quad callbacks. The two new lifetime fixtures
+  reversed `compose` arguments; both now follow its declared left-to-right order.
+  Their execution and record-worker evidence will run together in the next batch.
 
 ## Next action
 

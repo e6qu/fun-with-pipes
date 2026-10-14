@@ -41,7 +41,7 @@ raising = const "foreign error" | fail
 delayed-add : I64 -> I64 -> I64 ! {Async}
 delayed-add = curry (tap (const () | task.yield) | uncurry add)
 async-work : I64 -> I64 ! {Async}
-async-work = compose (flip invoke-async 7) delayed-add
+async-work = compose delayed-add (flip invoke-async 7)
 blocked : I64 -> I64 ! {Async}
 blocked = tap (const 1h | task.sleep)
 blocked-work : () -> I64 ! {Async}
