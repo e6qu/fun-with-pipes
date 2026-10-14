@@ -157,7 +157,8 @@ external-callback admission is claimed.
   bytes and zero collections. Record peak live bytes remain 1,040 in both variants.
   ARM macOS disassembly still has recursive 144-byte worker frames; Linux AMD64
   makes a loop using registers and stack slots. This is not zero stack usage or
-  a universal speed claim. Broader fusion and explicit worker tail lowering remain.
+  a universal speed claim. Broader fusion remains. Explicit worker tail lowering is now implemented;
+  its bounded-stack/preemption controls and fresh measurements await runners.
 - That run passed both full focused Linux jobs and all ownership/socket controls
   on macOS, but macOS TLS fixtures failed certificate verification. The bundle
   workflow lacked the OpenSSL 3 CLI path that the passing portability workflow
@@ -166,6 +167,16 @@ external-callback admission is claimed.
   gRPC. The Windows OpenSSL BIO preserves handles rather than narrowing them
   through `SSL_set_fd`; TLS accept initialization failure closes its connection.
   Complete Windows TLS acceptance still needs dependencies and native execution.
+- Complete generated Windows programs are running at `a089ad1` in
+  [38534588705](https://github.com/e6qu/fun-with-pipes/actions/runs/38534588705).
+  This includes the UTF-16 filesystem/environment/argv and CreateProcessW port,
+  native threads and clocks, binary standard streams and no pthread DLL dependency.
+- Direct numeric self-tail calls now evaluate every argument into temporaries
+  before updating parameters and jumping to the worker entry. Task ticks remain
+  on each iteration. New runner controls compare raw execution, restrict task
+  stacks to 1 MiB, and deliberately restore recursion or omit ticks to require
+  stack-overflow/preemption failures. Focused guarded compiler/test lint and
+  formatting pass; execution is pending.
 - At `dfca8e6`, all four Linux/macOS hosts passed exact-format/protocol/array
   tests and all seven foreign ABI/export tests in
   [38527790040](https://github.com/e6qu/fun-with-pipes/actions/runs/38527790040).
@@ -199,7 +210,8 @@ external-callback admission is claimed.
 ## Next action
 
 Next: run complete generated Windows programs on both native architectures,
-fix failures, and rerun the macOS TLS controls with the corrected OpenSSL path.
+fix failures, and run the numeric tail-loop/measurement batch with macOS TLS
+controls using the corrected OpenSSL path.
 Finish managed protocol ownership and final-head ABI/cache acceptance. Keep raw/native agreement and exact rounding.
 Then complete Windows static memory/TLS/PE packages, broader ownership/worker
 proofs, and nested reverse differentiation/checkpointing with measured layout

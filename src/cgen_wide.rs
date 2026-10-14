@@ -1,4 +1,4 @@
-//! Native scalar workers for closed wide numeric expressions. Generic entries
+//! Native scalar and record workers for closed wide numeric expressions. Generic entries
 //! keep word values; proven worker-to-worker paths keep full-width native bits.
 use crate::ir::{type_of, Body, Expr, FuncId, Pat, Program, MT};
 use crate::value::Value;
@@ -180,8 +180,96 @@ struct Emitter<'a> {
     locals: &'a [MT],
     output: String,
     next: usize,
+    tail_loop: bool,
 }
 impl Emitter<'_> {
+    fn returned_local(expression: &Expr) -> Option<u32> {
+        match expression {
+            Expr::Local(local) => Some(*local),
+            Expr::Dup(_, body) | Expr::Drop(_, body) => Self::returned_local(body),
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } if parameters.is_empty() && bindings.is_empty() => Self::returned_local(body),
+            _ => None,
+        }
+    }
+    /// Self calls in tail position reuse the worker frame. Finish every
+    /// argument before overwriting parameters, preserving aliases and traps.
+    fn tail(&mut self, expression: &Expr, shape: &Shape, function: FuncId) -> Option<()> {
+        match expression {
+            Expr::Call(callee, arguments) if *callee == function => {
+                let f = &self.program.funcs[function];
+                if arguments.len() != f.arity as usize {
+                    return None;
+                }
+                let (parameters, result) = f.ty.params(arguments.len());
+                if Shape::of(self.program, result).as_ref() != Some(shape) {
+                    return None;
+                }
+                let mut values = Vec::new();
+                for (argument, ty) in arguments.iter().zip(parameters) {
+                    let argument_shape = Shape::of(self.program, ty)?;
+                    let value = self.expression(argument, &argument_shape)?;
+                    values.push(self.shape_temporary(&argument_shape, &value));
+                }
+                for (index, value) in values.iter().enumerate() {
+                    writeln!(self.output, "    l{index} = {value};").unwrap();
+                }
+                self.output.push_str("    goto fwp_wide_again;\n");
+                self.tail_loop = true;
+            }
+            Expr::Let(local, value, body) if Self::returned_local(body) == Some(*local) => {
+                self.tail(value, shape, function)?;
+            }
+            Expr::Let(local, value, body) => {
+                let local_shape = Shape::of(self.program, &self.locals[*local as usize])?;
+                let value = self.expression(value, &local_shape)?;
+                writeln!(self.output, "    l{local} = {value};").unwrap();
+                self.tail(body, shape, function)?;
+            }
+            Expr::Match(scrutinee, arms) => {
+                let scrutinee_shape = self.shape(scrutinee).or_else(|| {
+                    arms.iter()
+                        .all(|(p, _)| matches!(p, Pat::Wild | Pat::Construct(0..=1, _)))
+                        .then_some(Shape::Scalar(Kind::Bool))
+                })?;
+                let value = self.expression(scrutinee, &scrutinee_shape)?;
+                let value = self.shape_temporary(&scrutinee_shape, &value);
+                for (index, (pattern, body)) in arms.iter().enumerate() {
+                    let mut bindings = String::new();
+                    let condition =
+                        self.condition(pattern, &scrutinee_shape, &value, &mut bindings)?;
+                    writeln!(
+                        self.output,
+                        "    {}if ({condition}) {{",
+                        if index == 0 { "" } else { "else " }
+                    )
+                    .unwrap();
+                    self.output.push_str(&bindings);
+                    self.tail(body, shape, function)?;
+                    self.output.push_str("    }\n");
+                }
+                self.output
+                    .push_str("    else fwp_trap(\"internal: no match arm applies\");\n");
+            }
+            Expr::Dup(_, body) | Expr::Drop(_, body) => self.tail(body, shape, function)?,
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } if parameters.is_empty() && bindings.is_empty() => {
+                self.tail(body, shape, function)?
+            }
+            _ => {
+                let value = self.expression(expression, shape)?;
+                writeln!(self.output, "    return {value};").unwrap();
+            }
+        }
+        Some(())
+    }
+
     fn temporary(&mut self, kind: Kind, value: &str) -> String {
         let name = format!("w{}", self.next);
         self.next += 1;
@@ -615,7 +703,7 @@ impl Emitter<'_> {
     }
 }
 
-fn body(program: &Program, enabled: &[bool], id: FuncId) -> Option<String> {
+fn body(program: &Program, enabled: &[bool], id: FuncId, ticks: bool) -> Option<String> {
     let f = &program.funcs[id];
     let Body::Expr(expr) = &f.body else {
         return None;
@@ -627,15 +715,23 @@ fn body(program: &Program, enabled: &[bool], id: FuncId) -> Option<String> {
         locals: &f.locals,
         output: String::new(),
         next: 0,
+        tail_loop: false,
     };
+    let mut declarations = String::new();
     for (i, ty) in f.locals.iter().enumerate().skip(f.arity as usize) {
         if let Some(shape) = Shape::of(program, ty) {
-            writeln!(emitter.output, "    {} l{i} = {{0}};", shape.c()).unwrap();
+            writeln!(declarations, "    {} l{i} = {{0}};", shape.c()).unwrap();
         }
     }
-    let value = emitter.expression(expr, &shape)?;
-    writeln!(emitter.output, "    return {value};").unwrap();
-    Some(emitter.output)
+    emitter.tail(expr, &shape, id)?;
+    if emitter.tail_loop {
+        declarations.push_str("fwp_wide_again:;\n");
+    }
+    if ticks {
+        declarations.push_str("    FWP_TICK();\n");
+    }
+    declarations.push_str(&emitter.output);
+    Some(declarations)
 }
 
 pub(super) fn select(program: &Program) -> Vec<bool> {
@@ -658,7 +754,7 @@ pub(super) fn select(program: &Program) -> Vec<bool> {
     loop {
         let previous = enabled.clone();
         for (id, active) in enabled.iter_mut().enumerate() {
-            if *active && body(program, &previous, id).is_none() {
+            if *active && body(program, &previous, id, false).is_none() {
                 *active = false;
             }
         }
@@ -670,10 +766,9 @@ pub(super) fn select(program: &Program) -> Vec<bool> {
 
 pub(super) fn worker(program: &Program, enabled: &[bool], id: FuncId, ticks: bool) -> String {
     format!(
-        "/* native wide worker: {} */\n{} {{\n{}{}\n}}\n",
+        "/* native wide worker: {} */\n{} {{\n{}\n}}\n",
         program.funcs[id].name,
         signature(program, id),
-        if ticks { "    FWP_TICK();\n" } else { "" },
-        body(program, enabled, id).expect("selected wide worker")
+        body(program, enabled, id, ticks).expect("selected wide worker")
     )
 }

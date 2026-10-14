@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import statistics
 import time
 
@@ -54,10 +55,12 @@ main = 256{decimal}{suffix} | sum-wide | echo
             code = cfile.read_text()
             assert ('/* native wide worker:' in code) == (enabled == '1')
             workers = []
+            worker_entries = set()
             for section in code.split('/* native wide worker:')[1:]:
                 worker = section.split('\nstatic V f', 1)[0]
                 assert 'fwp_box_' not in worker and 'fwp_alloc' not in worker
                 workers.append(worker)
+                worker_entries.add('f' + re.search(r'\bfwp_wide(\d+)\(', worker).group(1))
             profile = out / (label + '-profile.c')
             profile.write_text(iteration.instrument(code))
             if '#define FWP_EXACT_FLOAT 1' in code and not core_objects:
@@ -83,10 +86,11 @@ main = 256{decimal}{suffix} | sum-wide | echo
             for line in (out / (label + '.su')).read_text().splitlines():
                 location, size, qualifier = line.split('\t')
                 function = location.rsplit(':', 1)[-1]
-                if function.startswith('fwp_wide'):
-                    stack_usage.append(dict(function=function, bytes=int(size), qualifier=qualifier))
+                if function.startswith('fwp_wide') or function in worker_entries:
+                    stack_usage.append(dict(function=function, bytes=int(size), qualifier=qualifier,
+                                            boundary='worker' if function.startswith('fwp_wide') else 'generic-entry'))
             if enabled == '1':
-                assert stack_usage, 'recursive native worker must retain stack evidence'
+                assert stack_usage, 'worker or its inlined generic entry must retain stack evidence'
             samples = []
             for _ in range(5):
                 start = time.perf_counter_ns()

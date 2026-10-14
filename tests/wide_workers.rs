@@ -8,6 +8,106 @@ fn checked(command: &mut Command) -> Output {
 }
 
 #[test]
+fn numeric_tail_workers_bound_stack_and_preserve_preemption() {
+    let dir = fwp::cgen::TempDir::new("wide-tail-stack").unwrap();
+    let source = dir.join("tail.fwp");
+    std::fs::write(
+        &source,
+        r#"
+Spin = { a: I128, b: I128, remaining: I64 }
+start : I64 -> Spin
+start = make Spin { a = const 17i128, b = const 29i128, remaining = id }
+rec rotate : Spin -> Spin
+rotate = if (.remaining | eq 0) id
+    (make Spin { a = .b, b = .a, remaining = .remaining | sub 1 } | rotate)
+work : I64 -> () -> (I128, I128)
+work = curry (.0 | start | rotate | both .a .b)
+main = [
+    task.spawn (work 32769) | task.await | echo,
+    task.spawn (work 10000000) | tap (const () | task.yield)
+        | tap task.cancel | task.await | echo,
+] | ignore
+"#,
+    )
+    .unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let expected = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert!(String::from_utf8_lossy(&expected.stdout).ends_with("None\n"));
+    let cfile = dir.join("tail.c");
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--gc", "arc", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let generated = std::fs::read_to_string(cfile).unwrap();
+    let code = generated.replace(
+        "#define FWP_NATIVE_TASK_STACK ((size_t)256 << 20)",
+        "#define FWP_NATIVE_TASK_STACK ((size_t)1 << 20)",
+    );
+    assert_ne!(code, generated);
+    let start = code.find("/* native wide worker: rotate */").unwrap();
+    let end = start + code[start..].find("\n}\n").unwrap() + 3;
+    let worker = &code[start..end];
+    let signature = worker.lines().nth(1).unwrap();
+    let result_type = signature.split_whitespace().nth(1).unwrap();
+    let name = signature
+        .split_whitespace()
+        .nth(2)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    assert!(
+        worker.contains("fwp_wide_again:;\n    FWP_TICK();"),
+        "{worker}"
+    );
+    assert!(worker.contains("goto fwp_wide_again;"), "{worker}");
+    assert_eq!(worker.matches(&format!("{name}(")).count(), 1, "{worker}");
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(if cfg!(windows) { "tail.exe" } else { "tail" });
+        let run = || {
+            Command::new(&binary)
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap()
+        };
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let actual = run();
+        assert!(actual.status.success(), "{opt}: {actual:?}");
+        assert_eq!(actual.stdout, expected.stdout, "{opt}");
+        assert_eq!(actual.stderr, expected.stderr, "{opt}");
+        // Force a real recursive call after removing the compiler's loop;
+        // the barrier prevents the C compiler from reintroducing tail calls.
+        let recursive = worker.replace("goto fwp_wide_again;", &format!(
+            "{result_type} recursive = {name}(l0); __asm__ volatile(\"\" : : \"m\"(recursive) : \"memory\"); return recursive;"
+        ));
+        fwp::cgen::compile_c(&code.replacen(worker, &recursive, 1), &binary, opt).unwrap();
+        let failed = run();
+        assert_eq!(failed.status.code(), Some(101), "{opt}: {failed:?}");
+        assert!(String::from_utf8_lossy(&failed.stderr).contains("stack overflow"));
+        let unpreempted = worker.replace("    FWP_TICK();", "");
+        fwp::cgen::compile_c(&code.replacen(worker, &unpreempted, 1), &binary, opt).unwrap();
+        let wrong = run();
+        assert!(wrong.status.success(), "{opt}: {wrong:?}");
+        assert_ne!(
+            wrong.stdout, expected.stdout,
+            "missing preemption control did not fail"
+        );
+    }
+}
+
+#[test]
 fn wide_workers_match_raw_arithmetic_and_reclaim_boundaries() {
     let dir = std::env::temp_dir().join(format!("fwp-wide-workers-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
