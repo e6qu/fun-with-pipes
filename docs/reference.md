@@ -347,6 +347,8 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
 |---|---|
 | integers | `intN_t`, `uintN_t`; `ISize`/`USize` are `ptrdiff_t`/`size_t` |
 | `F32`, `F64`, `Bool` | `float`, `double`, `_Bool` |
+| `F16`, `BF16` | `uint16_t` containing the raw format bits |
+| `F128` | `struct fwp_binary128 { uint64_t low, high; }` containing raw bits |
 | `()` | `void` |
 | `String` | `const char *` |
 | `Bytes` | `const uint8_t *` (parameters only) |
@@ -354,6 +356,12 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
 | `Option[Ptr[T]]` | a nullable pointer |
 | `repr(C)` record | a struct |
 | function | a callback |
+
+The half/bfloat/quad ABI is part of the [active format migration](float-formats.md)
+and awaits native acceptance. C code receives bits in the declared structs or
+integers; it must explicitly convert to a numeric C type if needed. Quad does
+not use the host's `long double` ABI. `repr(C)` fields, exported headers and
+pointer element widths use the same representation (2/2/16 bytes).
 
 - Foreign functions take their arguments in C order, not data-last, and
   should not reuse a standard name (`div` above would shadow fwp's own).

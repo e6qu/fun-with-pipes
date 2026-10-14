@@ -13,11 +13,13 @@ fn packed_array_constructor_preserves_the_checked_count_boundary() {
     let end = start + source[start..].find("\n}").unwrap() + 2;
     let constructor = &source[start..end];
     let condition = "n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)";
+    let wide_condition = "n > (SIZE_MAX - sizeof(fwp_arr)) / fwp_array_stride(elem)";
     assert_eq!(constructor.matches(condition).count(), 1);
     for opt in ["-O1", "-O2"] {
         for (label, code) in [
             ("checked", constructor.to_string()),
             ("omitted", constructor.replace(condition, "0")),
+            ("omitted-wide", constructor.replace(wide_condition, "0")),
         ] {
             let cfile = directory.join(format!("{label}{}.c", &opt[1..]));
             let executable = cfile.with_extension("bin");
@@ -31,14 +33,17 @@ fn packed_array_constructor_preserves_the_checked_count_boundary() {
                     .arg("-o")
                     .arg(&executable),
             );
-            for width in [1, 2, 4, 8] {
+            for width in [1, 2, 4, 8, 16] {
                 let output = Command::new(&executable)
                     .arg(width.to_string())
                     .output()
                     .unwrap();
-                let expected = if label == "checked" {
+                let expected = if label == "checked"
+                    || (label == "omitted" && width == 16)
+                    || (label == "omitted-wide" && width != 16)
+                {
                     1
-                } else if width == 8 {
+                } else if width >= 8 {
                     129
                 } else {
                     130

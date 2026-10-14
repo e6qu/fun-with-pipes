@@ -6427,8 +6427,12 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 _ => "",
             };
             for i in 0..f.arity {
+                let foreign_bits = matches!(f.body, Body::ForeignC { .. })
+                    && crate::ffi::classify(self.prog, &f.locals[i as usize])
+                        .is_ok_and(|ty| crate::ffi::by_value(&ty));
                 if crate::rc::needs_rc(&self.prog.shapes, &f.locals[i as usize])
                     && !crate::rc::prim_reads_only(sym, i as usize)
+                    && !foreign_bits
                 {
                     let _ = writeln!(out, "    fwp_rc_share(l{});", i);
                 }
@@ -7377,6 +7381,8 @@ fn ffi_to_c(t: &crate::ffi::CType, v: &str) -> String {
         CType::Int { .. } => format!("({})(int64_t)({})", crate::ffi::c_name(t), v),
         CType::F32 => format!("fwp_f32({})", v),
         CType::F64 => format!("fwp_f64({})", v),
+        CType::F16 | CType::BF16 => format!("(uint16_t)({v})"),
+        CType::F128 => format!("fwp_to_c_quad({v})"),
         CType::Bool => format!("(({}) == FWP_TRUE)", v),
         CType::Str => format!("fwp_c_str_arg({})", v),
         CType::Bytes => format!("((const uint8_t *)STR({})->d)", v),
@@ -7398,6 +7404,8 @@ fn ffi_from_c(t: &crate::ffi::CType, e: &str) -> String {
         CType::Int { signed: false, .. } => format!("(V)({})", e),
         CType::F32 => format!("fwp_from_f32({})", e),
         CType::F64 => format!("fwp_from_f64({})", e),
+        CType::F16 | CType::BF16 => format!("(V)({e})"),
+        CType::F128 => format!("fwp_from_c_quad({e})"),
         CType::Bool => format!("(({}) ? FWP_TRUE : FWP_FALSE)", e),
         CType::Str => format!("fwp_c_string({})", e),
         CType::Ptr | CType::Bytes | CType::Callback { .. } => format!("(V)(uintptr_t)({})", e),
@@ -7442,7 +7450,7 @@ impl Gen<'_> {
             let mut slot = 0;
             for (field, index, ft) in fields {
                 let converted = ffi_from_c(ft, &format!("{value}.{field}"));
-                let converted = if matches!(ft, CType::Str | CType::OptPtr) {
+                let converted = if matches!(ft, CType::Str | CType::OptPtr | CType::F128) {
                     self.fresh(converted)
                 } else {
                     converted
@@ -7463,7 +7471,7 @@ impl Gen<'_> {
             }
         } else {
             let converted = ffi_from_c(c, value);
-            let converted = if matches!(c, CType::Str | CType::OptPtr) {
+            let converted = if matches!(c, CType::Str | CType::OptPtr | CType::F128) {
                 self.fresh(converted)
             } else {
                 converted
@@ -7623,6 +7631,18 @@ impl Gen<'_> {
         }
         let call = format!("{}({})", cname, args.join(", "));
         let restore = restore.concat();
+        let result_type = f.ty.params(f.arity as usize).1;
+        if self.reuse && ffi::by_value(&ret) && crate::rc::needs_rc(&self.prog.shapes, result_type)
+        {
+            let _ = write!(
+                body,
+                "    {} c_result = {call};\n{restore}",
+                ffi::c_name(&ret)
+            );
+            self.library_arg(&mut body, "result", &ret, result_type, "c_result");
+            body.push_str("    return result;\n");
+            return Ok(body);
+        }
         if ret == CType::Void {
             let _ = write!(body, "    {};\n{}    return FWP_UNIT;\n", call, restore);
         } else if restore.is_empty() {

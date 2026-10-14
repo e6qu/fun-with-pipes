@@ -127,10 +127,19 @@ verified on runners. The existing closed wide-expression workers now also lower
 F128 arithmetic, comparisons and elementary math to direct bit-struct calls,
 without boxing between selected workers. The wide-worker suite adds quad raw/
 native comparisons with workers enabled/disabled and tracing/ARC reclamation.
-Focused lint checks pass; execution is pending. Quad aggregate workers, foreign
-ABI admission and complete ownership/exception controls remain. Generic F128
-values stay boxed. Run 38521759189 tests the preceding array/trait change at
-`1454d11`; it does not include the new direct quad workers.
+Focused lint checks pass; execution is pending in run 38522527293 at `957f797`.
+Quad aggregate workers and complete ownership/exception controls remain. Generic
+F128 values stay boxed. Run 38521759189 tests the preceding array/trait change at
+`1454d11`; its scalar/protocol/array tests passed on the first three completed
+hosts, then an existing omitted-array-bound control found a duplicate guard for
+eight-byte elements. The new wide guard now applies only to widths over eight;
+the regression includes a separate omitted-wide-bound control at width 16.
+
+Foreign ABI integration is in progress: explicit u16 half/bfloat bits, two-word
+quad structs, shim field/result widths, callbacks, pointer widths and owned
+native returns. ARC and lowering now share a recursive pointer-free C value
+classifier. Managed pointers/callbacks still require further lifetime proofs.
+Focused FFI lint checks passed; new raw/native and ARC C-record tests await CI.
 
 ## Next action
 

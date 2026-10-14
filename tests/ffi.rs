@@ -89,6 +89,91 @@ word_count = 4
 ";
 
 #[test]
+fn exact_float_abi_preserves_bits_and_owned_value_records() {
+    let temp = fwp::cgen::TempDir::new("fwp-exact-ffi").unwrap();
+    let c = temp.join("bits.c");
+    std::fs::write(&c, r#"
+#include <stdint.h>
+struct fwp_binary128 { uint64_t low, high; };
+struct fwp_c_Pack { struct fwp_binary128 q; uint16_t h, b; };
+uint16_t echo_half(uint16_t x) { return x; }
+uint16_t half_nan(void) { return UINT16_C(0x7c35); }
+uint16_t bfloat_nan(void) { return UINT16_C(0x7f95); }
+uint64_t half_bits(uint16_t x) { return x; }
+struct fwp_binary128 echo_quad(struct fwp_binary128 x) { return x; }
+struct fwp_binary128 quad_nan(void) { return (struct fwp_binary128){UINT64_C(0x1234),UINT64_C(0x7fff000000000000)}; }
+uint64_t quad_low(struct fwp_binary128 x) { return x.low; }
+struct fwp_c_Pack echo_pack(struct fwp_c_Pack x) { return x; }
+struct fwp_binary128 invoke_quad(struct fwp_binary128 (*f)(struct fwp_binary128), struct fwp_binary128 x) { return f(x); }
+"#).unwrap();
+    for callbacks in [false, true] {
+        let source = temp.join(format!("bits-{callbacks}.fwp"));
+        let callback = if callbacks {
+            "    1.0000000000000000000000000000000002f128 | invoke-quad id | gt 1.0f128 | echo,\n"
+        } else {
+            ""
+        };
+        let callback_decl = if callbacks {
+            "foreign \"C\" invoke-quad : (F128 -> F128) -> F128 -> F128 = \"invoke_quad\"\n"
+        } else {
+            ""
+        };
+        std::fs::write(&source, format!(r#"
+repr(C) Pack = {{ q: F128, h: F16, b: BF16 }}
+foreign "C" echo-half : F16 -> F16 = "echo_half"
+foreign "C" echo-bfloat : BF16 -> BF16 = "echo_half"
+foreign "C" echo-quad : F128 -> F128 = "echo_quad"
+foreign "C" echo-pack : Pack -> Pack = "echo_pack"
+foreign "C" half-nan : () -> F16 = "half_nan"
+foreign "C" bfloat-nan : () -> BF16 = "bfloat_nan"
+foreign "C" half-bits : F16 -> U64 = "half_bits"
+foreign "C" bfloat-bits : BF16 -> U64 = "half_bits"
+foreign "C" quad-nan : () -> F128 = "quad_nan"
+foreign "C" quad-low : F128 -> U64 = "quad_low"
+{callback_decl}
+main = [
+    1.0f16 | echo-half | eq 1.0f16 | echo,
+    1.0bf16 | echo-bfloat | eq 1.0bf16 | echo,
+    1.0000000000000000000000000000000002f128 | echo-quad | gt 1.0f128 | echo,
+    {{ q = 1.0000000000000000000000000000000002f128, h = 1.0f16, b = 2.0bf16 }} | echo-pack | .q | gt 1.0f128 | echo,
+    () | half-nan | echo-half | half-bits | eq 31797u64 | echo,
+    () | bfloat-nan | echo-bfloat | bfloat-bits | eq 32661u64 | echo,
+    () | quad-nan | echo-quad | quad-low | eq 4660u64 | echo,
+{callback}] | ignore
+"#)).unwrap();
+        let expected = "True\n".repeat(if callbacks { 8 } else { 7 });
+        let mut interpreted = Command::new(fwp());
+        interpreted
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp", "--link"])
+            .arg(&c)
+            .arg(&source);
+        assert_eq!(stdout(interpreted), expected);
+        for gc in if callbacks {
+            vec!["tracing"]
+        } else {
+            vec!["tracing", "arc"]
+        } {
+            let binary = temp.join(format!("bits-{callbacks}-{gc}"));
+            let mut build = Command::new(fwp());
+            build
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--gc", gc, "--link"])
+                .arg(&c)
+                .arg(&source)
+                .arg("-o")
+                .arg(&binary);
+            stdout(build);
+            let mut run = Command::new(binary);
+            run.env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
+                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", "1");
+            assert_eq!(stdout(run), expected);
+        }
+    }
+}
+
+#[test]
 fn static_library_from_rust() {
     if !have(&cc()) || !have("rustc") {
         return;

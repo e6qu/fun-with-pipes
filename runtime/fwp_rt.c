@@ -205,11 +205,17 @@ static V fwp_box_u128(u128 x) {
 static inline u128 fwp_u128(V v) { return *(u128 *)(uintptr_t)v; }
 
 #ifdef FWP_EXACT_FLOAT
+#ifndef FWP_BINARY128_DEFINED
+#define FWP_BINARY128_DEFINED
+struct fwp_binary128 { uint64_t low, high; };
+#endif
 static V fwp_box_f128(float128_t x) {
     float128_t *p = (float128_t *)fwp_alloc_leaf(sizeof x);
     *p = x; return PTR(p);
 }
 static inline float128_t fwp_f128(V v) { float128_t x; memcpy(&x, (void *)(uintptr_t)v, sizeof x); return x; }
+static struct fwp_binary128 fwp_to_c_quad(V v) { float128_t x=fwp_f128(v); return (struct fwp_binary128){x.v[0],x.v[1]}; }
+static V fwp_from_c_quad(struct fwp_binary128 x) { return fwp_box_f128((float128_t){{x.low,x.high}}); }
 #endif
 
 /* ------------------------------------------------------------- descriptors */
@@ -359,7 +365,7 @@ static inline void fwp_array_store(V a, size_t i, V value, const fwp_desc *elem)
 static V fwp_array_new_packed(size_t n, const fwp_desc *elem) {
     /* Preserve the established count/trap boundary in every layout mode. */
     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
-    if (n > (SIZE_MAX - sizeof(fwp_arr)) / fwp_array_stride(elem)) fwp_trap("array too large");
+    if (fwp_array_stride(elem) > sizeof(V) && n > (SIZE_MAX - sizeof(fwp_arr)) / fwp_array_stride(elem)) fwp_trap("array too large");
     size_t bytes = sizeof(fwp_arr) + n * fwp_array_stride(elem);
     void *storage = fwp_array_numeric(elem) ? fwp_alloc_leaf(bytes) : fwp_alloc(bytes);
     V result = PTR(storage); uint64_t len = n; memcpy(storage, &len, sizeof len); return result;

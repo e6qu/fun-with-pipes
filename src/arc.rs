@@ -81,16 +81,7 @@ pub(crate) fn check(prog: &Program) -> Result<(), String> {
                 // cannot thereby extend a managed value's lifetime. Use the
                 // actual ABI classification, not just `needs_rc`: raw pointers
                 // are uncounted too, yet can hide managed owners.
-                let scalar = |ty: &crate::ffi::CType| {
-                    matches!(
-                        ty,
-                        crate::ffi::CType::Void
-                            | crate::ffi::CType::Int { .. }
-                            | crate::ffi::CType::F32
-                            | crate::ffi::CType::F64
-                            | crate::ffi::CType::Bool
-                    )
-                };
+                let scalar = crate::ffi::by_value;
                 if params.iter().all(|(_, ty)| scalar(ty)) && scalar(&result) {
                     continue;
                 }

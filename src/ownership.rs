@@ -182,10 +182,11 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "zlib.gzip-end" | "ws.close-payload" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
         "ws.frame" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         // Raw address words are not managed owners. String conversion copies;
-        // only read-string returns a fresh managed leaf.
-        "mem.alloc" | "mem.free" | "mem.string" | "ptr.cast" | "ptr.address" | "ptr.read" => {
+        // wide scalar reads and read-string copy into owned language storage.
+        "mem.alloc" | "mem.free" | "mem.string" | "ptr.cast" | "ptr.address" => {
             (&[B], R, None, &[])
         }
+        "ptr.read" => (&[B], ResultOwnership::Numeric, None, &[]),
         "ptr.at" | "ptr.write" => (&[B, B], R, None, &[]),
         "ptr.read-string" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
         "matrix._valid-f64" => (&[B, B, B, B, B, B], R, None, &[]),

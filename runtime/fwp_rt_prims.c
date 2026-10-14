@@ -1804,7 +1804,7 @@ static V fwp_p_array_push_typed(V x, V a, void (*dup)(V),
     (void)drop_element;
     size_t n = fwp_array_len(a);
     if (n >= (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
-    if (n >= (SIZE_MAX - sizeof(fwp_arr)) / fwp_array_stride(elem)) fwp_trap("array too large");
+    if (fwp_array_stride(elem) > sizeof(V) && n >= (SIZE_MAX - sizeof(fwp_arr)) / fwp_array_stride(elem)) fwp_trap("array too large");
     int unique = fwp_array_is_view(a) ? 0 : fwp_rc_unique_mut(a);
     if (unique == 1 && fwp_array_capacity(a, elem) >= sizeof(fwp_arr) + (n + 1) * fwp_array_stride(elem)) {
         if (dup && elem->kind != K_F128) dup(x);
