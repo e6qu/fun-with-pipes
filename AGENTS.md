@@ -15,7 +15,9 @@ PR #136 completed the six-step platform/ownership roadmap as `2684241d`, with
 all nine production jobs and docs passing. The user requested continued work.
 The current follow-up bounds numeric backward-pass storage and scans to the
 seeded prefix; keep its implementation, regression controls, measurements and
-docs together on `autodiff-active-prefix`. Follow the live plan and handoff.
+docs together in PR #137 on `autodiff-active-prefix`. Follow the live plan and
+handoff. Once that PR merges with all final-head gates, this follow-up is complete;
+check its actual state before resuming or creating another implementation PR.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,

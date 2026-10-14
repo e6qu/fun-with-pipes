@@ -200,7 +200,11 @@ fn unused_tape_suffix_preserves_language_values_and_forward_traps() {
             .arg(&input).env("FWP_NO_OPT", "1").output().unwrap();
         assert_eq!(reference.status.code(), Some(status), "{reference:?}");
         assert_eq!(String::from_utf8_lossy(&reference.stdout).replace("\r\n", "\n"), expected);
-        assert!(String::from_utf8_lossy(&reference.stderr).contains(diagnostic));
+        if diagnostic.is_empty() {
+            assert!(reference.stderr.is_empty(), "{reference:?}");
+        } else {
+            assert!(String::from_utf8_lossy(&reference.stderr).contains(diagnostic));
+        }
         for arc in [false, true] {
             for opt in ["-O1", "-O2"] {
                 let binary = directory.join("prefix.exe");
@@ -217,7 +221,11 @@ fn unused_tape_suffix_preserves_language_values_and_forward_traps() {
                         .output().unwrap();
                     assert_eq!(output.status.code(), reference.status.code(), "{output:?}");
                     assert_eq!(output.stdout, reference.stdout);
-                    assert!(String::from_utf8_lossy(&output.stderr).contains(diagnostic));
+                    if diagnostic.is_empty() {
+                        assert!(output.stderr.is_empty(), "{output:?}");
+                    } else {
+                        assert!(String::from_utf8_lossy(&output.stderr).contains(diagnostic));
+                    }
                 }
             }
         }

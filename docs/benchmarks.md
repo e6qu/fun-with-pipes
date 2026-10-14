@@ -38,6 +38,31 @@ Fold-until and map-accum remain measured controls, without a
 claimed allocation improvement. The [handoff](development-state.md) records the
 measurement revisions and final acceptance gates.
 
+## Numeric backward prefix
+
+[Four-host native measurements](measurements/ad-prefix-2026-10-14.json) compare
+the same ARC program with bounded backward work and a full-prefix control.
+Both record 12,291 nodes; only the three inputs are seeded. Bounding adjoints
+reduces peak tape storage from 491,648 to 393,344 bytes (98,304 bytes, about
+20%) and avoids scanning 12,288 unused operation nodes. Tape allocation request
+counts stay at 38; requested bytes fall from 883,328 to 785,024. Managed counts
+and peak storage are unchanged, and all measured storage is reclaimed without GC.
+
+| Native host | Bounded process median | Full-prefix control |
+|---|---:|---:|
+| Linux AMD64 | 2.943 ms | 2.913 ms |
+| Linux ARM64 | 2.466 ms | 2.536 ms |
+| macOS ARM64 | 9.547 ms | 9.575 ms |
+| macOS AMD64 | 13.754 ms | 13.588 ms |
+
+These seven-sample process timings include startup/output and show no consistent
+speedup. The result establishes reduced storage and reverse scanning for this
+workload, with forward work unchanged. Workspace reuse is disabled for the
+comparison; existing larger cached buffers can remain within their fixed budget.
+The artifact records compiler/flags, hardware, raw samples, allocation counts,
+source/binary/disassembly hashes and native instruction inspection. Generated C,
+binaries and disassembly are retained by the linked runner artifacts.
+
 ## Running comparisons
 
 Run full workloads on GitHub runners. `bench/<name>/` contains fwp, C and Rust

@@ -1,7 +1,8 @@
 # Session handoff
 
-Updated 2026-10-14. The user requested continued development after PR #136
-completed the six-step roadmap. Current branch: `autodiff-active-prefix`, [PR #137](https://github.com/e6qu/fun-with-pipes/pull/137) (draft).
+Updated 2026-10-14. The user requested continued development after PR #136.
+[PR #137](https://github.com/e6qu/fun-with-pipes/pull/137), branch
+`autodiff-active-prefix`, implements the bounded numeric backward-pass follow-up.
 Publication, fixes and squash merge after all final-head gates remain authorized.
 
 ## Roadmap status
@@ -14,7 +15,7 @@ Publication, fixes and squash merge after all final-head gates remain authorized
 | 4 | Verified | Nested reverse AD, checkpointing and lifetime controls |
 | 5 | Verified | Actual F16/BF16/F128 and protocol v2 |
 | 6 | Verified | Native Windows ARM64/AMD64 and standalone packages |
-| 7 | In progress | Numeric backward-pass prefix bounds, regression controls and measurements |
+| 7 | Implemented | Seeded-prefix adjoint bounds, amortized workspace growth and four-host memory/binary evidence; final delivery follows PR #137's checks and merge |
 
 ## Accepted baseline
 
@@ -23,57 +24,61 @@ tree-identical to `26f2c68a`. All nine production jobs and docs pass; see
 [the acceptance record](roadmap-history.md#pr-136-merge-acceptance).
 Historical preparation anchors are not work to replay.
 
-## Current work
+## Current implementation and evidence
 
-Numeric backward passes currently reserve adjoints and scan the entire tape,
-including nodes recorded after every seeded output. The follow-up computes the
-last relevant node in output validation order, retains every input adjoint and
-processes only that prefix. Parents precede children, so the suffix cannot
-contribute. Both Rust interpretation and native C change together. Forward
-recording and managed nested-tape behavior stay intact.
+Numeric backward passes retain every input adjoint and the tape prefix through
+the last seeded output. Parent indices precede children, so later nodes cannot
+contribute. Both engines preserve validation and arithmetic order. Detached
+buffers remain protected before validation; invalid outputs allocate no new
+adjoints. Later failure/cancellation still releases all allocated buffers.
+A reused adjoint workspace grows geometrically; a cold one allocates the needed
+prefix. Forward recording and managed nested-tape propagation are unchanged.
 
-Implementation and regression controls are ready for focused runner checks;
-no new native support or performance result is verified yet.
-Required controls include duplicate/constant/empty outputs, truncated seed/output
-pairs, invalid/mixed tokens and diagnostic precedence, nested AD, workspace
-reuse, physical cleanup after validation/allocation failure and cancellation,
-and deliberate broken implementations. Measure actual adjoint allocation and
-scan bounds, retain generated C/native instructions and compare equivalent
-workloads on GitHub. Do not use stale local compiler binaries as an oracle.
+[Focused AD 38601394373](https://github.com/e6qu/fun-with-pipes/actions/runs/38601394373)
+passes all four Linux/macOS hosts at `920f5aa9`: native and interpreter tests,
+nested AD, scope/unwind/cancellation controls, workspace reuse, deliberate
+full-storage/full-scan regressions, and checkpoint/prefix measurements.
+[Focused WASM 38601399062](https://github.com/e6qu/fun-with-pipes/actions/runs/38601399062)
+passes both Linux hosts, including CLI/browser semantics and physical
+reclamation controls. Both runs test the
+current compiler/runtime. The evidence closeout adds docs/report hashes and
+strengthens successful-language-case stderr assertions; it does not alter runtime
+or compiler sources. Final production checks also exercise the stricter assertion.
 
-## Local checks
+[Four-host evidence](measurements/ad-prefix-2026-10-14.json) records 12,291 tape
+nodes with a three-input prefix. Peak tape storage falls 491,648 → 393,344 bytes;
+requested tape bytes fall 883,328 → 785,024 while request count stays 38.
+Managed allocations/retains/peak are unchanged; all measured storage is reclaimed
+without GC. Seven-sample process timings show no consistent speedup. The report
+retains hardware/compiler/flags, samples and source/binary/disassembly hashes.
+Native disassembly on all four hosts confirms the computed prefix controls
+adjoint allocation and reverse-loop bounds. Forward work remains unchanged.
 
-All checks use `python3 scripts/local-guard.py`: `cargo fmt --all` (0.99s),
-`cargo clippy --all-targets -- -D warnings` (24.14s initially, 0.37s after tests),
-`cargo test --lib tape_validation_tests -- --test-threads=1` (four pass, 19.47s),
-current-runtime C syntax (0.27s), current formatter compilation (0.39s) and AST/
-idempotence validation of `ad_unused_suffix.fwp` (0.52s), measurement-script
-syntax (0.15s), and `python3 scripts/check-roadmap.py` (48 link sets, 106 anchors,
-7 steps, 2.87s) pass. Full native/WASM suites and measurements remain on runners.
-
-Workspace growth refinement: all four focused interpreter tests pass again
-(13.52s). New native controls exercise cold/warm storage with GC and reuse
-verification and reject full-storage/full-scan regressions. Growing an existing
-adjoint workspace retains geometric growth; a cold workspace uses only the
-required prefix. Workflow lint passes (0.89s).
+Local checks through `python3 scripts/local-guard.py` pass: formatting, clippy
+(17.21s after refinement), four interpreter tape tests (13.52s), current-runtime
+C syntax (0.26s), current formatter AST/idempotence, Python syntax, workflow lint,
+and the roadmap/link/commit audit. Aggregating and hash-checking the runner
+reports passes (0.15s); no measurements were regenerated locally. Final evidence
+closeout formatting (1.14s) and clippy (0.61s) pass. Initial runs
+38600695264/38600698982 were cancelled while queued before the growth refinement;
+they do not count as evidence.
 
 ## Boundaries
 
-Checked native ARC still rejects unproved cycles, mutable/retained graphs and
-State/AD lifetimes. Service/remote/library/WASM executable ARC admission is
-outside the completed bundle. Generic wide values and some lazy producers can
-allocate. Checkpointing trades work for memory; prior measurements remain in
-[benchmarks](benchmarks.md). No universal collector-free or C/Rust speed claim.
+This change trims an unused suffix, not holes within the active prefix. Existing
+larger cached buffers stay within the fixed workspace budget. Checked native ARC
+still rejects unproved cycles, mutable/retained graphs and State/AD lifetimes.
+Service/remote/library/WASM executable ARC admission remains outside the earlier
+bundle. Generic wide values and some lazy producers can allocate. No universal
+collector-free execution, allocation reduction or speedup is claimed.
 
 ## Next action
 
-Next: dispatch and monitor the `autodiff` and `wasm` focused workflows for the
-current head. Initial runs 38600695264/38600698982 at `5f2aeac0` were cancelled
-while queued because they predate the workspace growth refinement. They are
-not final evidence.
-Fix every failure, record measured results, then require all nine production
-jobs plus docs on the final head before squash merge with one line of at most
-80 characters and an empty body. Keep this follow-up together in one PR.
+Next: inspect PR #137's current head, checks and merge state. If it is open,
+finish all nine exact-head production jobs plus docs, fix any failure, and
+squash merge with one line of at most 80 characters and an empty body. At a session restart, inspect that PR first. If merged with those passing
+gates, this follow-up is complete; no implementation task remains from step 7.
+Keep its work in this PR and do not replay historical preparation entries.
 
 Use `python3 scripts/local-guard.py COMMAND...` for serial local checks; preserve
 64 GiB free disk, target below 2 GiB, sampled aggregate RSS below 1 GiB and the

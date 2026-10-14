@@ -8,7 +8,12 @@ All nine production jobs and documentation passed at its tree-identical head
 The current follow-up reduces numeric reverse-mode adjoint storage and scans
 for unused tape suffixes. Preserve output validation, arithmetic order,
 reclamation and task/scope behavior in both engines. Keep this bounded change,
-its measured binary/memory evidence and documentation together in one PR.
+its measured binary/memory evidence and documentation together in
+[PR #137](https://github.com/e6qu/fun-with-pipes/pull/137). Four-host focused
+validation and measurements pass: the measured unused-suffix workload cuts peak
+tape storage by 98,304 bytes with no consistent speedup. Delivery requires all
+nine production jobs and docs on the final head. Once PR #137 merges with those
+gates, this follow-up is complete; historical anchors are not further work.
 [The handoff](docs/development-state.md) records current checks and next actions.
 
 ## Direction

@@ -1,0 +1,561 @@
+{
+  "scope": "Focused four-host numeric backward-prefix evidence. Identical ARC programs and compiler; the control only extends the backward prefix to the full recorded tape. Workspace reuse is disabled. Forward recording and managed allocation counts are unchanged. Timing includes process startup/output and shows no consistent speedup. Native code uses -O2 and -ffp-contract=off. Separate tape/managed peaks exclude allocator metadata and OS reservations. Final production acceptance is recorded by PR #137 checks.",
+  "run": 38601394373,
+  "reports": {
+    "ubuntu-latest": {
+      "head": "920f5aa956c882fb2334626af2f56b824ebd64ea",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmmprz5",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              INTEL(R) XEON(R) PLATINUM 8573C\nCPU family:                              6\nModel:                                   207\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                2\nCPU(s) scaling MHz:                      130%\nCPU max MHz:                             2300.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                4600.00\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves vnmi avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid fsrm arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                4 MiB (2 instances)\nL3 cache:                                260 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "source": "main = [2.0, 3.0, 4.0] | vjp (tap (rev._replay 4096 (map (add 1.0)) | ignore)) [1.0, 2.0, 3.0] | echo\n",
+      "sourceSha256": "845a10bcd16e82a1907ef64be4324ca0a07ce81183388932a8b4795580b1efe0",
+      "results": {
+        "bounded": {
+          "prefix": {
+            "recordedNodes": 12291,
+            "activeNodes": 3
+          },
+          "tape": {
+            "tapeRequests": 38,
+            "tapeRequestedBytes": 785024,
+            "peakTapeBytes": 393344,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 41010,
+            "requestedBytes": 1213672,
+            "retains": 45074,
+            "peakChargedBytes": 976,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            2943325,
+            2671112,
+            2790942,
+            3585942,
+            2734376,
+            3219873,
+            3316686
+          ],
+          "medianProcessWallNs": 2943325,
+          "generatedSha256": "9fab46239e848af4dfe8509b9b54515c7b873584859696fe2ce2f5c19cfbd611",
+          "binarySha256": "f913d7030f8c9e659359b75dfba29cc810ede4a2c603a70c27e6dc7c1cbf8dad",
+          "assemblySha256": "2e79a2e57cb5d8b15c672142bd4934657fa9d50035e20560f0ee59c49423f55c"
+        },
+        "full-prefix-control": {
+          "prefix": {
+            "recordedNodes": 12291,
+            "activeNodes": 12291
+          },
+          "tape": {
+            "tapeRequests": 38,
+            "tapeRequestedBytes": 883328,
+            "peakTapeBytes": 491648,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 41010,
+            "requestedBytes": 1213672,
+            "retains": 45074,
+            "peakChargedBytes": 976,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            3522557,
+            2737370,
+            3784427,
+            2912652,
+            2822816,
+            2790589,
+            4478535
+          ],
+          "medianProcessWallNs": 2912652,
+          "generatedSha256": "4a63a95e4d3a6b075a96398c76b303796e0aa11b9ce52a1c533f4046989f1c5d",
+          "binarySha256": "f2b0e50972fcd45bda901fe6dc60c073f5122ff721c6010462ed0b2d90987abb",
+          "assemblySha256": "647f0e9bc49b52bc2e679bb20fd4d4dd05b31a006ce15b2727db272d8453fd2a"
+        }
+      },
+      "scope": "Identical ARC program and compiler, workspace disabled. The control only extends the backward prefix to the full recorded tape. Actual tape buffers and charged managed storage are measured separately. Process timings include startup/output; no speedup threshold. Forward recording is unchanged; allocator metadata and OS reservations excluded."
+    },
+    "ubuntu-24.04-arm": {
+      "head": "920f5aa956c882fb2334626af2f56b824ebd64ea",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmy3dvn",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "source": "main = [2.0, 3.0, 4.0] | vjp (tap (rev._replay 4096 (map (add 1.0)) | ignore)) [1.0, 2.0, 3.0] | echo\n",
+      "sourceSha256": "845a10bcd16e82a1907ef64be4324ca0a07ce81183388932a8b4795580b1efe0",
+      "results": {
+        "bounded": {
+          "prefix": {
+            "recordedNodes": 12291,
+            "activeNodes": 3
+          },
+          "tape": {
+            "tapeRequests": 38,
+            "tapeRequestedBytes": 785024,
+            "peakTapeBytes": 393344,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 41010,
+            "requestedBytes": 1213672,
+            "retains": 45074,
+            "peakChargedBytes": 976,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            2715323,
+            2392169,
+            2413658,
+            2469115,
+            2485556,
+            2465507,
+            2413130
+          ],
+          "medianProcessWallNs": 2465507,
+          "generatedSha256": "9fab46239e848af4dfe8509b9b54515c7b873584859696fe2ce2f5c19cfbd611",
+          "binarySha256": "2cb76100501b70f749ed23a6d19afb600f0a13f20cb789ec3e6c99f12046dbf4",
+          "assemblySha256": "4c0d7be156ba517aae646ac5031d3acc1b5c38601091f3b384246f2e1eb25883"
+        },
+        "full-prefix-control": {
+          "prefix": {
+            "recordedNodes": 12291,
+            "activeNodes": 12291
+          },
+          "tape": {
+            "tapeRequests": 38,
+            "tapeRequestedBytes": 883328,
+            "peakTapeBytes": 491648,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 41010,
+            "requestedBytes": 1213672,
+            "retains": 45074,
+            "peakChargedBytes": 976,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            2743620,
+            2459419,
+            2552782,
+            2466739,
+            2889960,
+            2535598,
+            2433274
+          ],
+          "medianProcessWallNs": 2535598,
+          "generatedSha256": "4a63a95e4d3a6b075a96398c76b303796e0aa11b9ce52a1c533f4046989f1c5d",
+          "binarySha256": "efa2f46a7d9549a8555dd5eb557dbcbeac275abd067aadb7ecde09ff48adff22",
+          "assemblySha256": "2366869dca9334c177751750828e2b3ee61a33746895e8c75260845792937ad2"
+        }
+      },
+      "scope": "Identical ARC program and compiler, workspace disabled. The control only extends the backward prefix to the full recorded tape. Actual tape buffers and charged managed storage are measured separately. Process timings include startup/output; no speedup threshold. Forward recording is unchanged; allocator metadata and OS reservations excluded."
+    },
+    "macos-15": {
+      "head": "920f5aa956c882fb2334626af2f56b824ebd64ea",
+      "hardware": {
+        "system": "Darwin",
+        "node": "iad20-gt1017-c140d0bd-b552-454f-b690-0b6b782340d1-9261BE4450DC.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "source": "main = [2.0, 3.0, 4.0] | vjp (tap (rev._replay 4096 (map (add 1.0)) | ignore)) [1.0, 2.0, 3.0] | echo\n",
+      "sourceSha256": "845a10bcd16e82a1907ef64be4324ca0a07ce81183388932a8b4795580b1efe0",
+      "results": {
+        "bounded": {
+          "prefix": {
+            "recordedNodes": 12291,
+            "activeNodes": 3
+          },
+          "tape": {
+            "tapeRequests": 38,
+            "tapeRequestedBytes": 785024,
+            "peakTapeBytes": 393344,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 41010,
+            "requestedBytes": 1213672,
+            "retains": 45074,
+            "peakChargedBytes": 976,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            6776750,
+            15574458,
+            13766083,
+            4471750,
+            6463042,
+            9547334,
+            19682917
+          ],
+          "medianProcessWallNs": 9547334,
+          "generatedSha256": "9fab46239e848af4dfe8509b9b54515c7b873584859696fe2ce2f5c19cfbd611",
+          "binarySha256": "46def26cb3e81ee06ec0a72f5e37c4b0444ff289dd0ae48e7d42bf2feda87806",
+          "assemblySha256": "7b03e9652fd472569903cfb987516c75472d31acb9bd14b9c364535c22fa12d2"
+        },
+        "full-prefix-control": {
+          "prefix": {
+            "recordedNodes": 12291,
+            "activeNodes": 12291
+          },
+          "tape": {
+            "tapeRequests": 38,
+            "tapeRequestedBytes": 883328,
+            "peakTapeBytes": 491648,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 41010,
+            "requestedBytes": 1213672,
+            "retains": 45074,
+            "peakChargedBytes": 976,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            15895416,
+            9150625,
+            9574667,
+            11816667,
+            10613541,
+            6838833,
+            5522542
+          ],
+          "medianProcessWallNs": 9574667,
+          "generatedSha256": "4a63a95e4d3a6b075a96398c76b303796e0aa11b9ce52a1c533f4046989f1c5d",
+          "binarySha256": "4f651db2729eabc91fd1bd36fcc2b55a0f229a7d361680d26b60fb42971235a8",
+          "assemblySha256": "87affba8567a556035918b58d2377860371654c8a96fc0d41dc47d0d85dff6eb"
+        }
+      },
+      "scope": "Identical ARC program and compiler, workspace disabled. The control only extends the backward prefix to the full recorded tape. Actual tape buffers and charged managed storage are measured separately. Process timings include startup/output; no speedup threshold. Forward recording is unchanged; allocator metadata and OS reservations excluded."
+    },
+    "macos-15-intel": {
+      "head": "920f5aa956c882fb2334626af2f56b824ebd64ea",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sat12-jr307-731c3745-ac13-404c-91b1-c69d95805a1d-1EB66671B3D3.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "machine": "x86_64",
+        "processor": "i386"
+      },
+      "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "source": "main = [2.0, 3.0, 4.0] | vjp (tap (rev._replay 4096 (map (add 1.0)) | ignore)) [1.0, 2.0, 3.0] | echo\n",
+      "sourceSha256": "845a10bcd16e82a1907ef64be4324ca0a07ce81183388932a8b4795580b1efe0",
+      "results": {
+        "bounded": {
+          "prefix": {
+            "recordedNodes": 12291,
+            "activeNodes": 3
+          },
+          "tape": {
+            "tapeRequests": 38,
+            "tapeRequestedBytes": 785024,
+            "peakTapeBytes": 393344,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 41010,
+            "requestedBytes": 1213672,
+            "retains": 45074,
+            "peakChargedBytes": 976,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/bounded-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            12792992,
+            13425258,
+            13753755,
+            14574746,
+            12477065,
+            13813555,
+            14858648
+          ],
+          "medianProcessWallNs": 13753755,
+          "generatedSha256": "9fab46239e848af4dfe8509b9b54515c7b873584859696fe2ce2f5c19cfbd611",
+          "binarySha256": "66c0c0af9272033a3d55a0b4c5a65b83c7135596dc4c72998c69921f1ae88289",
+          "assemblySha256": "1cf7ab26a15658939ecf6a8c9c15dbae8399ebbc7017d977ee09884c3120c550"
+        },
+        "full-prefix-control": {
+          "prefix": {
+            "recordedNodes": 12291,
+            "activeNodes": 12291
+          },
+          "tape": {
+            "tapeRequests": 38,
+            "tapeRequestedBytes": 883328,
+            "peakTapeBytes": 491648,
+            "finalTapeBytes": 0
+          },
+          "managed": {
+            "requests": 41010,
+            "requestedBytes": 1213672,
+            "retains": 45074,
+            "peakChargedBytes": 976,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control-profile.c",
+              "-o",
+              "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/prefix/full-prefix-control-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "processWallNs": [
+            15162671,
+            12154587,
+            10955000,
+            13048435,
+            13587681,
+            14977989,
+            14639314
+          ],
+          "medianProcessWallNs": 13587681,
+          "generatedSha256": "4a63a95e4d3a6b075a96398c76b303796e0aa11b9ce52a1c533f4046989f1c5d",
+          "binarySha256": "30270e6c69069e451a8c544483fc265cc67ebb87cfe9f7dbb500f5be794dbc83",
+          "assemblySha256": "5476ba48f4856fc76ecdd0964b6062edef530d03c7ea1f022fa74cc465829313"
+        }
+      },
+      "scope": "Identical ARC program and compiler, workspace disabled. The control only extends the backward prefix to the full recorded tape. Actual tape buffers and charged managed storage are measured separately. Process timings include startup/output; no speedup threshold. Forward recording is unchanged; allocator metadata and OS reservations excluded."
+    }
+  },
+  "binaryInspection": {
+    "scope": "Inspected emitted native disassembly for bounded f129/_f129 on all four hosts. Output validation computes the maximum node prefix in a register; the allocation path uses that bound and the reverse loop compares it against input count. Retained assembly is in each runner artifact under prefix/bounded.asm.",
+    "linuxAMD64": "f129: max bound in rbp via cmovge; allocation count passed through r13; cmp r12,rbp guards the reverse loop.",
+    "linuxARM64": "f129: csinc updates x26; calloc receives count via x22; cmp x26,x24 and b.le skip the unused suffix.",
+    "macOSARM64": "_f129 uses bounded count for calloc and bzero; the reverse-loop entry compares the prefix with the input count.",
+    "macOSAMD64": "_f129 uses the computed count for calloc and byte clearing, then tests the prefix against the input count before the reverse loop."
+  }
+}

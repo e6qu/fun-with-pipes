@@ -114,8 +114,10 @@ forward evaluation still runs in full, including traps. Duplicate seeds accumula
 in their original order. Validation still consumes the tape and checks output
 identity/bounds in order before allocating new adjoint storage. A cached larger
 workspace can remain allocated within its existing budget. Managed nested tapes
-retain their existing callback propagation rules. The current handoff records
-validation and measured costs for this follow-up.
+retain their existing callback propagation rules. [Measured evidence](measurements/ad-prefix-2026-10-14.json)
+shows lower tape storage and unchanged managed allocation counts for an unused
+suffix; process timings show no consistent speedup. The handoff records delivery
+validation. Growing a reused adjoint workspace remains amortized.
 
 `xs | vjp-checkpointed {steps = 1000, every = 32} step seeds` differentiates
 1000 applications of a pure `step`. Both counts are explicit: `steps` must be

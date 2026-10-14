@@ -330,3 +330,25 @@ passes at that head. Intel GC finishes in 73 minutes after rebalancing REST and
 wide-worker tests, with complete coverage and unchanged limits. This accepts
 all six roadmap steps. The squash message has one line and no body or trailers.
 Later work follows the user's subsequent request to continue.
+
+
+## PR #137 focused evidence
+
+The user requested continued development after PR #136. The bounded follow-up
+trims numeric adjoint storage and reverse scanning after the last seeded output,
+retains every input and amortized workspace growth, and preserves forward work.
+[AD 38601394373](https://github.com/e6qu/fun-with-pipes/actions/runs/38601394373)
+passes all four Linux/macOS hosts at `920f5aa9`, including nested AD, workspace,
+scope/unwind/cancellation and deliberate full-storage/full-scan controls.
+[WASM 38601399062](https://github.com/e6qu/fun-with-pipes/actions/runs/38601399062)
+passes both Linux hosts, including physical reclamation and CLI/browser execution.
+
+[Permanent measurements](measurements/ad-prefix-2026-10-14.json) retain four
+host reports, hardware/compiler/flags, raw timings, actual allocations and
+binary/disassembly hashes. The identical unused-suffix workload records 12,291
+nodes but needs three adjoints. Peak tape storage falls 491,648 → 393,344 bytes,
+with unchanged managed counts and zero final storage/collections. Process timings
+show no consistent speedup. Native instructions on all four hosts confirm the
+computed prefix controls allocation and reverse-loop bounds. This is focused
+evidence; final delivery requires all nine production jobs and docs on
+[PR #137](https://github.com/e6qu/fun-with-pipes/pull/137)'s final head before merge.
