@@ -28,7 +28,7 @@ unresolved checks continue on `roadmap-after-135` without replaying merged code.
 | 3 | In progress | Four-host wide record allocation measurements pass; numeric tail loops and direct array producer fusion implemented, latest ownership/transport/instruction checks running |
 | 4 | In progress | Four-host nested/checkpoint semantic and ARC controls pass; managed failure/task/unload and checkpoint measurements pass four hosts; final gates remain |
 | 5 | In progress | Actual F16/BF16/F128 values, text, arrays, closed workers, foreign ABI and protocol v2 implemented; final precision/ownership/platform gates remain |
-| 6 | In progress | Windows native allocator/fiber/socket, interpreter goldens and generated resource/task stress passed both architectures; static memory/TLS repairs under validation; production gates are wired |
+| 6 | In progress | Windows native allocator/fiber/socket, interpreter goldens and generated resource/task stress passed both architectures; static-memory and TLS controls pass both hosts; final production gates remain |
 
 Scope includes Windows ARM64/AMD64 and actual half/quad formats, superseding
 old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
@@ -70,7 +70,7 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   LLVM-MinGW and vcpkg/OpenSSL sources are pinned. TLS COFF linking, dependency
   architecture checks and standalone PE packages are implemented but unaccepted.
   Windows static-memory reservations, reusable worker/fiber pools and explicit
-  decimal scratch allocation pass the AMD64 native fixture; ARM64 and final
+  decimal scratch allocation pass native fixtures on both architectures; final
   gates remain. DLL/OS resource allocations are excluded
   from the runtime storage budget.
 
@@ -91,19 +91,19 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   hashes are in [the artifact](measurements/checkpoint-2026-10-14.json).
 - [Production 38558134779@09db8f25](https://github.com/e6qu/fun-with-pipes/actions/runs/38558134779)
   is running all platform gates after a runner queue delay. Bench and docs pass.
-  Windows AMD64 passes native foundations, interpreter goldens, generated
+  Windows AMD64 and ARM64 pass native foundations, interpreter goldens, generated
   resource/GC stress and all three static-memory tests, including startup-only
   allocations, repeated workers/fibers, decimal scratch, exhaustion, fatal exits
-  and omission controls. The remaining jobs are running. Keep this run for
-  broad diagnostics while the next focused repairs are prepared.
-- [Full Windows 38552879801@e5fecb81](https://github.com/e6qu/fun-with-pipes/actions/runs/38552879801)
-  passes both architectures' executable/CLI/foreign/task ownership, exact formats/protocol,
-  native goldens and standalone packaging. TLS passes 9/10 cases: the remaining
-  snapshot needs Windows peer-close normalization alongside reset/alert rejection.
-  AD probe failures need CRLF handling and a Windows stack bound on the injected
-  cancellation task. The older cross-task source typo is already fixed.
-  ARM64 also reports a peer connection abort; the same Windows failure category
-  now includes it. Neither architecture is accepted yet.
+  and omission controls. Both Windows jobs also pass TLS and executable ownership.
+  macOS ARM regular passes every test except the two library-format checks;
+  `lib/autodiff.fwp` is now formatted with the current formatter sources, with
+  syntax-tree equality and idempotence checked. Remaining jobs are running.
+  Keep this run for broad diagnostics while the next repair batch is prepared.
+- Earlier Windows full run 38552879801 passes both architectures' native goldens,
+  standalone packages, exact formats and executable/CLI/foreign/task ownership.
+  Its TLS peer-close snapshot, CRLF probe output and injected cancellation stack
+  bound failures are repaired. The current native AD shard validates those fixes;
+  neither architecture is accepted until all final-head gates pass.
 - The intermittent Windows allocator probe retained a stale mutator pointer to
   its supposed collector-only garbage. Its injection now creates that object
   inside the collector frame; a guarded current-runtime O1/O2 probe passes with
@@ -120,7 +120,12 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   construction now protects the completed retain prefix before any later retain
   can fail. Four new unwind stages and an omitted-owner control are added.
   Guarded focused clippy and current-runtime C syntax pass; these new controls
-  still require runner execution. Do not claim their acceptance from 09db8f25.
+  require the focused runner results below, not the older 09db8f25 run.
+  [Focused 38560981174@b4d072bb](https://github.com/e6qu/fun-with-pipes/actions/runs/38560981174)
+  passes all focused tests and measurements on Linux AMD64/ARM64 and macOS ARM,
+  including new identity-reuse and partial-retain controls. Intel macOS is running.
+  PR #136 is temporarily draft to avoid
+  repeated full matrices during fixes; restore readiness for final acceptance.
 - Completed merged-main macOS ARM shard exposed three older harness failures:
   ARC corpus charged permanent scheduler root storage; CSV trap injection still
   named an old constructor; early task publication injection missed the new
@@ -138,6 +143,13 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
 - Earlier development evidence and wide-record reductions remain in
   [history](roadmap-history.md#pr-135-development-evidence) and
   [the measurement artifact](measurements/wide-records-2026-10-14.json).
+
+- Guarded current-source formatter compilation and execution on `lib/autodiff.fwp`
+  and `tests/run/ad_task_reuse.fwp` pass (1.15s and 1.13s), preserving each syntax
+  tree. Guarded standalone `tests/stdlib_doc.rs` compilation and
+  `env -u FWP_BLESS /private/tmp/fwp-stdlib-doc-current --exact stdlib_doc_is_current`
+  pass (0.64s/0.52s); generated public docs remain current. Stale future-format
+  claims in design/numerics and working-branch wording in references are removed.
 
 ## Next action
 

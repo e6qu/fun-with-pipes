@@ -362,7 +362,8 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
   fibers with explicit saved-register and stack root ranges; the OS owns stack
   reservation, commitment and ABI restoration. Native acceptance remains pending. Interpreter tasks are OS threads that pass a
   baton, so only one runs at a time. Function-entry preemption preserves
-  deterministic ready-task interleaving across backends; relative wall-clock
+  deterministic ready-task interleaving across backends at the same optimization
+  setting. Inlining changes the function-entry count. Relative wall-clock
   timers do not establish an order between independent effects. Use channels
   or awaits when output order matters.
 
@@ -557,7 +558,8 @@ evaluated into ordered temporaries before native calls, preserving trap order.
 Unsupported expression shapes retain the ordinary lowering; this is a compile-time
 eligibility choice. C compilation decides register assignment and spills.
 
-[Float formats](float-formats.md) records the implemented F32/F64 representations
-of half/wide float names and the decision for a coordinated future format and
-protocol migration. Current native ownership/array claims do not imply true
-binary16, bfloat16 or binary128 arithmetic.
+[Float formats](float-formats.md) records actual binary16, bfloat16 and binary128
+arithmetic, exact decimal conversion and protocol v2. Half/bfloat arrays use
+two-byte elements; quad arrays use sixteen-byte elements at eight-byte alignment.
+Closed quad workers and flat numeric records pass their bits directly; generic
+boundaries can still box. Platform acceptance is recorded in the handoff.

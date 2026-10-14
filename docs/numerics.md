@@ -328,6 +328,7 @@ results, including recursive worker calls. Generic entries, closures and
 containers retain typed counted boxes with explicit ownership transfer.
 `FWP_WIDE_WORKERS=0` selects the boxed comparison control. Checked overflow,
 division and evaluation order agree with raw interpretation. Overflow message
-formatting stays outside hot arithmetic frames; recursive calls still use stack.
-The [float-format decision](float-formats.md) separately specifies existing
-F16/BF16/F128 behavior and the future precision and wire-format migration.
+formatting stays outside hot arithmetic frames. Eligible numeric self-tail calls
+use loops; other recursive calls still use stack.
+The [float-format contract](float-formats.md) specifies actual F16/BF16/F128
+arithmetic, storage, rounding and the implemented protocol v2 migration.

@@ -56,7 +56,7 @@ the destination format. Formatting and macro expansion preserve those digits;
 `SFloat` now carries a decimal `String`, as described in the
 [macro reference](reference.md#compile-time-evaluation-and-macros). This removes
 early F64 rounding from syntax. Monomorphization now parses literal digits
-directly into the selected format on the working branch.
+directly into the selected format.
 
 Generated programs using these formats link the shared C11 arithmetic/decimal
 and C++20 math cores. The object cache includes their source, compiler identities,

@@ -17,7 +17,7 @@ library is listed in [stdlib.md](stdlib.md).
   suffix, the literal takes the type it is used at; a literal out of range
   for that type is a compile error.
 - **Float literals:** `1.5`, `2e-3`, with suffixes `f16`, `bf16`, `f32`,
-  `f64`, `f128`. The working branch uses binary16, bfloat16, binary32,
+  `f64`, `f128`. These use binary16, bfloat16, binary32,
   binary64 and binary128 respectively, with direct rounding from decimal text.
   See the [format contract and validation status](float-formats.md).
 - **Duration literals:** `500ns`, `20us`, `250ms`, `2s`, `1.5s`, `5min`,

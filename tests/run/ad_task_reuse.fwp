@@ -6,5 +6,10 @@ seed = const [1.0] | rev._seed | .1 | rev._seed | .1
 work : List[Rev[Rev[F64]]] -> () -> Rev[Rev[F64]]
 work = curry (.0 | head | option.unwrap-or zero | fork mul id id)
 
-main = task.spawn seed | task.await | option.unwrap-or []
-    | compose work task.spawn | task.await | ignore
+main =
+    task.spawn seed
+    | task.await
+    | option.unwrap-or []
+    | compose work task.spawn
+    | task.await
+    | ignore
