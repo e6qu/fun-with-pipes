@@ -76,88 +76,67 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
 
 ## Current validation
 
-- [Autodiff 38554877275@c5f9ff42](https://github.com/e6qu/fun-with-pipes/actions/runs/38554877275)
-  passes on Linux AMD64/ARM64 and macOS Intel/ARM: all library tests, nested
-  second/third derivatives, active zeros, stale/mixed/task identity, managed
-  tape growth and wide reference counts, recovered failure/cancellation and
-  real library unload. Omitted releases fail the controls. Existing numeric
-  tape scopes/workspaces/capacity, checkpoint errors and Linux pipe teardown
-  controls also pass. This is focused evidence, not final production acceptance.
-- The same four-host run measures the 4096-step additive VJP at checkpoint
-  intervals 16/32/64. Interval 32 cuts peak tape storage 262,248 → 2,152 bytes,
-  increases managed peak 336 → 12,816 bytes and does more allocations and work.
-  All measured storage is reclaimed without collection. Separate peaks are
-  not necessarily simultaneous. Hardware/compiler/flags, timings, counts and
-  hashes are in [the artifact](measurements/checkpoint-2026-10-14.json).
-- [Production 38558134779@09db8f25](https://github.com/e6qu/fun-with-pipes/actions/runs/38558134779)
-  is running all platform gates after a runner queue delay. Bench and docs pass.
-  Windows AMD64 and ARM64 pass native foundations, interpreter goldens, generated
-  resource/GC stress and all three static-memory tests, including startup-only
-  allocations, repeated workers/fibers, decimal scratch, exhaustion, fatal exits
-  and omission controls. Both Windows jobs also pass TLS and executable ownership.
-  macOS ARM regular passes every test except the two library-format checks;
-  `lib/autodiff.fwp` is now formatted with the current formatter sources, with
-  syntax-tree equality and idempotence checked. Remaining jobs are running.
-  Keep this run for broad diagnostics while the next repair batch is prepared.
-- Earlier Windows full run 38552879801 passes both architectures' native goldens,
-  standalone packages, exact formats and executable/CLI/foreign/task ownership.
-  Its TLS peer-close snapshot, CRLF probe output and injected cancellation stack
-  bound failures are repaired. The current native AD shard validates those fixes;
-  neither architecture is accepted until all final-head gates pass.
-- The intermittent Windows allocator probe retained a stale mutator pointer to
-  its supposed collector-only garbage. Its injection now creates that object
-  inside the collector frame; a guarded current-runtime O1/O2 probe passes with
-  the correct boundary and fails with the omitted boundary. CI repeats processes
-  across address layouts. No runtime root range was weakened.
-- Guarded local formatting, focused clippy, runtime and measurement C syntax,
-  workflow lint, primitive inventory and roadmap/link/commit checks pass.
-  Generated stdlib docs have been refreshed; old merged-main preflight failures
-  require the final production run. Full builds/tests/measurements run on CI.
-- Further review found that task addresses and WASM host fiber slots can be
-  reused. Managed tapes now bind to nonrecycled task identities; a shared golden
-  fixture exercises completed-task isolation in native and WASM engines, and a
-  native constant-identity negative control must expose the bug. Managed seed
-  construction now protects the completed retain prefix before any later retain
-  can fail. Four new unwind stages and an omitted-owner control are added.
-  Guarded focused clippy and current-runtime C syntax pass; these new controls
-  require the focused runner results below, not the older 09db8f25 run.
-  [Focused 38560981174@b4d072bb](https://github.com/e6qu/fun-with-pipes/actions/runs/38560981174)
-  passes all focused tests and measurements on Linux AMD64/ARM64 and macOS ARM,
-  including new identity-reuse and partial-retain controls. Intel macOS is running.
-  PR #136 is temporarily draft to avoid
-  repeated full matrices during fixes; restore readiness for final acceptance.
-- Completed merged-main macOS ARM shard exposed three older harness failures:
-  ARC corpus charged permanent scheduler root storage; CSV trap injection still
-  named an old constructor; early task publication injection missed the new
-  Windows conditional. The fixtures now initialize the scheduler baseline and
-  assert current injection markers. A guarded O1 compile/run of the runner's
-  emitted preemption program confirms balanced charged bytes after the baseline
-  repair; current compiler agreement and all controls require CI. Preemption compares
-  matching optimization settings because inlining changes function-entry counts;
-  both raw engines now have a separate regression. Task preparation now owns
-  the unpublished task allocation through scope/stack failure, with a physical
-  reclamation ledger and a missing-release control pending CI.
-- Both Windows architectures share one reusable acceptance workflow, including
-  native nested AD, ownership, exact formats and standalone PE packaging.
-  Require these plus all seven Linux/macOS production jobs and documentation.
+- [Production 38558134779@09db8f25](https://github.com/e6qu/fun-with-pipes/actions/runs/38558134779):
+  macOS ARM GC, bench and docs pass. The complete macOS ARM regular test shard
+  passes except for library formatting; current-source formatting now preserves
+  the syntax tree and is idempotent. Both Windows architectures pass foundations,
+  interpreter goldens, generated runtime/GC stress, static-memory controls,
+  TLS/executable ownership and native nested AD. Their native goldens/package
+  steps and remaining Linux/Intel jobs are running. This older head is diagnostic
+  evidence, not the final merge gate.
+- [Focused 38560981174@b4d072bb](https://github.com/e6qu/fun-with-pipes/actions/runs/38560981174):
+  all four Linux/macOS hosts pass the latest nested AD, completed-task identity,
+  partial-retain unwind and omitted-release controls, numeric tape scopes,
+  workspaces/capacity, library unload, checkpoints and Linux pipe ownership.
+  Checkpoint measurements also pass on all four hosts.
+  Full WASM and Windows checks of these newest changes still require the final run.
+- [Four-host checkpoint evidence](https://github.com/e6qu/fun-with-pipes/actions/runs/38554877275)
+  at `c5f9ff42` measures a 4096-step additive VJP with intervals 16/32/64. Interval
+  32 cuts peak tape storage 262,248 → 2,152 bytes and increases managed peak
+  336 → 12,816 bytes, allocations and elapsed time. Separate peaks need not be
+  simultaneous. All measured storage is reclaimed without collection. Hardware,
+  compiler, flags, timings, counts and hashes are in
+  [the artifact](measurements/checkpoint-2026-10-14.json).
+- Both Windows architectures previously passed native goldens, exact formats,
+  foreign ABI and standalone packaging in
+  [38552879801@e5fecb81](https://github.com/e6qu/fun-with-pipes/actions/runs/38552879801).
+  Its TLS peer-close, CRLF probe and synthetic cancellation stack-bound failures
+  are repaired and pass the corresponding stages of the newer production run.
+- macOS ARM GC now passes the repaired ARC corpus/scheduler baseline, CSV partial
+  construction, early publication and unpublished task reclamation controls.
+  The allocator probe creates collector-only garbage in the collector frame;
+  current-runtime O1/O2 positive/negative controls pass locally and on both
+  Windows hosts. No runtime root range was weakened.
+- Local checks are serial through `python3 scripts/local-guard.py`: focused
+  clippy, current-runtime C syntax, formatting, workflow lint, inventory and
+  roadmap/link/commit audits pass. Standalone `tests/stdlib_doc.rs` compilation
+  and `env -u FWP_BLESS /private/tmp/fwp-stdlib-doc-current --exact stdlib_doc_is_current`
+  pass (0.64s/0.52s). Compiling the current formatter modules and formatting
+  `lib/autodiff.fwp`/`tests/run/ad_task_reuse.fwp` pass (1.15s/1.13s), with unchanged
+  syntax trees. Full builds/tests/measurements remain on CI.
+- To reduce CI duration, REST and examples move from the GC shard to regular
+  macOS. They took 458s/297s in Intel run 38550733670; the GC job also runs the
+  full stress golden suite. Guarded `python3 scripts/test-macos-test-shards.py`
+  passes (0.16s); a guarded check of current Cargo metadata confirms all 194
+  integration targets appear exactly once (99 regular, 95 GC). Job timeouts,
+  stress coverage and failure propagation are unchanged; new elapsed times
+  require the final runner results.
 - Earlier development evidence and wide-record reductions remain in
   [history](roadmap-history.md#pr-135-development-evidence) and
   [the measurement artifact](measurements/wide-records-2026-10-14.json).
 
-- Guarded current-source formatter compilation and execution on `lib/autodiff.fwp`
-  and `tests/run/ad_task_reuse.fwp` pass (1.15s and 1.13s), preserving each syntax
-  tree. Guarded standalone `tests/stdlib_doc.rs` compilation and
-  `env -u FWP_BLESS /private/tmp/fwp-stdlib-doc-current --exact stdlib_doc_is_current`
-  pass (0.64s/0.52s); generated public docs remain current. Stale future-format
-  claims in design/numerics and working-branch wording in references are removed.
-
 ## Next action
 
-Next: run the task-identity and partial-tape construction controls, inspect the
-09db8f25 production run and fix every failure. Restore PR readiness after the
-focused fixes pass, then require all full gates on the final head. Keep all work
-in the follow-up to PR #135. Require all seven Linux/macOS production jobs, both native Windows
-acceptance jobs and docs on the final head before squash merge.
+Next: publish this final repair/documentation batch, restore PR #136 readiness
+and monitor its final production run. Also collect remaining 09db8f25 diagnostics
+and fix every failure. Require all seven Linux/macOS production jobs, both native
+Windows acceptance jobs and docs on the final head before squash merge. Use an
+explicit one-line subject of at most 80 characters and an empty body.
+
+The six-step implementation scope is complete when PR #136 passes those gates
+and is merged. At a session restart, check its actual merge and final-head CI
+state first. If both are complete, close out this bundle; do not start another
+implementation PR from the historical preparation queue or invent new scope.
 
 Use `python3 scripts/local-guard.py COMMAND...` for serial focused local work.
 Preserve 64 GiB free disk, target below 2 GiB, aggregate sampled RSS below 1 GiB,

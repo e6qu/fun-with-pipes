@@ -4,8 +4,9 @@ The original roadmap and follow-up bundles are accepted through PR #133.
 [PR #135](https://github.com/e6qu/fun-with-pipes/pull/135) was merged by the user
 as `ad37059e` before final platform acceptance. It delivered further ownership,
 array fusion, exact formats, checkpointing/nested AD and Windows implementation;
-it did not finish all six directions. Focused passing checks remain scoped
-evidence, and Windows TLS failures are still work to fix.
+it did not finish final acceptance. Follow-up PR #136 completes implementation
+and repairs the Windows TLS/ownership failures. Focused checks remain scoped
+evidence until final production gates pass.
 The remaining scope below carries forward, including Windows ARM64/AMD64 and
 real half/quad language formats.
 [The handoff](docs/development-state.md) records actual progress and checks;
@@ -53,7 +54,7 @@ host/target pair is not implied.
 
 | Area | Current implementation | Verification boundary |
 |---|---|---|
-| Native platforms | Linux/macOS ARM64 and AMD64; Windows allocator, fibers, sockets, Unicode paths/processes, TLS and PE packages | Linux/macOS support accepted previously; Windows static storage and TLS peer repairs need native acceptance |
+| Native platforms | Linux/macOS ARM64 and AMD64; Windows allocator, fibers, sockets, Unicode paths/processes, TLS and PE packages | Linux/macOS support accepted previously; Windows static storage and TLS controls pass both hosts; final gates remain |
 | Ownership | Typed Dup/Drop, reuse, scoped File/State owners, retained tasks, synchronous foreign callbacks, CLI/protocol lifetimes | Checked ARC rejects unproved cycles and resource graphs; final follow-up gates remain |
 | Numeric storage | Natural-width arrays, retained views, wide scalar/record workers, actual F16/BF16/F128 and protocol v2 | Four-host exact-format/ABI proofs and wide-record measurements pass; final six-platform gates remain |
 | Iteration | Tacit data-last combinators, direct count/list/iterate/array producer fusion, known State callbacks and numeric self-tail loops | Allocation and instruction probes preserve effects, forcing and traps; some general lazy tails still allocate |
@@ -95,7 +96,9 @@ Windows suites on both architectures, and documentation on the final PR head.
 Use early focused runner checks while developing; run full final gates once the
 bundle is ready, fix all failures, and squash with one explicit subject of at
 most 80 characters and an empty body. A new backend, JIT and distributed
-execution are not part of this bundle.
+execution are not part of this bundle. Once PR #136 passes these gates and is
+merged, the six-step bundle is complete. Check that state before resuming work;
+historical preparation entries are not a new task queue.
 
 ## Agreed syntax
 
