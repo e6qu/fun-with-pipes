@@ -11,7 +11,7 @@ fn autodiff_library_unload_releases_live_and_cached_buffers() {
         "workspace.{}",
         fwp::cgen::shared_library_extension()
     ));
-    std::fs::write(&input,"export probe : I64 -> I64\nprobe = ad.scope ad.tape\nexport live : I64 -> I64\nlive = ad.tape\n").unwrap();
+    std::fs::write(&input,"export probe : I64 -> I64\nprobe = ad.scope ad.tape\nexport live : I64 -> I64\nlive = ad.tape\nexport managed : I64 -> I64\nmanaged = const [0.0] | rev._seed | .1 | rev._seed | .0\n").unwrap();
     let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
         .args(["build", "--cdylib", "--emit-c"])
         .arg(&input)
@@ -34,14 +34,20 @@ fn autodiff_library_unload_releases_live_and_cached_buffers() {
         .unwrap();
     let tape = c_instrument::calls(
         &source[a..b],
-        &[("realloc", "library_realloc"), ("free", "library_free")],
+        &[
+            ("realloc", "library_realloc"),
+            ("free", "library_free"),
+            ("fwp_mem_alloc", "library_mem_alloc"),
+            ("fwp_mem_realloc", "library_mem_realloc"),
+            ("fwp_mem_free", "library_mem_free"),
+        ],
     )
     .replace("(double *)calloc(", "(double *)library_calloc(");
-    let code=format!("{}\nstatic void *library_realloc(void *,size_t);\nstatic void *library_calloc(size_t,size_t);\nstatic void library_free(void *);\nstatic void library_finished(void);\n{}{}\n{}",&source[..a],tape,&source[b..],include_str!("fixtures/autodiff_library_ledger.c"))
+    let code=format!("{}\nstatic void *library_realloc(void *,size_t);\nstatic void *library_calloc(size_t,size_t);\nstatic void library_free(void *);\nstatic void *library_mem_alloc(size_t);\nstatic void *library_mem_realloc(void *,size_t,size_t);\nstatic void library_mem_free(void *);\nstatic void library_finished(void);\n{}{}\n{}",&source[..a],tape,&source[b..],include_str!("fixtures/autodiff_library_ledger.c"))
         .replace("    fwp_tape_finish();\n    fwp_gc_finish();", "    fwp_tape_finish();library_finished();\n    fwp_gc_finish();");
     assert!(code.contains("fwp_tape_finish();library_finished();"));
     let host = dir.join("host.c");
-    let exe = dir.join("host");
+    let exe = dir.join(if cfg!(windows) { "host.exe" } else { "host" });
     std::fs::write(&host, include_str!("fixtures/autodiff_library_host.c")).unwrap();
     let mut cc = Command::new(std::env::var("CC").unwrap_or_else(|_| "cc".into()));
     cc.arg(&host).arg("-o").arg(&exe);
@@ -55,12 +61,13 @@ fn autodiff_library_unload_releases_live_and_cached_buffers() {
         String::from_utf8_lossy(&built.stderr)
     );
     for opt in ["-O1", "-O2"] {
-        for omit in [false, true] {
-            let c = if omit {
-                code.replace("fwp_tape_finish();library_finished();", "")
-            } else {
-                code.clone()
+        for omit in ["none", "finish", "weights"] {
+            let c = match omit {
+                "finish" => code.replace("fwp_tape_finish();library_finished();", ""),
+                "weights" => code.replace("library_mem_free(owner->weights);", ""),
+                _ => code.clone(),
             };
+            assert_eq!(c == code, omit == "none");
             fwp::cgen::compile_library(&c, &header, &output, opt, fwp::cgen::LibKind::Shared)
                 .unwrap();
             for cache in ["0", "1"] {
@@ -76,7 +83,11 @@ fn autodiff_library_unload_releases_live_and_cached_buffers() {
                     .unwrap();
                 assert_eq!(
                     result.status.code(),
-                    Some(if omit { 182 } else { 0 }),
+                    Some(match omit {
+                        "finish" => 182,
+                        "weights" => 183,
+                        _ => 0,
+                    }),
                     "{opt} omit={omit} cache={cache}: {}",
                     String::from_utf8_lossy(&result.stderr)
                 );

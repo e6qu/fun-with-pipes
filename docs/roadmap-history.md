@@ -236,8 +236,10 @@ checkpointing. These five implementation areas carry forward in PLAN.
 The user merged this subset on 2026-10-14 as
 `ad37059e5769a54911ee05ee3b7a11faf90f3480`, tree-identical to head
 `5d6e96d895b80d8d4e9c142944a7016453e84f40`. This merge preceded final platform
-acceptance. The latest autodiff batch passes Linux AMD64/macOS ARM so far;
-other hosts were running. Windows `38546869551@fc697328` passed native goldens
+acceptance. [Autodiff 38550312989](https://github.com/e6qu/fun-with-pipes/actions/runs/38550312989)
+at this head passed on all four Linux/macOS hosts: nested analytical and
+active-zero derivatives, checkpointing, ARC release controls and existing tape
+lifetimes/unload. This focused run does not establish a full production gate. Windows `38546869551@fc697328` passed native goldens
 and standalone compiler build on both architectures, but failed TLS peer tests
 (system Schannel curl with PEM fixtures and reset-vs-alert diagnostics).
 These failures and all remaining work continue in one follow-up branch,

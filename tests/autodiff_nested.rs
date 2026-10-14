@@ -1,5 +1,7 @@
 //! Reverse-over-reverse records typed backward operations on enclosing tapes.
 use std::process::{Command, Output};
+#[path = "support/c_instrument.rs"]
+mod c_instrument;
 
 fn checked(command: &mut Command) -> Output {
     let output = command.output().unwrap();
@@ -147,5 +149,107 @@ fn nested_reverse_rejects_expired_and_unrelated_tapes() {
         let output = Command::new(binary).output().unwrap();
         assert!(!output.status.success());
         assert!(String::from_utf8_lossy(&output.stderr).contains(message), "{output:?}");
+    }
+}
+
+#[test]
+fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
+    let dir = fwp::cgen::TempDir::new("fwp-nested-unwind").unwrap();
+    let source = dir.join("unwind.fwp");
+    std::fs::write(&source, format!("{FUNCTIONS}\nprobe : List[F64] -> List[F64] ! {{Error[String]}}\nprobe = grad (grad square | sum)\nmain = [1.0] | attempt probe | ignore\n")).unwrap();
+    for arc in [false, true] {
+        let cfile = dir.join("unwind.c");
+        let mut build = Command::new(env!("CARGO_BIN_EXE_fwp"));
+        build
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile);
+        if arc {
+            build.args(["--gc", "arc"]);
+        }
+        checked(&mut build);
+        let original = std::fs::read_to_string(cfile).unwrap();
+        assert!(original.contains("#define FWP_UNWIND 1"));
+        let main = original
+            .split("static void *fwp_main_thread(void *arg)")
+            .nth(1)
+            .unwrap()
+            .split("    V r = ")
+            .nth(1)
+            .unwrap()
+            .split("();")
+            .next()
+            .unwrap();
+        let start = original
+            .find("static void fwp_owned_tape_release(void *pointer)")
+            .unwrap();
+        let end = start
+            + original[start..]
+                .find("static void fwp_owned_tape_reserve")
+                .unwrap();
+        let release = c_instrument::calls(&original[start..end], &[("fwp_mem_free", "nested_free")])
+            .replace("    if (!owner) return;", "    if (!owner) return;\n    nested_expected_frees += 1 + (owner->weights != NULL) + (owner->adj != NULL);");
+        let mut code = format!("{}\nstatic size_t nested_expected_frees;\nstatic void nested_point(int);\nstatic void nested_free(void *);\n{release}{}", &original[..start], &original[end..]);
+        for (point, marker) in [
+            (
+                1,
+                "    fwp_cleanup_pop(&cleanup);\n    FWP_KEEP_ALIVE(parameters);",
+            ),
+            (2, "    owner->len = t->len = idx + 1;"),
+            (
+                3,
+                "    fwp_cleanup_push(&value_cleanup, fwp_owned_tape_release, owner);",
+            ),
+            (
+                4,
+                "            fwp_cleanup_push(&product_cleanup, fwp_value_release, &product);",
+            ),
+            (
+                5,
+                "        result.value = fwp_rc_fresh(fwp_cons(value, result.value));",
+            ),
+        ] {
+            assert_eq!(code.matches(marker).count(), 1);
+            code = code.replace(marker, &format!("{marker}\n    nested_point({point});"));
+        }
+        code = code.replace(
+            "int main(int argc, char **argv)",
+            "int unused_main(int argc, char **argv)",
+        );
+        let probe = include_str!("fixtures/autodiff_nested_unwind.c")
+            .replace("NESTED_MAIN", main)
+            .replace(
+                "static size_t nested_expected_frees, nested_actual_frees;",
+                "static size_t nested_actual_frees;",
+            );
+        code.push_str(&probe);
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("unwind.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            for mode in 0..=6 {
+                checked(
+                    Command::new(&binary)
+                        .arg(mode.to_string())
+                        .env("FWP_AD_WORKSPACE", "0")
+                        .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                        .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
+                        .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" }),
+                );
+            }
+            let broken = code.replace("nested_free(owner->weights);", "(void)owner->weights;");
+            assert_ne!(broken, code);
+            fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+            assert_eq!(
+                Command::new(&binary)
+                    .arg("4")
+                    .env("FWP_AD_WORKSPACE", "0")
+                    .output()
+                    .unwrap()
+                    .status
+                    .code(),
+                Some(195)
+            );
+        }
     }
 }

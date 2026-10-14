@@ -1,7 +1,8 @@
 # Session handoff
 
 Updated 2026-10-14. Continue all remaining work in **one follow-up PR**, branch
-`roadmap-after-135`. The user merged PR #135 and explicitly asked to continue.
+`roadmap-after-135`, [PR #136](https://github.com/e6qu/fun-with-pipes/pull/136).
+The user merged PR #135 and explicitly asked to continue.
 Publication, fixes and squash merge after passing final-head
 CI remain authorized. Do not merge a partial bundle or narrow its scope.
 Every commit has one line, at most 80 characters, with no body or trailers.
@@ -84,71 +85,35 @@ diagnostics, GC stress/reuse and an injected allocation failure control.
 They have not executed yet. TLS tests explicitly select Git's OpenSSL curl for
 PEM client keys and compare the limited Windows reset/alert failure category.
 
-Historical development runs and measured wide-record reductions are in
-[history](roadmap-history.md#pr-135-development-evidence) and
-[the measurement artifact](measurements/wide-records-2026-10-14.json).
-
-- At `6fde679d`, [Windows full preflight](https://github.com/e6qu/fun-with-pipes/actions/runs/38542607906)
-  passed dependency setup, allocator/context/socket probes, interpreter goldens
-  and generated resource/task/process stress on both architectures. This fixes
-  the earlier AMD64 task-root failure. Remaining failures: two CLI fixtures
-  lacked module exposure; exact-float headers selected an older Windows API
-  before the runtime; WebSocket code called POSIX getpid; manual linking lacked
-  Windows libraries; package smoke expected fixed rather than shortest quad
-  text. Mutual TLS also assumed the peer rejection must arrive during handshake
-  rather than a subsequent read. Repairs are implemented, pending rerun.
-- [Four-host ownership](https://github.com/e6qu/fun-with-pipes/actions/runs/38542604291)
-  at `6fde679d` failed. Inspected Linux ARM/macOS ARM failures are the two CLI
-  fixtures and stale numeric ownership inventory expectations. At `72959c75`,
-  [the repaired batch](https://github.com/e6qu/fun-with-pipes/actions/runs/38545352758)
-  also includes array producer fusion, physical ARC reclamation and Linux pipe
-  descriptor/mapping omission controls; it is running.
-- [Checkpointing](https://github.com/e6qu/fun-with-pipes/actions/runs/38545880795)
-  at `a732cdda` exposed a test literal incorrectly fixed to a primitive float
-  instead of Rev, and an ARC proof that invoked closures merely carried as
-  loop data. The repair uses runtime callback contracts to identify invocation
-  positions and feeds callback results through subsequent iterations. A lowered
-  IR control accepts a carried getter but rejects its actual unscoped call.
-  Updated fixtures check raw/native behavior, errors, exact float types, ARC
-  reclamation, tape bounds and omitted retirement; rerun remains required.
-- At `fc697328`, [checkpointing](https://github.com/e6qu/fun-with-pipes/actions/runs/38546865567)
-  passes raw and tracing-native semantic checks before ARC rejects the missing
-  `prim.trap` contract. The contract is now explicitly Never; the native
-  implementation unwinds its borrowed message. The macOS job also exposed a
-  missing OpenSSL setup for library tests, now added. The new owned tape
-  primitives and trap contract pass the guarded frozen-baseline audit
-  (378 declarations, 223 contracts). Runtime C syntax and focused lint pass.
-- The `72959c75` macOS ARM ownership/fusion batch passed. Linux ARM failed only
-  because the standalone pipe probe omitted `fwp_static_memory`; the fixture
-  now defines the dynamic-memory setting explicitly. Windows repairs are
-  running at `fc697328` in [38546869551](https://github.com/e6qu/fun-with-pipes/actions/runs/38546869551).
-  Dependency caches now save immediately after successful setup so later test
-  failures do not force another OpenSSL source build.
-- [First nested batch](https://github.com/e6qu/fun-with-pipes/actions/runs/38548685796)
-  at `b4a28f47` passed the library unit tests (including callback-flow controls)
-  and the Linux pipe descriptor/mapping proof. Language fixtures failed on an
-  ambiguous owned-tape scalar: passing only a count erased its type connection.
-  `ad.tape-owned` now borrows the typed input list and counts it without copying;
-  its operation tuple is inferred from that element type. This repair needs
-  runner execution; no nested/checkpoint lifetime acceptance is claimed yet.
-- Guarded local `cargo fmt --all` and `cargo clippy --lib --tests -- -D warnings`
-  pass. These do not execute the language fixtures. The guarded primitive
-  inventory audit passed with 378 declarations and 223 contracts before the
-  Boolean `not` contract below; frozen
-  baseline evidence is unchanged. Full builds/tests/measurements stay on runners.
-- At `59da2033`, [autodiff](https://github.com/e6qu/fun-with-pipes/actions/runs/38549214020)
-  passes raw/tracing nested semantics, active-zero and stale/mixed controls,
-  checkpoint capacity/errors and library unload. ARC checkpoint compilation
-  needs the immortal Bool `not` contract; ARC tests must disable tracing-only
-  reuse quarantine, and the numeric scope omission probe must distinguish the
-  new managed backward function. All three repairs are implemented for rerun.
+- At merged head `5d6e96d8`, [autodiff 38550312989](https://github.com/e6qu/fun-with-pipes/actions/runs/38550312989)
+  **passes all four Linux/macOS hosts**: nested analytical derivatives, active
+  zeros, stale/mixed tokens, checkpoint capacity/errors, ARC physical releases,
+  callback scope controls, existing tape failure/cancellation/unload and Linux
+  pipe descriptor/mapping proofs. The three earlier harness/contract failures
+  are fixed. This is focused evidence, not a full production gate.
+- Windows [38546869551@fc697328](https://github.com/e6qu/fun-with-pipes/actions/runs/38546869551)
+  failed TLS on both architectures. Native foundations, interpreter/generated
+  goldens, runtime stress and standalone compiler/package step passed. The
+  failures concern Schannel curl with PEM keys and TCP reset/alert differences.
+- [Windows 38551180442@c230a360](https://github.com/e6qu/fun-with-pipes/actions/runs/38551180442)
+  is running the TLS repairs and new static-memory implementation on both
+  native architectures. No Windows acceptance is claimed yet.
+- New follow-up tests inject recovered failures at five managed-tape stages,
+  cancel a task with a live product owner, and track managed storage across real
+  shared-library unloads. Omitted releases must fail. Guarded formatting and
+  focused lint pass; these new cases require runner execution.
+- Both Windows architectures now share one reusable acceptance workflow between
+  manual preflight and production CI, with explicit final-head checkout. It
+  includes nested AD/ownership and packaging as well as native runtime stress.
+  It is required alongside all seven existing Linux/macOS jobs and docs.
+- Historical development runs and measured wide-record reductions remain in
+  [history](roadmap-history.md#pr-135-development-evidence) and
+  [the measurement artifact](measurements/wide-records-2026-10-14.json).
 
 ## Next action
 
-Next: run the nested reverse implementation and repaired checkpoint/pipe proofs,
-inspect the Windows portability batch, and fix every failure. Complete managed
-tape failure/cancellation/library-unload proofs and Windows static memory.
-Wire both native Windows acceptance jobs into production CI, finish remaining
+Next: execute the new managed-tape failure/cancellation/unload controls, inspect
+the Windows static-memory/TLS batch and fix every failure. Finish remaining
 measurement/ABI/ownership validation and streamline final docs. Keep all work
 in the follow-up to PR #135. Require all seven Linux/macOS production jobs, both native Windows
 acceptance jobs and docs on the final head before squash merge.

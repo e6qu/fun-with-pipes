@@ -3,15 +3,17 @@
  * interpreter has the same in src/numerics.rs, with the same operation
  * order, so results agree bit for bit.
  *
- * Tapes hold numbers only (parents and partial derivatives), so they live
- * in malloc'ed memory. A reverse-mode value refers to its node as
+ * Base-float tapes hold numeric parents and partial derivatives in malloc'ed
+ * buffers. Nested tapes own typed weights and callbacks in scanned runtime
+ * storage, and execute adjoint operations on enclosing tapes. A reverse-mode
+ * value refers to its node as
  * (tape id << 32) | index, constants as -1; a tape id is
  * (generation << 16) | (slot + 1), so a value that outlives its tape is
  * detected.
  *
  * Kernels are fused elementwise expressions in postfix form, evaluated
  * FWP_KCHUNK elements at a time. CpuParallel runs contiguous ranges of
- * chunks on POSIX threads; the workers read the input arrays and write
+ * chunks on native threads; the workers read the input arrays and write
  * malloc'ed memory, and never allocate from the collected heap (the
  * calling task waits for them, so no collection runs meanwhile).
  * Reductions sum blocks of FWP_KBLOCK elements from the left, then the
