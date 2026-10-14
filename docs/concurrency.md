@@ -77,6 +77,12 @@ depends on time, as before. One exception: callbacks of the runtime's own
 algorithms, such as the comparisons of a sort, may be called a different
 number of times by the two backends.
 
+The entry count belongs to the selected intermediate program. Disabling
+optimization with `FWP_NO_OPT=1` retains calls that inlining normally removes,
+so its interleaving can differ from an optimized build. Interpreter and native
+comparisons use the same optimization setting. Use channels, scopes or awaits
+when an effect must occur after another task's effect.
+
 The cost is small: a native program spends one decrement and a
 never-taken branch per function call (no measurable difference on
 `fib 35` in two tasks), and switching happens once per slice. The

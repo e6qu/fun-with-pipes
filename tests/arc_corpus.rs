@@ -140,13 +140,17 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                 child.wait_with_output().unwrap()
             };
             let mut interpreter = Command::new(env!("CARGO_BIN_EXE_fwp"));
-            if name == "optimizer" {
+            // Preemption counts entries in the selected IR: inlining changes
+            // that count. Compare the optimized program with its optimized
+            // interpreter and golden. preempt.rs also compares both raw engines.
+            let optimized_reference = matches!(name, "optimizer" | "preempt");
+            if optimized_reference {
                 interpreter.env_remove("FWP_NO_OPT");
             } else {
                 interpreter.env("FWP_NO_OPT", "1");
             }
             let reference = execute(interpreter.args(["run", "--interp"]).arg(source_path));
-            if name == "optimizer" {
+            if optimized_reference {
                 assert!(reference.status.success() && reference.stderr.is_empty());
                 assert_eq!(
                     reference.stdout,
@@ -174,7 +178,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                 "executed\t{name}\tstatus={:?}\treturn-ledger={}\toracle={}\n",
                 actual.status.code(),
                 actual.status.success(),
-                if name == "optimizer" {
+                if optimized_reference {
                     "optimized-interpreter-and-golden"
                 } else {
                     "raw-interpreter"

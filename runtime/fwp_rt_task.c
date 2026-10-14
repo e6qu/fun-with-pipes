@@ -905,6 +905,8 @@ static void CALLBACK fwp_win_task_entry(void *arg) {
 static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, int64_t deadline, int detached) {
     fwp_tasks_init();
     fwp_task *t = fwp_task_new();
+    fwp_cleanup task_cleanup;
+    fwp_cleanup_push(&task_cleanup, fwp_mem_free, t);
     t->thunk = thunk;
     t->cfn = cfn;
     t->carg = carg;
@@ -1010,6 +1012,7 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         if (fwp_cur->cancelled) t->cancelled = 1;
     }
     if (s) s->tasks[s->n++] = t;
+    fwp_cleanup_pop(&task_cleanup);
     fwp_make_ready(t);
     return t;
 }

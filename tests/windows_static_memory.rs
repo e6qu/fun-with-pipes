@@ -49,7 +49,7 @@ fn fixed_storage_reuses_tasks_workers_and_decimal_scratch() {
         format!(
             r#"
 xs : Vector[F64, _]
-xs = range 0 100000 | map (int.to-float | mul 0.0001) | vector.from-list
+xs = array.generate 100000 (int.to-float | mul 0.0001) | vector.wrap
 
 main = [
     range 0 1000 | each (singleton | task.map (add 1) | ignore),

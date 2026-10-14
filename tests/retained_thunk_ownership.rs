@@ -172,10 +172,11 @@ static jmp_buf failed;static int recover(void){return 1;}
 static int dead(V v){return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;}
 int main(void){
  fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
- fwp_scope scope={0};fwp_cur->scope=&scope;
+ fwp_scope scope={0};scope.cap=8;scope.tasks=fwp_mem_alloc(scope.cap*sizeof(*scope.tasks));fwp_cur->scope=&scope;
  for(int mode=0;mode<3;mode++)for(int alias=0;alias<2;alias++){
   V capture=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(capture);V fn=fwp_rc_fresh(fwp_pap(PLAIN,1,&capture));
   fwp_task *gc_before=fwp_gc_tasks;
+  intptr_t budget_before=fwp_gc.budget;
   if(mode==0)fail_stack=1;else if(mode==2){scope.n=SIZE_MAX;scope.cap=SIZE_MAX;}else{uint8_t *slot=fwp_rc_slot(fn);*slot=254;fwp_rc_dup(fn);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
   fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
   if(setjmp(failed)==0){fSPAWN(fn);return 1;}
@@ -184,6 +185,7 @@ int main(void){
   if(mode==2){if(scope.n!=SIZE_MAX||scope.cap!=SIZE_MAX)return 8;scope.n=0;scope.cap=8;}else if(scope.n)return 9;
   if(mode==1){uint8_t *slot=fwp_rc_slot(fn);if(*slot!=255||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 3;fwp_rc_forget_slot(slot);*slot=1;}
   if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=alias+1)return 4;
+  if(!fwp_gc.stress && fwp_gc.budget!=budget_before)return 10;
   fwp_closure_drop(fn);
   if(alias){if(*fwp_rc_slot(capture)!=1||STR(capture)->len!=5)return 5;fwp_rc_free_obj(capture);}
   else if(!dead(capture))return 6;
@@ -220,11 +222,18 @@ int main(void){
             "(void)owner;\n    return t;",
             1,
         );
+    let task_owner = "    fwp_cleanup_push(&task_cleanup, fwp_mem_free, t);";
+    assert_eq!(runtime.matches(task_owner).count(), 1);
+    let leaked_task = runtime.replace(task_owner, "").replace(
+        "    fwp_cleanup_pop(&task_cleanup);",
+        "    (void)task_cleanup;",
+    );
     for opt in ["-O1", "-O2"] {
-        for (control, expected) in [(&early, 2), (&extra, 4)] {
+        for (control, expected) in [(&early, 2), (&extra, 4), (&leaked_task, 10)] {
             fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
             let o = Command::new(&exe)
                 .env("FWP_REUSE_VERIFY", "1")
+                .env("FWP_GC_STRESS", "0")
                 .output()
                 .unwrap();
             assert_eq!(
@@ -234,9 +243,9 @@ int main(void){
             );
         }
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
+        for (stress, poison) in [("0", "0"), ("1", "0"), ("1", "1")] {
             let o = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_STRESS", stress)
                 .env("FWP_GC_VERIFY", "1")
                 .env("FWP_REUSE_VERIFY", poison)
                 .output()

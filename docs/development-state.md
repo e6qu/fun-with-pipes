@@ -96,10 +96,17 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   it now calls the existing `join`. Startup-only allocation, worker/fiber reuse,
   pool scratch and negative allocation controls still require execution.
 - [Full Windows 38552879801@e5fecb81](https://github.com/e6qu/fun-with-pipes/actions/runs/38552879801)
-  is completing TLS/ownership/packaging. Its AMD64 foundation failure and both
-  TLS outcomes still need diagnosis. Later c5 foundation checks pass both hosts;
-  this does not erase the earlier failure. Native OpenSSL/curl dependencies
-  are now built and cached, replacing incompatible Schannel peers in TLS tests.
+  passes AMD64 executable/CLI/foreign/task ownership, exact formats/protocol,
+  native goldens and standalone packaging. TLS passes 9/10 cases: the remaining
+  snapshot needs Windows peer-close normalization alongside reset/alert rejection.
+  AD probe failures need CRLF handling and a Windows stack bound on the injected
+  cancellation task. The older cross-task source typo is already fixed.
+  ARM64 is completing. Neither architecture is accepted yet.
+- The intermittent Windows allocator probe retained a stale mutator pointer to
+  its supposed collector-only garbage. Its injection now creates that object
+  inside the collector frame; a guarded current-runtime O1/O2 probe passes with
+  the correct boundary and fails with the omitted boundary. CI repeats processes
+  across address layouts. No runtime root range was weakened.
 - Guarded local formatting, focused clippy, runtime and measurement C syntax,
   workflow lint, primitive inventory and roadmap/link/commit checks pass.
   Generated stdlib docs have been refreshed; old merged-main preflight failures
@@ -110,7 +117,11 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   Windows conditional. The fixtures now initialize the scheduler baseline and
   assert current injection markers. A guarded O1 compile/run of the runner's
   emitted preemption program confirms balanced charged bytes after the baseline
-  repair; current compiler/raw agreement and all controls require CI.
+  repair; current compiler agreement and all controls require CI. Preemption compares
+  matching optimization settings because inlining changes function-entry counts;
+  both raw engines now have a separate regression. Task preparation now owns
+  the unpublished task allocation through scope/stack failure, with a physical
+  reclamation ledger and a missing-release control pending CI.
 - Both Windows architectures share one reusable acceptance workflow, including
   native nested AD, ownership, exact formats and standalone PE packaging.
   Require these plus all seven Linux/macOS production jobs and documentation.
@@ -120,8 +131,9 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
 
 ## Next action
 
-Next: rerun the repaired Windows static-memory fixture, inspect the full
-Windows TLS/ownership batch and fix every failure. Run full production gates
+Next: publish the batched platform/probe repairs, then inspect full production
+CI and fix every failure. The Windows static fixture now creates its numeric
+array directly to avoid irrelevant list construction under per-allocation GC. Run full production gates
 and streamline final docs with actual acceptance results. Keep all work
 in the follow-up to PR #135. Require all seven Linux/macOS production jobs, both native Windows
 acceptance jobs and docs on the final head before squash merge.

@@ -315,6 +315,7 @@ fn stream_snapshot(text: &str) -> String {
             "sslv3 alert bad certificate",
             "wrong version number",
             "Connection reset by peer",
+            "connection closed",
         ] {
             result = result.replace(
                 &format!("TLS handshake failed: {detail}"),
