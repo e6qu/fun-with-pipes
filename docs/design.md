@@ -106,7 +106,7 @@ box and each completed field duplicate until transfer.
 
 Accepted resource lifetimes and storage are summarized in
 [ownership](ownership.md#original-resource-semantics). The queue records immutable
-branches and the handoff records acceptance and the remaining tracing fallbacks.
+branches and the handoff records acceptance and the remaining tracing requirements.
 
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in
@@ -375,7 +375,7 @@ Lookup lowering preserves original IR nodes because loop tails and unwind
 liveness refer to those nodes.
 
 Canonical F64 matmul checks runtime dimensions and array lengths once. Valid
-shapes use32-element blocked loops over contiguous numeric data, with one fresh
+shapes use 32-element blocked loops over contiguous numeric data, with one fresh
 output and borrowed inputs. Loads/stores preserve C aliasing rules and support
 views and shared backing. Each output accumulates in ascending inner-index order,
 with multiplication followed by addition and contraction disabled. matrix.cast
@@ -385,7 +385,7 @@ called through source foreign declarations.
 
 AD tape capacity is limited before allocation by the signed vertex index and
 native address width. Native and interpreter runtimes may retain one detached
-workspace up to512KiB; oversized buffers are released. Reuse clears adjoints and
+workspace up to 512 KiB; oversized buffers are released. Reuse clears adjoints and
 retains generation/token validation. Scope exit, traps, cancellation and library
 unload retire owners. Cold/warm allocation and native/WASI boundary controls
 cover the private buffers separately from the managed result array.

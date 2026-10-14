@@ -26,9 +26,9 @@ unresolved checks continue on `roadmap-after-135` without replaying merged code.
 | 1 | Implemented | One live handoff and immutable historical evidence; keep docs accurate through final acceptance |
 | 2 | In progress | Four-host retained-task/scoped foreign proofs pass; CLI/protocol ownership and executable ARC implemented, new fixture repairs under validation; cycle boundaries remain explicit |
 | 3 | In progress | Four-host wide record allocation measurements pass; numeric tail loops and direct array producer fusion implemented, latest ownership/transport/instruction checks running |
-| 4 | In progress | Segmented checkpointing and nested reverse differentiation implemented, runner proofs pending; remaining measured kernel/layout work and acceptance remain |
+| 4 | In progress | Four-host nested/checkpoint semantic and ARC controls pass; new managed lifetime proofs pass Linux AMD64; measurements and final gates remain |
 | 5 | In progress | Actual F16/BF16/F128 values, text, arrays, closed workers, foreign ABI and protocol v2 implemented; final precision/ownership/platform gates remain |
-| 6 | In progress | Windows native allocator/fiber/socket, interpreter goldens and generated resource/task stress pass both architectures; TLS/package fixes pending, static memory and required production gates remain |
+| 6 | In progress | Windows native allocator/fiber/socket, interpreter goldens and generated resource/task stress passed both architectures; static memory/TLS repairs under validation; production gates are wired |
 
 Scope includes Windows ARM64/AMD64 and actual half/quad formats, superseding
 old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
@@ -61,7 +61,8 @@ old deferrals. Follow [PLAN](../PLAN.md), [ownership](ownership.md) and the
   mode now uses `ReverseScalar` specialization and typed owned tape weights;
   adjoint arithmetic records into the enclosing tape. Controls cover second/
   third derivatives, active zeros, stale/mixed tokens, exact floats and physical
-  reclamation. Raw and tracing-native semantics pass; ARC acceptance is pending.
+  reclamation. Raw, tracing-native and ARC focused controls pass; final platform
+  acceptance remains pending.
 - Windows uses UTF-16 native paths/environment/arguments, CreateProcessW with
   explicit inherited handles, concurrent output capture, native threads/fibers,
   full-width sockets/WSAPoll and PE roots. Root scanning and minor verification
@@ -129,6 +130,18 @@ PEM client keys and compare the limited Windows reset/alert failure category.
   managed and tape allocations/live bytes, process timings and native assembly;
   runner measurements are pending. It requires reclamation and a smaller tape
   peak, not a universal time improvement.
+- At `e455a033`, [38553589302](https://github.com/e6qu/fun-with-pipes/actions/runs/38553589302)
+  passes the complete focused autodiff suite on Linux AMD64, including managed
+  failure/cancellation/unload and task identity controls. Measurement failed
+  because an instrumentation marker also matched a non-main cleanup call. It
+  now targets only main; a guarded C syntax check using that runner's emitted
+  C passes. Other hosts and the repaired measurement require completion.
+  The next revision adds managed tape growth beyond 254 shared zero references,
+  pool-owned `strdup` for Windows TLS/gRPC scratch, and early Windows log uploads.
+  Linux ARM64 and Intel macOS now also pass the focused tests and fail only the
+  same measurement marker. Workflow lint passed after one automatic approval
+  timeout and a successful retry. The obsolete unreferenced 141-row fallback
+  review/script were removed; frozen baseline and immutable Git anchors remain.
 - Both Windows architectures now share one reusable acceptance workflow between
   manual preflight and production CI, with explicit final-head checkout. It
   includes nested AD/ownership and packaging as well as native runtime stress.

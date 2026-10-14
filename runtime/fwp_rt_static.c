@@ -23,10 +23,17 @@
 #define calloc fwp_static_calloc
 #define realloc fwp_static_realloc
 #define free fwp_static_free
+#define strdup fwp_static_strdup
 static void *fwp_static_malloc(size_t);
 static void *fwp_static_calloc(size_t, size_t);
 static void *fwp_static_realloc(void *, size_t);
 static void fwp_static_free(void *);
+static char *fwp_static_strdup(const char *text) {
+    size_t size = strlen(text) + 1;
+    char *copy = fwp_static_malloc(size);
+    memcpy(copy, text, size);
+    return copy;
+}
 #else
 #include <sys/mman.h>
 #include <unistd.h>

@@ -49,9 +49,11 @@ def instrument(code):
     tape = re.sub(r'\b(realloc|calloc|free)\(', lambda m: 'checkpoint_' + m[1] + '(', code[start:end])
     code = code[:start] + LEDGER + tape + code[end:]
     code = iteration.instrument(code)
+    main = code.index('static void *fwp_main_thread(void *arg) {')
+    prefix, body = code[:main], code[main:]
     marker = '    fwp_cl_finish();\n'
-    assert code.count(marker) == 1
-    return code.replace(marker, marker + r'''
+    assert body.count(marker) == 1
+    return prefix + body.replace(marker, marker + r'''
     fwp_tape_finish();
     if(checkpoint_live)exit(211);
     fprintf(stderr,"{\"tapeRequests\":%llu,\"tapeRequestedBytes\":%llu,\"peakTapeBytes\":%zu,\"finalTapeBytes\":%zu}\n",

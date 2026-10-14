@@ -46,7 +46,7 @@ impl Drop for TempDir {
 fn build(src: &Path, exe: &Path, opts: &[&str]) -> Output {
     Command::new(fwp())
         .arg("build")
-        .arg(src)
+        .arg(src.file_name().unwrap())
         .args(["--memory", "static", "-O1", "-o"])
         .arg(exe)
         .args(opts)

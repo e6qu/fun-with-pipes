@@ -29,6 +29,8 @@ main = [
         | eq [56.0] | echo,
     range 0 65 | map (int.to-float | singleton | grad (grad square | sum))
         | flatten | sum | eq 130.0 | echo,
+    [1.0] | grad (grad (rev._replay 300 (map (add one)) | square) | sum)
+        | eq [2.0] | echo,
 ] | ignore
 "#;
 
@@ -44,7 +46,7 @@ fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
             .args(["run", "--interp"])
             .arg(&source),
     );
-    assert_eq!(reference.stdout, "True\n".repeat(9).as_bytes());
+    assert_eq!(reference.stdout, "True\n".repeat(10).as_bytes());
     assert!(reference.stderr.is_empty());
     for arc in [false, true] {
         for opt in ["-O1", "-O2"] {

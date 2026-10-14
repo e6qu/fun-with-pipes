@@ -34,28 +34,37 @@ jobs:
       - name: Native socket and library execution
         shell: pwsh
         run: |
-          cargo test --lib socket_tests -- --nocapture
+          cargo test --lib socket_tests -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --lib dylib::tests -- --nocapture
+          cargo test --lib dylib::tests -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --lib softfloat:: -- --nocapture
+          cargo test --lib softfloat:: -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test softfloat_core --test float_math -- --nocapture
+          cargo test --test softfloat_core --test float_math -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test native_allocator --test windows_context --test native_sockets -- --nocapture
+          cargo test --test native_allocator --test windows_context --test native_sockets -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo build --bin fwp
+          cargo build --bin fwp 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Interpreter golden outputs and exit statuses
         shell: pwsh
         run: |
-          cargo test --test golden_run interpreter_snapshots -- --nocapture
+          cargo test --test golden_run interpreter_snapshots -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
       - name: Generated programs with native resources and ownership stress
         shell: pwsh
         run: |
-          cargo test --test windows_runtime --test windows_static_memory -- --nocapture
+          cargo test --test windows_runtime --test windows_static_memory -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
+      - name: Publish native diagnostics before dependency builds
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: windows-native-${{ matrix.runner }}
+          path: |
+            windows-host.txt
+            windows-probe.log
+            windows-native.log
       - uses: actions/cache/restore@v4
         id: windows_tls_cache
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}

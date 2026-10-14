@@ -108,7 +108,7 @@ main = [
     );
     let startup = "    fwp_init_consts();";
     assert_eq!(code.matches(startup).count(), 1);
-    code = code.replace(startup, "    if(static_mappings!=1 || static_threads!=4 || static_fibers!=2)exit(186);\n    static_started=1;\n    fwp_init_consts();");
+    code = code.replace(startup, "    if(static_mappings!=1 || static_threads!=4 || static_fibers!=2)exit(186);\n    static_started=1;\n    char *copied=strdup(\"runtime scratch\");\n    if((uintptr_t)copied<(uintptr_t)fwp_static.pool || (uintptr_t)copied>=(uintptr_t)fwp_static.pool_end)exit(187);\n    free(copied);\n    fwp_init_consts();");
     for opt in ["-O1", "-O2"] {
         let binary = dir.join("static.exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
