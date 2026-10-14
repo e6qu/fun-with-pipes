@@ -9,6 +9,10 @@ import subprocess
 ROOT = Path(__file__).resolve().parent.parent
 SHARDS = {"regular": 0, "gc": 1}
 UNIT_TARGETS = {"lib", "bin", "example", "bench"}
+# Intel GC timed out in run 38568712872; REST took 427 seconds there.
+# Wide workers took 144 seconds in run 38550733670. Move these to regular
+# to leave room for the separate stress suite without shifting other targets.
+REGULAR_TARGETS = {"rest", "wide_workers"}
 
 
 def command(metadata, shard):
@@ -29,7 +33,9 @@ def command(metadata, shard):
             raise ValueError(f"unassigned Cargo target: {target['name']} {kinds}")
     if not names or len(names) != len(set(names)):
         raise ValueError("expected nonempty, unique integration test targets")
-    selected = sorted(names)[SHARDS[shard]::len(SHARDS)]
+    selected = [name for index, name in enumerate(sorted(names))
+                if (0 if name in REGULAR_TARGETS else index % len(SHARDS))
+                == SHARDS[shard]]
     if not selected:
         raise ValueError(f"empty integration test shard: {shard}")
     args = ["cargo", "test", "--no-fail-fast"]

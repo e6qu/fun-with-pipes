@@ -1,0 +1,124 @@
+name: Native Windows acceptance
+on:
+  workflow_call:
+    inputs:
+      full:
+        type: boolean
+        required: true
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Native C toolchain for foreign calls
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
+      - name: Native Windows compiler check
+        id: native_compiler
+        shell: pwsh
+        run: |
+          rustc -vV | Tee-Object windows-host.txt
+          cargo check --all-targets 2>&1 | Tee-Object windows-probe.log
+          exit $LASTEXITCODE
+      - name: Native socket and library execution
+        shell: pwsh
+        run: |
+          cargo test --lib socket_tests -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --lib dylib::tests -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --lib softfloat:: -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --test softfloat_core --test float_math -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --test native_allocator --test windows_context --test native_sockets -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo build --bin fwp 2>&1 | Tee-Object -Append windows-native.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Interpreter golden outputs and exit statuses
+        shell: pwsh
+        run: |
+          cargo test --test golden_run interpreter_snapshots -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          exit $LASTEXITCODE
+      - name: Generated programs with native resources and ownership stress
+        shell: pwsh
+        run: |
+          cargo test --test windows_runtime --test windows_static_memory -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          exit $LASTEXITCODE
+      - name: Publish native diagnostics before dependency builds
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: windows-native-${{ matrix.runner }}
+          path: |
+            windows-host.txt
+            windows-probe.log
+            windows-native.log
+      - uses: actions/cache/restore@v4
+        id: windows_tls_cache
+        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native OpenSSL dependencies
+        id: windows_tls
+        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v4
+        if: ${{ !cancelled() && inputs.full && env.FWP_WINDOWS_DEPS_READY == '1' && steps.windows_tls_cache.outputs.cache-hit != 'true' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native TLS and executable ownership
+        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          cargo test --no-fail-fast --test tls --test cli_ownership --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test foreign_callback_ownership --test float_formats --test float_linking --test protocol
+          exit $LASTEXITCODE
+      - name: Native nested autodiff and ownership controls
+        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          cargo test --no-fail-fast --test autodiff_nested --test autodiff_checkpoint --test autodiff_library --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_capacity_bounds --test iterator_fusion
+          exit $LASTEXITCODE
+      - name: Complete native golden programs
+        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          cargo test --test golden_run native_snapshots -- --exact
+          exit $LASTEXITCODE
+      - name: Build standalone compiler with static C runtime
+        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        shell: pwsh
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: |
+          cargo build --release --bin fwp
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/package-native.py --output "$env:RUNNER_TEMP/native-package"
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v7
+        if: inputs.full && success()
+        with:
+          name: fwp-Windows-${{ runner.arch }}
+          path: ${{ runner.temp }}/native-package/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: windows-probe-${{ matrix.runner }}
+          path: |
+            windows-host.txt
+            windows-probe.log

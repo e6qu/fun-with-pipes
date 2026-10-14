@@ -1,5 +1,12 @@
 #include <stdio.h>
 #include <limits.h>
+static void *(*fwp_decimal_alloc_block)(size_t) = malloc;
+static void (*fwp_decimal_free_block)(void *) = free;
+void fwp_decimal_set_allocator(void *(*allocate)(size_t), void (*release)(void *)) {
+    if (!allocate || !release) abort();
+    fwp_decimal_alloc_block = allocate;
+    fwp_decimal_free_block = release;
+}
 /* Explicit scratch context: small conversions stay on the caller's stack;
  * overflow blocks are released after success, parse error or allocation failure. */
 typedef union fwp_decimal_block {
@@ -15,7 +22,7 @@ static void *fwp_decimal_allocate(ThInfo *context, size_t bytes) {
         context->next += bytes;
         return result;
     }
-    fwp_decimal_block *block = malloc(sizeof *block + bytes);
+    fwp_decimal_block *block = fwp_decimal_alloc_block(sizeof *block + bytes);
     if (!block) longjmp(context->failure, 1);
     block->link.next = (fwp_decimal_block *)context->blocks;
     context->blocks = block;
@@ -23,7 +30,7 @@ static void *fwp_decimal_allocate(ThInfo *context, size_t bytes) {
 }
 static void fwp_decimal_release(ThInfo *context) {
     fwp_decimal_block *block = (fwp_decimal_block *)context->blocks;
-    while (block) { fwp_decimal_block *next = block->link.next; free(block); block = next; }
+    while (block) { fwp_decimal_block *next = block->link.next; fwp_decimal_free_block(block); block = next; }
 }
 static int fwp_decimal_format(int format, FPI *fpi, unsigned *fraction, unsigned *exponent) {
     unsigned precision, bias;

@@ -31,6 +31,12 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo test --no-fail-fast --lib --test autodiff_checkpoint --test autodiff_nested --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_capacity_bounds --test autodiff_library --test pipe_ownership
+      - run: cargo build --release --bin fwp
+        id: checkpoint_compiler
+        if: ${{ !cancelled() }}
+      - name: Checkpoint recomputation and storage measurements
+        if: ${{ !cancelled() && steps.checkpoint_compiler.outcome == 'success' }}
+        run: python3 scripts/measure-checkpoint.py --output autodiff-evidence/checkpoint
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -201,103 +207,9 @@ jobs:
 
   windows_probe:
     if: inputs.suite == 'windows' || inputs.suite == 'windows-full'
-    strategy:
-      fail-fast: false
-      matrix:
-        runner: [windows-2025, windows-11-arm]
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
-    env:
-      CARGO_BUILD_JOBS: 2
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Native C toolchain for foreign calls
-        shell: pwsh
-        run: ./scripts/setup-windows.ps1
-      - uses: actions/cache/restore@v4
-        id: windows_tls_cache
-        if: inputs.suite == 'windows-full'
-        with:
-          path: ${{ runner.temp }}/fwp-windows-deps
-          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
-      - name: Native OpenSSL dependencies
-        id: windows_tls
-        if: inputs.suite == 'windows-full'
-        shell: pwsh
-        run: ./scripts/setup-windows-tls.ps1
-      - uses: actions/cache/save@v4
-        if: inputs.suite == 'windows-full' && steps.windows_tls.outcome == 'success' && steps.windows_tls_cache.outputs.cache-hit != 'true'
-        with:
-          path: ${{ runner.temp }}/fwp-windows-deps
-          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
-      - name: Native Windows compiler check
-        id: native_compiler
-        shell: pwsh
-        run: |
-          rustc -vV | Tee-Object windows-host.txt
-          cargo check --all-targets 2>&1 | Tee-Object windows-probe.log
-          exit $LASTEXITCODE
-      - name: Native socket and library execution
-        shell: pwsh
-        run: |
-          cargo test --lib socket_tests -- --nocapture
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --lib dylib::tests -- --nocapture
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --lib softfloat:: -- --nocapture
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test softfloat_core --test float_math -- --nocapture
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test native_allocator --test windows_context --test native_sockets -- --nocapture
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo build --bin fwp
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Interpreter golden outputs and exit statuses
-        shell: pwsh
-        run: |
-          cargo test --test golden_run interpreter_snapshots -- --nocapture
-          exit $LASTEXITCODE
-      - name: Generated programs with native resources and ownership stress
-        shell: pwsh
-        run: |
-          cargo test --test windows_runtime -- --nocapture
-          exit $LASTEXITCODE
-      - name: Native TLS and executable ownership
-        if: ${{ !cancelled() && inputs.suite == 'windows-full' && steps.native_compiler.outcome == 'success' }}
-        shell: pwsh
-        run: |
-          cargo test --no-fail-fast --test tls --test cli_ownership --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test foreign_callback_ownership --test float_formats --test float_linking --test protocol
-          exit $LASTEXITCODE
-      - name: Complete native golden programs
-        if: ${{ !cancelled() && inputs.suite == 'windows-full' && steps.native_compiler.outcome == 'success' }}
-        shell: pwsh
-        run: |
-          cargo test --test golden_run native_snapshots -- --exact
-          exit $LASTEXITCODE
-      - name: Build standalone compiler with static C runtime
-        if: ${{ !cancelled() && inputs.suite == 'windows-full' && steps.native_compiler.outcome == 'success' }}
-        shell: pwsh
-        env:
-          RUSTFLAGS: -C target-feature=+crt-static
-        run: |
-          cargo build --release --bin fwp
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python scripts/package-native.py --output "$env:RUNNER_TEMP/native-package"
-          exit $LASTEXITCODE
-      - uses: actions/upload-artifact@v7
-        if: inputs.suite == 'windows-full' && success()
-        with:
-          name: fwp-Windows-${{ runner.arch }}
-          path: ${{ runner.temp }}/native-package/
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: windows-probe-${{ matrix.runner }}
-          path: |
-            windows-host.txt
-            windows-probe.log
+    uses: ./.github/workflows/windows.yml
+    with:
+      full: ${{ inputs.suite == 'windows-full' }}
 
   portability:
     if: inputs.suite == 'portability' || inputs.suite == 'iteration'
@@ -382,4 +294,4 @@ jobs:
         run: cargo test --test wasm_resource_counts --test softfloat_core --test float_math --test array_size_limits
       - name: Actual WASI semantic agreement
         if: ${{ !cancelled() }}
-        run: cargo test --test wasm golden_programs_under_wasi
+        run: cargo test --no-fail-fast --test wasm --test browser --test exec_invocation_ownership

@@ -90,8 +90,8 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
             );
             if expected == 0 {
                 assert_eq!(
-                    out.stdout,
-                    b"checked tape capacities and exact realloc failure ownership passed\n"
+                    String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                    "checked tape capacities and exact realloc failure ownership passed\n"
                 );
             }
         }

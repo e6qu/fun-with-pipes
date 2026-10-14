@@ -1,6 +1,6 @@
 //! Static memory (`fwp build --memory static`, runtime/fwp_rt_static.c):
-//! every golden program behaves the same with all of its memory mapped at
-//! startup; nothing is asked of the operating system after that (checked
+//! Linux golden programs behave the same with runtime storage mapped at
+//! startup; the standalone workload makes no later memory mappings (checked
 //! with strace where it is installed); a loop that allocates far more than
 //! the heap runs in it; and running out of a part says which option to
 //! raise.
@@ -46,7 +46,7 @@ impl Drop for TempDir {
 fn build(src: &Path, exe: &Path, opts: &[&str]) -> Output {
     Command::new(fwp())
         .arg("build")
-        .arg(src)
+        .arg(src.file_name().unwrap())
         .args(["--memory", "static", "-O1", "-o"])
         .arg(exe)
         .args(opts)
@@ -108,11 +108,15 @@ fn golden_programs_with_static_memory() {
                     &[]
                 };
                 let exe = dir.0.join(&name);
-                if !build(&path, &exe, opts).status.success() {
-                    continue; // compile errors are covered by tests/golden_run.rs
-                }
-                let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
-                let got = render(&run(&exe, path.parent().unwrap(), &input));
+                let built = build(&path, &exe, opts);
+                let got = if built.status.success() {
+                    let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
+                    render(&run(&exe, path.parent().unwrap(), &input))
+                } else {
+                    // Expected language diagnostics still match their snapshot;
+                    // an unexpected native compilation failure must fail here.
+                    render(&built)
+                };
                 let want = std::fs::read_to_string(path.with_extension("out")).unwrap_or_default();
                 if got != want {
                     failures.lock().unwrap().push(format!(

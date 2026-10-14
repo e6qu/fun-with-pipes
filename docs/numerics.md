@@ -68,8 +68,9 @@ that of the branch taken).
 
 **The tape.** The tape lives in the runtime, outside the program's values
 (`src/numerics.rs` for the interpreter, `runtime/fwp_rt_kernel.c` for
-native code): per node, two parent indices and two partial derivatives,
-in growable arrays of numbers. A `Rev` value refers to its node as
+native code): per node, two parent indices and two partial derivatives.
+Primitive-float tapes use numeric buffers; nested tapes use typed value buffers.
+A `Rev` value refers to its node as
 `(tape id << 32) | index`, with -1 for constants; the tape id is
 `(generation << 16) | (slot + 1)`. Operations call the primitive
 `ad.push`, which appends a node to the tape of its operands (an operation
@@ -96,14 +97,15 @@ and current failures are recorded in the handoff.
 Managed tapes own their typed weights, scalar-operation closures and adjoints.
 Native storage stays in a scanned mutable root list while active or detached
 for backward, and releases on scope exit, failure or cancellation. Library
-teardown releases tapes before the managed heap. Interpreter managed weights
-belong to the creating task; cross-task use is rejected. A numeric zero with
+teardown releases tapes before the managed heap. Managed weights belong to
+the creating task in both engines; identities do not reuse task addresses or
+host fiber slots. Cross-task use is rejected. Partial construction owns only
+the scalar and callbacks whose retains have completed. A numeric zero with
 an active derivative is not pruned: only recursively inactive constant zeros
 may skip propagation. Capturing or combining unrelated tape tokens remains an
 error; nesting does not relax stale-token or generation checks.
-Reverse mode uses 24 bytes per operation before adjoint storage and capacity
-rounding. The active bundle adds segmented checkpointing below; its runner
-acceptance is tracked in the handoff.
+Base-float reverse mode uses 24 bytes per operation before adjoint storage and
+capacity rounding. Nested weights additionally own their scalar representation.
 
 `xs | vjp-checkpointed {steps = 1000, every = 32} step seeds` differentiates
 1000 applications of a pure `step`. Both counts are explicit: `steps` must be
@@ -122,6 +124,17 @@ Callback types remain pure, with the same primal step order; a primal trap
 stops the forward pass before backward replay. Captured values from unrelated
 active tapes still fail the normal mixed-tape checks. Checkpointing adds no
 syntax, implicit interval or automatic recomputation to ordinary `vjp`.
+
+[Four-host measurements](measurements/checkpoint-2026-10-14.json) compare a
+4096-step additive VJP under ARC, with workspace reuse disabled. Interval 32
+reduces peak tape storage from 262,248 to 2,152 bytes while increasing peak
+managed storage from 336 to 12,816 bytes. These separate peaks need not coincide.
+Tape allocation requests rise from 34 to 1,153 and managed requests from 16,410
+to 38,408; all measured storage is released without collection. Process time
+increases on all four hosts in this workload. The artifact records hardware,
+compiler, flags, counts, timings and emitted-source hashes; runner artifacts
+also retain generated C and native assembly. Checkpointing is an explicit
+memory/recomputation tradeoff, not a general speed optimization.
 
 Accepted PR124 registers detached tape buffers and adjoints for cleanup
 through normal return, mixed-tape errors, recoverable traps and cancellation.
@@ -253,7 +266,6 @@ disabled contraction while measuring SIMD, buffer reuse and fused gradients.
   kernels with its own Rust implementation of the same evaluator.
 - Distributed execution: sharding tensors across processes and
   collectives (`all-reduce`) over services.
-- Final acceptance and measurement of nested reverse mode and checkpointing.
 - Kernels other than elementwise expressions and sums (matrix products,
   reductions along an axis) on devices.
 
@@ -316,6 +328,7 @@ results, including recursive worker calls. Generic entries, closures and
 containers retain typed counted boxes with explicit ownership transfer.
 `FWP_WIDE_WORKERS=0` selects the boxed comparison control. Checked overflow,
 division and evaluation order agree with raw interpretation. Overflow message
-formatting stays outside hot arithmetic frames; recursive calls still use stack.
-The [float-format decision](float-formats.md) separately specifies existing
-F16/BF16/F128 behavior and the future precision and wire-format migration.
+formatting stays outside hot arithmetic frames. Eligible numeric self-tail calls
+use loops; other recursive calls still use stack.
+The [float-format contract](float-formats.md) specifies actual F16/BF16/F128
+arithmetic, storage, rounding and the implemented protocol v2 migration.

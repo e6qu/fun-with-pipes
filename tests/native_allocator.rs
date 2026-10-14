@@ -42,7 +42,7 @@ fn collector_scratch_is_excluded_from_the_mutator_root_range() {
         .replace("    fwp_gc_scan_data();", "")
         .replace(
             "    fwp_gc_scan_stacks(stack_start);",
-            "    volatile V scratch[32] = {0};\n    scratch[0] = garbage;\n    __asm__ volatile(\"\" : : \"m\"(scratch) : \"memory\");\n    fwp_gc_scan_stacks(stack_start);\n    __asm__ volatile(\"\" : : \"m\"(scratch) : \"memory\");",
+            "    volatile V scratch[32] = {0};\n    if (!garbage) garbage = (V)(uintptr_t)fwp_alloc_leaf(64);\n    scratch[0] = garbage;\n    __asm__ volatile(\"\" : : \"m\"(scratch) : \"memory\");\n    fwp_gc_scan_stacks(stack_start);\n    __asm__ volatile(\"\" : : \"m\"(scratch) : \"memory\");",
         );
     let old_range = allocator.replace(
         "    fwp_gc_scan_stacks(stack_start);",
@@ -55,12 +55,8 @@ fn collector_scratch_is_excluded_from_the_mutator_root_range() {
         .unwrap();
     let probe = r#"
 static void fwp_gc_scan_stacks(char *sp) { fwp_gc_scan_root(sp, fwp_gc.main_top); }
-static __attribute__((noinline)) void seed_garbage(void) {
-    garbage = (V)(uintptr_t)fwp_alloc_leaf(64);
-}
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0));
-    seed_garbage();
     volatile V live = (V)(uintptr_t)fwp_alloc_leaf(32);
     fwp_gc.major_next = 1;
     fwp_gc_collect();
@@ -72,18 +68,26 @@ int main(void) {
 }
 "#;
     let dir = fwp::cgen::TempDir::new("collector-stack").unwrap();
+    // Create garbage only inside the injected collector frame: allocating it
+    // in a prior mutator call can leave a legitimate stale register/stack root.
     let binary = dir.join(if cfg!(windows) { "probe.exe" } else { "probe" });
     for opt in ["-O1", "-O2"] {
         for (runtime, expected) in [(&allocator, 0), (&old_range, 23)] {
             let c = format!("{prefix}\nstatic volatile V garbage;\n{runtime}{probe}");
             fwp::cgen::compile_c(&c, &binary, opt).unwrap();
-            let output = Command::new(&binary)
-                .env("FWP_GC", "on")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_GC_VERIFY", "1")
-                .output()
-                .unwrap();
-            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+            for attempt in 0..8 {
+                let output = Command::new(&binary)
+                    .env("FWP_GC", "on")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "1")
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{opt}, attempt {attempt}: {output:?}"
+                );
+            }
         }
     }
 }

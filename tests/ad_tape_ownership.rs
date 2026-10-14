@@ -133,7 +133,7 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
                     String::from_utf8_lossy(&output.stderr)
                 );
                 if expected == 0 {
-                    assert_eq!(output.stdout, b"autodiff releases five detached buffers on return, trap and task cancellation\n");
+                    assert_eq!(String::from_utf8(output.stdout).unwrap().replace("\r\n", "\n"), "autodiff releases five detached buffers on return, trap and task cancellation\n");
                 }
             }
         }

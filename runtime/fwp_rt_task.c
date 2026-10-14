@@ -160,6 +160,7 @@ __asm__(FWP_CTX_BEGIN
 typedef struct { fwp_task *head; } fwp_wl;
 
 struct fwp_task {
+    uint64_t identity; /* Never reused when allocator slots or fibers are reused. */
 #ifdef _WIN32
     fwp_win_context ctx;
 #elif defined(FWP_OWN_CONTEXT)
@@ -256,7 +257,13 @@ static void fwp_gctx_pending_release(void *arg) {
 }
 #endif
 
-static fwp_task *fwp_task_new(void) { return (fwp_task *)fwp_mem_alloc(sizeof(fwp_task)); }
+static uint64_t fwp_task_identity;
+static fwp_task *fwp_task_new(void) {
+    if (fwp_task_identity == UINT64_MAX) fwp_trap("task identity exhausted");
+    fwp_task *task = fwp_mem_alloc(sizeof *task);
+    task->identity = ++fwp_task_identity;
+    return task;
+}
 
 static fwp_task *fwp_gc_tasks = 0;
 
@@ -285,6 +292,21 @@ static void fwp_gc_scan_stacks(char *sp) {
 }
 #endif
 
+#if defined(_WIN32) && defined(FWP_STATIC_MEMORY)
+typedef struct { void *fiber; char *top; int busy; } fwp_static_fiber;
+static fwp_static_fiber fwp_static_fibers[FWP_STATIC_TASKS];
+static void fwp_static_fibers_init(void);
+static void fwp_static_fiber_release(void *fiber) {
+    for (int i = 0; i < FWP_STATIC_TASKS; i++) {
+        if (fwp_static_fibers[i].fiber != fiber) continue;
+        if (!fwp_static_fibers[i].busy) abort();
+        fwp_static_fibers[i].busy = 0;
+        fwp_static.task_free[fwp_static.ntask_free++] = i;
+        return;
+    }
+    abort();
+}
+#endif
 static void fwp_tasks_init(void) {
     if (fwp_cur) return;
     fwp_root = fwp_task_new();
@@ -292,6 +314,9 @@ static void fwp_tasks_init(void) {
     fwp_win_context_root(&fwp_root->ctx);
 #endif
     fwp_cur = fwp_root;
+#if defined(_WIN32) && defined(FWP_STATIC_MEMORY)
+    fwp_static_fibers_init();
+#endif
 }
 
 #ifdef FWP_FIBERS
@@ -492,7 +517,11 @@ static int fwp_stack_pool_n = 0;
 static void fwp_free_zombie(void) {
     if (fwp_zombie && fwp_zombie != fwp_cur) {
 #ifdef _WIN32
+#ifdef FWP_STATIC_MEMORY
+        fwp_static_fiber_release(fwp_zombie->ctx.fiber);
+#else
         DeleteFiber(fwp_zombie->ctx.fiber);
+#endif
         memset(&fwp_zombie->ctx, 0, sizeof fwp_zombie->ctx);
 #else
 #ifdef FWP_STATIC_MEMORY
@@ -532,9 +561,7 @@ static void fwp_enter(fwp_task *to) {
     fwp_state_owners = to->state_owners;
 }
 
-static void fwp_switch(fwp_task *to) {
-    fwp_task *from = fwp_cur;
-    if (to == from) return;
+static void fwp_leave(fwp_task *from) {
     from->handlers = fwp_handlers;
     from->cleanups = fwp_cleanups;
     from->foreign_callbacks = fwp_foreign_callbacks;
@@ -542,6 +569,11 @@ static void fwp_switch(fwp_task *to) {
     from->st_len = fwp_state_len;
     from->st_cap = fwp_state_cap;
     from->state_owners = fwp_state_owners;
+}
+static void fwp_switch(fwp_task *to) {
+    fwp_task *from = fwp_cur;
+    if (to == from) return;
+    fwp_leave(from);
     fwp_enter(to);
 #if FWP_GC
     from->gc_sp = fwp_gc_sp();
@@ -812,6 +844,15 @@ static void fwp_task_main(void) {
             fwp_enter(n);
             return fwp_fiber_id(n);
         }
+#elif defined(_WIN32) && defined(FWP_STATIC_MEMORY)
+        if (n && n != t) {
+            /* The next task retires this task object and returns the fiber
+             * slot. On reuse, return without touching the retired object. */
+            fwp_leave(t);
+            fwp_enter(n);
+            SwitchToFiber(n->ctx.fiber);
+            return;
+        }
 #else
         if (n && n != t) fwp_switch(n);
 #endif
@@ -827,6 +868,38 @@ static void fwp_task_main(void) {
 static void fwp_ctx_entry(void) { fwp_task_main(); }
 #endif
 #ifdef _WIN32
+#ifdef FWP_STATIC_MEMORY
+static void CALLBACK fwp_win_task_entry(void *arg) {
+    fwp_static_fiber *slot = arg;
+    fwp_win_context context = {0};
+    fwp_win_context_started(&context);
+    slot->top = context.top;
+    fwp_static_touch_stack();
+    SwitchToFiber(fwp_root->ctx.fiber);
+    for (;;) fwp_task_main();
+}
+static void fwp_static_fibers_finish(void) {
+    /* Normally the runtime thread has joined; detached fibers can remain
+     * suspended. A fatal exit can instead originate on a fiber: Windows owns
+     * that current stack until process exit, so never delete it underneath us. */
+    void *current = IsThreadAFiber() ? GetCurrentFiber() : NULL;
+    for (int i = 0; i < FWP_STATIC_TASKS; i++) {
+        if (fwp_static_fibers[i].fiber != current)
+            DeleteFiber(fwp_static_fibers[i].fiber);
+        fwp_static_fibers[i].fiber = NULL;
+    }
+}
+static void fwp_static_fibers_init(void) {
+    for (int i = 0; i < FWP_STATIC_TASKS; i++) {
+        fwp_static_fiber *slot = &fwp_static_fibers[i];
+        slot->fiber = CreateFiberEx(FWP_STATIC_TASK_STACK, FWP_STATIC_TASK_STACK,
+            FIBER_FLAG_FLOAT_SWITCH, fwp_win_task_entry, slot);
+        if (!slot->fiber) fwp_static_full("task stacks", FWP_STATIC_TASK_STACK, "--task-stack");
+        SwitchToFiber(slot->fiber);
+    }
+    if (atexit(fwp_static_fibers_finish)) abort();
+}
+#else
 static void CALLBACK fwp_win_task_entry(void *arg) {
     fwp_task *task = (fwp_task *)arg;
     fwp_win_context_started(&task->ctx);
@@ -834,10 +907,13 @@ static void CALLBACK fwp_win_task_entry(void *arg) {
     abort();
 }
 #endif
+#endif
 
 static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, int64_t deadline, int detached) {
     fwp_tasks_init();
     fwp_task *t = fwp_task_new();
+    fwp_cleanup task_cleanup;
+    fwp_cleanup_push(&task_cleanup, fwp_mem_free, t);
     t->thunk = thunk;
     t->cfn = cfn;
     t->carg = carg;
@@ -860,9 +936,21 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         s->cap = cap;
     }
 #ifdef _WIN32
+#ifdef FWP_STATIC_MEMORY
+    if (!fwp_static.ntask_free)
+        fwp_static_full("task slots", FWP_STATIC_TASKS * FWP_STATIC_TASK_STACK, "--tasks");
+    int slot = fwp_static.task_free[--fwp_static.ntask_free];
+    if (fwp_static_fibers[slot].busy) abort();
+    fwp_static_fibers[slot].busy = 1;
+    t->ctx.fiber = fwp_static_fibers[slot].fiber;
+    t->ctx.top = fwp_static_fibers[slot].top;
+    int busy = FWP_STATIC_TASKS - fwp_static.ntask_free;
+    if (busy > fwp_static.tasks_peak) fwp_static.tasks_peak = busy;
+#else
     t->ctx.fiber = CreateFiberEx(65536, FWP_NATIVE_TASK_STACK,
         FIBER_FLAG_FLOAT_SWITCH, fwp_win_task_entry, t);
     if (!t->ctx.fiber) fwp_trap("cannot allocate a task stack");
+#endif
 #elif defined(FWP_FIBERS)
     if (!fwp_hooks.sw)
         fwp_trap("tasks need a WebAssembly host with JavaScript Promise Integration (JSPI), such as the fwp loader in a recent browser");
@@ -931,6 +1019,7 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         if (fwp_cur->cancelled) t->cancelled = 1;
     }
     if (s) s->tasks[s->n++] = t;
+    fwp_cleanup_pop(&task_cleanup);
     fwp_make_ready(t);
     return t;
 }

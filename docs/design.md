@@ -47,12 +47,12 @@ record-label evaluation order is preserved.
 `iter.fold`, `iter.each`, `iter.find` and list `fold-until` use the existing
 `loop` and Step constructors; `map-accum` uses a left fold followed by reverse.
 They introduce no primitives and do not widen iterator tail effects. Callback
-and tail evaluation order is tested against raw interpretation. The active PR
+and tail evaluation order is tested against raw interpretation. The compiler
 also lowers `array.to-list | iter.from-list` directly to an array owner and index,
 using checked element access without an intermediate list. Array construction
 still completes before any consumer callback; element aliases retain their
-owners. Raw/native, ARC reclamation and allocation/instruction controls await
-runner verification. Producer fusion applies only to proven direct chains; arbitrary lazy producers
+owners. Raw/native and ARC controls pass on four Linux/macOS hosts; the handoff
+records final platform acceptance. Producer fusion applies only to proven direct chains; arbitrary lazy producers
 retain their declared forcing behavior and may allocate.
 
 Merged synchronous callback entries borrow typed inputs and return owned results;
@@ -106,7 +106,7 @@ box and each completed field duplicate until transfer.
 
 Accepted resource lifetimes and storage are summarized in
 [ownership](ownership.md#original-resource-semantics). The queue records immutable
-branches and the handoff records acceptance and the remaining tracing fallbacks.
+branches and the handoff records acceptance and the remaining tracing requirements.
 
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in
@@ -342,25 +342,29 @@ checked arithmetic unchanged. Raw C buffers still require explicit mem.free.
   stacks are unknown. Linux finds program data segments with
   `dl_iterate_phdr`; the Darwin implementation finds the Mach-O image
   containing the runtime and scans its writable-at-load segments, including
-  `__DATA_CONST` and zero-fill storage. Other native systems do not arm
-  collection. Darwin validation is tracked in the session handoff.
+  `__DATA_CONST` and zero-fill storage. Windows scans writable PE image sections.
+  Other native systems do not arm collection. Platform acceptance is tracked
+  in the session handoff.
   Runtime value/string constructors and list traversals keep their source
   objects/buffers reachable until the last allocating operation: `FWP_KEEP_ALIVE` is a compiler lifetime fence.
   Optimized Clang can otherwise preload a short buffer and discard its
   only root while its elements are still needed.
-- Reverse-mode autodiff records operations on tapes kept by the runtime
-  outside the program's values (numbers only), and tensor kernels run on
+- Reverse-mode autodiff records base-float operations in private numeric tapes;
+  nested differentiation owns typed weights and adjoints in managed tapes.
+  Tensor kernels run on
   OS threads that never touch the collected heap; both are implemented
   twice, with the same operation order (`src/numerics.rs`,
   `runtime/fwp_rt_kernel.c`, see [numerics.md](numerics.md)).
 - Native tasks are green threads on an event loop: epoll on
   Linux, poll elsewhere. glibc uses `ucontext`; musl and Darwin use the
   runtime's custom x86-64/AArch64 context switch, with ELF and Mach-O
-  symbol/directive conventions respectively. The active Windows port uses native
+  symbol/directive conventions respectively. Windows uses native
   fibers with explicit saved-register and stack root ranges; the OS owns stack
-  reservation, commitment and ABI restoration. Native acceptance remains pending. Interpreter tasks are OS threads that pass a
+  reservation, commitment and ABI restoration. The handoff records platform
+  validation. Interpreter tasks are OS threads that pass a
   baton, so only one runs at a time. Function-entry preemption preserves
-  deterministic ready-task interleaving across backends; relative wall-clock
+  deterministic ready-task interleaving across backends at the same optimization
+  setting. Inlining changes the function-entry count. Relative wall-clock
   timers do not establish an order between independent effects. Use channels
   or awaits when output order matters.
 
@@ -375,7 +379,7 @@ Lookup lowering preserves original IR nodes because loop tails and unwind
 liveness refer to those nodes.
 
 Canonical F64 matmul checks runtime dimensions and array lengths once. Valid
-shapes use32-element blocked loops over contiguous numeric data, with one fresh
+shapes use 32-element blocked loops over contiguous numeric data, with one fresh
 output and borrowed inputs. Loads/stores preserve C aliasing rules and support
 views and shared backing. Each output accumulates in ascending inner-index order,
 with multiplication followed by addition and contraction disabled. matrix.cast
@@ -385,7 +389,7 @@ called through source foreign declarations.
 
 AD tape capacity is limited before allocation by the signed vertex index and
 native address width. Native and interpreter runtimes may retain one detached
-workspace up to512KiB; oversized buffers are released. Reuse clears adjoints and
+workspace up to 512 KiB; oversized buffers are released. Reuse clears adjoints and
 retains generation/token validation. Scope exit, traps, cancellation and library
 unload retire owners. Cold/warm allocation and native/WASI boundary controls
 cover the private buffers separately from the managed result array.
@@ -413,10 +417,10 @@ program constants are separate from live temporary values.
 
 Eligibility excludes unproved mutable/cyclic runtime graphs, external retained
 callbacks, raw pointers, unscoped reverse-mode operations, unchecked user native
-declarations, managed foreign/remote calls and unmodeled shared results. PR #135
-extends admission to typed retained-task captures and recursively pointer-free
+declarations, managed foreign/remote calls and unmodeled shared results. Checked
+admission includes typed retained-task captures and recursively pointer-free
 foreign C records, scoped text/byte borrows and synchronous foreign callbacks
-with copied C values, pending acceptance. The callback context follows the
+with copied C values. The handoff records platform validation. The callback context follows the
 calling task, with unwind cleanup. Child tasks start independent State/AD
 contexts; the closure-flow proof clears parent scope assumptions at spawn/within. Native symbol names alone do
 not establish ownership signatures. A finite closure-flow analysis proves that
@@ -475,10 +479,6 @@ error. See [protocol.md](protocol.md).
   [Ownership](ownership.md) specifies coverage and numeric representation limits;
   [PLAN](../PLAN.md) records the remaining efficiency gaps. C structs alone do
   not guarantee registers.
-- Windows on AMD64 and ARM64 is in active development. Interpreter platform probes pass, but the generated runtime and release packages are not yet verified.
-  Linux/macOS have native CI on both architectures; see the
-  [platform matrix](../PLAN.md#platform-objective-and-current-evidence) and handoff
-  for actual acceptance gates. Cross-build/QEMU evidence remains distinct.
 - Darwin cross-compilation and Clang PGO.
   Native macOS passed both architecture suites and the Linux/benchmark gates
   in PR #74; separate ARM and Intel binaries meet the packaging objective.
@@ -553,7 +553,8 @@ evaluated into ordered temporaries before native calls, preserving trap order.
 Unsupported expression shapes retain the ordinary lowering; this is a compile-time
 eligibility choice. C compilation decides register assignment and spills.
 
-[Float formats](float-formats.md) records the implemented F32/F64 representations
-of half/wide float names and the decision for a coordinated future format and
-protocol migration. Current native ownership/array claims do not imply true
-binary16, bfloat16 or binary128 arithmetic.
+[Float formats](float-formats.md) records actual binary16, bfloat16 and binary128
+arithmetic, exact decimal conversion and protocol v2. Half/bfloat arrays use
+two-byte elements; quad arrays use sixteen-byte elements at eight-byte alignment.
+Closed quad workers and flat numeric records pass their bits directly; generic
+boundaries can still box. Platform acceptance is recorded in the handoff.

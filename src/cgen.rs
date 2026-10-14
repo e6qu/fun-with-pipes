@@ -8425,7 +8425,7 @@ static const fwp_exec_spec exec_spec{i} = {{
                 callable = if n == 0 {
                     "0".into()
                 } else {
-                    format!("PTR(&fc{fid})")
+                    format!("&fc{fid}")
                 },
                 has_opts = c.options.is_some() as u8,
                 fallback = c.record_fallback as u8,
@@ -9114,6 +9114,10 @@ static void *fwp_main_thread(void *arg) {{
     (void)arg;
     fwp_gc_start(__builtin_frame_address(0));
     fwp_stack_guard_init(fwp_main_stack);
+#if defined(_WIN32) && defined(FWP_STATIC_MEMORY)
+    fwp_static_touch_stack();
+    fwp_tasks_init();
+#endif
     fwp_init_consts();
 {run}
     fwp_caf_finish();
@@ -9146,8 +9150,15 @@ int main(int argc, char **argv) {{
 #ifdef __wasi__
     fwp_main_thread(0);
 #elif defined(_WIN32)
+#ifdef FWP_STATIC_MEMORY
+    fwp_static_init();
+    fwp_main_stack = FWP_STATIC_STACK;
+    DWORD stack_flags = 0; /* commit the configured main stack at startup */
+#else
+    DWORD stack_flags = STACK_SIZE_PARAM_IS_A_RESERVATION;
+#endif
     HANDLE thread = CreateThread(NULL, fwp_main_stack, fwp_windows_main_thread, NULL,
-                                 STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
+                                 stack_flags, NULL);
     if (!thread) fwp_trap("cannot create main runtime thread");
     if (WaitForSingleObject(thread, INFINITE) != WAIT_OBJECT_0) abort();
     CloseHandle(thread);

@@ -7,6 +7,12 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
+  windows:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    uses: ./.github/workflows/windows.yml
+    with:
+      full: true
+
   macos:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     strategy:
@@ -59,7 +65,9 @@ jobs:
       - name: Build standalone compiler
         run: cargo build --release --bin fwp
       - name: Iterator and state allocation and binary evidence
-        run: python3 scripts/measure-iteration.py --output "$RUNNER_TEMP/iteration-evidence"
+        run: |
+          python3 scripts/measure-iteration.py --output "$RUNNER_TEMP/iteration-evidence"
+          python3 scripts/measure-checkpoint.py --output "$RUNNER_TEMP/iteration-evidence/checkpoint"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -213,7 +221,9 @@ jobs:
       - name: Build standalone compiler
         run: cargo build --release --bin fwp
       - name: Iterator and state allocation and binary evidence
-        run: python3 scripts/measure-iteration.py --output "$RUNNER_TEMP/iteration-evidence"
+        run: |
+          python3 scripts/measure-iteration.py --output "$RUNNER_TEMP/iteration-evidence"
+          python3 scripts/measure-checkpoint.py --output "$RUNNER_TEMP/iteration-evidence/checkpoint"
       - uses: actions/upload-artifact@v7
         if: always()
         with:

@@ -146,11 +146,10 @@ static void observed_free(void *p) {
     if (p) live_blocks--;
     free(p);
 }
-#define malloc observed_malloc
-#define free observed_free
 "#;
     let probe = r#"
 int main(void) {
+    fwp_decimal_set_allocator(observed_malloc, observed_free);
     uint64_t low, high;
     char shown[64];
     if (fwp_decimal_parse("1.25", 128, &low, &high) != 1 || attempts || live_blocks) return 41;

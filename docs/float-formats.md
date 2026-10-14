@@ -1,47 +1,49 @@
 # Floating-point representation and migration
 
-PR #134 is the accepted baseline: F16/BF16 used F32 arithmetic and F128 used
-F64 arithmetic. The active PR #135 migrates these types to their actual formats
-and changes the protocol version to 2. Scalar, array and foreign ABI integration
-has focused runner coverage; complete ownership and six-platform acceptance remain.
-Keep conversion explicit and precision independent of the host.
+PR #135 merged actual F16/BF16/F128 implementation and protocol version 2.
+[PR #136](https://github.com/e6qu/fun-with-pipes/pull/136) records platform and
+lifetime verification, including native Windows ARM64/AMD64. Keep conversion
+explicit and precision independent of the host.
 
-| Language type | Accepted PR #134 arithmetic/payload | Protocol v1 bytes | PR #135 format and v2 payload |
-|---|---|---|---|
-| F16 | binary32, 24 significant bits | 4, little endian | binary16: 1 sign, 5 exponent, 10 fraction bits; 2 bytes |
-| BF16 | binary32, 24 significant bits | 4, little endian | bfloat16: 1 sign, 8 exponent, 7 fraction bits; 2 bytes |
-| F32 | binary32 | 4, little endian | Unchanged |
-| F64 | binary64 | 8, little endian | Unchanged |
-| F128 | binary64, 53 significant bits | 8, little endian | binary128: 1 sign, 15 exponent, 112 fraction bits; 16 bytes |
+| Language type | Arithmetic format | Protocol v2 payload |
+|---|---|---|
+| F16 | binary16: 1 sign, 5 exponent, 10 fraction bits | 2 bytes, little endian |
+| BF16 | bfloat16: 1 sign, 8 exponent, 7 fraction bits | 2 bytes, little endian |
+| F32 | binary32: 24 significant bits | 4 bytes, little endian |
+| F64 | binary64: 53 significant bits | 8 bytes, little endian |
+| F128 | binary128: 1 sign, 15 exponent, 112 fraction bits | 16 bytes, little endian |
 
-These intended formats follow the [LLVM floating-point type definitions](https://llvm.org/docs/LangRef.html#floating-point-types).
+Protocol v1 used wider half payloads and a narrower quad payload; version 2
+rejects that incompatible wire format. Prior representation evidence remains
+in [history](roadmap-history.md), not as an alternative arithmetic mode.
+
+These formats follow the [LLVM floating-point type definitions](https://llvm.org/docs/LangRef.html#floating-point-types).
 The half and bfloat layouts are also specified in [Clang's type documentation](https://clang.llvm.org/docs/LanguageExtensions.html#half-precision-floating-point).
 This is a representation decision, not a decision to replace the C backend.
 
 ## Current contract
 
-On the working branch, interpreter values, native scalar arithmetic, text/JSON
+Interpreter values, native scalar arithmetic, text/JSON
 and protocol encoding use binary16/bfloat16/binary128. Half and bfloat native
 arrays use two-byte elements. F128 generic values are boxed 16-byte leaves;
 arrays now store 16-byte elements at eight-byte alignment, copying into an owned
 box when a scalar escapes. Half/bfloat workers use u16 bits. Closed quad workers
 use direct bit-struct arithmetic, with passing four-host execution controls.
 Closed flat numeric records now carry quad/wide values in C structs between
-workers; their new ownership and measurement controls are pending. Generic
+workers; four-host ownership controls and measured allocation reductions are
+recorded in [the measurement artifact](measurements/wide-records-2026-10-14.json). Generic
 boundaries box once and register partially constructed results for unwind.
 The C boundary maps half/bfloat to u16 bits and quad to `struct fwp_binary128`,
 including record fields, callbacks and pointer access. The handoff records
 which native ABI/export checks have completed.
-This partial integration does not establish accepted format support. Protocol
-golden-byte tests cover widths, signed zero, infinities and NaN payload transport;
-the handoff links raw/native regression results and remaining acceptance gates.
+Protocol golden-byte tests cover widths, signed zero, infinities and NaN payload
+transport. The handoff links raw/native regressions and production verification.
 
 The migration now has shared binary16/bfloat16/binary128 arithmetic and exact
 decimal cores. Arithmetic/conversion NaNs are canonical positive quiet NaNs;
 raw bit transport preserves payloads. Decimal conversion uses explicit per-call
-scratch ownership, including cleanup on allocation failure. These cores do not
-by themselves establish complete language support. [The handoff](development-state.md)
-records actual checks and remaining integration work.
+scratch ownership, including cleanup on allocation failure. [The handoff](development-state.md) records language integration and native
+verification alongside the core arithmetic checks.
 
 Keep `float.convert` explicit. Preserve operation order and the existing policy
 against implicit reassociation or contraction. Do not silently substitute the
@@ -52,7 +54,7 @@ the destination format. Formatting and macro expansion preserve those digits;
 `SFloat` now carries a decimal `String`, as described in the
 [macro reference](reference.md#compile-time-evaluation-and-macros). This removes
 early F64 rounding from syntax. Monomorphization now parses literal digits
-directly into the selected format on the working branch.
+directly into the selected format.
 
 Generated programs using these formats link the shared C11 arithmetic/decimal
 and C++20 math cores. The object cache includes their source, compiler identities,
@@ -66,7 +68,7 @@ depend on host `long double` or compiler-specific quad scalar types.
 
 ## Migration contract
 
-The active PR must deliver and validate these together before acceptance:
+Implementation and platform validation must satisfy these requirements together:
 
 - Literals, arithmetic and conversion round once to the destination format,
   using nearest, ties to even. Preserve signed zero, infinities and gradual

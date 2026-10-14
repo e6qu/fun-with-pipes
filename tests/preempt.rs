@@ -64,13 +64,14 @@ fn interpret(path: &Path, env: &[(&str, &str)]) -> String {
     render(&out)
 }
 
-fn build(path: &Path, dir: &Path) -> PathBuf {
+fn build(path: &Path, dir: &Path, env: &[(&str, &str)]) -> PathBuf {
     let exe = dir.join(path.file_stem().unwrap());
     let b = Command::new(fwp())
         .arg("build")
         .arg(path)
         .args(["-O2", "-o"])
         .arg(&exe)
+        .envs(env.iter().copied())
         .output()
         .unwrap();
     assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
@@ -100,7 +101,7 @@ fn backends_interleave_alike_for_any_slice() {
     let cc = have_cc();
     for p in PROGRAMS {
         let path = root().join(p);
-        let exe = cc.then(|| build(&path, &dir.0));
+        let exe = cc.then(|| build(&path, &dir.0, &[]));
         for slice in ["1", "37", "1000"] {
             let env = [("FWP_PREEMPT", slice)];
             let want = interpret(&path, &env);
@@ -141,9 +142,34 @@ fn output_is_reproducible() {
     }
     if have_cc() {
         let dir = TempDir::new("repro");
-        let exe = build(&path, &dir.0);
+        let exe = build(&path, &dir.0, &[]);
         for _ in 0..5 {
             assert_eq!(native(&exe, &[]), want);
+        }
+    }
+}
+
+#[test]
+fn raw_function_entries_preserve_interleaving() {
+    let dir = TempDir::new("raw");
+    let path = root().join("tests/run/preempt.fwp");
+    let exe = have_cc().then(|| build(&path, &dir.0, &[("FWP_NO_OPT", "1")]));
+    for slice in ["37", "10000"] {
+        let expected = interpret(&path, &[("FWP_NO_OPT", "1"), ("FWP_PREEMPT", slice)]);
+        assert!(!expected.contains("--- exit"), "{expected}");
+        if let Some(exe) = &exe {
+            assert_eq!(
+                native(
+                    exe,
+                    &[
+                        ("FWP_PREEMPT", slice),
+                        ("FWP_GC_STRESS", "1"),
+                        ("FWP_GC_VERIFY", "1")
+                    ]
+                ),
+                expected,
+                "raw IR with FWP_PREEMPT={slice}"
+            );
         }
     }
 }
@@ -164,7 +190,7 @@ fn deadline_cancels_a_spinning_task() {
     assert_eq!(interpret(&src, &[]), "None\n");
     assert!(t.elapsed() < std::time::Duration::from_secs(20));
     if have_cc() {
-        let exe = build(&src, &dir.0);
+        let exe = build(&src, &dir.0, &[]);
         let t = std::time::Instant::now();
         assert_eq!(native(&exe, &[]), "None\n");
         assert!(t.elapsed() < std::time::Duration::from_secs(5));

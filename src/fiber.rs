@@ -47,6 +47,7 @@ type Job = Box<dyn FnOnce() -> usize>;
 
 #[derive(Default)]
 struct Fiber {
+    identity: u64,
     /// What the fiber runs (until it starts): returns the fiber to resume.
     job: Option<Job>,
     /// While suspended: the stack pointer, and the region's contents from
@@ -61,6 +62,7 @@ thread_local! {
     /// Fibers by number; fiber 0 runs `_start` on the main stack.
     static FIBERS: RefCell<Vec<Option<Fiber>>> = RefCell::new(vec![Some(Fiber::default())]);
     static CURRENT: Cell<usize> = const { Cell::new(0) };
+    static LAST_IDENTITY: Cell<u64> = const { Cell::new(0) };
     /// The stack region of tasks (allocated with the first one).
     static REGION_MEM: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
 }
@@ -84,6 +86,11 @@ pub fn current() -> usize {
     CURRENT.with(|c| c.get())
 }
 
+/// A stable task identity, distinct from the reusable host table slot.
+pub fn identity() -> u64 {
+    FIBERS.with(|fibers| fibers.borrow()[current()].as_ref().unwrap().identity)
+}
+
 /// The bottom and the top of the shared stack region.
 fn region() -> (usize, usize) {
     REGION_MEM.with(|r| {
@@ -100,9 +107,15 @@ fn region() -> (usize, usize) {
 /// the fiber to resume when it finished.
 pub fn spawn(job: Job) -> usize {
     region();
+    let identity = LAST_IDENTITY.with(|last| {
+        let next = last.get().checked_add(1).expect("fiber identity exhausted");
+        last.set(next);
+        next
+    });
     FIBERS.with(|f| {
         let mut f = f.borrow_mut();
         let fiber = Fiber {
+            identity,
             job: Some(job),
             ..Fiber::default()
         };

@@ -1058,7 +1058,7 @@ typedef struct {
     const char *in_type;
     const unsigned char *in_fp;
     V (*caf)(void);
-    V callable; /* immutable static closure; call borrows it and its arguments */
+    const fwp_clo *callable; /* static address; converted to V only at the call */
     const fwp_desc *result; /* complete result, before output projections */
 } fwp_exec_spec;
 
@@ -1137,7 +1137,7 @@ static V fwp_exec_call(const fwp_exec_spec *s, V *args, int n, int *failed) {
     h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
-        V r = n == 0 ? s->caf() : fwp_apply_borrowed(s->callable, (uint32_t)n, args);
+        V r = n == 0 ? s->caf() : fwp_apply_borrowed(PTR(s->callable), (uint32_t)n, args);
         fwp_value_owner owner = {r, s->result->drop};
         fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
         fwp_tasks_finish();

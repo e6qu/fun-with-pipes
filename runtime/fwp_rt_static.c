@@ -1,23 +1,44 @@
-/* Static memory (`fwp build --memory static`): all the memory a program
- * uses is mapped once, when it starts, and nothing is asked of the
- * operating system after that. One region holds
+/* Static memory (`fwp build --memory static`) bounds runtime-owned storage.
+ * One populated region holds
  *
  *   - the pool behind malloc, calloc, realloc and free, which this file
- *     defines, so the C library's own allocations come from it too;
+ *     defines (Windows uses private names and an explicit decimal allocator);
  *   - the collector's heap and its metadata (runtime/fwp_rt_gc.c), which
  *     is still collected but never grows;
- *   - the main thread's stack, a fixed number of task stacks, and the
- *     stacks of the threads of `CpuParallel` kernels.
+ *   - on POSIX, main/task/worker stacks. Windows commits OS-managed stacks
+ *     separately at startup and reuses fixed fiber and worker pools.
+ * External DLL allocations and OS resources are outside this storage budget.
  *
  * The sizes are compiled in (FWP_STATIC_* below, from the build's
  * options). The region is populated when it is mapped, so its pages are
- * resident before the program runs. Running out of any part is reported
+ * touched before the program runs (the OS may subsequently page them out).
+ * Running out of any part is reported
  * by name and ends the program with exit code 102. FWP_MEMORY_REPORT=1
  * prints the layout and the high-water mark of each part at exit. */
 
+#ifdef _WIN32
+/* DLL-internal allocations retain their own allocator. Runtime allocations
+ * use this explicit pool; never free a DLL allocation through these names. */
+#define malloc fwp_static_malloc
+#define calloc fwp_static_calloc
+#define realloc fwp_static_realloc
+#define free fwp_static_free
+#define strdup fwp_static_strdup
+static void *fwp_static_malloc(size_t);
+static void *fwp_static_calloc(size_t, size_t);
+static void *fwp_static_realloc(void *, size_t);
+static void fwp_static_free(void *);
+static char *fwp_static_strdup(const char *text) {
+    size_t size = strlen(text) + 1;
+    char *copy = fwp_static_malloc(size);
+    memcpy(copy, text, size);
+    return copy;
+}
+#else
 #include <sys/mman.h>
 #include <unistd.h>
 #include <pthread.h>
+#endif
 
 #ifndef FWP_STATIC_HEAP
 #define FWP_STATIC_HEAP ((size_t)64 << 20)
@@ -57,13 +78,112 @@ static struct {
     char *thread_stack[FWP_STATIC_THREADS];
 } fwp_static;
 
+static void fwp_static_die(const char *message, size_t length) {
+#ifdef _WIN32
+    DWORD written;
+    WriteFile(GetStdHandle(STD_ERROR_HANDLE), message, (DWORD)length, &written, NULL);
+    ExitProcess(102);
+#else
+    if (write(2, message, length) < 0) { }
+    _exit(102);
+#endif
+}
+
 static void fwp_static_full(const char *what, size_t size, const char *option) {
     char buf[200];
     int n = snprintf(buf, sizeof buf, "fwp: out of memory: the static %s (%zu KiB) is full; build with a larger %s\n",
                      what, size >> 10, option);
-    if (write(2, buf, (size_t)n) < 0) { /* nothing more to do */ }
-    _exit(102);
+    fwp_static_die(buf, (size_t)n);
 }
+
+#ifdef _WIN32
+typedef struct {
+    HANDLE thread, wake, done;
+    LONG busy, stop;
+    LPTHREAD_START_ROUTINE run;
+    void *argument;
+    DWORD result;
+} fwp_static_worker;
+static fwp_static_worker fwp_static_workers[FWP_STATIC_THREADS];
+
+/* Commit is requested at creation; touch writable stack pages during startup.
+ * Leave Windows' guard pages intact. https://learn.microsoft.com/en-us/windows/win32/procthread/thread-stack-size */
+static void fwp_static_touch_stack(void) {
+    ULONG_PTR low, high;
+    SYSTEM_INFO system; GetSystemInfo(&system);
+    GetCurrentThreadStackLimits(&low, &high);
+    for (uintptr_t at = low; at < high;) {
+        MEMORY_BASIC_INFORMATION region;
+        if (!VirtualQuery((void *)at, &region, sizeof region)) abort();
+        uintptr_t end = (uintptr_t)region.BaseAddress + region.RegionSize;
+        if (end > high) end = high;
+        if (region.State == MEM_COMMIT && !(region.Protect & (PAGE_GUARD | PAGE_NOACCESS))) {
+            for (uintptr_t page = at; page < end; page += system.dwPageSize) {
+                volatile unsigned char *byte = (volatile unsigned char *)page;
+                *byte = *byte;
+            }
+        }
+        if (end <= at) abort();
+        at = end;
+    }
+}
+static DWORD WINAPI fwp_static_worker_main(void *argument) {
+    fwp_static_worker *worker = argument;
+    fwp_static_touch_stack();
+    if (!SetEvent(worker->done)) abort();
+    for (;;) {
+        if (WaitForSingleObject(worker->wake, INFINITE) != WAIT_OBJECT_0) abort();
+        if (InterlockedCompareExchange(&worker->stop, 0, 0)) return 0;
+        worker->result = worker->run(worker->argument);
+        if (!SetEvent(worker->done)) abort();
+    }
+}
+static void fwp_static_workers_finish(void) {
+    for (int i = 0; i < FWP_STATIC_THREADS; i++) {
+        fwp_static_worker *worker = &fwp_static_workers[i];
+        if (!worker->thread) continue;
+        if (WaitForSingleObject(worker->done, INFINITE) != WAIT_OBJECT_0) abort();
+        InterlockedExchange(&worker->stop, 1);
+        if (!SetEvent(worker->wake)) abort();
+        if (WaitForSingleObject(worker->thread, INFINITE) != WAIT_OBJECT_0) abort();
+        CloseHandle(worker->thread); CloseHandle(worker->wake); CloseHandle(worker->done);
+        memset(worker, 0, sizeof *worker);
+    }
+}
+static void fwp_static_workers_init(void) {
+    for (int i = 0; i < FWP_STATIC_THREADS; i++) {
+        fwp_static_worker *worker = &fwp_static_workers[i];
+        worker->wake = CreateEventW(NULL, FALSE, FALSE, NULL);
+        worker->done = CreateEventW(NULL, TRUE, FALSE, NULL);
+        if (!worker->wake || !worker->done)
+            fwp_static_full("worker startup", FWP_STATIC_THREAD_STACK, "--threads");
+        worker->thread = CreateThread(NULL, FWP_STATIC_THREAD_STACK, fwp_static_worker_main, worker, 0, NULL);
+        if (!worker->thread) fwp_static_full("worker startup", FWP_STATIC_THREAD_STACK, "--threads");
+        if (WaitForSingleObject(worker->done, INFINITE) != WAIT_OBJECT_0) abort();
+    }
+    if (atexit(fwp_static_workers_finish)) abort();
+}
+static fwp_static_worker *fwp_static_worker_start(LPTHREAD_START_ROUTINE run, void *argument) {
+    for (int i = 0; i < FWP_STATIC_THREADS; i++) {
+        fwp_static_worker *worker = &fwp_static_workers[i];
+        if (InterlockedCompareExchange(&worker->busy, 1, 0)) continue;
+        if (!ResetEvent(worker->done)) abort();
+        worker->run = run; worker->argument = argument;
+        if (!SetEvent(worker->wake)) abort();
+        return worker;
+    }
+    fwp_static_full("worker slots", FWP_STATIC_THREADS * FWP_STATIC_THREAD_STACK, "--threads");
+    return NULL;
+}
+static void fwp_static_worker_wait(fwp_static_worker *worker) {
+    if (WaitForSingleObject(worker->done, INFINITE) != WAIT_OBJECT_0) abort();
+}
+static void fwp_static_worker_release(fwp_static_worker *worker) {
+    fwp_static_worker_wait(worker);
+    worker->run = NULL; worker->argument = NULL;
+    if (InterlockedExchange(&worker->busy, 0) != 1) abort();
+}
+#endif
 
 static char *fwp_static_carve(size_t n, size_t align) {
     uintptr_t p = ((uintptr_t)fwp_static.cur + align - 1) & ~(uintptr_t)(align - 1);
@@ -78,21 +198,34 @@ static size_t fwp_static_meta_bytes(size_t heap);
 static void fwp_static_init(void) {
     if (fwp_static.ready) return;
     fwp_static.ready = 1;
+#ifdef _WIN32
+    SYSTEM_INFO system; GetSystemInfo(&system);
+    size_t page = system.dwPageSize;
+#else
     size_t page = (size_t)sysconf(_SC_PAGESIZE);
+#endif
     size_t meta = fwp_static_meta_bytes(FWP_STATIC_HEAP);
-    size_t total = FWP_STATIC_POOL + meta + FWP_STATIC_HEAP + FWP_STATIC_STACK +
+    size_t total = FWP_STATIC_POOL + meta + FWP_STATIC_HEAP + ((size_t)1 << 20);
+#ifndef _WIN32
+    total += FWP_STATIC_STACK +
                    (size_t)FWP_STATIC_TASKS * FWP_STATIC_TASK_STACK +
-                   (size_t)FWP_STATIC_THREADS * FWP_STATIC_THREAD_STACK + ((size_t)1 << 20);
+                   (size_t)FWP_STATIC_THREADS * FWP_STATIC_THREAD_STACK;
+#endif
     total = (total + page - 1) & ~(page - 1);
+#ifdef _WIN32
+    void *r = VirtualAlloc(NULL, total, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    int failed = !r;
+#else
     int flags = MAP_PRIVATE | MAP_ANONYMOUS;
 #ifdef MAP_POPULATE
     flags |= MAP_POPULATE;
 #endif
     void *r = mmap(0, total, PROT_READ | PROT_WRITE, flags, -1, 0);
-    if (r == MAP_FAILED) {
+    int failed = r == MAP_FAILED;
+#endif
+    if (failed) {
         static const char msg[] = "fwp: out of memory: cannot map the program's static memory\n";
-        if (write(2, msg, sizeof msg - 1) < 0) { /* nothing more to do */ }
-        _exit(102);
+        fwp_static_die(msg, sizeof msg - 1);
     }
     fwp_static.base = fwp_static.cur = (char *)r;
     fwp_static.end = (char *)r + total;
@@ -102,6 +235,15 @@ static void fwp_static_init(void) {
     fwp_static.meta_bytes = meta;
     fwp_static.heap = fwp_static_carve(FWP_STATIC_HEAP, (size_t)1 << 16);
     fwp_static.heap_bytes = FWP_STATIC_HEAP;
+#ifdef _WIN32
+    for (size_t i = 0; i < total; i += page) ((volatile char *)r)[i] = 0;
+    for (int i = 0; i < FWP_STATIC_TASKS; i++) fwp_static.task_free[i] = FWP_STATIC_TASKS - 1 - i;
+    fwp_static.ntask_free = FWP_STATIC_TASKS;
+#ifdef FWP_EXACT_FLOAT
+    fwp_decimal_set_allocator(fwp_static_malloc, fwp_static_free);
+#endif
+    fwp_static_workers_init();
+#else
     fwp_static.main_stack = fwp_static_carve(FWP_STATIC_STACK, page);
     for (int i = 0; i < FWP_STATIC_TASKS; i++) {
         fwp_static.task_stack[i] = fwp_static_carve(FWP_STATIC_TASK_STACK, page);
@@ -111,6 +253,7 @@ static void fwp_static_init(void) {
     }
     fwp_static.ntask_free = FWP_STATIC_TASKS;
     for (int i = 0; i < FWP_STATIC_THREADS; i++) fwp_static.thread_stack[i] = fwp_static_carve(FWP_STATIC_THREAD_STACK, page);
+#endif
 }
 
 /* ---------------------------------------------------------------- the pool
@@ -214,6 +357,7 @@ static void *fwp_pool_aligned(size_t align, size_t n) {
     return (void *)p;
 }
 
+#ifndef _WIN32
 int posix_memalign(void **out, size_t align, size_t n) {
     *out = fwp_pool_aligned(align, n);
     return 0;
@@ -230,9 +374,11 @@ size_t malloc_usable_size(void *p) {
     fwp_pool_hdr *h = fwp_pool_hdr_of(p);
     return fwp_pool_size(h->cls) - (size_t)((char *)p - (char *)h);
 }
+#endif
 
 /* ----------------------------------------------------------------- stacks */
 
+#ifndef _WIN32
 static char *fwp_static_task_stack(void) {
     if (!fwp_static.ready) fwp_static_init();
     if (fwp_static.ntask_free == 0) {
@@ -240,15 +386,13 @@ static char *fwp_static_task_stack(void) {
         int n = snprintf(buf, sizeof buf,
                          "fwp: out of memory: the static memory has stacks for %d tasks; build with a larger --tasks\n",
                          FWP_STATIC_TASKS);
-        if (write(2, buf, (size_t)n) < 0) { /* nothing more to do */ }
-        _exit(102);
+        fwp_static_die(buf, (size_t)n);
     }
     int i = fwp_static.task_free[--fwp_static.ntask_free];
     int busy = FWP_STATIC_TASKS - fwp_static.ntask_free;
     if (busy > fwp_static.tasks_peak) fwp_static.tasks_peak = busy;
     return fwp_static.task_stack[i];
 }
-
 static void fwp_static_task_stack_free(char *s) {
     for (int i = 0; i < FWP_STATIC_TASKS; i++)
         if (fwp_static.task_stack[i] == s) {
@@ -256,5 +400,6 @@ static void fwp_static_task_stack_free(char *s) {
             return;
         }
 }
+#endif
 
 static void fwp_static_report(void);

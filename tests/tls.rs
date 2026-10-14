@@ -253,12 +253,28 @@ fn start(mut cmd: Command) -> Server {
     }
 }
 
+fn curl_command() -> String {
+    std::env::var("FWP_TEST_CURL").unwrap_or_else(|_| "curl".into())
+}
+
+fn have_curl() -> bool {
+    let available = have(&curl_command(), "--version");
+    assert!(
+        available || std::env::var_os("FWP_REQUIRE_TLS").is_none(),
+        "required TLS peer curl unavailable"
+    );
+    available
+}
+
 fn curl(args: &[&str]) -> (i32, String) {
-    let o = Command::new("curl")
-        .args(["-s", "-m", "20", "-w", " [%{http_code}]"])
+    let o = Command::new(curl_command())
+        .args(["-sS", "-m", "20", "-w", " [%{http_code}]"])
         .args(args)
         .output()
         .expect("run curl");
+    if !o.status.success() {
+        eprintln!("curl peer: {}", String::from_utf8_lossy(&o.stderr));
+    }
     (
         o.status.code().unwrap_or(-1),
         String::from_utf8_lossy(&o.stdout).into_owned(),
@@ -285,6 +301,32 @@ fn both_ways(file: &Path, d: &Path, name: &str) -> Vec<Command> {
 
 // ------------------------------------------------------------ connections
 
+fn stream_snapshot(text: &str) -> String {
+    let mut result = text.replace(
+        "TLS handshake failed: ssl/tls alert bad certificate",
+        "TLS handshake failed: sslv3 alert bad certificate",
+    );
+    if cfg!(windows) {
+        // Windows may reset the TCP connection before its peer reads the TLS
+        // rejection alert. Preserve the client's exact certificate diagnostic
+        // and the failed handshake on the peer, without requiring alert delivery.
+        for detail in [
+            "tlsv1 alert unknown ca",
+            "sslv3 alert bad certificate",
+            "wrong version number",
+            "Connection reset by peer",
+            "Software caused connection abort",
+            "connection closed",
+        ] {
+            result = result.replace(
+                &format!("TLS handshake failed: {detail}"),
+                "TLS handshake failed: peer rejected connection",
+            );
+        }
+    }
+    result
+}
+
 /// TLS connections in one program, interpreted and native: the same
 /// output, which `tests/tls/streams.out` holds.
 #[test]
@@ -298,18 +340,12 @@ fn streams() {
         cmd.current_dir(certs);
         let o = run(cmd, 120);
         let raw = text(&o);
+        let got = stream_snapshot(&raw);
         if let Some(expected) = &reference {
-            assert_eq!(&raw, expected, "native and interpreter TLS output differs");
+            assert_eq!(&got, expected, "native and interpreter TLS output differs");
         } else {
-            reference = Some(raw.clone());
+            reference = Some(got.clone());
         }
-        // OpenSSL emits both names for the same bad-certificate alert. Keep
-        // exact engine agreement above; canonicalize only this vendor wording
-        // for the portable snapshot, without changing language diagnostics.
-        let got = raw.replace(
-            "TLS handshake failed: ssl/tls alert bad certificate",
-            "TLS handshake failed: sslv3 alert bad certificate",
-        );
         assert!(
             o.status.success(),
             "{}{}",
@@ -317,12 +353,12 @@ fn streams() {
             String::from_utf8_lossy(&o.stderr)
         );
         if bless() && i == 0 {
-            std::fs::write(&expected, &got).unwrap();
+            std::fs::write(&expected, &raw).unwrap();
         }
         let want = std::fs::read_to_string(&expected).unwrap_or_default();
         assert_eq!(
             got,
-            want,
+            stream_snapshot(&want),
             "{} differs",
             if i == 0 { "interpreted" } else { "native" }
         );
@@ -467,7 +503,7 @@ fn https_servers_and_clients() {
         let addr = srv.addr.strip_prefix("https://").expect("an https address");
         let base = format!("https://localhost:{}", srv.port());
         let _stalled = stalled_clients(addr);
-        if have("curl", "--version") {
+        if have_curl() {
             let started = Instant::now();
             assert_eq!(
                 curl(&["--cacert", ca, &format!("{}/health", base)]),
@@ -677,7 +713,7 @@ fn rest_over_https() {
     for srv in &servers {
         assert!(srv.addr.starts_with("https://"), "{}", srv.addr);
         let base = format!("https://localhost:{}", srv.port());
-        if have("curl", "--version") {
+        if have_curl() {
             let (code, body) = curl(&[
                 "--cacert",
                 certs.join("ca.pem").to_str().unwrap(),
@@ -747,7 +783,7 @@ fn rest_with_client_certificates() {
             .env("FWP_TLS_CLIENT_CA", file("ca.pem"));
         servers.push(start(cmd));
     }
-    if !have("curl", "--version") {
+    if !have_curl() {
         return;
     }
     for srv in &servers {

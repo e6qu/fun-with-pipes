@@ -17,7 +17,7 @@ library is listed in [stdlib.md](stdlib.md).
   suffix, the literal takes the type it is used at; a literal out of range
   for that type is a compile error.
 - **Float literals:** `1.5`, `2e-3`, with suffixes `f16`, `bf16`, `f32`,
-  `f64`, `f128`. The working branch uses binary16, bfloat16, binary32,
+  `f64`, `f128`. These use binary16, bfloat16, binary32,
   binary64 and binary128 respectively, with direct rounding from decimal text.
   See the [format contract and validation status](float-formats.md).
 - **Duration literals:** `500ns`, `20us`, `250ms`, `2s`, `1.5s`, `5min`,
@@ -434,10 +434,10 @@ fwp build file.fwp [options]                  compile
                      with the arguments after `--` (stdin from
                      --pgo-input F, or empty), then build with the profile
                      (needs GCC)
-    --gc arc         checked native main programs with counted ownership;
+    --gc arc         checked native main/CLI programs with counted ownership;
                      unsupported value/runtime boundaries diagnose
     --gc tracing     existing tracing compatibility mode (the default)
-    --memory static  all memory mapped once at startup (see below), with
+    --memory static  bounded runtime storage and stacks at startup, with
                      --heap S, --pool S, --stack S, --tasks N,
                      --task-stack S and --threads N
     --wasm-async A   jspi (default) or asyncify: how tasks switch on WebAssembly
@@ -532,27 +532,29 @@ rejected otherwise.
 ### Checked reference counting
 
 The `--gc arc` mode checks eligibility and reclaims supported immutable
-values and scoped File owners by reference counts. It supports native main
-programs and rejects unproved cycle/owner boundaries, WebAssembly, executable
-protocol entry points, libraries and services. It requires normal counted
+values and scoped File/State owners by reference counts. It supports native
+main, CLI and typed executable protocol entries. It rejects unproved cycle/owner
+boundaries, WebAssembly, libraries and services. It requires normal counted
 freeing; tracing stress/verification and reuse poisoning are incompatible.
 The [ownership contract](ownership.md#checked-arc-delivery) and
 [handoff](development-state.md) record coverage and production acceptance.
 
 ### Static memory
 
-`fwp build --memory static` builds a native executable that maps all the
-memory it will use when it starts, in one populated mapping, and asks the
-operating system for none after that, in the spirit of TigerBeetle's
-static allocation. The mapping holds:
+`fwp build --memory static` bounds runtime-owned memory using storage reserved,
+committed and touched at startup. Linux places the heap, buffers and stacks in
+one mapping. The Windows implementation under validation commits stacks
+separately and reuses precreated task fibers and worker threads. External DLL
+allocations and Windows resources are outside this budget; touched pages can
+still be paged out by the OS. The configured parts are:
 
 | Part | Option | Default | What uses it |
 |---|---|---|---|
 | heap | `--heap S` | 64M | fwp values; still collected, but it never grows: when it is full the collector runs before giving up |
-| pool | `--pool S` | 32M | `malloc`, `calloc`, `realloc` and `free`, which the program defines, so the runtime's buffers and the C library's own allocations come from it |
+| pool | `--pool S` | 32M | Runtime buffers and decimal overflow scratch; Linux interposes allocation functions, Windows uses a private allocator |
 | main stack | `--stack S` | 16M | the main task |
 | task stacks | `--tasks N`, `--task-stack S` | 64 of 1M | tasks: at most N run at once, each with a guard page |
-| thread stacks | `--threads N` | 8 of 1M | the threads of `CpuParallel` kernels (more are not started; results do not depend on their number) |
+| thread stacks | `--threads N` | 8 of 1M | `CpuParallel` workers; Windows also uses these workers for process output capture (two slots per capture) |
 
 Sizes take `K`, `M` and `G`. Running out of a part ends the program with
 exit code 102 and names the option to raise:
@@ -573,8 +575,9 @@ fwp: static memory: 124448 KiB mapped at startup
 
 Pipes between fwp programs stay on the Unix socket transport (`UDS_V1`)
 rather than the shared-memory ring, which would be new memory. Static
-memory is for native executables on Linux; WebAssembly and libraries
-keep the usual allocator. `tests/static_memory.rs` checks the golden
+memory is verified on Linux; the Windows port is under validation in
+`tests/windows_static_memory.rs`. WebAssembly and libraries keep the usual
+allocator. `tests/static_memory.rs` checks the Linux golden
 programs with it, and, with `strace`, that a program with tasks, a
 parallel kernel and plenty of allocation makes no memory system call after
 startup.

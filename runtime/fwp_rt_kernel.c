@@ -3,15 +3,17 @@
  * interpreter has the same in src/numerics.rs, with the same operation
  * order, so results agree bit for bit.
  *
- * Tapes hold numbers only (parents and partial derivatives), so they live
- * in malloc'ed memory. A reverse-mode value refers to its node as
+ * Base-float tapes hold numeric parents and partial derivatives in malloc'ed
+ * buffers. Nested tapes own typed weights and callbacks in scanned runtime
+ * storage, and execute adjoint operations on enclosing tapes. A reverse-mode
+ * value refers to its node as
  * (tape id << 32) | index, constants as -1; a tape id is
  * (generation << 16) | (slot + 1), so a value that outlives its tape is
  * detected.
  *
  * Kernels are fused elementwise expressions in postfix form, evaluated
  * FWP_KCHUNK elements at a time. CpuParallel runs contiguous ranges of
- * chunks on POSIX threads; the workers read the input arrays and write
+ * chunks on native threads; the workers read the input arrays and write
  * malloc'ed memory, and never allocate from the collected heap (the
  * calling task waits for them, so no collection runs meanwhile).
  * Reductions sum blocks of FWP_KBLOCK elements from the left, then the
@@ -25,6 +27,7 @@
 typedef struct fwp_owned_tape {
     struct fwp_owned_tape *prev, *next;
     const fwp_desc *elem;
+    uint64_t task; /* Zero identifies the root before and after task startup. */
     V zero, add, mul, inactive_zero;
     V *weights, *adj;
     int64_t leaves, len, cap, nadj;
@@ -324,17 +327,21 @@ static V fwp_p_ad_tape_owned(V parameters, V inputs, const fwp_desc *elem) {
     fwp_owned_tape *owner = fwp_mem_alloc(sizeof *owner);
     memset(owner, 0, sizeof *owner);
     owner->elem = elem;
-    owner->zero = OBJ(parameters)->f[0];
-    owner->add = OBJ(parameters)->f[1]; owner->mul = OBJ(parameters)->f[2];
-    owner->inactive_zero = OBJ(parameters)->f[3];
-    if (elem->dup) elem->dup(owner->zero);
-    fwp_rc_dup(owner->add); fwp_rc_dup(owner->mul); fwp_rc_dup(owner->inactive_zero);
-    owner->leaves = owner->len = n;
+    owner->task = fwp_cur == fwp_root ? 0 : fwp_cur->identity;
     owner->next = fwp_owned_tapes;
     if (owner->next) owner->next->prev = owner;
     fwp_owned_tapes = owner;
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_owned_tape_release, owner);
+    /* Publish each field only after its retain succeeds. Recovery must release
+     * exactly the completed prefix, without consuming borrowed parameters. */
+    V zero = OBJ(parameters)->f[0];
+    if (elem->dup) elem->dup(zero);
+    owner->zero = zero;
+    V callback = OBJ(parameters)->f[1]; fwp_rc_dup(callback); owner->add = callback;
+    callback = OBJ(parameters)->f[2]; fwp_rc_dup(callback); owner->mul = callback;
+    callback = OBJ(parameters)->f[3]; fwp_rc_dup(callback); owner->inactive_zero = callback;
+    owner->leaves = owner->len = n;
     V base = fwp_ad_tape_new((V)n, owner);
     fwp_cleanup_pop(&cleanup);
     FWP_KEEP_ALIVE(parameters);
@@ -428,6 +435,8 @@ static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {
     fwp_tape *t = fwp_tape_of(id);
     fwp_owned_tape *owner = t->owned;
     if (!owner || owner->elem != elem) fwp_trap(FWP_AD_REPRESENTATION);
+    if (owner->task != (fwp_cur == fwp_root ? 0 : fwp_cur->identity))
+        fwp_trap("autodiff: managed tape belongs to another task");
     int64_t idx = t->len;
     if (idx >= fwp_tape_limit()) fwp_trap("autodiff: the tape is full");
     if ((ra >= 0 && (ra & 0xffffffff) >= idx) || (rb >= 0 && (rb & 0xffffffff) >= idx))
@@ -455,6 +464,8 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
     fwp_tape *t = fwp_tape_of(id);
     fwp_owned_tape *owner = t->owned;
     if (!owner || owner->elem != list_type->elem) fwp_trap(FWP_AD_REPRESENTATION);
+    if (owner->task != (fwp_cur == fwp_root ? 0 : fwp_cur->identity))
+        fwp_trap("autodiff: managed tape belongs to another task");
     fwp_tape_unlink_scope(t);
     fwp_tape tp = *t;
     t->owned = NULL; t->live = 0;
@@ -639,6 +650,9 @@ static void fwp_kernel_parallel(const fwp_kernel *k, int sum, size_t n, size_t u
 #ifdef __wasi__
     t = 1;
 #endif
+#ifdef FWP_STATIC_MEMORY
+    if (t > FWP_STATIC_THREADS + 1) t = FWP_STATIC_THREADS + 1;
+#endif
     fwp_kjob jobs[256];
     for (size_t i = 0; i < t; i++) {
         jobs[i].k = k;
@@ -649,6 +663,12 @@ static void fwp_kernel_parallel(const fwp_kernel *k, int sum, size_t n, size_t u
         jobs[i].out = out;
     }
 #ifdef _WIN32
+#ifdef FWP_STATIC_MEMORY
+    fwp_static_worker *workers[256];
+    for (size_t i = 1; i < t; i++) workers[i] = fwp_static_worker_start(fwp_kjob_thread, &jobs[i]);
+    fwp_kjob_do(&jobs[0]);
+    for (size_t i = 1; i < t; i++) fwp_static_worker_release(workers[i]);
+#else
     HANDLE tids[256];
     size_t started = 1;
     for (; started < t; started++) {
@@ -662,17 +682,13 @@ static void fwp_kernel_parallel(const fwp_kernel *k, int sum, size_t n, size_t u
         CloseHandle(tids[i]);
     }
     if (started != t) fwp_trap("cannot create numerical worker thread");
+#endif
 #elif !defined(__wasi__)
     pthread_t tids[256];
     int started[256] = {0};
 #ifdef FWP_STATIC_MEMORY
     /* threads on the stacks mapped at startup; the results do not depend
      * on how many there are */
-    if (t > FWP_STATIC_THREADS + 1) t = FWP_STATIC_THREADS + 1;
-    for (size_t i = 0; i < t; i++) {
-        jobs[i].lo = i * units / t;
-        jobs[i].hi = (i + 1) * units / t;
-    }
     for (size_t i = 1; i < t; i++) {
         pthread_attr_t a;
         pthread_attr_init(&a);

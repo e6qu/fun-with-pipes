@@ -75,7 +75,7 @@ typedef unsigned __int128 u128;
 /* runtime/fwp_rt_gc.c: the collected heap */
 static void *fwp_alloc(size_t n);      /* zeroed; scanned for values */
 static void *fwp_alloc_leaf(size_t n); /* zeroed; holds no values */
-/* whether all memory was mapped at startup (runtime/fwp_rt_static.c) */
+/* whether runtime storage uses fixed startup budgets (runtime/fwp_rt_static.c) */
 #ifdef FWP_STATIC_MEMORY
 static const int fwp_static_memory = 1;
 #else

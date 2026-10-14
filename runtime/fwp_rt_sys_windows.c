@@ -284,7 +284,12 @@ static DWORD WINAPI fwp_win_process_read(void *pointer) {
 }
 typedef struct {
     PROCESS_INFORMATION process;
-    HANDLE input, inherited[3], readers[2];
+    HANDLE input, inherited[3];
+#ifdef FWP_STATIC_MEMORY
+    fwp_static_worker *readers[2];
+#else
+    HANDLE readers[2];
+#endif
     fwp_win_process_output output[2];
     LPPROC_THREAD_ATTRIBUTE_LIST attributes;
     int attributes_initialized;
@@ -299,8 +304,12 @@ static void fwp_win_process_finish(void *pointer) {
     for (int i = 0; i < 3; i++) fwp_win_close(&process->inherited[i]);
     for (int i = 0; i < 2; i++) {
         if (process->readers[i]) {
+#ifdef FWP_STATIC_MEMORY
+            fwp_static_worker_release(process->readers[i]);
+#else
             WaitForSingleObject(process->readers[i], INFINITE);
             CloseHandle(process->readers[i]);
+#endif
         } else fwp_win_close(&process->output[i].handle);
         free(process->output[i].data);
     }
@@ -400,8 +409,12 @@ static V fwp_run_process(V argv, V input, int capture, const fwp_desc *error) {
     for (int i = 0; i < 3; i++) fwp_win_close(&process.inherited[i]);
     if (capture) {
         for (int i = 0; i < 2; i++) {
+#ifdef FWP_STATIC_MEMORY
+            process.readers[i] = fwp_static_worker_start(fwp_win_process_read, &process.output[i]);
+#else
             process.readers[i] = CreateThread(NULL, 0, fwp_win_process_read, &process.output[i], 0, NULL);
             if (!process.readers[i]) { failed = GetLastError(); goto finish; }
+#endif
         }
     }
     if (ResumeThread(process.process.hThread) == (DWORD)-1) { failed = GetLastError(); goto finish; }
@@ -423,7 +436,11 @@ static V fwp_run_process(V argv, V input, int capture, const fwp_desc *error) {
     if (failed) goto finish;
     if (WaitForSingleObject(process.process.hProcess, INFINITE) != WAIT_OBJECT_0) { failed = GetLastError(); goto finish; }
     if (capture) for (int i = 0; i < 2; i++) {
+#ifdef FWP_STATIC_MEMORY
+        fwp_static_worker_wait(process.readers[i]);
+#else
         if (WaitForSingleObject(process.readers[i], INFINITE) != WAIT_OBJECT_0) { failed = GetLastError(); goto finish; }
+#endif
         if (process.output[i].error) { failed = process.output[i].error; goto finish; }
     }
     DWORD code;

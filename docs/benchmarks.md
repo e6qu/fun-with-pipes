@@ -16,6 +16,14 @@ Roadmap measurements are recorded in:
   direct producer/State allocation controls, I128/U128 native register arithmetic,
   reconstruction ownership and refreshed numerical/AD evidence for PR #133.
 
+- [Wide scalar and record workers](measurements/wide-records-2026-10-14.json):
+  four-host I128/U128/F128 and mixed-record allocation, retention, live storage
+  and native-instruction controls.
+- [Checkpointed autodiff](measurements/checkpoint-2026-10-14.json): four-host
+  4096-step VJP comparisons at intervals 16/32/64. Smaller peak tape storage
+  costs more managed storage, allocations and time; all measured storage is
+  reclaimed without collection.
+
 Reports distinguish preparation measurements from production acceptance.
 [History](roadmap-history.md) indexes accepted gates; [the handoff](development-state.md)
 records the latest tested source. These results do not establish universal C/Rust

@@ -1,5 +1,7 @@
 //! Reverse-over-reverse records typed backward operations on enclosing tapes.
 use std::process::{Command, Output};
+#[path = "support/c_instrument.rs"]
+mod c_instrument;
 
 fn checked(command: &mut Command) -> Output {
     let output = command.output().unwrap();
@@ -27,6 +29,8 @@ main = [
         | eq [56.0] | echo,
     range 0 65 | map (int.to-float | singleton | grad (grad square | sum))
         | flatten | sum | eq 130.0 | echo,
+    [1.0] | grad (grad (rev._replay 300 (map (add one)) | square) | sum)
+        | eq [2.0] | echo,
 ] | ignore
 "#;
 
@@ -42,7 +46,7 @@ fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
             .args(["run", "--interp"])
             .arg(&source),
     );
-    assert_eq!(reference.stdout, "True\n".repeat(9).as_bytes());
+    assert_eq!(reference.stdout, "True\n".repeat(10).as_bytes());
     assert!(reference.stderr.is_empty());
     for arc in [false, true] {
         for opt in ["-O1", "-O2"] {
@@ -148,4 +152,258 @@ fn nested_reverse_rejects_expired_and_unrelated_tapes() {
         assert!(!output.status.success());
         assert!(String::from_utf8_lossy(&output.stderr).contains(message), "{output:?}");
     }
+}
+
+#[test]
+fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
+    let dir = fwp::cgen::TempDir::new("fwp-nested-unwind").unwrap();
+    let source = dir.join("unwind.fwp");
+    std::fs::write(&source, format!("{FUNCTIONS}\nprobe : List[F64] -> List[F64] ! {{Error[String]}}\nprobe = grad (grad square | sum)\nmain = [1.0] | attempt probe | ignore\n")).unwrap();
+    for arc in [false, true] {
+        let cfile = dir.join("unwind.c");
+        let mut build = Command::new(env!("CARGO_BIN_EXE_fwp"));
+        build
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile);
+        if arc {
+            build.args(["--gc", "arc"]);
+        }
+        checked(&mut build);
+        let original = std::fs::read_to_string(cfile).unwrap();
+        assert!(original.contains("#define FWP_UNWIND 1"));
+        let main = original
+            .split("static void *fwp_main_thread(void *arg)")
+            .nth(1)
+            .unwrap()
+            .split("    V r = ")
+            .nth(1)
+            .unwrap()
+            .split("();")
+            .next()
+            .unwrap();
+        let start = original
+            .find("static void fwp_owned_tape_release(void *pointer)")
+            .unwrap();
+        let end = start
+            + original[start..]
+                .find("static void fwp_owned_tape_reserve")
+                .unwrap();
+        let release = c_instrument::calls(&original[start..end], &[("fwp_mem_free", "nested_free")])
+            .replace("    if (!owner) return;", "    if (!owner) return;\n    nested_expected_frees += 1 + (owner->weights != NULL) + (owner->adj != NULL);");
+        let mut code = format!("{}\nstatic size_t nested_expected_frees;\nstatic void nested_point(int);\nstatic void nested_free(void *);\n{release}{}", &original[..start], &original[end..]);
+        for (point, marker) in [
+            (
+                1,
+                "    fwp_cleanup_pop(&cleanup);\n    FWP_KEEP_ALIVE(parameters);",
+            ),
+            (2, "    owner->len = t->len = idx + 1;"),
+            (
+                3,
+                "    fwp_cleanup_push(&value_cleanup, fwp_owned_tape_release, owner);",
+            ),
+            (
+                4,
+                "            fwp_cleanup_push(&product_cleanup, fwp_value_release, &product);",
+            ),
+            (
+                5,
+                "        result.value = fwp_rc_fresh(fwp_cons(value, result.value));\n    }\n    fwp_cleanup_pop(&result_cleanup);\n    fwp_cleanup_pop(&value_cleanup);",
+            ),
+            (7, "    V zero = OBJ(parameters)->f[0];"),
+            (8, "    owner->zero = zero;"),
+            (9, "    V callback = OBJ(parameters)->f[1]; fwp_rc_dup(callback); owner->add = callback;"),
+            (10, "    callback = OBJ(parameters)->f[2]; fwp_rc_dup(callback); owner->mul = callback;"),
+        ] {
+            assert_eq!(code.matches(marker).count(), 1, "stage {point}");
+            let injected = if point == 5 {
+                marker.replace("    }\n    fwp_cleanup_pop(&result_cleanup);", "        nested_point(5);\n    }\n    fwp_cleanup_pop(&result_cleanup);")
+            } else {
+                format!("{marker}\n    nested_point({point});")
+            };
+            code = code.replace(marker, &injected);
+        }
+        code = code.replace(
+            "int main(int argc, char **argv)",
+            "int unused_main(int argc, char **argv)",
+        );
+        let probe = include_str!("fixtures/autodiff_nested_unwind.c")
+            .replace("NESTED_MAIN", main)
+            .replace(
+                "static size_t nested_expected_frees, nested_actual_frees;",
+                "static size_t nested_actual_frees;",
+            );
+        code.push_str(&probe);
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("unwind.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            for mode in 0..=10 {
+                checked(
+                    Command::new(&binary)
+                        .arg(mode.to_string())
+                        .env("FWP_AD_WORKSPACE", "0")
+                        .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                        .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
+                        .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" }),
+                );
+            }
+            let broken = code.replace("nested_free(owner->weights);", "(void)owner->weights;");
+            assert_ne!(broken, code);
+            fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+            assert_eq!(
+                Command::new(&binary)
+                    .arg("4")
+                    .env("FWP_AD_WORKSPACE", "0")
+                    .output()
+                    .unwrap()
+                    .status
+                    .code(),
+                Some(195)
+            );
+            let seed_cleanup = "    fwp_cleanup_push(&cleanup, fwp_owned_tape_release, owner);";
+            assert_eq!(code.matches(seed_cleanup).count(), 1);
+            let missing_seed_owner = code.replace(seed_cleanup, "");
+            fwp::cgen::compile_c(&missing_seed_owner, &binary, opt).unwrap();
+            assert_eq!(
+                Command::new(&binary)
+                    .arg("8")
+                    .env("FWP_AD_WORKSPACE", "0")
+                    .output()
+                    .unwrap()
+                    .status
+                    .code(),
+                Some(193)
+            );
+        }
+    }
+}
+
+#[test]
+fn completed_task_identity_cannot_be_reused_by_a_later_task() {
+    let dir = fwp::cgen::TempDir::new("fwp-tape-task-reuse").unwrap();
+    let source = dir.join("reuse.fwp");
+    std::fs::write(&source, include_str!("run/ad_task_reuse.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .args(["run", "--interp"])
+        .arg(&source)
+        .env("FWP_NO_OPT", "1")
+        .output()
+        .unwrap();
+    assert_eq!(reference.status.code(), Some(101), "{reference:?}");
+    let cfile = dir.join("reuse.c");
+    checked(
+        Command::new(compiler)
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let identity = "    task->identity = ++fwp_task_identity;";
+    assert_eq!(code.matches(identity).count(), 1);
+    let broken = code.replace(
+        identity,
+        "    task->identity = 1; /* reuse a completed task identity */",
+    );
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join("reuse.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let actual = Command::new(&binary)
+            .env("FWP_GC_STRESS", "1")
+            .env("FWP_GC_VERIFY", "1")
+            .env("FWP_REUSE_VERIFY", "1")
+            .output()
+            .unwrap();
+        assert_eq!(actual.status.code(), reference.status.code(), "{actual:?}");
+        assert_eq!(actual.stdout, reference.stdout);
+        assert_eq!(actual.stderr, reference.stderr);
+        fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+        assert_eq!(
+            Command::new(&binary).output().unwrap().status.code(),
+            Some(0)
+        );
+    }
+}
+
+#[test]
+fn managed_tapes_reject_cross_task_use_in_both_engines() {
+    let dir = fwp::cgen::TempDir::new("fwp-nested-task").unwrap();
+    let source = dir.join("task.fwp");
+    std::fs::write(
+        &source,
+        r#"
+work : List[Rev[Rev[F64]]] -> () -> Rev[Rev[F64]]
+work = curry (.0 | head | option.unwrap-or zero | fork mul id id)
+main = [1.0] | rev._seed | .1 | rev._seed | .1
+    | compose work task.spawn | task.await | ignore
+"#,
+    )
+    .unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .args(["run", "--interp"])
+        .arg(&source)
+        .env("FWP_NO_OPT", "1")
+        .output()
+        .unwrap();
+    assert_eq!(reference.status.code(), Some(101), "{reference:?}");
+    let message = "autodiff: managed tape belongs to another task";
+    assert!(
+        String::from_utf8_lossy(&reference.stderr).contains(message),
+        "{reference:?}"
+    );
+    let binary = dir.join("task.exe");
+    checked(
+        Command::new(compiler)
+            .args(["build", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&binary),
+    );
+    let actual = Command::new(&binary)
+        .env("FWP_GC_STRESS", "1")
+        .env("FWP_GC_VERIFY", "1")
+        .env("FWP_REUSE_VERIFY", "1")
+        .output()
+        .unwrap();
+    assert_eq!(actual.status.code(), reference.status.code(), "{actual:?}");
+    assert_eq!(actual.stdout, reference.stdout);
+    assert!(
+        String::from_utf8_lossy(&actual.stderr).contains(message),
+        "{actual:?}"
+    );
+    // Starting the scheduler later must not change the root tape's identity.
+    std::fs::write(
+        &source,
+        r#"
+main = [1.0] | rev._seed | .1 | rev._seed | .1
+    | tap (compose (const (const ())) task.spawn | task.await | ignore)
+    | head | option.unwrap-or zero | fork mul id id | .value | .value | echo
+"#,
+    )
+    .unwrap();
+    let reference = checked(
+        Command::new(compiler)
+            .args(["run", "--interp"])
+            .arg(&source)
+            .env("FWP_NO_OPT", "1"),
+    );
+    assert_eq!(reference.stdout, b"1.0\n");
+    checked(
+        Command::new(compiler)
+            .args(["build", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&binary),
+    );
+    let actual = checked(
+        Command::new(&binary)
+            .env("FWP_GC_STRESS", "1")
+            .env("FWP_GC_VERIFY", "1")
+            .env("FWP_REUSE_VERIFY", "1"),
+    );
+    assert_eq!(actual.stdout, reference.stdout);
+    assert_eq!(actual.stderr, reference.stderr);
 }

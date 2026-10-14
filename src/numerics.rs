@@ -61,6 +61,7 @@ struct Tape {
 }
 
 struct OwnedTape {
+    fiber: u64,
     zero: Value,
     add: Value,
     mul: Value,
@@ -69,8 +70,18 @@ struct OwnedTape {
     db: Vec<Value>,
 }
 
-// Interpreter tasks have independent OS threads. Numeric IDs remain globally
-// unique; managed weights stay on the creating task, like its dynamic scopes.
+// Native interpreter tasks have separate threads; WASM tasks share a thread
+// and must additionally match their fiber. Numeric IDs remain globally unique.
+fn tape_fiber() -> u64 {
+    #[cfg(target_family = "wasm")]
+    {
+        crate::fiber::identity()
+    }
+    #[cfg(not(target_family = "wasm"))]
+    {
+        0
+    }
+}
 thread_local! {
     static OWNED_TAPES: RefCell<BTreeMap<i64, OwnedTape>> = const { RefCell::new(BTreeMap::new()) };
 }
@@ -363,6 +374,7 @@ pub(crate) fn tape_owned(parameters: &Value, inputs: &Value) -> R<Value> {
     t.db = Vec::new();
     t.adj = Vec::new();
     let owner = OwnedTape {
+        fiber: tape_fiber(),
         zero: fields[0].clone(),
         add: fields[1].clone(),
         mul: fields[2].clone(),
@@ -409,6 +421,9 @@ pub(crate) fn push_owned(value: &Value) -> R<Value> {
         let Some(owner) = owners.get_mut(&id) else {
             return trap("autodiff: managed tape belongs to another task");
         };
+        if owner.fiber != tape_fiber() {
+            return trap("autodiff: managed tape belongs to another task");
+        }
         owner.da.push(fields[1].clone());
         owner.db.push(fields[3].clone());
         Ok(())
@@ -439,7 +454,17 @@ pub(crate) fn backward_owned(
     if !tapes[slot].owned {
         return trap(REPRESENTATION);
     }
-    let Some(owner) = OWNED_TAPES.with(|owners| owners.borrow_mut().remove(&id)) else {
+    let Some(owner) = OWNED_TAPES.with(|owners| {
+        let mut owners = owners.borrow_mut();
+        if owners
+            .get(&id)
+            .is_some_and(|owner| owner.fiber == tape_fiber())
+        {
+            owners.remove(&id)
+        } else {
+            None
+        }
+    }) else {
         return trap("autodiff: managed tape belongs to another task");
     };
     let t = std::mem::take(&mut tapes[slot]);

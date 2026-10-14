@@ -233,6 +233,18 @@ checkpointing. These five implementation areas carry forward in PLAN.
 
 ## PR #135 development evidence
 
+The user merged this subset on 2026-10-14 as
+`ad37059e5769a54911ee05ee3b7a11faf90f3480`, tree-identical to head
+`5d6e96d895b80d8d4e9c142944a7016453e84f40`. This merge preceded final platform
+acceptance. [Autodiff 38550312989](https://github.com/e6qu/fun-with-pipes/actions/runs/38550312989)
+at this head passed on all four Linux/macOS hosts: nested analytical and
+active-zero derivatives, checkpointing, ARC release controls and existing tape
+lifetimes/unload. This focused run does not establish a full production gate. Windows `38546869551@fc697328` passed native goldens
+and standalone compiler build on both architectures, but failed TLS peer tests
+(system Schannel curl with PEM fixtures and reset-vs-alert diagnostics).
+These failures and all remaining work continue in one follow-up branch,
+`roadmap-after-135`. The merge itself is not evidence of completed support.
+
 These focused runs preceded final acceptance and do not establish a passing
 merge gate. Current work and failures live only in the session handoff.
 
@@ -264,3 +276,45 @@ merge gate. Current work and failures live only in the session handoff.
 - At `bb523a5`, [both actual WASI jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38523463736)
   passed goldens, math cores and physical reclamation; [Windows foundations](https://github.com/e6qu/fun-with-pipes/actions/runs/38523466974)
   also passed both native architectures. Later changes need fresh final gates.
+
+
+## PR #136 implementation verification
+
+[PR #136](https://github.com/e6qu/fun-with-pipes/pull/136) completes the six-step
+implementation after the user merged PR #135 as `ad37059e` before acceptance.
+[Production 38568712872](https://github.com/e6qu/fun-with-pipes/actions/runs/38568712872)
+at `01c686d1` passes eight of nine jobs: Linux ARM64/AMD64, regular ARM/Intel
+macOS, ARM macOS GC, native Windows ARM64/AMD64 and benchmarks. Intel GC passed
+the full stress golden suite, then reached its 90-minute limit during wide
+workers without a failed assertion. This run is diagnostic evidence, not a
+passing merge gate. REST took 427 seconds; earlier Intel wide workers took
+144 seconds. Moving those two targets to regular preserves complete coverage
+and the existing limits. [Docs 38568712866](https://github.com/e6qu/fun-with-pipes/actions/runs/38568712866)
+passes at the same head. Final acceptance requires all nine production jobs
+and docs on PR #136's final head before squash merge; inspect the PR's checks
+and merge state for that delivery record.
+
+[Focused WASM 38566937737](https://github.com/e6qu/fun-with-pipes/actions/runs/38566937737)
+passes both Linux architectures at `cce2a70f`, with the same compiler/runtime as
+`01c686d1`: exact arithmetic, physical reclamation, CLI/browser execution and
+native executable ownership. Production Linux also passes Asyncify checks.
+[Focused AD 38560981174](https://github.com/e6qu/fun-with-pipes/actions/runs/38560981174)
+passes all four Linux/macOS hosts at `b4d072bb`, including nested derivatives,
+stable completed-task identities, partial-retain failures, omitted releases,
+cancellation, unload, workspace/tape bounds and checkpoint measurements.
+
+Repairs preserve the semantic expectations: typed executable closure pointers
+fix wasm32 static initialization; cleanup protects partially retained tape
+seeds and unpublished tasks; stable task identities prevent reused scheduler
+slots from accepting stale AD values. Test repairs correct collector-only root
+placement, permanent scheduler baselines, Windows peer-close diagnostics,
+CRLF handling, synthetic cancellation stack bounds and failure injection.
+
+Permanent artifacts record equivalent workloads and limitations:
+[wide records](measurements/wide-records-2026-10-14.json) reduce wide scalar
+allocations 513 → 2 and mixed record allocations 3,878 → 48;
+[checkpointing](measurements/checkpoint-2026-10-14.json) at interval 32 reduces
+peak tape bytes 262,248 → 2,152 while increasing managed peak 336 → 12,816,
+allocations and elapsed time. These separate peaks need not coincide. All
+measured storage is reclaimed without collection; neither result establishes
+universal allocation-free execution or C/Rust performance parity.

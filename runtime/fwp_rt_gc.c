@@ -1526,7 +1526,11 @@ static void fwp_gc_start(void *top) {
  * used at most */
 static void fwp_static_report(void) {
     fprintf(stderr,
+#ifdef _WIN32
+            "fwp: static memory: %zu KiB runtime storage mapped at startup; stacks committed separately\n"
+#else
             "fwp: static memory: %zu KiB mapped at startup\n"
+#endif
             "  heap        %8zu KiB, %zu KiB used at most (%zu KiB live at most, %zu collections)\n"
             "  pool        %8zu KiB, %zu KiB used at most\n"
             "  main stack  %8zu KiB\n"
