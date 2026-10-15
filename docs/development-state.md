@@ -65,25 +65,41 @@ the fixed limits. No local full compiler build or full gate was run.
 - Regression harness metadata passes. Standard-library documentation regenerated
   with the standalone focused test (0.76 s); its first invocation lacked the
   compile-time manifest path, corrected before regeneration.
-- Full four-host `precision` workflow and final production gates remain required.
-  No runtime or platform claim is verified by a queued job.
+- Four-host [precision run 38797434546](https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546)
+  passed at `7a463be9`, including all precision, nested/checkpoint, scope, ownership,
+  capacity, library and float-format regressions, formatting and Clippy.
+  [Retained profiles](measurements/f128-gradient-precision-2026-10-15.json) cover
+  all 32 mode/optimization/cache combinations. Each full fixture requests
+  2,843 managed allocations and 143,082 bytes; every ARC profile ends with zero
+  retained charge and no collections. The fixture and accounting scope are
+  explicit in that report. Guarded downloads passed (4.40 s); report recording
+  checks all counts and ARC cleanup before retaining the data.
+- Final-head production, including Windows, remains required before delivery.
 
 The preceding solver batch owns six linear-algebra workspaces and partial
 results, bounds QR output size and borrows invariant F64 array data once per
 loop. Repaired focused run
 [38795634707](https://github.com/e6qu/fun-with-pipes/actions/runs/38795634707)
-is queued at `ec1ff14b`. Its first expanded run exposed an ARC-ineligible
+passed all four hosts at `ec1ff14b`. Its first expanded run exposed an ARC-ineligible
 `read-all` in a QR fixture; the repaired fixture uses an explicit function entry.
 The details remain in `/private/tmp/fwp-linear-algebra/docs/development-state.md`.
 
 ## Next action
 
-Next: finish the precision probe and runner validation while monitoring #146 and
-the solver run. Fix failures rather than treating them as roadmap blockers.
+Next: monitor #146 and fix any failures. The solver branch has a same-run
+array borrowing comparison in [run 38800569111](https://github.com/e6qu/fun-with-pipes/actions/runs/38800569111);
+collect it before assigning a precise speedup to the generated-code change.
 After #146 merges, rebase only solver commits after `c10b1ccd` onto its accepted
-squash commit. Before delivering this precision change, rebase only its commits
-after `3e5d86ad` onto the accepted numerical parent; do not replay parent commits.
+squash commit. Bundle this precision work into the next substantial numerical PR by applying
+only its commits after `3e5d86ad` onto the rebased numerical branch; do not replay parent commits.
 Update this live handoff with actual results, download profiles and explain
 remaining costs before making acceptance claims. Preserve the unexplained Intel
 compiler abort recorded in the parent history; its unchanged rerun passed but
 its cause remains unresolved.
+
+Console preparation follows in `/private/tmp/fwp-console-ownership`, branch
+`checked-console-ownership`, based on `7a463be9`. Its focused run
+[38799697858](https://github.com/e6qu/fun-with-pipes/actions/runs/38799697858)
+is queued at `1d8270a`. It owns pending input strings/lists and C buffers;
+positive probes and deliberate missing-free controls passed locally. Its own
+handoff records the remaining checks. No additional PR is open.

@@ -134,8 +134,16 @@ metadata. Inputs have node indices but need no operation records. F128 and neste
 tapes instead own typed derivative values and operation callbacks. F128 values
 can require separately allocated boxes and reference counts; the 24-byte figure
 does not describe their complete storage cost. Preserving precision is not a
-claim of equal speed or allocation cost. The [handoff](development-state.md)
-tracks native validation and allocation profiles for this change. A failed append
+claim of equal speed or allocation cost.
+
+The [four-host precision report](measurements/f128-gradient-precision-2026-10-15.json)
+covers ten checks, including low bits, exponent range, nested/checkpointed
+arithmetic and 65 repeated gradients. The complete fixture makes 2,843 managed
+allocation requests for 143,082 requested bytes after initialization, including
+output formatting. Checked ARC finishes with zero retained charge and no
+collections at O1/O2 with workspace reuse off/on. These totals exclude unmanaged
+registry, linked-library and host allocations; they measure neither peak process
+memory nor speed relative to C/Rust. A failed append
 releases partially acquired owners without publishing an incomplete record.
 
 The vertex token encodes `(tape id << 32) | index`, with −1 for constants.
