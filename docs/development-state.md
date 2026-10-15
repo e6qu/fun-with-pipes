@@ -44,7 +44,8 @@ used the existing compiler; full CI rebuilds the published revision.
 
 ## Current delivery
 
-Make the no-JIT decision explicit throughout the plan and compiler guidance.
+[PR #144](https://github.com/e6qu/fun-with-pipes/pull/144) makes the no-JIT
+decision explicit throughout the plan and compiler guidance.
 The existing OpenCL path calls `clBuildProgram` at runtime in `src/numerics.rs`
 and `runtime/fwp_rt_kernel.c`; the plan records this as a gap to resolve under
 the no-JIT policy, not an exception. This is documentation only; it does not
@@ -52,13 +53,13 @@ alter runtime behavior or existing validation requirements.
 
 `python3 scripts/local-guard.py python3 scripts/check-roadmap.py` passed: all
 50 Markdown link sets, 106 immutable preparation rows/tags, seven matching
-plan/handoff steps and commit rules (2.85 seconds). Final link verification also
-covers the added no-JIT/device-compilation notes. No local limits were raised.
+plan/handoff steps and commit rules (2.85 seconds). The audit also passed after adding the no-JIT/device-compilation notes
+(2.81 seconds). No local limits were raised.
 
 ## Next action
 
-Next: publish the no-JIT clarification, inspect the merged cleanup's CI results,
-and fix every final-commit CI failure before squash merge. After this clarification
+Next: inspect [PR #144](https://github.com/e6qu/fun-with-pipes/pull/144) and the
+merged cleanup's CI results; fix every final-commit CI failure before squash merge. After this clarification
 is merged with passing checks, start the first milestone in PLAN.md: choose the
 representative applications, reproduce known performance gaps on runners and
 identify the first ownership boundary to improve. Do not replay old PRs.
