@@ -289,7 +289,14 @@ standard-input buffers or the process argument array. Invalid UTF-8 replacement,
 CRLF handling and end-of-input behavior remain unchanged. Environment lookups
 copy the value before the process setting can change; embedded zero bytes in a
 name return `None`, matching the interpreter instead of looking up a prefix.
-Environment listing, current-directory lookup and other unreviewed IO primitives
+Directory and environment snapshots now own their copied strings, pairs and list
+nodes through the existing protected list builder. Scratch buffers, partially
+constructed results and operating-system directory/environment handles are released
+on success and failure. Recursive directory creation releases its temporary path
+buffer. These three new contracts await cross-platform runner validation; local
+probes alone do not establish support.
+
+Current-directory lookup and other unreviewed IO primitives
 remain outside checked ARC.
 
 The six dense F64 linear-algebra primitives borrow their input arrays and return

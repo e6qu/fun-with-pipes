@@ -97,7 +97,7 @@ static void fwp_win_find_finish(void *pointer) {
     if (*handle != INVALID_HANDLE_VALUE) FindClose(*handle);
     *handle = INVALID_HANDLE_VALUE;
 }
-static V fwp_p_dir_list(V path, const fwp_desc *error) {
+static V fwp_p_dir_list(V path, const fwp_desc *error, void (*drop_list)(V)) {
     if (fwp_path_has_nul(path)) return fwp_io_error("list", "path contains a NUL character", error);
     fwp_win_text wide;
     if (!fwp_win_text_init(&wide, STR(path)->d, STR(path)->len)) return fwp_io_error_path("list", STR(path)->d, error);
@@ -119,26 +119,26 @@ static V fwp_p_dir_list(V path, const fwp_desc *error) {
     if (failed) return fwp_win_io_error("list", STR(path)->d, failed, error);
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_win_find_finish, &handle);
-    size_t n = 0, capacity = 16;
-    V *names = (V *)fwp_mem_alloc(capacity * sizeof(V));
+    fwp_map_owner owner={NULL,0,0,fwp_rc_free_obj,drop_list};
+    fwp_cleanup owner_cleanup;fwp_map_protect(&owner,&owner_cleanup);
+    size_t capacity=16;owner.items=(V *)fwp_mem_alloc(capacity*sizeof(V));
     do {
         if (!wcscmp(entry.cFileName, L".") || !wcscmp(entry.cFileName, L"..")) continue;
-        if (n == capacity) {
+        if (owner.count == capacity) {
             size_t old = capacity;
             if (old > SIZE_MAX / 2 / sizeof(V)) fwp_trap("directory too large");
             capacity *= 2;
-            names = (V *)fwp_mem_realloc(names, old * sizeof(V), capacity * sizeof(V));
+            owner.items = (V *)fwp_mem_realloc(owner.items, old * sizeof(V), capacity * sizeof(V));
         }
-        names[n++] = fwp_win_string(entry.cFileName, wcslen(entry.cFileName));
+        owner.items[owner.count]=fwp_rc_fresh(fwp_win_string(entry.cFileName,wcslen(entry.cFileName)));
+        owner.count++;
     } while (FindNextFileW(handle, &entry));
     failed = GetLastError();
-    fwp_cleanup_pop(&cleanup);
-    fwp_win_find_finish(&handle);
-    if (failed != ERROR_NO_MORE_FILES) { fwp_mem_free(names); return fwp_win_io_error("list", STR(path)->d, failed, error); }
-    qsort(names, n, sizeof(V), fwp_cmp_cstr);
-    V result = fwp_list_from(names, n);
-    fwp_mem_free(names);
-    return result;
+    if (failed != ERROR_NO_MORE_FILES) return fwp_win_io_error("list",STR(path)->d,failed,error);
+    qsort(owner.items,owner.count,sizeof(V),fwp_cmp_cstr);
+    V result=fwp_map_finish_protected(&owner,&owner_cleanup);
+    fwp_cleanup_pop(&cleanup);fwp_win_find_finish(&handle);
+    FWP_KEEP_ALIVE(path);return result;
 }
 static V fwp_p_dir_create(V path, const fwp_desc *error) {
     if (fwp_path_has_nul(path)) return fwp_io_error("create", "path contains a NUL character", error);
@@ -183,27 +183,34 @@ static V fwp_p_dir_create_all(V path, const fwp_desc *error) {
     return failed ? fwp_win_io_error("create", STR(path)->d, failed, error) : FWP_UNIT;
 }
 static void fwp_win_environment_finish(void *environment) { FreeEnvironmentStringsW((wchar_t *)environment); }
-static V fwp_p_env_vars(void) {
-    wchar_t *environment = GetEnvironmentStringsW();
-    if (!environment) fwp_trap("cannot read process environment");
-    fwp_cleanup cleanup;
-    fwp_cleanup_push(&cleanup, fwp_win_environment_finish, environment);
-    size_t count = 0;
-    for (const wchar_t *p = environment; *p; p += wcslen(p) + 1) if (*p != L'=') count++;
-    V *items = (V *)fwp_mem_alloc((count + 1) * sizeof(V));
-    size_t n = 0;
-    for (const wchar_t *p = environment; *p; p += wcslen(p) + 1) {
-        if (*p == L'=') continue; /* Windows drive-cwd entries are not variables */
-        const wchar_t *equal = wcschr(p, L'=');
-        if (!equal) continue;
-        V fields[2] = {fwp_win_string(p, (size_t)(equal - p)), fwp_win_string(equal + 1, wcslen(equal + 1))};
-        items[n++] = fwp_record(2, fields);
+static V fwp_p_env_vars(void (*drop_pair)(V), void (*drop_list)(V)) {
+    wchar_t *environment=GetEnvironmentStringsW();
+    if(!environment)fwp_trap("cannot read process environment");
+    fwp_cleanup environment_cleanup;
+    fwp_cleanup_push(&environment_cleanup,fwp_win_environment_finish,environment);
+    fwp_map_owner owner={NULL,0,0,drop_pair,drop_list};
+    fwp_cleanup cleanup;fwp_map_protect(&owner,&cleanup);
+    size_t capacity=16;owner.items=(V *)fwp_mem_alloc(capacity*sizeof(V));
+    for(const wchar_t *p=environment;*p;p+=wcslen(p)+1) {
+        if(*p==L'=')continue;
+        const wchar_t *equal=wcschr(p,L'=');if(!equal)continue;
+        if(owner.count==capacity) {
+            if(capacity>SIZE_MAX/sizeof(V)/2)fwp_trap("environment too large");
+            owner.items=fwp_mem_realloc(owner.items,capacity*sizeof(V),capacity*2*sizeof(V));
+            capacity*=2;
+        }
+        fwp_value_owner key={fwp_rc_fresh(fwp_win_string(p,(size_t)(equal-p))),fwp_rc_free_obj};
+        fwp_cleanup key_cleanup;fwp_value_protect(&key,&key_cleanup);
+        fwp_value_owner value={fwp_rc_fresh(fwp_win_string(equal+1,wcslen(equal+1))),fwp_rc_free_obj};
+        fwp_cleanup value_cleanup;fwp_value_protect(&value,&value_cleanup);
+        owner.items[owner.count]=fwp_rc_fresh(fwp_record(2,(V[]){key.value,value.value}));
+        owner.count++;
+        (void)fwp_value_finish(&value,&value_cleanup);
+        (void)fwp_value_finish(&key,&key_cleanup);
     }
-    fwp_cleanup_pop(&cleanup);
-    FreeEnvironmentStringsW(environment);
-    qsort(items, n, sizeof(V), fwp_cmp_env);
-    V result = fwp_list_from(items, n);
-    fwp_mem_free(items);
+    qsort(owner.items,owner.count,sizeof(V),fwp_cmp_env);
+    V result=fwp_map_finish_protected(&owner,&cleanup);
+    fwp_cleanup_pop(&environment_cleanup);FreeEnvironmentStringsW(environment);
     return result;
 }
 static V fwp_p_env_cwd(void) {

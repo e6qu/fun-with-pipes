@@ -105,8 +105,9 @@ for symbol in ['prim.add', 'prim.sub', 'prim.mul', 'prim.div', 'prim.rem',
 bundle_contracts['min'] = bundle_contracts['max'] = (2, 'SelectedArgument', [0, 1])
 bundle_contracts['csv.parse-with'] = (2, 'OwnedTree', [])
 bundle_contracts['cli.parse'] = (2, 'OwnedTree', [])
-for symbol in ['lines', 'read-line', 'read-lines', 'read-all', 'args', 'env.get']:
+for symbol in ['lines', 'read-line', 'read-lines', 'read-all', 'args', 'env.get', 'env.vars', 'dir.list']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
+bundle_contracts['dir.create-all'] = (1, 'Shared', [])
 bundle_contracts['list.transpose'] = (1, 'CopiedStructure', [0])
 for symbol, arity in [('linalg.lu-solve', 3), ('linalg.inverse', 2),
                       ('linalg.cholesky', 2), ('linalg.qr', 3), ('linalg.cg', 5)]:

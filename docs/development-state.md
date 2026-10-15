@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-15. The only open delivery is
+Updated 2026-10-16. The only open delivery is
 [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146), head `19b14d0b`,
 in `/Users/zardoz/projects/fun-with-pipes`. Its
 [production run](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
@@ -13,7 +13,7 @@ Earlier Windows probe CRLF output is repaired too.
 This is preparation branch `checked-filesystem-ownership` in
 `/private/tmp/fwp-filesystem-ownership`, based on path repair `135fa6f5`. Its first
 change repairs counted ownership of caught I/O errors. Directory/environment
-snapshot work is still pending. The combined numerical/console delivery remains
+snapshot work now has focused local tests; runner validation is pending. The combined numerical/console delivery remains
 in `/private/tmp/fwp-linear-algebra`; the path repair remains in
 `/private/tmp/fwp-path-validation`. No PR is open for these preparations.
 Only commits after `135fa6f5` belong to this error-ownership repair.
@@ -40,6 +40,37 @@ explicit `curry`/`uncurry`, infix precedence and tacit data-last pipes.
 | 6 | In progress | Preserve equivalent C/Rust comparisons, raw samples and memory profiles |
 | 7 | In progress | Extend numerical, collection-heavy and long-running applications |
 
+## Snapshot preparation after `aa6ad15`
+
+The caught-error fix below passed all six hosts in run `38808012610` and has
+already been imported into the combined numerical/console branch as `4f3f2a1b`.
+Do not replay it. This worktree now has separate changes for
+`dir.list`, `env.vars` and `dir.create-all`; they are not part of that verified
+commit and must not be described as supported yet.
+
+Directory/environment lists reuse the existing protected list builder, owning
+copied strings, pair records, scratch storage and partial list nodes. POSIX DIR
+streams and Windows search/environment handles stay protected through construction.
+The POSIX reader resets errno for each `readdir` and records its terminal error
+before cleanup. Recursive directory creation explicitly frees its scratch buffer.
+No new surface syntax, generic wrapper or performance claim is intended.
+
+The new regression compares raw interpretation with tracing/ARC at O1/O2,
+including sorted Unicode names, an empty directory and copied environment values.
+A C probe repeats each operation 64 times, changes the live environment after a
+snapshot, injects failure at each allocation and forces collection between stages.
+It checks borrowed path counts and OS handle closure. Omitting scratch release or
+directory closure must fail (241/242). `env.cwd` remains rejected and unreviewed.
+
+Guarded checks: `python3 scripts/local-guard.py python3
+/private/tmp/fwp-snapshot-runtime-check.py` passes runtime positives and negative
+controls (7.23 s); the final raw fixture with an empty directory passes (0.61 s), formatting
+passes (1.08 s), and the roadmap audit passes (2.51 s). The inventory check
+passes (1.28 s); its first invocation omitted required arguments and was corrected. These use the existing compiler plus edited runtime: new compiler proof
+rules and native Windows await the six-host `filesystem` workflow. The inventory
+now has 239 explicit contracts, 10 flat signatures, 110 review declarations and
+19 lowered templates; its frozen baseline is unchanged.
+
 ## Caught I/O error ownership
 
 A guarded probe reproduced zero reference counts for the error record and its
@@ -57,7 +88,7 @@ and ARC use their actual compiler modes, O1/O2; ARC never enables GC or poisoned
 reuse. Focused existing-compiler runtime probes pass (6.53 s). Initial harness
 issues (an undefined tracing-mode C macro and an inlined-away function entry)
 were corrected; the fixture now requests its explicit compiled function entry.
-Changed-compiler and native Windows acceptance remain required.
+The changed compiler and native Windows passed in six-host run `38808012610`.
 
 ## Path repair being prepared
 
@@ -186,21 +217,16 @@ A preceding Intel macOS compiler SIGABRT in U128 division by zero did not recur
 on its unchanged retry; its cause remains unknown. Preserve future crash reports.
 Do not describe the abort as repaired or a skipped/queued job as passing.
 
-## Next: validate error ownership and deliver the combined batch
+## Next: validate snapshots and deliver the combined batch
 
-Publish this repair and run the six-platform `filesystem` suite, including the
-already-passing path/file regressions. Fix failures. Monitor #146's exact-head
-gate and squash merge only after all nine production jobs and documentation pass.
-Both Windows production jobs now pass; Linux/macOS gates remain running.
+Publish the snapshot preparation and run the six-host `filesystem` suite; fix
+any failures. Keep these new contracts separate from the accepted caught-error
+and path evidence until their own checks pass.
 
-The path repair passed all six hosts at `135fa6f5`: combine only its commits
-after `3115b69a` into `/private/tmp/fwp-linear-algebra`. Once error ownership
-passes, combine only this branch's commits after `135fa6f5` there as well, so the
-known leak is repaired before the next delivery. Keep one active PR. Rebase only
-the combined descendants of `c10b1ccd` onto #146's accepted squash commit, reconcile
-the parent Windows workflow changes, and run the full gate for the next PR.
-Precision and console changes are already combined; never replay them.
-
-Afterward, extend ownership to directory/environment snapshots and remaining
-filesystem results and scratch buffers. This review has not implemented or
-verified those contracts. Keep them separate from the caught-error claim.
+Monitor #146 at `19b14d0b`: all nine production jobs plus documentation must pass
+before squash merge. The combined delivery in `/private/tmp/fwp-linear-algebra`
+already includes solvers, array borrowing, F128 precision, console ownership,
+path validation, portable file probes and counted I/O errors. Do not replay these
+changes. Transfer only its changes after `c10b1ccd` onto #146's accepted squash
+commit, preserve the latest Windows cancellation regression and run the full gate.
+Keep one active PR; subsequent snapshot work stays separate while that PR runs.

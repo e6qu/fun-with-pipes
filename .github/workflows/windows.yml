@@ -54,7 +54,7 @@ jobs:
       - name: Generated programs with native resources and ownership stress
         shell: pwsh
         run: |
-          cargo test --test windows_runtime --test windows_static_memory --test path_validation --test io_error_ownership --test file_construction_ownership --test file_inline_path --test file_storage_disposal -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          cargo test --test windows_runtime --test windows_static_memory --test path_validation --test io_error_ownership --test system_snapshots --test file_construction_ownership --test file_inline_path --test file_storage_disposal -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
       - name: Publish native diagnostics before dependency builds
         uses: actions/upload-artifact@v7

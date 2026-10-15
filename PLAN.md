@@ -112,6 +112,11 @@ ownership and removal of GC are the primary design priority.
    construction. Repeated caught failures must release both text fields and the
    error record without tracing. Then extend remaining filesystem and environment
    snapshot ownership contracts.
+10. Give directory and environment snapshots explicit ownership of copies, list
+    nodes and temporary storage, including OS handles on failure. Check sorted
+    Unicode output, empty directories, independent environment copies and every
+    partial-construction cleanup on all six targets. Recursive directory creation
+    must release temporary path storage without depending on collection.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

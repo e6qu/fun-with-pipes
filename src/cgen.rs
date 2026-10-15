@@ -5568,6 +5568,16 @@ impl<'p> Gen<'p> {
             ),
             "trits.pack" => "return fwp_p_trits_pack(l0);".into(),
             "trits.unpack" => "return fwp_p_trits_unpack(l0, l1);".into(),
+            "env.vars" => {
+                let drop_pair = self.value_drop(&elem(&result, 0));
+                let drop_list = self.value_drop(&result);
+                format!("return fwp_p_env_vars({drop_pair}, {drop_list});")
+            }
+            "dir.list" => {
+                let error = self.desc(&MT::con("std::IoError"));
+                let drop_list = self.value_drop(&result);
+                format!("return fwp_p_dir_list(l0, {error}, {drop_list});")
+            }
             "lines" | "read-lines" | "args" => {
                 let drop_list = self.value_drop(&result);
                 let call = match sym {
@@ -5831,7 +5841,7 @@ impl<'p> Gen<'p> {
                 }
             }
             "file.info" | "file.remove" | "dir.remove" | "file.rename" | "file.append"
-            | "file.read-bytes" | "file.write-bytes" | "dir.list" | "dir.create"
+            | "file.read-bytes" | "file.write-bytes" | "dir.create"
             | "dir.create-all" | "process.run-input" | "process.call" => {
                 let err = self.desc(&MT::con("std::IoError"));
                 let (f, n) = match sym {
@@ -5842,7 +5852,6 @@ impl<'p> Gen<'p> {
                     "file.append" => ("fwp_p_file_append", 2),
                     "file.read-bytes" => ("fwp_p_file_read_bytes", 1),
                     "file.write-bytes" => ("fwp_p_file_write_bytes", 2),
-                    "dir.list" => ("fwp_p_dir_list", 1),
                     "dir.create" => ("fwp_p_dir_create", 1),
                     "dir.create-all" => ("fwp_p_dir_create_all", 1),
                     "process.run-input" => ("fwp_p_process_run_input", 2),
@@ -6075,7 +6084,6 @@ impl<'p> Gen<'p> {
                     ("read-all", "fwp_read_stdin_all()"),
                     ("exit", "fwp_p_exit(l0)"),
                     ("env.get", "fwp_p_env_get(l0)"),
-                    ("env.vars", "fwp_p_env_vars()"),
                     ("env.cwd", "fwp_p_env_cwd()"),
                     ("term.is-tty", "fwp_p_term_is_tty(l0)"),
                     ("file.exists", "fwp_p_file_exists(l0)"),
