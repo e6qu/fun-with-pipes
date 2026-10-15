@@ -3007,9 +3007,6 @@ impl<'g, 'p> FnGen<'g, 'p> {
         (produces(self, e, m, &HashMap::new())? && !matches!(e, Expr::Construct(..))).then_some(m)
     }
 
-    /// The tag and fields (C expressions) of `e`, a variant of type `ty`
-    /// returned as a struct `fwp_u<m>`, without building it. The fields
-    /// hold the references the value would.
     /// Load a checked element, borrowing a proved loop-invariant data pointer
     /// when available. The original array remains the counted owner.
     fn load_array(
@@ -3039,6 +3036,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
+    /// The tag and fields (C expressions) of `e`, a variant of type `ty`
+    /// returned as a struct `fwp_u<m>`, without building it. The fields
+    /// hold the references the value would.
     fn expr_variant(&mut self, e: &Expr, m: usize, ty: &MT) -> (String, Vec<String>) {
         let parts = |u: &str| -> (String, Vec<String>) {
             (

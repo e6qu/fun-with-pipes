@@ -6,11 +6,13 @@ Updated 2026-10-15. This preparation branch is `checked-linear-algebra`, in
 after all nine production jobs and documentation passed for `1ee7d581`.
 [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146) is the only active
 delivery PR. Its main checkout is `/Users/zardoz/projects/fun-with-pipes`, branch
-`checked-library-ownership`, final head `bccead2d`. Required production run:
-[38790425937](https://github.com/e6qu/fun-with-pipes/actions/runs/38790425937);
-[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38790426370).
-Superseded pre-publication and duplicate post-merge runs were cancelled. Most
-production jobs are running; benchmark and documentation jobs remain queued.
+`checked-library-ownership`, head `930645e6`. Required production run:
+[38796862558](https://github.com/e6qu/fun-with-pipes/actions/runs/38796862558);
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38796862605).
+The earlier Windows AMD64 gate found CRLF output in handwritten C test probes.
+That parent repair selects binary stdout and binary report-file append; exact
+byte assertions remain. The superseded production run was cancelled. Current
+production and repaired solver runs are queued without assigned runners.
 
 Standing authorization covers fixes, publication and squash merge after all nine
 production jobs and documentation pass for the final commit, then the next PR.
@@ -82,8 +84,10 @@ not the changed compiler's ARC eligibility rules.
   on Linux AMD64. The fixture now passes dimensions through a function executable
   instead, preserving runtime size checks and ARC coverage. Interpreter function
   entry returns 9 for three columns and the expected exit-101 negative-dimension
-  trap (guarded 0.75/0.73 s). A new expanded run is required; do not count the
-  failed run as acceptance or weaken ARC's input-boundary checks.
+  trap (guarded 0.75/0.73 s). Repaired run
+  [38795634707](https://github.com/e6qu/fun-with-pipes/actions/runs/38795634707)
+  is queued at `ec1ff14b`; do not count the failed run as acceptance or weaken
+  ARC's input-boundary checks.
 
 Intel macOS assembly of the accepted numerical candidate shows repeated
 slice/data selection inside the F64 reduction. A bounded C experiment hoisted
@@ -120,3 +124,12 @@ it, then rebase only commits after `c10b1ccd` onto the accepted squash commit.
 Reconcile this handoff with the parent delivery evidence and open the solver PR.
 Require its full production/docs gates before merging. Continue the remaining
 project work in [PLAN.md](../PLAN.md); no broad roadmap area is complete.
+
+The follow-on F128 precision preparation is isolated in
+`/private/tmp/fwp-quad-grad`, branch `quad-gradient-precision`, based on
+`3e5d86ad` from this batch. It preserves F128 reverse weights/seeds/adjoints
+through the existing typed tape protocol. Raw interpreter and bounded O1 native
+probes passed, including checkpoint/nested precision and an omitted-free control.
+Its four-host [run 38797434546](https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546)
+is queued at `7a463be`. Bundle validated numerical work into the next substantial
+PR after #146; preserve source-specific evidence and run full final-head CI.
