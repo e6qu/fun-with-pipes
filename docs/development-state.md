@@ -64,8 +64,15 @@ The existing compiler fails the new count assertion with exactly one extra retai
 (exit 198), as intended. Guarded baseline probe
 `/private/tmp/fwp-field-move-baseline-check.py` passes that negative-control check
 (1.59 s). It emits `/private/tmp/fwp-field-move-baseline.c`; the test harness
-compiles against the existing library. Formatting passes (1.10 s). The changed
-compiler has not yet run; do not describe this candidate as verified.
+compiles against the existing library. Formatting passes (1.10 s). The changed compiler passes its new field-move regression on Linux AMD64/ARM64
+and Windows AMD64/ARM64 in [38815917275](https://github.com/e6qu/fun-with-pipes/actions/runs/38815917275)
+at `c8f65e5`. The broader Windows suite exposed two old probe portability issues: 
+text-mode newline translation and an unescaped path. Repairs set binary probe
+output, escape the path, intercept Windows wide-character file opens and check
+closed native handles. Both repaired probes pass locally against the existing
+compiler under the guard (10.97 s); native Windows acceptance is pending.
+Failed logs are `/private/tmp/fwp-field-116700424100.log` and
+`/private/tmp/fwp-field-116700424254.log`.
 
 The `fields` workflow suite adds six-host validation with adjacent projection,
 record-conversion, borrowed-callback and original resource-frame regressions.
@@ -75,8 +82,11 @@ Full builds and tests remain on runners; all local workloads use
 
 ## Next: validate field transfers while #147 runs
 
-Publish this preparation, dispatch `numerics.yml` with `suite=fields`, and fix
-failures without weakening the assertions. Add actual matrix emitted-code and
+Publish the probe repairs and repeat `numerics.yml` with `suite=fields`; fix
+failures without weakening assertions. Numerical evidence run
+[38816168594](https://github.com/e6qu/fun-with-pipes/actions/runs/38816168594)
+at `c8f65e5` is collecting changed-compiler profiles and instructions; inspect
+its actual counts and C/Rust comparisons before claiming improvement. Add actual matrix emitted-code and
 count evidence with the changed compiler, plus resource/callback cases needed
 by review. Retain known boxed/shared cases and any performance regressions.
 

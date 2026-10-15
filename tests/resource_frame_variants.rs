@@ -20,9 +20,9 @@ pack = {stages} | Some
 close = match
     Some _ -> file.close
     None -> ()
-main = "{}" | file.open | pack | close | const "closed" | echo
+main = {:?} | file.open | pack | close | const "closed" | echo
 "#,
-            data.display()
+            data.to_string_lossy()
         ),
     )
     .unwrap();
@@ -281,8 +281,19 @@ main = "{}" | file.open | pack | close | const "closed" | echo
         );
         let code = fwp::cgen::generate(&mixed).unwrap();
         let hooks = r#"
+#ifdef _WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0a00
+#endif
+#include <wchar.h>
+#endif
 #include <stdio.h>
 #include <sys/stat.h>
+#ifdef _WIN32
+static FILE *binding_wide_open(const wchar_t *,const wchar_t *);
+static int binding_closed(void);
+#define _wfopen binding_wide_open
+#endif
 static FILE *binding_open(const char *,const char *);
 static int binding_close(FILE *);
 static int binding_fd, binding_closes;
@@ -295,8 +306,30 @@ static int binding_fd, binding_closes;
 static FILE *binding_stream;
 static FILE *binding_open(const char *p,const char *m){FILE *f=fopen(p,m);if(f){binding_stream=f;binding_fd=fileno(f);}return f;}
 static int binding_close(FILE *f){if(f==binding_stream)binding_closes++;return fclose(f);}
+#ifdef _WIN32
+#undef _wfopen
+static HANDLE binding_handle;
+static FILE *binding_wide_open(const wchar_t *p,const wchar_t *m){
+ FILE *f=_wfopen(p,m);
+ if(f){binding_stream=f;binding_handle=(HANDLE)_get_osfhandle(_fileno(f));}
+ return f;
+}
+static int binding_closed(void){
+ DWORD flags;
+ return !GetHandleInformation(binding_handle,&flags)&&GetLastError()==ERROR_INVALID_HANDLE;
+}
+#endif
 "#;
-        let code = code.replace("return fwp_exit_code;", "struct stat binding_status;if(binding_closes!=1||fstat(binding_fd,&binding_status)!=-1||errno!=EBADF)return 34;return fwp_exit_code;");
+        let code = code.replace(
+            "return fwp_exit_code;",
+            "if(binding_closes!=1)return 34;
+#ifdef _WIN32
+if(!binding_closed())return 34;
+#else
+struct stat binding_status;if(fstat(binding_fd,&binding_status)!=-1||errno!=EBADF)return 34;
+#endif
+return fwp_exit_code;",
+        );
         let code = format!("{hooks}\n{code}\n{audit}");
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
@@ -392,7 +425,19 @@ static int binding_close(FILE *f){if(f==binding_stream)binding_closes++;return f
     assert!(code.contains(&omission));
     let omitted = code.replace(&omission, "(void)c->v0;");
     let hooks = r#"
+#ifdef _WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0a00
+#endif
+#include <wchar.h>
+#endif
 #include <stdio.h>
+#include <sys/stat.h>
+#ifdef _WIN32
+static FILE *observed_wide_open(const wchar_t *,const wchar_t *);
+static int observed_closed(void);
+#define _wfopen observed_wide_open
+#endif
 static FILE *observed_open(const char *,const char *);
 static int observed_close(FILE *);
 #define fopen observed_open
@@ -405,13 +450,31 @@ static int observed_close(FILE *);
 static int fd, closes;static FILE *stream;
 static FILE *observed_open(const char *p,const char *m){FILE *f=fopen(p,m);if(f){stream=f;fd=fileno(f);}return f;}
 static int observed_close(FILE *f){if(f==stream)closes++;return fclose(f);}
+#ifdef _WIN32
+#undef _wfopen
+static HANDLE observed_handle;
+static FILE *observed_wide_open(const wchar_t *p,const wchar_t *m){
+ FILE *f=_wfopen(p,m);
+ if(f){stream=f;observed_handle=(HANDLE)_get_osfhandle(_fileno(f));}
+ return f;
+}
+static int observed_closed(void){
+ DWORD flags;
+ return !GetHandleInformation(observed_handle,&flags)&&GetLastError()==ERROR_INVALID_HANDLE;
+}
+#endif
 static int recover(void){return 1;}
 int main(void){
  fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_prog_out=stdout;fwp_init_consts();
  jmp_buf recovery;fwp_trap_jb=&recovery;fwp_trap_recover=recover;fwp_trap_cleanup=0;
  if(!setjmp(recovery)){f0();return 1;}
  fwp_trap_jb=0;fwp_trap_recover=0;
- struct stat status;if(fwp_cleanups||closes!=1||fstat(fd,&status)!=-1||errno!=EBADF)return 2;
+ if(fwp_cleanups||closes!=1)return 2;
+#ifdef _WIN32
+ if(!observed_closed())return 2;
+#else
+ struct stat status;if(fstat(fd,&status)!=-1||errno!=EBADF)return 2;
+#endif
  uint8_t *slot=fwp_rc_slot(watched_text);
  if(fwp_reuse_verify){if(STR(watched_text)->len||STR(watched_text)->d[0])return 3;}
  else if(!slot||*slot)return 3;
