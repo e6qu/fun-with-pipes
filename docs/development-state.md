@@ -4,8 +4,8 @@ Updated 2026-10-15. The only open delivery is
 [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146), head `19b14d0b`,
 in `/Users/zardoz/projects/fun-with-pipes`. Its
 [production run](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
-is running. Windows AMD64 passed the repaired early cancellation regression;
-ARM64 and the complete gate remain required. The synthetic test task now has
+is running. Both Windows architectures passed the repaired early cancellation regression;
+the complete gate remains required. The synthetic test task now has
 its actual stack-scan boundary. Omitting that boundary reproduced string loss
 under forced collection; production task initialization was already correct.
 Earlier Windows probe CRLF output is repaired too.
@@ -75,7 +75,7 @@ materializes the stream; streaming helpers keep their existing behavior.
   passed all four hosts at `7a463be9`, including low bits, extreme exponents,
   seeded, nested and checkpointed gradients, cleanup controls and regressions.
 - [Console run 38802310868](https://github.com/e6qu/fun-with-pipes/actions/runs/38802310868)
-  at `f81970a1` passed both Linux hosts and ARM macOS; Intel macOS is still running.
+  at `f81970a1` passed all four Linux/macOS hosts, including the environment fix.
   The earlier partial console run was superseded and canceled.
 - All new tests are included in production Windows acceptance. Combined final-head
   production coverage, including Windows, remains required before delivery.
@@ -114,19 +114,20 @@ string/buffer release fails with 205/211 (2.36 s). Raw environment lookup
 reproduced prefix truncation before the fix (2.51 s). Metadata checks passed.
 
 Combined formatting and documentation audit passed (1.10/2.53 s). Paired report
-recording passed (0.13 s); repeat download passed (6.39 s). Recheck generated
-standard-library docs and inventory after combining console changes. The expected
-inventory is 236 explicit contracts, 10 flat scalar signatures, 113 declarations
+recording passed (0.13 s); repeat download passed (6.39 s). Combined standard-library documentation and inventory checks pass (1.11/0.49 s).
+The handoff audit initially required its literal `Next:` marker; restoring it
+passes the audit (2.40 s).
+The inventory is 236 explicit contracts, 10 flat scalar signatures, 113 declarations
 needing review and 19 lowered templates; the frozen baseline is unchanged.
 
 A preceding Intel macOS compiler SIGABRT in U128 division by zero did not recur
 on its unchanged retry; its cause remains unknown. Preserve future crash reports.
 Do not describe the abort as repaired or a skipped/queued job as passing.
 
-## Next action
+## Next: validate and publish the combined delivery
 
-Finish the console check and the combined documentation/inventory checks while
-monitoring #146; fix any failures. Once #146's exact final-head gate passes,
+Focused checks for every component and the combined documentation/inventory
+checks pass. Monitor #146 and fix any failures. Once #146's exact final-head gate passes,
 squash merge it, verify its one-line message and tree, then rebase only this
 branch's commits after `c10b1ccd` onto the accepted squash commit. The precision
 and console implementations are already combined: do not cherry-pick them again.
