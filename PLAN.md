@@ -90,6 +90,12 @@ ownership and removal of GC are the primary design priority.
    pointers still need an explicit
    release policy before they can join this subset. Track validation in the
    handoff; this is one boundary toward collector-free execution, not GC removal.
+6. Extend checked ownership to the existing linear-algebra solvers. Their native
+   scratch buffers currently rely on collection. Release scratch and partial
+   results on normal, singular-matrix and failure paths, and check QR's square
+   output size before multiplying dimensions or allocating. Compare raw
+   interpreter/native behavior and repeated-call memory for LU solve, determinant,
+   inverse, Cholesky, QR and conjugate gradient. Preserve arithmetic order.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

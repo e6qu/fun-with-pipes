@@ -187,45 +187,53 @@ not reproduce every cost of an earlier release.
 ### Current tracing and ARC comparison
 
 [The memory-mode report](measurements/numerical-memory-modes-2026-10-15.json)
-records revision `49d35018` on Linux/macOS ARM64/AMD64, including processor,
-compiler, build commands, forty raw timing samples per implementation and
-separate allocation profiles. All four jobs in
-[the evidence run](https://github.com/e6qu/fun-with-pipes/actions/runs/38782635990)
-passed. Both fwp memory modes are actual checked compiler builds; ARC binaries
-exclude tracing symbols. Numerical inputs and ordered arithmetic match C/Rust.
+retains baseline `49d35018` and candidate `c10b1ccd` on Linux/macOS ARM64/AMD64,
+including processors, compilers, build commands, forty raw timing samples per
+implementation and separate allocation profiles. Both [baseline](https://github.com/e6qu/fun-with-pipes/actions/runs/38782635990)
+and [candidate](https://github.com/e6qu/fun-with-pipes/actions/runs/38786031433)
+passed all four hosts. Intel macOS needed an unchanged-commit retry after a
+compiler abort in a division-by-zero test; its cause remains unknown.
+Both fwp memory modes are checked compiler builds; ARC binaries exclude tracing
+symbols. Numerical inputs and ordered arithmetic match C/Rust.
 
-These ratios compare only the kernel: array reduction includes consuming/freeing
-its input; matrix multiplication starts after output allocation and zeroing.
-Allocation-inclusive time and resident memory are recorded separately. A ratio
-of 2 means twice the elapsed time, or 100% extra time; 1.02 means about 2% extra.
+These candidate ratios compare only the kernel: array reduction includes
+consuming/freeing its input; matrix multiplication starts after output allocation
+and zeroing. Allocation-inclusive time and resident memory are recorded separately.
+A ratio of 2 means twice the elapsed time, or 100% extra time; 1.02 means about 2% extra.
 
 | Host / workload | Tracing fwp / C | ARC fwp / C | ARC fwp / Rust |
 |---|---:|---:|---:|
-| Linux AMD64 / array | 2.63 | 1.04 | 1.03 |
-| Linux ARM64 / array | 2.45 | 1.02 | 1.03 |
-| macOS AMD64 / array | 1.40 | 1.39 | 2.43 |
-| macOS ARM64 / array | 1.68 | 1.00 | 1.00 |
-| Linux AMD64 / matrix | 1.06 | 1.10 | 0.88 |
-| Linux ARM64 / matrix | 0.96 | 0.97 | 0.74 |
-| macOS AMD64 / matrix | 3.62 | 3.51 | 3.69 |
-| macOS ARM64 / matrix | 1.85 | 1.79 | 1.37 |
+| Linux AMD64 / array | 1.38 | 1.00 | 1.00 |
+| Linux ARM64 / array | 2.43 | 1.02 | 1.03 |
+| macOS AMD64 / array | 1.92 | 1.40 | 2.50 |
+| macOS ARM64 / array | 1.70 | 1.01 | 1.02 |
+| Linux AMD64 / matrix | 1.16 | 1.15 | 0.82 |
+| Linux ARM64 / matrix | 0.96 | 0.96 | 0.73 |
+| macOS AMD64 / matrix | 0.96 | 0.94 | 1.26 |
+| macOS ARM64 / matrix | 0.99 | 1.00 | 0.77 |
 
-ARC brings the array kernel near C/Rust time on three hosts, but Intel macOS
-still has a substantial gap. Matrix timing changes little between modes. Both
-fwp modes finish with zero live charged bytes and no collections. Each eight-round
-array sample allocates eight inputs, performs zero retains and releases each
-input once. Matrix samples use forty fwp allocations versus twenty-four in
-C/Rust because the two matrix wrapper records are also allocated each round;
-they perform twenty-four retains and matching nonlast releases. These costs
-remain work, not a language-wide zero-overhead result.
+ARC array time is near C/Rust on three hosts; Intel macOS still takes about 40%
+longer than C and 150% longer than Rust. The matrix kernel is now near C on both
+Macs, but Intel macOS still takes about 26% longer than Rust. These are specific
+workloads, not a language-wide zero-overhead result.
 
-Linux ARM64 assembly keeps array length outside the ARC loop, while the tracing
-loop reloads it. Intel macOS's timed blocked matrix loop is scalar: compiler
-diagnostics identify the platform's fixed-size `memcpy` expansion as a barrier
-to vectorization. A candidate uses compiler copy intrinsics and removes runtime
-scheduler ticks when the program has no tasks/services. Local instruction
-inspection confirms vector multiply/add and removal of that scheduler call;
-full candidate validation and same-method timing are pending.
+Compared with the baseline, ARC matrix time fell about 75% on Intel macOS and
+43% on ARM macOS; C time changed by -6.5% and +2.2%, respectively. Native
+instructions show vector multiply/add after fixed-size matrix copies became
+compiler intrinsics. Taskless programs also omit scheduler checks. The combined
+change preserves separate floating-point multiply/add and all allocation profiles.
+Linux ARM64 matrix timing changed by less than 1%. Linux AMD64 ran on different
+processors (EPYC 9V45 baseline, EPYC 7763 candidate), so its absolute before/after
+times cannot isolate the optimization. Current fwp matrix time there is about
+15% above C. Shared runner measurements do not establish a stable timing threshold.
+
+Both fwp modes finish with zero live charged bytes and no collections. Each
+eight-round array sample allocates eight inputs, performs zero retains and
+releases each input once. Matrix samples use forty fwp allocations versus
+twenty-four in C/Rust because two matrix wrapper records are allocated each
+round; they perform twenty-four retains and matching nonlast releases. Allocation,
+retention and cleanup counts match the baseline on every host. Removing these
+remaining wrapper/sharing costs and the Intel array gap remains work.
 
 The [earlier ownership/performance report](measurements/ownership-performance-2026-10-15.json)
 records `f42d6226`, its operation-count checks and sustained derivative experiment.

@@ -1,22 +1,19 @@
 # Session handoff
 
 Updated 2026-10-15. [PR #145](https://github.com/e6qu/fun-with-pipes/pull/145)
-is awaiting its final production gate at `1ee7d581`:
-[run 38779284746](https://github.com/e6qu/fun-with-pipes/actions/runs/38779284746).
-Documentation, benchmarks, both Windows jobs and both ARM macOS jobs have passed;
-the remaining Linux/macOS jobs are running. The earlier run failed a tutorial README/source consistency
-check. The repaired tutorial includes both `sum-pair` and `sum-curried` examples,
-and the fast documentation job now checks tutorial copies before the long suites.
-The superseded production run was cancelled. Do not merge on its partial results.
+merged as `e51b8570` after all nine production jobs and documentation passed
+for `1ee7d581`. Its single-line squash message has no body or trailers.
+Completed evidence is in [delivery history](roadmap-history.md).
+
+The current batch is `checked-library-ownership`: copied C library boundaries,
+data-only channels, transpose ownership, allocator accounting and measured
+numerical improvements. Move only this batch onto the accepted squash commit,
+then open its PR. The following solver work stays in its separate worktree.
 
 Standing authorization covers fixes, publication and squash merge after all nine
 production jobs and documentation pass for the final commit, then the next PR.
 Supply a single-line subject of at most 80 characters and an explicitly empty
 body, without trailers or attribution. Keep one active delivery PR.
-
-The next batch is on `checked-library-ownership`, rebased onto `1ee7d581`.
-After #145 merges, rebase only this batch onto its squash commit, without
-replaying #145, and open its PR. Do not discard the next branch's changes.
 
 ## Roadmap status
 
@@ -35,34 +32,7 @@ JIT is excluded. Functions take one argument and can return functions; keep
 explicit `curry`/`uncurry`, without implicit tuple conversion. Infix arithmetic
 complements curried calls and pipes.
 
-## PR #145: scope and evidence
-
-The PR adds fixed-precedence arithmetic, removes unnecessary cleanup around
-proved bounded internal array-index increments, omits conservative GC root fences
-in checked ARC, and improves benchmark comparability and sample ordering.
-
-[Four-host performance run 38771808755](https://github.com/e6qu/fun-with-pipes/actions/runs/38771808755)
-passed at code revision `f42d6226` on Linux/macOS ARM64/AMD64. It covered raw
-interpreter/native arithmetic, array fusion, ARC reclamation, derivative workspace,
-borrowed callback and pipe tests, plus numerical, derivative and program measurements.
-The final production gate additionally validates the tutorial consistency repair.
-
-Fused reductions report zero allocations, retains and cleanup registrations for
-0/1/7/129/257 elements at O1/O2 on all four hosts. The old baseline registered
-129/257 cleanups at those larger sizes. ARC assembly has no scan/mark/sweep symbols;
-the ARM macOS reduction uses scalar registers and no per-element cleanup call.
-This demonstrates removed work, not an isolated timing speedup.
-
-[Recorded measurements](measurements/ownership-performance-2026-10-15.json) and
-[benchmark explanations](benchmarks.md) retain algorithms, hardware, compilers,
-profiles and samples. Array time remains roughly 1.4–2.5 times C. Paired derivative
-metadata was slightly slower than separate allocations on both Macs and slightly
-faster on Linux; fewer allocations do not establish a universal speedup.
-Historical and current timing methods differ. Controlled before/after comparisons
-remain work. Local downloaded artifacts are in `/private/tmp/fwp-pr145-performance`
-and `/private/tmp/fwp-baseline-macos-arm`.
-
-## Next batch: checked boundaries and comparable memory modes
+## Current batch: checked boundaries and comparable memory modes
 
 C libraries: admit copied scalar/string/record inputs and scalar or scalar-record
 results, checking every export independently. Reject returned strings, raw pointers
@@ -137,10 +107,44 @@ retain them; Asyncify's stack checks remain unchanged. A forced-scheduler contro
 fails, while the taskless matrix matches the raw interpreter under GC stress.
 The wide-worker cancellation regression explicitly checks ticks remain enabled.
 
-These changes are pending runner validation and before/after timing against
-`49d35018` with the same forty-sample method. The extended suite now also runs
-matrix semantic/allocation/failure tests, wide-worker preemption and loop unwind
-checks. Do not attribute a speedup before these results exist.
+The candidate at `c10b1ccd` passed all four Linux/macOS hosts in
+[run 38786031433](https://github.com/e6qu/fun-with-pipes/actions/runs/38786031433).
+Intel macOS initially aborted the compiler during the existing `wide_workers`
+U128 division-by-zero case (`build --gc tracing --emit-c`, workers disabled),
+signal 6 with empty stdout/stderr. The abort occurred before C compilation;
+the exact-commit rerun passed. Its cause remains unknown. Preserve this failure
+as unresolved evidence, not a fixed defect. First-attempt log:
+`/private/tmp/fwp-candidate-intel.log`. CI now preserves available macOS compiler
+crash reports on failure to diagnose any recurrence.
+
+The retained numerical report includes both revisions with the same forty-sample
+method. ARC matrix time fell about 75% on Intel macOS and 43% on ARM macOS;
+C time changed -6.5%/+2.2%. Actual timed kernels contain vector multiply/add.
+Linux ARM64 changed less than 1%; Linux AMD64 used different EPYC processors,
+so its absolute before/after timing cannot isolate an optimization. Current ARC
+matrix/C ratios are 0.94/1.00 on Intel/ARM macOS, 1.15/0.96 on AMD64/ARM64 Linux.
+All allocation, retain/release, final-storage profiles and result hashes match.
+Intel macOS array time remains about 40% above C and 150% above Rust.
+Artifacts are in `/private/tmp/fwp-library-candidate`; guarded final downloads
+passed (9.46 s), and recording/profile comparison passed (0.14 s). The first
+comparison incorrectly included timing fields; corrected comparison excludes
+only elapsed times and checks all remaining allocation/profile fields.
+Windows validation and final production gates remain required.
+
+Following this delivery, the next ownership batch is the six existing
+linear-algebra solvers. Inspection found GC-owned scratch in `la_get` and each
+solver, and unchecked `n*n` QR output storage: a zero-row input can pass the
+input-shape check with an enormous column count, then overflow the output-size
+calculation. Preparation is isolated in `/private/tmp/fwp-linear-algebra`, branch
+`checked-linear-algebra`, based on `c10b1ccd`. It already checks the QR output
+limit in interpreter/native code and has matching-language regression cases;
+changed-compiler validation is pending. A guarded standalone C boundary probe
+passed at O1/O2 with sanitizers, catches an omitted guard before allocation, and
+preserves input-error order (2.01 s). No enormous allocation was attempted.
+Formatting passed (1.12 s). Scratch/result cleanup is now drafted in that
+worktree but unvalidated. Finish singular/invalid
+inputs and bounded repeated-call checks before admitting the six primitives to
+ARC. Keep this following batch separate; no PR is open for it.
 
 ## Focused local checks
 
@@ -166,9 +170,10 @@ runtime probes check runtime behavior, not the changed compiler's proof rules.
 
 ## Next action
 
-Next: publish the numerical candidate and dispatch the extended four-host library
-suite; retain its results alongside the passing `49d35018` baseline.
-Inspect #145's final production gate and squash merge
-once all required jobs pass; then rebase this batch onto main and open its PR.
+Next: retain the unexplained Intel compiler abort and collect diagnostic reports
+if it recurs; its exact-commit rerun and the other candidate hosts passed. The next PR must also run matrix,
+wide-worker and loop-unwind checks on both native Windows architectures.
+Rebase only this batch onto #145's accepted squash commit and open its PR;
+require all nine production jobs plus documentation for its final head.
 Record runner failures and fixes here. Keep the fixed local resource limits;
 queued CI gates merging, not independent roadmap work.
