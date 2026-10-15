@@ -103,8 +103,12 @@ These runtime/compiler changes are not yet verified on runners.
 The obsolete, still-queued syntax dispatch `38768610721` was cancelled and
 replaced by [run 38769658801](https://github.com/e6qu/fun-with-pipes/actions/runs/38769658801)
 at `c32b95f1`. Its arithmetic/formatter/type checks and array/ARC/unwind tests
-are still queued. There is no reported compiler or behavior failure yet, and
-queued checks do not establish support or authorize merging.
+finished with one failure: the new arithmetic fixture omitted signatures for
+its constant-input `left`/`right` helpers, which would otherwise be generic.
+Added explicit `() -> I64 ! {IO}` signatures. The arithmetic runtime comparison
+must rerun; it failed before execution. Rust formatting, Clippy, existing parse
+and type snapshots, formatting, array fusion, ARC reclamation and loop unwind
+controls passed. This failed overall run does not authorize merging.
 
 Measurement preparation now rotates complete-program C/Rust/fwp execution order
 over six samples, reports medians and compilation time/binary size, and uses
@@ -112,6 +116,11 @@ sorted Rust pairs to match the C/fwp map representation. Numerical measurements
 hide C/Rust dimensions from constant propagation, use disjoint C output storage,
 and collect six rotating batches of five samples. Historical results retain
 their original methods; new timings are pending. No local benchmark was run.
+
+The derivative comparison now balances eight process samples and adds a
+512-calculation case to reduce startup noise, retaining the short controls.
+The baseline identity case showed timing variation even with zero metadata
+allocation requests; that variation is not evidence of a metadata-layout cost.
 
 Focused local checks, all through `python3 scripts/local-guard.py`:
 
@@ -126,15 +135,19 @@ Focused local checks, all through `python3 scripts/local-guard.py`:
 - `python3 /private/tmp/fwp-measurement-checks.py`: benchmark harness, Rust map,
   numerical C/Rust fixtures (timing and profiling) compile; measurement script
   parses. This is a compile check only; output equivalence and timing run on CI.
+- Existing interpreter check of the tutorial's explicit curry/uncurry signatures
+  and corrected effectful fixture helpers: passed (0.65 s), printing `5`, `5`,
+  `left`, `right`, `7`. This does not replace changed-compiler infix validation.
 
 An attempted display probe using `fwp eval` failed because that CLI command does
 not exist; the corrected probe used `fwp run --interp` with a temporary file.
 
 ## Next action
 
-Next: inspect focused run `38769658801` and fix any failures, then dispatch
-the four-host `performance` suite at the current branch head after the
-focused compiler checks pass. Review operation counts and generated instructions;
+Next: dispatch the four-host `performance` suite at the fixed branch head. It
+now includes the arithmetic interpreter/native test, so this reruns the failed
+control while collecting the remaining evidence without a separate compiler
+build. Fix any failures. Review operation counts and generated instructions;
 do not compare old and new timing methods as an isolated optimization speedup.
 The current baseline confirms the old cleanup cost, but a controlled same-method
 before/after timing comparison and ARC-specific timings are still needed.

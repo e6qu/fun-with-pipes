@@ -334,8 +334,8 @@ Actual 32-bit WebAssembly checks verify request arithmetic without attempting
 gigabyte allocations. Machine-instruction inspection confirms the intended two
 numeric growth calls instead of four, while ordinary stack storage remains.
 
-Seven alternating process samples follow one warmup for each version/cache
-setting. For the 16-VJP test, the median milliseconds are:
+That report used seven alternating process samples after one warmup for each
+version/cache setting. For the 16-VJP test, the median milliseconds were:
 
 | Host | Reuse off, control → paired | Reuse on, control → paired |
 |---|---:|---:|
@@ -348,6 +348,12 @@ Some cases are slower. For example, macOS ARM64 with reuse takes about 21% longe
 in this sample (`37.041 / 30.679 − 1`). The accepted result is fewer allocator
 requests with the same payload size, not a general speedup. The report records
 raw samples, CPU/compiler information, flags and verified file hashes.
+
+The current runner uses eight alternating samples, placing each version first
+four times. It also includes 512 repeated derivative calculations so process
+startup contributes less to the measured interval. The shorter cases remain as
+controls. New results must reproduce a slowdown before assigning it to metadata
+layout; changing the workload or sampling method alone is not a compiler speedup.
 
 ## Running comparisons
 

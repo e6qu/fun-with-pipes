@@ -1,4 +1,7 @@
+left : () -> I64 ! {IO}
 left = const 10 | tap (const "left" | print)
+
+right : () -> I64 ! {IO}
 right = const 3 | tap (const "right" | print)
 
 macro twice = quote (unquote!(0) * 2)
