@@ -40,12 +40,13 @@ fn qr_checks_square_output_before_allocation_and_preserves_input_errors() {
     ] {
         let input = directory.join(format!("{label}.fwp"));
         std::fs::write(&input, format!(
-            "qr-empty : I64 -> (Array[F64], Array[F64])\nqr-empty = linalg.qr {rows} | apply ([] | array.from-list)\nmain = read-all () | string.length | {count} | qr-empty | .1 | array.length | echo\n"
+            "export qr-size : I64 -> I64\nqr-size = {count} | linalg.qr {rows} | apply ([] | array.from-list) | .1 | array.length\n"
         )).unwrap();
         let reference = Command::new(compiler)
             .env("FWP_NO_OPT", "1")
-            .args(["run", "--interp"])
+            .args(["exec", "--interp"])
             .arg(&input)
+            .args(["qr-size", "0"])
             .output()
             .unwrap();
         assert_eq!(
@@ -65,12 +66,13 @@ fn qr_checks_square_output_before_allocation_and_preserves_input_errors() {
             checked(
                 Command::new(compiler)
                     .env_remove("FWP_NO_OPT")
-                    .args(["build", "--gc", gc, optimization])
+                    .args(["build", "--fn", "qr-size", "--gc", gc, optimization])
                     .arg(&input)
                     .arg("-o")
                     .arg(&binary),
             );
             let actual = Command::new(binary)
+                .arg("0")
                 .env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
                 .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
                 .env("FWP_REUSE_VERIFY", if gc == "arc" { "0" } else { "1" })

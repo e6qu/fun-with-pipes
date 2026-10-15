@@ -76,8 +76,14 @@ not the changed compiler's ARC eligibility rules.
   [38791568892](https://github.com/e6qu/fun-with-pipes/actions/runs/38791568892)
   at `9fede19f` was cancelled while queued after the batch expanded.
   [Expanded run 38793378425](https://github.com/e6qu/fun-with-pipes/actions/runs/38793378425)
-  is queued at `42662770`, covering solver and array borrowing tests, existing
-  numerical allocation/failure controls and forty-sample C/Rust comparisons.
+  at `42662770` failed both Linux hosts: the QR boundary fixture used `read-all`,
+  which is correctly rejected by checked ARC. Formatting, Clippy, solver cleanup,
+  invariant/changing-array tests and existing numerical/unwind controls passed
+  on Linux AMD64. The fixture now passes dimensions through a function executable
+  instead, preserving runtime size checks and ARC coverage. Interpreter function
+  entry returns 9 for three columns and the expected exit-101 negative-dimension
+  trap (guarded 0.75/0.73 s). A new expanded run is required; do not count the
+  failed run as acceptance or weaken ARC's input-boundary checks.
 
 Intel macOS assembly of the accepted numerical candidate shows repeated
 slice/data selection inside the F64 reduction. A bounded C experiment hoisted
