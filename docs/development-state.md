@@ -3,7 +3,7 @@
 Updated 2026-10-16. The only open delivery is
 [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146), final head `19b14d0b`.
 Its [production run 38803349673](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
-has passing macOS, Windows and benchmark jobs; both Linux suites still run.
+has passing macOS, Windows, Linux ARM64 and benchmark jobs; Linux AMD64 still runs.
 [Documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349640)
 passes. Do not merge until all nine production jobs pass for this head.
 
@@ -106,7 +106,7 @@ tree, read metadata and sum sizes through ordinary pipes, repeated 64 times.
 The ARC executable checks final storage and absence of tracing. This is a
 reclamation/semantic test, not a speed benchmark. Six-platform
 [38812948324](https://github.com/e6qu/fun-with-pipes/actions/runs/38812948324)
-is running at `4c73dfb2`; its final result is required. All file-value changes
+passes all six hosts at `4c73dfb2`, including the composed ARC report. All file-value changes
 are already included here; do not import `checked-file-values` again.
 
 Local workloads use `python3 scripts/local-guard.py COMMAND...`, serially under
@@ -114,11 +114,31 @@ fixed resource limits. Full compiler builds, suites and timing stay on runners.
 Existing-compiler probes with edited C validate runtime behavior, not new proof
 rules. Corrected file-value raw/tracing and cleanup probes pass (9.16 s),
 snapshot runtime/source checks pass (7.23/0.61 s), and caught-error construction
-passes (6.53 s). Generated stdlib docs pass (0.64 s). The final integration passes formatting (1.09 s), roadmap audit (2.53 s) and
+passes (6.53 s). Generated stdlib docs pass (0.64 s). The final integration passes formatting (1.11 s), roadmap audit (2.53 s) and
 inventory (0.76 s): 249 explicit contracts, 10 flat scalar signatures, 100 review
 declarations and 19 lowered templates. Its source matches `4c73dfb2` except the
 preserved parent Windows library/loop-unwind probe repairs. The inventory
 baseline is frozen. Preserve the failed Linux logs in `/private/tmp/fwp-directory-*-failure.log`.
+
+## Next optimization identified, not implemented
+
+The retained matrix profile has three retains and three nonlast releases per
+multiplication. Its generated `product-data` entry duplicates a selected array
+field immediately before releasing that same field from an already flattened
+result record. An untimed single-multiplication C experiment removes just this
+pair: retains/nonlast releases fall 3 to 2, release checks 7 to 6. Five allocations,
+101,456 requested bytes, 101,392 peak charged bytes, zero final live storage and
+the result hash remain identical. This is a focused mechanism check, not a timing
+claim or a compiler implementation. Guarded script
+`/private/tmp/fwp-field-move-count-check.py` passes (2.40 s); results are in
+`/private/tmp/fwp-field-move-count-result.json`.
+
+After publishing this delivery, investigate transferring a selected field out of
+an unboxed owned record without a retain/release pair. Preserve other fields,
+shared children, failure cleanup and resource-frame lifetimes. Compare interpreter,
+tracing/ARC, actual generated instructions and before/after counts; retain rejected
+proof cases. Boxed input-record retains and two input wrapper allocations remain
+separate costs. Do not replace ordinary arguments or add implicit syntax.
 
 ## Next: finish the gate and publish the next substantial PR
 
@@ -128,6 +148,6 @@ message and unchanged tree. Transplant this combined delivery from `19b14d0b`
 onto that accepted squash commit; record actual merge/run evidence in history
 and this handoff. Open one PR and require its own full final-head gate.
 
-Finish the repaired file-value validation while waiting. Keep one current plan and handoff,
+The repaired file-value validation is complete. Keep one current plan and handoff,
 and retain unresolved exclusions and performance gaps. Completion of these
 components does not remove tracing GC or finish any whole roadmap area.
