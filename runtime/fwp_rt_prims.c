@@ -3537,6 +3537,51 @@ static V fwp_p_cg(V itv, V tolv, V nv, V av, V bv) {
     return la_put(x, n);
 }
 
+/* Borrow each input row, copy only list nodes and retain typed element aliases.
+ * Scratch holds row cursors and completed columns, not copies of every row.
+ * Build immutable links: rewriting an old node could hide a young GC root. */
+static V fwp_p_list_transpose_owned(V xss, void (*dup_element)(V),
+        void (*drop_element)(V), void (*drop_row)(V), void (*drop_result)(V)) {
+    size_t nr;
+    V *rows = fwp_map_items(xss, &nr);
+    fwp_cleanup scratch_cleanup;
+    fwp_scratch_protect(&rows, &scratch_cleanup);
+    size_t nc = 0;
+    for (size_t i = 0; i < nr; i++) {
+        size_t n = fwp_list_len(rows[i]);
+        if (i == 0 || n < nc) nc = n;
+    }
+    if (nc >= SIZE_MAX / sizeof(V)) fwp_trap("transpose too large");
+    V *cols = (V *)fwp_mem_alloc((nc + 1) * sizeof(V));
+    fwp_map_owner columns = {cols, 0, 0, drop_row, drop_result};
+    fwp_cleanup columns_cleanup;
+    fwp_map_protect(&columns, &columns_cleanup);
+    fwp_value_owner row = {0, drop_row};
+    fwp_value_owner pending = {0, drop_element};
+    fwp_cleanup row_cleanup, pending_cleanup;
+    fwp_value_protect(&row, &row_cleanup);
+    fwp_value_protect(&pending, &pending_cleanup);
+    for (size_t column = 0; column < nc; column++) {
+        for (size_t i = nr; i > 0; i--) {
+            V value = OBJ(rows[i - 1])->f[0];
+            if (dup_element) dup_element(value);
+            pending.value = value;
+            row.value = fwp_rc_fresh(fwp_cons(value, row.value));
+            pending.value = 0;
+            rows[i - 1] = OBJ(rows[i - 1])->f[1];
+        }
+        cols[column] = row.value;
+        columns.count++;
+        row.value = 0;
+    }
+    (void)fwp_value_finish(&pending, &pending_cleanup);
+    (void)fwp_value_finish(&row, &row_cleanup);
+    V output = fwp_map_finish_protected(&columns, &columns_cleanup);
+    fwp_scratch_finish(&rows, &scratch_cleanup);
+    FWP_KEEP_ALIVE(xss);
+    return output;
+}
+
 static V fwp_p_list_transpose(V xss) {
     size_t nr;
     V *rows = fwp_list_items(xss, &nr);

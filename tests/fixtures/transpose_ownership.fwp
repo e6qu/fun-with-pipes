@@ -1,0 +1,18 @@
+export transpose-text : List[List[String]] -> List[List[String]]
+transpose-text = list.transpose
+
+empty : List[List[I64]]
+empty = []
+
+main = [
+    [["a" | string.repeat 2, "b" | string.repeat 2], ["c" | string.repeat 2, "d" | string.repeat 2]]
+        | both id transpose-text | echo,
+    [[1, 2, 3], [4, 5]] | list.transpose | echo,
+    [[concat "a", concat "b"], [concat "c", concat "d"]]
+        | list.transpose | map (map (apply "!")) | echo,
+    [[1i128, 2i128], [3i128, 4i128]] | list.transpose | echo,
+    [[], [1, 2]] | list.transpose | echo,
+    empty | list.transpose | echo,
+    [["failure" | string.repeat 2]]
+        | attempt (transpose-text | tap (const "after transpose" | fail)) | echo,
+] | ignore
