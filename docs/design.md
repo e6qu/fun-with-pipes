@@ -154,6 +154,14 @@ wall-clock timers do not define an order between independent actions. Use a
 channel or await when ordering matters. [Concurrency](concurrency.md) gives the
 user-visible behavior and platform implementation.
 
+When a compiled program has no tasks or services, its runtime primitives omit
+task-slice checks as well as function-entry checks. Programs that can schedule
+tasks retain both. WebAssembly Asyncify's stack-bound checks remain active.
+The blocked F64 matrix kernel uses fixed-size compiler copy intrinsics: they
+preserve aliasing and alignment rules while exposing loads/stores to the C
+compiler's vectorizer. Shape validation bounds each access; floating-point
+accumulation order and separate multiplication/addition remain unchanged.
+
 ## Numerical specialization
 
 The optimizer removes work only when doing so preserves observable behavior:

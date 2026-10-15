@@ -1117,8 +1117,10 @@ static V fwp_p_matrix_mul_f64(V mv,V kv,V nv,V left,V right) {
     V result=fwp_array_typed_new(m*n,&scalar);
     fwp_cleanup cleanup;fwp_cleanup_push(&cleanup,fwp_matrix_output_release,&result);
     /* F64 occupies eight bytes in both packed and word arrays. Resolve views
-     * once, and use memcpy loads to preserve C aliasing and alignment rules.
-     * Only the fresh output is restrict-qualified: inputs may share backing. */
+     * once; fixed-size copy intrinsics preserve C aliasing/alignment rules and
+     * stay visible to vectorization (Darwin's fortified memcpy can hide stores).
+     * The shape predicate bounds every copy. Only the fresh output is
+     * restrict-qualified: inputs may share backing. */
     const unsigned char *a=fwp_array_data(left),*b=fwp_array_data(right);
     unsigned char *restrict out=(unsigned char *)(uintptr_t)result+sizeof(fwp_arr);
     memset(out,0,m*n*sizeof(double));
@@ -1129,12 +1131,12 @@ static V fwp_p_matrix_mul_f64(V mv,V kv,V nv,V left,V right) {
             for(size_t jb=0;jb<n;jb+=FWP_MATRIX_TILE){
                 size_t je=n-jb<FWP_MATRIX_TILE?n:jb+FWP_MATRIX_TILE;
                 for(size_t i=ib;i<ie;i++)for(size_t q=kb;q<ke;q++){
-                    double x;memcpy(&x,a+(i*k+q)*sizeof(double),sizeof x);
+                    double x;__builtin_memcpy(&x,a+(i*k+q)*sizeof(double),sizeof x);
                     for(size_t j=jb;j<je;j++){
-                        double y,prior;memcpy(&y,b+(q*n+j)*sizeof(double),sizeof y);
-                        memcpy(&prior,out+(i*n+j)*sizeof(double),sizeof prior);
+                        double y,prior;__builtin_memcpy(&y,b+(q*n+j)*sizeof(double),sizeof y);
+                        __builtin_memcpy(&prior,out+(i*n+j)*sizeof(double),sizeof prior);
                         double product=x*y,value=product+prior;
-                        memcpy(out+(i*n+j)*sizeof(double),&value,sizeof value);
+                        __builtin_memcpy(out+(i*n+j)*sizeof(double),&value,sizeof value);
                     }
                 }
             }

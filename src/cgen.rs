@@ -8797,6 +8797,7 @@ static const fwp_exec_spec exec_spec{i} = {{
         out.push_str("#define FWP_LIBRARY 1\n");
     }
     let _ = writeln!(out, "#define FWP_UNWIND {}", u8::from(g.unwind));
+    let _ = writeln!(out, "#define FWP_TASK_TICKS {}", u8::from(g.ticks));
     let packed = std::env::var("FWP_PACKED_ARRAYS").map_or(true, |v| v != "0");
     let _ = writeln!(out, "#define FWP_PACKED_ARRAYS {}", u8::from(packed));
     if !free_enabled() {
