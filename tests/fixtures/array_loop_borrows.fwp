@@ -1,0 +1,36 @@
+export reduce : Array[F64] -> F64
+reduce = array.map (mul 3.0) | array.map (add 1.0) | array.fold add -0.0
+Walk = { index: I64, total: F64, values: Array[F64] }
+export advancing : Walk -> Step[Walk, F64]
+advancing = if (.index | lt 4)
+    (make Walk {
+        index = .index | add 1,
+        total = both .total (.values | array.get 0 | option.unwrap-or 0.0) | uncurry add,
+        values = .values | array.slice 1 4,
+    } | Again)
+    (.total | Stop)
+export reading : Walk -> Step[Walk, F64]
+reading = if (.index | lt 4)
+    (make Walk {
+        index = .index | add 1,
+        total = both .total (both .index .values | uncurry array.get | option.unwrap-or 100.0) | uncurry add,
+        values = .values,
+    } | Again)
+    (.total | Stop)
+read-bounds : Array[F64] -> F64
+read-bounds = make Walk { index = const -1, total = const 0.0, values = id } | loop reading
+walk : Array[F64] -> F64
+walk = make Walk { index = const 0, total = const 0.0, values = id } | loop advancing
+values : Array[F64]
+values = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0] | array.from-list
+empty : Array[F64]
+empty = [] | array.from-list
+main = [
+    values | both id reduce | echo,
+    values | array.slice 1 5 | both id reduce | echo,
+    empty | reduce | echo,
+    values | both id walk | echo,
+    values | read-bounds | echo,
+    empty | read-bounds | echo,
+    task.spawn (const values | reduce) | task.await | echo,
+] | ignore

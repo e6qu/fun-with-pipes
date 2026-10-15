@@ -29,7 +29,7 @@ branch may run focused CI before #146 merges. Full local builds remain excluded.
 | 6 | In progress | Preserve comparable C/Rust measurements and profiles |
 | 7 | In progress | Extend numerical and long-running application coverage |
 
-## Prepared batch: owned linear-algebra workspaces
+## Prepared batch: numeric ownership and borrowed array data
 
 Scope: LU solve, determinant, inverse, Cholesky, QR and conjugate gradient.
 Borrow inputs, copy their numbers into the existing scratch buffers and own each
@@ -71,7 +71,26 @@ not the changed compiler's ARC eligibility rules.
 - Primitive inventory passed (1.02 s): 231 explicit contracts, 10 flat scalar
   signatures, 118 declarations needing review and 19 lowered templates. The
   original baseline file remains immutable.
-- Formatting passed (1.01 s). Focused changed-compiler CI remains pending.
+- Formatting passed (1.01 s). The initial solver-only run
+  [38791568892](https://github.com/e6qu/fun-with-pipes/actions/runs/38791568892)
+  was dispatched at `9fede19f`; it is queued and does not validate later array
+  borrowing changes. The expanded batch needs a new focused run.
+
+Intel macOS assembly of the accepted numerical candidate shows repeated
+slice/data selection inside the F64 reduction. A bounded C experiment hoisted
+that pointer and removed the branches, allowing ordinary scalar unrolling;
+`/private/tmp/fwp-array-pointer-check.py` passed (1.87 s), compiling Intel-targeted
+assembly without local timing. The compiler now drafts the same transformation
+only for flat F64 array parameters that every `Again` passes unchanged and that
+are directly read by `array.get`. Bounds tests, owners and cleanup remain in
+place. Changing-array loops keep dynamic loads; no new runtime wrapper or type
+conversion is introduced. Full compiler validation and runner timing are pending.
+
+The new fixture covers original inputs, slices, empty arrays, arrays replaced on
+each loop step and task execution. Raw interpreter output passed (0.65 s).
+`/private/tmp/fwp-array-borrow-check.py` passed (0.89 s): isolated invariant-proof
+and test-harness metadata compilation, plus old-compiler confirmation of the
+loop shape. This is not a changed-compiler integration result.
 
 The parent batch's Intel macOS compiler abort did not reproduce on an unchanged
 retry. Its cause is unknown; preserve available compiler crash reports on future
