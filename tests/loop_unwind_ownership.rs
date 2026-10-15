@@ -159,6 +159,9 @@ static void cancel_at_loop_tick(void) {
     observed_text=text;observed_other=other;fwp_cur->cancelled=1;fwp_budget=0;
 }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 190;
+#endif
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
     for (volatile int tick=1;tick<=2;tick++) for (volatile int mode=0;mode<5;mode++) {
         original_text=fwp_rc_fresh(fwp_str_new("seed",4));fwp_rc_dup(original_text);
@@ -256,6 +259,9 @@ static volatile V original_text, scalar_word, owned_step;
 static int recover_payload(void) { return 1; }
 static void fail_duplicate(V value) { (void)value; fwp_trap("injected payload preparation failure"); }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 190;
+#endif
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
     for (volatile int stop=0;stop<2;stop++) for (volatile int alias=0;alias<2;alias++) {
         original_text=fwp_rc_fresh(fwp_str_new("seed",4));fwp_rc_dup(original_text);

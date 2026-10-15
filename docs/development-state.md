@@ -9,7 +9,8 @@ The current batch is [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146),
 branch `checked-library-ownership`: copied C library boundaries,
 data-only channels, transpose ownership, allocator accounting and measured
 numerical improvements. This batch is rebased onto the accepted squash commit;
-its full production and documentation checks are starting. The following solver work stays in its separate worktree.
+its production gate exposed Windows test-host line endings, corrected below.
+The following solver work stays in its separate worktree.
 
 Standing authorization covers fixes, publication and squash merge after all nine
 production jobs and documentation pass for the final commit, then the next PR.
@@ -132,20 +133,29 @@ comparison incorrectly included timing fields; corrected comparison excludes
 only elapsed times and checks all remaining allocation/profile fields.
 Windows validation and final production gates remain required.
 
-Following this delivery, the next ownership batch is the six existing
-linear-algebra solvers. Inspection found GC-owned scratch in `la_get` and each
-solver, and unchecked `n*n` QR output storage: a zero-row input can pass the
-input-shape check with an enormous column count, then overflow the output-size
-calculation. Preparation is isolated in `/private/tmp/fwp-linear-algebra`, branch
-`checked-linear-algebra`, based on `c10b1ccd`. It already checks the QR output
-limit in interpreter/native code and has matching-language regression cases;
-changed-compiler validation is pending. A guarded standalone C boundary probe
-passed at O1/O2 with sanitizers, catches an omitted guard before allocation, and
-preserves input-error order (2.01 s). No enormous allocation was attempted.
-Formatting passed (1.12 s). Scratch/result cleanup is now drafted in that
-worktree but unvalidated. Finish singular/invalid
-inputs and bounded repeated-call checks before admitting the six primitives to
-ARC. Keep this following batch separate; no PR is open for it.
+### Production failure and following preparation
+
+At `bccead2d`, Windows AMD64 failed the library and loop-unwind output
+comparisons in [run 38790425937](https://github.com/e6qu/fun-with-pipes/actions/runs/38790425937).
+Their handwritten C entry points emitted CRLF; expected interpreter output uses
+LF. The test probes now select binary stdout on Windows, and the library cleanup
+report opens in binary append mode. Exact byte comparisons remain intact; the
+library ABI does not change host stream settings. Windows execution and the full
+production gate must pass on the repaired final commit. Documentation and bench
+passed on the earlier head; neither substitutes for that gate.
+
+The following batch is isolated in `/private/tmp/fwp-linear-algebra`, branch
+`checked-linear-algebra`, originally based on `c10b1ccd`. It owns scratch and
+partial results for all six linear-algebra solvers, checks QR output size, and
+borrows invariant F64 array data once per loop. The first expanded four-host
+run exposed an ARC-ineligible `read-all` in the QR test fixture. The fixture now
+passes dimensions through a checked function entry. Linux had already passed
+solver cleanup, array borrowing and the other selected regressions; the failed
+run is not acceptance. Repaired four-host run
+[38795634707](https://github.com/e6qu/fun-with-pipes/actions/runs/38795634707)
+is queued at `ec1ff14b`. Its own handoff records the detailed checks. Rebase only
+its commits after `c10b1ccd` onto this delivery's accepted squash commit before
+opening the next PR. Keep one active delivery PR.
 
 ## Focused local checks
 
@@ -166,6 +176,8 @@ runtime probes check runtime behavior, not the changed compiler's proof rules.
 - Taskless matrix plus fixed-size-copy runtime probe passed under GC stress,
   including forced scheduler failure (3.06 s). Intel-targeted instruction checks
   passed (2.36 s); they establish generated instructions, not native timing.
+- Windows fixture repair: harness metadata and exact native output/report bytes
+  passed on macOS (1.38 s); native Windows verification remains on CI.
 - Primitive inventory passed (0.85 s): 225 explicit contracts, 10 flat scalar
   signatures, 124 declarations needing runtime review and 19 lowered templates.
 

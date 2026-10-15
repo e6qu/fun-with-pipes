@@ -14,6 +14,10 @@ static int arc_library_call(void) {
 }
 
 int fwp_test_probe(void) {
+#ifdef _WIN32
+    /* Test output uses the same exact bytes as the interpreter. */
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 188;
+#endif
     fwp_lib_init();
     int result = arc_library_call();
     if (result) return result;
@@ -43,7 +47,7 @@ int fwp_test_probe(void) {
 static void fwp_test_finished(void) {
     const char *path = getenv("FWP_ARC_LIBRARY_REPORT");
     if (!path) return;
-    FILE *file = fopen(path, "a");
+    FILE *file = fopen(path, "ab");
     if (!file) abort();
     /* Called after typed globals and tapes finish, before the arena is freed. */
     fprintf(file, "%ld %zu\n", (long)(fwp_gc.budget_given - fwp_gc.budget),
