@@ -72,36 +72,35 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-The C-library, channel and numerical-runtime delivery passed its full gate and
-merged in [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146). The current
-[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) combines:
+[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) passed all nine
+production jobs and documentation before merging. It extends owned numerical
+solvers, preserves F128 gradient precision, borrows F64 array data across loops,
+and owns console/environment/filesystem results and errors. Delivery evidence
+belongs in [the history](docs/roadmap-history.md), not a second active backlog.
 
-- Explicit scratch and result cleanup for six linear-algebra solvers, including
-  QR output-size validation and singular/failure cases.
-- F64 array-data borrowing proved invariant across loop iterations, measured
-  against the existing per-element access and equivalent C/Rust workloads.
-- F128 reverse-mode seeds, weights and adjoints without narrowing through F64.
-- Owned console input, argument and environment copies, with partial-result
-  cleanup and raw/native semantic comparisons.
-- Rejection of zero bytes in OS paths and environment names before prefix access;
-  counted I/O errors and portable file-resource regression probes.
-- Directory and environment snapshots with owned copies, temporary storage and
-  OS handles, including recursive-directory scratch cleanup.
-- Owned file metadata/byte reads and ordinary file actions; preserve timestamp
-  conversion, original write errors and host directory diagnostics. Exercise
-  repeated directory reports as composed ARC programs.
+The current `record-moves-and-utilities` delivery combines:
 
-Require actual tracing/ARC compiler builds, negative cleanup controls, stress and
-reuse tests, and all nine production jobs plus documentation for the final head.
-Focused preparation runs are evidence for their components, not this final gate.
+- Transfer fields from flattened and uniquely owned boxed records. Preserve
+  aliases, discarded siblings, wide values, resource lifetimes and failure cleanup.
+- Own working-directory and clock results. Report an unavailable working
+  directory explicitly; admit static empty maps/sets and Boolean combinations
+  to checked ARC.
+- Validate repeated runs of the maintained directory-report example and
+  timestamped logging. Fix duplicated log newlines and Windows regression probes.
+- Record current C/Rust costs and controlled record-move measurements. Keep the
+  slower results and actual instructions. Do not adopt the tested matrix-output
+  helper: its smaller code did not give a dependable portable timing improvement.
 
-All six file-value hosts pass; the combined delivery still needs full production
-acceptance. The next measured target is a redundant retain/release when selecting
-an owned field from an unboxed numerical result. Prove a move preserves remaining
-fields, aliases, failure cleanup and resource lifetimes before changing emission.
-Afterward, select further ownership boundaries and confirmed application costs. Investigate derivative timing
-and memory scaling rather than assuming fewer allocations are always faster.
-Broaden long-running application coverage alongside these fixes.
+The complete focused batch passes Linux, macOS and Windows on both architectures.
+Require all nine production jobs plus documentation again for the combined PR's
+final head. Component results are evidence, not final delivery acceptance.
+
+The following preparation tackles child-process arguments, captured output,
+handles and failure cleanup, which still rely on tracing. Keep that work separate
+until this delivery is accepted. Then continue with confirmed application costs,
+derivative timing and memory scaling, and the other work areas above. Remaining
+matrix wrapper allocations and C/Rust timing gaps are not resolved by fewer
+reference counts.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

@@ -490,7 +490,8 @@ options:
 | directories (`FileIO`) | `dir.list` (sorted), `dir.walk` (every file below, in order), `dir.create`, `dir.create-all`, `dir.remove` |
 | paths (pure) | `path.join`, `path.basename`, `path.dirname`, `path.extension`, `path.stem`, `path.normalize`, `path.is-absolute` |
 | processes (`Process`) | `process.run` (capture stdout, stderr and the status), `process.run-input`, `process.output`, `process.call` (shares the terminal) |
-| environment (`IO`) | `args`, `env.get`, `env.vars`, `env.cwd`, `env.home`, `exit`, `eprint`, `ewrite` (stderr without a newline) |
+| environment (`IO`) | `args`, `env.get`, `env.vars`, `env.home`, `exit`, `eprint`, `ewrite` (stderr without a newline) |
+| working directory (`IO`, `Error[IoError]`) | `env.cwd` returns the absolute directory; `attempt env.cwd ()` makes an unavailable directory an explicit `Err` value |
 | standard input (`IO`) | `read-line`, `read-lines`, `read-all`, `each-line` and `fold-lines` (line by line, in constant memory) |
 | terminal (`IO`) | `term.is-tty`, `term.width` (`COLUMNS` or the terminal's), `term.color` (a terminal and no `NO_COLOR`), `term.paint`, `ansi.bold`, `ansi.red`... |
 | prompts (`IO`) | `prompt.line`, `prompt.confirm` (`[y/N]`), `prompt.password` (`term.read-secret`: no echo on a terminal; WebAssembly cannot turn the echo off) |

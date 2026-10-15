@@ -2914,13 +2914,33 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let ctx = self.fresh();
                     let node = self.fresh();
                     let retained = self.g.duplicate_values(&values, &ctx, &node);
+                    // A last owner can give its fields to the worker without
+                    // creating temporary aliases. Stack records have distinct
+                    // child owners and must keep their existing conversion.
+                    let moved = (tys.is_some() && self.stack_alias(e).is_none()).then(|| {
+                        let moved = self.fresh();
+                        self.line(&format!(
+                            "int {moved} = fwp_rc_last({t}); /* move boxed fields */"
+                        ));
+                        self.line(&format!("if (!{moved}) {{"));
+                        self.indent += 1;
+                        moved
+                    });
                     self.line(&retained);
+                    if moved.is_some() {
+                        self.indent -= 1;
+                        self.line("}");
+                    }
                     self.end_call(original);
                     let d = ty
                         .and_then(|t| self.typed_drop(&t))
                         .unwrap_or_else(|| "fwp_rc_drop".into());
                     if let Some(children) = self.stack_alias(e) {
                         self.stack_children_count(children, false);
+                    } else if let Some(moved) = moved {
+                        self.line(&format!(
+                            "if ({moved}) fwp_rc_free_obj({t}); else {d}({t});"
+                        ));
                     } else {
                         self.line(&format!("{}({});", d, t));
                     }
@@ -3647,6 +3667,41 @@ impl<'g, 'p> FnGen<'g, 'p> {
             self.known_callbacks.insert(l, (g, n));
         } else {
             self.known_callbacks.remove(&l);
+        }
+        // The RC pass describes a projection as retaining the selected field
+        // and then releasing the record. When the record is already separate
+        // owned fields, transfer that field and release only its siblings.
+        // Original resource frames retain their existing lifetime accounting.
+        if self.g.reuse {
+            if let (Expr::Field(base, index), Expr::Dup(selected, after_dup)) = (v, body) {
+                if let (Expr::Local(parent), Expr::Drop(dropped, rest)) = (&**base, &**after_dup) {
+                    if *selected == l
+                        && parent == dropped
+                        && !self.resource_slots.contains_key(parent)
+                    {
+                        if let Some(values) = self.fields.get(parent).cloned() {
+                            let types =
+                                record_fields(&self.g.prog.shapes, &self.locals[*parent as usize])
+                                    .expect("flattened record fields have known types")
+                                    .to_vec();
+                            self.line(&format!(
+                                "/* move owned field */ l{l} = {};",
+                                values[*index as usize]
+                            ));
+                            for (i, (value, (_, ty))) in values.iter().zip(&types).enumerate() {
+                                if i != *index as usize {
+                                    if let Some(drop) = self.typed_drop(ty) {
+                                        self.line(&format!(
+                                            "FWP_KEEP_ALIVE({value}); {drop}({value});"
+                                        ));
+                                    }
+                                }
+                            }
+                            return rest;
+                        }
+                    }
+                }
+            }
         }
         // Moving a variant through a named ownership temporary need not box
         // it when all uses of the destination remain matches/count operations.
@@ -5840,6 +5895,10 @@ impl<'p> Gen<'p> {
                     _ => format!("return fwp_p_file_write_new(l0, l1, {});", err),
                 }
             }
+            "env.cwd" => {
+                let error = self.desc(&MT::con("std::IoError"));
+                format!("return fwp_p_env_cwd({error});")
+            }
             "file.info" | "file.remove" | "dir.remove" | "file.rename" | "file.append"
             | "file.read-bytes" | "file.write-bytes" | "dir.create"
             | "dir.create-all" | "process.run-input" | "process.call" => {
@@ -6084,7 +6143,6 @@ impl<'p> Gen<'p> {
                     ("read-all", "fwp_read_stdin_all()"),
                     ("exit", "fwp_p_exit(l0)"),
                     ("env.get", "fwp_p_env_get(l0)"),
-                    ("env.cwd", "fwp_p_env_cwd()"),
                     ("term.is-tty", "fwp_p_term_is_tty(l0)"),
                     ("file.exists", "fwp_p_file_exists(l0)"),
                     ("file.is-dir", "fwp_p_file_is_dir(l0)"),

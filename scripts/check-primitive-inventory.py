@@ -88,6 +88,8 @@ assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row 
 # These reviewed contract changes are checked against the frozen baseline.
 bundle_contracts = {}
 bundle_contracts['not'] = (1, 'Shared', [])
+for symbol in ['and', 'or']:
+    bundle_contracts[symbol] = (2, 'Shared', [])
 bundle_contracts['prim.trap'] = (1, 'Never', [])
 for symbol in ['prim.zero', 'prim.one']:
     bundle_contracts[symbol] = (0, 'Numeric', [])
@@ -112,6 +114,9 @@ for symbol in ['dir.create-all', 'dir.create', 'dir.remove', 'file.remove', 'fil
 for symbol in ['file.rename', 'file.append', 'file.write-bytes']:
     bundle_contracts[symbol] = (2, 'Shared', [])
 bundle_contracts['file.read-bytes'] = (1, 'FreshLeaf', [])
+bundle_contracts['env.cwd'] = (1, 'FreshLeaf', [])
+for symbol in ['time.monotonic', 'time.unix']:
+    bundle_contracts[symbol] = (1, 'FreshLeaf', [])
 bundle_contracts['file.info'] = (1, 'OwnedTree', [])
 bundle_contracts['list.transpose'] = (1, 'CopiedStructure', [0])
 for symbol, arity in [('linalg.lu-solve', 3), ('linalg.inverse', 2),
@@ -142,6 +147,12 @@ for row in rows:
             contract='Some(Contract { arguments: ' + arguments + ', result: OwnedCallback, callback: Some(Borrowed(0)), aliases: ' + aliases + ' })')
         continue
     before = baseline_rows[key]
+    if row['symbol'] in {'map.empty', 'set.empty'}:
+        assert before['contract'] == 'Some(Contract { arguments: [], result: Shared, callback: None, aliases: [] })'
+        assert all(row[name] == before[name] for name in fields if name != 'contract')
+        assert row['contract'] == 'Some(Contract { arguments: [], result: Static, callback: None, aliases: [] })'
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] in {'fail', 'parse-int', 'parse-float'}:
         assert before['contract'] == 'Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })'
         assert all(row[name] == before[name] for name in fields if name != 'contract')
@@ -153,7 +164,13 @@ for row in rows:
         expected_before = ('Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })'
                            if row['symbol'] == 'lines' else 'None')
         assert before['contract'] == expected_before and row['bucket'] == 'contract', (before, row)
-        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
+        changed_fields = {'bucket', 'contract'}
+        if row['symbol'] == 'env.cwd':
+            # An unavailable directory is an explicit error, not a substitute path.
+            assert before['signature'] == '() -> String ! {IO}'
+            assert row['signature'] == '() -> String ! {IO, Error[IoError]}'
+            changed_fields.add('signature')
+        assert all(row[name] == before[name] for name in fields if name not in changed_fields)
         arity, result, aliases = bundle_contracts[row['symbol']]
         arguments = '[' + ', '.join(['Borrow'] * arity) + ']'
         expected = f'Some(Contract {{ arguments: {arguments}, result: {result}, callback: None, aliases: {aliases} }})'
@@ -212,7 +229,7 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22

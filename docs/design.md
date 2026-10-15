@@ -142,6 +142,15 @@ Specialized numeric functions use concrete C types instead. Records, variants
 and partially applied functions may need heap objects, but eligible local values
 can remain as separate fields, C structs or stack storage.
 
+When a record already exists as separate local fields, selecting its last-used
+field can transfer that field's ownership and release only the discarded fields.
+The new conversion path also checks whether a heap record has exactly one owner:
+if so, its fields transfer to the receiving function and only the outer record
+is freed. A shared record needs retained field references; a stack record keeps
+its existing child-owner rules. The candidate tests include aliases, pointer-like
+scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
+count operations; they do not prove every record or call allocation-free.
+
 A closure contains a function and its already supplied arguments. Generated
 calls retain/release captured values according to their types. Shared top-level
 computed values have cached owners, released during teardown. A type descriptor

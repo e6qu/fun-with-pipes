@@ -105,6 +105,9 @@ static const fwp_fninfo probe_fns[] = {
     {2, probe_capture, "capture", &probe_owned[3]},
 };
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 22;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     /* Exercise the compiler's actual parameter metadata, including a
      * scalar whose bits look exactly like the following pointer argument. */

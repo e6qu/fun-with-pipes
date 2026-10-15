@@ -215,10 +215,16 @@ static V fwp_p_env_vars(void (*drop_pair)(V), void (*drop_list)(V)) {
     return fwp_map_finish_protected(&owner,&cleanup);
 }
 
-static V fwp_p_env_cwd(void) {
-    char buf[4096];
-    if (!getcwd(buf, sizeof buf)) return fwp_cstr(".");
-    return fwp_str_lossy(buf, strlen(buf));
+static V fwp_p_env_cwd(const fwp_desc *error) {
+    fwp_buf path = {0};
+    path.d = getcwd(NULL, 0);
+    if (!path.d) return fwp_io_error("cwd", strerror(errno), error);
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_buf_release, &path);
+    V result = fwp_str_lossy(path.d, strlen(path.d));
+    fwp_cleanup_pop(&cleanup);
+    fwp_buf_release(&path);
+    return result;
 }
 
 static V fwp_p_term_is_tty(V fd) {
