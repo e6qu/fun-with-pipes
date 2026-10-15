@@ -16,8 +16,9 @@ numeric backward prefix bounds as `38da1401`, with all nine jobs and docs green.
 The user requested continued work. The current follow-up stores only operations
 in numeric/managed AD metadata, preserving input tokens and adjoints. Keep its
 cleanup fixes, tests, measurements and docs together on
-`autodiff-operation-storage`. Follow the live plan and handoff; historical
-preparation entries are not work to replay.
+`autodiff-operation-storage` in PR #138. Follow the live plan and handoff; historical
+preparation entries are not work to replay. Once PR #138 merges with all final-head
+gates, this follow-up is complete; check its actual state before resuming.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,

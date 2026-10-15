@@ -11,7 +11,21 @@ fn autodiff_library_unload_releases_live_and_cached_buffers() {
         "workspace.{}",
         fwp::cgen::shared_library_extension()
     ));
-    std::fs::write(&input,"export probe : I64 -> I64\nprobe = ad.scope ad.tape\nexport live : I64 -> I64\nlive = ad.tape\nexport managed : I64 -> I64\nmanaged = const [0.0] | rev._seed | .1 | rev._seed | .0\n").unwrap();
+    std::fs::write(
+        &input,
+        r#"
+record : I64 -> I64
+record = ad.tape | make { 0 = id, 1 = const 1.0, 2 = const -1, 3 = const 0.0 } | ad.push
+export probe : I64 -> I64
+probe = ad.scope record
+export live : I64 -> I64
+live = record
+export managed : I64 -> I64
+managed = const [0.0] | rev._seed | .1 | rev._seed | .1
+    | map (fork mul id id) | head | option.unwrap-or zero | .vertex
+"#,
+    )
+    .unwrap();
     let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
         .args(["build", "--cdylib", "--emit-c"])
         .arg(&input)

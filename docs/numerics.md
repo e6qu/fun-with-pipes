@@ -110,6 +110,10 @@ may skip propagation. Capturing or combining unrelated tape tokens remains an
 error; nesting does not relax stale-token or generation checks.
 Base-float reverse mode uses 24 bytes per operation before adjoint storage and
 capacity rounding. Nested weights additionally own their scalar representation.
+Input-only tapes need no operation buffers. [Four-host measurements](measurements/ad-operations-2026-10-15.json)
+record lower peak storage for identity, mapped and nested gradients. Cold mapped
+tapes make more growth requests from smaller initial buffers; timings show no
+consistent speedup. Existing cached capacity can remain within the fixed budget.
 
 Numeric backward passes retain adjoints for every input and for the tape prefix
 through the last seeded output. Later recorded nodes cannot contribute because

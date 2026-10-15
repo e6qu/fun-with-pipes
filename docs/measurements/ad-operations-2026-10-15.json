@@ -1,0 +1,1483 @@
+{
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38664959939",
+  "scope": "Four native hosts; paired input-capacity controls, physical buffer/managed storage and process timings. See each report for boundaries.",
+  "reports": [
+    {
+      "head": "31b9d8d2cd195f58675f45a62ccf7a77a47546e7",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmmprz5",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "results": {
+        "identity": {
+          "source": "main = range 0 4096 | map int.to-float | vjp id (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "15028a9fbc44b520360831c83a7e8a22a3de70c4867e661a876dcb41d6263ecc",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 2,
+                "tapeRequestedBytes": 32872,
+                "peakTapeBytes": 32872,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 49164,
+                "requestedBytes": 1507455,
+                "retains": 8198,
+                "peakChargedBytes": 819240,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                3435227,
+                2624997,
+                2762697,
+                2687911,
+                3084655,
+                2448210,
+                3717331
+              ],
+              "medianProcessWallNs": 2762697,
+              "generatedSha256": "ee11f0c9c5d3c845cae11ee740101ccf52f3cc61d901114a12b3c1bc64761f78",
+              "binarySha256": "ea893a51a5e5b14f490903f464c5b1423100865bf085c37feb5b1aff5f121695",
+              "assemblySha256": "87ff9658bb848505861e4e04366dfb1423d89da6d9230a34aa9409140554fea1"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 6,
+                "tapeRequestedBytes": 131176,
+                "peakTapeBytes": 131176,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 49164,
+                "requestedBytes": 1507455,
+                "retains": 8198,
+                "peakChargedBytes": 819240,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                2748229,
+                2724127,
+                3024195,
+                2864297,
+                2862433,
+                2905824,
+                3330557
+              ],
+              "medianProcessWallNs": 2864297,
+              "generatedSha256": "345fa6ce6918519eea99872c315d18a8e0acba6511cfdd91d274b658fd11e252",
+              "binarySha256": "5fab1c7711fe7c4028c6334b312bd1d539f1da931773fc86c483377ddd73c656",
+              "assemblySha256": "56a20efc35138fb3e32656845c4e149a259d19f61467913102308c69b1a9e6d2"
+            }
+          }
+        },
+        "map": {
+          "source": "main = range 0 4096 | map int.to-float | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "7abeb9fe1cc255c4a4e6f3c47cc220fb4d0cd6b23e2d1afccac549d63ece2093",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 30,
+                "tapeRequestedBytes": 260712,
+                "peakTapeBytes": 163944,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 61456,
+                "requestedBytes": 1900735,
+                "retains": 20489,
+                "peakChargedBytes": 819304,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                4541010,
+                3211401,
+                3604548,
+                3782304,
+                4679014,
+                3112410,
+                3734451
+              ],
+              "medianProcessWallNs": 3734451,
+              "generatedSha256": "0f24c84fb4c981ed9f2a15c3ff9d26f5225a6579d0417c9441d8cb6702852201",
+              "binarySha256": "bdbd02cfae9533b0efb7805230845618920b859ac1e787ca4278410713858143",
+              "assemblySha256": "9eb248a5eebc54f72a5ef5ab047ce2d6e23cbbc6a914aad8512365f18cfeea11"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 10,
+                "tapeRequestedBytes": 360552,
+                "peakTapeBytes": 262248,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 61456,
+                "requestedBytes": 1900735,
+                "retains": 20489,
+                "peakChargedBytes": 819304,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                4414499,
+                3592346,
+                3328483,
+                3149921,
+                3998023,
+                4499498,
+                3109604
+              ],
+              "medianProcessWallNs": 3592346,
+              "generatedSha256": "3fc6452760edd812bca059c23b92d0e1529936739f8723249c7f96f80967c5ce",
+              "binarySha256": "cfef4a3f23a93e0470724d6e6bd822f0beab1b9d9c2bcae6af4d5cfd816bce84",
+              "assemblySha256": "04003ea2d28d0c2bac56d177522a1367d535986028d7d82431c89b9fc02dd0df"
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "sourceSha256": "9f8320c6f38313d52267beae2c3043f42750c9a681684ea537510c1b55e12e43",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 21,
+                "tapeRequestedBytes": 28000,
+                "peakTapeBytes": 16632,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 4415,
+                "requestedBytes": 131516,
+                "retains": 2119,
+                "peakChargedBytes": 60096,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                1696687,
+                1893471,
+                1909534,
+                2066688,
+                1663985,
+                1503257,
+                1752161
+              ],
+              "medianProcessWallNs": 1752161,
+              "generatedSha256": "6aac112aede4180aa1f6016f00953352f4a29407b4849a273f80d319bdd385af",
+              "binarySha256": "d42d3ace39c813d5813567458e616b82b0cf766b8a8f98e0732a55a359286635",
+              "assemblySha256": "a71f66fd29faca27cc4c4342968c3011a71af64a89129ead6426dff146a71e36"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 19,
+                "tapeRequestedBytes": 53600,
+                "peakTapeBytes": 28920,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 4416,
+                "requestedBytes": 142780,
+                "retains": 2119,
+                "peakChargedBytes": 64192,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                1665172,
+                1938447,
+                1798648,
+                1609909,
+                1980935,
+                1619357,
+                1892881
+              ],
+              "medianProcessWallNs": 1798648,
+              "generatedSha256": "561a50c8222542f8d4bf1f0a2c0deb4721d7593a6fd16c16cd3c422c87236e3a",
+              "binarySha256": "0d5b956808f94bdc9e3b350d9a39b9bfebeca472dc82e51d0feb5c538111324e",
+              "assemblySha256": "80bc065ec94adf32cdd4d9119b6da1bbf0554d75d91f05add5d2c2fce84cf96c"
+            }
+          }
+        }
+      },
+      "scope": "Identical ARC programs and compiler, workspace disabled. The control reserves operation capacity for input placeholders at creation and growth; logical offsets and arithmetic remain identical. This isolates storage, not all old-code costs. Native tape buffers and charged managed storage are counted separately. Process timings include startup/output; no speedup threshold. Allocator metadata and OS reservations are excluded.",
+      "artifactHost": "linux-amd"
+    },
+    {
+      "head": "31b9d8d2cd195f58675f45a62ccf7a77a47546e7",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmidgih",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "results": {
+        "identity": {
+          "source": "main = range 0 4096 | map int.to-float | vjp id (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "15028a9fbc44b520360831c83a7e8a22a3de70c4867e661a876dcb41d6263ecc",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 2,
+                "tapeRequestedBytes": 32872,
+                "peakTapeBytes": 32872,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 49164,
+                "requestedBytes": 1507455,
+                "retains": 8198,
+                "peakChargedBytes": 819240,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                2343580,
+                2351827,
+                2259378,
+                2335877,
+                2324661,
+                2373426,
+                2786013
+              ],
+              "medianProcessWallNs": 2343580,
+              "generatedSha256": "ee11f0c9c5d3c845cae11ee740101ccf52f3cc61d901114a12b3c1bc64761f78",
+              "binarySha256": "283eb186b76696b283f4d7ca5f32552bc8b8663b05f129e6a24c5aba94bf68fc",
+              "assemblySha256": "72bddc379a1a9a7bf92f5b6a18672bc48d4b3769a50a8bc221220687bc51da33"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 6,
+                "tapeRequestedBytes": 131176,
+                "peakTapeBytes": 131176,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 49164,
+                "requestedBytes": 1507455,
+                "retains": 8198,
+                "peakChargedBytes": 819240,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                2624544,
+                2246891,
+                2351443,
+                2380210,
+                2290199,
+                2296464,
+                2262849
+              ],
+              "medianProcessWallNs": 2296464,
+              "generatedSha256": "345fa6ce6918519eea99872c315d18a8e0acba6511cfdd91d274b658fd11e252",
+              "binarySha256": "21f1a308f137281e611b12d9b736f19dff689cf27ccd336176dad7b510c55dfe",
+              "assemblySha256": "8f141fb73ebc392a3bbd2d51eb64e1a76cec6c0e0039af955c5a0bd0054782ce"
+            }
+          }
+        },
+        "map": {
+          "source": "main = range 0 4096 | map int.to-float | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "7abeb9fe1cc255c4a4e6f3c47cc220fb4d0cd6b23e2d1afccac549d63ece2093",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 30,
+                "tapeRequestedBytes": 260712,
+                "peakTapeBytes": 163944,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 61456,
+                "requestedBytes": 1900735,
+                "retains": 20489,
+                "peakChargedBytes": 819304,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                3051282,
+                2759255,
+                2966816,
+                2728937,
+                2750880,
+                2846752,
+                2733897
+              ],
+              "medianProcessWallNs": 2759255,
+              "generatedSha256": "0f24c84fb4c981ed9f2a15c3ff9d26f5225a6579d0417c9441d8cb6702852201",
+              "binarySha256": "bb7046cb44c19ff3805ebd5faa45cee0e9df851e29534cbaedb4fe1f51f22a41",
+              "assemblySha256": "c463b15997544f748a181ab7bfe0c052038acf571a6a0d7d255b7574748d0a9e"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 10,
+                "tapeRequestedBytes": 360552,
+                "peakTapeBytes": 262248,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 61456,
+                "requestedBytes": 1900735,
+                "retains": 20489,
+                "peakChargedBytes": 819304,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                2921699,
+                2632480,
+                2770734,
+                2737976,
+                2593842,
+                3305993,
+                2771566
+              ],
+              "medianProcessWallNs": 2770734,
+              "generatedSha256": "3fc6452760edd812bca059c23b92d0e1529936739f8723249c7f96f80967c5ce",
+              "binarySha256": "f98d611fe5ed27415ccd12b32aa16250087782e8022f878093d8d2c619924aae",
+              "assemblySha256": "bc6a3885260a1f608037b5caa64955878cf6f4a4606bbcac001127a13ba7b3b8"
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "sourceSha256": "9f8320c6f38313d52267beae2c3043f42750c9a681684ea537510c1b55e12e43",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 21,
+                "tapeRequestedBytes": 28000,
+                "peakTapeBytes": 16632,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 4415,
+                "requestedBytes": 131516,
+                "retains": 2119,
+                "peakChargedBytes": 60096,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                1342522,
+                1262336,
+                3594036,
+                1145152,
+                1130465,
+                1248760,
+                1017393
+              ],
+              "medianProcessWallNs": 1248760,
+              "generatedSha256": "6aac112aede4180aa1f6016f00953352f4a29407b4849a273f80d319bdd385af",
+              "binarySha256": "b6fcd2fb07bcace21e38a17bde7e67bd8dc32a4c020bcd55d3e8e13d35f066c7",
+              "assemblySha256": "88ed02484a813c6151cbcaf56b99144a90d464d2311530b0a701ffef2cd92874"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 19,
+                "tapeRequestedBytes": 53600,
+                "peakTapeBytes": 28920,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 4416,
+                "requestedBytes": 142780,
+                "retains": 2119,
+                "peakChargedBytes": 64192,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                1334826,
+                1300773,
+                1105762,
+                1109786,
+                1133217,
+                1102858,
+                1426300
+              ],
+              "medianProcessWallNs": 1133217,
+              "generatedSha256": "561a50c8222542f8d4bf1f0a2c0deb4721d7593a6fd16c16cd3c422c87236e3a",
+              "binarySha256": "e5ac7f3e4688adc1306d42559d88e7675b790801f1ad98d1e6009a88ce85ba67",
+              "assemblySha256": "51a6551685f45a303b77e8c52cfceb98047e2cb87ae16656da599c8aaa8022a6"
+            }
+          }
+        }
+      },
+      "scope": "Identical ARC programs and compiler, workspace disabled. The control reserves operation capacity for input placeholders at creation and growth; logical offsets and arithmetic remain identical. This isolates storage, not all old-code costs. Native tape buffers and charged managed storage are counted separately. Process timings include startup/output; no speedup threshold. Allocator metadata and OS reservations are excluded.",
+      "artifactHost": "linux-arm"
+    },
+    {
+      "head": "31b9d8d2cd195f58675f45a62ccf7a77a47546e7",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sjc22-bt152-7ed2eec2-4649-4e8b-9f1f-a21c54f3520f-CA46FB3FB131.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "results": {
+        "identity": {
+          "source": "main = range 0 4096 | map int.to-float | vjp id (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "15028a9fbc44b520360831c83a7e8a22a3de70c4867e661a876dcb41d6263ecc",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 2,
+                "tapeRequestedBytes": 32872,
+                "peakTapeBytes": 32872,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 49164,
+                "requestedBytes": 1507455,
+                "retains": 8198,
+                "peakChargedBytes": 819240,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                7004916,
+                5836417,
+                6569750,
+                7458000,
+                4894000,
+                5278666,
+                4701750
+              ],
+              "medianProcessWallNs": 5836417,
+              "generatedSha256": "ee11f0c9c5d3c845cae11ee740101ccf52f3cc61d901114a12b3c1bc64761f78",
+              "binarySha256": "8e388faa635d6fd67f27d38a02b69ce85f4e933966f3fac8b12bd4c1c37adb8a",
+              "assemblySha256": "c93560a36e1579c7a3f382228fd6b77ac7ed444a87803948bc422edce1e04514"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 6,
+                "tapeRequestedBytes": 131176,
+                "peakTapeBytes": 131176,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 49164,
+                "requestedBytes": 1507455,
+                "retains": 8198,
+                "peakChargedBytes": 819240,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                13051917,
+                8597542,
+                6311333,
+                5397875,
+                9509583,
+                5528125,
+                5399959
+              ],
+              "medianProcessWallNs": 6311333,
+              "generatedSha256": "345fa6ce6918519eea99872c315d18a8e0acba6511cfdd91d274b658fd11e252",
+              "binarySha256": "130ef55e5363ff1d99abc4dc5822baacdd73708fbba768cda5da8bd9b0b36ace",
+              "assemblySha256": "ea3d8655270782819859991f1683cdb590802022bd3e403a1e162dcbde51c991"
+            }
+          }
+        },
+        "map": {
+          "source": "main = range 0 4096 | map int.to-float | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "7abeb9fe1cc255c4a4e6f3c47cc220fb4d0cd6b23e2d1afccac549d63ece2093",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 30,
+                "tapeRequestedBytes": 260712,
+                "peakTapeBytes": 163944,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 61456,
+                "requestedBytes": 1900735,
+                "retains": 20489,
+                "peakChargedBytes": 819304,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                7010375,
+                8181083,
+                5518958,
+                8913000,
+                8619833,
+                5838584,
+                4837250
+              ],
+              "medianProcessWallNs": 7010375,
+              "generatedSha256": "0f24c84fb4c981ed9f2a15c3ff9d26f5225a6579d0417c9441d8cb6702852201",
+              "binarySha256": "64490d623b7e34473822baee8d60b12f0e78a0eb6949414b665ac6e18c2291d1",
+              "assemblySha256": "7d3e585f7ba513b0a1bfe2ada9a5a26c4e548bd2af805a3f5f14e940f52faeea"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 10,
+                "tapeRequestedBytes": 360552,
+                "peakTapeBytes": 262248,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 61456,
+                "requestedBytes": 1900735,
+                "retains": 20489,
+                "peakChargedBytes": 819304,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                10947125,
+                5555584,
+                5807125,
+                7397417,
+                7157291,
+                5694542,
+                6270000
+              ],
+              "medianProcessWallNs": 6270000,
+              "generatedSha256": "3fc6452760edd812bca059c23b92d0e1529936739f8723249c7f96f80967c5ce",
+              "binarySha256": "c0dc0d3d380bc9fc65b9c842fa8de7c87b7f28d4274f4b2b08941fc29daa6e1b",
+              "assemblySha256": "dc5fd0a17d7016c87ca63e6ef1b5e107b54ae64a5e3e33d28630a996fd6088e5"
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "sourceSha256": "9f8320c6f38313d52267beae2c3043f42750c9a681684ea537510c1b55e12e43",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 21,
+                "tapeRequestedBytes": 28000,
+                "peakTapeBytes": 16632,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 4415,
+                "requestedBytes": 131516,
+                "retains": 2119,
+                "peakChargedBytes": 60096,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                15671333,
+                7380959,
+                10453542,
+                8808792,
+                5142208,
+                10494958,
+                5208166
+              ],
+              "medianProcessWallNs": 8808792,
+              "generatedSha256": "6aac112aede4180aa1f6016f00953352f4a29407b4849a273f80d319bdd385af",
+              "binarySha256": "fa011679c6bb22426f52fff591c68eb321a1a938120254b3409d5767b59f6ba8",
+              "assemblySha256": "70515cc4ecfae7030907b78ad5d04ae6d1289c4a591702145b8d8cc6ce34a6ab"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 19,
+                "tapeRequestedBytes": 53600,
+                "peakTapeBytes": 28920,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 4416,
+                "requestedBytes": 142780,
+                "retains": 2119,
+                "peakChargedBytes": 64192,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                8330917,
+                10709167,
+                8362334,
+                9536291,
+                6857958,
+                7078417,
+                10596791
+              ],
+              "medianProcessWallNs": 8362334,
+              "generatedSha256": "561a50c8222542f8d4bf1f0a2c0deb4721d7593a6fd16c16cd3c422c87236e3a",
+              "binarySha256": "e643980e292ec4060bc362f7eb1a5daf1a819146634802a83b21242ff8a37a21",
+              "assemblySha256": "717f013c021bc1e0dc3cda617667041a8c8ccf1d5475b1135e650095bbc2c082"
+            }
+          }
+        }
+      },
+      "scope": "Identical ARC programs and compiler, workspace disabled. The control reserves operation capacity for input placeholders at creation and growth; logical offsets and arithmetic remain identical. This isolates storage, not all old-code costs. Native tape buffers and charged managed storage are counted separately. Process timings include startup/output; no speedup threshold. Allocator metadata and OS reservations are excluded.",
+      "artifactHost": "mac-arm"
+    },
+    {
+      "head": "31b9d8d2cd195f58675f45a62ccf7a77a47546e7",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sat12-jr307-030a1762-ec26-4de6-96db-9f2428c54265-FE1D315EC730.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "machine": "x86_64",
+        "processor": "i386"
+      },
+      "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "results": {
+        "identity": {
+          "source": "main = range 0 4096 | map int.to-float | vjp id (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "15028a9fbc44b520360831c83a7e8a22a3de70c4867e661a876dcb41d6263ecc",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 2,
+                "tapeRequestedBytes": 32872,
+                "peakTapeBytes": 32872,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 49164,
+                "requestedBytes": 1507455,
+                "retains": 8198,
+                "peakChargedBytes": 819240,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                10983454,
+                9295925,
+                8608051,
+                9220014,
+                9098434,
+                10599415,
+                11356874
+              ],
+              "medianProcessWallNs": 9295925,
+              "generatedSha256": "ee11f0c9c5d3c845cae11ee740101ccf52f3cc61d901114a12b3c1bc64761f78",
+              "binarySha256": "2735765dc5d739e6de4b3cfdeec5635ec450e7d3a61dfd4476cd482b17e92da4",
+              "assemblySha256": "8c02168e81787f63118f5ae08ccbf34e8813ee7e164233177a3f007d661d39f6"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 6,
+                "tapeRequestedBytes": 131176,
+                "peakTapeBytes": 131176,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 49164,
+                "requestedBytes": 1507455,
+                "retains": 8198,
+                "peakChargedBytes": 819240,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/identity-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                11112658,
+                11194626,
+                9444425,
+                10908694,
+                10958382,
+                10558239,
+                11962408
+              ],
+              "medianProcessWallNs": 10958382,
+              "generatedSha256": "345fa6ce6918519eea99872c315d18a8e0acba6511cfdd91d274b658fd11e252",
+              "binarySha256": "fac7e8ff1b315ae2025827f1ea223ec189014278175c0bebe6317d571f8471bf",
+              "assemblySha256": "05d3e0e255a0286e81463dd84007da5059d51faf622c5d7e15f6fb170c1a83a7"
+            }
+          }
+        },
+        "map": {
+          "source": "main = range 0 4096 | map int.to-float | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "7abeb9fe1cc255c4a4e6f3c47cc220fb4d0cd6b23e2d1afccac549d63ece2093",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 30,
+                "tapeRequestedBytes": 260712,
+                "peakTapeBytes": 163944,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 61456,
+                "requestedBytes": 1900735,
+                "retains": 20489,
+                "peakChargedBytes": 819304,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                12968344,
+                11884321,
+                11111744,
+                12462994,
+                11135131,
+                10535262,
+                10786598
+              ],
+              "medianProcessWallNs": 11135131,
+              "generatedSha256": "0f24c84fb4c981ed9f2a15c3ff9d26f5225a6579d0417c9441d8cb6702852201",
+              "binarySha256": "fc171578b26983db3c171922755c20f050d08b44323886c553725283c6687015",
+              "assemblySha256": "0584e58499817baadebdf25bb057a27ec87e43229aa159db70593af7a00591ce"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 10,
+                "tapeRequestedBytes": 360552,
+                "peakTapeBytes": 262248,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 61456,
+                "requestedBytes": 1900735,
+                "retains": 20489,
+                "peakChargedBytes": 819304,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/map-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                14106887,
+                12219986,
+                12149333,
+                10437435,
+                11109427,
+                11400890,
+                11462516
+              ],
+              "medianProcessWallNs": 11462516,
+              "generatedSha256": "3fc6452760edd812bca059c23b92d0e1529936739f8723249c7f96f80967c5ce",
+              "binarySha256": "9832d98ae1712c9156e0e2a36d3fe2290231989a0783844e235c30dc8ea50a9b",
+              "assemblySha256": "30d6272eac1cbd5ec4cb894cc13e190134b5d20d75b876226094b487d3747156"
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "sourceSha256": "9f8320c6f38313d52267beae2c3043f42750c9a681684ea537510c1b55e12e43",
+          "cases": {
+            "operations": {
+              "tape": {
+                "tapeRequests": 21,
+                "tapeRequestedBytes": 28000,
+                "peakTapeBytes": 16632,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 4415,
+                "requestedBytes": 131516,
+                "retains": 2119,
+                "peakChargedBytes": 60096,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-operations-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                8478383,
+                8023209,
+                7685450,
+                7525014,
+                8643384,
+                7953604,
+                8219922
+              ],
+              "medianProcessWallNs": 8023209,
+              "generatedSha256": "6aac112aede4180aa1f6016f00953352f4a29407b4849a273f80d319bdd385af",
+              "binarySha256": "312e3b2c2b1bb74c0b9c00e6f5fb9e38412fbb83fc228eff74204c7482a3dfa8",
+              "assemblySha256": "4d4ae3f166a5eeaaa081d8a8d940133153d03a8ed65105676d4053106e2f549c"
+            },
+            "input-capacity-control": {
+              "tape": {
+                "tapeRequests": 19,
+                "tapeRequestedBytes": 53600,
+                "peakTapeBytes": 28920,
+                "finalTapeBytes": 0
+              },
+              "managed": {
+                "requests": 4416,
+                "requestedBytes": 142780,
+                "retains": 2119,
+                "peakChargedBytes": 64192,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/operations/nested-input-capacity-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "processWallNs": [
+                8223298,
+                7916794,
+                9071836,
+                7351649,
+                8014513,
+                8858397,
+                8271107
+              ],
+              "medianProcessWallNs": 8223298,
+              "generatedSha256": "561a50c8222542f8d4bf1f0a2c0deb4721d7593a6fd16c16cd3c422c87236e3a",
+              "binarySha256": "4649c3f858749c8a4bd8d2756fa9cd336debcade6155c6ec37a5788d9652182c",
+              "assemblySha256": "beb35a184eb99a25793f538889665d514ad77864e65e68296b74bcf465c1e82e"
+            }
+          }
+        }
+      },
+      "scope": "Identical ARC programs and compiler, workspace disabled. The control reserves operation capacity for input placeholders at creation and growth; logical offsets and arithmetic remain identical. This isolates storage, not all old-code costs. Native tape buffers and charged managed storage are counted separately. Process timings include startup/output; no speedup threshold. Allocator metadata and OS reservations are excluded.",
+      "artifactHost": "mac-intel"
+    }
+  ],
+  "artifacts": {
+    "linux-amd": 11940702875,
+    "linux-arm": 11940707776,
+    "mac-arm": 11941045526,
+    "mac-intel": 11942080039
+  },
+  "validation": "All four operation-storage measurement steps pass at 31b9d8d2. The focused test step failed on stale input-allocation fixtures and a negative-control descriptor lifetime; later test-only fixes require final-head production CI. Compiler/runtime sources are unchanged.",
+  "binaryInspection": {
+    "linux-amd": "map f67 subtracts the input count into r15 at a463 before capacity checks and metadata addressing. f113 adjusts the four metadata bases once at d217-d23d, uses 32-bit parent loads and separate mulsd/addsd in the descending loop.",
+    "linux-arm": "map f67 computes operation offset with sub x28,x27,x8 at 9208. f113 hoists scaled input offsets into metadata bases before be60; ldr w13 loads parents and fmul/fadd remain separate.",
+    "mac-arm": "map _f67 computes sub x26,x25,x8 at 0x100006b08. _f113 adjusts bases at 0x100009d90-0x100009dac, then uses 32-bit parents and separate fmul/fadd while descending.",
+    "mac-intel": "map _f67 subtracts the input count into rbx at 0x1000079c9. _f113 adjusts metadata bases once at 0x10000b2b3-0x10000b2d5; movslq reads 32-bit parents, with separate mulsd/addsd."
+  }
+}

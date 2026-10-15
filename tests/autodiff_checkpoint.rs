@@ -176,7 +176,7 @@ fn checkpoint_tapes_are_bounded_and_released_without_collection() {
             if checkpointed {
                 assert!(peak <= 64, "{peak}");
             } else {
-                assert!(peak >= 4097, "{peak}");
+                assert_eq!(peak, 4096, "only recorded operations need metadata");
             }
             peaks.push((checkpointed, opt, peak));
             if checkpointed {

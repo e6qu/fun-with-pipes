@@ -38,7 +38,7 @@ int main(void) {
     }
     /* Managed inputs also have no metadata. Fail the second actual retain,
      * recover with the tape still live, then successfully reuse its first slot. */
-    const fwp_desc element={.kind=K_I64,.dup=operation_dup,.drop=operation_drop};
+    static const fwp_desc element={.kind=K_I64,.dup=operation_dup,.drop=operation_drop};
     operation_parameters=fwp_record(4,(V[4]){0,0,0,0});
     for (int i=0;i<65;i++) operation_inputs=fwp_cons(0,operation_inputs);
     V base=fwp_p_ad_tape_owned(operation_parameters,operation_inputs,&element);

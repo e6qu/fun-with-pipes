@@ -63,6 +63,39 @@ The artifact records compiler/flags, hardware, raw samples, allocation counts,
 source/binary/disassembly hashes and native instruction inspection. Generated C,
 binaries and disassembly are retained by the linked runner artifacts.
 
+## Operation-only autodiff metadata
+
+[Four-host measurements](measurements/ad-operations-2026-10-15.json) compare
+identical ARC programs with operation-only capacity and a control that also
+reserves capacity for inputs. All four Linux/macOS hosts report these counts:
+
+| Workload | Input count | Native tape peak, control → operations | Native allocation requests, control → operations |
+|---|---:|---:|---:|
+| Identity VJP | 4,096 | 131,176 → 32,872 bytes | 6 → 2 |
+| Mapped VJP | 4,096 | 262,248 → 163,944 bytes | 10 → 30 |
+| Nested gradient | 256 | 28,920 → 16,632 bytes | 19 → 21 |
+
+Numeric managed allocation counts and peak storage are unchanged. The nested
+case also reduces requested managed bytes 142,780 → 131,516 and peak charged
+managed storage 64,192 → 60,096 bytes. Native and managed peaks are measured
+separately and must not be added as a simultaneous peak. Every measured owner
+is reclaimed, with zero collections and zero final charged/native tape bytes.
+
+The smaller cold operation buffers grow geometrically. This increases growth
+requests in the mapped and nested workloads, despite lower requested bytes and
+peak storage; warm workspace reuse remains bounded by the existing budget.
+Seven-sample process timings vary by host and workload, so no consistent speedup
+is claimed. The control changes reserved capacity, not the new logical offsets;
+it isolates storage rather than reproducing every cost of the previous code.
+
+Native instruction inspection on all four hosts shows a register subtraction
+for operation offsets and hoisted metadata-base adjustment in backward loops.
+Parent loads remain 32-bit, weights 64-bit, and multiplication/addition remain
+separate. The report retains hardware/compiler/flags, raw samples and verified
+source/binary/disassembly hashes. Measurement steps passed; the focused run's
+fixture failures and their corrections are recorded in the handoff. Production
+acceptance requires the final PR head's full checks.
+
 ## Running comparisons
 
 Run full workloads on GitHub runners. `bench/<name>/` contains fwp, C and Rust

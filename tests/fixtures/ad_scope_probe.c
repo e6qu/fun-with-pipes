@@ -13,7 +13,10 @@ static void scope_probe_free(void *p) {
 static void *scope_probe_calloc(size_t n,size_t size) {
     void *p=calloc(n,size);scope_tracked[8]=p;return p;
 }
-static void scope_observe(V base,int offset) {
+static void scope_record_and_observe(V base,int offset) {
+    /* Scope cleanup must own real operation buffers, not input placeholders. */
+    struct { uint32_t tag,n; V fields[4]; } tuple={0,4,{base,fwp_from_f64(1),(V)(int64_t)-1,0}};
+    fwp_p_ad_push(PTR(&tuple));
     fwp_tape *t=fwp_tape_of((int64_t)base>>32);
     scope_tracked[offset]=t->pa;scope_tracked[offset+1]=t->pb;
     scope_tracked[offset+2]=t->da;scope_tracked[offset+3]=t->db;
@@ -21,12 +24,12 @@ static void scope_observe(V base,int offset) {
 static fwp_clo inner_scope_callback={1,0};
 static V scope_inner_entry(V *args) {
     (void)args;
-    scope_inner=fwp_p_ad_tape(3);scope_observe(scope_inner,4);
+    scope_inner=fwp_p_ad_tape(3);scope_record_and_observe(scope_inner,4);
     return 11;
 }
 static V scope_outer_entry(V *args) {
     (void)args;
-    scope_base=fwp_p_ad_tape(2);scope_observe(scope_base,0);
+    scope_base=fwp_p_ad_tape(2);scope_record_and_observe(scope_base,0);
 #if FWP_ARC_ONLY
     if (fwp_gc.armed || fwp_gc.ncollect) scope_error=65;
 #else
@@ -43,7 +46,7 @@ static V scope_outer_entry(V *args) {
     }
     if (scope_mode==4 && fwp_p_ad_scope(PTR(&inner_scope_callback), FWP_UNIT)!=11) scope_error=66;
     if (scope_mode==5) {
-        scope_inner=fwp_p_ad_tape(3);scope_observe(scope_inner,4);
+        scope_inner=fwp_p_ad_tape(3);scope_record_and_observe(scope_inner,4);
     }
     return 7;
 }

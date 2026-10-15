@@ -14,8 +14,13 @@ The user requested continued development. The current follow-up removes input
 placeholders from numeric and managed autodiff operation buffers. Inputs keep
 their existing node indices and adjoints; only recorded operations need parent
 and derivative storage. Include partial derivative-retain cleanup, regression
-controls, four-host memory/binary evidence and the updated handoff in one PR.
-Delivery requires all nine final-head production jobs and documentation.
+controls, four-host memory/binary evidence and the updated handoff in
+[PR #138](https://github.com/e6qu/fun-with-pipes/pull/138).
+[Four-host measurements](docs/measurements/ad-operations-2026-10-15.json) show
+lower peak storage for identity, mapped and nested gradients, with more cold
+growth requests in the latter two and no consistent speedup. Delivery requires
+all nine final-head production jobs and documentation. Once PR #138 merges with
+those gates, step 8 is complete; historical anchors are not further work.
 [The handoff](docs/development-state.md) records actual checks and next actions.
 
 ## Direction
