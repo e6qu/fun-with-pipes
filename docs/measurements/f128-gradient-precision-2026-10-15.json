@@ -1,0 +1,243 @@
+{
+  "head": "7a463be9f3b2e5a73e27cccc689a55da3a460f1f",
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546",
+  "validation": "All four hosts passed the precision probe and existing nested/checkpoint/scope/ownership/capacity/library/float regressions, formatting and Clippy.",
+  "workload": "Ten checks: forward/reverse low bits, VJP seed precision, tiny and huge finite exponents, accumulated low terms, first/second derivatives, checkpoint replay, and 65 repeated gradients. Counts cover the full fixture after constant initialization, including output formatting.",
+  "accounting": "Managed allocation requests and requested bytes exclude unmanaged registry, linked-library and host allocations. Final charged delta compares managed budget before execution with teardown; ARC must be zero. Tracing can also release preexisting constants. No peak process memory or elapsed-time claim; these totals are not a C/Rust comparison.",
+  "flags": "Native O1 and O2; workspace reuse disabled/enabled. Tracing uses GC stress/verification and reuse verification; ARC requires no tracing. Deliberately omitted tape free must fail.",
+  "sourceHashes": {
+    "tests/fixtures/quad_gradient_precision.fwp": "fec39f027a890f5ba7625242162410b20a6e19aed55e4adab36b4482d8aaba88",
+    "tests/autodiff_precision.rs": "02f0989f702b0c4b5bb61b9c0fc00e6569cb2464973a875e0860c4c51cf8a86b",
+    "lib/autodiff.fwp": "18f19dc999f8453316ce2bd16d79bbe9531e7d89fcc3b8cd3e3efe5c734326c4"
+  },
+  "hosts": {
+    "precision-macos-15": {
+      "environment": "Darwin sjc20-bb711-0dd982bd-6794-4703-b599-b068008cda1f-E270572F4303.local 24.6.0 Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE arm64\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\nApple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "profiles": {
+        "arc-O1-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O1-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O2-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O2-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "tracing-O1-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O1-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O2-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O2-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        }
+      },
+      "emittedSourceHashes": {
+        "arc.c": "c67ba860129baf3f0147fc6c872d356be17ebb81de931dc7f0744d33107a67f1",
+        "tracing.c": "97d36134215240514baad64051ac26b4f02603830e2654bfc0eb143a3265a3d8"
+      }
+    },
+    "precision-macos-15-intel": {
+      "environment": "Darwin iad01-ar515-1f68b13e-09bb-44f0-a64a-cb9ce6178fcd-7648BFEFCDE4.local 24.6.0 Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64 x86_64\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\nApple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "profiles": {
+        "arc-O1-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O1-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O2-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O2-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "tracing-O1-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O1-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O2-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O2-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        }
+      },
+      "emittedSourceHashes": {
+        "arc.c": "c67ba860129baf3f0147fc6c872d356be17ebb81de931dc7f0744d33107a67f1",
+        "tracing.c": "97d36134215240514baad64051ac26b4f02603830e2654bfc0eb143a3265a3d8"
+      }
+    },
+    "precision-ubuntu-24.04-arm": {
+      "environment": "Linux runnervmidgih 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\nUbuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "profiles": {
+        "arc-O1-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O1-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O2-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O2-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "tracing-O1-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O1-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O2-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O2-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        }
+      },
+      "emittedSourceHashes": {
+        "arc.c": "c67ba860129baf3f0147fc6c872d356be17ebb81de931dc7f0744d33107a67f1",
+        "tracing.c": "97d36134215240514baad64051ac26b4f02603830e2654bfc0eb143a3265a3d8"
+      }
+    },
+    "precision-ubuntu-latest": {
+      "environment": "Linux runnervm8k3b6 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\nUbuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "profiles": {
+        "arc-O1-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O1-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O2-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "arc-O2-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": 0,
+          "collections": 0
+        },
+        "tracing-O1-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O1-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O2-cache0": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        },
+        "tracing-O2-cache1": {
+          "managedRequests": 2843,
+          "managedRequestedBytes": 143082,
+          "finalChargedDelta": -352,
+          "collections": 1620
+        }
+      },
+      "emittedSourceHashes": {
+        "arc.c": "c67ba860129baf3f0147fc6c872d356be17ebb81de931dc7f0744d33107a67f1",
+        "tracing.c": "97d36134215240514baad64051ac26b4f02603830e2654bfc0eb143a3265a3d8"
+      }
+    }
+  }
+}

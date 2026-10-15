@@ -39,6 +39,37 @@ list. The reverse example deliberately uses only the first input. `xs` in the
 last row is a placeholder for the vector from tutorial 20, not a global library
 variable.
 
+## Dense F64 solvers
+
+A dense matrix stores every element, including zeros. The existing solvers use
+F64 arithmetic and copy input elements into temporary buffers so the original
+immutable arrays, including slices, remain unchanged. They perform no automatic
+precision conversion or differentiation of the solver itself.
+
+| Operation | Result | Temporary storage, excluding returned arrays |
+|---|---|---|
+| LU solve | Solve `A x = b`; `None` for a singular matrix | Matrix copy and one vector |
+| Determinant | Scalar measure of a square matrix; zero when singular | Matrix copy |
+| Inverse | Matrix that reverses multiplication; `None` when singular | Two matrices |
+| Cholesky | Lower triangular factor for a positive definite matrix; `None` when a diagonal step is nonpositive | Two matrices |
+| QR | Orthogonal columns and an upper triangular factor | An `m` by `n` matrix and an `n` by `n` matrix |
+| Conjugate gradient | Iterative solution for a symmetric positive definite system | Matrix copy and four vectors |
+
+For `n` by `n` inputs, a matrix buffer contains `n*n` doubles and a vector
+contains `n` doubles. Buffers also reserve one extra double for zero-length
+allocation safety. Dimensions and input lengths are checked before arithmetic.
+QR separately checks the square output size: even zero input rows must not allow
+an enormous column count to overflow output allocation.
+
+The native implementation now owns these buffers explicitly and releases them
+on return, singular-result paths and unwinding. Partial result arrays remain
+protected until their containing result is constructed. Checked ARC contracts
+cover all six primitives; validation of this new batch is tracked in the
+[session handoff](development-state.md). These are existing algorithms with
+unchanged arithmetic order, not a claim of BLAS-level speed or improved numerical
+stability. Conjugate gradient keeps its explicit iteration limit and tolerance;
+it does not automatically switch algorithms on difficult inputs.
+
 ## Forward mode
 
 `Dual[T] = { re: T, eps: T }` pairs a value (`re`) with its derivative (`eps`).
@@ -72,11 +103,11 @@ An **adjoint** is the derivative accumulated for a recorded value during that
 backward pass. A **primal** value is the ordinary value before considering its
 derivative. Local partial derivatives are the weights on parent dependencies.
 
-`ReverseScalar` supports the five float types and recursively `Rev[T]`. Base-float
-reverse tapes accumulate adjoints in F64 and convert results back to the element
-type. This is a precision choice, including for F128; it does not promise an
-F128-precision gradient. Nested reverse levels keep typed weights and record
-backward arithmetic on the enclosing tape. A `Float[T]` constraint alone does
+`ReverseScalar` supports the five float types and recursively `Rev[T]`.
+F16/BF16/F32/F64 tapes accumulate adjoints in F64 and convert results back to the
+element type. F128 weights, seeds and adjoints remain F128, preserving its wider
+precision and exponent range. Nested reverse levels keep typed weights and
+record backward arithmetic on the enclosing tape. A `Float[T]` constraint alone does
 not describe this nested behavior; generic reverse callers use `ReverseScalar[T]`.
 Comparisons use primal values, so a piecewise program differentiates the branch
 actually taken. This does not define a smooth derivative at every branch boundary.
@@ -97,10 +128,22 @@ alive. Child tasks start independent derivative scopes.
 
 ### Tape layout and reuse
 
-A base-float operation stores two 32-bit parent indices and two F64 local
+An F16/BF16/F32/F64 operation stores two 32-bit parent indices and two F64 local
 derivatives: 24 payload bytes before adjoint storage, spare capacity and allocator
-metadata. Inputs have node indices but need no operation records. Nested tapes
-instead own typed derivative values and operation callbacks. A failed append
+metadata. Inputs have node indices but need no operation records. F128 and nested
+tapes instead own typed derivative values and operation callbacks. F128 values
+can require separately allocated boxes and reference counts; the 24-byte figure
+does not describe their complete storage cost. Preserving precision is not a
+claim of equal speed or allocation cost.
+
+The [four-host precision report](measurements/f128-gradient-precision-2026-10-15.json)
+covers ten checks, including low bits, exponent range, nested/checkpointed
+arithmetic and 65 repeated gradients. The complete fixture makes 2,843 managed
+allocation requests for 143,082 requested bytes after initialization, including
+output formatting. Checked ARC finishes with zero retained charge and no
+collections at O1/O2 with workspace reuse off/on. These totals exclude unmanaged
+registry, linked-library and host allocations; they measure neither peak process
+memory nor speed relative to C/Rust. A failed append
 releases partially acquired owners without publishing an incomplete record.
 
 The vertex token encodes `(tape id << 32) | index`, with −1 for constants.
@@ -148,9 +191,10 @@ step is evaluated twice. Zero steps return the seeds without invoking the step;
 seed length must match the final output. A forward trap stops before replay.
 There is no implicit interval or automatic recomputation in ordinary `vjp`.
 
-Each segment follows VJP precision: F64 adjoints converted back to the element
-type. Narrow types can round at segment boundaries, so a checkpointed result
-need not match a single unsegmented accumulation bit for bit.
+Each segment follows VJP precision: F16/BF16/F32/F64 adjoints accumulate in F64,
+while F128 adjoints remain F128. Narrow types can round at segment boundaries,
+so a checkpointed result need not match a single unsegmented accumulation bit
+for bit.
 
 The [4096-step measurement](measurements/checkpoint-2026-10-14.json) compares
 checkpoint interval 32 with ordinary fwp VJP under ARC, with cache reuse off.

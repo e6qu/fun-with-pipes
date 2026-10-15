@@ -105,7 +105,19 @@ for symbol in ['prim.add', 'prim.sub', 'prim.mul', 'prim.div', 'prim.rem',
 bundle_contracts['min'] = bundle_contracts['max'] = (2, 'SelectedArgument', [0, 1])
 bundle_contracts['csv.parse-with'] = (2, 'OwnedTree', [])
 bundle_contracts['cli.parse'] = (2, 'OwnedTree', [])
+for symbol in ['lines', 'read-line', 'read-lines', 'read-all', 'args', 'env.get', 'env.vars', 'dir.list']:
+    bundle_contracts[symbol] = (1, 'OwnedTree', [])
+for symbol in ['dir.create-all', 'dir.create', 'dir.remove', 'file.remove', 'file.exists', 'file.is-dir']:
+    bundle_contracts[symbol] = (1, 'Shared', [])
+for symbol in ['file.rename', 'file.append', 'file.write-bytes']:
+    bundle_contracts[symbol] = (2, 'Shared', [])
+bundle_contracts['file.read-bytes'] = (1, 'FreshLeaf', [])
+bundle_contracts['file.info'] = (1, 'OwnedTree', [])
 bundle_contracts['list.transpose'] = (1, 'CopiedStructure', [0])
+for symbol, arity in [('linalg.lu-solve', 3), ('linalg.inverse', 2),
+                      ('linalg.cholesky', 2), ('linalg.qr', 3), ('linalg.cg', 5)]:
+    bundle_contracts[symbol] = (arity, 'OwnedTree', [])
+bundle_contracts['linalg.det'] = (2, 'Numeric', [])
 for symbol in ['csv.decode', 'json.parse', 'json.read']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
 promoted = []
@@ -138,7 +150,9 @@ for row in rows:
         changed_symbols.add(row['symbol'])
         continue
     if row['symbol'] in bundle_contracts:
-        assert before['contract'] == 'None' and row['bucket'] == 'contract', (before, row)
+        expected_before = ('Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })'
+                           if row['symbol'] == 'lines' else 'None')
+        assert before['contract'] == expected_before and row['bucket'] == 'contract', (before, row)
         assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
         arity, result, aliases = bundle_contracts[row['symbol']]
         arguments = '[' + ', '.join(['Borrow'] * arity) + ']'

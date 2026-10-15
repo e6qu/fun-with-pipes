@@ -127,8 +127,8 @@ fn source_file_io_matches_the_unoptimized_interpreter() {
     std::fs::write(
         &source,
         format!(
-            "main = \"{}\" | file.open | file.read-all | .0 | echo\n",
-            data.display()
+            "main = {:?} | file.open | file.read-all | .0 | echo\n",
+            data.to_string_lossy()
         ),
     )
     .unwrap();

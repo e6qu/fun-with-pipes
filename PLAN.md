@@ -65,37 +65,43 @@ ownership and removal of GC are the primary design priority.
 | 1 | Remove tracing GC and limit ARC | Compile-time ownership, moves and borrows cover maintained program and deployment modes; shared ownership and cycles have an explicit policy; cleanup works on success, failure and cancellation; binaries exclude tracing; unshared hot paths avoid retain/release traffic; long-running memory remains bounded. |
 | 2 | Remove avoidable costs from functional code | Representative pipes, partial applications, closures, records, variants, iteration and state compile to direct calls and loops where their lifetimes/targets are known, without avoidable intermediate heap objects; remaining costs are measured and explained. |
 | 3 | Improve machine-level performance | Diagnose and reduce the largest equivalent-work C/Rust gaps on ARM64 and AMD64; inspect register use, spills, vector instructions, layout and cache behavior; preserve checked arithmetic, floating-point rules and failure order. |
-| 4 | Improve differentiation speed, memory and precision | Reproduce and address known timing regressions; reduce recording and workspace costs without losing correctness; show memory scaling across input sizes and nesting; decide and test gradient precision, including the current F64 accumulation for F128 inputs. |
+| 4 | Improve differentiation speed, memory and precision | Reproduce and address known timing regressions; reduce recording and workspace costs without losing correctness; show memory scaling across input sizes and nesting; preserve and validate F128 gradient precision; measure the typed representation's allocation and arithmetic costs. |
 | 5 | Strengthen numerical kernels | Benchmark arrays, reductions and matrix products across useful sizes/layouts; improve CPU kernels with documented accuracy and allocation costs; establish real-device evidence before claiming GPU execution support. |
 | 6 | Make performance comparisons dependable | Use current revisions, comparable algorithms and explicit arithmetic rules; vary run order and retain repeated samples; report elapsed time, allocations, live memory, compilation/startup cost and binary size; use repeatable regression criteria rather than noisy single timings. |
 | 7 | Validate the language with larger programs | Maintain numerical, collection-heavy and long-running applications; run them across supported targets and memory modes; use observed failures and friction to improve inference diagnostics, libraries, tooling and documentation without expanding syntax unnecessarily. |
 
-### First milestone: measured baseline and confirmed costs
+### Current delivery and next acceptance
 
-1. Resolve outstanding CI failures and establish a tested source revision.
-2. Select a bounded set of applications for step 7 and pair their hot operations
-   with equivalent C/Rust implementations for step 6. Document algorithms,
-   arithmetic and ownership differences before comparing speed.
-3. Reproduce the derivative-buffer slowdowns and the largest numerical gaps.
-   Measure allocation and retain/release traffic; inspect native instructions
-   before assigning a cause. Historical timings are starting hypotheses.
-4. Fix the largest confirmed avoidable cost, preserve a regression case, and
-   publish before/after results including any memory or portability tradeoff.
-5. Extend checked ownership to C library calls with copied inputs and
-   pointer-free results, and channels whose payloads cannot retain channel
-   handles or callbacks. Check every export independently; prove repeated-call,
-   failure, cancellation and unload cleanup. Give list transposition a checked
-   copy/cleanup contract so general matrix multiplication can enter checked ARC;
-   compare both memory modes against equivalent C/Rust kernels. Returned host
-   pointers still need an explicit
-   release policy before they can join this subset. Track validation in the
-   handoff; this is one boundary toward collector-free execution, not GC removal.
-6. Extend checked ownership to the existing linear-algebra solvers. Their native
-   scratch buffers currently rely on collection. Release scratch and partial
-   results on normal, singular-matrix and failure paths, and check QR's square
-   output size before multiplying dimensions or allocating. Compare raw
-   interpreter/native behavior and repeated-call memory for LU solve, determinant,
-   inverse, Cholesky, QR and conjugate gradient. Preserve arithmetic order.
+The C-library, channel and numerical-runtime delivery passed its full gate and
+merged in [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146). The current
+[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) combines:
+
+- Explicit scratch and result cleanup for six linear-algebra solvers, including
+  QR output-size validation and singular/failure cases.
+- F64 array-data borrowing proved invariant across loop iterations, measured
+  against the existing per-element access and equivalent C/Rust workloads.
+- F128 reverse-mode seeds, weights and adjoints without narrowing through F64.
+- Owned console input, argument and environment copies, with partial-result
+  cleanup and raw/native semantic comparisons.
+- Rejection of zero bytes in OS paths and environment names before prefix access;
+  counted I/O errors and portable file-resource regression probes.
+- Directory and environment snapshots with owned copies, temporary storage and
+  OS handles, including recursive-directory scratch cleanup.
+- Owned file metadata/byte reads and ordinary file actions; preserve timestamp
+  conversion, original write errors and host directory diagnostics. Exercise
+  repeated directory reports as composed ARC programs.
+
+Require actual tracing/ARC compiler builds, negative cleanup controls, stress and
+reuse tests, and all nine production jobs plus documentation for the final head.
+Focused preparation runs are evidence for their components, not this final gate.
+
+All six file-value hosts pass; the combined delivery still needs full production
+acceptance. The next measured target is a redundant retain/release when selecting
+an owned field from an unboxed numerical result. Prove a move preserves remaining
+fields, aliases, failure cleanup and resource lifetimes before changing emission.
+Afterward, select further ownership boundaries and confirmed application costs. Investigate derivative timing
+and memory scaling rather than assuming fewer allocations are always faster.
+Broaden long-running application coverage alongside these fixes.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

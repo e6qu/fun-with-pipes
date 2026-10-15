@@ -1,0 +1,45 @@
+# Each exported function keeps the input matrix available to its caller.
+export solve : Array[F64] -> Array[F64] -> Option[Array[F64]]
+solve = linalg.lu-solve 2
+export determinant2 : Array[F64] -> F64
+determinant2 = linalg.det 2
+export invert : Array[F64] -> Option[Array[F64]]
+invert = linalg.inverse 2
+export factor : Array[F64] -> Option[Array[F64]]
+factor = linalg.cholesky 2
+export orthogonalize : Array[F64] -> (Array[F64], Array[F64])
+orthogonalize = linalg.qr 2 2
+export iterative : Array[F64] -> Array[F64] -> Array[F64]
+iterative = linalg.cg 8 0.000001 2
+
+matrix : Array[F64]
+matrix = [4.0, 0.0, 0.0, 9.0] | array.from-list
+rhs : Array[F64]
+rhs = [8.0, 18.0] | array.from-list
+singular : Array[F64]
+singular = [1.0, 2.0, 2.0, 4.0] | array.from-list
+empty : Array[F64]
+empty = [] | array.from-list
+
+main = [
+    rhs | solve matrix | echo,
+    matrix | both id determinant2 | echo,
+    matrix | both id invert | echo,
+    matrix | both id factor | echo,
+    matrix | both id orthogonalize | echo,
+    rhs | iterative matrix | echo,
+    [99.0, 4.0, 0.0, 0.0, 9.0, 99.0] | array.from-list
+        | array.slice 1 4 | both id orthogonalize | echo,
+    rhs | linalg.cg 0 0.000001 2 matrix | echo,
+    rhs | solve singular | echo,
+    singular | invert | echo,
+    [1.0, 2.0, 2.0, 1.0] | array.from-list | factor | echo,
+    singular | determinant2 | echo,
+    empty | linalg.lu-solve 0 empty | echo,
+    empty | linalg.det 0 | echo,
+    empty | linalg.inverse 0 | echo,
+    empty | linalg.cholesky 0 | echo,
+    empty | linalg.qr 0 3 | echo,
+    empty | linalg.cg 0 0.000001 0 empty | echo,
+    matrix | attempt (orthogonalize | tap (const "after QR" | fail)) | echo,
+] | ignore

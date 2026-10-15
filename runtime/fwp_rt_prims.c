@@ -1158,24 +1158,32 @@ static V fwp_p_join(V sep, V xs) {
     return buf_to_str(&b);
 }
 
-static V fwp_lines_of(const char *d, size_t n) {
-    size_t cap = 8, k = 0, i = 0;
-    V *a = (V *)fwp_mem_alloc(cap * sizeof(V));
+static V fwp_lines_of(const char *d, size_t n, void (*drop_list)(V)) {
+    size_t cap = 8, i = 0;
+    fwp_map_owner owner = {(V *)fwp_mem_alloc(cap * sizeof(V)), 0, 0,
+                           fwp_rc_free_obj, drop_list};
+    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);
     while (i < n) {
         size_t j = i;
         while (j < n && d[j] != '\n') j++;
         size_t e = j;
         if (j < n && e > i && d[e - 1] == '\r') e--;
-        if (k == cap) { cap *= 2; a = (V *)fwp_mem_realloc(a, cap / 2 * sizeof(V), cap * sizeof(V)); }
-        a[k++] = fwp_str_new(d + i, e - i);
+        if (owner.count == cap) {
+            if (cap > SIZE_MAX / sizeof(V) / 2) fwp_trap("too many lines");
+            owner.items = (V *)fwp_mem_realloc(owner.items, cap * sizeof(V), cap * 2 * sizeof(V));
+            cap *= 2;
+        }
+        owner.items[owner.count] = fwp_rc_fresh(fwp_str_new(d + i, e - i));
+        owner.count++;
         i = j + 1;
     }
-    V r = fwp_list_from(a, k);
-    fwp_mem_free(a);
-    return r;
+    return fwp_map_finish_protected(&owner, &cleanup);
 }
 
-static V fwp_p_lines(V s) { return fwp_lines_of(STR(s)->d, STR(s)->len); }
+static V fwp_p_lines(V s, void (*drop_list)(V)) {
+    V result = fwp_lines_of(STR(s)->d, STR(s)->len, drop_list);
+    FWP_KEEP_ALIVE(s); return result;
+}
 
 static V fwp_p_words(V s) {
     const char *d = STR(s)->d;
@@ -2543,10 +2551,12 @@ static V fwp_p_ewrite(V s) {
 static V fwp_read_stdin_all(void) {
     fflush(stdout);
     fwp_buf b = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
     char tmp[65536];
     size_t n;
     while ((n = fread(tmp, 1, sizeof tmp, stdin)) > 0) buf_put(&b, tmp, n);
-    V r = fwp_str_lossy(b.d ? b.d : "", b.len);
+    V r = fwp_rc_fresh(fwp_str_lossy(b.d ? b.d : "", b.len));
+    fwp_cleanup_pop(&cleanup);
     free(b.d);
     return r;
 }
@@ -2554,37 +2564,66 @@ static V fwp_read_stdin_all(void) {
 static V fwp_p_read_line(void) {
     fflush(stdout);
     fwp_buf b = {0};
+    fwp_cleanup buffer_cleanup; fwp_cleanup_push(&buffer_cleanup, fwp_buf_release, &b);
     int c, any = 0;
     while ((c = fgetc(stdin)) != EOF) {
         any = 1;
         if (c == '\n') break;
         buf_putc(&b, (char)c);
     }
-    if (!any) { free(b.d); return FWP_NONE; }
+    if (!any) { fwp_cleanup_pop(&buffer_cleanup); free(b.d); return FWP_NONE; }
     if (b.len > 0 && b.d[b.len - 1] == '\r' && c == '\n') b.len--;
-    V r = fwp_str_lossy(b.d ? b.d : "", b.len);
+    V text = fwp_rc_fresh(fwp_str_lossy(b.d ? b.d : "", b.len));
+    fwp_cleanup_pop(&buffer_cleanup);
     free(b.d);
-    return fwp_some(r);
+    fwp_value_owner owner = {text, fwp_rc_free_obj}; fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+    V result = fwp_rc_fresh(fwp_some(text));
+    owner.value = 0;
+    (void)fwp_value_finish(&owner, &cleanup);
+    return result;
 }
 
-static V fwp_p_read_lines(void) {
-    V s = fwp_read_stdin_all();
-    return fwp_lines_of(STR(s)->d, STR(s)->len);
+static V fwp_p_read_lines(void (*drop_list)(V)) {
+    fwp_value_owner input = {fwp_read_stdin_all(), fwp_rc_free_obj};
+    fwp_cleanup cleanup; fwp_value_protect(&input, &cleanup);
+    V result = fwp_lines_of(STR(input.value)->d, STR(input.value)->len, drop_list);
+    FWP_KEEP_ALIVE(input.value);
+    fwp_rc_free_obj(fwp_value_finish(&input, &cleanup));
+    return result;
 }
 
-static V fwp_p_args(void) {
-    V r = 0;
-    for (int i = fwp_argc - 1; i >= 1; i--) r = fwp_cons(fwp_str_lossy(fwp_argv[i], strlen(fwp_argv[i])), r);
-    return r;
+static V fwp_p_args(void (*drop_list)(V)) {
+    /* Reuse the range builder's pending-element and completed-spine owner. */
+    fwp_range_owner owner = {0, 0, fwp_rc_free_obj, drop_list};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_range_release, &owner);
+    for (int i = fwp_argc - 1; i >= 1; i--) {
+        owner.element = fwp_rc_fresh(fwp_str_lossy(fwp_argv[i], strlen(fwp_argv[i])));
+        owner.list = fwp_rc_fresh(fwp_cons(owner.element, owner.list));
+        owner.element = 0;
+    }
+    V result = owner.list; owner.list = 0;
+    fwp_cleanup_pop(&cleanup);
+    return result;
 }
 
 static V fwp_p_env_get(V name) {
+    /* OS names cannot contain NUL; do not accidentally look up a prefix. */
+    if (memchr(STR(name)->d, 0, STR(name)->len)) return FWP_NONE;
+    V text;
 #ifdef _WIN32
-    return fwp_win_env_get(name);
+    if (!fwp_win_env_text(STR(name)->d, STR(name)->len, &text)) return FWP_NONE;
 #else
-    const char *v = getenv(STR(name)->d);
-    return v ? fwp_some(fwp_str_lossy(v, strlen(v))) : FWP_NONE;
+    const char *value = getenv(STR(name)->d);
+    if (!value) return FWP_NONE;
+    text = fwp_str_lossy(value, strlen(value));
 #endif
+    fwp_value_owner owner = {fwp_rc_fresh(text), fwp_rc_free_obj};
+    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);
+    V result = fwp_rc_fresh(fwp_some(text));
+    owner.value = 0;
+    (void)fwp_value_finish(&owner, &cleanup);
+    return result;
 }
 
 static int64_t fwp_now_ns(void) {
@@ -2846,8 +2885,15 @@ static V fwp_p_run_state(V s, V f, V x) {
 /* ------------------------------------------------------------------ files */
 
 static V fwp_io_error(const char *kind, const char *msg, const fwp_desc *d) {
-    V f[2] = {fwp_cstr(kind), fwp_cstr(msg)};
-    fwp_fail(fwp_record(2, f), d);
+    fwp_value_owner key = {fwp_rc_fresh(fwp_cstr(kind)), fwp_rc_free_obj};
+    fwp_cleanup key_cleanup; fwp_value_protect(&key, &key_cleanup);
+    fwp_value_owner text = {fwp_rc_fresh(fwp_cstr(msg)), fwp_rc_free_obj};
+    fwp_cleanup text_cleanup; fwp_value_protect(&text, &text_cleanup);
+    V fields[2] = {key.value, text.value};
+    V error = fwp_rc_fresh(fwp_record(2, fields));
+    (void)fwp_value_finish(&text, &text_cleanup);
+    (void)fwp_value_finish(&key, &key_cleanup);
+    fwp_fail(error, d);
     return 0;
 }
 
@@ -2950,7 +2996,14 @@ static V fwp_file_value(FILE *f, const char *path) {
     return PTR(h);
 }
 
+/* OS paths cannot contain a zero byte. Check before calling C APIs so a
+ * malformed language string never operates on its prefix. */
+static int fwp_path_has_nul(V path) {
+    return memchr(STR(path)->d, 0, STR(path)->len) != NULL;
+}
+
 static V fwp_p_file_open(V path, int create, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("open", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, create ? "w+b" : "rb");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
     return fwp_file_value(f, STR(path)->d);
@@ -3035,6 +3088,7 @@ static V fwp_p_file_read_all_owned(V h, const fwp_desc *err) {
 }
 
 static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("open", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "r+b");
     if (!f) f = fwp_path_fopen(path, "w+b");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
@@ -3061,6 +3115,7 @@ static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
 }
 
 static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pair)(V), void (*dup_result)(V)) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("open", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "r+b");
     if (!f) f = fwp_path_fopen(path, "w+b");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
@@ -3095,6 +3150,7 @@ static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pa
 }
 
 static V fwp_p_file_read_impl(V path, const fwp_desc *err, int text) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("read", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "rb");
     if (!f) return fwp_io_error_path("read", STR(path)->d, err);
     fwp_file_cleanup file = {f, 0};
@@ -3125,6 +3181,7 @@ static V fwp_p_file_read_impl(V path, const fwp_desc *err, int text) {
     V result = buf_to_str(&b);
     b.d = 0;
     fwp_cleanup_pop(&buffer_cleanup);
+    FWP_KEEP_ALIVE(path);
     return result;
 }
 
@@ -3136,6 +3193,7 @@ static V fwp_p_file_read_bytes(V path, const fwp_desc *err) {
 }
 
 static V fwp_p_file_write_new(V path, V s, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("write", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "wb");
     if (!f) return fwp_io_error_path("write", STR(path)->d, err);
     int error = fwrite(STR(s)->d, 1, STR(s)->len, f) == STR(s)->len ? 0 : errno;
@@ -3350,8 +3408,45 @@ static V fwp_p_syntax_show(V v) {
 /* ------------------------------------------------------- linear algebra */
 /* Same algorithms and operation order as src/linalg.rs. */
 
-static double *la_get(V arr, size_t n) {
-    double *d = (double *)fwp_alloc_leaf((n + 1) * sizeof(double));
+/* A solver owns its scratch and any result arrays not yet transferred into
+ * the returned value. These fields stay on the C stack, not the managed heap. */
+typedef struct { double *scratch[5]; V results[2]; } fwp_la_owner;
+static void la_release(void *arg) {
+    fwp_la_owner *owner = arg;
+    for (size_t i = 2; i > 0; i--) {
+        V value = owner->results[i - 1];
+        owner->results[i - 1] = 0;
+        if (value) { FWP_KEEP_ALIVE(value); fwp_rc_free_arr(value); }
+    }
+    for (size_t i = 5; i > 0; i--) {
+        double *buffer = owner->scratch[i - 1];
+        owner->scratch[i - 1] = NULL;
+        if (buffer) { FWP_KEEP_ALIVE(buffer); fwp_mem_free(buffer); }
+    }
+}
+static void la_protect(fwp_la_owner *owner, fwp_cleanup *cleanup) {
+#if FWP_UNWIND
+    fwp_cleanup_push(cleanup, la_release, owner);
+#else
+    (void)owner; (void)cleanup;
+#endif
+}
+static void la_finish(fwp_la_owner *owner, fwp_cleanup *cleanup) {
+#if FWP_UNWIND
+    fwp_cleanup_pop(cleanup);
+#else
+    (void)cleanup;
+#endif
+    la_release(owner);
+}
+static double *la_alloc(fwp_la_owner *owner, size_t slot, size_t n) {
+    if (n >= SIZE_MAX / sizeof(double)) fwp_trap("array too large");
+    double *buffer = (double *)fwp_alloc_leaf((n + 1) * sizeof(double));
+    owner->scratch[slot] = buffer;
+    return buffer;
+}
+static double *la_get(fwp_la_owner *owner, size_t slot, V arr, size_t n) {
+    double *d = la_alloc(owner, slot, n);
     for (size_t i = 0; i < n; i++) d[i] = fwp_f64(fwp_array_load(arr, i, NULL));
     return d;
 }
@@ -3372,8 +3467,9 @@ static void la_check(const char *name, V arr, int64_t rows, int64_t cols) {
     }
 }
 
-static V la_put(const double *d, size_t n) {
-    V r = fwp_arr_new(n);
+static V la_put(fwp_la_owner *owner, size_t slot, const double *d, size_t n) {
+    V r = fwp_rc_fresh(fwp_arr_new(n));
+    owner->results[slot] = r;
     for (size_t i = 0; i < n; i++) ARR(r)->d[i] = fwp_from_f64(d[i]);
     return r;
 }
@@ -3382,12 +3478,14 @@ static V fwp_p_lu_solve(V nv, V av, V bv) {
     la_check("linalg.lu-solve", av, (int64_t)nv, (int64_t)nv);
     la_check("linalg.lu-solve", bv, (int64_t)nv, 1);
     size_t n = (size_t)(int64_t)nv;
-    double *a = la_get(av, n * n), *x = la_get(bv, n);
+    fwp_la_owner owner = {0}; fwp_cleanup cleanup;
+    la_protect(&owner, &cleanup);
+    double *a = la_get(&owner, 0, av, n * n), *x = la_get(&owner, 1, bv, n);
     for (size_t k = 0; k < n; k++) {
         size_t p = k;
         for (size_t i = k + 1; i < n; i++)
             if (fabs(a[i * n + k]) > fabs(a[p * n + k])) p = i;
-        if (a[p * n + k] == 0.0) return FWP_NONE;
+        if (a[p * n + k] == 0.0) { la_finish(&owner, &cleanup); return FWP_NONE; }
         if (p != k) {
             for (size_t j = 0; j < n; j++) { double t = a[k * n + j]; a[k * n + j] = a[p * n + j]; a[p * n + j] = t; }
             double t = x[k]; x[k] = x[p]; x[p] = t;
@@ -3404,18 +3502,23 @@ static V fwp_p_lu_solve(V nv, V av, V bv) {
         for (size_t j = i + 1; j < n; j++) s -= a[i * n + j] * x[j];
         x[i] = s / a[i * n + i];
     }
-    return fwp_some(la_put(x, n));
+    V result = fwp_rc_fresh(fwp_some(la_put(&owner, 0, x, n)));
+    owner.results[0] = 0;
+    la_finish(&owner, &cleanup);
+    return result;
 }
 
 static V fwp_p_det(V nv, V av) {
     la_check("linalg.det", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
-    double *a = la_get(av, n * n), d = 1.0;
+    fwp_la_owner owner = {0}; fwp_cleanup cleanup;
+    la_protect(&owner, &cleanup);
+    double *a = la_get(&owner, 0, av, n * n), d = 1.0;
     for (size_t k = 0; k < n; k++) {
         size_t p = k;
         for (size_t i = k + 1; i < n; i++)
             if (fabs(a[i * n + k]) > fabs(a[p * n + k])) p = i;
-        if (a[p * n + k] == 0.0) return fwp_from_f64(0.0);
+        if (a[p * n + k] == 0.0) { la_finish(&owner, &cleanup); return fwp_from_f64(0.0); }
         if (p != k) {
             for (size_t j = 0; j < n; j++) { double t = a[k * n + j]; a[k * n + j] = a[p * n + j]; a[p * n + j] = t; }
             d = -d;
@@ -3426,21 +3529,24 @@ static V fwp_p_det(V nv, V av) {
             for (size_t j = k; j < n; j++) a[i * n + j] -= f * a[k * n + j];
         }
     }
+    la_finish(&owner, &cleanup);
     return fwp_from_f64(d);
 }
 
 static V fwp_p_inverse(V nv, V av) {
     la_check("linalg.inverse", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
-    double *a = la_get(av, n * n);
-    double *inv = (double *)fwp_alloc_leaf((n * n + 1) * sizeof(double));
+    fwp_la_owner owner = {0}; fwp_cleanup cleanup;
+    la_protect(&owner, &cleanup);
+    double *a = la_get(&owner, 0, av, n * n);
+    double *inv = la_alloc(&owner, 1, n * n);
     for (size_t i = 0; i < n * n; i++) inv[i] = 0.0;
     for (size_t i = 0; i < n; i++) inv[i * n + i] = 1.0;
     for (size_t k = 0; k < n; k++) {
         size_t p = k;
         for (size_t i = k + 1; i < n; i++)
             if (fabs(a[i * n + k]) > fabs(a[p * n + k])) p = i;
-        if (a[p * n + k] == 0.0) return FWP_NONE;
+        if (a[p * n + k] == 0.0) { la_finish(&owner, &cleanup); return FWP_NONE; }
         if (p != k)
             for (size_t j = 0; j < n; j++) {
                 double t = a[k * n + j]; a[k * n + j] = a[p * n + j]; a[p * n + j] = t;
@@ -3457,34 +3563,49 @@ static V fwp_p_inverse(V nv, V av) {
             }
         }
     }
-    return fwp_some(la_put(inv, n * n));
+    V result = fwp_rc_fresh(fwp_some(la_put(&owner, 0, inv, n * n)));
+    owner.results[0] = 0;
+    la_finish(&owner, &cleanup);
+    return result;
 }
 
 static V fwp_p_cholesky(V nv, V av) {
     la_check("linalg.cholesky", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
-    double *a = la_get(av, n * n);
-    double *l = (double *)fwp_alloc_leaf((n * n + 1) * sizeof(double));
+    fwp_la_owner owner = {0}; fwp_cleanup cleanup;
+    la_protect(&owner, &cleanup);
+    double *a = la_get(&owner, 0, av, n * n);
+    double *l = la_alloc(&owner, 1, n * n);
     for (size_t i = 0; i < n * n; i++) l[i] = 0.0;
     for (size_t i = 0; i < n; i++)
         for (size_t j = 0; j <= i; j++) {
             double s = a[i * n + j];
             for (size_t k = 0; k < j; k++) s -= l[i * n + k] * l[j * n + k];
             if (i == j) {
-                if (s <= 0.0) return FWP_NONE;
+                if (s <= 0.0) { la_finish(&owner, &cleanup); return FWP_NONE; }
                 l[i * n + j] = sqrt(s);
             } else {
                 l[i * n + j] = s / l[j * n + j];
             }
         }
-    return fwp_some(la_put(l, n * n));
+    V result = fwp_rc_fresh(fwp_some(la_put(&owner, 0, l, n * n)));
+    owner.results[0] = 0;
+    la_finish(&owner, &cleanup);
+    return result;
 }
 
 static V fwp_p_qr(V mv, V nv, V av) {
     la_check("linalg.qr", av, (int64_t)mv, (int64_t)nv);
+    /* A zero-row input can have arbitrarily many columns. Bound the square
+     * output before size_t conversion, multiplication or scratch allocation. */
+    uint64_t columns = (uint64_t)nv;
+    uint64_t limit = (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V);
+    if (columns && columns > limit / columns) fwp_trap("array too large");
     size_t m = (size_t)(int64_t)mv, n = (size_t)(int64_t)nv;
-    double *q = la_get(av, m * n);
-    double *r = (double *)fwp_alloc_leaf((n * n + 1) * sizeof(double));
+    fwp_la_owner owner = {0}; fwp_cleanup cleanup;
+    la_protect(&owner, &cleanup);
+    double *q = la_get(&owner, 0, av, m * n);
+    double *r = la_alloc(&owner, 1, n * n);
     for (size_t i = 0; i < n * n; i++) r[i] = 0.0;
     for (size_t j = 0; j < n; j++) {
         for (size_t i = 0; i < j; i++) {
@@ -3500,7 +3621,12 @@ static V fwp_p_qr(V mv, V nv, V av) {
         if (norm != 0.0)
             for (size_t k = 0; k < m; k++) q[k * n + j] /= norm;
     }
-    return fwp_tuple2(la_put(q, m * n), la_put(r, n * n));
+    V qv = la_put(&owner, 0, q, m * n);
+    V rv = la_put(&owner, 1, r, n * n);
+    V result = fwp_rc_fresh(fwp_tuple2(qv, rv));
+    owner.results[0] = owner.results[1] = 0;
+    la_finish(&owner, &cleanup);
+    return result;
 }
 
 static double la_dot(const double *x, const double *y, size_t n) {
@@ -3515,9 +3641,11 @@ static V fwp_p_cg(V itv, V tolv, V nv, V av, V bv) {
     la_check("linalg.cg", av, (int64_t)nv, (int64_t)nv);
     la_check("linalg.cg", bv, (int64_t)nv, 1);
     size_t n = (size_t)(int64_t)nv;
-    double *a = la_get(av, n * n), *r = la_get(bv, n), *p = la_get(bv, n);
-    double *x = (double *)fwp_alloc_leaf((n + 1) * sizeof(double));
-    double *ap = (double *)fwp_alloc_leaf((n + 1) * sizeof(double));
+    fwp_la_owner owner = {0}; fwp_cleanup cleanup;
+    la_protect(&owner, &cleanup);
+    double *a = la_get(&owner, 0, av, n * n), *r = la_get(&owner, 1, bv, n), *p = la_get(&owner, 2, bv, n);
+    double *x = la_alloc(&owner, 3, n);
+    double *ap = la_alloc(&owner, 4, n);
     for (size_t i = 0; i < n; i++) x[i] = 0.0;
     double rs = la_dot(r, r, n);
     for (int64_t it = 0; it < maxit; it++) {
@@ -3534,7 +3662,10 @@ static V fwp_p_cg(V itv, V tolv, V nv, V av, V bv) {
         for (size_t i = 0; i < n; i++) p[i] = r[i] + beta * p[i];
         rs = rs_new;
     }
-    return la_put(x, n);
+    V result = la_put(&owner, 0, x, n);
+    owner.results[0] = 0;
+    la_finish(&owner, &cleanup);
+    return result;
 }
 
 /* Borrow each input row, copy only list nodes and retain typed element aliases.

@@ -18,6 +18,13 @@ fn io_error(kind: &str, msg: String) -> Ctl {
     )
 }
 
+pub(crate) fn check_path(kind: &str, path: &str) -> Result<(), Ctl> {
+    if path.as_bytes().contains(&0) {
+        return Err(io_error(kind, "path contains a NUL character".into()));
+    }
+    Ok(())
+}
+
 fn path_error(kind: &str, path: &str, e: &std::io::Error) -> Ctl {
     io_error(kind, format!("{}: {}", path, io_msg(e)))
 }
@@ -61,6 +68,22 @@ pub fn handles(sym: &str) -> bool {
 /// flushed before a process starts.
 pub fn prim(sym: &str, a: &[Value], out: &mut dyn Write) -> Result<Value, Ctl> {
     let s = |i: usize| a[i].as_str().to_string();
+    let path_kind = match sym {
+        "file.info" => Some("stat"),
+        "file.remove" | "dir.remove" => Some("remove"),
+        "file.rename" => Some("rename"),
+        "file.append" | "file.write-bytes" => Some("write"),
+        "file.read-bytes" => Some("read"),
+        "dir.list" => Some("list"),
+        "dir.create" | "dir.create-all" => Some("create"),
+        _ => None,
+    };
+    if let Some(kind) = path_kind {
+        check_path(kind, a[0].as_str())?;
+        if sym == "file.rename" {
+            check_path(kind, a[1].as_str())?;
+        }
+    }
     match sym {
         "file.exists" => Ok(Value::bool(std::fs::metadata(s(0)).is_ok())),
         "file.is-dir" => Ok(Value::bool(

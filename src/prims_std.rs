@@ -627,6 +627,13 @@ impl<'p> Interp<'p> {
                 "linalg.qr" => {
                     let (m, n, am) = (int(&a[0]), int(&a[1]), f64s(&a[2]));
                     la_check(sym, am.len(), m, n)?;
+                    // Zero input rows do not bound the square output. Check
+                    // its native array/header limit before multiplying usize.
+                    let limit =
+                        (usize::MAX - std::mem::size_of::<u64>()) / std::mem::size_of::<u64>();
+                    if (n as u128) * (n as u128) > limit as u128 {
+                        return trap("array too large");
+                    }
                     let (q, r) = crate::linalg::qr(m as usize, n as usize, &am);
                     Value::tuple(vec![f64_array(&q), f64_array(&r)])
                 }
