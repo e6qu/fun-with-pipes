@@ -17,6 +17,7 @@ static int fwp_cmp_env(const void *a, const void *b) {
 }
 
 static V fwp_p_file_append(V path, V s, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("write", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "ab");
     if (!f) return fwp_io_error_path("write", STR(path)->d, err);
     size_t n = fwrite(STR(s)->d, 1, STR(s)->len, f);
@@ -25,6 +26,7 @@ static V fwp_p_file_append(V path, V s, const fwp_desc *err) {
 }
 
 static V fwp_p_file_write_bytes(V path, V s, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("write", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "wb");
     if (!f) return fwp_io_error_path("write", STR(path)->d, err);
     size_t n = fwrite(STR(s)->d, 1, STR(s)->len, f);
@@ -48,16 +50,19 @@ static V fwp_p_file_write_bytes(V path, V s, const fwp_desc *err) {
 extern char **environ;
 
 static V fwp_p_file_exists(V path) {
+    if (fwp_path_has_nul(path)) return FWP_FALSE;
     struct stat st;
     return stat(STR(path)->d, &st) == 0 ? FWP_TRUE : FWP_FALSE;
 }
 
 static V fwp_p_file_is_dir(V path) {
+    if (fwp_path_has_nul(path)) return FWP_FALSE;
     struct stat st;
     return stat(STR(path)->d, &st) == 0 && S_ISDIR(st.st_mode) ? FWP_TRUE : FWP_FALSE;
 }
 
 static V fwp_p_file_info(V path, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("stat", "path contains a NUL character", err);
     struct stat st;
     if (stat(STR(path)->d, &st) != 0) return fwp_io_error_path("stat", STR(path)->d, err);
 #if defined(__APPLE__)
@@ -71,21 +76,25 @@ static V fwp_p_file_info(V path, const fwp_desc *err) {
 }
 
 static V fwp_p_file_remove(V path, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("remove", "path contains a NUL character", err);
     if (unlink(STR(path)->d) != 0) return fwp_io_error_path("remove", STR(path)->d, err);
     return FWP_UNIT;
 }
 
 static V fwp_p_dir_remove(V path, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("remove", "path contains a NUL character", err);
     if (rmdir(STR(path)->d) != 0) return fwp_io_error_path("remove", STR(path)->d, err);
     return FWP_UNIT;
 }
 
 static V fwp_p_file_rename(V to, V from, const fwp_desc *err) {
+    if (fwp_path_has_nul(from) || fwp_path_has_nul(to)) return fwp_io_error("rename", "path contains a NUL character", err);
     if (rename(STR(from)->d, STR(to)->d) != 0) return fwp_io_error_path("rename", STR(from)->d, err);
     return FWP_UNIT;
 }
 
 static V fwp_p_dir_list(V path, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("list", "path contains a NUL character", err);
     DIR *d = opendir(STR(path)->d);
     if (!d) return fwp_io_error_path("list", STR(path)->d, err);
     size_t n = 0, cap = 16;
@@ -107,11 +116,13 @@ static V fwp_p_dir_list(V path, const fwp_desc *err) {
 }
 
 static V fwp_p_dir_create(V path, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("create", "path contains a NUL character", err);
     if (mkdir(STR(path)->d, 0777) != 0) return fwp_io_error_path("create", STR(path)->d, err);
     return FWP_UNIT;
 }
 
 static V fwp_p_dir_create_all(V path, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("create", "path contains a NUL character", err);
     const char *p = STR(path)->d;
     size_t len = STR(path)->len;
     char *buf = (char *)fwp_alloc_leaf(len + 1);

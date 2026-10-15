@@ -4,8 +4,7 @@ Updated 2026-10-15. The only open delivery is
 [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146), head `19b14d0b`,
 in `/Users/zardoz/projects/fun-with-pipes`. Its
 [production run](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
-is running. Both Windows architectures passed the repaired early cancellation regression;
-the complete gate remains required. The synthetic test task now has
+is running. Both Windows production jobs now pass; Linux/macOS gates remain running. The synthetic test task now has
 its actual stack-scan boundary. Omitting that boundary reproduced string loss
 under forced collection; production task initialization was already correct.
 Earlier Windows probe CRLF output is repaired too.
@@ -13,7 +12,7 @@ Earlier Windows probe CRLF output is repaired too.
 This branch, `checked-linear-algebra` in `/private/tmp/fwp-linear-algebra`,
 prepares the next substantial delivery. Its original parent is `c10b1ccd`.
 It now combines solver ownership, array borrowing, F128 gradient precision,
-console ownership and the environment-name repair. No PR is open for it.
+console ownership, environment-name and filesystem-path repairs. No PR is open for it.
 
 Standing authorization covers fixes, publication and squash merges after all
 nine production jobs and documentation pass for the final commit. Use exactly
@@ -124,24 +123,30 @@ A preceding Intel macOS compiler SIGABRT in U128 division by zero did not recur
 on its unchanged retry; its cause remains unknown. Preserve future crash reports.
 Do not describe the abort as repaired or a skipped/queued job as passing.
 
-## Additional defect found during review
+## Filesystem path repair
 
-A related path-truncation repair is prepared separately in
-`/private/tmp/fwp-path-validation`, branch `checked-path-validation`, based on
-this branch's `3115b69a`. Native file operations accepted a zero-containing path
-as its prefix; a read-only probe reproduced the interpreter/native difference.
-Commit `4303dc2` rejects the path before OS access, preserves both rename operands
-and parent-directory contents, and makes diagnostics agree across engines.
-[Six-platform run 38805524008](https://github.com/e6qu/fun-with-pipes/actions/runs/38805524008)
-is queued. Bounded native probes pass, including unchanged prefix files and ARC
-resource cases; native Windows and changed-interpreter checks are not yet verified.
-Combine only its commits after `3115b69a` when these checks pass. Its own handoff
-records the failure reproductions and local checks. No second PR is open.
+The reproduced zero-byte path-truncation repair and Windows test fixes are now
+combined. Native file operations reject invalid paths before OS access, preserve
+prefix/destination files and parent directories, and match interpreter diagnostics.
+The preparation `/private/tmp/fwp-path-validation` passed all six hosts at
+`135fa6f5` in [run 38806367846](https://github.com/e6qu/fun-with-pipes/actions/runs/38806367846).
+Its earlier run exposed portability defects in old file probes; native handle
+checks and escaped Windows paths repair those without skipping assertions.
+
+Caught I/O error ownership is prepared separately in
+`/private/tmp/fwp-filesystem-ownership`, branch `checked-filesystem-ownership`,
+based on path commit `135fa6f5`. A probe reproduced 64 retained charged bytes per
+small caught error because the runtime had left the record and strings uncounted.
+The repair counts and protects construction; 128 runtime and compiled catches,
+all three construction failures and omitted-ownership controls pass locally.
+[Six-platform run 38808012610](https://github.com/e6qu/fun-with-pipes/actions/runs/38808012610)
+is queued at `aa6ad15`. Combine only commits after `135fa6f5` once it passes,
+so this known leak is repaired before the next delivery.
 
 ## Next: validate and publish the combined delivery
 
 Focused numerical/console checks and combined documentation/inventory checks
-pass. Finish the additional path repair checks, monitor #146 and fix failures. Once #146's exact final-head gate passes,
+pass. Finish the caught-error repair checks, monitor #146 and fix failures. Once #146's exact final-head gate passes,
 squash merge it, verify its one-line message and tree, then rebase only this
 branch's commits after `c10b1ccd` onto the accepted squash commit. The precision
 and console implementations are already combined: do not cherry-pick them again.

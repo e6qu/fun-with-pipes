@@ -1,7 +1,10 @@
 # Files, directories and paths. Paths are strings with `/` separators;
 # the `path.*` functions only compute with them and touch no file.
 # Failures are `IoError`s whose message names the path, as in
-# `missing.txt: No such file or directory`.
+# `missing.txt: No such file or directory`. A zero byte cannot occur in an OS
+# path: operations reject it with `path contains a NUL character` before any
+# access; `file.exists` and `file.is-dir` return False. For example,
+# `"notes.txt\0suffix"` never names or modifies `"notes.txt"`.
 #
 # A path names a location; a directory contains named entries. Path helpers
 # only manipulate strings, while file operations declare FileIO and can fail

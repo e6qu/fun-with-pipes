@@ -1,0 +1,5 @@
+main = [
+    "user-data.txt\0suffix" | attempt (file.open | file.close) | echo,
+    "user-data.txt\0suffix" | attempt (file.create | file.close) | echo,
+    attempt (file.with "user-data.txt\0suffix") file.read-all | echo,
+] | ignore
