@@ -2,8 +2,8 @@
 
 Updated 2026-10-16. PR #146 merged as `be890914` after all nine production
 jobs and documentation passed. Current [PR #147](https://github.com/e6qu/fun-with-pipes/pull/147)
-is at `71c612d0`; production run `38814786923` has seven passing jobs and two
-running (Linux ARM64/AMD64). Documentation passes in
+is at `71c612d0`; production run `38814786923` has eight passing jobs and one
+running (Linux AMD64). Documentation passes in
 `38814787519`. Do not change its head merely to refresh tracking.
 
 Standing authorization: fix failures, require all nine production jobs and docs
@@ -143,10 +143,14 @@ timing sources. Run `38822697830` passes all four hosts against solver run
 Linux AMD64: ARC kernel 1.192× and allocation-inclusive 1.194×; tracing kernel
 1.716×. Linux/macOS ARM64 and Intel macOS changes are small and mixed. Actual
 AMD64 ARC disassembly has 303 instructions versus 387, 89 stack-addressed
-instructions versus 115 and a 376-byte frame versus 472 bytes; both use the same
+instructions versus 115 and a 376-byte explicit stack reservation versus 472 bytes; both use the same
 two-lane multiply/add sequence. Fewer instructions are not a timing gain.
-Repeat run `38823092869` is queued to test reproducibility. Runtime is unchanged;
-retain the result before deciding whether to reject this candidate. Artifacts:
+Repeat run `38823092869` passes all four hosts. Both AMD64 runs use EPYC 7763:
+ARC allocation-inclusive ratios are 1.194 then 0.883; tracing ratios are 1.528
+then 1.207. Reject the candidate: smaller code does not show a dependable portable
+gain. Runtime is unchanged. Both runs and actual AMD64 kernels are retained in
+`docs/measurements/matrix-output-alias-2026-10-16.json`; benchmarks explain the
+negative result. Guarded report consolidation passes (0.13 s). Artifacts:
 `/private/tmp/fwp-matrix-alias-evidence`; extracted kernels `/private/tmp/fwp-matrix-{local,parameter}-kernel.asm`.
 
 ## Clock and logging extension
@@ -170,3 +174,8 @@ this bug; the corrected edited-C mechanism probe passes (2.46 s). Local formatti
 passes (1.07 s), generated stdlib docs regenerate and verify (0.48 s), inventory
 passes (0.48 s): 254 contracts, eight scalar signatures, 97 review declarations,
 19 templates and 87 review symbols. Actual compiler validation remains on CI.
+
+Clock/logging changes are published at `93156ee0`; six-host combined validation
+runs in `38823885563`. The preceding Boolean/static-container/application batch
+at `86bdcba6` has five hosts passing in `38822994702`, with Intel macOS still
+running. Do not replace these component results with final-head acceptance.

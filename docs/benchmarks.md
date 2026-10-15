@@ -272,6 +272,37 @@ retains the earlier fixed-size-copy and scheduler-check changes. The
 separately compares invariant array-data access with per-element lookup. These
 are historical measurements, not competing current performance claims.
 
+### Matrix output experiment: not adopted
+
+[Two four-host runs](measurements/matrix-output-alias-2026-10-16.json) test whether
+explicitly telling the C compiler that fresh matrix output cannot overlap either
+input improves generated code. The inputs may still overlap each other. The
+candidate places the identical loop in an always-inlined function with that
+output-pointer promise; binary inspection confirms no additional function call.
+The shipped runtime remains unchanged.
+
+On Linux AMD64, the ARC kernel shrinks from 387 to 303 instructions and its
+explicit stack reservation from 472 to 376 bytes. Instructions addressing the
+stack fall from 115 to 89; this includes local storage accesses, not just register
+spills. Both variants still use the same two-lane floating-point multiply/add
+sequence. Output hashes, forty allocations, zero retains/nonfinal releases,
+sixteen release checks and zero final charged bytes agree.
+
+Smaller code did not give a dependable timing improvement. These ratios compare
+the candidate with the existing generated code, including allocation and cleanup:
+
+| Linux AMD64, EPYC 7763 | ARC candidate / existing | Tracing candidate / existing |
+|---|---:|---:|
+| First run | 1.194 | 1.528 |
+| Repeat run | 0.883 | 1.207 |
+
+Each ratio uses forty uninstrumented samples in rotating order with separate
+memory profiles. The other three hosts changed by roughly ±3% across the two
+runs. The inconsistent ARC result and repeated tracing slowdown do not justify
+adoption. The retained report includes both runs, hardware, flags, samples and
+actual AMD64 kernel instructions. It remains evidence for future diagnosis,
+not an optimization claim or a new runtime layer.
+
 The [earlier ownership/performance report](measurements/ownership-performance-2026-10-15.json)
 records `f42d6226`, its operation-count checks and sustained derivative experiment.
 Its different sample count is preserved rather than used as the new timing baseline.
