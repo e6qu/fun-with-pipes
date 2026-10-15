@@ -199,7 +199,8 @@ count insertion. Unsupported lifetimes produce a compile error; the compiler
 does not silently switch to tracing.
 
 Admitted programs include ordinary immutable values, scoped files and state,
-proved derivative scopes, selected retained tasks and scoped C calls. Mutable
+proved derivative scopes, selected retained tasks, channels carrying data without
+functions/tasks/channel handles, and scoped C calls. Mutable
 cycles, raw pointers, unproved external callbacks and remote/service contexts
 remain excluded. Checked ARC supports native main and function executables,
 including CLI commands, and C libraries with copied inputs and pointer-free

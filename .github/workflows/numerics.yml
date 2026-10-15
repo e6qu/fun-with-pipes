@@ -33,7 +33,7 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo test --no-fail-fast --test arc_library --test arc_execution --test native_allocator --test library_input_ownership --test library_result_ownership --test library_resources --test library_unload --test autodiff_library --test ffi
+      - run: cargo test --no-fail-fast --test arc_library --test arc_execution --test arc_tasks --test channel_queue_ownership --test channel_cycle_ownership --test native_allocator --test library_input_ownership --test library_result_ownership --test library_resources --test library_unload --test autodiff_library --test ffi
   syntax:
     if: inputs.suite == 'syntax'
     runs-on: ubuntu-latest

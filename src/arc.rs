@@ -4,6 +4,35 @@ use crate::ir::{Body, Program, TypeShape, MT};
 use crate::ownership::{Argument, Callback, ResultOwnership};
 use std::collections::HashSet;
 
+/// A data-only queue cannot publish a reference back to its channel. Functions
+/// and tasks can hide such a reference in captures even when their result type
+/// contains only scalars. Recursive immutable data remains admissible.
+fn channel_data(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> bool {
+    if !seen.insert(ty.clone()) {
+        return true;
+    }
+    match ty {
+        MT::Fun(..) => false,
+        MT::Nat(_) => true,
+        MT::Record(fields) => fields.iter().all(|(_, ty)| channel_data(prog, ty, seen)),
+        MT::Con(name, args) => {
+            if matches!(name.as_str(), "std::Channel" | "std::Task") {
+                return false;
+            }
+            args.iter().all(|ty| channel_data(prog, ty, seen))
+                && match prog.shapes.get(ty) {
+                    Some(TypeShape::Record(fields)) => {
+                        fields.iter().all(|(_, ty)| channel_data(prog, ty, seen))
+                    }
+                    Some(TypeShape::Adt(variants)) => variants
+                        .iter()
+                        .all(|(_, fields)| fields.iter().all(|ty| channel_data(prog, ty, seen))),
+                    _ => true,
+                }
+        }
+    }
+}
+
 fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), String> {
     if !seen.insert(ty.clone()) {
         return Ok(());
@@ -25,6 +54,14 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                 value_type(prog, arg, seen)?;
             }
             match name.as_str() {
+                "std::Channel" => {
+                    if args.len() == 1 && channel_data(prog, &args[0], &mut HashSet::new()) {
+                        return Ok(());
+                    }
+                    return Err(format!(
+                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain functions, tasks or channels"
+                    ));
+                }
                 "std::Bool" | "std::String" | "std::Bytes" | "std::File" | "std::I8"
                 | "std::I16" | "std::I32" | "std::I64" | "std::I128" | "std::ISize" | "std::U8"
                 | "std::U16" | "std::U32" | "std::U64" | "std::U128" | "std::USize"
@@ -94,13 +131,10 @@ pub(crate) fn check(prog: &Program, entries: &[crate::ir::FuncId]) -> Result<(),
             }
             Body::Prim(symbol) => symbol.as_str(),
         };
-        // Child tasks get fresh dynamic scopes (proved above); their immutable
-        // captures can only refer to already-created handles. Channels and raw
-        // addresses can publish a mutable back-edge and remain excluded.
-        if symbol.starts_with("channel.")
-            || symbol.starts_with("mem.")
-            || symbol.starts_with("ptr.")
-        {
+        // Child tasks get fresh dynamic scopes (proved above). Channel payloads
+        // cannot hold handles/captures that publish a mutable back-edge. Raw
+        // addresses still have no checked pointee lifetime.
+        if symbol.starts_with("mem.") || symbol.starts_with("ptr.") {
             return Err(reject(format!(
                 "primitive `{symbol}` has no tracing-free lifetime policy"
             )));

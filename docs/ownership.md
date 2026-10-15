@@ -62,7 +62,7 @@ traps. Unproved runtime sharing still uses tracing.
 | Arrays, maps and sets | Typed elements, counted storage, selected unique updates | Callback and alias contracts must be proved |
 | Strings and bytes | Counted leaves for proved copies/aliases | Unmodeled result families remain shared |
 | Closures | Owned captured arguments and typed call metadata | Retained unknown callbacks are not checked ARC |
-| Tasks and channels | Counted handles/results/queues | Mutable cycles are not automatically broken by counting |
+| Tasks and channels | Counted handles/results/queues; ARC admits channels whose payloads contain no functions, tasks or channels | Mutable cycles are not automatically broken by counting |
 | Derivative tapes | Scoped owners and a bounded numeric workspace | Raw unscoped tape calls are not checked ARC |
 | External/network state | Explicit resource teardown where modeled | Freeing a C buffer does not prove the lifetime of every referenced fwp value |
 
@@ -95,6 +95,16 @@ can contain a queued value holding that same channel. Closing it must preserve
 queued values for later receives. Explicit draining breaks the tested cycle;
 losing the last external handle without draining does not. Unproved cycles need
 tracing and are rejected by checked ARC.
+
+Checked ARC admits channels carrying data such as numbers, strings, records and
+recursive immutable lists or variants. Their payload type must contain no
+functions, tasks or channel handles, even inside another container. A function
+or task can capture the sending channel and form a cycle without mentioning it
+in its result type; the check therefore examines the complete payload type.
+This is a conservative eligibility rule, not a ban on ordinary tracing channels.
+Closing an admitted channel still preserves queued messages for receiving.
+Releasing its last owner destroys the remaining queue and its typed contents;
+cancelled blocked operations release their wait registrations and owners first.
 
 ## Ownership contract checks
 

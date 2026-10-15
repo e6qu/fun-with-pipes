@@ -1,4 +1,4 @@
-//! Retained task captures, cached results and cancellation need no collector.
+//! Task captures and data-only channel queues reclaim without a collector.
 use std::process::{Command, Output};
 
 fn checked(command: &mut Command) -> Output {
@@ -8,7 +8,7 @@ fn checked(command: &mut Command) -> Output {
 }
 
 #[test]
-fn immutable_task_graphs_reclaim_after_join_and_cancellation() {
+fn tasks_and_data_channels_reclaim_after_join_and_cancellation() {
     let dir = fwp::cgen::TempDir::new("fwp-arc-tasks").unwrap();
     let source = dir.join("tasks.fwp");
     std::fs::write(
@@ -29,6 +29,25 @@ own-state = run-state "initial" (const "owned" | tap put | const () | get) | .0
 scope-failure : () -> () ! {Async, Error[String]}
 scope-failure = tap (const "scope" | string.repeat 2 | start-sleeping | ignore)
     | const "expected" | fail
+text-channel : I64 -> Channel[String] ! {Async}
+text-channel = channel.make
+Data = | End | Cell String Data
+data-channel : I64 -> Channel[Data] ! {Async}
+data-channel = channel.make
+receive : Channel[String] -> () -> Option[String] ! {Async}
+receive = curry (.0 | channel.recv)
+send : Channel[String] -> () -> Bool ! {Async}
+send = curry (.0 | flip channel.send ("pending" | string.repeat 2))
+start-receive : Channel[String] -> Task[Option[String]] ! {Async}
+start-receive = compose receive task.spawn
+start-send : Channel[String] -> Task[Bool] ! {Async}
+start-send = compose send task.spawn
+undrained : I64 -> () ! {Async}
+undrained = text-channel | tap (flip channel.send ("queued" | string.repeat 2))
+    | tap channel.close | ignore
+queue-failure : I64 -> () ! {Async, Error[String]}
+queue-failure = text-channel | tap (flip channel.send ("failed" | string.repeat 2))
+    | const "expected" | fail
 main = [
     task.spawn (value ("input" | string.repeat 2)) | both task.await task.await | echo,
     task.spawn (sleeping ("early" | string.repeat 2)) | tap task.cancel | task.await | echo,
@@ -40,6 +59,19 @@ main = [
     () | attempt (const scope-failure | task.scope) | echo,
     task.scope (const "joined" | string.repeat 2 | start-value | ignore),
     range 0 65 | map show | task.map (string.repeat 3) | length | echo,
+    text-channel 2 | tap (flip channel.send ("kept" | string.repeat 2))
+        | tap channel.close | channel.recv | echo,
+    text-channel 1 | channel.recv-for 0ns | echo,
+    text-channel 1 | tap channel.close | flip channel.send "rejected" | echo,
+    data-channel 1 | tap (flip channel.send (Cell ("data" | string.repeat 2) End))
+        | tap channel.close | channel.recv | echo,
+    text-channel 1 | start-receive | tap (const () | task.yield)
+        | tap task.cancel | task.await | echo,
+    text-channel 1 | tap (flip channel.send ("full" | string.repeat 2))
+        | start-send | tap (const () | task.yield)
+        | tap task.cancel | task.await | echo,
+    range 1 65 | each undrained,
+    1 | attempt queue-failure | echo,
 ] | ignore
 "#,
     )
@@ -94,6 +126,7 @@ main = [
                 for needle in [
                     "if (t->result_drop && result) t->result_drop(result);",
                     "if (finished->counted) fwp_task_drop(PTR(finished));",
+                    "c->value_drop(element);",
                 ] {
                     assert_eq!(measured.matches(needle).count(), 1);
                     let omitted = measured.replace(needle, "/* omitted owner release */");

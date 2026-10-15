@@ -82,8 +82,9 @@ ownership and removal of GC are the primary design priority.
 4. Fix the largest confirmed avoidable cost, preserve a regression case, and
    publish before/after results including any memory or portability tradeoff.
 5. Extend checked ownership to C library calls with copied inputs and
-   pointer-free results. Check every export independently; prove repeated-call,
-   failure and unload cleanup. Returned host pointers still need an explicit
+   pointer-free results, and channels whose payloads cannot retain channel
+   handles or callbacks. Check every export independently; prove repeated-call,
+   failure, cancellation and unload cleanup. Returned host pointers still need an explicit
    release policy before they can join this subset. Track validation in the
    handoff; this is one boundary toward collector-free execution, not GC removal.
 
