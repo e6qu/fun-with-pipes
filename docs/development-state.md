@@ -80,8 +80,8 @@ the full production acceptance gate.
 
 The pre-change performance dispatch is
 [run 38767826317](https://github.com/e6qu/fun-with-pipes/actions/runs/38767826317)
-at preparation commit `711ac295`. Linux ARM/AMD64 and macOS ARM64 jobs passed;
-Intel macOS is still running. This is baseline evidence, not final-head acceptance.
+at preparation commit `711ac295`. All four Linux/macOS ARM64/AMD64 jobs passed.
+This is baseline evidence, not final-head acceptance.
 The ARM macOS profile confirms one cleanup registration per element in the fused
 array loop (129/257 registrations for 129/257 elements), with zero intermediate
 allocations or retains. Timings vary substantially; no speedup is claimed.
@@ -92,13 +92,26 @@ the syntax tree retains notation for formatting. Added precedence/formatting,
 macro, numeric-width, operand-effect and competing-trap controls. Full compiler
 and interpreter/native validation is pending on runners.
 
-The working tree additionally removes checked increments from the bounded
+Commit `c32b95f1` additionally removes checked increments from the bounded
 internal array index and omits unwind scopes for immediate wrapping integer
 operations. Wide boxed integers and ordinary checked arithmetic keep their
 protection. Checked ARC also omits conservative-GC root fences; tracing mode
 retains them. Existing allocation/cleanup and ARC reclamation controls are the
 acceptance tests, with the array cleanup bound tightened to constant work.
 These runtime/compiler changes are not yet verified on runners.
+
+The obsolete, still-queued syntax dispatch `38768610721` was cancelled and
+replaced by [run 38769658801](https://github.com/e6qu/fun-with-pipes/actions/runs/38769658801)
+at `c32b95f1`. Its arithmetic/formatter/type checks and array/ARC/unwind tests
+are still queued. There is no reported compiler or behavior failure yet, and
+queued checks do not establish support or authorize merging.
+
+Measurement preparation now rotates complete-program C/Rust/fwp execution order
+over six samples, reports medians and compilation time/binary size, and uses
+sorted Rust pairs to match the C/fwp map representation. Numerical measurements
+hide C/Rust dimensions from constant propagation, use disjoint C output storage,
+and collect six rotating batches of five samples. Historical results retain
+their original methods; new timings are pending. No local benchmark was run.
 
 Focused local checks, all through `python3 scripts/local-guard.py`:
 
@@ -110,17 +123,22 @@ Focused local checks, all through `python3 scripts/local-guard.py`:
   fixture output spelling only, not the changed compiler's correctness.
 - `python3 scripts/check-roadmap.py`: passed after the documentation updates
   (2.82 s); `git diff --check` also passed.
+- `python3 /private/tmp/fwp-measurement-checks.py`: benchmark harness, Rust map,
+  numerical C/Rust fixtures (timing and profiling) compile; measurement script
+  parses. This is a compile check only; output equivalence and timing run on CI.
 
 An attempted display probe using `fwp eval` failed because that CLI command does
 not exist; the corrected probe used `fwp run --interp` with a temporary file.
 
 ## Next action
 
-Next: publish the added loop/ARC changes and run the focused `syntax` suite,
-which now includes array, ARC and unwind controls. Supersede any still-queued
-older dispatch rather than spending a compiler build on an obsolete head.
-Fix compiler, formatter or behavioral failures, then collect comparable final
-performance evidence and improve sampling fairness. Keep all changes in this combined PR;
+Next: inspect focused run `38769658801` and fix any failures, then dispatch
+the four-host `performance` suite at the current branch head after the
+focused compiler checks pass. Review operation counts and generated instructions;
+do not compare old and new timing methods as an isolated optimization speedup.
+The current baseline confirms the old cleanup cost, but a controlled same-method
+before/after timing comparison and ARC-specific timings are still needed.
+Keep all changes in this combined PR;
 mark it ready only when its final content and evidence are reviewable.
 
 Use `python3 scripts/local-guard.py COMMAND...` for focused serial local checks.

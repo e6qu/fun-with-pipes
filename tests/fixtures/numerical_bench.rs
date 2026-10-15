@@ -24,7 +24,9 @@ fn matrix_kernel(a:&[f64],b:&[f64],out:&mut[f64],m:usize,k:usize,n:usize){
     }}}
 }
 fn main(){
-    let matrix=std::env::args().nth(1).unwrap()=="matrix";let(elements,m,k,n,rounds)=(65537,65,67,63,8);
+    let matrix=std::env::args().nth(1).unwrap()=="matrix";
+    // Match fwp's runtime dimensions instead of specializing constant sizes.
+    let(elements,m,k,n)=black_box((65537,65,67,63));let rounds=8;
     println!("{{\"samples\":[");
     for sample in 0..5 {
         memory::peak_reset();let before_memory=memory::snapshot();let mut kernel_ns=0u128;let mut hash=1469598103934665603u64;let start=Instant::now();

@@ -18,13 +18,18 @@ ratios on another machine or establish that the whole language is “zero-cost.�
 
 Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and
 `main.rs`. The programs must print the same result. The runner builds native
-executables with `fwp build -O2`, `cc -O2` and `rustc -O`. It runs each executable
-three times and reports its shortest elapsed time. “Native” means machine code;
+executables with `fwp build -O2`, `cc -O2` and `rustc -O`. After one warmup per
+executable, it measures six runs each and reports the median: the average of
+the two middle times after sorting. Execution order rotates C/Rust/fwp,
+Rust/fwp/C and fwp/C/Rust, twice. “Native” means machine code;
 this comparison does not time the fwp interpreter.
 
 The clock covers **process startup, input construction, calculation, allocation
 and printing**. It excludes compilation. It is not a measurement of just the
-inner calculation, nor of compile time, startup alone or peak memory.
+inner calculation, startup alone or peak memory. The report separately records
+one compilation time and the executable file size for each implementation.
+Compilation includes tool startup and linking; it excludes building the fwp
+compiler itself. Binary sizes include differing runtime and linking choices.
 The fwp build uses its normal native memory mode, which includes a tracing
 garbage collector; this is not a comparison of checked ARC against Rust.
 ARC means automatic reference counting, which releases objects when their last
@@ -36,7 +41,7 @@ owning reference disappears.
 |---|---|---|
 | `fib` | Compute Fibonacci number 35 with recursive calls | Same recurrence. Compilers can transform calls differently. fwp checks integer overflow; these C and optimized Rust builds do not have the same overflow guarantees. These inputs fit all three. |
 | `loop` | Update two integers for 100 million iterations | fwp expresses the loop state as a pair; its compiler can turn that into local variables. C and Rust write the loop directly. Checked arithmetic and generated code can still differ. |
-| `map` | Build 500,000 key/value entries, then perform 2 million lookups | fwp and C use sorted arrays searched by bisection. Rust uses `BTreeMap`, a tree. This is a comparison of complete implementations, not the isolated cost of the same map algorithm. |
+| `map` | Build 500,000 key/value entries, then perform 2 million lookups | All three use contiguous sorted pairs searched by bisection. Sorting implementations and construction costs still differ. This compares complete implementations, not an isolated lookup operation. |
 | `pipeline` | Multiply, select even values and sum one million inputs, 20 times | fwp can combine the stages into one traversal without intermediate lists. C explicitly fills arrays; Rust constructs vectors and filters them. Eliminating that work can outweigh language overhead. |
 | `strings` | Format two numbers, combine their text and count characters, 2 million times | fwp can calculate some formatted lengths without creating the string. C uses `snprintf` and `strlen`; Rust uses `format!` and byte length. All characters here are ASCII, so the lengths agree. The programs need not perform the same formatting or allocation work. |
 
@@ -54,6 +59,10 @@ The percentages below are therefore **approximate**, calculated from those
 rounded times. Treat them as an example of how to read a comparison, not a
 precise hardware baseline.
 
+That historical Rust map used `BTreeMap`. The current benchmark uses sorted
+pairs to match C and fwp; do not attribute differences from this old table solely
+to compiler improvements.
+
 | Program | C | Rust | fwp | Extra fwp time versus C | Extra fwp time versus Rust |
 |---|---:|---:|---:|---:|---:|
 | `fib` | 15 ms | 25 ms | 11 ms | −27% | −56% |
@@ -69,13 +78,25 @@ the Rust result in this run. Do not average these percentages into a language-wi
 score: the programs do different work and have different comparison limitations.
 
 The runner writes `target/bench.md`, the GitHub job summary and a downloadable
-`benchmarks` artifact. It reports both ratios and percentages, all three samples, the source
-commit, OS/architecture, compiler versions and Linux CPU details. Its fixed
-C-then-Rust-then-fwp order and best-of-three statistic are still vulnerable to
-shared-runner load and order effects. Timing is reported, not used as a pass/fail
+`benchmarks` artifact. It reports both ratios and percentages, all six samples,
+the source commit, OS/architecture, compiler versions and Linux/macOS CPU details.
+Rotating order reduces systematic order bias, but shared-runner load still
+affects results. The historical table above used the older shortest-of-three
+method; it has not been relabeled as a new measurement.
+Timing is reported, not used as a pass/fail
 threshold. Output disagreement is a failure.
 
 ## Numerical workloads compared with C and Rust
+
+Current runner comparisons hide C/Rust dimensions from compile-time constant
+propagation, matching the dimensions fwp reads from array and matrix metadata.
+The C output buffer is explicitly disjoint from the input buffers, as in the
+generated fwp kernel and Rust's mutable output slice. Each uninstrumented binary
+has one warmup process, followed by six rotating C/Rust/fwp process batches of
+five samples each. Reports retain all 30 samples, batch order and process memory
+measurements. Allocation profiles use separate instrumented binaries and are
+not used for timing claims. These method changes do not revise the historical
+measurements below.
 
 The [2026-10-12 ownership/numerical report](measurements/ownership-and-arc-2026-10-12.json)
 contains a more controlled comparison than the five complete programs above.
