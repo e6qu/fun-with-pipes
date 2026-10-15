@@ -72,8 +72,9 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-The current C-library, channel and numerical-runtime PR must pass its final
-production gate before merge. The next substantial batch combines:
+The C-library, channel and numerical-runtime delivery passed its full gate and
+merged in [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146). The current
+[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) combines:
 
 - Explicit scratch and result cleanup for six linear-algebra solvers, including
   QR output-size validation and singular/failure cases.

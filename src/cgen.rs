@@ -3648,6 +3648,41 @@ impl<'g, 'p> FnGen<'g, 'p> {
         } else {
             self.known_callbacks.remove(&l);
         }
+        // The RC pass describes a projection as retaining the selected field
+        // and then releasing the record. When the record is already separate
+        // owned fields, transfer that field and release only its siblings.
+        // Original resource frames retain their existing lifetime accounting.
+        if self.g.reuse {
+            if let (Expr::Field(base, index), Expr::Dup(selected, after_dup)) = (v, body) {
+                if let (Expr::Local(parent), Expr::Drop(dropped, rest)) = (&**base, &**after_dup) {
+                    if *selected == l
+                        && parent == dropped
+                        && !self.resource_slots.contains_key(parent)
+                    {
+                        if let Some(values) = self.fields.get(parent).cloned() {
+                            let types =
+                                record_fields(&self.g.prog.shapes, &self.locals[*parent as usize])
+                                    .expect("flattened record fields have known types")
+                                    .to_vec();
+                            self.line(&format!(
+                                "/* move owned field */ l{l} = {};",
+                                values[*index as usize]
+                            ));
+                            for (i, (value, (_, ty))) in values.iter().zip(&types).enumerate() {
+                                if i != *index as usize {
+                                    if let Some(drop) = self.typed_drop(ty) {
+                                        self.line(&format!(
+                                            "FWP_KEEP_ALIVE({value}); {drop}({value});"
+                                        ));
+                                    }
+                                }
+                            }
+                            return rest;
+                        }
+                    }
+                }
+            }
+        }
         // Moving a variant through a named ownership temporary need not box
         // it when all uses of the destination remain matches/count operations.
         if let Expr::Local(source) = v {
