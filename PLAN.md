@@ -9,7 +9,7 @@ All nine production jobs and documentation passed at tree-identical head
 The user requested continued development. The active follow-up pairs native AD
 metadata buffers to reduce allocator requests without adding padding, changing
 numeric evaluation order or narrowing the existing node bounds. Keep code,
-regression controls, four-host measurements and docs on `autodiff-metadata-block`.
+regression controls, four-host measurements and docs on `autodiff-metadata-block` in [PR #141](https://github.com/e6qu/fun-with-pipes/pull/141).
 [The handoff](docs/development-state.md) records actual checks and next actions.
 Delivery requires all nine production jobs and documentation on the final head.
 

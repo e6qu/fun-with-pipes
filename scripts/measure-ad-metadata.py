@@ -95,19 +95,13 @@ def main():
             caches = {}
             for cache in ['0', '1']:
                 env = dict(environment, FWP_AD_WORKSPACE=cache)
-                samples = []
-                for _ in range(7):
-                    start = time.perf_counter_ns()
-                    result = run([binary], env)
-                    samples.append(time.perf_counter_ns() - start)
-                    assert result.stdout == expected and not result.stderr
                 result = run([measured_binary], env)
                 assert result.stdout == expected
                 metadata, tape, managed = map(json.loads, result.stderr.splitlines())
                 assert tape['finalTapeBytes'] == 0 and managed['finalChargedBytes'] == 0
                 assert managed['collections'] == 0
                 caches[cache] = dict(metadata=metadata, tape=tape, managed=managed,
-                                    processWallNs=samples, medianProcessWallNs=statistics.median(samples))
+                                    processWallNs=[])
             assembly = ['otool', '-tvV', binary] if platform.system() == 'Darwin' else ['objdump', '-d', binary]
             asmfile = out / (stem + '.asm')
             asmfile.write_text(run(assembly).stdout)
@@ -116,6 +110,23 @@ def main():
                                    binarySha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
                                    assemblySha256=hashlib.sha256(asmfile.read_bytes()).hexdigest())
         for cache in ['0', '1']:
+            env = dict(environment, FWP_AD_WORKSPACE=cache)
+            labels = ['paired', 'separate-control']
+            for label in labels:
+                warmup = run([out / (name + '-' + label)], env)
+                assert warmup.stdout == expected and not warmup.stderr
+            # Alternate process order after warming both executables, avoiding
+            # a complete variant block being measured before the other builds.
+            for sample in range(7):
+                for label in (labels if sample % 2 == 0 else labels[::-1]):
+                    start = time.perf_counter_ns()
+                    result = run([out / (name + '-' + label)], env)
+                    elapsed = time.perf_counter_ns() - start
+                    assert result.stdout == expected and not result.stderr
+                    variants[label]['caches'][cache]['processWallNs'].append(elapsed)
+            for variant in variants.values():
+                values = variant['caches'][cache]
+                values['medianProcessWallNs'] = statistics.median(values['processWallNs'])
             paired = variants['paired']['caches'][cache]
             separate = variants['separate-control']['caches'][cache]
             assert paired['metadata']['metadataRequests'] * 2 == separate['metadata']['metadataRequests']
@@ -135,6 +146,7 @@ def main():
                   hardware=platform.uname()._asdict(),
                   cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
                   cc=run([cc, '--version']).stdout, rustc=run(['rustc', '-vV']).stdout,
+                  sampling='One unmeasured process warmup per variant/cache; seven alternating paired/control process samples.',
                   results=results, scope='Same ARC program and compiler; control substitutes the accepted baseline tape runtime. '
                   'Both workspace settings are explicit. Seven process samples include startup/output, with no speedup threshold. '
                   'Profiles separately count native tape payloads and charged managed storage; allocator metadata, '

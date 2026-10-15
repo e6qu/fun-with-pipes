@@ -17,7 +17,7 @@ The user requested continued work. The current follow-up pairs native AD parent
 buffers and numeric derivative buffers, reducing allocator requests while keeping
 layout, capacity bounds, ownership and arithmetic order explicit. Keep code,
 failure/relocation controls, four-host measurements and docs together on
-`autodiff-metadata-block`. Follow the live plan and handoff; historical preparation
+`autodiff-metadata-block` in [PR #141](https://github.com/e6qu/fun-with-pipes/pull/141). Follow the live plan and handoff; historical preparation
 entries are not work to replay.
 
 Standing authorization covers publication, fixes and squash merge after all

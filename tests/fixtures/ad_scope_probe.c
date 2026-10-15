@@ -75,10 +75,12 @@ int main(void) {
         } else if (scope_mode!=1 || strcmp(fwp_trap_msg,"gradient callback control")) return 68;
         if (scope_error) return scope_error;
         if (fwp_cleanups) return 69;
-        for (int i=0;i<4;i++) if (!scope_tracked[i] || scope_released[i]!=1) return 61;
+        /* Paired arrays have owning bases at even indices and borrowed
+         * interior regions at odd indices, for both outer and nested tapes. */
+        for (int i=0;i<4;i++) if (!scope_tracked[i] || scope_released[i]!=(i%2==0?1u:0u)) return 61;
         if (scope_mode==3 && (!scope_tracked[8] || scope_released[8]!=1)) return 70;
         if (scope_mode==4 || scope_mode==5)
-            for (int i=4;i<8;i++) if (!scope_tracked[i] || scope_released[i]!=1) return 71;
+            for (int i=4;i<8;i++) if (!scope_tracked[i] || scope_released[i]!=(i%2==0?1u:0u)) return 71;
         if (!setjmp(scope_recovered)) { fwp_p_ad_backward(scope_base,scope_outputs,scope_seeds);return 72; }
         if (strcmp(fwp_trap_msg,FWP_AD_OUTSIDE)) return 73;
         if (scope_inner) {
