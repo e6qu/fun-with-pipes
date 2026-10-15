@@ -94,9 +94,11 @@ Require actual tracing/ARC compiler builds, negative cleanup controls, stress an
 reuse tests, and all nine production jobs plus documentation for the final head.
 Focused preparation runs are evidence for their components, not this final gate.
 
-File-value follow-up validation is running; its exact result belongs in the
-handoff. After this delivery passes, select the next ownership boundary or
-confirmed cost from representative applications. Investigate derivative timing
+All six file-value hosts pass; the combined delivery still needs full production
+acceptance. The next measured target is a redundant retain/release when selecting
+an owned field from an unboxed numerical result. Prove a move preserves remaining
+fields, aliases, failure cleanup and resource lifetimes before changing emission.
+Afterward, select further ownership boundaries and confirmed application costs. Investigate derivative timing
 and memory scaling rather than assuming fewer allocations are always faster.
 Broaden long-running application coverage alongside these fixes.
 

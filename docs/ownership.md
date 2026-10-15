@@ -301,8 +301,9 @@ protecting the duration if record construction fails. Byte reads reuse the same
 buffer/stream cleanup as text reads and return a fresh leaf. Existence checks,
 rename/remove, ordinary directory creation and append/byte writes borrow their
 arguments. Focused tests check repeated storage release and error preservation;
-the initial six-platform checks pass. The later directory-error and composed
-application regressions still require final acceptance, tracked in the handoff.
+all six native platforms pass, including the directory-error and composed
+application regressions. The combined delivery still needs its full production
+gate, tracked in the handoff.
 
 Current-directory lookup and other unreviewed IO primitives
 remain outside checked ARC.
