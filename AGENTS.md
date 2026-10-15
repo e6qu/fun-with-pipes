@@ -11,15 +11,13 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-PR #139 completed bounded native AD registry growth and workspace preservation
-as `5d05cdd6`, with all nine production jobs and documentation green. The user
-requested continued work. The current follow-up removes repeated scans of known
-unavailable tape slots in both runtimes, preserving lowest-slot token selection.
-Keep implementation, regression controls, four-host measurements and docs on
-`autodiff-registry-search` in PR #140. Follow the live plan and handoff; historical
-preparation entries are not work to replay.
-Once PR #140 merges with all final-head gates, step 10 is complete; check its
-actual state before resuming.
+Steps 1–10 are accepted through PR #140 (`09f1a029`). The final follow-up,
+[PR #141](https://github.com/e6qu/fun-with-pipes/pull/141), pairs native AD
+metadata allocations. Implementation and four-host native evidence are complete;
+follow [the handoff](docs/development-state.md) for final validation and merge.
+Once PR #141 merges with its required gates, all eleven planned steps are complete.
+There is no additional queued implementation task; historical preparation
+entries are evidence, not work to replay.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,

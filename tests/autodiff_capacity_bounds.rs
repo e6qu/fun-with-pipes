@@ -2,6 +2,101 @@
 #[path = "support/c_instrument.rs"]
 mod c_instrument;
 use std::process::Command;
+
+#[test]
+fn paired_metadata_preserves_values_alignment_and_recoverable_growth() {
+    let directory = fwp::cgen::TempDir::new("fwp-ad-pairs").unwrap();
+    let input = directory.join("runtime.fwp");
+    let cfile = directory.join("runtime.c");
+    std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["build", "--emit-c", "-o"])
+        .arg(&cfile)
+        .arg(&input)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let source = std::fs::read_to_string(cfile).unwrap();
+    let start = source
+        .find("/* ------------------------------------------------------------------ tapes */")
+        .unwrap();
+    let end = source
+        .find("/* ---------------------------------------------------------------- kernels */")
+        .unwrap();
+    let tape = c_instrument::calls(&source[start..end], &[
+        ("realloc", "pair_realloc"), ("free", "pair_free"), ("memmove", "pair_move"),
+    ]).replace(
+        "static void fwp_owned_tape_reserve(fwp_owned_tape *owner, int64_t cap) {",
+        "static void fwp_owned_tape_reserve(fwp_owned_tape *owner, int64_t cap) {\n    if (pair_fail_weights) fwp_trap(\"paired weight growth control\");",
+    );
+    let declarations = "static void *pair_realloc(void *,size_t);\nstatic void pair_free(void *);\nstatic void *pair_move(void *,const void *,size_t);\nstatic int pair_fail_weights;\n";
+    let code = format!("{}{declarations}{tape}{}", &source[..start], &source[end..]).replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let parent_move = "if (used) pair_move(t->pa + cap, t->pb, used * sizeof(int32_t));";
+    let derivative_move = "if (used) pair_move(t->da + cap, t->db, used * sizeof(double));";
+    assert_eq!(code.matches(parent_move).count(), 1);
+    assert_eq!(code.matches(derivative_move).count(), 1);
+    let no_parents = code.replace(parent_move, "");
+    let no_derivatives = code.replace(derivative_move, "");
+    let full_capacity = code.replace("used * sizeof(int32_t)", "(size_t)cap * sizeof(int32_t)");
+    let early_capacity = code.replace(
+        "fwp_owned_tape_reserve(owned, cap);",
+        "t->cap = cap; fwp_owned_tape_reserve(owned, cap);",
+    );
+    assert_ne!(early_capacity, code);
+    // Clamp below doubling so the relocated second region overlaps its source.
+    let clamped = code.replace(
+        "return limit < (size_t)INT32_MAX ? (int64_t)limit : INT32_MAX;",
+        "return 273;",
+    );
+    assert_ne!(clamped, code);
+    for opt in ["-O1", "-O2"] {
+        for arc in [false, true] {
+            for (name, runtime, expected) in [
+                ("paired", &code, 0),
+                ("clamped", &clamped, 0),
+                ("missing-parents", &no_parents, 211),
+                ("missing-derivatives", &no_derivatives, 212),
+                ("full-capacity", &full_capacity, 213),
+                ("early-capacity", &early_capacity, 216),
+            ] {
+                let mode = if arc { "#define FWP_ARC_ONLY 1\n" } else { "" };
+                let source = format!(
+                    "{mode}{runtime}\n{}",
+                    include_str!("fixtures/autodiff_pairs_probe.c")
+                );
+                let binary = directory.join(name);
+                fwp::cgen::compile_c(&source, &binary, opt).unwrap();
+                for cache in ["0", "1"] {
+                    let output = Command::new(&binary)
+                        .env("FWP_AD_WORKSPACE", cache)
+                        .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                        .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
+                        .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" })
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        output.status.code(),
+                        Some(expected),
+                        "{name} {opt} arc={arc} cache={cache}: {output:?}"
+                    );
+                    if expected == 0 {
+                        assert!(output.stderr.is_empty(), "{output:?}");
+                    }
+                }
+                if let Some(path) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    std::fs::write(path.join(format!("pairs-{name}-{opt}-arc{arc}.c")), source)
+                        .unwrap();
+                }
+            }
+        }
+    }
+}
+
 #[test]
 fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
     let directory = std::env::temp_dir().join(format!("fwp-ad-capacity-{}", std::process::id()));
@@ -59,8 +154,8 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
         "",
     );
     let missing_release = code.replace(
-        "capacity_free(t->pa);capacity_free(t->pb);",
-        "(void)t->pa;capacity_free(t->pb);",
+        "capacity_free(t->pa);capacity_free(t->da);",
+        "(void)t->pa;capacity_free(t->da);",
     );
     let missing_registry_owner = code.replace("if (!next) {", "if (!next) { fwp_tapes = next;");
     assert_ne!(missing_input_bound, code);

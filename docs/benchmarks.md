@@ -65,6 +65,9 @@ binaries and disassembly are retained by the linked runner artifacts.
 
 ## Operation-only autodiff metadata
 
+This is the accepted PR #138 snapshot, before the paired allocations below.
+Its allocation counts describe that revision, not the current paired runtime.
+
 [Four-host measurements](measurements/ad-operations-2026-10-15.json) compare
 identical ARC programs with operation-only capacity and a control that also
 reserves capacity for inputs. All four Linux/macOS hosts report these counts:
@@ -220,3 +223,67 @@ can avoid formatting that the C/Rust versions still perform. Those workloads
 cannot establish equal kernel throughput or a general language speed ratio.
 Use equivalent algorithms and actual work for optimization acceptance, and
 inspect native instructions when claiming eliminated allocation or dispatch.
+
+## Paired autodiff metadata allocations
+
+[Four-host measurements](measurements/ad-metadata-2026-10-15.json) compare the
+same checked ARC programs at runtime revision `24620ead` with the accepted
+`09f1a029` tape runtime substituted as a control. Compiler output outside the
+tape runtime is identical. Parents share one allocation; numeric derivatives
+share another. All four Linux/macOS hosts report these totals:
+
+| Workload | Workspace cache | Metadata requests, separate → paired | All native tape requests, separate → paired | Unchanged peak tape bytes | Explicit relocation bytes, paired |
+|---|---:|---:|---:|---:|---:|
+| Identity VJP, 4,096 inputs | 0 or 1 | 0 → 0 | 2 → 2 | 32,872 | 0 |
+| Mapped VJP, 4,096 inputs | 0 or 1 | 28 → 14 | 30 → 16 | 163,944 | 48,384 |
+| 16 mapped VJPs, 4,096 inputs each | 0 | 448 → 224 | 465 → 241 | 163,944 | 774,144 |
+| 16 mapped VJPs, 4,096 inputs each | 1 | 28 → 14 | 30 → 16 | 163,944 | 48,384 |
+| Replay, 4,096 operations | 0 or 1 | 28 → 14 | 30 → 16 | 131,184 | 48,384 |
+| Nested gradient, 256 inputs | 0 or 1 | 18 → 9 | 21 → 12 | 16,632 | 5,376 |
+
+Requested metadata and total tape bytes are equal between variants, as are all
+managed allocation, retain and live-storage counters. All final charged managed
+and native tape bytes are zero, with zero collections. Peak payload excludes
+allocator metadata and transient realloc copies; managed peaks are recorded
+separately. Explicit relocation counts only the initialized second regions moved
+by this implementation. The control's zero explicit relocation count excludes
+any copies performed inside realloc, so it does not imply zero copying.
+
+The tradeoff is fewer allocator requests plus explicit relocation during growth.
+Two allocations retain the existing wasm32 node bound: the largest parent and
+numeric requests are 2,147,483,640 and 4,294,967,280 bytes. Tests intercept those
+requests without allocating gigabytes, and reject a deliberately overflowing
+size expression. Workspace payload remains 24 bytes per operation plus adjoints,
+within the unchanged 512 KiB cache budget; natural alignment and scalar order
+are preserved.
+
+Seven alternating process samples follow one warmup per variant/cache. They
+include startup/output and show mixed timings, with regressions in some cases.
+For the 16-VJP case, median milliseconds are:
+
+| Host | Cache off, separate → paired | Cache on, separate → paired |
+|---|---:|---:|
+| Linux AMD64 | 15.828 → 16.052 | 15.369 → 15.358 |
+| Linux ARM64 | 25.037 → 25.004 | 24.523 → 24.796 |
+| macOS ARM64 | 26.679 → 29.444 | 30.679 → 37.041 |
+| macOS Intel | 62.244 → 55.340 | 50.887 → 57.204 |
+
+These measurements establish the allocator-request reduction, not a general
+speedup. The report retains every raw sample, hardware/compiler/flags and
+verified source/binary/disassembly hashes. Linux uses clang 18.1.3; macOS uses
+Apple clang 17.0.0, with `-O2 -std=gnu11 -ffp-contract=off` on all four hosts.
+
+Actual native instruction review confirms two numeric growth calls instead of
+four, initialized-region moves and 32-bit parent/64-bit weight stores. Capacity
+hits bypass allocation. Capturing the owner before realloc lets the numeric
+push exclude managed-weight growth; nested pushes still call a shared helper
+with both owner branches. Linux AMD64's numeric push reserves 56 local stack
+bytes versus 72 in the control; Linux ARM64, macOS ARM64 and Intel retain their
+160-byte frame, 128-byte frame and 72-byte local reservation respectively.
+Saved registers and ordinary spills remain. The report records exact addresses;
+these observations do not establish universal cache or register improvements.
+
+Reproduce on GitHub with `scripts/measure-ad-metadata.py --output DIR` in the
+focused autodiff workflow. Native controls cover moving and overlapping growth,
+bit preservation, recoverable managed traps, OOM, scope cleanup and deliberate
+faults. The Rust interpreter remains the independent semantic reference.

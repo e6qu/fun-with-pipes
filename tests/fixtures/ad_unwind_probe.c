@@ -74,10 +74,11 @@ int main(void) {
         if (fwp_cleanups) return 39;
         t=&fwp_tapes[(((int64_t)selected_base>>32)&0xffff)-1];
         if (t->live || t->pa || t->pb || t->da || t->db || t->len || t->cap || t->leaves) return 40;
-        for (int i=0;i<4;i++) if (!tracked[i] || released[i]!=1) return 41;
+        /* Each pair has one owning base; its interior region is never freed. */
+        for (int i=0;i<4;i++) if (!tracked[i] || released[i]!=(i%2==0?1u:0u)) return 41;
         /* Output validation now precedes adjoint allocation. On these two
          * paths there must be no allocation to release; later failures still
-         * own all five detached buffers. */
+         * own both metadata pairs and the adjoint buffer. */
         if (probe_mode==1 || probe_mode==2) {
             if (tracked[4] || released[4]) return 41;
         } else if (!tracked[4] || released[4]!=1) return 41;

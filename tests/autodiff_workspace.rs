@@ -22,7 +22,7 @@ fn input_nodes_omit_metadata_and_managed_weights_transfer_atomically() {
     );
     let marker = "    t->len = n;";
     assert_eq!(code.matches(marker).count(), 1);
-    let padded = code.replace(marker, &format!("    fwp_tape_reserve(t, n);\n{marker}"));
+    let padded = code.replace(marker, &format!("{marker}\n    fwp_tape_reserve(t, n);"));
     let registration = "        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);";
     assert_eq!(code.matches(registration).count(), 1);
     let unprotected = code.replace(registration, "");

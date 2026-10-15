@@ -189,6 +189,13 @@ No timing claim covers unrelated workloads.
 [Four-host registry measurements](measurements/ad-registry-2026-10-15.json) record
 fewer allocation requests and the extra live capacity between growth boundaries.
 They do not establish lower slot-search complexity or a general speedup.
+Native metadata uses two paired allocations: contiguous parent arrays in one,
+numeric derivative arrays in another. Growth preserves initialized values and
+alignment, and detached cleanup frees only the owning bases. Managed weights
+keep their typed owner. The layout changes allocator requests, not the 24-byte
+numeric payload per operation, the node bound or the workspace budget. Growth
+moves the second initialized regions; allocation reduction alone is not a speed
+claim. [The handoff](development-state.md) records current validation.
 Raw reverse-mode tape interfaces remain outside checked ARC eligibility.
 
 Historical timing samples are preserved in

@@ -400,6 +400,19 @@ Numeric and managed tapes use the same offset convention. Managed pushes protect
 the first retained weight until the second retain completes, so a failed push
 keeps its original length and releases partial ownership.
 
+Native AD metadata keeps the structure-of-arrays layout in paired allocations:
+`pa`/`pb` share an owning base, as do numeric `da`/`db`. Both second regions are
+naturally aligned. Growth moves only initialized entries, preserving bits and
+parent order; callbacks and managed-weight growth finish before the new capacity
+is committed. Until then, old offsets remain valid after a moving realloc.
+The owner is captured before realloc, allowing direct numeric and managed
+pushes to specialize the growth branch. Only base pointers release storage.
+Two pairs keep the existing 32-bit node
+bound representable without multiplying its capacity by 24 in one size_t request.
+Managed weights remain separately typed; numeric workspace payload bytes and
+the 512 KiB budget are unchanged. The interpreter retains its independent Vec
+representation. [The handoff](development-state.md) records validation.
+
 The native AD registry doubles from one slot up to the 65,535-slot token bound.
 Only initialized slots are published; growth commits its pointer and capacity
 once allocation succeeds. Scope links use slot indices and survive relocation.

@@ -1,5 +1,24 @@
 # Delivery evidence
 
+## Accepted registry cursor follow-up (PR #140)
+
+[PR #140](https://github.com/e6qu/fun-with-pipes/pull/140) merged as `09f1a029`,
+tree-identical to `cdb76905`. All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38710624989)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38710579729)
+passed. Four-host [AD/evidence](https://github.com/e6qu/fun-with-pipes/actions/runs/38707923424)
+and both [WASM checks](https://github.com/e6qu/fun-with-pipes/actions/runs/38707931935)
+passed at runtime-equivalent `e0d073a7`.
+[Permanent evidence](measurements/ad-search-2026-10-15.json) records exact
+allocation/live-memory counts, timings and inspected native instructions.
+At 16,384 simultaneous tapes the cursor avoids 134,209,536 unavailable-slot
+visits without additional heap allocation; small timing cases are mixed and
+arbitrary holes can still require linear search. The merge message was verified
+as one line with an empty body and no trailers. The final guarded gate passed
+in 6.92s and clean-main/tree/message verification in 0.62s. The duplicate
+post-merge production run `38720091772` was cancelled after confirming tree
+identity and accepted PR gates; it is not an acceptance gate. Post-merge
+documentation `38720091540` passed.
+
 [PLAN](../PLAN.md) records delivered scope and remaining engineering gaps;
 [the handoff](development-state.md) records current work. This index supplies
 verification references, not executable next actions. Superseded session plans,
