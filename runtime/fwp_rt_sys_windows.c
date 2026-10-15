@@ -64,9 +64,15 @@ static V fwp_p_file_info(V path, const fwp_desc *error) {
     if (failed) return fwp_win_io_error("stat", STR(path)->d, failed, error);
     i128 modified = ((i128)basic.LastWriteTime.QuadPart - UINT64_C(116444736000000000)) * 100;
     if (modified < 0) modified = 0; /* interpreter metadata before Unix epoch */
+    fwp_value_owner time = {fwp_rc_fresh(fwp_duration((int64_t)modified)), fwp_rc_free_obj};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&time, &cleanup);
     V fields[3] = {standard.Directory ? FWP_TRUE : FWP_FALSE,
-                   fwp_duration((int64_t)modified), (V)standard.EndOfFile.QuadPart};
-    return fwp_record(3, fields);
+                   time.value, (V)standard.EndOfFile.QuadPart};
+    V result = fwp_rc_fresh(fwp_record(3, fields));
+    (void)fwp_value_finish(&time, &cleanup);
+    FWP_KEEP_ALIVE(path);
+    return result;
 }
 static V fwp_win_remove(V path, int directory, const fwp_desc *error) {
     if (fwp_path_has_nul(path)) return fwp_io_error("remove", "path contains a NUL character", error);

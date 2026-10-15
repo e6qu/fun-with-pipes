@@ -10,13 +10,36 @@ its actual stack-scan boundary. Omitting that boundary reproduced string loss
 under forced collection; production task initialization was already correct.
 Earlier Windows probe CRLF output is repaired too.
 
-This is preparation branch `checked-filesystem-ownership` in
-`/private/tmp/fwp-filesystem-ownership`, based on path repair `135fa6f5`. Its first
-change repairs counted ownership of caught I/O errors. Directory/environment
-snapshot work now has focused local tests; runner validation is pending. The combined numerical/console delivery remains
-in `/private/tmp/fwp-linear-algebra`; the path repair remains in
-`/private/tmp/fwp-path-validation`. No PR is open for these preparations.
-Only commits after `135fa6f5` belong to this error-ownership repair.
+This is preparation branch `checked-file-values` in `/private/tmp/fwp-file-values`,
+based on snapshot preparation `cbe6604a`. That parent passed all six platforms in [run 38810318287](https://github.com/e6qu/fun-with-pipes/actions/runs/38810318287).
+Only changes after `cbe6604a` belong to this subsequent file-value preparation.
+The combined numerical/console delivery remains in `/private/tmp/fwp-linear-algebra`.
+No PR is open for these preparations.
+
+## File-value acceptance criteria
+
+Give file metadata, byte reads and ordinary filesystem actions reviewed ownership
+contracts. The metadata duration and enclosing record need counted ownership and
+protection while construction can fail. Byte reads reuse the existing owned input
+buffer cleanup. Borrowed path/data inputs survive success and failure. Repeated
+calls, forced collection, allocation-failure injection and deliberately omitted
+cleanup must expose leaks. Compare real file changes and raw/native results on
+all six platforms before claiming support.
+
+A guarded repro (`/private/tmp/fwp-file-info-repro.py`, 2.28 s) confirmed a
+pre-epoch timestamp mismatch: interpreter `0ns`, native macOS `-1s`. Match the
+existing interpreter/Windows zero behavior on POSIX and avoid signed overflow
+while converting wider dates to the existing 64-bit nanosecond representation.
+Preserve the original write error across `fclose`, as the existing text writer
+already does. Guarded existing-compiler probes now pass (8.87 s): raw/native file mutations,
+pre-epoch and wide dates, 128 metadata/byte reads, collection between metadata
+allocations and each construction failure. Missing record count and missing
+partial-duration protection fail with 182/189. Injected short writes followed by
+an errno-changing close retain ENOSPC; close failures report EACCES. Removing
+error restoration fails with 192. These checks do not establish new compiler
+eligibility or native Windows support; run the six-platform suite next.
+The inventory passes (0.50 s): 249 explicit contracts, 10 flat signatures,
+100 declarations needing review and 19 lowered templates (90 review symbols).
 
 Standing authorization covers fixes, publication and squash merges after all
 nine production jobs and documentation pass for the final commit. Use exactly
@@ -67,7 +90,8 @@ Guarded checks: `python3 scripts/local-guard.py python3
 controls (7.23 s); the final raw fixture with an empty directory passes (0.61 s), formatting
 passes (1.08 s), and the roadmap audit passes (2.51 s). The inventory check
 passes (1.28 s); its first invocation omitted required arguments and was corrected. These use the existing compiler plus edited runtime: new compiler proof
-rules and native Windows await the six-host `filesystem` workflow. The inventory
+rules and native Windows then passed the six-host `filesystem` workflow
+`38810318287` at `cbe6604a`. The inventory
 now has 239 explicit contracts, 10 flat signatures, 110 review declarations and
 19 lowered templates; its frozen baseline is unchanged.
 
@@ -217,10 +241,10 @@ A preceding Intel macOS compiler SIGABRT in U128 division by zero did not recur
 on its unchanged retry; its cause remains unknown. Preserve future crash reports.
 Do not describe the abort as repaired or a skipped/queued job as passing.
 
-## Next: validate snapshots and deliver the combined batch
+## Next: validate file values and deliver the combined batch
 
-Publish the snapshot preparation and run the six-host `filesystem` suite; fix
-any failures. Keep these new contracts separate from the accepted caught-error
+Publish the file-value preparation and run the six-host `filesystem` suite; fix
+any failures. Snapshot parent `cbe6604a` passed all six hosts in `38810318287`. Keep these new contracts separate from the accepted caught-error
 and path evidence until their own checks pass.
 
 Monitor #146 at `19b14d0b`: all nine production jobs plus documentation must pass

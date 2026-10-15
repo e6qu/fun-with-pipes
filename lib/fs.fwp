@@ -18,6 +18,8 @@ FileInfo = { size: I64, modified: Duration, is-dir: Bool }
 foreign "fwp" file.exists : String -> Bool ! {FileIO}
 foreign "fwp" file.is-dir : String -> Bool ! {FileIO}
 # Size, modification time (since the Unix epoch) and kind of a file.
+# Modification times before the epoch are reported as zero. Nanoseconds use
+# the existing I64 representation: wider timestamps keep their low 64 bits.
 foreign "fwp" file.info : String -> FileInfo ! {FileIO, Error[IoError]}
 foreign "fwp" file.remove : String -> () ! {FileIO, Error[IoError]}
 # `"old.txt" | file.rename "new.txt"` moves a file.

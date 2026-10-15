@@ -732,6 +732,8 @@ file.exists : String -> Bool ! {FileIO}
 file.is-dir : String -> Bool ! {FileIO}
 
 # Size, modification time (since the Unix epoch) and kind of a file.
+# Modification times before the epoch are reported as zero. Nanoseconds use
+# the existing I64 representation: wider timestamps keep their low 64 bits.
 file.info : String -> FileInfo ! {FileIO, Error[IoError]}
 file.remove : String -> () ! {FileIO, Error[IoError]}
 

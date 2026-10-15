@@ -296,6 +296,13 @@ on success and failure. Recursive directory creation releases its temporary path
 buffer. These three new contracts await cross-platform runner validation; local
 probes alone do not establish support.
 
+The next file-value preparation owns metadata records and their duration fields,
+protecting the duration if record construction fails. Byte reads reuse the same
+buffer/stream cleanup as text reads and return a fresh leaf. Existence checks,
+rename/remove, ordinary directory creation and append/byte writes borrow their
+arguments. Focused tests check repeated storage release and error preservation;
+changed-compiler and six-platform acceptance remain pending.
+
 Current-directory lookup and other unreviewed IO primitives
 remain outside checked ARC.
 

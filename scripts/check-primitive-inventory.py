@@ -107,7 +107,12 @@ bundle_contracts['csv.parse-with'] = (2, 'OwnedTree', [])
 bundle_contracts['cli.parse'] = (2, 'OwnedTree', [])
 for symbol in ['lines', 'read-line', 'read-lines', 'read-all', 'args', 'env.get', 'env.vars', 'dir.list']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
-bundle_contracts['dir.create-all'] = (1, 'Shared', [])
+for symbol in ['dir.create-all', 'dir.create', 'dir.remove', 'file.remove', 'file.exists', 'file.is-dir']:
+    bundle_contracts[symbol] = (1, 'Shared', [])
+for symbol in ['file.rename', 'file.append', 'file.write-bytes']:
+    bundle_contracts[symbol] = (2, 'Shared', [])
+bundle_contracts['file.read-bytes'] = (1, 'FreshLeaf', [])
+bundle_contracts['file.info'] = (1, 'OwnedTree', [])
 bundle_contracts['list.transpose'] = (1, 'CopiedStructure', [0])
 for symbol, arity in [('linalg.lu-solve', 3), ('linalg.inverse', 2),
                       ('linalg.cholesky', 2), ('linalg.qr', 3), ('linalg.cg', 5)]:

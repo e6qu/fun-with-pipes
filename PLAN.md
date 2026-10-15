@@ -117,6 +117,10 @@ ownership and removal of GC are the primary design priority.
     Unicode output, empty directories, independent environment copies and every
     partial-construction cleanup on all six targets. Recursive directory creation
     must release temporary path storage without depending on collection.
+11. Complete reviewed ownership of file metadata, byte reads and ordinary file
+    actions. Preserve file contents, errors and borrowed inputs; release partial
+    metadata results without collection. Compare pre-epoch and wide modification
+    times with the interpreter and retain the original write error across close.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

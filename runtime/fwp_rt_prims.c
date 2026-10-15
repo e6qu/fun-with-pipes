@@ -3181,6 +3181,7 @@ static V fwp_p_file_read_impl(V path, const fwp_desc *err, int text) {
     V result = buf_to_str(&b);
     b.d = 0;
     fwp_cleanup_pop(&buffer_cleanup);
+    FWP_KEEP_ALIVE(path);
     return result;
 }
 

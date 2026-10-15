@@ -20,8 +20,12 @@ static V fwp_p_file_append(V path, V s, const fwp_desc *err) {
     if (fwp_path_has_nul(path)) return fwp_io_error("write", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "ab");
     if (!f) return fwp_io_error_path("write", STR(path)->d, err);
-    size_t n = fwrite(STR(s)->d, 1, STR(s)->len, f);
-    if (fclose(f) != 0 || n != STR(s)->len) return fwp_io_error_path("write", STR(path)->d, err);
+    int error = fwrite(STR(s)->d, 1, STR(s)->len, f) == STR(s)->len ? 0 : errno;
+    if (fclose(f) != 0 && !error) error = errno;
+    if (error) {
+        errno = error;
+        return fwp_io_error_path("write", STR(path)->d, err);
+    }
     return FWP_UNIT;
 }
 
@@ -29,8 +33,12 @@ static V fwp_p_file_write_bytes(V path, V s, const fwp_desc *err) {
     if (fwp_path_has_nul(path)) return fwp_io_error("write", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "wb");
     if (!f) return fwp_io_error_path("write", STR(path)->d, err);
-    size_t n = fwrite(STR(s)->d, 1, STR(s)->len, f);
-    if (fclose(f) != 0 || n != STR(s)->len) return fwp_io_error_path("write", STR(path)->d, err);
+    int error = fwrite(STR(s)->d, 1, STR(s)->len, f) == STR(s)->len ? 0 : errno;
+    if (fclose(f) != 0 && !error) error = errno;
+    if (error) {
+        errno = error;
+        return fwp_io_error_path("write", STR(path)->d, err);
+    }
     return FWP_UNIT;
 }
 
@@ -66,13 +74,22 @@ static V fwp_p_file_info(V path, const fwp_desc *err) {
     struct stat st;
     if (stat(STR(path)->d, &st) != 0) return fwp_io_error_path("stat", STR(path)->d, err);
 #if defined(__APPLE__)
-    int64_t ns = (int64_t)st.st_mtimespec.tv_sec * 1000000000LL + st.st_mtimespec.tv_nsec;
+    int64_t seconds = st.st_mtimespec.tv_sec, nanos = st.st_mtimespec.tv_nsec;
 #else
-    int64_t ns = (int64_t)st.st_mtim.tv_sec * 1000000000LL + st.st_mtim.tv_nsec;
+    int64_t seconds = st.st_mtim.tv_sec, nanos = st.st_mtim.tv_nsec;
 #endif
+    /* Match the interpreter: pre-epoch time is zero; wide nanoseconds narrow
+     * modulo 2^64, without signed multiplication overflow. */
+    int64_t ns = seconds < 0 ? 0 : (int64_t)((uint64_t)seconds * UINT64_C(1000000000) + (uint64_t)nanos);
+    fwp_value_owner modified = {fwp_rc_fresh(fwp_duration(ns)), fwp_rc_free_obj};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&modified, &cleanup);
     /* fields in canonical order: is-dir, modified, size */
-    V f[3] = {S_ISDIR(st.st_mode) ? FWP_TRUE : FWP_FALSE, fwp_duration(ns), (V)(int64_t)st.st_size};
-    return fwp_record(3, f);
+    V fields[3] = {S_ISDIR(st.st_mode) ? FWP_TRUE : FWP_FALSE, modified.value, (V)(int64_t)st.st_size};
+    V result = fwp_rc_fresh(fwp_record(3, fields));
+    (void)fwp_value_finish(&modified, &cleanup);
+    FWP_KEEP_ALIVE(path);
+    return result;
 }
 
 static V fwp_p_file_remove(V path, const fwp_desc *err) {
