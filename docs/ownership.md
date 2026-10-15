@@ -359,3 +359,12 @@ alongside the maintained application in both memory modes.
 Boolean `not`, `and` and `or` borrow their immediate Boolean arguments and
 return an immediate Boolean tag; none needs storage or reference counts. Their
 explicit contracts admit ordinary Boolean combinations to checked ARC.
+
+`time.monotonic` and `time.unix` return a counted Duration record whose single
+field contains nanoseconds. Repeated clock reads and timestamped logs must free
+those records without tracing. The clock regression compares monotonic ordering,
+positive wall-clock readings and log fields with raw interpretation, checks
+final ARC storage, and deliberately removes one count to verify leak detection.
+Timestamps differ between executions; the test checks their format and the
+remaining fields rather than requiring identical clock readings. These records
+still allocate; avoiding that allocation is separate work.

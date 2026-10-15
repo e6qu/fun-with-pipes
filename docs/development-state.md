@@ -2,8 +2,8 @@
 
 Updated 2026-10-16. PR #146 merged as `be890914` after all nine production
 jobs and documentation passed. Current [PR #147](https://github.com/e6qu/fun-with-pipes/pull/147)
-is at `71c612d0`; production run `38814786923` has six passing jobs and three
-running (Linux ARM64/AMD64, Intel macOS GC shard). Documentation passes in
+is at `71c612d0`; production run `38814786923` has seven passing jobs and two
+running (Linux ARM64/AMD64). Documentation passes in
 `38814787519`. Do not change its head merely to refresh tracking.
 
 Standing authorization: fix failures, require all nine production jobs and docs
@@ -38,7 +38,7 @@ and larger applications; derivative scaling and the other listed goals remain.
 | 6 | In progress | Retain comparable C/Rust results and establish repeatable regression criteria |
 | 7 | In progress | Repair and validate the maintained directory application in checked ARC |
 
-Next: run the combined Boolean/static-container repair and fix any remaining application failures; merge #147
+Next: inspect combined repair run `38822994702` at `86bdcba6` and fix any remaining application failures; merge #147
 only after its exact-head gate passes, then publish the combined preparation.
 
 ## Batch scope
@@ -84,7 +84,13 @@ only after its exact-head gate passes, then publish the combined preparation.
   It is `/private/tmp/fwp-directory-contract-check.py`. The inventory passes
   (0.48 s): 252 contracts, eight scalar signatures, 99 review declarations,
   19 templates and 89 review symbols. Native application acceptance still awaits
-  the combined repair.
+  the combined repair in `38822994702`. The superseded `38822110000` is canceled
+  after the same missing-Boolean-contract failure on four hosts, freeing its
+  unfinished runners. A bounded O1 application mechanism probe using #147's
+  downloaded ARM64 compiler and explicit ARC preprocessor mode passes (2.75 s),
+  including output parity and final memory. It deliberately bypasses old
+  eligibility and does not establish changed-compiler acceptance:
+  `/private/tmp/fwp-directory-runtime-check.py`.
 - Guarded local formatting passes (1.07 s), extended raw-interpreter application
   passes (1.66 s), and primitive inventory passes (0.61 s): 250 contracts,
   10 scalar signatures, 99 review declarations, 19 templates, 89 review symbols.
@@ -132,4 +138,35 @@ helper taking a restrict-qualified output parameter. Only output is disjoint;
 inputs may alias. The arithmetic, ticks and all profiles must agree, and symbols
 must show no out-of-line helper. This is a runner experiment before any runtime
 change. Source transformations and Python syntax pass for all eight downloaded
-timing sources; dispatch against solver run `38817877068`.
+timing sources. Run `38822697830` passes all four hosts against solver run
+`38817877068`, with unchanged profiles and no helper call. It is slower on
+Linux AMD64: ARC kernel 1.192× and allocation-inclusive 1.194×; tracing kernel
+1.716×. Linux/macOS ARM64 and Intel macOS changes are small and mixed. Actual
+AMD64 ARC disassembly has 303 instructions versus 387, 89 stack-addressed
+instructions versus 115 and a 376-byte frame versus 472 bytes; both use the same
+two-lane multiply/add sequence. Fewer instructions are not a timing gain.
+Repeat run `38823092869` is queued to test reproducibility. Runtime is unchanged;
+retain the result before deciding whether to reject this candidate. Artifacts:
+`/private/tmp/fwp-matrix-alias-evidence`; extracted kernels `/private/tmp/fwp-matrix-{local,parameter}-kernel.asm`.
+
+## Clock and logging extension
+
+Inspection found `time.monotonic` and `time.unix` allocate a one-field Duration
+record without a counted-result contract, excluding ordinary `log.info` from
+checked ARC. Extend this batch with explicit ownership for these records.
+Acceptance: interpreter/native agreement on clock ordering and logging fields
+(timestamps naturally differ), repeated ARC cleanup, a missing-count negative
+control, tracing stress/reuse and all six native targets. No timing or zero-heap
+claim is intended; the existing Duration allocation remains measured overhead.
+
+The clock contract uses existing fresh-leaf ownership: the Duration has only an
+I64 field. `tests/clock_ownership.rs` repeats 128 ordered reads, wall-clock reads
+and log messages, checks both memory modes and rejects an omitted count with
+exit 231. The test exposed an extra blank line in every `log.event`: it appended
+a newline before `eprint`, which already appends one. Removing that redundant
+append restores one line per event; raw/native log fields are compared while
+validating, rather than comparing, timestamps. The first fixture failure exposed
+this bug; the corrected edited-C mechanism probe passes (2.46 s). Local formatting
+passes (1.07 s), generated stdlib docs regenerate and verify (0.48 s), inventory
+passes (0.48 s): 254 contracts, eight scalar signatures, 97 review declarations,
+19 templates and 87 review symbols. Actual compiler validation remains on CI.

@@ -115,6 +115,8 @@ for symbol in ['file.rename', 'file.append', 'file.write-bytes']:
     bundle_contracts[symbol] = (2, 'Shared', [])
 bundle_contracts['file.read-bytes'] = (1, 'FreshLeaf', [])
 bundle_contracts['env.cwd'] = (1, 'FreshLeaf', [])
+for symbol in ['time.monotonic', 'time.unix']:
+    bundle_contracts[symbol] = (1, 'FreshLeaf', [])
 bundle_contracts['file.info'] = (1, 'OwnedTree', [])
 bundle_contracts['list.transpose'] = (1, 'CopiedStructure', [0])
 for symbol, arity in [('linalg.lu-solve', 3), ('linalg.inverse', 2),
