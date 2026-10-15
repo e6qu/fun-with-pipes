@@ -73,8 +73,10 @@ not the changed compiler's ARC eligibility rules.
   original baseline file remains immutable.
 - Formatting passed (1.01 s). The initial solver-only run
   [38791568892](https://github.com/e6qu/fun-with-pipes/actions/runs/38791568892)
-  was dispatched at `9fede19f`; it is queued and does not validate later array
-  borrowing changes. The expanded batch needs a new focused run.
+  at `9fede19f` was cancelled while queued after the batch expanded.
+  [Expanded run 38793378425](https://github.com/e6qu/fun-with-pipes/actions/runs/38793378425)
+  is queued at `42662770`, covering solver and array borrowing tests, existing
+  numerical allocation/failure controls and forty-sample C/Rust comparisons.
 
 Intel macOS assembly of the accepted numerical candidate shows repeated
 slice/data selection inside the F64 reduction. A bounded C experiment hoisted
@@ -87,7 +89,8 @@ place. Changing-array loops keep dynamic loads; no new runtime wrapper or type
 conversion is introduced. Full compiler validation and runner timing are pending.
 
 The new fixture covers original inputs, slices, empty arrays, arrays replaced on
-each loop step and task execution. Raw interpreter output passed (0.65 s).
+each loop step, negative/out-of-range indices and task execution. Raw interpreter
+output passed (0.62 s for the final fixture).
 `/private/tmp/fwp-array-borrow-check.py` passed (0.89 s): isolated invariant-proof
 and test-harness metadata compilation, plus old-compiler confirmation of the
 loop shape. This is not a changed-compiler integration result.
@@ -100,7 +103,7 @@ these solver ownership changes for numerical speed or accuracy improvements.
 
 ## Next action
 
-Next: publish this preparation branch and run the focused `solvers` workflow. Fix any
+Next: monitor expanded run 38793378425 and fix any
 failures while monitoring #146. When #146's exact-head gates pass, squash merge
 it, then rebase only commits after `c10b1ccd` onto the accepted squash commit.
 Reconcile this handoff with the parent delivery evidence and open the solver PR.
