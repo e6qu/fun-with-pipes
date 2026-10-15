@@ -184,56 +184,93 @@ not reproduce every cost of an earlier release.
 
 ## Measurement report index
 
-### Current tracing and ARC comparison
+### Current numerical comparison and record moves
 
-[The memory-mode report](measurements/numerical-memory-modes-2026-10-15.json)
-retains baseline `49d35018` and candidate `c10b1ccd` on Linux/macOS ARM64/AMD64,
-including processors, compilers, build commands, forty raw timing samples per
-implementation and separate allocation profiles. Both [baseline](https://github.com/e6qu/fun-with-pipes/actions/runs/38782635990)
-and [candidate](https://github.com/e6qu/fun-with-pipes/actions/runs/38786031433)
-passed all four hosts. Intel macOS needed an unchanged-commit retry after a
-compiler abort in a division-by-zero test; its cause remains unknown.
-Both fwp memory modes are checked compiler builds; ARC binaries exclude tracing
-symbols. Numerical inputs and ordered arithmetic match C/Rust.
+[The record-move report](measurements/numerical-record-moves-2026-10-16.json)
+retains current fwp/C/Rust results at `a3d8f16e` on Linux/macOS ARM64/AMD64,
+plus a separate experiment that restores the removed ownership operations.
+All four hosts pass both the [numerical run](https://github.com/e6qu/fun-with-pipes/actions/runs/38817877068)
+and [paired experiment](https://github.com/e6qu/fun-with-pipes/actions/runs/38821156704).
+These component measurements precede the combined delivery's final acceptance.
+Processors, compilers, flags, build commands, source hashes, raw samples and
+allocation profiles are retained. Checked ARC binaries exclude tracing symbols.
 
-These candidate ratios compare only the kernel: array reduction includes
-consuming/freeing its input; matrix multiplication starts after output allocation
-and zeroing. Allocation-inclusive time and resident memory are recorded separately.
-A ratio of 2 means twice the elapsed time, or 100% extra time; 1.02 means about 2% extra.
+The array workload reduces 65,537 elements eight times. Its kernel time includes
+consuming and releasing the input, but excludes input allocation and filling.
+The matrix workload multiplies 65×67 by 67×63 matrices eight times using tiles
+of width 32. Its kernel timer starts after output allocation and zeroing and
+covers only multiplication and accumulation. Allocation-inclusive time includes
+input construction, computation and cleanup. C, Rust and fwp use the same inputs,
+ordered arithmetic and algorithms; multiply and add remain separate operations.
+Forty uninstrumented samples per implementation come from eight rotating process
+batches after warmup. Separate binaries collect allocation counts and memory;
+profiling overhead is excluded from timings. Compilation and process startup
+are outside these timers. No stable regression threshold is inferred from shared
+runner timings.
 
-| Host / workload | Tracing fwp / C | ARC fwp / C | ARC fwp / Rust |
-|---|---:|---:|---:|
-| Linux AMD64 / array | 1.38 | 1.00 | 1.00 |
-| Linux ARM64 / array | 2.43 | 1.02 | 1.03 |
-| macOS AMD64 / array | 1.92 | 1.40 | 2.50 |
-| macOS ARM64 / array | 1.70 | 1.01 | 1.02 |
-| Linux AMD64 / matrix | 1.16 | 1.15 | 0.82 |
-| Linux ARM64 / matrix | 0.96 | 0.96 | 0.73 |
-| macOS AMD64 / matrix | 0.96 | 0.94 | 1.26 |
-| macOS ARM64 / matrix | 0.99 | 1.00 | 0.77 |
+A ratio of 2 means twice the elapsed time, or 100% extra time; 1.02 means 2% extra.
 
-ARC array time is near C/Rust on three hosts; Intel macOS still takes about 40%
-longer than C and 150% longer than Rust. The matrix kernel is now near C on both
-Macs, but Intel macOS still takes about 26% longer than Rust. These are specific
-workloads, not a language-wide zero-overhead result.
+| Host / workload | Tracing / C kernel | ARC / C kernel | ARC / Rust kernel | ARC / C allocation-inclusive |
+|---|---:|---:|---:|---:|
+| Linux AMD64 / array | 3.060 | 1.045 | 1.052 | 1.843 |
+| Linux ARM64 / array | 2.447 | 0.991 | 0.988 | 1.656 |
+| macOS AMD64 / array | 1.478 | 0.998 | 1.736 | 1.853 |
+| macOS ARM64 / array | 1.665 | 1.000 | 0.999 | 2.233 |
+| Linux AMD64 / matrix | 1.234 | 1.831 | 1.257 | 2.069 |
+| Linux ARM64 / matrix | 0.973 | 0.980 | 0.746 | 1.126 |
+| macOS AMD64 / matrix | 0.951 | 0.948 | 0.883 | 1.205 |
+| macOS ARM64 / matrix | 1.011 | 0.998 | 0.747 | 1.247 |
 
-Compared with the baseline, ARC matrix time fell about 75% on Intel macOS and
-43% on ARM macOS; C time changed by -6.5% and +2.2%, respectively. Native
-instructions show vector multiply/add after fixed-size matrix copies became
-compiler intrinsics. Taskless programs also omit scheduler checks. The combined
-change preserves separate floating-point multiply/add and all allocation profiles.
-Linux ARM64 matrix timing changed by less than 1%. Linux AMD64 ran on different
-processors (EPYC 9V45 baseline, EPYC 7763 candidate), so its absolute before/after
-times cannot isolate the optimization. Current fwp matrix time there is about
-15% above C. Shared runner measurements do not establish a stable timing threshold.
+The ARC array kernel is close to C for these inputs, but input construction and
+cleanup make its complete calculation 66–123% slower than C. Intel macOS array
+execution is also about 74% slower than Rust. The Linux AMD64 ARC matrix kernel
+takes about 83% more time than C; its allocation-inclusive calculation takes
+about 107% more. These remaining costs must be investigated. Near-C kernel time
+on another host does not establish language-wide zero overhead.
 
 Both fwp modes finish with zero live charged bytes and no collections. Each
-eight-round array sample allocates eight inputs, performs zero retains and
-releases each input once. Matrix samples use forty fwp allocations versus
-twenty-four in C/Rust because two matrix wrapper records are allocated each
-round; they perform twenty-four retains and matching nonlast releases. Allocation,
-retention and cleanup counts match the baseline on every host. Removing these
-remaining wrapper/sharing costs and the Intel array gap remains work.
+array sample allocates eight inputs and performs no retains. Eight matrix
+products allocate forty objects versus twenty-four in C/Rust: fwp still creates
+two input wrapper records per product. They request 811,648 bytes in total and
+peak at 101,392 charged bytes, which includes allocator size-class rounding but
+excludes allocator metadata. Process resident memory is recorded separately;
+reserved address space is not physical live storage.
+
+The compiler now transfers fields from uniquely owned records, including a
+selected field whose flattened parent is immediately discarded. Shared parents
+still retain the children they share. In this matrix workload the moves remove
+all twenty-four retains and twenty-four nonfinal releases; release checks fall
+from fifty-six to sixteen. Allocation counts and final storage do not change.
+This establishes reduced bookkeeping, not elimination of all ownership cost.
+
+The separate paired experiment compiles the same emitted C twice: once with
+moves and once with the former count operations restored. It holds the matrix
+arithmetic and allocation counts fixed and asserts both sets of operation counts.
+Each binary gets forty samples in rotating order. The control restores traffic
+for these nonfailing inputs; it is not an old compiler build and does not reproduce
+obsolete retain-overflow cleanup scaffolding.
+
+| Host | ARC moved / retained kernel | ARC moved / retained allocation-inclusive | Tracing moved / retained allocation-inclusive |
+|---|---:|---:|---:|
+| Linux AMD64 | 0.710 | 0.694 | 0.875 |
+| Linux ARM64 | 1.008 | 1.006 | 0.999 |
+| macOS AMD64 | 0.965 | 0.984 | 0.971 |
+| macOS ARM64 | 0.997 | 0.985 | 0.998 |
+
+This run shows a substantial AMD64 Linux gain, small Mac gains and a small Linux
+ARM64 slowdown. It does not establish a portable speedup or C/Rust parity.
+The kernel timer excludes the record conversions, so a changed kernel timing
+cannot be read as time spent in those operations alone: generated-code layout,
+cache state and runner variation also matter. A preceding AMD64 numerical run
+used Xeon 8370C; the current cross-language run used 8573C. Its absolute times
+cannot isolate record moves. Keep the slower current C/Rust result alongside
+the paired result when selecting the next optimization.
+
+[The preceding memory-mode report](measurements/numerical-memory-modes-2026-10-15.json)
+retains the earlier fixed-size-copy and scheduler-check changes. The
+[array-borrow report](measurements/numerical-array-borrows-2026-10-15.json)
+separately compares invariant array-data access with per-element lookup. These
+are historical measurements, not competing current performance claims.
 
 The [earlier ownership/performance report](measurements/ownership-performance-2026-10-15.json)
 records `f42d6226`, its operation-count checks and sustained derivative experiment.

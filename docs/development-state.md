@@ -26,6 +26,21 @@ full final-head gate. Component runs below are not a substitute for that gate.
 Current changes address ownership, functional overhead, numerical measurements
 and larger applications; derivative scaling and the other listed goals remain.
 
+## Roadmap status
+
+| Step | Status | Next concrete work |
+|---|---|---|
+| 1 | In progress | Accept field transfers and explicit empty-container ownership; extend remaining boundaries |
+| 2 | In progress | Measure and remove remaining record wrappers and functional intermediates |
+| 3 | In progress | Diagnose the AMD64 matrix gap using generated instructions and controlled timing |
+| 4 | In progress | Accept #147 precision fixes; measure derivative timing and memory scaling |
+| 5 | Pending | Broaden CPU kernels and resolve runtime OpenCL compilation under the no-JIT policy |
+| 6 | In progress | Retain comparable C/Rust results and establish repeatable regression criteria |
+| 7 | In progress | Repair and validate the maintained directory application in checked ARC |
+
+Next: inspect `38822110000` and fix any further application failures; merge #147
+only after its exact-head gate passes, then publish the combined preparation.
+
 ## Batch scope
 
 - Move a selected field out of an already flattened record when its parent is
@@ -60,7 +75,8 @@ and larger applications; derivative scaling and the other listed goals remain.
 - Run `38820866204` fails the new directory application on all six hosts because
   `map.empty` was classified as an uncounted owner. Logs are
   `/private/tmp/fwp-app-linux.log` and `/private/tmp/fwp-app-windows.log`.
-  The explicit static contract is the current fix, awaiting changed-compiler CI.
+  The explicit static contract is published at `f5a38e2e`; changed-compiler CI
+  is running in `38822110000`.
 - Guarded local formatting passes (1.07 s), extended raw-interpreter application
   passes (1.66 s), and primitive inventory passes (0.61 s): 250 contracts,
   10 scalar signatures, 99 review declarations, 19 templates, 89 review symbols.
@@ -84,8 +100,9 @@ emitted C. The control restores count traffic for nonfailing inputs, not the
 entire old compiler or its overflow scaffolding. Forty rotating samples per
 binary and separate profiles compare both memory modes with unchanged arithmetic
 and allocations. Artifacts: `/private/tmp/fwp-record-moves-evidence`.
-Next: retain raw comparisons and update benchmarks with both current C/Rust
-ratios and the distinct moved/retained comparison, including slower results.
+Raw comparisons are retained in `docs/measurements/numerical-record-moves-2026-10-16.json`;
+`docs/benchmarks.md` now explains current C/Rust overhead and the separate paired
+comparison, including slower results. Guarded consolidation passed (0.13 s).
 Linux AMD64's cross-language matrix gap remains; different runner CPUs prevent
 attributing cross-run changes solely to record moves.
 
