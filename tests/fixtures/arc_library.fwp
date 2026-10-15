@@ -1,0 +1,20 @@
+repr(C) Input = { number: I64, text: String }
+repr(C) Summary = { count: I64, value: F64 }
+export text-length : String -> I64
+text-length = string.length
+export summarize : Input -> Summary
+summarize = make { count = .text | string.length, value = .number | int.to-float }
+loss : List[Rev[F64]] -> Rev[F64]
+loss = nth 0 | option.unwrap-or (rev.const 0.0) | fork mul id id
+export slope : F64 -> F64
+slope = singleton | grad loss | sum
+export pipeline : I64 -> I64
+pipeline = range 0 | map (add 1) | sum
+export crash : String -> I64
+crash = const 1 | div 0
+main = [
+    "héllo" | text-length | echo,
+    { number = 7, text = "abcd" } | summarize | .count | echo,
+    3.0 | slope | echo,
+    10 | pipeline | echo,
+] | ignore

@@ -173,7 +173,50 @@ not reproduce every cost of an earlier release.
 
 ## Measurement report index
 
-The first two reports include C/Rust numerical baselines; the other listed
+### Current four-platform baseline
+
+[The 2026-10-15 report](measurements/ownership-performance-2026-10-15.json)
+records revision `f42d6226` on native Linux/macOS ARM64/AMD64, including processor,
+compiler, build commands, raw samples and allocation profiles. All four jobs in
+[the evidence run](https://github.com/e6qu/fun-with-pipes/actions/runs/38771808755)
+passed. Numerical inputs and ordered arithmetic match C/Rust; dimensions are
+runtime values in all three. Timing uses 30 samples from six rotating process
+batches. These are default tracing builds, not checked ARC timings.
+
+The table compares only the kernel: array reduction includes consuming/freeing
+its input; matrix multiplication starts after output allocation and zeroing.
+Allocation-inclusive time and resident memory are recorded separately in the
+report. A ratio of 2 means twice the elapsed time, or 100% extra time.
+
+| Host | Array fwp/C | Array fwp/Rust | Matrix fwp/C | Matrix fwp/Rust |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 1.37 | 1.35 | 1.28 | 0.90 |
+| Linux ARM64 | 2.46 | 2.46 | 0.97 | 0.73 |
+| macOS AMD64 | 1.60 | 2.82 | 3.65 | 4.23 |
+| macOS ARM64 | 1.71 | 1.72 | 1.77 | 1.26 |
+
+The fused reduction allocates no intermediate storage, performs no retains and
+registers no cleanup per element for the tested 0/1/7/129/257-element inputs at
+O1/O2 on all four hosts. Previously, the ARM macOS baseline registered one cleanup
+per element. Generated instructions confirm a scalar reduction loop; the ARM
+macOS loop holds its index and accumulator in registers and has no cleanup call
+in its body. Remaining bounds/view checks and ordinary load/multiply/add work
+are visible. This does not establish vectorization or zero overhead. The timing
+method changed between baseline and candidate, so no isolated optimization
+speedup is claimed.
+
+The sustained derivative case repeats a 4,096-element calculation 512 times.
+It compares paired metadata storage with separate allocations in otherwise
+equivalent generated fwp code. With workspace reuse enabled, paired metadata
+needs 14 allocation requests versus 28 and explicitly moves 48,384 bytes while
+growing. Final managed storage is zero in both variants. Median whole-process
+time is about 1.5–2.0% lower on Linux, 1.6% higher on Intel macOS and 4.7% higher
+on ARM macOS. Eight alternating samples per variant balance execution order;
+shared-runner noise remains. Fewer allocation requests are established; a
+portable speed improvement is not. Same-method before/after and ARC-specific
+timings remain active work.
+
+The first two historical reports below include C/Rust numerical baselines; the other listed
 experiments primarily compare fwp implementations. Their raw reports retain inputs,
 source revisions, machine/compiler details, settings, timings and measured
 allocation counters. Some also retain generated C and disassembly: the actual

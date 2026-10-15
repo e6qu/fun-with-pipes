@@ -519,7 +519,7 @@ fwp build file.fwp [options]                  compile
                      with the arguments after `--` (stdin from
                      --pgo-input F, or empty), then build with the profile
                      (needs GCC)
-    --gc arc         checked native main/CLI programs with counted ownership;
+    --gc arc         checked native executables/C libraries with counted ownership;
                      unsupported value/runtime boundaries diagnose
     --gc tracing     existing tracing compatibility mode (the default)
     --memory static  bounded runtime storage and stacks at startup, with
@@ -618,8 +618,15 @@ rejected otherwise.
 
 The `--gc arc` mode checks eligibility and reclaims supported immutable
 values and scoped File/State owners by reference counts. It supports native
-main, CLI and typed executable protocol entries. It rejects unproved cycle/owner
-boundaries, WebAssembly, libraries and services. It requires normal counted
+main, CLI and typed executable protocol entries, and C libraries whose inputs
+are copied and whose results contain no managed pointers. For example,
+`fwp build --gc arc --staticlib stats.fwp -o libstats.a` can export a
+`String -> I64` function: it copies the input for the call and returns the count
+by value. A `String -> String` export is rejected because the existing C ABI
+returns a pointer with no host release operation. Records follow these rules
+field by field. Host calls must be serialized and finish before library unload.
+The mode rejects unproved cycle/owner boundaries, WebAssembly and services.
+It requires normal counted
 freeing; tracing stress/verification and reuse poisoning are incompatible.
 The [ownership contract](ownership.md#checked-arc-delivery) and
 [delivery evidence](roadmap-history.md) record coverage and production acceptance.
