@@ -1,0 +1,8 @@
+# The test harness supplies the directory, files and process setting.
+main = [
+    dir.create-all "made/a",
+    dir.list "names" | echo,
+    dir.list "empty" | echo,
+    env.vars () | filter (.0 | eq "FWP_SNAPSHOT_COPY") | echo,
+    "absent" | attempt dir.list | echo,
+] | ignore

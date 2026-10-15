@@ -704,6 +704,7 @@ impl<'p> Interp<'p> {
             // files
             "file.open" | "file.create" => {
                 let path = a[0].as_str().to_string();
+                crate::sys::check_path("open", &path)?;
                 let f = if sym == "file.open" {
                     std::fs::File::open(&path)
                 } else {
@@ -756,6 +757,7 @@ impl<'p> Interp<'p> {
             }
             "file.with" => {
                 let path = a[0].as_str().to_string();
+                crate::sys::check_path("open", &path)?;
                 let file = match std::fs::OpenOptions::new()
                     .read(true)
                     .write(true)
@@ -789,6 +791,7 @@ impl<'p> Interp<'p> {
             }
             "file.read" => {
                 let path = a[0].as_str().to_string();
+                crate::sys::check_path("read", &path)?;
                 match std::fs::read_to_string(&path) {
                     Ok(s) => Ok(Value::str(&s)),
                     Err(e) => Err(self.io_error(
@@ -800,6 +803,7 @@ impl<'p> Interp<'p> {
             }
             "file.write-new" => {
                 let path = a[0].as_str().to_string();
+                crate::sys::check_path("write", &path)?;
                 match std::fs::write(&path, a[1].as_str()) {
                     Ok(()) => Ok(Value::unit()),
                     Err(e) => Err(self.io_error(

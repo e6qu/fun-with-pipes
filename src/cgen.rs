@@ -2186,6 +2186,8 @@ fn allocates(e: &Expr, n: usize) -> bool {
 /// result instead of being allocated.
 struct LoopGen {
     unpacked_parameters: bool,
+    /// Array inputs passed unchanged through every Again state.
+    cached_arrays: Vec<usize>,
     tails: std::collections::HashSet<*const Expr>,
     record: bool,
     /// Per field of a record state: its first slot in the state arrays,
@@ -2557,6 +2559,57 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
         ty,
         body: Body::Expr(body),
     })
+}
+
+/// An unchanged array owner keeps its data address valid throughout the loop.
+/// Restrict this direct word load to F64; packed narrower and boxed wider
+/// elements keep their existing representation-specific access paths.
+fn invariant_f64_arrays(prog: &Program, e: &Expr, locals: &[MT], arity: usize) -> Vec<usize> {
+    fn reads(prog: &Program, e: &Expr, local: Local) -> bool {
+        match e {
+            Expr::Call(id, args) => {
+                (matches!(&prog.funcs[*id].body, Body::Prim(s) if s == "array.get")
+                    && args.len() == 2
+                    && matches!(args[1], Expr::Local(l) if l == local))
+                    || args.iter().any(|e| reads(prog, e, local))
+            }
+            Expr::Apply(f, args) => {
+                reads(prog, f, local) || args.iter().any(|e| reads(prog, e, local))
+            }
+            Expr::Record(xs) | Expr::Construct(_, xs) => xs.iter().any(|e| reads(prog, e, local)),
+            Expr::Field(e, _)
+            | Expr::Dup(_, e)
+            | Expr::Drop(_, e)
+            | Expr::ResourceRegion { body: e, .. } => reads(prog, e, local),
+            Expr::SetFields(e, fields) => {
+                reads(prog, e, local) || fields.iter().any(|(_, e)| reads(prog, e, local))
+            }
+            Expr::Let(_, value, body) => reads(prog, value, local) || reads(prog, body, local),
+            Expr::Match(value, arms) => {
+                reads(prog, value, local) || arms.iter().any(|(_, e)| reads(prog, e, local))
+            }
+            Expr::Const(_) | Expr::Local(_) | Expr::Func(_) => false,
+        }
+    }
+    let mut endings = Vec::new();
+    tails(e, &mut endings);
+    let again: Vec<_> = endings
+        .into_iter()
+        .filter_map(|e| match e {
+            Expr::Construct(0, xs) => Some(xs),
+            _ => None,
+        })
+        .collect();
+    if again.is_empty() {
+        return Vec::new();
+    }
+    (0..arity).filter(|&index| {
+        matches!(&locals[index], MT::Con(name, args) if name == "std::Array"
+            && matches!(args.as_slice(), [MT::Con(element, args)] if element == "std::F64" && args.is_empty()))
+            && again.iter().all(|xs| matches!(xs.as_slice(), [Expr::Record(fields)]
+                if matches!(fields.get(index), Some(Expr::Local(l)) if *l as usize == index)))
+            && reads(prog, e, index as Local)
+    }).collect()
 }
 
 fn loop_state_expr(e: &Expr) -> Expr {
@@ -2954,6 +3007,35 @@ impl<'g, 'p> FnGen<'g, 'p> {
         (produces(self, e, m, &HashMap::new())? && !matches!(e, Expr::Construct(..))).then_some(m)
     }
 
+    /// Load a checked element, borrowing a proved loop-invariant data pointer
+    /// when available. The original array remains the counted owner.
+    fn load_array(
+        &mut self,
+        array: &Expr,
+        values: &[String],
+        found: &str,
+        descriptor: &str,
+    ) -> String {
+        let cached = match array {
+            Expr::Local(local) => self
+                .in_loop
+                .as_ref()
+                .filter(|lg| lg.cached_arrays.contains(&(*local as usize)))
+                .map(|_| *local),
+            _ => None,
+        };
+        if let Some(local) = cached {
+            let value = self.fresh();
+            self.line(&format!("V {value} = 0; if ({found}) __builtin_memcpy(&{value}, array_data_{local} + (size_t){} * sizeof(V), sizeof(V));", values[0]));
+            value
+        } else {
+            self.bind(format!(
+                "{found} ? fwp_array_load({}, (size_t){}, {descriptor}) : 0",
+                values[1], values[0]
+            ))
+        }
+    }
+
     /// The tag and fields (C expressions) of `e`, a variant of type `ty`
     /// returned as a struct `fwp_u<m>`, without building it. The fields
     /// hold the references the value would.
@@ -3003,11 +3085,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         index = values[0],
                         array = values[1]
                     ));
-                    let value = self.bind(format!(
-                        "{tag} ? fwp_array_load({array}, (size_t){index}, {descriptor}) : 0",
-                        index = values[0],
-                        array = values[1]
-                    ));
+                    let value = self.load_array(&args[1], &values, &tag, &descriptor);
                     (tag, value)
                 };
                 if self.g.reuse && crate::rc::needs_rc(&self.g.prog.shapes, &element) {
@@ -5148,31 +5226,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
             e = b;
         }
         let xs = self.args(args);
-        let (found, at, v) = (self.fresh(), self.fresh(), self.fresh());
-        if array_element.is_some() {
+        let (found, at) = (self.fresh(), self.fresh());
+        let v = if array_element.is_some() {
             self.line(&format!("int {found} = (int64_t){index} >= 0 && (uint64_t){index} < fwp_array_len({array});", index=xs[0], array=xs[1]));
-            self.line(&format!(
-                "V {v} = {found} ? fwp_array_load({array}, (size_t){index}, {kd}) : 0;",
-                array = xs[1],
-                index = xs[0]
-            ));
+            self.load_array(&args[1], &xs, &found, &kd)
         } else {
             self.line(&format!(
-                "int {found}; uint64_t {at} = fwp_map_find({m}, {k}, {kd}, &{found});",
-                found = found,
-                at = at,
-                m = xs[1],
-                k = xs[0],
-                kd = kd
+                "int {found}; uint64_t {at} = fwp_map_find({}, {}, {kd}, &{found});",
+                xs[1], xs[0]
             ));
-            self.line(&format!(
-                "V {v} = {found} ? MAP({m})->d[2 * {at} + 1] : 0;",
-                v = v,
-                found = found,
-                m = xs[1],
-                at = at
-            ));
-        }
+            self.bind(format!("{found} ? MAP({})->d[2 * {at} + 1] : 0", xs[1]))
+        };
         let value_type = array_element.or_else(|| match &f.locals[1] {
             MT::Con(name, fields) if name == "std::Map" && fields.len() == 2 => {
                 Some(fields[1].clone())
@@ -5504,6 +5568,25 @@ impl<'p> Gen<'p> {
             ),
             "trits.pack" => "return fwp_p_trits_pack(l0);".into(),
             "trits.unpack" => "return fwp_p_trits_unpack(l0, l1);".into(),
+            "env.vars" => {
+                let drop_pair = self.value_drop(&elem(&result, 0));
+                let drop_list = self.value_drop(&result);
+                format!("return fwp_p_env_vars({drop_pair}, {drop_list});")
+            }
+            "dir.list" => {
+                let error = self.desc(&MT::con("std::IoError"));
+                let drop_list = self.value_drop(&result);
+                format!("return fwp_p_dir_list(l0, {error}, {drop_list});")
+            }
+            "lines" | "read-lines" | "args" => {
+                let drop_list = self.value_drop(&result);
+                let call = match sym {
+                    "lines" => format!("fwp_p_lines(l0, {drop_list})"),
+                    "read-lines" => format!("fwp_p_read_lines({drop_list})"),
+                    _ => format!("fwp_p_args({drop_list})"),
+                };
+                format!("return {call};")
+            }
             "simd.splat" => format!("return fwp_p_simd_splat(l0, {}, {});", vec_shape(&result).0, self.desc(&vec_shape(&result).1)),
             "simd.from-array" => format!(
                 "return fwp_p_simd_from_array(l0, {});",
@@ -5758,7 +5841,7 @@ impl<'p> Gen<'p> {
                 }
             }
             "file.info" | "file.remove" | "dir.remove" | "file.rename" | "file.append"
-            | "file.read-bytes" | "file.write-bytes" | "dir.list" | "dir.create"
+            | "file.read-bytes" | "file.write-bytes" | "dir.create"
             | "dir.create-all" | "process.run-input" | "process.call" => {
                 let err = self.desc(&MT::con("std::IoError"));
                 let (f, n) = match sym {
@@ -5769,7 +5852,6 @@ impl<'p> Gen<'p> {
                     "file.append" => ("fwp_p_file_append", 2),
                     "file.read-bytes" => ("fwp_p_file_read_bytes", 1),
                     "file.write-bytes" => ("fwp_p_file_write_bytes", 2),
-                    "dir.list" => ("fwp_p_dir_list", 1),
                     "dir.create" => ("fwp_p_dir_create", 1),
                     "dir.create-all" => ("fwp_p_dir_create_all", 1),
                     "process.run-input" => ("fwp_p_process_run_input", 2),
@@ -5931,7 +6013,6 @@ impl<'p> Gen<'p> {
                     ("string.chars", "fwp_p_chars(l0)"),
                     ("split", "fwp_p_split(l0, l1)"),
                     ("join", "fwp_p_join(l0, l1)"),
-                    ("lines", "fwp_p_lines(l0)"),
                     ("words", "fwp_p_words(l0)"),
                     ("string.contains", "fwp_p_str_contains(l0, l1)"),
                     ("starts-with", "fwp_p_starts_with(l0, l1)"),
@@ -6001,11 +6082,8 @@ impl<'p> Gen<'p> {
                     ("term.read-secret", "fwp_p_term_read_secret()"),
                     ("read-line", "fwp_p_read_line()"),
                     ("read-all", "fwp_read_stdin_all()"),
-                    ("read-lines", "fwp_p_read_lines()"),
-                    ("args", "fwp_p_args()"),
                     ("exit", "fwp_p_exit(l0)"),
                     ("env.get", "fwp_p_env_get(l0)"),
-                    ("env.vars", "fwp_p_env_vars()"),
                     ("env.cwd", "fwp_p_env_cwd()"),
                     ("term.is-tty", "fwp_p_term_is_tty(l0)"),
                     ("file.exists", "fwp_p_file_exists(l0)"),
@@ -6206,15 +6284,40 @@ impl<'p> Gen<'p> {
         let e = &normalized;
         let mut ts = Vec::new();
         tails(e, &mut ts);
+        let cached_arrays = if unpacked_parameters {
+            invariant_f64_arrays(
+                self.prog,
+                e,
+                &body_function.locals,
+                body_function.arity as usize,
+            )
+        } else {
+            Vec::new()
+        };
+        let data_parameters = cached_arrays
+            .iter()
+            .map(|i| format!(", const unsigned char *array_data_{i}"))
+            .collect::<String>();
+        let data_arguments = cached_arrays
+            .iter()
+            .map(|i| format!(", array_data_{i}"))
+            .collect::<String>();
+        let data_initializers = cached_arrays
+            .iter()
+            .map(|i| {
+                format!("    const unsigned char *array_data_{i} = fwp_array_data(st[{i}]);\n")
+            })
+            .collect::<String>();
         let lg = LoopGen {
             unpacked_parameters,
+            cached_arrays,
             tails: ts.iter().map(|t| *t as *const Expr).collect(),
             record: record.is_some(),
             slots: slots.clone(),
         };
         let mut out = format!(
             "/* loop of {} : {}, the state in locals */
-static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
+static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_parameters}) {{
 ",
             f.name, f.ty, step
         );
@@ -6393,10 +6496,10 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
     V st[{n}] = {{0}}, nx[{n}] = {{0}}, out = 0;
     {load}{take}
     {protect}
-    for (;;) {{
+{data_initializers}    for (;;) {{
         {save}{tick}
         {transfer}
-        int done = fs{id}(st, nx, &out);
+        int done = fs{id}(st, nx, &out{data_arguments});
 {root_fences}        if (done) {{ {finish} return out; }}
         for (int i = 0; i < {n}; i++) st[i] = nx[i];
     }}
@@ -6418,7 +6521,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 .map(|i| format!("a{i}"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            let _ = write!(out, "static V fwp_loop_fields{step}({parameters}) {{\n    V st[{n}] = {{{initial}}}, nx[{n}] = {{0}}, out = 0;\n    {protect}\n    for (;;) {{\n        {save}{tick}\n        {transfer}\n        int done = fs{step}(st, nx, &out);\n{root_fences}        if (done) {{ {finish} return out; }}\n        for (int i = 0; i < {n}; i++) st[i] = nx[i];\n    }}\n}}\n");
+            let _ = write!(out, "static V fwp_loop_fields{step}({parameters}) {{\n    V st[{n}] = {{{initial}}}, nx[{n}] = {{0}}, out = 0;\n    {protect}\n{data_initializers}    for (;;) {{\n        {save}{tick}\n        {transfer}\n        int done = fs{step}(st, nx, &out{data_arguments});\n{root_fences}        if (done) {{ {finish} return out; }}\n        for (int i = 0; i < {n}; i++) st[i] = nx[i];\n    }}\n}}\n");
         }
         out
     }

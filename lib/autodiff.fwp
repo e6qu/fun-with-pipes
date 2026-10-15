@@ -161,16 +161,17 @@ test "gradient" =
 # and arithmetic costs; pass counts do not give a wall-clock ratio. Like `Dual`, it
 # implements the numeric traits, so generic numeric code (vectors,
 # matrices, `where Field[t], Floating[t]`) differentiates unchanged.
-# Primitive float adjoints accumulate in F64. Nested reverse adjoints use
-# typed arithmetic on the enclosing tape. A Rev value belongs to its grad:
+# F16/BF16/F32/F64 adjoints accumulate in F64. F128 keeps F128 weights and
+# adjoints. Nested reverse adjoints use typed arithmetic on the enclosing tape.
+# A Rev value belongs to its grad:
 # using it after that grad returned, or combining unrelated same-level tapes,
 # is a trap. Nesting Rev wraps the enclosing value instead of mixing tape IDs.
 
 Rev[T] = { value: T, vertex: I64 }
 
 # The scalar protocol selects its tape representation at specialization time.
-# Primitive floats retain F64 adjoint accumulation. Nested Rev scalars retain
-# typed weights and evaluate their backward arithmetic on the enclosing tape.
+# F16/BF16/F32/F64 retain F64 accumulation; F128 uses typed F128 weights.
+# Nested Rev scalars evaluate backward arithmetic on the enclosing tape.
 trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
     rev._seed : List[T] -> (I64, List[Rev[T]])
     rev._push : (I64, T, I64, T) -> I64
@@ -219,9 +220,9 @@ impl ReverseScalar[F64] =
     rev._inactive-zero = eq zero
 
 impl ReverseScalar[F128] =
-    rev._seed = rev._seed-float
-    rev._push = rev._push-float
-    rev._backward = rev._backward-float
+    rev._seed = rev._seed-owned
+    rev._push = ad.push-owned
+    rev._backward = ad.backward-owned
     rev._inactive-zero = eq zero
 
 impl ReverseScalar[Rev[t]] where ReverseScalar[t] =
