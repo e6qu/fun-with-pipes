@@ -74,7 +74,11 @@ fn filesystem_values_match_raw_interpretation() {
             assert_eq!(
                 (&actual.stdout, &actual.stderr),
                 (&expected.stdout, &expected.stderr),
-                "{gc} {opt}"
+                "{gc} {opt}: native stdout={} stderr={}; interpreter stdout={} stderr={}",
+                String::from_utf8_lossy(&actual.stdout),
+                String::from_utf8_lossy(&actual.stderr),
+                String::from_utf8_lossy(&expected.stdout),
+                String::from_utf8_lossy(&expected.stderr)
             );
             assert!(!root.join("made").exists());
             assert_eq!(std::fs::read(root.join("input")).unwrap(), vec![255; 70000]);

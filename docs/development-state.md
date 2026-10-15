@@ -18,6 +18,20 @@ The current combined delivery is `owned-numerical-programs` in
 evidence anchor.
 No PR is open for these preparations.
 
+## Directory follow-up failure and repair
+
+Run `38812282305` at `03d39626` found that Linux reports `File exists` for a
+trailing slash on a regular file, while macOS reports `Not a directory`.
+The first repair incorrectly imposed the latter on both systems. The runtime
+now asks `mkdir` about the original full path when a parent is a regular file,
+preserving the host's existing interpreter diagnostic. It also preserves the
+first error across secondary metadata checks. Tests compare exact output and
+keep the original file bytes; assertion messages now show readable text.
+Linux failure log: `/private/tmp/fwp-directory-linux-failure.log`.
+Both Linux failures have the same single trailing-slash difference; metadata
+cleanup passes. Corrected local raw/native and cleanup checks pass (9.16 s).
+The repaired commit requires new native validation; the failed run is not acceptance.
+
 ## Recursive-directory follow-up after `c456277`
 
 A guarded repro (`/private/tmp/fwp-directory-error-repro.py`, 2.39 s) confirmed

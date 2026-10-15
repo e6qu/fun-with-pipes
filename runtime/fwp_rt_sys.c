@@ -167,15 +167,20 @@ static V fwp_p_dir_create_all(V path, const fwp_desc *err) {
         if (stat(buf, &st) == 0) {
             if (S_ISDIR(st.st_mode)) continue;
             if (i < len) {
-                errno = ENOTDIR;
-                return fwp_io_error_path("create", p, err);
+                /* Ask about the original path: a trailing slash has different
+                 * mkdir diagnostics on Linux and macOS. */
+                if (mkdir(p, 0777) != 0) return fwp_io_error_path("create", p, err);
+                break;
             }
         }
         if (mkdir(buf, 0777) != 0) {
             int error = errno;
             if (error == EEXIST && stat(buf, &st) == 0) {
                 if (S_ISDIR(st.st_mode)) continue;
-                if (i < len) error = ENOTDIR;
+                if (i < len) {
+                    if (mkdir(p, 0777) == 0) break;
+                    error = errno;
+                }
             }
             errno = error;
             return fwp_io_error_path("create", p, err);
