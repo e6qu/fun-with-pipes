@@ -154,6 +154,14 @@ wall-clock timers do not define an order between independent actions. Use a
 channel or await when ordering matters. [Concurrency](concurrency.md) gives the
 user-visible behavior and platform implementation.
 
+When a compiled program has no tasks or services, its runtime primitives omit
+task-slice checks as well as function-entry checks. Programs that can schedule
+tasks retain both. WebAssembly Asyncify's stack-bound checks remain active.
+The blocked F64 matrix kernel uses fixed-size compiler copy intrinsics: they
+preserve aliasing and alignment rules while exposing loads/stores to the C
+compiler's vectorizer. Shape validation bounds each access; floating-point
+accumulation order and separate multiplication/addition remain unchanged.
+
 ## Numerical specialization
 
 The optimizer removes work only when doing so preserves observable behavior:
@@ -199,11 +207,14 @@ count insertion. Unsupported lifetimes produce a compile error; the compiler
 does not silently switch to tracing.
 
 Admitted programs include ordinary immutable values, scoped files and state,
-proved derivative scopes, selected retained tasks and scoped C calls. Mutable
+proved derivative scopes, selected retained tasks, channels carrying data without
+functions/tasks/channel handles, and scoped C calls. Mutable
 cycles, raw pointers, unproved external callbacks and remote/service contexts
 remain excluded. Checked ARC supports native main and function executables,
-including CLI commands; WebAssembly and library entry points are outside this
-mode. The allocator still uses metadata and may retain reusable pages. See
+including CLI commands, and C libraries with copied inputs and pointer-free
+results. Every library export is checked as a separate entry. WebAssembly and
+service entry points remain excluded. The allocator still uses metadata and may
+retain reusable pages. See
 [the precise memory contract](ownership.md#checked-arc-delivery).
 
 ## Executables and the pipe protocol

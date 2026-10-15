@@ -88,15 +88,26 @@ threshold. Output disagreement is a failure.
 
 ## Numerical workloads compared with C and Rust
 
-Current runner comparisons hide C/Rust dimensions from compile-time constant
+The numerical runner hides C/Rust dimensions from compile-time constant
 propagation, matching the dimensions fwp reads from array and matrix metadata.
 The C output buffer is explicitly disjoint from the input buffers, as in the
 generated fwp kernel and Rust's mutable output slice. Each uninstrumented binary
-has one warmup process, followed by six rotating C/Rust/fwp process batches of
-five samples each. Reports retain all 30 samples, batch order and process memory
-measurements. Allocation profiles use separate instrumented binaries and are
-not used for timing claims. These method changes do not revise the historical
-measurements below.
+has one warmup process. The current script then rotates C, Rust, tracing fwp and
+checked ARC fwp through eight process batches of five samples each. Each
+implementation occupies each position twice. Reports retain all forty samples,
+batch order and process memory measurements. Both fwp modes are emitted by the
+same compiler; the matrix's declared dimensions match the buffers being timed.
+Allocation profiles use separate instrumented binaries and are not used for
+timing claims. The four-host comparison at `49d35018` passed with this method.
+Earlier reports have thirty or fewer samples and only tracing fwp; their
+measurements have not been relabeled as new results.
+
+A C harness constructs fwp inputs through its runtime allocation and array-store
+helpers, then calls the compiled fwp function directly. The allocation-inclusive
+interval includes that harness's construction and cleanup costs; it is not a
+complete fwp application's startup time. The kernel interval isolates the scopes
+described below. This distinction matters when a kernel approaches C speed but
+its surrounding input construction still takes longer.
 
 The [2026-10-12 ownership/numerical report](measurements/ownership-and-arc-2026-10-12.json)
 contains a more controlled comparison than the five complete programs above.
@@ -173,7 +184,83 @@ not reproduce every cost of an earlier release.
 
 ## Measurement report index
 
-The first two reports include C/Rust numerical baselines; the other listed
+### Current tracing and ARC comparison
+
+[The memory-mode report](measurements/numerical-memory-modes-2026-10-15.json)
+retains baseline `49d35018` and candidate `c10b1ccd` on Linux/macOS ARM64/AMD64,
+including processors, compilers, build commands, forty raw timing samples per
+implementation and separate allocation profiles. Both [baseline](https://github.com/e6qu/fun-with-pipes/actions/runs/38782635990)
+and [candidate](https://github.com/e6qu/fun-with-pipes/actions/runs/38786031433)
+passed all four hosts. Intel macOS needed an unchanged-commit retry after a
+compiler abort in a division-by-zero test; its cause remains unknown.
+Both fwp memory modes are checked compiler builds; ARC binaries exclude tracing
+symbols. Numerical inputs and ordered arithmetic match C/Rust.
+
+These candidate ratios compare only the kernel: array reduction includes
+consuming/freeing its input; matrix multiplication starts after output allocation
+and zeroing. Allocation-inclusive time and resident memory are recorded separately.
+A ratio of 2 means twice the elapsed time, or 100% extra time; 1.02 means about 2% extra.
+
+| Host / workload | Tracing fwp / C | ARC fwp / C | ARC fwp / Rust |
+|---|---:|---:|---:|
+| Linux AMD64 / array | 1.38 | 1.00 | 1.00 |
+| Linux ARM64 / array | 2.43 | 1.02 | 1.03 |
+| macOS AMD64 / array | 1.92 | 1.40 | 2.50 |
+| macOS ARM64 / array | 1.70 | 1.01 | 1.02 |
+| Linux AMD64 / matrix | 1.16 | 1.15 | 0.82 |
+| Linux ARM64 / matrix | 0.96 | 0.96 | 0.73 |
+| macOS AMD64 / matrix | 0.96 | 0.94 | 1.26 |
+| macOS ARM64 / matrix | 0.99 | 1.00 | 0.77 |
+
+ARC array time is near C/Rust on three hosts; Intel macOS still takes about 40%
+longer than C and 150% longer than Rust. The matrix kernel is now near C on both
+Macs, but Intel macOS still takes about 26% longer than Rust. These are specific
+workloads, not a language-wide zero-overhead result.
+
+Compared with the baseline, ARC matrix time fell about 75% on Intel macOS and
+43% on ARM macOS; C time changed by -6.5% and +2.2%, respectively. Native
+instructions show vector multiply/add after fixed-size matrix copies became
+compiler intrinsics. Taskless programs also omit scheduler checks. The combined
+change preserves separate floating-point multiply/add and all allocation profiles.
+Linux ARM64 matrix timing changed by less than 1%. Linux AMD64 ran on different
+processors (EPYC 9V45 baseline, EPYC 7763 candidate), so its absolute before/after
+times cannot isolate the optimization. Current fwp matrix time there is about
+15% above C. Shared runner measurements do not establish a stable timing threshold.
+
+Both fwp modes finish with zero live charged bytes and no collections. Each
+eight-round array sample allocates eight inputs, performs zero retains and
+releases each input once. Matrix samples use forty fwp allocations versus
+twenty-four in C/Rust because two matrix wrapper records are allocated each
+round; they perform twenty-four retains and matching nonlast releases. Allocation,
+retention and cleanup counts match the baseline on every host. Removing these
+remaining wrapper/sharing costs and the Intel array gap remains work.
+
+The [earlier ownership/performance report](measurements/ownership-performance-2026-10-15.json)
+records `f42d6226`, its operation-count checks and sustained derivative experiment.
+Its different sample count is preserved rather than used as the new timing baseline.
+
+The fused reduction allocates no intermediate storage, performs no retains and
+registers no cleanup per element for the tested 0/1/7/129/257-element inputs at
+O1/O2 on all four hosts. Previously, the ARM macOS baseline registered one cleanup
+per element. Generated instructions confirm a scalar reduction loop; the ARM
+macOS loop holds its index and accumulator in registers and has no cleanup call
+in its body. Remaining bounds/view checks and ordinary load/multiply/add work
+are visible. This does not establish vectorization or zero overhead. The timing
+method changed between baseline and candidate, so no isolated optimization
+speedup is claimed.
+
+The sustained derivative case repeats a 4,096-element calculation 512 times.
+It compares paired metadata storage with separate allocations in otherwise
+equivalent generated fwp code. With workspace reuse enabled, paired metadata
+needs 14 allocation requests versus 28 and explicitly moves 48,384 bytes while
+growing. Final managed storage is zero in both variants. Median whole-process
+time is about 1.5–2.0% lower on Linux, 1.6% higher on Intel macOS and 4.7% higher
+on ARM macOS. Eight alternating samples per variant balance execution order;
+shared-runner noise remains. Fewer allocation requests are established; a
+portable speed improvement is not. The numerical memory-mode comparison above
+does not settle this derivative regression; its diagnosis remains active work.
+
+The first two historical reports below include C/Rust numerical baselines; the other listed
 experiments primarily compare fwp implementations. Their raw reports retain inputs,
 source revisions, machine/compiler details, settings, timings and measured
 allocation counters. Some also retain generated C and disassembly: the actual

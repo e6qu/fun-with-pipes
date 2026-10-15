@@ -115,11 +115,16 @@ boundary; it does not establish tracing-free eligibility.
 | Remote values and memoized decoding | Preserve retained context/cache owners and independent reader aliases; scratch cleanup alone does not count decoded nodes |
 | Foreign values and retained callbacks | Keep explicit sharing unless host lifetime and teardown are proved |
 | list.flat-map and list.ap | Borrow typed synchronous inputs, adopt owned callback results and own copied spines; partial results, scratch and unwind cleanup have partial-result and failure controls |
+| list.transpose | Borrow rows, retain typed element aliases and own new row/outer list nodes; row cursors, completed-column storage and partial columns are released on success or failure; ragged input stops at its shortest row |
 | State handlers | Typed get/put/modify/run-state owners; finite callback-flow proof admits State operations only under a handler. Returned closures require a fresh handler when called; unknown targets are rejected by ARC |
 | External resource contexts | Original scoped/task owners preserve teardown order; counted C context storage does not by itself prove ownership of every fwp graph |
 
 Channel close preserves queued values. Explicit drain breaks the tested counted
-cycle, while unreachable shared cycles still need tracing. Preserve callback,
+cycle, while unreachable shared cycles still need tracing. Checked ARC now admits
+data-only channel payloads: no functions, tasks or channel handles at any nested
+position. The queue owns each retained message and the last channel owner releases
+remaining messages; the type restriction prevents a queue from owning a path
+back to its channel. Preserve callback,
 trap and task ordering when extending contracts. The finite review classifies this compatibility model. Checked native ARC separately enforces its proved eligibility
 and cycle policy, rejecting unproved shared boundaries.
 

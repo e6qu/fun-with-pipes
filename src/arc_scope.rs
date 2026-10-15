@@ -232,7 +232,8 @@ impl Proof<'_> {
             Body::Prim(symbol) if matches!(symbol.as_str(), "task.spawn" | "task.within") => {
                 // A child starts with independent State and AD stacks. Carry
                 // callable captures, but never its parent's dynamic scopes.
-                // Channels/raw addresses remain excluded by ARC eligibility,
+                // Channel payloads exclude closures/tasks/channels, and raw
+                // addresses remain excluded by ARC eligibility,
                 // so no mutable back-edge can publish this task to its thunk.
                 let callback = usize::from(symbol == "task.within");
                 self.apply(&args[callback], &[Targets::new()], 0)

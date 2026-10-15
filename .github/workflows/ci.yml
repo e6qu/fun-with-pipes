@@ -97,6 +97,14 @@ jobs:
           name: ownership-evidence-regular-${{ runner.os }}-${{ runner.arch }}
           path: ownership-evidence/
 
+      - name: Preserve compiler crash reports
+        uses: actions/upload-artifact@v7
+        if: failure() && runner.os == 'macOS'
+        with:
+          name: compiler-crashes-regular-${{ matrix.runner }}
+          path: ~/Library/Logs/DiagnosticReports/fwp*
+          if-no-files-found: ignore
+
   # Split the integration targets between the two existing macOS jobs.
   # Both shards exclude the stress test; this job runs it separately once.
   # Their union retains the full suite within the existing job budgets.
@@ -158,6 +166,14 @@ jobs:
         with:
           name: ownership-evidence-gc-${{ runner.os }}-${{ runner.arch }}
           path: ownership-evidence/
+
+      - name: Preserve compiler crash reports
+        uses: actions/upload-artifact@v7
+        if: failure() && runner.os == 'macOS'
+        with:
+          name: compiler-crashes-gc-${{ matrix.runner }}
+          path: ~/Library/Logs/DiagnosticReports/fwp*
+          if-no-files-found: ignore
 
   test:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft

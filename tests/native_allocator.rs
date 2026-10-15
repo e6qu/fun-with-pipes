@@ -3,6 +3,54 @@
 use std::process::Command;
 
 #[test]
+fn first_allocation_and_free_balance_without_explicit_initialization() {
+    let source = include_str!("../runtime/fwp_rt_gc.c");
+    let end = source.find("#endif /* FWP_GC */").unwrap() + "#endif /* FWP_GC */".len();
+    let prefix = include_str!("fixtures/native_allocator_probe.c")
+        .split("/* NATIVE_ALLOCATOR */")
+        .next()
+        .unwrap();
+    let probe = r#"
+static void fwp_gc_scan_stacks(char *sp) { (void)sp; }
+int main(void) {
+    size_t sizes[] = {1, 17, 1024, GC_MAX_SMALL + 16};
+    for (int mode = 0; mode < 3; ++mode) {
+        for (size_t i = 0; i < sizeof sizes / sizeof *sizes; ++i) {
+            size_t size = sizes[i];
+            void *value = mode == 0 ? fwp_alloc_leaf(size) :
+                mode == 1 ? fwp_alloc(size) : fwp_alloc_init(size);
+            size_t expected = size > GC_MAX_SMALL ? size :
+                fwp_gc.slot[fwp_gc.cls_of[(size + 15) >> 4]];
+            if (fwp_gc.budget_given - fwp_gc.budget != (intptr_t)expected) return 35;
+            fwp_mem_free(value);
+            if (fwp_gc.budget != fwp_gc.budget_given) return 36;
+            fwp_gc_finish();
+        }
+    }
+    return 0;
+}
+"#;
+    let dir = fwp::cgen::TempDir::new("first-allocation").unwrap();
+    let binary = dir.join("probe.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(
+            &format!("{prefix}\n{}{probe}", &source[..end]),
+            &binary,
+            opt,
+        )
+        .unwrap();
+        let output = Command::new(&binary)
+            .env("FWP_GC", "off")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{opt}: {output:?}");
+    }
+}
+
+#[test]
 fn native_pages_image_roots_counts_and_release() {
     let source = include_str!("../runtime/fwp_rt_gc.c");
     let end = source.find("#endif /* FWP_GC */").unwrap() + "#endif /* FWP_GC */".len();

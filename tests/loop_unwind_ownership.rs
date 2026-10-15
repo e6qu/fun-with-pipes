@@ -159,6 +159,9 @@ static void cancel_at_loop_tick(void) {
     observed_text=text;observed_other=other;fwp_cur->cancelled=1;fwp_budget=0;
 }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 190;
+#endif
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
     for (volatile int tick=1;tick<=2;tick++) for (volatile int mode=0;mode<5;mode++) {
         original_text=fwp_rc_fresh(fwp_str_new("seed",4));fwp_rc_dup(original_text);
@@ -169,6 +172,11 @@ int main(void) {
         state_box=fwp_rc_fresh(fwp_data(0,2,(V[]){scalar_word,payload}));
         wanted_tick=tick;current_tick=0;observed_text=0;observed_other=0;
         memset(&cancelled_loop,0,sizeof cancelled_loop);fwp_cur=&cancelled_loop;fwp_budget=1000000;
+#ifdef _WIN32
+        /* This synthetic task runs on main's stack. Windows tasks normally
+         * receive their scan boundary when their fiber starts. */
+        cancelled_loop.ctx.top=fwp_gc.main_top;
+#endif
         if (!setjmp(cancelled_loop.base)) {
             if (mode==0) fwp_loopSTEP(state_box);
             else if (mode==1) fGENERIC(state_box);
@@ -178,7 +186,12 @@ int main(void) {
             return 1;
         }
         fwp_cur=NULL;
-        if (!cancelled_loop.unwinding || fwp_cleanups || current_tick!=tick || !observed_text) return 2;
+        if (!cancelled_loop.unwinding || fwp_cleanups || current_tick!=tick || !observed_text) {
+            fprintf(stderr,"cancellation: mode=%d tick=%d current=%d unwinding=%d cleanup=%p text=%llu\n",
+                mode,tick,current_tick,cancelled_loop.unwinding,(void *)fwp_cleanups,
+                (unsigned long long)observed_text);
+            return 2;
+        }
         if (*fwp_rc_slot(original_text)!=1 || STR(original_text)->len!=4 || memcmp(STR(original_text)->d,"seed",4)) return 3;
         if (observed_text!=original_text && !dead_string(observed_text)) return 4;
         if (observed_other && observed_other!=original_text && !dead_string(observed_other)) return 5;
@@ -256,6 +269,9 @@ static volatile V original_text, scalar_word, owned_step;
 static int recover_payload(void) { return 1; }
 static void fail_duplicate(V value) { (void)value; fwp_trap("injected payload preparation failure"); }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 190;
+#endif
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
     for (volatile int stop=0;stop<2;stop++) for (volatile int alias=0;alias<2;alias++) {
         original_text=fwp_rc_fresh(fwp_str_new("seed",4));fwp_rc_dup(original_text);

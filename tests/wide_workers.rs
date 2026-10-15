@@ -59,6 +59,7 @@ main = [
             .arg(&cfile),
     );
     let generated = std::fs::read_to_string(cfile).unwrap();
+    assert!(generated.contains("#define FWP_TASK_TICKS 1"));
     let code = generated.replace(
         "#define FWP_NATIVE_TASK_STACK ((size_t)256 << 20)",
         "#define FWP_NATIVE_TASK_STACK ((size_t)1 << 20)",

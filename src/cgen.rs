@@ -7056,6 +7056,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                         fs.iter().map(|(_, ty)| ty.clone()).collect()
                                     }
                                     "chunks" => vec![element(&func.locals[1])?],
+                                    "list.transpose" => vec![element(&element(&func.locals[0])?)?],
                                     "repeat" => vec![func.locals[1].clone()],
                                     _ => return Err(format!("unknown structural copy `{sym}`")),
                                 };
@@ -7068,7 +7069,16 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                         "NULL".into()
                                     }
                                 }));
-                                s = format!("return fwp_p_{sym}_owned({});", args.join(", "));
+                                if sym == "list.transpose" {
+                                    args.push(self.value_drop(&fields[0]));
+                                    args.push(self.value_drop(&element(&func.locals[0])?));
+                                    args.push(self.value_drop(&func.locals[0]));
+                                }
+                                s = format!(
+                                    "return fwp_p_{}_owned({});",
+                                    sym.replace('.', "_"),
+                                    args.join(", ")
+                                );
                             }
                             ResultOwnership::FreshOuter => {
                                 if contract.borrows_callback() {
@@ -7885,6 +7895,9 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
         name = lib_name,
         g = guard
     );
+    if native_options().arc {
+        h.push_str("/* Checked ARC: inputs are copied for each call; results contain no managed\n * pointers. Keep input strings valid until return. Serialize host calls and\n * finish all calls before unloading the library. */\n\n");
+    }
     let mut all = Vec::new();
     for (_, _, ps, r) in &sigs {
         all.extend(ps.iter().map(|(_, c)| c.clone()));
@@ -8062,8 +8075,8 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let arc = native_options().arc;
     if arc {
-        if !matches!(mode, Mode::Main | Mode::Exec(..)) {
-            return Err("--gc arc requires a native main or function executable".into());
+        if !matches!(mode, Mode::Main | Mode::Exec(..) | Mode::Library) {
+            return Err("--gc arc requires a native executable or checked C library".into());
         }
         if !reuse_enabled() || !free_enabled() {
             return Err(
@@ -8106,6 +8119,22 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     if arc {
         let entries = match &mode {
             Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
+            Mode::Library => {
+                let signatures = export_sigs(prog)?;
+                for (name, _, params, result) in &signatures {
+                    // The existing export ABI copies strings on entry but
+                    // returns string addresses without a host release API.
+                    // Admit only results whose bits contain no managed pointer.
+                    if !params.iter().all(|(_, ty)| crate::ffi::copied_result(ty))
+                        || !crate::ffi::by_value(result)
+                    {
+                        return Err(format!(
+                            "--gc arc: exported function `{name}` requires copied C inputs and a pointer-free result; returned strings and raw pointers have no host release contract"
+                        ));
+                    }
+                }
+                signatures.iter().map(|(_, fid, _, _)| *fid).collect()
+            }
             _ => vec![main],
         };
         crate::arc::check(prog, &entries)?;
@@ -8768,6 +8797,7 @@ static const fwp_exec_spec exec_spec{i} = {{
         out.push_str("#define FWP_LIBRARY 1\n");
     }
     let _ = writeln!(out, "#define FWP_UNWIND {}", u8::from(g.unwind));
+    let _ = writeln!(out, "#define FWP_TASK_TICKS {}", u8::from(g.ticks));
     let packed = std::env::var("FWP_PACKED_ARRAYS").map_or(true, |v| v != "0");
     let _ = writeln!(out, "#define FWP_PACKED_ARRAYS {}", u8::from(packed));
     if !free_enabled() {

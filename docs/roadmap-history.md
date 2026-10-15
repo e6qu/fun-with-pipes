@@ -48,6 +48,26 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Infix arithmetic and numeric loop cleanup (PR #145)
+
+[PR #145](https://github.com/e6qu/fun-with-pipes/pull/145) merged as `e51b8570`
+after all nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38779284746)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38779284697)
+passed for `1ee7d581`. It adds fixed-precedence arithmetic while preserving
+single-argument curried calls and pipes, removes cleanup for proved bounded
+internal array-index increments, omits conservative GC fences in checked ARC,
+and improves benchmark sample ordering and comparisons. The final gate includes
+a repaired tutorial source/README consistency check.
+
+[Four-host focused performance checks](https://github.com/e6qu/fun-with-pipes/actions/runs/38771808755)
+passed at `f42d6226`. Fused reductions at 0/1/7/129/257 elements have zero
+allocations, retains and per-element cleanup registrations at O1/O2. ARM macOS
+native instructions confirm scalar register arithmetic without those cleanup
+calls. ARC binaries exclude tracing symbols. [Recorded evidence](measurements/ownership-performance-2026-10-15.json)
+retains hardware, compilers and profiles. Changed timing methods prevent an
+isolated before/after speed claim. Derivative timings remain mixed; broader
+memory and performance goals remain open in the plan.
+
 ## Documentation rewrite (PR #142)
 
 [PR #142](https://github.com/e6qu/fun-with-pipes/pull/142) merged as `bbdbf8dc`
