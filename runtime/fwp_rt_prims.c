@@ -2885,8 +2885,15 @@ static V fwp_p_run_state(V s, V f, V x) {
 /* ------------------------------------------------------------------ files */
 
 static V fwp_io_error(const char *kind, const char *msg, const fwp_desc *d) {
-    V f[2] = {fwp_cstr(kind), fwp_cstr(msg)};
-    fwp_fail(fwp_record(2, f), d);
+    fwp_value_owner key = {fwp_rc_fresh(fwp_cstr(kind)), fwp_rc_free_obj};
+    fwp_cleanup key_cleanup; fwp_value_protect(&key, &key_cleanup);
+    fwp_value_owner text = {fwp_rc_fresh(fwp_cstr(msg)), fwp_rc_free_obj};
+    fwp_cleanup text_cleanup; fwp_value_protect(&text, &text_cleanup);
+    V fields[2] = {key.value, text.value};
+    V error = fwp_rc_fresh(fwp_record(2, fields));
+    (void)fwp_value_finish(&text, &text_cleanup);
+    (void)fwp_value_finish(&key, &key_cleanup);
+    fwp_fail(error, d);
     return 0;
 }
 

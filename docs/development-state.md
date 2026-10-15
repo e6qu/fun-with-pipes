@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-15. The only open delivery is
+Updated 2026-10-16. The only open delivery is
 [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146), head `19b14d0b`,
 in `/Users/zardoz/projects/fun-with-pipes`. Its
 [production run](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
@@ -133,24 +133,27 @@ The preparation `/private/tmp/fwp-path-validation` passed all six hosts at
 Its earlier run exposed portability defects in old file probes; native handle
 checks and escaped Windows paths repair those without skipping assertions.
 
-Caught I/O error ownership is prepared separately in
-`/private/tmp/fwp-filesystem-ownership`, branch `checked-filesystem-ownership`,
-based on path commit `135fa6f5`. A probe reproduced 64 retained charged bytes per
-small caught error because the runtime had left the record and strings uncounted.
-The repair counts and protects construction; 128 runtime and compiled catches,
-all three construction failures and omitted-ownership controls pass locally.
-[Six-platform run 38808012610](https://github.com/e6qu/fun-with-pipes/actions/runs/38808012610)
-is queued at `aa6ad15`. Combine only commits after `135fa6f5` once it passes,
-so this known leak is repaired before the next delivery.
+Caught I/O error ownership is now combined too. A probe reproduced 64 retained
+charged bytes per small caught error because its record and strings were
+uncounted. The repair counts and protects construction. Repeated runtime and
+compiled catches, all three construction failures and omitted-ownership controls
+pass at O1/O2 in actual tracing/ARC modes. [Six-platform run 38808012610](https://github.com/e6qu/fun-with-pipes/actions/runs/38808012610)
+passed every host at `aa6ad15`. These checks include the path/file regressions.
+
+Further snapshot ownership is being prepared in `/private/tmp/fwp-filesystem-ownership`
+after `aa6ad15`. It changes `dir.list`, `env.vars` and `dir.create-all`; it is not
+yet verified and is not included here. Do not import its uncommitted work as part
+of the already-tested error repair.
 
 ## Next: validate and publish the combined delivery
 
 Focused numerical/console checks and combined documentation/inventory checks
-pass. Finish the caught-error repair checks, monitor #146 and fix failures. Once #146's exact final-head gate passes,
+pass. All component checks pass; monitor #146 and fix failures. Once #146's exact final-head gate passes,
 squash merge it, verify its one-line message and tree, then rebase only this
 branch's commits after `c10b1ccd` onto the accepted squash commit. The precision
 and console implementations are already combined: do not cherry-pick them again.
-Reconcile the parent Windows workflow changes, refresh this handoff and open one
+The caught-error and path repairs are already combined. Reconcile the parent
+Windows workflow changes, refresh this handoff and open one
 substantial PR for the combined delivery. Run its full final-head gate and fix
 failures before merging. Continue with remaining ownership and measured costs.
 

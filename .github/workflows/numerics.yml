@@ -5,14 +5,14 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, precision, console, paths]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, precision, console, paths, filesystem]
         default: numerical
       evidence_run:
         description: Completed solver run to use for array-borrow comparison
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'paths'
+    if: inputs.suite == 'paths' || inputs.suite == 'filesystem'
     strategy:
       fail-fast: false
       matrix:
@@ -40,7 +40,7 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo test --no-fail-fast --test path_validation --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
+      - run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
   array_borrow:
     if: inputs.suite == 'array-borrow'
     permissions:
