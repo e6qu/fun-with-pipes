@@ -24,8 +24,9 @@ the next optimization. Historical preparation entries are evidence, not tasks.
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,
 not independent work. Do not request the same permission again. Historical
-preparation entries are not new work. A new backend, JIT and distributed
-execution remain outside scope.
+preparation entries are not new work. JIT compilation is explicitly excluded,
+not deferred: do not propose or implement a JIT in fwp or its generated runtime.
+A new backend and distributed execution remain outside scope.
 
 The current acceptance matrix has nine production gates: Linux ARM64/AMD64,
 regular and GC-stress ARM/Intel macOS, C/Rust benchmarks and native Windows

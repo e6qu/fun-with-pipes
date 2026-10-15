@@ -1,10 +1,10 @@
 # Session handoff
 
-Updated 2026-10-15. Current branch: `project-roadmap-cleanup`, based on merge
-`bbdbf8dc` (PR #142). The user requested the remaining project work in PLAN.md
-and removal of obsolete information throughout the repository. They clarified
-the memory objective: remove tracing GC and limit ARC, preferring compile-time
-ownership and borrowing in the spirit of Rust without losing simple pipes.
+Updated 2026-10-15. Current branch: `document-no-jit`, based on merge `700c2e7f`
+(PR #143). The user explicitly excludes JIT from the project: it is never a
+planned feature, rather than deferred work. PLAN.md, agent instructions and the
+compiler/numerical guides now record this decision. The seven project work
+areas and the goal of removing GC while limiting ARC remain active.
 
 ## Roadmap status
 
@@ -22,64 +22,49 @@ the project's efficiency goals. Planning a feature is not implementing it.
 | 6 | Pending | Establish dependable comparisons and regression criteria |
 | 7 | Pending | Exercise ownership, inference and tooling in larger programs |
 
+## Latest merged work and validation
+
+[PR #143](https://github.com/e6qu/fun-with-pipes/pull/143) merged as `700c2e7f`
+before CI finished; its files match final PR head `020ac73a`. It replaced the
+completed checklist with seven project work areas and measurable criteria,
+removed obsolete guidance, and fixed PR #142's stale bookstore OpenAPI fixture.
+
+[Production checks on the merge](https://github.com/e6qu/fun-with-pipes/actions/runs/38761771511)
+and [documentation checks](https://github.com/e6qu/fun-with-pipes/actions/runs/38761771377)
+determine acceptance. Inspect their actual outcomes; a merged PR or a skipped
+pre-merge job does not establish passing tests. The prior PR #142 failure and
+fixture repair are recorded in [history](roadmap-history.md#documentation-rewrite-pr-142).
+
+PR #143's focused guarded checks passed: all 50 Markdown link sets, 106 immutable
+preparation rows/tags, seven matching plan/handoff steps, four OpenAPI fixtures
+without regeneration enabled, generated library docs, tutorial source/output
+copies, Rust formatting, JavaScript syntax and diff whitespace. The serial
+preflight took 5.17 seconds; no resource limits were raised. The OpenAPI check
+used the existing compiler; full CI rebuilds the published revision.
+
 ## Current delivery
 
-[PR #143](https://github.com/e6qu/fun-with-pipes/pull/143) contains this cleanup
-and the OpenAPI fixture repair. Its final checks determine acceptance.
+Make the no-JIT decision explicit throughout the plan and compiler guidance.
+The existing OpenCL path calls `clBuildProgram` at runtime in `src/numerics.rs`
+and `runtime/fwp_rt_kernel.c`; the plan records this as a gap to resolve under
+the no-JIT policy, not an exception. This is documentation only; it does not
+alter runtime behavior or existing validation requirements.
 
-The cleanup replaces the completed checklist with seven work areas, completion
-evidence and a first milestone: measured baselines, confirmed costs and the next
-ownership boundary. It updates contributor/agent instructions and the README;
-removes obsolete phase/migration language, repeated historical stubs and old
-branch/merge instructions; and corrects stale protocol/compiler comments.
-Immutable preparation IDs/tags, raw measurements, meaningful compatibility
-contracts, licenses and regression controls remain intact.
-
-The new direction is a goal. The implemented runtime still combines tracing and
-counting by default, and checked ARC covers a subset. Do not claim GC removal or
-count-free abstractions from this documentation change.
-
-## Outstanding validation
-
-PR #142 merged before CI finished. Its merge `bbdbf8dc` and final PR head
-`4ea1b687` have identical files. [The merge production run](https://github.com/e6qu/fun-with-pipes/actions/runs/38752839908)
-reported a failure in regular ARM macOS: `rest::openapi_golden` compares the
-bookstore example's updated description with an old `books.openapi.json` fixture.
-The documentation audit passed. Follow the production run for other outcomes;
-partial success is not acceptance. This delivery includes the fixture repair.
-
-The OpenAPI fixture has been regenerated; the only fixture change is
-“REST, interpreted” to “REST, compiled and cached.” All four OpenAPI comparisons
-pass without `FWP_BLESS`. This uses the existing compiler for a focused check;
-full CI must rebuild and validate the published revision.
-
-Local validation, all through `python3 scripts/local-guard.py`:
-
-- Standalone `tests/rest.rs` harness compilation: passed, 0.87 seconds.
-- `FWP_BLESS=1 ... --exact openapi_golden`: regenerated, 2.85 seconds; reviewed
-  the fixture diff before checking without regeneration enabled.
-- Serial preflight `/private/tmp/fwp-roadmap-preflight.py`: passed, 5.17 seconds.
-  It checks all 50 Markdown link sets, 106 immutable preparation rows/tags and
-  seven matching plan/handoff steps; all four OpenAPI fixtures; generated library
-  docs; every tutorial's source/output copies; Rust formatting; JavaScript syntax;
-  and diff whitespace. No limits were raised.
-- Final `python3 scripts/check-roadmap.py`: passed, 2.94 seconds.
-
-The repository audit covered tracked guides, examples, generated fixtures,
-source/runtime comments, scripts and workflows. References to old implementations
-used by deliberate regression controls and version compatibility rules are still
-relevant and remain. No compiler/runtime behavior changed in this cleanup.
-Full builds, suites and benchmarks stay on GitHub runners.
+`python3 scripts/local-guard.py python3 scripts/check-roadmap.py` passed: all
+50 Markdown link sets, 106 immutable preparation rows/tags, seven matching
+plan/handoff steps and commit rules (2.85 seconds). Final link verification also
+covers the added no-JIT/device-compilation notes. No local limits were raised.
 
 ## Next action
 
-Next: inspect [PR #143](https://github.com/e6qu/fun-with-pipes/pull/143), fix every
-final-commit CI failure and squash-merge only after passing checks. Keep all
-nine production jobs and documentation coverage. If this delivery is already
-merged with passing checks, start the first milestone in PLAN.md: select the
-representative applications, reproduce the known performance gaps on runners,
-and identify the first ownership boundary to improve. Do not replay old PRs.
+Next: publish the no-JIT clarification, inspect the merged cleanup's CI results,
+and fix every final-commit CI failure before squash merge. After this clarification
+is merged with passing checks, start the first milestone in PLAN.md: choose the
+representative applications, reproduce known performance gaps on runners and
+identify the first ownership boundary to improve. Do not replay old PRs.
 
 Update this handoff with exact checks, unresolved failures and one concrete next
 action after meaningful progress. Keep the project plan active until its stated
 acceptance criteria are met; do not substitute a completed PR for that evidence.
+Use `python3 scripts/local-guard.py COMMAND...` for bounded serial local checks;
+full builds, suites, benchmarks and large regeneration stay on GitHub runners.
