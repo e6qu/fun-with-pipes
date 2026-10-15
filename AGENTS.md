@@ -11,15 +11,14 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-PR #139 completed bounded native AD registry growth and workspace preservation
-as `5d05cdd6`, with all nine production jobs and documentation green. The user
-requested continued work. The current follow-up removes repeated scans of known
-unavailable tape slots in both runtimes, preserving lowest-slot token selection.
-Keep implementation, regression controls, four-host measurements and docs on
-`autodiff-registry-search` in PR #140. Follow the live plan and handoff; historical
-preparation entries are not work to replay.
-Once PR #140 merges with all final-head gates, step 10 is complete; check its
-actual state before resuming.
+PR #140 completed AD registry cursor search as `09f1a029`, with all nine
+production jobs and documentation green at tree-identical head `cdb76905`.
+The user requested continued work. The current follow-up pairs native AD parent
+buffers and numeric derivative buffers, reducing allocator requests while keeping
+layout, capacity bounds, ownership and arithmetic order explicit. Keep code,
+failure/relocation controls, four-host measurements and docs together on
+`autodiff-metadata-block`. Follow the live plan and handoff; historical preparation
+entries are not work to replay.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,

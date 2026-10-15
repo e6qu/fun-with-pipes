@@ -48,7 +48,7 @@ def main():
         original = emitted.read_text()
         creation, growth = '    t->len = n;', '    fwp_tape_reserve(t, op + 1);'
         assert original.count(creation) == 1 and original.count(growth) == 2
-        padded = original.replace(creation, '    fwp_tape_reserve(t, n);\n' + creation)
+        padded = original.replace(creation, creation + '\n    fwp_tape_reserve(t, n);')
         padded = padded.replace(growth, '    fwp_tape_reserve(t, t->leaves + op + 1);')
         cases = {}
         for label, code in [('operations', original), ('input-capacity-control', padded)]:

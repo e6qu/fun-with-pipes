@@ -58,7 +58,7 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
             "V r = fwp_arr_new((size_t)tp.leaves);",
             "V r = probe_result_array((size_t)tp.leaves);",
         );
-    assert_eq!(tape_code.matches("probe_free(b->").count(), 5);
+    assert_eq!(tape_code.matches("probe_free(b->").count(), 3);
     let declarations = "static void probe_free(void *);\nstatic void *probe_calloc(size_t,size_t);\nstatic V probe_result_array(size_t);\n";
     let runtime = format!(
         "{}{}{}{}",

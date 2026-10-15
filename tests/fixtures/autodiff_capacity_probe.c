@@ -24,7 +24,7 @@ static void capacity_exit(int code){capacity_exit_code=code;longjmp(capacity_oom
 static int capacity_recover(void){return 1;}
 static void capacity_dispose(void) {
     for(int64_t i=0;i<fwp_ntapes;i++){
-        fwp_tape *t=&fwp_tapes[i];capacity_free(t->pa);capacity_free(t->pb);capacity_free(t->da);capacity_free(t->db);
+        fwp_tape *t=&fwp_tapes[i];capacity_free(t->pa);capacity_free(t->da);
     }
     capacity_free(fwp_tapes);fwp_tapes=0;fwp_ntapes=fwp_tapes_cap=0;
     fwp_tape_next_slot=0;
@@ -36,9 +36,9 @@ int main(void) {
     if(fwp_tape_limit()!=INT32_MAX/8)return 180;
     if(!setjmp(capacity_trap)){fwp_p_ad_tape((V)(fwp_tape_limit()+1));return 182;}
     if(strcmp(fwp_trap_msg,"autodiff: too many inputs") || capacity_calls || capacity_live)return 182;
-    /* All four failures must free the last owned pointer, including successful
+    /* Both paired-buffer failures must free the last owned pointer, including successful
      * earlier reallocs. No giant allocations are performed by this probe. */
-    for(capacity_fail=1;capacity_fail<=4;capacity_fail++) {
+    for(capacity_fail=1;capacity_fail<=2;capacity_fail++) {
         size_t selected=capacity_fail;capacity_fail=0;
         capacity_base=fwp_p_ad_tape(1);
         fwp_tape_reserve(fwp_tape_of((int64_t)capacity_base>>32),1);
@@ -52,7 +52,7 @@ int main(void) {
     fwp_tape_reserve(capacity_registry,1);
     capacity_calls=0;capacity_fail=1;
     if(!setjmp(capacity_oom)){fwp_p_ad_tape(1);return 185;}
-    if(capacity_exit_code!=102 || fwp_tapes!=capacity_registry || fwp_ntapes!=1 || fwp_tapes_cap!=1 || fwp_tape_next_slot!=1 || capacity_live!=5 ||
+    if(capacity_exit_code!=102 || fwp_tapes!=capacity_registry || fwp_ntapes!=1 || fwp_tapes_cap!=1 || fwp_tape_next_slot!=1 || capacity_live!=3 ||
        fwp_tape_of((int64_t)capacity_base>>32)!=capacity_registry)return 186;
     capacity_fail=0;capacity_calls=0;
     if(!setjmp(capacity_trap)){fwp_tape_reserve(capacity_registry,fwp_tape_limit()+1);return 187;}

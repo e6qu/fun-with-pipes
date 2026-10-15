@@ -71,7 +71,8 @@ typedef struct {
     uint32_t gen;
     int live;
     int64_t leaves, len, cap;
-    /* Operation offsets exclude inputs; parent values remain node indices. */
+    /* Operation offsets exclude inputs; parent values remain node indices.
+     * pa/pb share one allocation; numeric da/db share another. */
     int32_t *pa, *pb;
     double *da, *db, *adj;
     int64_t adjcap;
@@ -172,9 +173,7 @@ static int fwp_tape_workspace_enabled(void) {
 static void fwp_tape_buffers_dispose(void *pointer) {
     fwp_tape_buffers *b = pointer;
     free(b->pa);
-    free(b->pb);
     free(b->da);
-    free(b->db);
     free(b->adj);
     memset(b, 0, sizeof *b);
 }
@@ -250,29 +249,31 @@ static void fwp_tape_reserve(fwp_tape *t, int64_t n) {
     if (n <= t->cap) return;
     int64_t cap = t->cap ? t->cap : (limit < 64 ? limit : 64);
     while (cap < n) cap = cap > limit / 2 ? limit : cap * 2;
-    /* Commit each successful realloc; a failed call still owns the old buffer. */
-    void *next = realloc(t->pa, (size_t)cap * sizeof(int32_t));
+    /* Each pair fits size_t even at the existing PTRDIFF_MAX/8 node bound.
+     * Keep old offsets until all allocations succeed: managed weight growth
+     * can trap, leaving the live tape usable with its original capacity. */
+    size_t used = (size_t)(t->len - t->leaves);
+    void *next = realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t)));
     if (!next) goto oom;
     t->pa = (int32_t *)next;
-    next = realloc(t->pb, (size_t)cap * sizeof(int32_t));
-    if (!next) goto oom;
-    t->pb = (int32_t *)next;
+    t->pb = t->pa + t->cap;
     if (t->owned) {
         fwp_owned_tape_reserve(t->owned, cap);
-        t->cap = cap;
-        return;
+    } else {
+        next = realloc(t->da, (size_t)cap * (2 * sizeof(double)));
+        if (!next) goto oom;
+        t->da = (double *)next;
+        t->db = t->da + t->cap;
+        if (used) memmove(t->da + cap, t->db, used * sizeof(double));
+        t->db = t->da + cap;
     }
-    next = realloc(t->da, (size_t)cap * sizeof(double));
-    if (!next) goto oom;
-    t->da = (double *)next;
-    next = realloc(t->db, (size_t)cap * sizeof(double));
-    if (!next) goto oom;
-    t->db = (double *)next;
+    if (used) memmove(t->pa + cap, t->pb, used * sizeof(int32_t));
+    t->pb = t->pa + cap;
     t->cap = cap;
     return;
 oom:
     fwp_tape_unlink_scope(t);
-    free(t->pa);free(t->pb);free(t->da);free(t->db);free(t->adj);
+    free(t->pa);free(t->da);free(t->adj);
     t->pa = t->pb = 0;t->da = t->db = t->adj = 0;
     t->live = 0;t->len = t->cap = t->leaves = t->adjcap = 0;
     fprintf(stderr, "fwp: out of memory\n");

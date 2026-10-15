@@ -23,6 +23,8 @@ jobs:
       FWP_AD_WORKSPACE_ARTIFACTS: autodiff-evidence
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - name: OpenSSL on macOS
         if: runner.os == 'macOS'
@@ -49,6 +51,9 @@ jobs:
       - name: Registry search work and binary measurements
         if: ${{ !cancelled() && steps.checkpoint_compiler.outcome == 'success' }}
         run: python3 scripts/measure-ad-registry.py --comparison search --output autodiff-evidence/search
+      - name: Paired metadata allocation and binary measurements
+        if: ${{ !cancelled() && steps.checkpoint_compiler.outcome == 'success' }}
+        run: python3 scripts/measure-ad-metadata.py --output autodiff-evidence/metadata
       - uses: actions/upload-artifact@v7
         if: always()
         with:

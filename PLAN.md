@@ -1,21 +1,17 @@
 # Plan
 
-The platform/ownership roadmap and three autodiff follow-ups are accepted through
-[PR #139](https://github.com/e6qu/fun-with-pipes/pull/139), merged as `5d05cdd6`.
-All nine production jobs and documentation passed at its tree-identical head
-`917d28a3`; four-host focused AD and both WASM checks also passed.
+The platform/ownership roadmap and four autodiff follow-ups are accepted through
+[PR #140](https://github.com/e6qu/fun-with-pipes/pull/140), merged as `09f1a029`.
+All nine production jobs and documentation passed at tree-identical head
+`cdb76905`; focused four-host AD and both WASM checks also passed.
 [History](docs/roadmap-history.md) retains prior deliveries and evidence.
 
-The user requested continued development. The current follow-up removes repeated
-scans of known unavailable AD tape slots in both runtimes. Keep implementation,
-regression controls, four-host measurements and streamlined docs together on
-`autodiff-registry-search` in [PR #140](https://github.com/e6qu/fun-with-pipes/pull/140).
-[The handoff](docs/development-state.md) records actual
-checks and next actions. Delivery requires all nine production jobs and
-documentation on the final head; historical anchors are not further work.
-[Four-host evidence](docs/measurements/ad-search-2026-10-15.json) records reduced
-scan work, equal allocation/live-memory counters and actual native instructions.
-Once PR #140 merges with those gates, step 10 is complete.
+The user requested continued development. The active follow-up pairs native AD
+metadata buffers to reduce allocator requests without adding padding, changing
+numeric evaluation order or narrowing the existing node bounds. Keep code,
+regression controls, four-host measurements and docs on `autodiff-metadata-block`.
+[The handoff](docs/development-state.md) records actual checks and next actions.
+Delivery requires all nine production jobs and documentation on the final head.
 
 ## Direction
 
@@ -65,6 +61,7 @@ Cross-compilation between every host/target pair is not implied.
 | 7 | Seeded-prefix numeric backward bounds | Input/seed order, validation, workspace growth and unwind controls; four-host storage/binary evidence and all nine production jobs |
 | 8 | Operation-only AD metadata | Stable input tokens, atomic weight retains, four-host allocation/binary evidence and all nine production jobs |
 | 9 | Geometric AD registry growth and numeric workspace preservation | Stable slot/generation selection, forced relocation and allocation-failure controls; four-host allocation/binary evidence and all nine production jobs |
+| 10 | Skip known unavailable AD registry slots | Lowest-slot reuse and generation limits preserved; four-host allocation/timing/instruction evidence and all nine production jobs |
 
 [Ownership](docs/ownership.md) and [float formats](docs/float-formats.md) specify
 the contracts. Generic wide boundaries can still box; arbitrary lazy producers
@@ -82,13 +79,16 @@ to replay.
 
 | Step | Work | Acceptance |
 |---|---|---|
-| 10 | Skip known unavailable AD registry slots | Preserve lowest-slot selection, generation exhaustion, validation and release order in both runtimes; cover scope exit, failed and nested backward; measure search work, allocations and actual native instructions |
+| 11 | Pair native AD metadata buffers | Two growth requests for numeric metadata and one for managed parents; preserve alignment, byte bounds, values, cleanup and reuse; force relocation and allocation/trap failures; measure actual allocations and inspect native instructions |
 
-A cursor skips a prefix whose slots are live or generation-exhausted. Releasing
-a reusable earlier slot lowers it before reentrant callbacks. Sequential creation
-should no longer rescan the occupied prefix. Arbitrary holes can still require a
-linear scan; do not claim constant-time allocation in every workload. The cursor
-adds no heap allocation and leaves registry growth and the workspace budget intact.
+Parents retain separate contiguous `pa`/`pb` regions in one allocation; numeric
+weights retain `da`/`db` regions in another. Splitting these two allocations keeps
+the existing 32-bit node bound representable. Growth preserves initialized
+regions and leaves old offsets usable until potentially trapping allocation
+finishes. Managed language weights retain their separate typed owner. Workspace
+payload bytes and its 512 KiB budget stay unchanged. The interpreter remains the
+semantic oracle; no interpreter storage or language syntax change is planned.
+Measured allocator reduction alone will not establish a general speedup.
 
 ## Agreed syntax
 

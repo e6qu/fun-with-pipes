@@ -535,5 +535,44 @@ fn autodiff_capacity_bounds_precede_actual_wasm32_allocation() {
             );
         }
     }
+    // Probe both real paired request expressions at the actual wasm32 node
+    // bound. The allocator supplies a tiny placeholder before failing the
+    // second request; no huge allocation or metadata access takes place.
+    let source = tmp.join("pairs.fwp");
+    let emitted = tmp.join("pairs.c");
+    std::fs::write(&source, "main = echo \"pairs\"\n").unwrap();
+    let output = Command::new(fwp())
+        .args(["build", "--target", "wasm32-wasi", "--emit-c", "-o"])
+        .arg(&emitted)
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let original = std::fs::read_to_string(emitted).unwrap();
+    for name in ["pa", "da"] {
+        assert_eq!(original.matches(&format!("realloc(t->{name},")).count(), 1);
+    }
+    let code = original
+        .replace("/* ------------------------------------------------------------------ tapes */",
+                 "static void *wasm_pair_realloc(void *,size_t);\n/* ------------------------------------------------------------------ tapes */")
+        .replace("realloc(t->pa,", "wasm_pair_realloc(t->pa,")
+        .replace("realloc(t->da,", "wasm_pair_realloc(t->da,")
+        .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
+    let oversized = code.replace(
+        "(size_t)cap * (2 * sizeof(double))",
+        "(size_t)cap * (3 * sizeof(double))",
+    );
+    assert_ne!(oversized, code);
+    for opt in ["-O1", "-O2"] {
+        for (label, code, expected) in [
+            ("paired", &code, "paired wasm32 allocation sizes do not wrap\n--- stderr\nfwp: out of memory\n--- exit 102\n"),
+            ("overflow-control", &oversized, "--- exit 222\n"),
+        ] {
+            let wasm = tmp.join(format!("{label}-{opt}.wasm"));
+            let code = format!("{code}\n{}", include_str!("fixtures/autodiff_wasm_pairs_probe.c"));
+            fwp::cgen::compile_for(&code, &wasm, opt, fwp::cgen::Target::Wasi).unwrap();
+            assert_eq!(run_wasi(&wasm, &[]), expected, "{label} {opt}");
+        }
+    }
     std::fs::remove_dir_all(tmp).unwrap();
 }
