@@ -408,7 +408,9 @@ capacity trades some live storage for fewer registry allocation requests.
 The registry remains until shutdown/unload so retired generations cannot be
 reused accidentally; its capacity is separate from the numeric workspace budget.
 Managed interpreter tapes leave the numeric cache untouched, and releasing an
-empty tape does not evict an existing useful workspace, matching the native path.
+empty tape does not evict an existing useful workspace. Native zero-input
+backward passes also skip the dummy adjoint allocation and its cache eviction;
+zero-length clearing is guarded so no null pointer reaches memset.
 
 AD tape capacity is limited before allocation by the signed vertex index and
 native address width. Native and interpreter runtimes may retain one detached

@@ -18,7 +18,7 @@ and no consistent speedup.
 
 The user requested continued development. The next follow-up bounds native AD
 registry growth and preserves numeric workspace ownership across managed and
-empty interpreter tapes. Keep implementation, allocator/token/scope regressions,
+empty tapes in both runtimes. Keep implementation, allocator/token/scope regressions,
 four-host evidence and streamlined docs together on `autodiff-registry-growth`.
 Delivery requires all nine production jobs and documentation on the final head.
 [The handoff](docs/development-state.md) records actual checks and next actions.

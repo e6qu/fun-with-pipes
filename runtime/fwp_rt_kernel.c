@@ -405,7 +405,7 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
         if (node >= tp.len) fwp_trap(FWP_AD_INVALID_NODE);
         if (node >= active) active = node + 1;
     }
-    int64_t needed = active ? active : 1;
+    int64_t needed = active;
     double *adj = buffers.adj;
     if (buffers.adjcap < needed) {
         int64_t capacity = buffers.adjcap ? buffers.adjcap : needed;
@@ -415,13 +415,13 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
                           : (double *)calloc((size_t)capacity, sizeof(double));
         if (adj) { buffers.adj = adj;buffers.adjcap = capacity; }
     }
-    if (!adj) {
+    if (needed && !adj) {
         fwp_cleanup_pop(&cleanup);
         fwp_tape_buffers_release(&buffers);
         fprintf(stderr, "fwp: out of memory\n");
         exit(102);
     }
-    memset(adj, 0, (size_t)needed * sizeof(double));
+    if (needed) memset(adj, 0, (size_t)needed * sizeof(double));
     for (size_t i = 0; i < m; i++) {
         int64_t o = (int64_t)fwp_array_load(outs, i, NULL);
         if (o < 0) continue;

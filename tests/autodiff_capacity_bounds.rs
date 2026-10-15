@@ -115,6 +115,7 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
     let code = std::fs::read_to_string(cfile)
         .unwrap()
         .replace("realloc(fwp_tapes,", "registry_realloc(fwp_tapes,")
+        .replace("(double *)calloc(", "(double *)registry_calloc(")
         .replace("free(fwp_tapes);", "registry_free(fwp_tapes);")
         .replace("atexit(fwp_tape_finish)", "0")
         .replace(
@@ -122,7 +123,7 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
             "int original_main(int argc, char **argv)",
         );
     let code = code.replace("static int64_t fwp_ntapes = 0;",
-        "static void *registry_realloc(void *, size_t);\nstatic void registry_free(void *);\nstatic int64_t fwp_ntapes = 0;");
+        "static void *registry_realloc(void *, size_t);\nstatic void *registry_calloc(size_t, size_t);\nstatic void registry_free(void *);\nstatic int64_t fwp_ntapes = 0;");
     let incremental = code
         .replace("if (fwp_ntapes == fwp_tapes_cap)", "if (1)")
         .replace(
@@ -130,6 +131,11 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
             "int64_t cap = fwp_ntapes + 1;",
         );
     let stale_capacity = code.replace("fwp_ntapes = fwp_tapes_cap = 0;", "fwp_ntapes = 0;");
+    let dummy_adjoint = code.replace(
+        "int64_t needed = active;",
+        "int64_t needed = active ? active : 1;",
+    );
+    assert_ne!(dummy_adjoint, code);
     assert_ne!(incremental, code);
     assert_ne!(stale_capacity, code);
     for arc in ["0", "1"] {
@@ -138,6 +144,7 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
                 ("bounded", &code, 0),
                 ("incremental", &incremental, 193),
                 ("stale-capacity", &stale_capacity, 196),
+                ("dummy-adjoint", &dummy_adjoint, 202),
             ] {
                 let mode = if arc == "1" {
                     "#define FWP_ARC_ONLY 1\n"
@@ -150,18 +157,20 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
                 );
                 let binary = directory.join(label);
                 fwp::cgen::compile_c(&source, &binary, opt).unwrap();
-                let output = Command::new(&binary)
-                    .env("FWP_AD_WORKSPACE", "0")
-                    .env("FWP_GC_STRESS", if arc == "1" { "0" } else { "1" })
-                    .env("FWP_GC_VERIFY", if arc == "1" { "0" } else { "1" })
-                    .env("FWP_REUSE_VERIFY", if arc == "1" { "0" } else { "1" })
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    output.status.code(),
-                    Some(expected),
-                    "{label} arc={arc} {opt}: {output:?}"
-                );
+                for cache in ["0", "1"] {
+                    let output = Command::new(&binary)
+                        .env("FWP_AD_WORKSPACE", cache)
+                        .env("FWP_GC_STRESS", if arc == "1" { "0" } else { "1" })
+                        .env("FWP_GC_VERIFY", if arc == "1" { "0" } else { "1" })
+                        .env("FWP_REUSE_VERIFY", if arc == "1" { "0" } else { "1" })
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        output.status.code(),
+                        Some(expected),
+                        "{label} arc={arc} {opt} cache={cache}: {output:?}"
+                    );
+                }
                 if let Some(destination) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
                     let destination = std::path::PathBuf::from(destination);
                     std::fs::create_dir_all(&destination).unwrap();

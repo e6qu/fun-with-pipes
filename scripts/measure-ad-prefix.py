@@ -37,7 +37,7 @@ def main():
     cfile = out / 'prefix.c'
     run([compiler, 'build', '--gc', 'arc', '--emit-c', '-o', cfile, source], environment)
     original = cfile.read_text()
-    marker = '    int64_t needed = active ? active : 1;'
+    marker = '    int64_t needed = active;'
     assert original.count(marker) == 1
     cases = {'bounded': original, 'full-prefix-control': original.replace(marker, '    active = tp.len;\n' + marker)}
     results = {}

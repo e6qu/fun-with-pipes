@@ -1,7 +1,8 @@
 # Session handoff
 
 Updated 2026-10-15. The user requested continued development after PR #138.
-Current branch: `autodiff-registry-growth`. Publication, fixes and squash merge
+[PR #139](https://github.com/e6qu/fun-with-pipes/pull/139), branch
+`autodiff-registry-growth`, is a draft; the empty-adjoint correction follows initial head `53dfdbcf`. Publication, fixes and squash merge
 after all nine exact-head production jobs plus documentation remain authorized.
 
 ## Roadmap status
@@ -35,8 +36,10 @@ limits and scope links remain unchanged. Failed growth keeps the old registry.
 The interpreter now creates managed tapes without taking numeric workspaces and
 leaves an existing workspace intact when an empty tape retires, matching native
 behavior. Allocation/capacity, forced relocation, token exhaustion, scope release
-and allocator-failure controls pass locally. Four-host measurements and full
-acceptance are still outstanding.
+and allocator-failure controls pass locally. A final review also removed native zero-input backward
+passes' dummy adjoint allocation. Its control restores that allocation and
+checks that cold empty tapes allocate no adjoints and do not evict a warm cache.
+Four-host measurements and full acceptance are still outstanding.
 
 All commands below use `python3 scripts/local-guard.py` and pass within the
 unchanged limits:
@@ -57,6 +60,15 @@ uses valid settings and explicitly asserts its active mode. The first language
 fixture lacked expression-list separators; the corrected tacit fixture passes.
 These were test-construction failures, with no skipped acceptance checks.
 
+The empty-adjoint correction passes both `autodiff_capacity_bounds` tests and
+three of four `autodiff_workspace` tests in the combined guarded run (54.57s).
+The remaining prefix test initially matched the old C statement; its updated
+zero-byte expectation passes `cargo test --test autodiff_workspace backward_prefix_bounds_actual_native_storage_and_scans -- --exact --test-threads=1`
+(4.32s), including the full-storage/full-scan negative controls. Native registry
+controls cover O1/O2, ARC/tracing and cache on/off, and reject a restored dummy
+adjoint allocation. Actual generated-C measurement instrumentation and a guarded
+`cc -std=gnu11 -fsyntax-only` check also pass (0.14s each).
+
 The contribution guide's stale seven-job statement now lists all nine jobs.
 
 ## Boundaries
@@ -69,8 +81,11 @@ some lazy producers can allocate. No general collector-free or speedup claim.
 
 ## Next action
 
-Next: finish focused lifecycle regressions and equivalent registry allocation/binary
-measurements, publish one draft PR, obtain focused four-host evidence, then run
+Next: publish the final empty-adjoint correction and dispatch fresh focused
+runs. The superseded [focused AD/evidence](https://github.com/e6qu/fun-with-pipes/actions/runs/38685654685)
+and [WASM](https://github.com/e6qu/fun-with-pipes/actions/runs/38685671382) at `53dfdbcf` were cancelled to avoid duplicate runner work; they are not gates.
+Fix failures, collect/hash-check all four registry reports and inspect native
+instructions, then mark PR #139 ready and run
 all nine final-head production jobs and documentation before squash merge.
 Keep the commit subject one line, at most 80 characters, with an empty body.
 Full builds, suites and benchmarks run on GitHub; local checks remain serial,

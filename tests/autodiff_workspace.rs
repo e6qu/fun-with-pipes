@@ -207,7 +207,7 @@ fn backward_prefix_bounds_actual_native_storage_and_scans() {
             "int main(int argc, char **argv)",
             "int original_main(int argc, char **argv)",
         );
-    let needed = "int64_t needed = active ? active : 1;";
+    let needed = "int64_t needed = active;";
     assert_eq!(code.matches(needed).count(), 1);
     let full_storage = code.replace(needed, "int64_t needed = tp.len ? tp.len : 1;");
     let full_scan =

@@ -12,6 +12,11 @@ static void *registry_realloc(void *old, size_t bytes) {
     return next;
 }
 static void registry_free(void *p) { free(p); registry_bytes = 0; }
+static size_t registry_adj_requests;
+static void *registry_calloc(size_t n, size_t bytes) {
+    registry_adj_requests++;
+    return calloc(n, bytes);
+}
 static int registry_recover(void) { return 1; }
 static jmp_buf registry_trap;
 int main(void) {
@@ -23,6 +28,31 @@ int main(void) {
 #endif
     fwp_tape_scope scope = {-1};
     fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);
+    V empty = fwp_rc_fresh(fwp_arr_new(0));
+    V base = fwp_p_ad_tape(0);
+    V result = fwp_rc_fresh(fwp_p_ad_backward(base, empty, empty));
+    if (ARR(result)->len || registry_adj_requests) return 202;
+    fwp_rc_free_arr(result);
+    /* Create the empty tape before another tape fills the shared cache. */
+    base = fwp_p_ad_tape(0);
+    V warm = fwp_p_ad_tape(1);
+    V outputs = fwp_rc_fresh(fwp_arr_new(1)), seeds = fwp_rc_fresh(fwp_arr_new(1));
+    ARR(outputs)->d[0] = warm; ARR(seeds)->d[0] = fwp_from_f64(1.0);
+    result = fwp_rc_fresh(fwp_p_ad_backward(warm, outputs, seeds));
+    if (ARR(result)->len != 1 || fwp_f64(ARR(result)->d[0]) != 1.0) return 203;
+    fwp_rc_free_arr(result);
+    double *cached = fwp_tape_workspace.adj;
+    size_t cached_bytes = fwp_tape_cached_bytes, adj_requests = registry_adj_requests;
+    result = fwp_rc_fresh(fwp_p_ad_backward(base, empty, empty));
+    if (ARR(result)->len || registry_adj_requests != adj_requests ||
+        fwp_tape_workspace.adj != cached || fwp_tape_cached_bytes != cached_bytes) return 204;
+    fwp_rc_free_arr(result); fwp_rc_free_arr(empty); fwp_rc_free_arr(outputs); fwp_rc_free_arr(seeds);
+    fwp_cleanup_pop(&cleanup); fwp_tape_scope_release(&scope);
+    fwp_tape_finish();
+    if (fwp_ntapes || fwp_tapes_cap || fwp_tapes || registry_bytes) return 196;
+    registry_requests = 0;
+    scope.head = -1;
     fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);
     for (int i = 0; i < 257; i++) {
         int64_t base = (int64_t)fwp_p_ad_tape(0), id = base >> 32;
