@@ -183,7 +183,10 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
         ("custom-native","foreign \"fwp\" string.repeat : I64 -> I64 -> I64\nmain = 1 | string.repeat 2 | echo\n","no checked ownership signature"),
         ("foreign-callback","foreign \"C\" invoke : (I64 -> String) -> I64\nmain = invoke show | echo\n","foreign boundary has no checked ownership contract"),
         ("foreign-address","foreign \"C\" lookup : () -> Ptr[I64]\nmain = lookup () | ignore\n","tracing-free ownership contract"),
-        ("channel","text-channel : I64 -> Channel[String] ! {Async}\ntext-channel = channel.make\nmain = text-channel 1 | channel.close\n","tracing-free ownership contract"),
+        ("channel","fn-channel : I64 -> Channel[() -> String] ! {Async}\nfn-channel = channel.make\nmain = fn-channel 1 | channel.close\n","channel payloads cannot contain"),
+        ("task-channel","tasks : I64 -> Channel[Task[String]] ! {Async}\ntasks = channel.make\nmain = tasks 1 | channel.close\n","channel payloads cannot contain"),
+        ("nested-channel","nested : I64 -> Channel[List[Channel[String]]] ! {Async}\nnested = channel.make\nmain = nested 1 | channel.close\n","channel payloads cannot contain"),
+        ("cyclic-channel","Link = | Node (Channel[Link])\nlinks : I64 -> Channel[Link] ! {Async}\nlinks = channel.make\nmain = links 1 | channel.close\n","channel payloads cannot contain"),
         ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
         ("input","main = read-all () | echo\n","tracing-free ownership contract"),
     ] {
