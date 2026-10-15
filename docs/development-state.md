@@ -1,17 +1,20 @@
 # Session handoff
 
-Updated 2026-10-16. The only open delivery is
-[PR #146](https://github.com/e6qu/fun-with-pipes/pull/146), final head `19b14d0b`.
-Its [production run 38803349673](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
-has passing macOS, Windows, Linux ARM64 and benchmark jobs; Linux AMD64 still runs.
-[Documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349640)
-passes. Do not merge until all nine production jobs pass for this head.
+Updated 2026-10-16. [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146)
+merged as `be890914` after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349640)
+passed for `19b14d0b`. The merge message is one line with an empty body and its
+files match the tested head. Duplicate post-merge production CI was canceled.
+[Delivery history](roadmap-history.md) records the accepted scope and limits.
 
-This is the next delivery branch `owned-numerical-programs` in
-`/private/tmp/fwp-numerical-delivery`, based on `19b14d0b`. It combines the changes
-after `c10b1ccd` from `checked-linear-algebra` (`4f3f2a1b`) and the snapshot
-change `cbe6604a`, plus file-value changes through `4c73dfb2`. The latest Windows loop-unwind repair, its early test and
-matrix/wide-worker coverage are preserved. No PR is open for this branch yet.
+The current delivery is [PR #147](https://github.com/e6qu/fun-with-pipes/pull/147),
+branch `owned-numerical-programs` in `/Users/zardoz/projects/fun-with-pipes`,
+based on accepted `be890914`. Its full final-head production gate is pending.
+It combines solvers, array borrowing, F128 precision, console ownership, path/error
+repairs, snapshots and file values through `4c73dfb2`. It preserves #146's Windows
+library/loop-unwind repairs, early cancellation test and matrix/wide-worker tests.
+Earlier preparation worktrees are evidence anchors; do not replay their commits.
 
 Standing authorization covers fixes, publication and squash merges after all
 nine final-head production jobs and documentation pass. Use exactly one subject
@@ -120,7 +123,7 @@ declarations and 19 lowered templates. Its source matches `4c73dfb2` except the
 preserved parent Windows library/loop-unwind probe repairs. The inventory
 baseline is frozen. Preserve the failed Linux logs in `/private/tmp/fwp-directory-*-failure.log`.
 
-## Next optimization identified, not implemented
+## Next optimization: unvalidated preparation
 
 The retained matrix profile has three retains and three nonlast releases per
 multiplication. Its generated `product-data` entry duplicates a selected array
@@ -133,21 +136,29 @@ claim or a compiler implementation. Guarded script
 `/private/tmp/fwp-field-move-count-check.py` passes (2.40 s); results are in
 `/private/tmp/fwp-field-move-count-result.json`.
 
-After publishing this delivery, investigate transferring a selected field out of
-an unboxed owned record without a retain/release pair. Preserve other fields,
-shared children, failure cleanup and resource-frame lifetimes. Compare interpreter,
-tracing/ARC, actual generated instructions and before/after counts; retain rejected
-proof cases. Boxed input-record retains and two input wrapper allocations remain
-separate costs. Do not replace ordinary arguments or add implicit syntax.
+A provisional implementation is isolated in `move-unboxed-fields` at
+`/private/tmp/fwp-field-moves`, based on pre-rebase delivery anchor `a2679ecb`.
+It is not in #147. `src/cgen.rs` transfers only an immediate projected-field
+Dup/parent-Drop pair from an already flattened owned record, releases siblings
+and leaves original resource-frame cases unchanged. The two local files are
+uncommitted; formatting passes (1.11 s), but the changed compiler has not run.
 
-## Next: finish the gate and publish the next substantial PR
+Next for that preparation: add counted tests for owned/shared children, discarded
+siblings, callback/resource cases and failures. Compare raw interpretation,
+tracing/ARC, generated instructions and before/after counts on runners. The
+untimed C experiment is not compiler verification. Boxed input-record retains
+and two input wrapper allocations remain separate costs. Keep changes after
+`a2679ecb` isolated and transfer them onto #147's accepted squash later.
 
-Monitor #146; fix failures and require all nine production jobs plus docs for
-`19b14d0b`. Squash merge with the prescribed subject/empty body, then verify its
-message and unchanged tree. Transplant this combined delivery from `19b14d0b`
-onto that accepted squash commit; record actual merge/run evidence in history
-and this handoff. Open one PR and require its own full final-head gate.
+## Next: validate and merge #147, then continue the measured optimization
 
-The repaired file-value validation is complete. Keep one current plan and handoff,
-and retain unresolved exclusions and performance gaps. Completion of these
-components does not remove tracing GC or finish any whole roadmap area.
+Run #147's full final-head gate and fix any failures. Require all nine production
+jobs plus documentation for the exact current head before squash merge. Use one
+subject line of at most 80 characters and an explicitly empty body; verify the
+message and unchanged tree, then record acceptance in history and this handoff.
+Skipped draft jobs and superseded runs do not count as acceptance.
+
+Continue field-move proof tests while CI runs. Keep one current PR, plan and
+handoff; open the next substantial PR after this one merges. Retain unresolved
+exclusions and performance gaps. These components do not remove tracing GC or
+finish any whole roadmap area.
