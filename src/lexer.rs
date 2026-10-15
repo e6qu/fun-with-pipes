@@ -72,9 +72,12 @@ pub enum Sym {
     RBrace,
     Comma,
     Semi,
-    /// `+` and `*`: arithmetic on sizes in types (`Vector[T, n + m]`).
+    /// Arithmetic; `+` and `*` also apply to sizes in types.
     Plus,
+    Minus,
     Star,
+    Slash,
+    Percent,
 }
 
 impl Sym {
@@ -94,7 +97,10 @@ impl Sym {
             Sym::Comma => ",",
             Sym::Semi => ";",
             Sym::Plus => "+",
+            Sym::Minus => "-",
             Sym::Star => "*",
+            Sym::Slash => "/",
+            Sym::Percent => "%",
         }
     }
 }
@@ -342,7 +348,11 @@ impl<'a> Lexer<'a> {
                 continue;
             }
             let (line, col, start) = (self.line, self.col, self.pos);
-            if c.is_ascii_digit() || (c == b'-' && self.peek_at(1).is_ascii_digit()) {
+            if c.is_ascii_digit()
+                || (c == b'-'
+                    && self.peek_at(1).is_ascii_digit()
+                    && !self.prev_is_adjacent_operand(start))
+            {
                 let tok = self.number(line, col)?;
                 self.push(tok, line, col, start);
                 continue;
@@ -400,7 +410,10 @@ impl<'a> Lexer<'a> {
                 b',' => Sym::Comma,
                 b';' => Sym::Semi,
                 b'+' => Sym::Plus,
+                b'-' => Sym::Minus,
                 b'*' => Sym::Star,
+                b'/' => Sym::Slash,
+                b'%' => Sym::Percent,
                 _ => {
                     let ch = self.text[self.pos..].chars().next().unwrap_or('?');
                     return self.err(line, col, format!("unexpected character `{}`", ch));

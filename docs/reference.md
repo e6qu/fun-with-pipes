@@ -96,7 +96,8 @@ imported under the same name.
 
 | Form | Meaning |
 |---|---|
-| `f x y` | application; functions are curried |
+| `f x y` | successive single-argument applications: `(f x) y` |
+| `a + b`, `a - b`, `a * b`, `a / b`, `a % b` | arithmetic with fixed precedence; `%` is remainder |
 | `x \| f` | `f x` when `x` is a value; composition when `x` is a function |
 | `[a, b]`, `(a, b)`, `()` | list, tuple, unit (tuples are records with fields `.0`, `.1`, ...) |
 | `{ x = 1, y = 2 }` | record (structural; unifies with nominal records) |
@@ -117,6 +118,45 @@ constant stack space; use it for long-running loops instead of recursion.
 
 The data being transformed comes last: `sub 1` subtracts one, `div 2` halves, `lt 0` tests
 `x < 0`, and `concat "!"` appends.
+
+### Arithmetic and precedence
+
+From tightest to loosest:
+
+| Precedence | Forms | Grouping |
+|---|---|---|
+| 1 | Function application: `f x` | Left to right |
+| 2 | Unary negation: `-(x + y)` | Negates the following application |
+| 3 | `*`, `/`, `%` | Left to right |
+| 4 | `+`, `-` | Left to right |
+| 5 | Pipe: `\|` | Left to right |
+
+`2 + 3 * 4` gives `14`; `(2 + 3) * 4` gives `20`.
+`20 - 6 - 2` means `(20 - 6) - 2`, giving `12`.
+`2 + 3 * 4 | echo` prints `14`. A pipe used as an operand needs parentheses:
+`(3 | add 1) * 2`. `f (2 + 3)` passes a sum to `f`, while `f 2 + 3`
+adds three to the result of `f 2`.
+
+These operators use the standard `add`, `sub`, `mul`, `div`, `rem` and `neg`
+traits, including checked integer arithmetic and existing floating-point rules.
+`a - b` subtracts `b` from `a`, whereas the data-last prefix call is `sub b a`.
+Operands evaluate left to right, exactly once; rewriting to a prefix call with
+swapped expressions can change effects or which failure occurs first.
+No reassociation or implicit numeric conversion is introduced.
+
+Use spaces around binary subtraction. Hyphenated names remain names:
+`count-long` is an identifier. A minus attached to a numeric literal after
+whitespace remains its sign: `add -1` partially applies addition to negative
+one. Consequently, `x -1` is application, while `x - 1` is subtraction.
+`10-3` is also subtraction because the minus immediately follows its operand.
+Use `f (-x)` to pass a negated expression to a function.
+
+Exponentiation remains an explicit library call; there is no infix power,
+comparison or user-defined operator syntax.
+
+Every function still takes one argument, including a tuple-taking function.
+`curry` and `uncurry` explicitly convert between a pair-taking function and
+successive applications; tuple arguments are not unpacked automatically.
 
 ### Pipes
 

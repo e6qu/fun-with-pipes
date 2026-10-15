@@ -2,9 +2,11 @@
 
 Updated 2026-10-15. Current branch: `measured-ownership-performance`, based on
 `e94cc4a6` (PR #144). The user requested cancellation of remaining old CI runs
-and the next large combined PR. They also requested automatic currying to avoid
-writing `curry`/`uncurry`; the proposed type-directed adaptation rules are still
-being discussed. Continue independent performance work during that discussion.
+and the next large combined PR. The currying discussion is settled: retain
+explicit `curry`/`uncurry` and pursue the single-argument function model.
+`f x y` means `(f x) y`; tuples are single values. Do not add implicit conversion
+between tuple-taking and curried functions. The user also requested infix
+arithmetic with standard precedence, alongside prefix calls and pipes.
 
 ## Roadmap status
 
@@ -44,9 +46,11 @@ JIT is explicitly excluded, not deferred. Earlier delivery evidence remains in
   Prove any removed work unnecessary before changing it; preserve arithmetic
   traps, failure cleanup, alias behavior and task cancellation.
 - Reproduce paired derivative-buffer slowdowns before selecting a change there.
-- Audit curry/uncurry uses and settle the adaptation rules before changing
-  inference. Ordinary partial application must retain its meaning. Ambiguous
-  argument shapes must not silently select a different call.
+- Preserve single-argument functions, ordinary partial application and explicit
+  `curry`/`uncurry`; optimize their compiled costs without changing call semantics.
+- Add fixed-precedence infix arithmetic using the existing numeric traits;
+  preserve checked operations, left-to-right operand evaluation, negative
+  literals and hyphenated names. Update formatting, macros, examples and docs.
 
 Acceptance requires raw-interpreter/native agreement, allocation/retain/cleanup
 counts, generated binary inspection, explicit before/after comparisons on Linux
@@ -73,11 +77,36 @@ ownership tests and numerical/derivative/program measurements on four native
 hosts. Initial results establish the pre-change baseline; this dispatch is not
 the full production acceptance gate.
 
+The pre-change performance dispatch is
+[run 38767826317](https://github.com/e6qu/fun-with-pipes/actions/runs/38767826317)
+at preparation commit `711ac295`. Results are pending; do not treat the dispatch
+as passing evidence.
+
+Infix arithmetic is implemented in the working tree (`+ - * / %` and unary
+negation). Inference and native lowering use the existing arithmetic operations;
+the syntax tree retains notation for formatting. Added precedence/formatting,
+macro, numeric-width, operand-effect and competing-trap controls. Full compiler
+and interpreter/native validation is pending on runners.
+
+Focused local checks, all through `python3 scripts/local-guard.py`:
+
+- `python3 /private/tmp/fwp-infix-local.py`: standalone lexer/parser/formatter
+  harness passed one precedence/round-trip test and six lexer tests; rerun after
+  absolute standard-library reference fixes passed (1.56 s).
+- `cargo fmt --all -- --check`: passed (1.08 s).
+- Existing interpreter float-display probe: passed (0.63 s); this establishes
+  fixture output spelling only, not the changed compiler's correctness.
+- `python3 scripts/check-roadmap.py`: passed after the documentation updates
+  (2.82 s); `git diff --check` also passed.
+
+An attempted display probe using `fwp eval` failed because that CLI command does
+not exist; the corrected probe used `fwp run --interp` with a temporary file.
+
 ## Next action
 
-Next: validate and publish the baseline measurement preparation as a draft PR,
-dispatch its performance suite, then implement and test the proved loop/ARC
-improvements while the baseline runs. Keep all changes in this combined PR;
+Next: publish the combined draft PR and dispatch the focused `syntax` suite;
+fix any compiler, formatter or behavioral failures. Inspect the running baseline,
+then implement and test the proved loop/ARC improvements. Keep all changes in this combined PR;
 mark it ready only when its final content and evidence are reviewable.
 
 Use `python3 scripts/local-guard.py COMMAND...` for focused serial local checks.

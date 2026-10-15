@@ -200,7 +200,7 @@ fn check_superclasses(env: &mut Env, out: &mut Typed) {
 fn free_names(e: &Expr, out: &mut Vec<(String, Span)>) {
     match &e.kind {
         ExprKind::Var(n) => out.push((n.clone(), e.span)),
-        ExprKind::App(f, args) => {
+        ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
             free_names(f, out);
             args.iter().for_each(|a| free_names(a, out));
         }
@@ -1337,7 +1337,7 @@ impl<'a> Infer<'a> {
                 }
                 Ok(result.unwrap())
             }
-            ExprKind::App(f, args) => {
+            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
                 let t = self.infer_app(e, f, args, ctx)?;
                 self.size_literal(e, f, args, &t)?;
                 Ok(t)
@@ -1840,7 +1840,7 @@ impl<'a> Infer<'a> {
 pub fn collect_unquotes<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     match &e.kind {
         ExprKind::MacroCall(n, args) if n == "unquote" => out.extend(args.iter()),
-        ExprKind::App(f, args) => {
+        ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
             collect_unquotes(f, out);
             args.iter().for_each(|a| collect_unquotes(a, out));
         }

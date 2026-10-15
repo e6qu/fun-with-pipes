@@ -900,15 +900,15 @@ impl<'a> Parser<'a> {
             let e = self.expr()?;
             return Ok(self.mk(sp, ExprKind::Comptime(Box::new(e))));
         }
-        let mut lhs = self.app()?;
+        let mut lhs = self.arithmetic(1)?;
         while self.at_sym(Sym::Pipe) && !self.at_boundary_strict() {
             let psp = self.bump().span;
             let rhs = if self.at_kw(Kw::Comptime) {
                 let sp = self.bump().span;
-                let e = self.app()?;
+                let e = self.arithmetic(1)?;
                 self.mk(sp, ExprKind::Comptime(Box::new(e)))
             } else {
-                self.app()?
+                self.arithmetic(1)?
             };
             let span = Span { len: 1, ..psp };
             lhs = self.mk(span, ExprKind::Pipe(Box::new(lhs), Box::new(rhs)));
@@ -916,7 +916,51 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
+    fn infix_op(&self) -> Option<ArithmeticOp> {
+        if self.at_boundary_strict() {
+            return None;
+        }
+        match self.peek_tok() {
+            Tok::Sym(Sym::Plus) => Some(ArithmeticOp::Add),
+            Tok::Sym(Sym::Minus) => Some(ArithmeticOp::Sub),
+            Tok::Sym(Sym::Star) => Some(ArithmeticOp::Mul),
+            Tok::Sym(Sym::Slash) => Some(ArithmeticOp::Div),
+            Tok::Sym(Sym::Percent) => Some(ArithmeticOp::Rem),
+            _ => None,
+        }
+    }
+
+    fn arithmetic(&mut self, min_precedence: u8) -> DResult<Expr> {
+        let mut lhs = self.app()?;
+        while let Some(op) = self.infix_op() {
+            if op.precedence() < min_precedence {
+                break;
+            }
+            let span = self.bump().span;
+            let rhs = self.arithmetic(op.precedence() + 1)?;
+            // Prefix arithmetic is data-last. `flip op lhs rhs` keeps the
+            // operands' evaluation order while passing their values to op.
+            let flip = self.mk(span, ExprKind::Var("::std::flip".into()));
+            let function = self.mk(span, ExprKind::Var(format!("::std::{}", op.function())));
+            let callee = self.mk(span, ExprKind::App(Box::new(flip), vec![function]));
+            lhs = self.mk(
+                span,
+                ExprKind::Arithmetic(op, Box::new(callee), vec![lhs, rhs]),
+            );
+        }
+        Ok(lhs)
+    }
+
     fn app(&mut self) -> DResult<Expr> {
+        if self.at_sym(Sym::Minus) && !self.at_boundary_strict() {
+            let span = self.bump().span;
+            let operand = self.app()?;
+            let neg = self.mk(span, ExprKind::Var("::std::neg".into()));
+            return Ok(self.mk(
+                span,
+                ExprKind::Arithmetic(ArithmeticOp::Neg, Box::new(neg), vec![operand]),
+            ));
+        }
         if self.at_expr_end() {
             return self.unexpected("an expression");
         }

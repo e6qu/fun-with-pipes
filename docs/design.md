@@ -35,10 +35,25 @@ operation order. Tests compare standard output, standard error and exit status.
 
 ## Syntax
 
-Pipes stay data-last: `x | sub 1` means `x − 1`. Calls are prefix expressions;
-there is no infix arithmetic. `x | f` applies a function and `f | g` combines
+Pipes stay data-last: `x | sub 1` means `x − 1`. Prefix calls and infix arithmetic
+coexist: `x - 1` has the same numeric result. `x | f` applies a function and `f | g` combines
 functions. If the left side is still unknown when its binding is solved, the
 compiler selects application. Parentheses group nested arguments.
+
+Every function takes one argument; its result may be another function.
+`f x y` means `(f x) y`, and `A -> B -> C` means `A -> (B -> C)`.
+A tuple is one value: `(A, B) -> C` takes a pair, while `A -> B -> C`
+takes an `A` and returns a function taking a `B`. The library helpers `curry`
+and `uncurry` explicitly convert between these shapes. Type inference does not
+silently convert them. Native calls may combine successive applications and
+eliminate temporary closures or tuples while preserving evaluation and effects.
+
+Arithmetic has fixed precedence: calls, unary negation, `* / %`, `+ -`, then
+pipes, from tightest to loosest. Binary arithmetic associates left to right;
+parentheses override grouping. Operators use the existing standard arithmetic
+traits, with operands evaluated left to right. Their syntax tree retains notation
+for formatting while inference and specialization handle ordinary applications.
+There is no separate numeric runtime or implicit numeric conversion.
 
 Selectors such as `.name` and `.0` are functions. Tuple positions start at zero.
 A top-level declaration starts in column one; indented lines continue it.

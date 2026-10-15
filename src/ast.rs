@@ -34,6 +34,10 @@ pub enum ExprKind {
     Selector(Vec<String>),
     /// Juxtaposition: `f a b`.
     App(Box<Expr>, Vec<Expr>),
+    /// Arithmetic application, retaining notation for formatting. Binary
+    /// operators use `flip op` with arguments in source evaluation order;
+    /// unary negation uses `neg` with one argument.
+    Arithmetic(ArithmeticOp, Box<Expr>, Vec<Expr>),
     /// `a | b`.
     Pipe(Box<Expr>, Box<Expr>),
     Unit,
@@ -58,6 +62,48 @@ pub enum ExprKind {
     TypeOf(TypeExpr),
     /// Macro invocation `name!(a, b)`.
     MacroCall(String, Vec<Expr>),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ArithmeticOp {
+    Neg,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Rem,
+}
+
+impl ArithmeticOp {
+    pub fn text(self) -> &'static str {
+        match self {
+            Self::Neg => "-",
+            Self::Add => "+",
+            Self::Sub => "-",
+            Self::Mul => "*",
+            Self::Div => "/",
+            Self::Rem => "%",
+        }
+    }
+
+    pub fn function(self) -> &'static str {
+        match self {
+            Self::Neg => "neg",
+            Self::Add => "add",
+            Self::Sub => "sub",
+            Self::Mul => "mul",
+            Self::Div => "div",
+            Self::Rem => "rem",
+        }
+    }
+
+    pub fn precedence(self) -> u8 {
+        match self {
+            Self::Neg => 3,
+            Self::Add | Self::Sub => 1,
+            Self::Mul | Self::Div | Self::Rem => 2,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -261,7 +307,7 @@ impl Expr {
     pub fn walk(&self, f: &mut dyn FnMut(&Expr)) {
         f(self);
         match &self.kind {
-            ExprKind::App(g, args) => {
+            ExprKind::App(g, args) | ExprKind::Arithmetic(_, g, args) => {
                 g.walk(f);
                 args.iter().for_each(|a| a.walk(f));
             }

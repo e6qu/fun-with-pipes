@@ -22,7 +22,9 @@ const MAX_ROUNDS: usize = 32;
 fn has_call(e: &Expr) -> bool {
     match &e.kind {
         ExprKind::MacroCall(n, args) => n != "unquote" || args.iter().any(has_call),
-        ExprKind::App(f, args) => has_call(f) || args.iter().any(has_call),
+        ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
+            has_call(f) || args.iter().any(has_call)
+        }
         ExprKind::Pipe(a, b) => has_call(a) || has_call(b),
         ExprKind::Tuple(xs) | ExprKind::List(xs) => xs.iter().any(has_call),
         ExprKind::Record(fs)
@@ -67,7 +69,7 @@ fn names_in(e: &Expr, out: &mut HashSet<String>) {
         ExprKind::Var(n) => {
             out.insert(n.clone());
         }
-        ExprKind::App(f, args) => {
+        ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
             names_in(f, out);
             args.iter().for_each(|a| names_in(a, out));
         }
@@ -317,7 +319,7 @@ impl Expander<'_> {
             }
         }
         match &mut e.kind {
-            ExprKind::App(f, args) => {
+            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
                 self.expr(f);
                 args.iter_mut().for_each(|a| self.expr(a));
             }
@@ -348,7 +350,7 @@ impl Expander<'_> {
             }
         }
         match &mut e.kind {
-            ExprKind::App(f, args) => {
+            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
                 self.in_quote(f);
                 args.iter_mut().for_each(|a| self.in_quote(a));
             }

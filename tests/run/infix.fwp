@@ -1,0 +1,25 @@
+left = const 10 | tap (const "left" | print)
+right = const 3 | tap (const "right" | print)
+
+macro twice = quote (unquote!(0) * 2)
+
+main = [
+    2 + 3 * 4 | echo,
+    (2 + 3) * 4 | echo,
+    20 - 6 - 2 | echo,
+    20 - (6 - 2) | echo,
+    24 / 3 * 2 | echo,
+    24 / (3 * 2) | echo,
+    17 % 5 + 1 | echo,
+    1+2*3 | echo,
+    10-3 | echo,
+    10 - -3 | echo,
+    -(2 + 3) * 4 | echo,
+    add -1 4 | echo,
+    2.0 + 3.0 * 4.0 | echo,
+    20i8 - 3i8 * 2i8 | echo,
+    2.0f32 + 3.0f32 * 4.0f32 | echo,
+    -9223372036854775808 | echo,
+    twice!(2 + 3) | echo,
+    (() | left) - (() | right) | echo,
+] | ignore

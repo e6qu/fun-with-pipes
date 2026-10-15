@@ -1410,7 +1410,7 @@ pub fn renumber(e: &Expr, next: &mut NodeId) -> Expr {
         e.id = *next;
         *next += 1;
         match &mut e.kind {
-            ExprKind::App(f, args) => {
+            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
                 go(f, next);
                 args.iter_mut().for_each(|a| go(a, next));
             }
