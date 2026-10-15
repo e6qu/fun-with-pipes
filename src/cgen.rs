@@ -2914,13 +2914,33 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let ctx = self.fresh();
                     let node = self.fresh();
                     let retained = self.g.duplicate_values(&values, &ctx, &node);
+                    // A last owner can give its fields to the worker without
+                    // creating temporary aliases. Stack records have distinct
+                    // child owners and must keep their existing conversion.
+                    let moved = (tys.is_some() && self.stack_alias(e).is_none()).then(|| {
+                        let moved = self.fresh();
+                        self.line(&format!(
+                            "int {moved} = fwp_rc_last({t}); /* move boxed fields */"
+                        ));
+                        self.line(&format!("if (!{moved}) {{"));
+                        self.indent += 1;
+                        moved
+                    });
                     self.line(&retained);
+                    if moved.is_some() {
+                        self.indent -= 1;
+                        self.line("}");
+                    }
                     self.end_call(original);
                     let d = ty
                         .and_then(|t| self.typed_drop(&t))
                         .unwrap_or_else(|| "fwp_rc_drop".into());
                     if let Some(children) = self.stack_alias(e) {
                         self.stack_children_count(children, false);
+                    } else if let Some(moved) = moved {
+                        self.line(&format!(
+                            "if ({moved}) fwp_rc_free_obj({t}); else {d}({t});"
+                        ));
                     } else {
                         self.line(&format!("{}({});", d, t));
                     }

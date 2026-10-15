@@ -51,6 +51,22 @@ resource-frame cases unchanged. No wrapper, runtime mode or language syntax is
 added. Boxed input-record retains and two input wrapper allocations remain
 separate costs.
 
+The next candidate targets the two boxed-input conversions, using the existing
+last-owner test. A unique heap record transfers its typed fields and frees only
+its outer cell; shared or stack records keep their existing ownership operations.
+Acceptance requires mixed scalar/pointer fields, shared parents/children, wide
+numeric boxes, retain failure, cleanup on later failure and unchanged numerical
+results. The intended matrix count is zero retains/nonlast releases, with the
+same five allocations per multiplication. No timing gain is assumed.
+`boxed_field_moves` checks actual tracing/ARC builds, shared parents, aliased
+children, an I64 with pointer-like bits, an owned I128 box, repeated drops and
+traps, and a negative control forcing the old conversion. The existing compiler
+fails its unique-input retain assertion with four retains (exit 214), as expected
+(guarded baseline check 1.36 s). An edited-C mechanism probe passes this test and
+the shared overflow regression (10.40 s); it does not verify changed compiler
+emission. The overflow regression now forces a shared parent because a unique
+parent no longer retains children and cannot trigger that artificial overflow.
+
 ## Proof tests and actual checks
 
 `field_moves` constructs checked typed IR so inlining cannot erase the projection
@@ -70,7 +86,9 @@ at `c8f65e5`. The broader Windows suite exposed two old probe portability issues
 text-mode newline translation and an unescaped path. Repairs set binary probe
 output, escape the path, intercept Windows wide-character file opens and check
 closed native handles. Both repaired probes pass locally against the existing
-compiler under the guard (10.97 s); native Windows acceptance is pending.
+compiler under the guard (10.97 s). Both Windows and both Linux jobs pass
+[38817093105](https://github.com/e6qu/fun-with-pipes/actions/runs/38817093105)
+at `1901fd44`; macOS jobs were still queued before the boxed-transfer extension.
 Failed logs are `/private/tmp/fwp-field-116700424100.log` and
 `/private/tmp/fwp-field-116700424254.log`.
 
@@ -85,8 +103,12 @@ Full builds and tests remain on runners; all local workloads use
 Publish the probe repairs and repeat `numerics.yml` with `suite=fields`; fix
 failures without weakening assertions. Numerical evidence run
 [38816168594](https://github.com/e6qu/fun-with-pipes/actions/runs/38816168594)
-at `c8f65e5` is collecting changed-compiler profiles and instructions; inspect
-its actual counts and C/Rust comparisons before claiming improvement. Add actual matrix emitted-code and
+at `c8f65e5` has passed both Linux hosts; macOS remains pending. Linux profiles
+confirm 16 retains/nonlast releases and 48 release checks across eight matrix
+products, versus 24/24/56 before the unboxed move. Forty allocations, output hash
+and zero final storage/collections are unchanged. Artifacts are in
+`/private/tmp/fwp-field-numerical-evidence`; retain actual C/Rust comparisons
+and inspect instructions before making timing claims. Add actual matrix emitted-code and
 count evidence with the changed compiler, plus resource/callback cases needed
 by review. Retain known boxed/shared cases and any performance regressions.
 
