@@ -262,6 +262,15 @@ wrapper. Ordinary tracing libraries keep their existing behavior. Proving these
 boundaries does not make every library eligible for ARC, or eliminate the
 necessary copy of a string that the host can later change.
 
+List transposition also has a checked copying contract. It creates new list
+nodes, retains the original elements as typed aliases and releases temporary
+row cursors and completed-column storage. Scratch space grows with the number
+of rows plus columns, without copying every input row into an array. A failure
+during a retain or list-node construction releases the
+partial column and completed columns. This closes the ownership gap in the
+general matrix multiplication path as well as direct `list.transpose` calls.
+The original input is unchanged, and ragged rows still stop at the shortest row.
+
 Scoped C calls can borrow strings/bytes and copy supported scalar/record values.
 Synchronous callbacks must run on the calling task before C returns; C must copy
 borrowed data before keeping it. Foreign strings are copied into owned fwp values.

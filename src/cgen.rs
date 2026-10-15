@@ -7056,6 +7056,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                         fs.iter().map(|(_, ty)| ty.clone()).collect()
                                     }
                                     "chunks" => vec![element(&func.locals[1])?],
+                                    "list.transpose" => vec![element(&element(&func.locals[0])?)?],
                                     "repeat" => vec![func.locals[1].clone()],
                                     _ => return Err(format!("unknown structural copy `{sym}`")),
                                 };
@@ -7068,7 +7069,16 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                         "NULL".into()
                                     }
                                 }));
-                                s = format!("return fwp_p_{sym}_owned({});", args.join(", "));
+                                if sym == "list.transpose" {
+                                    args.push(self.value_drop(&fields[0]));
+                                    args.push(self.value_drop(&element(&func.locals[0])?));
+                                    args.push(self.value_drop(&func.locals[0]));
+                                }
+                                s = format!(
+                                    "return fwp_p_{}_owned({});",
+                                    sym.replace('.', "_"),
+                                    args.join(", ")
+                                );
                             }
                             ResultOwnership::FreshOuter => {
                                 if contract.borrows_callback() {

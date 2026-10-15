@@ -85,7 +85,7 @@ jobs:
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test tls --test cli_ownership --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test arc_library --test foreign_callback_ownership --test float_formats --test float_linking --test protocol
+          cargo test --no-fail-fast --test tls --test cli_ownership --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test arc_library --test transpose_ownership --test foreign_callback_ownership --test float_formats --test float_linking --test protocol
           exit $LASTEXITCODE
       - name: Native nested autodiff and ownership controls
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}

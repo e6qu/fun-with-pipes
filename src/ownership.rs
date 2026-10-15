@@ -422,6 +422,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "zip" => (&[B, B], ResultOwnership::CopiedStructure, None, &[0, 1]),
         "unzip" => (&[B], ResultOwnership::CopiedStructure, None, &[0]),
         "chunks" => (&[B, B], ResultOwnership::CopiedStructure, None, &[1]),
+        "list.transpose" => (&[B], ResultOwnership::CopiedStructure, None, &[0]),
         "nth" => (&[B, B], ResultOwnership::FreshOuter, None, &[1]),
         "index-of" => (&[B, B], ResultOwnership::FreshOuter, None, &[]),
         "find" => (

@@ -84,7 +84,10 @@ ownership and removal of GC are the primary design priority.
 5. Extend checked ownership to C library calls with copied inputs and
    pointer-free results, and channels whose payloads cannot retain channel
    handles or callbacks. Check every export independently; prove repeated-call,
-   failure, cancellation and unload cleanup. Returned host pointers still need an explicit
+   failure, cancellation and unload cleanup. Give list transposition a checked
+   copy/cleanup contract so general matrix multiplication can enter checked ARC;
+   compare both memory modes against equivalent C/Rust kernels. Returned host
+   pointers still need an explicit
    release policy before they can join this subset. Track validation in the
    handoff; this is one boundary toward collector-free execution, not GC removal.
 
