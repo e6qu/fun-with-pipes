@@ -1,24 +1,19 @@
 # Session handoff
 
-Updated 2026-10-15. This preparation branch is `checked-linear-algebra`, in
-`/private/tmp/fwp-linear-algebra`, based on `c10b1ccd` from the preceding batch.
-[PR #145](https://github.com/e6qu/fun-with-pipes/pull/145) merged as `e51b8570`
-after all nine production jobs and documentation passed for `1ee7d581`.
-[PR #146](https://github.com/e6qu/fun-with-pipes/pull/146) is the only active
-delivery PR. Its main checkout is `/Users/zardoz/projects/fun-with-pipes`, branch
-`checked-library-ownership`, head `930645e6`. Required production run:
-[38796862558](https://github.com/e6qu/fun-with-pipes/actions/runs/38796862558);
-[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38796862605).
-The earlier Windows AMD64 gate found CRLF output in handwritten C test probes.
-That parent repair selects binary stdout and binary report-file append; exact
-byte assertions remain. The superseded production run was cancelled. Current
-production and repaired solver runs are queued without assigned runners.
+Updated 2026-10-15. Preparation branch `checked-linear-algebra` lives in
+`/private/tmp/fwp-linear-algebra`; its parent anchor is `c10b1ccd` from the
+current delivery. [PR #145](https://github.com/e6qu/fun-with-pipes/pull/145)
+merged as `e51b8570` after all nine production jobs and documentation passed.
+[PR #146](https://github.com/e6qu/fun-with-pipes/pull/146) remains the only open
+PR, head `930645e6`, in `/Users/zardoz/projects/fun-with-pipes`.
+Production [38796862558](https://github.com/e6qu/fun-with-pipes/actions/runs/38796862558)
+is running; documentation passed. Windows probes were repaired to emit exact
+LF bytes and binary report files after the previous head failed CRLF comparisons.
 
-Standing authorization covers fixes, publication and squash merge after all nine
-production jobs and documentation pass for the final commit, then the next PR.
-Use a one-line subject of at most 80 characters and an explicitly empty body,
-without trailers or attribution. Keep one active delivery PR; this preparation
-branch may run focused CI before #146 merges. Full local builds remain excluded.
+Standing authorization covers publication, fixes and squash merge after all
+nine production jobs and documentation pass for the final commit. Use one line
+of at most 80 characters and an explicitly empty body, with no trailers or
+attribution. Bundle coherent work into one active delivery PR.
 
 ## Roadmap status
 
@@ -32,7 +27,8 @@ branch may run focused CI before #146 merges. Full local builds remain excluded.
 | 6 | In progress | Preserve comparable C/Rust measurements and profiles |
 | 7 | In progress | Extend numerical and long-running application coverage |
 
-## Prepared batch: numeric ownership and borrowed array data
+
+## Prepared numerical batch
 
 Scope: LU solve, determinant, inverse, Cholesky, QR and conjugate gradient.
 Borrow inputs, copy their numbers into the existing scratch buffers and own each
@@ -53,83 +49,83 @@ injected failures at scratch/output construction. Missing scratch release and
 missing partial-result release must make the probes fail. New compiler tests run
 on Linux/macOS ARM64/AMD64; final production CI must also cover native Windows.
 
-## Evidence and unresolved work
+The compiler also borrows F64 array data once before eligible loops. Every
+`Again` must pass the exact same array parameter, and the body must read that
+parameter directly. Changing arrays, bounds checks, ownership, cleanup and task
+scheduling retain their established behavior. No public syntax or type conversion.
 
-All local checks used `python3 scripts/local-guard.py COMMAND...` from the main
-checkout. They test existing compiler output with the edited runtime inserted,
-not the changed compiler's ARC eligibility rules.
+## Runner evidence
 
-- `/private/tmp/fwp-linalg-runtime-check.py` passed (6.00 s): O1/O2, 256 calls per
-  solver, forced collection on/off, every allocation/constructor failure,
-  unchanged input counts/data and restored storage budgets. Omitting scratch
-  release exits 222; omitting pending-output release exits 224.
-- `/private/tmp/fwp-qr-size-check.py` passed after runtime updates (1.85 s):
-  O1/O2 with address/undefined sanitizers, byte/square overflow and preserved
-  dimension/input error order. The omitted-size-check control exits before any
-  enormous allocation is attempted.
-- `/private/tmp/fwp-linalg-harness-check.py` passed (0.63 s): metadata-only test
-  harness compilation and expanded raw interpreter fixture. An initial test
-  incorrectly put a shape trap under `attempt`, which catches explicit `fail`;
-  removed that invalid expectation. QR tests cover trap output separately.
-- Primitive inventory passed (1.02 s): 231 explicit contracts, 10 flat scalar
-  signatures, 118 declarations needing review and 19 lowered templates. The
-  original baseline file remains immutable.
-- Formatting passed (1.01 s). The initial solver-only run
-  [38791568892](https://github.com/e6qu/fun-with-pipes/actions/runs/38791568892)
-  at `9fede19f` was cancelled while queued after the batch expanded.
-  [Expanded run 38793378425](https://github.com/e6qu/fun-with-pipes/actions/runs/38793378425)
-  at `42662770` failed both Linux hosts: the QR boundary fixture used `read-all`,
-  which is correctly rejected by checked ARC. Formatting, Clippy, solver cleanup,
-  invariant/changing-array tests and existing numerical/unwind controls passed
-  on Linux AMD64. The fixture now passes dimensions through a function executable
-  instead, preserving runtime size checks and ARC coverage. Interpreter function
-  entry returns 9 for three columns and the expected exit-101 negative-dimension
-  trap (guarded 0.75/0.73 s). Repaired run
-  [38795634707](https://github.com/e6qu/fun-with-pipes/actions/runs/38795634707)
-  is queued at `ec1ff14b`; do not count the failed run as acceptance or weaken
-  ARC's input-boundary checks.
+[Solver run 38795634707](https://github.com/e6qu/fun-with-pipes/actions/runs/38795634707)
+passed all four Linux/macOS hosts at `ec1ff14b`, including formatting, Clippy,
+solver cleanup and QR limits, invariant/changing-array regressions, existing
+numerical/unwind tests, primitive inventory and measurements. The earlier
+`42662770` run exposed an ARC-ineligible `read-all` in the QR test fixture;
+the fixture now passes dimensions through an explicit function entry.
+No ownership check was weakened. Later commits change comments, handoff and
+the additional measurement script, not this tested compiler implementation.
 
-Intel macOS assembly of the accepted numerical candidate shows repeated
-slice/data selection inside the F64 reduction. A bounded C experiment hoisted
-that pointer and removed the branches, allowing ordinary scalar unrolling;
-`/private/tmp/fwp-array-pointer-check.py` passed (1.87 s), compiling Intel-targeted
-assembly without local timing. The compiler now drafts the same transformation
-only for flat F64 array parameters that every `Again` passes unchanged and that
-are directly read by `array.get`. Bounds tests, owners and cleanup remain in
-place. Changing-array loops keep dynamic loads; no new runtime wrapper or type
-conversion is introduced. Full compiler validation and runner timing are pending.
+[The retained report](measurements/numerical-array-borrows-2026-10-15.json)
+contains raw samples, hardware/compiler details, equivalent C/Rust comparisons
+and unchanged allocation profiles. Its baseline is the `candidate` section of
+PR #146's current numerical report; that updated parent report arrives when
+this branch is rebased onto the accepted squash commit.
 
-The new fixture covers original inputs, slices, empty arrays, arrays replaced on
-each loop step, negative/out-of-range indices and task execution. Raw interpreter
-output passed (0.62 s for the final fixture).
-`/private/tmp/fwp-array-borrow-check.py` passed (0.89 s): isolated invariant-proof
-and test-harness metadata compilation, plus old-compiler confirmation of the
-loop shape. `/private/tmp/fwp-array-borrow-runtime-check.py` also passed (5.14 s):
-edit existing emitted C to borrow invariant data, then compare raw interpreter
-output with native tracing/ARC at O1/O2, including collection/reuse stress,
-changing arrays and bounds cases. These are not changed-compiler integration
-results. Keep runner validation pending until its actual results arrive.
+ARC array/C ratios are 1.01/1.00 on AMD64/ARM64 Linux and 0.98/1.00 on Intel/ARM
+macOS. Intel remains 1.74x Rust. In the actual AMD64 timed loops the borrowed
+address stays in a register and scalar arithmetic is unrolled fourfold without
+reassociation, fused multiply/add or stack traffic inside the arithmetic loop.
+Intel ARC absolute time fell 7.5%, but C/Rust reference times rose about 33%.
+Linux AMD64 tracing matrix time rose about 11% despite byte-identical matrix
+executables. These shared-runner comparisons cannot assign a precise speedup.
 
-The parent batch's Intel macOS compiler abort did not reproduce on an unchanged
-retry. Its cause is unknown; preserve available compiler crash reports on future
-failures. The parent numerical report records current C/Rust gaps, including
-Intel array overhead and remaining matrix wrapper allocations. Do not mistake
-these solver ownership changes for numerical speed or accuracy improvements.
+[Paired run 38800569111](https://github.com/e6qu/fun-with-pipes/actions/runs/38800569111)
+is queued at `ce95f063`. It reuses the validated emitted C, verifies its hashes,
+and compares cached reads against per-element selection on the same runner.
+Only generated load expressions change; the arithmetic, owners and workload
+remain identical. This needs no compiler rebuild or new language option.
+The four-host source-rewrite check passed locally (0.16 s); timing stays on CI.
 
-## Next action
+## Focused checks and limits
 
-Next: monitor expanded run 38793378425 and fix any
-failures while monitoring #146. When #146's exact-head gates pass, squash merge
-it, then rebase only commits after `c10b1ccd` onto the accepted squash commit.
-Reconcile this handoff with the parent delivery evidence and open the solver PR.
-Require its full production/docs gates before merging. Continue the remaining
-project work in [PLAN.md](../PLAN.md); no broad roadmap area is complete.
+All local work used `python3 scripts/local-guard.py COMMAND...` serially, with
+no full build, full gate or benchmark. Existing compiler output plus edited
+runtime probes establish runtime behavior; runner tests above validate the
+changed compiler. Scratch/partial-result failures, forced collection and
+missing-free controls passed at O1/O2 (6.00 s); the QR boundary sanitizer probe
+passed without huge allocation (1.85 s). Array borrowing semantic/runtime probes
+passed (5.14 s), and metadata/inventory/formatting checks passed. Inventory:
+231 explicit contracts, 10 flat scalar signatures, 118 declarations needing
+review and 19 lowered templates. The frozen baseline is unchanged.
 
-The follow-on F128 precision preparation is isolated in
-`/private/tmp/fwp-quad-grad`, branch `quad-gradient-precision`, based on
-`3e5d86ad` from this batch. It preserves F128 reverse weights/seeds/adjoints
-through the existing typed tape protocol. Raw interpreter and bounded O1 native
-probes passed, including checkpoint/nested precision and an omitted-free control.
-Its four-host [run 38797434546](https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546)
-is queued at `7a463be`. Bundle validated numerical work into the next substantial
-PR after #146; preserve source-specific evidence and run full final-head CI.
+Artifact downloads passed (8.08/3.73 s). Report recording and complete profile
+comparison passed (0.14 s); the first recording attempt used this preparation's
+older parent report, corrected to #146's current retained report.
+Full final-head production, including both Windows targets, remains required.
+The preceding Intel compiler SIGABRT did not recur on its unchanged retry;
+its cause is still unknown. Preserve future crash reports.
+
+## Following preparation and next action
+
+F128 precision branch `quad-gradient-precision` is in `/private/tmp/fwp-quad-grad`,
+based on `3e5d86ad`. Its [four-host run](https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546)
+passed at `7a463be9`: low bits, exponent range, seed accumulation, nested and
+checkpointed gradients, cleanup controls and existing differentiation regressions.
+It uses the existing typed tape protocol; boxes and reference counts still cost
+storage. Its own handoff records profile limits.
+
+Console preparation `checked-console-ownership` is in
+`/private/tmp/fwp-console-ownership`, based on `7a463be9`. It owns whole-input
+buffers, pending lines and copied arguments. Its focused
+[run 38799697858](https://github.com/e6qu/fun-with-pipes/actions/runs/38799697858)
+is queued at `1d8270a`; bounded runtime probes and both missing-free controls
+passed locally. It has its own handoff and no open PR.
+
+Next: finish the paired measurement, monitor #146 and fix failures. After its
+full exact-head gate passes, squash merge it; rebase only solver commits after
+`c10b1ccd` onto the accepted squash commit. Bring only precision commits after
+`3e5d86ad` into the numerical branch, reconcile documentation/workflows, and
+open one substantial numerical PR. Consider the console batch together only
+when its own checks pass and the combined scope stays reviewable. Its commits
+begin after `7a463be9`. Keep [PLAN.md](../PLAN.md) current; no broad work area
+is complete, and JIT remains excluded.
