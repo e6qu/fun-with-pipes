@@ -305,8 +305,11 @@ all six native platforms pass, including the directory-error and composed
 application regressions. The combined delivery still needs its full production
 gate, tracked in the handoff.
 
-Current-directory lookup and other unreviewed IO primitives
-remain outside checked ARC.
+Current-directory lookup now returns a counted string and protects its OS path
+buffer until conversion finishes. It raises an explicit `IoError` of kind `cwd`
+when the directory cannot be read. POSIX no longer substitutes `"."` or imposes a
+4 KiB buffer. This is a candidate contract: native six-host acceptance is tracked
+in the handoff. Other unreviewed IO primitives remain outside checked ARC.
 
 The six dense F64 linear-algebra primitives borrow their input arrays and return
 independently owned results. Scratch pointers and partially constructed output

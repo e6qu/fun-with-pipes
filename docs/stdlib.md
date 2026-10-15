@@ -685,8 +685,12 @@ env.get : String -> Option[String] ! {IO}
 # All environment variables, sorted by name.
 env.vars : () -> List[(String, String)] ! {IO}
 
-# The current working directory.
-env.cwd : () -> String ! {IO}
+# The absolute current working directory, copied into a string.
+# Failure raises an IoError: an error value with kind and message fields.
+# Its kind is "cwd"; no substitute path is returned.
+# `attempt env.cwd ()` returns `Ok path` or `Err error`, so callers can handle
+# an unavailable directory explicitly.
+env.cwd : () -> String ! {IO, Error[IoError]}
 time.monotonic : () -> Duration ! {IO}
 time.unix : () -> Duration ! {IO}
 

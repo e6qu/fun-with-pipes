@@ -279,7 +279,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "dir.create-all" | "dir.create" | "dir.remove" | "file.remove" | "file.exists"
         | "file.is-dir" => (&[B], R, None, &[]),
         "file.rename" | "file.append" | "file.write-bytes" => (&[B, B], R, None, &[]),
-        "file.read-bytes" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "file.read-bytes" | "env.cwd" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
         "file.info" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "lines" | "read-line" | "read-lines" | "read-all" | "args" | "env.get" | "env.vars"
         | "dir.list" => (&[B], ResultOwnership::OwnedTree, None, &[]),

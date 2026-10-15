@@ -98,19 +98,49 @@ Production Windows coverage includes the changed projection/resource cases too.
 Full builds and tests remain on runners; all local workloads use
 `python3 scripts/local-guard.py COMMAND...` within the fixed limits.
 
-## Next: validate field transfers while #147 runs
+## Working-directory ownership and explicit errors
 
-Publish the probe repairs and repeat `numerics.yml` with `suite=fields`; fix
-failures without weakening assertions. Numerical evidence run
-[38816168594](https://github.com/e6qu/fun-with-pipes/actions/runs/38816168594)
-at `c8f65e5` has passed both Linux hosts; macOS remains pending. Linux profiles
-confirm 16 retains/nonlast releases and 48 release checks across eight matrix
-products, versus 24/24/56 before the unboxed move. Forty allocations, output hash
-and zero final storage/collections are unchanged. Artifacts are in
-`/private/tmp/fwp-field-numerical-evidence`; retain actual C/Rust comparisons
-and inspect instructions before making timing claims. Add actual matrix emitted-code and
-count evidence with the changed compiler, plus resource/callback cases needed
-by review. Retain known boxed/shared cases and any performance regressions.
+The current extension removes `env.cwd`'s POSIX fixed 4 KiB buffer and silent
+`"."` substitution. Both engines now raise `Error[IoError]` with kind `cwd` if the
+OS cannot read the directory; the copied string has a checked fresh-leaf contract.
+Native buffers are protected during string allocation and freed on all exits.
+This also replaces the old Windows trap with the same typed error interface.
+The library signature and generated reference describe the deliberate change.
+
+`working_directory` compares actual Unicode directories in both engines, checks
+removed-directory errors on POSIX, and probes repeated native ownership,
+6000-character OS results, read failure, partial string-construction failure,
+forced collections and omitted-count/release controls. Native Windows uses its
+wide path API, including a second-read failure. Changed-compiler checks remain
+pending; do not claim all-target support from the local runtime experiment.
+
+The local POSIX edited-C mechanism probe passes (3.38 s). Its first attempt used
+an obsolete generated call spelling; a later attempt included scheduler setup in
+the memory baseline. The corrected probe calls the exported cwd entry directly
+and includes #147's counted error constructor. It is runtime evidence, not
+changed-compiler or native Windows acceptance.
+
+Local formatting passes (1.10 s); generated docs regenerate and verify through
+`stdlib_doc` (1.03 s). The inventory initially rejected the deliberate added
+error effect; its exact expected signature is now recorded without changing the
+frozen baseline. It passes (0.98 s): 250 contracts, 10 scalar signatures, 99 review
+declarations, 19 templates and 89 remaining review symbols.
+
+## Next: validate preparation and merge #147
+
+Boxed-field compiler tests at `a3d8f16e` pass Linux and Windows on both
+architectures in [38817873592](https://github.com/e6qu/fun-with-pipes/actions/runs/38817873592);
+macOS remains pending. Numerical run
+[38817877068](https://github.com/e6qu/fun-with-pipes/actions/runs/38817877068)
+collects profiles and instructions for both move changes. Superseded preparation
+runs `38817093105` and `38816168594` were canceled; their completed jobs remain
+component evidence, not final acceptance.
+
+Publish and run the working-directory extension with the ownership suite, fix
+all failures, and inspect the final numerical counts and C/Rust measurements.
+The expected matrix profile is zero retains/nonlast releases across eight
+products, with forty allocations and zero final charged storage/collections.
+Keep boxed API wrapper allocations visible in the report.
 
 Monitor #147's exact-head gate and merge only after all nine production jobs
 plus docs pass. Transfer this preparation's changes after `a2679ecb` onto that

@@ -112,6 +112,7 @@ for symbol in ['dir.create-all', 'dir.create', 'dir.remove', 'file.remove', 'fil
 for symbol in ['file.rename', 'file.append', 'file.write-bytes']:
     bundle_contracts[symbol] = (2, 'Shared', [])
 bundle_contracts['file.read-bytes'] = (1, 'FreshLeaf', [])
+bundle_contracts['env.cwd'] = (1, 'FreshLeaf', [])
 bundle_contracts['file.info'] = (1, 'OwnedTree', [])
 bundle_contracts['list.transpose'] = (1, 'CopiedStructure', [0])
 for symbol, arity in [('linalg.lu-solve', 3), ('linalg.inverse', 2),
@@ -153,7 +154,13 @@ for row in rows:
         expected_before = ('Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })'
                            if row['symbol'] == 'lines' else 'None')
         assert before['contract'] == expected_before and row['bucket'] == 'contract', (before, row)
-        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
+        changed_fields = {'bucket', 'contract'}
+        if row['symbol'] == 'env.cwd':
+            # An unavailable directory is an explicit error, not a substitute path.
+            assert before['signature'] == '() -> String ! {IO}'
+            assert row['signature'] == '() -> String ! {IO, Error[IoError]}'
+            changed_fields.add('signature')
+        assert all(row[name] == before[name] for name in fields if name not in changed_fields)
         arity, result, aliases = bundle_contracts[row['symbol']]
         arguments = '[' + ', '.join(['Borrow'] * arity) + ']'
         expected = f'Some(Contract {{ arguments: {arguments}, result: {result}, callback: None, aliases: {aliases} }})'

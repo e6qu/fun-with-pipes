@@ -5895,6 +5895,10 @@ impl<'p> Gen<'p> {
                     _ => format!("return fwp_p_file_write_new(l0, l1, {});", err),
                 }
             }
+            "env.cwd" => {
+                let error = self.desc(&MT::con("std::IoError"));
+                format!("return fwp_p_env_cwd({error});")
+            }
             "file.info" | "file.remove" | "dir.remove" | "file.rename" | "file.append"
             | "file.read-bytes" | "file.write-bytes" | "dir.create"
             | "dir.create-all" | "process.run-input" | "process.call" => {
@@ -6139,7 +6143,6 @@ impl<'p> Gen<'p> {
                     ("read-all", "fwp_read_stdin_all()"),
                     ("exit", "fwp_p_exit(l0)"),
                     ("env.get", "fwp_p_env_get(l0)"),
-                    ("env.cwd", "fwp_p_env_cwd()"),
                     ("term.is-tty", "fwp_p_term_is_tty(l0)"),
                     ("file.exists", "fwp_p_file_exists(l0)"),
                     ("file.is-dir", "fwp_p_file_is_dir(l0)"),

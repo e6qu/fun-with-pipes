@@ -96,12 +96,17 @@ reuse tests, and all nine production jobs plus documentation for the final head.
 Focused preparation runs are evidence for their components, not this final gate.
 
 All six file-value hosts pass; the combined delivery still needs full production
-acceptance. The next measured target is a redundant retain/release when selecting
-an owned field from an unboxed numerical result. Prove a move preserves remaining
-fields, aliases, failure cleanup and resource lifetimes before changing emission.
-Afterward, select further ownership boundaries and confirmed application costs. Investigate derivative timing
-and memory scaling rather than assuming fewer allocations are always faster.
-Broaden long-running application coverage alongside these fixes.
+acceptance. The next preparation transfers fields out of flattened records and
+uniquely owned boxed inputs, with tests for aliases, discarded children, wide
+values and failures. It also adds checked working-directory ownership and
+explicit errors when the OS cannot read that directory. Track candidate checks
+and unresolved failures in the handoff; require final-head production acceptance
+before treating the combined changes as delivered.
+
+Afterward, select further ownership boundaries and confirmed application costs.
+Investigate derivative timing and memory scaling rather than assuming fewer
+allocations are always faster. Broaden long-running application coverage
+alongside these fixes.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the
