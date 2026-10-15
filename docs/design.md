@@ -400,6 +400,16 @@ Numeric and managed tapes use the same offset convention. Managed pushes protect
 the first retained weight until the second retain completes, so a failed push
 keeps its original length and releases partial ownership.
 
+The native AD registry doubles from one slot up to the 65,535-slot token bound.
+Only initialized slots are published; growth commits its pointer and capacity
+once allocation succeeds. Scope links use slot indices and survive relocation.
+First-reusable-slot search and generation exhaustion are unchanged. Spare
+capacity trades some live storage for fewer registry allocation requests.
+The registry remains until shutdown/unload so retired generations cannot be
+reused accidentally; its capacity is separate from the numeric workspace budget.
+Managed interpreter tapes leave the numeric cache untouched, and releasing an
+empty tape does not evict an existing useful workspace, matching the native path.
+
 AD tape capacity is limited before allocation by the signed vertex index and
 native address width. Native and interpreter runtimes may retain one detached
 workspace up to 512 KiB; oversized buffers are released. Reuse clears adjoints and

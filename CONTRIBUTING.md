@@ -76,9 +76,9 @@ A separate CI job runs the benchmarks
 reports times without failing on them, but it does fail when fwp, C and
 Rust print different results.
 
-All seven exact-head production jobs and the roadmap documentation audit are
+All nine exact-head production jobs and the roadmap documentation audit are
 required before merging: Linux ARM64/AMD64, bench, regular macOS arm64/x86-64 and separate
-GC stress jobs on both macOS architectures.
+GC stress jobs on both macOS architectures, plus native Windows ARM64/AMD64.
 The desired platform matrix is Linux, macOS and Windows on ARM64 and AMD64,
 with separate binaries. The reusable Windows workflow adds required native
 gates on both architectures before claiming coverage; existing

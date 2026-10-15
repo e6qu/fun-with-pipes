@@ -26,7 +26,7 @@ static void capacity_dispose(void) {
     for(int64_t i=0;i<fwp_ntapes;i++){
         fwp_tape *t=&fwp_tapes[i];capacity_free(t->pa);capacity_free(t->pb);capacity_free(t->da);capacity_free(t->db);
     }
-    capacity_free(fwp_tapes);fwp_tapes=0;fwp_ntapes=0;
+    capacity_free(fwp_tapes);fwp_tapes=0;fwp_ntapes=fwp_tapes_cap=0;
     capacity_calls=capacity_fail=0;capacity_exit_code=capacity_oversized=0;
 }
 int main(void) {
@@ -51,7 +51,7 @@ int main(void) {
     fwp_tape_reserve(capacity_registry,1);
     capacity_calls=0;capacity_fail=1;
     if(!setjmp(capacity_oom)){fwp_p_ad_tape(1);return 185;}
-    if(capacity_exit_code!=102 || fwp_tapes!=capacity_registry || fwp_ntapes!=1 || capacity_live!=5 ||
+    if(capacity_exit_code!=102 || fwp_tapes!=capacity_registry || fwp_ntapes!=1 || fwp_tapes_cap!=1 || capacity_live!=5 ||
        fwp_tape_of((int64_t)capacity_base>>32)!=capacity_registry)return 186;
     capacity_fail=0;capacity_calls=0;
     if(!setjmp(capacity_trap)){fwp_tape_reserve(capacity_registry,fwp_tape_limit()+1);return 187;}

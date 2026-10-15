@@ -82,6 +82,7 @@ typedef struct {
 
 static fwp_tape *fwp_tapes = 0;
 static int64_t fwp_ntapes = 0;
+static int64_t fwp_tapes_cap = 0;
 static void fwp_tape_retire(fwp_tape *t);
 static void fwp_tape_finish(void);
 
@@ -210,7 +211,7 @@ static void fwp_tape_finish(void) {
         fwp_tape_buffers_dispose(&buffers);
         fwp_owned_tape_release(t->owned); t->owned = NULL;
     }
-    free(fwp_tapes);fwp_tapes = 0;fwp_ntapes = 0;
+    free(fwp_tapes);fwp_tapes = 0;fwp_ntapes = fwp_tapes_cap = 0;
 }
 
 /* Library teardown calls this before freeing the managed heap. */
@@ -287,12 +288,17 @@ static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
     while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;
     if (slot == fwp_ntapes) {
         if (fwp_ntapes >= 0xffff) fwp_trap("autodiff: too many grad computations at once");
-        fwp_tape *next = (fwp_tape *)realloc(fwp_tapes, (size_t)(fwp_ntapes + 1) * sizeof(fwp_tape));
-        if (!next) {
-            fprintf(stderr, "fwp: out of memory\n");
-            exit(102);
+        if (fwp_ntapes == fwp_tapes_cap) {
+            int64_t cap = fwp_tapes_cap ? fwp_tapes_cap * 2 : 1;
+            if (cap > 0xffff) cap = 0xffff;
+            fwp_tape *next = (fwp_tape *)realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape));
+            if (!next) {
+                fprintf(stderr, "fwp: out of memory\n");
+                exit(102);
+            }
+            fwp_tapes = next;
+            fwp_tapes_cap = cap;
         }
-        fwp_tapes = next;
         memset(&fwp_tapes[fwp_ntapes], 0, sizeof(fwp_tape));
         fwp_ntapes++;
     }

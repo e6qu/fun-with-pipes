@@ -11,14 +11,13 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-PR #136 completed the six-step platform/ownership roadmap. PR #137 completed
-numeric backward prefix bounds as `38da1401`, with all nine jobs and docs green.
-The user requested continued work. The current follow-up stores only operations
-in numeric/managed AD metadata, preserving input tokens and adjoints. Keep its
-cleanup fixes, tests, measurements and docs together on
-`autodiff-operation-storage` in PR #138. Follow the live plan and handoff; historical
-preparation entries are not work to replay. Once PR #138 merges with all final-head
-gates, this follow-up is complete; check its actual state before resuming.
+PR #138 completed operation-only AD metadata as `d77b3fea`, with all nine
+production jobs and documentation green. The user requested continued work.
+The current follow-up bounds native AD registry growth and preserves numeric
+workspace ownership across managed and empty interpreter tapes. Keep the
+implementation, regression controls, measurements and docs together on
+`autodiff-registry-growth`. Follow the live plan and handoff; historical
+preparation entries are not work to replay.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,

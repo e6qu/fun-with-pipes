@@ -172,7 +172,11 @@ wrapper allocations. [Allocation validation](#scoped-gradient-allocation-validat
 records the complete counters and limits. A single detached workspace may retain
 at most 512 KiB of numeric buffers. Reuse zeroes adjoints and preserves stale-token
 checks; oversized capacity is released. FWP_AD_WORKSPACE=0 disables this cache
-for comparison. Native library unload releases both live and cached tape owners.
+for comparison. Native library unload releases both live and cached tape owners. Managed tapes
+do not consume the numeric cache; retiring an empty tape leaves existing cached
+storage intact. The native slot registry grows geometrically from one slot,
+clamped to the 65,535-slot token limit. Slot/generation selection is unchanged;
+spare capacity is not exposed as initialized tapes.
 Raw reverse-mode tape interfaces remain outside checked ARC eligibility.
 
 Historical timing samples are preserved in

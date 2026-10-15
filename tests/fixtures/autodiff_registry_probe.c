@@ -1,0 +1,68 @@
+/* Always move the registry: scope links and tokens must use stable slot indices. */
+static size_t registry_bytes, registry_requests;
+static void *registry_realloc(void *old, size_t bytes) {
+    if (bytes > 0xffff * sizeof(fwp_tape)) abort();
+    void *next = malloc(bytes);
+    if (!next) abort();
+    memset(next, 0xa5, bytes);
+    if (old) memcpy(next, old, registry_bytes);
+    free(old);
+    registry_bytes = bytes;
+    registry_requests++;
+    return next;
+}
+static void registry_free(void *p) { free(p); registry_bytes = 0; }
+static int registry_recover(void) { return 1; }
+static jmp_buf registry_trap;
+int main(void) {
+    fwp_gc_start(__builtin_frame_address(0));
+#ifdef FWP_ARC_ONLY
+    if (fwp_gc.enabled || fwp_gc.armed) return 200;
+#else
+    if (!fwp_gc.enabled || !fwp_gc.stress || !fwp_gc.verify) return 201;
+#endif
+    fwp_tape_scope scope = {-1};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);
+    for (int i = 0; i < 257; i++) {
+        int64_t base = (int64_t)fwp_p_ad_tape(0), id = base >> 32;
+        if ((id & 0xffff) != i + 1 || (id >> 16) != 1) return 190;
+        fwp_tape *t = fwp_tape_of(id);
+        if (t->pa || t->pb || t->da || t->db || t->adj || t->cap || t->adjcap || t->owned) return 191;
+        if (fwp_ntapes != i + 1 || fwp_tapes_cap < fwp_ntapes || fwp_tapes_cap >= 2 * fwp_ntapes) return 192;
+    }
+    if (registry_requests != 10 || fwp_tapes_cap != 512) return 193;
+    fwp_tape_unlink_scope(&fwp_tapes[4]);
+    fwp_tape_retire(&fwp_tapes[4]);
+    int64_t reused = (int64_t)fwp_p_ad_tape(0) >> 32;
+    if ((reused & 0xffff) != 5 || (reused >> 16) != 2 || registry_requests != 10) return 194;
+    fwp_cleanup_pop(&cleanup);
+    fwp_tape_scope_release(&scope);
+    for (int i = 0; i < 257; i++) if (fwp_tapes[i].live || fwp_tapes[i].scope) return 195;
+    fwp_tape_finish();
+    if (fwp_ntapes || fwp_tapes_cap || fwp_tapes || registry_bytes) return 196;
+
+    /* Exercise the real doubling clamp and token exhaustion with a small
+     * bounded registry, without quadratic creation of 65,535 live tapes. */
+    fwp_tapes = registry_realloc(NULL, 32768 * sizeof(fwp_tape));
+    fwp_ntapes = fwp_tapes_cap = 32768;
+    memset(fwp_tapes, 0, registry_bytes);
+    for (int i = 0; i < 32768; i++) fwp_tapes[i].gen = 32767;
+    scope.head = -1;
+    fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);
+    int64_t last = (int64_t)fwp_p_ad_tape(0) >> 32;
+    if ((last & 0xffff) != 32769 || fwp_tapes_cap != 0xffff || fwp_ntapes != 32769) return 197;
+    memset(fwp_tapes + fwp_ntapes, 0, (size_t)(fwp_tapes_cap - fwp_ntapes) * sizeof(fwp_tape));
+    for (int64_t i = fwp_ntapes; i < fwp_tapes_cap; i++) fwp_tapes[i].gen = 32767;
+    fwp_ntapes = fwp_tapes_cap;
+    size_t requests = registry_requests;
+    fwp_trap_recover = registry_recover; fwp_trap_jb = &registry_trap; fwp_trap_cleanup = fwp_cleanups;
+    if (!setjmp(registry_trap)) { fwp_p_ad_tape(0); return 198; }
+    if (strcmp(fwp_trap_msg, "autodiff: too many grad computations at once") || registry_requests != requests) return 199;
+    fwp_trap_recover = 0; fwp_trap_jb = 0; fwp_trap_cleanup = 0;
+    fwp_cleanup_pop(&cleanup); fwp_tape_scope_release(&scope);
+    fwp_tape_finish();
+    if (registry_bytes || fwp_tapes_cap || fwp_ntapes || fwp_tapes) return 196;
+    puts("bounded registry growth preserves tokens, relocation and scope release");
+    return 0;
+}

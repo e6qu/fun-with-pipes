@@ -1,10 +1,8 @@
 # Session handoff
 
-Updated 2026-10-15. The user requested continued development after PR #137.
-[PR #138](https://github.com/e6qu/fun-with-pipes/pull/138), branch
-`autodiff-operation-storage`, removes input placeholders from numeric and
-managed AD parent/derivative buffers. Publication, fixes and squash merge after
-all final-head gates remain authorized.
+Updated 2026-10-15. The user requested continued development after PR #138.
+Current branch: `autodiff-registry-growth`. Publication, fixes and squash merge
+after all nine exact-head production jobs plus documentation remain authorized.
 
 ## Roadmap status
 
@@ -17,75 +15,63 @@ all final-head gates remain authorized.
 | 5 | Verified | Actual F16/BF16/F128 and protocol v2 |
 | 6 | Verified | Native Windows ARM64/AMD64 and standalone packages |
 | 7 | Verified | Seeded-prefix adjoint bounds and four-host memory/binary evidence; PR #137 merged with all gates |
-| 8 | Implemented | Operation-only AD metadata, partial weight-retain cleanup, regression controls and measured evidence |
+| 8 | Verified | Operation-only AD metadata, partial weight-retain cleanup, regression controls and measured evidence |
+| 9 | In progress | Geometric native AD registry growth and numeric workspace ownership |
 
 ## Accepted baseline
 
-[PR #137](https://github.com/e6qu/fun-with-pipes/pull/137) merged as `38da1401`,
-tree-identical to `37104959`. All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38604595248)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38604594927)
-pass. [The prefix report](measurements/ad-prefix-2026-10-14.json) records its
-specific 98,304-byte peak tape reduction and absence of a consistent speedup.
-Historical preparation anchors are not work to replay.
+[PR #138](https://github.com/e6qu/fun-with-pipes/pull/138) merged as `d77b3fea`,
+tree-identical to `f251fbd1`. All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38666526202)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38666481103)
+passed. [The operation-storage report](measurements/ad-operations-2026-10-15.json)
+records the measured storage reductions and tradeoffs. Historical preparation
+anchors are not work to replay.
 
-## Current implementation and evidence
+## Current work
 
-Both runtimes now index parent/weight metadata relative to the input count.
-Node tokens, parent values and adjoints retain their original absolute indices.
-Input-only tapes need no operation buffers; existing cached buffers remain
-subject to the 512 KiB budget. Managed backward callback order is unchanged.
-A related native cleanup fix protects the first retained derivative if retaining
-the second fails. Cold input-only tapes allocate no operation metadata.
+The accepted baseline reallocates the native registry for every new slot; this implementation
+now doubles capacity from one slot, clamped at 65,535. Slot selection, generation
+limits and scope links remain unchanged. Failed growth keeps the old registry.
+The interpreter now creates managed tapes without taking numeric workspaces and
+leaves an existing workspace intact when an empty tape retires, matching native
+behavior. Allocation/capacity, forced relocation, token exhaustion, scope release
+and allocator-failure controls pass locally. Four-host measurements and full
+acceptance are still outstanding.
 
-Guarded checks pass: formatting, all-target clippy, five interpreter tape tests,
-native operation-storage/actual second-retain controls, managed unwind and
-cancellation, allocator/index/generation/unwind controls, and raw language
-outputs. The exact commands use `python3 scripts/local-guard.py` before cargo or
-fwp; all stayed within the fixed limits.
+All commands below use `python3 scripts/local-guard.py` and pass within the
+unchanged limits:
 
-The first focused AD run exposed three fixtures that still assumed input
-metadata: scope release, library unload and checkpoint capacity. Scope/library
-fixtures now record real operations, preserving their omission controls;
-checkpoint capacity now asserts exactly 4,096 operations. CI also exposed a
-stack-lifetime error in the new deliberately leaking probe; its descriptor now
-has static lifetime so shutdown remains valid. These corrected tests pass locally:
-scope release (9.31s), library unload (4.87s), checkpoint bounds (7.09s) and native
-operation/retain controls (4.01s). No compiler/runtime source changed after the
-measured `31b9d8d2` head. Full production CI must verify the corrected fixtures.
+- `cargo test --lib tape_validation_tests -- --test-threads=1`: six tests, 12.96s.
+- `cargo test --test autodiff_capacity_bounds -- --test-threads=1`: both tests,
+  8.66s on the final harness, including O1/O2 tracing stress/reuse and ARC.
+- `cargo test --test autodiff_workspace unused_tape_suffix_preserves_language_values_and_forward_traps -- --exact --test-threads=1`:
+  raw interpreter/native values and traps, O1/O2 ARC/tracing, cache on/off, 28.97s.
+- `cargo fmt --all`, `cargo clippy --all-targets -- -D warnings`: 1.09s/0.38s
+  final checks; initial all-target clippy also passed in 16.68s.
+- `actionlint .github/workflows/numerics.yml`: 0.89s; measurement Python AST
+  syntax: 0.14s; `python3 scripts/check-roadmap.py`: 48 link sets, 106 immutable
+  anchors and nine steps, 2.71s; `target/debug/fwp fmt tests/run/ad_registry_growth.fwp`: 0.01s.
 
-[Focused WASM](https://github.com/e6qu/fun-with-pipes/actions/runs/38664966403)
-passes on Linux AMD64 and ARM64 at `31b9d8d2`, including actual WASI semantics and
-physical reclamation controls. The AD run is not a passing gate: its measurement
-steps succeed independently of the fixture failures.
-[All four measurement reports](measurements/ad-operations-2026-10-15.json) are
-recorded with verified source/binary/disassembly hashes. Native tape peaks fall
-131,176 → 32,872 bytes for identity VJP, 262,248 → 163,944 for mapped VJP and
-28,920 → 16,632 for the nested gradient. The latter also reduces managed storage.
-Mapped/native requests rise 10 → 30 and nested requests 19 → 21 because smaller
-cold buffers grow geometrically. All final storage is reclaimed without GC;
-process timings show no consistent speedup. Native instructions on all four hosts
-show register operation offsets and hoisted backward metadata-base adjustments.
+During harness development, ARC rejected tracing/reuse flags; the final probe
+uses valid settings and explicitly asserts its active mode. The first language
+fixture lacked expression-list separators; the corrected tacit fixture passes.
+These were test-construction failures, with no skipped acceptance checks.
 
-Final fixture clippy passes (0.73s); guarded four-host aggregation/hash verification
-passes (0.16s). Final production CI must accept the corrected fixtures on every
-required host before this PR can merge.
+The contribution guide's stale seven-job statement now lists all nine jobs.
 
 ## Boundaries
 
-Numeric prefix bounds trim an unused suffix, not holes in the active prefix.
-Checked native ARC still rejects unproved cycles, mutable/retained graphs and
-State/AD lifetimes. Service/remote/library/WASM executable ARC admission remains
-outside the earlier bundle. Generic wide values and some lazy producers can
-allocate. No universal collector-free execution or speedup is claimed.
+Registry allocation growth becomes geometric; first-reusable-slot search remains
+linear. Spare registry capacity can increase live bytes between growth boundaries.
+Numeric caches retain their 512 KiB bound. Native ARC still rejects unproved
+cycles, mutable/retained graphs and State/AD lifetimes. Generic wide values and
+some lazy producers can allocate. No general collector-free or speedup claim.
 
 ## Next action
 
-Next: inspect PR #138's current head, checks and merge state. If open, require
-all nine exact-head production jobs plus documentation, fix any failures, and
-squash merge with one line of at most 80 characters and an empty body. If merged
-with those passing gates, step 8 is complete; no implementation task remains
-from this follow-up. Keep work in this PR and do not replay historical anchors.
-
-Use `python3 scripts/local-guard.py` for focused serial local checks; preserve
-64 GiB free disk, target below 2 GiB, sampled aggregate RSS below 1 GiB and the
-180-second deadline. Full builds, suites and measurements belong on GitHub.
+Next: finish focused lifecycle regressions and equivalent registry allocation/binary
+measurements, publish one draft PR, obtain focused four-host evidence, then run
+all nine final-head production jobs and documentation before squash merge.
+Keep the commit subject one line, at most 80 characters, with an empty body.
+Full builds, suites and benchmarks run on GitHub; local checks remain serial,
+guarded and below the existing disk, memory and 180-second limits.

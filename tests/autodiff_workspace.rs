@@ -254,6 +254,8 @@ fn unused_tape_suffix_preserves_language_values_and_forward_traps() {
     let directory = fwp::cgen::TempDir::new("fwp-ad-prefix-language").unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
     for (name, source, expected, status, diagnostic) in [
+        ("registry", include_str!("run/ad_registry_growth.fwp"),
+         include_str!("run/ad_registry_growth.out"), 0, ""),
         ("inputs", include_str!("run/ad_input_storage.fwp"),
          include_str!("run/ad_input_storage.out"), 0, ""),
         ("values", include_str!("run/ad_unused_suffix.fwp"),

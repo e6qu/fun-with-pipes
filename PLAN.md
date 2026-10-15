@@ -10,17 +10,17 @@ numeric backward bounds as `38da1401`, with all nine production jobs and docs
 passing on its tree-identical head `37104959`. Its measured unused-suffix
 workload reduces peak tape storage by 98,304 bytes, without a consistent speedup.
 
-The user requested continued development. The current follow-up removes input
-placeholders from numeric and managed autodiff operation buffers. Inputs keep
-their existing node indices and adjoints; only recorded operations need parent
-and derivative storage. Include partial derivative-retain cleanup, regression
-controls, four-host memory/binary evidence and the updated handoff in
-[PR #138](https://github.com/e6qu/fun-with-pipes/pull/138).
-[Four-host measurements](docs/measurements/ad-operations-2026-10-15.json) show
-lower peak storage for identity, mapped and nested gradients, with more cold
-growth requests in the latter two and no consistent speedup. Delivery requires
-all nine final-head production jobs and documentation. Once PR #138 merges with
-those gates, step 8 is complete; historical anchors are not further work.
+[PR #138](https://github.com/e6qu/fun-with-pipes/pull/138) completed operation-only
+AD metadata as `d77b3fea`, with all nine production jobs and docs passing at its
+tree-identical head `f251fbd1`. [Four-host measurements](docs/measurements/ad-operations-2026-10-15.json)
+show lower tape storage, more cold growth requests for mapped/nested workloads
+and no consistent speedup.
+
+The user requested continued development. The next follow-up bounds native AD
+registry growth and preserves numeric workspace ownership across managed and
+empty interpreter tapes. Keep implementation, allocator/token/scope regressions,
+four-host evidence and streamlined docs together on `autodiff-registry-growth`.
+Delivery requires all nine production jobs and documentation on the final head.
 [The handoff](docs/development-state.md) records actual checks and next actions.
 
 ## Direction
@@ -69,6 +69,7 @@ Cross-compilation between every host/target pair is not implied.
 | 5 | Actual F16/BF16/F128 | Correct-format arithmetic, direct decimal rounding, arrays, C ABI and protocol v2 pass exact-bit/rounding and ownership controls; software arithmetic preserves the declared precision |
 | 6 | Native Windows ARM64/AMD64 | Both native jobs pass runtime/resources, TLS, interpreter/native goldens, static storage, ownership stress and standalone PE packages |
 | 7 | Seeded-prefix numeric backward bounds | Input/seed order, validation, workspace growth and unwind controls; four-host storage/binary evidence and all nine production jobs |
+| 8 | Operation-only AD metadata | Stable input tokens, atomic weight retains, four-host allocation/binary evidence and all nine production jobs |
 
 [Ownership](docs/ownership.md) and [float formats](docs/float-formats.md) specify
 the contracts. Generic wide boundaries can still box; arbitrary lazy producers
@@ -86,12 +87,13 @@ to replay.
 
 | Step | Work | Acceptance |
 |---|---|---|
-| 8 | Store only operations in AD parent/weight buffers | Preserve raw/native numeric and nested derivatives, token limits, scope/unwind/task behavior and bounded reuse; prove input-only tapes need no operation buffers and measure equivalent input-heavy workloads |
+| 9 | Bound AD registry growth and preserve numeric workspaces | Geometric registry allocation without changing slot/generation selection; preserve numeric caches during managed/empty tape lifetimes; verify relocation, limits, allocation failures and release; record actual allocation and binary evidence |
 
-Keep the node-count and byte limits explicit. Parent tokens remain absolute node
-indices; metadata uses operation offsets after the input prefix. Managed weight
-retains must transfer atomically or release the completed prefix on unwind.
-Record actual allocations and inspect native instructions before claiming gains.
+Registry capacity remains bounded by the 65,535 token slots. Spare slots stay
+unpublished until initialized; allocation failure retains the prior registry.
+Record the extra capacity at non-power-of-two live counts alongside fewer
+allocation requests. Do not claim lower search complexity: slot selection still
+scans for the first reusable entry. Numeric caches retain their 512 KiB budget.
 
 ## Agreed syntax
 

@@ -98,3 +98,80 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
     }
     std::fs::remove_dir_all(&directory).unwrap();
 }
+
+#[test]
+fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
+    let directory = fwp::cgen::TempDir::new("fwp-ad-registry").unwrap();
+    let input = directory.join("runtime.fwp");
+    let cfile = directory.join("runtime.c");
+    std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["build", "--emit-c", "-o"])
+        .arg(&cfile)
+        .arg(&input)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let code = std::fs::read_to_string(cfile)
+        .unwrap()
+        .replace("realloc(fwp_tapes,", "registry_realloc(fwp_tapes,")
+        .replace("free(fwp_tapes);", "registry_free(fwp_tapes);")
+        .replace("atexit(fwp_tape_finish)", "0")
+        .replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+    let code = code.replace("static int64_t fwp_ntapes = 0;",
+        "static void *registry_realloc(void *, size_t);\nstatic void registry_free(void *);\nstatic int64_t fwp_ntapes = 0;");
+    let incremental = code
+        .replace("if (fwp_ntapes == fwp_tapes_cap)", "if (1)")
+        .replace(
+            "int64_t cap = fwp_tapes_cap ? fwp_tapes_cap * 2 : 1;",
+            "int64_t cap = fwp_ntapes + 1;",
+        );
+    let stale_capacity = code.replace("fwp_ntapes = fwp_tapes_cap = 0;", "fwp_ntapes = 0;");
+    assert_ne!(incremental, code);
+    assert_ne!(stale_capacity, code);
+    for arc in ["0", "1"] {
+        for opt in ["-O1", "-O2"] {
+            for (label, runtime, expected) in [
+                ("bounded", &code, 0),
+                ("incremental", &incremental, 193),
+                ("stale-capacity", &stale_capacity, 196),
+            ] {
+                let mode = if arc == "1" {
+                    "#define FWP_ARC_ONLY 1\n"
+                } else {
+                    ""
+                };
+                let source = format!(
+                    "{mode}{runtime}\n{}",
+                    include_str!("fixtures/autodiff_registry_probe.c")
+                );
+                let binary = directory.join(label);
+                fwp::cgen::compile_c(&source, &binary, opt).unwrap();
+                let output = Command::new(&binary)
+                    .env("FWP_AD_WORKSPACE", "0")
+                    .env("FWP_GC_STRESS", if arc == "1" { "0" } else { "1" })
+                    .env("FWP_GC_VERIFY", if arc == "1" { "0" } else { "1" })
+                    .env("FWP_REUSE_VERIFY", if arc == "1" { "0" } else { "1" })
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{label} arc={arc} {opt}: {output:?}"
+                );
+                if let Some(destination) = std::env::var_os("FWP_AD_WORKSPACE_ARTIFACTS") {
+                    let destination = std::path::PathBuf::from(destination);
+                    std::fs::create_dir_all(&destination).unwrap();
+                    std::fs::write(
+                        destination.join(format!("registry-{label}-arc{arc}{opt}.c")),
+                        &source,
+                    )
+                    .unwrap();
+                }
+            }
+        }
+    }
+}
