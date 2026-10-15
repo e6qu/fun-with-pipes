@@ -202,8 +202,10 @@ Admitted programs include ordinary immutable values, scoped files and state,
 proved derivative scopes, selected retained tasks and scoped C calls. Mutable
 cycles, raw pointers, unproved external callbacks and remote/service contexts
 remain excluded. Checked ARC supports native main and function executables,
-including CLI commands; WebAssembly and library entry points are outside this
-mode. The allocator still uses metadata and may retain reusable pages. See
+including CLI commands, and C libraries with copied inputs and pointer-free
+results. Every library export is checked as a separate entry. WebAssembly and
+service entry points remain excluded. The allocator still uses metadata and may
+retain reusable pages. See
 [the precise memory contract](ownership.md#checked-arc-delivery).
 
 ## Executables and the pipe protocol

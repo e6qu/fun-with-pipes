@@ -81,9 +81,11 @@ ownership and removal of GC are the primary design priority.
    before assigning a cause. Historical timings are starting hypotheses.
 4. Fix the largest confirmed avoidable cost, preserve a regression case, and
    publish before/after results including any memory or portability tradeoff.
-5. Use those programs to identify the next concrete ownership boundary preventing
-   collector-free execution. Extend compile-time ownership and borrowing there,
-   with cleanup and no-reference-count controls.
+5. Extend checked ownership to C library calls with copied inputs and
+   pointer-free results. Check every export independently; prove repeated-call,
+   failure and unload cleanup. Returned host pointers still need an explicit
+   release policy before they can join this subset. Track validation in the
+   handoff; this is one boundary toward collector-free execution, not GC removal.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

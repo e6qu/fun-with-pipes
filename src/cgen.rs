@@ -7885,6 +7885,9 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
         name = lib_name,
         g = guard
     );
+    if native_options().arc {
+        h.push_str("/* Checked ARC: inputs are copied for each call; results contain no managed\n * pointers. Keep input strings valid until return. Serialize host calls and\n * finish all calls before unloading the library. */\n\n");
+    }
     let mut all = Vec::new();
     for (_, _, ps, r) in &sigs {
         all.extend(ps.iter().map(|(_, c)| c.clone()));
@@ -8062,8 +8065,8 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let arc = native_options().arc;
     if arc {
-        if !matches!(mode, Mode::Main | Mode::Exec(..)) {
-            return Err("--gc arc requires a native main or function executable".into());
+        if !matches!(mode, Mode::Main | Mode::Exec(..) | Mode::Library) {
+            return Err("--gc arc requires a native executable or checked C library".into());
         }
         if !reuse_enabled() || !free_enabled() {
             return Err(
@@ -8106,6 +8109,22 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     if arc {
         let entries = match &mode {
             Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
+            Mode::Library => {
+                let signatures = export_sigs(prog)?;
+                for (name, _, params, result) in &signatures {
+                    // The existing export ABI copies strings on entry but
+                    // returns string addresses without a host release API.
+                    // Admit only results whose bits contain no managed pointer.
+                    if !params.iter().all(|(_, ty)| crate::ffi::copied_result(ty))
+                        || !crate::ffi::by_value(result)
+                    {
+                        return Err(format!(
+                            "--gc arc: exported function `{name}` requires copied C inputs and a pointer-free result; returned strings and raw pointers have no host release contract"
+                        ));
+                    }
+                }
+                signatures.iter().map(|(_, fid, _, _)| *fid).collect()
+            }
             _ => vec![main],
         };
         crate::arc::check(prog, &entries)?;

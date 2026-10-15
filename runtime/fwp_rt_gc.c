@@ -578,7 +578,14 @@ static __attribute__((noinline)) char *fwp_gc_refill(gc_list *l, unsigned c, int
 }
 
 static __attribute__((noinline)) void *fwp_gc_alloc_slow(size_t n, int leaf) {
-    if (!fwp_gc.ready) fwp_gc_init();
+    if (!fwp_gc.ready) {
+        fwp_gc_init();
+        /* The first fast-path lookup used the uninitialized size-class table,
+         * so it charged zero bytes. Charge that small allocation now; big
+         * allocations charge their own size below. */
+        if (n <= GC_MAX_SMALL)
+            fwp_gc.budget -= (intptr_t)fwp_gc.slot[fwp_gc.cls_of[(n + 15) >> 4]];
+    }
     if (n > GC_MAX_SMALL) return fwp_gc_alloc_big(n, leaf);
     unsigned c = fwp_gc.cls_of[(n + 15) >> 4];
     size_t sz = fwp_gc.slot[c];

@@ -44,7 +44,8 @@ There are three different claims to keep separate:
 `--memory static` provides a bounded memory pool. It does not mean that every
 value has a statically known lifetime. WebAssembly and native libraries release
 typed counted owners but retain unproved shared graphs: they cannot scan arbitrary
-host roots. Checked ARC is currently a native executable mode.
+host roots. Checked ARC admits native executables and C libraries with checked
+copying boundaries, described below.
 
 The compiler first tries to eliminate temporary objects, keep fields as scalars,
 and place eligible values on the stack. Values that still need shared storage
@@ -231,8 +232,25 @@ still closes streams. Resource lifetime and physical storage lifetime are distin
 
 `fwp build --gc arc` excludes tracing code and rejects unsupported ownership.
 Supported native entries include `main`, exported function executables and CLI
-commands. Each entry starts without assuming an existing state or derivative scope.
-WebAssembly, library, remote and service entry points remain outside this mode.
+commands and native C libraries with copied inputs and pointer-free results.
+Each entry starts without assuming an existing state or derivative scope.
+WebAssembly, remote and service entry points remain outside this mode.
+
+For a static or shared C library, scalar inputs are copied by value and string
+inputs are copied into owned language storage during the call. Records can
+contain these input types. Results must be scalars or records of scalars: C
+receives all their bits before the temporary language value is released.
+Returned strings and raw pointers are rejected because the current ABI (the C
+calling convention and generated declarations) has no way for the host to
+release managed storage. Each exported function is checked independently, even
+if another export uses it under a state or derivative handler. Serialize host
+calls and finish them before unloading; concurrent host entry is not supported
+by this contract. The generated header states these obligations.
+
+This extends the existing copying ABI without introducing a handle or release
+wrapper. Ordinary tracing libraries keep their existing behavior. Proving these
+boundaries does not make every library eligible for ARC, or eliminate the
+necessary copy of a string that the host can later change.
 
 Scoped C calls can borrow strings/bytes and copy supported scalar/record values.
 Synchronous callbacks must run on the calling task before C returns; C must copy
