@@ -271,6 +271,15 @@ partial column and completed columns. This closes the ownership gap in the
 general matrix multiplication path as well as direct `list.transpose` calls.
 The original input is unchanged, and ragged rows still stop at the shortest row.
 
+Console input and process arguments have explicit copied-result ownership.
+`read-all` owns its input buffer until conversion to a string completes;
+`read-line` protects that string while constructing `Some`. `read-lines` releases
+the complete input string after copying its lines. `lines` and `args` protect
+partial lists and pending strings during construction. No returned value borrows
+standard-input buffers or the process argument array. Invalid UTF-8 replacement,
+CRLF handling and end-of-input behavior remain unchanged. Environment, directory
+and other unreviewed IO primitives remain outside checked ARC.
+
 The six dense F64 linear-algebra primitives borrow their input arrays and return
 independently owned results. Scratch pointers and partially constructed output
 arrays are tracked in one stack record. Normal completion, singular-result exits

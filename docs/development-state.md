@@ -128,8 +128,8 @@ per-gradient timing or whole-process memory measurements; see the numeric guide.
 The fixture checks low bits, extreme exponents, seeds, nested and checkpointed
 use, O1/O2, workspace reuse on/off and a missing-release negative control.
 
-Console preparation `checked-console-ownership` is in
-`/private/tmp/fwp-console-ownership`, based on `7a463be9`. It owns whole-input
+Console implementation is now combined for review. Its original preparation
+remains in `/private/tmp/fwp-console-ownership`, based on `7a463be9`. It owns whole-input
 buffers, pending lines, copied arguments and environment lookups. It also
 fixes embedded-zero names incorrectly looking up a prefix variable. Its expanded
 [run 38802310868](https://github.com/e6qu/fun-with-pipes/actions/runs/38802310868)
