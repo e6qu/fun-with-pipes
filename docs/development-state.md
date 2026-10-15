@@ -10,7 +10,7 @@ branch `checked-library-ownership`: copied C library boundaries,
 data-only channels, transpose ownership, allocator accounting and measured
 numerical improvements. This batch is rebased onto the accepted squash commit;
 its production gate exposed Windows test-host line endings, corrected below.
-The following solver work stays in its separate worktree.
+Following numerical and console work stays in separate preparation worktrees.
 
 Standing authorization covers fixes, publication and squash merge after all nine
 production jobs and documentation pass for the final commit, then the next PR.
@@ -144,6 +144,15 @@ library ABI does not change host stream settings. Windows execution and the full
 production gate must pass on the repaired final commit. Documentation and bench
 passed on the earlier head; neither substitutes for that gate.
 
+At `930645e6`, both Windows architectures pass the repaired output checks but
+fail the cancellation probe's state assertion (exit 2) in
+[run 38796862558](https://github.com/e6qu/fun-with-pipes/actions/runs/38796862558).
+The partial-payload cleanup probe passes. Diagnostics now print the mode, tick,
+unwind flag and remaining cleanup pointer; the regression runs in the early
+Windows resource step, including the focused Windows workflow. This is diagnostic
+work, not a confirmed fix. Harness metadata and exact output/report-byte checks
+passed through the local guard (1.13 s); native Windows diagnosis remains required.
+
 The following batch is isolated in `/private/tmp/fwp-linear-algebra`, branch
 `checked-linear-algebra`, originally based on `c10b1ccd`. It owns scratch and
 partial results for all six linear-algebra solvers, checks QR output size, and
@@ -153,7 +162,14 @@ passes dimensions through a checked function entry. Linux had already passed
 solver cleanup, array borrowing and the other selected regressions; the failed
 run is not acceptance. Repaired four-host run
 [38795634707](https://github.com/e6qu/fun-with-pipes/actions/runs/38795634707)
-is queued at `ec1ff14b`. Its own handoff records the detailed checks. Rebase only
+passed all four hosts at `ec1ff14b`. Same-run array comparison passed all four
+hosts in run `38800569111`; a repeat (`38801692547`) is still waiting for ARM
+macOS. Keep the slower tracing observation in the report. F128 precision work in
+`/private/tmp/fwp-quad-grad` passed all four hosts in `38797434546`. Console and
+environment-copy ownership in `/private/tmp/fwp-console-ownership` is running
+in `38802310868`; it also fixes embedded-zero environment-name truncation.
+Their handoffs record detailed checks. Combine the validated numerical changes
+into the next substantial PR after this delivery passes. Rebase only
 its commits after `c10b1ccd` onto this delivery's accepted squash commit before
 opening the next PR. Keep one active delivery PR.
 

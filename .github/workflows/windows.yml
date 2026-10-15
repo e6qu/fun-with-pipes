@@ -54,7 +54,7 @@ jobs:
       - name: Generated programs with native resources and ownership stress
         shell: pwsh
         run: |
-          cargo test --test windows_runtime --test windows_static_memory -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          cargo test --test windows_runtime --test windows_static_memory --test loop_unwind_ownership -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
       - name: Publish native diagnostics before dependency builds
         uses: actions/upload-artifact@v7
@@ -85,7 +85,7 @@ jobs:
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test tls --test cli_ownership --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test arc_library --test transpose_ownership --test foreign_callback_ownership --test float_formats --test float_linking --test protocol --test blocked_matrix --test wide_workers --test loop_unwind_ownership
+          cargo test --no-fail-fast --test tls --test cli_ownership --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test arc_library --test transpose_ownership --test foreign_callback_ownership --test float_formats --test float_linking --test protocol --test blocked_matrix --test wide_workers
           exit $LASTEXITCODE
       - name: Native nested autodiff and ownership controls
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}

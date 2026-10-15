@@ -181,7 +181,12 @@ int main(void) {
             return 1;
         }
         fwp_cur=NULL;
-        if (!cancelled_loop.unwinding || fwp_cleanups || current_tick!=tick || !observed_text) return 2;
+        if (!cancelled_loop.unwinding || fwp_cleanups || current_tick!=tick || !observed_text) {
+            fprintf(stderr,"cancellation: mode=%d tick=%d current=%d unwinding=%d cleanup=%p text=%llu\n",
+                mode,tick,current_tick,cancelled_loop.unwinding,(void *)fwp_cleanups,
+                (unsigned long long)observed_text);
+            return 2;
+        }
         if (*fwp_rc_slot(original_text)!=1 || STR(original_text)->len!=4 || memcmp(STR(original_text)->d,"seed",4)) return 3;
         if (observed_text!=original_text && !dead_string(observed_text)) return 4;
         if (observed_other && observed_other!=original_text && !dead_string(observed_other)) return 5;
