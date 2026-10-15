@@ -11,13 +11,14 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-PR #136 completed the six-step platform/ownership roadmap as `2684241d`, with
-all nine production jobs and docs passing. The user requested continued work.
-The current follow-up bounds numeric backward-pass storage and scans to the
-seeded prefix; keep its implementation, regression controls, measurements and
-docs together in PR #137 on `autodiff-active-prefix`. Follow the live plan and
-handoff. Once that PR merges with all final-head gates, this follow-up is complete;
-check its actual state before resuming or creating another implementation PR.
+PR #136 completed the six-step platform/ownership roadmap. PR #137 completed
+numeric backward prefix bounds as `38da1401`, with all nine jobs and docs green.
+The user requested continued work. The current follow-up stores only operations
+in numeric/managed AD metadata, preserving input tokens and adjoints. Keep its
+cleanup fixes, tests, measurements and docs together on
+`autodiff-operation-storage` in PR #138. Follow the live plan and handoff; historical
+preparation entries are not work to replay. Once PR #138 merges with all final-head
+gates, this follow-up is complete; check its actual state before resuming.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,
@@ -60,10 +61,7 @@ representation choices and limits explicit and justify them.
   compiler, flags, allocations and live memory as well as elapsed time.
 - Every commit message is exactly one line, at most 80 characters, with no
   body, trailers or AI attribution. Use ordinary Git author metadata.
-  When authorized to merge, require all seven exact-head jobs (Linux ARM64/AMD64,
-  bench, regular ARM/Intel macOS and GC stress ARM/Intel) and squash-merge with an
-  explicitly supplied subject and empty body.
-  Require the documentation audit and the added native Windows gates too.
-  The existing seven jobs alone do not establish Windows support.
+  When authorized to merge, require all nine exact-head production jobs and
+  documentation. Squash-merge with an explicitly supplied subject and empty body.
 
 Repository conventions and test locations are in [CONTRIBUTING.md](CONTRIBUTING.md).

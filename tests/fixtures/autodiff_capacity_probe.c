@@ -33,19 +33,22 @@ int main(void) {
     fwp_gc_start(__builtin_frame_address(0));
     fwp_trap_recover=capacity_recover;fwp_trap_jb=&capacity_trap;fwp_trap_cleanup=0;
     if(fwp_tape_limit()!=INT32_MAX/8)return 180;
-    if(!setjmp(capacity_trap)){fwp_p_ad_tape((V)(fwp_tape_limit()+1));return 181;}
+    if(!setjmp(capacity_trap)){fwp_p_ad_tape((V)(fwp_tape_limit()+1));return 182;}
     if(strcmp(fwp_trap_msg,"autodiff: too many inputs") || capacity_calls || capacity_live)return 182;
     /* All four failures must free the last owned pointer, including successful
      * earlier reallocs. No giant allocations are performed by this probe. */
     for(capacity_fail=1;capacity_fail<=4;capacity_fail++) {
         size_t selected=capacity_fail;capacity_fail=0;
-        capacity_base=fwp_p_ad_tape(1);capacity_calls=0;capacity_fail=selected;
+        capacity_base=fwp_p_ad_tape(1);
+        fwp_tape_reserve(fwp_tape_of((int64_t)capacity_base>>32),1);
+        capacity_calls=0;capacity_fail=selected;
         if(!setjmp(capacity_oom)){fwp_tape_reserve(fwp_tape_of((int64_t)capacity_base>>32),65);return 183;}
         if(capacity_exit_code!=102 || capacity_oversized || capacity_live!=1 || fwp_tapes[0].live ||
            fwp_tapes[0].pa || fwp_tapes[0].pb || fwp_tapes[0].da || fwp_tapes[0].db)return 184;
         selected=capacity_fail;capacity_dispose();capacity_fail=selected;
     }
     capacity_fail=0;capacity_base=fwp_p_ad_tape(1);capacity_registry=fwp_tapes;
+    fwp_tape_reserve(capacity_registry,1);
     capacity_calls=0;capacity_fail=1;
     if(!setjmp(capacity_oom)){fwp_p_ad_tape(1);return 185;}
     if(capacity_exit_code!=102 || fwp_tapes!=capacity_registry || fwp_ntapes!=1 || capacity_live!=5 ||

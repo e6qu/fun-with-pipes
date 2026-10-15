@@ -1,9 +1,10 @@
 # Session handoff
 
-Updated 2026-10-14. The user requested continued development after PR #136.
-[PR #137](https://github.com/e6qu/fun-with-pipes/pull/137), branch
-`autodiff-active-prefix`, implements the bounded numeric backward-pass follow-up.
-Publication, fixes and squash merge after all final-head gates remain authorized.
+Updated 2026-10-15. The user requested continued development after PR #137.
+[PR #138](https://github.com/e6qu/fun-with-pipes/pull/138), branch
+`autodiff-operation-storage`, removes input placeholders from numeric and
+managed AD parent/derivative buffers. Publication, fixes and squash merge after
+all final-head gates remain authorized.
 
 ## Roadmap status
 
@@ -15,71 +16,76 @@ Publication, fixes and squash merge after all final-head gates remain authorized
 | 4 | Verified | Nested reverse AD, checkpointing and lifetime controls |
 | 5 | Verified | Actual F16/BF16/F128 and protocol v2 |
 | 6 | Verified | Native Windows ARM64/AMD64 and standalone packages |
-| 7 | Implemented | Seeded-prefix adjoint bounds, amortized workspace growth and four-host memory/binary evidence; final delivery follows PR #137's checks and merge |
+| 7 | Verified | Seeded-prefix adjoint bounds and four-host memory/binary evidence; PR #137 merged with all gates |
+| 8 | Implemented | Operation-only AD metadata, partial weight-retain cleanup, regression controls and measured evidence |
 
 ## Accepted baseline
 
-[PR #136](https://github.com/e6qu/fun-with-pipes/pull/136) merged as `2684241d`,
-tree-identical to `26f2c68a`. All nine production jobs and docs pass; see
-[the acceptance record](roadmap-history.md#pr-136-merge-acceptance).
+[PR #137](https://github.com/e6qu/fun-with-pipes/pull/137) merged as `38da1401`,
+tree-identical to `37104959`. All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38604595248)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38604594927)
+pass. [The prefix report](measurements/ad-prefix-2026-10-14.json) records its
+specific 98,304-byte peak tape reduction and absence of a consistent speedup.
 Historical preparation anchors are not work to replay.
 
 ## Current implementation and evidence
 
-Numeric backward passes retain every input adjoint and the tape prefix through
-the last seeded output. Parent indices precede children, so later nodes cannot
-contribute. Both engines preserve validation and arithmetic order. Detached
-buffers remain protected before validation; invalid outputs allocate no new
-adjoints. Later failure/cancellation still releases all allocated buffers.
-A reused adjoint workspace grows geometrically; a cold one allocates the needed
-prefix. Forward recording and managed nested-tape propagation are unchanged.
+Both runtimes now index parent/weight metadata relative to the input count.
+Node tokens, parent values and adjoints retain their original absolute indices.
+Input-only tapes need no operation buffers; existing cached buffers remain
+subject to the 512 KiB budget. Managed backward callback order is unchanged.
+A related native cleanup fix protects the first retained derivative if retaining
+the second fails. Cold input-only tapes allocate no operation metadata.
 
-[Focused AD 38601394373](https://github.com/e6qu/fun-with-pipes/actions/runs/38601394373)
-passes all four Linux/macOS hosts at `920f5aa9`: native and interpreter tests,
-nested AD, scope/unwind/cancellation controls, workspace reuse, deliberate
-full-storage/full-scan regressions, and checkpoint/prefix measurements.
-[Focused WASM 38601399062](https://github.com/e6qu/fun-with-pipes/actions/runs/38601399062)
-passes both Linux hosts, including CLI/browser semantics and physical
-reclamation controls. Both runs test the
-current compiler/runtime. The evidence closeout adds docs/report hashes and
-strengthens successful-language-case stderr assertions; it does not alter runtime
-or compiler sources. Final production checks also exercise the stricter assertion.
+Guarded checks pass: formatting, all-target clippy, five interpreter tape tests,
+native operation-storage/actual second-retain controls, managed unwind and
+cancellation, allocator/index/generation/unwind controls, and raw language
+outputs. The exact commands use `python3 scripts/local-guard.py` before cargo or
+fwp; all stayed within the fixed limits.
 
-[Four-host evidence](measurements/ad-prefix-2026-10-14.json) records 12,291 tape
-nodes with a three-input prefix. Peak tape storage falls 491,648 → 393,344 bytes;
-requested tape bytes fall 883,328 → 785,024 while request count stays 38.
-Managed allocations/retains/peak are unchanged; all measured storage is reclaimed
-without GC. Seven-sample process timings show no consistent speedup. The report
-retains hardware/compiler/flags, samples and source/binary/disassembly hashes.
-Native disassembly on all four hosts confirms the computed prefix controls
-adjoint allocation and reverse-loop bounds. Forward work remains unchanged.
+The first focused AD run exposed three fixtures that still assumed input
+metadata: scope release, library unload and checkpoint capacity. Scope/library
+fixtures now record real operations, preserving their omission controls;
+checkpoint capacity now asserts exactly 4,096 operations. CI also exposed a
+stack-lifetime error in the new deliberately leaking probe; its descriptor now
+has static lifetime so shutdown remains valid. These corrected tests pass locally:
+scope release (9.31s), library unload (4.87s), checkpoint bounds (7.09s) and native
+operation/retain controls (4.01s). No compiler/runtime source changed after the
+measured `31b9d8d2` head. Full production CI must verify the corrected fixtures.
 
-Local checks through `python3 scripts/local-guard.py` pass: formatting, clippy
-(17.21s after refinement), four interpreter tape tests (13.52s), current-runtime
-C syntax (0.26s), current formatter AST/idempotence, Python syntax, workflow lint,
-and the roadmap/link/commit audit. Aggregating and hash-checking the runner
-reports passes (0.15s); no measurements were regenerated locally. Final evidence
-closeout formatting (1.14s) and clippy (0.61s) pass. Initial runs
-38600695264/38600698982 were cancelled while queued before the growth refinement;
-they do not count as evidence.
+[Focused WASM](https://github.com/e6qu/fun-with-pipes/actions/runs/38664966403)
+passes on Linux AMD64 and ARM64 at `31b9d8d2`, including actual WASI semantics and
+physical reclamation controls. The AD run is not a passing gate: its measurement
+steps succeed independently of the fixture failures.
+[All four measurement reports](measurements/ad-operations-2026-10-15.json) are
+recorded with verified source/binary/disassembly hashes. Native tape peaks fall
+131,176 → 32,872 bytes for identity VJP, 262,248 → 163,944 for mapped VJP and
+28,920 → 16,632 for the nested gradient. The latter also reduces managed storage.
+Mapped/native requests rise 10 → 30 and nested requests 19 → 21 because smaller
+cold buffers grow geometrically. All final storage is reclaimed without GC;
+process timings show no consistent speedup. Native instructions on all four hosts
+show register operation offsets and hoisted backward metadata-base adjustments.
+
+Final fixture clippy passes (0.73s); guarded four-host aggregation/hash verification
+passes (0.16s). Final production CI must accept the corrected fixtures on every
+required host before this PR can merge.
 
 ## Boundaries
 
-This change trims an unused suffix, not holes within the active prefix. Existing
-larger cached buffers stay within the fixed workspace budget. Checked native ARC
-still rejects unproved cycles, mutable/retained graphs and State/AD lifetimes.
-Service/remote/library/WASM executable ARC admission remains outside the earlier
-bundle. Generic wide values and some lazy producers can allocate. No universal
-collector-free execution, allocation reduction or speedup is claimed.
+Numeric prefix bounds trim an unused suffix, not holes in the active prefix.
+Checked native ARC still rejects unproved cycles, mutable/retained graphs and
+State/AD lifetimes. Service/remote/library/WASM executable ARC admission remains
+outside the earlier bundle. Generic wide values and some lazy producers can
+allocate. No universal collector-free execution or speedup is claimed.
 
 ## Next action
 
-Next: inspect PR #137's current head, checks and merge state. If it is open,
-finish all nine exact-head production jobs plus docs, fix any failure, and
-squash merge with one line of at most 80 characters and an empty body. At a session restart, inspect that PR first. If merged with those passing
-gates, this follow-up is complete; no implementation task remains from step 7.
-Keep its work in this PR and do not replay historical preparation entries.
+Next: inspect PR #138's current head, checks and merge state. If open, require
+all nine exact-head production jobs plus documentation, fix any failures, and
+squash merge with one line of at most 80 characters and an empty body. If merged
+with those passing gates, step 8 is complete; no implementation task remains
+from this follow-up. Keep work in this PR and do not replay historical anchors.
 
-Use `python3 scripts/local-guard.py COMMAND...` for serial local checks; preserve
+Use `python3 scripts/local-guard.py` for focused serial local checks; preserve
 64 GiB free disk, target below 2 GiB, sampled aggregate RSS below 1 GiB and the
 180-second deadline. Full builds, suites and measurements belong on GitHub.

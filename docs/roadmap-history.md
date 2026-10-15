@@ -352,3 +352,15 @@ show no consistent speedup. Native instructions on all four hosts confirm the
 computed prefix controls allocation and reverse-loop bounds. This is focused
 evidence; final delivery requires all nine production jobs and docs on
 [PR #137](https://github.com/e6qu/fun-with-pipes/pull/137)'s final head before merge.
+
+## PR #137 merge acceptance
+
+PR [#137](https://github.com/e6qu/fun-with-pipes/pull/137) merged as `38da1401`,
+tree-identical to tested head `37104959`. All nine production jobs in
+[38604595248](https://github.com/e6qu/fun-with-pipes/actions/runs/38604595248) and
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38604594927)
+passed. Numeric backward passes retain every input adjoint and stop at the last
+seeded output; validation, seed arithmetic and unwind ownership are preserved.
+[Four-host measurements](measurements/ad-prefix-2026-10-14.json) show a
+98,304-byte peak tape reduction in the recorded unused-suffix workload, with no
+consistent process-time speedup. The squash subject is one line without trailers.

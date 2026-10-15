@@ -5,16 +5,23 @@ The six-step platform/ownership roadmap was accepted in
 All nine production jobs and documentation passed at its tree-identical head
 `26f2c68a`. The user subsequently requested continued development.
 
-The current follow-up reduces numeric reverse-mode adjoint storage and scans
-for unused tape suffixes. Preserve output validation, arithmetic order,
-reclamation and task/scope behavior in both engines. Keep this bounded change,
-its measured binary/memory evidence and documentation together in
-[PR #137](https://github.com/e6qu/fun-with-pipes/pull/137). Four-host focused
-validation and measurements pass: the measured unused-suffix workload cuts peak
-tape storage by 98,304 bytes with no consistent speedup. Delivery requires all
-nine production jobs and docs on the final head. Once PR #137 merges with those
-gates, this follow-up is complete; historical anchors are not further work.
-[The handoff](docs/development-state.md) records current checks and next actions.
+[PR #137](https://github.com/e6qu/fun-with-pipes/pull/137) completed seeded-prefix
+numeric backward bounds as `38da1401`, with all nine production jobs and docs
+passing on its tree-identical head `37104959`. Its measured unused-suffix
+workload reduces peak tape storage by 98,304 bytes, without a consistent speedup.
+
+The user requested continued development. The current follow-up removes input
+placeholders from numeric and managed autodiff operation buffers. Inputs keep
+their existing node indices and adjoints; only recorded operations need parent
+and derivative storage. Include partial derivative-retain cleanup, regression
+controls, four-host memory/binary evidence and the updated handoff in
+[PR #138](https://github.com/e6qu/fun-with-pipes/pull/138).
+[Four-host measurements](docs/measurements/ad-operations-2026-10-15.json) show
+lower peak storage for identity, mapped and nested gradients, with more cold
+growth requests in the latter two and no consistent speedup. Delivery requires
+all nine final-head production jobs and documentation. Once PR #138 merges with
+those gates, step 8 is complete; historical anchors are not further work.
+[The handoff](docs/development-state.md) records actual checks and next actions.
 
 ## Direction
 
@@ -61,6 +68,7 @@ Cross-compilation between every host/target pair is not implied.
 | 4 | Nested autodiff and checkpointing | Second/third derivatives, stable task identities, partial-retain cleanup and bounded tape/workspace lifetimes pass; explicit checkpointing trades recomputation for storage |
 | 5 | Actual F16/BF16/F128 | Correct-format arithmetic, direct decimal rounding, arrays, C ABI and protocol v2 pass exact-bit/rounding and ownership controls; software arithmetic preserves the declared precision |
 | 6 | Native Windows ARM64/AMD64 | Both native jobs pass runtime/resources, TLS, interpreter/native goldens, static storage, ownership stress and standalone PE packages |
+| 7 | Seeded-prefix numeric backward bounds | Input/seed order, validation, workspace growth and unwind controls; four-host storage/binary evidence and all nine production jobs |
 
 [Ownership](docs/ownership.md) and [float formats](docs/float-formats.md) specify
 the contracts. Generic wide boundaries can still box; arbitrary lazy producers
@@ -78,12 +86,12 @@ to replay.
 
 | Step | Work | Acceptance |
 |---|---|---|
-| 7 | Bound numeric backward work to the seeded prefix | Raw/native agreement, validation precedence, empty/constant/duplicate outputs, workspace reuse, unwind controls, measured adjoint storage and native binary evidence; all nine production jobs and docs |
+| 8 | Store only operations in AD parent/weight buffers | Preserve raw/native numeric and nested derivatives, token limits, scope/unwind/task behavior and bounded reuse; prove input-only tapes need no operation buffers and measure equivalent input-heavy workloads |
 
-The optimization retains all input adjoints and all nodes through the greatest
-seeded output index. Parent indices precede their children, so later nodes
-cannot contribute. Forward evaluation and nested managed-tape semantics remain
-unchanged. Do not claim a speedup before equivalent-workload measurements.
+Keep the node-count and byte limits explicit. Parent tokens remain absolute node
+indices; metadata uses operation offsets after the input prefix. Managed weight
+retains must transfer atomically or release the completed prefix on unwind.
+Record actual allocations and inspect native instructions before claiming gains.
 
 ## Agreed syntax
 

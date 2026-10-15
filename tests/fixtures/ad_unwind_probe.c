@@ -43,13 +43,16 @@ int main(void) {
         if (code) return code;
         fwp_tape *t=fwp_tape_of((int64_t)selected_base>>32);
         if (t->len!=2 || !t->live) return 33;
+        /* Record a real operation so unwind still owns all metadata buffers. */
+        V fields[4]={selected_base,fwp_from_f64(1),(V)(int64_t)-1,0};
+        fwp_p_ad_push(fwp_record(4,fields));
         outputs=fwp_arr_new(2);seeds=fwp_arr_new(2);
         ARR(outputs)->d[0]=selected_base;ARR(outputs)->d[1]=selected_base+1;
         ARR(seeds)->d[0]=fwp_from_f64(2);ARR(seeds)->d[1]=fwp_from_f64(3);
         fwp_gc_collect();
         if (!fwp_gc.armed || !fwp_gc.ncollect) return 52;
         if (probe_mode==1) ARR(outputs)->d[0]=other_base;
-        if (probe_mode==2) ARR(outputs)->d[0]=selected_base+2;
+        if (probe_mode==2) ARR(outputs)->d[0]=selected_base+3;
         tracked[0]=t->pa;tracked[1]=t->pb;tracked[2]=t->da;tracked[3]=t->db;tracked[4]=0;
         memset(released,0,sizeof(released));
         saved_current=fwp_cur;

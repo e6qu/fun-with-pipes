@@ -394,6 +394,12 @@ can preserve inconsistent runtime fields; those values retain the library's
 existing list/chunk/zip semantics. Compiler-internal matrix primitives cannot be
 called through source foreign declarations.
 
+AD parent and derivative buffers store only operations, starting after the input
+prefix. Tokens and parent indices remain absolute; adjoints retain input slots.
+Numeric and managed tapes use the same offset convention. Managed pushes protect
+the first retained weight until the second retain completes, so a failed push
+keeps its original length and releases partial ownership.
+
 AD tape capacity is limited before allocation by the signed vertex index and
 native address width. Native and interpreter runtimes may retain one detached
 workspace up to 512 KiB; oversized buffers are released. Reuse clears adjoints and

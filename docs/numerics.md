@@ -68,8 +68,12 @@ that of the branch taken).
 
 **The tape.** The tape lives in the runtime, outside the program's values
 (`src/numerics.rs` for the interpreter, `runtime/fwp_rt_kernel.c` for
-native code): per node, two parent indices and two partial derivatives.
-Primitive-float tapes use numeric buffers; nested tapes use typed value buffers.
+native code): per recorded operation, two parent indices and two partial
+derivatives. Input nodes need no parent or derivative entries. Operation buffers
+use offsets after the input prefix; tokens and adjoints keep absolute node
+indices. Primitive-float tapes use numeric buffers; nested tapes use typed value
+buffers. A failed managed weight retain releases completed ownership before
+returning, without publishing a partial operation.
 A `Rev` value refers to its node as
 `(tape id << 32) | index`, with -1 for constants; the tape id is
 `(generation << 16) | (slot + 1)`. Operations call the primitive
@@ -106,6 +110,10 @@ may skip propagation. Capturing or combining unrelated tape tokens remains an
 error; nesting does not relax stale-token or generation checks.
 Base-float reverse mode uses 24 bytes per operation before adjoint storage and
 capacity rounding. Nested weights additionally own their scalar representation.
+Input-only tapes need no operation buffers. [Four-host measurements](measurements/ad-operations-2026-10-15.json)
+record lower peak storage for identity, mapped and nested gradients. Cold mapped
+tapes make more growth requests from smaller initial buffers; timings show no
+consistent speedup. Existing cached capacity can remain within the fixed budget.
 
 Numeric backward passes retain adjoints for every input and for the tape prefix
 through the last seeded output. Later recorded nodes cannot contribute because
