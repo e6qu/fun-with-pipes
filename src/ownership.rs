@@ -276,7 +276,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "string.slice" | "bytes.slice" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "join" | "format" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
         "show" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
-        "lines" | "read-line" | "read-lines" | "read-all" | "args" => {
+        "lines" | "read-line" | "read-lines" | "read-all" | "args" | "env.get" => {
             (&[B], ResultOwnership::OwnedTree, None, &[])
         }
         "string.chars"

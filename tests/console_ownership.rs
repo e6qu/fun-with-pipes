@@ -8,6 +8,9 @@ fn checked(command: &mut Command) -> Output {
 }
 fn input(command: &mut Command, bytes: &[u8]) -> Output {
     let mut child = command
+        .env("FWP_ENV_COPY", "copied")
+        .env("FWP_ENV_EMPTY", "")
+        .env_remove("FWP_ENV_ABSENT")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -28,10 +31,14 @@ fn console_input_matches_raw_interpretation() {
         ("lines", "read-lines () | echo"),
         ("fold", "0 | fold-lines (curry (.0 | add 1)) | echo"),
         ("args", "args () | echo"),
+        (
+            "environment",
+            r#"[env.get "FWP_ENV_COPY", env.get "FWP_ENV_EMPTY", env.get "FWP_ENV_ABSENT", env.get "FWP_ENV_COPY\0suffix"] | echo"#,
+        ),
     ] {
         std::fs::write(&source, format!("main = {body}\n")).unwrap();
         let all_cases = [bytes.as_slice(), b"", b"\n", b"last\r", b"a\0b\n"];
-        let cases = if name == "args" {
+        let cases = if name == "args" || name == "environment" {
             &all_cases[1..2]
         } else {
             &all_cases[..]
@@ -126,6 +133,7 @@ fn console_builders_release_each_partial_result_and_completed_copy() {
         for (start, end) in [
             ("static V fwp_lines_of(", "static V fwp_p_words("),
             ("static V fwp_read_stdin_all(", "static V fwp_p_env_get("),
+            ("static V fwp_p_env_get(", "static int64_t fwp_now_ns("),
         ] {
             let a = code.find(start).unwrap();
             let b = a + code[a..].find(end).unwrap();

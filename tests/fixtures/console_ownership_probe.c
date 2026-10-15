@@ -35,13 +35,21 @@ static V console_call(int kind, const char *path, V text) {
     case 1:return fwp_p_read_line();
     case 2:return fwp_p_read_lines(console_drop_list);
     case 3:return fwp_p_args(console_drop_list);
-    default:return fwp_p_lines(text,console_drop_list);
+    case 4:return fwp_p_lines(text,console_drop_list);
+    default:return fwp_p_env_get(text);
     }
 }
 static void console_drop(int kind,V value) {
     if(kind==0) fwp_rc_free_obj(value);
-    else if(kind==1 && value) {fwp_rc_free_obj(OBJ(value)->f[0]);fwp_rc_free_obj(value);}
-    else if(kind>=2) console_drop_list(value);
+    else if((kind==1 || kind>=5) && value) {fwp_rc_free_obj(OBJ(value)->f[0]);fwp_rc_free_obj(value);}
+    else if(kind>=2 && kind<=4) console_drop_list(value);
+}
+static void console_set_environment(const char *value) {
+#ifdef _WIN32
+    if(!SetEnvironmentVariableA("FWP_ENV_COPY",value))exit(213);
+#else
+    if(setenv("FWP_ENV_COPY",value,1))exit(213);
+#endif
 }
 int main(int argc,char **argv) {
     if(argc!=2)return 202;
@@ -51,13 +59,22 @@ int main(int argc,char **argv) {
     V text=fwp_rc_fresh(fwp_str_new("a\r\nb\n\nlast\r",11));
     const char *setting=getenv("FWP_CONSOLE_COLLECTION");
     console_collect=setting && !strcmp(setting,"1");
+    V key=fwp_rc_fresh(fwp_str_new("FWP_ENV_COPY",12));
+    V nul_key=fwp_rc_fresh(fwp_str_new("FWP_ENV_COPY\0suffix",19));
     intptr_t budget=fwp_gc.budget;
-    for(int kind=0;kind<5;kind++) {
+    for(int kind=0;kind<7;kind++) {
+        V argument=kind==5 ? key : kind==6 ? nul_key : text;
         for(int i=0;i<128;i++) {
+            console_set_environment("copied");
             console_events=0;
-            V value=console_call(kind,argv[1],text);
+            V value=console_call(kind,argv[1],argument);
             if(kind==3 && fwp_list_len(value)!=3)return 203;
             if(kind==4 && fwp_list_len(value)!=4)return 204;
+            if(kind==5) {
+                console_set_environment("changed");
+                if(!value || STR(OBJ(value)->f[0])->len!=6 || memcmp(STR(OBJ(value)->f[0])->d,"copied",6))return 214;
+            }
+            if(kind==6 && value)return 215;
             console_drop(kind,value);
             if(!console_collect && fwp_gc.budget!=budget)return 205;
             if(console_heap_live)return 211;
@@ -67,7 +84,7 @@ int main(int argc,char **argv) {
         fwp_trap_cleanup=fwp_cleanups;
         for(int event=1;event<=count;event++) {
             console_events=0;console_fail_at=event;
-            if(!setjmp(console_failure)) {(void)console_call(kind,argv[1],text);return 206;}
+            if(!setjmp(console_failure)) {(void)console_call(kind,argv[1],argument);return 206;}
             if(fwp_cleanups!=fwp_trap_cleanup)return 207;
             if(console_heap_live)return 212;
             if(!console_collect && fwp_gc.budget!=budget)return 208;
@@ -75,7 +92,7 @@ int main(int argc,char **argv) {
         }
         console_fail_at=0;fwp_trap_recover=0;fwp_trap_jb=0;fwp_trap_cleanup=0;
     }
-    fwp_rc_free_obj(text);
+    fwp_rc_free_obj(text);fwp_rc_free_obj(key);fwp_rc_free_obj(nul_key);
     if(console_collect && !fwp_gc.ncollect)return 210;
     return 0;
 }

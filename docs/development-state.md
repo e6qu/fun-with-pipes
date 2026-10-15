@@ -29,7 +29,7 @@ trailers or attribution. Keep one active delivery PR and bundle coherent work.
 
 ## Prepared console ownership batch
 
-Admit `read-all`, `read-line`, `read-lines` and `args` to checked ARC. `read-lines`
+Admit `read-all`, `read-line`, `read-lines`, `args` and `env.get` to checked ARC. `read-lines`
 previously left its temporary whole-input string to GC; now it releases that
 copy after making the returned lines. Protect the external input buffer until
 UTF-8 conversion completes, the string while constructing `Some`, and partial
@@ -43,8 +43,8 @@ invalid UTF-8 and embedded-NUL input; repeated calls with no retained charge;
 injected failure at each string/node/buffer allocation; forced GC/reuse tests;
 negative controls omitting the input-string free and the external-buffer free.
 Check both tracing and ARC at O1/O2 on all maintained native targets.
-Environment inputs and other IO remain unreviewed; keep a negative ARC test
-for `env.get`. The old negative `read-all` assertion is replaced by positive
+Environment listing and other IO remain unreviewed; keep a negative ARC test
+for `env.vars`. The old negative `read-all` assertion is replaced by positive
 console tests, not silently removed from coverage.
 
 Input storage is not free: `read-all` materializes the entire stream and
@@ -57,9 +57,10 @@ This batch establishes ownership, not a timing or zero-allocation claim.
 All local checks use `python3 scripts/local-guard.py COMMAND...`, serially
 within the fixed limits. No compiler rebuild or full local gate was run.
 
-- Current primitive inventory passes (1.31 s): 235 explicit contracts,
-  10 flat scalar signatures, 114 declarations needing review, 19 lowered
-  templates and 104 distinct unreviewed symbols. The baseline is unchanged.
+- Current primitive inventory passes (1.31 s): 236 explicit contracts,
+  10 flat scalar signatures, 113 declarations needing review, 19 lowered
+  templates and 103 distinct unreviewed symbols. The updated check passed
+  in 0.61 s. The baseline is unchanged.
 - Existing-compiler C with edited runtime passes 128 calls per operation,
   forced collection off/on, every injected allocation failure and preserved
   borrowed input ownership. The extended probe counts outstanding C input
@@ -69,6 +70,17 @@ within the fixed limits. No compiler rebuild or full local gate was run.
   including Unicode/empty process arguments. Formatting passes (0.98 s) and
   the roadmap/documentation audit passes (2.51 s). Full changed-compiler
   validation remains required.
+
+A focused interpreter/native probe also exposed an environment lookup bug:
+`"FWP_ENV_COPY\0suffix"` returned the prefix variable natively, but `None` in
+the interpreter (guarded reproduction, 2.51 s). Native lookup now rejects the
+zero byte, protects the copied string during `Some` construction, and preserves
+it after the environment changes. The redundant Windows option wrapper is
+removed; the existing UTF-16 conversion helper remains. The extended runtime
+probe passes both collection modes and leak controls (2.36 s); harness metadata
+passes (3.72 s). The original console run has passed Linux AMD64/ARM64 and ARM
+macOS; Intel macOS is still running. The environment addition requires its own
+updated four-host run and final production coverage.
 
 ## Delivery order
 
