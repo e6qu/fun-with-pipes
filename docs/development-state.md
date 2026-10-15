@@ -122,6 +122,12 @@ The derivative comparison now balances eight process samples and adds a
 The baseline identity case showed timing variation even with zero metadata
 allocation requests; that variation is not evidence of a metadata-layout cost.
 
+Published the fixture/signature correction and measurement work at `f42d6226`.
+[Run 38771808755](https://github.com/e6qu/fun-with-pipes/actions/runs/38771808755)
+now runs the corrected arithmetic comparison and ownership/performance evidence
+on Linux/macOS ARM64/AMD64. Results are pending. The branch is a draft and has
+not run the full final-commit production gate.
+
 Focused local checks, all through `python3 scripts/local-guard.py`:
 
 - `python3 /private/tmp/fwp-infix-local.py`: standalone lexer/parser/formatter
@@ -144,10 +150,9 @@ not exist; the corrected probe used `fwp run --interp` with a temporary file.
 
 ## Next action
 
-Next: dispatch the four-host `performance` suite at the fixed branch head. It
-now includes the arithmetic interpreter/native test, so this reruns the failed
-control while collecting the remaining evidence without a separate compiler
-build. Fix any failures. Review operation counts and generated instructions;
+Next: inspect four-host run `38771808755`, fix any failures, and retain its
+reports with source provenance. It includes the corrected arithmetic comparison
+alongside ownership and performance controls. Review operation counts and generated instructions;
 do not compare old and new timing methods as an isolated optimization speedup.
 The current baseline confirms the old cleanup cost, but a controlled same-method
 before/after timing comparison and ARC-specific timings are still needed.
