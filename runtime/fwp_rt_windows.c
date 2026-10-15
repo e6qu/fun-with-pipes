@@ -91,11 +91,6 @@ static int fwp_win_env_text(const char *name, size_t length, V *out) {
     free(value);
     return 1;
 }
-static V fwp_win_env_get(V name) {
-    V value;
-    return fwp_win_env_text(STR(name)->d, STR(name)->len, &value) ? fwp_some(value) : FWP_NONE;
-}
-
 /* argv is one owned allocation, with UTF-8 strings following its pointers. */
 static char **fwp_win_arguments(int *count) {
     wchar_t **wide = CommandLineToArgvW(GetCommandLineW(), count);

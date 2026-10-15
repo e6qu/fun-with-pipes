@@ -113,6 +113,21 @@ Recursion that would require infinitely many type specializations is rejected.
 Effect variables can be generalized without an explicit signature because effects
 are checked and erased before code generation.
 
+## Borrowing array data inside loops
+
+An array slice can store a pointer into another array rather than copying its
+numbers. Reading it normally selects between that pointer and an ordinary
+array's inline data. For a flat F64 array parameter passed unchanged through
+every `Again` state, the compiler can select the data address once before the
+loop. It still checks each index and keeps the array's existing owner alive.
+Loops that replace their input array do not satisfy this proof. Narrow packed
+and wider boxed element types retain their existing access rules.
+
+This removes repeated representation checks without changing evaluation order,
+adding a retain or changing floating-point operations. It does not assume that
+all array loops are invariant. The [handoff](development-state.md) records
+current compiler validation and performance evidence for this new change.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C

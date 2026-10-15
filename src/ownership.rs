@@ -276,8 +276,14 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "string.slice" | "bytes.slice" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "join" | "format" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
         "show" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "dir.create-all" | "dir.create" | "dir.remove" | "file.remove" | "file.exists"
+        | "file.is-dir" => (&[B], R, None, &[]),
+        "file.rename" | "file.append" | "file.write-bytes" => (&[B, B], R, None, &[]),
+        "file.read-bytes" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "file.info" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "lines" | "read-line" | "read-lines" | "read-all" | "args" | "env.get" | "env.vars"
+        | "dir.list" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "string.chars"
-        | "lines"
         | "words"
         | "string.codepoints"
         | "string.from-codepoints"
@@ -422,6 +428,10 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "zip" => (&[B, B], ResultOwnership::CopiedStructure, None, &[0, 1]),
         "unzip" => (&[B], ResultOwnership::CopiedStructure, None, &[0]),
         "chunks" => (&[B, B], ResultOwnership::CopiedStructure, None, &[1]),
+        "linalg.lu-solve" | "linalg.qr" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "linalg.inverse" | "linalg.cholesky" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
+        "linalg.det" => (&[B, B], ResultOwnership::Numeric, None, &[]),
+        "linalg.cg" => (&[B, B, B, B, B], ResultOwnership::OwnedTree, None, &[]),
         "list.transpose" => (&[B], ResultOwnership::CopiedStructure, None, &[0]),
         "nth" => (&[B, B], ResultOwnership::FreshOuter, None, &[1]),
         "index-of" => (&[B, B], ResultOwnership::FreshOuter, None, &[]),

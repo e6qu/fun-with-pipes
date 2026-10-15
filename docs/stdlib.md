@@ -677,6 +677,9 @@ ewrite : String -> () ! {IO}
 read-line : () -> Option[String] ! {IO}
 read-all : () -> String ! {IO}
 read-lines : () -> List[String] ! {IO}
+
+# Look up a name and copy its value. A name containing a zero byte (`\0`)
+# is invalid and returns None, like a missing name.
 env.get : String -> Option[String] ! {IO}
 
 # All environment variables, sorted by name.
@@ -710,7 +713,10 @@ duration.from-millis : I64 -> Duration
 Files, directories and paths. Paths are strings with `/` separators;
 the `path.*` functions only compute with them and touch no file.
 Failures are `IoError`s whose message names the path, as in
-`missing.txt: No such file or directory`.
+`missing.txt: No such file or directory`. A zero byte cannot occur in an OS
+path: operations reject it with `path contains a NUL character` before any
+access; `file.exists` and `file.is-dir` return False. For example,
+`"notes.txt\0suffix"` never names or modifies `"notes.txt"`.
 
 A path names a location; a directory contains named entries. Path helpers
 only manipulate strings, while file operations declare FileIO and can fail
@@ -726,6 +732,8 @@ file.exists : String -> Bool ! {FileIO}
 file.is-dir : String -> Bool ! {FileIO}
 
 # Size, modification time (since the Unix epoch) and kind of a file.
+# Modification times before the epoch are reported as zero. Nanoseconds use
+# the existing I64 representation: wider timestamps keep their low 64 bits.
 file.info : String -> FileInfo ! {FileIO, Error[IoError]}
 file.remove : String -> () ! {FileIO, Error[IoError]}
 
@@ -2479,8 +2487,8 @@ hessian : (List[Dual[Dual[t]]] -> Dual[Dual[t]]) -> List[t] -> List[List[t]] whe
 Rev[T] = { value: T, vertex: I64 }
 
 # The scalar protocol selects its tape representation at specialization time.
-# Primitive floats retain F64 adjoint accumulation. Nested Rev scalars retain
-# typed weights and evaluate their backward arithmetic on the enclosing tape.
+# F16/BF16/F32/F64 retain F64 accumulation; F128 uses typed F128 weights.
+# Nested Rev scalars evaluate backward arithmetic on the enclosing tape.
 trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
     rev._seed : List[T] -> (I64, List[Rev[T]])
     rev._push : (I64, T, I64, T) -> I64

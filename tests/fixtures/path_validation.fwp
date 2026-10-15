@@ -1,0 +1,17 @@
+# The test harness creates these prefixes and verifies that they never change.
+main = [
+    [file.exists "user-data.txt\0suffix", file.is-dir "empty\0suffix"] | echo,
+    "user-data.txt\0suffix" | attempt (file.read | ignore) | echo,
+    "user-data.txt\0suffix" | attempt (file.read-bytes | ignore) | echo,
+    "replacement" | attempt (file.write-new "user-data.txt\0suffix") | echo,
+    "replacement" | attempt (file.append "user-data.txt\0suffix") | echo,
+    bytes.from-list [1u8] | attempt (file.write-bytes "user-data.txt\0suffix") | echo,
+    "user-data.txt\0suffix" | attempt (file.info | ignore) | echo,
+    "user-data.txt\0suffix" | attempt file.remove | echo,
+    "user-data.txt\0suffix" | attempt (file.rename "destination.txt") | echo,
+    "user-data.txt" | attempt (file.rename "destination.txt\0suffix") | echo,
+    "empty\0suffix" | attempt (dir.list | ignore) | echo,
+    "new\0suffix" | attempt dir.create | echo,
+    "new/child\0suffix" | attempt dir.create-all | echo,
+    "empty\0suffix" | attempt dir.remove | echo,
+] | ignore

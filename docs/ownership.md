@@ -10,6 +10,14 @@ This guide states the implemented memory contract. The [primitive tables](primit
 give per-operation details, [benchmarks](benchmarks.md) distinguish memory savings
 from speed, and [delivery history](roadmap-history.md) records accepted tests.
 
+Caught I/O errors must own their kind string, message string and record just like
+ordinary returned values. Error construction now protects each completed string
+while allocating the next field and transfers the completed record to the handler.
+A previous runtime path left all three counts at zero and retained 64 charged bytes
+per small caught error when tracing was disabled. Repeated-catch and injected
+allocation-failure probes cover this repair; final runner acceptance is tracked
+in the [handoff](development-state.md).
+
 ## Direction
 
 The [project plan](../PLAN.md#memory-direction) targets removal of tracing GC,
@@ -271,6 +279,44 @@ partial column and completed columns. This closes the ownership gap in the
 general matrix multiplication path as well as direct `list.transpose` calls.
 The original input is unchanged, and ragged rows still stop at the shortest row.
 
+Console input, process arguments and environment lookups have explicit
+copied-result ownership.
+`read-all` owns its input buffer until conversion to a string completes;
+`read-line` protects that string while constructing `Some`. `read-lines` releases
+the complete input string after copying its lines. `lines` and `args` protect
+partial lists and pending strings during construction. No returned value borrows
+standard-input buffers or the process argument array. Invalid UTF-8 replacement,
+CRLF handling and end-of-input behavior remain unchanged. Environment lookups
+copy the value before the process setting can change; embedded zero bytes in a
+name return `None`, matching the interpreter instead of looking up a prefix.
+Directory and environment snapshots now own their copied strings, pairs and list
+nodes through the existing protected list builder. Scratch buffers, partially
+constructed results and operating-system directory/environment handles are released
+on success and failure. Recursive directory creation releases its temporary path
+buffer. These three contracts pass focused tests on all six native targets; the
+combined delivery still needs its final production gate.
+
+File-value runtime changes own metadata records and their duration fields,
+protecting the duration if record construction fails. Byte reads reuse the same
+buffer/stream cleanup as text reads and return a fresh leaf. Existence checks,
+rename/remove, ordinary directory creation and append/byte writes borrow their
+arguments. Focused tests check repeated storage release and error preservation;
+the initial six-platform checks pass. The later directory-error and composed
+application regressions still require final acceptance, tracked in the handoff.
+
+Current-directory lookup and other unreviewed IO primitives
+remain outside checked ARC.
+
+The six dense F64 linear-algebra primitives borrow their input arrays and return
+independently owned results. Scratch pointers and partially constructed output
+arrays are tracked in one stack record. Normal completion, singular-result exits
+and unwinding release scratch explicitly; outputs transfer to the returned value
+only after its container exists. No input retain or hidden managed workspace
+owner is needed. QR checks its square output size separately from input shape.
+See [numerical storage costs](numerics.md#dense-f64-solvers) and the
+[handoff](development-state.md) for validation status. Native arithmetic and
+iteration order are unchanged.
+
 Scoped C calls can borrow strings/bytes and copy supported scalar/record values.
 Synchronous callbacks must run on the calling task before C returns; C must copy
 borrowed data before keeping it. Foreign strings are copied into owned fwp values.
@@ -282,8 +328,9 @@ extend the old handler's lifetime, though it can run under a new one. The checke
 tracks callback targets, captures and stored values; unknown targets are rejected.
 
 Derivative calls likewise need a proved scope. A returned token cannot keep a
-tape alive, and stale/mixed/cross-task tokens trap. Nested tapes own typed weights
-and remain protected while backward callbacks record into an outer tape. Scope
+tape alive, and stale/mixed/cross-task tokens trap. F128 and nested tapes own
+typed weights. Nested tapes remain protected while backward callbacks record
+into an outer tape. Scope
 exit, failure, cancellation and library teardown release those owners. Numeric
 workspace reuse is bounded and counted separately from returned gradient arrays.
 

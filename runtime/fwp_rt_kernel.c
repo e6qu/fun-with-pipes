@@ -3,8 +3,9 @@
  * interpreter has the same in src/numerics.rs, with the same operation
  * order, so results agree bit for bit.
  *
- * Base-float tapes hold numeric parents and partial derivatives in malloc'ed
- * buffers. Nested tapes own typed weights and callbacks in scanned runtime
+ * F16/BF16/F32/F64 tapes hold numeric parents and F64 partial derivatives in
+ * malloc'ed buffers. F128 and nested tapes own typed weights and callbacks in
+ * scanned runtime
  * storage, and execute adjoint operations on enclosing tapes. A reverse-mode
  * value refers to its node as
  * (tape id << 32) | index, constants as -1; a tape id is
@@ -21,7 +22,7 @@
 
 /* ------------------------------------------------------------------ tapes */
 
-/* Nested reverse weights are language values. Keep them in scanned mutable
+/* F128 and nested reverse weights are language values. Keep them in scanned mutable
  * storage with explicit typed owners, rooted independently of the reallocable
  * numeric registry. Detached backward passes stay on this list across reentry. */
 typedef struct fwp_owned_tape {

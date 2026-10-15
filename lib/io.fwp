@@ -13,6 +13,8 @@ foreign "fwp" ewrite : String -> () ! {IO}
 foreign "fwp" read-line : () -> Option[String] ! {IO}
 foreign "fwp" read-all : () -> String ! {IO}
 foreign "fwp" read-lines : () -> List[String] ! {IO}
+# Look up a name and copy its value. A name containing a zero byte (`\0`)
+# is invalid and returns None, like a missing name.
 foreign "fwp" env.get : String -> Option[String] ! {IO}
 # All environment variables, sorted by name.
 foreign "fwp" env.vars : () -> List[(String, String)] ! {IO}
