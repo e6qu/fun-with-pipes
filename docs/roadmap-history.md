@@ -10,6 +10,21 @@ working documentation. Original records remain in the
 
 ## Accepted deliveries
 
+PR #139 completed geometric AD registry growth and numeric workspace preservation
+as `5d05cdd6ebcfc137d4495b8fa48fc4c7d36c9f8c`, tree-identical to tested head
+`917d28a339e73efff9bf7a2d3c0e11da561f3267`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38690176314),
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38690140952),
+[four-host AD/evidence](https://github.com/e6qu/fun-with-pipes/actions/runs/38686797678)
+and [both focused WASM jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38686804116)
+passed. Focused evidence used the unchanged compiler/runtime at `957ba0cd`.
+[Measurements](measurements/ad-registry-2026-10-15.json) record fewer allocations,
+spare-capacity costs, full reclamation and actual native instructions without a
+general speedup claim. The squash message was one line with no body or trailers.
+Duplicate main CI `38701521745` was cancelled after its tree was verified equal
+to the accepted PR head; it supplies no additional gate. Main documentation
+`38701521545` passed.
+
 | Delivery | Evidence |
 |---|---|
 | Native macOS | [PR #74](https://github.com/e6qu/fun-with-pipes/pull/74), ARM/Intel native and interpreter gates |

@@ -87,7 +87,27 @@ thread_local! {
     static OWNED_TAPES: RefCell<BTreeMap<i64, OwnedTape>> = const { RefCell::new(BTreeMap::new()) };
 }
 
-static TAPES: Mutex<Vec<Tape>> = Mutex::new(Vec::new());
+struct TapeRegistry {
+    slots: Vec<Tape>,
+    // Every earlier slot is live or permanently generation-exhausted.
+    next_slot: usize,
+}
+
+impl TapeRegistry {
+    fn take(&mut self, slot: usize) -> Tape {
+        let tape = std::mem::take(&mut self.slots[slot]);
+        self.slots[slot].gen = tape.gen;
+        if tape.gen < 32767 {
+            self.next_slot = self.next_slot.min(slot);
+        }
+        tape
+    }
+}
+
+static TAPES: Mutex<TapeRegistry> = Mutex::new(TapeRegistry {
+    slots: Vec::new(),
+    next_slot: 0,
+});
 
 const TAPE_WORKSPACE_BUDGET: usize = 512 * 1024;
 static TAPE_WORKSPACE: Mutex<Option<Tape>> = Mutex::new(None);
@@ -170,9 +190,8 @@ impl Drop for TapeScope {
         let mut tapes = TAPES.lock().unwrap();
         for base in owned {
             OWNED_TAPES.with(|owners| owners.borrow_mut().remove(&(base >> 32)));
-            if let Ok(slot) = slot_of(&tapes, base >> 32) {
-                let tape = std::mem::take(&mut tapes[slot]);
-                tapes[slot].gen = tape.gen;
+            if let Ok(slot) = slot_of(&tapes.slots, base >> 32) {
+                let tape = tapes.take(slot);
                 recycle_workspace(tape);
             }
         }
@@ -228,17 +247,23 @@ fn tape_new(n: i64, owned: bool) -> R<i64> {
         return trap("autodiff: too many inputs");
     }
     let mut tapes = TAPES.lock().unwrap();
-    let slot = match tapes.iter().position(|t| !t.live && t.gen < 32767) {
-        Some(s) => s,
+    let slot = match tapes
+        .slots
+        .iter()
+        .enumerate()
+        .skip(tapes.next_slot)
+        .find(|(_, t)| !t.live && t.gen < 32767)
+    {
+        Some((s, _)) => s,
         None => {
-            if tapes.len() >= 0xffff {
+            if tapes.slots.len() >= 0xffff {
                 return trap("autodiff: too many grad computations at once");
             }
-            tapes.push(Tape::default());
-            tapes.len() - 1
+            tapes.slots.push(Tape::default());
+            tapes.slots.len() - 1
         }
     };
-    let gen = tapes[slot].gen + 1;
+    let gen = tapes.slots[slot].gen + 1;
     let mut workspace = if !owned && workspace_enabled() {
         TAPE_WORKSPACE.lock().unwrap().take().unwrap_or_default()
     } else {
@@ -248,8 +273,9 @@ fn tape_new(n: i64, owned: bool) -> R<i64> {
     workspace.gen = gen;
     workspace.live = true;
     workspace.leaves = n as usize;
-    tapes[slot] = workspace;
-    let t = &tapes[slot];
+    tapes.slots[slot] = workspace;
+    tapes.next_slot = slot + 1;
+    let t = &tapes.slots[slot];
     let id = ((t.gen as i64) << 16) | (slot as i64 + 1);
     let base = id << 32;
     TAPE_SCOPES.with(|scopes| {
@@ -276,8 +302,8 @@ fn push(ra: i64, da: f64, rb: i64, db: f64) -> R<i64> {
     };
     let id = ra >> 32;
     let mut tapes = TAPES.lock().unwrap();
-    let slot = slot_of(&tapes, id)?;
-    let t = &mut tapes[slot];
+    let slot = slot_of(&tapes.slots, id)?;
+    let t = &mut tapes.slots[slot];
     if t.owned {
         return trap(REPRESENTATION);
     }
@@ -305,12 +331,11 @@ fn push(ra: i64, da: f64, rb: i64, db: f64) -> R<i64> {
 fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
     let id = base >> 32;
     let mut tapes = TAPES.lock().unwrap();
-    let slot = slot_of(&tapes, id)?;
-    if tapes[slot].owned {
+    let slot = slot_of(&tapes.slots, id)?;
+    if tapes.slots[slot].owned {
         return trap(REPRESENTATION);
     }
-    let t = std::mem::take(&mut tapes[slot]);
-    tapes[slot].gen = t.gen;
+    let t = tapes.take(slot);
     drop(tapes);
     forget_scoped_tape(id);
     let mut owner = TapeOwner(t);
@@ -410,8 +435,8 @@ pub(crate) fn push_owned(value: &Value) -> R<Value> {
     }
     let id = (if ra >= 0 { ra } else { rb }) >> 32;
     let mut tapes = TAPES.lock().unwrap();
-    let slot = slot_of(&tapes, id)?;
-    let t = &mut tapes[slot];
+    let slot = slot_of(&tapes.slots, id)?;
+    let t = &mut tapes.slots[slot];
     if !t.owned {
         return trap(REPRESENTATION);
     }
@@ -458,8 +483,8 @@ pub(crate) fn backward_owned(
 ) -> R<Value> {
     let id = int(base) >> 32;
     let mut tapes = TAPES.lock().unwrap();
-    let slot = slot_of(&tapes, id)?;
-    if !tapes[slot].owned {
+    let slot = slot_of(&tapes.slots, id)?;
+    if !tapes.slots[slot].owned {
         return trap(REPRESENTATION);
     }
     let Some(owner) = OWNED_TAPES.with(|owners| {
@@ -475,8 +500,7 @@ pub(crate) fn backward_owned(
     }) else {
         return trap("autodiff: managed tape belongs to another task");
     };
-    let t = std::mem::take(&mut tapes[slot]);
-    tapes[slot].gen = t.gen;
+    let t = tapes.take(slot);
     drop(tapes);
     forget_scoped_tape(id);
     // Detached Rust owners survive reentrant callbacks and drop on every error.
@@ -1279,6 +1303,64 @@ mod tape_validation_tests {
     }
 
     #[test]
+    fn registry_cursor_preserves_lowest_slot_reuse_and_failed_backward() {
+        let _serial = TAPE_TEST_LOCK.lock().unwrap();
+        let slot = |base: i64| ((base >> 32) & 0xffff) as usize - 1;
+        with_tape_scope(|| {
+            let mut bases = Vec::new();
+            for _ in 0..257 {
+                let expected = {
+                    let tapes = TAPES.lock().unwrap();
+                    assert!(tapes.slots[..tapes.next_slot]
+                        .iter()
+                        .all(|t| t.live || t.gen >= 32767));
+                    tapes
+                        .slots
+                        .iter()
+                        .position(|t| !t.live && t.gen < 32767)
+                        .unwrap_or(tapes.slots.len())
+                };
+                let base = tape_new(0, false)?;
+                assert_eq!(slot(base), expected);
+                assert_eq!(TAPES.lock().unwrap().next_slot, expected + 1);
+                bases.push(base);
+            }
+            backward(bases[200], &[], &[])?;
+            backward(bases[4], &[], &[])?;
+            let low = tape_new(0, false)?;
+            let high = tape_new(0, false)?;
+            assert_eq!(slot(low), slot(bases[4]));
+            assert_eq!(slot(high), slot(bases[200]));
+            assert_eq!(low >> 48, (bases[4] >> 48) + 1);
+            expect_trap(backward(low, &[low], &[1.0]), INVALID_NODE);
+            expect_trap(backward(low, &[], &[]), USED_OUTSIDE);
+            assert_eq!(slot(tape_new(0, false)?), slot(low));
+            let parameters = Value::tuple(vec![Value::F64(0.0); 4]);
+            let empty = Value::list(vec![]);
+            let managed = tape_owned(&parameters, &empty)?;
+            let index = slot(int(&managed));
+            backward_owned(&managed, &empty, &empty, |_, _| {
+                panic!("empty backward must not call scalar operations")
+            })?;
+            assert_eq!(slot(tape_new(0, false)?), index);
+            Ok(())
+        })
+        .unwrap();
+        let tapes = TAPES.lock().unwrap();
+        assert!(tapes.slots[..tapes.next_slot]
+            .iter()
+            .all(|t| t.live || t.gen >= 32767));
+        assert_eq!(
+            tapes.next_slot,
+            tapes
+                .slots
+                .iter()
+                .position(|t| !t.live && t.gen < 32767)
+                .unwrap_or(tapes.slots.len())
+        );
+    }
+
+    #[test]
     fn managed_and_empty_tapes_preserve_the_numeric_workspace() {
         let _serial = TAPE_TEST_LOCK.lock().unwrap();
         *TAPE_WORKSPACE.lock().unwrap() = None;
@@ -1293,7 +1375,7 @@ mod tape_validation_tests {
             let inputs = Value::list(vec![Value::F64(1.0)]);
             let base = int(&tape_owned(&parameters, &inputs)?);
             let tapes = TAPES.lock().unwrap();
-            let managed = &tapes[slot_of(&tapes, base >> 32)?];
+            let managed = &tapes.slots[slot_of(&tapes.slots, base >> 32)?];
             assert!(managed.owned);
             assert_eq!(managed.workspace_bytes(), 0);
             assert_eq!(
@@ -1313,7 +1395,9 @@ mod tape_validation_tests {
         {
             let tapes = TAPES.lock().unwrap();
             assert_eq!(
-                tapes[slot_of(&tapes, reused >> 32).unwrap()].pa.as_ptr(),
+                tapes.slots[slot_of(&tapes.slots, reused >> 32).unwrap()]
+                    .pa
+                    .as_ptr(),
                 pointer
             );
         }
@@ -1329,7 +1413,7 @@ mod tape_validation_tests {
             let base = tape_new(leaves, false).unwrap();
             {
                 let tapes = TAPES.lock().unwrap();
-                let tape = &tapes[slot_of(&tapes, base >> 32).unwrap()];
+                let tape = &tapes.slots[slot_of(&tapes.slots, base >> 32).unwrap()];
                 assert_eq!(tape.workspace_bytes(), 0);
                 assert!(tape.pa.is_empty() && tape.pb.is_empty());
             }
@@ -1339,7 +1423,7 @@ mod tape_validation_tests {
             assert_eq!(last, base + leaves + 1);
             {
                 let tapes = TAPES.lock().unwrap();
-                let tape = &tapes[slot_of(&tapes, base >> 32).unwrap()];
+                let tape = &tapes.slots[slot_of(&tapes.slots, base >> 32).unwrap()];
                 assert_eq!(tape.pa, [0, leaves as i32]);
                 assert_eq!(tape.pb, [leaves as i32 - 1, -1]);
                 assert!(tape.workspace_bytes() <= 64 * 24);
@@ -1458,7 +1542,7 @@ mod tape_validation_tests {
 
         // Exhaust a generation without resetting its identity to an old token.
         let slot = ((base >> 32) & 0xffff) as usize - 1;
-        TAPES.lock().unwrap()[slot].gen = 32766;
+        TAPES.lock().unwrap().slots[slot].gen = 32766;
         let last = tape_new(0, false).unwrap();
         assert_eq!((last >> 32) & 0xffff, (base >> 32) & 0xffff);
         assert_eq!(last >> 48, 32767);
@@ -1530,7 +1614,7 @@ mod tape_validation_tests {
         let slot = ((second >> 32) & 0xffff) as usize - 1;
         {
             let tapes = TAPES.lock().unwrap();
-            let t = &tapes[slot];
+            let t = &tapes.slots[slot];
             assert_eq!(
                 (
                     t.pa.as_ptr(),

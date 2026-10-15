@@ -33,6 +33,7 @@ int main(void) {
     V base = fwp_p_ad_tape(0);
     V result = fwp_rc_fresh(fwp_p_ad_backward(base, empty, empty));
     if (ARR(result)->len || registry_adj_requests) return 202;
+    if (fwp_tape_next_slot != 0) return 206;
     fwp_rc_free_arr(result);
     /* Create the empty tape before another tape fills the shared cache. */
     base = fwp_p_ad_tape(0);
@@ -48,10 +49,18 @@ int main(void) {
     if (ARR(result)->len || registry_adj_requests != adj_requests ||
         fwp_tape_workspace.adj != cached || fwp_tape_cached_bytes != cached_bytes) return 204;
     fwp_rc_free_arr(result); fwp_rc_free_arr(empty); fwp_rc_free_arr(outputs); fwp_rc_free_arr(seeds);
+    /* Managed backward releases its slot before any user scalar callback. */
+    static const fwp_desc element = {.kind=K_I64};
+    static const fwp_desc list_type = {.elem=&element};
+    V parameters = fwp_rc_fresh(fwp_record(4, (V[4]){0,0,0,0}));
+    base = fwp_p_ad_tape_owned(parameters, 0, &element);
+    if (fwp_p_ad_backward_owned(base, 0, 0, &list_type) || fwp_tape_next_slot != 0) return 207;
+    fwp_rc_free_obj(parameters);
     fwp_cleanup_pop(&cleanup); fwp_tape_scope_release(&scope);
     fwp_tape_finish();
-    if (fwp_ntapes || fwp_tapes_cap || fwp_tapes || registry_bytes) return 196;
+    if (fwp_ntapes || fwp_tapes_cap || fwp_tapes || registry_bytes || fwp_tape_next_slot) return 196;
     registry_requests = 0;
+    registry_scans = 0;
     scope.head = -1;
     fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);
     for (int i = 0; i < 257; i++) {
@@ -62,15 +71,22 @@ int main(void) {
         if (fwp_ntapes != i + 1 || fwp_tapes_cap < fwp_ntapes || fwp_tapes_cap >= 2 * fwp_ntapes) return 192;
     }
     if (registry_requests != 10 || fwp_tapes_cap != 512) return 193;
+    if (registry_scans) return 205;
+    /* Release holes out of order: selection must still choose the lowest. */
+    fwp_tape_unlink_scope(&fwp_tapes[200]);
+    fwp_tape_retire(&fwp_tapes[200]);
     fwp_tape_unlink_scope(&fwp_tapes[4]);
     fwp_tape_retire(&fwp_tapes[4]);
     int64_t reused = (int64_t)fwp_p_ad_tape(0) >> 32;
     if ((reused & 0xffff) != 5 || (reused >> 16) != 2 || registry_requests != 10) return 194;
+    reused = (int64_t)fwp_p_ad_tape(0) >> 32;
+    if ((reused & 0xffff) != 201 || (reused >> 16) != 2) return 194;
+    if (registry_scans != 195) return 205;
     fwp_cleanup_pop(&cleanup);
     fwp_tape_scope_release(&scope);
     for (int i = 0; i < 257; i++) if (fwp_tapes[i].live || fwp_tapes[i].scope) return 195;
     fwp_tape_finish();
-    if (fwp_ntapes || fwp_tapes_cap || fwp_tapes || registry_bytes) return 196;
+    if (fwp_ntapes || fwp_tapes_cap || fwp_tapes || registry_bytes || fwp_tape_next_slot) return 196;
 
     /* Exercise the real doubling clamp and token exhaustion with a small
      * bounded registry, without quadratic creation of 65,535 live tapes. */
@@ -92,7 +108,7 @@ int main(void) {
     fwp_trap_recover = 0; fwp_trap_jb = 0; fwp_trap_cleanup = 0;
     fwp_cleanup_pop(&cleanup); fwp_tape_scope_release(&scope);
     fwp_tape_finish();
-    if (registry_bytes || fwp_tapes_cap || fwp_ntapes || fwp_tapes) return 196;
+    if (registry_bytes || fwp_tapes_cap || fwp_ntapes || fwp_tapes || fwp_tape_next_slot) return 196;
     puts("bounded registry growth preserves tokens, relocation and scope release");
     return 0;
 }

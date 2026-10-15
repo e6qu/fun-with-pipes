@@ -117,8 +117,9 @@ managed storage remains 294,920 bytes, with 36,867 managed requests and no retai
 Managed counters agree across both variants at every size. All final tape/managed
 storage is reclaimed with zero collections.
 
-Spare capacity adds 26,520 live bytes in the 257-tape case. First-free-slot search
-remains linear; this change reduces allocation requests, not search complexity.
+Spare capacity adds 26,520 live bytes in the 257-tape case. This accepted report
+predates the search-cursor follow-up and measures allocation requests, not a
+reduction in slot-search work.
 Seven process samples per case include startup and output and vary across sizes
 and hosts, so no general speedup is claimed. The control isolates registry growth
 policy and does not reproduce every cost of the previous compiler revision.
@@ -132,6 +133,62 @@ tapes preserve numeric workspace ownership. Those cache fixes have regression
 evidence rather than a timing claim. The report records hardware/compiler/flags,
 raw samples, verified archive/source/binary/disassembly hashes and inspection
 addresses. [The handoff](development-state.md) records final production acceptance.
+
+## Autodiff registry search
+
+[Four-host measurements](measurements/ad-search-2026-10-15.json) compare equivalent
+ARC gradient batches with a search cursor and a control that starts each search
+at zero. All native Linux/macOS hosts report the same unavailable-slot visits:
+
+| Simultaneously recorded tapes | Restart control | Cursor |
+|---|---:|---:|
+| 1 | 0 | 0 |
+| 257 | 32,896 | 0 |
+| 4,096 | 8,386,560 | 0 |
+| 16,384 | 134,209,536 | 0 |
+
+The counter measures visits to unavailable slots, not all instructions or bound
+checks. Sequential creation avoids rescanning the occupied prefix; arbitrary
+holes can still require linear search. Lowest-slot selection and exhausted
+generations retain their existing behavior. The native cursor adds eight static
+bytes and no heap allocation.
+
+Allocation and live-memory counters are identical between paired variants. At
+16,384 tapes, both make 15 registry requests, 16,399 total native tape requests
+and 147,459 managed requests. Peak native tape storage is 1,703,944 bytes,
+including the 1,703,936-byte registry; peak charged managed storage is 1,179,656
+bytes. These are separate peaks, not a combined simultaneous peak. All measured
+storage is reclaimed with zero collections. Allocator metadata and transient
+realloc copies are outside these counters.
+
+Seven process samples include startup and output. Median elapsed milliseconds
+for the 16,384-tape case are:
+
+| Host | Restart control | Cursor |
+|---|---:|---:|
+| Linux AMD64 | 164.802 | 10.681 |
+| Linux ARM64 | 166.837 | 8.686 |
+| macOS ARM64 | 144.215 | 12.551 |
+| macOS Intel | 197.902 | 24.284 |
+
+Small cases are not consistently faster; these results do not establish a
+general speedup. The control changes only the search start, retaining the cursor
+maintenance and other current runtime behavior. Interpreter changes have
+unit/semantic evidence, not a timing claim. Hardware, compiler, flags, raw
+samples and every allocation counter are retained in the report.
+
+Actual uninstrumented instructions on all four hosts load the cursor before the
+search, bypass the loop at the initialized end, advance the cursor on creation,
+and lower it for a reusable released slot. Numeric backward uses the validated
+token's slot directly; the preliminary Apple ARM64 pointer-difference and
+reciprocal-multiply sequence is absent. Normal saved registers and stack frames
+remain. The report records instruction addresses, verified archive/source/binary/
+disassembly hashes and the boundary of managed-tape regression coverage.
+
+Reproduce on GitHub with `scripts/measure-ad-registry.py --comparison search
+--output OUTPUT`; `--comparison growth` retains the separate geometric-versus-
+incremental allocation comparison. [The handoff](development-state.md) records
+final production acceptance.
 
 ## Running comparisons
 

@@ -1,0 +1,2479 @@
+{
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38707923424",
+  "scope": "Four native Linux/macOS hosts, equivalent gradient batches and a restart-at-zero search control. All source, profile, binary and disassembly hashes verified against the retained archives. See individual reports for allocation, timing and complexity boundaries.",
+  "archives": [
+    {
+      "host": "linux-amd",
+      "sha256": "8fdc3bcfbfbe080127b59150f31078e403b5a6f9e9f4a3e79f7a9a6510792060",
+      "id": 11959786709,
+      "name": "autodiff-ubuntu-latest",
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38707923424/artifacts/11959786709"
+    },
+    {
+      "host": "linux-arm",
+      "sha256": "85ce46618cb81ad84caddfad119cc9c1616542110fada7f42208242c205e1afe",
+      "id": 11959372704,
+      "name": "autodiff-ubuntu-24.04-arm",
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38707923424/artifacts/11959372704"
+    },
+    {
+      "host": "mac-arm",
+      "sha256": "ad639526c283521b36ee5b3096116a76f9be8a808d0e165f4528accebe775ee9",
+      "id": 11959377797,
+      "name": "autodiff-macos-15",
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38707923424/artifacts/11959377797"
+    },
+    {
+      "host": "mac-intel",
+      "sha256": "921c6219740a1a700867bde107902f592338f660296c0e350f282607cbe65d05",
+      "id": 11959379027,
+      "name": "autodiff-macos-15-intel",
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38707923424/artifacts/11959379027"
+    }
+  ],
+  "reports": [
+    {
+      "head": "e0d073a789524761c09d888e65e330a8798a2b15",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervm8k3b6",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_AD_WORKSPACE": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "comparison": "search",
+      "results": {
+        "1": {
+          "cursor": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1688772,
+              1889555,
+              2366783,
+              1429799,
+              1603048,
+              1531293,
+              1557523
+            ],
+            "medianProcessWallNs": 1603048,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-cursor.c": "9bbd9711afeb9451f1d938fce9818bc09f72c1cb572d4219e67d9a3f3af07725",
+              "slots-1-cursor-profile.c": "3440f556ee4226f25537e0ab148dbb29fcc9c9bb9c996a8e0cfb1872b00f2b2d",
+              "slots-1-cursor": "121ae0bf7474c3f6c9996ada9e863039ae91b2a70f7852320808e0bc4966bac2",
+              "slots-1-cursor-profile": "d8e1b77b4d268c952bcab590b124639c29574ae35a2932ee65220ebb0f2a340d",
+              "slots-1-cursor.asm": "ff1b191bf1819dbaaf05d15903001f589abee1a8a6ff3957f4516e5be4b4a4d6"
+            }
+          },
+          "restart-control": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1602193,
+              1965350,
+              2011482,
+              1700443,
+              1843446,
+              1534352,
+              1639732
+            ],
+            "medianProcessWallNs": 1700443,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-restart-control.c": "1f97197e182117c6765eb07379c376d90a2a3fdc81a635b5dfee9319424977e9",
+              "slots-1-restart-control-profile.c": "8d661b355a3d7a68dbf25c093e857415dde9660d93e4071f17eb43b60543b310",
+              "slots-1-restart-control": "da9d3fd1e0929ea2c7bf9e7dcb88fbecd5210942a4a62be6f0fbb884ad56900b",
+              "slots-1-restart-control-profile": "b3d50985bea97a60c188409b86d7e6009bfe4cc3f391304453788aace515f976",
+              "slots-1-restart-control.asm": "7d994e2d8efbbba47710a4d79a8f69d743f2698da19e98dcba4f0638c8f30358"
+            }
+          }
+        },
+        "257": {
+          "cursor": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1732628,
+              2093481,
+              1960723,
+              1819689,
+              1929356,
+              1765307,
+              1702940
+            ],
+            "medianProcessWallNs": 1819689,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-cursor.c": "c9f79a5741c61011cc475c6dc42844b4ab138bac10a815e7d51180e54f576d9b",
+              "slots-257-cursor-profile.c": "80d38b580d7586b696b89d16abea4605112d706389842b371de05115da0f1222",
+              "slots-257-cursor": "74d4b316abbd5a668c6f64027d06e7eeae88b0de16d91c563a0558d5f0a943dc",
+              "slots-257-cursor-profile": "6226fc50dcbedad4a3c9d1a4e796f47e8224ce8844dfa5633528179f63d04202",
+              "slots-257-cursor.asm": "3c590009b92e84a5c6d5f1d05c6179be2731b7ef3a61dffe3c767966f358a781"
+            }
+          },
+          "restart-control": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512,
+              "unavailableSlotsScanned": 32896,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1560373,
+              1833145,
+              1840809,
+              1969472,
+              2086735,
+              1669457,
+              1769395
+            ],
+            "medianProcessWallNs": 1833145,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-restart-control.c": "b5c5c366483e8bd0d22152617ae88ae0d1bed3b742ddd5bfffce781f480149f1",
+              "slots-257-restart-control-profile.c": "7508b73b78e31fa00cb3affd4e294ac7c2d4f374f303aa30cd6f9e0bd355e2a6",
+              "slots-257-restart-control": "5b7b3d5aebf5ce5389bcb8ed0e4363db1a06928957a11c40a2366a5c3886e730",
+              "slots-257-restart-control-profile": "255a6cf36d762a1f7ace0ba45e95356cdf30127f79df735f6cabd52b973df963",
+              "slots-257-restart-control.asm": "70633b360963d01d7d5c7f4ad981e323dd38ff67ca9fde33672d41122466e6af"
+            }
+          }
+        },
+        "4096": {
+          "cursor": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              4063827,
+              4129234,
+              4252656,
+              3893164,
+              5837689,
+              4005253,
+              4630595
+            ],
+            "medianProcessWallNs": 4129234,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-cursor.c": "c9ddecc4bc8b5c732d1ab977e5ef9d9fdd3975b3647449cc50a866c00ac44163",
+              "slots-4096-cursor-profile.c": "a3a2e43ee43e589f24e62256d35e8f69c48ddb4bff317cea05589ea3c7e81e18",
+              "slots-4096-cursor": "4c3cac9badc2e3d3ef884817bf7645d4288a87e5d25eb8bddd99bbcfe3364508",
+              "slots-4096-cursor-profile": "d780c45f608854a32dbfac19869b9fad42cacb0fb01a5bab3c884a0584d9ca4a",
+              "slots-4096-cursor.asm": "b66bf3016c14750add5727a5fe4c3a5eba24c82c8f4485d6c6413e8d52bb3e6c"
+            }
+          },
+          "restart-control": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096,
+              "unavailableSlotsScanned": 8386560,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              16068948,
+              10071454,
+              15844430,
+              11748769,
+              11662017,
+              10774855,
+              11944808
+            ],
+            "medianProcessWallNs": 11748769,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-restart-control.c": "cef6fa22a329ed2ad86a700c364071358ed81c2ef582bfbe30fb9c9a11076956",
+              "slots-4096-restart-control-profile.c": "79d269528f49ed44762b21edd233da090cf32bf761d9424c78c891d1658fdb44",
+              "slots-4096-restart-control": "e223afc17441f45a4ebdf405c3c53c240831095bb15cd08548a07e576e10b08d",
+              "slots-4096-restart-control-profile": "7ce124543a1e1e5d72af07698c74cf77e75db8f477a8cc3a2ff083651d4682d3",
+              "slots-4096-restart-control.asm": "81c8a3b22309cb2b5ebbb326bd2daf3abf1ede8e56746cb727890a8562cdf38b"
+            }
+          }
+        },
+        "16384": {
+          "cursor": {
+            "output": "16384.0\n",
+            "registry": {
+              "registryRequests": 15,
+              "registryRequestedBytes": 3407768,
+              "peakRegistryBytes": 1703936,
+              "slotBytes": 104,
+              "initializedSlots": 16384,
+              "capacitySlots": 16384,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 16399,
+              "tapeRequestedBytes": 3538840,
+              "peakTapeBytes": 1703944,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 147459,
+              "requestedBytes": 3407904,
+              "retains": 0,
+              "peakChargedBytes": 1179656,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              18049232,
+              10186813,
+              11140100,
+              17335183,
+              10060166,
+              10680779,
+              10627639
+            ],
+            "medianProcessWallNs": 10680779,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-16384.fwp": "f311f87e617222f25b5bc00f0ead52cb04affb3a3a7bb1f4eab3a7e45d2ac42e",
+              "slots-16384-cursor.c": "a02afee60f3aca4c0f507d97d4ebcbc8b3b66388affe10fb086c35cca5f4c067",
+              "slots-16384-cursor-profile.c": "ef3c27a60eb7e01d2698fcde95d00642163a801bba536372608e8938dc5f3a9c",
+              "slots-16384-cursor": "00b6aba33da4e7ffb766594a6a442f9750819df76552c2530f110278f9da7ff2",
+              "slots-16384-cursor-profile": "f62efc346214f9dd92f69d7e0a6a0cca716ea900ece0b24eecc7831c57b984a9",
+              "slots-16384-cursor.asm": "69ec9f13348f11918f073f0895ac730aa9c561254d141bcb71ce12f57d2b1799"
+            }
+          },
+          "restart-control": {
+            "output": "16384.0\n",
+            "registry": {
+              "registryRequests": 15,
+              "registryRequestedBytes": 3407768,
+              "peakRegistryBytes": 1703936,
+              "slotBytes": 104,
+              "initializedSlots": 16384,
+              "capacitySlots": 16384,
+              "unavailableSlotsScanned": 134209536,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 16399,
+              "tapeRequestedBytes": 3538840,
+              "peakTapeBytes": 1703944,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 147459,
+              "requestedBytes": 3407904,
+              "retains": 0,
+              "peakChargedBytes": 1179656,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              174478611,
+              165185760,
+              164802022,
+              165535114,
+              164395829,
+              164566051,
+              164731499
+            ],
+            "medianProcessWallNs": 164802022,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-16384.fwp": "f311f87e617222f25b5bc00f0ead52cb04affb3a3a7bb1f4eab3a7e45d2ac42e",
+              "slots-16384-restart-control.c": "356ea1acccd48b39c1af88c3fcad00b8f384472f00a30565eae82c566b98c5d9",
+              "slots-16384-restart-control-profile.c": "209a5100b5de834e26296c39f63c338ec444e46569fd07f04b3a547068c838db",
+              "slots-16384-restart-control": "e3ae1a773da9e9843de913ec2e09a1ca99ab03d12a52b07b6123e7fe63e38499",
+              "slots-16384-restart-control-profile": "516c0d7b8c31f2c13a19697393f4f19902dc10ce8f15eb345614045da2ec767f",
+              "slots-16384-restart-control.asm": "b2f35c3183b130a0cc111a5e9e1f4c028a000c416b5acc32b4df1fcabb2e237b"
+            }
+          }
+        }
+      },
+      "scope": "ARC, cold numeric registry, actual equivalent gradients. Growth control restores one-slot registry growth; search control only restarts selection at zero. Sequential creation with the cursor skips no unavailable slots; arbitrary holes can still require linear search. Cursor adds eight static native bytes, no heap allocation. Separate profiles count actual C tape/registry buffers and managed requests/live bytes. Registry peak is included in tape peak, not additional storage. Allocator metadata and transient realloc copies are excluded. Process timings include startup/output; no timing threshold. Interpreter cache fixes have unit/semantic evidence, not a timing claim."
+    },
+    {
+      "head": "e0d073a789524761c09d888e65e330a8798a2b15",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmy3dvn",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_AD_WORKSPACE": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "comparison": "search",
+      "results": {
+        "1": {
+          "cursor": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1385599,
+              1116037,
+              984881,
+              1200345,
+              1232145,
+              1172911,
+              1279619
+            ],
+            "medianProcessWallNs": 1200345,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-cursor.c": "9bbd9711afeb9451f1d938fce9818bc09f72c1cb572d4219e67d9a3f3af07725",
+              "slots-1-cursor-profile.c": "3440f556ee4226f25537e0ab148dbb29fcc9c9bb9c996a8e0cfb1872b00f2b2d",
+              "slots-1-cursor": "61d5192962ac6d46f7d71faf8acc2bf34d057f4709e846f0c9fa7594cf490f8d",
+              "slots-1-cursor-profile": "5e1e62fe5035f35a93bc2568e14129cf9ae7cbe6b685bfa32a628e8064804f5b",
+              "slots-1-cursor.asm": "4a6afd1618e1c590ff3127712bd50161a839a567a7c81ae908bff6bc34cc87d5"
+            }
+          },
+          "restart-control": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1367198,
+              1135222,
+              1098485,
+              1172063,
+              1078196,
+              1009218,
+              1118358
+            ],
+            "medianProcessWallNs": 1118358,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-restart-control.c": "1f97197e182117c6765eb07379c376d90a2a3fdc81a635b5dfee9319424977e9",
+              "slots-1-restart-control-profile.c": "8d661b355a3d7a68dbf25c093e857415dde9660d93e4071f17eb43b60543b310",
+              "slots-1-restart-control": "5aa0b87fca6b083d89efe180bd55016dcdc9ed09e2f8940700506afe357513da",
+              "slots-1-restart-control-profile": "06f06cf26ab14565da63c1dbd24299e5e67a8bcc08ade1f17320495ea2085f5a",
+              "slots-1-restart-control.asm": "9f81af0bcd1a0f1ebf6154b454a4b43574f3abaf4a67e2dabc4b49a2effd45f2"
+            }
+          }
+        },
+        "257": {
+          "cursor": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1385838,
+              1606838,
+              1096869,
+              1154119,
+              1143302,
+              1239946,
+              1316228
+            ],
+            "medianProcessWallNs": 1239946,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-cursor.c": "c9f79a5741c61011cc475c6dc42844b4ab138bac10a815e7d51180e54f576d9b",
+              "slots-257-cursor-profile.c": "80d38b580d7586b696b89d16abea4605112d706389842b371de05115da0f1222",
+              "slots-257-cursor": "a733c80cd84ebcb58564e29937bf6d8c2d22a16bb4a6d4f7f8501db7f5aa1d6a",
+              "slots-257-cursor-profile": "470a2117f1f5103fbbbfe01ed5051b57ce14329825fe02bcbbee3748bd19032b",
+              "slots-257-cursor.asm": "6f2941e020a12d5adc237666f9e8ce16ab7db80272e0460aa4e0ce89d148cb87"
+            }
+          },
+          "restart-control": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512,
+              "unavailableSlotsScanned": 32896,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1333756,
+              1332325,
+              1278347,
+              1206817,
+              1160535,
+              1156342,
+              1153071
+            ],
+            "medianProcessWallNs": 1206817,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-restart-control.c": "b5c5c366483e8bd0d22152617ae88ae0d1bed3b742ddd5bfffce781f480149f1",
+              "slots-257-restart-control-profile.c": "7508b73b78e31fa00cb3affd4e294ac7c2d4f374f303aa30cd6f9e0bd355e2a6",
+              "slots-257-restart-control": "6ee9cbb6f7c93d031b087315a1856807cb86a8fd8f860576366b341a6375fe8a",
+              "slots-257-restart-control-profile": "466c53c431abe4617b7c823aa028611859d6e7c9abe71bd87b70738c8b4a6fa6",
+              "slots-257-restart-control.asm": "0449618b2d36323b583cd405382a711cf7fe29d658b7d553136e6ea20763546e"
+            }
+          }
+        },
+        "4096": {
+          "cursor": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              3197339,
+              3518078,
+              3110113,
+              3369977,
+              3024469,
+              2975308,
+              3081815
+            ],
+            "medianProcessWallNs": 3110113,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-cursor.c": "c9ddecc4bc8b5c732d1ab977e5ef9d9fdd3975b3647449cc50a866c00ac44163",
+              "slots-4096-cursor-profile.c": "a3a2e43ee43e589f24e62256d35e8f69c48ddb4bff317cea05589ea3c7e81e18",
+              "slots-4096-cursor": "d407e0dd29c430ba9379336cbe4daaf810f540e9aa5664ac0bc27402ae0a5882",
+              "slots-4096-cursor-profile": "f690d0a2d702a0890cb4ff58c0710ba7f5851b125770e5988bc61fed8e4c6f6e",
+              "slots-4096-cursor.asm": "6bbadf541e9566b6a5bf85d3907f5d6b3eadd07ba0ab996555100164422fae85"
+            }
+          },
+          "restart-control": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096,
+              "unavailableSlotsScanned": 8386560,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              8352192,
+              8264557,
+              8845161,
+              8489284,
+              8470676,
+              8776558,
+              8368841
+            ],
+            "medianProcessWallNs": 8470676,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-restart-control.c": "cef6fa22a329ed2ad86a700c364071358ed81c2ef582bfbe30fb9c9a11076956",
+              "slots-4096-restart-control-profile.c": "79d269528f49ed44762b21edd233da090cf32bf761d9424c78c891d1658fdb44",
+              "slots-4096-restart-control": "eeccaad37f0cdfcba238b696413b0b5f0c8e0393a35052f5cd10054f60ca7002",
+              "slots-4096-restart-control-profile": "4109a2444c0f1e3110802205ba3b3214478e85631e1fecd0f031fab6503fd4c8",
+              "slots-4096-restart-control.asm": "7c898c5c745ff9008af561180666f93e8410d9767d022452ccd1b174a8aaadd8"
+            }
+          }
+        },
+        "16384": {
+          "cursor": {
+            "output": "16384.0\n",
+            "registry": {
+              "registryRequests": 15,
+              "registryRequestedBytes": 3407768,
+              "peakRegistryBytes": 1703936,
+              "slotBytes": 104,
+              "initializedSlots": 16384,
+              "capacitySlots": 16384,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 16399,
+              "tapeRequestedBytes": 3538840,
+              "peakTapeBytes": 1703944,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 147459,
+              "requestedBytes": 3407904,
+              "retains": 0,
+              "peakChargedBytes": 1179656,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              8585896,
+              8376337,
+              8408874,
+              8761014,
+              8686340,
+              8847425,
+              9136954
+            ],
+            "medianProcessWallNs": 8686340,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-16384.fwp": "f311f87e617222f25b5bc00f0ead52cb04affb3a3a7bb1f4eab3a7e45d2ac42e",
+              "slots-16384-cursor.c": "a02afee60f3aca4c0f507d97d4ebcbc8b3b66388affe10fb086c35cca5f4c067",
+              "slots-16384-cursor-profile.c": "ef3c27a60eb7e01d2698fcde95d00642163a801bba536372608e8938dc5f3a9c",
+              "slots-16384-cursor": "c0230365ff80bef0cca632b6bf779140e6165af60df2d71eedb93fac03a4df47",
+              "slots-16384-cursor-profile": "6d51c198cd3188e3c918a3178c473a66e8d7350374cfcb91f4a8179e1da6884d",
+              "slots-16384-cursor.asm": "95f33b5fb82a44583b9b6ff16fb46d04b9c09a7e0aec8d4c4a84ec1d70aa70b6"
+            }
+          },
+          "restart-control": {
+            "output": "16384.0\n",
+            "registry": {
+              "registryRequests": 15,
+              "registryRequestedBytes": 3407768,
+              "peakRegistryBytes": 1703936,
+              "slotBytes": 104,
+              "initializedSlots": 16384,
+              "capacitySlots": 16384,
+              "unavailableSlotsScanned": 134209536,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 16399,
+              "tapeRequestedBytes": 3538840,
+              "peakTapeBytes": 1703944,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 147459,
+              "requestedBytes": 3407904,
+              "retains": 0,
+              "peakChargedBytes": 1179656,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              162296414,
+              166837014,
+              169471359,
+              167581687,
+              165536251,
+              174842242,
+              161058301
+            ],
+            "medianProcessWallNs": 166837014,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-16384.fwp": "f311f87e617222f25b5bc00f0ead52cb04affb3a3a7bb1f4eab3a7e45d2ac42e",
+              "slots-16384-restart-control.c": "356ea1acccd48b39c1af88c3fcad00b8f384472f00a30565eae82c566b98c5d9",
+              "slots-16384-restart-control-profile.c": "209a5100b5de834e26296c39f63c338ec444e46569fd07f04b3a547068c838db",
+              "slots-16384-restart-control": "8d59af8207adb0c1ad36071d07d6b02ead8b2ebeea781dc85769a77dc65c7cbd",
+              "slots-16384-restart-control-profile": "bbe936c4b04111778088269ba2d56d78415b4d3389643c88d52bf817db1eea46",
+              "slots-16384-restart-control.asm": "5645df875dfe3da2216c5423f4eec553c5501c7a6ac32ce91006c18334b2eec4"
+            }
+          }
+        }
+      },
+      "scope": "ARC, cold numeric registry, actual equivalent gradients. Growth control restores one-slot registry growth; search control only restarts selection at zero. Sequential creation with the cursor skips no unavailable slots; arbitrary holes can still require linear search. Cursor adds eight static native bytes, no heap allocation. Separate profiles count actual C tape/registry buffers and managed requests/live bytes. Registry peak is included in tape peak, not additional storage. Allocator metadata and transient realloc copies are excluded. Process timings include startup/output; no timing threshold. Interpreter cache fixes have unit/semantic evidence, not a timing claim."
+    },
+    {
+      "head": "e0d073a789524761c09d888e65e330a8798a2b15",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sjc22-bm212-3459ef03-fbf4-4a2c-97a8-8ccb6220c9fd-CE4C1EAB84D0.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_AD_WORKSPACE": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "comparison": "search",
+      "results": {
+        "1": {
+          "cursor": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              4656333,
+              4138625,
+              4355375,
+              5189167,
+              5317000,
+              5766209,
+              3954625
+            ],
+            "medianProcessWallNs": 4656333,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-cursor.c": "9bbd9711afeb9451f1d938fce9818bc09f72c1cb572d4219e67d9a3f3af07725",
+              "slots-1-cursor-profile.c": "3440f556ee4226f25537e0ab148dbb29fcc9c9bb9c996a8e0cfb1872b00f2b2d",
+              "slots-1-cursor": "2df6c4bab28aa437eca5ba1448814df3c4b361280f9cf93da65836bdd25c57dd",
+              "slots-1-cursor-profile": "efcb66a8d03ffc7ede3dfe503defd1d5d37ea9232a1a54c394f1efea22f5a5f7",
+              "slots-1-cursor.asm": "b632f1282d1d0e92bcf218b92de894da6d002711fc737fea071545bd30617b7c"
+            }
+          },
+          "restart-control": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              4528417,
+              5461291,
+              3525000,
+              4507625,
+              5893958,
+              3484000,
+              4127292
+            ],
+            "medianProcessWallNs": 4507625,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-restart-control.c": "1f97197e182117c6765eb07379c376d90a2a3fdc81a635b5dfee9319424977e9",
+              "slots-1-restart-control-profile.c": "8d661b355a3d7a68dbf25c093e857415dde9660d93e4071f17eb43b60543b310",
+              "slots-1-restart-control": "289ae466800e9a5ba879138ddbf586ffc391a8a3294c265359c2073fa755db04",
+              "slots-1-restart-control-profile": "8179c66df505ae89358815fa0ac6c8694bd4ab3c952e4baa2d554d992dfcd15a",
+              "slots-1-restart-control.asm": "848ae6df39f7c89e46dedc207a64e5c98d4274b146c96b99abe078d68374edbb"
+            }
+          }
+        },
+        "257": {
+          "cursor": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              7229917,
+              4351500,
+              4966709,
+              4702833,
+              4256417,
+              4885375,
+              5111833
+            ],
+            "medianProcessWallNs": 4885375,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-cursor.c": "c9f79a5741c61011cc475c6dc42844b4ab138bac10a815e7d51180e54f576d9b",
+              "slots-257-cursor-profile.c": "80d38b580d7586b696b89d16abea4605112d706389842b371de05115da0f1222",
+              "slots-257-cursor": "3486f3ec088f42b3f54af40d7b783ca70bc9d646d574d1a394e702ad2c49fcd3",
+              "slots-257-cursor-profile": "c0bcaf89c50848296ad4c045587fe3cd66fefd312e776dd9a3a4e3bf89c4d4a4",
+              "slots-257-cursor.asm": "cb5cf7baddd61a394233b6cbc48c2e3295abba34a54cfbe97135a4902810a553"
+            }
+          },
+          "restart-control": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512,
+              "unavailableSlotsScanned": 32896,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              4151166,
+              4078292,
+              3971459,
+              6986125,
+              4528250,
+              4954500,
+              5591583
+            ],
+            "medianProcessWallNs": 4528250,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-restart-control.c": "b5c5c366483e8bd0d22152617ae88ae0d1bed3b742ddd5bfffce781f480149f1",
+              "slots-257-restart-control-profile.c": "7508b73b78e31fa00cb3affd4e294ac7c2d4f374f303aa30cd6f9e0bd355e2a6",
+              "slots-257-restart-control": "0b8a68520485d2dbaa32367ae37ed0db13124c2d6fb67a567c940d18d9eab207",
+              "slots-257-restart-control-profile": "f08ac13a6399e2b94af4bb4a85bdd640cb7c5d267065ca87139e394c392428d5",
+              "slots-257-restart-control.asm": "e052adf52cf8cad66e0e9fb01642a67ad32704f19b5a3af88d43863775de3869"
+            }
+          }
+        },
+        "4096": {
+          "cursor": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              9532125,
+              6350417,
+              5453375,
+              5548708,
+              5451209,
+              5355833,
+              6203834
+            ],
+            "medianProcessWallNs": 5548708,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-cursor.c": "c9ddecc4bc8b5c732d1ab977e5ef9d9fdd3975b3647449cc50a866c00ac44163",
+              "slots-4096-cursor-profile.c": "a3a2e43ee43e589f24e62256d35e8f69c48ddb4bff317cea05589ea3c7e81e18",
+              "slots-4096-cursor": "6c564ae745dce62f0583c8791eedc7a5d1ad403bb1a2849230de419c136f4007",
+              "slots-4096-cursor-profile": "e2428220eb7cfc1333a6114205bbe9a2cf52eb9ccc8a58fcb0d5a25c9a558fa8",
+              "slots-4096-cursor.asm": "2484a6d1ba90be546e4c8c292d90300f578452a0af1fdb16c80c6f3ee8539035"
+            }
+          },
+          "restart-control": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096,
+              "unavailableSlotsScanned": 8386560,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              10921250,
+              14262333,
+              15554625,
+              10713416,
+              10530125,
+              10677083,
+              11645000
+            ],
+            "medianProcessWallNs": 10921250,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-restart-control.c": "cef6fa22a329ed2ad86a700c364071358ed81c2ef582bfbe30fb9c9a11076956",
+              "slots-4096-restart-control-profile.c": "79d269528f49ed44762b21edd233da090cf32bf761d9424c78c891d1658fdb44",
+              "slots-4096-restart-control": "73c047387f0d3e8fa4ee025ed9d76fd593548b98adac89541bc870a5be7fc7b1",
+              "slots-4096-restart-control-profile": "c8176a3400ebd8979e615db306b43e5ecc397e86a8d3f1d97a3671b55f57d6b6",
+              "slots-4096-restart-control.asm": "19e3eb9bf462e457e171020477699e74bc129d691da65c5d7fdafb2e0912d5c2"
+            }
+          }
+        },
+        "16384": {
+          "cursor": {
+            "output": "16384.0\n",
+            "registry": {
+              "registryRequests": 15,
+              "registryRequestedBytes": 3407768,
+              "peakRegistryBytes": 1703936,
+              "slotBytes": 104,
+              "initializedSlots": 16384,
+              "capacitySlots": 16384,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 16399,
+              "tapeRequestedBytes": 3538840,
+              "peakTapeBytes": 1703944,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 147459,
+              "requestedBytes": 3407904,
+              "retains": 0,
+              "peakChargedBytes": 1179656,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              17077791,
+              11927250,
+              17272750,
+              13416709,
+              11916250,
+              12551375,
+              12305084
+            ],
+            "medianProcessWallNs": 12551375,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-16384.fwp": "f311f87e617222f25b5bc00f0ead52cb04affb3a3a7bb1f4eab3a7e45d2ac42e",
+              "slots-16384-cursor.c": "a02afee60f3aca4c0f507d97d4ebcbc8b3b66388affe10fb086c35cca5f4c067",
+              "slots-16384-cursor-profile.c": "ef3c27a60eb7e01d2698fcde95d00642163a801bba536372608e8938dc5f3a9c",
+              "slots-16384-cursor": "d64e791143043ad72f22327c463bd7fb260b7e18ffd954a557b6ca270a1f7bdc",
+              "slots-16384-cursor-profile": "2c72fe0520a9372855efd5c16308bf237db8a332622df7792c8b220e53848d0d",
+              "slots-16384-cursor.asm": "5c14eb17b7179f1a1f3a6a1413cd96fc33f48be66c0aa960976882780eb276ee"
+            }
+          },
+          "restart-control": {
+            "output": "16384.0\n",
+            "registry": {
+              "registryRequests": 15,
+              "registryRequestedBytes": 3407768,
+              "peakRegistryBytes": 1703936,
+              "slotBytes": 104,
+              "initializedSlots": 16384,
+              "capacitySlots": 16384,
+              "unavailableSlotsScanned": 134209536,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 16399,
+              "tapeRequestedBytes": 3538840,
+              "peakTapeBytes": 1703944,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 147459,
+              "requestedBytes": 3407904,
+              "retains": 0,
+              "peakChargedBytes": 1179656,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              156803667,
+              144215417,
+              165925125,
+              134991292,
+              151069917,
+              143766833,
+              139234750
+            ],
+            "medianProcessWallNs": 144215417,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-16384.fwp": "f311f87e617222f25b5bc00f0ead52cb04affb3a3a7bb1f4eab3a7e45d2ac42e",
+              "slots-16384-restart-control.c": "356ea1acccd48b39c1af88c3fcad00b8f384472f00a30565eae82c566b98c5d9",
+              "slots-16384-restart-control-profile.c": "209a5100b5de834e26296c39f63c338ec444e46569fd07f04b3a547068c838db",
+              "slots-16384-restart-control": "9a5d62ceafc77799fd04f315c625ede0df40512a533e43a3933a76e4c010c8da",
+              "slots-16384-restart-control-profile": "85978cde3cef5016a4284de47abd7b854e65225ee527a7f112d4c923a25aae2b",
+              "slots-16384-restart-control.asm": "ded52efe5e997997f67b49e779e020cdcfed38e45282c524700e78c09ccd399c"
+            }
+          }
+        }
+      },
+      "scope": "ARC, cold numeric registry, actual equivalent gradients. Growth control restores one-slot registry growth; search control only restarts selection at zero. Sequential creation with the cursor skips no unavailable slots; arbitrary holes can still require linear search. Cursor adds eight static native bytes, no heap allocation. Separate profiles count actual C tape/registry buffers and managed requests/live bytes. Registry peak is included in tape peak, not additional storage. Allocator metadata and transient realloc copies are excluded. Process timings include startup/output; no timing threshold. Interpreter cache fixes have unit/semantic evidence, not a timing claim."
+    },
+    {
+      "head": "e0d073a789524761c09d888e65e330a8798a2b15",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sjc20-cw761-903564e8-d322-4dfe-af67-e3acb7b17bbe-EE777C5406C8.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "machine": "x86_64",
+        "processor": "i386"
+      },
+      "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_AD_WORKSPACE": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "comparison": "search",
+      "results": {
+        "1": {
+          "cursor": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              6414896,
+              5527023,
+              5255074,
+              5343803,
+              5335862,
+              6084119,
+              6857699
+            ],
+            "medianProcessWallNs": 5527023,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-cursor.c": "9bbd9711afeb9451f1d938fce9818bc09f72c1cb572d4219e67d9a3f3af07725",
+              "slots-1-cursor-profile.c": "3440f556ee4226f25537e0ab148dbb29fcc9c9bb9c996a8e0cfb1872b00f2b2d",
+              "slots-1-cursor": "99c84fe28b3d0713c001e5df9e6dfdf264304c20f181d4da7fa99d5a92d5336b",
+              "slots-1-cursor-profile": "83a80698d22a743a7b15da25a7f1925b397549180af1041a6378a3467e588688",
+              "slots-1-cursor.asm": "e07f02d6c72980271fe80432a6ad51720b940aec1ccd0a25802cd01ebed534f7"
+            }
+          },
+          "restart-control": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              6892163,
+              6278986,
+              6114167,
+              6375124,
+              6055824,
+              6475035,
+              6526839
+            ],
+            "medianProcessWallNs": 6375124,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-1-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-restart-control.c": "1f97197e182117c6765eb07379c376d90a2a3fdc81a635b5dfee9319424977e9",
+              "slots-1-restart-control-profile.c": "8d661b355a3d7a68dbf25c093e857415dde9660d93e4071f17eb43b60543b310",
+              "slots-1-restart-control": "15791bdec5039567091944c3eebc8767b59f9f29e78312753517dc555db9984b",
+              "slots-1-restart-control-profile": "6ca8c65559458b84310410a4cc5892c188ccd769d426f7ab283039cc9121af13",
+              "slots-1-restart-control.asm": "d9831e8e7a30889b4626347029b654368a48a9da3148114ec062a84ab25daea0"
+            }
+          }
+        },
+        "257": {
+          "cursor": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              7170096,
+              6701993,
+              6522470,
+              6678009,
+              6927195,
+              6768506,
+              6999112
+            ],
+            "medianProcessWallNs": 6768506,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-cursor.c": "c9f79a5741c61011cc475c6dc42844b4ab138bac10a815e7d51180e54f576d9b",
+              "slots-257-cursor-profile.c": "80d38b580d7586b696b89d16abea4605112d706389842b371de05115da0f1222",
+              "slots-257-cursor": "37b0bf36f87077129424a31bfeff244d762886fadf4a15613e8318e9c2575bc0",
+              "slots-257-cursor-profile": "0d30f0556cd2d6958ab0aa4eb637f97c08600bea8a66c0a1176410f6d0f28118",
+              "slots-257-cursor.asm": "bcc2d8f5faedc129c0f659dc3b6b83f8f4effa3295699c03a2082e595196d956"
+            }
+          },
+          "restart-control": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512,
+              "unavailableSlotsScanned": 32896,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              6390706,
+              7071621,
+              6555560,
+              6394946,
+              6279561,
+              6234504,
+              6324880
+            ],
+            "medianProcessWallNs": 6390706,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-257-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-restart-control.c": "b5c5c366483e8bd0d22152617ae88ae0d1bed3b742ddd5bfffce781f480149f1",
+              "slots-257-restart-control-profile.c": "7508b73b78e31fa00cb3affd4e294ac7c2d4f374f303aa30cd6f9e0bd355e2a6",
+              "slots-257-restart-control": "1dd3c784bb0012ec3806a680d5f9f69b3dbb46c72596fb1e1b84ce423550ef28",
+              "slots-257-restart-control-profile": "1155880be85327755f634cd509e43a645f9758efa9ceb8a0b57400ea143a1b5f",
+              "slots-257-restart-control.asm": "e6bb452fd77b24a325c9efe48d5b282e2c332064bb79a2f9000df0403c814d59"
+            }
+          }
+        },
+        "4096": {
+          "cursor": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              9694321,
+              9542046,
+              9408677,
+              9705125,
+              9955697,
+              9885623,
+              9965699
+            ],
+            "medianProcessWallNs": 9705125,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-cursor.c": "c9ddecc4bc8b5c732d1ab977e5ef9d9fdd3975b3647449cc50a866c00ac44163",
+              "slots-4096-cursor-profile.c": "a3a2e43ee43e589f24e62256d35e8f69c48ddb4bff317cea05589ea3c7e81e18",
+              "slots-4096-cursor": "e1c6c5317f8361de2a21a802d15d789b5cd5e052a8a8b56524b26a006e084884",
+              "slots-4096-cursor-profile": "588d756d1e95cd9c21099106fb15f63e9ed4317e9562aa194e4795ad44188925",
+              "slots-4096-cursor.asm": "7fb269f24eea37da6968e4db2898e8b910d1bb48e2a78e4403ec1762d749df2f"
+            }
+          },
+          "restart-control": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096,
+              "unavailableSlotsScanned": 8386560,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              18496161,
+              16213697,
+              15988883,
+              16055291,
+              17153851,
+              16814575,
+              17203223
+            ],
+            "medianProcessWallNs": 16814575,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-4096-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-restart-control.c": "cef6fa22a329ed2ad86a700c364071358ed81c2ef582bfbe30fb9c9a11076956",
+              "slots-4096-restart-control-profile.c": "79d269528f49ed44762b21edd233da090cf32bf761d9424c78c891d1658fdb44",
+              "slots-4096-restart-control": "47ef59cfa508fb7a20ded09ba3e368f70d0c0cd8853065cd93060436bf07794b",
+              "slots-4096-restart-control-profile": "c3a1884acb92de40473523b70d860e5cceedca18052bb38bc8af6f7a083eff85",
+              "slots-4096-restart-control.asm": "4d30d5031eeb11bf7de3fb7fda3570d726dc24a57a663d2a2b5a3b33f99b2128"
+            }
+          }
+        },
+        "16384": {
+          "cursor": {
+            "output": "16384.0\n",
+            "registry": {
+              "registryRequests": 15,
+              "registryRequestedBytes": 3407768,
+              "peakRegistryBytes": 1703936,
+              "slotBytes": 104,
+              "initializedSlots": 16384,
+              "capacitySlots": 16384,
+              "unavailableSlotsScanned": 0,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 16399,
+              "tapeRequestedBytes": 3538840,
+              "peakTapeBytes": 1703944,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 147459,
+              "requestedBytes": 3407904,
+              "retains": 0,
+              "peakChargedBytes": 1179656,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              34207136,
+              33766608,
+              24283512,
+              23479982,
+              23095926,
+              24669505,
+              23467091
+            ],
+            "medianProcessWallNs": 24283512,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-cursor-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-16384.fwp": "f311f87e617222f25b5bc00f0ead52cb04affb3a3a7bb1f4eab3a7e45d2ac42e",
+              "slots-16384-cursor.c": "a02afee60f3aca4c0f507d97d4ebcbc8b3b66388affe10fb086c35cca5f4c067",
+              "slots-16384-cursor-profile.c": "ef3c27a60eb7e01d2698fcde95d00642163a801bba536372608e8938dc5f3a9c",
+              "slots-16384-cursor": "a8382542e7ac78a7a4be231d3618a38da9dfbe4739e694f81510a7098dff5e2a",
+              "slots-16384-cursor-profile": "d571b9ff11adb786dc2b8b4cbf7a7296dec730d7f4635f9cdd79f138a8b6207b",
+              "slots-16384-cursor.asm": "040d6412a6b975dd6a8f8643ae5cde17c1f8572d8cc2e7aed262c48417b835fd"
+            }
+          },
+          "restart-control": {
+            "output": "16384.0\n",
+            "registry": {
+              "registryRequests": 15,
+              "registryRequestedBytes": 3407768,
+              "peakRegistryBytes": 1703936,
+              "slotBytes": 104,
+              "initializedSlots": 16384,
+              "capacitySlots": 16384,
+              "unavailableSlotsScanned": 134209536,
+              "cursorBytes": 8
+            },
+            "tape": {
+              "tapeRequests": 16399,
+              "tapeRequestedBytes": 3538840,
+              "peakTapeBytes": 1703944,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 147459,
+              "requestedBytes": 3407904,
+              "retains": 0,
+              "peakChargedBytes": 1179656,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              220936113,
+              217309185,
+              197901515,
+              186480512,
+              193786459,
+              189602463,
+              200818392
+            ],
+            "medianProcessWallNs": 197901515,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/search/slots-16384-restart-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-16384.fwp": "f311f87e617222f25b5bc00f0ead52cb04affb3a3a7bb1f4eab3a7e45d2ac42e",
+              "slots-16384-restart-control.c": "356ea1acccd48b39c1af88c3fcad00b8f384472f00a30565eae82c566b98c5d9",
+              "slots-16384-restart-control-profile.c": "209a5100b5de834e26296c39f63c338ec444e46569fd07f04b3a547068c838db",
+              "slots-16384-restart-control": "e83f360c5f1bad825f70dc6dacc7b63270b799c3d3d31294c1a8afcc95701475",
+              "slots-16384-restart-control-profile": "b3a35092a8f4a4dc44842344ab49c2f043f3b6d0e2122d69694d421f063ed042",
+              "slots-16384-restart-control.asm": "948d50bbbeae4f1b80af40d6bfb13bc6fabb5c229946196c51e90e8c20883423"
+            }
+          }
+        }
+      },
+      "scope": "ARC, cold numeric registry, actual equivalent gradients. Growth control restores one-slot registry growth; search control only restarts selection at zero. Sequential creation with the cursor skips no unavailable slots; arbitrary holes can still require linear search. Cursor adds eight static native bytes, no heap allocation. Separate profiles count actual C tape/registry buffers and managed requests/live bytes. Registry peak is included in tape peak, not additional storage. Allocator metadata and transient realloc copies are excluded. Process timings include startup/output; no timing threshold. Interpreter cache fixes have unit/semantic evidence, not a timing claim."
+    }
+  ],
+  "binaryInspection": {
+    "scope": "Manual inspection of actual uninstrumented 16384-tape cursor/control binaries. Emitted C maps f10 to ad.tape and f32 to numeric ad.backward. Allocation equality is established by separate profiles, not inferred solely from assembly. Ordinary saved registers and stack frames remain; no zero-spill claim.",
+    "hosts": {
+      "linux-amd": {
+        "cursorLoadAndBound": "f10 0x6eac loads fwp_tape_next_slot; 0x6eba-0x6ebd compares against initialized slots and bypasses the scan at the end.",
+        "remainingScan": "0x6ee0-0x6ef8 advances by 104 bytes and tests live/generation fields for arbitrary holes.",
+        "advance": "0x7077-0x707b computes slot+1 and stores the cursor.",
+        "backwardRelease": "f32 0x7912-0x7924 checks generation and lowers the cursor using the decoded token slot; no pointer-difference reconstruction.",
+        "control": "Restart control f10 0x6ec7 zeros eax before the scan at 0x6ed0-0x6ee8.",
+        "storage": "Existing geometric realloc branch and one-slot initialization remain; saved registers/stack storage are visible. Cursor reset is stored at 0x72c8."
+      },
+      "linux-arm": {
+        "cursorLoadAndBound": "f10 0x60a0 loads the cursor into x22; 0x60a8-0x60ac compares with initialized slots and bypasses scanning at the end.",
+        "remainingScan": "0x60cc-0x60ec advances by 104 bytes and retains live/generation checks.",
+        "advance": "0x6228 adds one to the selected slot; 0x6234 stores the cursor.",
+        "backwardRelease": "f32 0x6a54-0x6a78 checks generation and conditionally lowers the cursor using the decoded token slot.",
+        "control": "Restart control f10 0x60ac initializes x21 from xzr before scanning at 0x60c0-0x60e0.",
+        "storage": "Existing geometric registry growth remains; the creation frame saves registers in 80 bytes. No heap search index was introduced."
+      },
+      "mac-intel": {
+        "cursorLoadAndBound": "f10 0x1000056af loads the cursor; 0x1000056bd-0x1000056c0 compares it with initialized slots and bypasses the scan at the end.",
+        "remainingScan": "0x1000056e0-0x1000056f8 advances by 104 bytes and preserves live/generation checks.",
+        "advance": "0x10000586c-0x100005870 computes slot+1 and stores the cursor.",
+        "backwardRelease": "f32 0x100006234-0x10000623b decodes the token; 0x10000630a-0x10000631f checks generation and conditionally decrements/stores the decoded slot, without pointer-difference reconstruction.",
+        "control": "Restart control f10 0x1000056ca zeros eax before scanning at 0x1000056d0-0x1000056e8.",
+        "storage": "Existing geometric realloc branch and one-slot initialization remain. Ordinary saved registers, a frame pointer and backward stack storage remain. Shutdown resets the cursor at 0x100005abd."
+      },
+      "mac-arm": {
+        "cursorLoadAndBound": "f10 0x100004e40 loads the cursor; 0x100004e4c-0x100004e50 compares with initialized slots and bypasses the scan at the end.",
+        "remainingScan": "0x100004e70-0x100004e90 advances by 104 bytes with live/generation checks.",
+        "advance": "0x100004fc8-0x100004fcc computes slot+1 and stores the cursor.",
+        "backwardRelease": "f32 0x1000058b0-0x1000058b4 decodes the token; 0x100005964-0x100005980 checks generation and lowers the cursor with a subtract/store. The preliminary pointer-subtraction, shift and reciprocal-multiply sequence is absent from this release path.",
+        "control": "Restart control f10 0x100004e4c zeros x21 before scanning at 0x100004e64-0x100004e84.",
+        "storage": "Existing geometric registry growth and one-slot vector/scalar initialization remain. Creation uses a 96-byte frame and numeric backward a 192-byte frame."
+      }
+    }
+  },
+  "validation": {
+    "head": "e0d073a789524761c09d888e65e330a8798a2b15",
+    "native": "https://github.com/e6qu/fun-with-pipes/actions/runs/38707923424",
+    "wasm": "https://github.com/e6qu/fun-with-pipes/actions/runs/38707931935",
+    "scope": "Four native Linux/macOS focused AD and measurement jobs, both focused WASM jobs. Production gates remain separate. Every archived report source/profile/binary/disassembly hash was verified. Manual binary review covers uninstrumented numeric tape creation/backward at 16384 tapes; managed tape release additionally has O1/O2 ARC/tracing positive and omission controls."
+  }
+}
