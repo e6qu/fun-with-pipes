@@ -11,15 +11,15 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-The eleven-step implementation plan is complete through
-[PR #141](https://github.com/e6qu/fun-with-pipes/pull/141), merge `41f30475`.
-The documentation rewrite for new readers is
-[PR #142](https://github.com/e6qu/fun-with-pipes/pull/142) on `docs-for-new-readers`.
-Once it merges after the required checks, the current plan is complete; do not
-restart its historical implementation steps or invent another roadmap task. Follow [PLAN.md](PLAN.md) and the live handoff. Explain
-terms before using them, teach the prerequisites of examples, and name the
-baseline and limitations of every performance comparison. Historical preparation
-entries are evidence, not pending implementation tasks.
+Follow the remaining project work in [PLAN.md](PLAN.md), with one current
+handoff in [docs/development-state.md](docs/development-state.md). Completed
+batches do not mean the language's memory and performance goals are finished.
+Remove tracing GC; prefer compile-time ownership, moves, borrowing, stack
+storage and unique reuse; reserve ARC for necessary shared ownership and
+measure its remaining cost. Preserve simple pipes and ordinary inference.
+Do not silently replace rejected ownership with tracing or permanent retention.
+Establish reproducible measurements and representative programs before selecting
+the next optimization. Historical preparation entries are evidence, not tasks.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,
@@ -27,9 +27,12 @@ not independent work. Do not request the same permission again. Historical
 preparation entries are not new work. A new backend, JIT and distributed
 execution remain outside scope.
 
-Retain all nine production gates: Linux ARM64/AMD64, regular and GC-stress
-ARM/Intel macOS, C/Rust benchmarks and native Windows ARM64/AMD64, plus the
-documentation audit. Skipped or emulated tests do not establish native support.
+The current acceptance matrix has nine production gates: Linux ARM64/AMD64,
+regular and GC-stress ARM/Intel macOS, C/Rust benchmarks and native Windows
+ARM64/AMD64, plus the
+documentation audit. Preserve their coverage as ownership evolves; collector
+checks change only with tested replacements. Skipped or emulated tests do not
+establish native support.
 Package one binary per OS/architecture; universal binaries are not an objective.
 [docs/ownership.md](docs/ownership.md) records memory contracts and evidence.
 

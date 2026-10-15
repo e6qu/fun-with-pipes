@@ -1,4 +1,4 @@
-# Floating-point representation and migration
+# Floating-point representation and arithmetic
 
 Floating-point numbers store a sign, an exponent (scale) and a fraction. More
 fraction bits give more precision; more exponent bits give a wider range. The
@@ -10,7 +10,7 @@ A **payload** is the bytes representing a value inside a message. **Little
 endian** puts the least significant byte first. The formats below are implemented;
 PRs [#135](https://github.com/e6qu/fun-with-pipes/pull/135) and
 [#136](https://github.com/e6qu/fun-with-pipes/pull/136) record integration and
-platform verification. The old migration is complete, not a next action.
+platform verification.
 
 | Language type | Arithmetic format | Protocol v2 payload |
 |---|---|---|
@@ -35,7 +35,6 @@ internal function. A generic entry can box a value even when its specialized
 worker passes bits directly. An ABI (application binary interface) specifies
 how machine-level calls pass those arguments and results.
 
-
 Interpreter values, native scalar arithmetic, text/JSON
 and protocol encoding use binary16/bfloat16/binary128. Half and bfloat native
 arrays use two-byte elements. F128 generic values are boxed 16-byte leaves;
@@ -47,16 +46,17 @@ workers; four-host ownership controls and measured allocation reductions are
 recorded in [the measurement artifact](measurements/wide-records-2026-10-14.json). Generic
 boundaries box once and register partially constructed results for unwind.
 The C boundary maps half/bfloat to u16 bits and quad to `struct fwp_binary128`,
-including record fields, callbacks and pointer access. The handoff records
-which native ABI/export checks have completed.
+including record fields, callbacks and pointer access. [Delivery evidence](roadmap-history.md)
+records the completed native ABI/export checks.
 Protocol golden-byte tests cover widths, signed zero, infinities and NaN payload
-transport. The handoff links raw/native regressions and production verification.
+transport. Delivery evidence links the corresponding production verification.
 
-The migration now has shared binary16/bfloat16/binary128 arithmetic and exact
+The implementation uses shared binary16/bfloat16/binary128 arithmetic and exact
 decimal cores. Arithmetic/conversion NaNs are canonical positive quiet NaNs;
 raw bit transport preserves payloads. Decimal conversion uses explicit per-call
-scratch ownership, including cleanup on allocation failure. [The handoff](development-state.md) records language integration and native
-verification alongside the core arithmetic checks.
+scratch ownership, including cleanup on allocation failure. Delivery evidence
+records language integration and native verification alongside core arithmetic
+checks.
 
 Keep `float.convert` explicit. Preserve operation order and the existing policy
 against implicit reassociation or contraction. Do not silently substitute the
@@ -79,10 +79,9 @@ uses `-fno-exceptions -fno-rtti` and has no C++ runtime dependency. Ordinary
 `fwp build` handles this compilation and caching. The bit-struct C ABI does not
 depend on host `long double` or compiler-specific quad scalar types.
 
-## Migration contract
+## Conformance requirements
 
-These are ongoing conformance requirements for the completed migration. A
-**subnormal** represents very small values with reduced precision. A **NaN**
+A **subnormal** represents very small values with reduced precision. A **NaN**
 represents a non-number result and can carry extra payload bits. “Ties to even”
 chooses the nearest result with an even low bit when exactly halfway. One **ULP**
 is one representable step at the result's magnitude. Reassociation changes
@@ -127,7 +126,7 @@ The intended bfloat treatment includes subnormals and nearest-even rounding;
 these are concrete choices consistent with the [ratified RISC-V BF16 specification](https://docs.riscv.org/reference/isa/unpriv/bfloat16.html), not assumptions
 that every device's bfloat instructions behave identically.
 
-Item 5 of [the plan](../PLAN.md) is complete. Preserve the declared precision
-and the native/WebAssembly regression tests when changing these implementations.
+Preserve the declared precision and the native/WebAssembly regression tests
+when changing these implementations.
 Storage savings do not imply hardware arithmetic support or faster execution;
 software-format operations can cost more than a native F32/F64 instruction.

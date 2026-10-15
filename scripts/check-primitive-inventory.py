@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Recheck candidate contracts against the frozen prepared112 declaration review."""
+"""Check current ownership contracts against the frozen declaration baseline."""
 import argparse
 from collections import Counter
 import hashlib
@@ -85,7 +85,7 @@ owned_tapes = {
 new_keys = scope_keys | {('lib/autodiff.fwp', name) for name in owned_tapes}
 leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.help', 'zlib.gzip', 'zlib.gzip-chunk', 'zlib.deflate', 'ws.accept', 'ws.deflate', 'ws.key', 'zlib.gzip-end', 'ws.close-payload', 'ws.frame'}
 assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
-# This bundle promotes only these reviewed numeric and parsed-tree boundaries.
+# These reviewed contract changes are checked against the frozen baseline.
 bundle_contracts = {}
 bundle_contracts['not'] = (1, 'Shared', [])
 bundle_contracts['prim.trap'] = (1, 'Never', [])

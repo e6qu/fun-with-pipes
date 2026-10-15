@@ -10,6 +10,15 @@ This guide states the implemented memory contract. The [primitive tables](primit
 give per-operation details, [benchmarks](benchmarks.md) distinguish memory savings
 from speed, and [delivery history](roadmap-history.md) records accepted tests.
 
+## Direction
+
+The [project plan](../PLAN.md#memory-direction) targets removal of tracing GC,
+with compile-time ownership, moves and borrowing as the normal way to manage
+lifetimes. ARC is reserved for necessary shared ownership. Counted allocation
+alone is not the desired endpoint: unshared values should avoid count traffic,
+and eligible abstractions should compile away. The contracts below describe
+what exists today; they do not claim this objective is already achieved.
+
 ## Stable language behavior
 
 Optimization must preserve results, external actions, evaluation order, failures
@@ -86,10 +95,9 @@ queued values for later receives. Explicit draining breaks the tested cycle;
 losing the last external handle without draining does not. Unproved cycles need
 tracing and are rejected by checked ARC.
 
-## Phase 2 exit gates
+## Ownership contract checks
 
-This historical phase name identifies the completed ownership review, not a
-pending task. Its tests inventory declarations, resolved runtime symbols and
+The tests inventory declarations, resolved runtime symbols and
 aliases against the recorded baseline. They check argument/result modes,
 callbacks, retention, teardown and cycle policy. A count of inventoried functions
 is not a count of freed objects or fixed bugs.

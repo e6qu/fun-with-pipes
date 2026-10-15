@@ -224,10 +224,11 @@ startup; it is not a macOS universal-binary requirement.
 
 ## Not implemented
 
-General collector-free execution, a just-in-time compiler (JIT), a replacement
-compiler backend and distributed tensor execution are outside the completed
-roadmap. Existing device kernels handle elementwise expressions and sums, not
-arbitrary matrix operations. OpenCL discovery/source tests do not establish
+Removing tracing GC and reducing ARC overhead are active goals in the
+[project plan](../PLAN.md). General collector-free execution is not implemented.
+A just-in-time compiler (JIT), a replacement backend and distributed tensor
+execution remain deferred. Existing device kernels handle elementwise expressions
+and sums, not arbitrary matrix operations. OpenCL discovery/source tests do not establish
 successful execution on real GPU hardware.
 
 Darwin cross-compilation and Clang profile-guided optimization are not supported.

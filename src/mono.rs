@@ -1712,8 +1712,8 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
         crate::fuse::fuse(&mut prog);
         check(&prog, "fusing");
     }
-    // in debug builds, references are counted (not yet used by the
-    // backends) and the result is checked
+    // In debug builds, check the reference-count insertion also used by native
+    // code generation before passing the program to an execution backend.
     if cfg!(debug_assertions) {
         for (f, rc) in prog.funcs.iter().zip(crate::rc::insert(&prog)) {
             if let Some((body, locals)) = rc {

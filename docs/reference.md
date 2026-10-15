@@ -440,7 +440,7 @@ pointer element widths use the same representation (2/2/16 bytes).
   C input ownership copies strings and `repr(C)` records into owned
   language values. Export validation rejects `Bytes` parameters,
   because the byte pointer ABI carries no length; foreign calls keep their
-  existing convention. See [the handoff](development-state.md) for delivery status.
+  existing convention. See [delivery evidence](roadmap-history.md) for accepted checks.
 
 ## The `fwp` command
 
@@ -582,7 +582,7 @@ main, CLI and typed executable protocol entries. It rejects unproved cycle/owner
 boundaries, WebAssembly, libraries and services. It requires normal counted
 freeing; tracing stress/verification and reuse poisoning are incompatible.
 The [ownership contract](ownership.md#checked-arc-delivery) and
-[handoff](development-state.md) record coverage and production acceptance.
+[delivery evidence](roadmap-history.md) record coverage and production acceptance.
 
 ### Static memory
 
@@ -705,8 +705,8 @@ each switch at the end of a slice is a JSPI suspension.
 
 | Host | Tasks |
 |---|---|
-| Chrome, Edge 137 and later | yes (JSPI is on by default) |
-| Firefox, Safari | with `--wasm-async=asyncify` (below); otherwise once they enable JSPI by default (until then, a program with tasks is rejected or traps as below) |
+| JavaScript host exposing the JSPI interfaces recognized by `web/fibers.js` | yes, with the default JSPI build |
+| JavaScript host without those interfaces | requires an Asyncify build and support for its transformed module; a JSPI build cannot start tasks |
 | node 24 | yes (JSPI is on by default; node 22 needs `--experimental-wasm-jspi`). With `node:wasi`, also pass `--no-turbo-fast-api-calls` (`tests/wasm/wasi-run.mjs` and `fwp-run.mjs` do): node may otherwise crash when V8 collects garbage inside a WASI call made from optimized code (node 24 stops with ``Check failed: isolate_->IsOnCentralStack()``, node 22 with a segmentation fault), which programs that switch tasks often make likely. node 24's `node:wasi` also rejects addresses beyond 2 GiB (which the stacks of a few thousand tasks reach) unless its 32-bit arguments are made unsigned (`x >>> 0`) in wrappers, as these runners and the browser loader do |
 | wasmtime and other WASI runtimes | no: a program that starts a task traps with `fwp: trap: tasks need a WebAssembly host with JavaScript Promise Integration (JSPI), …`; `task.sleep` alone works |
 
@@ -729,10 +729,9 @@ JavaScript host. wasm-opt is an optional tool, needed only for this
 option and only by programs with tasks: it comes with binaryen (`npm
 install -g binaryen`, or a system package); `FWP_WASM_OPT` names the
 executable. Asyncify adds code and execution-state save/restore work; its cost
-depends on the module and host. The old size/time anecdotes did not record enough
-hardware/compiler/allocation information to serve as a current benchmark. Compare
-the same program and host in JSPI and Asyncify modes before making a performance
-claim. The default stays `--wasm-async=jspi`. For the compiler/interpreter module,
+depends on the module and host. Compare the same program and host in JSPI and
+Asyncify modes, recording compiler settings, time and memory, before making a
+performance claim. The default stays `--wasm-async=jspi`. For the compiler/interpreter module,
 `scripts/build-playground.sh --asyncify` applies the same transformation, allowing
 tasks in hosts without JSPI when they support the transformed module.
 

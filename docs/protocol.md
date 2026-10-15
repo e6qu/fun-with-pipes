@@ -145,7 +145,7 @@ Version 2 changes the half/bfloat/quad payloads and every type fingerprint.
 Version 1 used binary32 for F16/BF16 and binary64 for F128. There is no implicit
 wire upgrade; rebuild both peers together. Raw encoding preserves signed zeros
 and NaN payload bits; arithmetic has a separate canonical-NaN contract. See the
-[format migration status](float-formats.md) for the unfinished integration gates.
+[floating-point contract](float-formats.md) for representation and arithmetic rules.
 
 Decoding is strict, and fails the same way in both backends (exit 3):
 

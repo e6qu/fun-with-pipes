@@ -1,7 +1,7 @@
 # Historical preparation commits
 
-This table is a recovery and audit record, not a to-do list. The implementation
-work has merged through PR #141. Read [the plan](../PLAN.md) for current work
+This table preserves identities from earlier implementation work for recovery
+and audit. Read [the plan](../PLAN.md) for current work
 and [the handoff](development-state.md) for the next action.
 
 A Git commit identifies a saved version of the repository. During earlier work,
