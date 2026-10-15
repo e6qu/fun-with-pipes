@@ -103,11 +103,11 @@ An **adjoint** is the derivative accumulated for a recorded value during that
 backward pass. A **primal** value is the ordinary value before considering its
 derivative. Local partial derivatives are the weights on parent dependencies.
 
-`ReverseScalar` supports the five float types and recursively `Rev[T]`. Base-float
-reverse tapes accumulate adjoints in F64 and convert results back to the element
-type. This is a precision choice, including for F128; it does not promise an
-F128-precision gradient. Nested reverse levels keep typed weights and record
-backward arithmetic on the enclosing tape. A `Float[T]` constraint alone does
+`ReverseScalar` supports the five float types and recursively `Rev[T]`.
+F16/BF16/F32/F64 tapes accumulate adjoints in F64 and convert results back to the
+element type. F128 weights, seeds and adjoints remain F128, preserving its wider
+precision and exponent range. Nested reverse levels keep typed weights and
+record backward arithmetic on the enclosing tape. A `Float[T]` constraint alone does
 not describe this nested behavior; generic reverse callers use `ReverseScalar[T]`.
 Comparisons use primal values, so a piecewise program differentiates the branch
 actually taken. This does not define a smooth derivative at every branch boundary.
@@ -128,10 +128,14 @@ alive. Child tasks start independent derivative scopes.
 
 ### Tape layout and reuse
 
-A base-float operation stores two 32-bit parent indices and two F64 local
+An F16/BF16/F32/F64 operation stores two 32-bit parent indices and two F64 local
 derivatives: 24 payload bytes before adjoint storage, spare capacity and allocator
-metadata. Inputs have node indices but need no operation records. Nested tapes
-instead own typed derivative values and operation callbacks. A failed append
+metadata. Inputs have node indices but need no operation records. F128 and nested
+tapes instead own typed derivative values and operation callbacks. F128 values
+can require separately allocated boxes and reference counts; the 24-byte figure
+does not describe their complete storage cost. Preserving precision is not a
+claim of equal speed or allocation cost. The [handoff](development-state.md)
+tracks native validation and allocation profiles for this change. A failed append
 releases partially acquired owners without publishing an incomplete record.
 
 The vertex token encodes `(tape id << 32) | index`, with −1 for constants.
@@ -179,9 +183,10 @@ step is evaluated twice. Zero steps return the seeds without invoking the step;
 seed length must match the final output. A forward trap stops before replay.
 There is no implicit interval or automatic recomputation in ordinary `vjp`.
 
-Each segment follows VJP precision: F64 adjoints converted back to the element
-type. Narrow types can round at segment boundaries, so a checkpointed result
-need not match a single unsegmented accumulation bit for bit.
+Each segment follows VJP precision: F16/BF16/F32/F64 adjoints accumulate in F64,
+while F128 adjoints remain F128. Narrow types can round at segment boundaries,
+so a checkpointed result need not match a single unsegmented accumulation bit
+for bit.
 
 The [4096-step measurement](measurements/checkpoint-2026-10-14.json) compares
 checkpoint interval 32 with ordinary fwp VJP under ARC, with cache reuse off.

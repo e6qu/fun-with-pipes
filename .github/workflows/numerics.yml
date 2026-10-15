@@ -5,9 +5,53 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, precision]
         default: numerical
 jobs:
+  precision:
+    if: inputs.suite == 'precision'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_AD_PRECISION_ARTIFACTS: precision-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test --no-fail-fast --test autodiff_precision --test autodiff_nested --test autodiff_checkpoint --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_capacity_bounds --test autodiff_library --test float_formats --test stdlib_doc
+      - name: Record profile environment
+        run: |
+          uname -a > precision-evidence/environment.txt
+          rustc -Vv >> precision-evidence/environment.txt
+          clang --version >> precision-evidence/environment.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: precision-${{ matrix.runner }}
+          path: precision-evidence/
+      - name: Preserve compiler crash reports
+        uses: actions/upload-artifact@v7
+        if: failure() && runner.os == 'macOS'
+        with:
+          name: compiler-crashes-precision-${{ matrix.runner }}
+          path: ~/Library/Logs/DiagnosticReports/fwp*
+          if-no-files-found: ignore
   solvers:
     if: inputs.suite == 'solvers'
     strategy:

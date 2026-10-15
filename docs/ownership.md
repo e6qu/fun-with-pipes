@@ -292,8 +292,9 @@ extend the old handler's lifetime, though it can run under a new one. The checke
 tracks callback targets, captures and stored values; unknown targets are rejected.
 
 Derivative calls likewise need a proved scope. A returned token cannot keep a
-tape alive, and stale/mixed/cross-task tokens trap. Nested tapes own typed weights
-and remain protected while backward callbacks record into an outer tape. Scope
+tape alive, and stale/mixed/cross-task tokens trap. F128 and nested tapes own
+typed weights. Nested tapes remain protected while backward callbacks record
+into an outer tape. Scope
 exit, failure, cancellation and library teardown release those owners. Numeric
 workspace reuse is bounded and counted separately from returned gradient arrays.
 
