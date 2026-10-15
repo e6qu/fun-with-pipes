@@ -1,0 +1,4271 @@
+{
+  "sourceHead": "24620eadbcc8c03fa1aefc2190bf1af483720840",
+  "baseline": "09f1a029c139d06ac3a11623c70f1de959624fbb",
+  "focusedRun": "https://github.com/e6qu/fun-with-pipes/actions/runs/38726490082",
+  "reports": {
+    "linux-amd": {
+      "head": "24620eadbcc8c03fa1aefc2190bf1af483720840",
+      "baseline": "09f1a029c139d06ac3a11623c70f1de959624fbb",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervm8k3b6",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.24\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "sampling": "One unmeasured process warmup per variant/cache; seven alternating paired/control process samples.",
+      "results": {
+        "identity": {
+          "source": "main = range 0 4096 | map int.to-float | vjp id (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "15028a9fbc44b520360831c83a7e8a22a3de70c4867e661a876dcb41d6263ecc",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1933112,
+                    1698410,
+                    2090829,
+                    1626161,
+                    1843490,
+                    1648365,
+                    1977468
+                  ],
+                  "medianProcessWallNs": 1843490
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1708526,
+                    1666894,
+                    1701905,
+                    1697869,
+                    1785491,
+                    1986553,
+                    2200618
+                  ],
+                  "medianProcessWallNs": 1708526
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "d5bfe7f12ed670b84de6871e34dd5fce327a05e01c11bea2fd59aa4517c36917",
+              "binarySha256": "b69870fbb1a802c9837457c1905960417c6a48c3d151fde912d27054d4422ef5",
+              "assemblySha256": "b98a64fdc2eb35c2168e079a771606790b9c3c46903406dd83d6b4c85e3dfae7"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1680253,
+                    2047615,
+                    1653212,
+                    1977540,
+                    1718149,
+                    1863339,
+                    2009428
+                  ],
+                  "medianProcessWallNs": 1863339
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2230268,
+                    1766783,
+                    1551760,
+                    1560573,
+                    1474273,
+                    1564770,
+                    1879071
+                  ],
+                  "medianProcessWallNs": 1564770
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "58c5fddc9e300fd7e624a9e9dfff10ee23e67a0cbc73a1e8a3c5283df71f8433",
+              "binarySha256": "a3ab8264bba2961f5678615f7ae165f38b7c0651fb73d41a715af7b8b3ed8766",
+              "assemblySha256": "098c29a0c3b0381b5428d152b9211c2eacb086f52b7fcaf63c73c877b31eb75c"
+            }
+          }
+        },
+        "map": {
+          "source": "main = range 0 4096 | map int.to-float | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "7abeb9fe1cc255c4a4e6f3c47cc220fb4d0cd6b23e2d1afccac549d63ece2093",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2290249,
+                    2524530,
+                    1986833,
+                    2142406,
+                    1916888,
+                    2833676,
+                    1877109
+                  ],
+                  "medianProcessWallNs": 2142406
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2124064,
+                    1825902,
+                    1839893,
+                    2634960,
+                    1937876,
+                    2205532,
+                    2013744
+                  ],
+                  "medianProcessWallNs": 2013744
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "6a9755fd92bdd128523e6543190bcaff79e50a4791b8e73ae1a7696261275a04",
+              "binarySha256": "13c6304891266d4e4469132b32a9aeb600c127ccbbf5d0656923c6d4338683b9",
+              "assemblySha256": "0e4e74ac1abb79bc797c77862ccdc445d77fd62bdc4520ac145852d23f348018"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2587294,
+                    2708017,
+                    2187315,
+                    1944540,
+                    2456378,
+                    1965401,
+                    2062938
+                  ],
+                  "medianProcessWallNs": 2187315
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1933734,
+                    2176608,
+                    2498290,
+                    1841706,
+                    2029878,
+                    1942207,
+                    2067435
+                  ],
+                  "medianProcessWallNs": 2029878
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "d50d10030d999003adf233ed51c805a2d1e12d1a0a860d178e187794f8fe2fbf",
+              "binarySha256": "1693132bd69358722e44d37fffaddebdafd9df6d96dc1bce09469682a651f20d",
+              "assemblySha256": "723d547613be00e90fdcdb362a9d4c83039c2387b0f34ad75175c3247eb9c2f0"
+            }
+          }
+        },
+        "repeated-map": {
+          "source": "main = range 0 16 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "sourceSha256": "3258e3a78117812c782770c9d0432058f8802c8e8578da7a6e3ed8189d9ac1c3",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 224,
+                    "metadataRequestedBytes": 3121152,
+                    "explicitMovedBytes": 774144
+                  },
+                  "tape": {
+                    "tapeRequests": 241,
+                    "tapeRequestedBytes": 4169832,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    14629618,
+                    14809137,
+                    14735520,
+                    21504797,
+                    16415819,
+                    21661466,
+                    16051812
+                  ],
+                  "medianProcessWallNs": 16051812
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    15357691,
+                    15627866,
+                    15432533,
+                    15122677,
+                    14768405,
+                    14684569,
+                    20238589
+                  ],
+                  "medianProcessWallNs": 15357691
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "a8436cd7d3270aae0623f5891975b9dcfbdfae7bdabd099f8d99f0cc6e24469c",
+              "binarySha256": "66fb5fd5b33033a877980c200a2e5555bee979490a59d88c7020bc323af82373",
+              "assemblySha256": "29370860d6084567639fb393530b5a9baafec2dec99d89c095a4cef57fdba7fa"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 448,
+                    "metadataRequestedBytes": 3121152,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 465,
+                    "tapeRequestedBytes": 4169832,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    14647114,
+                    14988286,
+                    15636259,
+                    15847096,
+                    15828156,
+                    22218242,
+                    16665514
+                  ],
+                  "medianProcessWallNs": 15828156
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    15348216,
+                    15356278,
+                    15368696,
+                    21661450,
+                    15298651,
+                    15468016,
+                    15514096
+                  ],
+                  "medianProcessWallNs": 15368696
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "64c45150f3e6d3e40035fe9983f4ccbb29d1e06e36c56626b57c02f962dcf1cc",
+              "binarySha256": "0f02b8174d73030f94c95238a1b645c344e0d0db52cb3b6544d56e67aa878704",
+              "assemblySha256": "8c2cfcb1eb8b9de6ce33f8d98c7a21b1b3970872e77b7cd2828522d068bf72ce"
+            }
+          }
+        },
+        "replay": {
+          "source": "main = [2.0] | vjp (rev._replay 4096 (map (add 1.0))) [1.0] | sum | echo\n",
+          "sourceSha256": "27019d33ebe7ac8d2656f98f9bfd12113b7f6ae3e150b755bd4b7167bd7f5259",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1341826,
+                    1392770,
+                    1975386,
+                    1274935,
+                    1772091,
+                    1265640,
+                    1634394
+                  ],
+                  "medianProcessWallNs": 1392770
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1185140,
+                    1505500,
+                    1369316,
+                    1297317,
+                    1572312,
+                    1571789,
+                    1296507
+                  ],
+                  "medianProcessWallNs": 1369316
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "eebf845262b7ec9dc57710b897163eb7cbc8765e4ff0f536595b912432aa3eff",
+              "binarySha256": "90352d4e599eafa6c410493e5e290365020e74ada8136e905758198df50dd15d",
+              "assemblySha256": "c69a5e74a03306cf6cd0b847c1e2b5546d3671d71e5b0b3233b11228e91e7d30"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1286271,
+                    1511720,
+                    1335395,
+                    1365330,
+                    1608289,
+                    1174684,
+                    1380578
+                  ],
+                  "medianProcessWallNs": 1365330
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1276486,
+                    1441390,
+                    1256565,
+                    1258932,
+                    1299061,
+                    1293573,
+                    1258560
+                  ],
+                  "medianProcessWallNs": 1276486
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "87399219a05085b3e4ce7e8f1b5ecb2a6d36780667f559ce6c30c65903f628a0",
+              "binarySha256": "31f6a018c081d2b3b63994f699d948c0c11e991c55ce6724af83f74a76dcbf79",
+              "assemblySha256": "867e7223dafa4ee7bcadf9c6bf6f694f06b65e19fd8aaf3ecb61100afaa1407c"
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "sourceSha256": "9f8320c6f38313d52267beae2c3043f42750c9a681684ea537510c1b55e12e43",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 9,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 5376
+                  },
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1296496,
+                    1026898,
+                    1260653,
+                    1259943,
+                    1107002,
+                    1343908,
+                    1433477
+                  ],
+                  "medianProcessWallNs": 1260653
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 9,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 5376
+                  },
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1335626,
+                    1354644,
+                    1532061,
+                    1416176,
+                    1712388,
+                    1037814,
+                    1351694
+                  ],
+                  "medianProcessWallNs": 1354644
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "bc00733a6a51df367196aba5dd29c23968a57331c072583a3ebe378ce48b5d88",
+              "binarySha256": "26b60dedd8b20d174070fcd9024431b324959cdaec52f630b849321a746458a7",
+              "assemblySha256": "b0da469843a1db0f886ede4a892fe781f8e3c954b12db087275c24a14a4a6016"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 18,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 21,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2703995,
+                    1233767,
+                    1073671,
+                    1254033,
+                    1569577,
+                    1260252,
+                    1274214
+                  ],
+                  "medianProcessWallNs": 1260252
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 18,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 21,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1181128,
+                    1594741,
+                    1621469,
+                    1254544,
+                    1124187,
+                    1450032,
+                    1449737
+                  ],
+                  "medianProcessWallNs": 1449737
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "7ccb0c5b0906e669de1c1168952df9ba88be18150cbbd1aa02c3d47c81772e4e",
+              "binarySha256": "5ea71d746d24ee903cb18dd3663eb5f7e56687553602930354528fd931e28e33",
+              "assemblySha256": "41866389e1b17b91098b8ad437848562cb480f769a8a878374f693b4e11a36d1"
+            }
+          }
+        }
+      },
+      "scope": "Same ARC program and compiler; control substitutes the accepted baseline tape runtime. Both workspace settings are explicit. Seven process samples include startup/output, with no speedup threshold. Profiles separately count native tape payloads and charged managed storage; allocator metadata, transient realloc copies and OS reservations are excluded. Paired growth explicitly moves initialized second regions; that count excludes allocator-internal copies in both variants. The Rust interpreter supplies semantic reference results, not a storage or timing comparison."
+    },
+    "linux-arm": {
+      "head": "24620eadbcc8c03fa1aefc2190bf1af483720840",
+      "baseline": "09f1a029c139d06ac3a11623c70f1de959624fbb",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmy3dvn",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "sampling": "One unmeasured process warmup per variant/cache; seven alternating paired/control process samples.",
+      "results": {
+        "identity": {
+          "source": "main = range 0 4096 | map int.to-float | vjp id (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "15028a9fbc44b520360831c83a7e8a22a3de70c4867e661a876dcb41d6263ecc",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2384272,
+                    2304575,
+                    2225174,
+                    2435440,
+                    2306951,
+                    3017062,
+                    2277462
+                  ],
+                  "medianProcessWallNs": 2306951
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2350599,
+                    2396760,
+                    2288327,
+                    2479048,
+                    2411536,
+                    2648690,
+                    2315999
+                  ],
+                  "medianProcessWallNs": 2396760
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "d5bfe7f12ed670b84de6871e34dd5fce327a05e01c11bea2fd59aa4517c36917",
+              "binarySha256": "4854afe75943a77dccec586d6f4c02e88b59607fda71383457656e329405d967",
+              "assemblySha256": "0aea4dd60f0c100e602d619a46ffb3abea99d6e246ef658f554061b211bc20b0"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2356679,
+                    2366751,
+                    2358903,
+                    2308135,
+                    2993445,
+                    2320319,
+                    3168087
+                  ],
+                  "medianProcessWallNs": 2358903
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2403568,
+                    2610545,
+                    2413807,
+                    2367712,
+                    3143383,
+                    2270814,
+                    2317959
+                  ],
+                  "medianProcessWallNs": 2403568
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "58c5fddc9e300fd7e624a9e9dfff10ee23e67a0cbc73a1e8a3c5283df71f8433",
+              "binarySha256": "3e5deb88b188778e688fb3cf43f07ad8210b64bc6ff82748e887c0fac8c60c20",
+              "assemblySha256": "b9667e992d79153ec15e384b1cf1ad3ac5f7388988338ad7c2f091ebd01d4035"
+            }
+          }
+        },
+        "map": {
+          "source": "main = range 0 4096 | map int.to-float | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "7abeb9fe1cc255c4a4e6f3c47cc220fb4d0cd6b23e2d1afccac549d63ece2093",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    3069822,
+                    2715019,
+                    2849492,
+                    2862172,
+                    2852828,
+                    2994109,
+                    2796076
+                  ],
+                  "medianProcessWallNs": 2852828
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2780316,
+                    2890892,
+                    3016870,
+                    2769867,
+                    2970877,
+                    2718202,
+                    2740851
+                  ],
+                  "medianProcessWallNs": 2780316
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "6a9755fd92bdd128523e6543190bcaff79e50a4791b8e73ae1a7696261275a04",
+              "binarySha256": "5cbe73e88a541d785ee199b6376d1d28a78ead40c5f902100d018764c4d4779c",
+              "assemblySha256": "ae2608bc1778a81a70c4ef59bdad2a9a35e16b194ec8d7fb0ec0a90890f87db5"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2894589,
+                    2838579,
+                    2737763,
+                    2800028,
+                    2938205,
+                    3117207,
+                    3038238
+                  ],
+                  "medianProcessWallNs": 2894589
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2968853,
+                    3122383,
+                    2813196,
+                    2740683,
+                    2816100,
+                    2812820,
+                    2824179
+                  ],
+                  "medianProcessWallNs": 2816100
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "d50d10030d999003adf233ed51c805a2d1e12d1a0a860d178e187794f8fe2fbf",
+              "binarySha256": "23847d448ee405a97a85a481f81d11dfde0ace2001f7f64edb4038fec284320c",
+              "assemblySha256": "6b3dd7cceb5e8d6dbd4bdb2b656d9895f908959a5adfddf068b71ec270e89879"
+            }
+          }
+        },
+        "repeated-map": {
+          "source": "main = range 0 16 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "sourceSha256": "3258e3a78117812c782770c9d0432058f8802c8e8578da7a6e3ed8189d9ac1c3",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 224,
+                    "metadataRequestedBytes": 3121152,
+                    "explicitMovedBytes": 774144
+                  },
+                  "tape": {
+                    "tapeRequests": 241,
+                    "tapeRequestedBytes": 4169832,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    25049826,
+                    25590695,
+                    25003641,
+                    24746422,
+                    24859408,
+                    24804159,
+                    25869866
+                  ],
+                  "medianProcessWallNs": 25003641
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    25173651,
+                    25173595,
+                    24532004,
+                    24369555,
+                    23661020,
+                    24795951,
+                    25022058
+                  ],
+                  "medianProcessWallNs": 24795951
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "a8436cd7d3270aae0623f5891975b9dcfbdfae7bdabd099f8d99f0cc6e24469c",
+              "binarySha256": "c3ca348a4f840ffc673e6bc231b0d4f03e1bd32b8e74d310f6ed88fc4971a018",
+              "assemblySha256": "4e6895bb9d8238746a0861694d7f4368ddcd5c54a75890fce004ed60fc5678bb"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 448,
+                    "metadataRequestedBytes": 3121152,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 465,
+                    "tapeRequestedBytes": 4169832,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    25888858,
+                    25034577,
+                    25037394,
+                    24785447,
+                    25276956,
+                    25311284,
+                    24983961
+                  ],
+                  "medianProcessWallNs": 25037394
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    24331362,
+                    25060810,
+                    24522661,
+                    24136888,
+                    24432907,
+                    24787183,
+                    25159746
+                  ],
+                  "medianProcessWallNs": 24522661
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "64c45150f3e6d3e40035fe9983f4ccbb29d1e06e36c56626b57c02f962dcf1cc",
+              "binarySha256": "e93f884171a4bc73bc8e445bcdbfca894e3555cd7f583bad1d8284142b5dbe3a",
+              "assemblySha256": "3cf395bb22b64c45501cf7a3d5a1ef55a4474a779b314aefe0dafbc1babdd931"
+            }
+          }
+        },
+        "replay": {
+          "source": "main = [2.0] | vjp (rev._replay 4096 (map (add 1.0))) [1.0] | sum | echo\n",
+          "sourceSha256": "27019d33ebe7ac8d2656f98f9bfd12113b7f6ae3e150b755bd4b7167bd7f5259",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1808164,
+                    1649515,
+                    1577586,
+                    1651978,
+                    1580570,
+                    1683923,
+                    1637802
+                  ],
+                  "medianProcessWallNs": 1649515
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1514633,
+                    1665019,
+                    1703619,
+                    1511353,
+                    1502265,
+                    1555785,
+                    1629011
+                  ],
+                  "medianProcessWallNs": 1555785
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "eebf845262b7ec9dc57710b897163eb7cbc8765e4ff0f536595b912432aa3eff",
+              "binarySha256": "1c1cb7e686016aa58c559fa8f3894b7ea66fa1c3ada8f8cd1a84f5f6ebdaebc2",
+              "assemblySha256": "0fdc8bf8750fbf65df675ce0007db325f6bd03940cddd835301a3d52e0d39883"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1670131,
+                    1547033,
+                    1640459,
+                    1679706,
+                    1987991,
+                    1598786,
+                    1511833
+                  ],
+                  "medianProcessWallNs": 1640459
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1595234,
+                    1732100,
+                    1643771,
+                    1588714,
+                    1603442,
+                    1577106,
+                    1577346
+                  ],
+                  "medianProcessWallNs": 1595234
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "87399219a05085b3e4ce7e8f1b5ecb2a6d36780667f559ce6c30c65903f628a0",
+              "binarySha256": "272bcad7afb6dbda8a4e3747c8172abdc2739c1857d2e95f1b18acd9348db40d",
+              "assemblySha256": "3a969845f32d5f898b7f1c5b73c74f4807ef6138e1fe69cd3a181bba1542ff9b"
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "sourceSha256": "9f8320c6f38313d52267beae2c3043f42750c9a681684ea537510c1b55e12e43",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 9,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 5376
+                  },
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1179429,
+                    1152940,
+                    1153045,
+                    1102779,
+                    1172749,
+                    1205749,
+                    1138340
+                  ],
+                  "medianProcessWallNs": 1153045
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 9,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 5376
+                  },
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1206421,
+                    1197253,
+                    1141204,
+                    2305641,
+                    1116180,
+                    1099019,
+                    1190901
+                  ],
+                  "medianProcessWallNs": 1190901
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "bc00733a6a51df367196aba5dd29c23968a57331c072583a3ebe378ce48b5d88",
+              "binarySha256": "9af85aa6c66fc6ca642407c563e5099bfda885f02f39d727006353ae368713a6",
+              "assemblySha256": "0ed2cb51267539dbdd3966b943f8a27ceeb0617064a06eda58cb244fce93d790"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 18,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 21,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1109884,
+                    1301566,
+                    1154908,
+                    1125900,
+                    1098356,
+                    1102996,
+                    1217437
+                  ],
+                  "medianProcessWallNs": 1125900
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 18,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 21,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1244206,
+                    1134780,
+                    1277358,
+                    1171988,
+                    1134653,
+                    1100260,
+                    1175149
+                  ],
+                  "medianProcessWallNs": 1171988
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control-profile.c",
+                  "-o",
+                  "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "7ccb0c5b0906e669de1c1168952df9ba88be18150cbbd1aa02c3d47c81772e4e",
+              "binarySha256": "f04566ad73e4d907b34d250f9f2e315a09ca93d932723a94228097deb2da07b1",
+              "assemblySha256": "c609a8ee0bbd07b793fa32a8665427037a3a9b1732813a134509697c06734656"
+            }
+          }
+        }
+      },
+      "scope": "Same ARC program and compiler; control substitutes the accepted baseline tape runtime. Both workspace settings are explicit. Seven process samples include startup/output, with no speedup threshold. Profiles separately count native tape payloads and charged managed storage; allocator metadata, transient realloc copies and OS reservations are excluded. Paired growth explicitly moves initialized second regions; that count excludes allocator-internal copies in both variants. The Rust interpreter supplies semantic reference results, not a storage or timing comparison."
+    },
+    "mac-arm": {
+      "head": "24620eadbcc8c03fa1aefc2190bf1af483720840",
+      "baseline": "09f1a029c139d06ac3a11623c70f1de959624fbb",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sat12-dp155-d6e2b71e-3cbc-4c37-8c7f-45a3bd2cef43-BAC06A809B9A.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "sampling": "One unmeasured process warmup per variant/cache; seven alternating paired/control process samples.",
+      "results": {
+        "identity": {
+          "source": "main = range 0 4096 | map int.to-float | vjp id (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "15028a9fbc44b520360831c83a7e8a22a3de70c4867e661a876dcb41d6263ecc",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    5487083,
+                    4832625,
+                    4743208,
+                    4870250,
+                    5680875,
+                    5219708,
+                    4344167
+                  ],
+                  "medianProcessWallNs": 4870250
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    4420583,
+                    7377541,
+                    7351334,
+                    6374583,
+                    6580208,
+                    6390833,
+                    7087792
+                  ],
+                  "medianProcessWallNs": 6580208
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "d5bfe7f12ed670b84de6871e34dd5fce327a05e01c11bea2fd59aa4517c36917",
+              "binarySha256": "423e14ae76fad8193515c76f40a975ab5d99b41111d080da1fb9cc9ff5c98110",
+              "assemblySha256": "0213dea6bc52aea451899bf68c2591150cfc412deac257ff7b28e180a224c7fd"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    8141708,
+                    4832833,
+                    5377500,
+                    4924708,
+                    4317792,
+                    5287541,
+                    9257417
+                  ],
+                  "medianProcessWallNs": 5287541
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    10145125,
+                    7379584,
+                    6720292,
+                    6606334,
+                    7206791,
+                    7243791,
+                    6699708
+                  ],
+                  "medianProcessWallNs": 7206791
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "58c5fddc9e300fd7e624a9e9dfff10ee23e67a0cbc73a1e8a3c5283df71f8433",
+              "binarySha256": "1612f5c66259714c5c19af37fa3f4dbecd671d026df5f05df2531ae33787639c",
+              "assemblySha256": "9eee77c6887e2d908a1baa7c89b7b39d4013f9af4fe3297b2e583c2f0e76b8d0"
+            }
+          }
+        },
+        "map": {
+          "source": "main = range 0 4096 | map int.to-float | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "7abeb9fe1cc255c4a4e6f3c47cc220fb4d0cd6b23e2d1afccac549d63ece2093",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    4417583,
+                    5092417,
+                    5678000,
+                    4903500,
+                    5681041,
+                    6622416,
+                    4770000
+                  ],
+                  "medianProcessWallNs": 5092417
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    4195625,
+                    4413375,
+                    6607292,
+                    6860208,
+                    6522458,
+                    7456541,
+                    8107542
+                  ],
+                  "medianProcessWallNs": 6607292
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "6a9755fd92bdd128523e6543190bcaff79e50a4791b8e73ae1a7696261275a04",
+              "binarySha256": "766f15ffa59e8be2dd46bd6c70e272b31433b8c1b57df0b4db157de860842965",
+              "assemblySha256": "82081c3b0d25dce848ac5b3989cdd965281ffecd7c3e47c21f12917124d77ad8"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    4401041,
+                    4438667,
+                    4653708,
+                    4617333,
+                    5415625,
+                    4572625,
+                    4525583
+                  ],
+                  "medianProcessWallNs": 4572625
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    4347500,
+                    4293583,
+                    7013500,
+                    7074125,
+                    6326708,
+                    6775250,
+                    6629917
+                  ],
+                  "medianProcessWallNs": 6629917
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "d50d10030d999003adf233ed51c805a2d1e12d1a0a860d178e187794f8fe2fbf",
+              "binarySha256": "e9cf0e94384db14759ceaec82f0d3af65255f86bc4b5302854eecf0b0e5ed4ca",
+              "assemblySha256": "7ebfc8fcdca0e6c8e95cedc737b38d30d47f2f0a4acdf4fc97014dcf64503957"
+            }
+          }
+        },
+        "repeated-map": {
+          "source": "main = range 0 16 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "sourceSha256": "3258e3a78117812c782770c9d0432058f8802c8e8578da7a6e3ed8189d9ac1c3",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 224,
+                    "metadataRequestedBytes": 3121152,
+                    "explicitMovedBytes": 774144
+                  },
+                  "tape": {
+                    "tapeRequests": 241,
+                    "tapeRequestedBytes": 4169832,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    22894167,
+                    26921792,
+                    29444083,
+                    27221042,
+                    29947916,
+                    30317542,
+                    33774834
+                  ],
+                  "medianProcessWallNs": 29444083
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    37041334,
+                    30741583,
+                    32137875,
+                    39806625,
+                    42711542,
+                    32930333,
+                    43585167
+                  ],
+                  "medianProcessWallNs": 37041334
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "a8436cd7d3270aae0623f5891975b9dcfbdfae7bdabd099f8d99f0cc6e24469c",
+              "binarySha256": "906f3aad65368d573b315bb656124caf41548541bdbc3514ca84f6b65da7cd97",
+              "assemblySha256": "a924bf6e93fa078a7d41403bdf87e55d0a9b17d1dfaf295fd9669aef8433bf83"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 448,
+                    "metadataRequestedBytes": 3121152,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 465,
+                    "tapeRequestedBytes": 4169832,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    23111500,
+                    23654333,
+                    28495416,
+                    27043292,
+                    26678666,
+                    28675875,
+                    26592875
+                  ],
+                  "medianProcessWallNs": 26678666
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    35147375,
+                    28910792,
+                    30151666,
+                    30110000,
+                    42486625,
+                    43273375,
+                    30679125
+                  ],
+                  "medianProcessWallNs": 30679125
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "64c45150f3e6d3e40035fe9983f4ccbb29d1e06e36c56626b57c02f962dcf1cc",
+              "binarySha256": "f7de047b72a8a42f09786c2218968d62256fb3d2867f6080ac7835d02aaf2285",
+              "assemblySha256": "7f6e6c544dbb2d4f88b909fbb0c09f7a7c732cfa46cbbf78d97781a4cef5f1ed"
+            }
+          }
+        },
+        "replay": {
+          "source": "main = [2.0] | vjp (rev._replay 4096 (map (add 1.0))) [1.0] | sum | echo\n",
+          "sourceSha256": "27019d33ebe7ac8d2656f98f9bfd12113b7f6ae3e150b755bd4b7167bd7f5259",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    3932458,
+                    3541959,
+                    3676667,
+                    4156958,
+                    3674292,
+                    4172417,
+                    4207542
+                  ],
+                  "medianProcessWallNs": 3932458
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    4735833,
+                    4032000,
+                    3888459,
+                    7006791,
+                    6076875,
+                    7467500,
+                    7485292
+                  ],
+                  "medianProcessWallNs": 6076875
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "eebf845262b7ec9dc57710b897163eb7cbc8765e4ff0f536595b912432aa3eff",
+              "binarySha256": "c887b57e9a9d4b8f73060d197b3fb4388749c0f72fc3174e61477f99c8b56973",
+              "assemblySha256": "025a357cbd87dc3ecddbf7cfe24b67625424b815f8357e2b43074ca2c29b964c"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    4195916,
+                    3828084,
+                    4043791,
+                    5417333,
+                    4496625,
+                    5012958,
+                    4062333
+                  ],
+                  "medianProcessWallNs": 4195916
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    6780791,
+                    4192708,
+                    6651167,
+                    5938708,
+                    7028417,
+                    5974917,
+                    6476167
+                  ],
+                  "medianProcessWallNs": 6476167
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "87399219a05085b3e4ce7e8f1b5ecb2a6d36780667f559ce6c30c65903f628a0",
+              "binarySha256": "f2b828ef147bfa42a21f374455ae884e936416706887849e763c0114a3a498b2",
+              "assemblySha256": "b77021156a806f081537b7c81bbf3f1ce13174c352c17a5cc5c80132b7b99b5b"
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "sourceSha256": "9f8320c6f38313d52267beae2c3043f42750c9a681684ea537510c1b55e12e43",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 9,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 5376
+                  },
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    3710958,
+                    3384667,
+                    3307000,
+                    3071916,
+                    3497500,
+                    3736083,
+                    3472584
+                  ],
+                  "medianProcessWallNs": 3472584
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 9,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 5376
+                  },
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    3054958,
+                    3359250,
+                    3416084,
+                    3312917,
+                    3347375,
+                    3467417,
+                    3340375
+                  ],
+                  "medianProcessWallNs": 3347375
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "bc00733a6a51df367196aba5dd29c23968a57331c072583a3ebe378ce48b5d88",
+              "binarySha256": "5dae010ee8cb3544a649298a69385b155143ecaf9af5b8834a3d245223925e44",
+              "assemblySha256": "ccb4fc946399685d60a0755f6ea3aca3c35f0763c534bce926961d46d858c012"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 18,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 21,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    3536500,
+                    3384916,
+                    3509417,
+                    3501458,
+                    3516458,
+                    3812958,
+                    3196000
+                  ],
+                  "medianProcessWallNs": 3509417
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 18,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 21,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    3613750,
+                    3230208,
+                    4129792,
+                    3376334,
+                    4084125,
+                    4301208,
+                    6657750
+                  ],
+                  "medianProcessWallNs": 4084125
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "7ccb0c5b0906e669de1c1168952df9ba88be18150cbbd1aa02c3d47c81772e4e",
+              "binarySha256": "f8ded37f780c2823def2f5e363fa51dfb76b0069e1a8a64f8a7bec19d9ae1735",
+              "assemblySha256": "67ed936324b19a71207209d095cebbade375a1029e829c07001347a747db5358"
+            }
+          }
+        }
+      },
+      "scope": "Same ARC program and compiler; control substitutes the accepted baseline tape runtime. Both workspace settings are explicit. Seven process samples include startup/output, with no speedup threshold. Profiles separately count native tape payloads and charged managed storage; allocator metadata, transient realloc copies and OS reservations are excluded. Paired growth explicitly moves initialized second regions; that count excludes allocator-internal copies in both variants. The Rust interpreter supplies semantic reference results, not a storage or timing comparison."
+    },
+    "mac-intel": {
+      "head": "24620eadbcc8c03fa1aefc2190bf1af483720840",
+      "baseline": "09f1a029c139d06ac3a11623c70f1de959624fbb",
+      "hardware": {
+        "system": "Darwin",
+        "node": "iad01-ar515-89c79b85-0538-4336-af87-9d1648f0e555-1E1FDECCC9BD.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "machine": "x86_64",
+        "processor": "i386"
+      },
+      "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "sampling": "One unmeasured process warmup per variant/cache; seven alternating paired/control process samples.",
+      "results": {
+        "identity": {
+          "source": "main = range 0 4096 | map int.to-float | vjp id (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "15028a9fbc44b520360831c83a7e8a22a3de70c4867e661a876dcb41d6263ecc",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    12576393,
+                    12864443,
+                    11463214,
+                    12853487,
+                    13160100,
+                    12576440,
+                    13103599
+                  ],
+                  "medianProcessWallNs": 12853487
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    11273327,
+                    10129788,
+                    11519530,
+                    12323830,
+                    14691646,
+                    11549082,
+                    13251436
+                  ],
+                  "medianProcessWallNs": 11549082
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "d5bfe7f12ed670b84de6871e34dd5fce327a05e01c11bea2fd59aa4517c36917",
+              "binarySha256": "db0336b11b779475020e1cd0b6d1f7416899e8c5d38170192bb76b6dfbc5943d",
+              "assemblySha256": "71b39564b7a7397837375d1d4f9613ee0b4a02d174d17eedfe2a290a101d80ad"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    12180955,
+                    12147671,
+                    11234382,
+                    12784916,
+                    12391811,
+                    11712266,
+                    12016096
+                  ],
+                  "medianProcessWallNs": 12147671
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 0,
+                    "metadataRequestedBytes": 0,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 2,
+                    "tapeRequestedBytes": 32872,
+                    "peakTapeBytes": 32872,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 49164,
+                    "requestedBytes": 1507455,
+                    "retains": 8198,
+                    "peakChargedBytes": 819240,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    10885271,
+                    11929903,
+                    9855703,
+                    10646750,
+                    16882345,
+                    13569167,
+                    13504791
+                  ],
+                  "medianProcessWallNs": 11929903
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/identity-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "58c5fddc9e300fd7e624a9e9dfff10ee23e67a0cbc73a1e8a3c5283df71f8433",
+              "binarySha256": "8201a3ac5b89e8fe400c71c82634b0d9ed1e95a3042d3b9845f6e2c7a361dd65",
+              "assemblySha256": "4a86ddbad9fd99d61cf0fe1e0ee8e6f82806e453b43d4ba993f281c62265741c"
+            }
+          }
+        },
+        "map": {
+          "source": "main = range 0 4096 | map int.to-float | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum | echo\n",
+          "sourceSha256": "7abeb9fe1cc255c4a4e6f3c47cc220fb4d0cd6b23e2d1afccac549d63ece2093",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    15726555,
+                    14851104,
+                    16784907,
+                    16773586,
+                    16783439,
+                    15496706,
+                    16059771
+                  ],
+                  "medianProcessWallNs": 16059771
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    13127177,
+                    16864655,
+                    17427341,
+                    17730038,
+                    15012863,
+                    15843659,
+                    15231555
+                  ],
+                  "medianProcessWallNs": 15843659
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "6a9755fd92bdd128523e6543190bcaff79e50a4791b8e73ae1a7696261275a04",
+              "binarySha256": "7fb8a66d6a87d87d18fe460f81fd1d7ad45e70c9ffe3d81e011376038147e0bf",
+              "assemblySha256": "46c293ef38a1eef3493bb759b4076fb0a129781a3089800d28c02568c91a8f6e"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    17421163,
+                    15102784,
+                    17789059,
+                    14882040,
+                    15225481,
+                    16292758,
+                    16362234
+                  ],
+                  "medianProcessWallNs": 16292758
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 61456,
+                    "requestedBytes": 1900735,
+                    "retains": 20489,
+                    "peakChargedBytes": 819304,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    16770000,
+                    19541954,
+                    16956277,
+                    16811925,
+                    16777475,
+                    15578992,
+                    13819183
+                  ],
+                  "medianProcessWallNs": 16777475
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/map-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "d50d10030d999003adf233ed51c805a2d1e12d1a0a860d178e187794f8fe2fbf",
+              "binarySha256": "c34f701b83bc08687e3c967adef05050f61885150c092cb9bba64519c1574de1",
+              "assemblySha256": "c82d8d77cb77f31be3846a147866bf18fa9d5dc367b8abc8ccffdde75bc253f7"
+            }
+          }
+        },
+        "repeated-map": {
+          "source": "main = range 0 16 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "sourceSha256": "3258e3a78117812c782770c9d0432058f8802c8e8578da7a6e3ed8189d9ac1c3",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 224,
+                    "metadataRequestedBytes": 3121152,
+                    "explicitMovedBytes": 774144
+                  },
+                  "tape": {
+                    "tapeRequests": 241,
+                    "tapeRequestedBytes": 4169832,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    51817748,
+                    65776881,
+                    51691627,
+                    50835477,
+                    55340027,
+                    62861095,
+                    63750995
+                  ],
+                  "medianProcessWallNs": 55340027
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    63910834,
+                    52783989,
+                    58289488,
+                    56811733,
+                    52404044,
+                    57203653,
+                    58593719
+                  ],
+                  "medianProcessWallNs": 57203653
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "a8436cd7d3270aae0623f5891975b9dcfbdfae7bdabd099f8d99f0cc6e24469c",
+              "binarySha256": "1d57e821b8971a8af6ca1b43a3f28ebbe84c714f5888f3eefce891655e19f0a3",
+              "assemblySha256": "5253d7ea41ab2124e0cb3f751ec4f8b9cdb0570faf25f154363e530a1e2d289a"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 448,
+                    "metadataRequestedBytes": 3121152,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 465,
+                    "tapeRequestedBytes": 4169832,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    64128009,
+                    57247348,
+                    65317437,
+                    50134483,
+                    60600354,
+                    62244352,
+                    63834896
+                  ],
+                  "medianProcessWallNs": 62244352
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 798937,
+                    "requestedBytes": 25496345,
+                    "retains": 327920,
+                    "peakChargedBytes": 820040,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    53382564,
+                    49816780,
+                    50862163,
+                    53884642,
+                    57556495,
+                    50886572,
+                    50684591
+                  ],
+                  "medianProcessWallNs": 50886572
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/repeated-map-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "64c45150f3e6d3e40035fe9983f4ccbb29d1e06e36c56626b57c02f962dcf1cc",
+              "binarySha256": "953241be50c1803e595e65af5d5dc996efa5107febd7b1f4dfe6c246657413af",
+              "assemblySha256": "a0f390da871c1072c8d4cb15edcde8c97f0340cf1c0cf6018a21c17c20bd7c72"
+            }
+          }
+        },
+        "replay": {
+          "source": "main = [2.0] | vjp (rev._replay 4096 (map (add 1.0))) [1.0] | sum | echo\n",
+          "sourceSha256": "27019d33ebe7ac8d2656f98f9bfd12113b7f6ae3e150b755bd4b7167bd7f5259",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    9980046,
+                    7815962,
+                    10806611,
+                    7675654,
+                    7581191,
+                    7395148,
+                    7809480
+                  ],
+                  "medianProcessWallNs": 7809480
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 14,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 48384
+                  },
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    8238099,
+                    11612996,
+                    11203598,
+                    11810403,
+                    11341209,
+                    10721540,
+                    12322058
+                  ],
+                  "medianProcessWallNs": 11341209
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "eebf845262b7ec9dc57710b897163eb7cbc8765e4ff0f536595b912432aa3eff",
+              "binarySha256": "088376c0bfa4ac3b5852bbace8d5074e51031e6794e0069cab95f87a57413a0d",
+              "assemblySha256": "1f941d1eebc302dea28dddd4c8c2ca45cfaeb3bc9a7de91a0f3cbc3e7e1361cf"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    7675303,
+                    7779960,
+                    10161687,
+                    7532911,
+                    8337237,
+                    7992488,
+                    7413293
+                  ],
+                  "medianProcessWallNs": 7779960
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 28,
+                    "metadataRequestedBytes": 195072,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 30,
+                    "tapeRequestedBytes": 227952,
+                    "peakTapeBytes": 131184,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 16410,
+                    "requestedBytes": 426516,
+                    "retains": 20491,
+                    "peakChargedBytes": 336,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    7637018,
+                    7735506,
+                    10243177,
+                    10090358,
+                    10311569,
+                    11171514,
+                    11777586
+                  ],
+                  "medianProcessWallNs": 10243177
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/replay-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "87399219a05085b3e4ce7e8f1b5ecb2a6d36780667f559ce6c30c65903f628a0",
+              "binarySha256": "2f1aaf21957d166fb1782b949c522c4921de7c99494df1f3247219dc3e268d16",
+              "assemblySha256": "23fe080a17bc600695cc069b1d9ed9d41fe1346e599262dabaa198b89c65f164"
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "sourceSha256": "9f8320c6f38313d52267beae2c3043f42750c9a681684ea537510c1b55e12e43",
+          "variants": {
+            "paired": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 9,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 5376
+                  },
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    7228643,
+                    6329589,
+                    6806141,
+                    7454829,
+                    8213830,
+                    7647645,
+                    7667732
+                  ],
+                  "medianProcessWallNs": 7454829
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 9,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 5376
+                  },
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    7926854,
+                    11038845,
+                    11363911,
+                    14003099,
+                    11252149,
+                    9727625,
+                    10113782
+                  ],
+                  "medianProcessWallNs": 11038845
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-paired-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "bc00733a6a51df367196aba5dd29c23968a57331c072583a3ebe378ce48b5d88",
+              "binarySha256": "195f4e3e2ca1dfc5280ee06575a37399329347b49de5f292ad08fcbc1b158947",
+              "assemblySha256": "97ba172f6d200c66851e2756d7489f2d7724ddd206d9f64fa6404da7d4a40b34"
+            },
+            "separate-control": {
+              "caches": {
+                "0": {
+                  "metadata": {
+                    "metadataRequests": 18,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 21,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    6392023,
+                    6488371,
+                    6984421,
+                    7790004,
+                    7446728,
+                    6934486,
+                    8245843
+                  ],
+                  "medianProcessWallNs": 6984421
+                },
+                "1": {
+                  "metadata": {
+                    "metadataRequests": 18,
+                    "metadataRequestedBytes": 23552,
+                    "explicitMovedBytes": 0
+                  },
+                  "tape": {
+                    "tapeRequests": 21,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4415,
+                    "requestedBytes": 131516,
+                    "retains": 2119,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    8886753,
+                    11511304,
+                    10306849,
+                    9940707,
+                    10919345,
+                    11852717,
+                    8033589
+                  ],
+                  "medianProcessWallNs": 10306849
+                }
+              },
+              "commands": [
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control",
+                  "-lm",
+                  "-lpthread"
+                ],
+                [
+                  "clang",
+                  "-O2",
+                  "-std=gnu11",
+                  "-ffp-contract=off",
+                  "-w",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control-profile.c",
+                  "-o",
+                  "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/metadata/nested-separate-control-profile",
+                  "-lm",
+                  "-lpthread"
+                ]
+              ],
+              "generatedSha256": "7ccb0c5b0906e669de1c1168952df9ba88be18150cbbd1aa02c3d47c81772e4e",
+              "binarySha256": "7adb2c2ec693fd9f671c976e328320336870e9501166fb4bbaaae8e413118a02",
+              "assemblySha256": "a5176563aae9b1791cc4a5b2ff6a6d5d69fdaa6a35e49049a1fa55c6011048f1"
+            }
+          }
+        }
+      },
+      "scope": "Same ARC program and compiler; control substitutes the accepted baseline tape runtime. Both workspace settings are explicit. Seven process samples include startup/output, with no speedup threshold. Profiles separately count native tape payloads and charged managed storage; allocator metadata, transient realloc copies and OS reservations are excluded. Paired growth explicitly moves initialized second regions; that count excludes allocator-internal copies in both variants. The Rust interpreter supplies semantic reference results, not a storage or timing comparison."
+    }
+  },
+  "artifacts": {
+    "linux-amd": {
+      "archiveSha256": "d40b8486f863f246c3d5c2604f0434e8625d141a820dd4c09c31c5fe42130a95",
+      "verifiedFiles": [
+        "metadata/identity-paired.c",
+        "metadata/identity-paired",
+        "metadata/identity-paired.asm",
+        "metadata/identity-separate-control.c",
+        "metadata/identity-separate-control",
+        "metadata/identity-separate-control.asm",
+        "metadata/map-paired.c",
+        "metadata/map-paired",
+        "metadata/map-paired.asm",
+        "metadata/map-separate-control.c",
+        "metadata/map-separate-control",
+        "metadata/map-separate-control.asm",
+        "metadata/repeated-map-paired.c",
+        "metadata/repeated-map-paired",
+        "metadata/repeated-map-paired.asm",
+        "metadata/repeated-map-separate-control.c",
+        "metadata/repeated-map-separate-control",
+        "metadata/repeated-map-separate-control.asm",
+        "metadata/replay-paired.c",
+        "metadata/replay-paired",
+        "metadata/replay-paired.asm",
+        "metadata/replay-separate-control.c",
+        "metadata/replay-separate-control",
+        "metadata/replay-separate-control.asm",
+        "metadata/nested-paired.c",
+        "metadata/nested-paired",
+        "metadata/nested-paired.asm",
+        "metadata/nested-separate-control.c",
+        "metadata/nested-separate-control",
+        "metadata/nested-separate-control.asm"
+      ],
+      "id": 11967664798,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38726490082/artifacts/11967664798"
+    },
+    "linux-arm": {
+      "archiveSha256": "13620cedf06c25e158ad62f08f831e955b6567454b2ce047ba03caa50bb89185",
+      "verifiedFiles": [
+        "metadata/identity-paired.c",
+        "metadata/identity-paired",
+        "metadata/identity-paired.asm",
+        "metadata/identity-separate-control.c",
+        "metadata/identity-separate-control",
+        "metadata/identity-separate-control.asm",
+        "metadata/map-paired.c",
+        "metadata/map-paired",
+        "metadata/map-paired.asm",
+        "metadata/map-separate-control.c",
+        "metadata/map-separate-control",
+        "metadata/map-separate-control.asm",
+        "metadata/repeated-map-paired.c",
+        "metadata/repeated-map-paired",
+        "metadata/repeated-map-paired.asm",
+        "metadata/repeated-map-separate-control.c",
+        "metadata/repeated-map-separate-control",
+        "metadata/repeated-map-separate-control.asm",
+        "metadata/replay-paired.c",
+        "metadata/replay-paired",
+        "metadata/replay-paired.asm",
+        "metadata/replay-separate-control.c",
+        "metadata/replay-separate-control",
+        "metadata/replay-separate-control.asm",
+        "metadata/nested-paired.c",
+        "metadata/nested-paired",
+        "metadata/nested-paired.asm",
+        "metadata/nested-separate-control.c",
+        "metadata/nested-separate-control",
+        "metadata/nested-separate-control.asm"
+      ],
+      "id": 11969440061,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38726490082/artifacts/11969440061"
+    },
+    "mac-arm": {
+      "archiveSha256": "a6eb311be77823d6afe164e5bf2e2342e76c257db3dfe1d13aa409969159a732",
+      "verifiedFiles": [
+        "metadata/identity-paired.c",
+        "metadata/identity-paired",
+        "metadata/identity-paired.asm",
+        "metadata/identity-separate-control.c",
+        "metadata/identity-separate-control",
+        "metadata/identity-separate-control.asm",
+        "metadata/map-paired.c",
+        "metadata/map-paired",
+        "metadata/map-paired.asm",
+        "metadata/map-separate-control.c",
+        "metadata/map-separate-control",
+        "metadata/map-separate-control.asm",
+        "metadata/repeated-map-paired.c",
+        "metadata/repeated-map-paired",
+        "metadata/repeated-map-paired.asm",
+        "metadata/repeated-map-separate-control.c",
+        "metadata/repeated-map-separate-control",
+        "metadata/repeated-map-separate-control.asm",
+        "metadata/replay-paired.c",
+        "metadata/replay-paired",
+        "metadata/replay-paired.asm",
+        "metadata/replay-separate-control.c",
+        "metadata/replay-separate-control",
+        "metadata/replay-separate-control.asm",
+        "metadata/nested-paired.c",
+        "metadata/nested-paired",
+        "metadata/nested-paired.asm",
+        "metadata/nested-separate-control.c",
+        "metadata/nested-separate-control",
+        "metadata/nested-separate-control.asm"
+      ],
+      "id": 11968790238,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38726490082/artifacts/11968790238"
+    },
+    "mac-intel": {
+      "archiveSha256": "a675bada1eac53dced3bf3e1a7ef4260258b4ddf5fe97583a71018dac40de733",
+      "verifiedFiles": [
+        "metadata/identity-paired.c",
+        "metadata/identity-paired",
+        "metadata/identity-paired.asm",
+        "metadata/identity-separate-control.c",
+        "metadata/identity-separate-control",
+        "metadata/identity-separate-control.asm",
+        "metadata/map-paired.c",
+        "metadata/map-paired",
+        "metadata/map-paired.asm",
+        "metadata/map-separate-control.c",
+        "metadata/map-separate-control",
+        "metadata/map-separate-control.asm",
+        "metadata/repeated-map-paired.c",
+        "metadata/repeated-map-paired",
+        "metadata/repeated-map-paired.asm",
+        "metadata/repeated-map-separate-control.c",
+        "metadata/repeated-map-separate-control",
+        "metadata/repeated-map-separate-control.asm",
+        "metadata/replay-paired.c",
+        "metadata/replay-paired",
+        "metadata/replay-paired.asm",
+        "metadata/replay-separate-control.c",
+        "metadata/replay-separate-control",
+        "metadata/replay-separate-control.asm",
+        "metadata/nested-paired.c",
+        "metadata/nested-paired",
+        "metadata/nested-paired.asm",
+        "metadata/nested-separate-control.c",
+        "metadata/nested-separate-control",
+        "metadata/nested-separate-control.asm"
+      ],
+      "id": 11969400536,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38726490082/artifacts/11969400536"
+    }
+  },
+  "nativeInspection": {
+    "linux-amd": {
+      "numericEntry": "a380",
+      "capacityBranch": "a49c",
+      "capacityCommit": "a610",
+      "localStackBytesControlToPaired": [
+        72,
+        56
+      ],
+      "managedReserveEntry": "119c0",
+      "managedOwnerBranch": "11a6d",
+      "managedParentRealloc": "11a43",
+      "managedParentMove": "11c16",
+      "managedCapacityCommit": "11c27",
+      "pairedNumericGrowthInstructions": [
+        "a510:\te8 eb 8c ff ff       \tcall   3200 <realloc@plt>",
+        "a54b:\te8 b0 8c ff ff       \tcall   3200 <realloc@plt>",
+        "a5b1:\te8 7a 8c ff ff       \tcall   3230 <memmove@plt>",
+        "a5e2:\te8 49 8c ff ff       \tcall   3230 <memmove@plt>"
+      ],
+      "separate-controlNumericGrowthInstructions": [
+        "a503:\te8 f8 8c ff ff       \tcall   3200 <realloc@plt>",
+        "a521:\te8 da 8c ff ff       \tcall   3200 <realloc@plt>",
+        "a5e1:\te8 1a 8c ff ff       \tcall   3200 <realloc@plt>",
+        "a602:\te8 f9 8b ff ff       \tcall   3200 <realloc@plt>"
+      ],
+      "review": "Generated C maps f67 to numeric ad.push and f108 to managed ad.push-owned. Numeric capacity hits bypass growth; growth uses two realloc calls (8*cap and 16*cap), then initialized-region memmoves (8*used and 4*used). Parent stores remain 32-bit and weights 64-bit. Numeric growth has no managed-weight branch. Nested code calls a shared reserve helper that retains both owner branches; its managed path performs one native parent realloc, separate typed weight growth, then parent relocation and capacity publication. Ordinary saved registers and stack spills remain. AMD64 local stack figures exclude saved-register pushes; ARM64 frames include saved registers. No universal register, cache, or timing improvement is inferred."
+    },
+    "linux-arm": {
+      "numericEntry": "9130",
+      "capacityBranch": "9274",
+      "capacityCommit": "9380",
+      "totalFrameBytesControlToPaired": [
+        160,
+        160
+      ],
+      "managedReserveEntry": "101d0",
+      "managedOwnerBranch": "1025c",
+      "managedParentRealloc": "10244",
+      "managedParentMove": "103b0",
+      "managedCapacityCommit": "103bc",
+      "pairedNumericGrowthInstructions": [
+        "92d8:\t97ffe506 \tbl\t26f0 <realloc@plt>",
+        "9308:\t97ffe4fa \tbl\t26f0 <realloc@plt>",
+        "9354:\t97ffe497 \tbl\t25b0 <memmove@plt>",
+        "9370:\t97ffe490 \tbl\t25b0 <memmove@plt>"
+      ],
+      "separate-controlNumericGrowthInstructions": [
+        "9284:\t97ffe50b \tbl\t26b0 <realloc@plt>",
+        "92a4:\t97ffe503 \tbl\t26b0 <realloc@plt>",
+        "9340:\t97ffe4dc \tbl\t26b0 <realloc@plt>",
+        "9360:\t97ffe4d4 \tbl\t26b0 <realloc@plt>"
+      ],
+      "review": "Generated C maps f67 to numeric ad.push and f108 to managed ad.push-owned. Numeric capacity hits bypass growth; growth uses two realloc calls (8*cap and 16*cap), then initialized-region memmoves (8*used and 4*used). Parent stores remain 32-bit and weights 64-bit. Numeric growth has no managed-weight branch. Nested code calls a shared reserve helper that retains both owner branches; its managed path performs one native parent realloc, separate typed weight growth, then parent relocation and capacity publication. Ordinary saved registers and stack spills remain. AMD64 local stack figures exclude saved-register pushes; ARM64 frames include saved registers. No universal register, cache, or timing improvement is inferred."
+    },
+    "mac-arm": {
+      "numericEntry": "100006a10",
+      "capacityBranch": "100006b24",
+      "capacityCommit": "100006bdc",
+      "totalFrameBytesControlToPaired": [
+        128,
+        128
+      ],
+      "managedReserveEntry": "10000ba80",
+      "managedOwnerBranch": "10000bb10",
+      "managedParentRealloc": "10000baf8",
+      "managedParentMove": "10000bc50",
+      "managedCapacityCommit": "10000bc60",
+      "pairedNumericGrowthInstructions": [
+        "0000000100006b68\tbl\t0x10000b818 ; symbol stub for: _realloc",
+        "0000000100006b84\tbl\t0x10000b818 ; symbol stub for: _realloc",
+        "0000000100006bb0\tbl\t0x10000b7ac ; symbol stub for: _memmove",
+        "0000000100006bcc\tbl\t0x10000b7ac ; symbol stub for: _memmove"
+      ],
+      "separate-controlNumericGrowthInstructions": [
+        "0000000100006b64\tbl\t0x10000b940 ; symbol stub for: _realloc",
+        "0000000100006b78\tbl\t0x10000b940 ; symbol stub for: _realloc",
+        "0000000100006c0c\tbl\t0x10000b940 ; symbol stub for: _realloc",
+        "0000000100006c20\tbl\t0x10000b940 ; symbol stub for: _realloc"
+      ],
+      "review": "Generated C maps f67 to numeric ad.push and f108 to managed ad.push-owned. Numeric capacity hits bypass growth; growth uses two realloc calls (8*cap and 16*cap), then initialized-region memmoves (8*used and 4*used). Parent stores remain 32-bit and weights 64-bit. Numeric growth has no managed-weight branch. Nested code calls a shared reserve helper that retains both owner branches; its managed path performs one native parent realloc, separate typed weight growth, then parent relocation and capacity publication. Ordinary saved registers and stack spills remain. AMD64 local stack figures exclude saved-register pushes; ARM64 frames include saved registers. No universal register, cache, or timing improvement is inferred."
+    },
+    "mac-intel": {
+      "numericEntry": "1000078d0",
+      "capacityBranch": "1000079f0",
+      "capacityCommit": "100007b0d",
+      "localStackBytesControlToPaired": [
+        72,
+        72
+      ],
+      "managedReserveEntry": "10000d6e0",
+      "managedOwnerBranch": "10000d78e",
+      "managedParentRealloc": "10000d763",
+      "managedParentMove": "10000d915",
+      "managedCapacityCommit": "10000d926",
+      "pairedNumericGrowthInstructions": [
+        "0000000100007a66\tcallq\t0x10000cef6                     ## symbol stub for: _realloc",
+        "0000000100007a8f\tcallq\t0x10000cef6                     ## symbol stub for: _realloc",
+        "0000000100007ac5\tcallq\t0x10000cec0                     ## symbol stub for: _memmove",
+        "0000000100007aee\tcallq\t0x10000cec0                     ## symbol stub for: _memmove"
+      ],
+      "separate-controlNumericGrowthInstructions": [
+        "0000000100007a55\tcallq\t0x10000d050                     ## symbol stub for: _realloc",
+        "0000000100007a6e\tcallq\t0x10000d050                     ## symbol stub for: _realloc",
+        "0000000100007b17\tcallq\t0x10000d050                     ## symbol stub for: _realloc",
+        "0000000100007b30\tcallq\t0x10000d050                     ## symbol stub for: _realloc"
+      ],
+      "review": "Generated C maps f67 to numeric ad.push and f108 to managed ad.push-owned. Numeric capacity hits bypass growth; growth uses two realloc calls (8*cap and 16*cap), then initialized-region memmoves (8*used and 4*used). Parent stores remain 32-bit and weights 64-bit. Numeric growth has no managed-weight branch. Nested code calls a shared reserve helper that retains both owner branches; its managed path performs one native parent realloc, separate typed weight growth, then parent relocation and capacity publication. Ordinary saved registers and stack spills remain. AMD64 local stack figures exclude saved-register pushes; ARM64 frames include saved registers. No universal register, cache, or timing improvement is inferred."
+    }
+  },
+  "validation": {
+    "nativeRun": "https://github.com/e6qu/fun-with-pipes/actions/runs/38726490082",
+    "nativeResult": "All four AD jobs and paired metadata measurement steps passed at sourceHead.",
+    "wasmRun": "https://github.com/e6qu/fun-with-pipes/actions/runs/38726508454",
+    "scope": "Final production acceptance is recorded by PR #141 checks; sourceHead is the measured runtime revision. Subsequent delivery changes are documentation/evidence only.",
+    "controls": "Moving allocations and overlapping clamped growth; exact F64 bits and alignment; initialized lengths; recoverable managed-growth traps; native OOM cleanup; tracing collection/reuse and ARC reclamation; deliberate defective relocation, copy length and early capacity controls. Actual wasm32 checks the original node bound and size_t requests with no giant allocation; overflow mutation must fail.",
+    "wasmResult": "Both actual WASM jobs passed at sourceHead, including wasm32 size expressions and deliberate overflow controls."
+  }
+}

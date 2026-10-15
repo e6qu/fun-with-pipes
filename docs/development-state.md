@@ -1,11 +1,10 @@
 # Session handoff
 
-Updated 2026-10-15. The user requested continued development after PR #140.
-[Draft PR #141](https://github.com/e6qu/fun-with-pipes/pull/141), branch
-`autodiff-metadata-block`, is published at `87ce49e9`, based on accepted
-`09f1a029`. The validated owner-capture refinement is ready for publication.
-Publication, fixes and squash merge after all nine exact-head production jobs
-and documentation remain authorized.
+Updated 2026-10-15. [PR #141](https://github.com/e6qu/fun-with-pipes/pull/141),
+branch `autodiff-metadata-block`, delivers the final planned follow-up. Runtime,
+tests, measurement tooling and workflows are frozen at `24620ead`; subsequent
+changes only record evidence and documentation. Base is accepted `09f1a029`.
+Publication, fixes and squash merge remain authorized after the gates below.
 
 ## Roadmap status
 
@@ -21,94 +20,80 @@ and documentation remain authorized.
 | 8 | Verified | Operation-only AD metadata and atomic weight retention |
 | 9 | Verified | Geometric AD registry growth and workspace preservation |
 | 10 | Verified | Registry cursor search; PR #140 merged with all gates |
-| 11 | In progress | Paired native AD metadata allocations and relocation controls |
+| 11 | Implemented | Paired native AD metadata allocations and relocation controls |
 
-## Accepted baseline
+## Accepted baseline and final change
 
-Steps 1–10 in [PLAN](../PLAN.md) are verified. [PR #140](https://github.com/e6qu/fun-with-pipes/pull/140)
-merged as `09f1a029`, tree-identical to `cdb76905`, with all nine production jobs,
-documentation, four-host focused AD and both WASM checks passing. See
-[history](roadmap-history.md#accepted-registry-cursor-follow-up-pr-140) for links.
-Local main was clean and the one-line squash message was verified.
-Historical preparation anchors are evidence, not work to replay.
+Steps 1–10 are verified through [PR #140](https://github.com/e6qu/fun-with-pipes/pull/140),
+merged as `09f1a029` with all nine production jobs and documentation at the
+identical tested tree. [History](roadmap-history.md#accepted-registry-cursor-follow-up-pr-140)
+retains its acceptance; preparation anchors are not work to replay.
 
-## Current work: paired native AD metadata (step 11)
+Step 11 pairs native parent buffers and numeric derivative buffers while keeping
+separate contiguous, naturally aligned regions. Growth copies only initialized
+second regions. Old offsets remain valid until potentially trapping managed
+weight growth finishes. Only base pointers own storage. Capturing the owner
+before realloc allows numeric growth specialization. The interpreter, syntax,
+arithmetic order, node bound and workspace budget are unchanged.
 
-Implementation and focused native controls are complete; runner measurements and
-full platform acceptance remain pending. No timing claim is made. Native
-parents share one allocation with contiguous `pa`/`pb` regions. Numeric
-derivatives similarly share a second allocation. Growth relocates initialized
-second regions after allocating, and only base pointers own storage. Managed
-weights remain separately typed and owned. Preserve old offsets during managed
-weight growth because it can trap and leave the tape live. Preserve the existing
-32-bit node limit, natural alignment, arithmetic order and workspace byte budget.
-The interpreter stays unchanged as the semantic reference. Growth now captures
-the existing owner before realloc so direct numeric/managed pushes can discard
-the unreachable growth branch.
+[Four-host evidence](measurements/ad-metadata-2026-10-15.json) verifies half as
+many metadata requests with unchanged requested/peak payload and managed
+counters. The mapped VJP uses 16 total native tape requests instead of 30;
+all measured storage is reclaimed with zero collections. Timings are mixed,
+including regressions, so no general speedup is claimed. [Benchmarks](benchmarks.md#paired-autodiff-metadata-allocations)
+record copying costs, timings and actual instruction review. Archive and every
+source/binary/disassembly hash were verified before recording the report.
 
-## Checks and resolved failures
+## Validation
 
-All local checks used `python3 scripts/local-guard.py` with unchanged limits.
-The final `cargo test --test autodiff_capacity_bounds -- --test-threads=1`
-passed all three tests in 27.48s, including forced relocation, aligned regions,
-clamped overlapping moves, recoverable managed-growth traps and deliberate
-move/length/early-commit defects at O1/O2 in tracing and ARC modes.
-`cargo test --test autodiff_workspace --test ad_tape_ownership --test autodiff_library -- --test-threads=1`
-passed both unwind tests, library teardown and three workspace tests in 57.06s;
-the input-padding negative control then failed because it reserved before
-initializing the tape length. Moving that deliberate reservation after length
-initialization fixes the control; its separate rerun passed in 4.14s. The matching
-historical-comparison script is corrected too. An earlier ledger assertion still
-expected five independent buffers; it now verifies three owning bases and no
-interior-pointer frees. An initial ARC probe used forbidden reuse verification;
-the corrected explicit tracing/ARC settings pass. These failures are resolved.
+[Four-host AD and measurements](https://github.com/e6qu/fun-with-pipes/actions/runs/38726490082)
+passed at `24620ead`. [Both actual WASM jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38726508454)
+both passed at that revision, including semantic agreement and actual 32-bit
+allocation-size controls. The final merge gate rechecks their conclusions. [Runtime-head documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38726466688)
+passed, but the final documentation head needs its own audit.
 
-Final Rust formatting passed in 1.11s and all-target clippy in 17.45s. Measurement
-instrumentation on actual emitted C passed syntax checking in 0.98s; a final
-5.23s check also emitted checked ARC C for all five workloads without running
-benchmarks. Workflow lint passed in 0.26s; the roadmap/link/commit audit passed
-all 11 steps in 2.76s. Full builds, suites, timing samples and actual wasm32
-controls remain runner work. A subsequent 11.18s paired-metadata rerun also
-requires tracing collection to be armed and actually run; it passed. This extra
-assertion is published in `87ce49e9` and is included in its replacement native run;
-the measured runtime remains identical to `ff7f528a`.
+All local checks used `python3 scripts/local-guard.py` with unchanged limits:
 
-The first four-host run exposed a scope-ledger assumption that still expected
-separate frees for interior regions. The completed macOS ARM log confirms this
-was its sole failed test; all measurement steps passed. Local reproduction failed
-with status 61 (2.06s), then the corrected full `ad_tape_scopes` target passed all
-four tests in 33.16s. Both outer/nested scope ledgers now require one free per
-base and none for interior pointers. That ledger correction did not change runtime sources. Preliminary
-Mac ARM counters verify halved metadata requests and equal payload/live storage;
-timing cases are mixed. The final measurement script now alternates variant
-order after explicit warmups, avoiding block-order timing bias. Preliminary
-measurements are not final acceptance evidence. The superseded native run
-`38724114075` was cancelled after dispatching the corrected replacement; it is
-not an acceptance gate. Final measurement syntax/ARC emission passed in 5.11s
-and the updated roadmap audit in 2.79s.
+- `cargo test --test autodiff_capacity_bounds -- --test-threads=1`: final three
+  controls passed (42.69s), including moving/overlapping allocation, exact bits,
+  alignment, managed-growth trap recovery and deliberate defective controls.
+- `cargo test --test ad_tape_scopes -- --test-threads=1`: four controls passed
+  (33.16s). Workspace, ownership/unwind and library controls also passed; the
+  corrected workspace padding control passed separately (4.14s).
+- `cargo clippy --all-targets -- -D warnings`: passed (17.45s).
+  `cargo fmt --check`: final formatting passed (1.07s).
+- Measurement instrumentation syntax and checked ARC emission for five workloads:
+  passed (5.39s); local compile/disassembly confirmed owner specialization without
+  running benchmarks (1.21s). Workflow lint passed (0.26s).
+- `python3 /private/tmp/fwp-collect-metadata.py`: all four artifact/hash/counter
+  checks passed (0.26s). `python3 scripts/check-roadmap.py` passed all 11 steps,
+  links, immutable anchors and commit messages (2.92s).
 
-Actual native binary inspection found that reading the owner after realloc kept
-managed-growth code in the numeric push. A guarded local compile/disassembly
-comparison (1.21s; no workload execution) confirms capturing it before allocation
-removes that branch and reduces the inspected ARM64 numeric push frame from
-144 to 128 bytes. This refinement is now in the local runtime; all three focused capacity
-controls passed in 42.69s. Final measurement syntax/ARC emission passed in 5.39s,
-formatting in 1.07s and the roadmap audit passed. All final runner evidence must use the refined runtime.
-Both WASM jobs in `38724130547` passed the previous runtime, including actual
-32-bit size expressions and overflow controls; they must be rerun for the new
-runtime. Native run `38725506551` is still running at the earlier revision.
+Resolved validation defects: scope/unwind ledgers expected frees for now-interior
+pointers; the workspace negative control reserved before initializing length;
+an ARC probe incorrectly enabled tracing reuse verification. Their corrected
+controls pass in the final focused native run. Earlier native/WASM runs were
+superseded and are not acceptance gates. No unresolved native failure remains.
 
 ## Next action
 
-Next: publish owner capture, then dispatch
-replacement four-host AD/evidence and two-host WASM runs. Retire superseded
-native run `38725506551` once its replacement is dispatched. Earlier successful
-WASM and preliminary measurements do not validate the refined runtime. Draft
-production skips are not gates. Initial draft documentation passed.
+Next: publish the final documentation/evidence commit and make PR #141 ready.
+Recheck the successful focused runs above and wait for all nine production jobs plus
+`roadmap_docs` at the final PR head. Discover their run IDs from PR checks;
+draft production `38726466710` was skipped and does not count. Fix any failure.
+Verify the final head changes only documentation/evidence after `24620ead`.
 
-Record actual evidence, streamline docs, and require all nine exact-head
-production jobs plus documentation before the authorized squash merge.
+Require Linux ARM64/AMD64, regular and GC-stress ARM/Intel macOS, benchmarks,
+and native Windows ARM64/AMD64. Squash-merge with exactly this subject and an
+explicit empty body: `Pair native autodiff metadata allocations`. Then verify
+clean main, equality with the tested tree, and the raw one-line commit message
+(no trailers, at most 80 characters).
 
-Full builds, suites and benchmarks run on GitHub. Local checks stay serial via
-`python3 scripts/local-guard.py COMMAND...`: preserve 64 GiB free disk, target
-below 2 GiB, sampled workload RSS below 1 GiB and the 180-second deadline.
+Once PR #141 is merged under these gates, step 11 is verified and the complete
+plan is finished. Next sessions should confirm that PR's merged state and checks,
+then report completion; no further implementation work is queued. The pre-merge
+wording above is an acceptance checklist, not a request to repeat completed CI.
+
+Full builds, suites and benchmarks run on GitHub. Local checks remain serial
+under the guard: 64 GiB free disk, target below 2 GiB, sampled workload RSS below
+1 GiB, 180-second deadline. Do not raise limits or substitute skipped gates.

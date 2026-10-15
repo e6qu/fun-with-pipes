@@ -6,12 +6,16 @@ All nine production jobs and documentation passed at tree-identical head
 `cdb76905`; focused four-host AD and both WASM checks also passed.
 [History](docs/roadmap-history.md) retains prior deliveries and evidence.
 
-The user requested continued development. The active follow-up pairs native AD
-metadata buffers to reduce allocator requests without adding padding, changing
-numeric evaluation order or narrowing the existing node bounds. Keep code,
-regression controls, four-host measurements and docs on `autodiff-metadata-block` in [PR #141](https://github.com/e6qu/fun-with-pipes/pull/141).
+The final follow-up pairs native AD metadata buffers. Implementation, native
+regression controls and four-host measurements are complete in
+[PR #141](https://github.com/e6qu/fun-with-pipes/pull/141), on
+`autodiff-metadata-block`. It halves metadata growth requests without changing
+payload sizes or numeric evaluation order; timings are mixed.
 [The handoff](docs/development-state.md) records actual checks and next actions.
-Delivery requires all nine production jobs and documentation on the final head.
+Delivery requires all nine production jobs and documentation on the final head,
+plus both focused WASM jobs at the unchanged runtime revision. Once PR #141
+merges under these gates, all eleven steps are complete; there is no queued
+implementation task. Do not replay historical preparation entries.
 
 ## Direction
 
@@ -75,7 +79,7 @@ live storage and timings. [History](docs/roadmap-history.md) preserves earlier
 acceptance; [preparation anchors](docs/roadmap-queue.md) are evidence, not a queue
 to replay.
 
-## Current follow-up
+## Final follow-up
 
 | Step | Work | Acceptance |
 |---|---|---|
