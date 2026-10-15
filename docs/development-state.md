@@ -5,7 +5,8 @@ merged as `c9127d2d` after all nine production jobs and documentation passed for
 `71c612d0`. Its files and prescribed single-line message were verified; duplicate
 post-merge production run `38825167262` was canceled. The history records links.
 
-The current delivery is branch `record-moves-and-utilities` in
+The current delivery is [PR #148](https://github.com/e6qu/fun-with-pipes/pull/148),
+branch `record-moves-and-utilities`, in
 `/Users/zardoz/projects/fun-with-pipes`, based on accepted `c9127d2d`. It contains
 only the changes after old preparation anchor `a2679ecb`, transferred from
 `move-unboxed-fields` at `81d113aa`. Runtime/compiler files match that preparation;
@@ -31,8 +32,8 @@ the next substantial PR without requesting permission. JIT is excluded.
 | 6 | In progress | Preserve comparable repeated measurements and establish regression criteria |
 | 7 | In progress | Accept maintained directory/logging tests and extend process-heavy programs |
 
-Next: publish this combined delivery and run its full final-head production/docs
-gate. Fix any failures, merge when all gates pass, then deliver the separate
+Next: monitor this combined delivery’s full final-head production/docs gate.
+Ignore skipped draft jobs. Fix failures, merge when all gates pass, then deliver the separate
 process preparation described below.
 
 ## Current batch and evidence

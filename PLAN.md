@@ -78,7 +78,7 @@ solvers, preserves F128 gradient precision, borrows F64 array data across loops,
 and owns console/environment/filesystem results and errors. Delivery evidence
 belongs in [the history](docs/roadmap-history.md), not a second active backlog.
 
-The current `record-moves-and-utilities` delivery combines:
+The current [PR #148](https://github.com/e6qu/fun-with-pipes/pull/148) combines:
 
 - Transfer fields from flattened and uniquely owned boxed records. Preserve
   aliases, discarded siblings, wide values, resource lifetimes and failure cleanup.
