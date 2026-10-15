@@ -5,9 +5,40 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow]
         default: numerical
+      evidence_run:
+        description: Completed solver run to use for array-borrow comparison
+        type: string
 jobs:
+  array_borrow:
+    if: inputs.suite == 'array-borrow'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      CC: clang
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download verified emitted numerical programs
+        run: |
+          test -n "$EVIDENCE_RUN"
+          gh run download "$EVIDENCE_RUN" --name "solver-${{ matrix.runner }}" --dir solver-input
+      - name: Compare cached and per-element array reads
+        run: python3 scripts/measure-array-borrow.py --input solver-input/arrays/performance --output array-borrow-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: array-borrow-${{ matrix.runner }}
+          path: array-borrow-evidence/
   solvers:
     if: inputs.suite == 'solvers'
     strategy:
