@@ -124,10 +124,24 @@ A preceding Intel macOS compiler SIGABRT in U128 division by zero did not recur
 on its unchanged retry; its cause remains unknown. Preserve future crash reports.
 Do not describe the abort as repaired or a skipped/queued job as passing.
 
+## Additional defect found during review
+
+A related path-truncation repair is prepared separately in
+`/private/tmp/fwp-path-validation`, branch `checked-path-validation`, based on
+this branch's `3115b69a`. Native file operations accepted a zero-containing path
+as its prefix; a read-only probe reproduced the interpreter/native difference.
+Commit `4303dc2` rejects the path before OS access, preserves both rename operands
+and parent-directory contents, and makes diagnostics agree across engines.
+[Six-platform run 38805524008](https://github.com/e6qu/fun-with-pipes/actions/runs/38805524008)
+is queued. Bounded native probes pass, including unchanged prefix files and ARC
+resource cases; native Windows and changed-interpreter checks are not yet verified.
+Combine only its commits after `3115b69a` when these checks pass. Its own handoff
+records the failure reproductions and local checks. No second PR is open.
+
 ## Next: validate and publish the combined delivery
 
-Focused checks for every component and the combined documentation/inventory
-checks pass. Monitor #146 and fix any failures. Once #146's exact final-head gate passes,
+Focused numerical/console checks and combined documentation/inventory checks
+pass. Finish the additional path repair checks, monitor #146 and fix failures. Once #146's exact final-head gate passes,
 squash merge it, verify its one-line message and tree, then rebase only this
 branch's commits after `c10b1ccd` onto the accepted squash commit. The precision
 and console implementations are already combined: do not cherry-pick them again.
