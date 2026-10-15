@@ -62,7 +62,8 @@ benchmark compilation and the changed examples in interpreter/native execution.
 and [documentation checks](https://github.com/e6qu/fun-with-pipes/actions/runs/38752840023)
 are the authoritative records. Regular ARM macOS reported `openapi_golden`
 failing because the expected bookstore description still said “interpreted.”
-Merge alone does not establish acceptance. The live handoff tracks its repair.
+Merge alone does not establish acceptance. [PR #143](https://github.com/e6qu/fun-with-pipes/pull/143)
+contains the fixture repair; its final production checks determine acceptance.
 Duplicate pre-merge runs were cancelled after verifying identical files.
 
 ## Accepted paired metadata allocations (PR #141)

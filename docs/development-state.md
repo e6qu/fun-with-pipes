@@ -24,6 +24,9 @@ the project's efficiency goals. Planning a feature is not implementing it.
 
 ## Current delivery
 
+[PR #143](https://github.com/e6qu/fun-with-pipes/pull/143) contains this cleanup
+and the OpenAPI fixture repair. Its final checks determine acceptance.
+
 The cleanup replaces the completed checklist with seven work areas, completion
 evidence and a first milestone: measured baselines, confirmed costs and the next
 ownership boundary. It updates contributor/agent instructions and the README;
@@ -60,6 +63,7 @@ Local validation, all through `python3 scripts/local-guard.py`:
   seven matching plan/handoff steps; all four OpenAPI fixtures; generated library
   docs; every tutorial's source/output copies; Rust formatting; JavaScript syntax;
   and diff whitespace. No limits were raised.
+- Final `python3 scripts/check-roadmap.py`: passed, 2.94 seconds.
 
 The repository audit covered tracked guides, examples, generated fixtures,
 source/runtime comments, scripts and workflows. References to old implementations
@@ -69,8 +73,8 @@ Full builds, suites and benchmarks stay on GitHub runners.
 
 ## Next action
 
-Next: publish this branch as one PR and fix every final-commit CI failure before
-squash merge. Keep all
+Next: inspect [PR #143](https://github.com/e6qu/fun-with-pipes/pull/143), fix every
+final-commit CI failure and squash-merge only after passing checks. Keep all
 nine production jobs and documentation coverage. If this delivery is already
 merged with passing checks, start the first milestone in PLAN.md: select the
 representative applications, reproduce the known performance gaps on runners,
