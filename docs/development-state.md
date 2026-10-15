@@ -1,16 +1,17 @@
 # Session handoff
 
-Updated 2026-10-15. This is preparation branch `quad-gradient-precision` in
-`/private/tmp/fwp-quad-grad`, based on `3e5d86ad` of `checked-linear-algebra`.
-No PR is open for this branch. [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146)
-is the active delivery; its Windows line-ending fixture repair is `930645e6`.
-Production run [38796862558](https://github.com/e6qu/fun-with-pipes/actions/runs/38796862558)
-and documentation must pass for that exact head before squash merge.
+Updated 2026-10-15. This is preparation branch `checked-console-ownership` in
+`/private/tmp/fwp-console-ownership`, based on `7a463be9` of the numerical
+precision preparation. No PR is open for this branch.
+[PR #146](https://github.com/e6qu/fun-with-pipes/pull/146) is the only active
+PR, at `930645e6`; production
+[38796862558](https://github.com/e6qu/fun-with-pipes/actions/runs/38796862558)
+is running after fixing Windows test-host CRLF output. Never merge until all
+nine production jobs and documentation pass for the final commit.
 
-Standing authorization covers fixes, publication and squash merge after all nine
-production jobs and documentation pass for the final commit. Commit messages
-are exactly one line, at most 80 characters, without body, trailers or attribution.
-Keep one active delivery PR. Queued CI gates merging, not preparation work.
+Standing authorization covers roadmap fixes, publication and squash merges,
+with exactly one-line commit messages of at most 80 characters, no body,
+trailers or attribution. Keep one active delivery PR and bundle coherent work.
 
 ## Roadmap status
 
@@ -25,65 +26,72 @@ Keep one active delivery PR. Queued CI gates merging, not preparation work.
 | 7 | In progress | Extend numerical and long-running application coverage |
 
 
-## Current preparation: preserve F128 gradients
 
-The previous F128 reverse implementation converted local derivatives, seeds and
-adjoints through F64. A coefficient distinguishable from 1 in F128 became 1 in
-reverse mode, although forward mode preserved it. The existing scalar protocol
-now selects typed F128 tape values and arithmetic. F16/BF16/F32/F64 keep F64
-accumulation; nested reverse levels keep their existing typed arithmetic.
-There is no new syntax or runtime tape implementation.
+## Prepared console ownership batch
 
-Acceptance: compare raw interpreter and native tracing/checked ARC at O1/O2,
-with workspace reuse off/on. Cover low mantissa bits, extreme finite exponents,
-accumulated small terms, seed precision, nested derivatives, checkpoint replay
-and repeated calls. Verify that all private tapes are released, ARC collections
-and final retained charges are zero, and an omitted tape free is detected.
-Existing nested/checkpoint/scope/cancellation/capacity/library regressions remain
-required. Native Windows runs include the new regression too.
+Admit `read-all`, `read-line`, `read-lines` and `args` to checked ARC. `read-lines`
+previously left its temporary whole-input string to GC; now it releases that
+copy after making the returned lines. Protect the external input buffer until
+UTF-8 conversion completes, the string while constructing `Some`, and partial
+line/argument lists. The existing `lines` primitive uses the same protected list
+builder and returns an already-owned tree. Preserve immutable copies, input
+order, invalid UTF-8 replacement, CRLF rules and end-of-input behavior.
+No new syntax, fallback or public wrapper is introduced.
 
-Preserving precision has costs: F128 values can need boxes, reference counts
-and typed arithmetic callbacks. The probe records managed allocation requests,
-requested bytes, final charged delta and collections. These counts exclude
-unmanaged tape registry allocation and linked-library/host allocation; they are
-not whole-process memory or timing measurements. Do not call this a speedup or
-claim a complete C/Rust overhead comparison. Four-host runner artifacts will
-retain emitted C, profiles and compiler/platform metadata.
+Acceptance: raw interpreter/native agreement for empty, multiline, CRLF,
+invalid UTF-8 and embedded-NUL input; repeated calls with no retained charge;
+injected failure at each string/node/buffer allocation; forced GC/reuse tests;
+negative controls omitting the input-string free and the external-buffer free.
+Check both tracing and ARC at O1/O2 on all maintained native targets.
+Environment inputs and other IO remain unreviewed; keep a negative ARC test
+for `env.get`. The old negative `read-all` assertion is replaced by positive
+console tests, not silently removed from coverage.
 
-## Validation and unresolved work
+Input storage is not free: `read-all` materializes the entire stream and
+`read-lines` copies its lines. `each-line` and `fold-lines` read one line at a
+time; their retained state and callbacks determine additional live storage.
+This batch establishes ownership, not a timing or zero-allocation claim.
 
-All local work uses `python3 scripts/local-guard.py COMMAND...`, serially within
-the fixed limits. No local full compiler build or full gate was run.
+## Checks and limits
 
-- The source probe loads edited `lib/autodiff.fwp` into the existing compiler
-  library. Raw interpretation passes ten precision cases; tracing/ARC C emission
-  succeeds (3.45 s). This checks the library change, not the pending parent
-  compiler changes.
-- The native O1 probe passes tracing GC/reuse verification, checked ARC with no
-  collections or retained charge, and the missing-free control. The first
-  nine-case version passed in 5.50 s; the ten-case rerun passed in 6.20 s.
-- Regression harness metadata passes. Standard-library documentation regenerated
-  with the standalone focused test (0.76 s); its first invocation lacked the
-  compile-time manifest path, corrected before regeneration.
-- Full four-host `precision` workflow and final production gates remain required.
-  No runtime or platform claim is verified by a queued job.
+All local checks use `python3 scripts/local-guard.py COMMAND...`, serially
+within the fixed limits. No compiler rebuild or full local gate was run.
 
-The preceding solver batch owns six linear-algebra workspaces and partial
-results, bounds QR output size and borrows invariant F64 array data once per
-loop. Repaired focused run
+- Current primitive inventory passes (1.31 s): 235 explicit contracts,
+  10 flat scalar signatures, 114 declarations needing review, 19 lowered
+  templates and 104 distinct unreviewed symbols. The baseline is unchanged.
+- Existing-compiler C with edited runtime passes 128 calls per operation,
+  forced collection off/on, every injected allocation failure and preserved
+  borrowed input ownership. The extended probe counts outstanding C input
+  buffers separately from managed bytes (2.31 s). Omitting input-string release
+  fails with 205; omitting buffer release fails with 211.
+- Harness metadata and all five raw interpreter fixtures pass (3.75 s),
+  including Unicode/empty process arguments. Formatting passes (0.98 s) and
+  the roadmap/documentation audit passes (2.51 s). Full changed-compiler
+  validation remains required.
+
+## Delivery order
+
+The preceding solver batch lives in `/private/tmp/fwp-linear-algebra`, branch
+`checked-linear-algebra`. Run
 [38795634707](https://github.com/e6qu/fun-with-pipes/actions/runs/38795634707)
-is queued at `ec1ff14b`. Its first expanded run exposed an ARC-ineligible
-`read-all` in a QR fixture; the repaired fixture uses an explicit function entry.
-The details remain in `/private/tmp/fwp-linear-algebra/docs/development-state.md`.
+at `ec1ff14b` has passed AMD64/ARM64 Linux and ARM64 macOS; Intel macOS is running.
+Its later `6af4f207` changes only handoff/source comments. It owns six solver
+workspaces/partial results, bounds QR output and borrows invariant F64 array data.
+
+F128 precision lives in `/private/tmp/fwp-quad-grad`, branch
+`quad-gradient-precision`, based on solver commit `3e5d86ad`. Run
+[38797434546](https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546)
+at `7a463be9` is running. It preserves F128 weights/seeds/adjoints with the existing
+typed tape protocol. Its own handoff distinguishes bounded probes from runner
+acceptance and explains boxing/reference-count costs.
 
 ## Next action
 
-Next: finish the precision probe and runner validation while monitoring #146 and
-the solver run. Fix failures rather than treating them as roadmap blockers.
-After #146 merges, rebase only solver commits after `c10b1ccd` onto its accepted
-squash commit. Before delivering this precision change, rebase only its commits
-after `3e5d86ad` onto the accepted numerical parent; do not replay parent commits.
-Update this live handoff with actual results, download profiles and explain
-remaining costs before making acceptance claims. Preserve the unexplained Intel
-compiler abort recorded in the parent history; its unchanged rerun passed but
-its cause remains unresolved.
+Next: publish and monitor the focused console evidence run. Monitor and fix #146 first. After it merges, rebase only solver commits
+after `c10b1ccd` onto its accepted squash commit, then bring only precision
+commits after `3e5d86ad` into that branch for one substantial numerical PR.
+Keep this console batch separate unless validation justifies a coherent combined
+delivery; its own commits begin after `7a463be9`. Record results in the live
+handoff and run full exact-head CI before every merge. The unexplained Intel
+compiler abort in the preceding numerical evidence remains unresolved.

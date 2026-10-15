@@ -5,9 +5,50 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, precision]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, precision, console]
         default: numerical
 jobs:
+  console:
+    if: inputs.suite == 'console'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_ARC_ARTIFACTS: console-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test --no-fail-fast --test console_ownership --test arc_execution --test arc_corpus --test text_ownership --test cli_ownership
+      - name: Primitive ownership inventory
+        run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output console-evidence/inventory.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: console-${{ matrix.runner }}
+          path: console-evidence/
+      - name: Preserve compiler crash reports
+        uses: actions/upload-artifact@v7
+        if: failure() && runner.os == 'macOS'
+        with:
+          name: compiler-crashes-console-${{ matrix.runner }}
+          path: ~/Library/Logs/DiagnosticReports/fwp*
+          if-no-files-found: ignore
   precision:
     if: inputs.suite == 'precision'
     strategy:

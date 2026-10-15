@@ -5568,6 +5568,15 @@ impl<'p> Gen<'p> {
             ),
             "trits.pack" => "return fwp_p_trits_pack(l0);".into(),
             "trits.unpack" => "return fwp_p_trits_unpack(l0, l1);".into(),
+            "lines" | "read-lines" | "args" => {
+                let drop_list = self.value_drop(&result);
+                let call = match sym {
+                    "lines" => format!("fwp_p_lines(l0, {drop_list})"),
+                    "read-lines" => format!("fwp_p_read_lines({drop_list})"),
+                    _ => format!("fwp_p_args({drop_list})"),
+                };
+                format!("return {call};")
+            }
             "simd.splat" => format!("return fwp_p_simd_splat(l0, {}, {});", vec_shape(&result).0, self.desc(&vec_shape(&result).1)),
             "simd.from-array" => format!(
                 "return fwp_p_simd_from_array(l0, {});",
@@ -5995,7 +6004,6 @@ impl<'p> Gen<'p> {
                     ("string.chars", "fwp_p_chars(l0)"),
                     ("split", "fwp_p_split(l0, l1)"),
                     ("join", "fwp_p_join(l0, l1)"),
-                    ("lines", "fwp_p_lines(l0)"),
                     ("words", "fwp_p_words(l0)"),
                     ("string.contains", "fwp_p_str_contains(l0, l1)"),
                     ("starts-with", "fwp_p_starts_with(l0, l1)"),
@@ -6065,8 +6073,6 @@ impl<'p> Gen<'p> {
                     ("term.read-secret", "fwp_p_term_read_secret()"),
                     ("read-line", "fwp_p_read_line()"),
                     ("read-all", "fwp_read_stdin_all()"),
-                    ("read-lines", "fwp_p_read_lines()"),
-                    ("args", "fwp_p_args()"),
                     ("exit", "fwp_p_exit(l0)"),
                     ("env.get", "fwp_p_env_get(l0)"),
                     ("env.vars", "fwp_p_env_vars()"),

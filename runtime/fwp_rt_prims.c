@@ -1158,24 +1158,32 @@ static V fwp_p_join(V sep, V xs) {
     return buf_to_str(&b);
 }
 
-static V fwp_lines_of(const char *d, size_t n) {
-    size_t cap = 8, k = 0, i = 0;
-    V *a = (V *)fwp_mem_alloc(cap * sizeof(V));
+static V fwp_lines_of(const char *d, size_t n, void (*drop_list)(V)) {
+    size_t cap = 8, i = 0;
+    fwp_map_owner owner = {(V *)fwp_mem_alloc(cap * sizeof(V)), 0, 0,
+                           fwp_rc_free_obj, drop_list};
+    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);
     while (i < n) {
         size_t j = i;
         while (j < n && d[j] != '\n') j++;
         size_t e = j;
         if (j < n && e > i && d[e - 1] == '\r') e--;
-        if (k == cap) { cap *= 2; a = (V *)fwp_mem_realloc(a, cap / 2 * sizeof(V), cap * sizeof(V)); }
-        a[k++] = fwp_str_new(d + i, e - i);
+        if (owner.count == cap) {
+            if (cap > SIZE_MAX / sizeof(V) / 2) fwp_trap("too many lines");
+            owner.items = (V *)fwp_mem_realloc(owner.items, cap * sizeof(V), cap * 2 * sizeof(V));
+            cap *= 2;
+        }
+        owner.items[owner.count] = fwp_rc_fresh(fwp_str_new(d + i, e - i));
+        owner.count++;
         i = j + 1;
     }
-    V r = fwp_list_from(a, k);
-    fwp_mem_free(a);
-    return r;
+    return fwp_map_finish_protected(&owner, &cleanup);
 }
 
-static V fwp_p_lines(V s) { return fwp_lines_of(STR(s)->d, STR(s)->len); }
+static V fwp_p_lines(V s, void (*drop_list)(V)) {
+    V result = fwp_lines_of(STR(s)->d, STR(s)->len, drop_list);
+    FWP_KEEP_ALIVE(s); return result;
+}
 
 static V fwp_p_words(V s) {
     const char *d = STR(s)->d;
@@ -2543,10 +2551,12 @@ static V fwp_p_ewrite(V s) {
 static V fwp_read_stdin_all(void) {
     fflush(stdout);
     fwp_buf b = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
     char tmp[65536];
     size_t n;
     while ((n = fread(tmp, 1, sizeof tmp, stdin)) > 0) buf_put(&b, tmp, n);
-    V r = fwp_str_lossy(b.d ? b.d : "", b.len);
+    V r = fwp_rc_fresh(fwp_str_lossy(b.d ? b.d : "", b.len));
+    fwp_cleanup_pop(&cleanup);
     free(b.d);
     return r;
 }
@@ -2554,28 +2564,47 @@ static V fwp_read_stdin_all(void) {
 static V fwp_p_read_line(void) {
     fflush(stdout);
     fwp_buf b = {0};
+    fwp_cleanup buffer_cleanup; fwp_cleanup_push(&buffer_cleanup, fwp_buf_release, &b);
     int c, any = 0;
     while ((c = fgetc(stdin)) != EOF) {
         any = 1;
         if (c == '\n') break;
         buf_putc(&b, (char)c);
     }
-    if (!any) { free(b.d); return FWP_NONE; }
+    if (!any) { fwp_cleanup_pop(&buffer_cleanup); free(b.d); return FWP_NONE; }
     if (b.len > 0 && b.d[b.len - 1] == '\r' && c == '\n') b.len--;
-    V r = fwp_str_lossy(b.d ? b.d : "", b.len);
+    V text = fwp_rc_fresh(fwp_str_lossy(b.d ? b.d : "", b.len));
+    fwp_cleanup_pop(&buffer_cleanup);
     free(b.d);
-    return fwp_some(r);
+    fwp_value_owner owner = {text, fwp_rc_free_obj}; fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+    V result = fwp_rc_fresh(fwp_some(text));
+    owner.value = 0;
+    (void)fwp_value_finish(&owner, &cleanup);
+    return result;
 }
 
-static V fwp_p_read_lines(void) {
-    V s = fwp_read_stdin_all();
-    return fwp_lines_of(STR(s)->d, STR(s)->len);
+static V fwp_p_read_lines(void (*drop_list)(V)) {
+    fwp_value_owner input = {fwp_read_stdin_all(), fwp_rc_free_obj};
+    fwp_cleanup cleanup; fwp_value_protect(&input, &cleanup);
+    V result = fwp_lines_of(STR(input.value)->d, STR(input.value)->len, drop_list);
+    FWP_KEEP_ALIVE(input.value);
+    fwp_rc_free_obj(fwp_value_finish(&input, &cleanup));
+    return result;
 }
 
-static V fwp_p_args(void) {
-    V r = 0;
-    for (int i = fwp_argc - 1; i >= 1; i--) r = fwp_cons(fwp_str_lossy(fwp_argv[i], strlen(fwp_argv[i])), r);
-    return r;
+static V fwp_p_args(void (*drop_list)(V)) {
+    /* Reuse the range builder's pending-element and completed-spine owner. */
+    fwp_range_owner owner = {0, 0, fwp_rc_free_obj, drop_list};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_range_release, &owner);
+    for (int i = fwp_argc - 1; i >= 1; i--) {
+        owner.element = fwp_rc_fresh(fwp_str_lossy(fwp_argv[i], strlen(fwp_argv[i])));
+        owner.list = fwp_rc_fresh(fwp_cons(owner.element, owner.list));
+        owner.element = 0;
+    }
+    V result = owner.list; owner.list = 0;
+    fwp_cleanup_pop(&cleanup);
+    return result;
 }
 
 static V fwp_p_env_get(V name) {
