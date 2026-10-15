@@ -1,0 +1,25 @@
+# The low bit, exponent range and accumulated low terms must survive reverse mode.
+coefficient : F128
+coefficient = 1.0000000000000000000000000000000002f128
+small : F128
+small = 1.0f128 | div 1267650600228229401496703205376.0f128
+loss-with : F128 -> List[Rev[F128]] -> Rev[F128]
+loss-with = curry (both (.0 | rev.const) (.1 | head | option.unwrap-or (rev.const 0.0f128)) | uncurry mul)
+accumulated : List[Rev[F128]] -> Rev[F128]
+accumulated = fork add (loss-with 1.0f128) (loss-with small)
+square : List[t] -> t where Ring[t], Dup[t]
+square = head | option.unwrap-or zero | fork mul id id
+main = [
+    2.0f128 | derivative (mul (dual.const coefficient)) | eq coefficient | echo,
+    [2.0f128] | grad (loss-with coefficient) | eq [coefficient] | echo,
+    [2.0f128] | vjp id [coefficient] | eq [coefficient] | echo,
+    [2.0f128] | grad (loss-with 1e-4000f128) | eq [1e-4000f128] | echo,
+    [2.0f128] | grad (loss-with 1e4000f128) | eq [1e4000f128] | echo,
+    [2.0f128] | grad accumulated | eq [1.0f128 | add small] | echo,
+    [coefficient] | grad square | eq [coefficient | mul 2.0f128] | echo,
+    [coefficient] | grad (grad square | sum) | eq [2.0f128] | echo,
+    [2.0f128] | vjp-checkpointed {steps = 3, every = 2} id [coefficient]
+        | eq [coefficient] | echo,
+    range 0 65 | map (const [2.0f128] | grad (loss-with coefficient))
+        | flatten | all (eq coefficient) | echo,
+] | ignore

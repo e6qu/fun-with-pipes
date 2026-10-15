@@ -115,8 +115,8 @@ its cause is still unknown. Preserve future crash reports.
 
 ## Following preparation and next action
 
-F128 precision branch `quad-gradient-precision` is in `/private/tmp/fwp-quad-grad`,
-based on `3e5d86ad`. Its [four-host run](https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546)
+F128 precision from `quad-gradient-precision` is now combined into this branch.
+Its original preparation worktree remains `/private/tmp/fwp-quad-grad`. Its [four-host run](https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546)
 passed at `7a463be9`: low bits, exponent range, seed accumulation, nested and
 checkpointed gradients, cleanup controls and existing differentiation regressions.
 It uses the existing typed tape protocol; boxes and reference counts still cost
@@ -132,9 +132,8 @@ partial run was superseded and canceled. It has its own handoff and no open PR.
 
 Next: monitor #146 and fix failures. After its
 full exact-head gate passes, squash merge it; rebase only solver commits after
-`c10b1ccd` onto the accepted squash commit. Bring only precision commits after
-`3e5d86ad` into the numerical branch, reconcile documentation/workflows, and
-open one substantial numerical PR. Consider the console batch together only
+`c10b1ccd` onto the accepted squash commit. Precision implementation is combined; import its retained profile report and
+reconcile the final handoff before opening one substantial numerical PR. Consider the console batch together only
 when its own checks pass and the combined scope stays reviewable. Its commits
 begin after `7a463be9`. Keep [PLAN.md](../PLAN.md) current; no broad work area
 is complete, and JIT remains excluded.

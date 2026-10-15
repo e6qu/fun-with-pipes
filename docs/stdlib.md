@@ -2479,8 +2479,8 @@ hessian : (List[Dual[Dual[t]]] -> Dual[Dual[t]]) -> List[t] -> List[List[t]] whe
 Rev[T] = { value: T, vertex: I64 }
 
 # The scalar protocol selects its tape representation at specialization time.
-# Primitive floats retain F64 adjoint accumulation. Nested Rev scalars retain
-# typed weights and evaluate their backward arithmetic on the enclosing tape.
+# F16/BF16/F32/F64 retain F64 accumulation; F128 uses typed F128 weights.
+# Nested Rev scalars evaluate backward arithmetic on the enclosing tape.
 trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
     rev._seed : List[T] -> (I64, List[Rev[T]])
     rev._push : (I64, T, I64, T) -> I64
