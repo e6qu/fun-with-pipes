@@ -5,10 +5,11 @@ Updated 2026-10-15. Preparation branch `checked-linear-algebra` lives in
 current delivery. [PR #145](https://github.com/e6qu/fun-with-pipes/pull/145)
 merged as `e51b8570` after all nine production jobs and documentation passed.
 [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146) remains the only open
-PR, head `930645e6`, in `/Users/zardoz/projects/fun-with-pipes`.
-Production [38796862558](https://github.com/e6qu/fun-with-pipes/actions/runs/38796862558)
-is running; documentation passed. Windows probes were repaired to emit exact
-LF bytes and binary report files after the previous head failed CRLF comparisons.
+PR, head `19b14d0b`, in `/Users/zardoz/projects/fun-with-pipes`.
+Production [38803349673](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
+is running. The Windows probe now initializes its synthetic task's stack-scan
+boundary after reproducing missing-root corruption locally; preceding CRLF
+output failures are also repaired. Final native Windows acceptance is required.
 
 Standing authorization covers publication, fixes and squash merge after all
 nine production jobs and documentation pass for the final commit. Use one line
@@ -80,11 +81,18 @@ Linux AMD64 tracing matrix time rose about 11% despite byte-identical matrix
 executables. These shared-runner comparisons cannot assign a precise speedup.
 
 [Paired run 38800569111](https://github.com/e6qu/fun-with-pipes/actions/runs/38800569111)
-is queued at `ce95f063`. It reuses the validated emitted C, verifies its hashes,
-and compares cached reads against per-element selection on the same runner.
-Only generated load expressions change; the arithmetic, owners and workload
-remain identical. This needs no compiler rebuild or new language option.
-The four-host source-rewrite check passed locally (0.16 s); timing stays on CI.
+and [repeat 38801692547](https://github.com/e6qu/fun-with-pipes/actions/runs/38801692547)
+passed all four hosts. They reuse validated emitted C, verify its hashes and
+compare cached reads against per-element selection on the same runner. Only
+load expressions change; arithmetic, owners and workload remain identical.
+Intel macOS ARC kernel ratios repeat at 0.704/0.707; Linux ARM64 ARC at
+0.965/0.967. ARM macOS ARC changes direction (0.968/1.021), and tracing is
+slower (1.046/1.009). Generated ARM tracing code removes address selection
+without adding loop spills but retains length reloads around root-liveness
+fences. Keep both complete reports; no universal speedup claim is supported.
+The same JSON retains both paired runs, raw samples and environment details.
+Source-rewrite checks passed locally (0.16 s); timing stayed on CI. Repeat
+artifact download passed (6.39 s), report recording passed (0.13 s).
 
 ## Focused checks and limits
 
@@ -116,12 +124,13 @@ storage. Its own handoff records profile limits.
 
 Console preparation `checked-console-ownership` is in
 `/private/tmp/fwp-console-ownership`, based on `7a463be9`. It owns whole-input
-buffers, pending lines and copied arguments. Its focused
-[run 38799697858](https://github.com/e6qu/fun-with-pipes/actions/runs/38799697858)
-is queued at `1d8270a`; bounded runtime probes and both missing-free controls
-passed locally. It has its own handoff and no open PR.
+buffers, pending lines, copied arguments and environment lookups. It also
+fixes embedded-zero names incorrectly looking up a prefix variable. Its expanded
+[run 38802310868](https://github.com/e6qu/fun-with-pipes/actions/runs/38802310868)
+at `f81970a1` has passed ARM Linux/macOS; AMD64 jobs are still running. The prior
+partial run was superseded and canceled. It has its own handoff and no open PR.
 
-Next: finish the paired measurement, monitor #146 and fix failures. After its
+Next: monitor #146 and fix failures. After its
 full exact-head gate passes, squash merge it; rebase only solver commits after
 `c10b1ccd` onto the accepted squash commit. Bring only precision commits after
 `3e5d86ad` into the numerical branch, reconcile documentation/workflows, and

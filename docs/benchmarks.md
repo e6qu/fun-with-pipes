@@ -465,8 +465,24 @@ one host, then compares its cached read with the existing per-element selection.
 It changes only the generated load expressions and verifies result hashes and
 allocation profiles. Both memory modes use identical C flags, separate profiles
 and forty samples with rotated process order. That experiment compares two fwp
-implementations; the table above compares fwp with C and Rust. Its results are
-pending in the [handoff](development-state.md). No local timings were used.
+implementations; the table above compares fwp with C and Rust. Two complete
+four-host runs are retained in the report. Below, each pair is the first and
+second run's cached/per-element kernel-time ratio; below 1 means faster.
+
+| Host | Checked ARC | Tracing |
+|---|---:|---:|
+| Linux AMD64 | 1.00 / 0.99 | 0.76 / 0.86 |
+| Linux ARM64 | 0.96 / 0.97 | 1.00 / 1.00 |
+| macOS AMD64 | 0.70 / 0.71 | 0.96 / 1.00 |
+| macOS ARM64 | 0.97 / 1.02 | 1.05 / 1.01 |
+
+The Intel macOS ARC improvement repeats. ARM macOS ARC changes direction, and
+tracing is slightly slower in both runs; its generated loop removes address
+selection without adding stack spills, but still reloads length around the
+compiler's root-liveness fences. The experiments do not establish a universal
+gain or a stable ARM macOS penalty. Outputs and allocation profiles match;
+the report keeps all raw samples, including allocation-inclusive timings and
+slower cases. No local timings were used.
 
 ## Running comparisons
 
