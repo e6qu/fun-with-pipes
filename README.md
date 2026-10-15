@@ -49,6 +49,14 @@ free: some values still need heap storage, reference-count updates or indirect
 function calls. [Performance measurements](docs/benchmarks.md) explain the
 comparisons with C and Rust and the limits of the evidence.
 
+## Project direction
+
+The remaining [project plan](PLAN.md) targets removal of tracing garbage
+collection and less reference-counting overhead through compile-time ownership,
+borrowing and storage reuse. It also covers measured CPU performance,
+differentiation, numerical kernels and larger example applications. These are
+active goals; the capabilities and limitations above describe today's compiler.
+
 ## Supported platforms
 
 Native execution and packaged compilers have passed automated checks on:

@@ -20,13 +20,13 @@
 //   sp()       -> the stack pointer
 // Fiber 0 is the one that runs _start.
 //
-// A module without fwp_fiber_hooks (a program without tasks), or an engine
-// without JSPI, runs _start directly; a module that then starts a task
-// reports that tasks are unavailable. JSPI exists in two forms: the
-// standard one (WebAssembly.Suspending and WebAssembly.promising: Chrome
-// and Edge 137 and later, and other engines as they ship it) and an
-// earlier one (WebAssembly.Function with an explicit suspender: node 22
-// with --experimental-wasm-jspi). Both are supported.
+// A module without fwp_fiber_hooks (a program without tasks) runs _start
+// directly. With neither JSPI nor Asyncify hooks, starting a task reports
+// that tasks are unavailable. JSPI exists in two forms: the
+// standard one (WebAssembly.Suspending and WebAssembly.promising) and an
+// earlier one (WebAssembly.Function with an explicit suspender). The
+// loader detects interfaces instead of selecting by browser/version.
+// Asyncify-transformed modules use the separate hooks below.
 //
 // The hooks are installed into the module's function table rather than
 // imported, so that the module needs no imports beyond WASI and still

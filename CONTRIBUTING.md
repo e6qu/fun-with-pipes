@@ -82,11 +82,10 @@ Rust print different results.
 All nine exact-head production jobs and the roadmap documentation audit are
 required before merging: Linux ARM64/AMD64, bench, regular macOS arm64/x86-64 and separate
 GC stress jobs on both macOS architectures, plus native Windows ARM64/AMD64.
-The desired platform matrix is Linux, macOS and Windows on ARM64 and AMD64,
-with separate binaries. The reusable Windows workflow adds required native
-gates on both architectures before claiming coverage; existing
-Linux/macOS results alone do not establish it. Full native Linux ARM64 acceptance
-requires a passing complete native job; see [the platform matrix](PLAN.md#platform-objective-and-current-evidence).
+The supported platform matrix is Linux, macOS and Windows on ARM64 and AMD64,
+with separate binaries. The reusable Windows workflow runs both native Windows
+architectures. Preserve the complete matrix for each accepted revision; see
+[the platform matrix](PLAN.md#platform-objective-and-current-evidence).
 For each macOS architecture, the two jobs split the integration targets using
 `scripts/run-macos-test-shard.py`: sorted Cargo target names alternate between
 the `regular` and `gc` shards, with REST and wide workers assigned to regular
@@ -102,10 +101,11 @@ still require Linux `/proc` or `strace`; Darwin-specific regressions in
 `tests/macos.rs` assert that collection is armed and really runs, rather
 than accepting a stress variable with collection disabled.
 
-The accepted resource/network bundle runs an exact-head primitive inventory
+CI runs a primitive inventory at the exact source commit
 before the regular Linux and ARM/Intel macOS gates. Its standalone Rust reader
 uses the actual ownership module; the Python audit compares declarations with
-the immutable prepared112 baseline and preserves observed rows on failure.
+the immutable `tests/fixtures/primitive-inventory-baseline.json` baseline and
+preserves observed rows on failure.
 Run it through the local guard when its limits permit, or on GitHub:
 `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /tmp/fwp-inventory.json`.
 Inventory agreement
@@ -116,7 +116,7 @@ does not substitute for runtime alias/unwind controls or full CI.
 - **Leave encountered code healthier.** Fix discovered bugs and issues even
   when they are outside the current roadmap item. Preserve semantic regression
   controls and record validation in the handoff. Group coherent fixes without
-  weakening the required CI gates or changing the roadmap's phase order.
+  weakening the required CI gates or discarding the roadmap's priorities.
 - **No third-party crates.** fwp depends only on Rust's standard library,
   with a vendored BSD-licensed [SoftFloat core](vendor/softfloat/README.md) for
   exact arithmetic and a scoped [gdtoa core](vendor/gdtoa/README.md) for exact
@@ -263,6 +263,9 @@ as current results.
 A user-visible change updates the reference, relevant guide and tutorials together.
 Tutorial README source copies must match their files, and outputs must remain
 explained as well as tested. Generated library docs come from source comments.
+Comments can also become CLI help, MCP descriptions and OpenAPI documents;
+when those comments change, regenerate the affected fixtures and run their
+focused comparison tests without `FWP_BLESS` afterward.
 For performance, name both implementations, equivalent work, timing scope and
 extra cost as a ratio or percentage; state when a comparison cannot isolate
 language overhead. “Fewer allocations” does not by itself mean “faster.”

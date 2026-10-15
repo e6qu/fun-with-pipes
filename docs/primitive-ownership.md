@@ -266,7 +266,8 @@ blanket no-GC claim is established.
 
 ## Validation and limits
 
-The handoff records the exact source and gates accepted for each delivery.
+[Delivery evidence](roadmap-history.md) records the exact source and accepted
+checks for past changes; the handoff tracks current work.
 Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,
 GC stress/verification and reuse poisoning. The interpreter/native comparison
@@ -274,7 +275,7 @@ includes observable callback and trap order.
 
 Detailed tests, failed controls, allocation/count measurements and compiler/
 hardware settings are preserved in
-[history](roadmap-history.md#archived-primitive-contract-notes-through-queue18).
+[the archived record](https://github.com/e6qu/fun-with-pipes/blob/41f30475c5e59951e784fe686aa6c69c7f2738e3/docs/roadmap-history.md#archived-primitive-contract-notes-through-queue18).
 They are scoped reclamation evidence, not blanket speed, register-placement or
 no-GC claims. Retained callbacks, exception/cancellation, unknown runtime boundaries and
 cycles remain explicit acceptance concerns.

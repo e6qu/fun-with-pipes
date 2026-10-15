@@ -1,99 +1,81 @@
 # Session handoff
 
-Updated 2026-10-15. Current branch: `docs-for-new-readers`, based on `41f30475`.
-The user requested a complete documentation rewrite for outside readers, with
-concepts introduced before use and honest comparisons of fwp performance with
-its baselines. Publication, fixes and squash merge after the required checks
-remain authorized. The complete documentation bundle is
-[PR #142](https://github.com/e6qu/fun-with-pipes/pull/142).
+Updated 2026-10-15. Current branch: `project-roadmap-cleanup`, based on merge
+`bbdbf8dc` (PR #142). The user requested the remaining project work in PLAN.md
+and removal of obsolete information throughout the repository. They clarified
+the memory objective: remove tracing GC and limit ARC, preferring compile-time
+ownership and borrowing in the spirit of Rust without losing simple pipes.
 
 ## Roadmap status
 
-| Step | Status | Delivered scope |
+These rows track the project work areas in [PLAN.md](../PLAN.md). Past delivery
+batches are in [history](roadmap-history.md); their completion does not finish
+the project's efficiency goals. Planning a feature is not implementing it.
+
+| Step | Status | Remaining scope |
 |---|---|---|
-| 1 | Verified | Documentation and session notes |
-| 2 | Verified | Reference-counted memory |
-| 3 | Verified | Less intermediate work |
-| 4 | Verified | Derivatives of derivatives |
-| 5 | Verified | Additional floating-point formats |
-| 6 | Verified | Windows on both processor families |
-| 7 | Verified | Smaller derivative workspaces |
-| 8 | Verified | Less recorded derivative data |
-| 9 | Verified | Fewer bookkeeping reallocations |
-| 10 | Verified | Less bookkeeping search |
-| 11 | Verified | Fewer derivative-buffer allocations |
-| 12 | Implemented | Documentation for new readers; acceptance tracked by PR #142 |
+| 1 | Pending | Remove tracing GC; use moves/borrows and limit ARC to necessary sharing |
+| 2 | Pending | Remove avoidable allocation and calls from functional patterns |
+| 3 | Pending | Diagnose and reduce machine-level performance gaps |
+| 4 | Pending | Improve derivative timing, memory scaling and precision |
+| 5 | Pending | Broaden efficient numerical kernels and validate device claims |
+| 6 | Pending | Establish dependable comparisons and regression criteria |
+| 7 | Pending | Exercise ownership, inference and tooling in larger programs |
 
-## Accepted starting point
+## Current delivery
 
-[PR #141](https://github.com/e6qu/fun-with-pipes/pull/141) merged as `41f30475`.
-All nine production jobs and documentation passed at `f31f7b66`, which has the
-same files as the merge. Four-platform derivative tests and both WebAssembly
-checks passed at its runtime revision. [History](roadmap-history.md) keeps the
-run links. The previous eleven-step implementation plan is complete; do not
-repeat its old publication or merge instructions.
+The cleanup replaces the completed checklist with seven work areas, completion
+evidence and a first milestone: measured baselines, confirmed costs and the next
+ownership boundary. It updates contributor/agent instructions and the README;
+removes obsolete phase/migration language, repeated historical stubs and old
+branch/merge instructions; and corrects stale protocol/compiler comments.
+Immutable preparation IDs/tags, raw measurements, meaningful compatibility
+contracts, licenses and regression controls remain intact.
 
-## Documentation rewrite
+The new direction is a goal. The implemented runtime still combines tracing and
+counting by default, and checked ARC covers a subset. Do not claim GC removal or
+count-free abstractions from this documentation change.
 
-All 50 Markdown files (including the two new guides) have been revised. The
-change also updates explanations in 17 hand-written example files and all 28
-library module introductions; the generated REST client remains generated code.
-Raw measurement JSON and immutable preparation IDs are unchanged.
+## Outstanding validation
 
-- README, tutorials and example guide introduce notation, prerequisites, inputs,
-  steps and output before advanced material. A glossary supports lookup.
-- Compiler/memory/numerics guides explain current contracts and remaining costs.
-  History preserves evidence without old active instructions. Windows and
-  floating-point status now reflect accepted support.
-- Benchmarks name C/Rust or fwp-only baselines, show signed extra time, and state
-  timing/memory scope. The runner retains samples, compiler/CPU metadata and both
-  ratios; CI publishes its readable report as an artifact.
-- Library explanations come from `lib/*.fwp` and `tests/stdlib_doc.rs`, with
-  `docs/stdlib.md` regenerated rather than edited independently.
-- The review found and fixed a raw buffer leak in tutorial 9 and incorrect
-  remainder distribution in tutorial 21. A 1001-cent/3-person transcript catches
-  the latter. Tutorial 5 no longer presents an obsolete project-age example.
+PR #142 merged before CI finished. Its merge `bbdbf8dc` and final PR head
+`4ea1b687` have identical files. [The merge production run](https://github.com/e6qu/fun-with-pipes/actions/runs/38752839908)
+reported a failure in regular ARM macOS: `rest::openapi_golden` compares the
+bookstore example's updated description with an old `books.openapi.json` fixture.
+The documentation audit passed. Follow the production run for other outcomes;
+partial success is not acceptance. This delivery includes the fixture repair.
 
-## Checks
+The OpenAPI fixture has been regenerated; the only fixture change is
+“REST, interpreted” to “REST, compiled and cached.” All four OpenAPI comparisons
+pass without `FWP_BLESS`. This uses the existing compiler for a focused check;
+full CI must rebuild and validate the published revision.
 
-All local workloads used `python3 scripts/local-guard.py`; no limits were raised.
-The existing compiler binary was used only for focused example checks. Full CI
-must rebuild and validate the published change.
+Local validation, all through `python3 scripts/local-guard.py`:
 
-| Check | Result |
-|---|---|
-| `python3 scripts/check-roadmap.py` through the guard | Passed: 50 link sets, 106 immutable preparation rows/tags, 12 plan steps, commit rules |
-| Standalone `tests/stdlib_doc.rs` test, regenerated with `FWP_BLESS=1`, then checked without it | Passed; all 28 modules current |
-| Standalone `tests/examples.rs`, `tutorial_readmes_match_their_programs` | Passed for every tutorial source/output copy |
-| `rustfmt --check` for changed Rust and `rustc --test -D warnings tests/bench.rs` | Passed; benchmarks themselves remain runner-only |
-| `target/debug/fwp fmt --check` on tutorials 5, 9 and 21 | Passed |
-| Tutorial 9, `FWP_NO_OPT=1 ... run --interp` and native `run` | Both pass with unchanged expected output; buffer now freed after copying |
-| Tutorial 21, raw-interpreter and native `exec ... split-bill 1001 3` | Both return 334, 334, 333 |
-| `FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 FWP_TUTORIAL=21` standalone `tutorial_sessions` | Passed in 15.94 s under the guard |
-| Final serial preflight `/private/tmp/fwp-docs-preflight.py` | Passed in 3.53 s; includes links, generated docs, tutorial copies, Rust formatting/compile and diff whitespace |
+- Standalone `tests/rest.rs` harness compilation: passed, 0.87 seconds.
+- `FWP_BLESS=1 ... --exact openapi_golden`: regenerated, 2.85 seconds; reviewed
+  the fixture diff before checking without regeneration enabled.
+- Serial preflight `/private/tmp/fwp-roadmap-preflight.py`: passed, 5.17 seconds.
+  It checks all 50 Markdown link sets, 106 immutable preparation rows/tags and
+  seven matching plan/handoff steps; all four OpenAPI fixtures; generated library
+  docs; every tutorial's source/output copies; Rust formatting; JavaScript syntax;
+  and diff whitespace. No limits were raised.
 
-The first MCP transcript run failed because OpenSSL's prefix was unset and a
-second displayed copy of the old bill order remained. Both were corrected;
-the rerun above passes. No known local failure remains. Temporary standalone
-harnesses are conveniences, not required project files; CI uses the checked-in
-Rust test targets.
+The repository audit covered tracked guides, examples, generated fixtures,
+source/runtime comments, scripts and workflows. References to old implementations
+used by deliberate regression controls and version compatibility rules are still
+relevant and remain. No compiler/runtime behavior changed in this cleanup.
+Full builds, suites and benchmarks stay on GitHub runners.
 
 ## Next action
 
-Next: inspect [PR #142](https://github.com/e6qu/fun-with-pipes/pull/142) and its
-checks for the current PR commit. If open, fix failures and require all nine
-production jobs plus documentation before squash merge. If already merged with
-those passing checks, step 12 is accepted and this documentation roadmap is
-finished: do not republish the branch or repeat the old eleven implementation
-steps. No further implementation work is queued by this plan.
+Next: publish this branch as one PR and fix every final-commit CI failure before
+squash merge. Keep all
+nine production jobs and documentation coverage. If this delivery is already
+merged with passing checks, start the first milestone in PLAN.md: select the
+representative applications, reproduce the known performance gaps on runners,
+and identify the first ownership boundary to improve. Do not replay old PRs.
 
-The table records implementation status at publication; the PR's final checks
-and merge record supply acceptance without requiring a new commit merely to
-copy a transient CI status. Use the subject `Rewrite documentation and explain
-benchmark costs` (one line), with an explicitly empty squash body. Old PR #141
-checks do not validate this change. A future session should read the PR result
-before treating this conditional next action as unfinished work.
-
-Use `python3 scripts/local-guard.py COMMAND...` for focused local checks. Keep
-full builds, suites, benchmarks and large regeneration on GitHub runners. Do not
-raise fixed local resource limits or count skipped checks as passing support.
+Update this handoff with exact checks, unresolved failures and one concrete next
+action after meaningful progress. Keep the project plan active until its stated
+acceptance criteria are met; do not substitute a completed PR for that evidence.
