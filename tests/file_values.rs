@@ -60,6 +60,7 @@ fn filesystem_values_match_raw_interpretation() {
                 "{gc} {opt}"
             );
             assert!(!root.join("made").exists());
+            assert_eq!(std::fs::read(root.join("input")).unwrap(), vec![255; 70000]);
         }
     }
 }

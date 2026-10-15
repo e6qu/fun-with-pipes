@@ -16,6 +16,19 @@ Only changes after `cbe6604a` belong to this subsequent file-value preparation.
 The combined numerical/console delivery remains in `/private/tmp/fwp-linear-algebra`.
 No PR is open for these preparations.
 
+## Recursive-directory follow-up after `c456277`
+
+A guarded repro (`/private/tmp/fwp-directory-error-repro.py`, 2.39 s) confirmed
+another mismatch: `dir.create-all "leaf/child"` and `"leaf/"` with an existing
+regular file report `Not a directory` in the interpreter but `File exists` in
+native macOS. The runtime now distinguishes a non-directory parent from an
+existing final file, preserves the original OS error through the secondary
+metadata check. Windows retains its existing native implementation; the test
+compares each host with its own interpreter. The semantic fixture
+retains all three cases and verifies the original file's bytes. This follow-up
+is not part of `38811437488`; native platform acceptance remains required. The guarded raw/native and cleanup
+probe passes locally (8.21 s).
+
 ## File-value acceptance criteria
 
 Give file metadata, byte reads and ordinary filesystem actions reviewed ownership

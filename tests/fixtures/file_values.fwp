@@ -19,6 +19,9 @@ main = [
     file.remove "made/moved",
     dir.remove "made",
     file.exists "made" | echo,
+    "input/child" | attempt dir.create-all | echo,
+    "input/" | attempt dir.create-all | echo,
+    "input" | attempt dir.create-all | echo,
     "absent" | attempt (file.info | ignore) | echo,
     "absent" | attempt (file.read-bytes | ignore) | echo,
 ] | ignore

@@ -164,9 +164,22 @@ static V fwp_p_dir_create_all(V path, const fwp_desc *err) {
         if (i < len && p[i] != '/') continue;
         memcpy(buf, p, i);
         buf[i] = 0;
-        if (stat(buf, &st) == 0 && S_ISDIR(st.st_mode)) continue;
-        if (mkdir(buf, 0777) != 0 && !(errno == EEXIST && stat(buf, &st) == 0 && S_ISDIR(st.st_mode)))
+        if (stat(buf, &st) == 0) {
+            if (S_ISDIR(st.st_mode)) continue;
+            if (i < len) {
+                errno = ENOTDIR;
+                return fwp_io_error_path("create", p, err);
+            }
+        }
+        if (mkdir(buf, 0777) != 0) {
+            int error = errno;
+            if (error == EEXIST && stat(buf, &st) == 0) {
+                if (S_ISDIR(st.st_mode)) continue;
+                if (i < len) error = ENOTDIR;
+            }
+            errno = error;
             return fwp_io_error_path("create", p, err);
+        }
     }
     fwp_scratch_finish(&scratch,&cleanup);
     FWP_KEEP_ALIVE(path);return FWP_UNIT;
