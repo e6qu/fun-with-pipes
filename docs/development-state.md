@@ -117,3 +117,11 @@ result. Files: `/private/tmp/fwp-matrix-output-alias.c` and `.s`; guarded
 in 0.17 s. Before adoption prove fresh output lifetime, preserve checks/ticks and
 floating order, inspect actual inlining/instructions and measure all four hosts.
 Do not mark the GC allocator broadly malloc-like: its arena aliases need care.
+
+`scripts/measure-matrix-alias.py` and the `matrix-alias` evidence suite now
+compare verified emitted C with its identical loop moved into an always-inlined
+helper taking a restrict-qualified output parameter. Only output is disjoint;
+inputs may alias. The arithmetic, ticks and all profiles must agree, and symbols
+must show no out-of-line helper. This is a runner experiment before any runtime
+change. Source transformations and Python syntax pass for all eight downloaded
+timing sources; dispatch against solver run `38817877068`.
