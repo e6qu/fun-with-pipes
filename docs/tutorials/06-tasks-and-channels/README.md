@@ -1,32 +1,53 @@
 # 6. Tasks and channels
 
-Concurrency is structured. `task.spawn` starts a task as a child of the
-current one. Every task waits for its children before it finishes, so no
-task outlives the code that started it. `task.await` returns `Some result`,
-or `None` if the task was cancelled.
+Prerequisites: [lessons 1–5](../README.md), including effects, tuples and
+`Option`. **Concurrency** means several pieces of work can make progress during
+the same period, including while others wait. It does not promise that every
+piece runs on a separate CPU core.
 
-## Channels
+A **task** is one such piece of work. `task.spawn` starts a child task. A parent
+waits for its children before finishing, so their lifetimes stay within its
+scope; this is **structured concurrency**. `task.await` returns `Some result`
+or `None` for cancellation. `task.map` applies a function in tasks and collects
+these optional results.
 
-A channel is a bounded queue. Sending to a full channel waits, so a fast
-producer cannot outrun a slow consumer (this is called backpressure).
-After `channel.close`, receivers drain what is left and then get `None`.
+## Sending values through a channel
 
-## Loops
+A **channel** is a queue between tasks. Its capacity bounds how many values can
+wait in the queue. Sending to a full queue waits until a receiver makes room;
+this is **backpressure**. After `channel.close`, receivers can read the queued
+values and then get `None`.
 
-`loop step state` calls `step` until it returns `Stop result`. Each step
-returns `Again next-state` to continue. The loop runs in constant stack
-space, which makes it the tool for long-running processes:
+The program makes a channel with capacity two. A producer sends `1`, `2`, `3`
+and closes it. The consumer adds the received values, so the result is `6`.
+`tap (produce | task.spawn)` starts the producer and passes the original channel
+on to the consumer. `the-channel` supplies an explicit type for that channel.
 
-```fwp
-total : Channel[I64] -> I64 ! {Async}
-total = both id (const 0) | loop add-next
-```
+## A loop with explicit state
+
+`loop step state` calls `step` until it returns `Stop result`. `Again next-state`
+means continue from the supplied state. `Step[S, R]` is the variant type holding
+those alternatives, where `S` is state and `R` is the final result. The loop
+reuses call-stack space rather than adding a new frame on each iteration.
+
+Here the state is `(channel, running total)`. `both id (const 0)` creates the
+initial pair. `add-next` receives from the channel and sends the old state and
+the optional received value to `next-step`. In its `None` arm, `.1` extracts
+the total. In its `Some` arm, `curry` groups the captured state and new value
+into a pair, then constructs `Again (channel, updated total)`.
+
+`produce` also accepts `()` because spawned task functions use a unit input.
+`const` discards that unused input. `send-all` builds a per-element callback
+from `channel.send`; `compose ignore` discards each send's result before `each`
+continues. Its explicit effect signature includes the actions allowed at this
+task boundary; an effect list is permission, not proof each action occurs.
 
 ## Deadlines
 
-`task.within d f` runs `f` in a task with a deadline. When the deadline
-passes, the task is cancelled and the result is `None`. A deadline also
-applies to everything the task started.
+A **deadline** is a time limit. `task.within 50ms` cancels its task after
+50 milliseconds, including child work. The sample task sleeps for `1s` (one
+second), so its result is `None`. `const 1s` supplies that duration while
+ignoring the task's unit input.
 
 ## The program
 
@@ -73,8 +94,9 @@ build an executable with `fwp build docs/tutorials/06-tasks-and-channels/main.fw
 None
 ```
 
-In compiled programs, tasks are green threads on an event loop; in the
-interpreter, each task is a thread, and only one runs at a time. See
+In compiled programs, the runtime switches between task stacks on one event
+loop; these lightweight tasks are often called green threads. In the
+interpreter, tasks use host threads but only one executes language code at a time. See
 [docs/concurrency.md](../../concurrency.md) for the details.
 
 ---

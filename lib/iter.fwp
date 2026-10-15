@@ -1,6 +1,14 @@
 # Lazy, pull-based iterators, written in fwp. The tail of a non-empty
 # iterator is a function that produces the rest on demand, so iterators
 # can be infinite.
+#
+# An iterator produces values as requested rather than constructing an entire
+# list first. `Yield` contains a value and a function for the remaining values;
+# `Done` ends the sequence. `iter.take` bounds an otherwise infinite sequence,
+# and `iter.to-list` collects it. For example,
+# `0 | iter.count-from | iter.take 3 | iter.to-list` gives `[0, 1, 2]`.
+# Some producers compute a successor ahead of consumption, so a failing next
+# step can still be observable; see the collections tutorial.
 
 Iterator[T] =
     | Done

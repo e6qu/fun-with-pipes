@@ -1,16 +1,21 @@
 # MCP servers
 
-Exported functions exposed as `mcp` are the tools of a Model Context
-Protocol server, which AI applications such as Claude call. The server
-speaks the stateless protocol of the
-[2026-07-28 specification](https://modelcontextprotocol.io/specification/2026-07-28):
-there is no session and no `initialize` handshake, and every request
-stands alone. [Tutorial 21](tutorials/21-mcp/README.md) builds one step
-by step.
+Model Context Protocol (MCP) lets a client discover named tools and call them
+with structured arguments. Here an exposed fwp function becomes a tool. JSON-RPC
+messages carry a method, parameters and request ID; schemas describe the values
+allowed as arguments and results. The server implements the stateless
+`2026-07-28` version: requests stand alone, without an `initialize` handshake.
+A client must support that version; this guide does not claim compatibility with
+every application advertised as an MCP client.
+
+[Tutorial 21](tutorials/21-mcp/README.md) provides the complete converter and
+tested message exchange. The declaration below is a fragment; build commands
+assume that tutorial's directory and complete `converter.fwp` file. `export`
+makes a function visible, and `# expose: mcp` selects its tool interface.
 
 ```fwp
-# Exact conversions and sums, for a model that should not do arithmetic
-# in its head.
+# Temperature conversions and integer-cent bill splits.
+# Floating-point conversions can round.
 #
 # expose: mcp
 
@@ -23,7 +28,6 @@ export split-bill : I64 -> I64 -> List[I64] ! {Error[String]}
 ```
 $ fwp build converter.fwp --mcp -o converter    # a native server
 $ fwp serve --mcp converter.fwp                 # the same, without a build step
-$ claude mcp add converter -- /path/to/converter
 ```
 
 ## Commands
@@ -64,11 +68,17 @@ it, or in the file's leading comment) is a tool, named as the function
   wrong and can call again.
 * A function without effects (no `IO`, `FileIO`, `Network`, `Async`) has
   the annotations `readOnlyHint`, `idempotentHint` and not
-  `openWorldHint`, so clients may call it without asking.
+  `openWorldHint`. These describe expected behavior; the client decides whether
+  a call requires permission.
 * Types that JSON cannot carry (functions, `Iterator`, `Channel`) cannot
   be tools.
 
 ## Protocol
+
+A method names the requested operation. Notifications omit an ID and expect no
+reply. Discovery lists supported capabilities; tool listing describes argument
+shapes; tool calling executes the selected operation. `ttlMs` is how long the
+list may be cached, in milliseconds.
 
 | Method | Answer |
 |---|---|

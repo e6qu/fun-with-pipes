@@ -1,5 +1,16 @@
 # Concurrency, networking and HTTP
 
+Start with [lesson 6](tutorials/06-tasks-and-channels/README.md) for a complete
+example. Concurrency lets several tasks make progress while others wait. It does
+not imply several CPU cores execute fwp task code at once. A scheduler chooses
+which ready task runs; a channel transfers values between tasks. CPU-parallel
+numeric kernels are a separate feature in [numerics](numerics.md).
+
+The networking sections build on that scheduler. TCP is an ordered byte-stream
+connection; UDP sends independent datagrams; DNS resolves hostnames to addresses.
+HTTP adds requests and responses over a connection. [Lesson 8](tutorials/08-http-server/README.md)
+introduces HTTP before building its server.
+
 ## Tasks
 
 Concurrency is structured. `task.spawn` starts a task as a child of the
@@ -24,16 +35,15 @@ passes, so a deadline set on a task also applies to all of its children.
 `task.scope f` waits for the tasks that `f` started; if `f` fails, those
 tasks are cancelled first.
 
-Channels are bounded FIFO queues: `channel.send` returns `False` once the
+Channels are bounded first-in, first-out (FIFO) queues: `channel.send` returns `False` once the
 channel is closed, and `channel.recv` returns `None` once it is closed and
 empty. Closing preserves queued values: receives continue to return them until
-the queue is empty. A sender that finds the channel full waits, which propagates
-backpressure.
+the queue is empty. A sender that finds the channel full waits, which slows the producer to the consumer's pace (backpressure).
 
 A queued value can contain the channel itself. Closing alone does not break
 that reference cycle. The counted ownership implementation verifies explicit
 draining and typed destruction; automatic reclamation of unreachable cycles
-remains an open requirement in [the ownership plan](ownership.md).
+requires tracing outside the checked ARC subset in [the ownership contract](ownership.md).
 
 `loop : (s -> Step[s, r] ! e) -> s -> r ! e` runs a step function in
 constant stack space, which suits accept loops and other long-running
@@ -43,7 +53,7 @@ processes.
 
 | | interpreter | native |
 |---|---|---|
-| task | an OS thread; the threads take turns holding a fair baton, so only one evaluates at a time | a green thread with its own stack, on one OS thread; `ucontext` on glibc, the runtime's x86-64/AArch64 switch on musl and Darwin |
+| task | an OS thread; the threads take turns holding a fair baton, so only one evaluates at a time | a green thread with its own stack, on one OS thread; `ucontext` on glibc, the runtime's x86-64/AArch64 switch on musl and Darwin; native fibers on Windows |
 | task, WebAssembly | a fiber that the JavaScript host switches with JavaScript Promise Integration (fwp.wasm, the playground) | a fiber, as in the interpreter (`wasm32-wasi`, `wasm32-browser`) |
 | waiting for sockets | `poll` in 50 ms slices, without the baton | non-blocking sockets on an epoll event loop (poll elsewhere) |
 | scheduling | preemptive at safe points: a task that used up its slice hands the baton to the next task waiting for it | the same, switching green threads |
@@ -83,10 +93,10 @@ so its interleaving can differ from an optimized build. Interpreter and native
 comparisons use the same optimization setting. Use channels, scopes or awaits
 when an effect must occur after another task's effect.
 
-The cost is small: a native program spends one decrement and a
-never-taken branch per function call (no measurable difference on
-`fib 35` in two tasks), and switching happens once per slice. The
-collector finds the values of a task that is switched out at a safe point
+A native task-enabled program adds a counter decrement and branch at safe
+points, and switches when its slice expires. That is real scheduling overhead;
+the old isolated Fibonacci observation does not establish its cost for other
+workloads. The collector finds the values of a task that is switched out at a safe point
 as at any other switch: on its stack and in its saved registers.
 
 Tasks started in a row get their turns in the order they were started,
@@ -94,13 +104,13 @@ on both backends (the interpreter's threads take their places in the
 queue for the baton when they are started, not when the operating system
 first runs them).
 
-On WebAssembly, which cannot switch stacks by itself, tasks need an engine
-with JavaScript Promise Integration (JSPI): Chrome and Edge 137 and later,
-or node 24 (node 22 with `--experimental-wasm-jspi`); compiled programs built with
-`--wasm-async=asyncify` run their tasks in any JavaScript engine. Waiting for a timer suspends
-the program on a JavaScript timer, so a page is not kept busy. Sockets
-remain unavailable there. The hosts and the details are in the
-[reference](reference.md#tasks-on-webassembly).
+For these WebAssembly builds, task suspension needs JavaScript Promise Integration
+(JSPI) or the explicit Asyncify transformation. JSPI lets the JavaScript host
+suspend/resume the WebAssembly computation; Asyncify transforms the module to
+save/restore its execution state. A host must support the selected path. Waiting
+for a timer yields to the host rather than keeping the page busy. These fwp
+targets do not expose sockets. See [tasks on WebAssembly](reference.md#tasks-on-webassembly)
+for the tested host configuration and build options.
 
 ## Networking
 
@@ -176,6 +186,12 @@ load test, and a SIGTERM shutdown while a request is in flight.
 
 ### HTTP/2
 
+HTTP/2 interleaves several request/response streams on one connection. Flow
+control limits how much data can be sent before the peer consumes it. `h2`
+identifies HTTP/2 over TLS; ALPN selects that protocol during TLS setup. `h2c`
+is its cleartext form. Multiplexing avoids waiting for a different stream's IO,
+but does not remove shared CPU or connection limits.
+
 `http.serve` (and so every REST server) speaks HTTP/2 as well as
 HTTP/1.1, with the same handlers:
 
@@ -226,6 +242,11 @@ The HTTP/2 framing, HPACK and flow control are those of gRPC
 or trailers in responses.
 
 ### WebSocket
+
+A WebSocket begins with an HTTP upgrade and then exchanges messages in both
+directions. Frames are pieces of those messages or control signals (ping, pong,
+close). `ws://` uses a plain connection; `wss://` uses TLS. See
+[lesson 19](tutorials/19-websockets-and-http2/README.md) for a complete session.
 
 `http.websocket f` is a handler that upgrades an HTTP/1.1 request to a
 WebSocket session (RFC 6455) and runs `f` with it; `ws.connect url`

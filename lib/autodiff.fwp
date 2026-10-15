@@ -3,6 +3,13 @@
 # Write numeric code once, generically (for example with `where Field[a],
 # Floating[a]`); evaluating it at `Dual` computes derivatives. Nesting
 # duals (Dual[Dual[F64]]) gives second derivatives.
+#
+# A derivative measures local output change; a gradient collects derivatives
+# for all inputs of a scalar function. Forward mode carries a value and derivative
+# in Dual. Reverse mode records dependencies in a tape and accumulates derivatives
+# backward using Rev. Both perform extra work and floating-point rounding still
+# applies. Nested differentiation computes derivatives of derivatives. See tutorials
+# 12 and 20, and docs/numerics.md for precision and lifetime limits.
 
 Dual[T] = { re: T, eps: T }
 
@@ -149,8 +156,9 @@ test "gradient" =
 # Reverse-mode automatic differentiation with a tape. `Rev[T]` is a number
 # that records each operation on the tape of the `grad` that made it (in
 # the runtime, outside the program's values); `grad` then walks the tape
-# backwards once, so the gradient of a function of n inputs costs a small
-# multiple of one evaluation, where forward mode needs n. Like `Dual`, it
+# backwards once, instead of reevaluating once per input direction as the
+# forward gradient helper does. Recording and backward propagation add memory
+# and arithmetic costs; pass counts do not give a wall-clock ratio. Like `Dual`, it
 # implements the numeric traits, so generic numeric code (vectors,
 # matrices, `where Field[t], Floating[t]`) differentiates unchanged.
 # Primitive float adjoints accumulate in F64. Nested reverse adjoints use

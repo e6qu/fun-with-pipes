@@ -1,5 +1,17 @@
 # REST APIs and OpenAPI
 
+Read [tutorial 8](tutorials/08-http-server/README.md) for HTTP and
+[tutorial 17](tutorials/17-rest-and-openapi/README.md) for a complete REST example.
+HTTP carries a method, path, headers and body to a server, which returns a status,
+headers and body. A REST endpoint maps one method/path to an operation. JSON is
+the text encoding used here for structured arguments and results. OpenAPI describes
+those endpoints and JSON shapes so clients can discover or generate calls.
+
+This is a mapping reference. Small declaration snippets omit surrounding types
+or bodies; use the linked example files for runnable programs. A path parameter
+is part of the address (`/books/3`); query parameters follow `?` (`?limit=5`).
+Headers carry named metadata, and cookies are named values sent in a Cookie header.
+
 An exported function is a REST endpoint. Its parameters are the request:
 path parameters, query parameters and a JSON body (or a form, with
 files); its result is the JSON response (or text, or CSV), and its errors
@@ -7,7 +19,7 @@ are error responses. The functions of a file exposed as `rest` (a line
 `# expose: rest` above the `export`, or in the file's leading comment for
 all of them) build into one HTTP server, which also serves its OpenAPI
 3.1 document. In the other direction, `fwp openapi --import` turns the
-OpenAPI document of any API (JSON or YAML, OpenAPI 3 or Swagger 2.0) into
+supported OpenAPI documents (JSON or YAML, OpenAPI 3 or Swagger 2.0) into
 an fwp module of typed client functions. There is no routing or JSON code
 to write.
 
@@ -245,6 +257,11 @@ break, is a 500.
 
 ## Forms and files
 
+A form encodes named fields rather than a JSON object. A multipart body divides
+those fields and uploaded files into separate parts, each with its own headers.
+`Upload` holds a received file's metadata and bytes. The example accepts a title
+and files, then returns summaries; it does not imply files are saved to disk.
+
 By default the body is JSON, whatever the request's `Content-Type`. An
 endpoint with `# accepts:` takes the media types it lists, chosen by
 `Content-Type` (the first one when the request has none), and answers
@@ -299,6 +316,10 @@ boundary of its `Content-Type`.
 
 ## Content negotiation
 
+The request's `Accept` header says which response encodings a client understands.
+The server chooses among the endpoint's declared formats. This is separate from
+`Content-Type`, which describes the body already being sent, and from compression.
+
 The response is JSON. An endpoint with `# produces:` writes its result in
 the media types it lists, chosen by the request's `Accept` header (with
 qualities and wildcards: `text/*;q=0.5, application/json;q=0.4`), the
@@ -332,6 +353,12 @@ no body to negotiate (an error when the server is built).
 form and the three formats.
 
 ## Authentication
+
+Authentication checks a caller's credentials. A bearer token is a string sent
+in the Authorization header; an API key is a configured header/query value. The
+application's `authenticate` function decides what those credentials mean and
+returns a principal (the authenticated identity). Exposing a function alone does
+not invent users or permission rules.
 
 Endpoints can require a bearer token (`Authorization: Bearer <token>`) or
 an API key, which a function of the program verifies:
@@ -380,6 +407,11 @@ On the server it is `rest.secured authenticate [RestAuth.Bearer] route`
 (`lib/rest.fwp`), which can secure hand-written routes too.
 
 ## CORS
+
+Cross-Origin Resource Sharing (CORS) lets a browser decide whether a page from
+one origin may read a response from another. An origin is scheme, hostname and
+port. The allowed-origin list configures that browser protocol; it is separate
+from authenticating a caller.
 
 A `# cors:` line in the file's leading comment lets pages of other origins
 call the API from browsers:
@@ -447,6 +479,10 @@ rejected when the server is built.
 
 ## JSON
 
+A codec encodes typed values and decodes bytes/text back into them. Decoding
+checks the expected type. The following rules define representation, including
+optional fields and variants, rather than relying on a client to guess their shape.
+
 The codec is `json.write : a -> String where Encode[a]` and
 `json.read : String -> Result[a, String] where Decode[a]` in the standard
 library ([stdlib.md](stdlib.md#json)), with `json.encode-value` and
@@ -508,6 +544,11 @@ constructors whose values are strings last, or order them from the most
 to the least specific.
 
 ## OpenAPI
+
+An OpenAPI document describes paths, methods, argument locations, schemas and
+responses. `$ref` links to a reusable schema definition. The generated document
+and HTML view document the current exposed functions; changing a type can change
+the contract clients receive.
 
 `fwp openapi app.fwp` prints the OpenAPI 3.1 document of the endpoints
 (JSON, two-space indentation), derived from the same rules as the server:

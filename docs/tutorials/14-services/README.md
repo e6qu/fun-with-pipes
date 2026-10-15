@@ -1,5 +1,15 @@
 # 14. Services
 
+Read lessons 1–7 first. A **module** is a source file; a **process** is a running
+program. A remote procedure call (RPC) asks another process to run a function by
+encoding its arguments and returning an encoded result. gRPC supplies the message
+transport used here, with Protocol Buffers as the data encoding.
+
+Splitting a program keeps the function-call source notation, but introduces
+network latency and possible connection failures. This lesson compares the two
+deployments for behavior, not for speed. The small library catalog is immutable:
+returning a loan value does not update a persistent stock database.
+
 A program in fwp can be deployed two ways without changing its source:
 
 - as **one executable**, where a module's exported functions are ordinary
@@ -17,6 +27,15 @@ details are in [Services](../../services.md).
 
 To follow along, go to this directory (`cd docs/tutorials/14-services`).
 The sessions below run exactly as shown: the test suite runs them.
+
+## Reading the example
+
+The library's `book` function constructs a predicate from its ISBN input (the
+book identifier), applies it to each catalog entry's `.isbn`, and uses `find`.
+`apply catalog` supplies the fixed list to that assembled search function.
+`Option` represents “not found”; borrowing a found book returns a loan or a typed
+error. It does not mutate a persistent inventory. The client uses `attempt` to
+show successful and failed calls as values, making local/remote behavior comparable.
 
 ## A service interface
 
@@ -105,7 +124,8 @@ interpreted servers and clients mix freely.
 
 The parts talk gRPC over HTTP/2, with protobuf messages derived from the
 types, and check a fingerprint of the types on every call, so that parts
-built from different sources refuse to talk. `fwp proto main.fwp --service
+with incompatible interfaces refuse to talk. A different implementation with
+the same interface can still communicate. `fwp proto main.fwp --service
 library` prints the messages, to look at what goes over the wire:
 
 ```console

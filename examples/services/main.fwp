@@ -8,6 +8,9 @@
 #
 # The source is the same in every build; see docs/services.md.
 
+# Read tutorial 14. An import makes another file a module. --service changes
+# exported calls to remote calls; start those servers before running the client.
+
 import inventory
 import pricing
 

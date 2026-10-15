@@ -1,8 +1,19 @@
 # 2. Data: records, tuples and variants
 
-Data comes in three shapes: records with named fields, tuples (records
-whose fields are `.0`, `.1`, ...) and variant types, whose values are made
-with constructors.
+Read [lesson 1](../01-pipes-and-functions/README.md) first: this lesson uses
+pipes, `both`, `fork`, `id` and `const`. We will represent points and shapes,
+transform them, and calculate distances and areas.
+
+## Named fields, positions and alternatives
+
+A **record** groups named fields: `{ x = 3.0, y = 4.0 }`. A **tuple** groups
+values by position: `(3.0, 4.0)`. Positions start at zero, so `.0` selects `3.0`
+and `.1` selects `4.0`. A field selector such as `.x` is a function and can be
+used directly in a pipe.
+
+A type describes which values are allowed. `F64` is a 64-bit floating-point
+number. `Point = { x: F64, y: F64 }` declares a named record type. A **variant
+type** offers named alternatives:
 
 ```fwp
 Point = { x: F64, y: F64 }
@@ -12,40 +23,50 @@ Shape =
     | Rect Point Point
 ```
 
+A `Circle` stores a centre and radius; a `Rect` stores two opposite corners.
+`Circle` and `Rect` are **constructors**, functions that build those alternatives.
+The leading `|` in a type declaration separates alternatives; it is not an
+expression pipe.
+
+A signature such as `dist : Point -> F64` says that `dist` takes a `Point` and
+returns an `F64`. The colon introduces the type, and `->` means “to.” Lesson 3
+covers type signatures in detail.
+
 ## Reading and building records
 
-- `.x` is a function that selects a field, so it fits into pipelines:
-  `.x | fork mul id id` squares the `x` coordinate.
-- `make T { f = g, ... }` builds a record of type `T` from functions of
-  the input. `make { .name, .age }` copies those two fields; each shorthand
-  expands to an explicit selector such as `name = .name`. Nested paths need
-  a name, as in `city = .address.city`.
-- `update { f = g }` applies `g` to field `f`.
-- `with { f = v }` replaces the value of a field.
+- `.x | fork mul id id` selects the x coordinate, then multiplies it by itself.
+- `make Point { x = .0, y = .1 }` gives each field a function of the incoming
+  pair. It turns `(1.0, 2.0)` into a `Point`.
+- `make { .name, .age }` copies those fields from an incoming record. Each short
+  field stands for `name = .name` or `age = .age`. Nested paths need an output
+  name, such as `city = .address.city`.
+- `update { x = add 1.0 }` applies a function to the old field value.
+- `with { y = 9.0 }` supplies a replacement value directly.
+
+These operations return new logical values; they do not change the original
+record. The distance function below calculates `sqrt(x*x + y*y)`, the distance
+from the origin. `sqrt` is the square-root function.
 
 ## Pattern matching
 
-`match` is a function that takes a value apart. Each `_` hole in a pattern
-captures one part, and the captured parts are passed, in order, as
-arguments to the function on the right of the arrow:
+`match` chooses a result based on a value's shape. A pattern is written before
+`->`; the expression after it is the **arm**. Every `_` in a pattern captures
+one component and passes it to the arm as an argument, in order.
 
-```fwp
-area : Shape -> F64
-area = match
-    Circle _ _ -> const (fork mul id id | mul 3.14159)
-```
+For `Circle _ _`, those arguments are the centre and radius. The complete program
+uses `const` to ignore the centre and return a function that squares the radius
+and multiplies by pi. Here `const` returns a function, which receives the second
+captured argument. `_` does not automatically discard a value in fwp.
 
-`Circle _ _` has two holes, the centre and the radius. The arm's function
-receives both; `const` discards the centre and keeps the function of the
-radius. Here `const` returns a function, not a numeric area: the returned
-function then receives the radius. A `_` captures an argument in this
-language; it does not discard it automatically.
+For `Rect _ _`, `curry` lets the arm treat its two captured points as one pair.
+The nested selectors `.0 | .x` and `.1 | .x` read their x coordinates. `both`
+calculates the two side lengths, `uncurry mul` multiplies that pair, and `abs`
+makes the area nonnegative. A match must cover every alternative; omitting the
+rectangle arm would be a compile-time error.
 
-An arm with no holes, such as `True -> "yes"`, directly supplies its result.
-An arm such as `_ -> const "yes"` receives the matched value and explicitly
-ignores it. This is why some arms need `const` and others do not.
-
-Matches must be exhaustive. If a case is missing, the compiler names it.
+A pattern with no captured components, such as `True`, supplies its arm's result
+directly. An arm with one `_` receives an argument, so returning a fixed value
+requires a constant function. This distinction will matter in lesson 4.
 
 ## The program
 
@@ -98,8 +119,10 @@ Point {x = 2.0, y = 2.0}
 [3.14159, 6.0]
 ```
 
-A record literal like `{ x = 3.0, y = 4.0 }` is structural, and it fits
-wherever a nominal record with the same fields is expected.
+The anonymous record `{ x = 3.0, y = 4.0 }` is checked by its fields
+(“structural” typing). `Point` is a declared name (“nominal” typing). In this
+example the compiler accepts the matching anonymous shape where `Point` is
+expected; the named result is printed with `Point`.
 
 ---
 

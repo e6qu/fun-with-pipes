@@ -1,5 +1,18 @@
 # 18. TLS
 
+Read lessons 8, 14 and 17 first. TLS encrypts a connection and verifies a
+server's identity. HTTPS is HTTP over TLS. A **certificate** names an identity
+and contains a public key; the matching **private key** stays with the server.
+A certificate authority (CA) signs certificates. A client trusts a CA explicitly
+or through its system trust store. Trusting a certificate and encrypting traffic
+are both needed for the connection used here.
+
+This lesson creates a local test CA. A certificate signing request (CSR) asks it
+to sign a server identity. PEM is the text file encoding of certificates and
+keys. `localhost` names this computer. The subject alternative name (SAN) lists
+the names/addresses the certificate covers; the client checks its requested
+hostname against that list. `SSL_CERT_FILE` selects the CA file for that process.
+
 [Tutorial 17](../17-rest-and-openapi/README.md) served functions as REST
 endpoints, and [tutorial 14](../14-services/README.md) split a program
 into services, in cleartext. With a certificate, the same servers speak

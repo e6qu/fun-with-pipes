@@ -1,5 +1,11 @@
 # JSON values. `null` is the explicit variant `Json.Null`, not a language
 # null.
+#
+# JSON is a text representation of objects, arrays, strings, numbers, Booleans
+# and null. Json is the untyped value tree; a typed codec instead reads/writes a
+# specific fwp type. Encoding makes text/data; decoding validates it and returns
+# a value or error. `Json.Null` is an explicit constructor, not a hidden missing
+# value. See the REST guide for record/variant and special-number encodings.
 
 Json =
     | Json.Null

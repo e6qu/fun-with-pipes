@@ -1,12 +1,15 @@
 # A WebSocket chat: every text message a client sends goes to every
 # client connected, through one hub task. GET / serves a page that chats.
 #
-#     fwp run examples/server/chat.fwp       # interpreted
+#     fwp run examples/server/chat.fwp       # compiled and cached
 #     fwp build examples/server/chat.fwp && ./chat
 #
 # FWP_ADDR sets the listen address (default 127.0.0.1:8080); the actual
 # address is printed on stderr. The same server speaks HTTP/2 to clients
 # that use it (`curl --http2-prior-knowledge http://127.0.0.1:8080/`).
+
+# Read tutorials 6, 8 and 19. A WebSocket exchanges messages in both
+# directions. Channels are bounded queues; the hub owns the list of outgoing queues.
 
 ChatEvent =
     | ChatEvent.Join Channel[WsMessage]

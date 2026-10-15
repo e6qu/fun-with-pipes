@@ -1,7 +1,12 @@
 # Berkeley SoftFloat 3e
 
+This is third-party software arithmetic for formats that cannot be assumed to
+have matching CPU instructions. Binary16 uses 16 bits and binary128 uses 128;
+rounding selects a representable result. A NaN is a non-number floating result.
+The manifest identifies the imported files; the license remains unchanged.
+
 This subset implements binary16/binary128 arithmetic and conversions for fwp's
-float-format migration. It comes from John Hauser's
+floating-point formats. It comes from John Hauser's
 [SoftFloat 3e archive](https://www.jhauser.us/arithmetic/SoftFloat-3e.zip), released
 2018-01-20. [manifest.json](manifest.json) records the archive SHA-256 and selected
 files. The original [BSD three-clause license](LICENSE.txt) is compatible with
@@ -17,5 +22,6 @@ Arithmetic and numeric conversions use positive canonical quiet NaNs; raw binary
 transport preserves all bits. No host `long double` is used.
 
 The subset omits extended80 and floating decimal/transcendental operations.
-Those need the explicit implementations and tests required by the active format
-migration; this arithmetic core alone does not establish language-level support.
+Decimal conversion is supplied by gdtoa and transcendental functions by TLFloat.
+[The format contract](../../docs/float-formats.md) records the integrated behavior
+and validation; this core alone covers only its listed arithmetic operations.

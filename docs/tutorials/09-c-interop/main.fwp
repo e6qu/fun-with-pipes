@@ -28,7 +28,8 @@ sort-buffer = curry (tap (both .1 (.0 | int.convert | option.unwrap-or 0usize)
         | uncurry qsort
         | apply 4usize
         | apply compare)
-    | fork read-all .0 .1)
+    | both (fork read-all .0 .1) (.1 | mem.free)
+    | .0)
 
 read-all : I64 -> Ptr[I32] -> List[I32] ! {Unsafe}
 read-all =

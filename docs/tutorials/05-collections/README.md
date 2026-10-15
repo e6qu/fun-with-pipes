@@ -1,25 +1,39 @@
 # 5. Collections and strings
 
-Lists, arrays, maps, sets, strings and byte strings are all immutable.
-Their functions are curried and data-last like everything else, so they
-chain in pipelines:
+Prerequisites: [lessons 1–4](../README.md), particularly `map`, tuples and
+`Option`. A **collection** holds several values. A list keeps them in order;
+a map associates keys with values; a set keeps distinct values. Arrays provide
+indexed storage. Strings hold text, while byte strings hold raw bytes.
 
-- `words`, `lines`, `split`, `join`, `format`, `trim`, `replace` work on
-  strings;
-- `map`, `filter`, `fold`, `sort`, `sort-by`, `unique`, `take`, `zip` work
-  on lists;
-- `frequencies`, `map.get`, `map.insert`, `map.to-list` work on maps.
+All are immutable values: operations return results without changing the
+meaning of an earlier value. “Map” has two meanings here: `map f` transforms
+list elements, while `Map[K, V]` is a key/value collection. Names such as
+`map.get` operate on the latter.
 
-`format` fills `{}` placeholders from a tuple or a record.
+## Following the text transformations
 
-## Lazy iterators
+The sample splits a sentence into words. Its lines then:
 
-The functions under `iter.` are lazy, so an iterator can be infinite. Only
-the elements that are consumed are computed:
+- map each word to its length and add those lengths;
+- count equal words with `frequencies`, then look up `"the"`; `Some 3` means
+  the key exists with count three, while a missing key would produce `None`;
+- keep distinct words with `unique`, sort them alphabetically, and take three;
+- keep even integers (`rem 2` is the remainder after division by two), then
+  multiply them by ten.
 
-```fwp
-    1 | iter.iterate (mul 2) | iter.take 5 | iter.to-list | echo,
-```
+`format` replaces `{}` placeholders with values from a tuple or record. Other
+useful text operations are `lines` (split at line endings), `split`/`join`,
+`trim` (remove surrounding whitespace) and `replace`.
+
+## Values produced on demand
+
+An **iterator** supplies successive values when asked. The `iter.` functions
+are **lazy**: they can describe a sequence without constructing its whole list.
+`iter.iterate (mul 2)` starts from its input and repeatedly doubles it;
+`iter.take 5` limits consumption; `iter.to-list` collects the five results.
+The program therefore produces `[1, 2, 4, 8, 16]` without constructing an infinite
+list. Some producers prepare a successor when stepped; this is not a guarantee
+that every producer performs no lookahead.
 
 ## The program
 
@@ -34,7 +48,7 @@ main = [
     text | words | unique | sort | take 3 | echo,
     [1, 2, 3, 4, 5, 6] | filter (rem 2 | eq 0) | map (mul 10) | echo,
     1 | iter.iterate (mul 2) | iter.take 5 | iter.to-list | echo,
-    ("fwp", 12) | format "{} is {} PRs old" | print,
+    ("apples", 12) | format "{}: {}" | print,
 ] | ignore
 ```
 
@@ -48,7 +62,7 @@ Some 3
 ["brown", "dog", "end"]
 [20, 40, 60]
 [1, 2, 4, 8, 16]
-fwp is 12 PRs old
+apples: 12
 ```
 
 See `lib/list.fwp`, `lib/string.fwp`, `lib/collections.fwp` and

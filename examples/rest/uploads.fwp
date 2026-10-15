@@ -10,6 +10,9 @@
 #
 # expose: rest
 
+# Read tutorial 17. Multipart bodies contain separate named fields and file
+# parts. Upload values hold bytes; receiving one does not automatically save a file.
+
 # Files sent with a title (`multipart/form-data`).
 Batch = { title: String, files: List[Upload], tags: List[String] }
 

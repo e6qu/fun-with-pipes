@@ -4,6 +4,9 @@
 #   ./wc -l README.md docs/cli.md
 #   printf 'one two\nthree\n' | ./wc
 
+# Read tutorial 16 for generated flags. Counts is a named record; make builds
+# each field from the same text input. File failures use Error[IoError].
+
 WcOptions = {
     # -l  count lines
     lines: Bool,

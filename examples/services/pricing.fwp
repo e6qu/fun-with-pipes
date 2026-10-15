@@ -1,6 +1,9 @@
 # Pricing: unit prices, discounts and quotes. A quote checks the stock
 # with the inventory, so in a split build this service calls another one.
 
+# Read tutorial 14. Amounts are integer cents. Discount is a variant choosing
+# no discount or a percentage; pattern matching selects the calculation.
+
 import inventory
 
 Line = { sku: String, quantity: I64, cents: I64 }

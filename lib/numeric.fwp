@@ -9,6 +9,13 @@
 # call a size of its own, unknown but rigid, and `vector.same-size` checks
 # at run time that two vectors agree. Performance: abstract sizes cost a
 # length comparison and an `Option` at each such check.
+#
+# A vector is an ordered set of numbers; a matrix is a rectangular grid.
+# Dimensions are type arguments, so Vector[F64, 3] contains three F64 elements.
+# A complex number has real and imaginary parts. Linear algebra combines these
+# values through dot products, matrix multiplication and solving equations.
+# Numeric traits state which operations a generic algorithm needs. Tutorial 12
+# introduces these operations and explains their expected output.
 
 Vector[T, N] = { data: Array[T] }
 Matrix[T, M, N] = { rows: I64, cols: I64, data: Array[T] }

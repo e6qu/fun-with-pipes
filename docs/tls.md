@@ -1,5 +1,16 @@
 # TLS
 
+Transport Layer Security (TLS) encrypts a connection and verifies the peer's
+identity. HTTPS is HTTP over TLS. A certificate holds an identity and public key;
+the matching private key belongs to its owner. A certificate authority (CA) signs
+certificates, and a client has a set of trusted CAs. The handshake negotiates
+connection parameters and verifies the presented identity before application data.
+
+Read [lesson 18](tutorials/18-tls/README.md) to generate local test certificates
+and run a complete server/client pair. The opening commands below are usage
+sketches: `api.fwp`/`shop.fwp` stand for your programs and the PEM files must
+already exist. PEM is the text encoding used for these keys/certificates.
+
 TLS connections, HTTPS servers and clients, REST APIs over HTTPS and the
 services of split programs over TLS, in both backends, with the system's OpenSSL 3. TLS itself is not
 written from scratch: the cryptography is OpenSSL's, and fwp adds the
@@ -19,6 +30,12 @@ $ SSL_CERT_FILE=ca.pem FWP_SERVICE_WEATHER=tls://localhost:50051 fwp run --servi
 [Tutorial 18](tutorials/18-tls/README.md) walks through an example.
 
 ## OpenSSL
+
+OpenSSL supplies the cryptographic implementation. Header files are needed when
+compiling a program that uses it; shared libraries are needed when running that
+program. A library prefix is the directory containing `include`, `lib` and
+possibly `bin`. Linux `.so`, macOS `.dylib` and Windows `.dll` names refer to
+platform-specific shared libraries; the Linux names in the table are examples.
 
 For native macOS development, install OpenSSL 3 with Homebrew and set its
 prefix for both compilation and interpreter loading:
@@ -129,6 +146,11 @@ are loaded by `tls.listen`, which fails if they cannot be read or do not
 match. Without `client-ca`, client certificates are not requested.
 
 ### Mutual TLS
+
+Ordinary HTTPS verifies the server to the client. Mutual TLS additionally asks
+the client for a certificate and verifies it on the server. That establishes a
+certificate identity; application permission decisions still belong to the
+program, such as the REST authentication function.
 
 `tls.server "server.pem" "server.key" | tls.with-client-ca "ca.pem"` is a
 server that requires a client certificate signed by the CA certificates

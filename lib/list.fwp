@@ -1,4 +1,11 @@
 # Lists. Functions take the list last so they compose with `|`.
+#
+# A list is an ordered sequence written `[1, 2, 3]`. `map` transforms each
+# item, `filter` keeps items satisfying a predicate (a Boolean-valued function),
+# and `fold` combines items with an accumulator (the running result).
+# For example, `[1, 2, 3] | map (add 1)` gives `[2, 3, 4]`, and
+# `[1, 2, 3] | fold add 0` gives 6. Indices start at zero; optional results
+# use `Some value` or `None` when no item exists.
 
 foreign "fwp" map : (a -> b ! e) -> List[a] -> List[b] ! e
 foreign "fwp" filter : (a -> Bool ! e) -> List[a] -> List[a] ! e

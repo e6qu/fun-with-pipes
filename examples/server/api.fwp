@@ -1,12 +1,15 @@
 # A small JSON API server.
 #
-#     fwp run examples/server/api.fwp        # interpreted
+#     fwp run examples/server/api.fwp        # compiled and cached
 #     fwp build examples/server/api.fwp && ./api
 #
 # FWP_ADDR sets the listen address (default 127.0.0.1:8080); the actual
 # address is printed on stderr. With FWP_TLS_CERT and FWP_TLS_KEY (PEM
 # files) it serves HTTPS. SIGINT/SIGTERM shut down gracefully: requests in
 # flight get a few seconds to finish.
+
+# Read tutorials 6 and 8. A Request becomes a Response; routing chooses the
+# handler. const builds a function ignoring its input, useful for a fixed reply.
 
 # GET /health
 health : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}

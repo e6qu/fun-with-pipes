@@ -1,377 +1,258 @@
-# Numerics: automatic differentiation and devices
+# Numerical calculations, derivatives and devices
 
-This page covers how fwp differentiates programs and where tensor kernels
-run. The library itself is listed in [stdlib.md](stdlib.md) (sections
-*Autodiff* and *Tensors*); [tutorial 12](tutorials/12-numerics/README.md)
-and [tutorial 20](tutorials/20-autodiff-and-devices/README.md) introduce
-it.
+Start with [tutorial 12](tutorials/12-numerics/README.md) for vectors, matrices
+and derivatives, then [tutorial 20](tutorials/20-autodiff-and-devices/README.md)
+for reverse differentiation and execution devices. This guide explains behavior,
+precision, memory and implementation limits. Function signatures are in the
+[standard library reference](stdlib.md).
 
-Runtime ownership, natural-width numeric storage, numerical loop fusion,
-blocked matrix multiplication and bounded autodiff workspace reuse are accepted.
-[../PLAN.md](../PLAN.md) records the active roadmap, retained performance
-evidence and checked native ARC scope.
-[ownership.md](ownership.md) records the representation and floating-point
-contract; [development-state.md](development-state.md) records current evidence.
+A derivative measures local change in an output as an input changes. A gradient
+is the list of those derivatives for a scalar output. A Jacobian is the table
+for several outputs and inputs; a Hessian contains second derivatives of a scalar
+function. Automatic differentiation (AD) applies arithmetic derivative rules
+while evaluating a program. It avoids finite-difference estimates but still
+performs floating-point arithmetic, with rounding and domain limits.
 
-Numeric code in fwp is written once against the numeric traits (`Ring`,
-`Field`, `Floating`, `FromFloat`, ...). Floats, complex numbers, dual
-numbers, reverse-mode numbers and tensor expressions all implement them,
-so the same function evaluates, differentiates, or builds a kernel
-depending on the type it is used at:
+Numeric traits describe supported operations: `Ring` includes addition,
+subtraction and multiplication; `Field` adds division; `Floating` supplies
+functions such as `exp` and `ln`; `FromFloat` converts floating literals.
+For example, this complete definition computes `ln(exp(x) + 1)`:
 
+```fwp
+soft : t -> t where Field[t], Floating[t], FromFloat[t]
+soft = exp | add 1.0 | ln
 ```
-f : t -> t where Field[t], Floating[t], FromFloat[t]
-f = exp | add 1.0 | ln
-```
 
-| Use | `t` |
+The same definition can evaluate ordinary numbers, propagate derivatives or
+build an array expression, depending on the chosen type. That reuse does not
+make those computations equally expensive.
+
+| Use | What the input type makes it do |
 |---|---|
-| `2.0 \| f` | `F64` |
-| `2.0 \| derivative f` | `Dual[F64]` (forward mode) |
-| `[2.0] \| grad (head \| option.unwrap-or zero \| f)` | `Rev[F64]` (reverse mode) |
-| `xs \| tensor.lazy \| f \| realize-on (CpuParallel 4)` | `TensorExpr[n]` (a fused kernel) |
+| `2.0 \| soft` | Ordinary F64 arithmetic |
+| `2.0 \| derivative soft` | Carry a value and derivative through each operation |
+| `[2.0] \| grad (head \| option.unwrap-or zero \| soft)` | Record operations, then accumulate derivatives backward |
+| `xs \| tensor.lazy \| soft \| realize-on (CpuParallel 4)` | For a previously defined vector `xs`, build then evaluate an elementwise expression |
+
+`head` returns `Option`; `option.unwrap-or zero` supplies a value for an empty
+list. The reverse example deliberately uses only the first input. `xs` in the
+last row is a placeholder for the vector from tutorial 20, not a global library
+variable.
 
 ## Forward mode
 
-`Dual[T] = { re: T, eps: T }` carries a value and a derivative
-(`lib/autodiff.fwp`). `derivative`, `gradient`, `jacobian` and `hessian`
-(nested duals) evaluate the function once per input direction. It is the
-right tool for few inputs or many outputs; it needs no runtime support.
+`Dual[T] = { re: T, eps: T }` pairs a value (`re`) with its derivative (`eps`).
+Arithmetic propagates both. `derivative` handles one input; `gradient` and
+`jacobian` repeat evaluation for input directions. `hessian` nests dual numbers
+to obtain second derivatives. This is useful when there are few inputs, or many
+outputs relative to inputs. The implementation is library code, but its extra
+arithmetic and values still have runtime costs.
 
 ## Reverse mode
 
-`Rev[T] = { value: T, vertex: I64 }` is a number that records each
-operation on a tape. `grad f xs` makes a tape whose first nodes are the
-inputs, evaluates `f` once at `Rev` numbers, and walks the tape backwards
-once from the result, so the gradient of a function of n inputs costs a
-small constant times one evaluation, where `gradient` costs n.
+`Rev[T] = { value: T, vertex: I64 }` pairs a value with a reference to its recorded
+operation. A **tape** stores operations and their dependencies. `grad f xs`
+records one forward evaluation, then walks backward to compute the gradient.
+Unlike forward `gradient`, it does not rerun the function once per input.
+It does allocate/store records and do extra backward arithmetic; one forward
+plus one backward pass is not a measured wall-clock cost ratio.
 
-| Function | Result |
+| Function | Result and work |
 |---|---|
-| `grad f xs` | the gradient of a scalar function `List[Rev[t]] -> Rev[t]` |
-| `value-and-grad f xs` | the value and the gradient, from one forward and one backward pass |
-| `grad-vector f v` | `grad` for a function of a `Vector` |
-| `vjp f v xs` | the vector-Jacobian product vᵀ·J of `List[Rev[t]] -> List[Rev[t]]`, one backward pass |
-| `rev.jacobian f xs` | the Jacobian (rows are outputs), one backward pass per output |
-| `rev.const x` | a constant: no gradient flows through it |
+| `grad f xs` | Gradient of a scalar output, one forward and one backward pass |
+| `value-and-grad f xs` | Value plus the same gradient |
+| `grad-vector f v` | Corresponding operation for a `Vector` input |
+| `vjp f seeds xs` | Weighted output derivatives, one backward pass |
+| `rev.jacobian f xs` | One row per output, a backward pass for each output |
+| `rev.const x` | A constant that contributes no recorded dependency |
 
-`T` implements `ReverseScalar`: the five float types and recursively `Rev[T]`.
-Primitive float adjoints accumulate in `F64` and convert back. Nested reverse
-levels retain typed weights and perform backward arithmetic on the enclosing
-tape. Generic callers of `grad`/`vjp` declare `ReverseScalar[T]`; a `Float[T]`
-constraint alone describes primitive float operations. Since `Rev` implements `Add`, `Sub`, `Mul`, `Div`, `Neg`, `Zero`,
-`One`, `FromInt`, `FromFloat`, `Ring`, `Field` and `Floating`, generic
-code over lists, `Vector`s and `Matrix`es (`dot`, `norm`, `matmul`,
-`matrix.apply`, ...) differentiates unchanged. Comparisons (`lt`, `max`)
-compare `.value` first, so piecewise functions work (the derivative is
-that of the branch taken).
+A **seed** weights an output before backward propagation. VJP means
+vector-Jacobian product: the supplied output weights multiply the Jacobian.
+An **adjoint** is the derivative accumulated for a recorded value during that
+backward pass. A **primal** value is the ordinary value before considering its
+derivative. Local partial derivatives are the weights on parent dependencies.
 
-**The tape.** The tape lives in the runtime, outside the program's values
-(`src/numerics.rs` for the interpreter, `runtime/fwp_rt_kernel.c` for
-native code): per recorded operation, two parent indices and two partial
-derivatives. Input nodes need no parent or derivative entries. Operation buffers
-use offsets after the input prefix; tokens and adjoints keep absolute node
-indices. Primitive-float tapes use numeric buffers; nested tapes use typed value
-buffers. A failed managed weight retain releases completed ownership before
-returning, without publishing a partial operation.
-A `Rev` value refers to its node as
-`(tape id << 32) | index`, with -1 for constants; the tape id is
-`(generation << 16) | (slot + 1)`. Operations call the primitive
-`ad.push`, which appends a node to the tape of its operands (an operation
-on constants records nothing); `ad.backward` seeds the outputs, visits the
-nodes from the last to the first, adds `adjoint × partial` to each parent
-(skipping nodes whose adjoint is zero), returns the adjoints of the inputs
-and retires the tape. Its detached capacity may be reused within the bounded
-workspace described below. The order of these additions is the same in both
-backends, so gradients agree bit for bit. Tapes are independent, so
-tasks can differentiate concurrently.
+`ReverseScalar` supports the five float types and recursively `Rev[T]`. Base-float
+reverse tapes accumulate adjoints in F64 and convert results back to the element
+type. This is a precision choice, including for F128; it does not promise an
+F128-precision gradient. Nested reverse levels keep typed weights and record
+backward arithmetic on the enclosing tape. A `Float[T]` constraint alone does
+not describe this nested behavior; generic reverse callers use `ReverseScalar[T]`.
+Comparisons use primal values, so a piecewise program differentiates the branch
+actually taken. This does not define a smooth derivative at every branch boundary.
 
-The primitives have pure types, which is sound because the optimizer
-never duplicates, merges or hoists primitive calls (`src/opt.rs`), and a
-node is only reachable through the value returned for it.
+### Lifetime and nesting
 
-**Limits.** A `Rev` value belongs to the `grad` that made it: using one
-after its `grad` returned is a trap, and so is combining values of two
-different same-level `grad`s. The active bundle implements nested reverse mode:
-`[0.0] | grad (grad square | sum)` differentiates a gradient by recording its
-backward arithmetic on the enclosing tape. `hessian` remains the nested forward
-combinator; `rev.jacobian (grad f)` expresses a reverse Hessian. Runner acceptance
-and current failures are recorded in the handoff.
+A `Rev` value belongs to the tape that created it. Using it after that scope
+ends, combining different tapes at the same level, or using it from another task
+traps. Nesting is supported: a backward operation can record into an enclosing
+tape. `rev.jacobian (grad f)` expresses a reverse Hessian; `hessian` remains the
+nested-forward helper. Nesting does not relax stale-token or task checks.
 
-Managed tapes own their typed weights, scalar-operation closures and adjoints.
-Native storage stays in a scanned mutable root list while active or detached
-for backward, and releases on scope exit, failure or cancellation. Library
-teardown releases tapes before the managed heap. Managed weights belong to
-the creating task in both engines; identities do not reuse task addresses or
-host fiber slots. Cross-task use is rejected. Partial construction owns only
-the scalar and callbacks whose retains have completed. A numeric zero with
-an active derivative is not pruned: only recursively inactive constant zeros
-may skip propagation. Capturing or combining unrelated tape tokens remains an
-error; nesting does not relax stale-token or generation checks.
-Base-float reverse mode uses 24 bytes per operation before adjoint storage and
-capacity rounding. Nested weights additionally own their scalar representation.
-Input-only tapes need no operation buffers. [Four-host measurements](measurements/ad-operations-2026-10-15.json)
-record lower peak storage for identity, mapped and nested gradients. Cold mapped
-tapes make more growth requests from smaller initial buffers; timings show no
-consistent speedup. Existing cached capacity can remain within the fixed budget.
+Scoped helpers release tapes on success, failure, traps and cancellation. Native
+library teardown retires tape owners before the managed heap. Checked ARC needs
+a proof that calls run within `ad.scope`/`ad.scope2`; raw unscoped operations and
+unknown callback targets are rejected. Returned scalar tokens do not keep a tape
+alive. Child tasks start independent derivative scopes.
 
-Numeric backward passes retain adjoints for every input and for the tape prefix
-through the last seeded output. Later recorded nodes cannot contribute because
-parents precede children. This bounds adjoint allocation and reverse scans;
-forward evaluation still runs in full, including traps. Duplicate seeds accumulate
-in their original order. Validation still consumes the tape and checks output
-identity/bounds in order before allocating new adjoint storage. A cached larger
-workspace can remain allocated within its existing budget. Managed nested tapes
-retain their existing callback propagation rules. [Measured evidence](measurements/ad-prefix-2026-10-14.json)
-shows lower tape storage and unchanged managed allocation counts for an unused
-suffix; process timings show no consistent speedup. The handoff records delivery
-validation. Growing a reused adjoint workspace remains amortized.
+### Tape layout and reuse
+
+A base-float operation stores two 32-bit parent indices and two F64 local
+derivatives: 24 payload bytes before adjoint storage, spare capacity and allocator
+metadata. Inputs have node indices but need no operation records. Nested tapes
+instead own typed derivative values and operation callbacks. A failed append
+releases partially acquired owners without publishing an incomplete record.
+
+The vertex token encodes `(tape id << 32) | index`, with −1 for constants.
+The tape ID encodes `(generation << 16) | (slot + 1)`. Generation numbers prevent
+an old token from naming a new tape in a reused slot; slots retire after generation
+32767. At most 65,535 slots are representable. Node capacity is also limited by
+the signed node index and native address width before allocation.
+
+Backward processing validates requested outputs in order, seeds them in order
+(including duplicates), then visits dependent records in reverse order. Numeric
+adjoints retain all input slots and only the prefix through the last seeded output.
+Later recorded nodes cannot affect earlier outputs because parents precede children.
+Forward evaluation still runs in full, including possible failures. Nested tapes
+skip only recursively inactive constant zeros; a numeric zero with an active
+derivative must still propagate.
+
+Native parent arrays share one allocation; numeric derivative arrays share another.
+Growth preserves initialized entries and alignment, and only base pointers free
+storage. This reduces allocation requests, not the 24-byte payload per operation.
+Moving the second regions during growth adds copying, which can offset allocation
+savings. The interpreter keeps its independent vector representation.
+
+The active-tape table doubles capacity up to its slot limit. A cursor skips slots
+known to be unavailable, while earlier released slots move it back. It preserves
+the lowest-reusable-slot rule; arbitrary holes can still require linear search.
+Table capacity remains until shutdown to preserve retired generation identities.
+
+One detached numeric workspace may retain at most 512 KiB. Larger buffers are
+released, reused adjoints are cleared, and empty or managed tapes do not evict a
+useful numeric cache. `FWP_AD_WORKSPACE=0` disables that cache for comparison.
+The table's capacity and returned managed gradient arrays are separate costs.
+[Numerical benchmark reports](benchmarks.md) record cold/warm cases, allocations,
+live memory and mixed timing results against earlier fwp implementations.
+
+### Checkpointing
 
 `xs | vjp-checkpointed {steps = 1000, every = 32} step seeds` differentiates
-1000 applications of a pure `step`. Both counts are explicit: `steps` must be
-nonnegative and `every` positive. The forward pass saves ordinary input values
-at segment boundaries and retires each segment's tape. The backward pass
-replays segments in reverse order and propagates their vector-Jacobian products.
-This uses roughly `steps / every` value snapshots plus one segment's tape,
-instead of retaining every operation. It evaluates each step twice, so it is
-appropriate when saved tape memory justifies recomputation. Zero steps return
-the seeds without calling the step. Seed length must match the final output.
+1000 applications of a pure `step`. `xs`, `step` and `seeds` must be supplied by
+the program. `steps` must be nonnegative and `every` positive. The forward pass
+saves values at segment boundaries; the backward pass recomputes each segment
+and propagates its derivatives. This trades stored operations for extra work.
 
-Each segment follows `vjp` precision: F64 adjoint accumulation followed by
-conversion to the element type. For a narrower type this rounds at segment
-boundaries; it need not equal a single unsegmented F64 accumulation bit for bit.
-Callback types remain pure, with the same primal step order; a primal trap
-stops the forward pass before backward replay. Captured values from unrelated
-active tapes still fail the normal mixed-tape checks. Checkpointing adds no
-syntax, implicit interval or automatic recomputation to ordinary `vjp`.
+Storage is roughly `steps / every` saved values plus one segment's tape. Each
+step is evaluated twice. Zero steps return the seeds without invoking the step;
+seed length must match the final output. A forward trap stops before replay.
+There is no implicit interval or automatic recomputation in ordinary `vjp`.
 
-[Four-host measurements](measurements/checkpoint-2026-10-14.json) compare a
-4096-step additive VJP under ARC, with workspace reuse disabled. Interval 32
-reduces peak tape storage from 262,248 to 2,152 bytes while increasing peak
-managed storage from 336 to 12,816 bytes. These separate peaks need not coincide.
-Tape allocation requests rise from 34 to 1,153 and managed requests from 16,410
-to 38,408; all measured storage is released without collection. Process time
-increases on all four hosts in this workload. The artifact records hardware,
-compiler, flags, counts, timings and emitted-source hashes; runner artifacts
-also retain generated C and native assembly. Checkpointing is an explicit
-memory/recomputation tradeoff, not a general speed optimization.
+Each segment follows VJP precision: F64 adjoints converted back to the element
+type. Narrow types can round at segment boundaries, so a checkpointed result
+need not match a single unsegmented accumulation bit for bit.
 
-Accepted PR124 registers detached tape buffers and adjoints for cleanup
-through normal return, mixed-tape errors, recoverable traps and cancellation.
-It preserves consumption of the selected tape before output validation.
-Token validation checks live tape identity and node bounds; slots retire after
-generation32767 so old tokens cannot identify a later tape after wrap.
-Interpreter/native and deliberate omission controls pass on Linux and both Macs.
-Verified production acceptance is recorded in [the handoff](development-state.md).
-
-Internal ad.scope/ad.scope2 release tapes when callbacks fail before backward.
-Native scopes use stack owners and stable slot links in each task's cleanup chain;
-interpreter scopes use RAII. Borrowed inputs require Dup. Public grad/vjp types
-remain unchanged; direct arguments and projection inside the grad callback avoid
-wrapper allocations. [Allocation validation](#scoped-gradient-allocation-validation)
-records the complete counters and limits. A single detached workspace may retain
-at most 512 KiB of numeric buffers. Reuse zeroes adjoints and preserves stale-token
-checks; oversized capacity is released. FWP_AD_WORKSPACE=0 disables this cache
-for comparison. Native library unload releases both live and cached tape owners. Managed tapes
-do not consume the numeric cache; retiring an empty tape leaves existing cached
-storage intact. A native backward pass with no active nodes allocates no private
-adjoint buffer. The native slot registry grows geometrically from one slot,
-clamped to the 65,535-slot token limit. Slot/generation selection is unchanged;
-spare capacity is not exposed as initialized tapes.
-Both runtimes retain a cursor past slots known to be unavailable. Releasing an
-earlier reusable slot lowers it before reentrant scalar callbacks. This avoids
-rescanning occupied prefixes during sequential creation while preserving the
-lowest-slot rule; arbitrary holes can still require linear search.
-[Four-host search measurements](measurements/ad-search-2026-10-15.json) record
-the avoided slot visits, unchanged allocation/live-memory counters and native
-instructions. Timings improve for large measured batches; small cases are mixed.
-No timing claim covers unrelated workloads.
-[Four-host registry measurements](measurements/ad-registry-2026-10-15.json) record
-fewer allocation requests and the extra live capacity between growth boundaries.
-They do not establish lower slot-search complexity or a general speedup.
-Native metadata uses two paired allocations: contiguous parent arrays in one,
-numeric derivative arrays in another. Growth preserves initialized values and
-alignment, and detached cleanup frees only the owning bases. Managed weights
-keep their typed owner. The layout changes allocator requests, not the 24-byte
-numeric payload per operation, the node bound or the workspace budget. Growth
-moves the second initialized regions; allocation reduction alone is not a speed
-claim. [The handoff](development-state.md) records current validation.
-Raw reverse-mode tape interfaces remain outside checked ARC eligibility.
-
-Historical timing samples are preserved in
-[the benchmark history](roadmap-history.md#archived-numerics-timing-samples).
-Future comparisons must record equivalent workloads, hardware, compiler,
-flags, allocations and live memory alongside elapsed time, as required by
-[the ownership contract](ownership.md).
+The [4096-step measurement](measurements/checkpoint-2026-10-14.json) compares
+checkpoint interval 32 with ordinary fwp VJP under ARC, with cache reuse off.
+Peak tape bytes fall from 262,248 to 2,152, while peak managed bytes rise from
+336 to 12,816. Those separate peaks need not coincide. Tape requests rise from
+34 to 1,153 and managed requests from 16,410 to 38,408. Time increases on all
+four measured hosts. This is a memory/recomputation tradeoff, not a C/Rust
+comparison or a general speed improvement.
 
 ## Tensor expressions and kernels
 
-`TensorExpr[N]` (`lib/tensor.fwp`) is a lazy elementwise expression over
-`Vector[F64, N]` leaves: `tensor.lazy`, `tensor.fill`, `tensor.add`,
-`tensor.sub`, `tensor.mul`, `tensor.div`, `tensor.scale`, `tensor.abs`,
-`tensor.unary`, the `Floating` functions, and `tensor.map` with any
-function. Through its trait impls, generic numeric code builds
-expressions too.
+`TensorExpr[N]` describes elementwise arithmetic over `Vector[F64, N]` inputs.
+A leaf is an input vector or constant. `tensor.lazy` makes a leaf; numeric
+operations construct an expression graph. Construction has a cost even though
+individual elements are not evaluated yet.
 
-Running an expression compiles it to a `Kernel` (`tensor.kernel`): postfix
-code (`Array[I64]`: 0 an input, 1 a constant, 2–5 the arithmetic
-operations, 6–13 the unary operations), its constants and its input
-arrays. A `tensor.map` subexpression is evaluated first, on the CPU (it
-may be any fwp function), and becomes an input. The runtime evaluates the
-code 256 elements at a time on a stack of 256-element columns, so the
-interpretation costs one dispatch per operation per 256 elements and the
-inner loops are plain array loops; no intermediate arrays of the full
-length are allocated.
+A **kernel** is the executable sequence of element operations produced from that
+graph. The CPU evaluator processes blocks of 256 elements, dispatching each
+operation once per block and using inner array loops. It avoids full-length
+intermediate arrays for supported operations. `tensor.map` accepts an arbitrary
+fwp function; that subexpression is evaluated first on the CPU and becomes an
+input, so it is not included in that no-intermediate-array claim.
 
-| Function | |
+| Function | Meaning |
 |---|---|
-| `realize e` | `realize-on Cpu` |
-| `realize-on d e` | evaluate on device `d` (a trap with the reason when it cannot run there) |
-| `tensor.try-realize-on d e` | the same as a `Result` |
-| `tensor.sum-on d e`, `tensor.sum e` | the sum of the elements |
-| `tensor.grad-on d e`, `tensor.grad e` | the gradient of the sum with respect to each leaf, in order from the left |
-| `tensor.kernel e`, `kernel.run d k`, `kernel.sum d k` | the kernel and running it |
-| `tensor.opencl e` | the OpenCL C source of the kernel |
+| `realize e` | Evaluate using `Cpu` |
+| `realize-on d e` | Evaluate on explicit device `d`; trap with a reason if unavailable |
+| `tensor.try-realize-on d e` | Return failure as a `Result` instead |
+| `tensor.sum-on d e`, `tensor.sum e` | Evaluate and sum elements |
+| `tensor.grad-on d e`, `tensor.grad e` | Derivatives of the sum with respect to each leaf, in left-to-right order |
+| `tensor.kernel e` | Build the kernel description |
+| `kernel.run d k`, `kernel.sum d k` | Execute a built kernel |
+| `tensor.opencl e` | Produce OpenCL C source without requiring device execution |
 
-`tensor.grad` is reverse mode over the expression graph: the adjoint of
-each leaf is itself an expression (the adjoint of `a·b` with respect to
-`a` is `g·b`, and so on), compiled and run on the device. A leaf used
-twice in the tree (for example after `fork`) is two leaves. `tensor.map`
-cannot be differentiated (a trap); the derivative of `tensor.abs` at 0 is
-NaN.
+Tensor gradients differentiate the expression graph into another expression per
+leaf. Repeating a leaf in the tree, such as through `fork`, counts as separate
+leaves. `tensor.map` cannot be differentiated and traps; `tensor.abs` has NaN as
+its derivative at zero. A NaN is a floating-point non-number result.
 
 ## Devices
 
-```
-Device =
-    | Cpu
-    | CpuParallel I64
-    | Gpu
-```
+`Device` selects where a tensor kernel runs:
 
-- **`Cpu`** runs the kernel on the calling thread.
-- **`CpuParallel n`** splits the 256-element chunks into n contiguous
-  ranges (at most 256 threads, at most one per chunk) and runs them on OS
-  threads: POSIX threads in native code, `std::thread::scope` in the
-  interpreter, the first range on the calling thread. The workers read the
-  input arrays and write memory of their own; they never touch the
-  program's heap, so the native collector needs no synchronization (the
-  calling task waits for them, and nothing else allocates meanwhile). In
-  WebAssembly, and in the WebAssembly build of fwp, there are no threads
-  and it runs like `Cpu`. `device.available (CpuParallel n)` is
-  `n >= 1`; fewer threads run as one.
-- **`Gpu`** is the first OpenCL device with double precision
-  (`cl_khr_fp64`), a GPU if there is one. The library is loaded with
-  `dlopen` when the device is first used (`libOpenCL.so.1`, or the file
-  `FWP_OPENCL_LIB` names; on macOS, the system OpenCL framework), in both backends, so programs neither link
-  nor require it. `device.available Gpu` says whether one was found;
-  running on an unavailable GPU is an `Err` from `tensor.try-realize-on`
-  and a trap (`fwp: trap: device: no OpenCL device: ...`) from
-  `realize-on`. The kernel is `tensor.opencl`'s source: one work item per
-  element, the same postfix evaluation, `FP_CONTRACT OFF`. Sums on the GPU
-  compute the elements there and add them on the CPU in the fixed order.
+- `Cpu` uses the calling thread.
+- `CpuParallel n` divides blocks among CPU threads, at most 256 and no more than
+  one per block. The calling thread handles the first range. Workers access
+  kernel inputs/output, not the collected fwp heap. These WebAssembly targets run
+  this selection like `Cpu`; they do not launch those native worker threads.
+  Availability requires `n >= 1`.
+- `Gpu` uses a discovered OpenCL device with double-precision support, preferring
+  a GPU. OpenCL is the host interface for compiling and executing device kernels.
+  It is loaded when used; `FWP_OPENCL_LIB` can name the library. macOS uses its
+  OpenCL framework. Discovery is not proof that a kernel executed successfully.
 
-**Determinism.** Elementwise results do not depend on the device or the
-thread count: each element is computed by the same operations in the same
-order, and `+ - × ÷ sqrt` are correctly rounded everywhere. Reductions
-(`tensor.sum-on`, `kernel.sum`) add the elements of each block of 4096
-from the left, starting from 0.0, then the block sums from the left,
-whatever the number of threads; so every CPU device, in both backends,
-returns the same bits, and `tensor.sum` is reproducible from run to run.
-The interpreter and native code call the same C library for `exp`, `ln`,
-`sin`, `cos` and `tan`, and compile without contraction
-(`-ffp-contract=off`). On a GPU, `exp`, `log` and the trigonometric
-functions are OpenCL's, which may differ from the C library in the last
-bits.
+`device.available` reports availability. An unavailable device returns an error
+through `tensor.try-realize-on` and traps through `realize-on`. GPU sums evaluate
+elements on the device and add them on the CPU in the defined order.
 
-**Tests.** `tests/run/devices.fwp` and `tests/run/autodiff_reverse.fwp`
-(golden, both backends and under `FWP_GC_STRESS`),
-`tests/numerics.rs` (300 001 elements on six devices and thread counts,
-in both backends; the GPU device without OpenCL and with a library
-without platforms), and the library's own tests (`fwp test --std`). No
-OpenCL device was available where this was written: the OpenCL host code
-is exercised only up to platform discovery, and the generated source is
-checked as text.
-
-Historical tensor-kernel timings are preserved in
-[history](roadmap-history.md#archived-tensor-kernel-timing-samples). They lack
-recorded processor/compiler details and allocation/live-memory measurements,
-so they cannot establish a current performance baseline or equal kernel speed
-between backends. Future comparisons must separate input construction from
-kernel execution and use equivalent workloads under the measurement contract.
-Framework loading on Darwin does not prove a usable double-precision device
-or successful kernel execution. Preserve deterministic reduction order and
-disabled contraction while measuring SIMD, buffer reuse and fused gradients.
+CPU reductions add each block of 4096 elements left to right from zero, then
+add block sums left to right. Changing the worker count preserves that order.
+Interpreter/native tests check the expected outputs at their supported settings.
+OpenCL transcendental functions can differ in their last bits from the host C
+math library; matching operation order does not establish identical CPU/GPU bits.
+Contraction is disabled. The current GPU evidence covers unavailable-device
+behavior, host API lifetime controls and generated source, not verified execution
+on real double-precision GPU hardware.
 
 ## Not implemented
 
-- A JIT: native builds are compiled ahead of time; the interpreter runs
-  kernels with its own Rust implementation of the same evaluator.
-- Distributed execution: sharding tensors across processes and
-  collectives (`all-reduce`) over services.
-- Kernels other than elementwise expressions and sums (matrix products,
-  reductions along an axis) on devices.
-
+There is no just-in-time compiler, distributed tensor execution, or device kernel
+support for general matrix products and arbitrary-axis reductions. Native matrix
+multiplication has a separate optimized CPU path; it is not an OpenCL kernel.
 
 ## Scoped-gradient allocation validation
 
-Complete managed-allocation counters include initializer fast paths and count
-slow delegation once. They exposed a33→40 calls/720→872 bytes regression per
-gradient in the first scoped wrapper. Direct borrowed arguments through internal
-ad.scope/ad.scope2 and projection inside the grad callback restore33 calls/720
-bytes, matching the baseline on4096 equivalent O1/O2 calls across Linux and
-ARM/Intel macOS. The accepted combined Linux profiles also pass. Public grad/vjp
-signatures stay intact; borrowed scoped inputs require Dup, and affine File
-rejection, input aliases and tape cleanup controls pass. [The handoff](development-state.md)
-records measured source identities and passing production gates. No timing gain or tracing-free
-support is established, and earlier partial counters do not prove allocation parity.
+Historical tests of the first scoped-gradient wrapper found an increase from
+33 to 40 managed allocation requests (720 to 872 bytes) per gradient. Passing
+borrowed inputs directly and projecting inside the callback restored 33 requests
+and 720 bytes on the measured 4096-call workload. This compares fwp implementations;
+it does not measure overhead against C. The counts exclude private tape buffers,
+which need separate counters. [History](roadmap-history.md) preserves the accepted
+source and test evidence; [benchmarks](benchmarks.md) explains counter meanings.
 
 ## Numerical kernel measurements
 
-The accepted phase4 measurements compare identical array and matrix computations in C,
-Rust and generated fwp code on Linux and ARM/Intel macOS. The retained
-[measurement record](measurements/numerical-kernels-2026-10-12.json) includes
-source hashes, hardware, compiler versions, build flags, samples, allocations,
-reference counts, live memory, collection counts and process RSS. Raw reports
-and uninstrumented disassembly are artifacts of the linked runner execution.
-Run the Numerical and ownership evidence workflow manually to regenerate the same
-controls on GitHub runners; no local full benchmark run is required.
+[The numerical kernel report](measurements/numerical-kernels-2026-10-12.json)
+compares equivalent array/matrix computations in fwp, C and Rust. It records
+hardware, compiler versions, flags, samples, outputs, allocation/reference counts,
+live storage, collection activity and resident process memory. Timing uses separate
+uninstrumented binaries so counting does not distort the measured loop.
 
-Timings use separate uninstrumented binaries. Array kernel time consumes and
-releases an existing input; matrix kernel time excludes output allocation and
-zeroing. Allocation-inclusive time covers construction, computation and cleanup.
-C/Rust report allocator payload; fwp reports requested and charged storage,
-with allocator metadata excluded from charged bytes. Reserved virtual address
-space and process RSS are separate metrics. Shared-runner timing is descriptive;
-CI asserts exact results and stable allocation properties.
+Array kernel time includes consuming/releasing an existing input. Matrix kernel
+time excludes output allocation and zeroing. Allocation-inclusive time covers
+construction, computation and cleanup. C/Rust counters report allocator payload;
+fwp separates requested from charged storage, excluding allocator metadata.
+These are not interchangeable with resident process memory or reserved address
+space. Use the scope attached to each ratio before calling it language overhead.
 
-The current implementation allocates no intermediate arrays and performs no
-per-element retains/releases of its carried array. Matrix multiplication allocates one output;
-the benchmark's public generic input boundary also builds two Matrix records.
-The two public-boundary Matrix records remain explicit representation costs. Neither zero intermediate
-allocations nor vector instructions alone establish C/Rust speed parity.
-
-Flat loop fields have independent owners, removing
-per-element array retain/release pairs. Unwind scopes remain around fallible
-operations; concrete scalar reads and F32/F64 arithmetic need none. Generated
-type descriptors are read-only, allowing fixed element-width dispatch to be
-removed. Raw floating-point order and bounds/trap behavior remain unchanged.
-The [ownership measurement record](measurements/ownership-and-arc-2026-10-12.json)
-retains the three-platform results and separates numerical timings from ARC
-execution controls. The handoff records full production acceptance; a lower
-instruction/count total alone is not a timing guarantee.
-Aggregate-return and field analysis follow typed constructor aliases across
-intervening bindings, preserving ownership and effects without needless boxes. The ownership report records the
-original allocation controls separately from its earlier timing samples.
-Checked ARC requires a scope proof for reverse-mode operations. Proven scoped
-calls use the bounded workspace above; unscoped or ambiguous calls are rejected.
-[The handoff](development-state.md) records validation of this extension.
-Eligible closed I128/U128 functions use native wide arguments, locals and
-results, including recursive worker calls. Generic entries, closures and
-containers retain typed counted boxes with explicit ownership transfer.
-`FWP_WIDE_WORKERS=0` selects the boxed comparison control. Checked overflow,
-division and evaluation order agree with raw interpretation. Overflow message
-formatting stays outside hot arithmetic frames. Eligible numeric self-tail calls
-use loops; other recursive calls still use stack.
-The [float-format contract](float-formats.md) specifies actual F16/BF16/F128
-arithmetic, storage, rounding and the implemented protocol v2 migration.
+Eligible array pipelines avoid intermediate arrays and per-element owner updates.
+Matrix multiplication allocates one output; its public generic boundary also
+builds two matrix records. Those records remain a representation cost. Wide
+workers, view layout and scalar calling conventions have separate controls in
+[ownership](ownership.md#accepted-numeric-representation). Fewer allocations or
+vector instructions alone do not establish equal speed with C/Rust. Shared-runner
+timings are descriptive; CI asserts outputs and stable allocation properties.

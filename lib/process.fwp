@@ -2,6 +2,12 @@
 # `PATH` like a shell does, and its arguments, passed as they are (there is
 # no shell, so no quoting, globbing or redirection). Starting a program
 # that does not exist is an `IoError` (`kind = "spawn"`).
+#
+# A process is a running external program. PATH is the list of directories
+# used to find an executable. A command list passes arguments directly, so `*`
+# is a literal argument rather than a shell wildcard. Exit status 0 means
+# success; output and error streams are separate strings in the result.
+# Use a shell explicitly only when shell parsing is actually intended.
 
 # What a finished program wrote, and its exit status (128 plus the signal
 # number when a signal ended it).

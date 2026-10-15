@@ -1,5 +1,13 @@
 # 15. fwp in the browser
 
+Read lessons 1–5 and 10 first. A JavaScript loader instantiates a WebAssembly
+module and connects its input/output to the page. In the example, `<pre>` is a
+text display, `document.getElementById` finds it, and the `stdout` callback adds
+each output line. `run` returns a JavaScript promise; `await` obtains its eventual
+exit status. A Web Worker runs code off the page's main execution thread so the
+page can stay responsive. The playground's in-memory files disappear with that
+instance unless explicitly saved.
+
 There are two ways to run fwp in a web page. A finished program can be
 compiled to WebAssembly with a small JavaScript loader. Or fwp itself, the
 compiler and the interpreter, can run in the page. This is what the
@@ -62,17 +70,26 @@ A file name of `-` reads the program from standard input. That is
 convenient for hosts that have no file system to offer.
 
 This build has the limits of the `wasm32-wasi` target, and for the same
-reasons. WebAssembly has no threads, so tasks run as fibers that the
-browser suspends and resumes with JavaScript Promise Integration: the
-example menu includes [tutorial 6](../06-tasks-and-channels/README.md),
-which runs in Chrome and Edge 137 and later. It has no sockets, it cannot
-start processes, and it cannot load C code. A program that needs sockets
+reasons. This interpreter build runs tasks as fibers: suspended computations resumed
+by the browser through JavaScript Promise Integration (JSPI). The example menu
+includes [tutorial 6](../06-tasks-and-channels/README.md), which needs a host with
+JSPI enabled. This build exposes no sockets, cannot start processes, and cannot
+load C code. A program that needs sockets
 or foreign C functions (or tasks, in a browser without JSPI) is rejected
 before it starts, with an error that names what is missing. `fwp build` (except
 `--emit-c`), `fwp pipe` and `fwp serve` say that they are not available.
 Deep recursion is limited by the engine's stack, which in a browser is a
 few hundred to a few thousand nested calls; beyond that, the program traps
 with `stack overflow`. Long lists are fine.
+
+## Reading the example
+
+A palindrome reads the same forward and backward. `fork eq string.reverse id`
+compares the reversed word with the original; `filter` keeps matches and `unique`
+removes repeats. `widest` splits the poem into lines, computes each length and
+uses `maximum`, whose `Option` result accounts for an empty list. The named `test`
+checks a Boolean condition; it is run by `fwp test`, not just by invoking `main`.
+The last pipeline prefixes each line with `> ` before printing it.
 
 ## The program
 

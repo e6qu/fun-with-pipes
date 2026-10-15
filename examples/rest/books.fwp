@@ -4,7 +4,7 @@
 # MCP tools (the `# expose:` line below), and a service of a split program,
 # with no change to the code:
 #
-#   fwp serve --rest books.fwp                 REST, interpreted
+#   fwp serve --rest books.fwp                 REST, compiled and cached
 #   fwp build books.fwp --rest -o books-api    REST, native
 #   fwp openapi books.fwp                      its OpenAPI document
 #   fwp build books.fwp --cli -o books         a command-line program
@@ -16,6 +16,9 @@
 #
 # expose: rest, cli, mcp
 # cors: http://localhost:3000
+
+# Read tutorial 17. A route maps an HTTP method/path to a function; JSON
+# encodes its values. Quotes use a fixed catalog, not a persistent stock database.
 
 export version : String
 version = "1.0.0"

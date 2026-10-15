@@ -7,6 +7,13 @@
 # when it passes. In the native runtime tasks are green threads on an
 # event loop; the interpreter runs each task on a thread, one at a time. On
 # WebAssembly they are fibers, which need JavaScript Promise Integration.
+#
+# A task is a computation scheduled alongside others; it is not necessarily
+# an operating-system thread running in parallel. A channel is a bounded queue
+# of values. A full queue makes send wait, slowing the producer to the consumer.
+# Closing preserves queued values until received; then recv returns None.
+# Await waits for a task result, and a deadline requests cancellation after a
+# time limit. Tutorial 6 explains task scopes and ordering.
 
 Task[a] = builtin
 Channel[a] = builtin

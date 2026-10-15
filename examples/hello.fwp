@@ -1,2 +1,4 @@
 # The classic.
+
+# The pipe passes the string to print; print writes it and a newline.
 main = "hello, world" | print

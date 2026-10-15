@@ -1,5 +1,11 @@
 # TLFloat transcendental core
 
+Transcendental functions include exponentials, logarithms and trigonometry.
+They are approximations with a stated accuracy bound. One ULP is one step between
+representable values at the result's magnitude. The C ABI is the machine-level
+calling interface; templates create concrete C++ implementations during compilation.
+RTTI means runtime type information, which this configured core does not use.
+
 Selected headers from [TLFloat 1.15.0](https://github.com/shibatch/tlfloat/tree/v1.15.0),
 under the [Boost Software License](LICENSE.txt). [The manifest](manifest.json)
 records the release archive and every upstream header's SHA-256 hash.

@@ -1,19 +1,25 @@
-# Completed preparation anchors
+# Historical preparation commits
 
-The approved roadmap and follow-ups are merged through PR #131. This table
-preserves original preparation ancestry, not pending tasks. [PLAN](../PLAN.md)
-records delivered scope and remaining engineering gaps; [the handoff](development-state.md)
-records the latest accepted source and current work.
+This table is a recovery and audit record, not a to-do list. The implementation
+work has merged through PR #141. Read [the plan](../PLAN.md) for current work
+and [the handoff](development-state.md) for the next action.
 
-The historical branch/head columns are evidence references, not live branch tips.
-Immutable OLD heads are retained by tags `roadmap/preparation-007` through
-`roadmap/preparation-112`; their parents remain reachable through those tags.
-Fetch tags before checking a clean clone. Never move preparation or
-`roadmap/revision-NNN-SHA12` tags or rewrite OLD anchors. Ancestry checks use
-OLD parent → OLD head, which can differ from a later rewritten branch base.
+A Git commit identifies a saved version of the repository. During earlier work,
+changes were prepared on separate branches and later moved onto newer bases
+(“rebased”). The table keeps both identities so those changes can be traced:
 
-Row 34 is an accepted duplicate: its repair was incorporated into row 28 and
-accepted in PR #107. It remains solely for ancestry and regression evidence.
+- **Order / NAME:** the historical preparation item and its short label.
+- **Branch / Current head:** the branch and commit recorded after that item's
+  preparation. “Current” means current at the time of that record, not today's
+  main branch or a live task.
+- **Immutable OLD head / parent:** the original commit and the commit directly
+  before it. Do not edit these IDs or move their `roadmap/preparation-*` tags.
+
+The documentation audit checks that each old parent is an ancestor of its old
+head and that saved tags still point to the same commits. Fetch the tags in a
+fresh clone before running that audit. `roadmap/revision-NNN-SHA12` tags are also
+fixed historical references. Row 34 intentionally remains a duplicate: its fix
+was included in row 28 and accepted in PR #107.
 
 | Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|

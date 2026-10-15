@@ -1,33 +1,40 @@
 # Native primitive ownership contracts
 
-`src/ownership.rs` is the shared boundary inventory used by IR counting and
-native code generation. Its container inventory covers every array/map/set
-primitive declared in `lib/collections.fwp`; a coverage check detects newly
-added declarations without contracts. All 31 string-module declarations and seven byte primitives now have contracts;
-selected typed result ownership is listed below. Unmodeled primitives, foreign
-functions and remote calls retain the conservative default: borrow arguments, promote counted
-values to runtime sharing, and return runtime-shared values. Further inventories
-must refine that default before extending deterministic reclamation.
+This is a maintainer reference for calls between generated code and the runtime.
+Read [memory ownership](ownership.md) first. A **primitive** is a library operation
+implemented directly in Rust and C rather than in fwp. Its contract tells the
+compiler who keeps each argument and result alive.
 
-Arguments have three modes: **borrow** for the call, **consume** an owned
-reference, or **share** a borrowed value because it may escape into runtime
-storage. Consume is checked by `src/rc.rs`; share is emitted by `src/cgen.rs`.
-Result metadata distinguishes shared results, owned leaf copies/aliases, fresh outer containers and
-containers returned by an owning wrapper. That last category includes copies,
-in-place updates, missing-key no-ops and `array.set`'s optional container.
-The nonreturning `fail` contract has no normal result; its error value is
-retained by the handler. Every failure path still consumes its specified reference.
+`src/ownership.rs` is the shared inventory used by reference-count insertion and
+C generation. A coverage test checks library declarations against it. Unknown
+primitives, foreign functions and remote calls keep a conservative contract:
+arguments may become runtime-shared, and results need tracing unless a more
+precise contract proves their lifetime. Such a call is not automatically eligible
+for `--gc arc`.
 
-Scoped foreign contracts use the ABI classifier: text/bytes are borrowed during
-the call, string results are copied, and synchronous callbacks transfer typed
-C value arguments/results through task-local contexts with unwind cleanup.
-Raw pointers and callbacks returning managed C addresses remain unproved.
-Retained task callbacks own their immutable captures and typed cached results;
-channels and raw mutable backedges remain outside checked ARC admission.
+Read the tables using these meanings:
 
-The tables describe current contracts. [The handoff](development-state.md)
-distinguishes implemented extensions from accepted production evidence. Arrays,
-maps and sets own typed elements; the finite review records unproved boundaries.
+| Term | Meaning |
+|---|---|
+| borrow | Use during this call; the caller keeps an owner |
+| consume | Take an owned reference and release it or transfer it onward |
+| retain | Acquire an additional reference to keep a value alive |
+| alias | A reference to storage also reachable through another value |
+| counted | Reference-counted storage with typed release operations |
+| scalar | Inline number/tag bits, requiring no child destructor |
+| callback | A function the primitive calls, with its own argument/result contract |
+| spine | The linked list cells, separate from the values they contain |
+| unwind | Exit several active calls because of failure, a trap or cancellation |
+
+Arguments are numbered from zero in source application order, with the subject
+last. For example, `array.set index value array` borrows `index` and `value` but
+consumes its reference to `array`. If another owner still sees that array, the
+operation must copy; it cannot change the other owner's value. An owning wrapper
+is the runtime entry that implements that transfer policy.
+
+A synchronous C callback runs before the foreign call returns. Its temporary
+values and context have scoped cleanup. Raw pointers, retained unknown callbacks
+and managed C addresses do not establish complete lifetime proofs.
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
@@ -75,6 +82,9 @@ aliases are preserved. Unmodeled callbacks retain explicit sharing and conservat
 
 ## Registered unwind cleanup
 
+Cleanup registrations record owners acquired so far, so a failure during the
+next allocation does not lose them. LIFO means last acquired, first released.
+
 The merged runtime cleanup stack releases registered owners and scoped files in
 LIFO order before failure, trap or cancellation invalidates their frames. It
 stops at the catching handler boundary; task switches preserve separate chains.
@@ -104,7 +114,7 @@ boundary; it does not establish tracing-free eligibility.
 | Numeric I128/U128 results | Fresh leaf/aggregate ownership or explicitly retained selected aliases; scalar results remain inline |
 | Remote values and memoized decoding | Preserve retained context/cache owners and independent reader aliases; scratch cleanup alone does not count decoded nodes |
 | Foreign values and retained callbacks | Keep explicit sharing unless host lifetime and teardown are proved |
-| list.flat-map and list.ap | Borrow typed synchronous inputs, adopt owned callback results and own copied spines; partial results, scratch and unwind cleanup pass PR124 controls |
+| list.flat-map and list.ap | Borrow typed synchronous inputs, adopt owned callback results and own copied spines; partial results, scratch and unwind cleanup have partial-result and failure controls |
 | State handlers | Typed get/put/modify/run-state owners; finite callback-flow proof admits State operations only under a handler. Returned closures require a fresh handler when called; unknown targets are rejected by ARC |
 | External resource contexts | Original scoped/task owners preserve teardown order; counted C context storage does not by itself prove ownership of every fwp graph |
 
@@ -115,10 +125,13 @@ and cycle policy, rejecting unproved shared boundaries.
 
 ## Complete runtime sharing
 
-Native counts1..254 fit the existing byte. At255, rare exact size_t side
+Sharing promotes the reachable graph to the tracing lifetime policy. It is
+different from merely increasing an exact reference count.
+
+Native counts 1–254 fit the existing byte. At 255, rare exact size_t side
 entries keyed by canonical metadata slots track additional owners without new
 value roots. Release, sharing, free/reuse and collection remove those entries;
-count overflow traps and side-entry allocation failure exits102. Interior
+count overflow traps and side-entry allocation failure exits with status 102. Interior
 references canonicalize to allocation starts. Explicit runtime sharing still
 promotes the complete reachable graph; traversal overflow preserves child
 counts while recursing. Large fanout no longer forces automatic sharing.
@@ -150,6 +163,9 @@ A shared input remains shared when duplicated. Slices copy and retain no view.
 
 ## Fresh copied text result trees
 
+A result tree can contain many allocations: for example, `words` returns list
+cells containing newly copied strings. The outer list and every string need owners.
+
 A `FreshTree` result guarantees a tree of new counted allocations, with no aliases
 of arguments and no internal sharing or cycles. Generated helpers establish one
 reference per node using monomorphic field types. They skip scalar fields, treat
@@ -175,11 +191,11 @@ allocation rather than freeing an interior pointer from its bump heap.
 
 ## Task result and deadline boundaries
 
-Merged PR102 owns fresh typed result wrappers from task.await, task.within and
+The runtime owns fresh typed result wrappers from task.await, task.within and
 Channel receives. Wrappers retain pointer-bearing payload owners; scalar words
 do not select reference destructors. task.deadline borrows its typed argument
 and retains the returned alias instead of forcing it into runtime sharing.
-PR122 also retains spawn/deadline captures through entry, completion or
+It also retains spawn/deadline captures through entry, completion or
 cancellation and protects scope results through joining and unwind. Counted
 task handles own typed cached results; repeated awaits return separate owners.
 Typed channels retain queued elements and transfer them on receive; close
@@ -187,6 +203,11 @@ preserves the queue. These contracts do not establish automatic cycle
 reclamation, complete ARC or tracing-free execution.
 
 ## Compiled closures and synchronous callbacks
+
+A closure stores a function and arguments already supplied to it. Partial
+application supplies fewer arguments than the function needs; overapplication
+supplies enough to call a function and then call the function it returns. Both
+paths must transfer the correct typed owners.
 
 Compiled dynamic calls own heap closures and typed captures. Monomorphic
 argument metadata distinguishes references from scalar words. Borrowed callback
@@ -220,9 +241,13 @@ released explicitly. Scalar bits never select a reference destructor.
 | nth; find | Borrow arguments | Fresh Option retaining selected element; find borrows predicate and stops at first match |
 | index-of | Borrow key/list | Fresh Option of scalar; comparison key is read-only |
 
-FreshSpine adopts owned heads; CopiedSpine retains borrowed heads; FreshOuter
-owns one newly allocated wrapper and duplicates typed pointer-bearing fields.
-FreshTree requires every reachable allocation to be new and independently owned.
+The internal result labels describe distinct promises:
+
+- `FreshSpine`: new list cells adopt already owned elements.
+- `CopiedSpine`: new list cells retain borrowed elements.
+- `FreshOuter`: one new wrapper retains its pointer-bearing fields.
+- `FreshTree`: every reachable allocation is new and independently owned.
+
 None needs no allocation. These contracts preserve aliasing and immutable values;
 they do not establish complete exception or retained-callback ownership.
 

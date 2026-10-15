@@ -1,15 +1,28 @@
 # One function, three interfaces
 
-An exported fwp function can be a command-line program, a REST endpoint
+Start with [lessons 1–4](tutorials/README.md) for types and effects. An interface
+is how another program or person supplies arguments and receives a result:
+
+- **CLI:** a terminal command, using flags, text and process exit statuses.
+- **REST:** an HTTP request to a named path, using JSON bodies and HTTP statuses.
+- **MCP:** a structured tool call from a compatible client application, using
+  JSON-RPC messages and argument/result schemas.
+
+A schema describes allowed values; encoding is their text/byte representation.
+The same function can support several interfaces, but their transport and failure
+costs differ. The table below compares mappings, not performance. Its snippets
+are declaration fragments from the linked bookstore example.
+
+An explicitly exposed fwp function can be a command-line program, a REST endpoint
 and an MCP tool, without a line of interface code. Its type is
 the contract; its comments are the documentation; a few comment lines
 adjust what the types cannot say. You choose which interfaces a function
 has, and build the program for one of them:
 
 ```
-$ fwp build books.fwp --cli -o books        # a command-line program
-$ fwp build books.fwp --rest -o books-api   # an HTTP server with OpenAPI
-$ fwp build books.fwp --mcp -o books-mcp    # an MCP server for AI clients
+$ fwp build examples/rest/books.fwp --cli -o books        # a command-line program
+$ fwp build examples/rest/books.fwp --rest -o books-api   # an HTTP server with OpenAPI
+$ fwp build examples/rest/books.fwp --mcp -o books-mcp    # an MCP server for AI clients
 ```
 
 [`examples/rest/books.fwp`](../examples/rest/books.fwp) builds all three

@@ -1,8 +1,18 @@
 # Services: one program, two deployments
 
-An fwp program can be compiled as **one executable** (a "fat" binary
-holding every module; not to be confused with `fwp build --fat`, which
-holds one copy per CPU level), in which its modules call each other's
+Read [tutorial 14](tutorials/14-services/README.md) for the complete runnable
+version. A module is a source file; a process is a running executable. A service
+is a process that answers requests from other processes. Remote procedure calls
+(RPCs) encode function arguments, send them to a service and decode the reply.
+Here gRPC carries those calls over HTTP/2, using Protocol Buffers for messages.
+
+Keeping the same source notation does not make a remote call as cheap or reliable
+as a local call. It adds encoding, transport, waiting and connection-failure
+behavior. A client stub is generated code that performs those steps. The
+`shop.fwp` commands below illustrate deployment; the complete checked-in shop
+uses `main.fwp` in `examples/services`, with commands in [the example guide](../examples/README.md).
+
+An fwp program can be compiled as **one executable** holding every module, in which its modules call each other's
 functions directly, or as **separate executables** that call each other
 over gRPC. The source is the same in both builds; only the
 build command differs. You can write, test and debug a system as one
@@ -21,7 +31,7 @@ inventory  pricing  shop
 [Tutorial 14](tutorials/14-services/README.md) builds a small example both
 ways. A module's exported functions are all served, with no `# expose:`
 line: that line chooses the interfaces for clients outside the program
-(command lines, REST, a gRPC server of the root file, MCP), which
+(command lines, REST and MCP), which
 [interfaces.md](interfaces.md) compares, and has no effect on how the
 program is split. The shop in
 [`examples/services`](../examples/services/main.fwp) splits into two
@@ -140,7 +150,7 @@ process:
 
 ## The interface rules
 
-A function can be served when it is exported, has a monomorphic type and
+A function can be served when it is exported, has a monomorphic type (all parameter/result types are concrete) and
 at least one parameter, and every parameter, its result and its `Error`
 type can be encoded: numbers, `Bool`, `String`, `Bytes`, `Duration`,
 records, tuples, `()`, variants, `List`, `Array`, `Set`, `Map` and
@@ -165,6 +175,11 @@ names (`price-of` and `price.of` would both be `PriceOf`).
 The calls of a split program behave as the calls of one program; this is how the transport carries them.
 
 ### Streaming
+
+A stream sends a sequence without collecting every item into one reply first.
+`Iterator` pulls values on demand; `Channel` exchanges values with a task. These
+types determine the direction of streaming. Closing, cancellation and errors
+therefore need rules beyond those of a single ordinary result.
 
 Whether a call streams is decided by the function's type:
 
@@ -339,6 +354,12 @@ rejected, and other encodings (`deflate`, `snappy`) fail the call with
 
 ## The wire format
 
+The wire format is the exact message representation sent over a connection.
+A protobuf field has a numeric tag identifying it; a varint uses more bytes for
+larger integers. The tables below are for protocol implementers. The type
+fingerprint checks compatibility; it is not a cryptographic identity or an
+authentication mechanism.
+
 Calls are [gRPC](https://grpc.io/docs/what-is-grpc/) calls over HTTP/2
 cleartext with prior knowledge (h2c), or over TLS with ALPN `h2` for
 `tls://` addresses ([tls.md](tls.md#services)). The parts of one program
@@ -472,6 +493,12 @@ they are deployed separately, and an old client can meet a new server.
 
 ## Transport details
 
+These details are for transport implementers. Frames are the bounded pieces of
+an HTTP/2 connection; a stream identifies one call. Flow-control windows bound
+bytes in flight. HPACK compresses headers using indexed tables and Huffman codes
+(shorter bit codes for common symbols). A GOAWAY frame announces connection
+shutdown. Application-message gzip compression is separate from header encoding.
+
 - HTTP/2 framing, SETTINGS, PING, WINDOW_UPDATE, RST_STREAM, GOAWAY and
   CONTINUATION frames, and flow control in both directions. fwp peers
   advertise large windows (1 GiB) and replenish the connection window as
@@ -479,7 +506,8 @@ they are deployed separately, and an old client can meet a new server.
 - HPACK with the static and dynamic tables and Huffman decoding. fwp
   encodes headers as literals without indexing, which every decoder
   accepts and which needs no encoder state.
-- Messages are uncompressed; a compressed message is rejected.
+- Messages may be uncompressed or gzip-compressed under the rules in
+  [compression](#compression); unsupported encodings are rejected.
 - A client keeps one connection per address and multiplexes calls on it,
   one stream per call. If a reused connection turns out to be closed
   before the server saw the request (a GOAWAY, a refused stream, or a

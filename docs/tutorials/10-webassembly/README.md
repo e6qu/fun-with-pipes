@@ -1,5 +1,16 @@
 # 10. WebAssembly
 
+Read lessons 1–4 first. WebAssembly is a portable compiled instruction format.
+A **host** runs that code and supplies access to the outside world. WASI is one
+such interface for things like files and standard output. A browser instead
+uses JavaScript glue to connect the module to a page. A **sysroot** supplies the
+headers and libraries needed to compile for the target rather than your computer.
+
+Build commands using `main.fwp` below run from this lesson's directory. Paths
+starting `tests/` or `docs/` are relative to the repository root. The HTML example
+loads the generated JavaScript as a module; `await` waits for its asynchronous
+`run` operation to finish.
+
 `--target wasm32-wasi` compiles a program to a WebAssembly module for WASI
 runtimes such as wasmtime or node. `--target wasm32-browser` also writes a
 small JavaScript loader for web pages. A WASI module runs under
@@ -25,20 +36,29 @@ In a page:
 </script>
 ```
 
-WebAssembly has no sockets, so programs that use `Network` are rejected
+These fwp WebAssembly targets do not expose sockets, so programs that use
+`Network` are rejected
 when they are compiled for these targets, with an error naming the
-effect. Tasks and channels (`Async`) work where the JavaScript engine has
-JavaScript Promise Integration, which suspends a task's stack while it
-waits: Chrome and Edge 137 and later, and node 24 (node 22 with
-`--experimental-wasm-jspi`). Built with `--wasm-async=asyncify`, they
-work in any JavaScript engine. In wasmtime a program that starts a task
-traps. Everything else, files
-included (for WASI, in preopened directories), behaves exactly as in a
-native build.
+effect. Tasks and channels (`Async`) need JavaScript Promise Integration (JSPI),
+which lets the host suspend a WebAssembly stack while a task waits, or a build
+with `--wasm-async=asyncify`, which transforms the module to support suspension.
+The repository tests these paths separately. In wasmtime, starting a task traps.
+WASI file access is limited to directories the host explicitly opens for the
+module (preopened directories). See the [target limits](../../reference.md#targets)
+before moving a native program to either target.
 
 Building for WebAssembly needs clang with a WASI sysroot. On Debian or
 Ubuntu, install `clang`, `lld`, `wasi-libc` and
 `libclang-rt-18-dev-wasm32`.
+
+## Reading the example
+
+The Collatz sequence halves even inputs and maps odd inputs to `3n + 1`,
+repeating until 1. `rec` declares recursion. `collatz-length` counts terms including
+that final 1, so starting at 27 gives 112. `longest` checks inputs 1 through 999
+(`range` excludes its upper bound), pairs each with its length, sorts by `.1`
+(the length), and selects the last. The result is optional because `last` can
+receive an empty list. For this range it is `Some (871, 179)`.
 
 ## The program
 

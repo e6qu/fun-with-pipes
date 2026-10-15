@@ -1,289 +1,354 @@
-# Benchmarks
+# Benchmarks: what is compared, and what fwp costs
 
-Roadmap measurements are recorded in:
+There is no single measured “fwp overhead.” The extra time or memory depends on
+the program, the implementation used for comparison, compiler settings and the
+machine. This page separates two different questions:
 
-- [Numerical kernels](measurements/numerical-kernels-2026-10-12.json): equivalent
-  numerical and autodiff workloads on Linux and ARM/Intel macOS, with runner,
-  compiler, flags and measurement scope.
-- [Ownership and checked ARC](measurements/ownership-and-arc-2026-10-12.json):
-  allocation/live-memory and ownership controls, ARC executions and rejections,
-  binary evidence and the aggregate-return regression follow-up.
-- [Native platform and ownership bundle](measurements/native-ownership-2026-10-13.json):
-  paired iterator controls on Linux/macOS ARM64/AMD64, actual checked register
-  arithmetic, ARC scope omission controls and cold/warm workspace counts.
+1. **How long do these fwp programs take compared with C and Rust programs?**
+   The five examples in `bench/` answer this for complete executable runs.
+2. **Does a particular fwp optimization reduce work or storage?** The reports
+   under `docs/measurements/` usually compare two fwp implementations. Those
+   fwp-only comparisons do not measure overhead relative to another language;
+   the numerical reports that do include C/Rust are identified separately below.
 
-- [Reconstruction and native workers](measurements/reconstruction-and-workers-2026-10-13.json):
-  direct producer/State allocation controls, I128/U128 native register arithmetic,
-  reconstruction ownership and refreshed numerical/AD evidence for PR #133.
+The measurements below are dated observations. They do not promise the same
+ratios on another machine or establish that the whole language is “zero-cost.”
 
-- [Wide scalar and record workers](measurements/wide-records-2026-10-14.json):
-  four-host I128/U128/F128 and mixed-record allocation, retention, live storage
-  and native-instruction controls.
-- [Checkpointed autodiff](measurements/checkpoint-2026-10-14.json): four-host
-  4096-step VJP comparisons at intervals 16/32/64. Smaller peak tape storage
-  costs more managed storage, allocations and time; all measured storage is
-  reclaimed without collection.
+## fwp compared with C and Rust
 
-Reports distinguish preparation measurements from production acceptance.
-[History](roadmap-history.md) indexes accepted gates; [the handoff](development-state.md)
-records the latest tested source. These results do not establish universal C/Rust
-parity. Iterator measurements use the current compiler, dynamic input and paired
-consumer-fusion controls. `scripts/measure-iteration.py` retains generated C,
-native instructions, allocation/retain counts, charged live storage and separate
-process timings on each Linux/macOS architecture. Timing includes startup and
-output; it is not kernel throughput. Direct count-from/from-list chains avoid
-per-step producer allocation, and known State updates call their entries directly.
-Other lazy producers and dynamic callbacks retain their declared behavior.
-Fold-until and map-accum remain measured controls, without a
-claimed allocation improvement. The [handoff](development-state.md) records the
-measurement revisions and final acceptance gates.
+Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and
+`main.rs`. The programs must print the same result. The runner builds native
+executables with `fwp build -O2`, `cc -O2` and `rustc -O`. It runs each executable
+three times and reports its shortest elapsed time. “Native” means machine code;
+this comparison does not time the fwp interpreter.
+
+The clock covers **process startup, input construction, calculation, allocation
+and printing**. It excludes compilation. It is not a measurement of just the
+inner calculation, nor of compile time, startup alone or peak memory.
+The fwp build uses its normal native memory mode, which includes a tracing
+garbage collector; this is not a comparison of checked ARC against Rust.
+ARC means automatic reference counting, which releases objects when their last
+owning reference disappears.
+
+### What each program actually does
+
+| Program | Input and work | Important differences between implementations |
+|---|---|---|
+| `fib` | Compute Fibonacci number 35 with recursive calls | Same recurrence. Compilers can transform calls differently. fwp checks integer overflow; these C and optimized Rust builds do not have the same overflow guarantees. These inputs fit all three. |
+| `loop` | Update two integers for 100 million iterations | fwp expresses the loop state as a pair; its compiler can turn that into local variables. C and Rust write the loop directly. Checked arithmetic and generated code can still differ. |
+| `map` | Build 500,000 key/value entries, then perform 2 million lookups | fwp and C use sorted arrays searched by bisection. Rust uses `BTreeMap`, a tree. This is a comparison of complete implementations, not the isolated cost of the same map algorithm. |
+| `pipeline` | Multiply, select even values and sum one million inputs, 20 times | fwp can combine the stages into one traversal without intermediate lists. C explicitly fills arrays; Rust constructs vectors and filters them. Eliminating that work can outweigh language overhead. |
+| `strings` | Format two numbers, combine their text and count characters, 2 million times | fwp can calculate some formatted lengths without creating the string. C uses `snprintf` and `strlen`; Rust uses `format!` and byte length. All characters here are ASCII, so the lengths agree. The programs need not perform the same formatting or allocation work. |
+
+A result that is faster than C here does not mean fwp outperforms the best
+hand-written C version. Likewise, a slower result does not identify how much
+came from reference counting, collection, checks, allocation or the algorithm.
+The timing runner does not measure those costs separately.
+
+### Recorded example and overhead
+
+This accepted [PR #141 benchmark job](https://github.com/e6qu/fun-with-pipes/actions/runs/38728631817/job/116400593825)
+ran on Linux AMD64 on 2026-10-15 at `f31f7b66`. Its old output rounded times to
+whole milliseconds and did not record CPU/compiler versions or raw samples.
+The percentages below are therefore **approximate**, calculated from those
+rounded times. Treat them as an example of how to read a comparison, not a
+precise hardware baseline.
+
+| Program | C | Rust | fwp | Extra fwp time versus C | Extra fwp time versus Rust |
+|---|---:|---:|---:|---:|---:|
+| `fib` | 15 ms | 25 ms | 11 ms | −27% | −56% |
+| `loop` | 83 ms | 110 ms | 111 ms | +34% | +1% |
+| `map` | 315 ms | 251 ms | 361 ms | +15% | +44% |
+| `pipeline` | 28 ms | 12 ms | 13 ms | −54% | +8% |
+| `strings` | 110 ms | 129 ms | 166 ms | +51% | +29% |
+
+Use `(fwp time / baseline time − 1) × 100%`. For example, `111 / 83` is about
+`1.34×`, or 34% longer than the C loop. A negative percentage means less elapsed
+time. Always name the baseline: that same fwp loop is only about 1% longer than
+the Rust result in this run. Do not average these percentages into a language-wide
+score: the programs do different work and have different comparison limitations.
+
+The runner writes `target/bench.md`, the GitHub job summary and a downloadable
+`benchmarks` artifact. It reports both ratios and percentages, all three samples, the source
+commit, OS/architecture, compiler versions and Linux CPU details. Its fixed
+C-then-Rust-then-fwp order and best-of-three statistic are still vulnerable to
+shared-runner load and order effects. Timing is reported, not used as a pass/fail
+threshold. Output disagreement is a failure.
+
+## Numerical workloads compared with C and Rust
+
+The [2026-10-12 ownership/numerical report](measurements/ownership-and-arc-2026-10-12.json)
+contains a more controlled comparison than the five complete programs above.
+These are historical measurements at the source revisions in that report, not
+fresh timings of today's compiler. The array workload has 65,537 elements; the
+matrix product is 65×67 by 67×63. Each sample runs eight rounds and the table
+uses the median (middle value after sorting) of five samples. C/fwp use O2 with floating contraction disabled;
+Rust uses optimization level 2. The report records exact commands, CPU models,
+compiler versions and source hashes for each host.
+
+**Construction and cleanup included:** the elapsed interval covers allocation,
+input filling, computation and release. Ratios compare those complete intervals,
+not just arithmetic. Times below are milliseconds for the measured eight rounds.
+
+| Host / workload | C | Rust | fwp | fwp versus C | fwp versus Rust |
+|---|---:|---:|---:|---:|---:|
+| Linux AMD64 / array | 0.813 | 0.865 | 1.724 | 2.12× (+112%) | 1.99× (+99%) |
+| Linux AMD64 / matrix | 0.719 | 0.922 | 0.763 | 1.06× (+6%) | 0.83× (-17%) |
+| macOS AMD64 / array | 2.308 | 1.413 | 2.749 | 1.19× (+19%) | 1.95× (+95%) |
+| macOS AMD64 / matrix | 1.894 | 1.051 | 5.637 | 2.98× (+198%) | 5.37× (+437%) |
+| macOS ARM64 / array | 0.779 | 0.765 | 1.767 | 2.27× (+127%) | 2.31× (+131%) |
+| macOS ARM64 / matrix | 0.640 | 0.773 | 1.080 | 1.69× (+69%) | 1.40× (+40%) |
+
+**Calculation-focused intervals:** array timing starts with an existing input and
+includes its consumed-owner release; matrix timing starts after allocating and
+zeroing the output. These scopes differ, so do not compare array and matrix ratios
+as if they measured the same overhead.
+
+| Host / workload | fwp versus C | fwp versus Rust |
+|---|---:|---:|
+| Linux AMD64 / array | 2.66× (+166%) | 2.60× (+160%) |
+| Linux AMD64 / matrix | 1.01× (+1%) | 0.75× (-25%) |
+| macOS AMD64 / array | 1.49× (+49%) | 2.21× (+121%) |
+| macOS AMD64 / matrix | 3.24× (+224%) | 5.82× (+482%) |
+| macOS ARM64 / array | 1.67× (+67%) | 1.69× (+69%) |
+| macOS ARM64 / matrix | 1.70× (+70%) | 1.30× (+30%) |
+
+For example, the Linux array calculation took 2.66× the C time, or about 166%
+longer, while its construction-inclusive ratio was 2.12×. The macOS Intel matrix
+case has a much larger gap than the Linux case. These results rule out a general
+C-parity claim. They do not isolate one cause: generated instructions, checks,
+ownership, allocation and host/toolchain differences all matter. Later allocation
+improvements do not retroactively change these recorded timings.
+
+The paired profiling runs record actual allocations and peak storage separately
+from timing; zero counters in uninstrumented timing samples mean counting was
+disabled, not that those programs allocated nothing. The two public matrix wrapper
+records remain a documented fwp representation cost. Read the metric definitions
+below before comparing C/Rust payload bytes with fwp charged storage or process RSS.
+
+## Understanding memory measurements
+
+The more focused reports also count memory operations. These quantities answer
+different questions:
+
+- **Allocation requests:** how often code asks for memory. Fewer requests do not
+  necessarily mean fewer bytes or less elapsed time.
+- **Cumulative requested bytes:** add the sizes of all requests, including
+  requests to grow the same block. This is neither peak memory nor copied bytes.
+- **Peak live payload:** the largest amount of requested program data held at
+  once. It excludes the allocator's bookkeeping and temporary copies inside
+  reallocation. It is not the process's full resident memory reported by the OS.
+- **Managed storage:** language objects tracked by the runtime. Some reports
+  count numerical tape buffers separately. Separate peak values may occur at
+  different times and must not be added as a measured simultaneous peak.
+- **Retains/releases:** updates to owning references. **Collections:** runs of
+  the tracing garbage collector. Zero collections in one tested program is not
+  proof that every program can avoid collection.
+
+A *control* is a deliberately changed implementation used for comparison. For
+example, disabling one optimization in the current compiler isolates that
+optimization better than comparing unrelated compiler releases. It still does
+not reproduce every cost of an earlier release.
+
+## Measurement report index
+
+The first two reports include C/Rust numerical baselines; the other listed
+experiments primarily compare fwp implementations. Their raw reports retain inputs,
+source revisions, machine/compiler details, settings, timings and measured
+allocation counters. Some also retain generated C and disassembly: the actual
+machine instructions used to check whether an intended transformation occurred.
+A check of instructions is evidence about that compiled example, not all programs.
+
+### Earlier compiler and memory experiments
+
+| Report | What is compared or checked | What it can establish |
+|---|---|---|
+| [Numerical kernels](measurements/numerical-kernels-2026-10-12.json) | Equivalent array and matrix computations in fwp, C and Rust | Earlier calculation and allocation-inclusive timings, storage and generated instructions; not a vendor-library comparison |
+| [Memory and checked ARC](measurements/ownership-and-arc-2026-10-12.json) | Later fwp/C/Rust array/matrix timings plus fwp reference-counting eligibility and reclamation checks | The cross-language ratios above and scoped lifetime proof; not a universal collector-free mode |
+| [Native platforms and memory](measurements/native-ownership-2026-10-13.json) | fwp iterator processing with/without selected compiler transformations, plus reused versus fresh derivative buffers | Allocation differences for those inputs; reused buffers can still leave allocations for result values |
+| [Constructed values and numeric workers](measurements/reconstruction-and-workers-2026-10-13.json) | fwp direct array/state paths and 128-bit arithmetic, with the comparison settings recorded per case | Where temporary objects or indirect calls are removed |
+| [Wide numbers and records](measurements/wide-records-2026-10-14.json) | fwp I128/U128/F128 and mixed records at direct versus general-purpose call boundaries | Representation and allocation costs at those boundaries |
+| [Iterator producers](measurements/iterate-producer.json) | Direct fwp iterator state versus the recorded producer control | Whether per-step iterator objects are avoided in the eligible chain |
+| [Checkpointed derivatives](measurements/checkpoint-2026-10-14.json) | fwp derivative calculation over 4,096 steps, storing checkpoints every 16, 32 or 64 steps | Less recorded history can cost more recomputation, managed storage, allocations and time; all measured storage was reclaimed |
+
+A *numeric worker* is compiler-generated code specialized to a numeric type.
+A *general-purpose boundary* may need a separately allocated object to carry
+that value; this is called boxing. An *iterator producer* supplies the next
+value, and a *consumer* processes it. The compiler combines eligible producer
+and consumer chains to avoid temporary iterator objects. Arbitrary delayed
+functions need not benefit from the same transformation.
+
+### Derivative-recording terms
+
+Automatic differentiation computes how outputs change with inputs. In reverse
+mode, fwp records operations and then walks backward through them. The recording
+is called a **tape**. Each operation stores references to its inputs (*parents*)
+and local derivative weights. A **seed** gives a chosen output its initial
+backward weight. Accumulated backward derivatives are called **adjoints**.
+
+A **VJP**, or vector-Jacobian product, combines output derivatives using supplied
+weights. “Identity VJP” below differentiates the unchanged input; “mapped VJP”
+differentiates an elementwise transformation. A **nested gradient** computes a
+derivative of a derivative. A **workspace cache** retains released numeric
+buffers for a later calculation, within a fixed memory budget.
 
 ## Numeric backward prefix
 
-[Four-host native measurements](measurements/ad-prefix-2026-10-14.json) compare
-the same ARC program with bounded backward work and a full-prefix control.
-Both record 12,291 nodes; only the three inputs are seeded. Bounding adjoints
-reduces peak tape storage from 491,648 to 393,344 bytes (98,304 bytes, about
-20%) and avoids scanning 12,288 unused operation nodes. Tape allocation request
-counts stay at 38; requested bytes fall from 883,328 to 785,024. Managed counts
-and peak storage are unchanged, and all measured storage is reclaimed without GC.
+[This historical comparison](measurements/ad-prefix-2026-10-14.json) uses the
+same reference-counted fwp program on both sides. The control scans and reserves
+space for the full recorded history; the changed version stops at the last node
+that can contribute to the requested result. Both record 12,291 nodes, but only
+the three original inputs receive output seeds in this particular test.
 
-| Native host | Bounded process median | Full-prefix control |
-|---|---:|---:|
-| Linux AMD64 | 2.943 ms | 2.913 ms |
-| Linux ARM64 | 2.466 ms | 2.536 ms |
-| macOS ARM64 | 9.547 ms | 9.575 ms |
-| macOS AMD64 | 13.754 ms | 13.588 ms |
-
-These seven-sample process timings include startup/output and show no consistent
-speedup. The result establishes reduced storage and reverse scanning for this
-workload, with forward work unchanged. Workspace reuse is disabled for the
-comparison; existing larger cached buffers can remain within their fixed budget.
-The artifact records compiler/flags, hardware, raw samples, allocation counts,
-source/binary/disassembly hashes and native instruction inspection. Generated C,
-binaries and disassembly are retained by the linked runner artifacts.
+Peak tape payload falls from 491,648 to 393,344 bytes: 98,304 bytes less, or about
+20%. The backward pass skips 12,288 irrelevant operation nodes. Allocation
+requests stay at 38. Managed-object counters are unchanged. Seven complete-process
+timing samples show no consistent speedup across the four Linux/macOS hosts.
+This establishes less storage and scanning for the test, not faster forward
+recording or a reduction relative to another language. Workspace reuse was off.
 
 ## Operation-only autodiff metadata
 
-This is the accepted PR #138 snapshot, before the paired allocations below.
-Its allocation counts describe that revision, not the current paired runtime.
+[This PR #138 snapshot](measurements/ad-operations-2026-10-15.json) compares two
+fwp capacity policies. The control reserves parent/weight entries for original
+inputs as well as operations. The changed version stores that extra information
+only for operations, because inputs do not need it. It predates the paired-buffer
+change below; its allocation counts are historical.
 
-[Four-host measurements](measurements/ad-operations-2026-10-15.json) compare
-identical ARC programs with operation-only capacity and a control that also
-reserves capacity for inputs. All four Linux/macOS hosts report these counts:
+| Test | Peak tape bytes, control → changed | Allocation requests, control → changed |
+|---|---:|---:|
+| Identity VJP, 4,096 inputs | 131,176 → 32,872 | 6 → 2 |
+| Mapped VJP, 4,096 inputs | 262,248 → 163,944 | 10 → 30 |
+| Nested gradient, 256 inputs | 28,920 → 16,632 | 19 → 21 |
 
-| Workload | Input count | Native tape peak, control → operations | Native allocation requests, control → operations |
-|---|---:|---:|---:|
-| Identity VJP | 4,096 | 131,176 → 32,872 bytes | 6 → 2 |
-| Mapped VJP | 4,096 | 262,248 → 163,944 bytes | 10 → 30 |
-| Nested gradient | 256 | 28,920 → 16,632 bytes | 19 → 21 |
-
-Numeric managed allocation counts and peak storage are unchanged. The nested
-case also reduces requested managed bytes 142,780 → 131,516 and peak charged
-managed storage 64,192 → 60,096 bytes. Native and managed peaks are measured
-separately and must not be added as a simultaneous peak. Every measured owner
-is reclaimed, with zero collections and zero final charged/native tape bytes.
-
-The smaller cold operation buffers grow geometrically. This increases growth
-requests in the mapped and nested workloads, despite lower requested bytes and
-peak storage; warm workspace reuse remains bounded by the existing budget.
-Seven-sample process timings vary by host and workload, so no consistent speedup
-is claimed. The control changes reserved capacity, not the new logical offsets;
-it isolates storage rather than reproducing every cost of the previous code.
-
-Native instruction inspection on all four hosts shows a register subtraction
-for operation offsets and hoisted metadata-base adjustment in backward loops.
-Parent loads remain 32-bit, weights 64-bit, and multiplication/addition remain
-separate. The report retains hardware/compiler/flags, raw samples and verified
-source/binary/disassembly hashes. PR #138 subsequently passed all nine production
-jobs and documentation; [history](roadmap-history.md#pr-138-merge-acceptance)
-records its accepted merge.
+The tradeoff is visible: smaller starting buffers save space but can need more
+growth requests. The nested case also reduces managed-object storage; the raw
+report separates those counters. Timings do not show a consistent general
+speedup. The control changes reserved capacity, not every earlier implementation
+detail. All measured final storage is released, with no tracing collections.
 
 ## Autodiff registry growth
 
-[Four-host measurements](measurements/ad-registry-2026-10-15.json) compare identical
-ARC gradient batches with geometric registry growth and a control that grows one
-slot per request. All four Linux/macOS hosts report these registry counters:
+The runtime keeps a table of active tapes, called a **registry**.
+[This comparison](measurements/ad-registry-2026-10-15.json) runs identical fwp
+batches. The control grows that table by one entry per request; the changed
+version doubles capacity, capped at the existing limit.
 
-| Simultaneously recorded tapes | Allocation requests, control → geometric | Peak registry bytes, control → geometric |
+| Simultaneous tapes | Table allocation requests, control → changed | Peak table bytes, control → changed |
 |---|---:|---:|
 | 1 | 1 → 1 | 104 → 104 |
 | 256 | 256 → 9 | 26,624 → 26,624 |
 | 257 | 257 → 10 | 26,728 → 53,248 |
 | 4,096 | 4,096 → 13 | 425,984 → 425,984 |
 
-For 4,096 tapes, total native tape requests fall 8,192 → 4,109. Cumulative
-requested registry bytes fall 872,628,224 → 851,864; this is the sum of realloc
-request sizes, not physical copied bytes or a peak-memory reduction. Registry
-storage is included in tape storage and must not be added again. Peak charged
-managed storage remains 294,920 bytes, with 36,867 managed requests and no retains.
-Managed counters agree across both variants at every size. All final tape/managed
-storage is reclaimed with zero collections.
-
-Spare capacity adds 26,520 live bytes in the 257-tape case. This accepted report
-predates the search-cursor follow-up and measures allocation requests, not a
-reduction in slot-search work.
-Seven process samples per case include startup and output and vary across sizes
-and hosts, so no general speedup is claimed. The control isolates registry growth
-policy and does not reproduce every cost of the previous compiler revision.
-
-Actual instructions on all four hosts branch around realloc when spare capacity
-exists, compute doubling/clamping in registers and initialize one 104-byte slot.
-Backward instructions also bypass adjoint allocation and clearing at zero active
-nodes. Separate positive/negative controls prove empty passes preserve a warm
-cache and allocate no private adjoint; interpreter tests prove managed and empty
-tapes preserve numeric workspace ownership. Those cache fixes have regression
-evidence rather than a timing claim. The report records hardware/compiler/flags,
-raw samples, verified archive/source/binary/disassembly hashes and inspection
-addresses. [The handoff](development-state.md) records final production acceptance.
+Doubling makes fewer requests but can reserve unused space: 26,520 extra live
+bytes at 257 tapes. The table is already included in tape-storage totals.
+Cumulative requested table bytes at 4,096 tapes fall from 872,628,224 to 851,864;
+this does not measure physical copying. Managed counters are unchanged, final
+measured storage is zero, and timings support no general speedup claim.
 
 ## Autodiff registry search
 
-[Four-host measurements](measurements/ad-search-2026-10-15.json) compare equivalent
-ARC gradient batches with a search cursor and a control that starts each search
-at zero. All native Linux/macOS hosts report the same unavailable-slot visits:
+[This comparison](measurements/ad-search-2026-10-15.json) changes where fwp starts
+looking for an available registry entry. The control starts at entry zero each
+time. The new version remembers the first entry that might be available; that
+remembered position is a **cursor**.
 
-| Simultaneously recorded tapes | Restart control | Cursor |
+| Simultaneous tapes | Occupied/unavailable entries revisited by control | Revisited with cursor |
 |---|---:|---:|
 | 1 | 0 | 0 |
 | 257 | 32,896 | 0 |
 | 4,096 | 8,386,560 | 0 |
 | 16,384 | 134,209,536 | 0 |
 
-The counter measures visits to unavailable slots, not all instructions or bound
-checks. Sequential creation avoids rescanning the occupied prefix; arbitrary
-holes can still require linear search. Lowest-slot selection and exhausted
-generations retain their existing behavior. The native cursor adds eight static
-bytes and no heap allocation.
+The counter measures those visits, not every CPU instruction. Creating tapes in
+order avoids repeated scans in this test; arbitrary free gaps can still require
+a search. The cursor costs eight static bytes and no new heap allocation.
+Allocation counts and live-storage measurements are identical between versions.
 
-Allocation and live-memory counters are identical between paired variants. At
-16,384 tapes, both make 15 registry requests, 16,399 total native tape requests
-and 147,459 managed requests. Peak native tape storage is 1,703,944 bytes,
-including the 1,703,936-byte registry; peak charged managed storage is 1,179,656
-bytes. These are separate peaks, not a combined simultaneous peak. All measured
-storage is reclaimed with zero collections. Allocator metadata and transient
-realloc copies are outside these counters.
+For 16,384 tapes, median complete-process times over seven samples are:
 
-Seven process samples include startup and output. Median elapsed milliseconds
-for the 16,384-tape case are:
-
-| Host | Restart control | Cursor |
+| Host | Restart-at-zero control | Cursor version |
 |---|---:|---:|
-| Linux AMD64 | 164.802 | 10.681 |
-| Linux ARM64 | 166.837 | 8.686 |
-| macOS ARM64 | 144.215 | 12.551 |
-| macOS Intel | 197.902 | 24.284 |
+| Linux AMD64 | 164.802 ms | 10.681 ms |
+| Linux ARM64 | 166.837 ms | 8.686 ms |
+| macOS ARM64 | 144.215 ms | 12.551 ms |
+| macOS Intel | 197.902 ms | 24.284 ms |
 
-Small cases are not consistently faster; these results do not establish a
-general speedup. The control changes only the search start, retaining the cursor
-maintenance and other current runtime behavior. Interpreter changes have
-unit/semantic evidence, not a timing claim. Hardware, compiler, flags, raw
-samples and every allocation counter are retained in the report.
-
-Actual uninstrumented instructions on all four hosts load the cursor before the
-search, bypass the loop at the initialized end, advance the cursor on creation,
-and lower it for a reusable released slot. Numeric backward uses the validated
-token's slot directly; the preliminary Apple ARM64 pointer-difference and
-reciprocal-multiply sequence is absent. Normal saved registers and stack frames
-remain. The report records instruction addresses, verified archive/source/binary/
-disassembly hashes and the boundary of managed-tape regression coverage.
-
-Reproduce on GitHub with `scripts/measure-ad-registry.py --comparison search
---output OUTPUT`; `--comparison growth` retains the separate geometric-versus-
-incremental allocation comparison. [The handoff](development-state.md) records
-final production acceptance.
-
-## Running comparisons
-
-Run full workloads on GitHub runners. `bench/<name>/` contains fwp, C and Rust
-programs with matching output. `tests/bench.rs` builds them with `fwp build -O2`,
-`cc -O2` and `rustc -O`, checks output agreement and reports the best of three runs:
-
-```sh
-cargo test --release --test bench -- --ignored --nocapture
-```
-
-Results go to stdout, `target/bench.md` and the CI `bench` job summary. Assert
-outputs and stable allocation properties, not noisy shared-runner timing bounds.
-Record hardware, compiler/version, flags, input sizes, allocation/count totals,
-peak live memory and collections. Separate input construction and allocation
-from kernel-only timing where applicable.
-
-| Workload | Scope |
-|---|---|
-| `fib` | Recursive calls and integer arithmetic (`fib 35`) |
-| `loop` | Pair-state loop, 100 million iterations |
-| `map` | Build from 500,000 pairs, then 2 million lookups |
-| `pipeline` | `range \| map \| filter \| sum`, one million elements, 20 rounds |
-| `strings` | Format, concatenate and measure two numbers, 2 million rounds |
-
-Matching outputs do not ensure equivalent implementation work. The map comparison
-uses sorted arrays in fwp/C and a B-tree in Rust. The fwp string-length optimizer
-can avoid formatting that the C/Rust versions still perform. Those workloads
-cannot establish equal kernel throughput or a general language speed ratio.
-Use equivalent algorithms and actual work for optimization acceptance, and
-inspect native instructions when claiming eliminated allocation or dispatch.
+This large case is much faster; small cases are not consistently faster. These
+are fwp-versus-fwp results, not overhead relative to C. The control retains the
+new cursor-maintenance code and changes only its search start. All measured
+storage is reclaimed with no tracing collections.
 
 ## Paired autodiff metadata allocations
 
-[Four-host measurements](measurements/ad-metadata-2026-10-15.json) compare the
-same checked ARC programs at runtime revision `24620ead` with the accepted
-`09f1a029` tape runtime substituted as a control. Compiler output outside the
-tape runtime is identical. Parents share one allocation; numeric derivatives
-share another. All four Linux/macOS hosts report these totals:
+[The PR #141 report](measurements/ad-metadata-2026-10-15.json) compares the same
+fwp programs at `24620ead` with a control using the accepted `09f1a029` tape
+runtime. Everything outside that runtime section is identical. Previously each
+parent array and each numeric-weight array had its own allocation. Now the two
+parent arrays share one block, and the two numeric-weight arrays share another.
+The contents still occupy separate, aligned regions inside their blocks.
 
-| Workload | Workspace cache | Metadata requests, separate → paired | All native tape requests, separate → paired | Unchanged peak tape bytes | Explicit relocation bytes, paired |
-|---|---:|---:|---:|---:|---:|
-| Identity VJP, 4,096 inputs | 0 or 1 | 0 → 0 | 2 → 2 | 32,872 | 0 |
-| Mapped VJP, 4,096 inputs | 0 or 1 | 28 → 14 | 30 → 16 | 163,944 | 48,384 |
-| 16 mapped VJPs, 4,096 inputs each | 0 | 448 → 224 | 465 → 241 | 163,944 | 774,144 |
-| 16 mapped VJPs, 4,096 inputs each | 1 | 28 → 14 | 30 → 16 | 163,944 | 48,384 |
-| Replay, 4,096 operations | 0 or 1 | 28 → 14 | 30 → 16 | 131,184 | 48,384 |
-| Nested gradient, 256 inputs | 0 or 1 | 18 → 9 | 21 → 12 | 16,632 | 5,376 |
+All four Linux/macOS hosts report:
 
-Requested metadata and total tape bytes are equal between variants, as are all
-managed allocation, retain and live-storage counters. All final charged managed
-and native tape bytes are zero, with zero collections. Peak payload excludes
-allocator metadata and transient realloc copies; managed peaks are recorded
-separately. Explicit relocation counts only the initialized second regions moved
-by this implementation. The control's zero explicit relocation count excludes
-any copies performed inside realloc, so it does not imply zero copying.
+| Test | Reuse released buffers? | All tape allocation requests, control → paired | Same peak tape bytes | Bytes explicitly moved by paired growth |
+|---|---|---:|---:|---:|
+| Identity VJP, 4,096 inputs | Either | 2 → 2 | 32,872 | 0 |
+| Mapped VJP, 4,096 inputs | Either | 30 → 16 | 163,944 | 48,384 |
+| 16 mapped VJPs of 4,096 inputs | No | 465 → 241 | 163,944 | 774,144 |
+| 16 mapped VJPs of 4,096 inputs | Yes | 30 → 16 | 163,944 | 48,384 |
+| Replay of 4,096 operations | Either | 30 → 16 | 131,184 | 48,384 |
+| Nested gradient, 256 inputs | Either | 21 → 12 | 16,632 | 5,376 |
 
-The tradeoff is fewer allocator requests plus explicit relocation during growth.
-Two allocations retain the existing wasm32 node bound: the largest parent and
-numeric requests are 2,147,483,640 and 4,294,967,280 bytes. Tests intercept those
-requests without allocating gigabytes, and reject a deliberately overflowing
-size expression. Workspace payload remains 24 bytes per operation plus adjoints,
-within the unchanged 512 KiB cache budget; natural alignment and scalar order
-are preserved.
+Requests specifically for parent/weight arrays halve; total tape requests also
+include other storage, so their totals do not necessarily halve. Requested bytes,
+peak payload and managed-object counters are unchanged. Final measured storage
+is zero, with no tracing collections.
 
-Seven alternating process samples follow one warmup per variant/cache. They
-include startup/output and show mixed timings, with regressions in some cases.
-For the 16-VJP case, median milliseconds are:
+The extra cost is moving initialized data inside the resized blocks. The table
+counts those explicit moves, not copying inside the system allocator. The
+control has no explicit moves but its reallocations can still copy data. The
+512 KiB workspace budget and 24 numeric metadata bytes per operation are unchanged.
+Actual 32-bit WebAssembly checks verify request arithmetic without attempting
+gigabyte allocations. Machine-instruction inspection confirms the intended two
+numeric growth calls instead of four, while ordinary stack storage remains.
 
-| Host | Cache off, separate → paired | Cache on, separate → paired |
+Seven alternating process samples follow one warmup for each version/cache
+setting. For the 16-VJP test, the median milliseconds are:
+
+| Host | Reuse off, control → paired | Reuse on, control → paired |
 |---|---:|---:|
 | Linux AMD64 | 15.828 → 16.052 | 15.369 → 15.358 |
 | Linux ARM64 | 25.037 → 25.004 | 24.523 → 24.796 |
 | macOS ARM64 | 26.679 → 29.444 | 30.679 → 37.041 |
 | macOS Intel | 62.244 → 55.340 | 50.887 → 57.204 |
 
-These measurements establish the allocator-request reduction, not a general
-speedup. The report retains every raw sample, hardware/compiler/flags and
-verified source/binary/disassembly hashes. Linux uses clang 18.1.3; macOS uses
-Apple clang 17.0.0, with `-O2 -std=gnu11 -ffp-contract=off` on all four hosts.
+Some cases are slower. For example, macOS ARM64 with reuse takes about 21% longer
+in this sample (`37.041 / 30.679 − 1`). The accepted result is fewer allocator
+requests with the same payload size, not a general speedup. The report records
+raw samples, CPU/compiler information, flags and verified file hashes.
 
-Actual native instruction review confirms two numeric growth calls instead of
-four, initialized-region moves and 32-bit parent/64-bit weight stores. Capacity
-hits bypass allocation. Capturing the owner before realloc lets the numeric
-push exclude managed-weight growth; nested pushes still call a shared helper
-with both owner branches. Linux AMD64's numeric push reserves 56 local stack
-bytes versus 72 in the control; Linux ARM64, macOS ARM64 and Intel retain their
-160-byte frame, 128-byte frame and 72-byte local reservation respectively.
-Saved registers and ordinary spills remain. The report records exact addresses;
-these observations do not establish universal cache or register improvements.
+## Running comparisons
 
-Reproduce on GitHub with `scripts/measure-ad-metadata.py --output DIR` in the
-focused autodiff workflow. Native controls cover moving and overlapping growth,
-bit preservation, recoverable managed traps, OOM, scope cleanup and deliberate
-faults. The Rust interpreter remains the independent semantic reference.
+Full benchmarks run on GitHub runners. The C/Rust comparison command is:
+
+```sh
+cargo test --release --test bench -- --ignored --nocapture
+```
+
+It writes the report to standard output, `target/bench.md` and the `bench` job
+summary. The per-change experiments have their own scripts and explicit controls:
+
+| Comparison | Runner command |
+|---|---|
+| Iterator processing | `python3 scripts/measure-iteration.py --help` lists the supported controls |
+| Table growth | `python3 scripts/measure-ad-registry.py --comparison growth --output OUTPUT` |
+| Table search | `python3 scripts/measure-ad-registry.py --comparison search --output OUTPUT` |
+| Paired buffers | `python3 scripts/measure-ad-metadata.py --output OUTPUT` |
+
+For a new claim, state both implementations, inputs, algorithms, compiler settings,
+hardware, timing boundary and memory-counter scope. Keep raw samples and inspect
+whether the generated program really does the work being claimed. Report slower
+cases and extra storage too. Correct output is required; noisy shared-runner
+elapsed times are not pass/fail thresholds. [Delivery history](roadmap-history.md)
+records which source versions completed the required tests.

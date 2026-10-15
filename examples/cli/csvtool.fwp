@@ -11,6 +11,9 @@
 #
 # expose: cli
 
+# Read tutorial 16. CSV is a table encoded as separated text fields; TSV
+# uses tabs. The first row supplies column names. The named CSV files are user inputs.
+
 export version : String
 version = "1.0.0"
 

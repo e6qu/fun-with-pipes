@@ -1,6 +1,9 @@
 # Summarize the files below a directory: how many files of each extension
 # there are and how many bytes they take, largest first.
 
+# Read tutorial 16. group-by collects files with the same extension; each
+# group becomes a count and byte total. A selector such as .files reads a field.
+
 # fwp build examples/cli/dirstat.fwp --fn dirstat -o dirstat
 # ./dirstat -n 3 src
 # ./dirstat --sort files

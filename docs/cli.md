@@ -1,5 +1,17 @@
 # Command-line programs
 
+Read [tutorial 16](tutorials/16-clis/README.md) for a complete first program.
+A command-line interface (CLI) accepts arguments from a terminal or script.
+Positional arguments are identified by order; flags/options have names such as
+`--file notes.txt`. A subcommand selects an operation (`todo add`). Standard
+input/output are the process's input/output streams; standard error carries
+diagnostics. Exit status zero means success.
+
+The opening session runs from the repository root and creates/updates a local
+to-do file. Later signature snippets illustrate mappings; names such as `Options`
+and omitted bodies need definitions in a complete program. `# args:` and other
+metadata comments configure an interface, not function evaluation.
+
 An exported function is a command-line program. Its parameters are the
 command line: a record parameter becomes flags, the others are positional
 arguments, the last one may come from standard input, and the comments
@@ -119,6 +131,12 @@ functions whose natural name is taken by the standard library (`add`,
 `todo add`.
 
 ## Flags from a record
+
+The first record parameter is an options group: each field becomes a named
+option. The following examples explain how field types decide whether a flag
+takes a value, can be repeated, or can be omitted. A field comment documents it
+and may give its short spelling. This convention applies to generated commands,
+not to ordinary calls of the function inside fwp.
 
 When the first parameter is a record (nominal or structural, but not a
 tuple, `()` or `Duration`), it is the *options record*: each field is a
@@ -350,6 +368,11 @@ that is renamed after it is built needs its script generated again.
 
 ## Results, errors and exit statuses
 
+A command has two outputs: printable data and a numeric process status. These
+are separate so a filter can return useful lines while reporting “no match” to
+a shell. `Outcome[T]` packages both. The table below defines how other return
+types and failures map to those outputs.
+
 | The function... | The program |
 |---|---|
 | returns a value | writes it as text (strings without quotes), then a newline |
@@ -499,87 +522,8 @@ an error names the row and the column
 Internal helpers of the standard library have a name part that starts
 with `_` (`table._row`) and are left out of [stdlib.md](stdlib.md).
 
-## What was missing, and what was added
+## Limitations
 
-To find out what CLIs needed, we wrote the programs of `examples/cli`
-(`wc`, `grep` with flags, `todo` with subcommands and a file, `dirstat`
-walking a directory), a CSV-to-JSON converter and a command that lists
-the files `git` tracks with their sizes, and tried to build them as
-native executables with the language as it was.
-
-What was missing in the language and its tools:
-
-* **Flags.** An exported function took only positional arguments in the
-  text format, so options had to be written as a record literal
-  (`'{ignore-case = True, invert = False}'`). Added: flags from an
-  options record, short flags from field comments, defaults
-  (`f.defaults`, `defaults`), `--` and negative numbers.
-* **Help and version.** A usage error printed only the parameter types.
-  Added: `--help` from the signature and comments, `--version` from an
-  exported `version`.
-* **One program, several commands.** Each function was its own
-  executable. Added: `fwp build --cli` and `fwp exec --cli`.
-* **Command names.** Natural command names (`add`, `list`, `count`) are
-  standard library names, which an export shadows inside its own file.
-  Added: `# command: name`.
-* **Variable numbers of arguments.** `wc FILE...` was impossible: a
-  `List` parameter was one `[..]` argument or standard input. Added:
-  `# args: FILE...`.
-* **Errors.** A `Result` was printed as `Err ...` with exit status 0, an
-  uncaught `IoError` was printed as `IoError {0 = ..., 1 = ...}` by the
-  interpreter and as `<opaque>` by native programs (its type had no
-  descriptor), and the interpreter added Rust's `(os error 2)` to I/O
-  messages where C does not. Fixed: `Err` and uncaught errors print
-  `name: message` and exit with 1; both backends display `IoError` the
-  same way.
-* **Filters.** A per-line function returning `Option` printed `Some x`
-  and `None`. Now `None` writes nothing.
-* **No arguments.** A command without arguments (`tracked : () -> ...`)
-  had to be called as `tracked '()'`, or read `()` from standard input.
-  A final `()` parameter is now implicit.
-* **Strings with spaces.** A string argument lost its leading spaces
-  (`--sep ' '` became empty) although the protocol says strings are
-  taken verbatim; both backends now keep them.
-
-What was missing in the standard library: listing, walking, creating and
-removing directories; existence, size and time of files; appending,
-renaming, copying, removing files; bytes from and to files; paths;
-running another program and capturing its output; the environment as a
-whole and the working directory; whether output is a terminal and colours;
-column alignment; grouping. All were added as above, with primitives in
-both backends where the operating system is needed (`src/sys.rs`,
-`runtime/fwp_rt_sys.c`) and in fwp otherwise (`lib/fs.fwp`,
-`lib/process.fwp`, `lib/cli.fwp`, `group-by`).
-
-A second round, to make the programs complete as programs made with
-clap, cobra or click are, added:
-
-* **Choices.** Enumerations as flag and argument values, in any case,
-  listed in the help and completed by the shells.
-* **Environment variables.** `[env: VAR]` on a field, with flag >
-  environment > default.
-* **Value names.** `<N>` in a field comment, instead of the type.
-* **Optional arguments.** Trailing `Option` parameters and positional
-  defaults in `f.defaults`.
-* **Exit statuses.** `Outcome[T]`: `grep` now exits with 1 when nothing
-  matches and still returns its lines.
-* **Constraints.** `[requires: ...]` and `[conflicts: ...]` between flags.
-* **Shell completion and man pages.** `--completions bash|zsh|fish` and
-  `--man` in every program, in both backends and in WebAssembly.
-* **Doc comments from the syntax tree.** Comments were found by matching
-  lines (`export name` and `Name = {`), which missed signatures on several
-  lines, documentation on a `rec` signature and records declared in other
-  modules or with another layout. They now come from the parser's
-  declarations and the lexer's comments.
-* **The binary protocol and `process.call`.** A called program wrote on
-  the stdout of a program writing the binary protocol, corrupting it; it
-  now writes on stderr, as the program's own output does.
-* **Library.** CSV (with typed records by header), `term.width`, prompts
-  (with the echo off for passwords), progress lines, streaming standard
-  input (`each-line`, `fold-lines`), `ewrite`; standard library helpers
-  are hidden from the generated documentation.
-
-What remains:
 
 * Tacit code with several parameters needs `curry`, tuples and `.0 | .1`
   selectors, and a helper record is often clearer than a tuple

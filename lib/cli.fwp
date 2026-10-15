@@ -2,6 +2,12 @@
 # help and subcommands without any code (see docs/cli.md); these
 # functions are for programs with a hand-written `main`, and for output to
 # terminals.
+#
+# A command-line interface (CLI) receives positional arguments and named flags.
+# An options record groups flags; `cli.parse` checks argument text against its
+# type and defaults. It does not read environment variables automatically.
+# A terminal may support colors, prompts and progress updates; redirected output
+# may not be a terminal. See tutorial 16 for a complete generated command.
 
 # Parse command-line arguments as executables do: each field of the
 # options record is a flag (`--name value`, `--name=value`; a `Bool` field

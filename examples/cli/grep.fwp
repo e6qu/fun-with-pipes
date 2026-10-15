@@ -5,6 +5,9 @@
 #   printf 'apple\nBanana\n' | ./grep -i an
 #   ./grep -c TODO notes.txt || echo 'nothing to do'
 
+# Read tutorial 16. This matches literal substrings, not regular expressions.
+# Outcome carries output plus an exit status, so no matches can report status 1.
+
 GrepOptions = {
     # -i  ignore case
     ignore-case: Bool,
