@@ -1,166 +1,148 @@
 # Session handoff
 
-Updated 2026-10-15. Current draft: [PR #145](https://github.com/e6qu/fun-with-pipes/pull/145),
-branch `measured-ownership-performance`, based on
-`e94cc4a6` (PR #144). The user requested cancellation of remaining old CI runs
-and the next large combined PR. The currying discussion is settled: retain
-explicit `curry`/`uncurry` and pursue the single-argument function model.
-`f x y` means `(f x) y`; tuples are single values. Do not add implicit conversion
-between tuple-taking and curried functions. The user also requested infix
-arithmetic with standard precedence, alongside prefix calls and pipes.
+Updated 2026-10-15. [PR #145](https://github.com/e6qu/fun-with-pipes/pull/145)
+is being repaired after [run 38772340049](https://github.com/e6qu/fun-with-pipes/actions/runs/38772340049)
+failed `tutorial_readmes_match_their_programs` on ARM macOS: the README showed
+`sum-pair`/`sum-curried` definitions absent from the tutorial program. Added the
+definitions and both example calls to `main.fwp`, its expected output and README.
+The fast documentation job now runs the exact consistency check before the long
+production suites. The repaired head needs a new full gate; old passes do not
+authorize merging it.
+The user authorized squash merge after all nine production jobs and documentation
+pass, then continuing the roadmap without asking again. Use a single-line
+subject of at most 80 characters and an explicitly empty body, with no trailers.
+
+The next batch is being prepared separately on `checked-library-ownership`,
+based on PR #145's earlier head `4ff50085`. Do not open its PR until #145 merges. Rebase it
+onto the squash commit without replaying #145's commits.
 
 ## Roadmap status
 
-| Step | Status | Current scope |
+| Step | Status | Next concrete work |
 |---|---|---|
-| 1 | Pending | Remove tracing GC; use moves/borrows and limit ARC to necessary sharing |
-| 2 | In progress | Inspect avoidable costs in fused array/iterator loops |
-| 3 | In progress | Establish comparable numerical measurements and inspect generated loops |
-| 4 | In progress | Reproduce the derivative metadata timing regressions |
-| 5 | Pending | Broaden numerical kernels; resolve runtime OpenCL compilation under no-JIT policy |
-| 6 | In progress | Improve sample ordering and baseline comparability |
-| 7 | In progress | Select numerical, collection-heavy and repeated workloads |
+| 1 | In progress | Check copied C library exports and data-only channel queues without tracing |
+| 2 | In progress | Measure remaining closure, container and call costs in representative programs |
+| 3 | In progress | Investigate current array and matrix C/Rust gaps; preserve floating-point order |
+| 4 | In progress | Investigate sustained derivative timing differences, especially macOS |
+| 5 | Pending | Broaden kernels and resolve runtime OpenCL compilation under the no-JIT policy |
+| 6 | In progress | Add controlled same-method before/after and ARC-specific timing comparisons |
+| 7 | In progress | Extend numerical, collection-heavy and repeated application coverage |
 
-## Merge and cancellation record
+The remaining project criteria are in [PLAN.md](../PLAN.md). JIT is excluded,
+not deferred. Every function takes one argument and can return another function;
+keep explicit `curry`/`uncurry`, without implicit tuple conversion. Infix
+arithmetic complements curried calls and pipes.
 
-The user merged [PR #144](https://github.com/e6qu/fun-with-pipes/pull/144) as
-`e94cc4a6`; its files match final head `5ec27257`, and the one-line merge message
-meets the commit rules. At their explicit request, cancelled remaining runs
-`38765035981`, `38765035723`, `38762453518`, `38761771511` and `38752839908`.
-Do not restart these old runs or count cancellation as a pass. The instruction
-applies to those remaining runs; the new implementation delivery still needs
-its own focused checks and full final-commit CI before merge.
+## PR #145: implemented and checked
 
-PR #143 fixed PR #142's stale bookstore OpenAPI fixture; its four focused
-OpenAPI comparisons passed locally without regeneration. PR #144 documents that
-JIT is explicitly excluded, not deferred. Earlier delivery evidence remains in
-[history](roadmap-history.md). The active project work is in [PLAN.md](../PLAN.md).
+The PR adds fixed-precedence arithmetic, removes unnecessary cleanup around
+proved bounded internal array-index increments, omits conservative GC root fences
+in checked ARC, and improves benchmark comparability and sample ordering.
 
-## Combined delivery scope
+Four-host [performance run 38771808755](https://github.com/e6qu/fun-with-pipes/actions/runs/38771808755)
+passed at code revision `f42d6226`; head `4ff50085` changed only this handoff.
+Linux/macOS ARM64/AMD64 all passed arithmetic raw-interpreter/native comparisons,
+array fusion, ARC reclamation, workspace, borrowed callback and pipe tests, plus
+numerical, derivative and complete-program measurements.
+The earlier focused run's missing helper signatures were fixed and rerun.
 
-- Establish runner measurements for current numerical arrays/matrices, repeated
-  derivative calculations and complete programs, with source/compiler/CPU data.
-- Improve comparison fairness: rotate implementation order, retain samples and
-  distinguish compile-time-known dimensions and algorithms from runtime work.
-- Investigate the per-element checked index/cleanup work in fused array loops
-  and tracing-only compiler fences still present in checked ARC executables.
-  Prove any removed work unnecessary before changing it; preserve arithmetic
-  traps, failure cleanup, alias behavior and task cancellation.
-- Reproduce paired derivative-buffer slowdowns before selecting a change there.
-- Preserve single-argument functions, ordinary partial application and explicit
-  `curry`/`uncurry`; optimize their compiled costs without changing call semantics.
-- Add fixed-precedence infix arithmetic using the existing numeric traits;
-  preserve checked operations, left-to-right operand evaluation, negative
-  literals and hyphenated names. Update formatting, macros, examples and docs.
+Artifacts are downloaded at `/private/tmp/fwp-pr145-performance`; baseline ARM
+macOS artifacts are at `/private/tmp/fwp-baseline-macos-arm`. The guarded download
+passed in 65.37 seconds. Inspection confirms zero allocations, retains and cleanup
+registrations in the fused reduction for 0/1/7/129/257 elements at O1/O2 on all
+four hosts. The old baseline recorded 129/257 cleanup registrations for 129/257
+elements. ARC assembly reports contain no scan/mark/sweep symbols. The ARM macOS
+reduction loop uses scalar registers, loads, multiply/add and index increment;
+its body has no per-element cleanup call. This is operation-count and code
+inspection evidence, not an isolated timing speedup.
 
-Acceptance requires raw-interpreter/native agreement, allocation/retain/cleanup
-counts, generated binary inspection, explicit before/after comparisons on Linux
-and macOS ARM64/AMD64, and all nine production jobs plus documentation. Keep
-source and result provenance; fewer allocations alone is not a speed claim.
+Current numerical and derivative reports retain source, compiler, CPU and raw
+samples. Array kernel time remains roughly 1.4–2.5 times C. The sustained paired
+metadata case is slightly slower than the separate-allocation control on both
+Macs and slightly faster on both Linux runners. Do not call fewer allocations a
+universal speedup. New and baseline timing methods differ; a controlled
+same-method optimization comparison and ARC-specific timing remain unfinished.
 
-## Progress and checks
+Earlier guarded lexer/parser/formatter checks, `cargo fmt --all -- --check`,
+measurement-fixture compilation and `python3 scripts/check-roadmap.py` passed.
+Full acceptance is the current production run, not the older focused runs.
 
-Read the current compiler/ownership contracts and emitted one existing numeric
-array program with the guarded command:
-`target/debug/fwp build --fn reduce64 --emit-c -o /private/tmp/fwp-baseline-array.c tests/fixtures/numeric_array_fusion.fwp`.
-It passed in 0.63 seconds. This uses the existing compiler for inspection only;
-runner builds establish current source behavior. No local benchmark was run.
+## Next batch: checked library and channel ownership
 
-The emitted loop already avoids intermediate arrays and per-element retains,
-but registers a cleanup around each checked index increment. Array headers
-reserve their high bit for views, bounding length by I64's maximum; a successful
-read therefore bounds the next index. The ARC runtime also retains compiler
-memory fences originally intended to keep conservative GC roots alive. These
-are candidate costs to validate, not accepted optimizations yet.
+Workload: C hosts repeatedly call string/record, collection and scoped derivative
+exports, then release a dynamic library. Existing export wrappers copy string
+inputs and release typed values, but returned string pointers are retained for
+the library's lifetime and have no host release API.
 
-A new explicit `performance` selection in the numerical workflow groups focused
-ownership tests and numerical/derivative/program measurements on four native
-hosts. Initial results establish the pre-change baseline; this dispatch is not
-the full production acceptance gate.
+Implement checked ARC for static/shared native libraries whose inputs are copied
+and whose results contain only scalar bits or records of those bits. Reject
+returned strings, raw pointers and unproved callbacks. Check every export as an
+independent entry with no assumed state or derivative scope. Preserve the existing
+ABI and ordinary tracing-library behavior. Host calls must be serialized; this
+batch does not establish concurrent entry safety.
 
-The pre-change performance dispatch is
-[run 38767826317](https://github.com/e6qu/fun-with-pipes/actions/runs/38767826317)
-at preparation commit `711ac295`. All four Linux/macOS ARM64/AMD64 jobs passed.
-This is baseline evidence, not final-head acceptance.
-The ARM macOS profile confirms one cleanup registration per element in the fused
-array loop (129/257 registrations for 129/257 elements), with zero intermediate
-allocations or retains. Timings vary substantially; no speedup is claimed.
+Include channels whose payloads contain only data: their existing typed queue
+owners already release pending messages, but ARC previously rejected them all.
+Reject functions, tasks and channel handles anywhere in a payload; they can
+publish a reference back to the queue. Immutable recursive data remains eligible.
+Preserve close/drain semantics and cancellation of blocked senders/receivers.
 
-Infix arithmetic was published at `0ae0737a` (`+ - * / %` and unary
-negation). Inference and native lowering use the existing arithmetic operations;
-the syntax tree retains notation for formatting. Added precedence/formatting,
-macro, numeric-width, operand-effect and competing-trap controls. Full compiler
-and interpreter/native validation is pending on runners.
+Acceptance: interpreter/host output agreement, bounded live memory over repeated
+calls, cleanup after traps, real static linking and repeated dynamic load/unload,
+no tracing symbols, and a missing-release control that fails. Exercise O1/O2,
+workspace reuse on/off and all supported native platforms. Preserve existing
+library input/result/resource/autodiff tests. Full CI runs before merge.
+Channel acceptance additionally requires recursive data, closed-send rejection,
+timed receive, undrained queue destruction, failure cleanup and blocked task
+cancellation, with a missing queue-release control that fails.
 
-Commit `c32b95f1` additionally removes checked increments from the bounded
-internal array index and omits unwind scopes for immediate wrapping integer
-operations. Wide boxed integers and ordinary checked arithmetic keep their
-protection. Checked ARC also omits conservative-GC root fences; tracing mode
-retains them. Existing allocation/cleanup and ARC reclamation controls are the
-acceptance tests, with the array cleanup bound tightened to constant work.
-These runtime/compiler changes are not yet verified on runners.
+Implementation and regression tests are prepared for runner validation. The existing interpreter
+validated the fixture output (`5`, `4`, `6.0`, `55`) through the local guard in
+0.64 seconds. Guarded `cargo fmt --all` passed in 1.12 seconds. These checks do
+not yet verify the changed compiler or library eligibility rules.
 
-The obsolete, still-queued syntax dispatch `38768610721` was cancelled and
-replaced by [run 38769658801](https://github.com/e6qu/fun-with-pipes/actions/runs/38769658801)
-at `c32b95f1`. Its arithmetic/formatter/type checks and array/ARC/unwind tests
-finished with one failure: the new arithmetic fixture omitted signatures for
-its constant-input `left`/`right` helpers, which would otherwise be generic.
-Added explicit `() -> I64 ! {IO}` signatures. The arithmetic runtime comparison
-must rerun; it failed before execution. Rust formatting, Clippy, existing parse
-and type snapshots, formatting, array fusion, ARC reclamation and loop unwind
-controls passed. This failed overall run does not authorize merging.
+The focused library ledger found an allocator accounting bug: the first small
+allocation used an uninitialized size-class table and charged zero bytes, while
+freeing credited its actual size. Fixed charging during lazy initialization and
+added small/large first-allocation controls for all three allocation paths.
+The initial probe failed with a -16-byte balance; after the fix, the guarded
+runtime probe passed with zero balance for workspace reuse on/off (1.91 s).
+`python3 /private/tmp/fwp-library-boundary-check.py` passed (2.11 s): three actual
+dynamic unloads each reported zero live-byte balance and zero collections;
+omitting result release failed with the expected code 186; the allocator checks
+passed. These focused probes use existing compiler output with the changed
+runtime and ARC define inserted. CI must still validate the new compiler proof,
+static linking, all platforms and the complete tests.
+Guarded roadmap audit passed (2.92 s), as did the new Rust test harness's
+metadata-only type check against the existing library artifact (0.14 s).
+The initial type-check command named a nonexistent top-level rlib; the corrected
+command used the existing dependency artifact. No compiler rebuild ran locally.
+The focused runner suite is `numerics.yml` with `suite=library` on four hosts;
+the Windows production jobs explicitly include the new library test.
 
-Measurement preparation now rotates complete-program C/Rust/fwp execution order
-over six samples, reports medians and compilation time/binary size, and uses
-sorted Rust pairs to match the C/fwp map representation. Numerical measurements
-hide C/Rust dimensions from constant propagation, use disjoint C output storage,
-and collect six rotating batches of five samples. Historical results retain
-their original methods; new timings are pending. No local benchmark was run.
+Published the library and allocator changes at `6c1440af` and dispatched
+[four-host run 38777828868](https://github.com/e6qu/fun-with-pipes/actions/runs/38777828868).
+All four hosts passed, including formatting, Clippy and the complete selected
+library/allocator regressions. This run predates channel eligibility and does
+not verify that addition.
+The subsequent channel fixture initially composed a returned function through
+`| task.spawn`; corrected it to explicit `compose`, as in the existing task
+examples. The raw interpreter passed in 0.60 seconds. The guarded runtime probe
+`python3 /private/tmp/fwp-channel-runtime-check.py` matched raw output, reclaimed
+queued/cancelled owners, and detected an omitted queue drop (2,112 retained bytes,
+expected exit 193; 3.41 seconds). The recursive-data extension also passed the
+same probe (3.61 seconds). New compiler proof validation remains on CI. The channel proof was published at
+`0c045fc3` and its extended four-host library suite was dispatched.
 
-The derivative comparison now balances eight process samples and adds a
-512-calculation case to reduce startup noise, retaining the short controls.
-The baseline identity case showed timing variation even with zero metadata
-allocation requests; that variation is not evidence of a metadata-layout cost.
-
-Published the fixture/signature correction and measurement work at `f42d6226`.
-[Run 38771808755](https://github.com/e6qu/fun-with-pipes/actions/runs/38771808755)
-now runs the corrected arithmetic comparison and ownership/performance evidence
-on Linux/macOS ARM64/AMD64. Results are pending. The branch is a draft and has
-not run the full final-commit production gate.
-
-Focused local checks, all through `python3 scripts/local-guard.py`:
-
-- `python3 /private/tmp/fwp-infix-local.py`: standalone lexer/parser/formatter
-  harness passed two precedence/layout/round-trip tests and six lexer tests
-  (1.83 s), including macros, type sizes, long expressions and comments.
-- `cargo fmt --all -- --check`: passed (1.08 s).
-- Existing interpreter float-display probe: passed (0.63 s); this establishes
-  fixture output spelling only, not the changed compiler's correctness.
-- `python3 scripts/check-roadmap.py`: passed after the documentation updates
-  (2.82 s); `git diff --check` also passed.
-- `python3 /private/tmp/fwp-measurement-checks.py`: benchmark harness, Rust map,
-  numerical C/Rust fixtures (timing and profiling) compile; measurement script
-  parses. This is a compile check only; output equivalence and timing run on CI.
-- Existing interpreter check of the tutorial's explicit curry/uncurry signatures
-  and corrected effectful fixture helpers: passed (0.65 s), printing `5`, `5`,
-  `left`, `right`, `7`. This does not replace changed-compiler infix validation.
-
-An attempted display probe using `fwp eval` failed because that CLI command does
-not exist; the corrected probe used `fwp run --interp` with a temporary file.
+The guarded `python3 /private/tmp/fwp-tutorial-fix-check.py` passed the exact
+README consistency test; interpreter/native tutorial checks and formatting also
+passed using the existing compiler (2.63 s). This repairs the failed check without
+rebuilding the compiler locally.
 
 ## Next action
 
-Next: inspect four-host run `38771808755`, fix any failures, and retain its
-reports with source provenance. It includes the corrected arithmetic comparison
-alongside ownership and performance controls. Review operation counts and generated instructions;
-do not compare old and new timing methods as an isolated optimization speedup.
-The current baseline confirms the old cleanup cost, but a controlled same-method
-before/after timing comparison and ARC-specific timings are still needed.
-Keep all changes in this combined PR;
-mark it ready only when its final content and evidence are reviewable.
-
-Use `python3 scripts/local-guard.py COMMAND...` for focused serial local checks.
-Full builds, suites, benchmarks and large regeneration stay on GitHub runners.
-Preserve fixed resource limits and the one-line, <=80-character commit format
-without body, trailers or attribution. Update this handoff after meaningful
-progress; the project remains active until PLAN.md's criteria are met.
+Next: publish PR #145's tutorial fix, inspect its new final production checks and squash merge once
+all pass. Meanwhile finish the separate library batch, publish runner checks and
+record actual results here. Keep one active delivery PR. Full builds, suites and
+benchmarks stay on runners; focused local checks use
+`python3 scripts/local-guard.py COMMAND...` with its fixed resource limits.

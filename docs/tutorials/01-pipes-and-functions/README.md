@@ -133,12 +133,20 @@ decrement = sub 1
 
 average = fork div length sum
 
+sum-pair : (I64, I64) -> I64
+sum-pair = uncurry add
+
+sum-curried : I64 -> I64 -> I64
+sum-curried = curry sum-pair
+
 main = [
     ten | echo,
     3 | quadruple | echo,
     10 | decrement | echo,
     [3, 5, 10] | average | echo,
     [3, 5, 10] | both length sum | echo,
+    (2, 3) | sum-pair | echo,
+    3 | sum-curried 2 | echo,
     "pipes" | upper | concat "!" | print,
 ] | ignore
 ```
@@ -153,6 +161,8 @@ build an executable with `fwp build docs/tutorials/01-pipes-and-functions/main.f
 9
 6
 (3, 18)
+5
+5
 PIPES!
 ```
 
