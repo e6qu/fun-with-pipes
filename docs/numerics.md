@@ -220,9 +220,17 @@ on real double-precision GPU hardware.
 
 ## Not implemented
 
-There is no just-in-time compiler, distributed tensor execution, or device kernel
-support for general matrix products and arbitrary-axis reductions. Native matrix
-multiplication has a separate optimized CPU path; it is not an OpenCL kernel.
+Just-in-time compilation (JIT) is explicitly excluded from fwp; it is not a
+planned way to optimize numerical programs. Distributed tensor execution and
+device kernels for general matrix products and arbitrary-axis reductions are
+not implemented. Native matrix multiplication has a separate optimized CPU path;
+it is not an OpenCL kernel.
+
+The existing GPU implementation calls `clCreateProgramWithSource` and
+`clBuildProgram` while running a program, in both the interpreter and native
+runtime. This runtime device compilation must be resolved under the
+[no-JIT direction](../PLAN.md#excluded-direction); GPU execution does not yet
+meet an ahead-of-time-only compilation policy.
 
 ## Scoped-gradient allocation validation
 

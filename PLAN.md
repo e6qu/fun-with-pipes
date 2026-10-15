@@ -117,9 +117,22 @@ Avoid needless wrappers, implicit conversions and hidden fallback behavior.
 Register spills and alternatives defined by a protocol are ordinary implementation
 choices, not fallbacks.
 
+## Excluded direction
+
+A just-in-time compiler (JIT), which compiles running program code during
+execution, is explicitly excluded. It is not deferred or a future optimization
+option. Keep native compilation ahead of execution and the interpreter; do not
+add a JIT to either the compiler or the generated runtime.
+
+The existing OpenCL path builds device source at runtime through `clBuildProgram`.
+That is an existing implementation gap against this direction, not an exception
+or proof of ahead-of-time device compilation. Step 5 must resolve device build
+and loading requirements before claiming the policy holds for GPU execution;
+do not expand runtime kernel compilation.
+
 ## Deferred expansions
 
-A replacement backend, JIT, distributed execution and new networking protocols
+A replacement backend, distributed execution and new networking protocols
 remain outside this roadmap. General GPU matrix kernels and additional deployment
 interfaces follow the core memory and CPU work; do not let them displace it.
 

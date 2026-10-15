@@ -226,10 +226,13 @@ startup; it is not a macOS universal-binary requirement.
 
 Removing tracing GC and reducing ARC overhead are active goals in the
 [project plan](../PLAN.md). General collector-free execution is not implemented.
-A just-in-time compiler (JIT), a replacement backend and distributed tensor
-execution remain deferred. Existing device kernels handle elementwise expressions
-and sums, not arbitrary matrix operations. OpenCL discovery/source tests do not establish
-successful execution on real GPU hardware.
+A just-in-time compiler (JIT) is explicitly excluded from the project direction;
+native fwp functions compile ahead of execution. The existing OpenCL device
+path builds kernels at runtime; resolving that conflict is part of the numerical
+work in the plan, not authorization to add a language JIT. A replacement backend
+and distributed tensor execution remain deferred. Existing device kernels handle
+elementwise expressions and sums, not arbitrary matrix operations. OpenCL
+discovery/source tests do not establish execution on real GPU hardware.
 
 Darwin cross-compilation and Clang profile-guided optimization are not supported.
 WebAssembly target effects and host capabilities are limited as described in the
