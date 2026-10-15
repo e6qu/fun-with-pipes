@@ -1,31 +1,17 @@
 # Plan
 
-The six-step platform/ownership roadmap was accepted in
-[PR #136](https://github.com/e6qu/fun-with-pipes/pull/136), merged as `2684241d`.
+The platform/ownership roadmap and three autodiff follow-ups are accepted through
+[PR #139](https://github.com/e6qu/fun-with-pipes/pull/139), merged as `5d05cdd6`.
 All nine production jobs and documentation passed at its tree-identical head
-`26f2c68a`. The user subsequently requested continued development.
+`917d28a3`; four-host focused AD and both WASM checks also passed.
+[History](docs/roadmap-history.md) retains prior deliveries and evidence.
 
-[PR #137](https://github.com/e6qu/fun-with-pipes/pull/137) completed seeded-prefix
-numeric backward bounds as `38da1401`, with all nine production jobs and docs
-passing on its tree-identical head `37104959`. Its measured unused-suffix
-workload reduces peak tape storage by 98,304 bytes, without a consistent speedup.
-
-[PR #138](https://github.com/e6qu/fun-with-pipes/pull/138) completed operation-only
-AD metadata as `d77b3fea`, with all nine production jobs and docs passing at its
-tree-identical head `f251fbd1`. [Four-host measurements](docs/measurements/ad-operations-2026-10-15.json)
-show lower tape storage, more cold growth requests for mapped/nested workloads
-and no consistent speedup.
-
-The user requested continued development. The next follow-up bounds native AD
-registry growth and preserves numeric workspace ownership across managed and
-empty tapes in both runtimes. Keep implementation, allocator/token/scope regressions,
-four-host evidence and streamlined docs in [PR #139](https://github.com/e6qu/fun-with-pipes/pull/139), branch
-`autodiff-registry-growth`. [Four-host measurements](docs/measurements/ad-registry-2026-10-15.json)
-verify fewer registry requests, including the spare-capacity tradeoff.
-Delivery requires all nine production jobs and documentation on the final head.
-Once PR #139 merges with those gates, step 9 is complete. Historical anchors
-are not further work. [The handoff](docs/development-state.md) records actual
-checks and next actions.
+The user requested continued development. The current follow-up removes repeated
+scans of known unavailable AD tape slots in both runtimes. Keep implementation,
+regression controls, four-host measurements and streamlined docs together on
+`autodiff-registry-search`. [The handoff](docs/development-state.md) records actual
+checks and next actions. Delivery requires all nine production jobs and
+documentation on the final head; historical anchors are not further work.
 
 ## Direction
 
@@ -74,6 +60,7 @@ Cross-compilation between every host/target pair is not implied.
 | 6 | Native Windows ARM64/AMD64 | Both native jobs pass runtime/resources, TLS, interpreter/native goldens, static storage, ownership stress and standalone PE packages |
 | 7 | Seeded-prefix numeric backward bounds | Input/seed order, validation, workspace growth and unwind controls; four-host storage/binary evidence and all nine production jobs |
 | 8 | Operation-only AD metadata | Stable input tokens, atomic weight retains, four-host allocation/binary evidence and all nine production jobs |
+| 9 | Geometric AD registry growth and numeric workspace preservation | Stable slot/generation selection, forced relocation and allocation-failure controls; four-host allocation/binary evidence and all nine production jobs |
 
 [Ownership](docs/ownership.md) and [float formats](docs/float-formats.md) specify
 the contracts. Generic wide boundaries can still box; arbitrary lazy producers
@@ -91,13 +78,13 @@ to replay.
 
 | Step | Work | Acceptance |
 |---|---|---|
-| 9 | Bound AD registry growth and preserve numeric workspaces | Geometric registry allocation without changing slot/generation selection; preserve numeric caches during managed/empty tape lifetimes; verify relocation, limits, allocation failures and release; record actual allocation and binary evidence |
+| 10 | Skip known unavailable AD registry slots | Preserve lowest-slot selection, generation exhaustion, validation and release order in both runtimes; cover scope exit, failed and nested backward; measure search work, allocations and actual native instructions |
 
-Registry capacity remains bounded by the 65,535 token slots. Spare slots stay
-unpublished until initialized; allocation failure retains the prior registry.
-Record the extra capacity at non-power-of-two live counts alongside fewer
-allocation requests. Do not claim lower search complexity: slot selection still
-scans for the first reusable entry. Numeric caches retain their 512 KiB budget.
+A cursor skips a prefix whose slots are live or generation-exhausted. Releasing
+a reusable earlier slot lowers it before reentrant callbacks. Sequential creation
+should no longer rescan the occupied prefix. Arbitrary holes can still require a
+linear scan; do not claim constant-time allocation in every workload. The cursor
+adds no heap allocation and leaves registry growth and the workspace budget intact.
 
 ## Agreed syntax
 

@@ -403,8 +403,14 @@ keeps its original length and releases partial ownership.
 The native AD registry doubles from one slot up to the 65,535-slot token bound.
 Only initialized slots are published; growth commits its pointer and capacity
 once allocation succeeds. Scope links use slot indices and survive relocation.
-First-reusable-slot search and generation exhaustion are unchanged. Spare
-capacity trades some live storage for fewer registry allocation requests.
+Both runtimes keep a search cursor: every earlier slot is live or permanently
+generation-exhausted. Creation starts at the cursor and still selects the lowest
+reusable slot. Detaching an earlier reusable tape lowers the cursor before
+backward callbacks or scope cleanup can reenter AD. Native shutdown resets it;
+the interpreter protects it with the slot registry's existing mutex. Sequential
+creation skips repeated occupied-prefix scans without allocating an index.
+Arbitrary holes can still require linear scanning. Generation exhaustion is
+unchanged. Spare capacity trades some live storage for fewer registry requests.
 The registry remains until shutdown/unload so retired generations cannot be
 reused accidentally; its capacity is separate from the numeric workspace budget.
 Managed interpreter tapes leave the numeric cache untouched, and releasing an

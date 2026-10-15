@@ -117,8 +117,9 @@ managed storage remains 294,920 bytes, with 36,867 managed requests and no retai
 Managed counters agree across both variants at every size. All final tape/managed
 storage is reclaimed with zero collections.
 
-Spare capacity adds 26,520 live bytes in the 257-tape case. First-free-slot search
-remains linear; this change reduces allocation requests, not search complexity.
+Spare capacity adds 26,520 live bytes in the 257-tape case. This accepted report
+predates the search-cursor follow-up and measures allocation requests, not a
+reduction in slot-search work.
 Seven process samples per case include startup and output and vary across sizes
 and hosts, so no general speedup is claimed. The control isolates registry growth
 policy and does not reproduce every cost of the previous compiler revision.
@@ -132,6 +133,19 @@ tapes preserve numeric workspace ownership. Those cache fixes have regression
 evidence rather than a timing claim. The report records hardware/compiler/flags,
 raw samples, verified archive/source/binary/disassembly hashes and inspection
 addresses. [The handoff](development-state.md) records final production acceptance.
+
+## Autodiff registry search
+
+The current follow-up adds a search cursor in both runtimes. The runner-only
+`scripts/measure-ad-registry.py --comparison search --output OUTPUT` compares
+equivalent ARC batches against a control that starts each search at zero.
+It records unavailable slots visited, seven process timings, allocation requests,
+live storage and actual native binaries. Both variants must have identical
+allocation/live-memory counters and reclaim all measured storage without GC.
+The native cursor adds eight static bytes and no heap allocation. Arbitrary
+holes can still require linear search. Results and binary inspection are pending;
+no timing improvement is established yet. `--comparison growth` retains the
+separate geometric-versus-incremental allocation comparison.
 
 ## Running comparisons
 

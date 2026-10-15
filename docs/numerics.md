@@ -178,6 +178,10 @@ storage intact. A native backward pass with no active nodes allocates no private
 adjoint buffer. The native slot registry grows geometrically from one slot,
 clamped to the 65,535-slot token limit. Slot/generation selection is unchanged;
 spare capacity is not exposed as initialized tapes.
+Both runtimes retain a cursor past slots known to be unavailable. Releasing an
+earlier reusable slot lowers it before reentrant scalar callbacks. This avoids
+rescanning occupied prefixes during sequential creation while preserving the
+lowest-slot rule; arbitrary holes can still require linear search.
 [Four-host registry measurements](measurements/ad-registry-2026-10-15.json) record
 fewer allocation requests and the extra live capacity between growth boundaries.
 They do not establish lower slot-search complexity or a general speedup.

@@ -1,9 +1,7 @@
 # Session handoff
 
-Updated 2026-10-15. The user requested continued development after PR #138.
-[PR #139](https://github.com/e6qu/fun-with-pipes/pull/139), branch
-`autodiff-registry-growth`, has completed native focused validation and measurements at `957ba0cd`.
-Publication, fixes and squash merge
+Updated 2026-10-15. The user requested continued development after PR #139.
+Current branch: `autodiff-registry-search`. Publication, fixes and squash merge
 after all nine exact-head production jobs plus documentation remain authorized.
 
 ## Roadmap status
@@ -18,77 +16,74 @@ after all nine exact-head production jobs plus documentation remain authorized.
 | 6 | Verified | Native Windows ARM64/AMD64 and standalone packages |
 | 7 | Verified | Seeded-prefix adjoint bounds and four-host memory/binary evidence; PR #137 merged with all gates |
 | 8 | Verified | Operation-only AD metadata, partial weight-retain cleanup, regression controls and measured evidence |
-| 9 | Implemented | Geometric native AD registry growth and numeric workspace ownership |
+| 9 | Verified | Geometric native AD registry growth and numeric workspace ownership |
+| 10 | Implemented | Skip known unavailable AD registry slots in native and interpreter runtimes; focused local checks pass, runner evidence pending |
 
 ## Accepted baseline
 
-[PR #138](https://github.com/e6qu/fun-with-pipes/pull/138) merged as `d77b3fea`,
-tree-identical to `f251fbd1`. All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38666526202)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38666481103)
-passed. [The operation-storage report](measurements/ad-operations-2026-10-15.json)
-records the measured storage reductions and tradeoffs. Historical preparation
-anchors are not work to replay.
+[PR #139](https://github.com/e6qu/fun-with-pipes/pull/139) merged as `5d05cdd6`,
+tree-identical to `917d28a3`. All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38690176314)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38690140952)
+passed. [Focused AD/evidence](https://github.com/e6qu/fun-with-pipes/actions/runs/38686797678)
+passed on all four Linux/macOS hosts; both [focused WASM jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38686804116)
+passed at the same compiler/runtime source. The squash message is exactly one
+line with no body or trailers. Local main was verified clean against the tested tree.
+[Permanent measurements](measurements/ad-registry-2026-10-15.json) retain the
+registry-growth allocation and binary evidence. Prior acceptance is in
+[history](roadmap-history.md); historical anchors are not work to replay.
 
 ## Current implementation and evidence
 
-Native registry capacity doubles from one slot and is clamped at 65,535. Slot
-selection, generation limits and scope links are unchanged; failed growth keeps
-the prior registry. Managed interpreter tapes no longer take numeric workspaces,
-and empty tapes leave existing caches intact. Native zero-input backward passes
-allocate no dummy adjoint and skip zero-length clearing without passing null to
-memset. O1/O2 ARC/tracing controls cover forced relocation, initialization,
-capacity/token limits, allocation failures, scope release and cache on/off. Their
-negative variants restore incremental growth, stale shutdown capacity or the
-unnecessary empty adjoint allocation and must fail.
+Both runtimes now track a cursor below which tape slots are live or permanently
+generation-exhausted. Creation starts there; normal, failed and managed backward
+and scope retirement lower the cursor when an earlier reusable slot is detached.
+Native shutdown resets it. The interpreter stores the cursor with its slots under
+the existing mutex. No surface semantics or token format changes are intended.
 
-[Focused AD/evidence](https://github.com/e6qu/fun-with-pipes/actions/runs/38686797678)
-passes on all four native Linux/macOS hosts at `957ba0cd`, including every test
-and measurement step. [Focused WASM](https://github.com/e6qu/fun-with-pipes/actions/runs/38686804116)
-is an additional acceptance check; require both Linux hosts to pass before merge.
-At evidence publication ARM64 has passed and AMD64 is running. Earlier runs at
-`53dfdbcf` were cancelled as superseded and supply no acceptance gate.
+Regression work covers out-of-order holes, stale tokens, failed backward,
+generation exhaustion, native relocation and shutdown, and an instrumented search
+counter. Negative native controls restore restart-at-zero search, omit release
+updates or omit cursor reset. A separate managed-release omission must fail too.
+Existing allocator-failure, nested AD and ownership controls are retained.
 
-[Permanent measurements](measurements/ad-registry-2026-10-15.json) retain all four
-reports, hardware/compiler/flags, raw timings and verified archive and per-file
-hashes. At 4,096 simultaneous tapes, registry requests fall 4,096 → 13 with the
-same 425,984-byte registry peak. At 257 tapes, spare capacity adds 26,520 bytes.
-Managed counters are unchanged and every measured owner is reclaimed without GC.
-No general speedup is claimed. Inspected instructions on all four hosts show a
-capacity branch around realloc, register doubling/clamping, one-slot initialization
-and zero-active-node branches around adjoint allocation and clearing.
+All local commands used `python3 scripts/local-guard.py` without raised limits:
 
-Focused local commands used `python3 scripts/local-guard.py` with unchanged
-limits. `cargo test --lib tape_validation_tests -- --test-threads=1` passed six
-tests (12.96s). The final combined `cargo test --test autodiff_capacity_bounds
---test autodiff_workspace -- --test-threads=1` passed both capacity controls and
-three workspace tests; an old prefix marker failed and was corrected. The exact
-`cargo test --test autodiff_workspace backward_prefix_bounds_actual_native_storage_and_scans -- --exact --test-threads=1`
-then passed (4.32s), retaining its negative controls. The four-host run now verifies
-all of these tests together. Raw/native language comparisons cover ARC/tracing,
-O1/O2 and cache on/off. Formatting, all-target clippy (17.36s final code check),
-workflow lint, generated-C instrumentation/syntax and roadmap/link audits pass.
-Four-host report/hash aggregation passes in 0.17s and archive verification in
-0.15s. No local limit was raised; full builds and measurements ran on GitHub.
+- `cargo test --lib tape_validation_tests -- --test-threads=1`: seven tests pass.
+  The final managed-release addition also passed in a 28.25s filtered run; that
+  command selected zero integration tests, so native validation ran separately.
+- `cargo test --test autodiff_capacity_bounds -- --test-threads=1`: both native
+  controls pass with the final managed-release negative variant (17.18s).
+- `cargo test --test autodiff_workspace --test autodiff_nested --test ad_tape_scopes -- --test-threads=1`:
+  all 14 tests pass (150.79s), including raw/native comparisons and failure paths.
+- `cargo clippy --all-targets -- -D warnings` passes (17.70s); formatting passes.
+- Actual generated-C measurement profiles pass C syntax checks (0.95s), without
+  running a benchmark locally; workflow lint passes (0.26s).
 
-The contribution guide now lists all nine production jobs. The final publication
-adds evidence/docs only; runtime/compiler code remains the measured `957ba0cd`.
+The existing measurement script now requires explicit `--comparison growth` or
+`--comparison search`. The latter records unavailable-slot scans, paired timings,
+allocation/live-memory equality and native binaries at 1, 257, 4,096 and 16,384
+simultaneous tapes. Four-host results and instruction inspection are pending.
+No full build, test gate or benchmark has run locally.
+
+Duplicate post-merge main CI `38701521745` was cancelled after verifying its tree
+matches PR #139's fully passing head; it supplies no acceptance gate. Main docs
+`38701521545` passed. The new PR requires its own final-head production run.
 
 ## Boundaries
 
-Registry allocation growth becomes geometric; first-reusable-slot search remains
-linear. Spare registry capacity can increase live bytes between growth boundaries.
-Numeric caches retain their 512 KiB bound. Native ARC still rejects unproved
-cycles, mutable/retained graphs and State/AD lifetimes. Generic wide values and
-some lazy producers can allocate. Service/remote/library/WASM executable ARC
-admission remains outside this follow-up. No general collector-free or speedup claim.
+The cursor eliminates repeated occupied-prefix scans during sequential creation.
+Arbitrary holes can still require linear scanning. Registry capacity, the 65,535
+slot bound and the 512 KiB numeric workspace budget are unchanged. No general
+speedup or constant-time allocation claim is established. Existing ARC admission
+and ownership boundaries remain as documented in [ownership](ownership.md).
 
 ## Next action
 
-Next: inspect PR #139's current head, checks and merge state. If open, require
-all nine exact-head production jobs, documentation and both focused WASM jobs
-linked above. Fix failures and squash merge with one line of at most 80
-characters and an empty body. If PR #139 has merged with those gates, step 9 is complete;
-no implementation task remains from this follow-up. Do not replay old anchors.
+Next: publish the draft PR, run focused four-host AD and WASM validation, collect
+and inspect paired search measurements and actual native instructions. Fix any
+failures, record permanent evidence and update these docs. Mark the PR ready,
+and require all nine production jobs plus documentation at the final head before
+squash merge. Keep this handoff current with actual outcomes.
 
 Full builds, suites and benchmarks run on GitHub. Local checks stay serial and
 guarded: preserve 64 GiB free disk, target below 2 GiB, sampled workload RSS below

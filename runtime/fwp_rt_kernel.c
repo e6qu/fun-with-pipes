@@ -83,6 +83,8 @@ typedef struct {
 static fwp_tape *fwp_tapes = 0;
 static int64_t fwp_ntapes = 0;
 static int64_t fwp_tapes_cap = 0;
+/* Every slot below this cursor is live or permanently generation-exhausted. */
+static int64_t fwp_tape_next_slot = 0;
 static void fwp_tape_retire(fwp_tape *t);
 static void fwp_tape_finish(void);
 
@@ -197,6 +199,8 @@ static void fwp_tape_retire(fwp_tape *t) {
     fwp_owned_tape *owned = t->owned; t->owned = NULL;
     t->pa = t->pb = 0;t->da = t->db = t->adj = 0;
     t->live = 0;t->len = t->cap = t->leaves = t->adjcap = 0;
+    if (t->gen < 32767 && t - fwp_tapes < fwp_tape_next_slot)
+        fwp_tape_next_slot = t - fwp_tapes;
     if (owned) {
         fwp_tape_buffers_dispose(&buffers);
         fwp_owned_tape_release(owned);
@@ -212,6 +216,7 @@ static void fwp_tape_finish(void) {
         fwp_owned_tape_release(t->owned); t->owned = NULL;
     }
     free(fwp_tapes);fwp_tapes = 0;fwp_ntapes = fwp_tapes_cap = 0;
+    fwp_tape_next_slot = 0;
 }
 
 /* Library teardown calls this before freeing the managed heap. */
@@ -284,7 +289,7 @@ static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
         registered_finish = 1;
     }
 #endif
-    int64_t slot = 0;
+    int64_t slot = fwp_tape_next_slot;
     while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;
     if (slot == fwp_ntapes) {
         if (fwp_ntapes >= 0xffff) fwp_trap("autodiff: too many grad computations at once");
@@ -312,6 +317,7 @@ static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
     }
     t->gen++;
     t->live = 1;
+    fwp_tape_next_slot = slot + 1;
     t->leaves = n;
     t->len = n;
     fwp_tape_link_scope(t, (int32_t)slot);
@@ -386,6 +392,8 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     fwp_tape_unlink_scope(t);
     fwp_tape tp = *t;
     t->live = 0;
+    if (t->gen < 32767 && t - fwp_tapes < fwp_tape_next_slot)
+        fwp_tape_next_slot = t - fwp_tapes;
     t->pa = t->pb = 0;
     t->da = t->db = t->adj = 0;
     t->len = t->cap = t->leaves = t->adjcap = 0;
@@ -491,6 +499,8 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
     fwp_tape_unlink_scope(t);
     fwp_tape tp = *t;
     t->owned = NULL; t->live = 0;
+    if (t->gen < 32767 && t - fwp_tapes < fwp_tape_next_slot)
+        fwp_tape_next_slot = t - fwp_tapes;
     t->pa = t->pb = NULL; t->da = t->db = t->adj = NULL;
     t->len = t->cap = t->leaves = t->adjcap = 0;
     fwp_tape_buffers buffers = {tp.pa, tp.pb, tp.da, tp.db, tp.adj, tp.cap, tp.adjcap};

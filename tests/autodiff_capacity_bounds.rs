@@ -124,6 +124,10 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
         );
     let code = code.replace("static int64_t fwp_ntapes = 0;",
         "static void *registry_realloc(void *, size_t);\nstatic void *registry_calloc(size_t, size_t);\nstatic void registry_free(void *);\nstatic int64_t fwp_ntapes = 0;");
+    let search = "while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;";
+    assert_eq!(code.matches(search).count(), 1);
+    let code = code.replace("static int64_t fwp_ntapes = 0;", "static size_t registry_scans;\nstatic int64_t fwp_ntapes = 0;")
+        .replace(search, "while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) { registry_scans++; slot++; }");
     let incremental = code
         .replace("if (fwp_ntapes == fwp_tapes_cap)", "if (1)")
         .replace(
@@ -138,6 +142,18 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
     assert_ne!(dummy_adjoint, code);
     assert_ne!(incremental, code);
     assert_ne!(stale_capacity, code);
+    let restart_search = code.replace("int64_t slot = fwp_tape_next_slot;", "int64_t slot = 0;");
+    let missed_release = code.replace("fwp_tape_next_slot = t - fwp_tapes;", "(void)0;");
+    let stale_cursor = code.replace(
+        "    fwp_tape_next_slot = 0;",
+        "    /* omitted cursor reset */",
+    );
+    let owned_release = "t->owned = NULL; t->live = 0;\n    if (t->gen < 32767 && t - fwp_tapes < fwp_tape_next_slot)\n        fwp_tape_next_slot = t - fwp_tapes;";
+    assert_eq!(code.matches(owned_release).count(), 1);
+    let missed_owned_release = code.replace(owned_release, "t->owned = NULL; t->live = 0;");
+    assert_ne!(restart_search, code);
+    assert_ne!(missed_release, code);
+    assert_ne!(stale_cursor, code);
     for arc in ["0", "1"] {
         for opt in ["-O1", "-O2"] {
             for (label, runtime, expected) in [
@@ -145,6 +161,10 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
                 ("incremental", &incremental, 193),
                 ("stale-capacity", &stale_capacity, 196),
                 ("dummy-adjoint", &dummy_adjoint, 202),
+                ("restart-search", &restart_search, 205),
+                ("missed-release", &missed_release, 206),
+                ("stale-cursor", &stale_cursor, 196),
+                ("missed-owned-release", &missed_owned_release, 207),
             ] {
                 let mode = if arc == "1" {
                     "#define FWP_ARC_ONLY 1\n"

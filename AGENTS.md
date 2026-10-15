@@ -11,14 +11,13 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-PR #138 completed operation-only AD metadata as `d77b3fea`, with all nine
-production jobs and documentation green. The user requested continued work.
-The current follow-up bounds native AD registry growth and preserves numeric
-workspace ownership across managed and empty tapes in both runtimes. Keep the
-implementation, regression controls, measurements and docs together on
-`autodiff-registry-growth` in PR #139. Once it merges with all final-head gates,
-step 9 is complete; check its actual state before resuming. Follow the live plan
-and handoff; historical preparation entries are not work to replay.
+PR #139 completed bounded native AD registry growth and workspace preservation
+as `5d05cdd6`, with all nine production jobs and documentation green. The user
+requested continued work. The current follow-up removes repeated scans of known
+unavailable tape slots in both runtimes, preserving lowest-slot token selection.
+Keep implementation, regression controls, four-host measurements and docs on
+`autodiff-registry-search`. Follow the live plan and handoff; historical
+preparation entries are not work to replay.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,
