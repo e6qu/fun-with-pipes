@@ -19,9 +19,13 @@ and no consistent speedup.
 The user requested continued development. The next follow-up bounds native AD
 registry growth and preserves numeric workspace ownership across managed and
 empty tapes in both runtimes. Keep implementation, allocator/token/scope regressions,
-four-host evidence and streamlined docs together on `autodiff-registry-growth`.
+four-host evidence and streamlined docs in [PR #139](https://github.com/e6qu/fun-with-pipes/pull/139), branch
+`autodiff-registry-growth`. [Four-host measurements](docs/measurements/ad-registry-2026-10-15.json)
+verify fewer registry requests, including the spare-capacity tradeoff.
 Delivery requires all nine production jobs and documentation on the final head.
-[The handoff](docs/development-state.md) records actual checks and next actions.
+Once PR #139 merges with those gates, step 9 is complete. Historical anchors
+are not further work. [The handoff](docs/development-state.md) records actual
+checks and next actions.
 
 ## Direction
 

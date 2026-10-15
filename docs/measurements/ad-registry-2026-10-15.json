@@ -1,0 +1,2399 @@
+{
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38686797678",
+  "scope": "Four native Linux/macOS hosts, equivalent gradient batches and an incremental-growth control. Every source, binary, profile and disassembly hash verified against retained artifacts. Read individual scope statements for counter and timing boundaries.",
+  "reports": [
+    {
+      "head": "957ba0cd9fb33b523b550a9c8f322698610273cf",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmmprz5",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.84\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_AD_WORKSPACE": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "results": {
+        "1": {
+          "geometric": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1609839,
+              1449793,
+              1589729,
+              1327608,
+              1655633,
+              1483377,
+              1421929
+            ],
+            "medianProcessWallNs": 1483377,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-geometric.c": "34ff483c5c72609e615dc128c4950059a3070f803cd65db64d6d35a062d19f1f",
+              "slots-1-geometric-profile.c": "0e1569470b0d87b416fdd1f754d0ce9c120f4744275ca568e6af1fca4e9d82c4",
+              "slots-1-geometric": "5a6b8ad1878f2b8279308cbdce3df0cb73eee556a3d836968bb641aecbf09bdd",
+              "slots-1-geometric-profile": "acaf9c2da87acaaf1865e324a7acbb771dc1ceba84ad35abc5a428793de3d0cb",
+              "slots-1-geometric.asm": "b041459fda66ea8a0898e5a445d47e6c08d61857ee7e08dc8c0525fe70cf2a89"
+            }
+          },
+          "incremental-control": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1479546,
+              1674594,
+              1276869,
+              1409125,
+              1669173,
+              1340590,
+              1561160
+            ],
+            "medianProcessWallNs": 1479546,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-incremental-control.c": "dd3c2868327b391ef195392b3d45a03f0f94d196fdb5a89941960e0e4199f3d5",
+              "slots-1-incremental-control-profile.c": "287a7cc56084461170fe2b5db214588f796257663eaf719fd7acb6e31e688430",
+              "slots-1-incremental-control": "a1fd73aafd784599625b5c1fb692c2f994ee9a7b1065bfc98915c759292c5b4d",
+              "slots-1-incremental-control-profile": "e16773e218a8a388ae6ce8dc4f595beaa6e13a7e4074d54a2a86d5f551b64b77",
+              "slots-1-incremental-control.asm": "593c1a97df511a1b5f900e0620630cb20463ce436fba8d65ccbf6ed7e8185e57"
+            }
+          }
+        },
+        "256": {
+          "geometric": {
+            "output": "256.0\n",
+            "registry": {
+              "registryRequests": 9,
+              "registryRequestedBytes": 53144,
+              "peakRegistryBytes": 26624,
+              "slotBytes": 104,
+              "initializedSlots": 256,
+              "capacitySlots": 256
+            },
+            "tape": {
+              "tapeRequests": 265,
+              "tapeRequestedBytes": 55192,
+              "peakTapeBytes": 26632,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2307,
+              "requestedBytes": 53278,
+              "retains": 0,
+              "peakChargedBytes": 18944,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1492754,
+              1748689,
+              2394344,
+              1946698,
+              1539361,
+              1544923,
+              1925914
+            ],
+            "medianProcessWallNs": 1748689,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-256.fwp": "be4f3324b7696b7cc1132f8ee62c4f1b6ff88b4dddffb0ab2c14593225ec243a",
+              "slots-256-geometric.c": "3a5c194fb73c831d8d09611d11b9cb89c76867cb55314078162078d146db01bf",
+              "slots-256-geometric-profile.c": "c42e4ea0678ab4cdf2f1257a9359b4e622e67828e5f0b5b59fb79176102859ce",
+              "slots-256-geometric": "9a9f2107538517b83384a07384c19445fdb5258f3e588e8daecc8718e7f281e4",
+              "slots-256-geometric-profile": "815bc9627734fe30c7b4592126b0023f753f865aeaabb2cb55b3b6cca4a1ee27",
+              "slots-256-geometric.asm": "42c8d9db03531c43af632e0b25d535126a4eae1aec4bea449efae480fe2b8c94"
+            }
+          },
+          "incremental-control": {
+            "output": "256.0\n",
+            "registry": {
+              "registryRequests": 256,
+              "registryRequestedBytes": 3421184,
+              "peakRegistryBytes": 26624,
+              "slotBytes": 104,
+              "initializedSlots": 256,
+              "capacitySlots": 256
+            },
+            "tape": {
+              "tapeRequests": 512,
+              "tapeRequestedBytes": 3423232,
+              "peakTapeBytes": 26632,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2307,
+              "requestedBytes": 53278,
+              "retains": 0,
+              "peakChargedBytes": 18944,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1601303,
+              2173480,
+              1572733,
+              1807561,
+              1985528,
+              1727793,
+              1809374
+            ],
+            "medianProcessWallNs": 1807561,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-256.fwp": "be4f3324b7696b7cc1132f8ee62c4f1b6ff88b4dddffb0ab2c14593225ec243a",
+              "slots-256-incremental-control.c": "328c223e55f0c0bc78bbf20d66826ecd32a7940ec0a40c2c1fb1141fbea410d9",
+              "slots-256-incremental-control-profile.c": "b7659f38a1c48d6ddc286de21ff8a5794f3fcc3ddcdeea2321830db6695f12e8",
+              "slots-256-incremental-control": "ed774d9eb4cfe953e7761ce86a871079ba342b7c49ac51d9fe0dfc3152ee1d3e",
+              "slots-256-incremental-control-profile": "db0b79a85eac2f878a2d87de4b9554c8ef1c110bd7f6e2837a3bea4240f3ffbc",
+              "slots-256-incremental-control.asm": "90f95e950ce39adb114a0c50e0491ef84e4649a587345237ac707653b0397a45"
+            }
+          }
+        },
+        "257": {
+          "geometric": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1715157,
+              1765584,
+              1957384,
+              1559087,
+              1871921,
+              1596217,
+              1911730
+            ],
+            "medianProcessWallNs": 1765584,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-geometric.c": "5ed46bd62929536ed183f21332d2cd4c3c0646bd1bbd6ee1c75498343095c599",
+              "slots-257-geometric-profile.c": "a01355b4f8b18b7e4aa7f157fd1827a7b2e91ce6d282e49d69fe630521d644a8",
+              "slots-257-geometric": "3a898fe0f7a186b946142edcbc5ef57a30ab9b1ee72346e036e814d0f93bc6fc",
+              "slots-257-geometric-profile": "8e26e8081d0c6dd1838315b86e67704389b05637e6dd330a6755ee700ac50c75",
+              "slots-257-geometric.asm": "fea782957fa973fe84695a325b07c4a2144fbec01d23a8758c0b317b49c85486"
+            }
+          },
+          "incremental-control": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 257,
+              "registryRequestedBytes": 3447912,
+              "peakRegistryBytes": 26728,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 257
+            },
+            "tape": {
+              "tapeRequests": 514,
+              "tapeRequestedBytes": 3449968,
+              "peakTapeBytes": 26736,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1712755,
+              1819315,
+              1548259,
+              1631897,
+              1438990,
+              1745780,
+              1511586
+            ],
+            "medianProcessWallNs": 1631897,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-incremental-control.c": "693a46c3cafbd71384b25d0e7dfddc27b68e6fd59de93c0019df5aabdcb57e8b",
+              "slots-257-incremental-control-profile.c": "701845773784424cb651e45af6130f8c4a08f38c9ac181e965d96fab59a4109f",
+              "slots-257-incremental-control": "b15555d76cd7b08f3dfe824ce67a0e6c4e4190a587e40879eeee68f01bf78391",
+              "slots-257-incremental-control-profile": "ea7257337bf16e492109817b8fa45ad72aa9e2c71b37976964c3fd3186a1a7e8",
+              "slots-257-incremental-control.asm": "1ca4ed45c9128f776b2412fec7c36bc6f1811bee69322037924a30dc530a648a"
+            }
+          }
+        },
+        "4096": {
+          "geometric": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              18793692,
+              11452375,
+              12433515,
+              10481157,
+              11722528,
+              11457265,
+              17154035
+            ],
+            "medianProcessWallNs": 11722528,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-geometric.c": "b1879dcb0359e19d3bddb2f973da9696f46dabf453896ae702a48b91ff4a356a",
+              "slots-4096-geometric-profile.c": "eced29edaf323a703c642235d29d4aed897aa407313e9dfae920c1df051d8f99",
+              "slots-4096-geometric": "cb5dc00191b18cfbf0928b5748a8b3e34e71debd87ccb247bcf91184c32925bc",
+              "slots-4096-geometric-profile": "4432cd94b0d30765f6048c45b877cf88e6f03467e3a87369f86481341b126357",
+              "slots-4096-geometric.asm": "fe630f9938849b9f889389f53b121ef9c05d2e43925d31f0149f0c5f225e64d6"
+            }
+          },
+          "incremental-control": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 4096,
+              "registryRequestedBytes": 872628224,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096
+            },
+            "tape": {
+              "tapeRequests": 8192,
+              "tapeRequestedBytes": 872660992,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              12245489,
+              12189570,
+              14389910,
+              10745265,
+              17715002,
+              10916287,
+              12638071
+            ],
+            "medianProcessWallNs": 12245489,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-incremental-control.c": "3379e74b21f9a5895d25c6cdefeef146626e8a3a984bb4101f939fdb26987027",
+              "slots-4096-incremental-control-profile.c": "b33fc814b0337025e998af7952478d283cd05356eb7d325a43c1a01524608c38",
+              "slots-4096-incremental-control": "4acbbfdd72a45d48c069d03d3b407ff6961c393759389e61d65ce1ad9cbdcc2e",
+              "slots-4096-incremental-control-profile": "2b1c857c24f6538322692dc1c07ea6ab647a965a398e911267647a050ab38c06",
+              "slots-4096-incremental-control.asm": "24cf596021b23ee9480575ccdfdb684bf091fe2721009989395b66cc35d67822"
+            }
+          }
+        }
+      },
+      "scope": "ARC, cold numeric registry, actual equivalent gradients. Control restores one-slot native registry growth only. First-free slot search remains linear. Separate profiles count actual C tape/registry buffers and managed requests/live bytes. Registry peak is included in tape peak, not additional storage. Allocator metadata and transient realloc copies are excluded. Process timings include startup/output; no timing threshold. Interpreter cache fixes have unit/semantic evidence, not a timing claim."
+    },
+    {
+      "head": "957ba0cd9fb33b523b550a9c8f322698610273cf",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmidgih",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_AD_WORKSPACE": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "results": {
+        "1": {
+          "geometric": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1257614,
+              1079345,
+              1026333,
+              1536756,
+              1021510,
+              1003830,
+              978808
+            ],
+            "medianProcessWallNs": 1026333,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-geometric.c": "34ff483c5c72609e615dc128c4950059a3070f803cd65db64d6d35a062d19f1f",
+              "slots-1-geometric-profile.c": "0e1569470b0d87b416fdd1f754d0ce9c120f4744275ca568e6af1fca4e9d82c4",
+              "slots-1-geometric": "b5b7d8873a36f83720fcf7661491568c10a63dd6ae4a397bc45c24148e964cc3",
+              "slots-1-geometric-profile": "0c2ae24609639bf922ee32079e31b30d59c5dd8c9bcbf9a4f33476b9394d4670",
+              "slots-1-geometric.asm": "0754c1f39e559879e972a3d5db2e79f04cd050f01de29161f13ede36c9affd08"
+            }
+          },
+          "incremental-control": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1186986,
+              976360,
+              1034213,
+              1149869,
+              1002863,
+              1045492,
+              1437283
+            ],
+            "medianProcessWallNs": 1045492,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-incremental-control.c": "dd3c2868327b391ef195392b3d45a03f0f94d196fdb5a89941960e0e4199f3d5",
+              "slots-1-incremental-control-profile.c": "287a7cc56084461170fe2b5db214588f796257663eaf719fd7acb6e31e688430",
+              "slots-1-incremental-control": "c9b295acf500414cbd24a8697aa6648fed526c3bcb905c92e16d6f339837ae48",
+              "slots-1-incremental-control-profile": "cbd29f4ea1126a02d5b1cbb164ce59d18d28d1cc5de266c4877bb4f7ef8de807",
+              "slots-1-incremental-control.asm": "b8c8f48c287ee685e5a4459a3414d69550f010b2b67edfd2f53eec163f47bcc6"
+            }
+          }
+        },
+        "256": {
+          "geometric": {
+            "output": "256.0\n",
+            "registry": {
+              "registryRequests": 9,
+              "registryRequestedBytes": 53144,
+              "peakRegistryBytes": 26624,
+              "slotBytes": 104,
+              "initializedSlots": 256,
+              "capacitySlots": 256
+            },
+            "tape": {
+              "tapeRequests": 265,
+              "tapeRequestedBytes": 55192,
+              "peakTapeBytes": 26632,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2307,
+              "requestedBytes": 53278,
+              "retains": 0,
+              "peakChargedBytes": 18944,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1370310,
+              1165548,
+              1155061,
+              1134422,
+              1150029,
+              1106584,
+              1109383
+            ],
+            "medianProcessWallNs": 1150029,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-256.fwp": "be4f3324b7696b7cc1132f8ee62c4f1b6ff88b4dddffb0ab2c14593225ec243a",
+              "slots-256-geometric.c": "3a5c194fb73c831d8d09611d11b9cb89c76867cb55314078162078d146db01bf",
+              "slots-256-geometric-profile.c": "c42e4ea0678ab4cdf2f1257a9359b4e622e67828e5f0b5b59fb79176102859ce",
+              "slots-256-geometric": "5a58670b74c8fb7c78931dfd8f1c7f7bae1a0f658a9b4bba0a3bf01afa520822",
+              "slots-256-geometric-profile": "2dea32f513e85fe08ba98596338f4868e1f99fc0f7fb2889b93672c01261b4e5",
+              "slots-256-geometric.asm": "e042bb605fba542939fe093913e711bcd887606d31573014bafd2826f8103181"
+            }
+          },
+          "incremental-control": {
+            "output": "256.0\n",
+            "registry": {
+              "registryRequests": 256,
+              "registryRequestedBytes": 3421184,
+              "peakRegistryBytes": 26624,
+              "slotBytes": 104,
+              "initializedSlots": 256,
+              "capacitySlots": 256
+            },
+            "tape": {
+              "tapeRequests": 512,
+              "tapeRequestedBytes": 3423232,
+              "peakTapeBytes": 26632,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2307,
+              "requestedBytes": 53278,
+              "retains": 0,
+              "peakChargedBytes": 18944,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1431219,
+              1114911,
+              1095440,
+              1158013,
+              1186139,
+              1127862,
+              1119647
+            ],
+            "medianProcessWallNs": 1127862,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-256.fwp": "be4f3324b7696b7cc1132f8ee62c4f1b6ff88b4dddffb0ab2c14593225ec243a",
+              "slots-256-incremental-control.c": "328c223e55f0c0bc78bbf20d66826ecd32a7940ec0a40c2c1fb1141fbea410d9",
+              "slots-256-incremental-control-profile.c": "b7659f38a1c48d6ddc286de21ff8a5794f3fcc3ddcdeea2321830db6695f12e8",
+              "slots-256-incremental-control": "b87742a91840dced80dd3ca5c8e3844c6923331ed9c1ce98db51811fac5d1596",
+              "slots-256-incremental-control-profile": "6e612a6409987fa28cc791ca118d5764089c17d66e6fb592c740ea5a2a0c1ffa",
+              "slots-256-incremental-control.asm": "1a3f9144770d4c401fb68b059f2d9a93dc759810d4cb2c1604d4c516435d3469"
+            }
+          }
+        },
+        "257": {
+          "geometric": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1345920,
+              1303339,
+              1240503,
+              1348736,
+              1213153,
+              1168020,
+              1160004
+            ],
+            "medianProcessWallNs": 1240503,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-geometric.c": "5ed46bd62929536ed183f21332d2cd4c3c0646bd1bbd6ee1c75498343095c599",
+              "slots-257-geometric-profile.c": "a01355b4f8b18b7e4aa7f157fd1827a7b2e91ce6d282e49d69fe630521d644a8",
+              "slots-257-geometric": "20e8af1d62a8ac9cbc1deb0abccf5c380a86a401035fdcc42da5d87cc6b36470",
+              "slots-257-geometric-profile": "e213d3a0230fc2e8253bb872c754ec4c9d1bd5344a102128274607c19db38e67",
+              "slots-257-geometric.asm": "8cee3619d824191d4da9442083d1ba3233a9e417c1fc3679428e515b44a644e1"
+            }
+          },
+          "incremental-control": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 257,
+              "registryRequestedBytes": 3447912,
+              "peakRegistryBytes": 26728,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 257
+            },
+            "tape": {
+              "tapeRequests": 514,
+              "tapeRequestedBytes": 3449968,
+              "peakTapeBytes": 26736,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              1337288,
+              1312995,
+              1132550,
+              1135470,
+              1116959,
+              1249614,
+              1119663
+            ],
+            "medianProcessWallNs": 1135470,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-incremental-control.c": "693a46c3cafbd71384b25d0e7dfddc27b68e6fd59de93c0019df5aabdcb57e8b",
+              "slots-257-incremental-control-profile.c": "701845773784424cb651e45af6130f8c4a08f38c9ac181e965d96fab59a4109f",
+              "slots-257-incremental-control": "256e7cb81d32cb2c305b13624c4d1b12ea53e729a1b6087bf45f6fc9bb1720f6",
+              "slots-257-incremental-control-profile": "7eb78fe04f5d476f953f752ca3d567a4db6e43d73a6cecacc6a8cd2cca013424",
+              "slots-257-incremental-control.asm": "9f9d38ec710b096b6dacf878609bab36e7a33aac8ac60880afc3e4aeced99bb3"
+            }
+          }
+        },
+        "4096": {
+          "geometric": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              8188746,
+              8658939,
+              8338200,
+              8347479,
+              8350343,
+              8287708,
+              8276412
+            ],
+            "medianProcessWallNs": 8338200,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-geometric.c": "b1879dcb0359e19d3bddb2f973da9696f46dabf453896ae702a48b91ff4a356a",
+              "slots-4096-geometric-profile.c": "eced29edaf323a703c642235d29d4aed897aa407313e9dfae920c1df051d8f99",
+              "slots-4096-geometric": "12d83c4a8a32007f7cfb012bdb7d4b92c4d2279706d5e5fb40b0309dde674b50",
+              "slots-4096-geometric-profile": "88aecd1ddf6a52210371a6a9b7ba484066755c36d2677178a1a5459ccdeba795",
+              "slots-4096-geometric.asm": "67fc96980700ae8e635f9f8e4a0af41cd2b58a4cea9c64bb8829bd5fac5392a7"
+            }
+          },
+          "incremental-control": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 4096,
+              "registryRequestedBytes": 872628224,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096
+            },
+            "tape": {
+              "tapeRequests": 8192,
+              "tapeRequestedBytes": 872660992,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              9341503,
+              8574553,
+              8552443,
+              8710216,
+              8579952,
+              8667107,
+              8561553
+            ],
+            "medianProcessWallNs": 8579952,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-incremental-control.c": "3379e74b21f9a5895d25c6cdefeef146626e8a3a984bb4101f939fdb26987027",
+              "slots-4096-incremental-control-profile.c": "b33fc814b0337025e998af7952478d283cd05356eb7d325a43c1a01524608c38",
+              "slots-4096-incremental-control": "084f95a70a7a26366afaeeb7ea86e0ef14653eb411607754c73f98a40a92b06a",
+              "slots-4096-incremental-control-profile": "36a8939c22f06c2232a015b9214daaec4eb5531faf5daff9453eda5d96d94aa2",
+              "slots-4096-incremental-control.asm": "736429b33ae5078748890d68e5aa6687b41cc4d9310d56160c4ca77ded25403c"
+            }
+          }
+        }
+      },
+      "scope": "ARC, cold numeric registry, actual equivalent gradients. Control restores one-slot native registry growth only. First-free slot search remains linear. Separate profiles count actual C tape/registry buffers and managed requests/live bytes. Registry peak is included in tape peak, not additional storage. Allocator metadata and transient realloc copies are excluded. Process timings include startup/output; no timing threshold. Interpreter cache fixes have unit/semantic evidence, not a timing claim."
+    },
+    {
+      "head": "957ba0cd9fb33b523b550a9c8f322698610273cf",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sat12-dp154-7b9b6367-8e4d-47c7-b0b0-ef158b2a2b43-12B64BBB49C8.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_AD_WORKSPACE": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "results": {
+        "1": {
+          "geometric": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              4615417,
+              5748959,
+              9943958,
+              5225875,
+              7551583,
+              5955584,
+              12432583
+            ],
+            "medianProcessWallNs": 5955584,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-geometric.c": "34ff483c5c72609e615dc128c4950059a3070f803cd65db64d6d35a062d19f1f",
+              "slots-1-geometric-profile.c": "0e1569470b0d87b416fdd1f754d0ce9c120f4744275ca568e6af1fca4e9d82c4",
+              "slots-1-geometric": "f72620c44f2b81c6d392ac4d3a96f69590d3380968d3f34bea25efdfadc17cc0",
+              "slots-1-geometric-profile": "2b05938dfbed3d6279f651a9e678527c39aa899d20fdae8c5779a0ecb0a3665a",
+              "slots-1-geometric.asm": "b2407ee9b8ff77512b61d38d04a8b14ca7242eaa29786a780e2b885ae8975d64"
+            }
+          },
+          "incremental-control": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              8169334,
+              5715625,
+              6553083,
+              4672000,
+              4467084,
+              4789792,
+              4722833
+            ],
+            "medianProcessWallNs": 4789792,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-incremental-control.c": "dd3c2868327b391ef195392b3d45a03f0f94d196fdb5a89941960e0e4199f3d5",
+              "slots-1-incremental-control-profile.c": "287a7cc56084461170fe2b5db214588f796257663eaf719fd7acb6e31e688430",
+              "slots-1-incremental-control": "712bdffa90b67163af3287cd68176578d2b064538adb058f9fd6c1e4fbf8c5ad",
+              "slots-1-incremental-control-profile": "06a68a5671c61df5c03aa121e75761aaffabc75cee8d791c33510713eab378fc",
+              "slots-1-incremental-control.asm": "af73fbfc6bb08f517d58e6000f65ebf9b3bee8b62f08015cd35715a28cc8ecf6"
+            }
+          }
+        },
+        "256": {
+          "geometric": {
+            "output": "256.0\n",
+            "registry": {
+              "registryRequests": 9,
+              "registryRequestedBytes": 53144,
+              "peakRegistryBytes": 26624,
+              "slotBytes": 104,
+              "initializedSlots": 256,
+              "capacitySlots": 256
+            },
+            "tape": {
+              "tapeRequests": 265,
+              "tapeRequestedBytes": 55192,
+              "peakTapeBytes": 26632,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2307,
+              "requestedBytes": 53278,
+              "retains": 0,
+              "peakChargedBytes": 18944,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              6512958,
+              5492792,
+              4286666,
+              4496750,
+              4356791,
+              7568958,
+              4838958
+            ],
+            "medianProcessWallNs": 4838958,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-256.fwp": "be4f3324b7696b7cc1132f8ee62c4f1b6ff88b4dddffb0ab2c14593225ec243a",
+              "slots-256-geometric.c": "3a5c194fb73c831d8d09611d11b9cb89c76867cb55314078162078d146db01bf",
+              "slots-256-geometric-profile.c": "c42e4ea0678ab4cdf2f1257a9359b4e622e67828e5f0b5b59fb79176102859ce",
+              "slots-256-geometric": "8b037eb5e06a7939cb3079464e516b2f9b55ef19360a11a61fd7c6a9ba0cfd2e",
+              "slots-256-geometric-profile": "8e3cc1ecf49b8d6c9b0f6ca1daa8caef317913c53878ddd29a5ac40228ff43f0",
+              "slots-256-geometric.asm": "656babfb9833a9f63e093bd035cbdc62d24a104c6027b1df347a90601bfab753"
+            }
+          },
+          "incremental-control": {
+            "output": "256.0\n",
+            "registry": {
+              "registryRequests": 256,
+              "registryRequestedBytes": 3421184,
+              "peakRegistryBytes": 26624,
+              "slotBytes": 104,
+              "initializedSlots": 256,
+              "capacitySlots": 256
+            },
+            "tape": {
+              "tapeRequests": 512,
+              "tapeRequestedBytes": 3423232,
+              "peakTapeBytes": 26632,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2307,
+              "requestedBytes": 53278,
+              "retains": 0,
+              "peakChargedBytes": 18944,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              4414083,
+              3650792,
+              3979583,
+              3368750,
+              3302208,
+              3661000,
+              4954292
+            ],
+            "medianProcessWallNs": 3661000,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-256.fwp": "be4f3324b7696b7cc1132f8ee62c4f1b6ff88b4dddffb0ab2c14593225ec243a",
+              "slots-256-incremental-control.c": "328c223e55f0c0bc78bbf20d66826ecd32a7940ec0a40c2c1fb1141fbea410d9",
+              "slots-256-incremental-control-profile.c": "b7659f38a1c48d6ddc286de21ff8a5794f3fcc3ddcdeea2321830db6695f12e8",
+              "slots-256-incremental-control": "0df0b2275afefc40acab7dae9bad52c37dd1d7937bc6e9d693f32e836029fda9",
+              "slots-256-incremental-control-profile": "409864e2b4e4d7c46e9ebf0ac553cc9fffd65d0aea857fced96f20e7bd354140",
+              "slots-256-incremental-control.asm": "5e743fa20385423231312fee7a9bbf7857df1ab146dae8a72b3ed18a449abbe6"
+            }
+          }
+        },
+        "257": {
+          "geometric": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              6636917,
+              6876042,
+              3889417,
+              5566291,
+              4780542,
+              4030167,
+              3772542
+            ],
+            "medianProcessWallNs": 4780542,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-geometric.c": "5ed46bd62929536ed183f21332d2cd4c3c0646bd1bbd6ee1c75498343095c599",
+              "slots-257-geometric-profile.c": "a01355b4f8b18b7e4aa7f157fd1827a7b2e91ce6d282e49d69fe630521d644a8",
+              "slots-257-geometric": "3f53b555d5d3cb770e9736095b3e1c59bf37cf85a69a02842255ff4a4ecc18d8",
+              "slots-257-geometric-profile": "44b4ee03a8f1ce3f88d01c53387c982ca5f1ac76b42ac741f4f68b804bf6539b",
+              "slots-257-geometric.asm": "454a4de588b4df843aa7ff3bd90319b0d8405edb56b10e40d747d526e5d2e47b"
+            }
+          },
+          "incremental-control": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 257,
+              "registryRequestedBytes": 3447912,
+              "peakRegistryBytes": 26728,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 257
+            },
+            "tape": {
+              "tapeRequests": 514,
+              "tapeRequestedBytes": 3449968,
+              "peakTapeBytes": 26736,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              8339709,
+              10984166,
+              7459500,
+              6047000,
+              5078792,
+              4623750,
+              4182292
+            ],
+            "medianProcessWallNs": 6047000,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-incremental-control.c": "693a46c3cafbd71384b25d0e7dfddc27b68e6fd59de93c0019df5aabdcb57e8b",
+              "slots-257-incremental-control-profile.c": "701845773784424cb651e45af6130f8c4a08f38c9ac181e965d96fab59a4109f",
+              "slots-257-incremental-control": "871d7ce24548a14f7cf77769bd0c630a5e4a00b7d7937850352fcf0aec6e9508",
+              "slots-257-incremental-control-profile": "a9bf17c58e06202e342e935405081b6c474cb4f780cf95dcefde65f1dfd81cdb",
+              "slots-257-incremental-control.asm": "2da04c757af222b2a708a9a68655de5fdb1f124e6adc48c09138512ea72d15d9"
+            }
+          }
+        },
+        "4096": {
+          "geometric": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              12938834,
+              11830458,
+              10895584,
+              12653292,
+              11350959,
+              13842917,
+              11259542
+            ],
+            "medianProcessWallNs": 11830458,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-geometric.c": "b1879dcb0359e19d3bddb2f973da9696f46dabf453896ae702a48b91ff4a356a",
+              "slots-4096-geometric-profile.c": "eced29edaf323a703c642235d29d4aed897aa407313e9dfae920c1df051d8f99",
+              "slots-4096-geometric": "18009f7f4cf949dcf2eb0a89ca59b48fd8ddc6890b6958425cc5db36165bdbb3",
+              "slots-4096-geometric-profile": "c60ca80fb9c1211141b58b8b16b410da4f99d74bd902e278913a543bd942dc13",
+              "slots-4096-geometric.asm": "07289e41c0deec33843c6b7555ef18e34a1b617fccb7dc251883acfe44c2ddd8"
+            }
+          },
+          "incremental-control": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 4096,
+              "registryRequestedBytes": 872628224,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096
+            },
+            "tape": {
+              "tapeRequests": 8192,
+              "tapeRequestedBytes": 872660992,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              14014750,
+              12692708,
+              12409500,
+              13069000,
+              14737333,
+              11832500,
+              13842958
+            ],
+            "medianProcessWallNs": 13069000,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-incremental-control.c": "3379e74b21f9a5895d25c6cdefeef146626e8a3a984bb4101f939fdb26987027",
+              "slots-4096-incremental-control-profile.c": "b33fc814b0337025e998af7952478d283cd05356eb7d325a43c1a01524608c38",
+              "slots-4096-incremental-control": "ea8261951d3ba5a875bae7c592dd0c57d9fba65b4fde0dcaf188c9b0737f185c",
+              "slots-4096-incremental-control-profile": "b9b2061ad9029e9483d195a610a9a985e08d7c3a6d78d2d03b94a0f1920265c3",
+              "slots-4096-incremental-control.asm": "84d173db308da091a4f21f540321f25eb0904c98214ad3fd512220d8f77818e7"
+            }
+          }
+        }
+      },
+      "scope": "ARC, cold numeric registry, actual equivalent gradients. Control restores one-slot native registry growth only. First-free slot search remains linear. Separate profiles count actual C tape/registry buffers and managed requests/live bytes. Registry peak is included in tape peak, not additional storage. Allocator metadata and transient realloc copies are excluded. Process timings include startup/output; no timing threshold. Interpreter cache fixes have unit/semantic evidence, not a timing claim."
+    },
+    {
+      "head": "957ba0cd9fb33b523b550a9c8f322698610273cf",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sat12-jr310-e0d2ee55-276c-40c8-b3d7-5ca5ac65278a-DE64FD5DACC4.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "machine": "x86_64",
+        "processor": "i386"
+      },
+      "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_AD_WORKSPACE": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "results": {
+        "1": {
+          "geometric": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              5739729,
+              5430772,
+              5362926,
+              5833259,
+              5326367,
+              5332183,
+              5247894
+            ],
+            "medianProcessWallNs": 5362926,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-geometric.c": "34ff483c5c72609e615dc128c4950059a3070f803cd65db64d6d35a062d19f1f",
+              "slots-1-geometric-profile.c": "0e1569470b0d87b416fdd1f754d0ce9c120f4744275ca568e6af1fca4e9d82c4",
+              "slots-1-geometric": "aa7664f2b7176919a742147457bed0dc82062f5f3b0f90095cafc4fd4a8dd5d8",
+              "slots-1-geometric-profile": "5b8800c2fe7959dc138c4d0f2c66cd3ed93bbaa5a113f3a0c61d6c564c8b7cd7",
+              "slots-1-geometric.asm": "35d83ecc54a56cd1681e4677f0ee661452397044452fe3aa9fad9144ad18665b"
+            }
+          },
+          "incremental-control": {
+            "output": "1.0\n",
+            "registry": {
+              "registryRequests": 1,
+              "registryRequestedBytes": 104,
+              "peakRegistryBytes": 104,
+              "slotBytes": 104,
+              "initializedSlots": 1,
+              "capacitySlots": 1
+            },
+            "tape": {
+              "tapeRequests": 2,
+              "tapeRequestedBytes": 112,
+              "peakTapeBytes": 112,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 12,
+              "requestedBytes": 236,
+              "retains": 0,
+              "peakChargedBytes": 112,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              6160077,
+              6659166,
+              6125559,
+              5761888,
+              5366839,
+              5392525,
+              5357539
+            ],
+            "medianProcessWallNs": 5761888,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-1-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-1.fwp": "76efe4897a6d12320200327b558d0e0005e82abf08195ce80949b8953e93bdd0",
+              "slots-1-incremental-control.c": "dd3c2868327b391ef195392b3d45a03f0f94d196fdb5a89941960e0e4199f3d5",
+              "slots-1-incremental-control-profile.c": "287a7cc56084461170fe2b5db214588f796257663eaf719fd7acb6e31e688430",
+              "slots-1-incremental-control": "455111272ec79dfcd46719067dcffdc80114a5f75f6ba1182c3d9e45745bef6b",
+              "slots-1-incremental-control-profile": "3e63049776f5b5efe90e73a8e22117807be1ce0067de143191af0506dcfc2457",
+              "slots-1-incremental-control.asm": "ba31a05ebddc5fa4776ffc6697b0a1c8e4cf06941bc949bd6a297b57becc0f92"
+            }
+          }
+        },
+        "256": {
+          "geometric": {
+            "output": "256.0\n",
+            "registry": {
+              "registryRequests": 9,
+              "registryRequestedBytes": 53144,
+              "peakRegistryBytes": 26624,
+              "slotBytes": 104,
+              "initializedSlots": 256,
+              "capacitySlots": 256
+            },
+            "tape": {
+              "tapeRequests": 265,
+              "tapeRequestedBytes": 55192,
+              "peakTapeBytes": 26632,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2307,
+              "requestedBytes": 53278,
+              "retains": 0,
+              "peakChargedBytes": 18944,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              5834901,
+              5686970,
+              5496553,
+              5457655,
+              5503208,
+              5376539,
+              5939999
+            ],
+            "medianProcessWallNs": 5503208,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-256.fwp": "be4f3324b7696b7cc1132f8ee62c4f1b6ff88b4dddffb0ab2c14593225ec243a",
+              "slots-256-geometric.c": "3a5c194fb73c831d8d09611d11b9cb89c76867cb55314078162078d146db01bf",
+              "slots-256-geometric-profile.c": "c42e4ea0678ab4cdf2f1257a9359b4e622e67828e5f0b5b59fb79176102859ce",
+              "slots-256-geometric": "d27f5d15164294f750428fcc6f7bdf2af89691572375909e0f92561180678233",
+              "slots-256-geometric-profile": "4e225daa5086c737df677254a1a462bd5947e330e1fbda2f04955d59758c1144",
+              "slots-256-geometric.asm": "923902278397c7321ff794a9362b69844af2036d8863ce796771e1bd478eb9f6"
+            }
+          },
+          "incremental-control": {
+            "output": "256.0\n",
+            "registry": {
+              "registryRequests": 256,
+              "registryRequestedBytes": 3421184,
+              "peakRegistryBytes": 26624,
+              "slotBytes": 104,
+              "initializedSlots": 256,
+              "capacitySlots": 256
+            },
+            "tape": {
+              "tapeRequests": 512,
+              "tapeRequestedBytes": 3423232,
+              "peakTapeBytes": 26632,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2307,
+              "requestedBytes": 53278,
+              "retains": 0,
+              "peakChargedBytes": 18944,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              5962642,
+              5978096,
+              5765283,
+              5936679,
+              5819820,
+              5729030,
+              5643260
+            ],
+            "medianProcessWallNs": 5819820,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-256-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-256.fwp": "be4f3324b7696b7cc1132f8ee62c4f1b6ff88b4dddffb0ab2c14593225ec243a",
+              "slots-256-incremental-control.c": "328c223e55f0c0bc78bbf20d66826ecd32a7940ec0a40c2c1fb1141fbea410d9",
+              "slots-256-incremental-control-profile.c": "b7659f38a1c48d6ddc286de21ff8a5794f3fcc3ddcdeea2321830db6695f12e8",
+              "slots-256-incremental-control": "13a0836a86bacf597619dd92b0749d735a126a95524762ec8a33b169a8af0ba9",
+              "slots-256-incremental-control-profile": "7aff2c3565e1f6b046890297d2af7246d7add06a36bcfff105c9e0199219f9b4",
+              "slots-256-incremental-control.asm": "ef2b42c2b1e27a77dcc0eff8d86d5a19405059c5cdc1a7c22f9a13e679038b49"
+            }
+          }
+        },
+        "257": {
+          "geometric": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 10,
+              "registryRequestedBytes": 106392,
+              "peakRegistryBytes": 53248,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 512
+            },
+            "tape": {
+              "tapeRequests": 267,
+              "tapeRequestedBytes": 108448,
+              "peakTapeBytes": 53256,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              7519810,
+              7107329,
+              7973963,
+              7412557,
+              8636176,
+              7519802,
+              6624922
+            ],
+            "medianProcessWallNs": 7519802,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-geometric.c": "5ed46bd62929536ed183f21332d2cd4c3c0646bd1bbd6ee1c75498343095c599",
+              "slots-257-geometric-profile.c": "a01355b4f8b18b7e4aa7f157fd1827a7b2e91ce6d282e49d69fe630521d644a8",
+              "slots-257-geometric": "98de1a57c2cc360ad2d187a4c4ce5020e1ad7a3d3687845970ffbcb964cd65d5",
+              "slots-257-geometric-profile": "11c7960e04ace8a3bff88785149a97f2212e16513d35c831d337454106f1a219",
+              "slots-257-geometric.asm": "2e1855337cc2f597df5374e810eb2ebba6c7b3963b64103aabcc6dfcf2f990d6"
+            }
+          },
+          "incremental-control": {
+            "output": "257.0\n",
+            "registry": {
+              "registryRequests": 257,
+              "registryRequestedBytes": 3447912,
+              "peakRegistryBytes": 26728,
+              "slotBytes": 104,
+              "initializedSlots": 257,
+              "capacitySlots": 257
+            },
+            "tape": {
+              "tapeRequests": 514,
+              "tapeRequestedBytes": 3449968,
+              "peakTapeBytes": 26736,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 2316,
+              "requestedBytes": 53486,
+              "retains": 0,
+              "peakChargedBytes": 19008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              7712645,
+              9120158,
+              10188535,
+              8921773,
+              7369221,
+              7548999,
+              8127004
+            ],
+            "medianProcessWallNs": 8127004,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-257-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-257.fwp": "37f13858ce869c50fa882577dba8cf681f285c022addcc329048584c3f915a1b",
+              "slots-257-incremental-control.c": "693a46c3cafbd71384b25d0e7dfddc27b68e6fd59de93c0019df5aabdcb57e8b",
+              "slots-257-incremental-control-profile.c": "701845773784424cb651e45af6130f8c4a08f38c9ac181e965d96fab59a4109f",
+              "slots-257-incremental-control": "be3744282b9f02dc71f7a66d89191aa99fc0850cc7e8c1d3e4e5a9cc92af3290",
+              "slots-257-incremental-control-profile": "8bb48affba9d9420da5574ecfc6579206de86a8a910cf7c9be0bb5bf90db07f5",
+              "slots-257-incremental-control.asm": "be6eed416788a455756417351cc1945d253ac16e243cd29cbf12e92f0398638f"
+            }
+          }
+        },
+        "4096": {
+          "geometric": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 13,
+              "registryRequestedBytes": 851864,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096
+            },
+            "tape": {
+              "tapeRequests": 4109,
+              "tapeRequestedBytes": 884632,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              18972882,
+              19327331,
+              18494588,
+              18217183,
+              18193443,
+              17998893,
+              18179680
+            ],
+            "medianProcessWallNs": 18217183,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-geometric-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-geometric.c": "b1879dcb0359e19d3bddb2f973da9696f46dabf453896ae702a48b91ff4a356a",
+              "slots-4096-geometric-profile.c": "eced29edaf323a703c642235d29d4aed897aa407313e9dfae920c1df051d8f99",
+              "slots-4096-geometric": "4f1d92bbc815a0583e1909b832d9abbe0b010cd6cdb916b8eabb5025e6d4e82c",
+              "slots-4096-geometric-profile": "6b099712b8f6f6867e3532689d5ec250d60292a591b533dac61cd2f45683f74f",
+              "slots-4096-geometric.asm": "b3f95e962c6316ef585da317514fc088840e45dc2272e049d3310f67dec33b99"
+            }
+          },
+          "incremental-control": {
+            "output": "4096.0\n",
+            "registry": {
+              "registryRequests": 4096,
+              "registryRequestedBytes": 872628224,
+              "peakRegistryBytes": 425984,
+              "slotBytes": 104,
+              "initializedSlots": 4096,
+              "capacitySlots": 4096
+            },
+            "tape": {
+              "tapeRequests": 8192,
+              "tapeRequestedBytes": 872660992,
+              "peakTapeBytes": 425992,
+              "finalTapeBytes": 0
+            },
+            "managed": {
+              "requests": 36867,
+              "requestedBytes": 851999,
+              "retains": 0,
+              "peakChargedBytes": 294920,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              19403276,
+              18459911,
+              18215355,
+              19914942,
+              19605496,
+              19357433,
+              20070058
+            ],
+            "medianProcessWallNs": 19403276,
+            "commands": [
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "clang",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control-profile.c",
+                "-o",
+                "/Users/runner/work/fun-with-pipes/fun-with-pipes/autodiff-evidence/registry/slots-4096-incremental-control-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "hashes": {
+              "slots-4096.fwp": "8262f3e1d1f6481f503b61933c28c958c2f73d7199b87d638e4adb6f6f099843",
+              "slots-4096-incremental-control.c": "3379e74b21f9a5895d25c6cdefeef146626e8a3a984bb4101f939fdb26987027",
+              "slots-4096-incremental-control-profile.c": "b33fc814b0337025e998af7952478d283cd05356eb7d325a43c1a01524608c38",
+              "slots-4096-incremental-control": "226718bef7e7702b9deaeab65e2ef315c229fcf1b962b6aa19600c8c4ad6be11",
+              "slots-4096-incremental-control-profile": "6466b3b6eb6784c550e67e8c7becc7930bb1797c8236773a746c0f968eec2d8f",
+              "slots-4096-incremental-control.asm": "69faa640f813cb9846c7c954a13a20a36d19618f932718477afb1f9c27865c2b"
+            }
+          }
+        }
+      },
+      "scope": "ARC, cold numeric registry, actual equivalent gradients. Control restores one-slot native registry growth only. First-free slot search remains linear. Separate profiles count actual C tape/registry buffers and managed requests/live bytes. Registry peak is included in tape peak, not additional storage. Allocator metadata and transient realloc copies are excluded. Process timings include startup/output; no timing threshold. Interpreter cache fixes have unit/semantic evidence, not a timing claim."
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 11951251840,
+      "name": "autodiff-ubuntu-latest",
+      "archiveSha256": "bda6c80689590af6c0c4a282a7fe51331beaca85b96cee199240a3125261ee75"
+    },
+    {
+      "id": 11952230307,
+      "name": "autodiff-ubuntu-24.04-arm",
+      "archiveSha256": "ea41b4e861f11ea567951bc4b7206aa62922dc09d6f0557c92a6db0cce41c995"
+    },
+    {
+      "id": 11951765287,
+      "name": "autodiff-macos-15",
+      "archiveSha256": "16310474f09e24d28cc7c43b653e71ec5bafa03ed6024912eb3c2a3e804bb2e8"
+    },
+    {
+      "id": 11951336920,
+      "name": "autodiff-macos-15-intel",
+      "archiveSha256": "15c56de48673297b8a90380a39d2890da0c339236f97a56dc19e96f711d3ed21"
+    }
+  ],
+  "binaryInspection": {
+    "Linux ARM64": {
+      "symbol": "f10",
+      "capacityGate": "0x60d8\u20130x60dc compare initialized slots with capacity and bypass realloc when capacity remains",
+      "growth": "0x60e0\u20130x6104 doubles capacity in a register, clamps to 65535 with csel, multiplies by the 104-byte slot size, then calls realloc",
+      "ownership": "0x6108 checks allocation success before pointer/capacity stores at 0x6110\u20130x6114",
+      "initialization": "0x6130\u20130x613c initializes one 104-byte slot using scalar and vector stores",
+      "boundary": "The linear first-free scan remains at 0x6090\u20130x60b0; the function has an 80-byte saved-register frame.",
+      "emptyBackward": "f32 compares active count with adjoint capacity at 0x6ad8\u20130x6adc, bypassing growth at zero; cbz at 0x6b54 skips memset for zero active nodes."
+    },
+    "macOS ARM64": {
+      "symbol": "_f10",
+      "capacityGate": "0x100004e80\u20130x100004e84 compare initialized slots with capacity and bypass realloc when capacity remains",
+      "growth": "0x100004e88\u20130x100004eac uses register doubling, csel clamping at 65535, 104-byte scaling and the realloc stub",
+      "ownership": "0x100004eb0 checks allocation success before pointer/capacity stores at 0x100004eb8\u20130x100004ebc",
+      "initialization": "0x100004ec8\u20130x100004ed8 initializes one 104-byte slot using scalar/vector stores",
+      "boundary": "The linear first-free scan remains at 0x100004e38\u20130x100004e58; the function has a 96-byte saved-register frame.",
+      "emptyBackward": "_f32 compares active count with adjoint capacity at 0x1000059e4\u20130x1000059e8, bypassing growth at zero; cbz at 0x100005a60 skips the bzero call for zero active nodes."
+    },
+    "Linux AMD64": {
+      "symbol": "f10",
+      "capacityGate": "0x6ee7\u20130x6eee compares initialized slots with capacity and bypasses realloc when capacity remains",
+      "growth": "0x6ef0\u20130x6f17 doubles capacity with lea, clamps to 65535 with cmov, scales by the 104-byte slot size and calls realloc",
+      "ownership": "0x6f1c\u20130x6f1f checks success before pointer/capacity stores at 0x6f28\u20130x6f2f",
+      "initialization": "0x6f3a\u20130x6f60 clears one 104-byte slot with xmm and scalar stores",
+      "emptyBackward": "f32 bypasses growth at 0x79d6\u20130x79d9 when capacity covers active nodes; test/je at 0x7a69\u20130x7a6c skips memset at zero",
+      "boundary": "First-free search is still linear at 0x6eb0\u20130x6ec8; the function saves registers on the stack."
+    },
+    "macOS AMD64": {
+      "symbol": "_f10",
+      "capacityGate": "0x1000056e7\u20130x1000056ee compares initialized slots with capacity and bypasses realloc when capacity remains",
+      "growth": "0x1000056f0\u20130x100005717 doubles with lea, clamps to 65535 with cmov, scales by 104 and calls realloc",
+      "ownership": "0x10000571c\u20130x10000571f checks success before pointer/capacity stores at 0x100005728\u20130x10000572f",
+      "initialization": "0x10000573a\u20130x100005760 clears one 104-byte slot with xmm and scalar stores",
+      "boundary": "First-free search remains linear at 0x1000056b0\u20130x1000056c8; ordinary saved registers and a frame pointer remain.",
+      "emptyBackward": "_f32 bypasses growth at 0x1000063d6\u20130x1000063dd when capacity covers active nodes; test/je at 0x10000647e\u20130x100006481 skips bzero at zero."
+    }
+  },
+  "validation": "All four native focused jobs passed tests and every measurement step at 957ba0cd9fb33b523b550a9c8f322698610273cf. All downloaded archive digests and every report source/binary/disassembly hash were verified. Full final-head production CI remains the merge gate."
+}

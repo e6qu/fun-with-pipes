@@ -16,8 +16,9 @@ production jobs and documentation green. The user requested continued work.
 The current follow-up bounds native AD registry growth and preserves numeric
 workspace ownership across managed and empty tapes in both runtimes. Keep the
 implementation, regression controls, measurements and docs together on
-`autodiff-registry-growth`. Follow the live plan and handoff; historical
-preparation entries are not work to replay.
+`autodiff-registry-growth` in PR #139. Once it merges with all final-head gates,
+step 9 is complete; check its actual state before resuming. Follow the live plan
+and handoff; historical preparation entries are not work to replay.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,

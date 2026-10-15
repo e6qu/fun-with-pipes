@@ -92,9 +92,46 @@ Native instruction inspection on all four hosts shows a register subtraction
 for operation offsets and hoisted metadata-base adjustment in backward loops.
 Parent loads remain 32-bit, weights 64-bit, and multiplication/addition remain
 separate. The report retains hardware/compiler/flags, raw samples and verified
-source/binary/disassembly hashes. Measurement steps passed; the focused run's
-fixture failures and their corrections are recorded in the handoff. Production
-acceptance requires the final PR head's full checks.
+source/binary/disassembly hashes. PR #138 subsequently passed all nine production
+jobs and documentation; [history](roadmap-history.md#pr-138-merge-acceptance)
+records its accepted merge.
+
+## Autodiff registry growth
+
+[Four-host measurements](measurements/ad-registry-2026-10-15.json) compare identical
+ARC gradient batches with geometric registry growth and a control that grows one
+slot per request. All four Linux/macOS hosts report these registry counters:
+
+| Simultaneously recorded tapes | Allocation requests, control → geometric | Peak registry bytes, control → geometric |
+|---|---:|---:|
+| 1 | 1 → 1 | 104 → 104 |
+| 256 | 256 → 9 | 26,624 → 26,624 |
+| 257 | 257 → 10 | 26,728 → 53,248 |
+| 4,096 | 4,096 → 13 | 425,984 → 425,984 |
+
+For 4,096 tapes, total native tape requests fall 8,192 → 4,109. Cumulative
+requested registry bytes fall 872,628,224 → 851,864; this is the sum of realloc
+request sizes, not physical copied bytes or a peak-memory reduction. Registry
+storage is included in tape storage and must not be added again. Peak charged
+managed storage remains 294,920 bytes, with 36,867 managed requests and no retains.
+Managed counters agree across both variants at every size. All final tape/managed
+storage is reclaimed with zero collections.
+
+Spare capacity adds 26,520 live bytes in the 257-tape case. First-free-slot search
+remains linear; this change reduces allocation requests, not search complexity.
+Seven process samples per case include startup and output and vary across sizes
+and hosts, so no general speedup is claimed. The control isolates registry growth
+policy and does not reproduce every cost of the previous compiler revision.
+
+Actual instructions on all four hosts branch around realloc when spare capacity
+exists, compute doubling/clamping in registers and initialize one 104-byte slot.
+Backward instructions also bypass adjoint allocation and clearing at zero active
+nodes. Separate positive/negative controls prove empty passes preserve a warm
+cache and allocate no private adjoint; interpreter tests prove managed and empty
+tapes preserve numeric workspace ownership. Those cache fixes have regression
+evidence rather than a timing claim. The report records hardware/compiler/flags,
+raw samples, verified archive/source/binary/disassembly hashes and inspection
+addresses. [The handoff](development-state.md) records final production acceptance.
 
 ## Running comparisons
 
