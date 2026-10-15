@@ -51,25 +51,36 @@ for profile in [False,True]:
    disassembly=['otool','-tvV',str(binary)] if platform.system()=='Darwin' else ['objdump','-d',str(binary)]
    (out/(case+'-timing.asm')).write_text(run(disassembly).stdout);commands.append(disassembly)
  for case in ['array','matrix']:
-  for language in ['c','rust','fwp']:
-   binary=binaries[language if language!='fwp' else 'fwp-'+case];args=[str(binary)]+([] if language=='fwp' else [case])
-   timed=['/usr/bin/time', '-l' if platform.system()=='Darwin' else '-v',*args]
-   env=dict(os.environ,FWP_GC_STRESS='0',FWP_GC_VERIFY='0',FWP_REUSE_VERIFY='0')
-   p=run(timed,env);data=json.loads(p.stdout)
-   if platform.system()=='Darwin':match=re.search(r'(\d+)\s+maximum resident set size',p.stderr);scale=1
-   else:match=re.search(r'Maximum resident set size \(kbytes\):\s*(\d+)',p.stderr);scale=1024
-   assert match,p.stderr
-   data['peakProcessRssBytes']=int(match[1])*scale
-   data['environment']={k:env[k] for k in ['FWP_GC_STRESS','FWP_GC_VERIFY','FWP_REUSE_VERIFY']}
-   data['profileInstrumented']=profile;data['invocation']=timed
-   key=case+'-'+language+'-'+suffix;results[key]=data;(out/(key+'.json')).write_text(json.dumps(data,indent=2)+'\n');(out/(key+'-process.txt')).write_text(p.stderr)
-   if profile:
-    expected=8 if case=='array' else (40 if language=='fwp' else 24)
-    assert all(s['requests']==expected for s in data['samples']),(key,data)
+  languages=['c','rust','fwp']
+  env=dict(os.environ,FWP_GC_STRESS='0',FWP_GC_VERIFY='0',FWP_REUSE_VERIFY='0')
+  invocations={language:[str(binaries[language if language!='fwp' else 'fwp-'+case])]+([] if language=='fwp' else [case]) for language in languages}
+  # Warm each uninstrumented executable before collecting rotating process batches.
+  if not profile:
+   for args in invocations.values():run(args,env)
+  for process_round in range(1 if profile else 6):
+   order=languages[process_round%3:]+languages[:process_round%3]
+   for language in order:
+    timed=['/usr/bin/time', '-l' if platform.system()=='Darwin' else '-v',*invocations[language]]
+    p=run(timed,env);data=json.loads(p.stdout)
+    if platform.system()=='Darwin':match=re.search(r'(\d+)\s+maximum resident set size',p.stderr);scale=1
+    else:match=re.search(r'Maximum resident set size \(kbytes\):\s*(\d+)',p.stderr);scale=1024
+    assert match,p.stderr
+    peak=int(match[1])*scale
+    for sample_index,sample in enumerate(data['samples']):
+     sample['processRound']=process_round;sample['withinProcessSample']=sample_index
+    key=case+'-'+language+'-'+suffix
+    if key not in results:
+     results[key]=dict(samples=[],peakProcessRssBytes=0,environment={k:env[k] for k in ['FWP_GC_STRESS','FWP_GC_VERIFY','FWP_REUSE_VERIFY']},profileInstrumented=profile,invocations=[])
+    result=results[key];result['samples'].extend(data['samples']);result['peakProcessRssBytes']=max(result['peakProcessRssBytes'],peak)
+    result['invocations'].append(dict(processRound=process_round,order=order,command=timed,peakProcessRssBytes=peak))
+    (out/(key+'.json')).write_text(json.dumps(result,indent=2)+'\n');(out/(key+'-process-'+str(process_round)+'.txt')).write_text(p.stderr)
+    if profile:
+     expected=8 if case=='array' else (40 if language=='fwp' else 24)
+     assert all(s['requests']==expected for s in data['samples']),(key,data)
 for case in ['array','matrix']:
  hashes={s['hash'] for key,r in results.items() if key.startswith(case+'-') for s in r['samples']};assert len(hashes)==1,(case,hashes)
 summary={key:dict(medianAllocationInclusiveNs=statistics.median(s['allocationInclusiveNs'] for s in r['samples']),medianKernelNs=statistics.median(s['kernelNs'] for s in r['samples']),peakProcessRssBytes=r['peakProcessRssBytes']) for key,r in results.items() if key.endswith('-timing')}
 hardware={'uname':run(['uname','-a']).stdout,'machine':platform.machine()}
 hardware['cpu']=run(['sysctl','-n','machdep.cpu.brand_string'] if platform.system()=='Darwin' else ['lscpu']).stdout
-report=dict(head=os.environ['GITHUB_SHA'],hardware=hardware,compiler=run([cc,'--version']).stdout,rustCompiler=run(['rustc','--version','--verbose']).stdout,buildCommands=commands,workloads={'array':dict(elements=65537,rounds=8,samples=5,kernelScope='Consumes the existing input and releases it; input allocation/fill excluded, ownership cost included.'),'matrix':dict(rows=65,inner=67,columns=63,tile=32,rounds=8,samples=5,kernelScope='Multiply/accumulate only, after output allocation and zeroing; input construction and all cleanup are in allocation-inclusive time.')},results=results,summary=summary,sourceHashes={str(p.relative_to(root)) if p.is_relative_to(root) else str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in [c_source,rust_source,root/'tests/fixtures/numerical_bench_native.c',*out.glob('*.c')]},scope='Identical dimensions, inputs, ordered arithmetic and result hashes. Timings use separate uninstrumented binaries; instrumented profile timings are not compared. C/Rust memory is allocator-requested payload. Native charged bytes include allocator size classes, exclude metadata, and are sampled at proven allocation peaks with no collections. Peak process RSS comes from each executable independently. No shared-runner timing threshold is asserted.')
+report=dict(head=os.environ['GITHUB_SHA'],hardware=hardware,compiler=run([cc,'--version']).stdout,rustCompiler=run(['rustc','--version','--verbose']).stdout,buildCommands=commands,workloads={'array':dict(elements=65537,rounds=8,samples=30,kernelScope='Consumes the existing input and releases it; input allocation/fill excluded, ownership cost included.'),'matrix':dict(rows=65,inner=67,columns=63,tile=32,rounds=8,samples=30,kernelScope='Multiply/accumulate only, after output allocation and zeroing; input construction and all cleanup are in allocation-inclusive time.')},results=results,summary=summary,sourceHashes={str(p.relative_to(root)) if p.is_relative_to(root) else str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in [c_source,rust_source,root/'tests/fixtures/numerical_bench_native.c',*out.glob('*.c')]},scope='Identical runtime dimensions, inputs, ordered arithmetic and result hashes. C/Rust dimensions are hidden from constant propagation to match fwp metadata loads. One warmup process per uninstrumented implementation, followed by six rotating C/Rust/fwp process batches with five samples each; every implementation occupies each position twice. Profiles use one separate process each. Timings use separate uninstrumented binaries; instrumented profile timings are not compared. C/Rust memory is allocator-requested payload. Native charged bytes include allocator size classes, exclude metadata, and are sampled at proven allocation peaks with no collections. Peak process RSS comes from each executable independently. No shared-runner timing threshold is asserted.')
 (out/'comparison.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(summary,indent=2))

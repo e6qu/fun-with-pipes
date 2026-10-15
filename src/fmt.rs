@@ -452,6 +452,22 @@ impl Fmt<'_> {
 
     fn flat_app(&self, e: &Expr) -> Option<String> {
         match &e.kind {
+            ExprKind::Arithmetic(ArithmeticOp::Neg, _, args) => {
+                Some(format!("-({})", self.flat(&args[0])?))
+            }
+            ExprKind::Arithmetic(op, _, args) => {
+                let operand = |i: usize| {
+                    let text = self.flat(&args[i])?;
+                    Some(
+                        if crate::pretty::infix_needs_parens(&args[i], *op, i == 1) {
+                            format!("({text})")
+                        } else {
+                            text
+                        },
+                    )
+                };
+                Some(format!("{} {} {}", operand(0)?, op.text(), operand(1)?))
+            }
             ExprKind::App(f, args) => {
                 let mut s = self.flat_atom(f)?;
                 for i in 0..args.len() {
@@ -495,7 +511,10 @@ impl Fmt<'_> {
             ExprKind::Var(v) => v.clone(),
             ExprKind::Ctor(c) => c.clone(),
             ExprKind::Selector(p) => format!(".{}", p.join(".")),
-            ExprKind::App(..) | ExprKind::Pipe(..) | ExprKind::Comptime(_) => {
+            ExprKind::App(..)
+            | ExprKind::Arithmetic(..)
+            | ExprKind::Pipe(..)
+            | ExprKind::Comptime(_) => {
                 format!("({})", self.flat(e)?)
             }
             ExprKind::Unit => "()".into(),
@@ -790,6 +809,7 @@ impl Fmt<'_> {
             return s;
         }
         match &e.kind {
+            ExprKind::Arithmetic(..) => format!("({})", crate::pretty::expr(e)),
             ExprKind::App(..) => format!("({})", self.app(e, indent, col + 1)),
             ExprKind::Pipe(..) | ExprKind::Comptime(_) => {
                 format!("({})", self.expr(e, indent + INDENT, col + 1))

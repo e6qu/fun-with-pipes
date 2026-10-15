@@ -62,8 +62,11 @@ typedef unsigned __int128 u128;
 
 /* A conservative collector needs the owner alive while values preloaded
  * from it cross allocations. An empty compiler fence extends that lifetime
- * without adding machine instructions. WebAssembly has no stack tracing. */
-#if !defined(__wasi__) && !defined(__wasm__)
+ * without adding machine instructions. Checked ARC keeps owners alive through
+ * explicit ownership and has no conservative stack scan to protect. WebAssembly
+ * likewise has no stack tracing. These are root-liveness fences, not thread
+ * synchronization. */
+#if !defined(FWP_ARC_ONLY) && !defined(__wasi__) && !defined(__wasm__)
 #define FWP_KEEP_ALIVE(p) __asm__ volatile("" : : "r"(p) : "memory")
 #else
 #define FWP_KEEP_ALIVE(p) ((void)(p))

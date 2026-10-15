@@ -105,10 +105,18 @@ that these boundaries can already execute safely without a collector.
 ## Syntax and behavior to preserve
 
 `x | f` passes a value to a function; `f | g` combines functions. Arguments come
-before the data being transformed. Calls use prefix notation such as `add 1`;
-parentheses delimit nested arguments. Preserve tacit composition, strong typing
+before the data being transformed. Keep prefix calls such as `add 1` and allow
+infix arithmetic with standard precedence; parentheses override grouping and
+delimit nested arguments. Preserve tacit composition, strong typing
 and inference, explicit generic signatures, immutable values, tracked effects,
 checked arithmetic, and observable evaluation and trap order.
+
+Every function takes one argument and may return another function: `f x y`
+means `(f x) y`. A tuple is one value, so a tuple-taking function also takes
+one argument. Keep explicit `curry` and `uncurry` helpers to convert between
+tuple-taking and curried functions; do not introduce automatic tuple conversion.
+This is the language model, not a requirement to allocate intermediate closures
+or tuples when the compiler can eliminate them.
 
 Keep both `if` and `match`, explicit `const` for constant functions, and `()` for
 unit. Tuple positions start at zero. Iteration and state helpers remain library

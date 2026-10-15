@@ -15,7 +15,7 @@ static double consume_array(double *input,size_t n){
     double sum=-0.0;for(size_t i=0;i<n;i++){double mapped=input[i]*3.0;mapped=mapped+1.0;sum=mapped+sum;}
     release(input,n*8);return sum;
 }
-static void matrix_kernel(const double *a,const double *b,double *out,size_t m,size_t k,size_t n){
+static void matrix_kernel(const double *a,const double *b,double *restrict out,size_t m,size_t k,size_t n){
     const size_t tile=32;
     for(size_t ib=0;ib<m;ib+=tile)for(size_t kb=0;kb<k;kb+=tile)for(size_t jb=0;jb<n;jb+=tile){
         size_t ie=ib+tile<m?ib+tile:m,ke=kb+tile<k?kb+tile:k,je=jb+tile<n?jb+tile:n;
@@ -26,7 +26,10 @@ static void matrix_kernel(const double *a,const double *b,double *out,size_t m,s
 }
 int main(int argc,char **argv){
     if(argc!=2)return 1;int matrix=!strcmp(argv[1],"matrix");
-    const size_t elements=65537,m=65,k=67,n=63,rounds=8;
+    size_t elements=65537,m=65,k=67,n=63;const size_t rounds=8;
+    /* fwp loads dimensions from runtime array/matrix metadata. Give the C
+     * kernel runtime dimensions too, rather than specializing fixed sizes. */
+    __asm__ volatile("" : "+r"(elements), "+r"(m), "+r"(k), "+r"(n));
     puts("{\"samples\":[");
     for(size_t sample=0;sample<5;sample++){
         requested=calls=live_bytes=peak_bytes=0;uint64_t kernel_ns=0,hash=1469598103934665603ULL,start=now_ns();

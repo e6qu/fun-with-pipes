@@ -26,6 +26,9 @@ CASES = {
     'map': ('main = range 0 4096 | map int.to-float | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum | echo\n', '8192.0\n'),
     'repeated-map': ('main = range 0 16 | map (const (range 0 4096 | map int.to-float) | '
                      'vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n', '131072.0\n'),
+    # Longer steady work makes process startup a smaller part of the comparison.
+    'sustained-map': ('main = range 0 512 | map (const (range 0 4096 | map int.to-float) | '
+                      'vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n', '4194304.0\n'),
     'replay': ('main = [2.0] | vjp (rev._replay 4096 (map (add 1.0))) [1.0] | sum | echo\n', '1.0\n'),
     'nested': ('square : List[t] -> t where Ring[t], Dup[t]\n'
                'square = head | option.unwrap-or zero | fork mul id id\n'
@@ -117,7 +120,7 @@ def main():
                 assert warmup.stdout == expected and not warmup.stderr
             # Alternate process order after warming both executables, avoiding
             # a complete variant block being measured before the other builds.
-            for sample in range(7):
+            for sample in range(8):
                 for label in (labels if sample % 2 == 0 else labels[::-1]):
                     start = time.perf_counter_ns()
                     result = run([out / (name + '-' + label)], env)
@@ -139,16 +142,17 @@ def main():
             if name != 'identity':
                 assert paired['metadata']['metadataRequests'] > 0
         results[name] = dict(source=program, sourceSha256=hashlib.sha256(source.read_bytes()).hexdigest(), variants=variants)
-        if name == 'repeated-map':
+        if name in ['repeated-map', 'sustained-map']:
             for variant in variants.values():
                 assert variant['caches']['1']['metadata']['metadataRequests'] < variant['caches']['0']['metadata']['metadataRequests']
     report = dict(head=run(['git', 'rev-parse', 'HEAD']).stdout.strip(), baseline=BASELINE,
                   hardware=platform.uname()._asdict(),
                   cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
                   cc=run([cc, '--version']).stdout, rustc=run(['rustc', '-vV']).stdout,
-                  sampling='One unmeasured process warmup per variant/cache; seven alternating paired/control process samples.',
+                  sampling='One unmeasured process warmup per variant/cache; eight alternating paired/control process samples, each variant first four times.',
                   results=results, scope='Same ARC program and compiler; control substitutes the accepted baseline tape runtime. '
-                  'Both workspace settings are explicit. Seven process samples include startup/output, with no speedup threshold. '
+                  'Both workspace settings are explicit. Eight process samples include startup/output, with no speedup threshold. '
+                  'The sustained-map case repeats 512 derivative calculations to reduce the relative contribution of startup. '
                   'Profiles separately count native tape payloads and charged managed storage; allocator metadata, '
                   'transient realloc copies and OS reservations are excluded. Paired growth explicitly moves initialized '
                   'second regions; that count excludes allocator-internal copies in both variants. '

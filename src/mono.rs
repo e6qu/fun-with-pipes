@@ -1110,7 +1110,7 @@ impl<'a> Mono<'a> {
                     body,
                 )))
             }
-            ExprKind::App(f, args) => {
+            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
                 let fe = self.expr(f, s, fb)?;
                 let mut xs = Vec::new();
                 for a in args {
@@ -1649,7 +1649,7 @@ fn field_type(prog: &Program, mt: &MT, idx: u32) -> MT {
 fn index_matches(env: &Env) -> HashMap<NodeId, &ast::Expr> {
     fn go<'e>(e: &'e ast::Expr, out: &mut HashMap<NodeId, &'e ast::Expr>) {
         match &e.kind {
-            ExprKind::App(f, args) => {
+            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
                 go(f, out);
                 args.iter().for_each(|a| go(a, out));
             }

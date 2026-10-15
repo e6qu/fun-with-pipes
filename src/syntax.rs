@@ -83,7 +83,7 @@ pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
         ExprKind::Var(n) => c(S_NAME, vec![s(&cx.value_name(n))]),
         ExprKind::Ctor(n) => c(S_CTOR, vec![s(&cx.ctor_name(n))]),
         ExprKind::Selector(path) => c(S_SELECT, vec![list(path.iter().map(|p| s(p)).collect())]),
-        ExprKind::App(f, args) => {
+        ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
             let fq = quote(f, cx)?;
             let mut xs = Vec::new();
             for a in args {
@@ -213,7 +213,7 @@ pub fn hole_count(e: &Expr) -> u32 {
 fn collect_unquote_calls<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     match &e.kind {
         ExprKind::MacroCall(n, _) if n == "unquote" => out.push(e),
-        ExprKind::App(f, args) => {
+        ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
             collect_unquote_calls(f, out);
             args.iter().for_each(|a| collect_unquote_calls(a, out));
         }
@@ -491,7 +491,7 @@ impl Builder<'_> {
 fn set_span(e: &mut Expr, span: Span) {
     e.span = span;
     match &mut e.kind {
-        ExprKind::App(f, args) => {
+        ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
             set_span(f, span);
             args.iter_mut().for_each(|a| set_span(a, span));
         }
@@ -562,7 +562,7 @@ fn unqualify_pat(p: &mut Pattern) {
 fn unqualify_expr(e: &mut Expr) {
     match &mut e.kind {
         ExprKind::Var(n) | ExprKind::Ctor(n) => *n = unqualify(n),
-        ExprKind::App(f, args) => {
+        ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
             unqualify_expr(f);
             args.iter_mut().for_each(unqualify_expr);
         }

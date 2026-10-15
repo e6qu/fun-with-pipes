@@ -17,8 +17,8 @@ int main(void) {
         if(run<3 && result!=fwp_from_f64(reference))return 170;
         calls=measured_calls-calls;bytes=measured_bytes-bytes;retains=measured_retains-retains;
         scopes=measured_scopes-scopes;
-        /* Keep checked index protection, without scopes for scalar reads/arithmetic. */
-        if(FUSED && (scopes<n || scopes>n+16))return 175;
+        /* The bounded internal index cannot overflow; cleanup is constant work. */
+        if(FUSED && scopes>16)return 175;
         if(FUSED && retains)return 174;
         if(FUSED && (calls || bytes)){fprintf(stderr,"fused allocated %llu calls and %llu bytes\n",(unsigned long long)calls,(unsigned long long)bytes);return 171;}
         if(!FUSED && calls<2)return 172;
