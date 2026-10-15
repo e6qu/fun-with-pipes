@@ -63,6 +63,19 @@ all were corrected before publication. These failures do not indicate native
 support. The changed interpreter/compiler and Windows still require runner tests.
 Formatting and generated standard-library docs pass (0.86/0.88 s).
 
+[Six-platform run 38805524008](https://github.com/e6qu/fun-with-pipes/actions/runs/38805524008)
+passed both Linux hosts. The new path test also passed on both Windows hosts,
+but two older tests added to this suite failed there: construction hooks included
+headers before the required Windows API version, watched `fopen` instead of
+`_wfopen`, and used POSIX `fcntl`; the source fixture inserted unescaped Windows
+path separators. The construction probe now watches the native wide open and
+checks the saved OS handle is closed; the source path is properly escaped.
+Negative leak/double-close controls remain. Both repaired harnesses pass serially
+against the existing local compiler (9.41 s). Native Windows validation remains
+required on the repaired head. All three file regressions join production
+Windows checks instead of being skipped. The original macOS jobs are superseded.
+
+
 ## Combined delivery
 
 **Solvers:** LU solve, determinant, inverse, Cholesky, QR and conjugate gradient
@@ -152,7 +165,7 @@ Do not describe the abort as repaired or a skipped/queued job as passing.
 
 ## Next: validate the path repair and finish the active delivery
 
-Publish this branch and run the six-platform `paths` suite. Fix failures without
+Publish the test-host repairs and rerun the six-platform `paths` suite. Fix failures without
 weakening checks. Monitor #146's exact-head gate and squash merge only after all
 nine production jobs and documentation pass. The numerical/console batch and
 its original anchors are documented above; its live handoff remains in

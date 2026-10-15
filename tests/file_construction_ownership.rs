@@ -34,10 +34,21 @@ fn construction_failures_close_streams_once_and_clear_finalized_handles() {
     };
     let (generated, _) = fwp::cgen::generate_library(&p, "file_owner").unwrap();
     let hooks = r#"
+#ifdef _WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0a00
+#endif
+#include <wchar.h>
+#endif
 #include <stdio.h>
 #include <stdint.h>
 static int fault, closes, watched_fd, callbacks;
 static uintptr_t watched_stream;
+#ifdef _WIN32
+static uintptr_t watched_os_handle;
+static FILE *observe_wide_open(const wchar_t *, const wchar_t *);
+#define _wfopen observe_wide_open
+#endif
 static void *observed_handle;
 static FILE *observe_open(const char *, const char *);
 static int observe_close(FILE *);
@@ -47,9 +58,28 @@ static int observe_close(FILE *);
     let fixture = r#"
 #undef fopen
 #undef fclose
+#ifdef _WIN32
+#undef _wfopen
+#else
 #include <fcntl.h>
+#endif
 static FILE *observe_open(const char *path,const char *mode) {
  FILE *f=fopen(path,mode);if(f){watched_stream=(uintptr_t)f;watched_fd=fileno(f);}return f;
+}
+#ifdef _WIN32
+static FILE *observe_wide_open(const wchar_t *path,const wchar_t *mode) {
+ FILE *f=_wfopen(path,mode);
+ if(f){watched_stream=(uintptr_t)f;watched_fd=_fileno(f);watched_os_handle=(uintptr_t)_get_osfhandle(watched_fd);}
+ return f;
+}
+#endif
+static int observed_stream_closed(void) {
+#ifdef _WIN32
+ DWORD flags;
+ return !GetHandleInformation((HANDLE)watched_os_handle,&flags) && GetLastError()==ERROR_INVALID_HANDLE;
+#else
+ return fcntl(watched_fd,F_GETFD)==-1 && errno==EBADF;
+#endif
 }
 static int observe_close(FILE *f) {if((uintptr_t)f==watched_stream)closes++;return fclose(f);}
 static jmp_buf construction_failure;
@@ -72,7 +102,7 @@ int main(int argc,char **argv){
    else {if(closes)return 7;fwp_p_file_close(result);fwp_p_file_close(result);}
   }else if(!mode)return 8;
   fault=0;fwp_trap_recover=0;fwp_trap_jb=0;fwp_handlers=0;
-  if(fwp_cleanups||closes!=1||watched_fd<0||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 2;
+  if(fwp_cleanups||closes!=1||watched_fd<0||!observed_stream_closed())return 2;
   // Inspect the header only while storage was retained by poison mode.
   if(observed_handle&&getenv("FWP_REUSE_VERIFY")&&strcmp(getenv("FWP_REUSE_VERIFY"),"0")&&((fwp_file *)observed_handle)->f)_Exit(3);
   if(mode&&mode<4&&callbacks)return 4;
