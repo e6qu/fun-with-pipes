@@ -17,6 +17,8 @@ pub enum Argument {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ResultOwnership {
     Shared,
+    /// Immutable static storage; no allocation or reference count is required.
+    Static,
     /// Transfers control to an effect handler; no normal result exists.
     Never,
     /// An owned resource or resource-bearing result prepared by the runtime.
@@ -512,7 +514,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[0, 1],
         ),
         "array.length" | "map.size" | "set.size" => (&[B], R, None, &[]),
-        "map.empty" | "set.empty" => (&[], R, None, &[]),
+        "map.empty" | "set.empty" => (&[], ResultOwnership::Static, None, &[]),
         "map.contains" | "set.contains" => (&[B, B], R, None, &[]),
         "map.from-list" | "set.from-list" | "map.keys" | "map.values" | "map.to-list"
         | "set.to-list" => (

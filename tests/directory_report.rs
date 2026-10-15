@@ -24,8 +24,20 @@ fn repeated_directory_reports_match_the_interpreter_and_release_storage() {
         std::fs::write(root.join(path), vec![b'x'; bytes]).unwrap();
     }
     let source = dir.join("report.fwp");
+    let empty_containers = r#"
+empty-map : Map[String, String]
+empty-map = map.empty
+empty-set : Set[String]
+empty-set = set.empty
+empty-report : I64 -> () ! {IO}
+empty-report = const () | tap (const empty-map
+    | both (map.insert "key" "value" | map.values) map.size | echo)
+    | tap (const empty-set | both (set.insert "value" | set.to-list) set.size | echo)
+    | const empty-map | map.insert "key" "value" | map.remove "key"
+    | both map.to-list map.size | echo
+"#;
     let program = format!(
-        "{}\nreport : I64 -> () ! {{FileIO, IO, Error[IoError]}}\nreport = const \"tree\" | tap (dirstat {{top = 10, all = False, sort = Bytes}} | each echo) | tap (dirstat {{top = 10, all = True, sort = Files}} | each echo) | dirstat {{top = 2, all = True, sort = Name}} | each echo\nmain = range 0 64 | each report\n",
+        "{}\n{empty_containers}\nreport : I64 -> () ! {{FileIO, IO, Error[IoError]}}\nreport = const \"tree\" | tap (dirstat {{top = 10, all = False, sort = Bytes}} | each echo) | tap (dirstat {{top = 10, all = True, sort = Files}} | each echo) | dirstat {{top = 2, all = True, sort = Name}} | each echo\nmain = range 0 64 | each (tap empty-report | report)\n",
         include_str!("../examples/cli/dirstat.fwp")
     );
     std::fs::write(&source, program).unwrap();

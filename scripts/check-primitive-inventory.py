@@ -143,6 +143,12 @@ for row in rows:
             contract='Some(Contract { arguments: ' + arguments + ', result: OwnedCallback, callback: Some(Borrowed(0)), aliases: ' + aliases + ' })')
         continue
     before = baseline_rows[key]
+    if row['symbol'] in {'map.empty', 'set.empty'}:
+        assert before['contract'] == 'Some(Contract { arguments: [], result: Shared, callback: None, aliases: [] })'
+        assert all(row[name] == before[name] for name in fields if name != 'contract')
+        assert row['contract'] == 'Some(Contract { arguments: [], result: Static, callback: None, aliases: [] })'
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] in {'fail', 'parse-int', 'parse-float'}:
         assert before['contract'] == 'Some(Contract { arguments: [Borrow], result: Shared, callback: None, aliases: [] })'
         assert all(row[name] == before[name] for name in fields if name != 'contract')
@@ -219,7 +225,7 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22

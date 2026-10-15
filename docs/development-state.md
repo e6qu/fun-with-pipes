@@ -1,195 +1,102 @@
 # Session handoff
 
-Updated 2026-10-16. [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146)
-merged as `be890914` after all nine production jobs and documentation passed
-for `19b14d0b`; its files and prescribed one-line message were verified.
-The current delivery is [PR #147](https://github.com/e6qu/fun-with-pipes/pull/147),
-head `71c612d0`, in `/Users/zardoz/projects/fun-with-pipes`.
-[Production 38814786923](https://github.com/e6qu/fun-with-pipes/actions/runs/38814786923)
-is running; its bench and [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38814787519)
-pass. Ignore skipped draft jobs. Do not change its head just to refresh status.
+Updated 2026-10-16. PR #146 merged as `be890914` after all nine production
+jobs and documentation passed. Current [PR #147](https://github.com/e6qu/fun-with-pipes/pull/147)
+is at `71c612d0`; production run `38814786923` has six passing jobs and three
+running (Linux ARM64/AMD64, Intel macOS GC shard). Documentation passes in
+`38814787519`. Do not change its head merely to refresh tracking.
 
-This is later preparation `move-unboxed-fields` in `/private/tmp/fwp-field-moves`,
-based on pre-rebase delivery anchor `a2679ecb`. Only changes after that commit
-belong here. No PR is open for this work; keep it separate while #147 runs.
-After #147 passes, squash merge with one subject of at most 80 characters and an
-explicitly empty body, no trailers or attribution. Continue without requesting
-permission again. Fix failures; queued CI gates merges, not preparation.
+Standing authorization: fix failures, require all nine production jobs and docs
+for the exact head, then squash merge with an explicit one-line subject of at
+most 80 characters and an empty body. No trailers or attribution. Continue to
+the next substantial PR without requesting permission again. JIT is excluded.
 
-## Roadmap status
+## Current preparation and delivery sequence
 
-[PLAN.md](../PLAN.md) defines completion; no whole area is finished. JIT is
-excluded. Preserve tacit data-last pipes, single-argument curried functions,
-explicit tuple conversion, infix precedence, effects and checked arithmetic.
+`move-unboxed-fields` in `/private/tmp/fwp-field-moves` contains the next batch.
+Only commits after preparation anchor `a2679ecb` belong to it. No PR is open for
+this work. Root `/Users/zardoz/projects/fun-with-pipes` remains on #147 and has a
+local handoff update; preserve/reconcile that update when switching branches.
+After #147 passes, merge it, fetch main, and rebase only preparation commits after
+`a2679ecb` onto the accepted squash. Preserve #147's Windows fixes when resolving
+tracking conflicts. Record acceptance, open the next combined PR and run the
+full final-head gate. Component runs below are not a substitute for that gate.
 
-| Step | Status | Next concrete work |
-|---|---|---|
-| 1 | In progress | Accept #147's ownership coverage; reduce proved unnecessary reference-count traffic |
-| 2 | In progress | Transfer fields of already unboxed records without a temporary owner |
-| 3 | In progress | Verify generated instructions and remaining matrix input costs |
-| 4 | In progress | Accept F128 precision; investigate differentiation timing and memory scaling |
-| 5 | Pending | Broaden CPU kernels and resolve runtime OpenCL compilation under the no-JIT policy |
-| 6 | In progress | Preserve equivalent C/Rust comparisons, repeated samples and memory profiles |
-| 7 | In progress | Extend composed and long-running application tests |
+[PLAN.md](../PLAN.md) defines the seven remaining work areas. None is complete.
+Current changes address ownership, functional overhead, numerical measurements
+and larger applications; derivative scaling and the other listed goals remain.
 
-## Measured target and implementation
+## Batch scope
 
-The retained matrix profile has three retains and three nonlast releases per
-multiplication. Its generated entry duplicates a selected array field immediately
-before releasing that field from an already flattened result record. An untimed
-single-multiplication C experiment removes just this pair: retains/nonlast
-releases fall 3 to 2, release checks 7 to 6. Five allocations, 101,456 requested
-bytes, 101,392 peak charged bytes, zero final storage and the hash remain identical.
-`/private/tmp/fwp-field-move-count-check.py` passes under the local guard (2.40 s);
-results are in `/private/tmp/fwp-field-move-count-result.json`. This is not a
-speed measurement or verification of a changed compiler.
+- Move a selected field out of an already flattened record when its parent is
+  immediately dropped. Release siblings without temporarily retaining the result.
+- Transfer typed fields from uniquely owned boxed records and free their outer
+  cell. Shared parents still duplicate children; stack records retain their
+  existing treatment. Mixed scalar/pointer bits, I128 boxes, shared children,
+  shared parents, partial retain failures and later traps have regressions.
+- Own working-directory results and temporary OS buffers. `env.cwd` now declares
+  `Error[IoError]` and reports kind `cwd` when lookup fails, instead of returning
+  a substitute `.` or trapping. Windows tests cover both UTF-16 and UTF-8 scratch
+  cleanup during string construction failure. Generated library docs are updated.
+- Repair Windows probes: binary stdout, escaped source paths, native file-handle
+  checks, explicit `.exe` filenames for ARC symbol inspection. Keep the real
+  symbol/cleanup checks; do not skip them on Windows.
+- Run the maintained `examples/cli/dirstat.fwp` 192 times over a nested Unicode
+  fixture, comparing raw interpretation with tracing/ARC O1/O2 and checking final
+  ARC storage. This exposed a rejected static empty-map boundary. Empty maps/sets
+  now have an explicit static-result contract; the extended test also checks
+  empty aliases, insertion and removal back to empty. Native repair validation
+  is pending; do not describe the application as accepted yet.
 
-The provisional `bind_local` change recognizes only an immediate selected-field
-Dup followed by that flattened parent's Drop. It transfers the selected field,
-releases the other fields with their existing typed drops, and leaves original
-resource-frame cases unchanged. No wrapper, runtime mode or language syntax is
-added. Boxed input-record retains and two input wrapper allocations remain
-separate costs.
+## Checks and unresolved failures
 
-The next candidate targets the two boxed-input conversions, using the existing
-last-owner test. A unique heap record transfers its typed fields and frees only
-its outer cell; shared or stack records keep their existing ownership operations.
-Acceptance requires mixed scalar/pointer fields, shared parents/children, wide
-numeric boxes, retain failure, cleanup on later failure and unchanged numerical
-results. The intended matrix count is zero retains/nonlast releases, with the
-same five allocations per multiplication. No timing gain is assumed.
-`boxed_field_moves` checks actual tracing/ARC builds, shared parents, aliased
-children, an I64 with pointer-like bits, an owned I128 box, repeated drops and
-traps, and a negative control forcing the old conversion. The existing compiler
-fails its unique-input retain assertion with four retains (exit 214), as expected
-(guarded baseline check 1.36 s). An edited-C mechanism probe passes this test and
-the shared overflow regression (10.40 s); it does not verify changed compiler
-emission. The overflow regression now forces a shared parent because a unique
-parent no longer retains children and cannot trigger that artificial overflow.
+- Field moves and adjacent ownership regressions pass all six native hosts in
+  `38817873592` at `a3d8f16e`. Negative controls restore redundant counts and fail
+  as expected. Earlier Windows newline/path probe failures are repaired.
+- Working-directory tests pass all six hosts at `713d98ec` in `38819770126`.
+  That run fails older Windows ARC file fixtures with unescaped paths; `6b40fb88`
+  repairs both real and missing paths. ARC execution then passes both Windows
+  hosts in `38820866204`.
+- Run `38820866204` fails the new directory application on all six hosts because
+  `map.empty` was classified as an uncounted owner. Logs are
+  `/private/tmp/fwp-app-linux.log` and `/private/tmp/fwp-app-windows.log`.
+  The explicit static contract is the current fix, awaiting changed-compiler CI.
+- Guarded local formatting passes (1.07 s), extended raw-interpreter application
+  passes (1.66 s), and primitive inventory passes (0.61 s): 250 contracts,
+  10 scalar signatures, 99 review declarations, 19 templates, 89 review symbols.
+  Commands: `python3 scripts/local-guard.py cargo fmt --check`, guarded
+  `/private/tmp/fwp-directory-report-raw.py`, and guarded
+  `scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-static-inventory.json`.
+  Existing local compiler predates these changes; local raw/edited-C probes do
+  not verify changed emission. All full builds and gates remain on runners.
 
-## Proof tests and actual checks
+## Numerical evidence to retain
 
-`field_moves` constructs checked typed IR so inlining cannot erase the projection
-being tested. Raw interpretation checks independent and shared children. Native
-probes repeat both cases with/without external aliases, check selected counts,
-release discarded siblings, and trap after selection to exercise real unwind
-cleanup. Tracing uses stress/reuse verification; ARC never enables them. O1/O2
-and an injected retain/release pair verify that the counter detects extra work.
+Solver run `38817877068` at `a3d8f16e` passes Linux/macOS ARM64/AMD64.
+Eight matrix products now perform zero retains/nonlast releases and 16 release
+checks versus 24/24/56. Forty allocations, 811,648 requested bytes, 101,392 peak
+charged bytes, zero final storage/collections and output hashes agree. The two
+input wrapper allocations per product remain: fwp uses five versus C/Rust's three.
+Artifacts: `/private/tmp/fwp-boxed-numerical-evidence`.
 
-The existing compiler fails the new count assertion with exactly one extra retain
-(exit 198), as intended. Guarded baseline probe
-`/private/tmp/fwp-field-move-baseline-check.py` passes that negative-control check
-(1.59 s). It emits `/private/tmp/fwp-field-move-baseline.c`; the test harness
-compiles against the existing library. Formatting passes (1.10 s). The changed compiler passes its new field-move regression on Linux AMD64/ARM64
-and Windows AMD64/ARM64 in [38815917275](https://github.com/e6qu/fun-with-pipes/actions/runs/38815917275)
-at `c8f65e5`. The broader Windows suite exposed two old probe portability issues: 
-text-mode newline translation and an unescaped path. Repairs set binary probe
-output, escape the path, intercept Windows wide-character file opens and check
-closed native handles. Both repaired probes pass locally against the existing
-compiler under the guard (10.97 s). Both Windows and both Linux jobs pass
-[38817093105](https://github.com/e6qu/fun-with-pipes/actions/runs/38817093105)
-at `1901fd44`; macOS jobs were still queued before the boxed-transfer extension.
-Failed logs are `/private/tmp/fwp-field-116700424100.log` and
-`/private/tmp/fwp-field-116700424254.log`.
+Paired run `38821156704` at `6b40fb88` passes all four hosts using that verified
+emitted C. The control restores count traffic for nonfailing inputs, not the
+entire old compiler or its overflow scaffolding. Forty rotating samples per
+binary and separate profiles compare both memory modes with unchanged arithmetic
+and allocations. Artifacts: `/private/tmp/fwp-record-moves-evidence`.
+Next: retain raw comparisons and update benchmarks with both current C/Rust
+ratios and the distinct moved/retained comparison, including slower results.
+Linux AMD64's cross-language matrix gap remains; different runner CPUs prevent
+attributing cross-run changes solely to record moves.
 
-The `fields` workflow suite adds six-host validation with adjacent projection,
-record-conversion, borrowed-callback and original resource-frame regressions.
-Production Windows coverage includes the changed projection/resource cases too.
-Full builds and tests remain on runners; all local workloads use
-`python3 scripts/local-guard.py COMMAND...` within the fixed limits.
+## Subsequent investigation
 
-## Numerical evidence and timing investigation
-
-Both Linux numerical jobs at `a3d8f16e` pass. Their matrix profiles now show zero
-retains/nonlast releases and 16 release checks across eight products, versus
-24/24/56 before both moves. Forty allocations, 811,648 requested bytes, 101,392
-peak charged bytes, zero final storage/collections and output hashes agree.
-The generic benchmark entry still constructs two boxed input records per product;
-C/Rust use three allocations per product versus fwp's five.
-
-Timing is not uniformly better. ARC matrix kernel/C ratios are 0.980 on Linux
-ARM64 and 1.831 on AMD64; allocation-inclusive ratios are 1.126 and 2.069. The
-new AMD64 runner is Xeon 8573C, versus 8370C for the preceding unboxed-only run.
-The matrix C kernel is byte-identical and its 387 disassembly lines differ only
-in data addresses. This does not establish that the timing change is noise or
-that the optimization caused it. Prepare a same-run moved/retained control,
-keeping arithmetic and allocations fixed and asserting the old/new counts.
-`scripts/measure-record-moves.py` performs that runner-only comparison; dispatch
-`suite=record-moves` after all solver artifacts from `38817877068` exist.
-Artifacts: `/private/tmp/fwp-boxed-numerical-evidence` and the normalized diff
-`/private/tmp/fwp-matrix-move-asm.diff`. Retain the slower result in the report.
-
-## Working-directory ownership and explicit errors
-
-The current extension removes `env.cwd`'s POSIX fixed 4 KiB buffer and silent
-`"."` substitution. Both engines now raise `Error[IoError]` with kind `cwd` if the
-OS cannot read the directory; the copied string has a checked fresh-leaf contract.
-Native buffers are protected during string allocation and freed on all exits.
-This also replaces the old Windows trap with the same typed error interface.
-The library signature and generated reference describe the deliberate change.
-
-`working_directory` compares actual Unicode directories in both engines, checks
-removed-directory errors on POSIX, and probes repeated native ownership,
-6000-character OS results, read failure, partial string-construction failure,
-forced collections and omitted-count/release controls. Native Windows uses its
-wide path API, including a second-read failure. Its strengthened long-path trap
-occurs after both the UTF-16 path and temporary UTF-8 conversion buffer exist. Both Windows architectures pass the cwd tests at `8660463f`; the broader run
-fails in an older `arc_execution` probe because `nm` is given a filename without
-Windows' `.exe` suffix. The fix supplies explicit binary filenames and adds this
-probe to production Windows coverage. Logs: `/private/tmp/fwp-cwd-116710703937.log`
-and `/private/tmp/fwp-cwd-116710704277.log`. All-target acceptance is still pending.
-
-The local POSIX edited-C mechanism probe passes (3.38 s); the stronger long-path
-construction failure repeats successfully (3.66 s). Its first attempt used
-an obsolete generated call spelling; a later attempt included scheduler setup in
-the memory baseline. The corrected probe calls the exported cwd entry directly
-and includes #147's counted error constructor. It is runtime evidence, not
-changed-compiler or native Windows acceptance.
-
-Local formatting passes (1.10 s); generated docs regenerate and verify through
-`stdlib_doc` (1.03 s). The inventory initially rejected the deliberate added
-error effect; its exact expected signature is now recorded without changing the
-frozen baseline. It passes (0.98 s): 250 contracts, 10 scalar signatures, 99 review
-declarations, 19 templates and 89 remaining review symbols.
-
-The corrected `713d98ec` suite passes both Linux and both macOS hosts. Both
-Windows jobs pass cwd ownership and nested conversion cleanup, but the older
-ARC probe reaches another unescaped path in its file case. That path and its
-missing-file counterpart now use escaped source literals; the entire fixture
-has been reviewed for native filenames, direct symbol reads and file handles.
-Failure logs: `/private/tmp/fwp-arc-symbols-116713225617.log` and
-`/private/tmp/fwp-arc-symbols-116713225969.log`. No failed run is acceptance.
-
-## Maintained application coverage
-
-`directory_report` executes the existing `examples/cli/dirstat.fwp` application
-64 times for three explicit option sets. It combines recursive directory walking,
-metadata, hidden-file filtering, extension grouping, sorting, column formatting
-and output, including nested Unicode paths. The raw interpreter check passes
-under the guard (1.48 s). Actual tracing/ARC O1/O2 builds, stress/reuse and final
-ARC storage checks are added to the native suite; they have not run yet.
-The local fixture was corrected to use effectful `tap` sequencing and a concrete
-input signature; `list.ap` requires pure functions and unused generic inputs need
-explicit signatures. These were fixture errors, not compiler regressions.
-
-## Next: validate preparation and merge #147
-
-Boxed-field compiler tests at `a3d8f16e` pass all six native targets in [38817873592](https://github.com/e6qu/fun-with-pipes/actions/runs/38817873592);
-including regular ownership, stress and resource cases. Numerical run
-[38817877068](https://github.com/e6qu/fun-with-pipes/actions/runs/38817877068)
-collects profiles and instructions for both move changes. Superseded preparation
-runs `38817093105` and `38816168594` were canceled; their completed jobs remain
-component evidence, not final acceptance.
-
-The cwd run at `8660463f` was superseded after its Windows symbol-inspection
-failure. The repaired candidate `713d98ec` is running in
-[38819770126](https://github.com/e6qu/fun-with-pipes/actions/runs/38819770126). Fix
-all failures, and inspect the final numerical counts and C/Rust measurements.
-The expected matrix profile is zero retains/nonlast releases across eight
-products, with forty allocations and zero final charged storage/collections.
-Keep boxed API wrapper allocations visible in the report.
-
-Monitor #147's exact-head gate and merge only after all nine production jobs
-plus docs pass. Transfer this preparation's changes after `a2679ecb` onto that
-accepted squash before opening the next substantial PR. Keep one current PR,
-and update the main handoff with actual tests, unresolved issues and next action.
+A small isolated x86 C compile suggests an output-pointer `restrict` parameter
+could give Clang a clearer no-alias promise than a local pointer. Inputs may still
+alias. The probe reduced spill/reload annotations from 44/47 to 30/33 and explicit
+stack reserve from 168 to 72 bytes. It is neither a runtime change nor a timing
+result. Files: `/private/tmp/fwp-matrix-output-alias.c` and `.s`; guarded
+`clang -O2 -std=gnu11 -ffp-contract=off -target x86_64-apple-darwin -S` passed
+in 0.17 s. Before adoption prove fresh output lifetime, preserve checks/ticks and
+floating order, inspect actual inlining/instructions and measure all four hosts.
+Do not mark the GC allocator broadly malloc-like: its arena aliases need care.

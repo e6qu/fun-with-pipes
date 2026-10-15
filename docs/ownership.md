@@ -348,3 +348,10 @@ on and off, inspect native symbols/instructions for absent tracing, and require
 missing-free controls to fail. ARC still needs allocator metadata and can retain
 reusable pages. It promises neither zero allocation overhead nor immediate return
 of every page to the operating system.
+
+Empty maps and sets use immutable static storage. Their explicit static-result
+contract permits checked ARC without allocating an owner or changing a reference
+count. Inserting into an empty value allocates an ordinary typed container;
+other aliases still see the empty value. The repeated directory-report test
+checks empty map/set aliases, insertion, removal back to empty and full cleanup
+alongside the maintained application in both memory modes.
