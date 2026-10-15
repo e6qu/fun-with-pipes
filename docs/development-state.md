@@ -149,9 +149,15 @@ fail the cancellation probe's state assertion (exit 2) in
 [run 38796862558](https://github.com/e6qu/fun-with-pipes/actions/runs/38796862558).
 The partial-payload cleanup probe passes. Diagnostics now print the mode, tick,
 unwind flag and remaining cleanup pointer; the regression runs in the early
-Windows resource step, including the focused Windows workflow. This is diagnostic
-work, not a confirmed fix. Harness metadata and exact output/report-byte checks
-passed through the local guard (1.13 s); native Windows diagnosis remains required.
+Windows resource step, including the focused Windows workflow. The probe installed
+a synthetic current task without its Windows stack-scan boundary. Under forced
+collection this hides stack roots. Reproducing that missing boundary locally
+fails at dynamic-loop mode 2, tick 2: unwinding completes and cleanups are empty,
+but the observed text is zero. The normal boundary passes. The synthetic Windows
+task now explicitly uses main's stack boundary; production task initialization
+is unchanged. Guarded reproduction passed in 5.91 s, including the expected
+missing-boundary failure. Native Windows and final production acceptance remain
+required. Earlier harness metadata and output/report checks passed (1.13 s).
 
 The following batch is isolated in `/private/tmp/fwp-linear-algebra`, branch
 `checked-linear-algebra`, originally based on `c10b1ccd`. It owns scratch and
