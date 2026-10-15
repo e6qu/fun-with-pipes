@@ -98,6 +98,27 @@ Production Windows coverage includes the changed projection/resource cases too.
 Full builds and tests remain on runners; all local workloads use
 `python3 scripts/local-guard.py COMMAND...` within the fixed limits.
 
+## Numerical evidence and timing investigation
+
+Both Linux numerical jobs at `a3d8f16e` pass. Their matrix profiles now show zero
+retains/nonlast releases and 16 release checks across eight products, versus
+24/24/56 before both moves. Forty allocations, 811,648 requested bytes, 101,392
+peak charged bytes, zero final storage/collections and output hashes agree.
+The generic benchmark entry still constructs two boxed input records per product;
+C/Rust use three allocations per product versus fwp's five.
+
+Timing is not uniformly better. ARC matrix kernel/C ratios are 0.980 on Linux
+ARM64 and 1.831 on AMD64; allocation-inclusive ratios are 1.126 and 2.069. The
+new AMD64 runner is Xeon 8573C, versus 8370C for the preceding unboxed-only run.
+The matrix C kernel is byte-identical and its 387 disassembly lines differ only
+in data addresses. This does not establish that the timing change is noise or
+that the optimization caused it. Prepare a same-run moved/retained control,
+keeping arithmetic and allocations fixed and asserting the old/new counts.
+`scripts/measure-record-moves.py` performs that runner-only comparison; dispatch
+`suite=record-moves` after all solver artifacts from `38817877068` exist.
+Artifacts: `/private/tmp/fwp-boxed-numerical-evidence` and the normalized diff
+`/private/tmp/fwp-matrix-move-asm.diff`. Retain the slower result in the report.
+
 ## Working-directory ownership and explicit errors
 
 The current extension removes `env.cwd`'s POSIX fixed 4 KiB buffer and silent
@@ -136,7 +157,8 @@ collects profiles and instructions for both move changes. Superseded preparation
 runs `38817093105` and `38816168594` were canceled; their completed jobs remain
 component evidence, not final acceptance.
 
-Publish and run the working-directory extension with the ownership suite, fix
+Working-directory candidate `8660463f` is running in
+[38819008626](https://github.com/e6qu/fun-with-pipes/actions/runs/38819008626). Fix
 all failures, and inspect the final numerical counts and C/Rust measurements.
 The expected matrix profile is zero retains/nonlast releases across eight
 products, with forty allocations and zero final charged storage/collections.
