@@ -152,6 +152,14 @@ error effect; its exact expected signature is now recorded without changing the
 frozen baseline. It passes (0.98 s): 250 contracts, 10 scalar signatures, 99 review
 declarations, 19 templates and 89 remaining review symbols.
 
+The corrected `713d98ec` suite passes both Linux and both macOS hosts. Both
+Windows jobs pass cwd ownership and nested conversion cleanup, but the older
+ARC probe reaches another unescaped path in its file case. That path and its
+missing-file counterpart now use escaped source literals; the entire fixture
+has been reviewed for native filenames, direct symbol reads and file handles.
+Failure logs: `/private/tmp/fwp-arc-symbols-116713225617.log` and
+`/private/tmp/fwp-arc-symbols-116713225969.log`. No failed run is acceptance.
+
 ## Maintained application coverage
 
 `directory_report` executes the existing `examples/cli/dirstat.fwp` application

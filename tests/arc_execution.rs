@@ -25,7 +25,7 @@ checks : (String -> String) -> (String, String, String)
 checks = make { 0 = apply "A", 1 = apply "B", 2 = apply "C" }
 main = range 0 129 | map (choose | checks) | length | echo
 "#;
-    let files = format!("main = [\"{}\" | attempt (flip file.with file.read-all) | echo, \"{}/missing\" | attempt (flip file.with file.read-all) | echo] | ignore\n",data.display(),dir.display());
+    let files = format!("main = [{:?} | attempt (flip file.with file.read-all) | echo, {:?} | attempt (flip file.with file.read-all) | echo] | ignore\n", data.to_string_lossy(), dir.join("missing").to_string_lossy());
     let sources = [
         ("arrays", include_str!("fixtures/numeric_array_fusion.fwp")),
         ("closures", closures),
