@@ -88,6 +88,8 @@ assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row 
 # These reviewed contract changes are checked against the frozen baseline.
 bundle_contracts = {}
 bundle_contracts['not'] = (1, 'Shared', [])
+for symbol in ['and', 'or']:
+    bundle_contracts[symbol] = (2, 'Shared', [])
 bundle_contracts['prim.trap'] = (1, 'Never', [])
 for symbol in ['prim.zero', 'prim.one']:
     bundle_contracts[symbol] = (0, 'Numeric', [])

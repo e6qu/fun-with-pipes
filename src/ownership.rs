@@ -151,8 +151,9 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
-        // Bool tags are immortal immediates; negation allocates nothing.
+        // Bool tags are immortal immediates; these operations allocate nothing.
         "not" => (&[B], R, None, &[]),
+        "and" | "or" => (&[B, B], R, None, &[]),
         "prim.zero" | "prim.one" => (&[], ResultOwnership::Numeric, None, &[]),
         "prim.neg" | "prim.from-int" | "prim.from-float" | "bit.not" | "int.convert"
         | "float.to-int" | "float.convert" | "int.to-float" | "sqrt" | "exp" | "ln" | "sin"

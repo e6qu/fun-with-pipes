@@ -30,7 +30,10 @@ empty-map = map.empty
 empty-set : Set[String]
 empty-set = set.empty
 empty-report : I64 -> () ! {IO}
-empty-report = const () | tap (const empty-map
+empty-report = const ()
+    | tap (const [(False, False), (False, True), (True, False), (True, True)]
+        | map (both (uncurry and) (uncurry or)) | echo)
+    | tap (const empty-map
     | both (map.insert "key" "value" | map.values) map.size | echo)
     | tap (const empty-set | both (set.insert "value" | set.to-list) set.size | echo)
     | const empty-map | map.insert "key" "value" | map.remove "key"

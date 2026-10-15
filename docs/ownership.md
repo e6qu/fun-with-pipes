@@ -355,3 +355,7 @@ count. Inserting into an empty value allocates an ordinary typed container;
 other aliases still see the empty value. The repeated directory-report test
 checks empty map/set aliases, insertion, removal back to empty and full cleanup
 alongside the maintained application in both memory modes.
+
+Boolean `not`, `and` and `or` borrow their immediate Boolean arguments and
+return an immediate Boolean tag; none needs storage or reference counts. Their
+explicit contracts admit ordinary Boolean combinations to checked ARC.

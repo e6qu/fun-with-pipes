@@ -38,7 +38,7 @@ and larger applications; derivative scaling and the other listed goals remain.
 | 6 | In progress | Retain comparable C/Rust results and establish repeatable regression criteria |
 | 7 | In progress | Repair and validate the maintained directory application in checked ARC |
 
-Next: inspect `38822110000` and fix any further application failures; merge #147
+Next: run the combined Boolean/static-container repair and fix any remaining application failures; merge #147
 only after its exact-head gate passes, then publish the combined preparation.
 
 ## Batch scope
@@ -76,7 +76,15 @@ only after its exact-head gate passes, then publish the combined preparation.
   `map.empty` was classified as an uncounted owner. Logs are
   `/private/tmp/fwp-app-linux.log` and `/private/tmp/fwp-app-windows.log`.
   The explicit static contract is published at `f5a38e2e`; changed-compiler CI
-  is running in `38822110000`.
+  in `38822110000` reaches the next missing contract, Boolean `or`.
+  Both `and` and `or` now have explicit immediate-value contracts. A bounded
+  harness compiles the application with the existing front end and the current
+  ARC contract/scope checker: it reproduces the rejection, then passes (1.42 s)
+  with no uncovered primitive. This checks eligibility, not new native emission.
+  It is `/private/tmp/fwp-directory-contract-check.py`. The inventory passes
+  (0.48 s): 252 contracts, eight scalar signatures, 99 review declarations,
+  19 templates and 89 review symbols. Native application acceptance still awaits
+  the combined repair.
 - Guarded local formatting passes (1.07 s), extended raw-interpreter application
   passes (1.66 s), and primitive inventory passes (0.61 s): 250 contracts,
   10 scalar signatures, 99 review declarations, 19 templates, 89 review symbols.
