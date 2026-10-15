@@ -16,7 +16,7 @@ as `5d05cdd6`, with all nine production jobs and documentation green. The user
 requested continued work. The current follow-up removes repeated scans of known
 unavailable tape slots in both runtimes, preserving lowest-slot token selection.
 Keep implementation, regression controls, four-host measurements and docs on
-`autodiff-registry-search`. Follow the live plan and handoff; historical
+`autodiff-registry-search` in PR #140. Follow the live plan and handoff; historical
 preparation entries are not work to replay.
 
 Standing authorization covers publication, fixes and squash merge after all

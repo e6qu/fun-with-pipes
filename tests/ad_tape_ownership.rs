@@ -88,7 +88,16 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
         "    if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))\n        fwp_trap(FWP_AD_INVALID_NODE);\n", "");
     assert_ne!(unchecked, runtime);
     let missing_release = runtime.replace("probe_free(b->pa);", "(void)b->pa;");
+    // Bypass the cursor too: exhausted generations are excluded by both the
+    // release cursor and the scan predicate. This control must actually wrap.
+    assert_eq!(
+        runtime
+            .matches("int64_t slot = fwp_tape_next_slot;")
+            .count(),
+        1
+    );
     let wrapping = runtime
+        .replace("int64_t slot = fwp_tape_next_slot;", "int64_t slot = 0;")
         .replace("while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;", "while (slot < fwp_ntapes && fwp_tapes[slot].live) slot++;")
         .replace("t->gen++;", "t->gen = t->gen % 32767 + 1;");
     assert_ne!(wrapping, runtime);

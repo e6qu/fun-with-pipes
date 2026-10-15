@@ -1,7 +1,8 @@
 # Session handoff
 
 Updated 2026-10-15. The user requested continued development after PR #139.
-Current branch: `autodiff-registry-search`. Publication, fixes and squash merge
+[PR #140](https://github.com/e6qu/fun-with-pipes/pull/140), branch
+`autodiff-registry-search`, is a draft at `1bf9c626`. Publication, fixes and squash merge
 after all nine exact-head production jobs plus documentation remain authorized.
 
 ## Roadmap status
@@ -65,6 +66,22 @@ allocation/live-memory equality and native binaries at 1, 257, 4,096 and 16,384
 simultaneous tapes. Four-host results and instruction inspection are pending.
 No full build, test gate or benchmark has run locally.
 
+[Focused AD/evidence](https://github.com/e6qu/fun-with-pipes/actions/runs/38705030679)
+at `1bf9c626` exposed a stale generation-wrap negative control on macOS ARM64:
+the cursor correctly bypassed the exhausted slot, so removing only the scan's
+generation check no longer induced wraparound. The test now also starts that
+intentionally broken search at zero. Expected failure status 46 is unchanged.
+Local reproduction failed as expected before the fix; both `ad_tape_ownership`
+tests pass after it (18.69s), including raw/native token comparisons. The runner
+log confirms this was its only failed test; all measurement steps passed there.
+The failed run is superseded and supplies no acceptance gate.
+
+[Focused WASM](https://github.com/e6qu/fun-with-pipes/actions/runs/38705039304)
+continues at `1bf9c626`; runtime/compiler source is unchanged by the test repair.
+The draft production run was skipped and supplies no gate. Documentation run
+`38704994147` was queued at publication. Roadmap/link/commit audit passed locally
+(2.91s). Final four-host evidence is pending from the corrected-test revision.
+
 Duplicate post-merge main CI `38701521745` was cancelled after verifying its tree
 matches PR #139's fully passing head; it supplies no acceptance gate. Main docs
 `38701521545` passed. The new PR requires its own final-head production run.
@@ -79,8 +96,8 @@ and ownership boundaries remain as documented in [ownership](ownership.md).
 
 ## Next action
 
-Next: publish the draft PR, run focused four-host AD and WASM validation, collect
-and inspect paired search measurements and actual native instructions. Fix any
+Next: monitor focused four-host AD and WASM validation, collect and inspect paired
+search measurements and actual native instructions. Fix any
 failures, record permanent evidence and update these docs. Mark the PR ready,
 and require all nine production jobs plus documentation at the final head before
 squash merge. Keep this handoff current with actual outcomes.

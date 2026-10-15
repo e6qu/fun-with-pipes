@@ -9,7 +9,8 @@ All nine production jobs and documentation passed at its tree-identical head
 The user requested continued development. The current follow-up removes repeated
 scans of known unavailable AD tape slots in both runtimes. Keep implementation,
 regression controls, four-host measurements and streamlined docs together on
-`autodiff-registry-search`. [The handoff](docs/development-state.md) records actual
+`autodiff-registry-search` in [PR #140](https://github.com/e6qu/fun-with-pipes/pull/140).
+[The handoff](docs/development-state.md) records actual
 checks and next actions. Delivery requires all nine production jobs and
 documentation on the final head; historical anchors are not further work.
 
