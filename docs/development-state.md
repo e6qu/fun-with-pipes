@@ -1,6 +1,7 @@
 # Session handoff
 
-Updated 2026-10-15. Current branch: `measured-ownership-performance`, based on
+Updated 2026-10-15. Current draft: [PR #145](https://github.com/e6qu/fun-with-pipes/pull/145),
+branch `measured-ownership-performance`, based on
 `e94cc4a6` (PR #144). The user requested cancellation of remaining old CI runs
 and the next large combined PR. The currying discussion is settled: retain
 explicit `curry`/`uncurry` and pursue the single-argument function model.
@@ -79,20 +80,31 @@ the full production acceptance gate.
 
 The pre-change performance dispatch is
 [run 38767826317](https://github.com/e6qu/fun-with-pipes/actions/runs/38767826317)
-at preparation commit `711ac295`. Results are pending; do not treat the dispatch
-as passing evidence.
+at preparation commit `711ac295`. Linux ARM/AMD64 and macOS ARM64 jobs passed;
+Intel macOS is still running. This is baseline evidence, not final-head acceptance.
+The ARM macOS profile confirms one cleanup registration per element in the fused
+array loop (129/257 registrations for 129/257 elements), with zero intermediate
+allocations or retains. Timings vary substantially; no speedup is claimed.
 
-Infix arithmetic is implemented in the working tree (`+ - * / %` and unary
+Infix arithmetic was published at `0ae0737a` (`+ - * / %` and unary
 negation). Inference and native lowering use the existing arithmetic operations;
 the syntax tree retains notation for formatting. Added precedence/formatting,
 macro, numeric-width, operand-effect and competing-trap controls. Full compiler
 and interpreter/native validation is pending on runners.
 
+The working tree additionally removes checked increments from the bounded
+internal array index and omits unwind scopes for immediate wrapping integer
+operations. Wide boxed integers and ordinary checked arithmetic keep their
+protection. Checked ARC also omits conservative-GC root fences; tracing mode
+retains them. Existing allocation/cleanup and ARC reclamation controls are the
+acceptance tests, with the array cleanup bound tightened to constant work.
+These runtime/compiler changes are not yet verified on runners.
+
 Focused local checks, all through `python3 scripts/local-guard.py`:
 
 - `python3 /private/tmp/fwp-infix-local.py`: standalone lexer/parser/formatter
-  harness passed one precedence/round-trip test and six lexer tests; rerun after
-  absolute standard-library reference fixes passed (1.56 s).
+  harness passed two precedence/layout/round-trip tests and six lexer tests
+  (1.83 s), including macros, type sizes, long expressions and comments.
 - `cargo fmt --all -- --check`: passed (1.08 s).
 - Existing interpreter float-display probe: passed (0.63 s); this establishes
   fixture output spelling only, not the changed compiler's correctness.
@@ -104,9 +116,11 @@ not exist; the corrected probe used `fwp run --interp` with a temporary file.
 
 ## Next action
 
-Next: publish the combined draft PR and dispatch the focused `syntax` suite;
-fix any compiler, formatter or behavioral failures. Inspect the running baseline,
-then implement and test the proved loop/ARC improvements. Keep all changes in this combined PR;
+Next: publish the added loop/ARC changes and run the focused `syntax` suite,
+which now includes array, ARC and unwind controls. Supersede any still-queued
+older dispatch rather than spending a compiler build on an obsolete head.
+Fix compiler, formatter or behavioral failures, then collect comparable final
+performance evidence and improve sampling fairness. Keep all changes in this combined PR;
 mark it ready only when its final content and evidence are reviewable.
 
 Use `python3 scripts/local-guard.py COMMAND...` for focused serial local checks.

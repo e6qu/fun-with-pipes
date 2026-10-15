@@ -52,7 +52,7 @@ pub fn parse_module_recover(
     p.module()
 }
 
-/// Parse a standalone expression (used by `fwp eval`).
+/// Parse a standalone expression, including syntax values decoded by macros.
 pub fn parse_expr_text(text: &str, file: u32, next_id: &mut NodeId) -> DResult<Expr> {
     let toks = lex(text, file)?;
     let mut p = Parser {

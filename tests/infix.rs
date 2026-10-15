@@ -42,6 +42,24 @@ fn precedence_and_application() {
 }
 
 #[test]
+fn arithmetic_layout_quotes_and_type_sizes_round_trip() {
+    for source in [
+        "value = 2\n    + 3 * 4\nnext = 5\n",
+        "macro twice = quote (unquote!(0) * 2)\nmain = twice!(2 + 3) | echo\n",
+        "f : Vector[I64, 2 + 3 * 4] -> I64\nf = vector.length\n",
+        "f = match\n    True -> const (2 + 3 * 4)\n    False -> const (20 - (6 - 2))\n",
+        "x = { first = 2 + 3, second = [4 * 5, 6 - 2] }\n",
+        "x = (1111111111111111 + 2222222222222222) * (3333333333333333 - 4444444444444444) | echo\n",
+        "x = 2 + # keep this explanation\n    3 * 4\n",
+    ] {
+        let formatted = fmt::format_source(source).unwrap();
+        assert!(fmt::same_program(source, &formatted), "{formatted}");
+        assert_eq!(fmt::format_source(&formatted).unwrap(), formatted);
+    }
+    assert!(parser::parse_module("x = 2\n+ 3\n", 0, &mut 0).is_err());
+}
+
+#[test]
 fn raw_interpreter_and_native_agree() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     let dir = std::env::temp_dir().join(format!("fwp-infix-{}", std::process::id()));

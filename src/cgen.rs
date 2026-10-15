@@ -4841,15 +4841,26 @@ impl<'g, 'p> FnGen<'g, 'p> {
         } else {
             let f = &self.g.prog.funcs[id];
             let (params, result_type) = f.ty.params(f.arity as usize);
-            // These concrete primitive bodies only emit floating arithmetic:
+            // These concrete primitive bodies only emit scalar arithmetic:
             // no allocation, language trap, callback or cancellation point.
             // Argument evaluation has already retained its own unwind scopes.
             let scalar_arithmetic = matches!(
                 (&f.body, f.arity),
                 (Body::Prim(sym), 2) if matches!(sym.as_str(), "prim.add" | "prim.sub" | "prim.mul")
             ) || matches!((&f.body, f.arity), (Body::Prim(sym), 1) if sym == "prim.neg");
-            let cannot_unwind = scalar_arithmetic
-                && matches!(scalar(result_type), Some(Scalar::F32 | Scalar::F64))
+            let scalar_wrapping = matches!(
+                (&f.body, f.arity),
+                (Body::Prim(sym), 2) if matches!(sym.as_str(), "wrapping.add" | "wrapping.sub" | "wrapping.mul")
+            );
+            // Wide integers can allocate their boxed result; checked integer
+            // arithmetic can trap. Neither qualifies for this exemption.
+            let cannot_unwind = ((scalar_arithmetic
+                && matches!(scalar(result_type), Some(Scalar::F32 | Scalar::F64)))
+                || (scalar_wrapping
+                    && matches!(
+                        scalar(result_type),
+                        Some(Scalar::Signed(_) | Scalar::Unsigned(_))
+                    )))
                 && params.iter().all(|ty| *ty == result_type);
             let call = format!("f{}({})", id, xs.join(", "));
             let result = if cannot_unwind {

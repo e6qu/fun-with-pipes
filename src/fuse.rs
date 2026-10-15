@@ -1276,7 +1276,11 @@ impl Fuser<'_> {
                 let element = elem(&prod_ty)?;
                 let option = MT::Con("std::Option".into(), vec![element]);
                 let get = self.prim("array.get", fun2(&index_ty, &prod_ty, &option), 2);
-                let add = self.prim("prim.add", fun2(&index_ty, &index_ty, &index_ty), 2);
+                // The index starts at zero and advances only after a successful
+                // array.get. Array lengths reserve the header's high bit for
+                // views, so position < length <= I64::MAX here. Adding one
+                // cannot overflow; user callback arithmetic remains checked.
+                let add = self.prim("wrapping.add", fun2(&index_ty, &index_ty, &index_ty), 2);
                 let position = st(0);
                 let input = st(1);
                 let next = Expr::Call(add, vec![Expr::Const(Value::I64(1)), position.clone()]);
