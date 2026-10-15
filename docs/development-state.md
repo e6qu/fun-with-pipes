@@ -5,10 +5,11 @@ merged as `e51b8570` after all nine production jobs and documentation passed
 for `1ee7d581`. Its single-line squash message has no body or trailers.
 Completed evidence is in [delivery history](roadmap-history.md).
 
-The current batch is `checked-library-ownership`: copied C library boundaries,
+The current batch is [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146),
+branch `checked-library-ownership`: copied C library boundaries,
 data-only channels, transpose ownership, allocator accounting and measured
-numerical improvements. This batch is rebased onto the accepted squash commit and
-is ready for publication. The following solver work stays in its separate worktree.
+numerical improvements. This batch is rebased onto the accepted squash commit;
+its full production and documentation checks are starting. The following solver work stays in its separate worktree.
 
 Standing authorization covers fixes, publication and squash merge after all nine
 production jobs and documentation pass for the final commit, then the next PR.
@@ -173,8 +174,8 @@ runtime probes check runtime behavior, not the changed compiler's proof rules.
 Next: retain the unexplained Intel compiler abort and collect diagnostic reports
 if it recurs; its exact-commit rerun and the other candidate hosts passed. The next PR must also run matrix,
 wide-worker and loop-unwind checks on both native Windows architectures.
-Publish this batch and open its PR; require all nine production jobs plus
-documentation for its final head. Continue solver ownership in the separate
+Monitor #146 and fix any failures; require all nine production jobs plus
+documentation for its final head before squash merge. Continue solver ownership in the separate
 worktree while the current PR runs.
 Record runner failures and fixes here. Keep the fixed local resource limits;
 queued CI gates merging, not independent roadmap work.
