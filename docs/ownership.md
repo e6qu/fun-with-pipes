@@ -271,6 +271,16 @@ partial column and completed columns. This closes the ownership gap in the
 general matrix multiplication path as well as direct `list.transpose` calls.
 The original input is unchanged, and ragged rows still stop at the shortest row.
 
+The six dense F64 linear-algebra primitives borrow their input arrays and return
+independently owned results. Scratch pointers and partially constructed output
+arrays are tracked in one stack record. Normal completion, singular-result exits
+and unwinding release scratch explicitly; outputs transfer to the returned value
+only after its container exists. No input retain or hidden managed workspace
+owner is needed. QR checks its square output size separately from input shape.
+See [numerical storage costs](numerics.md#dense-f64-solvers) and the
+[handoff](development-state.md) for validation status. Native arithmetic and
+iteration order are unchanged.
+
 Scoped C calls can borrow strings/bytes and copy supported scalar/record values.
 Synchronous callbacks must run on the calling task before C returns; C must copy
 borrowed data before keeping it. Foreign strings are copied into owned fwp values.

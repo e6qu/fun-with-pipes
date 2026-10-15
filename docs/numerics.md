@@ -39,6 +39,37 @@ list. The reverse example deliberately uses only the first input. `xs` in the
 last row is a placeholder for the vector from tutorial 20, not a global library
 variable.
 
+## Dense F64 solvers
+
+A dense matrix stores every element, including zeros. The existing solvers use
+F64 arithmetic and copy input elements into temporary buffers so the original
+immutable arrays, including slices, remain unchanged. They perform no automatic
+precision conversion or differentiation of the solver itself.
+
+| Operation | Result | Temporary storage, excluding returned arrays |
+|---|---|---|
+| LU solve | Solve `A x = b`; `None` for a singular matrix | Matrix copy and one vector |
+| Determinant | Scalar measure of a square matrix; zero when singular | Matrix copy |
+| Inverse | Matrix that reverses multiplication; `None` when singular | Two matrices |
+| Cholesky | Lower triangular factor for a positive definite matrix; `None` when a diagonal step is nonpositive | Two matrices |
+| QR | Orthogonal columns and an upper triangular factor | An `m` by `n` matrix and an `n` by `n` matrix |
+| Conjugate gradient | Iterative solution for a symmetric positive definite system | Matrix copy and four vectors |
+
+For `n` by `n` inputs, a matrix buffer contains `n*n` doubles and a vector
+contains `n` doubles. Buffers also reserve one extra double for zero-length
+allocation safety. Dimensions and input lengths are checked before arithmetic.
+QR separately checks the square output size: even zero input rows must not allow
+an enormous column count to overflow output allocation.
+
+The native implementation now owns these buffers explicitly and releases them
+on return, singular-result paths and unwinding. Partial result arrays remain
+protected until their containing result is constructed. Checked ARC contracts
+cover all six primitives; validation of this new batch is tracked in the
+[session handoff](development-state.md). These are existing algorithms with
+unchanged arithmetic order, not a claim of BLAS-level speed or improved numerical
+stability. Conjugate gradient keeps its explicit iteration limit and tolerance;
+it does not automatically switch algorithms on difficult inputs.
+
 ## Forward mode
 
 `Dual[T] = { re: T, eps: T }` pairs a value (`re`) with its derivative (`eps`).

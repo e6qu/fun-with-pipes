@@ -106,6 +106,10 @@ bundle_contracts['min'] = bundle_contracts['max'] = (2, 'SelectedArgument', [0, 
 bundle_contracts['csv.parse-with'] = (2, 'OwnedTree', [])
 bundle_contracts['cli.parse'] = (2, 'OwnedTree', [])
 bundle_contracts['list.transpose'] = (1, 'CopiedStructure', [0])
+for symbol, arity in [('linalg.lu-solve', 3), ('linalg.inverse', 2),
+                      ('linalg.cholesky', 2), ('linalg.qr', 3), ('linalg.cg', 5)]:
+    bundle_contracts[symbol] = (arity, 'OwnedTree', [])
+bundle_contracts['linalg.det'] = (2, 'Numeric', [])
 for symbol in ['csv.decode', 'json.parse', 'json.read']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
 promoted = []
