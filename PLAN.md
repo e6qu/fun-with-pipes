@@ -13,6 +13,9 @@ regression controls, four-host measurements and streamlined docs together on
 [The handoff](docs/development-state.md) records actual
 checks and next actions. Delivery requires all nine production jobs and
 documentation on the final head; historical anchors are not further work.
+[Four-host evidence](docs/measurements/ad-search-2026-10-15.json) records reduced
+scan work, equal allocation/live-memory counters and actual native instructions.
+Once PR #140 merges with those gates, step 10 is complete.
 
 ## Direction
 

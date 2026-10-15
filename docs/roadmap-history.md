@@ -21,6 +21,9 @@ passed. Focused evidence used the unchanged compiler/runtime at `957ba0cd`.
 [Measurements](measurements/ad-registry-2026-10-15.json) record fewer allocations,
 spare-capacity costs, full reclamation and actual native instructions without a
 general speedup claim. The squash message was one line with no body or trailers.
+Duplicate main CI `38701521745` was cancelled after its tree was verified equal
+to the accepted PR head; it supplies no additional gate. Main documentation
+`38701521545` passed.
 
 | Delivery | Evidence |
 |---|---|

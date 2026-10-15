@@ -18,6 +18,8 @@ unavailable tape slots in both runtimes, preserving lowest-slot token selection.
 Keep implementation, regression controls, four-host measurements and docs on
 `autodiff-registry-search` in PR #140. Follow the live plan and handoff; historical
 preparation entries are not work to replay.
+Once PR #140 merges with all final-head gates, step 10 is complete; check its
+actual state before resuming.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,
