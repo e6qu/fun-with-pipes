@@ -7,8 +7,8 @@ Completed evidence is in [delivery history](roadmap-history.md).
 
 The current batch is `checked-library-ownership`: copied C library boundaries,
 data-only channels, transpose ownership, allocator accounting and measured
-numerical improvements. Move only this batch onto the accepted squash commit,
-then open its PR. The following solver work stays in its separate worktree.
+numerical improvements. This batch is rebased onto the accepted squash commit and
+is ready for publication. The following solver work stays in its separate worktree.
 
 Standing authorization covers fixes, publication and squash merge after all nine
 production jobs and documentation pass for the final commit, then the next PR.
@@ -173,7 +173,8 @@ runtime probes check runtime behavior, not the changed compiler's proof rules.
 Next: retain the unexplained Intel compiler abort and collect diagnostic reports
 if it recurs; its exact-commit rerun and the other candidate hosts passed. The next PR must also run matrix,
 wide-worker and loop-unwind checks on both native Windows architectures.
-Rebase only this batch onto #145's accepted squash commit and open its PR;
-require all nine production jobs plus documentation for its final head.
+Publish this batch and open its PR; require all nine production jobs plus
+documentation for its final head. Continue solver ownership in the separate
+worktree while the current PR runs.
 Record runner failures and fixes here. Keep the fixed local resource limits;
 queued CI gates merging, not independent roadmap work.
