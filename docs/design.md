@@ -407,7 +407,9 @@ Both runtimes keep a search cursor: every earlier slot is live or permanently
 generation-exhausted. Creation starts at the cursor and still selects the lowest
 reusable slot. Detaching an earlier reusable tape lowers the cursor before
 backward callbacks or scope cleanup can reenter AD. Native shutdown resets it;
-the interpreter protects it with the slot registry's existing mutex. Sequential
+native backward uses the validated token's slot directly, without reconstructing
+the index from a byte-pointer difference. The
+interpreter protects it with the slot registry's existing mutex. Sequential
 creation skips repeated occupied-prefix scans without allocating an index.
 Arbitrary holes can still require linear scanning. Generation exhaustion is
 unchanged. Spare capacity trades some live storage for fewer registry requests.

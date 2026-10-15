@@ -2,7 +2,7 @@
 
 Updated 2026-10-15. The user requested continued development after PR #139.
 [PR #140](https://github.com/e6qu/fun-with-pipes/pull/140), branch
-`autodiff-registry-search`, is a draft at `1bf9c626`. Publication, fixes and squash merge
+`autodiff-registry-search`, is a draft at `4e99e5f1`. Publication, fixes and squash merge
 after all nine exact-head production jobs plus documentation remain authorized.
 
 ## Roadmap status
@@ -66,6 +66,15 @@ allocation/live-memory equality and native binaries at 1, 257, 4,096 and 16,384
 simultaneous tapes. Four-host results and instruction inspection are pending.
 No full build, test gate or benchmark has run locally.
 
+Binary review of the first three passing reports found Apple Clang reconstructing
+the backward slot with pointer subtraction and reciprocal multiplication. The
+validated token already contains that slot. Native numeric and managed backward
+now use its low 16 bits directly; release ordering and generation checks are
+unchanged. This refinement changes runtime source and requires fresh focused
+AD/evidence and WASM runs. Earlier measurements are preliminary, not final-head
+acceptance. The three verified preliminary reports show identical allocations and
+live storage, with 134,209,536 unavailable-slot visits removed at 16,384 tapes.
+
 [Focused AD/evidence](https://github.com/e6qu/fun-with-pipes/actions/runs/38705030679)
 at `1bf9c626` exposed a stale generation-wrap negative control on macOS ARM64:
 the cursor correctly bypassed the exhausted slot, so removing only the scan's
@@ -74,12 +83,17 @@ intentionally broken search at zero. Expected failure status 46 is unchanged.
 Local reproduction failed as expected before the fix; both `ad_tape_ownership`
 tests pass after it (18.69s), including raw/native token comparisons. The runner
 log confirms this was its only failed test; all measurement steps passed there.
-The failed run is superseded and supplies no acceptance gate.
+The failed run is cancelled as superseded and supplies no acceptance gate.
+[Corrected four-host AD/evidence](https://github.com/e6qu/fun-with-pipes/actions/runs/38706130998)
+is running at `4e99e5f1`; compiler/runtime sources remain those of `1bf9c626`.
 
 [Focused WASM](https://github.com/e6qu/fun-with-pipes/actions/runs/38705039304)
-continues at `1bf9c626`; runtime/compiler source is unchanged by the test repair.
+passed both hosts at `1bf9c626`; a new run is required for the token-derived
+backward-slot refinement.
+Final local `cargo test --test autodiff_capacity_bounds --test ad_tape_ownership -- --test-threads=1`
+passes all four tests after the refinement (51.42s); formatting also passes.
 The draft production run was skipped and supplies no gate. Documentation run
-`38704994147` was queued at publication. Roadmap/link/commit audit passed locally
+`38704994147` and corrected-head docs `38706081994` passed. Roadmap/link/commit audit passed locally
 (2.91s). Final four-host evidence is pending from the corrected-test revision.
 
 Duplicate post-merge main CI `38701521745` was cancelled after verifying its tree
@@ -96,8 +110,9 @@ and ownership boundaries remain as documented in [ownership](ownership.md).
 
 ## Next action
 
-Next: monitor focused four-host AD and WASM validation, collect and inspect paired
-search measurements and actual native instructions. Fix any
+Next: publish the validated token-derived backward-slot refinement and dispatch
+fresh focused AD/evidence and WASM runs. Collect and inspect
+paired search measurements and actual native instructions. Fix any
 failures, record permanent evidence and update these docs. Mark the PR ready,
 and require all nine production jobs plus documentation at the final head before
 squash merge. Keep this handoff current with actual outcomes.

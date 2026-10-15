@@ -392,8 +392,9 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     fwp_tape_unlink_scope(t);
     fwp_tape tp = *t;
     t->live = 0;
-    if (t->gen < 32767 && t - fwp_tapes < fwp_tape_next_slot)
-        fwp_tape_next_slot = t - fwp_tapes;
+    int64_t slot = (id & 0xffff) - 1;
+    if (t->gen < 32767 && slot < fwp_tape_next_slot)
+        fwp_tape_next_slot = slot;
     t->pa = t->pb = 0;
     t->da = t->db = t->adj = 0;
     t->len = t->cap = t->leaves = t->adjcap = 0;
@@ -499,8 +500,9 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
     fwp_tape_unlink_scope(t);
     fwp_tape tp = *t;
     t->owned = NULL; t->live = 0;
-    if (t->gen < 32767 && t - fwp_tapes < fwp_tape_next_slot)
-        fwp_tape_next_slot = t - fwp_tapes;
+    int64_t slot = (id & 0xffff) - 1;
+    if (t->gen < 32767 && slot < fwp_tape_next_slot)
+        fwp_tape_next_slot = slot;
     t->pa = t->pb = NULL; t->da = t->db = t->adj = NULL;
     t->len = t->cap = t->leaves = t->adjcap = 0;
     fwp_tape_buffers buffers = {tp.pa, tp.pb, tp.da, tp.db, tp.adj, tp.cap, tp.adjcap};

@@ -143,12 +143,14 @@ fn registry_growth_preserves_tokens_scopes_and_capacity_bounds() {
     assert_ne!(incremental, code);
     assert_ne!(stale_capacity, code);
     let restart_search = code.replace("int64_t slot = fwp_tape_next_slot;", "int64_t slot = 0;");
-    let missed_release = code.replace("fwp_tape_next_slot = t - fwp_tapes;", "(void)0;");
+    let missed_release = code
+        .replace("fwp_tape_next_slot = t - fwp_tapes;", "(void)0;")
+        .replace("fwp_tape_next_slot = slot;", "(void)0;");
     let stale_cursor = code.replace(
         "    fwp_tape_next_slot = 0;",
         "    /* omitted cursor reset */",
     );
-    let owned_release = "t->owned = NULL; t->live = 0;\n    if (t->gen < 32767 && t - fwp_tapes < fwp_tape_next_slot)\n        fwp_tape_next_slot = t - fwp_tapes;";
+    let owned_release = "t->owned = NULL; t->live = 0;\n    int64_t slot = (id & 0xffff) - 1;\n    if (t->gen < 32767 && slot < fwp_tape_next_slot)\n        fwp_tape_next_slot = slot;";
     assert_eq!(code.matches(owned_release).count(), 1);
     let missed_owned_release = code.replace(owned_release, "t->owned = NULL; t->live = 0;");
     assert_ne!(restart_search, code);
