@@ -9,7 +9,8 @@ delivery PR. Its main checkout is `/Users/zardoz/projects/fun-with-pipes`, branc
 `checked-library-ownership`, final head `bccead2d`. Required production run:
 [38790425937](https://github.com/e6qu/fun-with-pipes/actions/runs/38790425937);
 [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38790426370).
-Superseded pre-publication and duplicate post-merge runs were cancelled.
+Superseded pre-publication and duplicate post-merge runs were cancelled. Most
+production jobs are running; benchmark and documentation jobs remain queued.
 
 Standing authorization covers fixes, publication and squash merge after all nine
 production jobs and documentation pass for the final commit, then the next PR.
@@ -93,7 +94,11 @@ each loop step, negative/out-of-range indices and task execution. Raw interprete
 output passed (0.62 s for the final fixture).
 `/private/tmp/fwp-array-borrow-check.py` passed (0.89 s): isolated invariant-proof
 and test-harness metadata compilation, plus old-compiler confirmation of the
-loop shape. This is not a changed-compiler integration result.
+loop shape. `/private/tmp/fwp-array-borrow-runtime-check.py` also passed (5.14 s):
+edit existing emitted C to borrow invariant data, then compare raw interpreter
+output with native tracing/ARC at O1/O2, including collection/reuse stress,
+changing arrays and bounds cases. These are not changed-compiler integration
+results. Keep runner validation pending until its actual results arrive.
 
 The parent batch's Intel macOS compiler abort did not reproduce on an unchanged
 retry. Its cause is unknown; preserve available compiler crash reports on future
