@@ -17,6 +17,18 @@ Use a one-line subject of at most 80 characters and an explicitly empty body,
 without trailers or attribution. Keep one active delivery PR; this preparation
 branch may run focused CI before #146 merges. Full local builds remain excluded.
 
+## Roadmap status
+
+| Step | Status | Next concrete work |
+|---|---|---|
+| 1 | In progress | Validate C boundaries and solver scratch/result ownership |
+| 2 | In progress | Remove measured closure, container and call costs |
+| 3 | In progress | Diagnose remaining Intel array and matrix wrapper overhead |
+| 4 | In progress | Investigate sustained derivative timing differences |
+| 5 | Pending | Broaden CPU kernels and resolve runtime OpenCL compilation |
+| 6 | In progress | Preserve comparable C/Rust measurements and profiles |
+| 7 | In progress | Extend numerical and long-running application coverage |
+
 ## Prepared batch: owned linear-algebra workspaces
 
 Scope: LU solve, determinant, inverse, Cholesky, QR and conjugate gradient.
@@ -69,7 +81,7 @@ these solver ownership changes for numerical speed or accuracy improvements.
 
 ## Next action
 
-Publish this preparation branch and run the focused `solvers` workflow. Fix any
+Next: publish this preparation branch and run the focused `solvers` workflow. Fix any
 failures while monitoring #146. When #146's exact-head gates pass, squash merge
 it, then rebase only commits after `c10b1ccd` onto the accepted squash commit.
 Reconcile this handoff with the parent delivery evidence and open the solver PR.
