@@ -12,6 +12,10 @@ fn filesystem_values_match_raw_interpretation() {
     let root = dir.join(".");
     std::fs::write(root.join("input"), vec![255; 70000]).unwrap();
     std::fs::write(root.join("empty"), []).unwrap();
+    std::fs::create_dir_all(root.join("tree/nested")).unwrap();
+    std::fs::write(root.join("tree/a"), "abc").unwrap();
+    std::fs::write(root.join("tree/nested/héllo"), "hello").unwrap();
+    std::fs::write(root.join("tree/nested/empty"), []).unwrap();
     for (name, time) in [
         ("old", SystemTime::UNIX_EPOCH - Duration::from_secs(1)),
         (
@@ -42,6 +46,19 @@ fn filesystem_values_match_raw_interpretation() {
                 .arg(&cfile),
         );
         let code = std::fs::read_to_string(cfile).unwrap();
+        let code = if gc == "arc" {
+            let start = code
+                .find("static void *fwp_main_thread(void *arg) {")
+                .unwrap();
+            let (runtime, main) = code.split_at(start);
+            assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
+            assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+            let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t file_budget = fwp_gc.budget;\n")
+                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < file_budget) exit(195);\n");
+            format!("{runtime}{measured}")
+        } else {
+            code
+        };
         let binary = dir.join("values.exe");
         for opt in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();

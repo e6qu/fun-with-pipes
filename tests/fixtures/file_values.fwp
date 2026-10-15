@@ -1,5 +1,7 @@
 # The harness prepares input bytes and files with known modification times.
 main = [
+    # Repeatedly walk a nested tree and sum metadata sizes through ordinary pipes.
+    range 0 64 | map (const "tree" | dir.walk | map (file.info | .size) | sum) | echo,
     dir.create "made",
     bytes.from-list [0u8, 255, 13, 10] | file.write-bytes "made/data",
     "héllo" | file.append "made/data",

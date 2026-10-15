@@ -13,7 +13,9 @@ Earlier Windows probe CRLF output is repaired too.
 This is preparation branch `checked-file-values` in `/private/tmp/fwp-file-values`,
 based on snapshot preparation `cbe6604a`. That parent passed all six platforms in [run 38810318287](https://github.com/e6qu/fun-with-pipes/actions/runs/38810318287).
 Only changes after `cbe6604a` belong to this subsequent file-value preparation.
-The combined numerical/console delivery remains in `/private/tmp/fwp-linear-algebra`.
+The current combined delivery is `owned-numerical-programs` in
+`/private/tmp/fwp-numerical-delivery`; the earlier linear-algebra branch is an
+evidence anchor.
 No PR is open for these preparations.
 
 ## Recursive-directory follow-up after `c456277`
@@ -28,6 +30,17 @@ compares each host with its own interpreter. The semantic fixture
 retains all three cases and verifies the original file's bytes. This follow-up
 is not part of `38811437488`; native platform acceptance remains required. The guarded raw/native and cleanup
 probe passes locally (8.21 s).
+
+The follow-up also adds a repeated directory-report workload: walk a nested tree,
+read metadata and sum file sizes through ordinary `dir.walk`, `map` and `sum`
+pipes 64 times. The ARC executable checks its final storage charge and confirms
+that tracing never ran. This tests the composed application as well as individual
+runtime functions; it is not a speed benchmark. Local raw/tracing comparison plus cleanup controls
+pass (8.24 s); the changed-compiler ARC application check awaits final CI.
+
+File-value commit `c456277` passed all six hosts in `38811437488`. Directory-error
+follow-up `03d39626` is running on all six in `38812282305`. The composed report
+regression is later than those commits and must pass the next full PR gate.
 
 ## File-value acceptance criteria
 
