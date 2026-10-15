@@ -42,8 +42,8 @@ fn paired_metadata_preserves_values_alignment_and_recoverable_growth() {
     let no_derivatives = code.replace(derivative_move, "");
     let full_capacity = code.replace("used * sizeof(int32_t)", "(size_t)cap * sizeof(int32_t)");
     let early_capacity = code.replace(
-        "fwp_owned_tape_reserve(t->owned, cap);",
-        "t->cap = cap; fwp_owned_tape_reserve(t->owned, cap);",
+        "fwp_owned_tape_reserve(owned, cap);",
+        "t->cap = cap; fwp_owned_tape_reserve(owned, cap);",
     );
     assert_ne!(early_capacity, code);
     // Clamp below doubling so the relocated second region overlaps its source.

@@ -252,13 +252,14 @@ static void fwp_tape_reserve(fwp_tape *t, int64_t n) {
     /* Each pair fits size_t even at the existing PTRDIFF_MAX/8 node bound.
      * Keep old offsets until all allocations succeed: managed weight growth
      * can trap, leaving the live tape usable with its original capacity. */
+    fwp_owned_tape *owned = t->owned;
     size_t used = (size_t)(t->len - t->leaves);
     void *next = realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t)));
     if (!next) goto oom;
     t->pa = (int32_t *)next;
     t->pb = t->pa + t->cap;
-    if (t->owned) {
-        fwp_owned_tape_reserve(t->owned, cap);
+    if (owned) {
+        fwp_owned_tape_reserve(owned, cap);
     } else {
         next = realloc(t->da, (size_t)cap * (2 * sizeof(double)));
         if (!next) goto oom;

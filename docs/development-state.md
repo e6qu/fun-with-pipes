@@ -2,8 +2,8 @@
 
 Updated 2026-10-15. The user requested continued development after PR #140.
 [Draft PR #141](https://github.com/e6qu/fun-with-pipes/pull/141), branch
-`autodiff-metadata-block`, is published at runtime head `ff7f528a`, based on
-accepted `09f1a029`.
+`autodiff-metadata-block`, is published at `87ce49e9`, based on accepted
+`09f1a029`. The validated owner-capture refinement is ready for publication.
 Publication, fixes and squash merge after all nine exact-head production jobs
 and documentation remain authorized.
 
@@ -42,7 +42,9 @@ second regions after allocating, and only base pointers own storage. Managed
 weights remain separately typed and owned. Preserve old offsets during managed
 weight growth because it can trap and leave the tape live. Preserve the existing
 32-bit node limit, natural alignment, arithmetic order and workspace byte budget.
-The interpreter stays unchanged as the semantic reference.
+The interpreter stays unchanged as the semantic reference. Growth now captures
+the existing owner before realloc so direct numeric/managed pushes can discard
+the unreachable growth branch.
 
 ## Checks and resolved failures
 
@@ -68,7 +70,7 @@ benchmarks. Workflow lint passed in 0.26s; the roadmap/link/commit audit passed
 all 11 steps in 2.76s. Full builds, suites, timing samples and actual wasm32
 controls remain runner work. A subsequent 11.18s paired-metadata rerun also
 requires tracing collection to be armed and actually run; it passed. This extra
-assertion is currently local and will be covered by final-head production CI;
+assertion is published in `87ce49e9` and is included in its replacement native run;
 the measured runtime remains identical to `ff7f528a`.
 
 The first four-host run exposed a scope-ledger assumption that still expected
@@ -76,20 +78,34 @@ separate frees for interior regions. The completed macOS ARM log confirms this
 was its sole failed test; all measurement steps passed. Local reproduction failed
 with status 61 (2.06s), then the corrected full `ad_tape_scopes` target passed all
 four tests in 33.16s. Both outer/nested scope ledgers now require one free per
-base and none for interior pointers. Runtime sources remain unchanged. Preliminary
+base and none for interior pointers. That ledger correction did not change runtime sources. Preliminary
 Mac ARM counters verify halved metadata requests and equal payload/live storage;
 timing cases are mixed. The final measurement script now alternates variant
 order after explicit warmups, avoiding block-order timing bias. Preliminary
-measurements are not final acceptance evidence.
+measurements are not final acceptance evidence. The superseded native run
+`38724114075` was cancelled after dispatching the corrected replacement; it is
+not an acceptance gate. Final measurement syntax/ARC emission passed in 5.11s
+and the updated roadmap audit in 2.79s.
+
+Actual native binary inspection found that reading the owner after realloc kept
+managed-growth code in the numeric push. A guarded local compile/disassembly
+comparison (1.21s; no workload execution) confirms capturing it before allocation
+removes that branch and reduces the inspected ARM64 numeric push frame from
+144 to 128 bytes. This refinement is now in the local runtime; all three focused capacity
+controls passed in 42.69s. Final measurement syntax/ARC emission passed in 5.39s,
+formatting in 1.07s and the roadmap audit passed. All final runner evidence must use the refined runtime.
+Both WASM jobs in `38724130547` passed the previous runtime, including actual
+32-bit size expressions and overflow controls; they must be rerun for the new
+runtime. Native run `38725506551` is still running at the earlier revision.
 
 ## Next action
 
-Next: inspect four-host [AD/evidence](https://github.com/e6qu/fun-with-pipes/actions/runs/38724114075)
-and two-host [WASM](https://github.com/e6qu/fun-with-pipes/actions/runs/38724130547)
-at `ff7f528a`. The native run has a known scope-ledger failure fixed locally; publish the fix
-and dispatch a replacement native run. WASM continues; no final runner pass is
-claimed yet. Draft CI
-`38724099611` is skipped and is not a gate. Documentation `38724099571` passed.
+Next: publish owner capture, then dispatch
+replacement four-host AD/evidence and two-host WASM runs. Retire superseded
+native run `38725506551` once its replacement is dispatched. Earlier successful
+WASM and preliminary measurements do not validate the refined runtime. Draft
+production skips are not gates. Initial draft documentation passed.
+
 Record actual evidence, streamline docs, and require all nine exact-head
 production jobs plus documentation before the authorized squash merge.
 

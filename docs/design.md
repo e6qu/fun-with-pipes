@@ -405,7 +405,9 @@ Native AD metadata keeps the structure-of-arrays layout in paired allocations:
 naturally aligned. Growth moves only initialized entries, preserving bits and
 parent order; callbacks and managed-weight growth finish before the new capacity
 is committed. Until then, old offsets remain valid after a moving realloc.
-Only base pointers release storage. Two pairs keep the existing 32-bit node
+The owner is captured before realloc, allowing direct numeric and managed
+pushes to specialize the growth branch. Only base pointers release storage.
+Two pairs keep the existing 32-bit node
 bound representable without multiplying its capacity by 24 in one size_t request.
 Managed weights remain separately typed; numeric workspace payload bytes and
 the 512 KiB budget are unchanged. The interpreter retains its independent Vec
