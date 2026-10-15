@@ -1,5 +1,17 @@
 # 16. Command-line programs
 
+Read lessons 1–5 and 7 first. A **positional argument** is identified by where
+it appears; a **flag** has a name such as `--loud`. An **option** is a named
+argument that carries a value. A **subcommand** selects one operation in a tool,
+such as `repeat` or `divide`. The process exit status is a number used by the shell:
+zero means success. Completion suggests arguments as you type; a man page is
+terminal-readable help. Environment variables are named settings inherited from
+the process that starts the command.
+
+The examples show exactly where defaults come from: function types, metadata
+comments or library calls. A metadata comment such as `# expose: cli` is read by
+the compiler; it is not a runtime statement.
+
 This tutorial builds a real command-line program from ordinary
 functions: flags, help, subcommands, exit statuses, shell completion and
 a man page, with no argument parser to write. You build it with `fwp build
@@ -8,6 +20,17 @@ rule.
 
 To follow along, go to this directory (`cd docs/tutorials/16-clis`).
 Every session below runs exactly as shown: the test suite runs them.
+
+## Reading the example
+
+In `words.fwp`, `repeated` receives an options record and word list as a pair
+inside `curry`. It repeats each word `times` times, flattens those lists with
+`list.flat-map`, then joins them with `sep`. `say` chooses uppercase or unchanged
+output from the Boolean option. `divide` handles a zero divisor explicitly;
+`swap | uncurry div` restores the intended numerator/divisor order for data-last
+`div`. `non-blank` returns `None` to suppress an empty line. `containing` returns
+matching words plus an `Outcome` status: `then2` attaches the result-processing step
+so it runs after both inputs have reached the filtering function.
 
 ## Exposing functions as commands
 

@@ -1,5 +1,15 @@
 # 13. Tooling
 
+Read lessons 1–5 first. A formatter changes layout, a linter reports suspicious
+code, and a language server gives an editor information about names, types and
+errors. The Language Server Protocol (LSP) is the message format between that
+server and the editor. Lint warnings are advice; type errors prevent execution.
+
+The sample counts each word with `frequencies`, turns the resulting map into
+`(word, count)` pairs, and sorts on the negated count (`.1 | neg`) to put larger
+counts first. `take 3` keeps three entries. `format "{}: {}"` inserts the two
+pair fields into the placeholders.
+
 Three commands help with fwp code beyond running it: `fwp fmt` formats
 it, `fwp lint` points out likely mistakes, and `fwp lsp` brings
 diagnostics, types and navigation into an editor.

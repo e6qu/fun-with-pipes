@@ -2,6 +2,12 @@
 # the `path.*` functions only compute with them and touch no file.
 # Failures are `IoError`s whose message names the path, as in
 # `missing.txt: No such file or directory`.
+#
+# A path names a location; a directory contains named entries. Path helpers
+# only manipulate strings, while file operations declare FileIO and can fail
+# with Error[IoError]. File is an affine resource: it cannot be duplicated.
+# Use the scoped helpers to keep it open for the intended operation and close
+# it on exit. FileInfo describes byte size, modification time and directory status.
 
 FileInfo = { size: I64, modified: Duration, is-dir: Bool }
 

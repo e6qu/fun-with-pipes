@@ -9,6 +9,9 @@
 #
 # expose: cli
 
+# Read tutorial 16. FileIO records file access; Error[IoError] records possible
+# failure. This example persists edits in the selected text file.
+
 export version : String
 version = "1.0.0"
 

@@ -3,6 +3,12 @@
 # double quotes may contain separators, newlines and quotes written `""`.
 # Reading is lenient: text after a closing quote is part of the field, a
 # quote that is never closed runs to the end, and empty lines are skipped.
+#
+# CSV means comma-separated values: rows contain fields, with quoting for
+# separators/newlines inside a field. A header row names columns. The plain parser
+# returns rows of strings; typed reading converts fields according to a record
+# type and reports conversion failures. A separator can be changed explicitly;
+# a tab separator is commonly called TSV.
 
 # `"a,b\n1,2\n" | csv.parse` is `[["a", "b"], ["1", "2"]]`.
 csv.parse : String -> List[List[String]]

@@ -1,5 +1,11 @@
 # Strings are immutable UTF-8. Lengths and positions count Unicode scalar
 # values; case conversion is ASCII-only.
+#
+# UTF-8 encodes Unicode text as bytes. A Unicode scalar value is one code
+# point, which need not equal a whole displayed character: an accent can be a
+# separate scalar. `string.length` counts scalars, `string.byte-length` counts
+# bytes, and `lower`/`upper` change ASCII letters only. `"Hi" | lower` is `"hi"`.
+# `concat "!"` appends the suffix to its piped input; strings remain immutable.
 
 foreign "fwp" trim : String -> String
 foreign "fwp" trim-start : String -> String

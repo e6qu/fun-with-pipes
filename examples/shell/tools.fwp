@@ -6,6 +6,9 @@
 # Curried arguments come from the command line, the last one may come from
 # stdin (one record per line, or binary frames from another fwp program).
 
+# Read tutorial 7. Standard input is the process input stream. --fn selects
+# one exported function; shell pipes connect processes, unlike pipes inside fwp.
+
 export normalize : String -> String
 normalize = trim | lower
 

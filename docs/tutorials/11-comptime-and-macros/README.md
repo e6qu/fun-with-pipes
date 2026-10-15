@@ -1,5 +1,12 @@
 # 11. Compile-time code and macros
 
+Read lessons 1–4 first. **Compile time** is when fwp checks and builds your
+program; **runtime** is when the resulting program executes. Reflection means
+inspecting a type as data. A macro transforms program syntax before type checking;
+it does not call a runtime function with ordinary values. A syntax tree records
+how expressions are nested. These tools are useful for generating repetitive
+code, but ordinary functions are simpler when no syntax transformation is needed.
+
 `comptime e` evaluates `e` while the program is compiled and puts the
 result into the program as a constant. Lists, maps, records and even
 functions can be constants. The code inside `comptime` may read files and
@@ -28,6 +35,19 @@ is used, so macros cannot capture each other's names by accident.
 The prelude defines two macros. `assert!(e)` checks a condition and
 reports the failing expression. `dbg!(e)` prints an expression with its
 value.
+
+## Reading the example
+
+`squares` precomputes squares of 0 through 9. `commands` is a compile-time map
+whose values are functions. `run` looks up the requested name and uses `apply`
+to call that function on the text. For an unknown name, `const "unknown command"`
+creates a function with the same input type that ignores the supplied text.
+
+`type[Order]` returns type metadata; matching `ShapeRecord` exposes its fields,
+and `map .name` extracts their names. `twice!(add 1)` expands to two `add 1`
+stages, so `40 | add-two` prints 42. `assert!` checks a condition and returns unit
+`()`, which explains the final output. A schema describes allowed data; a
+serializer converts values to text/bytes. Reflection can help generate either.
 
 ## The program
 

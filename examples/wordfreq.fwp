@@ -2,6 +2,9 @@
 #
 #   fwp run examples/wordfreq.fwp < some-text.txt
 
+# Read lessons 1-5 first. .1 selects the count in each (word, count) pair;
+# neg sorts larger counts first. This normalization removes only commas and periods.
+
 normalize = lower | replace "," "" | replace "." ""
 
 main =

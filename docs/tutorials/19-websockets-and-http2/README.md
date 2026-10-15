@@ -1,5 +1,16 @@
 # 19. WebSockets and HTTP/2
 
+Read lessons 6, 8 and 18 first. HTTP/2 allows several request/response streams
+on one connection. `h2` names its TLS form, negotiated using ALPN (protocol
+selection during the TLS handshake); `h2c` is the cleartext form. These streams
+are network conversations, not the lazy iterators from lesson 5.
+
+Gzip compression reduces response bytes; `Accept-Encoding` requests supported
+compression and `Content-Encoding` names the encoding actually used. A WebSocket
+starts with an HTTP upgrade, then exchanges messages in both directions until
+closed. Ping/pong frames check that the connection is alive; a message may span
+several frames. The curl commands for HTTP/2 need a curl build with HTTP/2 support.
+
 [Tutorial 8](../08-http-server/README.md) wrote an HTTP server. The same
 server, with the same handlers, also speaks HTTP/2, can compress its
 responses, and can switch a connection to WebSocket for messages in both
@@ -8,6 +19,16 @@ details.
 
 To follow along, go to this directory (`cd docs/tutorials/19-websockets-and-http2`).
 The sessions below run exactly as shown: the test suite runs them.
+
+## Reading the example
+
+`mirror-step` receives one optional message and passes it alongside the original
+WebSocket to `mirror-got`. Its tuple patterns have holes for captured values.
+A close message has three holes (socket, code, reason); `curry3 (const (Stop ()))`
+accepts them and stops with unit. An ordinary message has two holes; the branch
+sends that message back with `tap`, keeps the socket and returns `Again`.
+`None` means the input ended. This explains both the control flow and the nested
+parentheses without adding new syntax.
 
 ## Handlers
 

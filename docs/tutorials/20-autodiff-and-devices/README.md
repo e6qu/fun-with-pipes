@@ -1,52 +1,54 @@
 # 20. Reverse-mode autodiff and devices
 
-[Tutorial 12](../12-numerics/README.md) differentiated generic numeric
-code with dual numbers (forward mode): one pass per input. This tutorial
-uses the other two tools of `lib/autodiff.fwp` and `lib/tensor.fwp`:
+Read lessons 3 and 12 first. Automatic differentiation calculates derivatives
+by applying the derivative rule for each arithmetic operation. Forward mode
+carries a derivative alongside each value. To get all partial derivatives of a
+scalar result, the `gradient` helper repeats that process for each input.
 
-- **Reverse mode.** `Rev[T]` numbers record each operation on a tape, and
-  `grad f xs` walks it backwards once, so the whole gradient of a function
-  of a thousand inputs costs about as much as one evaluation.
-  `value-and-grad`, `vjp` (vector-Jacobian products) and `rev.jacobian`
-  work the same way.
-- **Devices.** Tensor expressions implement the numeric traits too, so the
-  same generic code builds a fused elementwise kernel, which runs on a
-  `Device`: `Cpu`, `CpuParallel n` (n threads) or `Gpu` (OpenCL).
+**Reverse mode** records operations and their dependencies in a **tape**. After
+computing the result, it walks those records backward, accumulating how each
+input influences that result. `Rev[T]` is the tracked numeric value; `grad f xs`
+returns the gradient. This takes one forward and one backward pass for a scalar
+result, but those passes store records, allocate memory and do extra arithmetic.
+It is not a promise that a gradient costs the same as evaluating `f` once.
+Floating-point rounding applies in both modes.
 
-Every number type implements the same traits, so one definition serves
-them all:
+`value-and-grad` returns the function value as well. A vector-Jacobian product
+(`vjp`) weights several output derivatives by caller-supplied weights; the
+Jacobian is the table of derivatives of every output with respect to every input.
+Those operations are described in the [numerics guide](../../numerics.md).
 
-```fwp
-rosenbrock : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
-```
+The example's `rosenbrock` sums `100(y − x²)² + (1 − x)²` for adjacent input
+pairs. Its trait requirements allow ordinary or derivative-tracking numbers.
+`descend` multiplies the gradient by 0.001 and subtracts it from the original
+vector: one small step toward reducing the function. `zip-with sub` combines
+corresponding elements; because subtraction takes its subject last, the original
+vector is the final argument. Repeating this step lowers the objective in this
+example; it does not guarantee convergence for arbitrary functions.
 
-`grad rosenbrock` and `gradient rosenbrock` (forward mode) give the same
-derivatives; reverse mode needs one forward and one backward pass where
-forward mode needs one pass per input.
+## Expressions and execution devices
 
-```fwp
-descend = fork (zip-with sub) (grad rosenbrock | map (mul 0.001)) id
-```
+A tensor expression describes arithmetic over an array. `tensor.lazy` creates
+an input expression; applying `soft` builds the expression `ln(exp(x) + 1)`.
+Building this description does work, but does not yet evaluate every element.
+`tensor.sum-on` evaluates and sums it on a selected device. A **kernel** here
+is the compiled loop that performs the arithmetic for each element. Combining
+the operations into that loop avoids arrays for intermediate `exp` and `add`
+results.
 
-On tensor expressions, `soft` below does no work: it builds the
-expression `ln(exp(x) + 1)`, which `tensor.sum-on` compiles to one kernel
-and runs, here on four threads. The kernel reads each element once and
-allocates no intermediate arrays. Every CPU device gives the same bits:
-elementwise results do not depend on the thread count, and sums add
-blocks of 4096 elements from the left, then the block sums from the left.
-`tensor.grad` differentiates the sum of an expression with respect to
-each of its leaves in reverse mode, building one more kernel per leaf.
+`Cpu` uses one CPU thread; `CpuParallel 4` requests four. CPU sums add blocks of
+4096 elements in a fixed order and then add the block sums in order, so changing
+the thread count does not change that addition order. The test below compares
+both results; it does not benchmark their speed. `tensor.grad` builds derivatives
+of the sum with respect to each input leaf; the sample prints the first two
+elements of each resulting gradient vector.
 
-```fwp
-soft : t -> t where Field[t], Floating[t], FromFloat[t]
-soft = exp | add 1.0 | ln
-```
-
-`tensor.opencl` shows the OpenCL C that the `Gpu` device compiles. The
-GPU device loads `libOpenCL` (the OpenCL framework on macOS) when it is
-first used; without it (or
-without a device with double precision) `device.available Gpu` is
-`False` and `realize-on Gpu` stops with the reason.
+`Gpu` uses OpenCL, an interface for running kernels on a supported device.
+`tensor.opencl` prints the OpenCL C source without executing it. Execution needs
+an OpenCL library and a device with double-precision support. Check
+`device.available Gpu`; an unavailable device makes `realize-on Gpu` fail with
+the reason. Device math libraries may differ; the printed CPU agreement below
+does not establish identical GPU results.
 
 ## The program
 
@@ -121,8 +123,8 @@ __kernel void fwp_kernel(__global double *out, __global const double *k, const l
 
 ```
 
-The interpreter and native code agree to the last bit, including the sums
-of the parallel kernels. [docs/numerics.md](../../numerics.md) describes
+The expected output checks interpreter/native agreement for this program,
+including the sums of its parallel CPU kernels. [docs/numerics.md](../../numerics.md) describes
 the tape, the kernels and the devices.
 
 ---

@@ -6,6 +6,9 @@
 #   fwp serve --rest books.fwp &
 #   fwp run client.fwp [http://127.0.0.1:8080]
 
+# Read tutorial 17. Option fields distinguish omitted query parameters from
+# values sent explicitly. Calls encode JSON and can fail with RestError.
+
 import bookclient
 
 classics : bookclient.BooksQuery

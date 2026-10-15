@@ -16,6 +16,12 @@
 # With `compress` in the config, messages are compressed when the peer
 # agrees (`permessage-deflate`, RFC 7692, each message on its own: no
 # context takeover either way).
+#
+# A WebSocket starts with an HTTP upgrade, then sends messages in both
+# directions over one connection. ws:// is plain; wss:// uses TLS. Frames carry
+# message pieces or control signals such as ping, pong and close. The incoming
+# and outgoing channels below connect that network session to fwp tasks.
+# Tutorial 19 demonstrates a complete exchange.
 
 WsMessage =
     | WsMessage.Text String

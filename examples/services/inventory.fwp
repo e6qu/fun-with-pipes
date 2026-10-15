@@ -1,5 +1,8 @@
 # The inventory: which products exist and how many are in stock.
 
+# Read tutorial 14. This fixed catalog checks stock but does not persist a
+# reservation. Option represents a missing product; Shortage explains a failed check.
+
 Item = { sku: String, name: String, stock: I64 }
 
 # why a reservation failed

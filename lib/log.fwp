@@ -1,4 +1,9 @@
 # Structured logs (logfmt lines on stderr) and process metrics.
+#
+# A structured log attaches named fields to a message so a reader or program
+# can filter it. logfmt writes key=value fields on a line; logs go to standard
+# error to avoid corrupting normal output. Metrics report counters or resource
+# measurements; a process memory measurement is not just the bytes in fwp values.
 
 # `log.event level message fields`
 log.event : String -> String -> List[(String, String)] -> () ! {IO}

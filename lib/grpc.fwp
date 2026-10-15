@@ -7,6 +7,12 @@
 # metadata and deadlines of calls. Calls and servers run on the task
 # scheduler: a call waits only in its own task, and a server runs calls
 # concurrently.
+#
+# A remote procedure call (RPC) sends arguments to another process and returns
+# its result. gRPC carries such calls over HTTP/2 with Protocol Buffers messages.
+# Metadata is named information attached to a call; a deadline bounds its duration;
+# a status describes success or failure. Remote calls add encoding, transport
+# and possible connection failure even when source notation stays the same.
 
 # a failed call: a status code (`grpc.not-found`, ...) and a message. A
 # served function that fails with `Error[GrpcError]` answers with that

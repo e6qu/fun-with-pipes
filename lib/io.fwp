@@ -1,4 +1,10 @@
 # Console, environment and time.
+#
+# Standard input is the process input stream; standard output carries results;
+# standard error carries diagnostics. `write` adds no newline, while `print`
+# does. `eprint` and `ewrite` use standard error. `read-line` returns None at
+# end of input. Environment variables are named process settings. A Duration
+# stores an elapsed interval, distinct from a calendar date.
 
 foreign "fwp" write : String -> () ! {IO}
 foreign "fwp" eprint : String -> () ! {IO}

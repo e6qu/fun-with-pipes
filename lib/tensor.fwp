@@ -1,7 +1,7 @@
-# Lazy tensor expressions. Building an expression does no work; `realize`
-# evaluates the whole graph in one pass over the elements (the operations
-# are fused: no intermediate arrays are allocated). Graph passes rewrite
-# expressions before they are realized.
+# Lazy tensor expressions. `realize` evaluates supported elementwise operations
+# together without full-length intermediate arrays. An arbitrary `tensor.map`
+# function is evaluated first on the CPU and becomes an input. Graph passes
+# rewrite expressions before evaluation.
 #
 # Expressions implement the numeric traits (`Ring`, `Field`, `Floating`),
 # so generic numeric code builds fused elementwise kernels. They run on a
@@ -11,6 +11,13 @@
 # (`tensor.sum`) add blocks of 4096 elements from the left and then the
 # block sums from the left, whatever the number of threads, so they are
 # reproducible too. See docs/numerics.md.
+#
+# A tensor expression is a description of elementwise array arithmetic.
+# A leaf supplies an input vector; a kernel executes the combined operations.
+# Building the description costs work and storage, even before evaluating elements.
+# Cpu uses one thread; CpuParallel requests worker threads; Gpu uses a supported
+# OpenCL device. Availability must be checked separately from successful execution.
+# Tutorial 20 explains realization, reduction (combining elements) and gradients.
 
 TensorExpr[N] =
     | TLeaf Vector[F64, N]

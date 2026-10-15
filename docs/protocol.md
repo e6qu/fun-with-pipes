@@ -1,5 +1,15 @@
 # fwp executables and the typed process protocol
 
+Read [lesson 7](tutorials/07-executables-and-pipes/README.md) for the terminal
+workflow. A process protocol defines the bytes two running programs exchange.
+A typed stream carries the expected type as well as values so mismatched programs
+can reject each other before interpreting data. This page includes the actual
+binary layout for implementers, not just command-line examples.
+
+Run the opening commands from `examples/shell`. `printf` supplies newline-separated
+input; the shell pipe connects it to the executable. The function `scale` takes
+the multiplier first, so `./scale 10` multiplies each input line by ten.
+
 Every exported function can be compiled into a standalone executable.
 The examples on this page use `examples/shell/tools.fwp`, which contains:
 
@@ -72,6 +82,15 @@ runtime trap.
 
 ## Binary stream (`PIPE_V1`)
 
+The stream has a header, zero or more value frames and an end marker. A frame
+contains a kind and length, so the reader knows where its payload ends. In the
+notation below, `u8` is one unsigned byte, `u32le` is a four-byte unsigned integer
+in least-significant-byte-first order, and LEB128 is a variable-length integer
+encoding with seven value bits per byte. `utf8` is Unicode text encoded as bytes.
+The fingerprint is a compact identity of the type description, not an encryption
+or authentication check. `PIPE_V1` names the transport family; `version = 2`
+names the current value encoding.
+
 ```
 stream  := header frame* end
 header  := "FWP1" version:u8
@@ -115,7 +134,7 @@ architecture-independent:
 | `TInt[N]` | 64-bit little-endian value; `Trit` one byte |
 | `String`, `Bytes` | length (LEB128) then bytes (UTF-8 for strings) |
 | records, tuples | fields in canonical order (numeric labels first, then names) |
-| ADTs | constructor index (LEB128, declaration order) then fields |
+| variants (algebraic data types) | constructor index (LEB128, declaration order) then fields |
 | `List`, `Array` | count (LEB128) then elements |
 | `Map`, `Set` | count then keys (and values) in key order |
 
@@ -139,6 +158,12 @@ Decoding is strict, and fails the same way in both backends (exit 3):
   constructor) is a `malformed value`.
 
 ## Transports
+
+A transport is the mechanism moving the same typed values. An ordinary pipe
+passes bytes through the operating system; a Unix-domain socket (UDS) connects
+local processes; shared memory (SHM) lets them access an agreed memory region.
+The latter two are Linux-specific here. Negotiating a transport does not change
+the language value encoding or relax type checking.
 
 Between two fwp executables on Linux, the stream can leave the pipe after
 its header, for a Unix domain socket (`UDS_V1`) or a ring buffer in shared
@@ -164,7 +189,9 @@ follow.
 4. A consumer that reads the switch frame continues on that transport. A
    switch frame that it did not ask for is a `bad switch frame` (exit 3).
 
-The ring is one producer and one consumer without locks: a 4096-byte
+A ring buffer reuses a fixed memory region as read/write positions advance.
+A futex is a Linux wait/wake mechanism used when spinning would waste CPU.
+The ring has one producer and one consumer without locks: a 4096-byte
 header (the `FWPS` magic, version 1, the capacity of 1 MiB, the bytes
 written and read so far on separate cache lines, and a futex word with a
 waiting flag for each direction) followed by the data. A side that finds
@@ -176,7 +203,8 @@ exited.
 
 Producers check for a consumer at most once a millisecond (when they
 flush, and every 64 frames), and stop offering after 5 seconds, so a
-stream that a consumer does not ask to move costs nothing.
+stream that a consumer does not ask to move stays on the pipe. The probing
+still has a cost; this is not a measured zero-overhead guarantee.
 With `FWP_TRANSPORT_WAIT=ms` the producer waits that long after its
 header for the consumer to ask, so that the whole stream moves; `fwp pipe`
 sets it, since all its stages are fwp programs. Other readers of the pipe

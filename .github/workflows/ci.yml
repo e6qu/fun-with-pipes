@@ -269,3 +269,9 @@ jobs:
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: benchmarks against C and Rust (docs/benchmarks.md)
         run: cargo test --release --test bench -- --ignored --nocapture
+      - name: Preserve readable benchmark comparisons
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchmarks
+          path: target/bench.md
+          if-no-files-found: error

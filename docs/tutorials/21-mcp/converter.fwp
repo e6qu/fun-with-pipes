@@ -1,5 +1,5 @@
-# Exact conversions and sums, for a model that should not do arithmetic
-# in its head.
+# Temperature conversions and integer-cent bill splits.
+# Floating-point conversions can round.
 #
 # expose: mcp
 
@@ -56,4 +56,4 @@ shares =
         (.1 | range 0)
 
 share : Split -> I64 -> I64
-share = curry (if (fork lt .1 (.0 | .extra)) (.0 | .base | add 1) (.0 | .base))
+share = curry (if (fork lt (.0 | .extra) .1) (.0 | .base | add 1) (.0 | .base))

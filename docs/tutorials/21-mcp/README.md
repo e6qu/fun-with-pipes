@@ -1,9 +1,21 @@
 # 21. MCP tools
 
+Read lessons 1–4 first, plus lesson 8 for the HTTP transport. A tool server
+lets another application discover named operations and call them with structured
+arguments. Model Context Protocol (MCP) defines those requests. JSON-RPC messages
+have a method name, parameters and an ID that matches a reply to its request.
+A schema describes valid arguments/results; annotations provide hints about a
+tool, not permission to run it.
+
+This repository implements the `2026-07-28` protocol version shown in the tested
+messages below. A client must support that version and stateless operation;
+being described as an MCP client is not sufficient to establish compatibility.
+`jq` formats/selects JSON in the terminal. `<<'EOF'` supplies the following lines
+as input until the closing `EOF`; the `>` marks in the transcript are prompts.
+
 This tutorial makes ordinary functions the tools of a Model Context
-Protocol server, which AI applications (Claude and other MCP clients)
-call. The server speaks the stateless protocol of the 2026-07-28
-specification: no session, no `initialize` handshake, every request on
+Protocol server, which compatible client applications
+call. The server implements the stateless `2026-07-28` protocol version: no session, no `initialize` handshake, every request on
 its own. It talks over standard input and output, or over HTTP. The tools'
 input and output schemas come from the functions' types, and their
 descriptions from the comments. [docs/mcp.md](../../mcp.md) has every rule.
@@ -11,6 +23,18 @@ descriptions from the comments. [docs/mcp.md](../../mcp.md) has every rule.
 To follow along, go to this directory (`cd docs/tutorials/21-mcp`). The
 sessions below run exactly as shown: the test suite runs them. They use
 `jq` to show the JSON.
+
+## Reading the example
+
+`convert` first converts the input to Celsius, then to the requested output
+unit. `fork` supplies the target unit and intermediate value to `from-celsius`.
+These are F64 calculations and can round.
+
+`split-bill` validates the person count, computes integer quotient and remainder,
+then maps `share` over zero-based person indices. For nonnegative cents, the first
+`remainder` people receive one extra cent. `fork lt (.0 | .extra) .1` passes the
+extra-count first and the index last, testing `index < extra`. All shares therefore
+sum to the original amount. The code is a small example, not a full payment system.
 
 ## Functions are tools
 
@@ -20,8 +44,8 @@ is a tool only when it is exposed as `mcp`; the file's leading comment
 exposes all of them, and is the server's instructions:
 
 ```fwp
-# Exact conversions and sums, for a model that should not do arithmetic
-# in its head.
+# Temperature conversions and integer-cent bill splits.
+# Floating-point conversions can round.
 #
 # expose: mcp
 ```
@@ -80,14 +104,16 @@ $ echo '{"jsonrpc":"2.0","id":1,"method":"server/discover"}' | ./converter | jq 
     "name": "converter",
     "version": "1.0.0"
   },
-  "instructions": "Exact conversions and sums, for a model that should not do arithmetic\nin its head.",
+  "instructions": "Temperature conversions and integer-cent bill splits.\nFloating-point conversions can round.",
   "resultType": "complete"
 }
 ```
 
 `tools/list` lists the tools, with their JSON Schemas. A tool without
-effects (no `IO`, `Network`, ...) is marked as only reading, so a client
-can call it without asking:
+effects (no `IO`, `Network`, ...) receives the read-only and idempotent hints
+shown below. Idempotent means repeating it is expected to have the same external
+effect. These are behavior hints; the client still decides whether a call needs
+permission:
 
 ```console
 $ ./converter <<'EOF' | jq -c '.result.tools[] | {name, annotations}'
@@ -144,7 +170,7 @@ $ ./converter <<'EOF' | jq -c .result
 > {"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"convert","arguments":{"value":"hot","from":"Celsius","to":"Kelvin"},"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}}}
 > EOF
 {"content":[{"type":"text","text":"212"}],"structuredContent":{"result":212},"isError":false,"resultType":"complete"}
-{"content":[{"type":"text","text":"[333,333,334]"}],"structuredContent":{"result":[333,333,334]},"isError":false,"resultType":"complete"}
+{"content":[{"type":"text","text":"[334,333,333]"}],"structuredContent":{"result":[334,333,333]},"isError":false,"resultType":"complete"}
 {"content":[{"type":"text","text":"there must be at least one person"}],"isError":true,"resultType":"complete"}
 {"content":[{"type":"text","text":"invalid arguments: $.value: expected a number, got \"hot\""}],"isError":true,"resultType":"complete"}
 ```
@@ -157,17 +183,27 @@ $ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion
 {"code":-32022,"message":"unsupported protocol version","data":{"supported":["2026-07-28"],"requested":"2025-06-18"}}
 ```
 
-## Adding it to a client
+For 1001 cents among three people, two shares must get the extra cent. The
+base share is integer division (`333`); the remainder (`2`) is the number of
+leading shares to increase. `share` checks `index < extra`. The total remains 1001.
 
-A client runs the executable itself. For Claude Code:
-
-```sh
-claude mcp add converter -- /path/to/converter
+```console
+$ ./converter <<'EOF' | jq -c .result.structuredContent
+> {"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"split-bill","arguments":{"cents":1001,"people":3},"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}}}
+> EOF
+{"result":[334,334,333]}
 ```
 
-Other clients take the command in their configuration, as in
-`{"mcpServers": {"converter": {"command": "/path/to/converter"}}}`. The
-server's stdout carries only protocol messages; it logs on stderr.
+Temperature conversions use `F64` and can round. Bill amounts here are
+nonnegative integer cents; this example does not implement currency conversion.
+
+## Adding it to a client
+
+Configure a compatible client to start the built `converter` executable with
+no arguments and communicate over its standard input/output. Configuration syntax
+belongs to that client; confirm that it supports the version above before using
+it. Standard output carries only protocol messages; diagnostics use standard error.
+The client decides when a tool may run, regardless of tool annotations.
 
 ## Over HTTP
 
@@ -206,9 +242,9 @@ exported function, exposed or not:
 
 ```console
 $ fwp exec converter.fwp split-bill 1000 3
-333
-333
 334
+333
+333
 ```
 
 ## The program
@@ -216,8 +252,8 @@ $ fwp exec converter.fwp split-bill 1000 3
 [`converter.fwp`](converter.fwp):
 
 ```fwp
-# Exact conversions and sums, for a model that should not do arithmetic
-# in its head.
+# Temperature conversions and integer-cent bill splits.
+# Floating-point conversions can round.
 #
 # expose: mcp
 
@@ -274,7 +310,7 @@ shares =
         (.1 | range 0)
 
 share : Split -> I64 -> I64
-share = curry (if (fork lt .1 (.0 | .extra)) (.0 | .base | add 1) (.0 | .base))
+share = curry (if (fork lt (.0 | .extra) .1) (.0 | .base | add 1) (.0 | .base))
 ```
 
 ---

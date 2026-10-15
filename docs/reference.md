@@ -1,5 +1,17 @@
 # fwp reference
 
+This page is a lookup guide after [lessons 1–5](tutorials/README.md), which teach
+functions, data, types, effects and collections. Examples here can be syntax
+fragments: an ellipsis (`...`) or a signature without a body is explanatory,
+not a complete program. The tutorials contain complete runnable files.
+
+Read `A -> B` as “takes A and returns B”; repeated arrows take arguments one at
+a time. `! {IO}` declares an external action. `[T]` supplies a type argument,
+while `where Trait[T]` requires operations available for that type. A lowercase
+identifier in a type is a type variable, not a value parameter name. Definitions
+usually combine functions without naming their input; this is called *tacit*
+style. The [glossary](glossary.md) provides a lookup for other compiler terms.
+
 fwp is a tacit, curried, pipe-oriented language with static types, effect
 tracking, and two backends: an interpreter and native code through C. This
 page is the reference for the language as implemented. For a gentler
@@ -7,6 +19,11 @@ introduction, see the [tutorials](tutorials/README.md); the standard
 library is listed in [stdlib.md](stdlib.md).
 
 ## Lexical structure
+
+A literal writes a value directly, such as `42` or `"hello"`. A suffix selects
+its numeric type. Escapes represent characters that are awkward to write literally;
+for example `\n` is a newline and `\t` is a tab. Balanced ternary uses base three
+with digits −1, 0 and +1, called trits.
 
 - **Comments** run from `#` to the end of the line.
 - **Names** are kebab-case (`read-all`, `max-header-bytes`). Dots qualify
@@ -38,10 +55,10 @@ library is listed in [stdlib.md](stdlib.md).
 | `rec name = ...` | recursion must be declared (or on the signature: `rec name : Type`) |
 | `export name : Type` | exported: executables, libraries |
 | `import dir.module` | `dir/module.fwp`; its names are `dir.module.name` |
-| `Point = { x: F64, y: F64 }` | a nominal record |
+| `Point = { x: F64, y: F64 }` | a named record, distinct from other named record types |
 | `Meters = F64` | an alias (aliases may refer to later ones, but not to themselves) |
-| `Handle = builtin` | opaque, provided by the runtime |
-| `resource File = builtin` | affine: no `Dup`, not captured by partial application |
+| `Handle = builtin` | opaque: its internal fields are hidden and supplied by the runtime |
+| `resource File = builtin` | affine: cannot be duplicated (`Dup`) or captured by partial application |
 | `repr(C) Vec2 = { x: F64, y: F64 }` | C layout (fields in declaration order) |
 | `test "name" = expression` | must evaluate to `True` |
 | `macro name = function` | a `Syntax -> Syntax` function |
@@ -55,7 +72,10 @@ Shape =
     | Square Point F64
 ```
 
-A trait lists superclasses after `:`, and may give default methods
+A trait is a set of required operations. An implementation (`impl`) supplies
+those operations for a type. The following is a declaration-shape sketch, with
+placeholder types and a missing `area` body. A trait lists required parent traits
+(superclasses) after `:`, and may give default methods
 (`describe` here); an impl may have a context after `where`:
 
 ```
@@ -80,7 +100,7 @@ imported under the same name.
 | `x \| f` | `f x` when `x` is a value; composition when `x` is a function |
 | `[a, b]`, `(a, b)`, `()` | list, tuple, unit (tuples are records with fields `.0`, `.1`, ...) |
 | `{ x = 1, y = 2 }` | record (structural; unifies with nominal records) |
-| `Point { x = 1.0, y = 2.0 }` | a nominal record |
+| `Point { x = 1.0, y = 2.0 }` | a named record, distinct from other named record types |
 | `.x`, `.x.y`, `.0` | field selector functions |
 | `make { f = g }`, `make T { f = g }` | build a record (or a `T`) from functions of the input; `make { 0 = f, 1 = g }` builds a tuple |
 | `make { .name, .age }` | project named fields; shorthand for `make { name = .name, age = .age }`, also in nominal `make` |
@@ -95,7 +115,7 @@ imported under the same name.
 `loop step state` repeats `step` (which returns `Again s` or `Stop r`) in
 constant stack space; use it for long-running loops instead of recursion.
 
-Arguments come last: `sub 1` subtracts one, `div 2` halves, `lt 0` tests
+The data being transformed comes last: `sub 1` subtracts one, `div 2` halves, `lt 0` tests
 `x < 0`, and `concat "!"` appends.
 
 ### Pipes
@@ -200,6 +220,11 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
 
 ## Types
 
+A type describes the values an expression may have. A record holds named fields;
+a tuple holds numbered fields; a variant chooses one constructor and its payload.
+A structural record is identified by its fields; a nominal record also has its
+declared type name. An open row means additional fields/effects may be present.
+
 - **Numbers:** `I8`..`I128`, `U8`..`U128`, `ISize`, `USize`, `F16`, `BF16`,
   `F32`, `F64`, `F128`, `TInt[N]`, `Trit`.
   - Integer arithmetic traps on overflow; `wrapping.*`, `saturating.*`,
@@ -247,7 +272,7 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
   _]` gives each a size of its own (`matrix.pack` and `matrix.unpack`
   likewise).
   Performance: an abstract size costs a run-time comparison and an
-  `Option` at each such check, where a static size costs nothing.
+  `Option` at each such check; a static size avoids that particular runtime check.
 - **Higher-kinded parameters:** `Functor[F]`.
 
 ### Generics
@@ -274,10 +299,19 @@ A definition without a signature is not generic:
   signature.
 
 Generics are resolved at compile time: each use at new types compiles to
-its own specialized code, with no run-time cost
+its own specialized code, without runtime trait-method lookup. This can increase
+code size and does not remove all boxes or indirect calls at other boundaries
 ([design.md](design.md#generics)).
 
 ## Traits
+
+A trait names a set of operations a type supports. `Add` supplies `add`, `Ord`
+supplies ordering and `Display` supplies textual output. A derived trait is filled
+in by the compiler from a type's fields. `Functor` maps a function over a container;
+`Applicative` additionally applies contained functions; `Monad` sequences operations
+whose results determine later operations. These are library abstractions, not new
+control-flow syntax. A higher-kinded parameter such as `F` in `Functor[F]` stands
+for a type constructor (`List`, for example), which still needs an element type.
 
 - **Numeric:** `Add`, `Sub`, `Mul`, `Div`, `Rem`, `Neg`, `Zero`, `One`,
   `FromInt`, `FromFloat`, `Ring`, `Field`, `Floating`, and the primitive
@@ -293,6 +327,12 @@ against the traits computes values, derivatives or kernels
 ([numerics.md](numerics.md)).
 
 ## Effects
+
+Effects describe actions beyond returning a value. The compiler propagates them
+through calls so that a function cannot hide IO, failure or state use. A handler
+provides the meaning of a particular effect within a scope, such as catching an
+error or supplying state. An effect row is the set of such requirements, possibly
+with an unknown remainder.
 
 | Effect | Performed by |
 |---|---|
@@ -333,6 +373,12 @@ is no longer supported: use literal text to avoid losing digits in macros.
 
 ## C interop
 
+Foreign-function interoperation (FFI) calls code outside fwp. An ABI specifies
+C argument, result and memory layout. A pointer is an address whose validity is
+the caller's responsibility; declaring `Unsafe` records that responsibility but
+does not verify the address. [Lesson 9](tutorials/09-c-interop/README.md) walks
+through allocation, a callback, copying a result and freeing the raw buffer.
+
 ```
 foreign "C" strlen : String -> USize
 repr(C) DivResult = { quot: I32, rem: I32 }
@@ -358,8 +404,7 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
 | `repr(C)` record | a struct |
 | function | a callback |
 
-The half/bfloat/quad ABI is part of the [active format migration](float-formats.md)
-and awaits native acceptance. C code receives bits in the declared structs or
+The half/bfloat/quad ABI follows the accepted [format contract](float-formats.md). C code receives bits in the declared structs or
 integers; it must explicitly convert to a numeric C type if needed. Quad does
 not use the host's `long double` ABI. `repr(C)` fields, exported headers and
 pointer element widths use the same representation (2/2/16 bytes).
@@ -386,14 +431,14 @@ pointer element widths use the same representation (2/2/16 bytes).
   `tests/c-interop/main.rs` for Rust.
   Returned strings and string fields of returned structs borrow library storage
   and remain valid while the library is loaded; the host must not free them.
-  Prepared native teardown cancels library tasks and releases cached values and
+  Native teardown cancels library tasks and releases cached values and
   runtime regions at unload (or static-archive process exit). The host must finish
   all calls before unloading; see [ownership coverage](ownership.md#ownership-coverage)
   and [current validation](development-state.md).
   Scalar/struct results are copied into C values. A nullable pointer copies the
   raw pointer; the pointee follows its own allocation/lifetime contract.
-  Prepared C input ownership copies strings and `repr(C)` records into owned
-  language values. Prepared export validation rejects `Bytes` parameters,
+  C input ownership copies strings and `repr(C)` records into owned
+  language values. Export validation rejects `Bytes` parameters,
   because the byte pointer ABI carries no length; foreign calls keep their
   existing convention. See [the handoff](development-state.md) for delivery status.
 
@@ -543,7 +588,7 @@ The [ownership contract](ownership.md#checked-arc-delivery) and
 
 `fwp build --memory static` bounds runtime-owned memory using storage reserved,
 committed and touched at startup. Linux places the heap, buffers and stacks in
-one mapping. The Windows implementation under validation commits stacks
+one mapping. The Windows implementation commits stacks
 separately and reuses precreated task fibers and worker threads. External DLL
 allocations and Windows resources are outside this budget; touched pages can
 still be paged out by the OS. The configured parts are:
@@ -575,7 +620,7 @@ fwp: static memory: 124448 KiB mapped at startup
 
 Pipes between fwp programs stay on the Unix socket transport (`UDS_V1`)
 rather than the shared-memory ring, which would be new memory. Static
-memory is verified on Linux; the Windows port is under validation in
+memory is verified on Linux and Windows, with Windows-specific checks in
 `tests/windows_static_memory.rs`. WebAssembly and libraries keep the usual
 allocator. `tests/static_memory.rs` checks the Linux golden
 programs with it, and, with `strace`, that a program with tasks, a
@@ -639,7 +684,7 @@ use `.dylib`; native `--static` linking is rejected. Build a separate binary
 for each supported OS/architecture; universal binaries are outside project scope.
 The desired platform matrix is Linux, macOS and Windows on ARM64 (`aarch64`)
 and AMD64 (`x86_64`); see [current acceptance](../PLAN.md#platform-objective-and-current-evidence).
-Windows ARM64/AMD64 support is in active development and is not yet accepted. Darwin cross targets are not implemented;
+Native Windows ARM64/AMD64 is accepted. Darwin cross targets are not implemented;
 `--pgo` requires GCC.
 For TLS set `FWP_OPENSSL_DIR` as described in [tls.md](tls.md#openssl).
 To try an ARM executable on an x86 machine,
@@ -647,8 +692,8 @@ run it with qemu: `qemu-aarch64 -L /usr/aarch64-linux-gnu ./main`.
 
 #### Tasks on WebAssembly
 
-WebAssembly cannot switch stacks by itself, so tasks and channels
-(`Async`) run there with JavaScript Promise Integration (JSPI): each task
+These fwp WebAssembly builds implement tasks and channels (`Async`) through
+JavaScript Promise Integration (JSPI): each task
 is a fiber whose stack the JavaScript host suspends and resumes
 (`web/fibers.js`, which the browser loader includes). The scheduler is the
 native one (or, in fwp.wasm, the interpreter's), with the same order of
@@ -678,21 +723,18 @@ builds a program with tasks for engines without JSPI: binaryen's Asyncify
 pass (`wasm-opt --asyncify`) rewrites the module so that its call stack
 can be unwound into memory and rewound later, and `web/fibers.js` then
 switches fibers by unwinding the one that suspends and rewinding the next
-(the module exports `asyncify_*`, which the loader recognizes). It runs in
-any JavaScript engine (Firefox, Safari, node without flags), with the same
-output, preemption and cancellation; not in WASI runtimes without a
+(the module exports `asyncify_*`, which the loader recognizes). It supplies task suspension without JSPI on a compatible JavaScript host,
+with the same intended output, preemption and cancellation; not in WASI runtimes without a
 JavaScript host. wasm-opt is an optional tool, needed only for this
 option and only by programs with tasks: it comes with binaryen (`npm
 install -g binaryen`, or a system package); `FWP_WASM_OPT` names the
-executable. The cost: the module is about 7% larger, calls are about 70%
-slower (`fib 35` in two tasks: 0.9 s against 0.53 s with JSPI in node
-24), and a task's own stack in linear memory is checked at each call,
-since its calls run on the engine's main stack. The default stays
-`--wasm-async=jspi`. The same works for fwp.wasm itself:
-`scripts/build-playground.sh --asyncify` applies Asyncify to it, so the
-playground runs tasks without JSPI too (the module grows from 4.3 to
-5.1 MB, and a run in node takes about four times as long, much of it
-compiling the larger module).
+executable. Asyncify adds code and execution-state save/restore work; its cost
+depends on the module and host. The old size/time anecdotes did not record enough
+hardware/compiler/allocation information to serve as a current benchmark. Compare
+the same program and host in JSPI and Asyncify modes before making a performance
+claim. The default stays `--wasm-async=jspi`. For the compiler/interpreter module,
+`scripts/build-playground.sh --asyncify` applies the same transformation, allowing
+tasks in hosts without JSPI when they support the transformed module.
 
 ### fwp in the browser
 

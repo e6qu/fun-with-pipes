@@ -25,6 +25,12 @@
 # Responses can be compressed (`compress` in the config, or the
 # `http.compress` middleware), request bodies with a content encoding
 # are decompressed, and the client decompresses responses.
+#
+# HTTP sends a request (method, path, headers and body) and receives a response
+# (status, headers and body). A handler computes that response; middleware wraps
+# a handler to add behavior such as a deadline. A route selects a handler.
+# JSON is a text format for structured bodies. Tutorial 8 builds a complete
+# server before introducing generated REST interfaces.
 
 Request = {
     method: String,

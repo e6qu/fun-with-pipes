@@ -1,43 +1,64 @@
 # 3. Types and traits
 
-Types are inferred, so most definitions need no signature. A signature
-documents a definition, pins its types down, or makes it generic.
-Lower-case names in a type are type variables, and `where` lists the
-traits they must implement:
+Prerequisites: [pipes](../01-pipes-and-functions/README.md) and
+[records, variants and signatures](../02-data/README.md). This lesson shows how
+to describe reusable functions and operations that work on different types.
+
+## Inference and explicit generic signatures
+
+The compiler often determines a type from the code; this is **type inference**.
+A signature states it explicitly. `String -> I64` takes a string and returns a
+64-bit signed integer. Parentheses group types, so `a -> (a, a)` returns a pair.
+A lowercase name such as `a` is a **type variable**: it stands for the type chosen
+at a particular use of the function.
 
 ```fwp
 pair-up : a -> (a, a) where Dup[a]
 ```
 
-Generics are explicit: only a signature with type variables makes a
-definition generic. Without one, `pair-up = dup` would be an error, and
-the compiler would suggest the signature to write. A definition
-whose only open type comes from a number literal takes the literal's
-default type instead, so `double = mul 2` is `I64 -> I64`. The compiler
-specializes a generic definition for each type it is used at, so
-generics cost nothing at run time.
+This is a **generic** function: it can work at several types. `where Dup[a]`
+requires that values of the chosen type may be duplicated. Duplication preserves
+value semantics; it does not necessarily copy every byte of a shared object.
 
-## Traits
+Only an explicit signature with type variables makes a definition generic.
+Without it, an unconstrained `pair-up = dup` is rejected with a suggested signature.
+A number literal can supply a concrete default: `double = mul 2` becomes
+`I64 -> I64`. The compiler makes a specialized version of a generic function for
+each type used. This avoids runtime lookup of trait methods, but does not prove
+that all values, calls or surrounding code avoid allocations.
 
-A trait is a set of functions that a type can implement. A method may have
-a default definition. `impl` provides the methods for one type:
+## Traits and implementations
+
+A **trait** is a named set of operations a type provides. This one asks for a
+way to turn a value into a string:
 
 ```fwp
 trait Describe[T] =
     describe : T -> String
 ```
 
-The compiler derives the structural traits for every type: `Eq`, `Ord`,
-`Hash`, `Display`, `Dup`, `Encode` and `Decode`. So data can be compared,
-sorted, shown and serialized without any declarations. The numeric traits
-(`Add`, `Mul`, `Ring`, `Field`, `Floating`, ...) let you write code once
-for every number type.
+An `impl Describe[Temperature]` supplies that operation for `Temperature`.
+The Boolean implementation chooses `"yes"` or `"no"`. `shout` then works for
+either type by calling `describe` and converting its result to uppercase.
 
-## Numeric literals
+The compiler supplies standard operations for supported structures: `Eq` tests
+equality, `Ord` orders values, `Hash` calculates lookup hashes, `Display` formats
+values, `Dup` allows duplication, and `Encode`/`Decode` convert to/from the typed
+process data format. Resource types have restrictions described in the reference.
+Numeric traits describe arithmetic: `Add` provides addition, `Mul`
+multiplication, and larger traits such as `Ring` group related operations.
 
-A literal takes the type it is used at: in `half`, the `2` is an `F32`.
-A literal that does not fit its type is a compile-time error, and integer
-arithmetic that overflows stops the program with a trap.
+## Numbers in context
+
+`F32` is a 32-bit floating-point type. In `half : F32 -> F32`, the literal `2`
+takes that type from its use. A literal outside its type's range is a compile-time
+error. Checked integer arithmetic that overflows at runtime stops with a
+**trap**, an invalid-operation diagnostic; it does not silently wrap.
+
+In the program, `make Temperature { celsius = id }` turns `21.5` into the named
+record. `format "{} °C"` fills the `{}` placeholder with that field. The four
+outputs demonstrate a generic pair, a custom description, a Boolean description,
+and floating-point division.
 
 ## The program
 

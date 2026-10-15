@@ -1,5 +1,18 @@
 # 17. REST APIs and OpenAPI
 
+Read lessons 1–5 and 8 first; lesson 16 explains shared exposure comments.
+A REST API exposes operations at HTTP addresses. An **endpoint** is one method
+and path, such as `POST /quote`. A **schema** describes the allowed JSON values.
+OpenAPI is a machine-readable description of endpoints and their schemas; a
+client generator uses it to produce functions that send the corresponding requests.
+Encoding turns fwp values into JSON, and decoding checks JSON before building
+fwp values. Generated clients support the subset described in the REST guide;
+an arbitrary external OpenAPI document may use unsupported features.
+
+This example computes a quote from weight, parcel size and carrier prices. Its
+`express` query option keeps fast services; optional query values use `Option`
+so absence is distinct from an explicit value.
+
 This tutorial serves ordinary functions as a REST API, calls it with
 `curl`, publishes its OpenAPI document, and calls it from another fwp
 program through a client generated from that document. Each endpoint's
@@ -8,6 +21,19 @@ has every rule.
 
 To follow along, go to this directory (`cd docs/tutorials/17-rest-and-openapi`).
 The sessions below run exactly as shown: the test suite runs them.
+
+## Reading the example
+
+`rates` first checks weight, finds carriers serving the destination, computes
+prices, then applies options and sorts by price. `tap` performs the weight check
+while retaining the original pair of options and parcel. `rate` uses
+`base + weight × size-factor × per-kg`. A medium two-kilogram parcel costs 7 with
+steady (`4 + 2 × 1.5 × 1`) or 15 with swift (`9 + 2 × 1.5 × 2`).
+
+`keep` requires both the express test and any maximum-days test. `None` means no
+maximum; `Some n` passes `n` to `le`, making `days | le n` test `days <= n`.
+`check-weight` and `routes` raise distinct variants so the interface can map them
+to 422 and 404. This is a fixed illustrative tariff, not live carrier pricing.
 
 ## Functions are endpoints
 

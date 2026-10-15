@@ -6,6 +6,9 @@
 #   out/books --listen 127.0.0.1:50051 &           the gRPC server
 #   out/shop                                       its calls are gRPC
 
+# Read tutorial 14. gRPC sends function arguments/results between processes;
+# local syntax is preserved but remote calls add network cost and possible failure.
+
 import books
 
 cheap : books.Filter

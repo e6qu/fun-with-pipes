@@ -1,5 +1,17 @@
 # 9. Calling C
 
+Read lessons 1–4 first. C interoperability means calling code written in C
+from fwp. A **pointer** is a memory address, not a managed fwp collection.
+`Ptr[I32]` addresses 32-bit signed integers; `ptr.at` moves by elements, while
+`mem.alloc` takes a size in bytes. `USize` matches C's unsigned size type.
+`repr(C)` requests C's field layout for a record. A **callback** is a function
+passed to C so that C can call it, here to compare items while sorting.
+
+The `Unsafe` effect makes these operations visible in the type; it does not
+prove an address valid. The example allocates storage, writes the input into it,
+asks C to sort it, copies the result into an fwp list and frees the storage.
+The caller must also plan cleanup if adding operations that can fail.
+
 `foreign "C" name : Type` declares a C function and the fwp type it is
 called at. The C-side types follow from the fwp types:
 
@@ -44,6 +56,26 @@ On macOS the shared-library form (`--cdylib`) uses `.dylib` and the
 interpreter loads a Darwin FFI shim. Native portability and verification
 are tracked in [the session handoff](../../development-state.md).
 
+## Reading the example
+
+The first four outputs come from standard C functions: `strlen` counts the five
+bytes of "hello", `hypot` computes √(3² + 4²), `div` returns quotient 3 and
+remainder 2, and `getenv` returns no pointer for the deliberately absent variable.
+
+The final example copies I32 values into a raw buffer. Each I32 uses four bytes,
+so allocation multiplies the list length by four. `enumerate` supplies `(index,
+value)` pairs to `write-at`. `qsort` receives the buffer, element count, element
+size and comparison callback. Its subtraction comparator is suitable for these
+small sample values; arbitrary I32 extremes need an overflow-safe comparator.
+`read-all` copies sorted values back into a managed list. `both` evaluates that
+read before `mem.free`, then `.0` keeps the list and discards the unit result of
+freeing. The sorted output is therefore `[-2, 0, 3, 5, 9]`.
+
+The `mylib.c`, `program.fwp` and `geom.fwp` commands above are usage templates;
+those files are not supplied by this lesson. A static library is linked into
+another executable; a shared library is loaded alongside it. A generated header
+declares its callable C interface.
+
 ## The program
 
 [`main.fwp`](main.fwp):
@@ -79,7 +111,8 @@ sort-buffer = curry (tap (both .1 (.0 | int.convert | option.unwrap-or 0usize)
         | uncurry qsort
         | apply 4usize
         | apply compare)
-    | fork read-all .0 .1)
+    | both (fork read-all .0 .1) (.1 | mem.free)
+    | .0)
 
 read-all : I64 -> Ptr[I32] -> List[I32] ! {Unsafe}
 read-all =

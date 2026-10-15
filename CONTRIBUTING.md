@@ -1,17 +1,15 @@
 # Contributing to fwp
 
-Start with [PLAN.md](PLAN.md), [the session handoff](docs/development-state.md)
-and [the ownership contract](docs/ownership.md). Update the handoff with the
-actual validation and next action before ending a session. Keep unfinished
-work and historical benchmark evidence separate from verified deliveries.
-The [prepared queue](docs/roadmap-queue.md) preserves immutable rebase anchors;
-[historical notes](docs/roadmap-history.md) preserve prior evidence. Update the
-live handoff instead of appending competing historical next actions.
+This guide explains how to change the compiler, test it and submit a pull request.
+Learn the source language through the [tutorials](docs/tutorials/README.md); use
+[compiler design](docs/design.md) to find the implementation and
+[the glossary](docs/glossary.md) to look up unfamiliar terms.
 
-Thank you for helping. This guide covers setting up, the rules the code
-follows, how to test a change, and how changes are merged. How the
-compiler is built is described in [docs/design.md](docs/design.md), and
-the language in [docs/reference.md](docs/reference.md).
+Before work, read [the plan](PLAN.md) and [session handoff](docs/development-state.md)
+to avoid repeating completed tasks. The handoff records actual checks, unresolved
+failures and one next action. [Delivery history](docs/roadmap-history.md) preserves
+accepted evidence; [preparation commits](docs/roadmap-queue.md) are historical
+identities, not a backlog to execute again.
 
 ## Setting up
 
@@ -25,6 +23,10 @@ You need:
   OpenSSL 3 from Homebrew (`brew install openssl@3`). Set `FWP_OPENSSL_DIR`
   to the output of `brew --prefix openssl@3` for native TLS builds and the
   interpreter. CI uses Apple Clang on Apple Silicon and Intel.
+- On Windows: the native setup in `scripts/setup-windows.ps1` selects SDK-aware
+  Clang for the Rust MSVC build and LLVM-MinGW for generated programs.
+  `scripts/setup-windows-tls.ps1` supplies matching OpenSSL dependencies. The
+  [Windows workflow](.github/workflows/windows.yml) records the full runner setup.
 - Optional, for the WebAssembly tests: clang with a WASI sysroot and lld
   (Debian/Ubuntu: `clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32`), the
   `wasm32-wasip1` Rust target (`rustup target add wasm32-wasip1`), node 24,
@@ -50,8 +52,9 @@ Audit the handoff and tracked Markdown links with
 `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`. A clean clone
 needs full history and the immutable `roadmap/preparation-*` tags; fetch them
 without force before checking. The audit verifies tag identity, ancestry, queue
-order and whole commit messages. It also verifies live handoff heads against
-the queue and ancestry of their recorded actual rebase bases.
+order and whole commit messages. It also checks that plan and handoff step numbers agree and statuses use the
+defined values. It does not establish that a recorded CI run passed; verify that
+run separately against the actual commit being merged.
 CI checks the actual PR head and fetches review
 heads so merged preparation references remain available.
 Retain any pre-amend revision referenced by a frozen documentation snapshot
@@ -142,16 +145,17 @@ does not substitute for runtime alias/unwind controls or full CI.
   a shared evaluation-order bug. Check observable traps as well as values.
 - **Generics are explicit.** In `lib/` and in examples, every generic
   definition has a signature, because the compiler rejects a definition
-  without one that would be generic. Generics compile to specialized
-  code, so they cost nothing at run time
+  without one that would be generic. Generics select concrete code and trait methods at compile time, avoiding
+  runtime method-table dispatch. Boxing, allocation and indirect calls can still
+  exist at other boundaries
   ([docs/design.md](docs/design.md#generics)).
-- **Abstractions cost nothing at run time.** An abstraction that is free
-  in the source should compile to code a C programmer would write. When
-  it does not, the benchmarks in `bench/` show the cost
+- **Measure abstraction costs.** Aim to remove extra runtime work introduced by
+  convenient source constructs. Do not claim every abstraction is free: name the
+  baseline, inspect generated code and measure equivalent workloads. The
+  benchmarks in `bench/` show specific complete-program comparisons
   ([docs/benchmarks.md](docs/benchmarks.md)).
 - **Errors say what to do.** A diagnostic points at the cause and, where
-  there is one, gives the fix (the signature to write, the option to
-  raise).
+  there is one, gives the fix (the signature to write or the unsupported operation to replace).
 
 ## Tests
 
@@ -164,16 +168,19 @@ does not substitute for runtime alias/unwind controls or full CI.
 | Tutorials and examples | `docs/tutorials/*/`, `examples/` | each tutorial runs in both engines and prints its `main.out`, and its README shows only code from the program; the examples type-check |
 | Features | `tests/*.rs` | the protocol, HTTP, TLS, gRPC, REST, CLI, FFI, the GC, the cache, the formatter, the language server, the browser build, … |
 
-After an intended change in output, regenerate the snapshots and review
-the difference before committing it:
+A snapshot is stored expected output. After an intended behavior change, regenerate
+only the relevant snapshot and inspect the difference; blessing output does not
+prove it correct. For the generated library reference, the focused command is:
 
 ```
-FWP_BLESS=1 cargo test
-git diff tests/ docs/stdlib.md
+python3 scripts/local-guard.py env FWP_BLESS=1 cargo test --test stdlib_doc
+git diff docs/stdlib.md
 ```
 
 `docs/stdlib.md` is generated from the comments and signatures in
-`lib/*.fwp`. Regenerate it the same way, never by hand. A declaration
+`lib/*.fwp`. Edit those sources and the generator, never the output by hand.
+Other snapshot targets use the same environment setting with their focused test;
+full suites and large regeneration run on GitHub, not through a larger local limit. A declaration
 with a `# internal` comment line above it, or a name with a part starting
 with `_`, is left out.
 
@@ -198,7 +205,10 @@ Each one is implemented in both engines:
 
 ### Memory in the C runtime
 
-Native programs have a generational collector (`runtime/fwp_rt_gc.c`).
+Native tracing mode combines counted owners with a generational collector
+(`runtime/fwp_rt_gc.c`). A young object has not survived collection; an old one
+has. Minor collection avoids retracing immutable old objects, so its allocator
+rules matter. Checked ARC excludes tracing but still uses allocator metadata.
 Objects come in three kinds, and the generated code must use the right
 allocator:
 
@@ -217,28 +227,45 @@ generator.
 
 Records and variants that compiled code allocates are updated in place
 when they have a single reference (`fwp_rc_*` in runtime/fwp_rt_gc.c).
-A value the runtime keeps must be shared first (`fwp_rc_share`): generated
-code does this for whatever it hands to a primitive. Runtime code that
-calls compiled code back gets shared results through the `e<id>` and
-`k<id>` entries. `FWP_REUSE_VERIFY=1` poisons what would be reused, and
+A runtime call must follow its contract in `src/ownership.rs`: some arguments
+borrow, others transfer owners, and unproved retention promotes a graph to
+runtime sharing with `fwp_rc_share`. Do not apply the shared policy to every
+primitive indiscriminately. [Primitive ownership](docs/primitive-ownership.md)
+explains the modes and callback obligations. `FWP_REUSE_VERIFY=1` poisons what would be reused, and
 tests/reuse.rs runs every golden program that way.
 
 ### A benchmark
 
 Add `bench/<name>/main.fwp`, `main.c` and `main.rs`, three programs that
-compute the same thing and print the same output. Then update
+compute the same result and print the same output. Check algorithms, data
+structures, overflow behavior and eliminated work too: matching output alone
+does not make timing an isolated language-overhead measurement. Record inputs,
+hardware, compiler versions, flags, timing samples and timing scope. Run the
+benchmark on GitHub. Then update
 [docs/benchmarks.md](docs/benchmarks.md) with the results and an
 explanation of any gap.
 
 ## Documentation
 
-- A user-visible change updates the docs in the same pull request: the
-  reference, the relevant guide in `docs/`, and the tutorials where they
-  show the changed behavior. `PLAN.md` records what was delivered and
-  what comes next.
-- Write short, plain sentences in the present tense, and say what
-  something does before why. Give exact commands, flags and names, and
-  show working code; the examples and tutorials are tested.
+Write for a reader who knows programming but has not worked on this project.
+Introduce a term or symbol before using it; do not make a glossary link carry the
+whole explanation. Give the purpose and prerequisites first, then explain the
+example's input, steps, output and limitations. Distinguish runnable programs,
+tested terminal transcripts and incomplete reference fragments.
+
+Use precise technical names when needed, followed by their meaning. Prefer
+“a separate heap object” before “boxing,” and explain what an ownership boundary
+transfers. Remove obsolete next actions instead of accumulating status paragraphs.
+Keep historical test IDs and measurements in the evidence index, not in every
+user guide. Preserve original measurement files rather than relabeling old data
+as current results.
+
+A user-visible change updates the reference, relevant guide and tutorials together.
+Tutorial README source copies must match their files, and outputs must remain
+explained as well as tested. Generated library docs come from source comments.
+For performance, name both implementations, equivalent work, timing scope and
+extra cost as a ratio or percentage; state when a comparison cannot isolate
+language overhead. “Fewer allocations” does not by itself mean “faster.”
 
 ## Commits and pull requests
 
@@ -267,9 +294,9 @@ copied from another project ("vendored") keeps its own license:
 
 Contributions are accepted under the project's MIT license.
 
-Native CI publishes `fwp-{Linux,macOS}-{ARM64,X64}` artifacts containing one
+Native CI publishes `fwp-{Linux,macOS,Windows}-{ARM64,X64}` artifacts containing one
 compiler archive for that OS/architecture. `scripts/package-native.py` checks
-ELF/Mach-O machine types and executes a copied compiler, raw interpreter and
+ELF/Mach-O/PE machine types (the native executable formats) and executes a copied compiler, raw interpreter and
 tracing/ARC generated programs outside the checkout. The archive includes its
 manifest and requirements: a system C toolchain for native compilation and
 OpenSSL 3 for TLS. `iteration-evidence-*` retains C/disassembly and paired

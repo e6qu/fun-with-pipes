@@ -1,5 +1,12 @@
 # 7. Functions as executables
 
+Read lessons 1–4 first. A shell is the program that reads commands in your
+terminal. **Standard input** is the stream a command reads; **standard output**
+is the stream it writes. A shell pipe (`|` between commands) connects those
+streams. It is separate from `|` inside fwp, which applies or combines functions.
+`export` makes a definition available outside its module (source file).
+`--fn` selects the exported function and `-o` names the executable file.
+
 An exported function can be built into a standalone program, or run
 directly with `fwp exec`. No `main` and no argument parsing are needed:
 
@@ -50,7 +57,7 @@ $ printf '1\n2\n3\n' | fwp exec tools.fwp total
 ## Building it
 
 `fwp build --fn` builds one function into an executable that needs
-nothing else to run. A record is written in fwp's text format:
+no installed fwp compiler to run, though it still uses system libraries. A record is written in fwp's text format:
 
 ```console
 $ fwp build tools.fwp --fn fahrenheit -o fahrenheit

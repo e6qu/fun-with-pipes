@@ -1,5 +1,11 @@
 # Networking: TCP, UDP and DNS. Socket operations suspend only the calling
 # task. Addresses are "host:port" strings.
+#
+# TCP is an ordered byte-stream connection, UDP sends independent datagrams,
+# and DNS resolves hostnames to network addresses. A listener accepts incoming
+# connections; a connection reads/writes bytes. A host:port address such as
+# 127.0.0.1:8080 selects this computer and a port. Suspending a task while IO
+# waits lets other ready tasks run; it does not make IO instantaneous.
 
 Listener = builtin
 Conn = builtin

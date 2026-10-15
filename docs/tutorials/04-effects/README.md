@@ -1,43 +1,59 @@
-# 4. Effects
+# 4. Effects and explicit state
 
-A function's type says which effects it may perform. The effects come
-after `!`:
+Prerequisites: [lessons 1–3](../README.md), especially constant functions,
+pattern matching and type signatures. An **effect** is an action a function may
+perform in addition to returning a value, such as printing or raising a
+recoverable error. Its type lists effects after `!`:
 
 ```fwp
 parse-age : String -> I64 ! {Error[String]}
 ```
 
-The effects are `IO`, `FileIO`, `Network`, `Async`, `Random`, `State[S]`,
-`Error[E]`, `Alloc` and `Unsafe`. A function without `!` is pure. A
-definition other than `main` or a test must be a pure value.
+`parse-age` takes text, returns an integer, and may fail with a string message.
+A function without declared effects is called **pure**. Pure code can still
+allocate ordinary values or hit checked-arithmetic traps. Definitions outside
+`main` and tests must construct pure values, although those values may be
+functions that perform effects when called.
 
-## Handlers
+Common effects include `IO` (console/environment access), `FileIO` (files),
+`Network` (connections), `Async` (tasks), `Random`, `State[S]` (a handled state of
+type `S`), `Error[E]` (a recoverable error of type `E`), `Alloc` and `Unsafe`.
+The last two describe explicit allocation/resource operations and unsafe access;
+they are not a count of every heap object the implementation creates.
 
-Handlers turn effects into ordinary values:
+## Handling a recoverable error
 
-- `fail e` raises `Error[E]`, and `attempt f x` catches it, returning
-  `Ok value` or `Err e`;
-- `try` turns a `Result` back into a failure;
-- `or-fail e` turns `None` into a failure;
-- `run-state s f x` runs `f` with a piece of mutable state that starts as
-  `s`, and returns the result paired with the final state. Inside, `get`,
-  `put` and `modify` read and change the state.
+A **handler** determines how an effect is dealt with. `attempt age` runs `age`
+and returns a normal value: `Ok result` on success or `Err message` on failure.
+These are alternatives of `Result`. `fail message` raises the error; `try`
+turns an `Err` back into a raised error.
 
-## Piped branches
+`parse-int` returns `Some number` or `None`, the alternatives of `Option`.
+`or-fail "not a number"` unwraps `Some`, or raises that message for `None`.
+`check-age` rejects negative numbers. `lt 0` asks “is the input less than zero?”;
+`tap` runs the check but keeps the original age if it succeeds.
 
-`count-long` passes each string through `string.length`, then `gt 3`, then
-`match`. The `True` arm updates the state with `modify (add 1)`; the `False`
-arm returns `()`. Neither pattern captures an argument, so neither arm
-needs a constant function. Only the selected arm performs its effect.
+## A stateful count, step by step
 
-`check-age` uses `tap` to keep the original age after the piped check.
-A negative age raises the error before the pipeline can continue.
+`run-state 0 f` runs `f` with an integer state starting at zero. It returns
+`(f's result, final state)`. Within `f`, `get` reads that state, `put` replaces
+it, and `modify` takes a function that calculates its next value. The state is
+local to the handler; this does not make all values mutable.
 
-When an operation does need a callback that ignores its argument,
-`const` makes that explicit. For example, `const (add 1) | modify` ignores
-the callback input, supplies the function `add 1` to `modify`, and updates
-the state. Simply writing `add 1 | modify` would compose the two functions
-and send a number to `modify`, which expects a state-transforming function.
+The `count-long` program below does the following:
+
+1. `each` calls its function once for each word, in order.
+2. `string.length | gt 3` asks whether that word has more than three characters.
+3. `match` selects `True` or `False`. `modify (add 1)` increments the handled
+   counter; `()` is the unit value, meaning “no useful result.” Only the chosen
+   branch runs. These patterns capture no arguments, so no `const` is needed.
+4. `run-state` returns `((), count)`. `.1` selects the second field, because
+   tuple positions start at zero. Two words in the sample qualify.
+
+When a callback must ignore its incoming word and supply a function as data,
+`const (add 1) | modify` does that explicitly. `add 1 | modify` would instead
+try to send a number to `modify`, which needs a function. This is why constant
+functions are not implicit.
 
 ## The program
 

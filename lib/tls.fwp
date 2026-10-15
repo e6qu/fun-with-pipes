@@ -8,6 +8,12 @@
 # task that uses it: a slow handshake holds up no other task. Failures are
 # `IoError`s of kind "tls" (`certificate verify failed: hostname
 # mismatch`, ...).
+#
+# Transport Layer Security (TLS) encrypts a connection and verifies identities.
+# A certificate contains an identity/public key; the server holds its private
+# key. Clients trust certificate authorities (CAs) and verify the requested
+# hostname. The handshake establishes the protected connection. ALPN chooses an
+# application protocol during that handshake. Tutorial 18 creates test certificates.
 
 # How a client connects. The server's certificate is verified unless
 # `insecure`: against the system's CA certificates (`SSL_CERT_FILE` and

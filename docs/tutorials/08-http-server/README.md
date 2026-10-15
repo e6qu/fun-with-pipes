@@ -1,11 +1,38 @@
 # 8. An HTTP server
 
+Read lessons 1–4 and 6 first. HTTP is a request/response protocol: a client
+asks for a path such as `/hello`, and a server returns a status number, headers
+(named metadata), and a body (the content). `GET` reads a resource; `POST` sends
+content for processing. JSON is a text format for objects, lists and values.
+A **route** chooses a function by request method and path. **Middleware** wraps
+that function to add behavior such as authentication or a deadline.
+
+You need `curl`, a terminal HTTP client. Here `-s` hides its progress meter,
+`-H` sets a header, `-d` sends a body and implies POST, and `-w` prints response
+metadata. `127.0.0.1` is this computer; the number after `:` is the port.
+The shell's `&` starts a server in the background and `$!` identifies that process
+so the session can stop it with `kill`.
+
 This tutorial writes an HTTP server by hand, runs it, and calls it with
 `curl`. (To serve functions as a REST API with no HTTP code at all, see
 [tutorial 17](../17-rest-and-openapi/README.md).)
 
 To follow along, go to this directory (`cd docs/tutorials/08-http-server`).
 The sessions below run exactly as shown: the test suite runs them.
+
+## Reading the example
+
+`hello` reads an optional path parameter, substitutes "world" if absent and
+builds a 200 text response. `sum-numbers` requires a JSON array, then
+`filter-map json.as-number` keeps numeric members and drops other members: it
+does not reject a mixed array. `admin` checks the demonstration bearer token
+before returning a fixed message. `const` discards the authenticated request;
+it does not skip the preceding check.
+
+`serve` opens a TCP listener. `tap` prints its address while keeping that listener
+as the pipeline value. `fork http.serve-on id (const (...))` supplies the listener
+and the fixed configuration/handler pair to the server. `attempt` turns a startup
+failure into `Err`; the final match prints its message and exits with status 1.
 
 ## Handlers
 

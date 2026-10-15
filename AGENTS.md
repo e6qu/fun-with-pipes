@@ -11,13 +11,15 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
-Steps 1–10 are accepted through PR #140 (`09f1a029`). The final follow-up,
-[PR #141](https://github.com/e6qu/fun-with-pipes/pull/141), pairs native AD
-metadata allocations. Implementation and four-host native evidence are complete;
-follow [the handoff](docs/development-state.md) for final validation and merge.
-Once PR #141 merges with its required gates, all eleven planned steps are complete.
-There is no additional queued implementation task; historical preparation
-entries are evidence, not work to replay.
+The eleven-step implementation plan is complete through
+[PR #141](https://github.com/e6qu/fun-with-pipes/pull/141), merge `41f30475`.
+The documentation rewrite for new readers is
+[PR #142](https://github.com/e6qu/fun-with-pipes/pull/142) on `docs-for-new-readers`.
+Once it merges after the required checks, the current plan is complete; do not
+restart its historical implementation steps or invent another roadmap task. Follow [PLAN.md](PLAN.md) and the live handoff. Explain
+terms before using them, teach the prerequisites of examples, and name the
+baseline and limitations of every performance comparison. Historical preparation
+entries are evidence, not pending implementation tasks.
 
 Standing authorization covers publication, fixes and squash merge after all
 final-head gates pass. Failing tests are tasks to fix; queued CI gates merging,
@@ -42,6 +44,17 @@ Register spills are ordinary allocation decisions, not fallbacks. Alternatives
 defined by a protocol are peers, not fallbacks of one another. Make necessary
 representation choices and limits explicit and justify them.
 
+## Documentation standard
+
+Start with what the reader wants to do and the knowledge they need. Introduce
+new notation and terms before examples; explain what each example computes and
+why its output follows. Use technical names when useful, followed by plain
+explanations. Do not replace explanations with acronym lists or links alone.
+Distinguish implemented behavior, tested support and design goals. Benchmarks
+must name both implementations, inputs, timing scope, ratios/extra cost and
+known differences in work. A faster fwp variant is not evidence of parity with C.
+Update generated library documentation through its source comments/generator.
+
 ## Work and validation
 
 - Work on a branch, keep pull requests focused, and update relevant docs.
@@ -60,7 +73,7 @@ representation choices and limits explicit and justify them.
   compiler, flags, allocations and live memory as well as elapsed time.
 - Every commit message is exactly one line, at most 80 characters, with no
   body, trailers or AI attribution. Use ordinary Git author metadata.
-  When authorized to merge, require all nine exact-head production jobs and
+  When authorized to merge, require all nine production jobs for the exact commit being merged and
   documentation. Squash-merge with an explicitly supplied subject and empty body.
 
 Repository conventions and test locations are in [CONTRIBUTING.md](CONTRIBUTING.md).
