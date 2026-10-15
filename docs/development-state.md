@@ -152,6 +152,18 @@ error effect; its exact expected signature is now recorded without changing the
 frozen baseline. It passes (0.98 s): 250 contracts, 10 scalar signatures, 99 review
 declarations, 19 templates and 89 remaining review symbols.
 
+## Maintained application coverage
+
+`directory_report` executes the existing `examples/cli/dirstat.fwp` application
+64 times for three explicit option sets. It combines recursive directory walking,
+metadata, hidden-file filtering, extension grouping, sorting, column formatting
+and output, including nested Unicode paths. The raw interpreter check passes
+under the guard (1.48 s). Actual tracing/ARC O1/O2 builds, stress/reuse and final
+ARC storage checks are added to the native suite; they have not run yet.
+The local fixture was corrected to use effectful `tap` sequencing and a concrete
+input signature; `list.ap` requires pure functions and unused generic inputs need
+explicit signatures. These were fixture errors, not compiler regressions.
+
 ## Next: validate preparation and merge #147
 
 Boxed-field compiler tests at `a3d8f16e` pass all six native targets in [38817873592](https://github.com/e6qu/fun-with-pipes/actions/runs/38817873592);
@@ -161,8 +173,9 @@ collects profiles and instructions for both move changes. Superseded preparation
 runs `38817093105` and `38816168594` were canceled; their completed jobs remain
 component evidence, not final acceptance.
 
-Working-directory candidate `8660463f` is running in
-[38819008626](https://github.com/e6qu/fun-with-pipes/actions/runs/38819008626). Fix
+The cwd run at `8660463f` was superseded after its Windows symbol-inspection
+failure. The repaired candidate `713d98ec` is running in
+[38819770126](https://github.com/e6qu/fun-with-pipes/actions/runs/38819770126). Fix
 all failures, and inspect the final numerical counts and C/Rust measurements.
 The expected matrix profile is zero retains/nonlast releases across eight
 products, with forty allocations and zero final charged storage/collections.
