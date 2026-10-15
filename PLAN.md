@@ -60,7 +60,12 @@ There is no claim that every fwp program matches C or Rust speed.
 |---|---|---|
 | 12 | Rewrite documentation for new readers | All guides, tutorials, examples, generated library docs and tracking docs have been reviewed; new terms are introduced; benchmark baselines and overhead are explicit; links, examples and required CI pass |
 
-Cover the whole documentation set in one pull request:
+[PR #142](https://github.com/e6qu/fun-with-pipes/pull/142) contains this bundle.
+Its merge after the required checks completes step 12. After that acceptance,
+there is no further implementation task queued by this plan. The handoff's
+conditional next action prevents a later session from repeating a merged PR.
+
+The documentation bundle covers:
 
 1. Give readers a clear starting point and explain recurring vocabulary.
 2. Explain each tutorial's prerequisites, new notation, program and output.

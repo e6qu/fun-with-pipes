@@ -13,8 +13,10 @@ Do not treat an implemented change or a skipped test as verified support.
 
 The eleven-step implementation plan is complete through
 [PR #141](https://github.com/e6qu/fun-with-pipes/pull/141), merge `41f30475`.
-The current task is to rewrite all documentation for new readers on
-`docs-for-new-readers`. Follow [PLAN.md](PLAN.md) and the live handoff. Explain
+The documentation rewrite for new readers is
+[PR #142](https://github.com/e6qu/fun-with-pipes/pull/142) on `docs-for-new-readers`.
+Once it merges after the required checks, the current plan is complete; do not
+restart its historical implementation steps or invent another roadmap task. Follow [PLAN.md](PLAN.md) and the live handoff. Explain
 terms before using them, teach the prerequisites of examples, and name the
 baseline and limitations of every performance comparison. Historical preparation
 entries are evidence, not pending implementation tasks.

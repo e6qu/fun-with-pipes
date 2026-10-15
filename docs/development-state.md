@@ -4,7 +4,8 @@ Updated 2026-10-15. Current branch: `docs-for-new-readers`, based on `41f30475`.
 The user requested a complete documentation rewrite for outside readers, with
 concepts introduced before use and honest comparisons of fwp performance with
 its baselines. Publication, fixes and squash merge after the required checks
-remain authorized.
+remain authorized. The complete documentation bundle is
+[PR #142](https://github.com/e6qu/fun-with-pipes/pull/142).
 
 ## Roadmap status
 
@@ -21,7 +22,7 @@ remain authorized.
 | 9 | Verified | Fewer bookkeeping reallocations |
 | 10 | Verified | Less bookkeeping search |
 | 11 | Verified | Fewer derivative-buffer allocations |
-| 12 | In progress | Documentation for new readers |
+| 12 | Implemented | Documentation for new readers; acceptance tracked by PR #142 |
 
 ## Accepted starting point
 
@@ -79,10 +80,19 @@ Rust test targets.
 
 ## Next action
 
-Next: publish this bundle as one PR, run all nine production jobs plus the
-documentation audit for its final commit, fix any failures and squash merge.
-Record the PR link here before marking it ready so another session can continue
-from its checks. Passing old PR #141 does not validate this change.
+Next: inspect [PR #142](https://github.com/e6qu/fun-with-pipes/pull/142) and its
+checks for the current PR commit. If open, fix failures and require all nine
+production jobs plus documentation before squash merge. If already merged with
+those passing checks, step 12 is accepted and this documentation roadmap is
+finished: do not republish the branch or repeat the old eleven implementation
+steps. No further implementation work is queued by this plan.
+
+The table records implementation status at publication; the PR's final checks
+and merge record supply acceptance without requiring a new commit merely to
+copy a transient CI status. Use the subject `Rewrite documentation and explain
+benchmark costs` (one line), with an explicitly empty squash body. Old PR #141
+checks do not validate this change. A future session should read the PR result
+before treating this conditional next action as unfinished work.
 
 Use `python3 scripts/local-guard.py COMMAND...` for focused local checks. Keep
 full builds, suites, benchmarks and large regeneration on GitHub runners. Do not
