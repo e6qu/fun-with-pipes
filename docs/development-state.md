@@ -1,71 +1,87 @@
 # Session handoff
 
-Updated 2026-10-15. Current branch: `document-no-jit`, based on merge `700c2e7f`
-(PR #143). The user explicitly excludes JIT from the project: it is never a
-planned feature, rather than deferred work. PLAN.md, agent instructions and the
-compiler/numerical guides now record this decision. The seven project work
-areas and the goal of removing GC while limiting ARC remain active.
+Updated 2026-10-15. Current branch: `measured-ownership-performance`, based on
+`e94cc4a6` (PR #144). The user requested cancellation of remaining old CI runs
+and the next large combined PR. They also requested automatic currying to avoid
+writing `curry`/`uncurry`; the proposed type-directed adaptation rules are still
+being discussed. Continue independent performance work during that discussion.
 
 ## Roadmap status
 
-These rows track the project work areas in [PLAN.md](../PLAN.md). Past delivery
-batches are in [history](roadmap-history.md); their completion does not finish
-the project's efficiency goals. Planning a feature is not implementing it.
-
-| Step | Status | Remaining scope |
+| Step | Status | Current scope |
 |---|---|---|
 | 1 | Pending | Remove tracing GC; use moves/borrows and limit ARC to necessary sharing |
-| 2 | Pending | Remove avoidable allocation and calls from functional patterns |
-| 3 | Pending | Diagnose and reduce machine-level performance gaps |
-| 4 | Pending | Improve derivative timing, memory scaling and precision |
-| 5 | Pending | Broaden efficient numerical kernels and validate device claims |
-| 6 | Pending | Establish dependable comparisons and regression criteria |
-| 7 | Pending | Exercise ownership, inference and tooling in larger programs |
+| 2 | In progress | Inspect avoidable costs in fused array/iterator loops |
+| 3 | In progress | Establish comparable numerical measurements and inspect generated loops |
+| 4 | In progress | Reproduce the derivative metadata timing regressions |
+| 5 | Pending | Broaden numerical kernels; resolve runtime OpenCL compilation under no-JIT policy |
+| 6 | In progress | Improve sample ordering and baseline comparability |
+| 7 | In progress | Select numerical, collection-heavy and repeated workloads |
 
-## Latest merged work and validation
+## Merge and cancellation record
 
-[PR #143](https://github.com/e6qu/fun-with-pipes/pull/143) merged as `700c2e7f`
-before CI finished; its files match final PR head `020ac73a`. It replaced the
-completed checklist with seven project work areas and measurable criteria,
-removed obsolete guidance, and fixed PR #142's stale bookstore OpenAPI fixture.
+The user merged [PR #144](https://github.com/e6qu/fun-with-pipes/pull/144) as
+`e94cc4a6`; its files match final head `5ec27257`, and the one-line merge message
+meets the commit rules. At their explicit request, cancelled remaining runs
+`38765035981`, `38765035723`, `38762453518`, `38761771511` and `38752839908`.
+Do not restart these old runs or count cancellation as a pass. The instruction
+applies to those remaining runs; the new implementation delivery still needs
+its own focused checks and full final-commit CI before merge.
 
-[Production checks on the merge](https://github.com/e6qu/fun-with-pipes/actions/runs/38761771511)
-and [documentation checks](https://github.com/e6qu/fun-with-pipes/actions/runs/38761771377)
-determine acceptance. Inspect their actual outcomes; a merged PR or a skipped
-pre-merge job does not establish passing tests. The prior PR #142 failure and
-fixture repair are recorded in [history](roadmap-history.md#documentation-rewrite-pr-142).
+PR #143 fixed PR #142's stale bookstore OpenAPI fixture; its four focused
+OpenAPI comparisons passed locally without regeneration. PR #144 documents that
+JIT is explicitly excluded, not deferred. Earlier delivery evidence remains in
+[history](roadmap-history.md). The active project work is in [PLAN.md](../PLAN.md).
 
-PR #143's focused guarded checks passed: all 50 Markdown link sets, 106 immutable
-preparation rows/tags, seven matching plan/handoff steps, four OpenAPI fixtures
-without regeneration enabled, generated library docs, tutorial source/output
-copies, Rust formatting, JavaScript syntax and diff whitespace. The serial
-preflight took 5.17 seconds; no resource limits were raised. The OpenAPI check
-used the existing compiler; full CI rebuilds the published revision.
+## Combined delivery scope
 
-## Current delivery
+- Establish runner measurements for current numerical arrays/matrices, repeated
+  derivative calculations and complete programs, with source/compiler/CPU data.
+- Improve comparison fairness: rotate implementation order, retain samples and
+  distinguish compile-time-known dimensions and algorithms from runtime work.
+- Investigate the per-element checked index/cleanup work in fused array loops
+  and tracing-only compiler fences still present in checked ARC executables.
+  Prove any removed work unnecessary before changing it; preserve arithmetic
+  traps, failure cleanup, alias behavior and task cancellation.
+- Reproduce paired derivative-buffer slowdowns before selecting a change there.
+- Audit curry/uncurry uses and settle the adaptation rules before changing
+  inference. Ordinary partial application must retain its meaning. Ambiguous
+  argument shapes must not silently select a different call.
 
-[PR #144](https://github.com/e6qu/fun-with-pipes/pull/144) makes the no-JIT
-decision explicit throughout the plan and compiler guidance.
-The existing OpenCL path calls `clBuildProgram` at runtime in `src/numerics.rs`
-and `runtime/fwp_rt_kernel.c`; the plan records this as a gap to resolve under
-the no-JIT policy, not an exception. This is documentation only; it does not
-alter runtime behavior or existing validation requirements.
+Acceptance requires raw-interpreter/native agreement, allocation/retain/cleanup
+counts, generated binary inspection, explicit before/after comparisons on Linux
+and macOS ARM64/AMD64, and all nine production jobs plus documentation. Keep
+source and result provenance; fewer allocations alone is not a speed claim.
 
-`python3 scripts/local-guard.py python3 scripts/check-roadmap.py` passed: all
-50 Markdown link sets, 106 immutable preparation rows/tags, seven matching
-plan/handoff steps and commit rules (2.85 seconds). The audit also passed after adding the no-JIT/device-compilation notes
-(2.81 seconds). No local limits were raised.
+## Progress and checks
+
+Read the current compiler/ownership contracts and emitted one existing numeric
+array program with the guarded command:
+`target/debug/fwp build --fn reduce64 --emit-c -o /private/tmp/fwp-baseline-array.c tests/fixtures/numeric_array_fusion.fwp`.
+It passed in 0.63 seconds. This uses the existing compiler for inspection only;
+runner builds establish current source behavior. No local benchmark was run.
+
+The emitted loop already avoids intermediate arrays and per-element retains,
+but registers a cleanup around each checked index increment. Array headers
+reserve their high bit for views, bounding length by I64's maximum; a successful
+read therefore bounds the next index. The ARC runtime also retains compiler
+memory fences originally intended to keep conservative GC roots alive. These
+are candidate costs to validate, not accepted optimizations yet.
+
+A new explicit `performance` selection in the numerical workflow groups focused
+ownership tests and numerical/derivative/program measurements on four native
+hosts. Initial results establish the pre-change baseline; this dispatch is not
+the full production acceptance gate.
 
 ## Next action
 
-Next: inspect [PR #144](https://github.com/e6qu/fun-with-pipes/pull/144) and the
-merged cleanup's CI results; fix every final-commit CI failure before squash merge. After this clarification
-is merged with passing checks, start the first milestone in PLAN.md: choose the
-representative applications, reproduce known performance gaps on runners and
-identify the first ownership boundary to improve. Do not replay old PRs.
+Next: validate and publish the baseline measurement preparation as a draft PR,
+dispatch its performance suite, then implement and test the proved loop/ARC
+improvements while the baseline runs. Keep all changes in this combined PR;
+mark it ready only when its final content and evidence are reviewable.
 
-Update this handoff with exact checks, unresolved failures and one concrete next
-action after meaningful progress. Keep the project plan active until its stated
-acceptance criteria are met; do not substitute a completed PR for that evidence.
-Use `python3 scripts/local-guard.py COMMAND...` for bounded serial local checks;
-full builds, suites, benchmarks and large regeneration stay on GitHub runners.
+Use `python3 scripts/local-guard.py COMMAND...` for focused serial local checks.
+Full builds, suites, benchmarks and large regeneration stay on GitHub runners.
+Preserve fixed resource limits and the one-line, <=80-character commit format
+without body, trailers or attribution. Update this handoff after meaningful
+progress; the project remains active until PLAN.md's criteria are met.

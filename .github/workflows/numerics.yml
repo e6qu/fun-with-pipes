@@ -5,9 +5,57 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance]
         default: numerical
 jobs:
+  performance:
+    if: inputs.suite == 'performance'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_ARRAY_FUSION_ARTIFACTS: performance-evidence/arrays
+      FWP_ARC_ARTIFACTS: performance-evidence/arc
+      FWP_AD_WORKSPACE_ARTIFACTS: performance-evidence/workspaces
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Focused semantics and ownership controls
+        run: cargo test --no-fail-fast --test numeric_array_fusion --test blocked_matrix --test arc_execution --test autodiff_workspace --test autodiff_capacity_bounds --test borrowed_callbacks --test pipe_ownership
+      - name: Build measurement compiler
+        id: compiler
+        if: ${{ !cancelled() }}
+        run: cargo build --release --bin fwp
+      - name: Numerical C and Rust comparison
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: python3 scripts/measure-numerical-kernels.py
+      - name: Reproduce derivative metadata timings
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: python3 scripts/measure-ad-metadata.py --output performance-evidence/metadata
+      - name: Complete-program C and Rust comparison
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: cargo test --release --test bench -- --ignored --nocapture
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: performance-${{ matrix.runner }}
+          path: |
+            performance-evidence/
+            target/bench.md
   autodiff:
     if: inputs.suite == 'autodiff'
     strategy:
