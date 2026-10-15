@@ -82,7 +82,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                 .unwrap();
             }
             for opt in ["-O1", "-O2"] {
-                let binary = dir.join(format!("{name}-{stack}-{memory}{opt}"));
+                let binary = dir.join(format!("{name}-{stack}-{memory}{opt}.exe"));
                 fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
                 let symbols = checked(Command::new("nm").arg(&binary));
                 let symbols = String::from_utf8_lossy(&symbols.stdout);
@@ -139,7 +139,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                     needle,
                     "    /* negative control: omitted physical reclamation */",
                 );
-                let binary = dir.join("omitted-free");
+                let binary = dir.join("omitted-free.exe");
                 fwp::cgen::compile_c(&omitted, &binary, "-O2").unwrap();
                 let actual = Command::new(binary)
                     .env_remove("FWP_GC")
@@ -157,7 +157,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                     "    intptr_t arc_budget = fwp_gc.budget;",
                     "    fwp_gc_collect();\n    intptr_t arc_budget = fwp_gc.budget;",
                 );
-                let binary = dir.join("forced-trace");
+                let binary = dir.join("forced-trace.exe");
                 fwp::cgen::compile_c(&forced, &binary, "-O2").unwrap();
                 let out = Command::new(binary)
                     .env_remove("FWP_GC")

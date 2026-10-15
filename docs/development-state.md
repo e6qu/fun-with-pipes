@@ -132,10 +132,15 @@ The library signature and generated reference describe the deliberate change.
 removed-directory errors on POSIX, and probes repeated native ownership,
 6000-character OS results, read failure, partial string-construction failure,
 forced collections and omitted-count/release controls. Native Windows uses its
-wide path API, including a second-read failure. Changed-compiler checks remain
-pending; do not claim all-target support from the local runtime experiment.
+wide path API, including a second-read failure. Its strengthened long-path trap
+occurs after both the UTF-16 path and temporary UTF-8 conversion buffer exist. Both Windows architectures pass the cwd tests at `8660463f`; the broader run
+fails in an older `arc_execution` probe because `nm` is given a filename without
+Windows' `.exe` suffix. The fix supplies explicit binary filenames and adds this
+probe to production Windows coverage. Logs: `/private/tmp/fwp-cwd-116710703937.log`
+and `/private/tmp/fwp-cwd-116710704277.log`. All-target acceptance is still pending.
 
-The local POSIX edited-C mechanism probe passes (3.38 s). Its first attempt used
+The local POSIX edited-C mechanism probe passes (3.38 s); the stronger long-path
+construction failure repeats successfully (3.66 s). Its first attempt used
 an obsolete generated call spelling; a later attempt included scheduler setup in
 the memory baseline. The corrected probe calls the exported cwd entry directly
 and includes #147's counted error constructor. It is runtime evidence, not
@@ -149,9 +154,8 @@ declarations, 19 templates and 89 remaining review symbols.
 
 ## Next: validate preparation and merge #147
 
-Boxed-field compiler tests at `a3d8f16e` pass Linux and Windows on both
-architectures in [38817873592](https://github.com/e6qu/fun-with-pipes/actions/runs/38817873592);
-macOS remains pending. Numerical run
+Boxed-field compiler tests at `a3d8f16e` pass all six native targets in [38817873592](https://github.com/e6qu/fun-with-pipes/actions/runs/38817873592);
+including regular ownership, stress and resource cases. Numerical run
 [38817877068](https://github.com/e6qu/fun-with-pipes/actions/runs/38817877068)
 collects profiles and instructions for both move changes. Superseded preparation
 runs `38817093105` and `38816168594` were canceled; their completed jobs remain

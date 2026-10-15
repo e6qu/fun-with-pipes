@@ -126,6 +126,16 @@ fn a_removed_directory_is_an_explicit_error() {
 }
 
 fn instrument(mut code: String) -> String {
+    if let Some(start) = code.find("static V fwp_win_string(") {
+        let end = start + code[start..].find("\n}\n").unwrap() + 3;
+        let body = code[start..end]
+            .replace("malloc(", "cwd_alloc(")
+            .replace("fwp_win_free", "cwd_free")
+            .replace("free(bytes)", "cwd_free(bytes)")
+            .replace("fwp_str_new(", "cwd_string_allocation(");
+        let declarations = "static void *cwd_alloc(size_t);static void cwd_free(void *);static V cwd_string_allocation(const char *,size_t);\n";
+        code.replace_range(start..end, &format!("{declarations}{body}"));
+    }
     let mut offset = 0;
     while let Some(found) = code[offset..].find("static V fwp_p_env_cwd(") {
         let start = offset + found;

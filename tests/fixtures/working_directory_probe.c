@@ -11,7 +11,7 @@ static V cwd_string(const char *p,size_t n){cwd_event();return fwp_str_lossy(p,n
 #ifdef _WIN32
 static DWORD cwd_read_wide(DWORD size,wchar_t *path) {
     if(cwd_mode==1 || (cwd_mode==4 && size)) {SetLastError(ERROR_PATH_NOT_FOUND);return 0;}
-    if(cwd_mode==2) {
+    if(cwd_mode==2||cwd_mode==3) {
         if(!size)return 6001;
         if(size!=6001)_Exit(227);
         for(int i=0;i<6000;i++)path[i]=L'x';path[6000]=0;return 6000;
@@ -20,13 +20,14 @@ static DWORD cwd_read_wide(DWORD size,wchar_t *path) {
 }
 static void *cwd_alloc(size_t size){void *p=malloc(size);if(p)cwd_live++;return p;}
 static void cwd_free(void *p){if(p){free(p);cwd_live--;}}
-static V cwd_string_wide(const wchar_t *p,size_t n){cwd_event();return fwp_win_string(p,n);}
+static V cwd_string_allocation(const char *p,size_t n){cwd_event();return fwp_str_new(p,n);}
+static V cwd_string_wide(const wchar_t *p,size_t n){return fwp_win_string(p,n);}
 #else
 static char *cwd_read(char *path,size_t size) {
     if(path || size)_Exit(227);
     if(cwd_mode==1){errno=ENOENT;return NULL;}
     char *p;
-    if(cwd_mode==2){p=malloc(6001);if(p){memset(p,'x',6000);p[6000]=0;}}
+    if(cwd_mode==2||cwd_mode==3){p=malloc(6001);if(p){memset(p,'x',6000);p[6000]=0;}}
     else p=getcwd(path,size);
     if(p)cwd_live++;return p;
 }

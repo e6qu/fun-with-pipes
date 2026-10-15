@@ -85,7 +85,7 @@ jobs:
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test tls --test cli_ownership --test console_ownership --test working_directory --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test arc_library --test transpose_ownership --test linalg_ownership --test array_loop_borrows --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test foreign_callback_ownership --test float_formats --test float_linking --test protocol --test blocked_matrix --test wide_workers
+          cargo test --no-fail-fast --test tls --test cli_ownership --test console_ownership --test working_directory --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test arc_execution --test arc_library --test transpose_ownership --test linalg_ownership --test array_loop_borrows --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test foreign_callback_ownership --test float_formats --test float_linking --test protocol --test blocked_matrix --test wide_workers
           exit $LASTEXITCODE
       - name: Native nested autodiff and ownership controls
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
