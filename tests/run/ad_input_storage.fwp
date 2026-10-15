@@ -1,0 +1,13 @@
+# Inputs retain node indices and adjoints without operation metadata.
+first-square : List[t] -> t where Ring[t], Dup[t]
+first-square = head | option.unwrap-or zero | fork mul id id
+main = [
+    range 0 65 | map int.to-float | vjp id (repeat 65 1.0) | sum | echo,
+    range 0 65
+    | map int.to-float
+    | vjp (map (mul 2.0)) (repeat 65 1.0)
+    | sum
+    | echo,
+    range 0 65 | map int.to-float | grad (grad first-square | sum) | sum | echo,
+    [0.0] | take 0 | vjp id [] | echo,
+] | ignore

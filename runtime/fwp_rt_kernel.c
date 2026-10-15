@@ -41,7 +41,7 @@ static void fwp_owned_tape_release(void *pointer) {
     else fwp_owned_tapes = owner->next;
     if (owner->next) owner->next->prev = owner->prev;
     if (owner->elem->drop) {
-        for (int64_t i = owner->leaves; i < owner->len; i++) {
+        for (int64_t i = 0; i < owner->len - owner->leaves; i++) {
             owner->elem->drop(owner->weights[2*i]);
             owner->elem->drop(owner->weights[2*i+1]);
         }
@@ -71,6 +71,7 @@ typedef struct {
     uint32_t gen;
     int live;
     int64_t leaves, len, cap;
+    /* Operation offsets exclude inputs; parent values remain node indices. */
     int32_t *pa, *pb;
     double *da, *db, *adj;
     int64_t adjcap;
@@ -306,13 +307,6 @@ static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
     t->gen++;
     t->live = 1;
     t->leaves = n;
-    t->len = 0;
-    fwp_tape_reserve(t, n);
-    for (int64_t i = 0; i < n; i++) {
-        t->pa[i] = -1;
-        t->pb[i] = -1;
-        if (!owned) { t->da[i] = 0.0; t->db[i] = 0.0; }
-    }
     t->len = n;
     fwp_tape_link_scope(t, (int32_t)slot);
     int64_t id = ((int64_t)t->gen << 16) | (slot + 1);
@@ -368,11 +362,12 @@ static V fwp_p_ad_push(V tup) {
     if (idx >= fwp_tape_limit()) fwp_trap("autodiff: the tape is full");
     if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))
         fwp_trap(FWP_AD_INVALID_NODE);
-    fwp_tape_reserve(t, idx + 1);
-    t->pa[idx] = (int32_t)(ra & 0xffffffff);
-    t->da[idx] = da;
-    t->pb[idx] = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
-    t->db[idx] = db;
+    int64_t op = idx - t->leaves;
+    fwp_tape_reserve(t, op + 1);
+    t->pa[op] = (int32_t)(ra & 0xffffffff);
+    t->da[op] = da;
+    t->pb[op] = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
+    t->db[op] = db;
     t->len = idx + 1;
     return (V)((id << 32) | idx);
 }
@@ -429,8 +424,9 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     for (int64_t i = active - 1; i >= tp.leaves; i--) {
         double a = adj[i];
         if (a == 0.0) continue;
-        if (tp.pa[i] >= 0) adj[tp.pa[i]] += a * tp.da[i];
-        if (tp.pb[i] >= 0) adj[tp.pb[i]] += a * tp.db[i];
+        int64_t op = i - tp.leaves;
+        if (tp.pa[op] >= 0) adj[tp.pa[op]] += a * tp.da[op];
+        if (tp.pb[op] >= 0) adj[tp.pb[op]] += a * tp.db[op];
     }
     V r = fwp_arr_new((size_t)tp.leaves);
     for (int64_t i = 0; i < tp.leaves; i++) ARR(r)->d[i] = fwp_from_f64(adj[i]);
@@ -453,12 +449,20 @@ static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {
     if (idx >= fwp_tape_limit()) fwp_trap("autodiff: the tape is full");
     if ((ra >= 0 && (ra & 0xffffffff) >= idx) || (rb >= 0 && (rb & 0xffffffff) >= idx))
         fwp_trap(FWP_AD_INVALID_NODE);
-    fwp_tape_reserve(t, idx + 1);
+    int64_t op = idx - t->leaves;
+    fwp_tape_reserve(t, op + 1);
     V da = OBJ(tuple)->f[1], db = OBJ(tuple)->f[3];
-    if (elem->dup) { elem->dup(da); elem->dup(db); }
-    owner->weights[2*idx] = da; owner->weights[2*idx+1] = db;
-    t->pa[idx] = ra < 0 ? -1 : (int32_t)(ra & 0xffffffff);
-    t->pb[idx] = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
+    if (elem->dup) {
+        elem->dup(da);
+        fwp_value_owner weight = {da, elem->drop};
+        fwp_cleanup weight_cleanup;
+        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);
+        elem->dup(db);
+        fwp_cleanup_pop(&weight_cleanup);
+    }
+    owner->weights[2*op] = da; owner->weights[2*op+1] = db;
+    t->pa[op] = ra < 0 ? -1 : (int32_t)(ra & 0xffffffff);
+    t->pb[op] = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
     owner->len = t->len = idx + 1;
     FWP_KEEP_ALIVE(tuple);
     return (V)((id << 32) | idx);
@@ -510,10 +514,11 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
     for (int64_t i = tp.len - 1; i >= tp.leaves; i--) {
         V a = owner->adj[i];
         if (fwp_apply_borrowed(owner->inactive_zero, 1, &a) == FWP_TRUE) continue;
+        int64_t op = i - tp.leaves;
         for (int side = 0; side < 2; side++) {
-            int32_t parent = side ? tp.pb[i] : tp.pa[i];
+            int32_t parent = side ? tp.pb[op] : tp.pa[op];
             if (parent < 0) continue;
-            V args[2] = {owner->weights[2*i+side], a};
+            V args[2] = {owner->weights[2*op+side], a};
             fwp_value_owner product = {fwp_apply_borrowed(owner->mul, 2, args), owner->elem->drop};
             fwp_cleanup product_cleanup;
             fwp_cleanup_push(&product_cleanup, fwp_value_release, &product);

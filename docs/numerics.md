@@ -68,8 +68,12 @@ that of the branch taken).
 
 **The tape.** The tape lives in the runtime, outside the program's values
 (`src/numerics.rs` for the interpreter, `runtime/fwp_rt_kernel.c` for
-native code): per node, two parent indices and two partial derivatives.
-Primitive-float tapes use numeric buffers; nested tapes use typed value buffers.
+native code): per recorded operation, two parent indices and two partial
+derivatives. Input nodes need no parent or derivative entries. Operation buffers
+use offsets after the input prefix; tokens and adjoints keep absolute node
+indices. Primitive-float tapes use numeric buffers; nested tapes use typed value
+buffers. A failed managed weight retain releases completed ownership before
+returning, without publishing a partial operation.
 A `Rev` value refers to its node as
 `(tape id << 32) | index`, with -1 for constants; the tape id is
 `(generation << 16) | (slot + 1)`. Operations call the primitive

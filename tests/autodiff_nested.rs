@@ -199,6 +199,7 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
                 "    fwp_cleanup_pop(&cleanup);\n    FWP_KEEP_ALIVE(parameters);",
             ),
             (2, "    owner->len = t->len = idx + 1;"),
+            (11, "        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);"),
             (
                 3,
                 "    fwp_cleanup_push(&value_cleanup, fwp_owned_tape_release, owner);",
@@ -238,7 +239,7 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
         for opt in ["-O1", "-O2"] {
             let binary = dir.join("unwind.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for mode in 0..=10 {
+            for mode in 0..=11 {
                 checked(
                     Command::new(&binary)
                         .arg(mode.to_string())
@@ -261,6 +262,22 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
                     .code(),
                 Some(195)
             );
+            if arc {
+                let registration =
+                    "        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);";
+                let missing_weight = code.replace(registration, "");
+                fwp::cgen::compile_c(&missing_weight, &binary, opt).unwrap();
+                assert_eq!(
+                    Command::new(&binary)
+                        .arg("11")
+                        .env("FWP_AD_WORKSPACE", "0")
+                        .output()
+                        .unwrap()
+                        .status
+                        .code(),
+                    Some(197)
+                );
+            }
             let seed_cleanup = "    fwp_cleanup_push(&cleanup, fwp_owned_tape_release, owner);";
             assert_eq!(code.matches(seed_cleanup).count(), 1);
             let missing_seed_owner = code.replace(seed_cleanup, "");

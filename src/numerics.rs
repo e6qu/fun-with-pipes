@@ -52,6 +52,7 @@ struct Tape {
     gen: u32,
     live: bool,
     leaves: usize,
+    // Operation metadata starts at node `leaves`; inputs have no parents.
     pa: Vec<i32>,
     pb: Vec<i32>,
     da: Vec<f64>,
@@ -239,11 +240,6 @@ fn tape_new(n: i64) -> R<i64> {
     } else {
         Tape::default()
     };
-    reserve_nodes(&mut workspace, n as usize);
-    workspace.pa.resize(n as usize, -1);
-    workspace.pb.resize(n as usize, -1);
-    workspace.da.resize(n as usize, 0.0);
-    workspace.db.resize(n as usize, 0.0);
     workspace.gen = gen;
     workspace.live = true;
     workspace.leaves = n as usize;
@@ -280,14 +276,14 @@ fn push(ra: i64, da: f64, rb: i64, db: f64) -> R<i64> {
     if t.owned {
         return trap(REPRESENTATION);
     }
-    let idx = t.pa.len();
+    let idx = t.leaves + t.pa.len();
     if idx >= tape_limit() {
         return trap("autodiff: the tape is full");
     }
     if (ra & 0xffff_ffff) as usize >= idx || (rb >= 0 && (rb & 0xffff_ffff) as usize >= idx) {
         return trap(INVALID_NODE);
     }
-    reserve_nodes(t, idx + 1);
+    reserve_nodes(t, t.pa.len() + 1);
     t.pa.push((ra & 0xffff_ffff) as i32);
     t.da.push(da);
     t.pb.push(if rb < 0 {
@@ -325,7 +321,7 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
             return trap(MIXED);
         }
         let node = (*o & 0xffff_ffff) as usize;
-        if node >= t.pa.len() {
+        if node >= t.leaves + t.pa.len() {
             return trap(INVALID_NODE);
         }
         active = active.max(node + 1);
@@ -351,11 +347,12 @@ fn backward(base: i64, outs: &[i64], seeds: &[f64]) -> R<Vec<f64>> {
         if a == 0.0 {
             continue;
         }
-        if t.pa[i] >= 0 {
-            adj[t.pa[i] as usize] += a * t.da[i];
+        let op = i - t.leaves;
+        if t.pa[op] >= 0 {
+            adj[t.pa[op] as usize] += a * t.da[op];
         }
-        if t.pb[i] >= 0 {
-            adj[t.pb[i] as usize] += a * t.db[i];
+        if t.pb[op] >= 0 {
+            adj[t.pb[op] as usize] += a * t.db[op];
         }
     }
     Ok(adj[..t.leaves].to_vec())
@@ -392,8 +389,8 @@ pub(crate) fn tape_owned(parameters: &Value, inputs: &Value) -> R<Value> {
         add: fields[1].clone(),
         mul: fields[2].clone(),
         inactive_zero: fields[3].clone(),
-        da: vec![fields[0].clone(); t.leaves],
-        db: vec![fields[0].clone(); t.leaves],
+        da: Vec::new(),
+        db: Vec::new(),
     };
     OWNED_TAPES.with(|owners| owners.borrow_mut().insert(id, owner));
     Ok(Value::I64(base))
@@ -420,7 +417,7 @@ pub(crate) fn push_owned(value: &Value) -> R<Value> {
     if !t.owned {
         return trap(REPRESENTATION);
     }
-    let idx = t.pa.len();
+    let idx = t.leaves + t.pa.len();
     if idx >= tape_limit() {
         return trap("autodiff: the tape is full");
     }
@@ -441,7 +438,7 @@ pub(crate) fn push_owned(value: &Value) -> R<Value> {
         owner.db.push(fields[3].clone());
         Ok(())
     })?;
-    reserve_nodes(t, idx + 1);
+    reserve_nodes(t, t.pa.len() + 1);
     t.pa.push(if ra < 0 {
         -1
     } else {
@@ -485,7 +482,7 @@ pub(crate) fn backward_owned(
     drop(tapes);
     forget_scoped_tape(id);
     // Detached Rust owners survive reentrant callbacks and drop on every error.
-    let mut adj = vec![owner.zero.clone(); t.pa.len()];
+    let mut adj = vec![owner.zero.clone(); t.leaves + t.pa.len()];
     let outs = outs.list_items();
     let seeds = seeds.list_items();
     if outs.len() != seeds.len() {
@@ -505,12 +502,13 @@ pub(crate) fn backward_owned(
         }
         adj[node] = apply(owner.add.clone(), vec![seed, adj[node].clone()])?;
     }
-    for i in (t.leaves..t.pa.len()).rev() {
+    for i in (t.leaves..t.leaves + t.pa.len()).rev() {
         let a = adj[i].clone();
         if apply(owner.inactive_zero.clone(), vec![a.clone()])?.as_bool() {
             continue;
         }
-        for (parent, weight) in [(t.pa[i], &owner.da[i]), (t.pb[i], &owner.db[i])] {
+        let op = i - t.leaves;
+        for (parent, weight) in [(t.pa[op], &owner.da[op]), (t.pb[op], &owner.db[op])] {
             if parent < 0 {
                 continue;
             }
@@ -1283,6 +1281,50 @@ mod tape_validation_tests {
     }
 
     #[test]
+    fn input_nodes_need_no_operation_storage_and_keep_their_indices() {
+        let _serial = TAPE_TEST_LOCK.lock().unwrap();
+        *TAPE_WORKSPACE.lock().unwrap() = None;
+        for leaves in [1, 65, 4096] {
+            let base = tape_new(leaves).unwrap();
+            {
+                let tapes = TAPES.lock().unwrap();
+                let tape = &tapes[slot_of(&tapes, base >> 32).unwrap()];
+                assert_eq!(tape.workspace_bytes(), 0);
+                assert!(tape.pa.is_empty() && tape.pb.is_empty());
+            }
+            let node = push(base, 2.0, base + leaves - 1, 3.0).unwrap();
+            assert_eq!(node, base + leaves);
+            let last = push(node, 4.0, -1, f64::NAN).unwrap();
+            assert_eq!(last, base + leaves + 1);
+            {
+                let tapes = TAPES.lock().unwrap();
+                let tape = &tapes[slot_of(&tapes, base >> 32).unwrap()];
+                assert_eq!(tape.pa, [0, leaves as i32]);
+                assert_eq!(tape.pb, [leaves as i32 - 1, -1]);
+                assert!(tape.workspace_bytes() <= 64 * 24);
+            }
+            let gradient = backward(base, &[last], &[1.0]).unwrap();
+            let mut expected = vec![0.0; leaves as usize];
+            expected[0] += 8.0;
+            expected[leaves as usize - 1] += 12.0;
+            assert_eq!(gradient, expected);
+            *TAPE_WORKSPACE.lock().unwrap() = None;
+        }
+        // The token/byte limit still applies before any storage is requested.
+        expect_trap(
+            tape_new(tape_limit() as i64 + 1),
+            "autodiff: too many inputs",
+        );
+        with_tape_scope(|| {
+            let base = tape_new(tape_limit() as i64)?;
+            expect_trap(push(base, 1.0, -1, 0.0), "autodiff: the tape is full");
+            Ok(())
+        })
+        .unwrap();
+        *TAPE_WORKSPACE.lock().unwrap() = None;
+    }
+
+    #[test]
     fn backward_ignores_unseeded_suffix_and_preserves_input_and_seed_order() {
         let _serial = TAPE_TEST_LOCK.lock().unwrap();
         *TAPE_WORKSPACE.lock().unwrap() = None;
@@ -1300,7 +1342,7 @@ mod tape_validation_tests {
             let pool = TAPE_WORKSPACE.lock().unwrap();
             let cached = pool.as_ref().unwrap();
             assert_eq!(cached.adj.capacity(), 4);
-            assert!(cached.pa.capacity() >= 4100);
+            assert!(cached.pa.capacity() >= 4097);
         }
         // Reusing a larger workspace must clear the retained input prefix.
         let base = tape_new(3).unwrap();
@@ -1473,7 +1515,7 @@ mod tape_validation_tests {
             .iter()
             .all(|v| v.to_bits() == 0));
         *TAPE_WORKSPACE.lock().unwrap() = None;
-        let large = tape_new(32769).unwrap();
+        let large = tape_new((TAPE_WORKSPACE_BUDGET / 8 + 1) as i64).unwrap();
         backward(large, &[], &[]).unwrap();
         assert!(TAPE_WORKSPACE.lock().unwrap().is_none());
     }
