@@ -3,8 +3,8 @@
 Updated 2026-10-15. [PR #145](https://github.com/e6qu/fun-with-pipes/pull/145)
 is awaiting its final production gate at `1ee7d581`:
 [run 38779284746](https://github.com/e6qu/fun-with-pipes/actions/runs/38779284746).
-Documentation, benchmarks and Windows AMD64 have passed; the other production
-jobs are running. The earlier run failed a tutorial README/source consistency
+Documentation, benchmarks, both Windows jobs and both ARM macOS jobs have passed;
+the remaining Linux/macOS jobs are running. The earlier run failed a tutorial README/source consistency
 check. The repaired tutorial includes both `sum-pair` and `sum-curried` examples,
 and the fast documentation job now checks tutorial copies before the long suites.
 The superseded production run was cancelled. Do not merge on its partial results.
@@ -99,15 +99,48 @@ fresh immutable links, preserving the collector's old/young object rules.
 Ragged inputs still stop at their shortest row. Tests compare raw interpreter,
 tracing native and checked ARC output, and inject failure at each retain and list
 node, including final outer-list construction. Missing-retain and missing-free
-controls must fail. This addition awaits changed-compiler runner validation.
+controls must fail. The four-host run below validates this with the changed compiler.
 
 Measurements: emit actual tracing and checked ARC builds of the same array and
 matrix programs. Matrix type dimensions now match the measured 65x67 and 67x63
 buffers. Compare with equivalent C/Rust arithmetic using forty timing samples per
 implementation, balanced process order, separate allocation profiles and binary
 inspection. Do not substitute an ARC preprocessor define for compiler eligibility.
-The extended `numerics.yml` library suite includes these measurements and uploads
-`library-*` artifacts. No new timing result is claimed before that run completes.
+The extended `numerics.yml` library suite passed all four Linux/macOS hosts at
+`49d35018` in [run 38782635990](https://github.com/e6qu/fun-with-pipes/actions/runs/38782635990),
+including transpose, inventory, formatting, Clippy and ARC/tracing measurements.
+[The retained report](measurements/numerical-memory-modes-2026-10-15.json) contains
+all samples and environment details. Downloaded artifacts are under
+`/private/tmp/fwp-library-evidence`; guarded downloads passed in 4.90/4.81/6.50 s.
+
+ARC array kernel time is about 1.00–1.04x C on both Linux hosts and ARM macOS;
+Intel macOS is 1.39x C and 2.43x Rust. Both modes have zero retains and zero final
+live storage for arrays. Linux ARM64 ARC assembly keeps length outside the loop;
+tracing reloads it. Matrix mode differences are small; Intel macOS remains about
+3.5x C. The report and benchmark guide state that allocation-inclusive time also
+includes the C harness's input construction; it is not whole-program startup.
+
+### Additional candidate: remove confirmed numerical runtime obstacles
+
+The Intel macOS timed matrix loop is scalar. Vector instructions first spotted
+in the binary belonged to a different helper; inspect the actual timed function.
+Clang's loop diagnostics identify the platform `memcpy` expansion as an opaque
+store that prevents vectorization. Fixed-size compiler copy intrinsics preserve
+aliasing/alignment rules and expose vector multiply/add in an Intel-targeted
+local compile. Shape validation still bounds every copy, and arithmetic order
+and separate multiply/add are preserved. No wrapper or unsafe typed cast is added.
+
+The same kernel also spends task-slice checks in programs without tasks. The
+compiler now emits its existing task/service-use decision for runtime primitives,
+so their scheduler ticks disappear when no task can run. Task/service programs
+retain them; Asyncify's stack checks remain unchanged. A forced-scheduler control
+fails, while the taskless matrix matches the raw interpreter under GC stress.
+The wide-worker cancellation regression explicitly checks ticks remain enabled.
+
+These changes are pending runner validation and before/after timing against
+`49d35018` with the same forty-sample method. The extended suite now also runs
+matrix semantic/allocation/failure tests, wide-worker preemption and loop unwind
+checks. Do not attribute a speedup before these results exist.
 
 ## Focused local checks
 
@@ -120,18 +153,22 @@ runtime probes check runtime behavior, not the changed compiler's proof rules.
 - Channel runtime probe: recursive data, cancellation and queue reclamation passed;
   omitted queue release retained 2,112 bytes and failed as expected (3.61 s).
 - Transpose runtime probe: forced GC, retain/node trap cleanup, omitted-retain and
-  omitted-scratch-free controls passed (2.71 s).
+  omitted-scratch-free controls passed at O1 (2.71 s) and O2 (3.48 s).
 - Updated transpose interpreter fixture passed (0.75 s), including shared strings,
   functions, wide integers, ragged/empty lists and failure after transposition.
 - Transpose test harness metadata-only type check and measurement script parsing
   passed (0.14 s); formatting passed (1.09 s).
+- Taskless matrix plus fixed-size-copy runtime probe passed under GC stress,
+  including forced scheduler failure (3.06 s). Intel-targeted instruction checks
+  passed (2.36 s); they establish generated instructions, not native timing.
 - Primitive inventory passed (0.85 s): 225 explicit contracts, 10 flat scalar
   signatures, 124 declarations needing runtime review and 19 lowered templates.
 
 ## Next action
 
-Next: publish the extended library/transpose/measurement batch and dispatch its
-four-host library suite. Inspect #145's final production gate and squash merge
+Next: publish the numerical candidate and dispatch the extended four-host library
+suite; retain its results alongside the passing `49d35018` baseline.
+Inspect #145's final production gate and squash merge
 once all required jobs pass; then rebase this batch onto main and open its PR.
 Record runner failures and fixes here. Keep the fixed local resource limits;
 queued CI gates merging, not independent roadmap work.

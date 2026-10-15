@@ -46,11 +46,23 @@ fn blocked_matrix_preserves_raw_products_and_cast_shape_behavior() {
                 .arg(&generated),
         );
         let code = std::fs::read_to_string(&generated).unwrap();
+        assert!(code.contains("#define FWP_TASK_TICKS 0"));
         assert_eq!(
             code.contains("/* matrix._mul-f64 :"),
             mode == "1",
             "matrix specialization absent or active when disabled"
         );
+        // No task can run in this program. Force an expired slice at matrix
+        // entry and fail if an unnecessary runtime tick enters the scheduler.
+        let code = code
+            .replace(
+                "static __attribute__((noinline)) void fwp_preempt(void) {",
+                "static __attribute__((noinline)) void fwp_preempt(void) { exit(214);",
+            )
+            .replace(
+                "/* The compiler calls this only after the shape predicate succeeds. */",
+                "fwp_budget = 0; /* scheduler probe: no tasks exist */",
+            );
         for opt in ["-O1", "-O2"] {
             let exe = d.join(format!("matrix-{mode}{opt}"));
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
@@ -65,6 +77,13 @@ fn blocked_matrix_preserves_raw_products_and_cast_shape_behavior() {
                 (&reference.stdout, &reference.stderr),
                 "mode={mode} {opt}"
             );
+        }
+        if mode == "1" {
+            let forced = code.replace("#define FWP_TASK_TICKS 0", "#define FWP_TASK_TICKS 1");
+            let exe = d.join("unnecessary-scheduler-tick");
+            fwp::cgen::compile_c(&forced, &exe, "-O2").unwrap();
+            let actual = Command::new(exe).output().unwrap();
+            assert_eq!(actual.status.code(), Some(214), "{actual:?}");
         }
     }
     std::fs::remove_dir_all(d).unwrap();

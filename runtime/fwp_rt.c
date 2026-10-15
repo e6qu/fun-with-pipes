@@ -109,8 +109,12 @@ static uintptr_t fwp_stack_low = 0;
         if (__builtin_expect((uintptr_t)&fwp_sp_ < fwp_stack_low, 0)) fwp_trap("stack overflow"); \
         if (__builtin_expect(--fwp_budget <= 0, 0)) fwp_preempt();                              \
     } while (0)
-#else
+#elif FWP_TASK_TICKS
 #define FWP_TICK() do { if (__builtin_expect(--fwp_budget <= 0, 0)) fwp_preempt(); } while (0)
+#else
+/* The compiler proved there are no tasks or services to schedule. Asyncify
+ * above retains its stack-bound check regardless of that native decision. */
+#define FWP_TICK() ((void)0)
 #endif
 
 /* ---------------------------------------------------------------- objects */
