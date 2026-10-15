@@ -120,7 +120,13 @@ Its original preparation worktree remains `/private/tmp/fwp-quad-grad`. Its [fou
 passed at `7a463be9`: low bits, exponent range, seed accumulation, nested and
 checkpointed gradients, cleanup controls and existing differentiation regressions.
 It uses the existing typed tape protocol; boxes and reference counts still cost
-storage. Its own handoff records profile limits.
+storage. [Its retained report](measurements/f128-gradient-precision-2026-10-15.json)
+contains all 32 profiles: 2,843 managed requests / 143,082 requested bytes for the
+complete ten-check fixture, including output and 65 repeated gradients. Checked
+ARC finishes with zero charged bytes and zero collections. These are not
+per-gradient timing or whole-process memory measurements; see the numeric guide.
+The fixture checks low bits, extreme exponents, seeds, nested and checkpointed
+use, O1/O2, workspace reuse on/off and a missing-release negative control.
 
 Console preparation `checked-console-ownership` is in
 `/private/tmp/fwp-console-ownership`, based on `7a463be9`. It owns whole-input
@@ -132,8 +138,8 @@ partial run was superseded and canceled. It has its own handoff and no open PR.
 
 Next: monitor #146 and fix failures. After its
 full exact-head gate passes, squash merge it; rebase only solver commits after
-`c10b1ccd` onto the accepted squash commit. Precision implementation is combined; import its retained profile report and
-reconcile the final handoff before opening one substantial numerical PR. Consider the console batch together only
+`c10b1ccd` onto the accepted squash commit. Precision implementation and its retained profile report are combined. Reconcile
+the final handoff before opening one substantial numerical PR. Consider the console batch together only
 when its own checks pass and the combined scope stays reviewable. Its commits
 begin after `7a463be9`. Keep [PLAN.md](../PLAN.md) current; no broad work area
 is complete, and JIT remains excluded.
