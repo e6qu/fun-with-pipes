@@ -2989,7 +2989,14 @@ static V fwp_file_value(FILE *f, const char *path) {
     return PTR(h);
 }
 
+/* OS paths cannot contain a zero byte. Check before calling C APIs so a
+ * malformed language string never operates on its prefix. */
+static int fwp_path_has_nul(V path) {
+    return memchr(STR(path)->d, 0, STR(path)->len) != NULL;
+}
+
 static V fwp_p_file_open(V path, int create, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("open", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, create ? "w+b" : "rb");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
     return fwp_file_value(f, STR(path)->d);
@@ -3074,6 +3081,7 @@ static V fwp_p_file_read_all_owned(V h, const fwp_desc *err) {
 }
 
 static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("open", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "r+b");
     if (!f) f = fwp_path_fopen(path, "w+b");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
@@ -3100,6 +3108,7 @@ static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
 }
 
 static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pair)(V), void (*dup_result)(V)) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("open", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "r+b");
     if (!f) f = fwp_path_fopen(path, "w+b");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
@@ -3134,6 +3143,7 @@ static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pa
 }
 
 static V fwp_p_file_read_impl(V path, const fwp_desc *err, int text) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("read", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "rb");
     if (!f) return fwp_io_error_path("read", STR(path)->d, err);
     fwp_file_cleanup file = {f, 0};
@@ -3175,6 +3185,7 @@ static V fwp_p_file_read_bytes(V path, const fwp_desc *err) {
 }
 
 static V fwp_p_file_write_new(V path, V s, const fwp_desc *err) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("write", "path contains a NUL character", err);
     FILE *f = fwp_path_fopen(path, "wb");
     if (!f) return fwp_io_error_path("write", STR(path)->d, err);
     int error = fwrite(STR(s)->d, 1, STR(s)->len, f) == STR(s)->len ? 0 : errno;

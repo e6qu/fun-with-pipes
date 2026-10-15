@@ -103,6 +103,11 @@ ownership and removal of GC are the primary design priority.
    Verify retained storage and injected failures before admitting these calls to
    checked ARC; environment listing and other IO contracts remain separate work.
 
+8. Reject zero bytes in filesystem paths before any OS access. Verify interpreter
+   and native diagnostics, both rename operands and unchanged prefix files,
+   including scoped files in checked ARC. Do not truncate language strings into
+   a different path.
+
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the
 handoff. A performance regression needs investigation even when allocations fall.

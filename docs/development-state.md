@@ -10,10 +10,11 @@ its actual stack-scan boundary. Omitting that boundary reproduced string loss
 under forced collection; production task initialization was already correct.
 Earlier Windows probe CRLF output is repaired too.
 
-This branch, `checked-linear-algebra` in `/private/tmp/fwp-linear-algebra`,
-prepares the next substantial delivery. Its original parent is `c10b1ccd`.
-It now combines solver ownership, array borrowing, F128 gradient precision,
-console ownership and the environment-name repair. No PR is open for it.
+This is preparation branch `checked-path-validation` in
+`/private/tmp/fwp-path-validation`, based on combined preparation `3115b69a`.
+The combined numerical/console delivery remains in `/private/tmp/fwp-linear-algebra`.
+No PR is open for either preparation. Only this branch's commits after
+`3115b69a` belong to the path repair; do not replay its numerical parent.
 
 Standing authorization covers fixes, publication and squash merges after all
 nine production jobs and documentation pass for the final commit. Use exactly
@@ -36,6 +37,31 @@ explicit `curry`/`uncurry`, infix precedence and tacit data-last pipes.
 | 5 | Pending | Broaden CPU kernels and resolve runtime OpenCL compilation under the no-JIT policy |
 | 6 | In progress | Preserve equivalent C/Rust comparisons, raw samples and memory profiles |
 | 7 | In progress | Extend numerical, collection-heavy and long-running applications |
+
+## Path repair being prepared
+
+Read-only reproduction (2.58 s under the local guard) found interpreter output
+`[True, False, False]` versus native `[True, True, True]` for a real file and
+zero-containing file/directory paths. C treated the strings as their prefixes.
+Reject a zero byte before any filesystem access. Existence predicates return
+False; fallible operations report `path contains a NUL character` with their
+existing error kind. Check both rename operands and reject all of `dir.create-all`
+before creating any parent. Windows receives the same explicit diagnostics.
+
+Tests cover text/byte reads and writes, append, metadata, removal, rename,
+directory listing/creation/removal and scoped file operations. The harness checks
+prefix file contents, destination contents, an existing empty directory and
+absence of new parent directories after every execution. Compare raw interpreter
+and native at O1/O2. Tracing gets forced collection/reuse; checked ARC resource
+cases run without GC or poisoned reuse, which ARC explicitly rejects.
+
+Focused existing-compiler C probes with only these runtime guards changed pass
+(4.79 s), including unchanged files and ARC resource cases. Metadata passes.
+Initial test drafts used an unavailable `pair` helper, then accidentally composed
+a callback instead of passing it, and requested stress modes forbidden by ARC;
+all were corrected before publication. These failures do not indicate native
+support. The changed interpreter/compiler and Windows still require runner tests.
+Formatting and generated standard-library docs pass (0.86/0.88 s).
 
 ## Combined delivery
 
@@ -124,17 +150,14 @@ A preceding Intel macOS compiler SIGABRT in U128 division by zero did not recur
 on its unchanged retry; its cause remains unknown. Preserve future crash reports.
 Do not describe the abort as repaired or a skipped/queued job as passing.
 
-## Next: validate and publish the combined delivery
+## Next: validate the path repair and finish the active delivery
 
-Focused checks for every component and the combined documentation/inventory
-checks pass. Monitor #146 and fix any failures. Once #146's exact final-head gate passes,
-squash merge it, verify its one-line message and tree, then rebase only this
-branch's commits after `c10b1ccd` onto the accepted squash commit. The precision
-and console implementations are already combined: do not cherry-pick them again.
-Reconcile the parent Windows workflow changes, refresh this handoff and open one
-substantial PR for the combined delivery. Run its full final-head gate and fix
-failures before merging. Continue with remaining ownership and measured costs.
-
-Original preparation worktrees `/private/tmp/fwp-quad-grad` and
-`/private/tmp/fwp-console-ownership` retain evidence anchors; this file is the
-live handoff for their combined delivery.
+Publish this branch and run the six-platform `paths` suite. Fix failures without
+weakening checks. Monitor #146's exact-head gate and squash merge only after all
+nine production jobs and documentation pass. The numerical/console batch and
+its original anchors are documented above; its live handoff remains in
+`/private/tmp/fwp-linear-algebra`. Once this repair passes, combine only commits
+after `3115b69a` there to avoid another full CI cycle. Then rebase that combined
+branch's descendants of `c10b1ccd` onto #146's accepted squash commit and open
+one substantial next PR. Reconcile parent Windows workflow changes. Never replay
+precision or console commits: they are already combined.

@@ -48,6 +48,7 @@ static V fwp_p_file_is_dir(V path) {
     return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) ? FWP_TRUE : FWP_FALSE;
 }
 static V fwp_p_file_info(V path, const fwp_desc *error) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("stat", "path contains a NUL character", error);
     fwp_win_text wide;
     if (!fwp_win_text_init(&wide, STR(path)->d, STR(path)->len)) return fwp_io_error_path("stat", STR(path)->d, error);
     HANDLE file = CreateFileW(wide.text, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -68,6 +69,7 @@ static V fwp_p_file_info(V path, const fwp_desc *error) {
     return fwp_record(3, fields);
 }
 static V fwp_win_remove(V path, int directory, const fwp_desc *error) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("remove", "path contains a NUL character", error);
     fwp_win_text wide;
     if (!fwp_win_text_init(&wide, STR(path)->d, STR(path)->len)) return fwp_io_error_path("remove", STR(path)->d, error);
     int ok = directory ? RemoveDirectoryW(wide.text) : DeleteFileW(wide.text);
@@ -78,6 +80,7 @@ static V fwp_win_remove(V path, int directory, const fwp_desc *error) {
 static V fwp_p_file_remove(V path, const fwp_desc *error) { return fwp_win_remove(path, 0, error); }
 static V fwp_p_dir_remove(V path, const fwp_desc *error) { return fwp_win_remove(path, 1, error); }
 static V fwp_p_file_rename(V to, V from, const fwp_desc *error) {
+    if (fwp_path_has_nul(from) || fwp_path_has_nul(to)) return fwp_io_error("rename", "path contains a NUL character", error);
     fwp_win_text source, destination;
     if (!fwp_win_text_init(&source, STR(from)->d, STR(from)->len)) return fwp_io_error_path("rename", STR(from)->d, error);
     if (!fwp_win_text_init(&destination, STR(to)->d, STR(to)->len)) {
@@ -95,6 +98,7 @@ static void fwp_win_find_finish(void *pointer) {
     *handle = INVALID_HANDLE_VALUE;
 }
 static V fwp_p_dir_list(V path, const fwp_desc *error) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("list", "path contains a NUL character", error);
     fwp_win_text wide;
     if (!fwp_win_text_init(&wide, STR(path)->d, STR(path)->len)) return fwp_io_error_path("list", STR(path)->d, error);
     DWORD attributes = GetFileAttributesW(wide.text), failed = 0;
@@ -137,6 +141,7 @@ static V fwp_p_dir_list(V path, const fwp_desc *error) {
     return result;
 }
 static V fwp_p_dir_create(V path, const fwp_desc *error) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("create", "path contains a NUL character", error);
     fwp_win_text wide;
     if (!fwp_win_text_init(&wide, STR(path)->d, STR(path)->len)) return fwp_io_error_path("create", STR(path)->d, error);
     DWORD failed = CreateDirectoryW(wide.text, NULL) ? 0 : GetLastError();
@@ -144,6 +149,7 @@ static V fwp_p_dir_create(V path, const fwp_desc *error) {
     return failed ? fwp_win_io_error("create", STR(path)->d, failed, error) : FWP_UNIT;
 }
 static V fwp_p_dir_create_all(V path, const fwp_desc *error) {
+    if (fwp_path_has_nul(path)) return fwp_io_error("create", "path contains a NUL character", error);
     fwp_win_text wide;
     if (!fwp_win_text_init(&wide, STR(path)->d, STR(path)->len)) return fwp_io_error_path("create", STR(path)->d, error);
     wchar_t *p = wide.text;
