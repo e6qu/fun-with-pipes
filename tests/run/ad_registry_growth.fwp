@@ -1,0 +1,15 @@
+finish : I64 -> F64
+finish = make {
+    0 = id,
+    1 = singleton | array.from-list,
+    2 = const [1.0] | array.from-list,
+} | uncurry3 ad.backward | array.to-list | sum
+
+batch = range 0 | map (const 1 | ad.tape) | map finish | sum
+
+main = [
+    0 | ad.scope batch | echo,
+    1 | ad.scope batch | echo,
+    256 | ad.scope batch | echo,
+    257 | ad.scope batch | echo,
+] | ignore

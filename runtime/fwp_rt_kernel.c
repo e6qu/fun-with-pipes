@@ -82,6 +82,7 @@ typedef struct {
 
 static fwp_tape *fwp_tapes = 0;
 static int64_t fwp_ntapes = 0;
+static int64_t fwp_tapes_cap = 0;
 static void fwp_tape_retire(fwp_tape *t);
 static void fwp_tape_finish(void);
 
@@ -210,7 +211,7 @@ static void fwp_tape_finish(void) {
         fwp_tape_buffers_dispose(&buffers);
         fwp_owned_tape_release(t->owned); t->owned = NULL;
     }
-    free(fwp_tapes);fwp_tapes = 0;fwp_ntapes = 0;
+    free(fwp_tapes);fwp_tapes = 0;fwp_ntapes = fwp_tapes_cap = 0;
 }
 
 /* Library teardown calls this before freeing the managed heap. */
@@ -287,12 +288,17 @@ static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
     while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;
     if (slot == fwp_ntapes) {
         if (fwp_ntapes >= 0xffff) fwp_trap("autodiff: too many grad computations at once");
-        fwp_tape *next = (fwp_tape *)realloc(fwp_tapes, (size_t)(fwp_ntapes + 1) * sizeof(fwp_tape));
-        if (!next) {
-            fprintf(stderr, "fwp: out of memory\n");
-            exit(102);
+        if (fwp_ntapes == fwp_tapes_cap) {
+            int64_t cap = fwp_tapes_cap ? fwp_tapes_cap * 2 : 1;
+            if (cap > 0xffff) cap = 0xffff;
+            fwp_tape *next = (fwp_tape *)realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape));
+            if (!next) {
+                fprintf(stderr, "fwp: out of memory\n");
+                exit(102);
+            }
+            fwp_tapes = next;
+            fwp_tapes_cap = cap;
         }
-        fwp_tapes = next;
         memset(&fwp_tapes[fwp_ntapes], 0, sizeof(fwp_tape));
         fwp_ntapes++;
     }
@@ -399,7 +405,7 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
         if (node >= tp.len) fwp_trap(FWP_AD_INVALID_NODE);
         if (node >= active) active = node + 1;
     }
-    int64_t needed = active ? active : 1;
+    int64_t needed = active;
     double *adj = buffers.adj;
     if (buffers.adjcap < needed) {
         int64_t capacity = buffers.adjcap ? buffers.adjcap : needed;
@@ -409,13 +415,13 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
                           : (double *)calloc((size_t)capacity, sizeof(double));
         if (adj) { buffers.adj = adj;buffers.adjcap = capacity; }
     }
-    if (!adj) {
+    if (needed && !adj) {
         fwp_cleanup_pop(&cleanup);
         fwp_tape_buffers_release(&buffers);
         fprintf(stderr, "fwp: out of memory\n");
         exit(102);
     }
-    memset(adj, 0, (size_t)needed * sizeof(double));
+    if (needed) memset(adj, 0, (size_t)needed * sizeof(double));
     for (size_t i = 0; i < m; i++) {
         int64_t o = (int64_t)fwp_array_load(outs, i, NULL);
         if (o < 0) continue;

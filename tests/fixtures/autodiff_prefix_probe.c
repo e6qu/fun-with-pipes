@@ -27,7 +27,7 @@ static int prefix_case(int64_t leaves, int constants) {
         double expected=constants ? 0.0 : i==0 ? 13.0 : i==1 ? 9.0 : 0.0;
         if(fwp_f64(ARR(result)->d[i])!=expected)return 243;
     }
-    size_t expected_bytes=(size_t)(constants ? (leaves ? leaves : 1) : 4)*sizeof(double);
+    size_t expected_bytes=(size_t)(constants ? leaves : 4)*sizeof(double);
     if(prefix_adj_bytes!=expected_bytes)return 240;
     for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)return 244;
     if(fwp_cleanups)return 245;

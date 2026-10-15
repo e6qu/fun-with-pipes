@@ -113,7 +113,11 @@ impl Tape {
 }
 
 fn recycle_workspace(mut tape: Tape) {
-    if tape.owned || !workspace_enabled() || tape.workspace_bytes() > TAPE_WORKSPACE_BUDGET {
+    if tape.owned
+        || !workspace_enabled()
+        || tape.workspace_bytes() == 0
+        || tape.workspace_bytes() > TAPE_WORKSPACE_BUDGET
+    {
         return;
     }
     tape.gen = 0;
@@ -219,7 +223,7 @@ fn tape_limit() -> usize {
 }
 
 /// `ad.tape n`: a new tape whose first n nodes are the inputs.
-fn tape_new(n: i64) -> R<i64> {
+fn tape_new(n: i64, owned: bool) -> R<i64> {
     if !(0..=tape_limit() as i64).contains(&n) {
         return trap("autodiff: too many inputs");
     }
@@ -235,11 +239,12 @@ fn tape_new(n: i64) -> R<i64> {
         }
     };
     let gen = tapes[slot].gen + 1;
-    let mut workspace = if workspace_enabled() {
+    let mut workspace = if !owned && workspace_enabled() {
         TAPE_WORKSPACE.lock().unwrap().take().unwrap_or_default()
     } else {
         Tape::default()
     };
+    workspace.owned = owned;
     workspace.gen = gen;
     workspace.live = true;
     workspace.leaves = n as usize;
@@ -374,15 +379,8 @@ pub(crate) fn tape_owned(parameters: &Value, inputs: &Value) -> R<Value> {
         count += 1;
         tail = &fields[1];
     }
-    let base = tape_new(count as i64)?;
+    let base = tape_new(count as i64, true)?;
     let id = base >> 32;
-    let mut tapes = TAPES.lock().unwrap();
-    let slot = slot_of(&tapes, id)?;
-    let t = &mut tapes[slot];
-    t.owned = true;
-    t.da = Vec::new();
-    t.db = Vec::new();
-    t.adj = Vec::new();
     let owner = OwnedTape {
         fiber: tape_fiber(),
         zero: fields[0].clone(),
@@ -1157,7 +1155,7 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
         Ok(Some(match sym {
             "matrix._valid-f64" => Value::bool(matrix_product_shape(a).is_some()),
             "matrix._mul-f64" => matrix_product(a)?,
-            "ad.tape" => Value::I64(tape_new(int(&a[0]))?),
+            "ad.tape" => Value::I64(tape_new(int(&a[0]), false)?),
             "ad.push" => {
                 let f = match &a[0] {
                     Value::Record(f) => f.clone(),
@@ -1281,11 +1279,54 @@ mod tape_validation_tests {
     }
 
     #[test]
+    fn managed_and_empty_tapes_preserve_the_numeric_workspace() {
+        let _serial = TAPE_TEST_LOCK.lock().unwrap();
+        *TAPE_WORKSPACE.lock().unwrap() = None;
+        let empty = tape_new(0, false).unwrap();
+        let warm = tape_new(2, false).unwrap();
+        let output = push(warm, 2.0, warm + 1, 3.0).unwrap();
+        assert_eq!(backward(warm, &[output], &[1.0]).unwrap(), [2.0, 3.0]);
+        let pointer = TAPE_WORKSPACE.lock().unwrap().as_ref().unwrap().pa.as_ptr();
+        with_tape_scope(|| {
+            // Callbacks are retained but not invoked by creation or scope exit.
+            let parameters = Value::tuple(vec![Value::F64(0.0); 4]);
+            let inputs = Value::list(vec![Value::F64(1.0)]);
+            let base = int(&tape_owned(&parameters, &inputs)?);
+            let tapes = TAPES.lock().unwrap();
+            let managed = &tapes[slot_of(&tapes, base >> 32)?];
+            assert!(managed.owned);
+            assert_eq!(managed.workspace_bytes(), 0);
+            assert_eq!(
+                TAPE_WORKSPACE.lock().unwrap().as_ref().unwrap().pa.as_ptr(),
+                pointer
+            );
+            Ok(())
+        })
+        .unwrap();
+        assert!(backward(empty, &[], &[]).unwrap().is_empty());
+        assert_eq!(
+            TAPE_WORKSPACE.lock().unwrap().as_ref().unwrap().pa.as_ptr(),
+            pointer
+        );
+        let reused = tape_new(2, false).unwrap();
+        assert!(TAPE_WORKSPACE.lock().unwrap().is_none());
+        {
+            let tapes = TAPES.lock().unwrap();
+            assert_eq!(
+                tapes[slot_of(&tapes, reused >> 32).unwrap()].pa.as_ptr(),
+                pointer
+            );
+        }
+        assert_eq!(backward(reused, &[reused], &[1.0]).unwrap(), [1.0, 0.0]);
+        *TAPE_WORKSPACE.lock().unwrap() = None;
+    }
+
+    #[test]
     fn input_nodes_need_no_operation_storage_and_keep_their_indices() {
         let _serial = TAPE_TEST_LOCK.lock().unwrap();
         *TAPE_WORKSPACE.lock().unwrap() = None;
         for leaves in [1, 65, 4096] {
-            let base = tape_new(leaves).unwrap();
+            let base = tape_new(leaves, false).unwrap();
             {
                 let tapes = TAPES.lock().unwrap();
                 let tape = &tapes[slot_of(&tapes, base >> 32).unwrap()];
@@ -1312,11 +1353,11 @@ mod tape_validation_tests {
         }
         // The token/byte limit still applies before any storage is requested.
         expect_trap(
-            tape_new(tape_limit() as i64 + 1),
+            tape_new(tape_limit() as i64 + 1, false),
             "autodiff: too many inputs",
         );
         with_tape_scope(|| {
-            let base = tape_new(tape_limit() as i64)?;
+            let base = tape_new(tape_limit() as i64, false)?;
             expect_trap(push(base, 1.0, -1, 0.0), "autodiff: the tape is full");
             Ok(())
         })
@@ -1328,7 +1369,7 @@ mod tape_validation_tests {
     fn backward_ignores_unseeded_suffix_and_preserves_input_and_seed_order() {
         let _serial = TAPE_TEST_LOCK.lock().unwrap();
         *TAPE_WORKSPACE.lock().unwrap() = None;
-        let base = tape_new(3).unwrap();
+        let base = tape_new(3, false).unwrap();
         let early = push(base, 2.0, base + 1, 3.0).unwrap();
         let mut tail = early;
         for _ in 0..4096 {
@@ -1345,14 +1386,14 @@ mod tape_validation_tests {
             assert!(cached.pa.capacity() >= 4097);
         }
         // Reusing a larger workspace must clear the retained input prefix.
-        let base = tape_new(3).unwrap();
+        let base = tape_new(3, false).unwrap();
         let result = backward(base, &[-1], &[f64::NAN]).unwrap();
         assert!(result.iter().all(|value| value.to_bits() == 0));
         if workspace_enabled() {
             let mut previous = 4;
             let mut growths = 0;
             for leaves in 5..=33 {
-                let base = tape_new(leaves).unwrap();
+                let base = tape_new(leaves, false).unwrap();
                 assert!(backward(base, &[], &[]).unwrap().iter().all(|v| *v == 0.0));
                 let pool = TAPE_WORKSPACE.lock().unwrap();
                 let capacity = pool.as_ref().unwrap().adj.capacity();
@@ -1362,16 +1403,16 @@ mod tape_validation_tests {
             }
             assert_eq!(growths, 4);
         }
-        let base = tape_new(1).unwrap();
+        let base = tape_new(1, false).unwrap();
         assert_eq!(
             backward(base, &[base, base, base], &[1e16, 1.0, -1e16]).unwrap(),
             [0.0]
         );
-        let base = tape_new(0).unwrap();
+        let base = tape_new(0, false).unwrap();
         assert!(backward(base, &[], &[]).unwrap().is_empty());
         // Earlier invalid indices keep precedence over later foreign tapes.
-        let base = tape_new(1).unwrap();
-        let other = tape_new(1).unwrap();
+        let base = tape_new(1, false).unwrap();
+        let other = tape_new(1, false).unwrap();
         expect_trap(
             backward(base, &[base + 1, other], &[1.0, 1.0]),
             INVALID_NODE,
@@ -1383,8 +1424,8 @@ mod tape_validation_tests {
     #[test]
     fn invalid_nodes_preserve_push_state_and_consume_backward_tapes() {
         let _serial = TAPE_TEST_LOCK.lock().unwrap();
-        let base = tape_new(2).unwrap();
-        let other = tape_new(1).unwrap();
+        let base = tape_new(2, false).unwrap();
+        let other = tape_new(1, false).unwrap();
         for invalid in [base + 2, base | 0xffff_ffff] {
             expect_trap(push(invalid, 1.0, -1, 0.0), INVALID_NODE);
             expect_trap(push(base, 1.0, invalid, 1.0), INVALID_NODE);
@@ -1402,14 +1443,14 @@ mod tape_validation_tests {
         expect_trap(backward(other, &[other + 1], &[1.0]), INVALID_NODE);
         expect_trap(backward(other, &[], &[]), USED_OUTSIDE);
 
-        let base = tape_new(1).unwrap();
-        let other = tape_new(1).unwrap();
+        let base = tape_new(1, false).unwrap();
+        let other = tape_new(1, false).unwrap();
         expect_trap(backward(base, &[other | 0xffff_ffff], &[1.0]), MIXED);
         expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
         assert_eq!(backward(other, &[other], &[3.0]).unwrap(), [3.0]);
 
         // Zip semantics ignore unpaired outputs and constant sentinels.
-        let base = tape_new(0).unwrap();
+        let base = tape_new(0, false).unwrap();
         assert!(backward(base, &[-1, base | 0xffff_ffff], &[1.0])
             .unwrap()
             .is_empty());
@@ -1418,11 +1459,11 @@ mod tape_validation_tests {
         // Exhaust a generation without resetting its identity to an old token.
         let slot = ((base >> 32) & 0xffff) as usize - 1;
         TAPES.lock().unwrap()[slot].gen = 32766;
-        let last = tape_new(0).unwrap();
+        let last = tape_new(0, false).unwrap();
         assert_eq!((last >> 32) & 0xffff, (base >> 32) & 0xffff);
         assert_eq!(last >> 48, 32767);
         assert!(backward(last, &[], &[]).unwrap().is_empty());
-        let next = tape_new(0).unwrap();
+        let next = tape_new(0, false).unwrap();
         assert_ne!((next >> 32) & 0xffff, (last >> 32) & 0xffff);
         expect_trap(backward(last, &[], &[]), USED_OUTSIDE);
         expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
@@ -1433,26 +1474,26 @@ mod tape_validation_tests {
         let _serial = TAPE_TEST_LOCK.lock().unwrap();
         let mut base = 0;
         with_tape_scope(|| {
-            base = tape_new(2)?;
+            base = tape_new(2, false)?;
             Ok(())
         })
         .unwrap();
         expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
         expect_trap(
             with_tape_scope(|| {
-                base = tape_new(2)?;
+                base = tape_new(2, false)?;
                 trap::<()>("gradient callback control")
             }),
             "gradient callback control",
         );
         expect_trap(backward(base, &[], &[]), USED_OUTSIDE);
         with_tape_scope(|| {
-            let outer = tape_new(1)?;
-            let inner = with_tape_scope(|| tape_new(1))?;
+            let outer = tape_new(1, false)?;
+            let inner = with_tape_scope(|| tape_new(1, false))?;
             expect_trap(backward(inner, &[], &[]), USED_OUTSIDE);
             assert_eq!(backward(outer, &[outer], &[2.0])?, [2.0]);
             for _ in 0..64 {
-                let current = tape_new(1)?;
+                let current = tape_new(1, false)?;
                 TAPE_SCOPES.with(|scopes| assert_eq!(scopes.borrow().last().unwrap().len(), 1));
                 backward(current, &[], &[])?;
                 TAPE_SCOPES.with(|scopes| assert!(scopes.borrow().last().unwrap().is_empty()));
@@ -1469,7 +1510,7 @@ mod tape_validation_tests {
             return;
         }
         *TAPE_WORKSPACE.lock().unwrap() = None;
-        let first = tape_new(129).unwrap();
+        let first = tape_new(129, false).unwrap();
         let node = push(first, 4.0, first + 1, 5.0).unwrap();
         assert_eq!(backward(first, &[node], &[2.0]).unwrap()[..2], [8.0, 10.0]);
         let pointers = {
@@ -1484,7 +1525,7 @@ mod tape_validation_tests {
                 t.adj.as_ptr(),
             )
         };
-        let second = tape_new(129).unwrap();
+        let second = tape_new(129, false).unwrap();
         assert_ne!(first, second);
         let slot = ((second >> 32) & 0xffff) as usize - 1;
         {
@@ -1506,16 +1547,16 @@ mod tape_validation_tests {
             [3.0, 0.0]
         );
         expect_trap(backward(first, &[], &[]), USED_OUTSIDE);
-        let failed = tape_new(129).unwrap();
+        let failed = tape_new(129, false).unwrap();
         expect_trap(backward(failed, &[failed + 129], &[1.0]), INVALID_NODE);
         assert!(TAPE_WORKSPACE.lock().unwrap().is_some());
-        let current = tape_new(129).unwrap();
+        let current = tape_new(129, false).unwrap();
         assert!(backward(current, &[], &[])
             .unwrap()
             .iter()
             .all(|v| v.to_bits() == 0));
         *TAPE_WORKSPACE.lock().unwrap() = None;
-        let large = tape_new((TAPE_WORKSPACE_BUDGET / 8 + 1) as i64).unwrap();
+        let large = tape_new((TAPE_WORKSPACE_BUDGET / 8 + 1) as i64, false).unwrap();
         backward(large, &[], &[]).unwrap();
         assert!(TAPE_WORKSPACE.lock().unwrap().is_none());
     }

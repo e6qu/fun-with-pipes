@@ -43,6 +43,9 @@ jobs:
       - name: Operation-only tape storage and binary measurements
         if: ${{ !cancelled() && steps.checkpoint_compiler.outcome == 'success' }}
         run: python3 scripts/measure-ad-operations.py --output autodiff-evidence/operations
+      - name: Registry growth allocation and binary measurements
+        if: ${{ !cancelled() && steps.checkpoint_compiler.outcome == 'success' }}
+        run: python3 scripts/measure-ad-registry.py --output autodiff-evidence/registry
       - uses: actions/upload-artifact@v7
         if: always()
         with:

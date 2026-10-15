@@ -364,3 +364,15 @@ seeded output; validation, seed arithmetic and unwind ownership are preserved.
 [Four-host measurements](measurements/ad-prefix-2026-10-14.json) show a
 98,304-byte peak tape reduction in the recorded unused-suffix workload, with no
 consistent process-time speedup. The squash subject is one line without trailers.
+
+## PR #138 merge acceptance
+
+PR [#138](https://github.com/e6qu/fun-with-pipes/pull/138) merged as `d77b3fea`,
+tree-identical to tested head `f251fbd1`. All nine production jobs in
+[38666526202](https://github.com/e6qu/fun-with-pipes/actions/runs/38666526202) and
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38666481103)
+passed. Operation metadata excludes inputs while tokens and adjoints retain
+absolute indices; partial managed-weight retains unwind safely.
+[Four-host measurements](measurements/ad-operations-2026-10-15.json) record lower
+tape storage, more cold growth requests for mapped/nested workloads, and no
+consistent process-time speedup. The squash subject is one line without trailers.
