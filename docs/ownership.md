@@ -10,6 +10,14 @@ This guide states the implemented memory contract. The [primitive tables](primit
 give per-operation details, [benchmarks](benchmarks.md) distinguish memory savings
 from speed, and [delivery history](roadmap-history.md) records accepted tests.
 
+Caught I/O errors must own their kind string, message string and record just like
+ordinary returned values. Error construction now protects each completed string
+while allocating the next field and transfers the completed record to the handler.
+A previous runtime path left all three counts at zero and retained 64 charged bytes
+per small caught error when tracing was disabled. Repeated-catch and injected
+allocation-failure probes cover this repair; final runner acceptance is tracked
+in the [handoff](development-state.md).
+
 ## Direction
 
 The [project plan](../PLAN.md#memory-direction) targets removal of tracing GC,

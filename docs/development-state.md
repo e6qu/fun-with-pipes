@@ -10,11 +10,13 @@ its actual stack-scan boundary. Omitting that boundary reproduced string loss
 under forced collection; production task initialization was already correct.
 Earlier Windows probe CRLF output is repaired too.
 
-This is preparation branch `checked-path-validation` in
-`/private/tmp/fwp-path-validation`, based on combined preparation `3115b69a`.
-The combined numerical/console delivery remains in `/private/tmp/fwp-linear-algebra`.
-No PR is open for either preparation. Only this branch's commits after
-`3115b69a` belong to the path repair; do not replay its numerical parent.
+This is preparation branch `checked-filesystem-ownership` in
+`/private/tmp/fwp-filesystem-ownership`, based on path repair `135fa6f5`. Its first
+change repairs counted ownership of caught I/O errors. Directory/environment
+snapshot work is still pending. The combined numerical/console delivery remains
+in `/private/tmp/fwp-linear-algebra`; the path repair remains in
+`/private/tmp/fwp-path-validation`. No PR is open for these preparations.
+Only commits after `135fa6f5` belong to this error-ownership repair.
 
 Standing authorization covers fixes, publication and squash merges after all
 nine production jobs and documentation pass for the final commit. Use exactly
@@ -37,6 +39,25 @@ explicit `curry`/`uncurry`, infix precedence and tacit data-last pipes.
 | 5 | Pending | Broaden CPU kernels and resolve runtime OpenCL compilation under the no-JIT policy |
 | 6 | In progress | Preserve equivalent C/Rust comparisons, raw samples and memory profiles |
 | 7 | In progress | Extend numerical, collection-heavy and long-running applications |
+
+## Caught I/O error ownership
+
+A guarded probe reproduced zero reference counts for the error record and its
+two strings, retaining 64 charged bytes after a typed drop (0.97 s). Runtime
+error construction now counts each fresh string, protects it while allocating
+the next field, counts the completed record and transfers ownership to the
+handler. No language syntax or error wording changes in this fix.
+
+The regression repeats both direct runtime catches and compiled `attempt` calls
+128 times, checking zero retained charge without collection. It also forces
+collection between construction steps, injects failure at both string allocations
+and record allocation, and checks empty cleanup scopes. Removing the record
+count fails with 231; removing first-string protection fails with 235. Tracing
+and ARC use their actual compiler modes, O1/O2; ARC never enables GC or poisoned
+reuse. Focused existing-compiler runtime probes pass (6.53 s). Initial harness
+issues (an undefined tracing-mode C macro and an inlined-away function entry)
+were corrected; the fixture now requests its explicit compiled function entry.
+Changed-compiler and native Windows acceptance remain required.
 
 ## Path repair being prepared
 
@@ -73,7 +94,9 @@ checks the saved OS handle is closed; the source path is properly escaped.
 Negative leak/double-close controls remain. Both repaired harnesses pass serially
 against the existing local compiler (9.41 s). Native Windows validation remains
 required on the repaired head. All three file regressions join production
-Windows checks instead of being skipped. The original macOS jobs are superseded.
+Windows checks instead of being skipped. The original macOS jobs were superseded. Repaired six-platform
+[run 38806367846](https://github.com/e6qu/fun-with-pipes/actions/runs/38806367846)
+passed every host at `135fa6f5`, including both repaired Windows probes.
 
 
 ## Combined delivery
@@ -163,14 +186,21 @@ A preceding Intel macOS compiler SIGABRT in U128 division by zero did not recur
 on its unchanged retry; its cause remains unknown. Preserve future crash reports.
 Do not describe the abort as repaired or a skipped/queued job as passing.
 
-## Next: validate the path repair and finish the active delivery
+## Next: validate error ownership and deliver the combined batch
 
-Publish the test-host repairs and rerun the six-platform `paths` suite. Fix failures without
-weakening checks. Monitor #146's exact-head gate and squash merge only after all
-nine production jobs and documentation pass. The numerical/console batch and
-its original anchors are documented above; its live handoff remains in
-`/private/tmp/fwp-linear-algebra`. Once this repair passes, combine only commits
-after `3115b69a` there to avoid another full CI cycle. Then rebase that combined
-branch's descendants of `c10b1ccd` onto #146's accepted squash commit and open
-one substantial next PR. Reconcile parent Windows workflow changes. Never replay
-precision or console commits: they are already combined.
+Publish this repair and run the six-platform `filesystem` suite, including the
+already-passing path/file regressions. Fix failures. Monitor #146's exact-head
+gate and squash merge only after all nine production jobs and documentation pass.
+Both Windows production jobs now pass; Linux/macOS gates remain running.
+
+The path repair passed all six hosts at `135fa6f5`: combine only its commits
+after `3115b69a` into `/private/tmp/fwp-linear-algebra`. Once error ownership
+passes, combine only this branch's commits after `135fa6f5` there as well, so the
+known leak is repaired before the next delivery. Keep one active PR. Rebase only
+the combined descendants of `c10b1ccd` onto #146's accepted squash commit, reconcile
+the parent Windows workflow changes, and run the full gate for the next PR.
+Precision and console changes are already combined; never replay them.
+
+Afterward, extend ownership to directory/environment snapshots and remaining
+filesystem results and scratch buffers. This review has not implemented or
+verified those contracts. Keep them separate from the caught-error claim.

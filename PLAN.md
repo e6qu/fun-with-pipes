@@ -108,6 +108,11 @@ ownership and removal of GC are the primary design priority.
    including scoped files in checked ARC. Do not truncate language strings into
    a different path.
 
+9. Give runtime-created I/O errors counted ownership and protect partial error
+   construction. Repeated caught failures must release both text fields and the
+   error record without tracing. Then extend remaining filesystem and environment
+   snapshot ownership contracts.
+
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the
 handoff. A performance regression needs investigation even when allocations fall.
