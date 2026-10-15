@@ -188,7 +188,7 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
         ("nested-channel","nested : I64 -> Channel[List[Channel[String]]] ! {Async}\nnested = channel.make\nmain = nested 1 | channel.close\n","channel payloads cannot contain"),
         ("cyclic-channel","Link = | Node (Channel[Link])\nlinks : I64 -> Channel[Link] ! {Async}\nlinks = channel.make\nmain = links 1 | channel.close\n","channel payloads cannot contain"),
         ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
-        ("environment","main = env.get \"FWP_TEST_INPUT\" | echo\n","tracing-free ownership contract"),
+        ("environment-list","main = env.vars () | echo\n","tracing-free ownership contract"),
     ] {
         let input=dir.join(format!("{name}.fwp"));
         std::fs::write(&input,source).unwrap();

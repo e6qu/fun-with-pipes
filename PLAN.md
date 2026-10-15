@@ -99,9 +99,9 @@ ownership and removal of GC are the primary design priority.
 
 7. Give ordinary console input and process arguments explicit ownership. Release
    temporary whole-input strings and byte buffers, protect partially constructed
-   lists, and preserve raw interpreter behavior for UTF-8, CRLF and end of input.
+   lists and copied environment values, and preserve raw interpreter behavior for UTF-8, CRLF and end of input.
    Verify retained storage and injected failures before admitting these calls to
-   checked ARC; environment and other IO contracts remain separate work.
+   checked ARC; environment listing and other IO contracts remain separate work.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

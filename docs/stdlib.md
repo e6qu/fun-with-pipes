@@ -677,6 +677,9 @@ ewrite : String -> () ! {IO}
 read-line : () -> Option[String] ! {IO}
 read-all : () -> String ! {IO}
 read-lines : () -> List[String] ! {IO}
+
+# Look up a name and copy its value. A name containing a zero byte (`\0`)
+# is invalid and returns None, like a missing name.
 env.get : String -> Option[String] ! {IO}
 
 # All environment variables, sorted by name.

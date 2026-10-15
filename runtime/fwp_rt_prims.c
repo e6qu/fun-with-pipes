@@ -2608,12 +2608,22 @@ static V fwp_p_args(void (*drop_list)(V)) {
 }
 
 static V fwp_p_env_get(V name) {
+    /* OS names cannot contain NUL; do not accidentally look up a prefix. */
+    if (memchr(STR(name)->d, 0, STR(name)->len)) return FWP_NONE;
+    V text;
 #ifdef _WIN32
-    return fwp_win_env_get(name);
+    if (!fwp_win_env_text(STR(name)->d, STR(name)->len, &text)) return FWP_NONE;
 #else
-    const char *v = getenv(STR(name)->d);
-    return v ? fwp_some(fwp_str_lossy(v, strlen(v))) : FWP_NONE;
+    const char *value = getenv(STR(name)->d);
+    if (!value) return FWP_NONE;
+    text = fwp_str_lossy(value, strlen(value));
 #endif
+    fwp_value_owner owner = {fwp_rc_fresh(text), fwp_rc_free_obj};
+    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);
+    V result = fwp_rc_fresh(fwp_some(text));
+    owner.value = 0;
+    (void)fwp_value_finish(&owner, &cleanup);
+    return result;
 }
 
 static int64_t fwp_now_ns(void) {

@@ -1,145 +1,139 @@
 # Session handoff
 
-Updated 2026-10-15. Preparation branch `checked-linear-algebra` lives in
-`/private/tmp/fwp-linear-algebra`; its parent anchor is `c10b1ccd` from the
-current delivery. [PR #145](https://github.com/e6qu/fun-with-pipes/pull/145)
-merged as `e51b8570` after all nine production jobs and documentation passed.
-[PR #146](https://github.com/e6qu/fun-with-pipes/pull/146) remains the only open
-PR, head `19b14d0b`, in `/Users/zardoz/projects/fun-with-pipes`.
-Production [38803349673](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
-is running. The Windows probe now initializes its synthetic task's stack-scan
-boundary after reproducing missing-root corruption locally; preceding CRLF
-output failures are also repaired. Final native Windows acceptance is required.
+Updated 2026-10-15. The only open delivery is
+[PR #146](https://github.com/e6qu/fun-with-pipes/pull/146), head `19b14d0b`,
+in `/Users/zardoz/projects/fun-with-pipes`. Its
+[production run](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
+is running. Windows AMD64 passed the repaired early cancellation regression;
+ARM64 and the complete gate remain required. The synthetic test task now has
+its actual stack-scan boundary. Omitting that boundary reproduced string loss
+under forced collection; production task initialization was already correct.
+Earlier Windows probe CRLF output is repaired too.
 
-Standing authorization covers publication, fixes and squash merge after all
-nine production jobs and documentation pass for the final commit. Use one line
-of at most 80 characters and an explicitly empty body, with no trailers or
-attribution. Bundle coherent work into one active delivery PR.
+This branch, `checked-linear-algebra` in `/private/tmp/fwp-linear-algebra`,
+prepares the next substantial delivery. Its original parent is `c10b1ccd`.
+It now combines solver ownership, array borrowing, F128 gradient precision,
+console ownership and the environment-name repair. No PR is open for it.
+
+Standing authorization covers fixes, publication and squash merges after all
+nine production jobs and documentation pass for the final commit. Use exactly
+one line of at most 80 characters and an explicitly empty commit body, without
+trailers or attribution. Keep one active delivery PR. Failing tests are work to
+fix; queued CI prevents merging, not preparation.
 
 ## Roadmap status
 
+[PLAN.md](../PLAN.md) defines project completion; none of its seven work areas
+is complete. JIT is excluded. Preserve single-argument curried functions,
+explicit `curry`/`uncurry`, infix precedence and tacit data-last pipes.
+
 | Step | Status | Next concrete work |
 |---|---|---|
-| 1 | In progress | Validate C boundaries and solver scratch/result ownership |
-| 2 | In progress | Remove measured closure, container and call costs |
-| 3 | In progress | Diagnose remaining Intel array and matrix wrapper overhead |
-| 4 | In progress | Investigate sustained derivative timing differences |
-| 5 | Pending | Broaden CPU kernels and resolve runtime OpenCL compilation |
-| 6 | In progress | Preserve comparable C/Rust measurements and profiles |
-| 7 | In progress | Extend numerical and long-running application coverage |
+| 1 | In progress | Validate checked boundaries, solver and console ownership; then extend remaining runtime and deployment contracts |
+| 2 | In progress | Measure remaining record, closure and call costs in representative programs |
+| 3 | In progress | Reduce measured numerical gaps and sharing costs without changing arithmetic order |
+| 4 | In progress | Deliver F128 precision; investigate sustained differentiation timing and memory scaling |
+| 5 | Pending | Broaden CPU kernels and resolve runtime OpenCL compilation under the no-JIT policy |
+| 6 | In progress | Preserve equivalent C/Rust comparisons, raw samples and memory profiles |
+| 7 | In progress | Extend numerical, collection-heavy and long-running applications |
 
+## Combined delivery
 
-## Prepared numerical batch
+**Solvers:** LU solve, determinant, inverse, Cholesky, QR and conjugate gradient
+now own scratch and partial results. A stack record tracks five scratch buffers
+and two partial outputs. Cleanup covers normal, singular and trapped exits.
+QR independently bounds its square output before multiplying or allocating;
+zero input rows previously bypassed that capacity check. Preserve algorithms,
+input aliases, floating-point order and scheduling points.
 
-Scope: LU solve, determinant, inverse, Cholesky, QR and conjugate gradient.
-Borrow inputs, copy their numbers into the existing scratch buffers and own each
-buffer explicitly. One stack record tracks up to five scratch pointers and two
-partial result arrays. Release scratch on return and singular exits, and release
-scratch plus partial output when a trap unwinds. Results become counted owners
-before they escape. Preserve the algorithms, floating-point operation order,
-immutable input arrays and existing iteration limits. No new scheduling point.
+**Array loops:** borrow F64 array data once only when every `Again` passes the
+same array parameter and the body reads it directly. Changing-array loops retain
+per-read selection. Bounds checks, slices, ownership and task behavior remain.
 
-QR also checks `n*n` output capacity before multiplication/allocation. Zero input
-rows previously allowed arbitrarily large column counts through the input-shape
-check. Interpreter and native checks preserve negative/input-length error order.
+**F128 gradients:** use the existing typed tape operations for seeds, weights and
+adjoints, retaining low bits and the exponent range instead of narrowing through
+F64. Other scalar formats retain their existing accumulation rules. Boxes and
+reference counts still have costs; this is not a zero-allocation claim.
 
-Acceptance requires raw interpreter/native agreement in tracing and ARC modes,
-O1/O2, array slices and aliased inputs, empty/singular cases, zero iteration limits,
-QR output overflow, forced GC/reuse checks, bounded repeated-call storage and
-injected failures at scratch/output construction. Missing scratch release and
-missing partial-result release must make the probes fail. New compiler tests run
-on Linux/macOS ARM64/AMD64; final production CI must also cover native Windows.
+**Console and environment:** checked ARC now covers copied `read-all`,
+`read-line`, `read-lines`, `args` and `env.get` results. Protect external input
+buffers, strings during option construction and partial lists. `read-lines`
+releases its whole-input copy after copying lines. Native environment lookup
+now returns `None` for a name containing a zero byte, matching the interpreter;
+previously it incorrectly looked up the prefix. Environment listing remains
+unreviewed and has an explicit rejection test. Whole-stream reading still
+materializes the stream; streaming helpers keep their existing behavior.
 
-The compiler also borrows F64 array data once before eligible loops. Every
-`Again` must pass the exact same array parameter, and the body must read that
-parameter directly. Changing arrays, bounds checks, ownership, cleanup and task
-scheduling retain their established behavior. No public syntax or type conversion.
+## Validation and measurement
 
-## Runner evidence
+- [Solver run 38795634707](https://github.com/e6qu/fun-with-pipes/actions/runs/38795634707)
+  passed all four Linux/macOS hosts at `ec1ff14b`: formatting, Clippy, solver and
+  array regressions, QR limits, existing unwind tests, inventory and measurements.
+  The prior QR fixture incorrectly used ARC-ineligible `read-all`; it now passes
+  dimensions through a checked function entry. No ownership check was weakened.
+- [Precision run 38797434546](https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546)
+  passed all four hosts at `7a463be9`, including low bits, extreme exponents,
+  seeded, nested and checkpointed gradients, cleanup controls and regressions.
+- [Console run 38802310868](https://github.com/e6qu/fun-with-pipes/actions/runs/38802310868)
+  at `f81970a1` passed both Linux hosts and ARM macOS; Intel macOS is still running.
+  The earlier partial console run was superseded and canceled.
+- All new tests are included in production Windows acceptance. Combined final-head
+  production coverage, including Windows, remains required before delivery.
 
-[Solver run 38795634707](https://github.com/e6qu/fun-with-pipes/actions/runs/38795634707)
-passed all four Linux/macOS hosts at `ec1ff14b`, including formatting, Clippy,
-solver cleanup and QR limits, invariant/changing-array regressions, existing
-numerical/unwind tests, primitive inventory and measurements. The earlier
-`42662770` run exposed an ARC-ineligible `read-all` in the QR test fixture;
-the fixture now passes dimensions through an explicit function entry.
-No ownership check was weakened. Later commits change comments, handoff and
-the additional measurement script, not this tested compiler implementation.
+[Array measurements](measurements/numerical-array-borrows-2026-10-15.json)
+retain equivalent C/Rust timings and two paired internal comparisons
+([first](https://github.com/e6qu/fun-with-pipes/actions/runs/38800569111),
+[repeat](https://github.com/e6qu/fun-with-pipes/actions/runs/38801692547)).
+Both paired runs passed all four hosts. Intel macOS ARC cached/per-read kernel
+ratios repeat at 0.704/0.707; Linux ARM64 at 0.965/0.967. ARM macOS ARC changes
+direction (0.968/1.021), and tracing is slower (1.046/1.009). The latter loop
+removes address selection without adding spills but retains length reloads around
+root-liveness fences. Keep slower cases; no universal speedup is established.
+All profiles and result hashes match. Cross-run matrix variation includes an
+11% slower Linux result with byte-identical executables. The baseline is the
+`candidate` section of #146's report, which arrives with the parent rebase.
 
-[The retained report](measurements/numerical-array-borrows-2026-10-15.json)
-contains raw samples, hardware/compiler details, equivalent C/Rust comparisons
-and unchanged allocation profiles. Its baseline is the `candidate` section of
-PR #146's current numerical report; that updated parent report arrives when
-this branch is rebased onto the accepted squash commit.
+[F128 profiles](measurements/f128-gradient-precision-2026-10-15.json) contain
+32 host/mode/optimization/reuse combinations: 2,843 managed requests and 143,082
+requested bytes for the complete ten-check fixture, including output and 65
+repeated gradients. ARC ends with zero charged bytes and collections. These are
+not per-gradient timing, peak live memory or whole-process allocation measures.
 
-ARC array/C ratios are 1.01/1.00 on AMD64/ARM64 Linux and 0.98/1.00 on Intel/ARM
-macOS. Intel remains 1.74x Rust. In the actual AMD64 timed loops the borrowed
-address stays in a register and scalar arithmetic is unrolled fourfold without
-reassociation, fused multiply/add or stack traffic inside the arithmetic loop.
-Intel ARC absolute time fell 7.5%, but C/Rust reference times rose about 33%.
-Linux AMD64 tracing matrix time rose about 11% despite byte-identical matrix
-executables. These shared-runner comparisons cannot assign a precise speedup.
+## Local checks and unresolved limits
 
-[Paired run 38800569111](https://github.com/e6qu/fun-with-pipes/actions/runs/38800569111)
-and [repeat 38801692547](https://github.com/e6qu/fun-with-pipes/actions/runs/38801692547)
-passed all four hosts. They reuse validated emitted C, verify its hashes and
-compare cached reads against per-element selection on the same runner. Only
-load expressions change; arithmetic, owners and workload remain identical.
-Intel macOS ARC kernel ratios repeat at 0.704/0.707; Linux ARM64 ARC at
-0.965/0.967. ARM macOS ARC changes direction (0.968/1.021), and tracing is
-slower (1.046/1.009). Generated ARM tracing code removes address selection
-without adding loop spills but retains length reloads around root-liveness
-fences. Keep both complete reports; no universal speedup claim is supported.
-The same JSON retains both paired runs, raw samples and environment details.
-Source-rewrite checks passed locally (0.16 s); timing stayed on CI. Repeat
-artifact download passed (6.39 s), report recording passed (0.13 s).
+All local workloads use `python3 scripts/local-guard.py COMMAND...`, serially
+within fixed limits. Full compiler builds, suites and timing stay on runners.
+Existing-compiler probes check runtime behavior; they do not validate new
+compiler proof rules. Negative controls must fail when releases are omitted.
 
-## Focused checks and limits
+Solver scratch/partial-result and missing-free probes passed at O1/O2 (6.00 s);
+QR overflow passed without huge allocation (1.85 s). Array runtime probes passed
+(5.14 s). Console probes cover 128 repeated calls, forced collection, every
+injected allocation failure and separately counted C input buffers; omitted
+string/buffer release fails with 205/211 (2.36 s). Raw environment lookup
+reproduced prefix truncation before the fix (2.51 s). Metadata checks passed.
 
-All local work used `python3 scripts/local-guard.py COMMAND...` serially, with
-no full build, full gate or benchmark. Existing compiler output plus edited
-runtime probes establish runtime behavior; runner tests above validate the
-changed compiler. Scratch/partial-result failures, forced collection and
-missing-free controls passed at O1/O2 (6.00 s); the QR boundary sanitizer probe
-passed without huge allocation (1.85 s). Array borrowing semantic/runtime probes
-passed (5.14 s), and metadata/inventory/formatting checks passed. Inventory:
-231 explicit contracts, 10 flat scalar signatures, 118 declarations needing
-review and 19 lowered templates. The frozen baseline is unchanged.
+Combined formatting and documentation audit passed (1.10/2.53 s). Paired report
+recording passed (0.13 s); repeat download passed (6.39 s). Recheck generated
+standard-library docs and inventory after combining console changes. The expected
+inventory is 236 explicit contracts, 10 flat scalar signatures, 113 declarations
+needing review and 19 lowered templates; the frozen baseline is unchanged.
 
-Artifact downloads passed (8.08/3.73 s). Report recording and complete profile
-comparison passed (0.14 s); the first recording attempt used this preparation's
-older parent report, corrected to #146's current retained report.
-Full final-head production, including both Windows targets, remains required.
-The preceding Intel compiler SIGABRT did not recur on its unchanged retry;
-its cause is still unknown. Preserve future crash reports.
+A preceding Intel macOS compiler SIGABRT in U128 division by zero did not recur
+on its unchanged retry; its cause remains unknown. Preserve future crash reports.
+Do not describe the abort as repaired or a skipped/queued job as passing.
 
-## Following preparation and next action
+## Next action
 
-F128 precision from `quad-gradient-precision` is now combined into this branch.
-Its original preparation worktree remains `/private/tmp/fwp-quad-grad`. Its [four-host run](https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546)
-passed at `7a463be9`: low bits, exponent range, seed accumulation, nested and
-checkpointed gradients, cleanup controls and existing differentiation regressions.
-It uses the existing typed tape protocol; boxes and reference counts still cost
-storage. [Its retained report](measurements/f128-gradient-precision-2026-10-15.json)
-contains all 32 profiles: 2,843 managed requests / 143,082 requested bytes for the
-complete ten-check fixture, including output and 65 repeated gradients. Checked
-ARC finishes with zero charged bytes and zero collections. These are not
-per-gradient timing or whole-process memory measurements; see the numeric guide.
-The fixture checks low bits, extreme exponents, seeds, nested and checkpointed
-use, O1/O2, workspace reuse on/off and a missing-release negative control.
+Finish the console check and the combined documentation/inventory checks while
+monitoring #146; fix any failures. Once #146's exact final-head gate passes,
+squash merge it, verify its one-line message and tree, then rebase only this
+branch's commits after `c10b1ccd` onto the accepted squash commit. The precision
+and console implementations are already combined: do not cherry-pick them again.
+Reconcile the parent Windows workflow changes, refresh this handoff and open one
+substantial PR for the combined delivery. Run its full final-head gate and fix
+failures before merging. Continue with remaining ownership and measured costs.
 
-Console implementation is now combined for review. Its original preparation
-remains in `/private/tmp/fwp-console-ownership`, based on `7a463be9`. It owns whole-input
-buffers, pending lines, copied arguments and environment lookups. It also
-fixes embedded-zero names incorrectly looking up a prefix variable. Its expanded
-[run 38802310868](https://github.com/e6qu/fun-with-pipes/actions/runs/38802310868)
-at `f81970a1` has passed ARM Linux/macOS; AMD64 jobs are still running. The prior
-partial run was superseded and canceled. It has its own handoff and no open PR.
-
-Next: monitor #146 and fix failures. After its
-full exact-head gate passes, squash merge it; rebase only solver commits after
-`c10b1ccd` onto the accepted squash commit. Precision implementation and its retained profile report are combined. Reconcile
-the final handoff before opening one substantial numerical PR. Consider the console batch together only
-when its own checks pass and the combined scope stays reviewable. Its commits
-begin after `7a463be9`. Keep [PLAN.md](../PLAN.md) current; no broad work area
-is complete, and JIT remains excluded.
+Original preparation worktrees `/private/tmp/fwp-quad-grad` and
+`/private/tmp/fwp-console-ownership` retain evidence anchors; this file is the
+live handoff for their combined delivery.
