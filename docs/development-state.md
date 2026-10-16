@@ -11,46 +11,45 @@ Base: accepted #153, `9bf203d7`. The original preparation is preserved remotely
 by `evidence/service-context-before-delivery-20261016` at `f366dd2b`; reports
 continue to name their measured sources. Do not apply the preparation again.
 
-Next: run the six-host native and actual WebAssembly checks on the corrected
-combined branch, then retain measurements and start final production acceptance.
-Focused Linux AMD64 run `38972104344` passes at `383f5770`: iteration semantics,
-allocation limits, captures, service lifetimes and repeated timing. The
-one-million-element case is 43.0% faster than the old mapping definition, with
-one fewer allocation and 32 fewer requested bytes per element. Dynamic dispatch
-stays at two calls for both 32 and 128 elements. This is a one-host fwp-to-fwp
-comparison; all-host acceptance and wider performance checks remain.
+Next: publish this final report/documentation update, mark #154 ready, and
+verify all nine production jobs, documentation and both new Windows dependency
+jobs on that final head. Then squash-merge with subject
+`Reduce service memory and remove discarded iteration results` and empty body.
+The helper `/private/tmp/fwp-merge-154.py` verifies exact heads, all required
+results, merge tree/parent/message, and cancels only duplicate `ci.yml` runs. Six-host native run `38973106656` passes
+at `20f0f5f091edf7c9b296dbf548309cf68a779e29`. Actual WebAssembly/browser and
+physical-storage run `38973110352` passes on both Linux architectures at that
+same source. Windows ARM64 initially exhausted the existing 25-minute job limit
+after cold TLS setup; rerunning that job with its saved dependency cache passed.
+The timeout was not increased. Draft-skipped checks are not acceptance.
 
-The repair keeps aggregate captures outside loops and specializes known
-synchronous service callbacks, preserving the existing zero/one per-call service
-allocation limits. Earlier arguments and resource frames constrain moving
-captures. The preceding repair's allocation regression is fixed; its failed and
-canceled runs are superseded. Artifacts are under
-`/private/tmp/fwp-each-fixed-evidence/38972104344`. Draft-skipped production or
-dependency jobs are not acceptance. Full builds and tests remain on GitHub.
+The [current report](measurements/service-context-iteration-2026-10-16.json)
+retains six-host service/iteration counts, layouts, failure controls, compiler
+versions, binary hashes and repeated Linux timings. At one million elements,
+old/current medians are 56.93/27.30 ms on AMD64 and 66.70/32.80 ms on ARM64.
+Peak process memory is 79,216/37,648 KiB and 77,496/35,632 KiB respectively.
+Each saves one allocation and 32 requested bytes per element. These are fwp-to-fwp
+comparisons including startup, input construction, printing and cleanup; they do
+not establish C/Rust parity. Input storage and state bookkeeping remain.
 
-The pre-specialization baseline passes all six native hosts at `dbb9dbec` in run `38969247542`. The
-[retained baseline](measurements/service-context-iteration-baseline-2026-10-16.json)
-records service memory, iteration allocation counts, repeated Linux timings,
-binary hashes and generated trap programs. Retention passed under the local
-guard (37.47s). Compared with the old map-based definition, each saves one
-allocation and 32 requested bytes per element. At one million elements it takes
-16.6% longer on Linux AMD64 and 11.8% longer on Linux ARM64. AMD64 median process
-peak memory falls from 79,268 to 37,688 KiB. These are fwp-to-fwp comparisons,
-including startup/input/cleanup; they do not establish C/Rust parity.
+Actual AMD64 and ARM64 binaries contain checked increments without per-element
+callback dispatch in the counting loop. State-owner lookup and conditional
+cleanup remain. Dynamic call counts stay at two for both 32 and 128 elements.
+Guarded binary inspection passed in 0.15s. Artifacts are under
+`/private/tmp/fwp-context-iteration-final/38973106656`.
 
-The runtime now obtains the complete Linux/macOS thread-stack bound through
-pthread APIs, matching Windows. A debugger watchpoint proved the old scan bound
-missed a live callback at `x29+24`; GC erased it while allocating another closure.
-All six hosts now pass the triggering case, including stress and reuse checks.
-ARC and WebAssembly do not gain stack scanning. The passing artifacts are under
-`/private/tmp/fwp-context-each-evidence/38969247542`; actual ARM64 instructions
-confirm the pthread queries, base-plus-size calculation and the previously missed callback slot. Guarded inspection passed
-(0.13s); inspect the forthcoming direct loop as well. Temporary debugger jobs
-and the ineffective compiler-frame-bound attempt have been removed.
+The compiler binds aggregate captures once outside loops and specializes known
+synchronous state/service callbacks. Earlier arguments and resource lifetimes
+constrain movement. The [earlier baseline](measurements/service-context-iteration-baseline-2026-10-16.json)
+retains the initial iteration slowdown that prompted this repair; it is not the
+current result. The service allocation limits remain unchanged.
 
-Both actual WebAssembly jobs in `38967912068` pass at `16643edf`; the subsequent
-stack-bound fix is native-only. The new optimizer change requires fresh actual
-WebAssembly checks. Formatting passes (1.11s); full validation remains on CI.
+The runtime obtains complete Linux/macOS thread-stack bounds through pthread
+APIs, matching Windows. A debugger watchpoint showed the old scan missed a live
+callback at `x29+24`, which GC erased during another allocation. All six hosts
+pass the triggering case with stress/reuse checks. Actual ARM64 instructions
+confirm the bound calculation and previously missed slot. ARC and WebAssembly do
+not gain stack scanning. Temporary debugger jobs have been removed.
 
 PR #153 merged as `9bf203d767a928f63f343a3644abc6df019c4179` after all nine
 production jobs (`38958379514`) and documentation (`38955543617`) passed at
@@ -172,21 +171,31 @@ The PR description is maintained with `/private/tmp/fwp-context-pr-body.md`.
 Use `python3 scripts/local-guard.py COMMAND...` with unchanged limits. Full builds,
 native compilation and full tests belong on CI. Earlier automatic review refused
 local compiler/standalone C builds; do not bypass or repeat those requests.
-Recent guarded checks: Rust formatting 1.11s, workflow lint 1.44s, documentation
-audit 2.64s, six-host report retention 37.47s, actual ARM64 stack-bound inspection
-0.13s. Retaining the binary observation in the report passed in 1.84s. No local
-native build was used.
+Latest guarded checks: `python3 scripts/collect-service-measurements.py` with
+run `38973106656`, exact head and the artifact/output paths above passed in
+30.12s; `python3 scripts/check-roadmap.py` passed in 2.67s. Actual Linux binary
+inspection passed in 0.15s. Earlier Rust formatting and workflow lint passed.
+No local native build was used.
 
-After this delivery, measure `g_cell`/`g_force` cached remote-stream results and
-`g_incoming` lifetimes in `runtime/fwp_rt_grpc.c`: 1/32/128 elements, repeated
-reads, full/early consumption and retained earlier positions. Count cached
-values separately from pooled connections, then test releasing every external
-reference. Keep stream ownership changes separate from measurement evidence.
-Connections, HTTP/2 server operations, retained host callbacks and GPU ownership
-also remain. The [ownership guide](ownership.md#what-remains-before-remote-calls-can-use-arc)
-sets concrete tests for repeated calls, early stop, aliases, detached users and
-cycles. Prefer ownership and borrowing; do not substitute permanent retention
-or silent tracing. All seven project work areas remain open.
+Independent preparation is `/private/tmp/fwp-stream-caches`, branch
+`measure-remote-stream-storage`, based on `20f0f5f0`; no second PR. The controlled
+receive/cache baseline passes Linux AMD64 in `38973859489` at `deae732b`. It uses
+real queued protobuf messages, repeated reads, early stop, retained positions and
+a deliberate missing-cache control. Four managed allocations/89 requested bytes
+per received value become 112 charged bytes after rounding. Clearing C references
+alone does not release that storage with collection disabled. This excludes
+network latency and connection pooling. Its handoff and retained report preserve
+the exact limits; baseline collection is complete.
+
+Preparation now fixes an incoming stream description: client text was separately
+allocated without release, and server text borrowed its handler's storage. A copy
+inside the existing source allocation gives it the same lifetime as that source.
+Focused tests are pending; remote streams still require collector ownership.
+Next establish owners for cached results, continuations, sources and connections,
+with alias, early-stop, failure and cancellation tests before admitting ARC.
+Retained host callbacks and GPU ownership also remain. The
+[ownership guide](ownership.md#what-remains-before-remote-calls-can-use-arc)
+sets the remaining contracts. All seven project work areas remain open.
 
 ## Roadmap status
 

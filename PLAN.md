@@ -79,14 +79,16 @@ service results explicit cleanup. All nine production jobs and documentation
 passed; the merge has the same files as the tested commit.
 [Delivery history](docs/roadmap-history.md) retains its evidence.
 
-The next combined delivery keeps temporary service settings on the stack, copies
-them into independently running child tasks, avoids rebuilding forwarded tuples,
-and releases message buffers on failure or cancellation. It replaces list
-iteration's discarded result list with a fold. That saves memory, but first
-measurements found a slowdown: callback specialization must remove unnecessary
-runtime dispatch before this change is accepted. The new tests also exposed and
-fixed an incomplete native stack scan. The handoff records exact checks, timing
-results and the current repair; full production acceptance is still required.
+[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) keeps temporary service
+settings on the stack, copies them into independently running child tasks, avoids
+rebuilding forwarded tuples, and releases message buffers on failure or
+cancellation. List iteration now avoids discarded results, and the compiler
+turns known callbacks inside state and service helpers into direct calls. Focused
+checks pass on all six native platforms and both Linux WebAssembly hosts. The
+measured million-element count takes about half the previous time on Linux ARM64
+and AMD64; remaining state bookkeeping and input storage still cost work. Tests
+also exposed and fixed an incomplete native stack scan. The handoff records
+measurements and final production acceptance, which is still required.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

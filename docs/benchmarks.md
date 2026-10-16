@@ -209,14 +209,27 @@ construction, updates, printing and cleanup. Both use the same C compiler and
 peak process memory, build commands/times and binary sizes. Separate 32/128-element
 tests count allocations without contaminating timed executables with counters.
 
-The [first comparison](measurements/service-context-iteration-baseline-2026-10-16.json)
-at `dbb9dbec` saves one managed allocation and 32 requested bytes per element,
-but the one-million-element program takes 16.6% longer on Linux AMD64 and 11.8%
-longer on Linux ARM64. AMD64 median process peak memory falls from 79,268 to
-37,688 KiB. Runtime callback dispatch remains in that measured loop; the
-[handoff](development-state.md) tracks its repair and fresh measurements.
-This compares two fwp implementations, not fwp with C/Rust. Fewer allocations
-alone do not establish a speedup.
+The [current comparison](measurements/service-context-iteration-2026-10-16.json)
+at `20f0f5f0` passes the focused checks on all six native hosts. At one million
+elements, the Linux medians are:
+
+| Host | Previous definition | Current definition | Less elapsed time | Peak memory, previous/current |
+|---|---:|---:|---:|---:|
+| AMD64 | 56.93 ms | 27.30 ms | 52.1% | 79,216 / 37,648 KiB |
+| ARM64 | 66.70 ms | 32.80 ms | 50.8% | 77,496 / 35,632 KiB |
+
+Separate instrumented runs show one fewer allocation and 32 fewer requested
+bytes per element: a 24-byte result node and eight bytes of temporary array space.
+The input list still allocates. Actual binaries contain checked increments with
+no per-element callback dispatch in the counting loop. Finding the current state
+owner and conditional cleanup still cost work; this is not a zero-cost state claim.
+
+The [earlier comparison](measurements/service-context-iteration-baseline-2026-10-16.json)
+retains the initial regression: removing the result list alone made the million-
+element program 16.6% slower on AMD64 and 11.8% slower on ARM64. Specializing the
+known callbacks and keeping their captured values outside loops resolved that
+regression. These comparisons are between fwp definitions, not against C/Rust.
+They establish results for this workload and these runners, not every use of `each`.
 
 To reproduce the six-host service and iteration measurements, dispatch
 `.github/workflows/numerics.yml` with `suite=context-owners` on the source branch.

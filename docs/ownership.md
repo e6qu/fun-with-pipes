@@ -763,9 +763,14 @@ checked on all six hosts. Actual O2 instructions return that owner directly in
 incoming return address. These are instrumented binary observations, not timing
 measurements or whole-program stack bounds.
 
-A later library change replaces list `each`'s discarded result list with a fold.
-Its native allocation and evaluation-order checks are still pending. The reports
-above retain the earlier `each` definition; they do not establish this newer saving.
+List `each` now avoids its discarded result list. The [current six-host report](measurements/service-context-iteration-2026-10-16.json)
+at `20f0f5f0` verifies ordered calls, shared inputs, captured values and failures,
+along with all the service allocation limits above. It saves one allocation and
+32 requested bytes per element. The compiler makes known calls direct inside
+state and service helpers without rebuilding captured lists on each iteration.
+[Repeated timings and binary observations](benchmarks.md#list-iteration-compared-with-its-previous-definition)
+record the improvement and the remaining state bookkeeping. Full production
+acceptance is tracked separately in the handoff.
 
 The [intermediate stack-copy report](measurements/service-context-stack-2026-10-16.json)
 preserves the earlier representation tradeoff. It predates packed headers and
