@@ -80,10 +80,11 @@ jobs:
           name: udp-${{ matrix.runner }}
           path: udp-evidence/
           if-no-files-found: ignore
-      - name: Socket scratch and DNS ownership
+      - name: Socket construction, scratch and DNS ownership
         if: inputs.suite == 'sockets'
         env:
           FWP_DECODER_ARTIFACTS: decoder-evidence
+          FWP_TCP_CONSTRUCTOR_ARTIFACTS: decoder-evidence/tcp-constructors
         run: cargo test --no-fail-fast --test native_sockets --test dns_ownership
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'sockets'

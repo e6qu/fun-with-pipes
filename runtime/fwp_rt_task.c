@@ -1618,6 +1618,20 @@ static void fwp_fmt_addr(const struct sockaddr *sa, char *out, size_t n) {
     }
 }
 
+typedef struct { fwp_socket_t fd; struct addrinfo *addresses; } fwp_connect_owner;
+static void fwp_connect_finish(void *p) {
+    fwp_connect_owner *owner = (fwp_connect_owner *)p;
+    int saved = errno;
+    if (owner->fd != FWP_INVALID_SOCKET) {
+        fwp_socket_t fd = owner->fd;
+        owner->fd = FWP_INVALID_SOCKET;
+        fwp_fd_closing(fd);
+        fwp_socket_close(fd);
+    }
+    if (owner->addresses) { freeaddrinfo(owner->addresses); owner->addresses = 0; }
+    errno = saved;
+}
+
 static V fwp_p_tcp_listen(V addr, const fwp_desc *err) {
     struct addrinfo *res = fwp_resolve(addr, SOCK_STREAM, 1, "listen", err);
     fwp_socket_t fd = FWP_INVALID_SOCKET;
@@ -1639,7 +1653,13 @@ static V fwp_p_tcp_listen(V addr, const fwp_desc *err) {
         int error = errno; fwp_socket_close(fd); errno = error;
         return fwp_os_error("listen", STR(addr)->d, err);
     }
-    return fwp_sock_new(fd, 0);
+    fwp_connect_owner owner = {fd, NULL};
+    fwp_cleanup construction;
+    fwp_cleanup_push(&construction, fwp_connect_finish, &owner);
+    V result = fwp_sock_new(fd, 0);
+    owner.fd = FWP_INVALID_SOCKET;
+    fwp_cleanup_pop(&construction);
+    return result;
 }
 
 static V fwp_p_local_addr(V s) {
@@ -1679,7 +1699,12 @@ static V fwp_accept(V l, int64_t at, const fwp_desc *err) {
             }
             int one = 1;
             setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof one);
+            fwp_connect_owner owner = {fd, NULL};
+            fwp_cleanup construction;
+            fwp_cleanup_push(&construction, fwp_connect_finish, &owner);
             V c = fwp_sock_new(fd, 1);
+            owner.fd = FWP_INVALID_SOCKET;
+            fwp_cleanup_pop(&construction);
 #ifdef FWP_TLS
             /* the handshake happens on the first read or write, in the
              * task that serves the connection */
@@ -1727,19 +1752,6 @@ static void fwp_addrinfo_release(void *arg) {
     int saved = errno;
     if (*result) freeaddrinfo(*result);
     *result = NULL;
-    errno = saved;
-}
-typedef struct { fwp_socket_t fd; struct addrinfo *addresses; } fwp_connect_owner;
-static void fwp_connect_finish(void *p) {
-    fwp_connect_owner *owner = (fwp_connect_owner *)p;
-    int saved = errno;
-    if (owner->fd != FWP_INVALID_SOCKET) {
-        fwp_socket_t fd = owner->fd;
-        owner->fd = FWP_INVALID_SOCKET;
-        fwp_fd_closing(fd);
-        fwp_socket_close(fd);
-    }
-    if (owner->addresses) { freeaddrinfo(owner->addresses); owner->addresses = 0; }
     errno = saved;
 }
 

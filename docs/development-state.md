@@ -1,8 +1,11 @@
 # Session handoff
 
 Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
-The current delivery is branch `owned-values-delivery` in
-`/private/tmp/fwp-owned-values-delivery`. It combines decoded-value cleanup,
+This worktree is TCP constructor preparation, `/private/tmp/fwp-tcp-owners`,
+branch `tcp-owner-preparation`, based on `bb6d2ea3`.
+
+The current delivery is [PR #153](https://github.com/e6qu/fun-with-pipes/pull/153),
+branch `owned-values-delivery` in `/Users/zardoz/projects/fun-with-pipes`. It combines decoded-value cleanup,
 numerical worker storage and UDP socket lifetimes, including the passing UDP
 preparation through `2fd73fe2`. Do not apply that preparation again.
 
@@ -21,8 +24,11 @@ optimization settings and their explanation. Original preparation is retained by
 remote tag `evidence/owned-values-before-152`. The plain-language PR draft is
 `/private/tmp/fwp-owned-values-pr-body.md`.
 
-Next: publish this combined delivery and require all nine production jobs plus
-documentation on the final head. Fix any failures. Then squash-merge with the
+Head `bb6d2ea3bacc5b9b5017e23dcca64943d893c44f` has production
+`38915283341` and documentation `38915283274` running. This local status update
+does not change that published head.
+
+Next: require all nine production jobs plus documentation on that exact head. Fix any failures. Then squash-merge with the
 explicit subject `Reduce temporary memory and clean up network resources` and
 an empty body, verify the merge tree, parent and message, and cancel redundant
 postmerge CI. Continue the ownership work without opening a competing delivery PR.
@@ -111,3 +117,21 @@ unfinished. Conservative function lifetimes can prevent some optimizations.
 The existing OpenCL runtime compilation still conflicts with the no-JIT objective;
 do not expand it or add a JIT. New backends and distributed execution remain
 outside scope.
+
+## Following preparation
+
+`/private/tmp/fwp-tcp-owners`, branch `tcp-owner-preparation`, starts from the
+current PR head. Review found that TCP listen and accept have no descriptor
+cleanup registered while allocating their language-level handle; connect already
+has such cleanup. The preparation now protects both construction paths with the existing pending
+connection cleanup mechanism. Its regression uses real local TCP descriptors,
+32 failed listen allocations and 32 failed accept allocations, then verifies
+successful ownership transfer. It separately removes each cleanup to ensure
+missing cleanup is detected. No socket layout or supported ownership mode changes. Require zero remaining
+descriptors after injected failure, a deliberately missing-cleanup control, native
+O1/O2 checks on all six hosts and shared-runtime regressions. This does not yet
+extend checked ARC to TCP/TLS or change the socket representation. Bundle verified
+work into the next substantial delivery after #153; do not open a competing PR.
+
+Focused six-native socket validation and actual WASI shared-runtime regression
+checks must pass before integration. Local native builds remain prohibited.

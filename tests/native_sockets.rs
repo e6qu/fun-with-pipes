@@ -139,3 +139,88 @@ fn socket_addresses_reject_nul_before_using_the_prefix() {
         assert!(output.stderr.is_empty());
     }
 }
+
+#[test]
+fn tcp_constructor_failures_release_real_descriptors() {
+    let dir = fwp::cgen::TempDir::new("tcp-constructor").unwrap();
+    let input = dir.join("main.fwp");
+    let cfile = dir.join("main.c");
+    std::fs::write(&input, "main = ()\n").unwrap();
+    let emitted = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["build", "--emit-c"])
+        .arg(&input)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let mut code = std::fs::read_to_string(cfile)
+        .unwrap()
+        .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
+    let declarations = r#"
+static fwp_socket_t tcp_open(int,int,int);
+static fwp_socket_t tcp_accept(fwp_socket_t,struct sockaddr *,socklen_t *);
+static int tcp_close(fwp_socket_t);
+static void *tcp_header_alloc(size_t);
+"#;
+    let start = code.find("static void fwp_sock_final(").unwrap();
+    code.insert_str(start, declarations);
+    for name in [
+        "fwp_sock_final",
+        "fwp_connect_finish",
+        "fwp_p_tcp_listen",
+        "fwp_accept",
+    ] {
+        let signature = if name == "fwp_sock_final" || name == "fwp_connect_finish" {
+            format!("static void {name}(")
+        } else {
+            format!("static V {name}(")
+        };
+        let start = code.find(&signature).unwrap();
+        let end = start + code[start..].find("\n}\n").unwrap() + 3;
+        let body = code[start..end]
+            .replace("fwp_socket_open(", "tcp_open(")
+            .replace("fwp_socket_accept(", "tcp_accept(")
+            .replace("fwp_socket_close(", "tcp_close(");
+        code.replace_range(start..end, &body);
+    }
+    let allocation = "(fwp_sock *)fwp_mem_alloc(sizeof(fwp_sock))";
+    assert!(code.contains(allocation));
+    code = code.replace(allocation, "(fwp_sock *)tcp_header_alloc(sizeof(fwp_sock))");
+    let code = code[..code.find("int main(").unwrap()].to_string()
+        + "\n#define TCP_ERROR NULL\n"
+        + include_str!("fixtures/tcp_constructor_cleanup.c");
+    for opt in ["-O1", "-O2"] {
+        for omitted in [None, Some("fwp_p_tcp_listen"), Some("fwp_accept")] {
+            let mut candidate = code.clone();
+            if let Some(name) = omitted {
+                let start = candidate.find(&format!("static V {name}(")).unwrap();
+                let end = start + candidate[start..].find("\n}\n").unwrap() + 3;
+                let body = candidate[start..end].replace(
+                    "fwp_cleanup_push(&construction, fwp_connect_finish, &owner);",
+                    "/* deliberately omit constructor cleanup */",
+                );
+                assert_ne!(body, candidate[start..end]);
+                candidate.replace_range(start..end, &body);
+            }
+            let binary = dir.join("tcp-constructor.exe");
+            fwp::cgen::compile_c(&candidate, &binary, opt).unwrap();
+            let output = Command::new(&binary).env("FWP_GC", "off").output().unwrap();
+            if omitted.is_none() {
+                if let Some(path) = std::env::var_os("FWP_TCP_CONSTRUCTOR_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    std::fs::write(path.join(format!("tcp{opt}.c")), &candidate).unwrap();
+                    std::fs::copy(&binary, path.join(format!("tcp{opt}.exe"))).unwrap();
+                    std::fs::write(path.join(format!("tcp{opt}.stdout")), &output.stdout).unwrap();
+                    std::fs::write(path.join(format!("tcp{opt}.stderr")), &output.stderr).unwrap();
+                }
+            }
+            assert_eq!(
+                output.status.code(),
+                Some(if omitted.is_none() { 0 } else { 248 }),
+                "{opt}/{omitted:?}: {output:?}"
+            );
+        }
+    }
+}
