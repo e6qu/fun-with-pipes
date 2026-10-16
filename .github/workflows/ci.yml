@@ -60,6 +60,8 @@ jobs:
         run: cargo fmt --all -- --check
       - name: clippy
         run: cargo clippy --all-targets -- -D warnings
+      - name: Language formatting preflight
+        run: cargo run --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: Regular macOS test shard
         run: python3 scripts/run-macos-test-shard.py --shard regular
       - name: Build standalone compiler
@@ -137,6 +139,8 @@ jobs:
         run: |
           CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
+      - name: Language formatting preflight
+        run: cargo run --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: Full GC stress and verification golden suite
         run: |
           set -o pipefail
@@ -227,6 +231,8 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
       - name: clippy (WebAssembly build)
         run: cargo clippy --target wasm32-wasip1 -- -D warnings
+      - name: Language formatting preflight
+        run: cargo run --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: test
         env:
           FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"
@@ -284,6 +290,8 @@ jobs:
         run: |
           CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
+      - name: Language formatting preflight
+        run: cargo run --release --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: benchmarks against C and Rust (docs/benchmarks.md)
         run: cargo test --release --test bench -- --ignored --nocapture
       - name: Preserve readable benchmark comparisons

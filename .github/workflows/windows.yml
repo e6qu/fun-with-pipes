@@ -48,6 +48,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo build --bin fwp 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Language formatting preflight
+        shell: pwsh
+        run: |
+          ./target/debug/fwp.exe fmt --check lib examples docs/tutorials bench
+          exit $LASTEXITCODE
       - name: Interpreter golden outputs and exit statuses
         shell: pwsh
         run: |

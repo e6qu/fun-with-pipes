@@ -8,8 +8,14 @@ double-four = simd.mul (simd.splat 2.0)
 # option.map transforms the value inside Some and leaves None unchanged.
 # The first input prints Some [2.0, 4.0, 6.0, 8.0]; the second prints None.
 main = [
-    [1.0, 2.0, 3.0, 4.0] | array.from-list | simd.from-array
-        | option.map (double-four | simd.to-array | array.to-list) | echo,
-    [1.0, 2.0, 3.0] | array.from-list | simd.from-array
-        | option.map (double-four | simd.to-array | array.to-list) | echo,
+    [1.0, 2.0, 3.0, 4.0]
+    | array.from-list
+    | simd.from-array
+    | option.map (double-four | simd.to-array | array.to-list)
+    | echo,
+    [1.0, 2.0, 3.0]
+    | array.from-list
+    | simd.from-array
+    | option.map (double-four | simd.to-array | array.to-list)
+    | echo,
 ] | ignore

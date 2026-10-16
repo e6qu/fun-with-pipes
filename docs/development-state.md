@@ -28,6 +28,16 @@ head, its parent is #150 (`729db67f`), and its exact single-line message is
 production `38884089916` is confirmed canceled. The macOS assignment repair
 preserved all coverage and both Intel jobs passed within unchanged limits.
 
+Production `38884588161` at `ed936381` failed the ARM macOS regular shard:
+`examples/vector-lanes.fwp` did not match the language formatter. Both formatting
+assertions identify that same file; other tests in that completed shard pass.
+The example is now formatted with the accepted binary under the guard (0.02 s),
+and its format check passes (0.01 s). No implementation changed. CI now checks
+language formatting before lengthy suites on all production targets, using the
+compiler each job already builds. This supplements existing format tests and
+preserves all nine gates. Publish and require fresh final-head production/docs;
+the previous ARM macOS GC, benchmark and docs passes are not new-head acceptance.
+
 ## Roadmap status
 
 | Step | Status | Remaining focus |
@@ -119,30 +129,28 @@ whole-process timing and differing managed/system allocation scopes. Compilation
 RSS, binary size, hardware and flags remain in the raw reports. These selected
 programs do not establish whole-language zero-cost abstractions.
 
-## Following decoder preparation
+## Following owned-value preparation
 
-Worktree `/private/tmp/fwp-owned-decoders`, branch `owned-value-decoders`, is based
-on numerical preparation `3577ba37`. Only its later delta belongs to the next
-batch; do not replay the numerical chain. Runtime revision `8f848fde` is prepared
-through `c849cd54` with evidence and an independent gzip test fixture. No second
-delivery PR is open.
+The following combined batch lives in `/private/tmp/fwp-owned-kernels`, branch
+`owned-cpu-kernels`, currently published at `7c1bd94e`. Only its delta after
+`3577ba3780c19051845a5beba3f064f608cedf1e` belongs to the next delivery. It includes
+ternary, URL/form/HTTP, compressed-byte, metric and syntax results, plus CPU tensor
+output/scratch ownership. Inventory is 300 contracted declarations and 43 distinct
+remaining review symbols; counts alone do not establish runtime support.
 
-The batch adds 22 explicit contracts for ternary, URL/form/HTTP and compressed-byte/
-WebSocket decoding, with partial-result and native scratch cleanup. The inventory
-has 293 contracted declarations and 50 distinct remaining review symbols; its
-frozen baseline is unchanged. The explicit macOS schedule has 224 targets.
-Pure compressed-byte helpers remain unavailable on WASI.
+Decoder/Windows repairs at `30399066` pass all six jobs `38886033175`. Both actual
+WASI jobs `38884843627` pass at the preceding `72321a55`; its subsequent HTTP/2
+repair is native-only. The repairs cover native dependency setup, portable
+fixtures, Windows console shutdown, WebSocket clock selection and socket
+would-block handling. Native-only compressed-byte helpers remain unavailable on
+WASI. The worktree handoff retains intermediate evidence and repaired failures.
 
-Six-native `38881941135` currently passes both Linux and both macOS hosts;
-Windows is validating repaired dependencies and web tests. Both actual WASI jobs
-`38881944210` pass. At previous `e912227b`, ternary/text ownership tests passed on
-all six hosts, but neighboring Windows web/std-library tests lacked OpenSSL and
-HTTP/2 curl. The repair installs pinned native dependencies, removes Unix shell/
-null-device assumptions and handles Windows console shutdown in the interpreter.
-The test-only follow-up uses independently generated gzip bytes and still needs
-final-head validation. Its worktree handoff and intermediate report retain the
-failure, request counts and local checks. Finish these gates and fix failures
-before preparing its delivery after #152.
+Metrics/syntax and CPU kernels were added afterward. Their combined native
+`38888712709` and actual WASI `38888716317` are queued; earlier queued preparation
+runs were superseded to avoid duplicate work. Kernel evidence compares the old
+and new executor on identical inputs and retains C/binaries/disassembly; no timing
+claim is made. Finish those gates and fix failures, then rebase the complete
+preparation delta onto accepted #152 before opening its sole next delivery PR.
 
 ## Local checks and delivery constraints
 
