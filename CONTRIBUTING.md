@@ -93,9 +93,18 @@ tests between jobs. Remove obsolete entries when deleting targets. The runner
 rejects missing, duplicate, obsolete or unknown targets. Unit, example and
 benchmark targets run in regular; the GC job also runs its separate stress suite.
 Both ordinary shards skip `golden_programs_under_gc_stress` so that dedicated
-stress invocation runs exactly once. Together they retain the complete native
-coverage within the existing 90-minute limits. The documentation job verifies
-the real Cargo target set, assignment stability and failure propagation.
+stress invocation runs exactly once. Each shard builds its selected test
+executables once, verifies Cargo produced every requested target, then runs two
+executables concurrently with one harness thread each. Tests keep their existing
+internal workers. Every executable gets a separate uploaded log; any failed test
+fails the job after the remaining targets run. This avoids leaving the runner
+idle between the many single-test executables. The 90-minute limits and target
+assignments are unchanged; the final CI run must establish acceptance.
+
+The documentation job verifies the real Cargo target set, artifact coverage,
+assignment stability, concurrent execution and failure propagation. The stress
+queue starts its two longest measured programs first; [the observed timings](docs/measurements/gc-stress-scheduling-2026-10-16.json)
+explain that ordering without claiming a measured total-CI speedup.
 [Recorded timings](docs/measurements/macos-shards-2026-10-16.json) explain the
 initial balance, including the GC job's separate workload; estimates are not
 passing gates or promises about future runner speed.

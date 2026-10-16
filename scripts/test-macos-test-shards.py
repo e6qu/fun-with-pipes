@@ -16,6 +16,7 @@ SPEC.loader.exec_module(SHARDS)
 
 def metadata(names):
     return {"packages": [{"manifest_path": str(SHARDS.ROOT / "Cargo.toml"),
+                          "id": "root",
                           "targets": [
                               {"name": "fwp", "kind": ["lib"]},
                               {"name": "fwp", "kind": ["bin"]},
@@ -74,12 +75,64 @@ class Coverage(unittest.TestCase):
                     SHARDS.assignment(path)
 
     def test_failed_test_command_is_not_reported_as_success(self):
-        with patch("sys.argv", ["run-macos-test-shard.py", "--shard", "gc"]), \
+        with patch("sys.argv", ["run-macos-test-shard.py", "--shard", "gc", "--logs", "/unused"]), \
              patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "gc": ["b"]}), \
              patch.object(SHARDS.subprocess, "check_output", return_value=json.dumps(metadata(["a", "b"])).encode()), \
              patch.object(SHARDS.subprocess, "run", side_effect=subprocess.CalledProcessError(1, ["cargo", "test"])):
             with self.assertRaises(subprocess.CalledProcessError):
                 SHARDS.main()
+
+    def test_artifact_coverage_includes_units_and_rejects_missing_or_duplicate(self):
+        value = metadata(["a", "b"])
+        keys = [("lib", "fwp"), ("bin", "fwp"), ("example", "demo"),
+                ("bench", "speed"), ("test", "a")]
+        messages = [{"reason": "compiler-artifact", "package_id": "root",
+                     "target": {"kind": [kind], "name": name},
+                     "profile": {"test": True}, "executable": f"/{kind}-{name}"}
+                    for kind, name in keys]
+        encode = lambda rows: "\n".join(json.dumps(row) for row in rows)
+        unrelated = dict(messages[0], package_id="dependency")
+        ordinary_build = dict(messages[0], profile={"test": False})
+        result = SHARDS.test_executables(encode([unrelated, ordinary_build, *messages]),
+                                        value, "regular", ["a"])
+        self.assertEqual({key for key, _ in result}, set(keys))
+        for rows in [messages[:-1], messages + [messages[0]],
+                     messages + [dict(messages[-1], target={"kind": ["test"], "name": "b"})]]:
+            with self.assertRaises(ValueError):
+                SHARDS.test_executables(encode(rows), value, "regular", ["a"])
+        shared = [dict(message, executable="/same") for message in messages]
+        with self.assertRaises(ValueError):
+            SHARDS.test_executables(encode(shared), value, "regular", ["a"])
+
+    def test_two_executables_overlap_and_failures_do_not_skip_other_targets(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            executables = []
+            for index in range(3):
+                executable = root / f"probe-{index}"
+                executable.write_text("#!/usr/bin/env python3\n" +
+                    "import pathlib,sys,time\n" +
+                    f"root=pathlib.Path({str(root)!r}); index={index}\n" +
+                    "assert sys.argv[1:]==['--test-threads=1','--skip','golden_programs_under_gc_stress']\n" +
+                    "(root / f'started-{index}').touch()\n" +
+                    "if index<2:\n" +
+                    "    limit=time.monotonic()+3\n" +
+                    "    while not (root / f'started-{1-index}').exists():\n" +
+                    "        if time.monotonic()>limit: sys.exit(9)\n" +
+                    "        time.sleep(0.01)\n" +
+                    "print(f'executed {index}')\n" +
+                    "sys.exit(7 if index==1 else 0)\n")
+                executable.chmod(0o755)
+                executables.append((("test", str(index)), str(executable)))
+            code = SHARDS.run_tests(executables,
+                                    ["--skip", "golden_programs_under_gc_stress"], root / "logs")
+            self.assertEqual(code, 1)
+            for index in range(3):
+                self.assertTrue((root / f"started-{index}").exists())
+                self.assertEqual((root / "logs" / f"test-{index}.log").read_text(),
+                                 f"executed {index}\n")
+            with patch.object(SHARDS.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)):
+                self.assertEqual(SHARDS.run_tests(executables, [], root / "passing"), 0)
 
 
 if __name__ == "__main__":

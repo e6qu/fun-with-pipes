@@ -10,20 +10,28 @@ these preparation changes again.
 
 The combined preparation has been fast-forwarded into `owned-values-delivery`
 in `/Users/zardoz/projects/fun-with-pipes`.
-Next: publish that branch to PR #153, then require all nine production jobs
-and documentation on the exact new PR head. Update this local handoff with their
+Next: publish the combined branch to draft PR #153 and validate its revised
+macOS test runner with the `macos-shards` focused suite on both native Macs.
+Then mark the PR ready and require all nine production jobs plus documentation
+on the exact head. Draft skips do not count as acceptance. Update this local handoff with their
 run IDs. The tested service source is `e715de1a`. Following changes retain evidence,
 update documentation and start the two longest measured GC stress cases first.
 This queue order keeps every case and all four workers; it has no language or
-runtime change and does not claim a measured total-CI speedup.
+runtime change and does not claim a measured total-CI speedup. The macOS shard
+runner also builds its selected tests once and runs two executables concurrently,
+with one harness thread each. Cargo artifacts must cover exactly the selected
+integration and unit targets; missing/duplicate artifacts fail before execution.
+Each target retains its own log, and any failed target makes the job fail.
 
 The old published head `78e9a372` must not be merged. Its Windows TLS comparison
 failed because native reset messages bypassed the interpreter's common wording.
 Repair `abe3be17` passes both Windows focused jobs `38931783848`; it preserves
 exact certificate errors and adds five actual native/interpreter error-code
-comparisons. That repair is included in the combined preparation. Inspect any
-unfinished jobs in old production `38925341899` for additional failures before
-starting the final full run. Old documentation `38925341680` passed. Its Intel GC stress log is retained at
+comparisons. That repair is included in the combined preparation. Old production `38925341899` is complete: six jobs passed, both Windows jobs
+failed the known diagnostic comparison, and Intel GC timed out during TLS after
+90 minutes. Its completed tests contain no additional assertion failure. The
+concurrent runner addresses the long sequence of single-test executables without
+increasing the timeout or removing tests. Old documentation `38925341680` passed. Its Intel GC stress log is retained at
 `/private/tmp/fwp153-intel-gc-progress/gc-stress.log`: collection construction
 took 1,744s and HTTP took 175s. The test schedule now starts both first so shorter
 programs can run alongside them. Existing integration-shard assignments stay fixed.
@@ -87,7 +95,7 @@ CPU, memory, disk and deadline limits. Full compilation/testing stays on GitHub.
 Earlier local compiler and standalone C builds were refused by automatic review;
 do not retry or bypass that restriction.
 
-Guarded formatting passes (latest 1.28s); macOS partition checks pass (0.13s).
+Guarded formatting passes (latest 1.28s); macOS partition and new concurrent-runner checks pass (0.96s).
 The final independent roadmap audit passes (3.06s: 50 link sets, 106 immutable preparation
 pairs and seven work areas). `git diff --check` passes. Earlier accepted-interpreter
 examples and the primitive inventory pass (341 contracts, 13 remaining reviews).

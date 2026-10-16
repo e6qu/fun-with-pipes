@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, macos-shards, ci-profile]
         default: numerical
       source_revision:
         description: Full source commit for the CI profile comparison
@@ -1032,3 +1032,55 @@ jobs:
           name: ci-profile-${{ matrix.runner }}
           path: ci-profile-evidence/
           if-no-files-found: error
+
+  macos_shards:
+    if: inputs.suite == 'macos-shards'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      RUST_TEST_THREADS: 1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: OpenSSL
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Coverage and failure propagation
+        run: python3 scripts/test-macos-test-shards.py
+      - name: Real Cargo test artifacts and concurrent execution
+        run: |
+          python3 - <<'PYTHON'
+          import importlib.util, json, os, subprocess
+          from pathlib import Path
+          spec = importlib.util.spec_from_file_location('shards', 'scripts/run-macos-test-shard.py')
+          shards = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(shards)
+          metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--no-deps', '--format-version', '1']))
+          selected = ['compiler_options', 'stdlib_doc', 'native_sockets']
+          command = ['cargo', 'test', '--no-run', '--message-format=json', '--lib', '--bins']
+          for target in selected:
+              command += ['--test', target]
+          built = subprocess.run(command, stdout=subprocess.PIPE, text=True)
+          if built.returncode:
+              print(built.stdout)
+              built.check_returncode()
+          executables = shards.test_executables(built.stdout, metadata, 'regular', selected)
+          raise SystemExit(shards.run_tests(executables, ['--skip', 'golden_programs_under_gc_stress'],
+                                           Path(os.environ['RUNNER_TEMP']) / 'macos-shard-probe'))
+          PYTHON
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: macos-shard-probe-${{ matrix.runner }}
+          path: ${{ runner.temp }}/macos-shard-probe/
+          if-no-files-found: warn
