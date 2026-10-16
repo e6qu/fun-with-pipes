@@ -73,6 +73,28 @@ static V fwp_decode_variant(fwp_decode_fields *f, uint32_t tag) {
     return result;
 }
 
+/* Snapshots copy process-owned metric names into an immutable owned list. */
+static V fwp_p_metrics_snapshot(const fwp_desc *list_type) {
+    if (fwp_nmetrics > 1)
+        qsort(fwp_metrics, fwp_nmetrics, sizeof(fwp_metric), fwp_metric_cmp);
+    fwp_value_owner list = {0, list_type->drop};
+    fwp_cleanup cleanup; fwp_value_protect(&list, &cleanup);
+    for (size_t i = fwp_nmetrics; i > 0; i--) {
+        const fwp_metric *m = &fwp_metrics[i - 1];
+        fwp_decode_fields fields;
+        fwp_decode_fields_begin(&fields, 3, list_type->elem->fields, 3, NULL);
+        fields.values[0] = fwp_rc_fresh(fwp_str_new(m->name, m->len));
+        fields.values[1] = fwp_rc_fresh(fwp_cstr(m->kind));
+        fields.values[2] = fwp_from_f64(m->x);
+        fwp_value_owner tuple = {fwp_decode_record(&fields), list_type->elem->drop};
+        fwp_cleanup tuple_cleanup; fwp_value_protect(&tuple, &tuple_cleanup);
+        list.value = fwp_rc_fresh(fwp_cons(tuple.value, list.value));
+        fwp_value_finish(&tuple, &tuple_cleanup);
+    }
+    return fwp_value_finish(&list, &cleanup);
+}
+
+
 static V fwp_decode_sequence(fwp_decode_fields *f, const fwp_desc *d) {
     if (f->aggregate_type) {
         V result = f->aggregate;

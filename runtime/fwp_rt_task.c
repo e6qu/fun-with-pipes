@@ -1965,22 +1965,36 @@ static V fwp_p_request_shutdown(void) {
 
 /* ----- metrics: name -> (kind, value), listed in name order */
 
-typedef struct { char *name; const char *kind; double x; } fwp_metric;
+typedef struct { char *name; size_t len; const char *kind; double x; } fwp_metric;
 static fwp_metric *fwp_metrics = 0;
 static size_t fwp_nmetrics = 0, fwp_metrics_cap = 0;
 
-static fwp_metric *fwp_metric_get(const char *name, size_t len, const char *kind) {
+/* The registry owns name bytes for its lifetime. Observation suffixes are
+ * compared/copied directly, without allocating a temporary joined name. */
+static fwp_metric *fwp_metric_get(const char *name, size_t len,
+        const char *suffix, size_t suffix_len, const char *kind) {
+    if (len == SIZE_MAX || suffix_len > SIZE_MAX - len - 1) fwp_trap("out of memory");
+    size_t total = len + suffix_len;
     for (size_t i = 0; i < fwp_nmetrics; i++)
-        if (strlen(fwp_metrics[i].name) == len && !memcmp(fwp_metrics[i].name, name, len))
+        if (fwp_metrics[i].len == total && !memcmp(fwp_metrics[i].name, name, len) &&
+                !memcmp(fwp_metrics[i].name + len, suffix, suffix_len))
             return &fwp_metrics[i];
     if (fwp_nmetrics == fwp_metrics_cap) {
-        fwp_metrics_cap = fwp_metrics_cap ? fwp_metrics_cap * 2 : 16;
-        fwp_metrics = (fwp_metric *)realloc(fwp_metrics, fwp_metrics_cap * sizeof(fwp_metric));
+        if (fwp_metrics_cap > SIZE_MAX / sizeof(fwp_metric) / 2) fwp_trap("out of memory");
+        size_t cap = fwp_metrics_cap ? fwp_metrics_cap * 2 : 16;
+        fwp_metric *next = (fwp_metric *)realloc(fwp_metrics, cap * sizeof(fwp_metric));
+        if (!next) fwp_trap("out of memory");
+        fwp_metrics = next;
+        fwp_metrics_cap = cap;
     }
+    char *copy = (char *)malloc(total + 1);
+    if (!copy) fwp_trap("out of memory");
+    memcpy(copy, name, len);
+    memcpy(copy + len, suffix, suffix_len);
+    copy[total] = 0;
     fwp_metric *m = &fwp_metrics[fwp_nmetrics++];
-    m->name = (char *)malloc(len + 1);
-    memcpy(m->name, name, len);
-    m->name[len] = 0;
+    m->name = copy;
+    m->len = total;
     m->kind = kind;
     m->x = 0;
     return m;
@@ -1990,36 +2004,31 @@ static V fwp_p_metrics_update(int op, V name, V xv) {
     double x = fwp_f64(xv);
     const char *n = STR(name)->d;
     size_t len = STR(name)->len;
-    if (op == 0) fwp_metric_get(n, len, "counter")->x += x;
+    if (op == 0) fwp_metric_get(n, len, "", 0, "counter")->x += x;
     else if (op == 1) {
-        fwp_metric *m = fwp_metric_get(n, len, "gauge");
+        fwp_metric *m = fwp_metric_get(n, len, "", 0, "gauge");
         m->kind = "gauge";
         m->x = x;
     } else {
-        char *buf = (char *)malloc(len + 8);
-        memcpy(buf, n, len);
-        memcpy(buf + len, "_count", 6);
-        fwp_metric_get(buf, len + 6, "summary")->x += 1;
-        memcpy(buf + len, "_sum", 4);
-        fwp_metric_get(buf, len + 4, "summary")->x += x;
-        free(buf);
+        fwp_metric_get(n, len, "_count", 6, "summary")->x += 1;
+        fwp_metric_get(n, len, "_sum", 4, "summary")->x += x;
     }
+    FWP_KEEP_ALIVE(name);
     return FWP_UNIT;
 }
 
 static int fwp_metric_cmp(const void *a, const void *b) {
-    return strcmp(((const fwp_metric *)a)->name, ((const fwp_metric *)b)->name);
+    const fwp_metric *x = a, *y = b;
+    size_t n = x->len < y->len ? x->len : y->len;
+    int order = memcmp(x->name, y->name, n);
+    return order ? order : (x->len > y->len) - (x->len < y->len);
 }
 
-static V fwp_p_metrics_snapshot(void) {
-    qsort(fwp_metrics, fwp_nmetrics, sizeof(fwp_metric), fwp_metric_cmp);
-    V *items = (V *)fwp_alloc((fwp_nmetrics + 1) * sizeof(V));
-    for (size_t i = 0; i < fwp_nmetrics; i++) {
-        V f[3] = {fwp_cstr(fwp_metrics[i].name), fwp_cstr(fwp_metrics[i].kind),
-                  fwp_from_f64(fwp_metrics[i].x)};
-        items[i] = fwp_record(3, f);
-    }
-    return fwp_list_from(items, fwp_nmetrics);
+static void fwp_metrics_finish(void) {
+    for (size_t i = 0; i < fwp_nmetrics; i++) free(fwp_metrics[i].name);
+    free(fwp_metrics);
+    fwp_metrics = 0;
+    fwp_nmetrics = fwp_metrics_cap = 0;
 }
 
 #if defined(FWP_LIBRARY) && !defined(FWP_FIBERS)
@@ -2073,10 +2082,7 @@ static void fwp_library_tasks_finish(void) {
     fwp_saved_sigint = fwp_saved_sigterm = fwp_signals_installed = 0;
 #endif
     fwp_shutdown = 0;
-    for (size_t i = 0; i < fwp_nmetrics; i++) free(fwp_metrics[i].name);
-    free(fwp_metrics);
-    fwp_metrics = 0;
-    fwp_nmetrics = fwp_metrics_cap = 0;
+    fwp_metrics_finish();
 }
 #endif
 

@@ -111,7 +111,7 @@ void setup(struct snapshot *s) {
  fwp_gc.mstack=malloc(8*sizeof(gc_range));fwp_gc.mcap=8;s->marks=fwp_gc.mstack;
  uint64_t *marker=fwp_mem_alloc(sizeof(uint64_t));*marker=0x12345678;
  fwp_gc_finalizer(marker,finalize);s->fins=fwp_gc.fins;
- fwp_metric *metric=fwp_metric_get("probe",5,"gauge");s->metrics=fwp_metrics;s->name=metric->name;
+ fwp_metric *metric=fwp_metric_get("probe",5,"",0,"gauge");s->metrics=fwp_metrics;s->name=metric->name;
  (void)fwp_p_shutdown_requested();
  fwp_task *child=fwp_spawn_task(0,blocked,s,0,0);
  fwp_task *detached=fwp_spawn_task(0,blocked,s,0,1);

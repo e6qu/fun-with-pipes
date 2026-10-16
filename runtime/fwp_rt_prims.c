@@ -3700,8 +3700,12 @@ static void sy_expr(fwp_buf *b, V v) {
 
 static V fwp_p_syntax_show(V v) {
     fwp_buf b = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_buf_release, &b);
     sy_expr(&b, v);
-    return buf_to_str(&b);
+    V result = buf_to_str(&b);
+    fwp_cleanup_pop(&cleanup);
+    FWP_KEEP_ALIVE(v);
+    return result;
 }
 
 /* ------------------------------------------------------- linear algebra */

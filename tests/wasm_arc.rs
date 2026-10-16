@@ -224,6 +224,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("vectors", include_str!("fixtures/vector_ownership.fwp")),
         ("ternary", include_str!("fixtures/ternary_ownership.fwp")),
         ("text-decoders", include_str!("fixtures/text_decoder_ownership.fwp")),
+        ("metrics", include_str!("fixtures/metrics_ownership.fwp")),
         ("fresh-numerics", r#"
 main = [
     range 0 16 | map (const [1u128, 340282366920938463463374607431768211455u128] | map (checked.add 1u128)) | echo,

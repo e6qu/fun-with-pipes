@@ -56,98 +56,61 @@ fixed `python3 scripts/local-guard.py` limits. No compiler build is permitted as
 retry of the earlier guard refusal. Keep one delivery PR, exact-head acceptance
 and one-line <=80-character commits with empty bodies and no attribution.
 
-## Byte decoding and Windows peer checks
+## Decoder implementation and validation
 
-The same batch now prepares six more contracts: gzip/deflate decoding, CRC32,
-WebSocket frame parsing, close-payload parsing and message inflation. Typed result
-fields own copied leaves and wrappers; frame parsing no longer allocates an unused
-empty payload on success. Existing synchronous compression encoders protect native
-output buffers across managed result allocation. Injected failures cover every
-managed allocation, with separate missing-field and missing-native-buffer cleanup
-controls. Native buffer allocations that terminate the process on failure retain
-that existing policy; this is not a claim of recoverable native-allocator OOM.
-These native-only helpers remain unavailable on WASI; no emulated support claim.
+Eight ternary and eight URL/form/HTTP contracts own results and protect partial
+construction. They traverse lists and HTTP lines directly, avoiding pointer/index
+scratch arrays. Six compressed-byte contracts cover gzip/deflate, CRC32 and
+WebSocket parsing/inflation; encoders protect native output across managed result
+allocation. Native compression allocation failures retain their process-exit
+policy; managed-allocation injection does not claim recoverable native OOM.
+Those compressed-byte helpers remain unavailable on WASI.
 
-Focused `e912227b` passes both actual WASI jobs `38879832821`; its six-native
-run `38879829259` exposed missing OpenSSL/curl prerequisites in the newly added
-Windows web/std-library checks. Ternary and text ownership tests themselves pass
-on both Windows architectures. The workflow now installs the pinned native peer
-dependencies with HTTP/2 curl support. Web tests use that configured client,
-an independent fixed gzip fixture, portable null devices and console shutdown events on
-Windows. Interpreter shutdown registers the corresponding Windows console handler,
-matching native behavior. Full Windows CI includes these web/std-library checks.
-Revision `8f848fde` now has six-native `38881941135` and two-WASI `38881944210`
-queued/running. The portable gzip fixture now contains independently generated Python gzip bytes,
-verified against `zipped body` (guarded 0.14 s); formatting passes (1.33 s).
-This test-only follow-up still needs the next final-head gate. Fresh runner checks
-must validate both added byte ownership and
-this repair. The [intermediate evidence](measurements/value-decoders-2026-10-16.json)
-retains all six ternary/text artifact sets and exact counts (guarded 0.13 s),
-including the neighboring Windows gate failures.
+The retained [ternary/text evidence](measurements/value-decoders-2026-10-16.json)
+at `e912227b` includes all six target artifacts and exact allocation counts.
+It records that whole Windows jobs failed neighboring web prerequisites, despite
+passing decoder tests. Both WASI jobs `38879832821` passed. Packing/converting 40
+trits needs one result allocation. Text decoder cases need 3/7/13/12/6 requests;
+after disposal, charged storage returns to its initial value. These are storage
+measurements, not timing or C/Rust parity claims.
 
-Local byte fixture interpretation passes (0.25 s), formatting passes (1.12 s),
-and inventory passes (1.25 s): 293 contracted declarations, 50 distinct remaining
-review symbols. One new explicit macOS target raises the schedule to 224.
-All four Linux/macOS jobs and both WASI jobs pass at `8f848fde`. Windows AMD64
-job `116910514622` now has working OpenSSL/HTTP2 curl, but native byte/web/std
-checks fail linking `clock_gettime64`: WebSocket mask seeding still called the
-POSIX clock directly. It now reuses the existing platform-aware `fwp_unix_ns`.
-The independent gzip fixture at `c849cd54` is included in the next validation.
-Clock repair `72321a55` is published. Fresh six-native `38884840137` and
-two-WASI `38884843627` are queued/running. Both Windows dependency caches were
-saved; superseded `38881941135` is confirmed canceled. Fix every failure before
-delivery acceptance. PR #152 documentation passes; production is still running.
+`8f848fde` passes all four Linux/macOS jobs and both WASI jobs `38881944210`.
+It adds compressed-byte tests and installs cached pinned native OpenSSL and HTTP/2
+curl prerequisites for Windows peers. Windows revealed two existing runtime bugs:
 
-## Current progress
+- `clock_gettime64` failed to link. `72321a55` uses existing `fwp_unix_ns` instead.
+- After linking, native cleartext HTTP/2 closed sockets on Winsock would-block.
+  `30399066` uses existing `fwp_socket_again` in both server transport loops.
 
-Direct owned ternary construction and URL/form/HTTP decoding are implemented.
-The latter uses existing typed decoder cleanup for partial fields and scratch;
-HTTP builds its owned header list without line/value scratch arrays. Header order,
-first-line checks and malformed-input messages remain unchanged. The fixture
-retains originals beside parsed values and exercises malformed early/late fields.
-Native failure controls inject every managed allocation until successful completion;
-missing partial-field/list cleanup must fail the charged-storage check. Counts
-cover fast initialized objects and nonduplicated slow paths. HTTP counts must
-match output storage with no scratch arrays; packing/converting 40 trits needs
-only its result request. These are assertions awaiting native results, not
-reported measurements. Runner artifacts retain counts, generated C, binaries
-and disassembly; allocation evidence is not a timing or C/Rust parity claim.
+At `72321a55`, both Windows jobs `38884840137` pass owned decoder tests but fail
+four native HTTP/2 peers. All four Linux/macOS jobs pass, and both actual WASI jobs `38884843627` pass.
+Fresh six-native `38886033175` validates the second repair. Preserve coverage:
+full Windows acceptance now includes web/std-library peers with HTTP/2 curl.
+An independent fixed Python gzip input, portable null device and targeted console
+shutdown replace Unix-only fixture assumptions. Interpreter Windows shutdown
+handles console events consistently with native execution. No tests are removed.
 
-Both fixtures are included in actual WASI checks. Accepted-interpreter checks
-pass under the guard: ternary 0.26 s and text 0.25 s. The text fixture initially
-used the runtime symbol `int.parse-hex`; it now uses the declared library name
-`http.parse-hex`. Formatting passes (1.30 s), and inventory passes (1.07 s): 287
-contracted declarations and 56 distinct symbols still under review. Its frozen
-baseline is unchanged. These are preparation checks, not native acceptance.
+Earlier injected ternary checks caught a fixture incorrectly using `fwp_rc_drop`
+for final-owner destruction; `e912227b` fixes input/output disposal and checks the
+initial budget. Missing-field/list/native-buffer cleanup controls remain required.
+Superseded incomplete preparation runs are not acceptance; `38881941135` is
+confirmed canceled after both Windows dependency caches were saved.
 
-Explicit macOS assignments add `ternary_ownership` to regular and
-`text_decoder_ownership` to GC; previous targets do not move. The `decoders`
-focused workflow covers all six native hosts, with full Windows inclusion and
-actual WASI fixtures. Local generated-library documentation passes (1.20 s) and the explicit target
-assignment tests pass (0.25 s). The first docs audit caught a missing required
-roadmap-status section in this preparation handoff; that section is restored.
-At `27334bdb`, Linux ARM64 job `116899769089` in `38878658827` passed text
-decoder semantics, injected failures and exact request counts, but the ternary
-fixture leaked its packed output: `fwp_rc_drop` only decrements shared counts.
-The fixture now performs last-owner destruction for leaf storage and checks
-its initial budget after freeing inputs too. The same input-cleanup correction
-applies to the text fixture; runtime implementations are unchanged. Keep the
-missing-free negative controls. Next: publish the correction and run fresh six-native and two-WASI gates;
-these preparation results do not establish delivery acceptance.
+## Local checks
 
-Focused local commands use the fixed guard:
+All use the fixed `python3 scripts/local-guard.py` limits. Full compiler builds,
+full suites and evidence generation remain on GitHub.
 
-| Command after `python3 scripts/local-guard.py` | Result |
+| Command after the guard | Latest result |
 |---|---|
-| `cargo fmt --all` | Pass, 1.09 s for final allocation checks |
-| `python3 scripts/test-macos-test-shards.py` | Pass, 0.25 s |
-| `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-decoder-inventory/candidate.json` | Pass, 1.07 s; baseline unchanged |
-| `python3 scripts/check-roadmap.py` | Pass, 2.73 s after restoring the status section |
+| Accepted compiler `run --interp tests/fixtures/metrics_ownership.fwp` | Pass, 0.25 s |
+| `cargo fmt --all` | Pass, 1.08 s |
+| Standalone `tests/stdlib_doc.rs` generator with `FWP_BLESS=1` | Pass, 0.74 s |
+| `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-metrics-inventory/candidate.json` | Pass, 1.08 s; 298 contracted declarations, 45 distinct review symbols; frozen baseline unchanged |
+| `python3 scripts/test-macos-test-shards.py` | Pass, 0.13 s; 225 explicit targets, old assignments unchanged |
+| `python3 scripts/check-roadmap.py` | Pass, 2.57 s |
 
-The standalone `tests/stdlib_doc.rs` generator was compiled/executed serially
-under the same guard with `FWP_BLESS=1` (1.20 s); its source comments are the input.
-
-## Next preparation: process metrics and syntax rendering
+## Process metrics and syntax rendering
 
 Review the remaining metric contracts in the same owned-value batch. A snapshot
 is an immutable list of name/kind/value tuples; build only that result, with
@@ -164,12 +127,15 @@ stress/reuse checks; every managed construction failure and a missing-cleanup
 control; zero snapshot storage after disposal; actual WASI where available.
 Also review `syntax.show`: protect its native text buffer across result
 allocation, without changing its printed syntax. Test semantic parity and
-failure cleanup before promoting either family to checked ARC support. These
-are planned implementation checks, not claims of passing support.
+failure cleanup before promoting either family to checked ARC support. Implementation and fault fixtures are prepared. The accepted-interpreter fixture
+passes, including immutable earlier snapshots and complete embedded-NUL names.
+Native tests require 12 managed allocations for three snapshot tuples and one
+for a rendered syntax string, with zero charged storage and native scratch after
+disposal; deliberate missing-field/buffer cleanup must fail. Actual WASI includes
+the semantic fixture. Existing library-unload checks validate registry teardown.
+These new checks still need fresh runner results before any support claim.
 
-Clock repair `72321a55` removes the link failure. Both Windows jobs in
-`38884840137` now pass owned decoder tests but fail native cleartext HTTP/2
-web peers: the HTTP/2 server checks only Unix EAGAIN/EWOULDBLOCK/EINTR. It
-therefore treats Winsock would-block as a closed connection. Both receive and
-final-send loops now use the existing `fwp_socket_again` predicate, matching
-the shared gRPC transport. Fresh Windows peers must pass before acceptance.
+Next: finish local documentation checks, publish the combined metrics/syntax
+preparation, and run fresh six-native plus actual WASI gates. Fix all failures.
+Monitor #152 separately; merge it only after all nine final-head production jobs
+and docs pass, then move only the delta after `3577ba37` into the next delivery.

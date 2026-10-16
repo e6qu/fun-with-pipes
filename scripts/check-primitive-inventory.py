@@ -87,6 +87,10 @@ leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.he
 assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
 # These reviewed contract changes are checked against the frozen baseline.
 bundle_contracts = {}
+for symbol in ['metrics.add', 'metrics.set', 'metrics.observe']:
+    bundle_contracts[symbol] = (2, 'Shared', [])
+bundle_contracts['metrics.snapshot'] = (1, 'OwnedTree', [])
+bundle_contracts['syntax.show'] = (1, 'FreshLeaf', [])
 bundle_contracts['not'] = (1, 'Shared', [])
 bundle_contracts['hash'] = (1, 'Shared', [])
 for symbol in ['and', 'or']:

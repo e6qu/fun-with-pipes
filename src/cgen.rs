@@ -5526,6 +5526,10 @@ impl<'p> Gen<'p> {
             };
             return Ok(format!("return {call};"));
         }
+        if sym == "metrics.snapshot" {
+            let descriptor = self.desc(&result);
+            return Ok(format!("return fwp_p_metrics_snapshot({descriptor});"));
+        }
         if sym == "array._range" {
             let MT::Con(name, elements) = &result else {
                 return Err("direct range array result has no element type".into());
@@ -6326,7 +6330,6 @@ impl<'p> Gen<'p> {
                     ("metrics.add", "fwp_p_metrics_update(0, l0, l1)"),
                     ("metrics.set", "fwp_p_metrics_update(1, l0, l1)"),
                     ("metrics.observe", "fwp_p_metrics_update(2, l0, l1)"),
-                    ("metrics.snapshot", "fwp_p_metrics_snapshot()"),
                     ("grpc.metadata", "fwp_p_grpc_metadata()"),
                     ("grpc.with-metadata", "fwp_p_grpc_with_metadata(l0, l1)"),
                     ("grpc.with-deadline", "fwp_p_grpc_with_deadline(l0, l1)"),

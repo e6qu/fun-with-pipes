@@ -214,6 +214,7 @@
     "task_ownership",
     "temporary_ownership",
     "text_decoder_ownership",
+    "metrics_ownership",
     "tls",
     "tls_wire_ownership",
     "transpose_ownership",

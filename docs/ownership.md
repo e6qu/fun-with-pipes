@@ -516,3 +516,22 @@ changes preserve wrapping integer operations and existing division checks; they
 do not promise stack-only vectors or hardware vector instructions. Native and
 actual WASI acceptance remains tracked in the handoff until the required checks
 pass. General removal of tracing remains unfinished.
+
+## Process metrics and syntax text
+
+The next ownership batch prepares copied metric snapshots and syntax rendering.
+A metric registry stores names and numbers for a process or library instance.
+Repeated updates of an existing name reuse that entry; distinct names require
+more native storage. Library teardown frees it. A snapshot copies names and kinds
+into an immutable list of tuples: subsequent updates cannot mutate an earlier
+snapshot. Construction now protects partial strings, tuples and list nodes,
+without a temporary pointer array. This registry lifetime is separate from the
+shorter lifetime of snapshot storage; it is not an allocation-free service claim.
+
+Names use their complete byte length, including embedded NUL, matching interpreter
+lookup and string sorting. Observation suffixes are compared and copied directly
+without a temporary concatenated name. `syntax.show` borrows its syntax tree and
+returns new text; its native formatting buffer is protected if result allocation
+traps. Managed allocation fault tests, missing-cleanup controls, tracing stress,
+checked ARC and actual WASI checks are required before claiming verified support.
+The session handoff records their current results.
