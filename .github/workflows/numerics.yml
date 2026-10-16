@@ -21,6 +21,9 @@ jobs:
     if: inputs.suite == 'iteration-traps'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
     env:
       CC: clang
       CARGO_BUILD_JOBS: 2
@@ -29,10 +32,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+        if: inputs.evidence_run == ''
       - name: Iteration outputs and failures
+        if: inputs.evidence_run == ''
         run: cargo test --test state_sequence_ownership each_preserves_aliases_effect_order_and_early_failures -- --exact --nocapture
+      - name: Retrieve retained failing executable
+        if: inputs.evidence_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+        run: gh run download "$EVIDENCE_RUN" --repo "$GITHUB_REPOSITORY" --name iteration-trap-arm64 --dir context-evidence
       - name: Debug retained native failure
-        if: failure()
+        if: failure() || inputs.evidence_run != ''
         env:
           FWP_GC: 'on'
           FWP_GC_STRESS: '1'
@@ -41,7 +52,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y gdb
-          gdb --batch -ex 'set pagination off' -ex run -ex bt -ex 'info registers' --args context-evidence/each-trap-tracing-O1.exe > context-evidence/trap-debug.txt 2>&1
+          gdb --batch -x scripts/iteration-trap.gdb --args context-evidence/each-trap-tracing-O1.exe > context-evidence/trap-watch.txt 2>&1
       - uses: actions/upload-artifact@v7
         if: always()
         with:
