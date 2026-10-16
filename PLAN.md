@@ -91,7 +91,7 @@ The current combined delivery covers:
 - Retain repeated derivative timing/layout comparisons and allocation-site
   profiles. Production tape layout stays unchanged because timings are mixed.
 
-The combined process/terminal focused gate is being completed. Require all nine
+The combined process/terminal focused gate passes all six native hosts. Require all nine
 production jobs plus documentation again for the final delivery head. Focused
 results do not replace full acceptance.
 

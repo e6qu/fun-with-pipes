@@ -14,7 +14,7 @@ Current delivery branch: `owned-process-delivery` in
 only changes after `81d113aa` from preparation `owned-process-utilities` at
 `ad53a46a`, including verified derivative reports/profiling through `cfdf4d79`.
 Preparation revisions are preserved under remote `roadmap/revision-process-*`
-tags. No old parent preparation should be replayed. The next PR is not open yet.
+tags. No old parent preparation should be replayed. The single open delivery is draft [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149).
 
 Standing authorization: fix failures, require all nine production jobs and docs
 for the exact final head, then squash merge with a supplied one-line subject of
@@ -35,8 +35,7 @@ the next substantial batch without another permission request. JIT is excluded.
 | 6 | In progress | Preserve repeated comparable measurements and regression criteria |
 | 7 | In progress | Accept maintained process composition and real terminal checks |
 
-Next: publish the combined process/terminal delivery as the single draft PR,
-finish its six-host focused checks and evaluate the numeric mapped-array candidate
+Next: finish draft #149 by evaluating the numeric mapped-array candidate
 below. Include that optimization only after semantic/cleanup/profile evidence
 supports adoption, then run all nine production jobs and docs for the final head.
 Fix failures, merge only when all pass, and continue. A queued gate stops merging,
@@ -63,7 +62,7 @@ All six native hosts passed process/signal/terminal/CLI regressions in
 at `6e122959`; its only failure was a missing tty ownership contract. The repair
 and width comparison are at `8926a2fb`.
 [Combined rerun 38833152028](https://github.com/e6qu/fun-with-pipes/actions/runs/38833152028)
-is running, with Linux ARM/AMD and ARM macOS passing so far. Later preparation
+passes on all six native hosts at `8926a2fb`. Later preparation
 changes add measurement scripts/reports/docs only, without changing tested
 runtime/compiler/fixtures. Final production acceptance is still required.
 
@@ -78,8 +77,8 @@ host/compiler details and actual instruction evidence where measured. Benchmark
 prose explains the comparisons and limits. Production tape layout stays unchanged;
 smaller code and fewer allocations did not establish a portable timing win.
 
-Focused local checks use `python3 scripts/local-guard.py COMMAND...`. Preparation
-formatting, inventory and docs pass. Inventory: 259 contracts, six scalar
+Focused local checks use `python3 scripts/local-guard.py COMMAND...`. After transfer, `cargo fmt --all -- --check` passes (1.01 s), primitive
+inventory passes (1.11 s), and `python3 scripts/check-roadmap.py` passes (2.78 s). Inventory: 259 contracts, six scalar
 signatures, 94 review declarations, 19 templates and 84 review symbols.
 Edited-C mechanism probes pass process/signal failures and negative controls,
 maintained shell composition and real terminal restoration. They use the accepted
@@ -91,20 +90,28 @@ acceptance. Full builds, full suites and timing runs remain on GitHub.
 Worktree `/private/tmp/fwp-ad-allocation-sites`, branch `profile-ad-allocations`,
 is now anchored at `cfdf4d79`; only later changes belong to this candidate.
 The earlier profiler/report are already in this delivery. Current published
-candidate is `3edb2d07`. It constructs arrays directly from mapped inline numbers,
-retaining callback order, borrowed inputs and explicit scratch cleanup. Boxed or
-managed results keep their existing path. No new surface syntax is added.
+candidate is `da56521c`. It constructs arrays directly from mapped inline numbers,
+retaining callback order, borrowed inputs and scratch cleanup. Boxed or managed
+results keep their existing path. Known callbacks keep direct calls, including
+captured values; unknown callbacks use the ordinary dynamic call path. No new
+surface syntax is added.
 
-[Six-host tests 38835108890](https://github.com/e6qu/fun-with-pipes/actions/runs/38835108890)
-are queued/running at that candidate. An earlier missing Command borrow and a
-Clippy test lint are repaired; superseded `38834469846` and `38834524334` are
-confirmed canceled. The latest standalone Rust harness compiles (1.22 s).
-Edited-C success, callback/final-allocation failures and missing-free controls
-pass in tracing/ARC (1.19/1.22 s). New compiler acceptance remains pending.
-[Four-host comparison 38834969974](https://github.com/e6qu/fun-with-pipes/actions/runs/38834969974)
-uses runtime/compiler `d16592be`, identical to the later test-only Clippy repair.
-It compares only FWP_MAP_ARRAY off/on, with repeated samples, allocations,
-peak/final memory, compilation time, binary sizes and native disassembly.
+[Six-host tests 38836047263](https://github.com/e6qu/fun-with-pipes/actions/runs/38836047263)
+and [four-host comparison 38836050029](https://github.com/e6qu/fun-with-pipes/actions/runs/38836050029)
+are queued/running at that revision. Earlier missing Command-borrow and Clippy
+fixture errors are repaired; superseded `38834469846` and `38834524334` are
+confirmed canceled. Pre-direct-call tests `38835108890` continue for comparison.
+The standalone Rust harness compiles, raw dynamic/captured callback cases pass
+(0.38 s), and edited-C success/callback/final-allocation failures plus missing-free
+controls pass in tracing/ARC (1.19/1.22 s). Changed-compiler acceptance is pending.
+
+The earlier [four-host comparison 38834969974](https://github.com/e6qu/fun-with-pipes/actions/runs/38834969974)
+at `d16592be` passes ARM Linux/macOS so far. Direct numeric requests fall from
+532,996 to 8,708; repeated derivative requests fall from 25,184,777 to 23,087,625.
+Direct ARC time ratios are 0.788/0.868 and derivative ARC ratios 0.966/0.950,
+respectively. Nested timings are mixed. Retain every host/sample when complete;
+this is fwp versus fwp, not C/Rust parity or a general speed claim. The latest
+revision must repeat timings because it now preserves known direct callbacks.
 
 Do not silently adopt a slower or incorrect candidate. Inspect costs and preserve
 known direct callback calls when eliminating intermediates. If supported by
