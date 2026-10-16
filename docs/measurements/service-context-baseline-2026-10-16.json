@@ -1146,5 +1146,19 @@
   ],
   "lifetime_checks": "Nested compression/deadline/metadata settings survive parent return, typed failure, trap and cancellation. Source header mutation must not alter copied child settings. Deliberately omitting inheritance fails. Positive runs use O1/O2, collection off/on, stress/verification and reuse verification.",
   "retained_artifacts": "/private/tmp/fwp-context-baseline/38941168779",
-  "log_sha256": "6479d5e3bfb84ffdea20851729f6d3c9a381b0a5379c37deead26a6d3cacf8aa"
+  "log_sha256": "6479d5e3bfb84ffdea20851729f6d3c9a381b0a5379c37deead26a6d3cacf8aa",
+  "binary_observations": {
+    "binary": "gzip-128.exe",
+    "architecture": "Linux AMD64",
+    "disassembly_sha256": "122d14a40b173959611cad52be7b74356b1c0862af8f4c510f8d021a8c380382",
+    "tool": "Apple LLVM objdump, disassembly of retained ELF executable; no local compilation",
+    "scope_allocation_bytes": 64,
+    "task_allocation_bytes": 1512,
+    "evidence": [
+      "f9 at 0xb4f7 increments measured bytes by 0x40 for the scope allocation; its slow allocation call receives 0x40 at 0xb5e0.",
+      "The root-task branch at 0xb572 adds 0x5e8 requested bytes; the slow allocation call receives 0x5e8 at 0xb66f, then publishes fwp_root at 0xb6b2.",
+      "The scope copy uses four 16-byte xmm loads/stores at 0xb61d through 0xb63b."
+    ],
+    "limits": "This is the instrumented O2 baseline on one host. It does not establish stack bounds or speed and is not a layout claim for other targets."
+  }
 }

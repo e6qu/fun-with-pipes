@@ -37,7 +37,10 @@ TLS/capture resources retain their separate owners. Completion clears the copy
 so a completed task does not retain stale context pointers. Programs without
 service support omit the field. No checked ARC admission changes are made.
 
-Next: run `context-owners` on all six native hosts. Require the existing context,
+Run `38942724799` at `13e3a25b` stopped at a Clippy range-loop lint in the new
+allocation assertion, before native checks. The loop is repaired, and evidence
+now records the actual compiler versions and CPU. Next: publish the repair and
+complete replacement `context-owners` checks on all six native hosts. Require the existing context,
 TLS, capture, peer, library-unload and task tests plus new escaped-child controls.
 The new control rejects borrowing the parent's scope even if its old bytes are
 still readable. Allocation checks require gzip/deadline per-call costs to match
@@ -54,8 +57,8 @@ accepted compiler interpreted all five 32-call examples, both raw and optimized,
 and printed `32` in every case (1.80s); this does not validate the new native
 instrumentation. A named helper
 needed an explicit `I64 -> () ! {Network, State[I64]}` signature because generic
-signatures remain explicit. Formatting passes (1.23s); partition/concurrent-runner checks pass (1.03s),
-and the documentation audit passes (2.98s). The service guide now introduces
+signatures remain explicit. Formatting passes (1.12s); partition/concurrent-runner checks pass (1.03s),
+and the documentation audit passes (2.63s). The service guide now introduces
 request contexts, callback functions, `const`, deadlines and response metadata
 before using their examples. Native work belongs on CI.
 The new test target is assigned to the existing macOS GC job, giving this

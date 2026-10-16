@@ -52,6 +52,38 @@ static double context_start_charge;
 fn repeated_service_scopes_preserve_state_and_report_storage() {
     let dir = fwp::cgen::TempDir::new("service-context-storage").unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
+    if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
+        let path = std::path::PathBuf::from(path);
+        std::fs::create_dir_all(&path).unwrap();
+        let cc = std::env::var_os("CC").expect("evidence run must select its C compiler");
+        let c_version = checked(Command::new(cc).arg("--version"));
+        let rust_version = checked(Command::new("rustc").args(["--version", "--verbose"]));
+        let cpu = if cfg!(target_os = "windows") {
+            checked(Command::new("pwsh").args([
+                "-NoProfile",
+                "-Command",
+                "Get-CimInstance Win32_Processor | Select-Object Name,Architecture,NumberOfCores,NumberOfLogicalProcessors | ConvertTo-Json",
+            ]))
+        } else if cfg!(target_os = "macos") {
+            checked(Command::new("sysctl").args(["-n", "machdep.cpu.brand_string"]))
+        } else {
+            checked(&mut Command::new("lscpu"))
+        };
+        let revision = checked(Command::new("git").args(["rev-parse", "HEAD"]));
+        std::fs::write(
+            path.join("environment.txt"),
+            format!(
+                "Source: {}OS: {}\nArchitecture: {}\nC compiler:\n{}Rust compiler:\n{}CPU:\n{}Native optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+                String::from_utf8_lossy(&revision.stdout),
+                std::env::consts::OS,
+                std::env::consts::ARCH,
+                String::from_utf8_lossy(&c_version.stdout),
+                String::from_utf8_lossy(&rust_version.stdout),
+                String::from_utf8_lossy(&cpu.stdout),
+            ),
+        )
+        .unwrap();
+    }
     let cases = [
         ("plain", "const (add 1) | modify"),
         ("gzip", "const (const (add 1) | modify) | grpc.with-gzip"),
@@ -153,11 +185,14 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
         }
     }
     for name in ["gzip", "deadline"] {
-        for metric in 0..3 {
+        for (metric, label) in ["allocation requests", "requested bytes", "charged bytes"]
+            .into_iter()
+            .enumerate()
+        {
             assert_eq!(
                 measurements[&(name, 128)][metric] - measurements[&(name, 32)][metric],
                 measurements[&("plain", 128)][metric] - measurements[&("plain", 32)][metric],
-                "{name} scope allocates per call (metric {metric})"
+                "{name} scope allocates per call ({label})"
             );
         }
     }
