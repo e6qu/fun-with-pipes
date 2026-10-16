@@ -30,7 +30,9 @@ int main(int argc,char **argv) {
   HMODULE lib=LoadLibraryA(argv[1]);if(!lib){fprintf(stderr,"load: %lu\n",GetLastError());return 32;}
   const char *(*cached)(void)=(const char *(*)(void))GetProcAddress(lib,"cached");
   void (*setup)(struct snapshot *)=(void (*)(struct snapshot *))GetProcAddress(lib,"setup");
-  if(!cached||!setup||strcmp(cached(),"heapheap"))return 33;
+  if(!cached||!setup){fprintf(stderr,"missing DLL exports: cached=%d setup=%d\n",cached!=NULL,setup!=NULL);return 33;}
+  const char *value=cached();
+  if(strcmp(value,"heapheap")){fprintf(stderr,"cached result: %s\n",value);return 33;}
   static struct snapshot s;memset(&s,0,sizeof s);s.socket=(uintptr_t)fd;setup(&s);
   if(s.order_error||strcmp(cached(),"heapheap"))return 34;
   if(!FreeLibrary(lib))return 35;
