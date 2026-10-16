@@ -286,8 +286,11 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             (&[B], ResultOwnership::FreshLeaf, None, &[])
         }
         "file.info" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "process.run-input" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
+        // These observations return immediate scalars and allocate no managed values.
+        "process.call" | "term.is-tty" | "term.width" => (&[B], R, None, &[]),
         "lines" | "read-line" | "read-lines" | "read-all" | "args" | "env.get" | "env.vars"
-        | "dir.list" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        | "dir.list" | "term.read-secret" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "string.chars"
         | "words"
         | "string.codepoints"
@@ -497,6 +500,14 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             ResultOwnership::ArrayOperation { consumed: None },
             Some(Callback::Borrowed(0)),
             &[0, 1],
+        ),
+        // Compiler-only numeric map/list materialization. Callback results are
+        // inline numbers; only the returned array owns managed storage.
+        "array._map-list" => (
+            &[B, B],
+            ResultOwnership::OwnedTree,
+            Some(Callback::Borrowed(0)),
+            &[],
         ),
         "array.fold" => (
             &[B, C, B],

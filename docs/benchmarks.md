@@ -510,6 +510,85 @@ startup contributes less to the measured interval. The shorter cases remain as
 controls. New results must reproduce a slowdown before assigning it to metadata
 layout; changing the workload or sampling method alone is not a compiler speedup.
 
+### Repeating the longer derivative comparison
+
+[The current four-host report](measurements/ad-metadata-repeat-2026-10-16.json)
+uses compiler revision `48aa61dc` and the same separate-allocation tape control
+from `09f1a029`. Both execute the same ARC program. The longer case performs 512
+VJPs, each mapping multiplication by two over 4,096 F64 inputs with unit seeds;
+it sums the resulting derivatives to `4194304.0`. A VJP computes derivatives
+weighted by those seeds. This remains fwp versus fwp, with no C/Rust comparison.
+
+After one warmup, eight samples alternate the execution order. The clock includes
+process startup, input construction, derivatives and printing; compilation and
+allocation profiling are separate. Both variants use `-O2 -ffp-contract=off`.
+The report retains every sample, hardware/compiler details, verified source and
+binary hashes, and actual ARM64/AMD64 instructions.
+
+| Host | Paired/control time, reuse off | Paired/control time, reuse on |
+|---|---:|---:|
+| Linux AMD64 | 0.985 | 0.986 |
+| Linux ARM64 | 0.987 | 0.985 |
+| macOS ARM64 | 1.086 | 1.058 |
+| macOS Intel | 0.960 | 1.020 |
+
+A ratio above one is slower: ARM macOS takes 8.6% more time without reuse and
+5.8% more with reuse in this run. The previous short-workload slowdown is not a
+portable speed conclusion; the longer test still warrants investigation.
+
+For all four hosts, paired storage reduces tape allocation requests from 14,849
+to 7,681 without reuse and from 30 to 16 with reuse. Peak tape payload remains
+163,944 bytes. Both variants make 25,184,777 managed allocation requests for
+805,720,218 requested bytes and 10,492,416 retains; peak charged managed storage
+is 840,888 bytes. These separate peaks need not occur simultaneously. Final tape
+and charged managed storage are zero, with no tracing collections. These counts
+exclude allocator metadata and OS reservations. Avoiding language-level temporary
+values remains substantial work beyond reducing tape allocations.
+
+In the retained ARM macOS binary, the append function has 198 instructions
+versus 253 in the control; both backward functions have 374. Linux AMD64 counts
+are 239 versus 296 for append and 399 for both backward functions. The report
+also counts stack-address instructions without labeling them all as register
+spills. Smaller append code has not established a dependable speed improvement.
+The handoff tracks the next controlled layout experiment; production behavior
+is unchanged by that experiment.
+
+### Interleaving recorded operation pairs
+
+[The layout trial](measurements/ad-layout-2026-10-16.json) changes only generated
+experimental C. Each operation has two parent indices and two derivative weights.
+Current storage keeps each side in its own region of a shared block; the trial
+places each operation's pair together. It keeps the two allocation blocks, their
+sizes and arithmetic order, and avoids moving second regions when capacity grows.
+Production runtime storage is unchanged.
+
+The same six derivative workloads run under ARC with reuse off/on, using the
+same flags, eight alternating samples and separate profiling as above. Output,
+allocation counts, requested bytes, peak/final memory and zero collections agree.
+For 512 mapped VJPs, explicit growth copies fall from 24,772,608 bytes to zero
+without reuse, or from 48,384 to zero with reuse. This excludes copying performed
+internally by the system allocator. Managed allocation costs remain unchanged.
+
+| Host | Interleaved/current time, reuse off | Interleaved/current time, reuse on |
+|---|---:|---:|
+| Linux AMD64 | 1.012 | 1.012 |
+| Linux ARM64 | 1.001 | 1.010 |
+| macOS ARM64 | 0.930 | 0.938 |
+| macOS Intel | 1.005 | 0.986 |
+
+The sustained case is 7.0%/6.2% faster on ARM macOS in this run, with mixed results
+elsewhere. Short cases also vary: ARM macOS's single mapped VJP without reuse is
+31.1% slower. These process timings include startup and output; absolute times
+from separate runner executions should not be compared as if hardware load were
+identical. Repeat promising results before selecting a new runtime layout.
+
+Native instructions also show a tradeoff. On ARM macOS, append shrinks from 198
+to 182 instructions but backward grows from 374 to 384. On Linux AMD64 the counts
+are 239 to 207 and 399 to 412. The report retains both function disassemblies.
+These counts alone explain neither the speed differences nor their cause. The
+next investigation attributes the much larger managed allocation count to actual
+call sites rather than assuming tape layout is the dominant cost.
+
 ## Selecting invariant array data once
 
 A slice may store an address into another array. The compiler now selects that
@@ -584,3 +663,145 @@ whether the generated program really does the work being claimed. Report slower
 cases and extra storage too. Correct output is required; noisy shared-runner
 elapsed times are not pass/fail thresholds. [Delivery history](roadmap-history.md)
 records which source versions completed the required tests.
+
+## Where derivative allocations occur
+
+An allocation-site profile records the native instruction that requested each
+piece of managed storage. This explains what creates temporary objects; it does
+not measure how long that instruction takes. The
+[four-host report](measurements/ad-allocation-sites-2026-10-16.json) compares
+ordinary aggregate profiling against a diagnostic build with two allocation
+functions deliberately kept out of line. Requests, requested bytes, retains and
+peak/final memory agree exactly between both builds on every host. Raw
+interpretation supplies expected outputs. Initial constants are excluded.
+
+The workload computes 512 reverse derivatives of a function that doubles each
+of 4,096 inputs. All four hosts record 25,184,777 managed requests, 805,720,218
+requested bytes and 10,492,416 retains. Peak charged storage is 840,888 bytes;
+final charged storage and collections are zero. Native symbols and debug
+locations attribute the main requests as follows:
+
+| Construction | Requests | Share of all requests |
+|---|---:|---:|
+| List nodes holding mapped results | 10,490,368 | 41.65% |
+| Index/value pairs and list nodes for zip | 4,194,304 | 16.65% |
+| Reverse-number multiplication records | 4,194,304 | 16.65% |
+| Integer range list nodes | 2,101,760 | 8.35% |
+| Array-to-list result nodes | 2,097,152 | 8.33% |
+| Initial reverse-number records | 2,097,152 | 8.33% |
+
+These are allocated objects, not necessarily distinct system malloc calls. The
+report retains individual native sites, language signatures where available,
+source/binary hashes, compiler commands and host details. Both variants are fwp;
+this establishes no C/Rust parity or timing improvement. It points to list
+intermediates as an optimization target before further tape-layout work.
+
+
+## Building numeric arrays without temporary list nodes
+
+`map f | array.from-list` first applies `f` to each list element, then creates an
+array from those results. When the results are inline numbers, the candidate
+compiler can store them in temporary numeric storage and pack the array directly.
+It preserves callback order and runs every callback before allocating the array.
+This avoids allocating a list node for each result. Known callbacks still compile
+to direct calls; choosing a function at runtime still requires an indirect call.
+
+The [four-host report](measurements/mapped-arrays-2026-10-16.json) compares the same
+compiler, program, inputs and native settings with this transformation disabled
+and enabled. Both sides are fwp; these results do not measure overhead against C
+or Rust. Native compilation uses `-O2 -ffp-contract=off`, other array optimizations
+and derivative workspace reuse stay enabled. One warmup precedes eight samples
+with alternating run order. Timing includes process startup, input construction,
+calculation and output. Compilation and allocation profiling are separate.
+Hardware, compiler commands, binary sizes, source/binary hashes and every sample
+are in the report.
+
+Three workloads check different uses:
+
+- Direct numeric work doubles 4,096 F64 list elements, constructs an array and
+  sums it, repeating 128 times. The printed total is 2,146,959,360.
+- Repeated differentiation computes 512 reverse derivatives of a function that
+  doubles 4,096 inputs. The printed total is 4,194,304.
+- Nested differentiation squares the first value of a 256-element input, then
+  differentiates twice and sums the result. It prints 2 and provides a control
+  with little eligible work.
+
+The following ratios are enabled time divided by disabled time for the revision
+that preserves known direct callbacks. A ratio of 0.5 means half the elapsed
+time; a ratio above 1 means slower. Tracing is the normal collector mode; ARC
+uses checked reference counting without tracing.
+
+| Host | Direct tracing / ARC | Derivative tracing / ARC | Nested tracing / ARC |
+|---|---:|---:|---:|
+| Linux AMD64 | 0.535 / 0.519 | 0.927 / 0.923 | 0.983 / 0.993 |
+| Linux ARM64 | 0.473 / 0.498 | 0.934 / 0.889 | 0.965 / 0.913 |
+| macOS ARM64 | 0.533 / 0.542 | 0.974 / 0.943 | 1.010 / 1.008 |
+| macOS AMD64 | 0.514 / 0.276 | 1.070 / 0.918 | 0.906 / 0.966 |
+
+An independent repeat uses the same generated sources and records the same
+allocation counts on every host:
+
+| Host | Direct tracing / ARC | Derivative tracing / ARC | Nested tracing / ARC |
+|---|---:|---:|---:|
+| Linux AMD64 | 0.492 / 0.517 | 0.918 / 0.919 | 0.887 / 1.001 |
+| Linux ARM64 | 0.470 / 0.496 | 0.892 / 0.919 | 0.967 / 0.918 |
+| macOS ARM64 | 0.581 / 0.533 | 0.983 / 0.909 | 0.896 / 1.003 |
+| macOS AMD64 | 0.476 / 0.471 | 1.019 / 0.895 | 0.986 / 1.124 |
+
+Intel macOS has large timing variation in the first run: disabled direct ARC
+samples range from 30 to 117 ms, while enabled samples range from 14 to 18 ms.
+The repeat narrows these to 29–30 and 14 ms. Its traced derivative median is
+still 2% slower, compared with 7% in the first run; both runs have overlapping
+samples. The tiny nested case changes from 3% faster to 12% slower in ARC.
+A [separate four-host diagnostic](measurements/mapped-array-cpu-2026-10-16.json)
+reuses those verified binaries, with one warmup and 16 alternating samples. It
+measures both elapsed time and child CPU time (user plus system processing time),
+which helps distinguish computation from time spent waiting to run. Profiles are
+separate rebuilt binaries, with the normal collector and with collection disabled.
+Both profiles match the earlier allocation counts exactly; all hosts report zero
+collections and zero final managed/tape storage. Collection activity therefore
+does not explain the earlier Intel result.
+
+For repeated differentiation, the diagnostic reports:
+
+| Host | Tracing elapsed / CPU ratio | ARC elapsed / CPU ratio |
+|---|---:|---:|
+| Linux AMD64 | 0.925 / 0.925 | 0.925 / 0.925 |
+| Linux ARM64 | 0.919 / 0.919 | 0.927 / 0.927 |
+| macOS ARM64 | 0.898 / 0.904 | 0.873 / 0.881 |
+| macOS AMD64 | 0.913 / 0.917 | 0.944 / 0.951 |
+
+The Intel traced slowdown does not repeat with these same binaries. Direct
+numeric CPU ratios range from 0.433 to 0.497 across the hosts and memory modes.
+Tiny nested results remain mixed, including 6.8%/8.9% more CPU time in tracing/ARC
+on ARM macOS. This supports adopting the transformation for its measured
+allocation savings and substantial-work improvements; it does not prove every
+small call is faster. Keep the earlier slower samples in the record.
+
+The report also retains the first implementation, which used indirect callback
+calls. Compare enabled/disabled within each revision; do not pool measurements
+from different revisions. Across both final-code runs, ARC direct numeric work
+improves and ARC repeated differentiation uses 6–11% less elapsed time. That is
+specific to these inputs and hosts, not a general language-speed claim.
+
+Allocation profiles agree across all four hosts and both memory modes:
+
+| Workload | Managed requests, disabled → enabled | Retains, both | Peak charged bytes, disabled → enabled |
+|---|---:|---:|---:|
+| Direct numeric | 532,996 → 8,708 | 256 | 300,312 → 294,920 |
+| Repeated derivative | 25,184,777 → 23,087,625 | 10,492,416 | 840,888 → 840,888 |
+| Nested derivative | 4,415 → 4,414 | 2,109 | 60,096 → 60,096 |
+
+Managed requests count runtime objects, not necessarily system malloc calls.
+Initial constants are excluded. Profiles disable collection to check cleanup;
+final charged memory, tape storage and collections are zero. The traced timings
+use the normal collector. Fewer requests do not establish lower derivative peak
+memory or less reference-count traffic: neither changes here.
+
+Actual ARM64 and AMD64 disassembly retains vectorized floating-point doubling in
+the known-callback loop (`fadd.2d` and `addpd`, respectively). Selected function
+bodies and stack-address instructions are retained. Those counts exclude callees,
+and the initial implementation moved work into another function, so they are not
+total instruction counts or proof of fewer spills. Remaining array reductions
+can still use indirect calls. Full semantic/platform acceptance is recorded in
+the handoff, separately from these measurements.

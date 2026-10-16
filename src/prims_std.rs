@@ -696,6 +696,14 @@ impl<'p> Interp<'p> {
                     }
                     Value::Array(Rc::new(out))
                 }
+                "array._map-list" => {
+                    let f = a[0].clone();
+                    let mut out = Vec::new();
+                    for x in a[1].list_items() {
+                        out.push(self.apply(f.clone(), vec![x])?);
+                    }
+                    Value::Array(Rc::new(out))
+                }
                 "array.map" => {
                     let f = a[0].clone();
                     let mut out = Vec::new();

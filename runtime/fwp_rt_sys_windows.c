@@ -366,6 +366,9 @@ static int fwp_win_quote(wchar_t *command, size_t *used, const wchar_t *argument
 }
 static V fwp_run_process(V argv, V input, int capture, const fwp_desc *error) {
     if (!argv) return fwp_io_error("spawn", "empty command", error);
+    for (V list = argv; list; list = OBJ(list)->f[1])
+        if (fwp_path_has_nul(OBJ(list)->f[0]))
+            return fwp_io_error("spawn", "command argument contains a NUL character", error);
     V program = OBJ(argv)->f[0];
     wchar_t command[32768];
     size_t used = 0;
@@ -470,10 +473,14 @@ static V fwp_run_process(V argv, V input, int capture, const fwp_desc *error) {
     if (!GetExitCodeProcess(process.process.hProcess, &code)) { failed = GetLastError(); goto finish; }
     V result = (V)(int64_t)(int32_t)code;
     if (capture) {
-        V fields[3] = {result,
-            fwp_str_lossy(process.output[1].data ? process.output[1].data : "", process.output[1].size),
-            fwp_str_lossy(process.output[0].data ? process.output[0].data : "", process.output[0].size)};
-        result = fwp_record(3, fields);
+        fwp_value_owner stderr_value = {fwp_rc_fresh(fwp_str_lossy(process.output[1].data ? process.output[1].data : "", process.output[1].size)), fwp_rc_free_obj};
+        fwp_cleanup stderr_cleanup; fwp_value_protect(&stderr_value, &stderr_cleanup);
+        fwp_value_owner stdout_value = {fwp_rc_fresh(fwp_str_lossy(process.output[0].data ? process.output[0].data : "", process.output[0].size)), fwp_rc_free_obj};
+        fwp_cleanup stdout_cleanup; fwp_value_protect(&stdout_value, &stdout_cleanup);
+        V fields[3] = {result, stderr_value.value, stdout_value.value};
+        result = fwp_rc_fresh(fwp_record(3, fields));
+        (void)fwp_value_finish(&stdout_value, &stdout_cleanup);
+        (void)fwp_value_finish(&stderr_value, &stderr_cleanup);
     }
     fwp_cleanup_pop(&cleanup);
     fwp_win_process_finish(&process);

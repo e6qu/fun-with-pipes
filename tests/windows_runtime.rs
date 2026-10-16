@@ -83,12 +83,7 @@ fn generated_numerics_tasks_and_unicode_files_match_raw_execution() {
 fn unicode_process_arguments_and_concurrent_binary_capture_match_raw_execution() {
     let dir = fwp::cgen::TempDir::new("windows-processes").unwrap();
     let helper = dir.join("child λ 目录.exe");
-    fwp::cgen::compile_c(
-        include_str!("fixtures/windows_process_child.c"),
-        &helper,
-        "-O1",
-    )
-    .unwrap();
+    fwp::cgen::compile_c(include_str!("fixtures/process_child.c"), &helper, "-O1").unwrap();
     let source = dir.join("processes.fwp");
     let helper_literal = format!("{:?}", helper.to_string_lossy());
     std::fs::write(

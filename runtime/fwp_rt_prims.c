@@ -1798,6 +1798,21 @@ static V fwp_p_array_from_list_typed(V xs, void (*dup)(V), const fwp_desc *elem)
     FWP_KEEP_ALIVE(source);
     return fwp_array_builder_finish(&result, &cleanup);
 }
+/* Compiler-only map followed immediately by numeric array construction.
+ * Keep the same borrowed source snapshot and callback order as map, but pack
+ * inline results directly from scratch instead of building temporary list nodes.
+ * Complete every callback before allocating the array, just as the source does. */
+static V fwp_p_array_map_list(V f, V xs, const fwp_desc *elem) {
+    size_t n;
+    V *items = fwp_map_items(xs, &n);
+    fwp_cleanup cleanup; fwp_scratch_protect(&items, &cleanup);
+    for (size_t i = 0; i < n; i++) items[i] = fwp_apply_borrowed(f, 1, &items[i]);
+    V result = fwp_array_typed_new(n, elem);
+    for (size_t i = 0; i < n; i++) fwp_array_store(result, i, items[i], elem);
+    fwp_scratch_finish(&items, &cleanup);
+    FWP_KEEP_ALIVE(f); FWP_KEEP_ALIVE(xs);
+    return result;
+}
 static V fwp_p_array_to_list_typed(V a, void (*dup)(V), const fwp_desc *elem, void (*drop_list)(V)) {
     fwp_value_owner result = {0, drop_list}; fwp_cleanup cleanup;
     fwp_value_protect(&result, &cleanup);
