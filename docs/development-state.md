@@ -20,8 +20,13 @@ charged bytes with collection disabled. Raw TLS/capture buffers, allocator pages
 and total process memory remain outside those counters. This is an fwp baseline,
 not a speed or C/Rust comparison.
 
-Baseline `49e9e604` is published; focused Linux run `38939097999` is queued.
-Next: finish that `context-storage` run.
+Baseline `49e9e604` was published with focused Linux run `38939097999`.
+The preparation now also checks detached children after scope return, typed
+failure, trap and cancellation. They must retain header copies, compression and
+the earliest deadline, and restore their own nested scopes. A deliberately
+omitted inheritance path must fail. This fixture is prepared, not yet verified
+natively; the next publication supersedes the queued baseline with both checks.
+Next: finish the replacement `context-storage` run and retain its exact revision.
 Fix failures and retain baseline artifacts before changing scope storage.
 Then prefer stack contexts for scopes that do not escape and explicit ownership
 for child tasks that keep the context after callback return. Preserve nested
@@ -31,8 +36,9 @@ After #153 is accepted, rebase only this branch's delta after `ac3060d1` onto it
 accepted squash; keep one active delivery PR.
 
 Local checks use `python3 scripts/local-guard.py` with unchanged limits. The
-accepted compiler interpreted the 32-call gzip/state example and printed `32`
-(0.25s); this does not validate the new native instrumentation. A named helper
+accepted compiler interpreted all five 32-call examples, both raw and optimized,
+and printed `32` in every case (1.80s); this does not validate the new native
+instrumentation. A named helper
 needed an explicit `I64 -> () ! {Network, State[I64]}` signature because generic
 signatures remain explicit. Formatting passes (1.08s); partition/concurrent-runner checks pass (1.03s),
 and the documentation audit passes (2.75s). The service guide now introduces

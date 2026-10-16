@@ -1,6 +1,9 @@
 //! Establish the cost of repeated service scopes before changing their lifetimes.
 use std::process::{Command, Output};
 
+#[path = "support/http2_values.rs"]
+mod http2_values;
+
 fn checked(command: &mut Command) -> Output {
     let output = command.output().unwrap();
     assert!(output.status.success(), "{command:?}: {output:?}");
@@ -136,4 +139,66 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
     eprintln!("{report}");
     // This is a baseline, not a collector-free claim. Raw TLS/capture buffers,
     // allocator metadata, pages and total process memory are outside this count.
+}
+
+#[test]
+fn children_keep_scope_settings_after_return_failure_and_cancellation() {
+    let generated = http2_values::generated();
+    let start = generated.find("static V g_with_ctx(").unwrap();
+    let end = start
+        + generated[start..]
+            .find("\nstatic V fwp_p_grpc_with_metadata")
+            .unwrap();
+    let callback = "V r = fwp_apply1(f, FWP_UNIT);";
+    assert_eq!(generated[start..end].matches(callback).count(), 1);
+    let method = generated[start..end].replace(callback, "V r = scope_callback(f);");
+    let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
+    let hooks = "#include <stdint.h>\nstatic uintptr_t scope_callback(uintptr_t);\nstatic void inherited_child(void *, int);\n";
+    let fixture = include_str!("fixtures/service_context_inheritance.c");
+    let inherit = "    t->gctx = fwp_cur->gctx;";
+    assert_eq!(generated.matches(inherit).count(), 1);
+    let broken = generated.replace(
+        inherit,
+        &format!("{inherit}\n    if(t->cfn==inherited_child)t->gctx=0;"),
+    );
+    let dir = fwp::cgen::TempDir::new("service-context-inheritance").unwrap();
+    let binary = dir.join("probe");
+    for optimization in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(
+            &format!("{hooks}\n{broken}\n{fixture}"),
+            &binary,
+            optimization,
+        )
+        .unwrap();
+        let output = Command::new(&binary).env("FWP_GC", "off").output().unwrap();
+        assert_eq!(output.status.code(), Some(41), "lost settings: {output:?}");
+        fwp::cgen::compile_c(
+            &format!("{hooks}\n{generated}\n{fixture}"),
+            &binary,
+            optimization,
+        )
+        .unwrap();
+        for collection in ["off", "on"] {
+            for reuse in ["0", "1"] {
+                let output = checked(
+                    Command::new(&binary)
+                        .env("FWP_GC", collection)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", reuse),
+                );
+                assert!(output.stdout.is_empty() && output.stderr.is_empty());
+            }
+        }
+        if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
+            let path = std::path::PathBuf::from(path);
+            std::fs::create_dir_all(&path).unwrap();
+            std::fs::write(
+                path.join("inheritance.c"),
+                format!("{hooks}\n{generated}\n{fixture}"),
+            )
+            .unwrap();
+            std::fs::copy(&binary, path.join(format!("inheritance{optimization}.exe"))).unwrap();
+        }
+    }
 }
