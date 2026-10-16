@@ -41,6 +41,9 @@ def main():
         "incoming_stream_descriptions_outlive_their_input_text",
         "forced_cells_release_received_storage_and_decoder_failure_text",
         "every_kind_of_call",
+        "concurrent_reads_share_one_receive_and_cancel_independently",
+        "recursive_and_cancelled_waiters_preserve_the_active_reader",
+        "stream_aliases_are_consistent_across_tasks",
     ]
     for job in jobs:
         match = re.fullmatch(r"paths \(([^)]+)\)", job["name"])
@@ -71,7 +74,8 @@ def main():
             assert row["receive_requests"] == 4 * expected and row["receive_bytes"] == 89 * expected
             assert row["after_clearing_roots_charged_bytes"] == row["after_read_charged_bytes"]
         names = ["source.txt", "rust.txt", "c.txt", "cpu.txt", "storage.tsv", "stream.c", "description.c",
-                 "stream-O1.exe", "stream-O2.exe", "description-O1.exe", "description-O2.exe", "job.log"]
+                 "stream-O1.exe", "stream-O2.exe", "description-O1.exe", "description-O2.exe",
+                 "readers.c", "readers-O1.exe", "readers-O2.exe", "job.log"]
         hosts.append({"host": host, "job_url": job["url"], "rows": rows,
                       "environment": {name: (folder / (name + ".txt")).read_text() for name in ["rust", "c", "cpu"]},
                       "files": {name: fingerprint(folder / name) for name in names},

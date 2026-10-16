@@ -288,6 +288,48 @@ fn calls_are_concurrent() {
     }
 }
 
+/// Two tasks retain and consume the same cached stream positions.
+#[test]
+fn stream_aliases_are_consistent_across_tasks() {
+    assert!(
+        have_cc(),
+        "shared stream comparison requires native compilation"
+    );
+    let d = scratch("shared-stream");
+    let servers = greeter_servers(Some(d.as_path()));
+    let client = dir().join("shared-stream.fwp");
+    let split = d.join("split");
+    build(
+        &[
+            client.to_str().unwrap(),
+            "--service",
+            "greeter",
+            "-o",
+            split.to_str().unwrap(),
+        ],
+        &dir(),
+    );
+    for server in &servers {
+        let mut interpreted = Command::new(fwp());
+        interpreted
+            .args(["run", "--interp", "--service", "greeter"])
+            .arg(&client)
+            .env("FWP_SERVICE_GREETER", &server.addr);
+        expect_file(
+            &dir().join("shared-stream.out"),
+            &render(&run(interpreted, 120)),
+            "interpreted shared stream",
+        );
+        let mut native = Command::new(split.join("shared-stream"));
+        native.env("FWP_SERVICE_GREETER", &server.addr);
+        expect_file(
+            &dir().join("shared-stream.out"),
+            &render(&run(native, 120)),
+            "native shared stream",
+        );
+    }
+}
+
 // ------------------------------------------------------------ interoperability
 
 /// Go's HTTP/2 client (the standard library only) calls both servers.

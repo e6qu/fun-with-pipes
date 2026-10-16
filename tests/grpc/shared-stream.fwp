@@ -1,0 +1,13 @@
+# Both tasks sum the same received sequence. Sharing an unread position must
+# reuse its cached message rather than consume a different message per task.
+import greeter
+
+start : Iterator[I64] -> Task[I64] ! {Async}
+start = iter.later (iter.fold add 0) | task.spawn
+
+main =
+    1024
+    | greeter.count
+    | both start start
+    | both (.0 | task.await) (.1 | task.await)
+    | echo

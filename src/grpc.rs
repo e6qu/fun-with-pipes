@@ -16,7 +16,7 @@
 //! shared state here (`Rc<RefCell<..>>`) is only touched by the holder.
 //! No borrow is held across a point where the baton may be handed on.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -1551,6 +1551,8 @@ fn call_remote_at(
                 what: format!("{} ({})", what, addr),
                 deadline,
                 results: shape.results.is_some(),
+                reader: Cell::new(std::ptr::null()),
+                read_waiting: Cell::new(false),
             });
             let cell = Rc::new(RefCell::new(StreamCell::Pending(inc)));
             match force_cell(it, &cell, true) {
@@ -1598,6 +1600,9 @@ pub struct Incoming {
     /// Elements are `Result[R, GrpcError]`: a failure ends the stream
     /// with an `Err` (client side).
     results: bool,
+    /// Borrowed task identity, valid only while force_cell is receiving.
+    reader: Cell<*const TaskShared>,
+    read_waiting: Cell<bool>,
 }
 
 /// A position in a received stream; forcing it receives the message
@@ -1639,111 +1644,136 @@ fn force_cell(
     cell: &Rc<RefCell<StreamCell>>,
     first: bool,
 ) -> Result<Value, CellErr> {
-    // Release the borrow before recv can hand control to another task. Keep the
-    // original pending state on failure; publish the complete cache on success.
-    let src = match &*cell.borrow() {
-        StreamCell::Cached(value) => return Ok(value.clone()),
-        StreamCell::Pending(source) => source.clone(),
+    // No RefCell borrow survives a scheduler handoff. Waiting tasks re-read
+    // the cache after waking; failures leave the original pending source.
+    let src = loop {
+        let source = match &*cell.borrow() {
+            StreamCell::Cached(value) => return Ok(value.clone()),
+            StreamCell::Pending(source) => source.clone(),
+        };
+        let reader = source.reader.get();
+        if reader.is_null() {
+            source.reader.set(Arc::as_ptr(&it.task));
+            break source;
+        }
+        if reader == Arc::as_ptr(&it.task) {
+            return Err(CellErr::Ctl(Ctl::Trap("recursive stream read".into())));
+        }
+        it.check_cancel()?;
+        source.read_waiting.set(true);
+        it.world.park(it.task.deadline());
+        it.check_cancel()?;
     };
-    let got = recv(it, &src.conn, &src.stream, src.deadline)?;
-    if src.results {
-        // an `Err` element, then the end
-        let err = |code: u32, msg: &str| {
-            let last = Rc::new(RefCell::new(StreamCell::Cached(opt(None))));
-            let e = Value::data(
-                1,
-                vec![Value::tuple(vec![Value::I64(code as i64), Value::str(msg)])],
-            );
-            opt(Some(Value::tuple(vec![
-                e,
-                wrap(Native::Grpc(Obj::Cell(last))),
-            ])))
+    // Traps, typed errors and cancellation are Result values here. Finish the
+    // receive guard for every result without extra reference-counted owners.
+    let result = (|| {
+        let got = recv(it, &src.conn, &src.stream, src.deadline)?;
+        if src.results {
+            // an `Err` element, then the end
+            let err = |code: u32, msg: &str| {
+                let last = Rc::new(RefCell::new(StreamCell::Cached(opt(None))));
+                let e = Value::data(
+                    1,
+                    vec![Value::tuple(vec![Value::I64(code as i64), Value::str(msg)])],
+                );
+                opt(Some(Value::tuple(vec![
+                    e,
+                    wrap(Native::Grpc(Obj::Cell(last))),
+                ])))
+            };
+            let v = match got {
+                Got::Msg(m) => match decode_msg(it, &src.dec, &m)? {
+                    Ok(Ok(x)) => {
+                        let next = Rc::new(RefCell::new(StreamCell::Pending(src.clone())));
+                        opt(Some(Value::tuple(vec![
+                            Value::data(0, vec![x]),
+                            wrap(Native::Grpc(Obj::Cell(next))),
+                        ])))
+                    }
+                    Ok(Err(_)) => err(INTERNAL, "unexpected error in a response"),
+                    Err(e) => err(INTERNAL, &format!("bad response from {}: {}", src.what, e)),
+                },
+                Got::End(st) if st.code == OK => opt(None),
+                Got::End(st) => err(st.code, &st.message),
+                Got::Lost(m, _) => err(UNAVAILABLE, &m),
+            };
+            *cell.borrow_mut() = StreamCell::Cached(v.clone());
+            return Ok(v);
+        }
+        let failed = |f: Failure| -> CellErr {
+            if src.server {
+                return CellErr::Ctl(Ctl::Cancelled);
+            }
+            if first {
+                return CellErr::Failed(f);
+            }
+            CellErr::Ctl(match f {
+                Failure::Status(st) if st.code == INTERNAL && st.message.starts_with("trap: ") => {
+                    Ctl::Trap(st.message["trap: ".len()..].to_string())
+                }
+                Failure::Status(st) => Ctl::Trap(format!(
+                    "service call {} failed: gRPC status {}: {}",
+                    src.what, st.code, st.message
+                )),
+                Failure::Transport(m) => {
+                    Ctl::Trap(format!("service call {} failed: {}", src.what, m))
+                }
+            })
         };
         let v = match got {
             Got::Msg(m) => match decode_msg(it, &src.dec, &m)? {
                 Ok(Ok(x)) => {
                     let next = Rc::new(RefCell::new(StreamCell::Pending(src.clone())));
                     opt(Some(Value::tuple(vec![
-                        Value::data(0, vec![x]),
+                        x,
                         wrap(Native::Grpc(Obj::Cell(next))),
                     ])))
                 }
-                Ok(Err(_)) => err(INTERNAL, "unexpected error in a response"),
-                Err(e) => err(INTERNAL, &format!("bad response from {}: {}", src.what, e)),
+                Ok(Err((e, t))) => {
+                    if first {
+                        return Err(CellErr::Ctl(Ctl::Fail(e, t)));
+                    }
+                    let shown = crate::value::display(&e, &t, it.prog, true);
+                    return Err(CellErr::Ctl(Ctl::Trap(format!(
+                        "service call {} failed: error: {}",
+                        src.what, shown
+                    ))));
+                }
+                Err(e) => {
+                    if src.server {
+                        return Err(CellErr::Ctl(fail_call(
+                            it,
+                            Status::new(INVALID_ARGUMENT, e),
+                        )));
+                    }
+                    return Err(CellErr::Ctl(Ctl::Trap(format!(
+                        "bad response from {}: {}",
+                        src.what, e
+                    ))));
+                }
             },
             Got::End(st) if st.code == OK => opt(None),
-            Got::End(st) => err(st.code, &st.message),
-            Got::Lost(m, _) => err(UNAVAILABLE, &m),
+            Got::End(st) => return Err(failed(Failure::Status(st))),
+            Got::Lost(m, _) => {
+                if src.server {
+                    if let Some(b) = src.stream.borrow().bad.clone() {
+                        return Err(CellErr::Ctl(fail_call(
+                            it,
+                            Status::new(INVALID_ARGUMENT, b),
+                        )));
+                    }
+                }
+                return Err(failed(Failure::Transport(m)));
+            }
         };
         *cell.borrow_mut() = StreamCell::Cached(v.clone());
-        return Ok(v);
+        Ok(v)
+    })();
+    src.reader.set(std::ptr::null());
+    if src.read_waiting.replace(false) {
+        it.world.event();
     }
-    let failed = |f: Failure| -> CellErr {
-        if src.server {
-            return CellErr::Ctl(Ctl::Cancelled);
-        }
-        if first {
-            return CellErr::Failed(f);
-        }
-        CellErr::Ctl(match f {
-            Failure::Status(st) if st.code == INTERNAL && st.message.starts_with("trap: ") => {
-                Ctl::Trap(st.message["trap: ".len()..].to_string())
-            }
-            Failure::Status(st) => Ctl::Trap(format!(
-                "service call {} failed: gRPC status {}: {}",
-                src.what, st.code, st.message
-            )),
-            Failure::Transport(m) => Ctl::Trap(format!("service call {} failed: {}", src.what, m)),
-        })
-    };
-    let v = match got {
-        Got::Msg(m) => match decode_msg(it, &src.dec, &m)? {
-            Ok(Ok(x)) => {
-                let next = Rc::new(RefCell::new(StreamCell::Pending(src.clone())));
-                opt(Some(Value::tuple(vec![
-                    x,
-                    wrap(Native::Grpc(Obj::Cell(next))),
-                ])))
-            }
-            Ok(Err((e, t))) => {
-                if first {
-                    return Err(CellErr::Ctl(Ctl::Fail(e, t)));
-                }
-                let shown = crate::value::display(&e, &t, it.prog, true);
-                return Err(CellErr::Ctl(Ctl::Trap(format!(
-                    "service call {} failed: error: {}",
-                    src.what, shown
-                ))));
-            }
-            Err(e) => {
-                if src.server {
-                    return Err(CellErr::Ctl(fail_call(
-                        it,
-                        Status::new(INVALID_ARGUMENT, e),
-                    )));
-                }
-                return Err(CellErr::Ctl(Ctl::Trap(format!(
-                    "bad response from {}: {}",
-                    src.what, e
-                ))));
-            }
-        },
-        Got::End(st) if st.code == OK => opt(None),
-        Got::End(st) => return Err(failed(Failure::Status(st))),
-        Got::Lost(m, _) => {
-            if src.server {
-                if let Some(b) = src.stream.borrow().bad.clone() {
-                    return Err(CellErr::Ctl(fail_call(
-                        it,
-                        Status::new(INVALID_ARGUMENT, b),
-                    )));
-                }
-            }
-            return Err(failed(Failure::Transport(m)));
-        }
-    };
-    *cell.borrow_mut() = StreamCell::Cached(v.clone());
-    Ok(v)
+    result
 }
 
 /// A channel's values sent as messages of a stream.
@@ -2138,6 +2168,8 @@ fn run_method(
                 what: what.to_string(),
                 deadline: None,
                 results: false,
+                reader: Cell::new(std::ptr::null()),
+                read_waiting: Cell::new(false),
             });
             let cell = Rc::new(RefCell::new(StreamCell::Pending(inc)));
             let f = m
@@ -2821,6 +2853,8 @@ mod stream_source_tests {
             what: "queued.string".into(),
             deadline: None,
             results,
+            reader: Cell::new(std::ptr::null()),
+            read_waiting: Cell::new(false),
         })
     }
 
@@ -2942,11 +2976,37 @@ mod stream_source_tests {
                 } else {
                     assert!(value.is_err());
                     assert!(matches!(*cell.borrow(), StreamCell::Pending(_)));
+                    let pending = weak.upgrade().unwrap();
+                    assert!(pending.reader.get().is_null());
+                    assert!(!pending.read_waiting.get());
+                    drop(pending);
                     assert_eq!(weak.strong_count(), 1, "failure preserves original source");
                 }
                 drop(cell);
                 assert!(weak.upgrade().is_none());
             }
         }
+    }
+    #[test]
+    fn recursive_and_cancelled_waiters_preserve_the_active_reader() {
+        let program = Program::default();
+        let mut it = Interp::new(&program, Box::new(std::io::sink()));
+        let source = queued(&program, 0, false, OK);
+        let cell = Rc::new(RefCell::new(StreamCell::Pending(source.clone())));
+        source.reader.set(Arc::as_ptr(&it.task));
+        assert!(
+            matches!(force_cell(&mut it, &cell, false), Err(CellErr::Ctl(Ctl::Trap(message))) if message == "recursive stream read")
+        );
+        assert_eq!(source.reader.get(), Arc::as_ptr(&it.task));
+        let owner = TaskShared::new();
+        source.reader.set(Arc::as_ptr(&owner));
+        it.task.cancel();
+        assert!(matches!(
+            force_cell(&mut it, &cell, false),
+            Err(CellErr::Ctl(Ctl::Cancelled))
+        ));
+        assert_eq!(source.reader.get(), Arc::as_ptr(&owner));
+        assert!(!source.read_waiting.get());
+        source.reader.set(std::ptr::null());
     }
 }

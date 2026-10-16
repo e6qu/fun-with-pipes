@@ -4,9 +4,12 @@ Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
 This is independent remote-stream measurement preparation, not another PR.
 The active delivery is [PR #154](https://github.com/e6qu/fun-with-pipes/pull/154)
 in `/Users/zardoz/projects/fun-with-pipes`, branch `service-iteration-delivery`.
-Its current six-host run is `38973106656`; actual WebAssembly is `38973110352`.
-Keep its root handoff current and require final nine production jobs, docs and
-the two newly introduced Windows dependency jobs before its authorized squash.
+Its focused six-host/WebAssembly runs pass. Final head is `51354d10`; production
+`38977201910`, docs `38977126983` and Windows dependencies `38977201787` are
+the acceptance runs. Docs and benchmarks pass; the remaining jobs are running.
+The root has an authorized exact-head merge watcher (exec session `96582`),
+`/private/tmp/fwp-watch-154.py`; inspect its output/merge record before taking any
+merge action. It stops on a failing gate and never merges skipped checks.
 
 ## Current action
 
@@ -63,6 +66,34 @@ networking remain to verify for this preparation.
 Every commit/squash message is one line, at most 80 characters, without bodies,
 trailers or attribution. JIT is excluded. Failing tests are work to fix.
 
+## Receive serialization preparation
+
+Two tasks may ask for the same unread position while the first receive is
+suspended. The existing cache check alone occurs before that suspension. The
+new interpreter/native receive guard lets the second task wait for publication
+and then read the cache. Only the receiving task clears the guard; error and
+cancellation release it and wake waiters. Cancelling a waiter must not cancel the
+receiver. Task pointers here are borrowed identities, not owning back-references.
+Recursive reading of the same source traps explicitly. This does not add ARC
+eligibility or native cache destruction.
+
+Runner verification is pending. A deterministic native fixture starts two
+readers before publishing two messages: both readers must see the first message,
+and the second message must remain queued. It also cancels the receiver or its
+waiter independently. Removing serialization must fail with different results;
+a ten-second task deadline bounds broken wakeups. O1/O2 stress/reuse checks retain
+actual binaries. Interpreter controls cover recursive/cancelled waiters and guard
+release on failure. A shared-stream client sums 1..1024 in two tasks against
+interpreted/native servers; both must print `Some 524800`.
+
+The accepted prebuilt compiler formats this client (0.01s) and type-checks it
+(0.24s) under the guard. Rust formatting passes (1.36s), workflow lint passes
+(1.01s). No compiler or C program was built locally. Run `stream-storage` first,
+repair any failures, then `stream-owners` on all six native platforms and retain
+fresh measurements. The collector now requires the concurrency controls too.
+The preceding six-host source-lifetime run remains tied to `d9ba5154`; it cannot
+validate this newer change.
+
 ## Current source lifetime preparation
 
 A successfully read position now retains only its cached value and continuation.
@@ -82,7 +113,8 @@ last early owner releases it. Native controls reject retained source edges and
 missing caches; existing decode/copy traps must leave the original source intact.
 Actual interpreter/native service combinations remain in the focused workflow.
 
-Next publish and run the six-host `stream-owners` suite, then retain its report.
+Six-host run `38978268787` is running at `d9ba5154`; both Linux hosts pass.
+Next verify the other four hosts and retain its report before expanding ownership.
 The collector was checked against the passing one-host run (4.93s) after rejecting
 an incorrect full commit argument; evidence is under
 `/private/tmp/fwp-stream-source-evidence/38977738266`. The measurement fixture now uses the production source

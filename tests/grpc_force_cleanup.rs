@@ -97,6 +97,7 @@ int main(void){
   fwp_trap_recover=0;fwp_trap_jb=0;
   int expected=stage==4||stage==10?3:stage==5?2:1;
   if(allocations!=expected||frees!=expected||fwp_cleanups)return 1;
+  if(src->reader||src->read_waiters.head)return 13;
   if(trapped&&(cell->forced||cell->src!=src))return 11;
   FWP_KEEP_ALIVE(PTR(cell));FWP_KEEP_ALIVE(PTR(src));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
  }
@@ -353,6 +354,56 @@ int main(void) {
             std::fs::create_dir_all(&path).unwrap();
             std::fs::write(path.join("description.c"), code).unwrap();
             std::fs::copy(&binary, path.join(format!("description{opt}.exe"))).unwrap();
+        }
+    }
+}
+
+#[test]
+fn concurrent_reads_share_one_receive_and_cancel_independently() {
+    let code = format!(
+        "{}\n{}",
+        http2_values::generated(),
+        include_str!("fixtures/grpc_stream_readers.c")
+    );
+    let wait = "while (src->reader) {";
+    assert_eq!(code.matches(wait).count(), 1);
+    let dir = fwp::cgen::TempDir::new("grpc-stream-readers").unwrap();
+    let broken = dir.join("without-serialization.exe");
+    fwp::cgen::compile_c(&code.replace(wait, "while (0) {"), &broken, "-O2").unwrap();
+    let control = Command::new(&broken)
+        .arg("0")
+        .env("FWP_GC", "off")
+        .env("FWP_GC_STRESS", "0")
+        .env("FWP_GC_VERIFY", "0")
+        .env("FWP_REUSE_VERIFY", "0")
+        .output()
+        .unwrap();
+    assert_eq!(
+        control.status.code(),
+        Some(43),
+        "missing serialization must consume two different values: {control:?}"
+    );
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(format!("readers{opt}.exe"));
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for mode in 0..3 {
+            for stress in ["0", "1"] {
+                let output = Command::new(&binary)
+                    .arg(mode.to_string())
+                    .env("FWP_GC", if stress == "0" { "off" } else { "on" })
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress)
+                    .output()
+                    .unwrap();
+                assert!(output.status.success(), "{opt}/{mode}/{stress}: {output:?}");
+            }
+        }
+        if let Some(path) = std::env::var_os("FWP_STREAM_ARTIFACTS") {
+            let path = std::path::PathBuf::from(path);
+            std::fs::create_dir_all(&path).unwrap();
+            std::fs::write(path.join("readers.c"), &code).unwrap();
+            std::fs::copy(&binary, path.join(format!("readers{opt}.exe"))).unwrap();
         }
     }
 }

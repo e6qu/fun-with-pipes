@@ -1290,6 +1290,8 @@ typedef struct {
     const char *what;          /* the call, for messages (client side) */
     int64_t deadline;
     int results;               /* elements are Result[R, GrpcError] (client side) */
+    fwp_task *reader;           /* borrowed while this source is receiving */
+    fwp_wl read_waiters;        /* scheduler owns the parked tasks */
 } g_incoming;
 
 /* The description has the source's lifetime, with no separate raw allocation
@@ -1350,9 +1352,27 @@ static V g_err_element(int code, const char *text) {
     return fwp_some(fwp_tuple2(fwp_data(1, 1, &e), PTR(last)));
 }
 
+static void g_incoming_read_done(void *value) {
+    g_incoming *source = (g_incoming *)value;
+    source->reader = 0;
+    fwp_wake_all(&source->read_waiters);
+}
+
 static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_desc **err_desc) {
     if (cell->forced) return cell->memo;
     g_incoming *src = cell->src;
+    /* Two tasks can reach the same unread position before receiving resumes.
+     * Wait for its cache instead of consuming a second message for that cell. */
+    while (src->reader) {
+        if (src->reader == fwp_cur) fwp_trap("recursive stream read");
+        fwp_check_cancel();
+        fwp_park(&src->read_waiters, 0);
+        fwp_check_cancel();
+        if (cell->forced) return cell->memo;
+    }
+    src->reader = fwp_cur;
+    fwp_cleanup reading_cleanup;
+    fwp_cleanup_push(&reading_cleanup, g_incoming_read_done, src);
     g_got g;
     g_recv(src->c, src->s, src->deadline, &g);
     fwp_cleanup received_cleanup;
@@ -1393,6 +1413,8 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
         cell->forced = 1;
         cell->memo = r;
         cell->src = 0; /* the complete cached result owns its continuation */
+        fwp_cleanup_pop(&reading_cleanup);
+        g_incoming_read_done(src);
         return r;
     }
     if (g.kind == G_MSG) {
@@ -1415,6 +1437,8 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
                 fwp_tls_subject_free(why);
                 fwp_cleanup_pop(&received_cleanup);
                 g_got_release(&g);
+                fwp_cleanup_pop(&reading_cleanup);
+                g_incoming_read_done(src);
                 return 0;
             }
             fwp_buf b = {0};
@@ -1443,6 +1467,8 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             g.text = 0;
             fwp_cleanup_pop(&received_cleanup);
             g_got_release(&g);
+            fwp_cleanup_pop(&reading_cleanup);
+            g_incoming_read_done(src);
             return 0;
         }
         if (code == GRPC_INTERNAL && strncmp(g.text, "trap: ", 6) == 0) fwp_trap(g.text + 6);
@@ -1454,6 +1480,8 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
     cell->forced = 1;
     cell->memo = r;
     cell->src = 0; /* retain the source on every failure before publication */
+    fwp_cleanup_pop(&reading_cleanup);
+    g_incoming_read_done(src);
     return r;
 }
 
