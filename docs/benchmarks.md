@@ -753,9 +753,30 @@ samples range from 30 to 117 ms, while enabled samples range from 14 to 18 ms.
 The repeat narrows these to 29–30 and 14 ms. Its traced derivative median is
 still 2% slower, compared with 7% in the first run; both runs have overlapping
 samples. The tiny nested case changes from 3% faster to 12% slower in ARC.
-A separate diagnostic repeats the verified binaries with child CPU measurements
-and normal-collector profiles. Until that investigation finishes, do not dismiss
-the slower results or claim a portable tracing speedup.
+A [separate four-host diagnostic](measurements/mapped-array-cpu-2026-10-16.json)
+reuses those verified binaries, with one warmup and 16 alternating samples. It
+measures both elapsed time and child CPU time (user plus system processing time),
+which helps distinguish computation from time spent waiting to run. Profiles are
+separate rebuilt binaries, with the normal collector and with collection disabled.
+Both profiles match the earlier allocation counts exactly; all hosts report zero
+collections and zero final managed/tape storage. Collection activity therefore
+does not explain the earlier Intel result.
+
+For repeated differentiation, the diagnostic reports:
+
+| Host | Tracing elapsed / CPU ratio | ARC elapsed / CPU ratio |
+|---|---:|---:|
+| Linux AMD64 | 0.925 / 0.925 | 0.925 / 0.925 |
+| Linux ARM64 | 0.919 / 0.919 | 0.927 / 0.927 |
+| macOS ARM64 | 0.898 / 0.904 | 0.873 / 0.881 |
+| macOS AMD64 | 0.913 / 0.917 | 0.944 / 0.951 |
+
+The Intel traced slowdown does not repeat with these same binaries. Direct
+numeric CPU ratios range from 0.433 to 0.497 across the hosts and memory modes.
+Tiny nested results remain mixed, including 6.8%/8.9% more CPU time in tracing/ARC
+on ARM macOS. This supports adopting the transformation for its measured
+allocation savings and substantial-work improvements; it does not prove every
+small call is faster. Keep the earlier slower samples in the record.
 
 The report also retains the first implementation, which used indirect callback
 calls. Compare enabled/disabled within each revision; do not pool measurements

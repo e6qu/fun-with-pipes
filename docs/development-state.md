@@ -15,7 +15,7 @@ changes after `81d113aa` from preparation `owned-process-utilities` at
 `ad53a46a`, including verified derivative reports/profiling through `cfdf4d79`, plus numeric
 map-to-array preparation after that anchor.
 Preparation revisions are preserved under remote `roadmap/revision-process-*`
-tags. No old parent preparation should be replayed. The single open delivery is draft [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149).
+tags. No old parent preparation should be replayed. The single open delivery is [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149).
 
 Standing authorization: fix failures, require all nine production jobs and docs
 for the exact final head, then squash merge with a supplied one-line subject of
@@ -36,8 +36,8 @@ the next substantial batch without another permission request. JIT is excluded.
 | 6 | In progress | Preserve repeated comparable measurements and regression criteria |
 | 7 | In progress | Accept maintained process composition and real terminal checks |
 
-Next: finish the numeric mapped-array timing investigation below, then run all
-nine production jobs and docs for draft #149's final combined head.
+Next: monitor all nine production jobs plus docs for #149's exact final combined
+head.
 Fix failures, merge only when all pass, and continue. A queued gate stops merging,
 not independent development.
 
@@ -118,10 +118,16 @@ callbacks preserve vectorized doubling. These compare fwp with itself, not C/Rus
 The independent repeat's derivative ARC ratios enabled/disabled are Linux AMD64
 0.919, Linux ARM64 0.919, macOS ARM64 0.909 and macOS AMD64 0.895. Intel macOS
 tracing remains slower (1.019, versus 1.070 in the first run), and its tiny nested
-ARC case changes from 0.966 to 1.124. Investigate before final adoption: the new
-`mapped-array-repeat` suite reuses verified binaries from `38837662593`, records
-16 alternating child CPU/elapsed samples and separate normal/off collector
-profiles. It avoids another compiler build. Full acceptance has not started.
+ARC case changes from 0.966 to 1.124. The investigation now passes on all four hosts in
+[38839170915](https://github.com/e6qu/fun-with-pipes/actions/runs/38839170915), reusing
+verified binaries from `38837662593` at diagnostic source `1850f832`. Sixteen
+alternating samples show Intel traced derivative elapsed/CPU ratios 0.913/0.917;
+all four hosts improve in this diagnostic. Normal/off collector profiles match
+exactly, with zero collections and final storage. Tiny nested CPU results remain
+mixed. [The retained report](measurements/mapped-array-cpu-2026-10-16.json) and
+benchmark explanation preserve those limits. Select the transformation for its
+allocation savings and measured substantial workloads; do not claim universal
+speedup. Full production acceptance is still pending.
 
 Guarded local checks after transfer: formatting passes (1.26 s), inventory passes
 (1.12 s; the first invocation omitted its required arguments), docs pass (2.75 s).
@@ -135,6 +141,21 @@ The accepted #148 Mac compiler is available for small local fixture checks at
 and SHA-256 `9e79c06d7db07a45de341bd7769739a2eda6c58bbeeaff077cb77bbb1268fb43`
 are verified. No local full compiler build was run.
 
-After resolving the remaining timing concern, finalize the report and run all
-nine production jobs plus docs for the combined final head. Merge only after all
-pass, then continue measured derivative intermediates and ownership boundaries.
+Report retention verifies all four diagnostic reports and profile hashes (0.30 s).
+Docs at `1850f832` pass in `38839160662`; its draft production run was skipped and
+is not acceptance. Final source/runtime/tests still match the six-host candidate
+except the already validated process/tty contracts. Require the final combined
+production gate before merging.
+
+## Following preparation
+
+Worktree `/private/tmp/fwp-zip-map`, branch `fuse-numeric-zip-maps`, is anchored at
+`1850f832`. No second PR is open. It prepares elimination of immediately mapped
+numeric zip pairs using existing zip-with ownership and a specialized callback.
+It also repairs ordinary zip's unprotected pending fields/results on retain
+failure. Small isolated-pass counts for 129 numeric pairs fall from 390 to 131
+requests and from 129 to zero retains; raw/native cases pass. These use an older
+prebuilt compiler library and are not rebuilt-compiler acceptance. The worktree
+handoff records incomplete cleanup controls and pending six-host/performance
+checks. Transfer only changes after its anchor after #149 merges; never replay
+this current delivery's parent changes.
