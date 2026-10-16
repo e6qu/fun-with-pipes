@@ -8,12 +8,14 @@ these preparation changes again.
 
 ## Current action
 
-Next: publish the combined preparation from `/private/tmp/fwp-service-values`,
-branch `service-value-preparation`, by fast-forwarding `owned-values-delivery`
-in `/Users/zardoz/projects/fun-with-pipes`. Then require all nine production jobs
+The combined preparation has been fast-forwarded into `owned-values-delivery`
+in `/Users/zardoz/projects/fun-with-pipes`.
+Next: publish that branch to PR #153, then require all nine production jobs
 and documentation on the exact new PR head. Update this local handoff with their
-run IDs. The tested service source is `e715de1a`; the following changes retain
-evidence and update documentation only.
+run IDs. The tested service source is `e715de1a`. Following changes retain evidence,
+update documentation and start the two longest measured GC stress cases first.
+This queue order keeps every case and all four workers; it has no language or
+runtime change and does not claim a measured total-CI speedup.
 
 The old published head `78e9a372` must not be merged. Its Windows TLS comparison
 failed because native reset messages bypassed the interpreter's common wording.
@@ -21,7 +23,12 @@ Repair `abe3be17` passes both Windows focused jobs `38931783848`; it preserves
 exact certificate errors and adds five actual native/interpreter error-code
 comparisons. That repair is included in the combined preparation. Inspect any
 unfinished jobs in old production `38925341899` for additional failures before
-starting the final full run. Old documentation `38925341680` passed.
+starting the final full run. Old documentation `38925341680` passed. Its Intel GC stress log is retained at
+`/private/tmp/fwp153-intel-gc-progress/gc-stress.log`: collection construction
+took 1,744s and HTTP took 175s. The test schedule now starts both first so shorter
+programs can run alongside them. Existing integration-shard assignments stay fixed.
+[Scheduling evidence](measurements/gc-stress-scheduling-2026-10-16.json) retains
+all observed example timings and the baseline log hash.
 
 After all final-head gates pass, squash-merge with subject
 `Reduce temporary memory and clean up network resources` and an empty body.
@@ -80,8 +87,8 @@ CPU, memory, disk and deadline limits. Full compilation/testing stays on GitHub.
 Earlier local compiler and standalone C builds were refused by automatic review;
 do not retry or bypass that restriction.
 
-Guarded formatting passes (latest 1.18s); macOS partition checks pass (0.13s).
-The final independent roadmap audit passes (2.85s: 50 link sets, 106 immutable preparation
+Guarded formatting passes (latest 1.28s); macOS partition checks pass (0.13s).
+The final independent roadmap audit passes (3.06s: 50 link sets, 106 immutable preparation
 pairs and seven work areas). `git diff --check` passes. Earlier accepted-interpreter
 examples and the primitive inventory pass (341 contracts, 13 remaining reviews).
 Guarded artifact retention and binary inspection passed in 16.91s.
