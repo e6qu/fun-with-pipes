@@ -112,7 +112,7 @@ int main(void){int status=probe();if(status)_Exit(status);return 0;}
             Some(2),
         ),
         (
-            "        fwp_p_sock_close(c);\n        return fwp_io_error(\"tls\", fwp_tls_err, err);",
+            "        fwp_p_sock_close(c); fwp_sock_drop(c);\n        return fwp_io_error(\"tls\", fwp_tls_err, err);",
             "        return fwp_io_error(\"tls\", fwp_tls_err, err);",
             Some(7),
         ),

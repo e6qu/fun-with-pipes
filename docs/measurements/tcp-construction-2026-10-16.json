@@ -1,0 +1,285 @@
+{
+  "sourceHead": "985fc772b7f090e91d17ad26267e67ddf3c35b24",
+  "nativeRun": 38916070418,
+  "wasiRegressionRun": 38916075039,
+  "scope": "Original TCP constructor failure repair, before broader counted TCP/TLS ownership. Each native probe uses real local TCP sockets: 32 failed listener-handle allocations, 32 failed accepted-handle allocations, and successful construction followed by cleanup. Managed allocation failure is injected exactly at handle allocation. Both omitted-cleanup controls must fail.",
+  "status": "All six native jobs and both shared-runtime WASI regression jobs pass",
+  "limits": "This revision does not enable checked ARC for TCP/TLS. WASI results cover shared-runtime regressions, not networking support. Counts return to an initialized test baseline; this is not zero process memory or a throughput measurement. Subsequent owner-count/layout changes require new evidence.",
+  "sourceSha256": {
+    "runtime/fwp_rt_task.c": "47abebd1374feab783114ec444b3630a22047c3c7c8beed2b3c632c20779f4e0",
+    "tests/native_sockets.rs": "2a99a3dc327f26e0b35278b11e8587516005419402d31c7d4247088cdfdcc8eb",
+    "tests/fixtures/tcp_constructor_cleanup.c": "21472dfb53a08c9c292e278a6ef70c1f4edbd825cc6b047ee6ffa70bfc48da8e"
+  },
+  "hosts": [
+    {
+      "runner": "macos-15-intel",
+      "job": {
+        "databaseId": 117023756165,
+        "name": "paths (macos-15-intel)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "artifacts": {
+        "tcp-O1.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O1.exe": {
+          "sha256": "ef5414ed701c65b6621969a5d196a0d75c5f66db69811b22ca08c365cee1b214",
+          "bytes": 41816,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "tcp-O1.stdout": {
+          "sha256": "4c6f808f5dcdea7397e514c1997e835bd308be706dd565fd397a418511a3f657",
+          "bytes": 114
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O2.exe": {
+          "sha256": "e099735e243354bcacf7afd10df0ffcc3b5de7c1945073e39849ab8ea2145627",
+          "bytes": 41848,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "tcp-O2.stdout": {
+          "sha256": "4c6f808f5dcdea7397e514c1997e835bd308be706dd565fd397a418511a3f657",
+          "bytes": 114
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      }
+    },
+    {
+      "runner": "ubuntu-latest",
+      "job": {
+        "databaseId": 117023756542,
+        "name": "paths (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "artifacts": {
+        "tcp-O1.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O1.exe": {
+          "sha256": "546d2ac811dbbe4f04a15464f389a84f4bcce54c6c37aceea395667cc9146b56",
+          "bytes": 56656,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=52cd67e09e1f35f8f155f958080e96bb26cc5ada, for GNU/Linux 3.2.0, not stripped"
+        },
+        "tcp-O1.stdout": {
+          "sha256": "4c6f808f5dcdea7397e514c1997e835bd308be706dd565fd397a418511a3f657",
+          "bytes": 114
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O2.exe": {
+          "sha256": "c050a35b57ee184e1521253314fe9769236682cb760c44e1d529c214cac1b7e7",
+          "bytes": 56624,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=b1a88c7a367c99fdb2153c39f0383fb5144ba045, for GNU/Linux 3.2.0, not stripped"
+        },
+        "tcp-O2.stdout": {
+          "sha256": "4c6f808f5dcdea7397e514c1997e835bd308be706dd565fd397a418511a3f657",
+          "bytes": 114
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      }
+    },
+    {
+      "runner": "windows-2025",
+      "job": {
+        "databaseId": 117023756602,
+        "name": "paths (windows-2025)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "artifacts": {
+        "tcp-O1.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O1.exe": {
+          "sha256": "5e7a9b13b57926c37d3c40d783bd1d83b59527bea445aa23ef5d5230b27300da",
+          "bytes": 103424,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "tcp-O1.stdout": {
+          "sha256": "4ad20d7176115d433bd7144df054213a78e1fa60fa8054d4bd1d78c854f00beb",
+          "bytes": 115
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O2.exe": {
+          "sha256": "707ebe5565875221f168cdd33c178479426f431ca0181a6cca0982a07ed3dd46",
+          "bytes": 103936,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "tcp-O2.stdout": {
+          "sha256": "4ad20d7176115d433bd7144df054213a78e1fa60fa8054d4bd1d78c854f00beb",
+          "bytes": 115
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      }
+    },
+    {
+      "runner": "macos-15",
+      "job": {
+        "databaseId": 117023756612,
+        "name": "paths (macos-15)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "artifacts": {
+        "tcp-O1.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O1.exe": {
+          "sha256": "c6df74e9f7df53847b45934b366f1e56b8933d0ebd32ee1b9f89bd5cff048799",
+          "bytes": 71152,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "tcp-O1.stdout": {
+          "sha256": "4c6f808f5dcdea7397e514c1997e835bd308be706dd565fd397a418511a3f657",
+          "bytes": 114
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O2.exe": {
+          "sha256": "e9b2bb402c87b562226580dabd2dda096325a76488273c9b57acd355e3b027ba",
+          "bytes": 71184,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "tcp-O2.stdout": {
+          "sha256": "4c6f808f5dcdea7397e514c1997e835bd308be706dd565fd397a418511a3f657",
+          "bytes": 114
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      }
+    },
+    {
+      "runner": "windows-11-arm",
+      "job": {
+        "databaseId": 117023756766,
+        "name": "paths (windows-11-arm)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "artifacts": {
+        "tcp-O1.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O1.exe": {
+          "sha256": "562f8dcb62086aa7bc7349529ac093d50241b4bf3726f685d380fc18eb441833",
+          "bytes": 98816,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "tcp-O1.stdout": {
+          "sha256": "4ad20d7176115d433bd7144df054213a78e1fa60fa8054d4bd1d78c854f00beb",
+          "bytes": 115
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O2.exe": {
+          "sha256": "7cb02d712166426ccabc07ee42c48e271f5b9e5b5b120a73187a5f82654daa09",
+          "bytes": 99328,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "tcp-O2.stdout": {
+          "sha256": "4ad20d7176115d433bd7144df054213a78e1fa60fa8054d4bd1d78c854f00beb",
+          "bytes": 115
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      }
+    },
+    {
+      "runner": "ubuntu-24.04-arm",
+      "job": {
+        "databaseId": 117023756812,
+        "name": "paths (ubuntu-24.04-arm)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "artifacts": {
+        "tcp-O1.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O1.exe": {
+          "sha256": "5c602651d70cdb99fc92b8daa6cdd7dd84e910ea43570ae6b034e8d0336200ef",
+          "bytes": 82472,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=a0ccd38483f54f78fb8d174199e79154f5d7c9ea, for GNU/Linux 3.7.0, not stripped"
+        },
+        "tcp-O1.stdout": {
+          "sha256": "4c6f808f5dcdea7397e514c1997e835bd308be706dd565fd397a418511a3f657",
+          "bytes": 114
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.c": {
+          "sha256": "39cb0431b05b165a9c721daa79e6e7b7e13ea3efa21b0671039f0e28bc7a91ae",
+          "bytes": 649404
+        },
+        "tcp-O2.exe": {
+          "sha256": "a7e60d562af545d9327f3479eb5f2a8b21c9050696f1211981f6b926ae864e4c",
+          "bytes": 82568,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=efe3c288e66a2cf08375518a1d70aedd8d44fcf3, for GNU/Linux 3.7.0, not stripped"
+        },
+        "tcp-O2.stdout": {
+          "sha256": "4c6f808f5dcdea7397e514c1997e835bd308be706dd565fd397a418511a3f657",
+          "bytes": 114
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      }
+    }
+  ]
+}

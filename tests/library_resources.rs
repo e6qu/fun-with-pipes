@@ -189,13 +189,13 @@ int main(int argc,char **argv){
             1,
         ),
         (
-            "        else fwp_tls_dispose(s->tls);",
+            "        else fwp_tls_dispose(((fwp_stream *)s)->tls);",
             "        else (void)0; /* omit session */",
             2,
         ),
         (
-            "        else fwp_tls_dispose(s->tls);",
-            "        else fwp_tls_free(s->tls); /* implicit shutdown traffic */",
+            "        else fwp_tls_dispose(((fwp_stream *)s)->tls);",
+            "        else fwp_tls_free(((fwp_stream *)s)->tls); /* implicit shutdown traffic */",
             2,
         ),
         (

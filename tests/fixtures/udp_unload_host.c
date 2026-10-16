@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#define OWNED_COUNT 1
 #ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -33,14 +34,15 @@ int main(int argc,char **argv) {
         void (*setup)(uintptr_t *)=(void (*)(uintptr_t *))dlsym(library,"setup");
 #endif
         if(!setup) return 244;
-        uintptr_t owned; setup(&owned);
-        if(!socket_live((test_socket)owned)||!socket_live(borrowed)) return 247;
+        uintptr_t owned[OWNED_COUNT]; setup(owned);
+        for(int i=0;i<OWNED_COUNT;i++) if(!socket_live((test_socket)owned[i])) return 247;
+        if(!socket_live(borrowed)) return 247;
 #ifdef _WIN32
         if(!FreeLibrary(library)) return 243;
 #else
         if(dlclose(library)) return 243;
 #endif
-        if(socket_live((test_socket)owned)) return 248;
+        for(int i=0;i<OWNED_COUNT;i++) if(socket_live((test_socket)owned[i])) return 248;
         if(!socket_live(borrowed)) return 242;
     }
 #ifdef _WIN32
@@ -48,6 +50,6 @@ int main(int argc,char **argv) {
 #else
     close(borrowed);
 #endif
-    puts("UDP unload: three library cycles close retained owners and preserve the host socket");
+    puts("Socket unload: three library cycles close retained owners and preserve the host socket");
     return 0;
 }

@@ -387,6 +387,18 @@ fn mutual_tls() {
             ],
             &root(),
         );
+        let symbols = Command::new("nm").arg(&binary).output().unwrap();
+        assert!(symbols.status.success(), "{symbols:?}");
+        let symbols = String::from_utf8_lossy(&symbols.stdout);
+        for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+            assert!(!symbols.contains(name), "ARC TLS binary contains {name}");
+        }
+        if let Some(path) = std::env::var_os("FWP_TCP_CONSTRUCTOR_ARTIFACTS") {
+            let path = PathBuf::from(path);
+            std::fs::create_dir_all(&path).unwrap();
+            std::fs::copy(&binary, path.join("mutual-tls-arc.exe")).unwrap();
+            std::fs::write(path.join("mutual-tls-arc.nm"), symbols.as_bytes()).unwrap();
+        }
         commands.push(Command::new(binary));
     }
     for (i, mut cmd) in commands.into_iter().enumerate() {

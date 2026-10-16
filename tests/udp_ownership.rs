@@ -251,71 +251,88 @@ fn udp_construction_aliases_and_partial_receives_release_every_owner() {
 }
 
 #[test]
-fn udp_library_unload_closes_retained_handles_and_preserves_host_socket() {
-    let dir = fwp::cgen::TempDir::new("udp-unload").unwrap();
-    let input = dir.join("library.fwp");
-    std::fs::write(&input, include_str!("fixtures/udp_library.fwp")).unwrap();
-    let reference = checked(
-        Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .env("FWP_NO_OPT", "1")
-            .args(["run", "--interp"])
-            .arg(&input),
-    );
-    assert_eq!(reference.stdout, b"True\n");
-    for mode in ["tracing", "arc"] {
-        let cfile = dir.join("library.c");
-        checked(
+fn socket_library_unload_closes_retained_handles_and_preserves_host_socket() {
+    for (source, setup, count) in [
+        (
+            include_str!("fixtures/udp_library.fwp"),
+            include_str!("fixtures/udp_unload.c"),
+            1,
+        ),
+        (
+            include_str!("fixtures/tcp_library.fwp"),
+            include_str!("fixtures/tcp_unload.c"),
+            3,
+        ),
+    ] {
+        let dir = fwp::cgen::TempDir::new("udp-unload").unwrap();
+        let input = dir.join("library.fwp");
+        std::fs::write(&input, source).unwrap();
+        let reference = checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", mode, "--cdylib", "--emit-c"])
-                .arg(&input)
-                .arg("-o")
-                .arg(&cfile),
+                .env("FWP_NO_OPT", "1")
+                .args(["run", "--interp"])
+                .arg(&input),
         );
-        let code = std::fs::read_to_string(&cfile).unwrap() + include_str!("fixtures/udp_unload.c");
-        let header = std::fs::read_to_string(cfile.with_extension("h")).unwrap();
-        let omitted = code.replace(
-            "    fwp_gc_finalizer(s, fwp_sock_final);",
-            "    /* omitted library socket finalizer */",
-        );
-        assert_ne!(code, omitted);
-        let library = dir.join(format!("libudp.{}", fwp::cgen::shared_library_extension()));
-        let host = dir.join("host.exe");
-        for opt in ["-O1", "-O2"] {
-            fwp::cgen::compile_c(include_str!("fixtures/udp_unload_host.c"), &host, opt).unwrap();
-            for (source, expected) in [(&code, 0), (&omitted, 248)] {
-                fwp::cgen::compile_library(
-                    source,
-                    &header,
-                    &library,
-                    opt,
-                    fwp::cgen::LibKind::Shared,
-                )
-                .unwrap();
-                if mode == "arc" {
-                    let symbols = checked(Command::new("nm").arg(&library));
-                    let symbols = String::from_utf8_lossy(&symbols.stdout);
-                    for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
-                        assert!(!symbols.contains(name), "ARC library contains {name}");
+        assert_eq!(reference.stdout, b"True\n");
+        for mode in ["tracing", "arc"] {
+            let cfile = dir.join("library.c");
+            checked(
+                Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .args(["build", "--gc", mode, "--cdylib", "--emit-c"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let code = std::fs::read_to_string(&cfile).unwrap() + setup;
+            let header = std::fs::read_to_string(cfile.with_extension("h")).unwrap();
+            let omitted = code.replace(
+                "    fwp_gc_finalizer(s, fwp_sock_final);",
+                "    /* omitted library socket finalizer */",
+            );
+            assert_ne!(code, omitted);
+            let library = dir.join(format!("libudp.{}", fwp::cgen::shared_library_extension()));
+            let host = dir.join("host.exe");
+            for opt in ["-O1", "-O2"] {
+                let host_source = include_str!("fixtures/udp_unload_host.c").replace(
+                    "#define OWNED_COUNT 1",
+                    &format!("#define OWNED_COUNT {count}"),
+                );
+                fwp::cgen::compile_c(&host_source, &host, opt).unwrap();
+                for (source, expected) in [(&code, 0), (&omitted, 248)] {
+                    fwp::cgen::compile_library(
+                        source,
+                        &header,
+                        &library,
+                        opt,
+                        fwp::cgen::LibKind::Shared,
+                    )
+                    .unwrap();
+                    if mode == "arc" {
+                        let symbols = checked(Command::new("nm").arg(&library));
+                        let symbols = String::from_utf8_lossy(&symbols.stdout);
+                        for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                            assert!(!symbols.contains(name), "ARC library contains {name}");
+                        }
                     }
-                }
-                for reuse in ["0", "1"] {
-                    let output = Command::new(&host)
-                        .arg(&library)
-                        .env("FWP_REUSE_VERIFY", reuse)
-                        .env("FWP_GC", "off")
-                        .output()
-                        .unwrap();
-                    if mode == "arc" && reuse == "1" {
-                        assert_eq!(output.status.code(), Some(101), "{output:?}");
-                        assert!(String::from_utf8_lossy(&output.stderr).contains(
-                            "--gc arc cannot retain released storage for reuse verification"
-                        ));
-                    } else {
-                        assert_eq!(
-                            output.status.code(),
-                            Some(expected),
-                            "{mode}/{opt}/{reuse}: {output:?}"
-                        );
+                    for reuse in ["0", "1"] {
+                        let output = Command::new(&host)
+                            .arg(&library)
+                            .env("FWP_REUSE_VERIFY", reuse)
+                            .env("FWP_GC", "off")
+                            .output()
+                            .unwrap();
+                        if mode == "arc" && reuse == "1" {
+                            assert_eq!(output.status.code(), Some(101), "{output:?}");
+                            assert!(String::from_utf8_lossy(&output.stderr).contains(
+                                "--gc arc cannot retain released storage for reuse verification"
+                            ));
+                        } else {
+                            assert_eq!(
+                                output.status.code(),
+                                Some(expected),
+                                "{mode}/{opt}/{reuse}: {output:?}"
+                            );
+                        }
                     }
                 }
             }

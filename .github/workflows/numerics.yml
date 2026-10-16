@@ -93,6 +93,7 @@ jobs:
         if: ${{ !cancelled() && inputs.suite == 'tcp' }}
         env:
           FWP_REQUIRE_TLS: '1'
+          FWP_TCP_CONSTRUCTOR_ARTIFACTS: tcp-evidence
         run: cargo test --test tls mutual_tls -- --exact
       - name: Existing POSIX TLS teardown and session-transfer controls
         if: ${{ !cancelled() && inputs.suite == 'tcp' && runner.os != 'Windows' }}
@@ -458,7 +459,7 @@ jobs:
         run: ./scripts/setup-windows.ps1
       - run: cargo fmt --all -- --check
       - run: cargo test --test library_unload --test compiler_options -- --nocapture
-      - run: cargo test --test udp_ownership udp_library_unload -- --nocapture
+      - run: cargo test --test udp_ownership socket_library_unload -- --nocapture
   library:
     if: inputs.suite == 'library'
     strategy:

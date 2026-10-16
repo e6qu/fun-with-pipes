@@ -26,7 +26,12 @@ fn peer_subject_failures_and_copy_traps_release_temporary_owners() {
         ..Program::default()
     };
     let (generated, _header) = fwp::cgen::generate_library(&p, "resources").unwrap();
-    let generated = generated.replace("    V v = fwp_cstr(s);", "    V v = subject_copy(s);");
+    let needle = "    V v = fwp_rc_fresh(fwp_cstr(s));";
+    assert!(generated.contains(needle), "missing subject-copy hook");
+    let generated = generated.replace(needle, "    V v = fwp_rc_fresh(subject_copy(s));");
+    let needle = "    V result = fwp_rc_fresh(fwp_some(v));";
+    assert!(generated.contains(needle), "missing optional-subject hook");
+    let generated = generated.replace(needle, "    V result = fwp_rc_fresh(subject_some(v));");
     let hooks = r#"
 #include <stdint.h>
 #include <stdlib.h>
@@ -42,6 +47,7 @@ static void observe_free(void *p);
 static long observe_print(BIO *bio,const X509_NAME *name,int indent,unsigned long flags);
 static long observe_data(BIO *bio,char **p);
 static uintptr_t subject_copy(const char *s);
+static uintptr_t subject_some(uintptr_t v);
 static void subject_ignore(void *p);
 #define SSL_get1_peer_certificate(s) observe_peer(s)
 #define X509_free(p) observe_cert_free(p)
@@ -71,6 +77,7 @@ static void observe_free(void *p){if(armed&&p&&p==buffer)buffer_frees++;free(p);
 static long observe_print(BIO *b,const X509_NAME *n,int i,unsigned long f){if(armed&&stage==3)return -1;return X509_NAME_print_ex(b,n,i,f);}
 static long observe_data(BIO *b,char **p){if(armed&&stage==4)return -1;return BIO_ctrl(b,BIO_CTRL_INFO,0,p);}
 static uintptr_t subject_copy(const char *s){if(stage==5)fwp_trap("subject copy");return fwp_cstr(s);}
+static uintptr_t subject_some(uintptr_t v){if(stage==6)fwp_trap("subject option");return fwp_some(v);}
 static void subject_ignore(void *p){(void)p;}
 static jmp_buf failure;static int recover(void){return 1;}
 static int probe(int argc,char **argv){
@@ -88,19 +95,21 @@ static int probe(int argc,char **argv){
  V conn=fwp_sock_new(-1,1);STREAM(conn)->tls=client;
  if(fwp_p_tls_peer_subject(fwp_sock_new(-1,1))!=FWP_NONE)return 37;
  V peer=fwp_sock_new(-1,1);STREAM(peer)->tls=server;if(fwp_p_tls_peer_subject(peer)!=FWP_NONE)return 42;STREAM(peer)->tls=0;
- for(stage=0;stage<=5;stage++){
+ for(stage=0;stage<=6;stage++){
   cert_gets=cert_frees=bio_gets=bio_frees=buffer_frees=0;buffer=0;armed=1;
-  if(stage==5){fwp_trap_recover=recover;fwp_trap_jb=&failure;fwp_trap_cleanup=fwp_cleanups;
+  intptr_t budget=fwp_gc.budget;
+  if(stage>=5){fwp_trap_recover=recover;fwp_trap_jb=&failure;fwp_trap_cleanup=fwp_cleanups;
    if(!setjmp(failure)){(void)fwp_p_tls_peer_subject(conn);return 38;}fwp_trap_recover=0;fwp_trap_jb=0;
   }else{
    V result=fwp_p_tls_peer_subject(conn);
-   if(stage==0){if(result==FWP_NONE||strcmp(STR(OBJ(result)->f[0])->d,"CN=localhost,O=fwp"))return 39;}
+   if(stage==0){if(result==FWP_NONE||strcmp(STR(OBJ(result)->f[0])->d,"CN=localhost,O=fwp"))return 39;fwp_rc_free_obj(OBJ(result)->f[0]);fwp_rc_free_obj(result);}
    else if(result!=FWP_NONE)return 40;
   }
   if(cert_gets!=1||cert_frees!=1)return 1;
   if(bio_gets!=(stage==2?0:1)||bio_frees!=bio_gets)return 2;
-  if(buffer_frees!=(stage==0||stage==5?1:0))return 3;
+  if(buffer_frees!=(stage==0||stage>=5?1:0))return 3;
   if(fwp_cleanups||ERR_peek_error())return 4;
+  if(stage==6&&!fwp_reuse_verify&&fwp_gc.budget<budget)return 44;
   armed=0;
  }
  stage=0;char *retry=fwp_tls_peer_subject(client);if(!retry||strcmp(retry,"CN=localhost,O=fwp"))return 43;free(retry);
@@ -212,6 +221,11 @@ int main(int argc,char **argv){int status=probe(argc,argv);if(status)_Exit(statu
             "    fwp_cleanup_push(&cleanup, fwp_tls_subject_free, s);",
             "    fwp_cleanup_push(&cleanup, subject_ignore, s);",
             Some(3),
+        ),
+        (
+            "    fwp_value_owner value = {v, fwp_rc_free_obj};\n    fwp_cleanup_push(&cleanup, fwp_value_release, &value);",
+            "    fwp_value_owner value = {v, fwp_rc_free_obj};\n    fwp_cleanup_push(&cleanup, subject_ignore, &value);",
+            Some(44),
         ),
         (
             "            if (out) {\n                memcpy(out, p, (size_t)n);",

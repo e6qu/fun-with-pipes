@@ -1,0 +1,6 @@
+# Rebinding proves the helper released its listener before returning.
+address : () -> String ! {Network, Error[IoError]}
+address = const "127.0.0.1:0" | tcp.listen | tcp.local-addr
+export probe : I64 -> Bool ! {Network}
+probe = const () | attempt (address | tcp.listen | tcp.stop) | result.is-ok
+main = 0 | probe | echo
