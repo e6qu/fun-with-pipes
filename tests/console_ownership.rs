@@ -10,6 +10,7 @@ fn input(command: &mut Command, bytes: &[u8]) -> Output {
     let mut child = command
         .env("FWP_ENV_COPY", "copied")
         .env("FWP_ENV_EMPTY", "")
+        .env("COLUMNS", "113")
         .env_remove("FWP_ENV_ABSENT")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -37,6 +38,7 @@ fn console_input_matches_raw_interpretation() {
             "tty",
             "[-2147483648, -1, 0, 1, 2, 3, 2147483647] | map term.is-tty | echo",
         ),
+        ("width", "term.width () | echo"),
         ("fold", "0 | fold-lines (curry (.0 | add 1)) | echo"),
         ("args", "args () | echo"),
         (
@@ -46,7 +48,7 @@ fn console_input_matches_raw_interpretation() {
     ] {
         std::fs::write(&source, format!("main = {body}\n")).unwrap();
         let all_cases = [bytes.as_slice(), b"", b"\n", b"last\r", b"a\0b\n"];
-        let cases = if name == "args" || name == "environment" || name == "tty" {
+        let cases = if matches!(name, "args" | "environment" | "tty" | "width") {
             &all_cases[1..2]
         } else {
             &all_cases[..]

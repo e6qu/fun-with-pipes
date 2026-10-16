@@ -120,6 +120,8 @@ for symbol in ['time.monotonic', 'time.unix']:
 bundle_contracts['file.info'] = (1, 'OwnedTree', [])
 bundle_contracts['process.run-input'] = (2, 'OwnedTree', [])
 bundle_contracts['process.call'] = (1, 'Shared', [])
+for symbol in ['term.is-tty', 'term.width']:
+    bundle_contracts[symbol] = (1, 'Shared', [])
 bundle_contracts['term.read-secret'] = (1, 'OwnedTree', [])
 bundle_contracts['list.transpose'] = (1, 'CopiedStructure', [0])
 for symbol, arity in [('linalg.lu-solve', 3), ('linalg.inverse', 2),

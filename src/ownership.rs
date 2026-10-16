@@ -287,7 +287,8 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         }
         "file.info" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "process.run-input" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
-        "process.call" => (&[B], R, None, &[]),
+        // These observations return immediate scalars and allocate no managed values.
+        "process.call" | "term.is-tty" | "term.width" => (&[B], R, None, &[]),
         "lines" | "read-line" | "read-lines" | "read-all" | "args" | "env.get" | "env.vars"
         | "dir.list" | "term.read-secret" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "string.chars"
