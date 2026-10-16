@@ -131,12 +131,15 @@ fn mapped_array_scratch_releases_on_success_and_callback_failure() {
         );
         let start = code.find("static V fwp_p_array_map_list(").unwrap();
         let end = start + code[start..].find("\n}\n").unwrap() + 3;
-        let helper = code[start..end].replace(
-            "fwp_apply_borrowed(f, 1, &items[i])",
-            "mapped_test_apply(items[i])",
-        );
-        let code =
-            code[..start].to_string() + "static V mapped_test_apply(V);\n" + &helper + &code[end..];
+        let helper = code[start..end]
+            .replace(
+                "fwp_apply_borrowed(f, 1, &items[i])",
+                "mapped_test_apply(items[i])",
+            )
+            .replace("fwp_array_typed_new(n, elem)", "mapped_test_array(n, elem)");
+        let code = code[..start].to_string()
+            + "static V mapped_test_apply(V);\nstatic V mapped_test_array(size_t, const fwp_desc *);\n"
+            + &helper + &code[end..];
         let code = code.replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
         let main = code.find("int main(").unwrap();
         let code = code[..main].to_string() + include_str!("fixtures/mapped_array_cleanup.c");

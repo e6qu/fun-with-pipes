@@ -128,6 +128,21 @@ adding a retain or changing floating-point operations. It does not assume that
 all array loops are invariant. The [handoff](development-state.md) records
 current compiler validation and performance evidence for this new change.
 
+### Numeric lists immediately converted to arrays
+
+The candidate optimization recognizes `map f | array.from-list` when each mapped
+result is an inline integer, F32 or F64. It runs the same callbacks in the same
+order, stores their numeric results in temporary storage, then packs the array.
+It avoids allocating list nodes that would immediately be discarded. Input
+aliases stay alive; failures release the temporary storage. Boxed numbers and
+managed results keep their existing construction and cleanup rules. No new
+language notation is introduced.
+
+`FWP_MAP_ARRAY=0` disables this transformation for controlled comparisons;
+`FWP_ARRAY_FUSION=0` disables it along with the other array transformations.
+This is implemented preparation, not yet accepted platform support. The handoff
+records semantic, failure and performance validation.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C

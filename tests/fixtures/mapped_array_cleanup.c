@@ -6,15 +6,20 @@ static V mapped_test_apply(V value) {
 #ifndef FWP_ARC_ONLY
     if (mapped_test_collect) fwp_gc_collect();
 #endif
-    if (mapped_test_fail && mapped_test_calls == 2) fwp_trap("mapped array callback failure");
+    if (mapped_test_fail == 1 && mapped_test_calls == 2) fwp_trap("mapped array callback failure");
     return fwp_from_f64(fwp_f64(value) * 2.0);
+}
+static V mapped_test_array(size_t n, const fwp_desc *element) {
+    if (mapped_test_calls != 2) _Exit(237);
+    if (mapped_test_fail == 2) fwp_trap("mapped array allocation failure");
+    return fwp_array_typed_new(n, element);
 }
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     const fwp_desc element = {.kind=K_F64};
     V source = fwp_rc_fresh(fwp_cons(fwp_from_f64(1.5), fwp_rc_fresh(fwp_cons(fwp_from_f64(-2.0), 0))));
     for (mapped_test_collect = 0; mapped_test_collect < 2; mapped_test_collect++) {
-        for (mapped_test_fail = 0; mapped_test_fail < 2; mapped_test_fail++) for (int repeat=0; repeat<16; repeat++) {
+        for (mapped_test_fail = 0; mapped_test_fail < 3; mapped_test_fail++) for (int repeat=0; repeat<16; repeat++) {
             intptr_t before = fwp_gc.budget;
             mapped_test_calls = 0;
             fwp_trap_recover = mapped_test_recover; fwp_trap_jb = &mapped_test_jump;

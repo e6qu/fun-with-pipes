@@ -1,23 +1,25 @@
 # Session handoff
 
-Updated 2026-10-16. This is the independent allocation-profiling preparation in
-`/private/tmp/fwp-ad-allocation-sites`, branch `profile-ad-allocations`, based on
-`6e122959`. Only the workflow, profiling script and this handoff differ from that
-anchor. No runtime or language behavior is changed; no profiling PR is open.
+Updated 2026-10-16. This worktree `/private/tmp/fwp-ad-allocation-sites`, branch
+`profile-ad-allocations`, now prepares numeric mapped-array construction. The
+allocation diagnostic through `cfdf4d79` has been bundled into the process batch;
+only changes after that anchor belong to this following compiler delivery. No
+second PR is open. Earlier parent changes must not be replayed.
 
 The only active PR is [#148](https://github.com/e6qu/fun-with-pipes/pull/148), at
 `93b1741abcf5ab2a61460746c0077564e0328c0e`, in the root worktree. Its final
 [production run 38825629531](https://github.com/e6qu/fun-with-pipes/actions/runs/38825629531)
-has six passing jobs; both Linux jobs and Intel macOS stress remain running.
+has eight passing jobs; only Linux AMD64 remains running.
 [Documentation 38825487182](https://github.com/e6qu/fun-with-pipes/actions/runs/38825487182)
 passes. The previous delivery merged in #147 as `c9127d2d` after all gates passed.
 
-The following process/terminal batch is published at `6e122959` in
-`/private/tmp/fwp-process-utilities`, branch `owned-process-utilities`. Its full
-handoff is authoritative for that preparation. Combined six-host validation
-[38831045963](https://github.com/e6qu/fun-with-pipes/actions/runs/38831045963)
-is queued/running; old queued `38830176031` is confirmed canceled. Transfer only
-changes after `81d113aa` onto the accepted #148 squash before opening the next PR.
+The following process/terminal batch is published at `ad53a46a` in
+`/private/tmp/fwp-process-utilities`, branch `owned-process-utilities`. Its
+handoff is authoritative. All six hosts passed process/signal/terminal/CLI
+checks at `6e122959`; the only failure was the tty ownership contract, fixed at
+`8926a2fb`. Combined [rerun 38833152028](https://github.com/e6qu/fun-with-pipes/actions/runs/38833152028)
+is queued/running. Later additions only bundle measurements/docs. Transfer its
+diff after `81d113aa` onto #148's accepted squash before opening that next PR.
 
 Standing authorization covers fixes, publication and squash merge after all nine
 production jobs and docs pass for the exact final head. Commits have one subject
@@ -38,11 +40,11 @@ active, then continue. JIT is excluded. Failing tests are repair tasks.
 | 6 | In progress | Preserve equivalent-work profiles, raw samples and regression criteria |
 | 7 | In progress | Accept maintained application, process and terminal checks |
 
-Next: finish and merge #148, then accept the combined process/terminal delivery.
-In parallel, run this diagnostic preparation on four native hosts, inspect the
-largest allocation sites and choose a concrete optimization from that evidence.
-Transfer only its changes after `6e122959` onto the later accepted main; do not
-replay either parent preparation or open a competing PR.
+Next: finish and merge #148, then deliver the combined process/terminal batch.
+In parallel, validate this numeric map-to-array candidate on six hosts and run
+four-host repeated comparisons. Fix failures before selecting it for the later
+PR. Transfer only changes after `cfdf4d79` onto accepted process main; no second
+PR should be opened while the current delivery is still active.
 
 ## Why profile allocations
 
@@ -111,7 +113,19 @@ missing-free negative control. Formatting passes. These use the accepted #147
 compiler plus current helper C, not the changed compiler. Full acceptance and
 performance evidence remain on CI. The next focused suite is `mapped-arrays`.
 
-The standalone new Rust test harness initially caught a missing mutable Command
-borrow; that fixture is corrected and compiles (0.71 s, three tests listed). The
-queued `38834469846` was dispatched before the correction and must be canceled
-and replaced; it is not acceptance. Runtime source is unchanged by the repair.
+The new Rust test harness compiles against the existing library (0.71 s, three
+tests listed) after correcting a mutable Command borrow. The old queued
+`38834469846` is confirmed canceled. [Six-host candidate run 38834524334](https://github.com/e6qu/fun-with-pipes/actions/runs/38834524334)
+is queued at `3ad4f223`. Later additions cover final-array allocation failure
+and add repeated timing/profile evidence; publish and validate that final source
+before adoption. Edited-C success/callback/allocation-failure and missing-free
+controls pass in tracing and ARC (1.19/1.22 s).
+
+`scripts/measure-mapped-arrays.py` compares the same compiler with only
+`FWP_MAP_ARRAY` off/on, in tracing and ARC, using direct numeric work, repeated
+reverse derivatives and nested derivatives. It retains one warmup, eight
+alternating process samples, separate allocation profiles, peak/final memory,
+compiler/hardware/flags, compilation time, binary size and actual disassembly.
+Timed scope includes process startup and output; this is fwp versus fwp, not
+C/Rust parity. Script parsing passes (0.14 s); no local timing claim is made.
+The runner suite is `mapped-array-costs`. Results remain pending.

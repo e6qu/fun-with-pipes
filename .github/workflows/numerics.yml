@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs]
         default: numerical
       evidence_run:
         description: Completed solver run to use for generated-code comparisons
@@ -385,7 +385,7 @@ jobs:
             performance-evidence/
             target/bench.md
   ad_metadata:
-    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites'
+    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites' || inputs.suite == 'mapped-array-costs'
     strategy:
       fail-fast: false
       matrix:
@@ -401,11 +401,14 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bin fwp
+      - name: Compare numeric mapped-array costs
+        if: inputs.suite == 'mapped-array-costs'
+        run: python3 scripts/measure-mapped-arrays.py --output metadata-evidence
       - name: Attribute derivative allocations to native call sites
         if: inputs.suite == 'ad-sites'
         run: python3 scripts/measure-ad-allocation-sites.py --output metadata-evidence
       - name: Repeat paired metadata costs with sustained derivatives
-        if: inputs.suite != 'ad-sites'
+        if: inputs.suite != 'ad-sites' && inputs.suite != 'mapped-array-costs'
         run: python3 scripts/measure-ad-metadata.py --comparison "${{ inputs.suite == 'ad-layout' && 'interleaved' || 'separate' }}" --output metadata-evidence
       - uses: actions/upload-artifact@v7
         if: always()
