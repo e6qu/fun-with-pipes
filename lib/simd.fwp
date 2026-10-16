@@ -1,12 +1,10 @@
-# Portable SIMD: Vec[N, T] holds N lanes. Lane-wise operations lower to
-# GCC/Clang vector extensions in native code (and from there to SSE, AVX,
-# NEON or WASM SIMD). Integer lanes wrap on overflow, as in hardware.
-#
 # SIMD means single instruction, multiple data: each lane holds a value and an
-# operation acts lane by lane. Vec[N, T] has N lanes of type T. The compiler maps
-# eligible operations to the target's vector support. Lane count alone does not
-# prove one machine instruction or a speedup. Unlike ordinary checked integer
-# arithmetic, integer SIMD lanes wrap on overflow; choose that behavior explicitly.
+# operation acts lane by lane. Vec[N, T] has N lanes of type T, stored in an array
+# inside a record. The current native implementation emits C loops; the C compiler
+# may vectorize eligible loops for the target. The API does not guarantee vector
+# instructions, stack-only storage or a speedup. Integer addition, subtraction,
+# multiplication and sum wrap on overflow, unlike ordinary checked arithmetic.
+# Division retains its arithmetic checks. Choose these numeric rules explicitly.
 
 Vec[N, T] = { lanes: Array[T] }
 

@@ -520,12 +520,6 @@ fn free_enabled() -> bool {
     std::env::var("FWP_FREE").map_or(true, |v| v != "0")
 }
 
-/// Whether records and variants that do not escape live on the stack
-/// (`FWP_STACK=0` turns it off, to compare).
-fn stack_enabled() -> bool {
-    std::env::var("FWP_STACK").map_or(true, |v| v != "0")
-}
-
 /// Original resource record holders may retain fields without a heap box.
 fn resource_frame_fields_enabled() -> bool {
     std::env::var("FWP_FRAME_FIELDS").map_or(true, |v| v != "0")
@@ -3791,7 +3785,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         // a record, variant or closure that does not outlive `body`: on
         // the stack
         if self.stackable(v)
-            && stack_enabled()
+            && crate::escape::stack_enabled()
             && !crate::escape::escapes(body, l, &self.g.noesc, Some(self.me))
         {
             let types = self.stack_types(v, &self.locals[l as usize]);
@@ -3825,6 +3819,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// An argument of a call of `g` at parameter `j`: a record or variant
     /// built for a parameter that does not escape is built on the stack.
     fn arg(&mut self, g: FuncId, j: usize, a: &Expr) -> String {
+        if crate::rc::borrows_record_argument(&self.g.prog.funcs, g, j, a) {
+            // RC lowering keeps every field owner alive through this call.
+            // The stack view owns no child reference and needs no child drop.
+            return self.stack_object(a, None);
+        }
         if let Some(children) = self.stack_alias(a) {
             let value = self.expr(a);
             if crate::rc::consumes_arg(&self.g.prog.funcs, g, j) {
@@ -3834,7 +3833,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         if self.stackable(a)
             && g != self.me
-            && stack_enabled()
+            && crate::escape::stack_enabled()
             && self.g.noesc[g].get(j).copied().unwrap_or(false)
         {
             let ty = self.g.prog.funcs[g].ty.params(j + 1).0[j].clone();

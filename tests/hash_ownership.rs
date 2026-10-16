@@ -164,6 +164,7 @@ fn hash_and_bitwise_fusion_preserve_effects_traps_and_wide_values() {
     let compiler = env!("CARGO_BIN_EXE_fwp");
     let cases = [
         ("values", include_str!("fixtures/hash_fusion.fwp"), true, 0),
+        ("borrowed-records", include_str!("fixtures/hash_borrowed_fields.fwp"), false, 0),
         ("effects", "main = range 0 3 | map (tap echo | hash) | fold (curry (tap echo | uncurry bit.xor)) 0u64 | echo\n", false, 0),
         ("distinct-traps", "main = [0, 9223372036854775807] | map (add 1 | hash) | fold (curry (const 0u64 | div 0u64)) 0u64 | echo\n", false, 101),
         ("shift-trap", "main = [1u8, 2u8] | map (bit.shl 8 | hash) | find (const True) | echo\n", false, 101),
@@ -295,19 +296,22 @@ fn hash_reduction_removes_lists_and_temporary_heap_tuples() {
             assert_eq!(code.matches(marker).count(), 1);
             code = code.replace(
                 marker,
-                &format!("static unsigned hash_requests;\n{marker} if(leaf!=0) hash_requests++;"),
+                &format!("static unsigned hash_requests, hash_retains;\n{marker} if(leaf!=0) hash_requests++;"),
             );
             let initialized = "static inline void *fwp_alloc_init(size_t n) {";
             assert_eq!(code.matches(initialized).count(), 1);
             code = code.replace(initialized, &format!("{initialized} hash_requests++;"));
+            let retain = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
+            assert_eq!(code.matches(retain).count(), 1);
+            code = code.replace(retain, &format!("{retain} hash_retains++;"));
             let start = code
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
             let finish = start + code[start..].find("\n}\n").unwrap() + 3;
             let body = code[start..finish].replace("    fwp_init_consts();\n",
-            "    fwp_init_consts();\n    hash_requests = 0; intptr_t hash_budget = fwp_gc.budget;\n")
+            "    fwp_init_consts();\n    hash_requests = 0; hash_retains = 0; intptr_t hash_budget = fwp_gc.budget;\n")
             .replace("    fwp_cl_finish();\n",
-            "    fwp_cl_finish();\n    if(hash_requests > 35 || fwp_gc.budget != hash_budget) exit(249);\n");
+            "    fwp_cl_finish();\n    if(hash_requests > 35 || hash_retains || fwp_gc.budget != hash_budget) exit(249);\n");
             code.replace_range(start..finish, &body);
             // A 35-request budget allows input construction and fixed setup, but
             // excludes 65 per-hash heap tuples. Disabling stack placement must fail.

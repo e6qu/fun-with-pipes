@@ -20,6 +20,11 @@
 
 use crate::ir::{Body, Expr, FuncId, Local, Pat, Program};
 
+/// Existing compiler comparison switch for nonescaping stack aggregates.
+pub(crate) fn stack_enabled() -> bool {
+    std::env::var("FWP_STACK").map_or(true, |v| v != "0")
+}
+
 /// For each function, whether each parameter escapes (`false`: it does
 /// not). Non-expression functions let parameters escape except primitive slots
 /// with an explicit nonescape proof in the ownership inventory.

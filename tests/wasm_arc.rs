@@ -219,6 +219,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
 "#),
         ("hashes", include_str!("fixtures/hash_values.fwp")),
         ("hash-fusion", include_str!("fixtures/hash_fusion.fwp")),
+        ("hash-borrowed-fields", include_str!("fixtures/hash_borrowed_fields.fwp")),
         ("range-arrays", include_str!("fixtures/range_arrays.fwp")),
         ("fresh-numerics", r#"
 main = [

@@ -125,8 +125,16 @@ can avoid its intermediate result list. It keeps captured inputs alive through
 the ordinary ownership rules. Hash still uses its runtime type description. Its separately reviewed nonescape
 contract proves that the input object is used only during the call, allowing
 existing stack placement for temporary tuples. Borrowing alone does not imply
-this guarantee: other borrowed inputs can be returned or retained. Tuple fields
-still obey their normal ownership rules.
+this guarantee: other borrowed inputs can be returned or retained.
+
+For a direct temporary tuple, ownership lowering can borrow its fields until
+hash returns. Existing sequence rules keep every field owner alive while later
+fields are evaluated. A later operation that consumes an alias must obtain its
+own reference; a failure must still release pending owners. The independent
+ownership verifier checks that counted fields have owners alive at the call,
+and the backend builds a stack record without extra child references. Ordinary
+escaping tuples still own their fields. Disabling stack placement retains the
+ordinary counted representation for comparison.
 
 Bit shifts remain excluded from that proof because an oversized shift traps.
 Effectful callbacks and distinguishable traps still prevent interleaving. This

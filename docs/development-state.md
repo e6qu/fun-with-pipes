@@ -19,9 +19,10 @@ later commits after #151 merges; never replay that old parent chain. Do not open
 another delivery PR while #151 is open. Its first implementation is `ed78f26a`;
 subsequent work adds direct range arrays and repairs the allocation counter.
 
-Next: rerun native hash/range after the fixture-signature repair. Actual WASI
-`38861845639` and four-host costs `38861849157` run at `a2f4ccd9`; their compiler
-source matches the fixture-only follow-up. Fix failures, retain machine-code/allocation evidence
+Next: validate the latest field-borrowing change with native unit/semantic checks,
+actual WASI and four-host costs. Earlier direct-range WASI `38861845639` passes
+both hosts at `a2f4ccd9`; its costs are `38861849157`. Native fixture repair
+`38862399186` runs at `61fde4cc`. Those earlier checks do not cover field borrowing. Fix failures, retain machine-code/allocation evidence
 and repeat verified before/after binaries on the same hosts. Meanwhile monitor
 #151, fix its failures and squash merge after exact-head acceptance. Then rebase
 only this preparation's delta onto the verified merge and publish one substantial
@@ -49,6 +50,16 @@ Never raise limits or restart the refused local optimizer compilation.
 
 
 ## Changes and acceptance
+
+The latest unverified change borrows the fields of a temporary record
+passed directly to a proved nonescaping primitive. Existing sequence ownership
+keeps field owners alive until the call returns, including when later fields
+consume aliases or trap. The independent verifier rejects fields without owners
+or owners consumed by later fields. The backend uses stack storage without child
+count traffic. Structural tuple types are handled; nominal records retain their
+existing ownership. New unit tests and retained/mutated/error fixtures need CI.
+The disabled-stack path retains ordinary ownership. Require zero hot-loop retains,
+retained aliases, last-use cleanup, trap cleanup and actual WASI physical frees.
 
 Hash reads its input only during the call. An explicit nonescape proof in the
 ownership inventory lets existing stack placement remove temporary heap tuples.
@@ -110,3 +121,9 @@ host callbacks, numerical/network contracts, derivative scaling and OpenCL's
 runtime compilation remain open. The baseline and paired reports in
 [benchmarks](benchmarks.md) retain slower samples; fewer allocations alone is not
 proof of improved speed. Broader representative programs remain required.
+
+Library SIMD comments now state the actual C-loop implementation and possible C
+compiler vectorization, replacing an unsupported vector-extension guarantee.
+Generated docs were refreshed through `tests/stdlib_doc.rs` using the standalone
+generator (guarded 1.07 s). Borrowed-field fixtures pass the accepted interpreter
+(0.25 s); formatting/docs pass (1.06 / 2.57 s). No changed compiler was built locally.

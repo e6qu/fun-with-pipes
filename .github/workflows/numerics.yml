@@ -49,7 +49,11 @@ jobs:
         if: inputs.suite == 'hash' || inputs.suite == 'hash-windows'
         env:
           FWP_HASH_ARTIFACTS: hash-evidence
-        run: cargo test --no-fail-fast --test range_array --test hash_ownership --test protocol --test arc_execution
+        run: |
+          cargo test --lib rc::tests
+          cargo test --lib escape::tests
+          cargo test --lib ownership::tests
+          cargo test --no-fail-fast --test range_array --test hash_ownership --test protocol --test arc_execution
       - uses: actions/upload-artifact@v7
         if: always() && (inputs.suite == 'hash' || inputs.suite == 'hash-windows')
         with:
