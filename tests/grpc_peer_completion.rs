@@ -63,12 +63,17 @@ static void peer_child(void *,int);
 #undef free
 static void observed_free(void *p){if(p&&p==peer_buffer){peer_frees++;peer_buffer=0;}free(p);}
 static char *observed_subject(void){if(stage==3)return 0;peer_buffer=malloc(11);if(!peer_buffer)_Exit(30);memcpy(peer_buffer,"CN=runtime",11);return peer_buffer;}
+static const fwp_desc peer_string_type={.kind=K_STR,.drop=fwp_rc_free_obj};
+static const fwp_desc *const peer_fields[]={&peer_string_type};
+static const fwp_desc *const *const peer_variants[]={NULL,peer_fields};
+static const fwp_desc peer_option_type={.kind=K_ADT,.vfields=peer_variants};
 static void peer_child(void *arg,int cancelled){
  (void)arg;(void)cancelled;
  if(peer_frees)_Exit(1);
- V subject=fwp_p_grpc_peer_subject();
+ V subject=fwp_p_grpc_peer_subject(&peer_option_type);
  if(stage<3||stage>=5){if(subject==FWP_NONE||strcmp(STR(OBJ(subject)->f[0])->d,"CN=runtime"))_Exit(2);}
  else if(subject!=FWP_NONE)_Exit(3);
+ if(subject){fwp_rc_free_obj(OBJ(subject)->f[0]);fwp_rc_free_obj(subject);}
  children++;
 }
 static jmp_buf failure;

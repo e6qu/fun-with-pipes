@@ -162,6 +162,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "grpc.metadata" | "grpc.peer-subject" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "tcp.listen" | "tcp.connect" | "tcp.accept" => {
             (&[B], ResultOwnership::OwnedResource, None, &[])
         }

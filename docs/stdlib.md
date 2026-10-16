@@ -2185,7 +2185,8 @@ grpc.code-name : I64 -> String
 grpc.fail : I64 -> String -> a ! {Error[GrpcError]}
 
 # the metadata (request headers, with lower-case names) of the call the
-# current task serves; empty outside a call
+# current task serves; empty outside a call. The returned list and strings are
+# independent copies, so keeping them does not keep the request alive.
 grpc.metadata : () -> List[(String, String)] ! {Network}
 
 # one metadata value of the call being served
@@ -2210,7 +2211,8 @@ grpc.with-response-metadata : (() -> a ! {Network | e}) -> (a, List[(String, Str
 
 # the subject of the client's certificate (`CN=alice,O=Example`) of the
 # call the current task serves, when the server requires client
-# certificates (mutual TLS); `None` otherwise
+# certificates (mutual TLS); `None` otherwise. The returned text is an
+# independent copy that remains usable after the call finishes.
 grpc.peer-subject : () -> Option[String] ! {Network}
 
 # run a function whose calls connect over TLS with these options: a CA

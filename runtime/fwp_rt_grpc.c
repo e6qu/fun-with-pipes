@@ -2506,17 +2506,27 @@ static int g_not_metadata(const char *k) {
     return 0;
 }
 
-static V fwp_p_grpc_metadata(void) {
-    g_serving *sv = g_ctx_of()->serving;
+static V fwp_p_grpc_metadata(const fwp_desc *list_type) {
+    g_ctx *ctx = g_ctx_of();
+    g_serving *sv = ctx->serving;
     if (!sv) return 0;
-    V *items = (V *)fwp_alloc((sv->headers->n + 1) * sizeof(V));
-    size_t n = 0;
-    for (size_t i = 0; i < sv->headers->n; i++) {
-        const h2_hdr *h = &sv->headers->v[i];
+    fwp_value_owner result = {0, list_type->drop};
+    fwp_cleanup cleanup; fwp_value_protect(&result, &cleanup);
+    /* Build backwards to preserve header order without a pointer scratch array. */
+    for (size_t i = sv->headers->n; i > 0; i--) {
+        const h2_hdr *h = &sv->headers->v[i - 1];
         if (g_not_metadata(h->name)) continue;
-        items[n++] = fwp_tuple2(fwp_cstr(h->name), fwp_cstr(h->value));
+        fwp_decode_fields fields;
+        fwp_decode_fields_begin(&fields, 2, list_type->elem->fields, 2, NULL);
+        fields.values[0] = fwp_rc_fresh(fwp_cstr(h->name));
+        fields.values[1] = fwp_rc_fresh(fwp_cstr(h->value));
+        fwp_value_owner pair = {fwp_decode_record(&fields), list_type->elem->drop};
+        fwp_cleanup pair_cleanup; fwp_value_protect(&pair, &pair_cleanup);
+        result.value = fwp_rc_fresh(fwp_cons(pair.value, result.value));
+        fwp_value_finish(&pair, &pair_cleanup);
     }
-    return fwp_list_from(items, n);
+    FWP_KEEP_ALIVE(PTR(ctx));
+    return fwp_value_finish(&result, &cleanup);
 }
 
 typedef struct { fwp_task *task; void *saved, *held; } g_context_owner;
@@ -2631,10 +2641,15 @@ static V fwp_p_grpc_with_response_metadata(V f) {
     return result;
 }
 
-static V fwp_p_grpc_peer_subject(void) {
-    g_serving *sv = g_ctx_of()->serving;
+static V fwp_p_grpc_peer_subject(const fwp_desc *option_type) {
+    g_ctx *ctx = g_ctx_of();
+    g_serving *sv = ctx->serving;
     if (!sv || !sv->peer) return FWP_NONE;
-    return fwp_some(fwp_cstr(sv->peer));
+    fwp_decode_fields fields;
+    fwp_decode_fields_begin(&fields, 1, option_type->vfields[1], 1, NULL);
+    fields.values[0] = fwp_rc_fresh(fwp_cstr(sv->peer));
+    FWP_KEEP_ALIVE(PTR(ctx));
+    return fwp_decode_variant(&fields, 1);
 }
 
 /* the text of an `Option[String]` field ("" for None) */

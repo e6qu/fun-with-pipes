@@ -5550,6 +5550,15 @@ impl<'p> Gen<'p> {
             };
             return Ok(format!("return {call};"));
         }
+        if matches!(sym, "grpc.metadata" | "grpc.peer-subject") {
+            let descriptor = self.desc(&result);
+            let function = if sym == "grpc.metadata" {
+                "fwp_p_grpc_metadata"
+            } else {
+                "fwp_p_grpc_peer_subject"
+            };
+            return Ok(format!("return {function}({descriptor});"));
+        }
         if sym == "metrics.snapshot" {
             let descriptor = self.desc(&result);
             return Ok(format!("return fwp_p_metrics_snapshot({descriptor});"));
@@ -6362,10 +6371,8 @@ impl<'p> Gen<'p> {
                     ("metrics.add", "fwp_p_metrics_update(0, l0, l1)"),
                     ("metrics.set", "fwp_p_metrics_update(1, l0, l1)"),
                     ("metrics.observe", "fwp_p_metrics_update(2, l0, l1)"),
-                    ("grpc.metadata", "fwp_p_grpc_metadata()"),
                     ("grpc.with-metadata", "fwp_p_grpc_with_metadata(l0, l1)"),
                     ("grpc.with-deadline", "fwp_p_grpc_with_deadline(l0, l1)"),
-                    ("grpc.peer-subject", "fwp_p_grpc_peer_subject()"),
                     ("grpc.set-header", "fwp_p_grpc_set_meta(0, l0, l1)"),
                     ("grpc.set-trailer", "fwp_p_grpc_set_meta(1, l0, l1)"),
                     (

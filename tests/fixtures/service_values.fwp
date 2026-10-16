@@ -1,0 +1,2 @@
+# Outside a served request there are no incoming headers or peer certificate.
+main = [() | grpc.metadata | echo, () | grpc.peer-subject | echo] | ignore

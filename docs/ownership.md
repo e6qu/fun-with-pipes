@@ -635,3 +635,18 @@ them. Failed native receive allocation traps before the buffer is used. These
 repairs pass all six focused native hosts in `38898918147` at `7224b3de` and do
 not change socket-handle ownership;
 connections and listeners still require their separate lifetime work.
+
+### Copied service metadata preparation
+
+A served request carries headers (name/value strings) and may identify a peer
+certificate. `grpc.metadata` returns an independent list of incoming headers;
+`grpc.peer-subject` returns copied certificate text when available. The next
+preparation gives these output values ordinary owners and releases partially
+copied fields if construction fails. Metadata preserves the input order and
+duplicate names while omitting protocol headers; it builds directly into the
+result list without a temporary array of pointers.
+
+This does not establish ownership of the service's callbacks, connection,
+stream or retained request context. Those remain separate work. The preparation
+handoff records focused checks; full service execution without tracing has not
+been established by these result-copy changes.
