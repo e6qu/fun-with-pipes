@@ -156,3 +156,11 @@ The preceding polling implementation `89e66d53` passes all six native jobs in
 `38906218307`; the address and final header changes still require fresh checks.
 #152 now has passing Windows2, ARM macOS regular/GC, benchmarks and docs; Linux2
 and both Intel macOS jobs remain in progress. Do not merge early.
+
+Runtime `8d9a79cb` is under final six-native `38907692064` and actual WASI
+`38907697173` validation. The only following increment extends library acceptance:
+ordinary and checked-ARC exports repeatedly create/release UDP sockets before
+returning; both undergo real unload, host-socket preservation and missing-finalizer
+controls. The existing `library-unload` workflow now includes that targeted test.
+There is no runtime change in this test increment, so its focused result can be
+combined with the earlier exact-runtime checks before full production acceptance.

@@ -252,46 +252,65 @@ fn udp_construction_aliases_and_partial_receives_release_every_owner() {
 
 #[test]
 fn udp_library_unload_closes_retained_handles_and_preserves_host_socket() {
-    use fwp::ir::*;
-    let unit = MT::Record(vec![]);
-    let program = Program {
-        funcs: vec![Func {
-            name: "ready".into(),
-            arity: 1,
-            locals: vec![unit.clone()],
-            ty: MT::Fun(Box::new(unit), Box::new(MT::con("std::Bool"))),
-            body: Body::Expr(Expr::Const(fwp::value::Value::bool(true))),
-        }],
-        exports: vec![("ready".into(), 0)],
-        ..Program::default()
-    };
-    let (code, header) = fwp::cgen::generate_library(&program, "udp_owners").unwrap();
-    let code = code + include_str!("fixtures/udp_unload.c");
-    let omitted = code.replace(
-        "    fwp_gc_finalizer(s, fwp_sock_final);",
-        "    /* omitted library socket finalizer */",
-    );
-    assert_ne!(code, omitted);
     let dir = fwp::cgen::TempDir::new("udp-unload").unwrap();
-    let library = dir.join(format!("libudp.{}", fwp::cgen::shared_library_extension()));
-    let host = dir.join("host.exe");
-    for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(include_str!("fixtures/udp_unload_host.c"), &host, opt).unwrap();
-        for (source, expected) in [(&code, 0), (&omitted, 248)] {
-            fwp::cgen::compile_library(source, &header, &library, opt, fwp::cgen::LibKind::Shared)
+    let input = dir.join("library.fwp");
+    std::fs::write(&input, include_str!("fixtures/udp_library.fwp")).unwrap();
+    let reference = checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    assert_eq!(reference.stdout, b"True\n");
+    for mode in ["tracing", "arc"] {
+        let cfile = dir.join("library.c");
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["build", "--gc", mode, "--sharedlib", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap() + include_str!("fixtures/udp_unload.c");
+        let header = std::fs::read_to_string(cfile.with_extension("h")).unwrap();
+        let omitted = code.replace(
+            "    fwp_gc_finalizer(s, fwp_sock_final);",
+            "    /* omitted library socket finalizer */",
+        );
+        assert_ne!(code, omitted);
+        let library = dir.join(format!("libudp.{}", fwp::cgen::shared_library_extension()));
+        let host = dir.join("host.exe");
+        for opt in ["-O1", "-O2"] {
+            fwp::cgen::compile_c(include_str!("fixtures/udp_unload_host.c"), &host, opt).unwrap();
+            for (source, expected) in [(&code, 0), (&omitted, 248)] {
+                fwp::cgen::compile_library(
+                    source,
+                    &header,
+                    &library,
+                    opt,
+                    fwp::cgen::LibKind::Shared,
+                )
                 .unwrap();
-            for reuse in ["0", "1"] {
-                let output = Command::new(&host)
-                    .arg(&library)
-                    .env("FWP_REUSE_VERIFY", reuse)
-                    .env("FWP_GC", "off")
-                    .output()
-                    .unwrap();
-                assert_eq!(
-                    output.status.code(),
-                    Some(expected),
-                    "{opt}/{reuse}: {output:?}"
-                );
+                if mode == "arc" {
+                    let symbols = checked(Command::new("nm").arg(&library));
+                    let symbols = String::from_utf8_lossy(&symbols.stdout);
+                    for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                        assert!(!symbols.contains(name), "ARC library contains {name}");
+                    }
+                }
+                for reuse in ["0", "1"] {
+                    let output = Command::new(&host)
+                        .arg(&library)
+                        .env("FWP_REUSE_VERIFY", reuse)
+                        .env("FWP_GC", "off")
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        output.status.code(),
+                        Some(expected),
+                        "{opt}/{reuse}: {output:?}"
+                    );
+                }
             }
         }
     }
