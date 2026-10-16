@@ -275,12 +275,26 @@ language overhead. “Fewer allocations” does not by itself mean “faster.”
 
 ## Commits and pull requests
 
+Write the description for someone who has not followed the implementation.
+Start with the problem and what changes for a program or its author. Explain a
+concrete before/after example when it helps. Introduce necessary terms in place:
+for example, explain that a reference count records how many owners still use a
+value before discussing changes to that count. A list of internal function names
+or compiler passes is not an explanation of the change.
+
+Summarize validation and remaining limits separately from the changes. For a
+benchmark, name the programs being compared, input sizes, what the timer includes,
+and how to read the reported ratio. Keep source hashes, job IDs, failure history
+and individual timing samples in linked evidence. State whether full CI is still
+running. Rewrite the description around the final change before merging.
+
 - Work on a branch and open a pull request against `main`.
 - Pull requests are merged by **squash**. The title says what changed;
   the description explains why and how it was checked. Supply the
   squash subject explicitly and leave the commit body empty.
-- One topic per pull request. A refactor needed for a feature can go in
-  the same pull request; unrelated clean-ups get their own.
+- Bundle related roadmap work and fixes discovered while testing into a
+  reviewable delivery. Keep one delivery PR open at a time; avoid repeated
+  full test cycles for fragments of the same change.
 - Every commit message is exactly one line, at most 80 characters, with
   no body, trailers or AI attribution. When authorized to merge, wait
   for passing CI and squash-merge with an explicitly supplied subject
