@@ -48,6 +48,25 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Numeric zip maps and text applications (PR #150)
+
+[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) merged as
+`729db67f71386750aad0bbe477f546e5276b0223` after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38851567232)
+and [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38851565415) passed
+for `7a7b40e1878ea062f64eceded6ae029b4124f976`. The merge tree, parent and exact
+one-line message with empty body were verified. Duplicate production
+`38860909658` was canceled.
+
+Numeric zip/map pipelines avoid temporary pairs while preserving observable
+callback and trap order. Repeated derivatives remove 4,194,816 managed requests
+and 2,097,152 retains; peak charged storage stays 840,888 bytes. Repeated timing
+and actual code remain in [benchmarks](benchmarks.md); tiny nested cases are mixed.
+Partial-list cleanup, large WASI chunk sizes and the Windows cancellation fixture
+were repaired. Text-file contracts and maintained `todo`/`grep` calls have full
+acceptance. This does not finish tracing removal, derivative scaling or C/Rust
+performance work.
+
 ## Owned processes and numeric mapped arrays (PR #149)
 
 [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149) merged as
@@ -56,7 +75,7 @@ batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.
 and [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38841118993)
 passed for `5748f7496a8f1db0e93145c53e380a0703affc2f`. The merge tree, parent and
 single-line subject with empty body were verified. Duplicate post-merge production
-`38851195546` was requested canceled; documentation may finish normally.
+`38851195546` was canceled after that verification.
 
 Process calls own argument scratch, captured output, handles and partial results.
 POSIX child signal behavior agrees with interpretation while preserving the
@@ -141,7 +160,7 @@ both tracing and checked ARC against equivalent C/Rust kernels on four hosts.
 The [benchmark guide](benchmarks.md) states costs, instruction evidence and limits.
 This delivery does not remove tracing from the default runtime or finish the
 project's ownership/performance objectives. The earlier Intel compiler abort
-passed an unchanged retry; its unexplained cause remains recorded in the handoff.
+passed an unchanged retry; its cause remains unexplained in this historical record.
 
 ## Infix arithmetic and numeric loop cleanup (PR #145)
 
