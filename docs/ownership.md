@@ -689,3 +689,46 @@ The instrumented ARM64 metadata, certificate, request and body functions use
 448, 272, 624 and 288-byte stack frames respectively, including saved registers.
 These are test-binary observations, not bounds on an ordinary server's total
 stack use. The report retains the instructions used to read those sizes.
+
+### Service settings and outgoing headers: under validation
+
+Helpers such as `grpc.with-gzip` and `grpc.with-metadata` run a callback with
+temporary settings for its service calls. The settings must stay valid while
+the callback runs, and a child task must keep its inherited settings after that
+callback returns. See [service scopes](services.md#settings-for-a-group-of-calls)
+for the language-level examples.
+
+The [baseline](measurements/service-context-baseline-2026-10-16.json) compares
+repeated scopes with plain fwp state updates on Linux AMD64 at `-O2`. Every call
+increments the same state. The table shows the extra managed allocation cost
+per call, calculated from the difference between 32 and 128 calls, with
+collection disabled:
+
+| Scope | Extra allocation requests | Extra requested bytes | Extra bytes still charged after return |
+|---|---:|---:|---:|
+| Compression setting | 1 | 64 | 64 |
+| Deadline setting | 1 | 64 | 64 |
+| One outgoing header | 5 | 128 | 144 |
+| Response-header capture | 4 | 120 | 112 |
+
+Requested bytes are the sizes passed to the managed allocator. Charged bytes
+reflect its accounting, including size rounding and explicit releases. These
+counts exclude raw TLS/capture allocations, allocator pages and total process
+memory. They compare two fwp programs, not fwp with C or Rust, and do not measure
+speed. The report preserves the source revision, inputs and binaries; the old
+run did not record the exact CPU model or C compiler version.
+
+The new preparation keeps scope settings on the stack and stores a child's
+copy inside its task allocation. This enlarges service tasks; it does not add
+that field to programs without service support. Synchronous scopes borrow
+existing TLS/capture owners rather than incrementing their counts. Outgoing
+headers use one owned block for their pointer table and copied text. Children
+share that block only when they inherit it; otherwise it is freed when the
+scope ends. Empty or ignored header lists borrow the previous settings.
+
+These changes still need the native checks listed in the [handoff](development-state.md).
+Checks cover size overflow, allocation failure, source aliases, nested scopes,
+parent failure/cancellation and child cleanup, with deliberate broken controls.
+Measurements must include the larger task layout and remaining allocations.
+Response-capture result values, connections and streams still need ownership
+work. The preparation does not admit an entire service to checked ARC.

@@ -51,8 +51,8 @@ separate controls for lost inheritance, a borrowed parent stack, omitted free,
 omitted unwind cleanup and omitted child retain. Existing TLS/capture controls
 now require a single owner inside ordinary and nested scopes.
 
-Next: publish the combined follow-up and run `context-storage` on Linux first,
-including actual interpreter/native gRPC calls. Then require `context-owners`
+Next: complete `context-storage` run `38944540937` at published `7469df49` on
+Linux, including actual interpreter/native gRPC calls. Then require `context-owners`
 on all six hosts and real WASI regressions. The new changes are unverified until
 those checks pass. Allocation assertions require no per-call overhead versus
 plain updates for gzip/deadline/empty headers; nonempty copied headers require
