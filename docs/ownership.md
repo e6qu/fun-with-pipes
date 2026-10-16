@@ -357,8 +357,9 @@ additional pointer for those stream handles, without a separate allocation for
 the count. The passing ARM64 macOS TLS executable requests a 24-byte stream
 header: the count is at byte offset 8, and the TLS pointer is at byte offset 16.
 The plain TCP executable requests 16 bytes. These sizes describe the handle,
-not all memory used by the allocator, operating system or OpenSSL. The handoff
-records remaining native checks; full production acceptance is still required.
+not all memory used by the allocator, operating system or OpenSSL. [The TCP/TLS report](measurements/tcp-tls-ownership-2026-10-16.json) records
+passing focused checks on all six native targets and actual WASI shared-runtime
+regressions. Full combined production acceptance is still required.
 
 ARC executables omit the finalizer-table lookup during socket release because
 they never register these sockets in that table. Tracing programs and unloadable
@@ -636,11 +637,11 @@ repairs pass all six focused native hosts in `38898918147` at `7224b3de` and do
 not establish socket-handle ownership; the separate socket rules and acceptance
 above cover handles.
 
-### Copied service metadata preparation
+### Copied service data
 
 A served request carries headers (name/value strings) and may identify a peer
 certificate. `grpc.metadata` returns an independent list of incoming headers;
-`grpc.peer-subject` returns copied certificate text when available. The next
+`grpc.peer-subject` returns copied certificate text when available. The combined
 preparation gives these output values ordinary owners and releases partially
 copied fields if construction fails. Metadata preserves the input order and
 duplicate names while omitting protocol headers; it builds directly into the

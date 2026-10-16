@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets, udp, tcp, service-values, service-values-linux, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, ci-profile]
         default: numerical
       source_revision:
         description: Full source commit for the CI profile comparison
@@ -18,11 +18,11 @@ on:
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || inputs.suite == 'tcp' || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    if: inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
-        runner: ${{ fromJSON(inputs.suite == 'service-values-linux' && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
+        runner: ${{ fromJSON(inputs.suite == 'service-values-linux' && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
@@ -40,16 +40,16 @@ jobs:
         run: ./scripts/setup-windows.ps1
       - uses: actions/cache/restore@v4
         id: decoder_tls_cache
-        if: runner.os == 'Windows' && (inputs.suite == 'decoders' || inputs.suite == 'tcp' || inputs.suite == 'service-values')
+        if: runner.os == 'Windows' && (inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values')
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
-      - name: Native Windows decoder peer dependencies
-        if: runner.os == 'Windows' && (inputs.suite == 'decoders' || inputs.suite == 'tcp' || inputs.suite == 'service-values')
+      - name: Native Windows TLS dependencies
+        if: runner.os == 'Windows' && (inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values')
         shell: pwsh
         run: ./scripts/setup-windows-tls.ps1
       - uses: actions/cache/save@v4
-        if: runner.os == 'Windows' && (inputs.suite == 'decoders' || inputs.suite == 'tcp' || inputs.suite == 'service-values') && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
+        if: runner.os == 'Windows' && (inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values') && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
@@ -85,7 +85,7 @@ jobs:
         env:
           FWP_REQUIRE_TLS: '1'
           FWP_SERVICE_ARTIFACTS: service-evidence
-        run: cargo test --no-fail-fast --test service_value_ownership --test grpc_peer_completion --test http2_peer_cleanup
+        run: cargo test --no-fail-fast --test service_value_ownership --test grpc_peer_completion --test http2_peer_cleanup --test stdlib_doc
       - name: HTTP/2 body interpreter and native agreement
         if: ${{ !cancelled() && (inputs.suite == 'service-values' || inputs.suite == 'service-values-linux') }}
         run: cargo test --lib grpc::web::tests::body_bounds_and_error_order_agree_with_native -- --exact
@@ -99,7 +99,7 @@ jobs:
           path: service-evidence/
           if-no-files-found: error
       - name: TCP and TLS value ownership
-        if: inputs.suite == 'tcp'
+        if: (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows')
         env:
           FWP_REQUIRE_TLS: '1'
           FWP_TCP_CONSTRUCTOR_ARTIFACTS: tcp-evidence
@@ -107,22 +107,27 @@ jobs:
         run: |
           cargo test --no-fail-fast --lib resource::tests
           cargo test --no-fail-fast --test native_sockets --test udp_ownership --test arc_tasks
+      - name: TLS stream interpreter and native agreement
+        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
+        env:
+          FWP_REQUIRE_TLS: '1'
+        run: cargo test --test tls streams -- --exact
       - name: Mutual TLS with checked ARC
-        if: ${{ !cancelled() && inputs.suite == 'tcp' }}
+        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
         env:
           FWP_REQUIRE_TLS: '1'
           FWP_TCP_CONSTRUCTOR_ARTIFACTS: tcp-evidence
         run: cargo test --test tls mutual_tls -- --exact
       - name: Native TLS socket errors and clean shutdown
-        if: ${{ !cancelled() && inputs.suite == 'tcp' }}
+        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
         env:
           FWP_REQUIRE_TLS: '1'
         run: cargo test --test tls native_tls_preserves_socket_errors_and_clean_shutdown -- --exact
       - name: Existing POSIX TLS teardown and session-transfer controls
-        if: ${{ !cancelled() && inputs.suite == 'tcp' && runner.os != 'Windows' }}
+        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') && runner.os != 'Windows' }}
         run: cargo test --no-fail-fast --test tls_wire_ownership --test tls_alpn_roots --test tls_peer_subject_ownership --test tls_listener_ownership --test connect_cleanup --test library_resources
       - uses: actions/upload-artifact@v7
-        if: always() && inputs.suite == 'tcp'
+        if: always() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows')
         with:
           name: tcp-${{ matrix.runner }}
           path: tcp-evidence/

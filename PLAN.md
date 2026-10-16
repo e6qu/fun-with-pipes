@@ -79,14 +79,18 @@ floating-point operation order and errors. All nine production jobs and the
 documentation check passed, and the merged files match the tested commit.
 [Delivery history](docs/roadmap-history.md) retains the checks and measurements.
 
-The current delivery fixes cleanup for decoded values, CPU numerical results and
-network resources. Numerical workers avoid a second full result array. UDP
-sockets close when their last owner is released, including function and task
-captures; partial results are cleaned up on failure and cancellation. It also
-repairs invalid address/command handling and Windows checks discovered while
-testing. Focused native and supported WASI checks pass; full production acceptance
-must run on the combined PR. The handoff links the evidence and identifies the
-current branch. Keep one delivery PR open at a time.
+The current delivery, [PR #153](https://github.com/e6qu/fun-with-pipes/pull/153),
+reduces temporary numerical storage and gives decoded values and network
+resources explicit cleanup. UDP/TCP/TLS handles close when their last owner is
+released, including function and task captures. The combined preparation also
+owns copied service headers and bodies, removes temporary header-copy buffers,
+and checks raw protocol allocation failures and size overflow. It fixes Windows
+socket error wording to agree with the interpreter.
+
+The original numerical/socket batch has focused native and supported WASI
+evidence. Both Windows diagnostic-repair jobs pass. Service-result checks remain
+in progress; full production acceptance must run on the final combined head.
+The handoff identifies each exact revision and run. Keep one delivery PR open.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

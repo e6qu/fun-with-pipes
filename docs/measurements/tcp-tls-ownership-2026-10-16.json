@@ -1,0 +1,1514 @@
+{
+  "sourceHead": "a0447849f2dbce39e9e558001ac1fd75a842f028",
+  "linuxMacRun": 38922677306,
+  "windowsRun": 38923766437,
+  "windowsTestHead": "7c3c375b96674ed7c1726de69291eee9eda7ae13",
+  "wasiRegressionRun": 38922688282,
+  "status": "All four Linux/macOS jobs, both repaired Windows jobs and both actual WASI jobs pass; runtime/compiler/library sources are identical between focused heads",
+  "workload": "Real local TCP traffic, original function scopes and captured listeners, rebinding, timeout, cancellation, multiple pending accepts, 301 logical owners, allocation failures during listener/connection/optional-value construction, actual library load/unload and mutual TLS. Windows live-listener bind behavior and TLS socket-error capture match the interpreter.",
+  "validation": "Raw and optimized interpreter outputs match O1/O2 tracing stress/reuse and checked ARC. Initialized scheduler probes return charged storage to their starting budget without collections. An ARC executable probe rejects any unused finalizer-table lookup. Library tests retain three TCP descriptors or one UDP descriptor across three load/unload cycles; the host socket remains live. Omitted-cleanup controls fail. Mutual TLS compares successful and rejected client certificates with the interpreter, checks the actual ARC executable for absence of tracing functions, and retains that binary. Deterministic TLS read/write/handshake controls distinguish a socket reset from clean shutdown and readiness waits; ignoring socket errors must fail. POSIX TLS teardown and session-transfer controls run on Linux/macOS.",
+  "limits": "No throughput or C/Rust performance claim. Returning to the initialized managed-storage budget does not mean zero process memory: allocator reservations, scheduler state, OS sockets and OpenSSL have costs. Shared socket values retain a logical count. Scope preservation for opaque closures can inhibit optimization. The retained lifetime probes include storage-check instrumentation, not a timing harness. Socket-library and POSIX teardown outcomes are retained in job logs, not separate archived library binaries. WASI tests cover shared-runtime regressions, not networking support. General service/callback lifetime and whole-language collector removal remain unfinished. Full combined production acceptance is separate.",
+  "layout": "Common headers store a descriptor, kind and aligned 64-bit owner count. UDP/plain-TCP programs preserve the previous size; TCP handles in TLS-enabled programs add one session pointer within the same allocation. Native static assertions check each host. ARM64 executable inspection is recorded separately after downloading the exact binaries.",
+  "sourceSha256": {
+    "runtime/fwp_rt_task.c": "ec0a51e01599193a57e336bac7fbd951b336a9cba9b6be80ad72cfc39fbc79c6",
+    "runtime/fwp_rt_tls.c": "983f8cbde9667d90fb95b273cb90a27c14d8601e9b1b8fe67f7eae82847d0a73",
+    "runtime/fwp_rt_h2.c": "314878b32bdf2f98ca0e48cc252d414524b2cf79642481740a4a20d1b9f7a71c",
+    "runtime/fwp_rt_http2.c": "8600178d654a06af3a5a48ec5c6b4fcceaeae54969d2315d8a4c03ede4c038e6",
+    "src/cgen.rs": "839a0d901bb6168f6c036d0e9604515c331b5a9d7223c4882961b165cde9a213",
+    "src/arc.rs": "36db78228aa5fc9c0ac38815f51c57441a2d76d76a1a96f2571ea950939aab3d",
+    "src/rc.rs": "12b101b73b9acb18326072f77eba7f76222ff07de2af6925c3d5be273ea2405b",
+    "src/resource.rs": "9449710c61db6a2dab694e5dc4a1fcebcf9ac9ce8ebf1813474a43451d3fd396",
+    "src/ownership.rs": "4bfa1418af455f1b2725f810e58c3c69cb1513930b601ac7b8f2cb8a0cf49083",
+    "tests/native_sockets.rs": "7b2897f504d2ed864ba9eada12b7f068e2a3efe0d10438d721c402c3598b74fe",
+    "tests/udp_ownership.rs": "a587759a046a5e4e63f84b73b8887c3d63295d7e4adc14e1e64ad4c86bb25298",
+    "tests/tls.rs": "5cb991fd930e78bfb8b91286e1c1da0f1df99bd96832e1d78f58c46b061fe356",
+    "tests/tls_alpn_roots.rs": "6fdfa77faadff4ef9d1b277c373dddaff40976238bfd67826f96848383d1265a",
+    "tests/tls_peer_subject_ownership.rs": "6a69629aeacfaf27638f6ade2697f6a4522772963e35e73b702eba209453c488",
+    "tests/tls_wire_ownership.rs": "d56a028d51c315e3a70d47d9a03df47fe3c85ae3e6072dcdf5cd67f9ae09f78d",
+    "tests/library_resources.rs": "71945c04a267a6d4f871d74428fc1f0659a16f560d757e27cac672e2d168b2fe",
+    "tests/connect_cleanup.rs": "647e780613fd23efb8888025d3469cb73aa749a4a1bf50f383721ff9e418f2b5",
+    "tests/fixtures/tcp_constructor_cleanup.c": "52e97e8335ee19b8c5606fe3af0470d71b724d760d048cb010ec3fb175dcd8fd",
+    "tests/fixtures/tcp_ownership.fwp": "bda5dbfe28eff86f973c9517ad56e1373344bdc5c9bd36e375f42714120bfb89",
+    "tests/fixtures/tcp_library.fwp": "62096b146a5b27195c57b125c237a3569f43e00b494ffbb8f7c9c5f4899f56b1",
+    "tests/fixtures/tcp_unload.c": "2cdb88d7962e0fd8343adb70d8db654156e80ca86d16f95149cad5f5bc476a78",
+    "tests/fixtures/udp_unload_host.c": "83fb1d73cc896e20be722b311e6a603e2799e77e9e130f12bc0ad631f292944d",
+    "tests/fixtures/socket_kind_cleanup.c": "145e24435ce6a90088398eeec52268d9f96fd456e40d724f3e8fe39df4da5571"
+  },
+  "windowsHarnessFix": "The Windows-only run adds .exe to the inspected TLS executable path and selects the Windows API version before injected OpenSSL headers. Linux/macOS and WASI keep their exact-runtime evidence; final full acceptance is required on the combined head.",
+  "hosts": [
+    {
+      "runner": "macos-15",
+      "job": {
+        "databaseId": 117046289659,
+        "name": "paths (macos-15)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T15:17:33Z",
+        "completedAt": "2026-10-16T15:21:35Z"
+      },
+      "artifacts": {
+        "lifetime-arc--O1.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O1.exe": {
+          "sha256": "3aca1da82887502ceb5cc2969ae7369b7cfba62d701f248896c875261a37276a",
+          "bytes": 286808,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-arc--O2.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O2.exe": {
+          "sha256": "6001a534359fd3e5ff8e8f6bcd3920c019a27848a231f5f3cc21f4273bd0c2c6",
+          "bytes": 286808,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O1.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O1.exe": {
+          "sha256": "2f90747f234dc6d1325e4c24f734195d0d51fba5d8ac5ea4a3f25e011a983bea",
+          "bytes": 270504,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O2.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O2.exe": {
+          "sha256": "467c92b6008d98653528e20f12a6fe2d090f718e3177a0bae91ad79361f5de96",
+          "bytes": 270536,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "mutual-tls-arc.exe": {
+          "sha256": "22d979d50cba4970d116057d155267a5107bf47088f3a067ea267763da043efc",
+          "bytes": 745976,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "mutual-tls-arc.nm": {
+          "sha256": "eb65e5230b47dba6861543310454072a5a8fadbd5a00b65509ea5d2d2f1234dc",
+          "bytes": 102811
+        },
+        "tcp-O1.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O1.exe": {
+          "sha256": "b92fa7e441161b4d6b29bcfc3bd86f820eb3d8f69f1243236e4bfeb40ae42f51",
+          "bytes": 71392,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O1.stdout": {
+          "sha256": "ab7df446d56485cc236ab48ba45d8efc9c5b5381c69e6512af0064bbe93ca202",
+          "bytes": 161
+        },
+        "tcp-O2.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O2.exe": {
+          "sha256": "fe3bb1adfa8cecc368f73d94029c5f4cfca14ffc6f41af547b51a87d79c5819c",
+          "bytes": 71424,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.stdout": {
+          "sha256": "ab7df446d56485cc236ab48ba45d8efc9c5b5381c69e6512af0064bbe93ca202",
+          "bytes": 161
+        },
+        "udp/lifetime-arc--O1.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O1.exe": {
+          "sha256": "e5b45f2e6e44e589808c44ce4b9f3f1c7143498c8a1582508cd24fb5c922a299",
+          "bytes": 324696,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "udp/lifetime-arc--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-arc--O2.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O2.exe": {
+          "sha256": "c8ef6341bfefaec06175e15b309922ad388712d3ca823556fc9dd593b377a6c0",
+          "bytes": 308136,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "udp/lifetime-arc--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O1.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O1.exe": {
+          "sha256": "ad40ea606c13b6daab9a0fa3d1c27f40f7de10e8b79b790c5c31def931a1e0da",
+          "bytes": 308376,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "udp/lifetime-tracing--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O2.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O2.exe": {
+          "sha256": "bc0deb90ec5b976ae6b9e715b53347d615d52900994583660adbbbe58c1fc0f5",
+          "bytes": 291864,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "udp/lifetime-tracing--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/udp-arc.c": {
+          "sha256": "73354255485ffa1ba2d3755630407c40329f387f1c720e2b76e11d5e96c62d66",
+          "bytes": 959966
+        },
+        "udp/udp-arc.exe": {
+          "sha256": "9e8a3cbd35f2c63862b743ec2e4e4fb9fc986bea5b14ba5228367cdf37d70897",
+          "bytes": 268192,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "udp/udp-arc.txt": {
+          "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+          "bytes": 125
+        },
+        "udp/udp-tracing.c": {
+          "sha256": "193fd95a97baa248a248f0f0ad80925e5a452ac9d26749fd9940cbcbe993afa5",
+          "bytes": 959943
+        },
+        "udp/udp-tracing.exe": {
+          "sha256": "22d3d00a1d20ad8e453fad0262867faecae080b1ee1671b992d8ee556dc26366",
+          "bytes": 252032,
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "udp/udp-tracing.txt": {
+          "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+          "bytes": 125
+        }
+      }
+    },
+    {
+      "runner": "ubuntu-24.04-arm",
+      "job": {
+        "databaseId": 117046289727,
+        "name": "paths (ubuntu-24.04-arm)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T15:18:08Z",
+        "completedAt": "2026-10-16T15:22:51Z"
+      },
+      "artifacts": {
+        "lifetime-arc--O1.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O1.exe": {
+          "sha256": "1093247b9d0746aab497c104f22a0e9ba4096533d4687c4fdaed010dfc35e305",
+          "bytes": 384720,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=f39a9fa535da91ebaebb8f8f96119db361f1a7e6, for GNU/Linux 3.7.0, not stripped"
+        },
+        "lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-arc--O2.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O2.exe": {
+          "sha256": "5f4c8d6e987aa38009aa43a63d5d165121cb183ddad80491cf4b79256ee4bfb4",
+          "bytes": 384744,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=63ddbb60380bcf9a9db59334f5bd92d25b98883a, for GNU/Linux 3.7.0, not stripped"
+        },
+        "lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O1.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O1.exe": {
+          "sha256": "2594d995da120f0c5c86b28b9eefaf31b736e3edc0175ac99c8998cd24cd7551",
+          "bytes": 385096,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=55eb8410ebe23aefff4df7b015e2d21afa0638e3, for GNU/Linux 3.7.0, not stripped"
+        },
+        "lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O2.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O2.exe": {
+          "sha256": "d65e9960f11c26af419dc96f4fc227431767d479b8a022dcd0c93727ff8108ae",
+          "bytes": 319592,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=e237f2747d1b1f68952cdba9649f0f11132bcf2e, for GNU/Linux 3.7.0, not stripped"
+        },
+        "lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "mutual-tls-arc.exe": {
+          "sha256": "d255566c87af45d58b07debd615f35b07e66ea45883c379f35e7153176820440",
+          "bytes": 982136,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=58297eb19daa743fb9d2617241e7ffdae729771c, for GNU/Linux 3.7.0, not stripped"
+        },
+        "mutual-tls-arc.nm": {
+          "sha256": "b6665de8371ea4f501330adce35449b567bed25a7541ae6f6ed27fd462c791b4",
+          "bytes": 102350
+        },
+        "tcp-O1.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O1.exe": {
+          "sha256": "e729650ab7aa16b7e46404f886f0ff18dede493a058fd9e5ecd100bd75f6c0af",
+          "bytes": 82824,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=1f4fe9d7fe36dff0d4051fca0431af8048bb203d, for GNU/Linux 3.7.0, not stripped"
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O1.stdout": {
+          "sha256": "ab7df446d56485cc236ab48ba45d8efc9c5b5381c69e6512af0064bbe93ca202",
+          "bytes": 161
+        },
+        "tcp-O2.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O2.exe": {
+          "sha256": "3a028ad3519369ac7e27c89f558e94b81923afb5cac457e74b926badd6124914",
+          "bytes": 82920,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=144a52dc6072f7fc8c63cb20490dc7c34c6dd5f6, for GNU/Linux 3.7.0, not stripped"
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.stdout": {
+          "sha256": "ab7df446d56485cc236ab48ba45d8efc9c5b5381c69e6512af0064bbe93ca202",
+          "bytes": 161
+        },
+        "udp/lifetime-arc--O1.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O1.exe": {
+          "sha256": "1a1f15317d8b790be7a98fdb556ec213d6ad7872f57178571857b24ef98390ff",
+          "bytes": 455880,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=b9d8a8d5cee4c12a8a6b94d7a54aff82285567bd, for GNU/Linux 3.7.0, not stripped"
+        },
+        "udp/lifetime-arc--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-arc--O2.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O2.exe": {
+          "sha256": "f8da6e33935cfc227ddc45134101ecb5869f8724c21d9dc420e2787f391032c3",
+          "bytes": 390352,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=65fa3e45c1bee6827111e57fe196ba2dddcb008d, for GNU/Linux 3.7.0, not stripped"
+        },
+        "udp/lifetime-arc--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O1.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O1.exe": {
+          "sha256": "714bd1b9107623b33dbae75cd9497409b66b245976a9e31cbe94cad6366b3c4b",
+          "bytes": 390728,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=f35576ea6d80a496e2529abe952643b0ad64211f, for GNU/Linux 3.7.0, not stripped"
+        },
+        "udp/lifetime-tracing--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O2.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O2.exe": {
+          "sha256": "58baffd561d871692dfd2871afcd6728e4f686ff37c1c5e45180dc6e0a7fe33c",
+          "bytes": 390744,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=aca51df554d04f08ad71edf4357856a09721b144, for GNU/Linux 3.7.0, not stripped"
+        },
+        "udp/lifetime-tracing--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/udp-arc.c": {
+          "sha256": "73354255485ffa1ba2d3755630407c40329f387f1c720e2b76e11d5e96c62d66",
+          "bytes": 959966
+        },
+        "udp/udp-arc.exe": {
+          "sha256": "8b7ba455dd0ed006d0921bac2521e0d6d76850a83961255293740ba5994f42bd",
+          "bytes": 382264,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=e4201611a4da045edce92c9b6629c3f25ad231ea, for GNU/Linux 3.7.0, not stripped"
+        },
+        "udp/udp-arc.txt": {
+          "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+          "bytes": 125
+        },
+        "udp/udp-tracing.c": {
+          "sha256": "193fd95a97baa248a248f0f0ad80925e5a452ac9d26749fd9940cbcbe993afa5",
+          "bytes": 959943
+        },
+        "udp/udp-tracing.exe": {
+          "sha256": "4748fd9a91907928f624b1c9a7b20f91f0b2b22c374f58757717db9ea6c75092",
+          "bytes": 317080,
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=e01e5a6245e4b075d8a7de6a74bf7ee38bf202ab, for GNU/Linux 3.7.0, not stripped"
+        },
+        "udp/udp-tracing.txt": {
+          "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+          "bytes": 125
+        }
+      }
+    },
+    {
+      "runner": "macos-15-intel",
+      "job": {
+        "databaseId": 117046289911,
+        "name": "paths (macos-15-intel)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T15:19:15Z",
+        "completedAt": "2026-10-16T15:29:13Z"
+      },
+      "artifacts": {
+        "lifetime-arc--O1.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O1.exe": {
+          "sha256": "6ee9160f7670c927efc13a3b16912dd97614e74b7998be627ffdc219163f6b48",
+          "bytes": 288576,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-arc--O2.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O2.exe": {
+          "sha256": "9486ba52df0e3bd5bacbaffb1a17e353df61c5a06e20a43d12bb3436f54a9f50",
+          "bytes": 284472,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O1.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O1.exe": {
+          "sha256": "f72f9b0c315f5afb2d9f1efd34bbe58402ae128f82939b1f7d1dec5677fab7f9",
+          "bytes": 268296,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O2.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O2.exe": {
+          "sha256": "36456d98ff7c16e260da4b548073aae0ef17027be98561376c583c13c434a9d8",
+          "bytes": 264240,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "mutual-tls-arc.exe": {
+          "sha256": "f1c951db2ea16b34cabed498c28d7cafbcb25a988e29611ab61d6397e8deb50a",
+          "bytes": 817912,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "mutual-tls-arc.nm": {
+          "sha256": "2389e17480716a77745b2f728a30508cb12bfec454fce5afb517189d82b7be20",
+          "bytes": 102814
+        },
+        "tcp-O1.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O1.exe": {
+          "sha256": "27f73f88574d1204ccbc58fdc59d9f892bc71bf0c981d130d4b4207477ae9337",
+          "bytes": 46112,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O1.stdout": {
+          "sha256": "ab7df446d56485cc236ab48ba45d8efc9c5b5381c69e6512af0064bbe93ca202",
+          "bytes": 161
+        },
+        "tcp-O2.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O2.exe": {
+          "sha256": "5bf6bfd0720f93b34d2727e40b840130b551749046eaaed3abf5f09ea997f32d",
+          "bytes": 46152,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.stdout": {
+          "sha256": "ab7df446d56485cc236ab48ba45d8efc9c5b5381c69e6512af0064bbe93ca202",
+          "bytes": 161
+        },
+        "udp/lifetime-arc--O1.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O1.exe": {
+          "sha256": "ae5ab6e03c37045dd3a70e07f75acefadcc2e6b0c4fb3c714f5c5fe332104ff6",
+          "bytes": 334344,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "udp/lifetime-arc--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-arc--O2.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O2.exe": {
+          "sha256": "35f3755cb256fff3f6422793514318146f0b4cc263db48ef9fc85a8fb03003b7",
+          "bytes": 326112,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "udp/lifetime-arc--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O1.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O1.exe": {
+          "sha256": "ae74a00bbea8c2874f37145fddd049c0cf955de47e8ed4b412f732e4a7fc088b",
+          "bytes": 305880,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "udp/lifetime-tracing--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O2.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O2.exe": {
+          "sha256": "df219e08315e1de7bb599fd0b78357667229691b07c0f0593be6c61dab2f1e29",
+          "bytes": 301776,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "udp/lifetime-tracing--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/udp-arc.c": {
+          "sha256": "73354255485ffa1ba2d3755630407c40329f387f1c720e2b76e11d5e96c62d66",
+          "bytes": 959966
+        },
+        "udp/udp-arc.exe": {
+          "sha256": "54de605c605a96548998527bf006794de123a96ac8b4936db74f2d195e6d2ac0",
+          "bytes": 282400,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "udp/udp-arc.txt": {
+          "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+          "bytes": 125
+        },
+        "udp/udp-tracing.c": {
+          "sha256": "193fd95a97baa248a248f0f0ad80925e5a452ac9d26749fd9940cbcbe993afa5",
+          "bytes": 959943
+        },
+        "udp/udp-tracing.exe": {
+          "sha256": "6d05955ccd48b5092e9004ff1969ae3a4107b5b1405d832565a0bbb4d27da318",
+          "bytes": 262224,
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "udp/udp-tracing.txt": {
+          "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+          "bytes": 125
+        }
+      }
+    },
+    {
+      "runner": "ubuntu-latest",
+      "job": {
+        "databaseId": 117046290380,
+        "name": "paths (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T15:24:21Z",
+        "completedAt": "2026-10-16T15:29:25Z"
+      },
+      "artifacts": {
+        "lifetime-arc--O1.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O1.exe": {
+          "sha256": "474e0a760da54842f9d46747fce2ed5c9864861de558aaf4c98a59883f815a53",
+          "bytes": 358544,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=fdcea4383e69826b3706a3d62d13372285c82db3, for GNU/Linux 3.2.0, not stripped"
+        },
+        "lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-arc--O2.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O2.exe": {
+          "sha256": "bab2b4a2c22b28ab04da7865c3d41266e91681a6631ba4e0e6f3e447caf6b410",
+          "bytes": 342152,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=b8ac56851c43d4f8f87e80a12506dd54ea276aac, for GNU/Linux 3.2.0, not stripped"
+        },
+        "lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O1.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O1.exe": {
+          "sha256": "7405a4ada141b5d7a2ffc4b66afb027cfdf40a7fc8b21f00006d60968929623f",
+          "bytes": 334384,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=8029503fd5fb17a71ddd845246426ad701eff8cc, for GNU/Linux 3.2.0, not stripped"
+        },
+        "lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O2.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O2.exe": {
+          "sha256": "637012a3cc4153782251ea73529b74636185115492120e78ed21b0503f360f63",
+          "bytes": 322024,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=654d57a223c53634b976e751838a0cb8746dd16e, for GNU/Linux 3.2.0, not stripped"
+        },
+        "lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "mutual-tls-arc.exe": {
+          "sha256": "cc7874e2e5359652554120cd3eec5367abb13e23c161e6d373bdcbbfb1638b1b",
+          "bytes": 984608,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=af36c8322522e3e16e4ee0875a833c1460d967e4, for GNU/Linux 3.2.0, not stripped"
+        },
+        "mutual-tls-arc.nm": {
+          "sha256": "b5e5093e95ce22efb3ef6a57ed1dc9efd85df8eed4c77f31104429d0058127cf",
+          "bytes": 102235
+        },
+        "tcp-O1.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O1.exe": {
+          "sha256": "2c37a4e1b85588371af5795662d76d4dd3d278b7e9136fdda91ccb6b385392d0",
+          "bytes": 61024,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=7322143ee197e6dcc730a5f96310e0b83e32a2f0, for GNU/Linux 3.2.0, not stripped"
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O1.stdout": {
+          "sha256": "ab7df446d56485cc236ab48ba45d8efc9c5b5381c69e6512af0064bbe93ca202",
+          "bytes": 161
+        },
+        "tcp-O2.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O2.exe": {
+          "sha256": "81c614880465e60fe42af57c1e3d01b9e92970a5ec8227cc0511870ea1361880",
+          "bytes": 61024,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=8972acfaf8086d0688cd4c2f4dfefc8c3613420a, for GNU/Linux 3.2.0, not stripped"
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.stdout": {
+          "sha256": "ab7df446d56485cc236ab48ba45d8efc9c5b5381c69e6512af0064bbe93ca202",
+          "bytes": 161
+        },
+        "udp/lifetime-arc--O1.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O1.exe": {
+          "sha256": "e581184e3b77610e6bba55594757673656d56ee51ee8be1cd65f5bce081d4454",
+          "bytes": 409248,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=5d51fc699aabaedcb4a85614572dae089a319e1d, for GNU/Linux 3.2.0, not stripped"
+        },
+        "udp/lifetime-arc--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-arc--O2.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O2.exe": {
+          "sha256": "396a65e0e0143fb091402ca55b12d6d1cbea7c617f855b43b5f30ce6d46190f8",
+          "bytes": 388720,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=2914cf6c6a204b0d6962b7c6b2cfb30f68903b21, for GNU/Linux 3.2.0, not stripped"
+        },
+        "udp/lifetime-arc--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O1.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O1.exe": {
+          "sha256": "f9aac4cea64f6245333c9d87e6268551c7afbff3baa1d13b933936e9b7aea46d",
+          "bytes": 376904,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=d4cf997d2805a10936b9f2386ca3b09d010798ee, for GNU/Linux 3.2.0, not stripped"
+        },
+        "udp/lifetime-tracing--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O2.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O2.exe": {
+          "sha256": "8a3cae41c192a641eda432c801299e1cd92e105ab84fbfb84ecbf362e845ca88",
+          "bytes": 364496,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=d4ac5bbca2a90ecdf19c5ec147bd3037f147b1dc, for GNU/Linux 3.2.0, not stripped"
+        },
+        "udp/lifetime-tracing--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/udp-arc.c": {
+          "sha256": "73354255485ffa1ba2d3755630407c40329f387f1c720e2b76e11d5e96c62d66",
+          "bytes": 959966
+        },
+        "udp/udp-arc.exe": {
+          "sha256": "8d5622d04305911296d8f9fc0312860dfa70081819e60f61e4471f3a7c17bb5f",
+          "bytes": 335544,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=90219a655431c9381f8e680eb8d721b888f1ae5b, for GNU/Linux 3.2.0, not stripped"
+        },
+        "udp/udp-arc.txt": {
+          "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+          "bytes": 125
+        },
+        "udp/udp-tracing.c": {
+          "sha256": "193fd95a97baa248a248f0f0ad80925e5a452ac9d26749fd9940cbcbe993afa5",
+          "bytes": 959943
+        },
+        "udp/udp-tracing.exe": {
+          "sha256": "77c0e7d1c3a07001fb8317288c6bdb19197887b9667463f40964bab07f9a09d8",
+          "bytes": 315424,
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=61a3b8b257a2aa4e8a1010be0b1ec61b654c9db0, for GNU/Linux 3.2.0, not stripped"
+        },
+        "udp/udp-tracing.txt": {
+          "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+          "bytes": 125
+        }
+      }
+    },
+    {
+      "runner": "windows-11-arm",
+      "job": {
+        "databaseId": 117049982814,
+        "name": "paths (windows-11-arm)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T15:26:32Z",
+        "completedAt": "2026-10-16T15:32:37Z"
+      },
+      "artifacts": {
+        "lifetime-arc--O1.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O1.exe": {
+          "sha256": "b733f66e9ac624cccaa9f4984f57ce385b90e08c672337c58c17e47b8bdc5ac5",
+          "bytes": 335360,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-arc--O2.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O2.exe": {
+          "sha256": "05b4a36bb7c0907171b57136930228300d8a29c2fa1fc7b3c9b7e90d06437be1",
+          "bytes": 326656,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O1.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O1.exe": {
+          "sha256": "324bc2c640b8d8f2e5143fec1aa6985b3737aab56e31315f7765c73c6d98792f",
+          "bytes": 319488,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O2.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O2.exe": {
+          "sha256": "906284db92dca9a2c61e94d68cbe55254bb3c798ab2e35ace7aed0de34c3806a",
+          "bytes": 312832,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "mutual-tls-arc.exe": {
+          "sha256": "13c370fec7a46f4d57823968dec4f67266dcb0efd6fe766c076f14e2a5d42468",
+          "bytes": 813568,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "mutual-tls-arc.nm": {
+          "sha256": "87570f3a0f9a0c0a847b5f15e651f974606702807f832acf62eb8354c560713a",
+          "bytes": 86822
+        },
+        "tcp-O1.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O1.exe": {
+          "sha256": "52d480d83682c6d86ff8ac571de773b87fe46aa3717b77260dd2d8ecc3c3d4d9",
+          "bytes": 103936,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O1.stdout": {
+          "sha256": "d466e65a130eafd19e8bcc02e2c69284c48cb12d7fe3cecd5777699908268893",
+          "bytes": 162
+        },
+        "tcp-O2.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O2.exe": {
+          "sha256": "1fbbe8a4722e359dc9bc46b4605b851ef43cf9b77da9e2cb189d14dd5fea4922",
+          "bytes": 103936,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.stdout": {
+          "sha256": "d466e65a130eafd19e8bcc02e2c69284c48cb12d7fe3cecd5777699908268893",
+          "bytes": 162
+        },
+        "udp/lifetime-arc--O1.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O1.exe": {
+          "sha256": "0d44a6d5b28c0c951b8d971a3a81e642ecc9f93290bb836cec987c1c19f549c2",
+          "bytes": 372224,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "udp/lifetime-arc--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-arc--O2.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O2.exe": {
+          "sha256": "b50461d5c0b19fecc1c6e8eaf654a76e5b92ea1b8d62a02c7339944dca247582",
+          "bytes": 361472,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "udp/lifetime-arc--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O1.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O1.exe": {
+          "sha256": "615750476223da329ab413305bec6b93e5e865ddd153eb31e73f250d71281688",
+          "bytes": 352768,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "udp/lifetime-tracing--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O2.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O2.exe": {
+          "sha256": "a25f1d69da0a4947cf978bbff6dc3c0876df673e0c33ca4c37f774f60f72a81a",
+          "bytes": 344576,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "udp/lifetime-tracing--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/udp-arc.c": {
+          "sha256": "73354255485ffa1ba2d3755630407c40329f387f1c720e2b76e11d5e96c62d66",
+          "bytes": 959966
+        },
+        "udp/udp-arc.exe": {
+          "sha256": "83069f3286d93942de57b6d5726d2813b0039b1fd7f94657341c632b6d0c04cc",
+          "bytes": 325120,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "udp/udp-arc.txt": {
+          "sha256": "6241058d5a5648a006cfb237a5f3fbc949becbd63a077ab444afea83aea7f39c",
+          "bytes": 126
+        },
+        "udp/udp-tracing.c": {
+          "sha256": "193fd95a97baa248a248f0f0ad80925e5a452ac9d26749fd9940cbcbe993afa5",
+          "bytes": 959943
+        },
+        "udp/udp-tracing.exe": {
+          "sha256": "bb2be4f337bd107cf521a6ff5c268ef39edbe41aa5dea50c4c4c5edb6a8033ca",
+          "bytes": 307712,
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "udp/udp-tracing.txt": {
+          "sha256": "6241058d5a5648a006cfb237a5f3fbc949becbd63a077ab444afea83aea7f39c",
+          "bytes": 126
+        }
+      }
+    },
+    {
+      "runner": "windows-2025",
+      "job": {
+        "databaseId": 117049983347,
+        "name": "paths (windows-2025)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T15:26:45Z",
+        "completedAt": "2026-10-16T15:32:17Z"
+      },
+      "artifacts": {
+        "lifetime-arc--O1.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O1.exe": {
+          "sha256": "5562ad459a2cf6455645878a53fde596fe258f5c4de137d93abcce5d7f319c4c",
+          "bytes": 372224,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-arc--O2.c": {
+          "sha256": "15e712d76b264b7eef98a29a66e7bdc8bbf6267aa362b74067863735b375fb3d",
+          "bytes": 912520
+        },
+        "lifetime-arc--O2.exe": {
+          "sha256": "f1023f2e79e8d592ea1dfa8e2ed9a6733cd230e2cd47206d5377d23aff60a153",
+          "bytes": 366080,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-arc--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O1.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O1.exe": {
+          "sha256": "1fb41ea926c797c53fc6d1a4202a7fd7a154aef29f6dc2019451f988a2a03539",
+          "bytes": 350720,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O1.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "lifetime-tracing--O2.c": {
+          "sha256": "671b002acd9e3bbbed1e97729c62706bbe1dd6dae6fb7db2071ca82a4df01aca",
+          "bytes": 912441
+        },
+        "lifetime-tracing--O2.exe": {
+          "sha256": "2584e6f1959542924388e7866d11e20e86f69981560714aa07d218fdf8bc844a",
+          "bytes": 347648,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "lifetime-tracing--O2.stdout": {
+          "sha256": "d5f1864072b319bcb65f300979f0896e8aa329225ecbbb5dabba37c0bda52b65",
+          "bytes": 60
+        },
+        "mutual-tls-arc.exe": {
+          "sha256": "e43af2ab6d7b4e8741a86d42c81d7bda2ce20ef59974743d57e5305094fbc07a",
+          "bytes": 917504,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "mutual-tls-arc.nm": {
+          "sha256": "251455aac3de76adf4805aa02ed318437eb93631b43ac21bb15be8bdd7034a56",
+          "bytes": 86896
+        },
+        "tcp-O1.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O1.exe": {
+          "sha256": "5f126405dde6ccd9fc26af5e28c565437fb4815ba6c0bea51e892dc11778fc36",
+          "bytes": 108032,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "tcp-O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O1.stdout": {
+          "sha256": "d466e65a130eafd19e8bcc02e2c69284c48cb12d7fe3cecd5777699908268893",
+          "bytes": 162
+        },
+        "tcp-O2.c": {
+          "sha256": "12dd444b3edc2c68c54db1fb6efd6dd75764303b8bdcd747a50c8664b8d64c8f",
+          "bytes": 651977
+        },
+        "tcp-O2.exe": {
+          "sha256": "4a8adad9260748547ecf280642a792c239e9fa7c6997792e09b3e5855e9d6dd4",
+          "bytes": 108544,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "tcp-O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "tcp-O2.stdout": {
+          "sha256": "d466e65a130eafd19e8bcc02e2c69284c48cb12d7fe3cecd5777699908268893",
+          "bytes": 162
+        },
+        "udp/lifetime-arc--O1.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O1.exe": {
+          "sha256": "d8122203987e94783a3fb44e294ce67552da0d23cab69c51b5ab5d71b355940d",
+          "bytes": 413696,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "udp/lifetime-arc--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-arc--O2.c": {
+          "sha256": "83293df94b47c4f9fa6497e5d418f1501cfbe719b791266db527f310b1f54766",
+          "bytes": 957270
+        },
+        "udp/lifetime-arc--O2.exe": {
+          "sha256": "a3dfd92ebcbc69a638d6025d0c2c679e62417f854341c3db9b4b4cfabb18b17d",
+          "bytes": 406528,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "udp/lifetime-arc--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-arc--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-arc--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O1.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O1.exe": {
+          "sha256": "ea599c7dafda103e27499ac9b5b88f78d3e9c53e913fb65e9b460cb2b57d10ca",
+          "bytes": 389120,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "udp/lifetime-tracing--O1.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O1.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O1.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/lifetime-tracing--O2.c": {
+          "sha256": "a897597948ebfcd93eafd77c48f5c1e69dd873348e1555edb06507a39ac2052b",
+          "bytes": 957210
+        },
+        "udp/lifetime-tracing--O2.exe": {
+          "sha256": "416fb026a2f0f8909caf4161ed09085522e65672cab23d873cc00f94b27e5d01",
+          "bytes": 385024,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "udp/lifetime-tracing--O2.status": {
+          "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+          "bytes": 8
+        },
+        "udp/lifetime-tracing--O2.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "udp/lifetime-tracing--O2.stdout": {
+          "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+          "bytes": 77
+        },
+        "udp/udp-arc.c": {
+          "sha256": "73354255485ffa1ba2d3755630407c40329f387f1c720e2b76e11d5e96c62d66",
+          "bytes": 959966
+        },
+        "udp/udp-arc.exe": {
+          "sha256": "781359f4d8f4b4990902037d45d6e50c0fdc4d51def83b0b0698ef8d137e7c43",
+          "bytes": 361984,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "udp/udp-arc.txt": {
+          "sha256": "6241058d5a5648a006cfb237a5f3fbc949becbd63a077ab444afea83aea7f39c",
+          "bytes": 126
+        },
+        "udp/udp-tracing.c": {
+          "sha256": "193fd95a97baa248a248f0f0ad80925e5a452ac9d26749fd9940cbcbe993afa5",
+          "bytes": 959943
+        },
+        "udp/udp-tracing.exe": {
+          "sha256": "e31c3b1a9e16aca820b0488e99ea898d035210f45bdc53f2bef0a026f9f342f2",
+          "bytes": 339456,
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "udp/udp-tracing.txt": {
+          "sha256": "6241058d5a5648a006cfb237a5f3fbc949becbd63a077ab444afea83aea7f39c",
+          "bytes": 126
+        }
+      }
+    }
+  ],
+  "wasiJobs": [
+    {
+      "databaseId": 117046323672,
+      "name": "wasm_ownership (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "databaseId": 117046324065,
+      "name": "wasm_ownership (ubuntu-24.04-arm)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "arm64MachineCode": {
+    "tool": "Apple nm and otool -tvV on the exact macos-15 CI artifacts",
+    "notes": "Both binaries exclude tracing functions. The socket drop no longer contains the old linear finalizer-table scan. The lifetime probe includes storage-check instrumentation; the TLS executable is the ordinary compiled mutual-TLS program. No timing comparison was made.",
+    "observations": [
+      {
+        "binary": "lifetime-arc--O2.exe",
+        "sha256": "6001a534359fd3e5ff8e8f6bcd3920c019a27848a231f5f3cc21f4273bd0c2c6",
+        "headerRequestBytes": 16,
+        "countOffsetBytes": 8,
+        "tlsPointerOffsetBytes": null,
+        "disassemblySha256": "2353750c1453ce2fe379caec1b3d75187891718e50ee8fa099c4b6cb61f57ad1",
+        "socketConstructor": "_fwp_sock_new:\n0000000100009f60\tsub\tsp, sp, #0x30\n0000000100009f64\tstp\tx20, x19, [sp, #0x10]\n0000000100009f68\tstp\tx29, x30, [sp, #0x20]\n0000000100009f6c\tadd\tx29, sp, #0x20\n0000000100009f70\tmov\tx19, x0\n0000000100009f74\tadrp\tx9, 47 ; 0x100038000\n0000000100009f78\tadd\tx9, x9, #0x8\n0000000100009f7c\tldrb\tw10, [x9, #0xbe9]\n0000000100009f80\tadd\tx8, x9, x10, lsl #2\n0000000100009f84\tldr\tw8, [x8, #0xb48]\n0000000100009f88\tldr\tx11, [x9]\n0000000100009f8c\tsubs\tx11, x11, x8\n0000000100009f90\tstr\tx11, [x9]\n0000000100009f94\tb.mi\t0x100009fcc\n0000000100009f98\tmov\tw11, #0x18\n0000000100009f9c\tumaddl\tx9, w10, w11, x9\n0000000100009fa0\tadd\tx9, x9, #0x3c8\n0000000100009fa4\tldr\tx0, [x9]\n0000000100009fa8\tcbz\tx0, 0x100009fbc\n0000000100009fac\tldr\tx8, [x0]\n0000000100009fb0\tmvn\tx8, x8\n0000000100009fb4\tstr\tx8, [x9]\n0000000100009fb8\tb\t0x100009fec\n0000000100009fbc\tldp\tx0, x10, [x9, #0x8]\n0000000100009fc0\tsub\tx10, x10, x0\n0000000100009fc4\tcmp\tx10, x8\n0000000100009fc8\tb.hs\t0x100009fe4\n0000000100009fcc\tmov\tw0, #0x10\n0000000100009fd0\tmov\tx20, x1\n0000000100009fd4\tmov\tw1, #0x1\n0000000100009fd8\tbl\t_fwp_gc_alloc_slow\n0000000100009fdc\tmov\tx1, x20\n0000000100009fe0\tb\t0x100009ff0\n0000000100009fe4\tadd\tx8, x0, x8\n0000000100009fe8\tstr\tx8, [x9, #0x8]\n0000000100009fec\tstp\txzr, xzr, [x0]\n0000000100009ff0\tstp\tw19, w1, [x0]\n0000000100009ff4\tmov\tw8, #0x1\n0000000100009ff8\tstr\tx8, [x0, #0x8]\n0000000100009ffc\tadrp\tx8, 48 ; 0x100039000\n000000010000a000\tadd\tx8, x8, #0x38\n000000010000a004\tldr\tx9, [x8]\n000000010000a008\tsub\tx9, x0, x9\n000000010000a00c\tldr\tx8, [x8, #0x28]\n000000010000a010\tcmp\tx9, x8, lsl #16\n000000010000a014\tb.hs\t0x10000a06c\n000000010000a018\tadrp\tx8, 47 ; 0x100039000\n000000010000a01c\tldr\tx8, [x8, #0x80]\n000000010000a020\tlsr\tx10, x9, #16\n000000010000a024\tmov\tw11, #0x1228\n000000010000a028\tmadd\tx8, x10, x11, x8\n000000010000a02c\tldrb\tw10, [x8]\n000000010000a030\tand\tx9, x9, #0xffff\n000000010000a034\tcmp\tx9, #0x0\n000000010000a038\tccmp\tw10, #0x2, #0x0, eq\n000000010000a03c\tb.eq\t0x10000a054\n000000010000a040\tcmp\tw10, #0x1\n000000010000a044\tb.ne\t0x10000a06c\n000000010000a048\tldr\tw10, [x8, #0x20]\n000000010000a04c\tumull\tx9, w9, w10\n000000010000a050\tadd\tx8, x8, x9, lsr #32\n000000010000a054\tadd\tx19, x8, #0x228\n000000010000a058\tldrb\tw8, [x19]\n000000010000a05c\tcmp\tw8, #0xff\n000000010000a060\tb.eq\t0x10000a07c\n000000010000a064\tmov\tw8, #0x1\n000000010000a068\tstrb\tw8, [x19]\n000000010000a06c\tldp\tx29, x30, [sp, #0x20]\n000000010000a070\tldp\tx20, x19, [sp, #0x10]\n000000010000a074\tadd\tsp, sp, #0x30\n000000010000a078\tret\n000000010000a07c\tstr\tx0, [sp, #0x8]\n000000010000a080\tmov\tx0, x19\n000000010000a084\tbl\t_fwp_rc_forget_slot\n000000010000a088\tldr\tx0, [sp, #0x8]\n000000010000a08c\tb\t0x10000a064",
+        "socketDrop": "_fwp_sock_drop:\n000000010000e800\tcbz\tx0, 0x10000e940\n000000010000e804\tstp\tx20, x19, [sp, #-0x20]!\n000000010000e808\tstp\tx29, x30, [sp, #0x10]\n000000010000e80c\tadd\tx29, sp, #0x10\n000000010000e810\tldr\tx8, [x0, #0x8]\n000000010000e814\tcbz\tx8, 0x10000e938\n000000010000e818\tsubs\tx8, x8, #0x1\n000000010000e81c\tstr\tx8, [x0, #0x8]\n000000010000e820\tb.ne\t0x10000e938\n000000010000e824\tldr\tw8, [x0]\n000000010000e828\tcmn\tw8, #0x1\n000000010000e82c\tb.eq\t0x10000e848\n000000010000e830\tmov\tx19, x0\n000000010000e834\tmov\tx0, x8\n000000010000e838\tbl\t0x10002f018 ; symbol stub for: _close\n000000010000e83c\tmov\tx0, x19\n000000010000e840\tmov\tw8, #-0x1\n000000010000e844\tstr\tw8, [x19]\n000000010000e848\tadrp\tx8, 43 ; 0x100039000\n000000010000e84c\tadd\tx8, x8, #0x38\n000000010000e850\tldr\tx9, [x8]\n000000010000e854\tsub\tx9, x0, x9\n000000010000e858\tldr\tx8, [x8, #0x28]\n000000010000e85c\tcmp\tx9, x8, lsl #16\n000000010000e860\tb.hs\t0x10000e938\n000000010000e864\tadrp\tx8, 43 ; 0x100039000\n000000010000e868\tldr\tx8, [x8, #0x80]\n000000010000e86c\tlsr\tx10, x9, #16\n000000010000e870\tmov\tw11, #0x1228\n000000010000e874\tmadd\tx8, x10, x11, x8\n000000010000e878\tldrb\tw10, [x8]\n000000010000e87c\tand\tx9, x9, #0xffff\n000000010000e880\tcmp\tx9, #0x0\n000000010000e884\tccmp\tw10, #0x2, #0x0, eq\n000000010000e888\tb.eq\t0x10000e8a0\n000000010000e88c\tcmp\tw10, #0x1\n000000010000e890\tb.ne\t0x10000e938\n000000010000e894\tldr\tw10, [x8, #0x20]\n000000010000e898\tumull\tx9, w9, w10\n000000010000e89c\tadd\tx8, x8, x9, lsr #32\n000000010000e8a0\tadd\tx8, x8, #0x228\n000000010000e8a4\tldrb\tw8, [x8]\n000000010000e8a8\tcmp\tw8, #0x1\n000000010000e8ac\tb.ne\t0x10000e938\n000000010000e8b0\tadrp\tx19, 43 ; 0x100039000\n000000010000e8b4\tldr\tw9, [x19, #0xa28]\n000000010000e8b8\ttbz\tw9, #0x1f, 0x10000e90c\n000000010000e8bc\tmov\tx20, x0\n000000010000e8c0\tadrp\tx0, 33 ; 0x10002f000\n000000010000e8c4\tadd\tx0, x0, #0x74e ; literal pool for: \"FWP_REUSE_VERIFY\"\n000000010000e8c8\tbl\t0x10002f0a8 ; symbol stub for: _getenv\n000000010000e8cc\tcbz\tx0, 0x10000e8f8\n000000010000e8d0\tmov\tx8, x0\n000000010000e8d4\tldrb\tw9, [x0]\n000000010000e8d8\tmov\tx0, x20\n000000010000e8dc\tcbz\tw9, 0x10000e908\n000000010000e8e0\tcmp\tw9, #0x30\n000000010000e8e4\tb.ne\t0x10000e904\n000000010000e8e8\tldrb\tw8, [x8, #0x1]\n000000010000e8ec\tcmp\tw8, #0x0\n000000010000e8f0\tcset\tw9, ne\n000000010000e8f4\tb\t0x10000e908\n000000010000e8f8\tmov\tw9, #0x0\n000000010000e8fc\tmov\tx0, x20\n000000010000e900\tb\t0x10000e908\n000000010000e904\tmov\tw9, #0x1\n000000010000e908\tstr\tw9, [x19, #0xa28]\n000000010000e90c\tcbnz\tw9, 0x10000e938\n000000010000e910\tadrp\tx19, 42 ; 0x100038000\n000000010000e914\tadd\tx19, x19, #0x8\n000000010000e918\tldr\tx20, [x19]\n000000010000e91c\tbl\t_fwp_mem_free\n000000010000e920\tldr\tx8, [x19]\n000000010000e924\tsub\tx8, x8, x20\n000000010000e928\tscvtf\td0, x8\n000000010000e92c\tldr\td1, [x19, #0x1208]\n000000010000e930\tfadd\td0, d1, d0\n000000010000e934\tstr\td0, [x19, #0x1208]\n000000010000e938\tldp\tx29, x30, [sp, #0x10]\n000000010000e93c\tldp\tx20, x19, [sp], #0x20\n000000010000e940\tret"
+      },
+      {
+        "binary": "mutual-tls-arc.exe",
+        "sha256": "22d979d50cba4970d116057d155267a5107bf47088f3a067ea267763da043efc",
+        "headerRequestBytes": 24,
+        "countOffsetBytes": 8,
+        "tlsPointerOffsetBytes": 16,
+        "disassemblySha256": "c90d4e26ae360400dc17eb6059145fb6400b41ea2fd29967a408a207ec67209f",
+        "socketConstructor": "_fwp_sock_new:\n0000000100052aa8\tstp\tx20, x19, [sp, #-0x20]!\n0000000100052aac\tstp\tx29, x30, [sp, #0x10]\n0000000100052ab0\tadd\tx29, sp, #0x10\n0000000100052ab4\tmov\tx19, x1\n0000000100052ab8\tmov\tx20, x0\n0000000100052abc\tadrp\tx9, 70 ; 0x100098000\n0000000100052ac0\tadd\tx9, x9, #0x8\n0000000100052ac4\tldrb\tw10, [x9, #0xbea]\n0000000100052ac8\tadd\tx8, x9, x10, lsl #2\n0000000100052acc\tldr\tw8, [x8, #0xb48]\n0000000100052ad0\tldr\tx11, [x9]\n0000000100052ad4\tsubs\tx11, x11, x8\n0000000100052ad8\tstr\tx11, [x9]\n0000000100052adc\tb.mi\t0x100052be4\n0000000100052ae0\tmov\tw11, #0x18\n0000000100052ae4\tumaddl\tx9, w10, w11, x9\n0000000100052ae8\tadd\tx9, x9, #0x3c8\n0000000100052aec\tldr\tx0, [x9]\n0000000100052af0\tcbz\tx0, 0x100052b04\n0000000100052af4\tldr\tx8, [x0]\n0000000100052af8\tmvn\tx8, x8\n0000000100052afc\tstr\tx8, [x9]\n0000000100052b00\tb\t0x100052b28\n0000000100052b04\tldp\tx0, x10, [x9, #0x8]\n0000000100052b08\tsub\tx10, x10, x0\n0000000100052b0c\tcmp\tx10, x8\n0000000100052b10\tb.hs\t0x100052b20\n0000000100052b14\tmov\tw8, #0x1\n0000000100052b18\tcbnz\tw8, 0x100052b38\n0000000100052b1c\tb\t0x100052b3c\n0000000100052b20\tadd\tx8, x0, x8\n0000000100052b24\tstr\tx8, [x9, #0x8]\n0000000100052b28\tmov\tw8, #0x0\n0000000100052b2c\tstp\txzr, xzr, [x0]\n0000000100052b30\tstr\txzr, [x0, #0x10]\n0000000100052b34\tcbz\tw8, 0x100052b3c\n0000000100052b38\tmov\tw8, #0x1\n0000000100052b3c\tcbz\tw8, 0x100052b4c\n0000000100052b40\tmov\tw0, #0x18\n0000000100052b44\tmov\tw1, #0x1\n0000000100052b48\tbl\t_fwp_gc_alloc_slow\n0000000100052b4c\tstp\tw20, w19, [x0]\n0000000100052b50\tmov\tw8, #0x1\n0000000100052b54\tstp\tx8, xzr, [x0, #0x8]\n0000000100052b58\tadrp\tx8, 71 ; 0x100099000\n0000000100052b5c\tadd\tx8, x8, #0x38\n0000000100052b60\tldr\tx9, [x8]\n0000000100052b64\tsub\tx9, x0, x9\n0000000100052b68\tldr\tx8, [x8, #0x28]\n0000000100052b6c\tcmp\tx9, x8, lsl #16\n0000000100052b70\tb.hs\t0x100052bbc\n0000000100052b74\tadrp\tx8, 71 ; 0x100099000\n0000000100052b78\tldr\tx8, [x8, #0x80]\n0000000100052b7c\tlsr\tx10, x9, #16\n0000000100052b80\tmov\tw11, #0x1228\n0000000100052b84\tmadd\tx8, x10, x11, x8\n0000000100052b88\tldrb\tw10, [x8]\n0000000100052b8c\tand\tx9, x9, #0xffff\n0000000100052b90\tcmp\tx9, #0x0\n0000000100052b94\tccmp\tw10, #0x2, #0x0, eq\n0000000100052b98\tb.eq\t0x100052bb0\n0000000100052b9c\tcmp\tw10, #0x1\n0000000100052ba0\tb.ne\t0x100052bbc\n0000000100052ba4\tldr\tw10, [x8, #0x20]\n0000000100052ba8\tumull\tx9, w9, w10\n0000000100052bac\tadd\tx8, x8, x9, lsr #32\n0000000100052bb0\tadd\tx19, x8, #0x228\n0000000100052bb4\tcbnz\tx19, 0x100052bc4\n0000000100052bb8\tb\t0x100052bd8\n0000000100052bbc\tmov\tx19, #0x0\n0000000100052bc0\tcbz\tx19, 0x100052bd8\n0000000100052bc4\tldrb\tw8, [x19]\n0000000100052bc8\tcmp\tw8, #0xff\n0000000100052bcc\tb.eq\t0x100052be8\n0000000100052bd0\tmov\tw8, #0x1\n0000000100052bd4\tstrb\tw8, [x19]\n0000000100052bd8\tldp\tx29, x30, [sp, #0x10]\n0000000100052bdc\tldp\tx20, x19, [sp], #0x20\n0000000100052be0\tret\n0000000100052be4\tb\t0x100052b38\n0000000100052be8\tmov\tx20, x0\n0000000100052bec\tmov\tx0, x19\n0000000100052bf0\tbl\t_fwp_rc_forget_slot\n0000000100052bf4\tmov\tx0, x20\n0000000100052bf8\tb\t0x100052bd0",
+        "socketDrop": "_fwp_sock_drop:\n0000000100040b4c\tstp\tx22, x21, [sp, #-0x30]!\n0000000100040b50\tstp\tx20, x19, [sp, #0x10]\n0000000100040b54\tstp\tx29, x30, [sp, #0x20]\n0000000100040b58\tadd\tx29, sp, #0x20\n0000000100040b5c\tcbz\tx0, 0x100040b74\n0000000100040b60\tldr\tx8, [x0, #0x8]\n0000000100040b64\tcbz\tx8, 0x100040b74\n0000000100040b68\tsubs\tx8, x8, #0x1\n0000000100040b6c\tstr\tx8, [x0, #0x8]\n0000000100040b70\tb.eq\t0x100040b84\n0000000100040b74\tldp\tx29, x30, [sp, #0x20]\n0000000100040b78\tldp\tx20, x19, [sp, #0x10]\n0000000100040b7c\tldp\tx22, x21, [sp], #0x30\n0000000100040b80\tret\n0000000100040b84\tldr\tw8, [x0, #0x4]\n0000000100040b88\tcmp\tw8, #0x2\n0000000100040b8c\tb.eq\t0x100040be0\n0000000100040b90\tldr\tx19, [x0, #0x10]\n0000000100040b94\tcbz\tx19, 0x100040be0\n0000000100040b98\tmov\tx21, x0\n0000000100040b9c\tcbz\tw8, 0x100040bb0\n0000000100040ba0\tmov\tx0, x19\n0000000100040ba4\tbl\t_fwp_tls_dispose\n0000000100040ba8\tmov\tx0, x21\n0000000100040bac\tb\t0x100040bdc\n0000000100040bb0\tmov\tx0, x19\n0000000100040bb4\tmov\tw1, #0x0\n0000000100040bb8\tbl\t0x100091754 ; symbol stub for: _SSL_CTX_get_ex_data\n0000000100040bbc\tcbz\tx0, 0x100040d18\n0000000100040bc0\tmov\tx20, x0\n0000000100040bc4\tldr\tx8, [x0, #0x10]\n0000000100040bc8\tcbz\tx8, 0x100040d18\n0000000100040bcc\tsubs\tx8, x8, #0x1\n0000000100040bd0\tstr\tx8, [x20, #0x10]\n0000000100040bd4\tmov\tx0, x21\n0000000100040bd8\tb.eq\t0x100040cfc\n0000000100040bdc\tstr\txzr, [x0, #0x10]\n0000000100040be0\tldr\tw8, [x0]\n0000000100040be4\tcmn\tw8, #0x1\n0000000100040be8\tb.eq\t0x100040c04\n0000000100040bec\tmov\tx19, x0\n0000000100040bf0\tmov\tx0, x8\n0000000100040bf4\tbl\t0x100091a18 ; symbol stub for: _close\n0000000100040bf8\tmov\tx0, x19\n0000000100040bfc\tmov\tw8, #-0x1\n0000000100040c00\tstr\tw8, [x19]\n0000000100040c04\tadrp\tx8, 89 ; 0x100099000\n0000000100040c08\tadd\tx8, x8, #0x38\n0000000100040c0c\tldr\tx9, [x8]\n0000000100040c10\tsub\tx9, x0, x9\n0000000100040c14\tldr\tx8, [x8, #0x28]\n0000000100040c18\tcmp\tx9, x8, lsl #16\n0000000100040c1c\tb.hs\t0x100040c68\n0000000100040c20\tadrp\tx8, 89 ; 0x100099000\n0000000100040c24\tldr\tx8, [x8, #0x80]\n0000000100040c28\tlsr\tx10, x9, #16\n0000000100040c2c\tmov\tw11, #0x1228\n0000000100040c30\tmadd\tx8, x10, x11, x8\n0000000100040c34\tldrb\tw10, [x8]\n0000000100040c38\tands\tx9, x9, #0xffff\n0000000100040c3c\tb.ne\t0x100040c48\n0000000100040c40\tcmp\tw10, #0x2\n0000000100040c44\tb.eq\t0x100040c5c\n0000000100040c48\tcmp\tw10, #0x1\n0000000100040c4c\tb.ne\t0x100040c68\n0000000100040c50\tldr\tw10, [x8, #0x20]\n0000000100040c54\tumull\tx9, w9, w10\n0000000100040c58\tadd\tx8, x8, x9, lsr #32\n0000000100040c5c\tadd\tx8, x8, #0x228\n0000000100040c60\tcbnz\tx8, 0x100040c70\n0000000100040c64\tb\t0x100040b74\n0000000100040c68\tmov\tx8, #0x0\n0000000100040c6c\tcbz\tx8, 0x100040b74\n0000000100040c70\tldrb\tw8, [x8]\n0000000100040c74\tcmp\tw8, #0x1\n0000000100040c78\tb.ne\t0x100040b74\n0000000100040c7c\tadrp\tx19, 89 ; 0x100099000\n0000000100040c80\tldr\tw8, [x19, #0xb18]\n0000000100040c84\ttbz\tw8, #0x1f, 0x100040cc8\n0000000100040c88\tmov\tx20, x0\n0000000100040c8c\tadrp\tx0, 82 ; 0x100092000\n0000000100040c90\tadd\tx0, x0, #0x149 ; literal pool for: \"FWP_REUSE_VERIFY\"\n0000000100040c94\tbl\t0x100091ac0 ; symbol stub for: _getenv\n0000000100040c98\tcbz\tx0, 0x100040cbc\n0000000100040c9c\tldrb\tw8, [x0]\n0000000100040ca0\tcbz\tw8, 0x100040cc0\n0000000100040ca4\tadrp\tx1, 82 ; 0x100092000\n0000000100040ca8\tadd\tx1, x1, #0x15a ; literal pool for: \"0\"\n0000000100040cac\tbl\t0x100091c7c ; symbol stub for: _strcmp\n0000000100040cb0\tcmp\tw0, #0x0\n0000000100040cb4\tcset\tw8, ne\n0000000100040cb8\tb\t0x100040cc0\n0000000100040cbc\tmov\tw8, #0x0\n0000000100040cc0\tmov\tx0, x20\n0000000100040cc4\tstr\tw8, [x19, #0xb18]\n0000000100040cc8\tldr\tw8, [x19, #0xb18]\n0000000100040ccc\tcbnz\tw8, 0x100040b74\n0000000100040cd0\tadrp\tx19, 88 ; 0x100098000\n0000000100040cd4\tadd\tx19, x19, #0x8\n0000000100040cd8\tldr\tx20, [x19]\n0000000100040cdc\tbl\t_fwp_mem_free\n0000000100040ce0\tldr\tx8, [x19]\n0000000100040ce4\tsub\tx8, x8, x20\n0000000100040ce8\tscvtf\td0, x8\n0000000100040cec\tldr\td1, [x19, #0x1208]\n0000000100040cf0\tfadd\td0, d1, d0\n0000000100040cf4\tstr\td0, [x19, #0x1208]\n0000000100040cf8\tb\t0x100040b74\n0000000100040cfc\tmov\tx0, x19\n0000000100040d00\tbl\t0x100091748 ; symbol stub for: _SSL_CTX_free\n0000000100040d04\tldr\tx0, [x20]\n0000000100040d08\tbl\t0x100091a84 ; symbol stub for: _free\n0000000100040d0c\tmov\tx0, x20\n0000000100040d10\tbl\t0x100091a84 ; symbol stub for: _free\n0000000100040d14\tb\t0x100040ba8\n0000000100040d18\tbl\t0x1000919b8 ; symbol stub for: _abort"
+      }
+    ]
+  },
+  "windowsSocketDiagnosticFollowup": {
+    "revision": "abe3be17c0c6a99da999316c5329570760e8c557",
+    "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38931783848",
+    "jobs": [
+      {
+        "name": "paths (windows-11-arm)",
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38931783848/job/117077319791",
+        "conclusion": "success"
+      },
+      {
+        "name": "paths (windows-2025)",
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38931783848/job/117077320045",
+        "conclusion": "success"
+      }
+    ],
+    "change": "Common Windows socket messages now match the interpreter for permission, address-in-use, aborted, reset and refused errors. Unknown socket errors retain their system message.",
+    "checks": [
+      "Five actual native OS error codes are compared against the interpreter formatter at O1/O2.",
+      "Real interpreted/native TLS stream snapshots preserve exact client certificate diagnostics.",
+      "Deterministic TLS reset checks require the exact reset message; missing error capture still fails.",
+      "TCP/UDP lifetime, mutual TLS with checked ARC, native Windows socket-library unload and cancellation controls pass."
+    ],
+    "productionLimit": "This focused repair still requires all nine production jobs and documentation on the final delivery head.",
+    "sourceHashes": {
+      "runtime/fwp_rt_socket.c": "16cedc7fe544b1fb2534a4b32b05f08f03d818cca50cebb6353599581ccb3ee9",
+      "tests/native_sockets.rs": "4aff46b86f041116ce646aa80b370da3d90a25dfae62ae91b42e2a9f4d679883",
+      "tests/tls.rs": "927e06da56c7cdcb41472e6762f486d28bb045afa82ae9641e3c00d790666d6b",
+      "tests/fixtures/native_socket_probe.c": "5ffe21a6ce9e35469d7de02cd3f3c540e191f18f8c1f0dcc6acdd4f0c75d57c1"
+    }
+  }
+}

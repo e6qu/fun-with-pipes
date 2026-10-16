@@ -104,23 +104,47 @@ jobs:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: Native TLS and executable ownership
+        id: tls_tests
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test service_value_ownership --test http2_peer_cleanup --test byte_decoder_ownership --test text_decoder_ownership --test web --test std_tests --test tls --test cli_ownership --test console_ownership --test process_ownership --test terminal_ownership --test cli --test clock_ownership --test directory_report --test working_directory --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test arc_execution --test arc_library --test transpose_ownership --test linalg_ownership --test array_loop_borrows --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test foreign_callback_ownership --test float_formats --test float_linking --test protocol --test blocked_matrix --test wide_workers
+          cargo test --no-fail-fast --test service_value_ownership --test http2_peer_cleanup --test byte_decoder_ownership --test text_decoder_ownership --test web --test std_tests --test tls --test cli_ownership --test console_ownership --test process_ownership --test terminal_ownership --test cli --test clock_ownership --test directory_report --test working_directory --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test arc_execution --test arc_library --test transpose_ownership --test linalg_ownership --test array_loop_borrows --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test foreign_callback_ownership --test float_formats --test float_linking --test protocol --test blocked_matrix --test wide_workers 2>&1 | Tee-Object windows-tls_tests.log
           exit $LASTEXITCODE
+      - name: Publish failed native tls and executable ownership log
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && steps.tls_tests.outcome == 'failure' }}
+        with:
+          name: windows-tls_tests-${{ matrix.runner }}
+          path: windows-tls_tests.log
+          if-no-files-found: error
       - name: Native nested autodiff and ownership controls
+        id: autodiff_tests
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test autodiff_precision --test autodiff_nested --test autodiff_checkpoint --test autodiff_library --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_capacity_bounds --test iterator_fusion
+          cargo test --no-fail-fast --test autodiff_precision --test autodiff_nested --test autodiff_checkpoint --test autodiff_library --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_capacity_bounds --test iterator_fusion 2>&1 | Tee-Object windows-autodiff_tests.log
           exit $LASTEXITCODE
+      - name: Publish failed native nested autodiff and ownership controls log
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && steps.autodiff_tests.outcome == 'failure' }}
+        with:
+          name: windows-autodiff_tests-${{ matrix.runner }}
+          path: windows-autodiff_tests.log
+          if-no-files-found: error
       - name: Complete native golden programs
+        id: golden_tests
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
-          cargo test --test golden_run native_snapshots -- --exact
+          cargo test --test golden_run native_snapshots -- --exact 2>&1 | Tee-Object windows-golden_tests.log
           exit $LASTEXITCODE
+      - name: Publish failed complete native golden programs log
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && steps.golden_tests.outcome == 'failure' }}
+        with:
+          name: windows-golden_tests-${{ matrix.runner }}
+          path: windows-golden_tests.log
+          if-no-files-found: error
       - name: Build standalone compiler with static C runtime
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh

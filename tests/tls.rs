@@ -376,7 +376,7 @@ fn mutual_tls() {
     let expected = root().join("tests/tls/mutual.out");
     let mut commands = both_ways(&file, &d, "mutual");
     if have_cc() {
-        let binary = d.join("mutual-arc");
+        let binary = d.join("mutual-arc.exe");
         build(
             &[
                 file.to_str().unwrap(),
@@ -1101,6 +1101,9 @@ fn native_tls_preserves_socket_errors_and_clean_shutdown() {
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "tls_errors").unwrap();
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <openssl/ssl.h>
 static int test_read(SSL *ssl,void *data,int n);
 static int test_write(SSL *ssl,const void *data,int n);
@@ -1155,7 +1158,7 @@ int main(void){
  stale_error();result=fwp_tls_send(ssl,&byte,1,&wait);
  if(result!=-1||errno!=TEST_RESET||uncleared)return 247;
  stale_error();result=fwp_tls_step(ssl,&wait);
- if(result!=-2||strncmp(fwp_tls_err,"TLS handshake failed: ",22)||uncleared)return 247;
+ if(result!=-2||strcmp(fwp_tls_err,"TLS handshake failed: Connection reset by peer")||uncleared)return 247;
  error_kind=SSL_ERROR_ZERO_RETURN;
  stale_error();if(fwp_tls_recv(ssl,&byte,1,&wait)!=0||uncleared)return 247;
  stale_error();if(fwp_tls_send(ssl,&byte,1,&wait)!=-2||uncleared)return 247;
