@@ -9,7 +9,7 @@ belongs in [delivery history](roadmap-history.md).
 [PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is the only open delivery.
 Its final head is `27cdc7ff1b9c59b025159768b11452ab5adbc58c`, in worktree
 `/private/tmp/fwp-wasi-delivery`. Fresh production `38872161681` has all nine jobs running; docs
-`38872161673` is the matching documentation gate. Previous head `796f5a4c` did not pass acceptance:
+`38872161673` passes for that exact head. Previous head `796f5a4c` did not pass acceptance:
 Intel macOS GC exceeded the 90-minute job limit in `38861611494`; the run was
 canceled after that timeout. Six jobs had passed, with both Linux jobs unfinished.
 The repair assigns tests explicitly using measured durations, keeping full
@@ -83,8 +83,20 @@ added to the existing vector regression target; the accepted interpreter passes
 them under the guard (0.26 s). Acceptance
 requires native/interpreter parity, native/WASI ownership gates, four-host
 allocation/code evidence and paired timings against `38869050349`. No speedup
-is claimed before those results. Temporary vectors and materialized lists remain
-separate measured costs to address.
+is claimed before those results. A further narrow proof recognizes F64 lane arithmetic/sums, integer-to-F64
+conversion, and splats whose declared length fits the array limit even on WASI32.
+This lets eligible pipelines discard intermediate lists; integer lane division
+and oversized splats remain unknown to this proof. Explicit tests preserve
+observable effects and distinguishable first traps. Temporary vectors remain
+measured costs to address. The first direct-storage revision `17742b18` has
+native `38872997832`, WASI `38873001719` and costs `38873005668` queued/running;
+those do not validate the following fusion extension. The four new semantic
+cases pass the accepted interpreter under the guard (0.63 s), including the
+expected I64 overflow before the consumer's division error; formatting passes
+(1.11 s). The paired runner now requires an explicit hash/vector workload and
+verifies matching references as well as fwp source/binary/assembly identities.
+Its renamed `scripts/repeat-revision-comparison.py` preserves hash comparison
+and adds vector profiles; a full paired run is still required.
 
 ## Completed focused checks and measurements
 

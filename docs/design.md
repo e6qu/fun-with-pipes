@@ -152,6 +152,21 @@ Resource-bearing captures keep their original frames. The handoff separates
 implementation, focused checks and full acceptance; benchmarks retain the
 unfused baseline.
 
+## Combining F64 lane pipelines
+
+F64 lane arithmetic and sums terminate without language arithmetic traps. Their
+binary results use at most the common length of already valid input arrays.
+Integer-to-F64 conversion is also total, although it may round. A splat creates
+new storage: its proof applies only when the declared lane count fits the
+existing array size limit on every supported target, including 32-bit WASI.
+Other splat sizes and integer vector division do not receive this proof.
+
+The existing pipeline analysis can therefore combine eligible F64 maps and
+reductions into a loop, eliminating their intermediate lists. It still rejects
+interleaving observable effects, unknown callbacks or distinguishable traps.
+Arithmetic keeps its original lane/iteration order; this does not authorize
+floating-point reassociation or remove temporary vector storage by itself.
+
 ## Reading F64 vector lanes directly
 
 An F64 lane occupies eight contiguous bytes in both ordinary arrays and array

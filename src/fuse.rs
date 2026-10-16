@@ -178,6 +178,25 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
         // resources. It reads canonical bytes without callbacks or language
         // traps. Its borrowed input stays owned by the ordinary fused loop.
         "hash" => none(),
+        // Integer conversion to F64 is defined for every supported integer.
+        // It can round, but neither invokes a callback nor raises a trap.
+        "int.to-float" if *result == MT::con("std::F64") => match num(params.first()?)? {
+            Num::Int(_) => none(),
+            Num::Float => None,
+        },
+        // F64 lane arithmetic/sum is total. Binary operations use the actual
+        // common prefix, so their new array is no larger than either valid
+        // input array, even for manually constructed records.
+        "simd.add" | "simd.sub" | "simd.mul" | "simd.div" | "simd.min" | "simd.max"
+            if f64_lanes(result).is_some() =>
+        {
+            none()
+        }
+        "simd.sum" if params.first().and_then(|t| f64_lanes(t)).is_some() => none(),
+        // Splat has a declared size instead of an existing input array. Prove
+        // its array limit on all targets, including 32-bit WASI: eight header
+        // bytes and eight bytes per F64 lane. Larger shapes remain unknown.
+        "simd.splat" if f64_lanes(result).is_some_and(|n| n <= (u32::MAX as u64 - 8) / 8) => none(),
         // These integer operations are total, including boxed wide integers.
         // Shifts are deliberately absent: their bit count can trap.
         "bit.and" | "bit.or" | "bit.xor" | "bit.not" => match num(result)? {
@@ -218,6 +237,14 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
         {
             none()
         }
+        _ => None,
+    }
+}
+
+fn f64_lanes(ty: &MT) -> Option<u64> {
+    let MT::Con(name, args) = ty else { return None };
+    match (name.as_str(), args.as_slice()) {
+        ("std::Vec", [MT::Nat(n), element]) if *element == MT::con("std::F64") => Some(*n),
         _ => None,
     }
 }
@@ -1789,5 +1816,69 @@ pub fn specialize_matrices(prog: &mut Program) {
                 (Pat::Wild, original),
             ],
         ));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn f64_lane_proofs_respect_sizes_and_numeric_rules() {
+        let f64 = MT::con("std::F64");
+        let i64 = MT::con("std::I64");
+        let vector = |n, t: MT| MT::Con("std::Vec".into(), vec![MT::Nat(n), t]);
+        let unary = |a, b| MT::Fun(Box::new(a), Box::new(b));
+        assert_eq!(
+            prim("int.to-float", &unary(i64.clone(), f64.clone()), &[]),
+            none()
+        );
+        let limit = (u32::MAX as u64 - 8) / 8;
+        assert_eq!(
+            prim(
+                "simd.splat",
+                &unary(f64.clone(), vector(limit, f64.clone())),
+                &[]
+            ),
+            none()
+        );
+        assert_eq!(
+            prim(
+                "simd.splat",
+                &unary(f64.clone(), vector(limit + 1, f64.clone())),
+                &[]
+            ),
+            None
+        );
+        assert_eq!(
+            prim(
+                "simd.splat",
+                &unary(i64.clone(), vector(4, i64.clone())),
+                &[]
+            ),
+            None
+        );
+        for symbol in [
+            "simd.add", "simd.sub", "simd.mul", "simd.div", "simd.min", "simd.max",
+        ] {
+            let v = vector(4, f64.clone());
+            assert_eq!(
+                prim(symbol, &unary(v.clone(), unary(v.clone(), v)), &[]),
+                none()
+            );
+        }
+        let integer = vector(4, i64.clone());
+        assert_eq!(
+            prim(
+                "simd.div",
+                &unary(integer.clone(), unary(integer.clone(), integer)),
+                &[]
+            ),
+            None
+        );
+        assert_eq!(
+            prim("simd.sum", &unary(vector(0, f64.clone()), f64), &[]),
+            none()
+        );
     }
 }
