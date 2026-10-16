@@ -14,8 +14,12 @@ many tests remaining; that superseded run is canceled. The proposed repair uses
 Rust optimization level 1 for CI compiler/test binaries while explicitly retaining
 debug assertions and overflow checks. Test coverage and generated-C flags stay
 unchanged. Runner comparison `38901188943` tests profiles 0/1 on identical `c81b0c9f`
-source with separate warm caches and balanced sample order. Do not claim a speedup
-until the evidence and full gates pass.
+source with separate warm caches and balanced sample order. The comparison passes on both AMD64 hosts. The retained
+[report](measurements/ci-compiler-profiles-2026-10-16.json) records median test
+elapsed ratios of 0.805 on Linux and 0.747 on Intel macOS, plus the extra initial
+build costs (26.63s/158.20s). Debug and overflow checks are verified in actual
+artifact profiles. These two-target results do not establish full-gate timing;
+all nine production jobs still gate the merge.
 
 Integration worktree: `/private/tmp/fwp-owned-values-delivery`, branch
 `owned-values-delivery`, based on previous head `c81b0c9f`. It applies only the delta after
@@ -173,20 +177,21 @@ beyond the inventory count. The existing OpenCL runtime build violates the no-JI
 direction and remains unresolved; CPU changes do not fix that gap. No JIT, new
 backend or distributed execution is authorized as a workaround.
 
-The next memory slice should cover UDP handles and all five UDP operations. An
-address list is ordinary data; a socket also owns an operating-system descriptor,
-so last-owner destruction is observable. Preserve explicit close through aliases,
-original function lifetimes, captures in closures/records/tasks, and pending I/O
-cancellation. Do not make sockets non-capturable merely to reuse File's simpler
-contract. Ordinary File handles have an independent resource count and forbid
-captures; copying that policy blindly would change existing networking semantics.
-Closure/container cleanup with `FWP_FREE=0`, unknown retained callback graphs and
-GC/library finalizer removal need explicit review before promoting UDP contracts.
-No UDP-handle implementation has been added in this delivery.
+The next isolated memory slice is `/private/tmp/fwp-owned-udp`, branch
+`owned-udp-lifetimes`, based on this delivery at `4d9ecadd`. Its current head
+`947a6868` adds UDP handle ownership, five operation contracts, original resource
+scope preservation, typed partial receive cleanup and native failure/unload tests.
+It is not yet accepted and must not be folded into a delivery without evidence.
+Raw interpretation of a holder/rebind probe succeeds, while the accepted optimized
+interpreter retains the socket too long. This is a reproduced optimizer bug, not
+a new lifetime rule. Initial fix `91f24f63` passes Linux/Windows on both architectures
+in `38904425456`; that run was superseded before both macOS checks completed.
+Expanded six-host run `38905209906` tests `947a6868` and is pending. It includes
+4096 descriptor cycles, 301 aliases, all receive allocation failures, suspended
+receive cancellation, physical-free-disabled cleanup, library unload and omitted
+cleanup controls. Existing File capture restrictions must not be imposed on UDP.
+Do not count unfinished UDP preparation as support or a separate open PR.
 
-A bounded accepted-interpreter probe creates a socket in a helper, returns its
-address, then binds that address again after the helper returns. Raw and optimized
-interpretation both print `rebound` (0.26s/0.25s under the guard). This establishes
-the reference result, not native ownership support. Native lifetime/alias/capture,
-allocation-failure and long-running descriptor-count controls remain to implement
-for that next slice after this delivery.
+CI profile evidence was retained with
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-retain-ci-profile.py`
+(pass, 0.14s), checking both completed jobs, artifact settings and balanced samples.
