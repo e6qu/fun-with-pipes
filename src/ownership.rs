@@ -17,6 +17,8 @@ pub enum Argument {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ResultOwnership {
     Shared,
+    /// Immutable static storage; no allocation or reference count is required.
+    Static,
     /// Transfers control to an effect handler; no normal result exists.
     Never,
     /// An owned resource or resource-bearing result prepared by the runtime.
@@ -149,8 +151,9 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
-        // Bool tags are immortal immediates; negation allocates nothing.
+        // Bool tags are immortal immediates; these operations allocate nothing.
         "not" => (&[B], R, None, &[]),
+        "and" | "or" => (&[B, B], R, None, &[]),
         "prim.zero" | "prim.one" => (&[], ResultOwnership::Numeric, None, &[]),
         "prim.neg" | "prim.from-int" | "prim.from-float" | "bit.not" | "int.convert"
         | "float.to-int" | "float.convert" | "int.to-float" | "sqrt" | "exp" | "ln" | "sin"
@@ -279,7 +282,9 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "dir.create-all" | "dir.create" | "dir.remove" | "file.remove" | "file.exists"
         | "file.is-dir" => (&[B], R, None, &[]),
         "file.rename" | "file.append" | "file.write-bytes" => (&[B, B], R, None, &[]),
-        "file.read-bytes" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "file.read-bytes" | "env.cwd" | "time.monotonic" | "time.unix" => {
+            (&[B], ResultOwnership::FreshLeaf, None, &[])
+        }
         "file.info" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "lines" | "read-line" | "read-lines" | "read-all" | "args" | "env.get" | "env.vars"
         | "dir.list" => (&[B], ResultOwnership::OwnedTree, None, &[]),
@@ -512,7 +517,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[0, 1],
         ),
         "array.length" | "map.size" | "set.size" => (&[B], R, None, &[]),
-        "map.empty" | "set.empty" => (&[], R, None, &[]),
+        "map.empty" | "set.empty" => (&[], ResultOwnership::Static, None, &[]),
         "map.contains" | "set.contains" => (&[B, B], R, None, &[]),
         "map.from-list" | "set.from-list" | "map.keys" | "map.values" | "map.to-list"
         | "set.to-list" => (

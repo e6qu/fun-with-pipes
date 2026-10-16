@@ -219,13 +219,17 @@ static V fwp_p_env_vars(void (*drop_pair)(V), void (*drop_list)(V)) {
     fwp_cleanup_pop(&environment_cleanup);FreeEnvironmentStringsW(environment);
     return result;
 }
-static V fwp_p_env_cwd(void) {
+static V fwp_p_env_cwd(const fwp_desc *error) {
     DWORD size = GetCurrentDirectoryW(0, NULL);
-    if (!size) fwp_trap("cannot read working directory");
+    if (!size) return fwp_win_io_error("cwd", NULL, GetLastError(), error);
     wchar_t *path = (wchar_t *)malloc((size_t)size * sizeof *path);
     if (!path) fwp_trap("out of memory reading working directory");
     DWORD got = GetCurrentDirectoryW(size, path);
-    if (!got || got >= size) { free(path); fwp_trap("cannot read working directory"); }
+    if (!got || got >= size) {
+        DWORD failed = got ? ERROR_INSUFFICIENT_BUFFER : GetLastError();
+        free(path);
+        return fwp_win_io_error("cwd", NULL, failed, error);
+    }
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_win_free, path);
     V result = fwp_win_string(path, got);

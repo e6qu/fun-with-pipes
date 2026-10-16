@@ -48,6 +48,27 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Numerical precision and filesystem ownership (PR #147)
+
+[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) merged as `c9127d2d`
+at 2026-10-15 23:42 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38814786923)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38814787519)
+passed for `71c612d0`. The squash has identical files and the verified subject
+`Own numerical and filesystem results and preserve gradient precision`, with
+no body or trailers. Duplicate post-merge production run `38825167262` was
+canceled after verifying the identical tree.
+
+Six F64 solvers now own scratch/results and handle partial failures; QR validates
+output bounds. Array loops borrow invariant data pointers. Reverse differentiation
+preserves F128 seeds, weights and adjoints without narrowing through F64. Console
+input, arguments, environment/directory snapshots, file metadata, byte reads and
+ordinary file actions have explicit ownership and error cleanup. OS paths and
+environment names reject embedded zero bytes before accessing a truncated prefix.
+Regression tests also preserve timestamps, write errors and host directory
+messages. See [ownership](ownership.md) and [benchmarks](benchmarks.md) for scoped
+contracts and measured limits. Default tracing and broader roadmap work remain.
+
 ## Checked boundaries and numerical kernels (PR #146)
 
 [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146) merged as `be890914`

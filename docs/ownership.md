@@ -305,8 +305,11 @@ all six native platforms pass, including the directory-error and composed
 application regressions. The combined delivery still needs its full production
 gate, tracked in the handoff.
 
-Current-directory lookup and other unreviewed IO primitives
-remain outside checked ARC.
+Current-directory lookup now returns a counted string and protects its OS path
+buffer until conversion finishes. It raises an explicit `IoError` of kind `cwd`
+when the directory cannot be read. POSIX no longer substitutes `"."` or imposes a
+4 KiB buffer. This is a candidate contract: native six-host acceptance is tracked
+in the handoff. Other unreviewed IO primitives remain outside checked ARC.
 
 The six dense F64 linear-algebra primitives borrow their input arrays and return
 independently owned results. Scratch pointers and partially constructed output
@@ -345,3 +348,23 @@ on and off, inspect native symbols/instructions for absent tracing, and require
 missing-free controls to fail. ARC still needs allocator metadata and can retain
 reusable pages. It promises neither zero allocation overhead nor immediate return
 of every page to the operating system.
+
+Empty maps and sets use immutable static storage. Their explicit static-result
+contract permits checked ARC without allocating an owner or changing a reference
+count. Inserting into an empty value allocates an ordinary typed container;
+other aliases still see the empty value. The repeated directory-report test
+checks empty map/set aliases, insertion, removal back to empty and full cleanup
+alongside the maintained application in both memory modes.
+
+Boolean `not`, `and` and `or` borrow their immediate Boolean arguments and
+return an immediate Boolean tag; none needs storage or reference counts. Their
+explicit contracts admit ordinary Boolean combinations to checked ARC.
+
+`time.monotonic` and `time.unix` return a counted Duration record whose single
+field contains nanoseconds. Repeated clock reads and timestamped logs must free
+those records without tracing. The clock regression compares monotonic ordering,
+positive wall-clock readings and log fields with raw interpretation, checks
+final ARC storage, and deliberately removes one count to verify leak detection.
+Timestamps differ between executions; the test checks their format and the
+remaining fields rather than requiring identical clock readings. These records
+still allocate; avoiding that allocation is separate work.

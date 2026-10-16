@@ -1,164 +1,95 @@
 # Session handoff
 
-Updated 2026-10-16. [PR #146](https://github.com/e6qu/fun-with-pipes/pull/146)
-merged as `be890914` after all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349640)
-passed for `19b14d0b`. The merge message is one line with an empty body and its
-files match the tested head. Duplicate post-merge production CI was canceled.
-[Delivery history](roadmap-history.md) records the accepted scope and limits.
+Updated 2026-10-16. [PR #147](https://github.com/e6qu/fun-with-pipes/pull/147)
+merged as `c9127d2d` after all nine production jobs and documentation passed for
+`71c612d0`. Its files and prescribed single-line message were verified; duplicate
+post-merge production run `38825167262` was canceled. The history records links.
 
-The current delivery is [PR #147](https://github.com/e6qu/fun-with-pipes/pull/147),
-branch `owned-numerical-programs` in `/Users/zardoz/projects/fun-with-pipes`,
-based on accepted `be890914`. Its full final-head production gate is pending.
-It combines solvers, array borrowing, F128 precision, console ownership, path/error
-repairs, snapshots and file values through `4c73dfb2`. It preserves #146's Windows
-library/loop-unwind repairs, early cancellation test and matrix/wide-worker tests.
-Earlier preparation worktrees are evidence anchors; do not replay their commits.
+The current delivery is [PR #148](https://github.com/e6qu/fun-with-pipes/pull/148),
+branch `record-moves-and-utilities`, in
+`/Users/zardoz/projects/fun-with-pipes`, based on accepted `c9127d2d`. It contains
+only the changes after old preparation anchor `a2679ecb`, transferred from
+`move-unboxed-fields` at `81d113aa`. Runtime/compiler files match that preparation;
+#147's separate parent fixes remain. Measurement revisions are retained under
+remote `roadmap/revision-record-moves-*` tags. No old preparation is a new task.
 
-Standing authorization covers fixes, publication and squash merges after all
-nine final-head production jobs and documentation pass. Use exactly one subject
-line of at most 80 characters and an explicitly empty body, with no trailers or
-attribution. Keep one active PR. Failing tests are tasks; queued CI gates merging,
-not independent preparation. Never replay components already combined here.
+Standing authorization: fix failures, require all nine production jobs and docs
+for the exact final head, then squash merge with an explicit one-line subject of
+at most 80 characters and an empty body. No trailers or attribution. Continue to
+the next substantial PR without requesting permission. JIT is excluded.
 
 ## Roadmap status
 
-[PLAN.md](../PLAN.md) defines completion; none of its seven areas is finished.
-JIT is excluded. Preserve single-argument curried functions, explicit
-`curry`/`uncurry`, infix precedence and tacit data-last pipes.
+[PLAN.md](../PLAN.md) defines completion; none of the seven whole areas is done.
 
 | Step | Status | Next concrete work |
 |---|---|---|
-| 1 | In progress | Deliver solver, console and filesystem ownership, then extend remaining runtime/deployment contracts |
-| 2 | In progress | Measure remaining record, closure and call costs in representative programs |
-| 3 | In progress | Reduce confirmed numerical gaps and sharing costs without changing arithmetic order |
-| 4 | In progress | Deliver F128 precision; investigate differentiation timing and memory scaling |
-| 5 | Pending | Broaden CPU kernels and resolve runtime OpenCL compilation under the no-JIT policy |
-| 6 | In progress | Preserve equivalent C/Rust comparisons, repeated samples and memory profiles |
-| 7 | In progress | Extend numerical, collection-heavy and long-running applications |
+| 1 | In progress | Accept current ownership coverage; then own child-process boundaries |
+| 2 | In progress | Accept field moves; measure remaining record wrappers and functional intermediates |
+| 3 | In progress | Diagnose remaining C/Rust matrix gaps; rejected helper stays out of runtime |
+| 4 | In progress | Measure derivative timing/memory scaling after accepted F128 precision fixes |
+| 5 | Pending | Broaden CPU kernels; resolve runtime OpenCL compilation under the no-JIT policy |
+| 6 | In progress | Preserve comparable repeated measurements and establish regression criteria |
+| 7 | In progress | Accept maintained directory/logging tests and extend process-heavy programs |
 
-## Combined delivery and focused evidence
+Next: monitor this combined delivery’s full final-head production/docs gate.
+Ignore skipped draft jobs. Fix failures, merge when all gates pass, then deliver the separate
+process preparation described below.
 
-| Change | Behavior and acceptance evidence |
-|---|---|
-| Six linear-algebra solvers | Own scratch and partial outputs on success, singular results and failure; QR bounds square output independently. Four hosts pass at `ec1ff14b` in [38795634707](https://github.com/e6qu/fun-with-pipes/actions/runs/38795634707). |
-| F64 array loops | Borrow the data address once only when every loop iteration preserves the same array; retain bounds, slices, scheduling and floating order. The solver run and two four-host paired comparisons ([38800569111](https://github.com/e6qu/fun-with-pipes/actions/runs/38800569111), [38801692547](https://github.com/e6qu/fun-with-pipes/actions/runs/38801692547)) pass. |
-| F128 reverse gradients | Existing typed tape preserves seed, weight and adjoint precision/range; other formats keep their accumulation rules. Four hosts pass at `7a463be9` in [38797434546](https://github.com/e6qu/fun-with-pipes/actions/runs/38797434546). |
-| Console and environment copies | Own input buffers, partial lists, arguments and `env.get` copies; zero-containing names return `None` before prefix lookup. Four hosts pass at `f81970a1` in [38802310868](https://github.com/e6qu/fun-with-pipes/actions/runs/38802310868). |
-| Filesystem paths and probes | Reject zero bytes before OS access, preserving prefix files and both rename operands. Native Windows handles and escaped source paths repair old probes. Six hosts pass at `135fa6f5` in [38806367846](https://github.com/e6qu/fun-with-pipes/actions/runs/38806367846). |
-| Caught I/O errors | Count and protect both strings and the record; previously a typed drop retained 64 charged bytes. Repeated compiled/runtime catches and every construction failure pass on six hosts at `aa6ad15` in [38808012610](https://github.com/e6qu/fun-with-pipes/actions/runs/38808012610). |
-| Directory/environment snapshots | Own strings, pairs, list nodes, scratch and OS handles through failure; free recursive-directory scratch. Sorted Unicode names, empty directories, independent copies, borrowed paths and missing-release controls pass on six hosts at `cbe6604a` in [38810318287](https://github.com/e6qu/fun-with-pipes/actions/runs/38810318287). |
+## Current batch and evidence
 
-File metadata, byte reads and ordinary file actions passed all six hosts at
-`c4562773` in [38811437488](https://github.com/e6qu/fun-with-pipes/actions/runs/38811437488).
-The later directory-error repair and composed application test require their
-own acceptance below.
+Record moves avoid temporary child owners when a flattened parent is immediately
+dropped or a boxed parent is unique. Shared parents retain their necessary child
+references. Tests cover sibling cleanup, aliases, scalar pointer-like bits,
+I128 boxes, retain overflow, later traps and original resource lifetimes.
+Working-directory lookup owns copied results and scratch; unavailable directories
+raise `Error[IoError]` kind `cwd` in both engines. Static empty maps/sets and
+Boolean combinations have explicit contracts. Clock records are counted, and
+structured logs now emit one newline per message. Windows probes preserve actual
+binary symbol, native handle and cleanup checks.
 
-These runs cover their recorded revisions. The integrated final commit still
-needs full production CI. Tests use actual tracing/ARC builds, O1/O2, collection
-stress and deliberately omitted-release controls; ARC never enables tracing or
-poisoned reuse. No skipped host establishes native support.
+- The complete focused batch, including clocks, the 192-report maintained
+  application and neighboring ownership regressions, passes all six native hosts
+  in [38823885563](https://github.com/e6qu/fun-with-pipes/actions/runs/38823885563)
+  at `93156ee0`. Both memory modes run at O1/O2 with stress/reuse and negative
+  cleanup controls where applicable. Earlier missing static/Boolean contracts
+  and Windows fixture failures are repaired; no component failure remains open.
+- Numerical solver/run evidence passes all four Linux/macOS hosts in
+  [38817877068](https://github.com/e6qu/fun-with-pipes/actions/runs/38817877068)
+  at `a3d8f16e`. Paired record-move evidence passes in
+  [38821156704](https://github.com/e6qu/fun-with-pipes/actions/runs/38821156704).
+  Eight products now have zero retains/nonfinal releases and sixteen release
+  checks, versus 24/24/56. Forty allocations and 101,392 peak charged bytes remain;
+  final charged storage and collections are zero. C/Rust use twenty-four
+  allocations. Timings vary by host; the slower AMD64 matrix result is retained.
+- Matrix output-parameter experiments pass correctness/profile checks in
+  [38822697830](https://github.com/e6qu/fun-with-pipes/actions/runs/38822697830)
+  and [38823092869](https://github.com/e6qu/fun-with-pipes/actions/runs/38823092869),
+  but timing is mixed with repeated tracing slowdowns. The helper was not adopted.
+  Both runs and actual AMD64 kernel instructions are retained in the measurement
+  reports linked from [benchmarks](benchmarks.md). Smaller code is not a speed claim.
 
-## Measurements and limits
+Focused local checks use `python3 scripts/local-guard.py COMMAND...`. After
+transfer, formatting passes (1.13 s), primitive inventory passes (0.88 s), and
+the docs/roadmap audit passes (2.56 s). Standalone stdlib regeneration/check
+passed before transfer (0.48 s); generated library files are unchanged.
+Inventory: 254 contracts, eight scalar signatures, 97 review declarations,
+19 templates, 87 review symbols. Local edited-C probes are supplemental; they
+are not changed-compiler acceptance. Full builds, suites and timings stay on CI.
 
-[Array report](measurements/numerical-array-borrows-2026-10-15.json) retains
-C/Rust comparisons plus both same-run cached/per-element comparisons. Each paired
-run rotates four binaries through forty timing samples; outputs and allocation
-profiles agree. Intel macOS ARC kernel ratios are 0.704/0.707 (about 29–30% less
-time). ARM macOS is 0.968/1.021; retain both results and slower tracing cases.
-There is no universal speedup claim. Actual timed AMD64 instructions keep the
-array address/index in registers without added hot-loop stack traffic or FMA.
+## Following process preparation
 
-The same-run C/Rust comparison remains separate: Intel macOS ARC array time is
-0.978x C but 1.742x Rust. Cross-run absolute timings cannot isolate an optimization
-when host/reference performance changes. The [benchmark guide](benchmarks.md)
-explains timing scope, arithmetic and hardware.
+`/private/tmp/fwp-process-utilities`, branch `owned-process-utilities`, is based
+on `81d113aa`; only changes after that anchor belong to the later batch. Its
+runtime/contracts and handoff are currently uncommitted and must be preserved.
+Do not include them in this PR. Once this delivery is accepted, transfer its
+finished changes onto the new main and require another full final-head gate.
 
-[F128 report](measurements/f128-gradient-precision-2026-10-15.json) contains
-32 profiles across four hosts, two optimization levels, workspace reuse on/off
-and both memory modes. The full ten-check fixture plus 65 repeated gradients
-requests 2,843 allocations/143,082 bytes; ARC finishes with zero charged storage
-and collections. This is not per-gradient time, peak live memory or a count of
-all host-side allocations.
-
-An Intel macOS compiler SIGABRT in U128 division by zero at preceding `c10b1ccd`
-did not recur on its unchanged retry. The cause remains unknown. Keep future
-crash reports; do not call this repaired. Log: `/private/tmp/fwp-candidate-intel.log`.
-
-## File-value follow-up and local checks
-
-File metadata now owns its duration and enclosing record. A local repro found
-native macOS returning `-1s` for a pre-epoch file where the interpreter reports
-`0ns`; the repair matches existing interpreter/Windows behavior and avoids signed
-timestamp overflow. Byte reads reuse existing buffer/stream cleanup. Writes keep
-the original error across close. Missing count, missing protection and missing
-error restoration fail the negative controls (182/189/192).
-
-The directory-error follow-up at `03d39626` exposed a Linux-only mismatch in
-[38812282305](https://github.com/e6qu/fun-with-pipes/actions/runs/38812282305):
-`input/` with a regular file reports `File exists` in Linux's interpreter but
-`Not a directory` on macOS. The first fix incorrectly imposed the macOS result.
-Both Linux logs show precisely this difference; other executed cleanup tests pass.
-The repair at `4c73dfb2` asks `mkdir` about the original path and preserves the
-host's diagnostic. It also checks `input/child`, a final existing file and
-unchanged original contents. The superseded failed run was canceled.
-
-The same preparation now includes a composed directory report: walk a nested
-tree, read metadata and sum sizes through ordinary pipes, repeated 64 times.
-The ARC executable checks final storage and absence of tracing. This is a
-reclamation/semantic test, not a speed benchmark. Six-platform
-[38812948324](https://github.com/e6qu/fun-with-pipes/actions/runs/38812948324)
-passes all six hosts at `4c73dfb2`, including the composed ARC report. All file-value changes
-are already included here; do not import `checked-file-values` again.
-
-Local workloads use `python3 scripts/local-guard.py COMMAND...`, serially under
-fixed resource limits. Full compiler builds, suites and timing stay on runners.
-Existing-compiler probes with edited C validate runtime behavior, not new proof
-rules. Corrected file-value raw/tracing and cleanup probes pass (9.16 s),
-snapshot runtime/source checks pass (7.23/0.61 s), and caught-error construction
-passes (6.53 s). Generated stdlib docs pass (0.64 s). The final integration passes formatting (1.11 s), roadmap audit (2.53 s) and
-inventory (0.76 s): 249 explicit contracts, 10 flat scalar signatures, 100 review
-declarations and 19 lowered templates. Its source matches `4c73dfb2` except the
-preserved parent Windows library/loop-unwind probe repairs. The inventory
-baseline is frozen. Preserve the failed Linux logs in `/private/tmp/fwp-directory-*-failure.log`.
-
-## Next optimization: unvalidated preparation
-
-The retained matrix profile has three retains and three nonlast releases per
-multiplication. Its generated `product-data` entry duplicates a selected array
-field immediately before releasing that same field from an already flattened
-result record. An untimed single-multiplication C experiment removes just this
-pair: retains/nonlast releases fall 3 to 2, release checks 7 to 6. Five allocations,
-101,456 requested bytes, 101,392 peak charged bytes, zero final live storage and
-the result hash remain identical. This is a focused mechanism check, not a timing
-claim or a compiler implementation. Guarded script
-`/private/tmp/fwp-field-move-count-check.py` passes (2.40 s); results are in
-`/private/tmp/fwp-field-move-count-result.json`.
-
-A provisional implementation is isolated in `move-unboxed-fields` at
-`/private/tmp/fwp-field-moves`, based on pre-rebase delivery anchor `a2679ecb`.
-It is not in #147. `src/cgen.rs` transfers only an immediate projected-field
-Dup/parent-Drop pair from an already flattened owned record, releases siblings
-and leaves original resource-frame cases unchanged. The two local files are
-uncommitted; formatting passes (1.11 s), but the changed compiler has not run.
-
-Next for that preparation: add counted tests for owned/shared children, discarded
-siblings, callback/resource cases and failures. Compare raw interpretation,
-tracing/ARC, generated instructions and before/after counts on runners. The
-untimed C experiment is not compiler verification. Boxed input-record retains
-and two input wrapper allocations remain separate costs. Keep changes after
-`a2679ecb` isolated and transfer them onto #147's accepted squash later.
-
-## Next: validate and merge #147, then continue the measured optimization
-
-Run #147's full final-head gate and fix any failures. Require all nine production
-jobs plus documentation for the exact current head before squash merge. Use one
-subject line of at most 80 characters and an explicitly empty body; verify the
-message and unchanged tree, then record acceptance in history and this handoff.
-Skipped draft jobs and superseded runs do not count as acceptance.
-
-Continue field-move proof tests while CI runs. Keep one current PR, plan and
-handoff; open the next substantial PR after this one merges. Retain unresolved
-exclusions and performance gaps. These components do not remove tracing GC or
-finish any whole roadmap area.
+Eight baseline captured child calls leave 896 charged bytes when collection is
+explicitly disabled; checked ARC correctly rejects the primitive. The local
+process rewrite tracks argument scratch, pipe endpoints, child lifetime, spawn
+actions and captured buffers, with counted results on both POSIX and Windows.
+It also rejects NUL arguments consistently and preserves child stdio when pipe
+handles occupy initially closed descriptors. Next there: add repeated-call,
+partial-construction and OS-failure regressions; validate before publication.
+Its local handoff records implementation state and the guarded baseline command.

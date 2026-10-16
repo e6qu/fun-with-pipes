@@ -685,9 +685,19 @@ env.get : String -> Option[String] ! {IO}
 # All environment variables, sorted by name.
 env.vars : () -> List[(String, String)] ! {IO}
 
-# The current working directory.
-env.cwd : () -> String ! {IO}
+# The absolute current working directory, copied into a string.
+# Failure raises an IoError: an error value with kind and message fields.
+# Its kind is "cwd"; no substitute path is returned.
+# `attempt env.cwd ()` returns `Ok path` or `Err error`, so callers can handle
+# an unavailable directory explicitly.
+env.cwd : () -> String ! {IO, Error[IoError]}
+
+# Elapsed time since process clock initialization; useful for measuring intervals.
+# The clock cannot go backward. A Duration stores nanoseconds (one billion per second).
 time.monotonic : () -> Duration ! {IO}
+
+# Wall-clock nanoseconds since 1970-01-01 UTC, stored in a Duration record.
+# Clock corrections can change this value; use time.monotonic for elapsed time.
 time.unix : () -> Duration ! {IO}
 
 # Apply `f` to each line of standard input as it is read, in constant

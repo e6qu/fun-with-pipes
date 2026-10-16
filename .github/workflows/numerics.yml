@@ -5,14 +5,14 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, precision, console, paths, filesystem]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields]
         default: numerical
       evidence_run:
-        description: Completed solver run to use for array-borrow comparison
+        description: Completed solver run to use for generated-code comparisons
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'paths' || inputs.suite == 'filesystem'
+    if: inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields'
     strategy:
       fail-fast: false
       matrix:
@@ -40,7 +40,11 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
+      - if: inputs.suite != 'fields'
+        run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
+      - name: Field movement and resource lifetime regressions
+        if: inputs.suite == 'fields'
+        run: cargo test --no-fail-fast --test clock_ownership --test directory_report --test working_directory --test arc_execution --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test borrowed_callbacks --test general_record_update_ownership
   array_borrow:
     if: inputs.suite == 'array-borrow'
     permissions:
@@ -69,6 +73,62 @@ jobs:
         with:
           name: array-borrow-${{ matrix.runner }}
           path: array-borrow-evidence/
+  record_moves:
+    if: inputs.suite == 'record-moves'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      CC: clang
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download verified emitted numerical programs
+        run: |
+          test -n "$EVIDENCE_RUN"
+          gh run download "$EVIDENCE_RUN" --name "solver-${{ matrix.runner }}" --dir solver-input
+      - name: Compare field moves with retained record fields
+        run: python3 scripts/measure-record-moves.py --input solver-input/arrays/performance --output record-move-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: record-moves-${{ matrix.runner }}
+          path: record-move-evidence/
+  matrix_alias:
+    if: inputs.suite == 'matrix-alias'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      CC: clang
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download verified emitted numerical programs
+        run: |
+          test -n "$EVIDENCE_RUN"
+          gh run download "$EVIDENCE_RUN" --name "solver-${{ matrix.runner }}" --dir solver-input
+      - name: Compare explicit fresh output with the local matrix pointer
+        run: python3 scripts/measure-matrix-alias.py --input solver-input/arrays/performance --output matrix-alias-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: matrix-alias-${{ matrix.runner }}
+          path: matrix-alias-evidence/
   console:
     if: inputs.suite == 'console'
     strategy:

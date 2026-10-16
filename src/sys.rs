@@ -176,11 +176,10 @@ pub fn prim(sym: &str, a: &[Value], out: &mut dyn Write) -> Result<Value, Ctl> {
                     .collect(),
             ))
         }
-        "env.cwd" => Ok(Value::str(
-            &std::env::current_dir()
-                .map(|p| lossy_os(p.as_os_str()))
-                .unwrap_or_else(|_| ".".into()),
-        )),
+        "env.cwd" => {
+            let path = std::env::current_dir().map_err(|e| io_error("cwd", io_msg(&e)))?;
+            Ok(Value::str(&lossy_os(path.as_os_str())))
+        }
         "term.is-tty" => {
             use std::io::IsTerminal;
             let fd = a[0].as_i128().unwrap_or(-1);
