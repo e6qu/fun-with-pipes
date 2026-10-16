@@ -174,3 +174,14 @@ runner work. A later guarded diagnostic compilation stopped with an OS signal
 permission error; no optimizer/compiler process remains, no limits were raised,
 and further compilation/validation moved to CI. Earlier successful probes are
 supplemental, never full compiler acceptance.
+
+Completed logs from superseded WASI `38855575805` expose a separate required fix:
+`hash-fusion` prints correct results but leaves ten 16-byte physical allocations
+above its constant baseline, with zero live count entries. Native checks on
+Linux/Mac/Windows otherwise fail only the known unfused benchmark assertion.
+The complete capture repair is queued in `38856280599` / `38856283417`; costs are
+`38856285939`. Do not assume it resolves the physical leak. The WASI observer now
+records allocation source line and output phase, and retains every ordinary
+program's instrumented C and module before checking its result. This preserves
+the failing physical-storage assertion rather than weakening it. All three
+superseded runs are confirmed canceled.

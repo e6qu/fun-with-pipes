@@ -255,6 +255,21 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
                     fwp::cgen::Target::Wasi,
                 )
                 .unwrap();
+                if expected == 0 {
+                    if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                        let path = std::path::PathBuf::from(path);
+                        std::fs::create_dir_all(&path).unwrap();
+                        std::fs::write(
+                            path.join(format!("{name}{opt}.c")),
+                            format!(
+                                "{}\n{candidate}",
+                                include_str!("fixtures/wasm_arc_allocations.c")
+                            ),
+                        )
+                        .unwrap();
+                        std::fs::copy(&binary, path.join(format!("{name}{opt}.wasm"))).unwrap();
+                    }
+                }
                 let output = wasi(&binary, dir.path()).output().unwrap();
                 assert_eq!(
                     output.status.code(),
@@ -287,6 +302,13 @@ static void wasm_arc_check_shutdown(void) {
         fprintf(stderr, "unreleased: %zu/%zu allocations, %zu/%zu bytes, %zu/%zu counts\n",
             wasm_arc_live, wasm_arc_base_live, wasm_arc_bytes, wasm_arc_base_bytes,
             fwp_wasm_counts_live, wasm_arc_base_counts);
+        unsigned shown = 0;
+        for (size_t i = 0; i < 16384 && shown < 32; i++) {
+            if (!wasm_arc_storage[i].address) continue;
+            fprintf(stderr, "live allocation: %zu bytes at C line %u, output phase %u\n",
+                wasm_arc_storage[i].bytes, wasm_arc_storage[i].line, wasm_arc_storage[i].phase);
+            shown++;
+        }
         _Exit(244);
     }
 }
@@ -294,7 +316,9 @@ static void wasm_arc_check_shutdown(void) {
     let measured = thread.replace(begin, &format!("{begin}    wasm_arc_base_live = wasm_arc_live; wasm_arc_base_bytes = wasm_arc_bytes; wasm_arc_base_counts = fwp_wasm_counts_live;\n    if (atexit(wasm_arc_check_shutdown)) _Exit(245);\n"));
     let mut result = code.to_owned();
     result.replace_range(start..finish, &format!("{observer}\n{measured}"));
-    result
+    let print = "static V fwp_p_print(V s) {";
+    assert_eq!(result.matches(print).count(), 1);
+    result.replace(print, &format!("{print} wasm_arc_phase++;"))
 }
 
 #[test]
