@@ -1,129 +1,85 @@
 # Session handoff
 
 Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
-This worktree is UDP preparation: `/private/tmp/fwp-owned-udp`, branch
-`owned-udp-lifetimes`, based on the prepared owned-values delivery at `4d9ecadd`.
-It is not a second open PR and is not accepted platform support.
+This worktree is preparation for the next delivery: `/private/tmp/fwp-owned-udp`,
+branch `owned-udp-lifetimes`, based on `owned-values-delivery` at `4d9ecadd`.
+There is only one open delivery PR.
 
-## Current delivery
+## Current delivery and next action
 
-[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is the only open delivery.
-Its head is `485665795e47f6d7d6e078d386bc56b9c8cdeded`. Documentation
-`38901011298` passes; production `38901011355` is running. Require all nine jobs
-on that exact head before squash merge. The subject must have one line, at most
-80 characters, with an explicitly empty body and no trailers or attribution.
-Verify the squash tree, parent and message, then cancel duplicate postmerge CI.
-Standing authorization covers publication, fixes and successive merges.
+[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) reduces temporary memory
+in hashing and numerical calculations. Its description now explains the changes,
+a concrete calculation, the benchmark comparisons and their remaining limits.
+Head `485665795e47f6d7d6e078d386bc56b9c8cdeded` has passing documentation
+`38901011298` and seven of nine production jobs in `38901011355`. Linux AMD64 and
+regular Intel macOS remain running. Do not merge before both pass.
 
-The previous production head `c81b0c9f` passed ARM macOS, Windows and benchmarks,
-but both Intel jobs exceeded 90 minutes. Its superseded run is canceled. The
-current CI configuration optimizes Rust compiler/test builds at level 1 while
-retaining debug assertions and overflow checks, test coverage and generated-C
-flags. Comparison `38901188943` passes both AMD64 hosts: selected-test median
-elapsed ratios are 0.805 on Linux and 0.747 on Intel macOS versus level 0. Initial
-builds cost an extra 26.63s/158.20s. This does not predict full-gate timing or
-measure fwp/C/Rust program parity. The report is committed in prepared delivery
-`7b6775a8`, `docs/measurements/ci-compiler-profiles-2026-10-16.json`.
+Next: require all nine production jobs and documentation on that exact head,
+then squash-merge with subject `Reduce temporary memory in hashing and numerical calculations`
+and an explicitly empty body. Verify the merge tree, parent and exact message,
+then cancel duplicate postmerge CI. Standing authorization covers these actions.
 
-## Next substantial delivery
+After acceptance, rebase only the `owned-values-delivery` delta after `c81b0c9f`
+onto the accepted squash. Its current prepared head is `7b6775a8`; preserve the
+CI optimization settings and final numerical changes from #152. Add this UDP
+branch's delta after `4d9ecadd`, consolidate the handoff and open one combined PR.
+Full production and documentation must then pass for the combined head.
 
-`/private/tmp/fwp-owned-values-delivery`, branch `owned-values-delivery`, head
-`7b6775a8`, is based on `c81b0c9f`. After #152 merges, rebase only its delta after
-`c81b0c9f` onto the accepted squash; preserve the CI profile settings, formatting
-preflight and final numerical optimizations/reports. Publish one combined PR.
-Add this UDP delta only after its focused acceptance passes.
+## Prepared changes and evidence
 
-The prepared batch owns ternary, URL/form/HTTP and compressed-byte/frame decoder
-results, metric snapshots, syntax text, CPU tensor output/scratch and DNS lists.
-It repairs Windows web prerequisites, clocks, retry checks, shutdown and unload
-fixtures. Socket receive buffers and UDP resolver storage unwind on cancellation
-and allocation failure. Exact evidence is retained in
-[owned values and kernels](measurements/owned-values-and-kernels-2026-10-16.json)
-and [DNS](measurements/dns-ownership-2026-10-16.json).
+The next batch fixes cleanup for decoded values, numerical results and temporary
+network buffers. It removes a full temporary array from CPU calculations. UDP
+socket copies share a handle, explicit close affects all copies, and the last
+owner closes it. Function and task captures keep sockets alive for their original
+scope. Linux now releases records for tasks waiting on closed sockets. Invalid
+network addresses and compiler options produce explicit errors.
 
-- Owned values/kernel run `38893386853` at `457f00d3`: all relevant tests pass;
-  Windows failed only the new unload fixture's export selection. Fixture repair
-  `234da577` passes all six unload jobs `38894911944` without runtime changes.
-- Actual WASI `38891578037` at `c8f4646c`: both hosts pass.
-- DNS `cba3e810`: all six native jobs `38897597329` and both actual WASI regression
-  jobs `38897600949` pass. The deterministic peer checks 81 distinct addresses,
-  all 162 managed allocation failures and zero final measured storage.
-- Integrated socket scratch repair `7224b3de`: all six native jobs `38898918147`
-  pass, including real socket behavior and omitted-cleanup controls.
-- Combined full production gates have not yet run for this next delivery.
+- [Owned values and numerical workers](measurements/owned-values-and-kernels-2026-10-16.json):
+  six-host checks pass for the relevant runtime changes. A Windows export defect
+  in the new unload fixture was repaired and all six unload checks pass. Both
+  actual WASI checks pass for the recorded supported code.
+- [DNS results](measurements/dns-ownership-2026-10-16.json): all six native and both
+  WASI checks pass. Results preserve order without the old 64-address cutoff;
+  tests exercise 81 addresses and all 162 result-allocation failures.
+- Socket temporary-buffer repair `7224b3de`: all six jobs in `38898918147` pass.
+- [UDP cleanup](measurements/udp-ownership-2026-10-16.json): all six native jobs
+  in `38910056368` pass at `ffe6fc7d8c475ecabf72f9db7bcd9b2d0ebd984b`.
+  Both actual WASI regression jobs `38908635005` pass at `7c3889ac`; relevant
+  runtime and compiler ownership sources are identical between these revisions.
+  This is shared-runtime regression coverage, not WASI networking support.
+- [CI compiler settings](https://github.com/e6qu/fun-with-pipes/blob/7b6775a8/docs/measurements/ci-compiler-profiles-2026-10-16.json),
+  committed in the prepared delivery: selected tests run faster with optimization
+  level 1, while initial builds take longer. Both settings keep assertions and
+  overflow checks. These measurements do not predict full-suite timing.
 
-## UDP acceptance and implementation
+UDP evidence retains sources, executable hashes, outputs and exact job results.
+Tests compare interpretation with compiled behavior, exercise 4096 create/release
+cycles and 301 copies, fail every receive allocation, cancel waiting tasks, and
+load/unload real libraries while a host socket remains usable. Deliberately
+omitting cleanup makes the controls fail. Programs using reference counting
+without tracing physically release memory; retaining released storage for reuse
+checks is explicitly rejected in that mode.
 
-Preserve aliases, original scopes and captures without new syntax or File's
-capture prohibition. The last owner closes the OS descriptor; explicit close
-changes every alias. Suspended I/O must retain its socket and unwind correctly.
-Own partial receive results and constructor storage. Require raw/optimized
-interpreter parity, O1/O2 native tracing stress/reuse and checked ARC, no tracing
-symbols in ARC binaries, disabled-physical-free cleanup, actual library unload,
-repeated descriptor counts and deliberately broken cleanup controls.
+The ARM64 macOS test executable was inspected with `nm` and `otool`. It updates a
+64-bit owner count at byte offset 8 and requests a 16-byte socket header. The count
+shares an existing field used by other socket kinds, avoiding a larger header.
+This instrumented test binary establishes layout, not throughput or cache costs.
 
-The preparation adds five UDP operation contracts and a separate 64-bit logical
-owner count. It preserves original resource frames and possible closure holders
-before optimization; opaque function types do not expose captures. That
-conservative policy may inhibit optimizations and is not a zero-cost claim.
-Trace-mode finalizers cover unproved sharing; checked ARC still rejects unproved
-retention. TCP/TLS ownership and arbitrary callback graphs remain work.
+## Local checks and limits
 
-A reproduced optimizer bug motivates the frame change: raw interpretation releases
-a captured socket when its helper returns only an address, while the accepted
-optimized interpreter keeps it alive and makes rebind fail. The new compiler must
-match the original behavior. Prefix application constructs task callbacks where
-putting a function on the left of a pipe would instead mean composition.
-
-The tests cover 4096 bind/drop cycles, 301 aliases, constructor failure, all three
-receive allocations, closure/record holders, suspended receive cancellation,
-two simultaneous receivers closed through another alias, and library load/unload
-while a host socket remains open. Linux now releases closed-descriptor wait lists
-and their empty table; resumed tasks do not recreate removed entries. Omitted
-wait-list cleanup must fail the same charged-storage assertion.
-
-Address review also found native C-string truncation at embedded NUL bytes.
-The shared TCP/UDP resolver now receives the complete string value and rejects
-NUL before using its prefix. Interpreter validation reports the same explicit
-error. Separate regressions cover TCP listen/connect and UDP bind/send; ordinary
-raw/optimized output and native stress behavior must agree.
-
-## Focused results and next action
-
-| Revision | Run | Result |
-|---|---|---|
-| `91f24f63` | `38904425456` | Initial lifetime checks pass Linux/Windows, both architectures; superseded before both macOS jobs completed; canceled. |
-| `947a6868` | `38905209906` | Expanded constructor/receive/unload checks pass on Linux ARM64; suspended receive exposes retained Linux polling storage. Windows2 and ARM macOS pass. Superseded run canceled. |
-| `89e66d53` | `38906218307` | Polling repair passes all six native hosts. |
-| `89e66d53` | `38906222140` | Actual WASI shared-helper regression queued; no networking claim. |
-
-Next: publish the compact-header repair, then
-run fresh six-native `udp` and actual `wasi-arc` checks, retiring superseded work.
-Inspect any failure and fix it. Retain successful functional/cleanup C, binaries,
-statuses and outputs with exact source hashes before integrating into the delivery.
-No local native build has been run. Full production remains required after merging
-preparation into the next PR.
-
-## Local checks and resource limits
-
-Use `python3 scripts/local-guard.py` serially: at least 64 GiB free disk, target
-data below 2 GiB, sampled workload RSS below 1 GiB and a 180-second deadline.
-Full builds, tests, benchmarks and large regeneration run on GitHub. Earlier local
-fwp and standalone C builds were refused by automatic approval review; do not
-retry or bypass that restriction. Current disk availability is about 92 GiB.
+Use `python3 scripts/local-guard.py` serially with the existing disk, memory,
+CPU and deadline limits. Full builds, tests and benchmarks run on GitHub. Earlier
+local compiler and standalone C builds were refused by automatic review; do not
+retry or bypass that restriction. About 92 GiB disk remains free.
 
 The accepted reference compiler is
 `/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp`.
-
-| Guarded check | Latest result |
-|---|---|
-| `cargo fmt --all` | Pass, 1.30s |
-| Accepted compiler `fmt` / `check` for address fixture | Pass, 0.01s / 0.25s |
-| Raw accepted-interpreter UDP fixture | Pass, 0.36s; original lifetime and invalid-address reference |
-| Primitive inventory | Pass, 0.95s; 306 contracted declarations, 37 distinct review symbols |
-| macOS schedule tests | Pass, 0.13s; 228 integration targets assigned |
-| Standalone `tests/stdlib_doc.rs` regeneration/recheck | Pass, 0.13s / 0.01s; generated from library comments |
-| `python3 scripts/check-roadmap.py` | Pass, 2.78s |
+Guarded formatting, generated library documentation, interpreter examples and
+primitive inventory checks pass. The inventory has 306 contracted declarations
+and 37 distinct symbols still requiring review. The macOS schedule assigns all
+229 integration targets. Evidence retention with
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-retain-udp-evidence.py`
+passes in 0.49s. No local native build was run.
 
 ## Roadmap status
 
@@ -137,64 +93,11 @@ The accepted reference compiler is
 | 6 | In progress | Repeatable comparisons across representative workloads |
 | 7 | In progress | Larger numerical, collection-heavy and long-running programs |
 
-Remaining ownership review is mostly networking plus exit and GPU execution.
-Inventory counts do not settle retained callbacks, mutable cycles or host re-entry.
-The existing OpenCL runtime build remains incompatible with the no-JIT objective.
-No JIT, new backend or distributed execution is authorized as a workaround.
+## Remaining limits
 
-Final representation review found that a separate UDP count field enlarged all
-TCP headers too. UDP now shares the existing TLS payload slot under the socket
-kind tag. Actual generated-runtime tests require the prior header size and proper
-64-bit alignment; a destructor probe with TLS enabled rejects treating a UDP
-counter as a TLS pointer. Its broken-tag control must exit 248. This layout change
-needs fresh runner checks; it is not a measured throughput improvement.
-
-The final focused increment keeps the previous header size on each ABI and tests
-TLS/UDP tag dispatch, including a deliberately missing-tag failure. Guarded
-`cargo fmt --all -- --check` and the documentation audit pass (1.11s/2.76s).
-The preceding polling implementation `89e66d53` passes all six native jobs in
-`38906218307`; the address and final header changes still require fresh checks.
-#152 now has passing Windows2, ARM macOS regular/GC, benchmarks and docs; Linux2
-and both Intel macOS jobs remain in progress. Do not merge early.
-
-Runtime `8d9a79cb` is under final six-native `38907692064` and actual WASI
-`38907697173` validation. The only following increment extends library acceptance:
-ordinary and checked-ARC exports repeatedly create/release UDP sockets before
-returning; both undergo real unload, host-socket preservation and missing-finalizer
-controls. The existing `library-unload` workflow now includes that targeted test.
-There is no runtime change in this test increment, so its focused result can be
-combined with the earlier exact-runtime checks before full production acceptance.
-
-`8d9a79cb` exposes two validation issues. Windows ARM64 passes normal UDP,
-allocation/unload and address checks but the isolated TLS-tag probe requested
-OpenSSL linking via the production feature marker. Its valueless preprocessor
-switch now enables only the tested destructor branch; controlled peers supply
-those operations, with no OpenSSL runtime dependency. The WASI workflow's native
-collector-free allocator controls failed because UDP cleanup referenced native
-collector metadata. That path now uses the existing typed collector-free free
-operation, matching File cleanup. Actual WASI program tests passed, but the whole
-regression gate remains failed until all controls pass. Neither failure is waived.
-Fresh six-native and WASI validation is required for this repair; the separate
-ARC-library test increment also remains under validation.
-
-The first ARC-library increment `b5429f12` failed on ARM macOS before execution:
-the test used `--sharedlib` instead of the supported `--cdylib`, so no library
-header was emitted. Corrected the probe. This exposed a driver bug: an unknown
-option could be treated as a filename, then silently replaced by a later filename.
-Build now rejects unknown options, unsupported optimization levels, extra inputs
-and missing option values. `compiler_options` checks both option positions and
-absence of unintended output on all six hosts; Windows and macOS production
-selection includes the new target (229 integration targets). No valid build mode
-or runtime policy is replaced. Guarded formatting/schedule checks pass (1.20s/0.13s).
-Next: run the repaired combined UDP/library/CLI focused suite and retain the
-collector-free WASI repair run at `7c3889ac`; then integrate only accepted changes.
-
-At `818f7745`, ARM macOS and Windows AMD64 pass all ordinary UDP, allocation,
-header/tag, address and CLI checks. The expanded library test incorrectly expected
-ARC plus reuse-poison mode to succeed; the runtime correctly rejects retained
-storage under checked ARC. The test now requires exit 101 with that diagnostic,
-while tracing checks both poison settings and ARC checks real calls/unload with
-normal physical freeing. Missing-finalizer controls remain required in supported
-modes. This corrects the test matrix, not the ownership policy or a runtime failure.
-Run fresh combined native checks; the unchanged-runtime WASI repair is already
-passing ARM64 and awaiting AMD64 in `38908635005`.
+Full combined acceptance has not run. General tracing removal, TCP/TLS handle
+ownership, callbacks retained by external code, cycles and host re-entry remain
+unfinished. Conservative function lifetimes can prevent some optimizations.
+The existing OpenCL runtime compilation still conflicts with the no-JIT objective;
+do not expand it or add a JIT. New backends and distributed execution remain
+outside scope.

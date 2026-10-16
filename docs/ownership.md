@@ -311,8 +311,10 @@ recreate a closed descriptor's record. Disabling physical frees still closes the
 socket when its logical owners finish. Library teardown closes retained sockets
 without taking ownership of host sockets.
 
-These are candidate changes with runner results tracked in the
-[handoff](development-state.md), not accepted whole-language GC removal. Opaque
+All six focused native jobs and both shared-runtime WASI regression jobs pass;
+[the UDP report](measurements/udp-ownership-2026-10-16.json) retains the exact
+results and an ARM64 binary inspection. Full combined production acceptance is
+still required. This does not establish whole-language GC removal. Opaque
 function types do not describe their captures, so programs using UDP currently
 preserve possible closure-holder frames conservatively. This may prevent some
 optimizations; there is no zero-cost or throughput claim. Tracing programs retain
