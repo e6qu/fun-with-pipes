@@ -39,7 +39,7 @@ a suspended caller. Component lengths are bounded before addition. The existing
 their full length. Forty short/long method/address combinations exercise the
 punctuation and truncation boundaries against the old formatter.
 
-Next publish this refinement with the updated evidence collection, run
+Next: publish this refinement with the updated evidence collection, run
 `stream-owners` on all six hosts, and retain the report with
 `python3 scripts/local-guard.py python3 scripts/collect-stream-measurements.py`.
 Supply `--run`, exact `--head`, `--artifacts` and `--output`. The collector checks
@@ -114,7 +114,8 @@ Use the final run for new claims and fresh binary observations.
 Full builds, native compilation, large regeneration and full tests run on GitHub.
 Use `python3 scripts/local-guard.py COMMAND...` for serial bounded local checks;
 keep all limits unchanged. Recent guarded results: Rust formatting 1.09s,
-workflow lint 0.89s, docs audit 2.38s. The accepted prebuilt compiler formats the
+workflow lint 0.89s. The docs audit caught a missing roadmap status
+table in the rewritten handoff; it now passes after restoration (2.53s). The accepted prebuilt compiler formats the
 shared client in 0.01s and type-checks it in 0.24s. The collector was checked
 against passing one-host evidence in 4.93s; it rejected an incorrect source SHA.
 No compiler or C program was built locally.
@@ -131,3 +132,15 @@ GPU ownership remain. Preserve immutable iterator behavior and existing syntax.
 Every commit/squash message is one line, at most 80 characters, with no body,
 trailers or attribution. JIT is excluded. Failing tests are work to fix.
 All seven areas in PLAN.md remain open; this delivery does not finish GC removal.
+
+## Roadmap status
+
+| Step | Status | Remaining focus |
+|---|---|---|
+| 1 | In progress | Typed stream and external owners; remove tracing |
+| 2 | In progress | Remove intermediate storage and unnecessary reference counts |
+| 3 | In progress | Reduce equivalent-work C/Rust gaps |
+| 4 | In progress | Differentiation precision, speed and memory scaling |
+| 5 | In progress | CPU kernels and GPU resource ownership |
+| 6 | In progress | Repeated, comparable performance measurements |
+| 7 | In progress | Larger representative applications |
