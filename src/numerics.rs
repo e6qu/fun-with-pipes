@@ -580,7 +580,7 @@ fn workspace_fits(depth: usize) -> bool {
     depth <= usize::MAX / CHUNK / std::mem::size_of::<f64>()
 }
 
-fn check(code: &[i64], nconsts: usize, inputs: &[Vec<f64>], n: usize) -> R<usize> {
+fn check(code: &[i64], nconsts: usize, inputs: &[Vec<f64>], n: u64) -> R<usize> {
     let bad = || trap("device: malformed kernel");
     let (mut sp, mut depth, mut leaves, mut consts) = (0usize, 0usize, 0usize, 0usize);
     for &op in code {
@@ -612,7 +612,7 @@ fn check(code: &[i64], nconsts: usize, inputs: &[Vec<f64>], n: usize) -> R<usize
         return bad();
     }
     for (k, x) in inputs.iter().enumerate() {
-        if x.len() != n {
+        if x.len() as u64 != n {
             return trap(format!(
                 "device: input {} has {} elements, the kernel {}",
                 k,
@@ -698,7 +698,7 @@ impl Kernel<'_> {
         let mut buf = [0.0f64; CHUNK];
         for (k, s) in sums.iter_mut().enumerate() {
             let start = (b0 + k) * RBLOCK;
-            let end = n.min(start + RBLOCK);
+            let end = start + RBLOCK.min(n - start);
             let mut acc = 0.0f64;
             let mut i = start;
             while i < end {
@@ -1196,7 +1196,7 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
                 let code = ints(&a[2]);
                 let consts = f64s(&a[3]);
                 let ins = inputs(&a[4]);
-                let depth = check(&code, consts.len(), &ins, n)?;
+                let depth = check(&code, consts.len(), &ins, count)?;
                 let k = Kernel {
                     code: &code,
                     consts: &consts,
@@ -1211,6 +1211,9 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
                     }
                     f64_array(&run(threads, n, &k))
                 } else {
+                    if n as u64 != count {
+                        return trap("device: kernel too large");
+                    }
                     Value::F64(sum(threads, n, &k))
                 }
             }
@@ -1288,6 +1291,24 @@ fn matrix_product(a: &[Value]) -> R<Value> {
         }
     }
     Ok(f64_array(&result))
+}
+
+#[cfg(test)]
+mod kernel_boundary_tests {
+    use super::*;
+
+    #[test]
+    fn final_reduction_block_does_not_wrap_at_the_address_limit() {
+        let kernel = Kernel {
+            code: &[OP_CONST],
+            consts: &[2.5],
+            inputs: &[],
+            depth: 1,
+        };
+        let mut sums = [0.0];
+        kernel.sum_blocks(usize::MAX, usize::MAX / RBLOCK, &mut sums);
+        assert_eq!(sums[0], (RBLOCK - 1) as f64 * 2.5);
+    }
 }
 
 #[cfg(test)]

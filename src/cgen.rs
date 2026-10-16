@@ -5503,6 +5503,46 @@ impl<'p> Gen<'p> {
             }
             return Ok("return fwp_p_simd_dot_f64(l1, l0);".into());
         }
+        if matches!(
+            sym,
+            "url.decode"
+                | "form.decode"
+                | "url.split"
+                | "http.parse-request-head"
+                | "http.parse-response-head"
+        ) {
+            let descriptor = self.desc(&result);
+            let call = match sym {
+                "url.decode" => format!("fwp_p_url_decode(l0, 0, {descriptor})"),
+                "form.decode" => format!("fwp_p_url_decode(l0, 1, {descriptor})"),
+                "url.split" => format!("fwp_p_url_split(l0, {descriptor})"),
+                "http.parse-request-head" => format!("fwp_p_parse_request_head(l0, {descriptor})"),
+                "http.parse-response-head" => {
+                    format!("fwp_p_parse_response_head(l0, {descriptor})")
+                }
+                _ => unreachable!(),
+            };
+            return Ok(format!("return {call};"));
+        }
+        if matches!(
+            sym,
+            "zlib.gunzip" | "zlib.inflate" | "ws.parse" | "ws.close-parse" | "ws.inflate"
+        ) {
+            let descriptor = self.desc(&result);
+            let call = match sym {
+                "zlib.gunzip" => format!("fwp_p_zlib_gunzip(l0, l1, {descriptor})"),
+                "zlib.inflate" => format!("fwp_p_zlib_inflate(l0, l1, {descriptor})"),
+                "ws.parse" => format!("fwp_p_ws_parse(l0, l1, l2, {descriptor})"),
+                "ws.close-parse" => format!("fwp_p_ws_close_parse(l0, {descriptor})"),
+                "ws.inflate" => format!("fwp_p_ws_inflate(l0, l1, {descriptor})"),
+                _ => unreachable!(),
+            };
+            return Ok(format!("return {call};"));
+        }
+        if sym == "metrics.snapshot" {
+            let descriptor = self.desc(&result);
+            return Ok(format!("return fwp_p_metrics_snapshot({descriptor});"));
+        }
         if sym == "array._range" {
             let MT::Con(name, elements) = &result else {
                 return Err("direct range array result has no element type".into());
@@ -5715,13 +5755,19 @@ impl<'p> Gen<'p> {
             }
             "trit.to-int" | "tint.to-int" => "return l0;".into(),
             "tint.of-int" => format!("return fwp_p_tint_of_int(l0, {});", nk(&elem(&result, 0)).2),
-            "tint.trits" => format!("return fwp_p_tint_trits(l0, {});", nk(&p(0)).2),
+            "tint.trits" => {
+                let drop_list = self.value_drop(&result);
+                format!("return fwp_p_tint_trits(l0, {}, {drop_list});", nk(&p(0)).2)
+            },
             "tint.from-trits" => format!(
                 "return fwp_p_tint_from_trits(l0, {});",
                 nk(&elem(&result, 0)).2
             ),
             "trits.pack" => "return fwp_p_trits_pack(l0);".into(),
-            "trits.unpack" => "return fwp_p_trits_unpack(l0, l1);".into(),
+            "trits.unpack" => {
+                let drop_list = self.value_drop(&result);
+                format!("return fwp_p_trits_unpack(l0, l1, {drop_list});")
+            },
             "env.vars" => {
                 let drop_pair = self.value_drop(&elem(&result, 0));
                 let drop_list = self.value_drop(&result);
@@ -6114,9 +6160,13 @@ impl<'p> Gen<'p> {
                     _ => format!("return fwp_p_tls_handshake(l0, {});", err),
                 }
             }
+            "dns.resolve" => {
+                let err = self.desc(&MT::con("std::IoError"));
+                let list = self.desc(&result);
+                format!("return fwp_p_dns_resolve(l0, {err}, {list});")
+            }
             "tcp.listen" | "tcp.accept" | "tcp.accept-for" | "tcp.connect" | "tcp.read"
-            | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" | "udp.recv-from"
-            | "dns.resolve" => {
+            | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" | "udp.recv-from" => {
                 let err = self.desc(&MT::con("std::IoError"));
                 let (f, n) = match sym {
                     "tcp.listen" => ("fwp_p_tcp_listen", 1),
@@ -6130,7 +6180,7 @@ impl<'p> Gen<'p> {
                     "udp.bind" => ("fwp_p_udp_bind", 1),
                     "udp.send-to" => ("fwp_p_udp_send_to", 3),
                     "udp.recv-from" => ("fwp_p_udp_recv_from", 2),
-                    _ => ("fwp_p_dns_resolve", 1),
+                    _ => unreachable!("listed socket primitive"),
                 };
                 let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
                 format!("return {}({}, {});", f, args.join(", "), err)
@@ -6263,11 +6313,6 @@ impl<'p> Gen<'p> {
                     ("string.split-once", "fwp_p_split_once(l0, l1)"),
                     ("bytes.find", "fwp_p_bytes_find(l0, l1)"),
                     ("url.encode", "fwp_p_url_encode(l0)"),
-                    ("url.decode", "fwp_p_url_decode(l0, 0)"),
-                    ("form.decode", "fwp_p_url_decode(l0, 1)"),
-                    ("url.split", "fwp_p_url_split(l0)"),
-                    ("http.parse-request-head", "fwp_p_parse_request_head(l0)"),
-                    ("http.parse-response-head", "fwp_p_parse_response_head(l0)"),
                     ("http.field-ok", "fwp_p_field_ok(l0, l1)"),
                     ("http.content-length", "fwp_p_content_length(l0)"),
                     ("prim.trap", "fwp_p_trap(l0)"),
@@ -6302,7 +6347,6 @@ impl<'p> Gen<'p> {
                     ("metrics.add", "fwp_p_metrics_update(0, l0, l1)"),
                     ("metrics.set", "fwp_p_metrics_update(1, l0, l1)"),
                     ("metrics.observe", "fwp_p_metrics_update(2, l0, l1)"),
-                    ("metrics.snapshot", "fwp_p_metrics_snapshot()"),
                     ("grpc.metadata", "fwp_p_grpc_metadata()"),
                     ("grpc.with-metadata", "fwp_p_grpc_with_metadata(l0, l1)"),
                     ("grpc.with-deadline", "fwp_p_grpc_with_deadline(l0, l1)"),
@@ -6322,20 +6366,15 @@ impl<'p> Gen<'p> {
                     ("http2.data", "fwp_p_http2_data(l0, l1, l2)"),
                     ("http2.pooled", "fwp_p_http2_pooled(l0)"),
                     ("zlib.gzip", "fwp_p_zlib_gzip(l0)"),
-                    ("zlib.gunzip", "fwp_p_zlib_gunzip(l0, l1)"),
                     ("zlib.deflate", "fwp_p_zlib_deflate(l0)"),
                     ("zlib.gzip-chunk", "fwp_p_zlib_gzip_chunk(l0)"),
                     ("zlib.crc32", "fwp_p_zlib_crc32(l0, l1)"),
                     ("zlib.gzip-end", "fwp_p_zlib_gzip_end(l0, l1)"),
-                    ("zlib.inflate", "fwp_p_zlib_inflate(l0, l1)"),
                     ("ws.accept", "fwp_p_ws_accept(l0)"),
                     ("ws.key", "fwp_p_ws_key()"),
                     ("ws.frame", "fwp_p_ws_frame(l0, l1, l2)"),
-                    ("ws.parse", "fwp_p_ws_parse(l0, l1, l2)"),
                     ("ws.close-payload", "fwp_p_ws_close_payload(l0, l1)"),
-                    ("ws.close-parse", "fwp_p_ws_close_parse(l0)"),
                     ("ws.deflate", "fwp_p_ws_deflate(l0)"),
-                    ("ws.inflate", "fwp_p_ws_inflate(l0, l1)"),
                 ];
                 match simple.iter().find(|(n, _)| *n == sym) {
                     Some((_, c)) => format!("return {};", c),

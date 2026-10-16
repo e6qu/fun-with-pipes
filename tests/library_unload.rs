@@ -46,6 +46,10 @@ fn loader_unload_drains_tasks_restores_signals_and_releases_regions() {
         ..Program::default()
     };
     let (generated, header) = fwp::cgen::generate_library(&p, "unload").unwrap();
+    if cfg!(windows) {
+        windows_loader_unload(&generated, &header);
+        return;
+    }
     let observed=generated
         .replace("static void fwp_gc_init(void) {", "static char *test_reservation; static size_t test_reserved_bytes;\nstatic void fwp_gc_init(void) {")
         .replace("char *r = (char *)fwp_gc_reserve(&bytes);", "char *r = (char *)fwp_gc_reserve(&bytes); test_reservation=r;test_reserved_bytes=bytes+GC_CHUNK;")
@@ -111,7 +115,7 @@ void setup(struct snapshot *s) {
  fwp_gc.mstack=malloc(8*sizeof(gc_range));fwp_gc.mcap=8;s->marks=fwp_gc.mstack;
  uint64_t *marker=fwp_mem_alloc(sizeof(uint64_t));*marker=0x12345678;
  fwp_gc_finalizer(marker,finalize);s->fins=fwp_gc.fins;
- fwp_metric *metric=fwp_metric_get("probe",5,"gauge");s->metrics=fwp_metrics;s->name=metric->name;
+ fwp_metric *metric=fwp_metric_get("probe",5,"",0,"gauge");s->metrics=fwp_metrics;s->name=metric->name;
  (void)fwp_p_shutdown_requested();
  fwp_task *child=fwp_spawn_task(0,blocked,s,0,0);
  fwp_task *detached=fwp_spawn_task(0,blocked,s,0,1);
@@ -298,4 +302,133 @@ int main(void) {{
         }
     }
     std::fs::remove_dir_all(dir).unwrap();
+}
+
+fn windows_loader_unload(generated: &str, header: &str) {
+    let dir = fwp::cgen::TempDir::new("windows-library-unload").unwrap();
+    let common = include_str!("fixtures/windows_library_unload.h");
+    let hooks = r#"
+static struct snapshot *observed;
+static void observe_free(void *p);
+static BOOL WINAPI observe_key_delete(DWORD key);
+static void WINAPI observe_fiber_delete(void *fiber);
+static BOOL WINAPI observe_signal(PHANDLER_ROUTINE handler,BOOL add);
+static void observe_finished(void);
+#define free(p) observe_free(p)
+#define TlsFree(key) observe_key_delete(key)
+#define DeleteFiber(fiber) observe_fiber_delete(fiber)
+#define SetConsoleCtrlHandler(handler,add) observe_signal(handler,add)
+"#;
+    let needle = "    fwp_closure_drop_finish();\n";
+    assert_eq!(generated.matches(needle).count(), 1);
+    let source = format!(
+        "{common}\n{hooks}\n{}\n{}",
+        generated.replace(
+            needle,
+            "    fwp_closure_drop_finish(); observe_finished();\n"
+        ),
+        include_str!("fixtures/windows_library_unload.c")
+    );
+    let host = format!(
+        "{common}\n{}",
+        include_str!("fixtures/windows_library_unload_host.c")
+    );
+    let binary = dir.join("host.exe");
+    let library = dir.join("unload.dll");
+    let controls = [
+        (
+            "if (fwp_gc.reservation) VirtualFree(fwp_gc.reservation, 0, MEM_RELEASE);",
+            "/* missing heap release */",
+            1,
+        ),
+        (
+            "DeleteFiber(fwp_zombie->ctx.fiber);",
+            "/* missing fiber deletion */",
+            2,
+        ),
+        (
+            "    fwp_caf_finish();",
+            "    /* missing cache cleanup */",
+            6,
+        ),
+        (
+            "            free(entry);",
+            "            /* missing wide-count cleanup */",
+            4,
+        ),
+        (
+            "TlsFree(fwp_closure_drop_key);",
+            "/* missing key deletion */",
+            4,
+        ),
+        (
+            "SetConsoleCtrlHandler(fwp_on_console_signal, FALSE);",
+            "(void)0; /* missing handler removal */",
+            5,
+        ),
+    ];
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&host, &binary, opt).unwrap();
+        fwp::cgen::compile_library(&source, header, &library, opt, fwp::cgen::LibKind::Shared)
+            .unwrap();
+        for poison in ["0", "1"] {
+            let output = Command::new(&binary)
+                .arg(&library)
+                .env("FWP_REUSE_VERIFY", poison)
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "Windows unload {opt}/{poison}: {output:?}"
+            );
+        }
+        let archive = dir.join("unload.a");
+        fwp::cgen::compile_library(&source, header, &archive, opt, fwp::cgen::LibKind::Static)
+            .unwrap();
+        let previous = fwp::ffi::links();
+        fwp::ffi::set_links(vec![archive.to_string_lossy().into_owned()]);
+        let static_binary = dir.join("static-host.exe");
+        let result = fwp::cgen::compile_c(
+            &format!("#define STATIC_HOST 1\n{host}"),
+            &static_binary,
+            opt,
+        );
+        fwp::ffi::set_links(previous);
+        result.unwrap();
+        for poison in ["0", "1"] {
+            let output = Command::new(&static_binary)
+                .env("FWP_REUSE_VERIFY", poison)
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "Windows static {opt}/{poison}: {output:?}"
+            );
+            assert_eq!(
+                String::from_utf8_lossy(&output.stdout).replace("\r\n", "\n"),
+                "main\nfinalized\nfinished\n"
+            );
+        }
+        for (needle, replacement, expected) in controls {
+            assert!(source.contains(needle), "missing Windows control {needle}");
+            fwp::cgen::compile_library(
+                &source.replacen(needle, replacement, 1),
+                header,
+                &library,
+                opt,
+                fwp::cgen::LibKind::Shared,
+            )
+            .unwrap();
+            let output = Command::new(&binary).arg(&library).output().unwrap();
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "Windows {opt}, {needle}: {output:?}"
+            );
+        }
+    }
 }

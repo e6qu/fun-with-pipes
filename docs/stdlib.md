@@ -146,6 +146,10 @@ SynPat =
     | PBare String
     | PTuple List[SynPat]
     | PUnit
+
+# Renders a syntax value as source text, without evaluating it. For example,
+# `SApply (SName "add") [SInt 1] | syntax.show` returns "add 1". The returned
+# string owns its storage; the input syntax value is unchanged.
 syntax.show : Syntax -> String
 TypeInfo = { name: String, args: List[String], shape: TypeShape }
 
@@ -1135,7 +1139,11 @@ udp.send-to : String -> Bytes -> UdpSocket -> () ! {Async, Network, Error[IoErro
 udp.recv-from : I64 -> UdpSocket -> (Bytes, String) ! {Async, Network, Error[IoError]}
 udp.close : UdpSocket -> () ! {Network}
 
-# addresses of a host name
+# Resolve a hostname or numeric IP address to distinct address strings, in the
+# order supplied by the operating system. There is no fixed result-count limit.
+# Embedded NUL bytes fail with IoError; they never shorten the hostname.
+# For example, "127.0.0.1" | dns.resolve returns ["127.0.0.1"].
+# This call waits for the system resolver; the returned list owns its strings.
 dns.resolve : String -> List[String] ! {Network, Error[IoError]}
 
 # SIGINT/SIGTERM arrived (or `signal.request-shutdown` was called); the
@@ -2254,16 +2262,25 @@ log.info : String -> () ! {IO}
 log.warn : String -> () ! {IO}
 log.error : String -> () ! {IO}
 
-# counters only grow; gauges are set; observations add `_count` and `_sum`
+# Metrics store one numeric value per name for the process or library instance.
+# `metrics.add "requests" 1.0` creates a counter or adds to an existing value;
+# negative amounts subtract too. `metrics.set "load" 0.5` replaces its value and
+# marks it as a gauge. An observation updates names ending in `_count` and `_sum`:
+# observing 2.0 then 4.0 gives count 2.0 and sum 6.0. Adding or observing an
+# existing name preserves its kind. Names are complete strings, including NUL.
+# Repeated updates reuse registry entries; distinct names consume more storage.
 metrics.add : String -> F64 -> () ! {IO}
 metrics.set : String -> F64 -> () ! {IO}
 metrics.observe : String -> F64 -> () ! {IO}
 
-# (name, kind, value), in name order
+# Returns copied (name, kind, value) tuples in string order. A snapshot remains
+# unchanged after later updates. Its list and text are freed when no longer used;
+# the registry itself lives until the process exits or the library is closed.
 metrics.snapshot : () -> List[(String, String, F64)] ! {IO}
 metrics.inc : String -> () ! {IO}
 
-# Prometheus text exposition format
+# Formats a snapshot as Prometheus text. Choose metric names valid for that
+# protocol; this renderer does not validate or escape arbitrary registry names.
 metrics.render : () -> String ! {IO}
 ```
 
@@ -2709,10 +2726,6 @@ tensor.grad : TensorExpr[n] -> List[Vector[F64, n]]
 ## Balanced ternary
 
 `lib/ternary.fwp`
-
-Balanced ternary: trits (-1, 0, +1), fixed-width balanced ternary
-integers TInt[N] (literals like 0t+-0, checked arithmetic), and dense
-packing of trits, five per byte.
 
 Balanced ternary is base three with digits -1, 0 and +1, called trits.
 TInt[N] has N trits; 0t+-0 means 1*9 - 1*3 + 0 = 6. Arithmetic checks its

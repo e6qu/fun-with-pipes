@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels]
         default: numerical
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
@@ -15,7 +15,7 @@ on:
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    if: inputs.suite == 'kernels' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
@@ -35,6 +35,21 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/setup-windows.ps1
+      - uses: actions/cache/restore@v4
+        id: decoder_tls_cache
+        if: runner.os == 'Windows' && inputs.suite == 'decoders'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native Windows decoder peer dependencies
+        if: runner.os == 'Windows' && inputs.suite == 'decoders'
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v4
+        if: runner.os == 'Windows' && inputs.suite == 'decoders' && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: OpenSSL on macOS
         if: runner.os == 'macOS'
         run: |
@@ -43,8 +58,45 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - if: inputs.suite != 'vectors' && inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays' && inputs.suite != 'zip-maps' && inputs.suite != 'zip-windows' && inputs.suite != 'hash' && inputs.suite != 'hash-windows'
+      - if: inputs.suite != 'kernels' && inputs.suite != 'decoders' && inputs.suite != 'vectors' && inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays' && inputs.suite != 'zip-maps' && inputs.suite != 'zip-windows' && inputs.suite != 'hash' && inputs.suite != 'hash-windows'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
+      - name: Retrieve immutable CPU kernel baseline
+        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        run: |
+          git fetch --no-tags --depth=1 origin 21a621c699d11a84c05f955935dc95dcfb8adbf2
+          git show 21a621c699d11a84c05f955935dc95dcfb8adbf2:runtime/fwp_rt_kernel.c > kernel-baseline.c
+      - name: CPU kernel ownership
+        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        env:
+          FWP_KERNEL_ARTIFACTS: kernel-evidence
+          FWP_KERNEL_BASELINE: kernel-baseline.c
+        run: cargo test --no-fail-fast --test cpu_kernel_ownership --test stdlib_doc
+      - name: CPU kernel size validation order
+        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact
+      - name: Interpreter final reduction block
+        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        run: cargo test --lib numerics::kernel_boundary_tests::final_reduction_block_does_not_wrap_at_the_address_limit -- --exact
+      - name: CPU kernel sanitized size and cleanup controls
+        if: (inputs.suite == 'kernels' || inputs.suite == 'decoders') && runner.os != 'Windows'
+        run: cargo test --test device_bounds device_allocations_are_bounded_and_cleanup_controls_detect_omissions -- --exact
+      - uses: actions/upload-artifact@v7
+        if: always() && (inputs.suite == 'kernels' || inputs.suite == 'decoders')
+        with:
+          name: kernels-${{ matrix.runner }}
+          path: kernel-evidence/
+          if-no-files-found: ignore
+      - name: Value decoder ownership and partial-failure cleanup
+        if: inputs.suite == 'decoders'
+        env:
+          FWP_DECODER_ARTIFACTS: decoder-evidence
+        run: cargo test --no-fail-fast --test metrics_ownership --test library_unload --test byte_decoder_ownership --test ternary_ownership --test dns_ownership --test text_decoder_ownership --test web --test std_tests --test arc_execution --test stdlib_doc
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'decoders'
+        with:
+          name: decoders-${{ matrix.runner }}
+          path: decoder-evidence/
+          if-no-files-found: ignore
       - name: Vector ownership, boxed lanes and failure cleanup
         if: inputs.suite == 'vectors'
         env:
@@ -333,6 +385,29 @@ jobs:
           name: compiler-crashes-solvers-${{ matrix.runner }}
           path: ~/Library/Logs/DiagnosticReports/fwp*
           if-no-files-found: ignore
+  library_unload:
+    if: inputs.suite == 'library-unload'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
+      - run: cargo fmt --all -- --check
+      - run: cargo test --test library_unload -- --nocapture
   library:
     if: inputs.suite == 'library'
     strategy:

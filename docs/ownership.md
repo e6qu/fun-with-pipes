@@ -135,6 +135,43 @@ lifetimes and cycles. Unknown calls remain explicit sharing boundaries. The
 [accepted evidence](roadmap-history.md) records platform runs; a skipped test is
 not support for that platform.
 
+## Value decoders
+
+A decoder turns encoded bytes or text into ordinary language values. The current
+preparation gives balanced-ternary conversions, URL/form decoding and HTTP-head
+parsing explicit owners for their results. Complete and partial results must be
+released without relying on a later collection.
+
+The decoder subset passes focused checks on all six native hosts at `30399066`
+(`38886033175`). Actual WASI checks cover its available ternary/text helpers at
+`72321a55` (`38884843627`). These focused results precede the combined batch's
+full production acceptance; the [handoff](development-state.md) records current
+validation. [Earlier allocation evidence](measurements/value-decoders-2026-10-16.json)
+retains the six-host ternary/text counts and the neighboring Windows failures
+that were subsequently repaired.
+
+Compressed bytes and WebSocket frames are also decoding boundaries. Their native
+implementation owns copied bytes/text and result wrappers, including malformed
+input results. Compression encoders protect native output buffers if language
+result allocation traps. Tests count native buffers separately from managed
+storage and deliberately omit cleanup to check detection. This covers synchronous
+conversion of bytes already in memory; socket, server and retained-callback
+lifetimes remain separate work. These helpers are unavailable on WASI.
+
+Ternary list conversions traverse borrowed inputs directly and build owned
+lists. Packing writes the result bytes directly. Partial lists have cleanup if
+node allocation fails. Counts remain bounded by the available input bytes;
+invalid widths and oversized digit lists retain their existing optional results.
+
+URL decoding protects its temporary byte buffer and completed result fields
+until the outer optional value owns them. HTTP parsing copies names/values into
+owned header pairs and lists, without temporary line-index or value arrays.
+It reads headers from last to first while prepending them, preserving source
+order and the existing single invalid-header error. Parse rejection and allocation
+failure release completed fields and buffers. Input text stays borrowed and
+unchanged. Asynchronous connection lifetimes and retained callbacks remain
+separate work; owning a decoded message does not prove those boundaries safe.
+
 ## Representation and numerics
 
 Use the least costly representation that preserves behavior. A large dynamic
@@ -477,3 +514,39 @@ changes preserve wrapping integer operations and existing division checks; they
 do not promise stack-only vectors or hardware vector instructions. Native and
 actual WASI acceptance remains tracked in the handoff until the required checks
 pass. General removal of tracing remains unfinished.
+
+## Process metrics and syntax text
+
+The next ownership batch prepares copied metric snapshots and syntax rendering.
+A metric registry stores names and numbers for a process or library instance.
+Repeated updates of an existing name reuse that entry; distinct names require
+more native storage. Process shutdown and library teardown free it. A snapshot
+copies names and kinds into an immutable list of tuples: subsequent updates cannot
+mutate an earlier snapshot. Construction now protects partial strings, tuples and list nodes,
+without a temporary pointer array. This registry lifetime is separate from the
+shorter lifetime of snapshot storage; it is not an allocation-free service claim.
+
+Names use their complete byte length, including embedded NUL, matching interpreter
+lookup and string sorting. Observation suffixes are compared and copied directly
+without a temporary concatenated name. `syntax.show` borrows its syntax tree and
+returns new text; its native formatting buffer is protected if result allocation
+traps. Managed allocation fault tests, missing-cleanup controls, tracing stress,
+checked ARC and actual WASI checks pass in preparation. Windows and POSIX library
+unload tests verify registry release separately. The
+[retained report](measurements/owned-values-and-kernels-2026-10-16.json) records
+the artifacts and repaired test failures; the handoff tracks full acceptance.
+
+### DNS result ownership under validation
+
+`dns.resolve` borrows its hostname and returns an owned list of copied address
+strings. The native implementation releases the operating system's temporary
+resolver entries on success and on recoverable allocation failure, and owns each
+partially built list. It preserves first-seen order and removes duplicate address
+strings without the previous 64-address cutoff. Both engines reject embedded NUL
+bytes instead of passing a shortened hostname to the operating system.
+
+The DNS tests compare real numeric and localhost lookups, then use a deterministic
+resolver peer to check 81 distinct addresses and every result-allocation failure.
+These additions await native CI; the earlier owned-values/kernel report does not
+cover them. Socket handles and retained networking callbacks still need separate
+ownership work. This does not add WASI networking or prove faster DNS lookups.

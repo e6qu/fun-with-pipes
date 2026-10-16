@@ -162,6 +162,31 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "dns.resolve" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "device.run" => (&[B, B, B, B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "device.sum" => (&[B, B, B, B, B], R, None, &[]),
+        "metrics.add" | "metrics.set" | "metrics.observe" => (&[B, B], R, None, &[]),
+        "metrics.snapshot" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "syntax.show" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "url.decode"
+        | "form.decode"
+        | "url.split"
+        | "http.parse-request-head"
+        | "http.parse-response-head" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "zlib.gunzip" | "zlib.inflate" | "ws.inflate" => {
+            (&[B, B], ResultOwnership::OwnedTree, None, &[])
+        }
+        "ws.parse" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "ws.close-parse" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "zlib.crc32" => (&[B, B], R, None, &[]),
+        "http.field-ok" => (&[B, B], R, None, &[]),
+        "http.content-length" => (&[B], R, None, &[]),
+        "int.parse-hex" => (&[B], ResultOwnership::FreshOuter, None, &[]),
+        "trit.from-sign" | "trit.to-int" | "tint.to-int" => (&[B], R, None, &[]),
+        "tint.of-int" | "tint.from-trits" => (&[B], ResultOwnership::FreshOuter, None, &[]),
+        "tint.trits" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "trits.pack" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "trits.unpack" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
         // Bool tags are immortal immediates; these operations allocate nothing.
         "not" => (&[B], R, None, &[]),
         "and" | "or" => (&[B, B], R, None, &[]),

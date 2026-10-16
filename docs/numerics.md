@@ -285,7 +285,8 @@ its derivative at zero. A NaN is a floating-point non-number result.
 - `Cpu` uses the calling thread.
 - `CpuParallel n` divides blocks among CPU threads, at most 256 and no more than
   one per block. The calling thread handles the first range. Workers access
-  kernel inputs/output, not the collected fwp heap. These WebAssembly targets run
+  borrowed inputs and distinct ranges of an owned output; they do not allocate
+  language objects. These WebAssembly targets run
   this selection like `Cpu`; they do not launch those native worker threads.
   Availability requires `n >= 1`.
 - `Gpu` uses a discovered OpenCL device with double-precision support, preferring
@@ -296,6 +297,23 @@ its derivative at zero. A NaN is a floating-point non-number result.
 `device.available` reports availability. An unavailable device returns an error
 through `tensor.try-realize-on` and traps through `realize-on`. GPU sums evaluate
 elements on the device and add them on the CPU in the defined order.
+
+The current ownership preparation makes CPU elementwise workers write directly
+into one result array, avoiding a second full-size native output and copy. Input
+arrays remain borrowed and unchanged. A small pointer table identifies inputs;
+each worker still allocates arithmetic workspace for 256 elements at the maximum
+expression-stack depth. Reductions also allocate one scalar per 4096-element
+block. These are real remaining costs, so tensor evaluation is not heap-free.
+
+The caller protects output and scratch through validation, allocation and worker
+startup. If a requested native worker cannot start, it joins every worker already
+started, frees pending storage and reports a trap. It does not silently execute
+missing workers on the caller. Counts are validated before conversion to WASI's
+32-bit address size; final reduction blocks use remaining lengths to avoid index
+overflow. Focused native, WASI, allocation-failure and worker-failure checks pass;
+full delivery acceptance remains in the [session handoff](development-state.md).
+[Measured storage costs](benchmarks.md#cpu-tensor-output-storage) distinguish the
+removed buffer from remaining allocations. No timing improvement is claimed here.
 
 CPU reductions add each block of 4096 elements left to right from zero, then
 add block sums left to right. Changing the worker count preserves that order.

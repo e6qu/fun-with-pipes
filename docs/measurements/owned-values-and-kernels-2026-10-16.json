@@ -1,0 +1,2171 @@
+{
+  "head": "457f00d3952bcef23df965de64793980dbccda56",
+  "unloadRepair": {
+    "head": "234da5778830c69f52236de655dd85d240c206ec",
+    "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38894911944",
+    "jobs": [
+      {
+        "name": "library_unload (ubuntu-latest)",
+        "databaseId": 116952961932,
+        "conclusion": "success"
+      },
+      {
+        "name": "library_unload (macos-15-intel)",
+        "databaseId": 116952962111,
+        "conclusion": "success"
+      },
+      {
+        "name": "library_unload (ubuntu-24.04-arm)",
+        "databaseId": 116952962156,
+        "conclusion": "success"
+      },
+      {
+        "name": "library_unload (windows-11-arm)",
+        "databaseId": 116952962247,
+        "conclusion": "success"
+      },
+      {
+        "name": "library_unload (windows-2025)",
+        "databaseId": 116952962281,
+        "conclusion": "success"
+      },
+      {
+        "name": "library_unload (macos-15)",
+        "databaseId": 116952962355,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "wasi": {
+    "head": "c8f4646c4066ab0b23056a9279c4d6b4d48ad7be",
+    "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38891578037",
+    "result": "Both actual WASI jobs pass. Runtime and WASI tests are unchanged by the later native unload fixture repairs."
+  },
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38893386853",
+  "scope": "All owned-value and kernel tests passed on six native hosts. The two overall Windows jobs failed only the new library-unload fixture export check. That fixture was repaired without changing runtime sources; its dedicated follow-up passed all six native jobs. This records allocation and cleanup probes, not full production acceptance, elapsed time, C/Rust parity, cache behavior, or dynamic register pressure. All managed-allocation failure points are exercised until success; native-buffer accounting does not inject system malloc failures. Semantic checks compare raw/optimized interpretation and native O1/O2, with tracing stress/reuse verification and checked ARC. Allocation probes disable tracing collection.",
+  "build": {
+    "CCompiler": "CC selects Clang; Windows uses pinned LLVM-MinGW 20261006. Exact paths and runner images are in job logs. No compiler-version-independent speed claim.",
+    "flags": [
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w"
+    ],
+    "environment": {
+      "FWP_GC": "off",
+      "FWP_GC_STRESS": "0",
+      "FWP_GC_VERIFY": "0",
+      "FWP_REUSE_VERIFY": "0"
+    },
+    "hardware": "Native ARM64/AMD64 GitHub-hosted Linux/macOS/Windows runners named in each report. All native pointers are eight bytes; no CPU microarchitecture timing measurement."
+  },
+  "kernelComparison": {
+    "baseline": "Only the kernel executor is replaced with immutable 21a621c699d11a84c05f955935dc95dcfb8adbf2:runtime/fwp_rt_kernel.c; the compiled probe and other runtime code are current. This is not a comparison of complete compiler revisions.",
+    "workload": "8193 F64 values equal to their indices, multiplied by 0.5; elementwise output and ordered sum, with one/four requested workers. Inputs already exist when counting starts.",
+    "removed": "One native 65544-byte elementwise output and its full copy. The managed 65552-byte result array remains; worker arithmetic scratch and input-pointer table remain.",
+    "reduction": "Block sums and arithmetic order remain. One scalar per 4096-element block is allocated, plus per-worker workspace.",
+    "peak": "Native peak excludes managed objects, allocator metadata/test ledger headers, stacks, thread/runtime storage and resident memory. Concurrent scheduling changes peak worker overlap. Separate peaks must not be added as if simultaneous.",
+    "baselineArtifactSha256": "4277261058d2802e0aaa214b2a54cc68f604697ccfa7e215b85aac5c14380afe"
+  },
+  "reports": {
+    "ubuntu-latest": {
+      "jobId": 116948016683,
+      "overallJobConclusion": "success",
+      "values": {
+        "ternary-tracing": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "19d5ca1fcfd4ef0747dcf3b99836ebe528d35c9f269f2cf0a2406079b505fb67",
+              "bytes": 642709
+            },
+            "exe": {
+              "sha256": "620afadc254c204da887042b878daff00e9a03f8af76ae207583cb930f2e2d47",
+              "bytes": 42000
+            },
+            "txt": {
+              "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+              "bytes": 75
+            },
+            "asm": {
+              "sha256": "f21ca32ed90087870fe628b27f9ec769231e34d873fcb59a6103552943340988",
+              "bytes": 231495
+            }
+          }
+        },
+        "ternary-arc": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "bcfcdfb001170447b460f96e01045445e752b6f2dc7277f6b41c9b9e7bf28fd0",
+              "bytes": 642732
+            },
+            "exe": {
+              "sha256": "85ff00ac51c444f743eaf69c03d5172254f6a8583f56f57b29b77829653695d9",
+              "bytes": 33288
+            },
+            "txt": {
+              "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+              "bytes": 75
+            },
+            "asm": {
+              "sha256": "d50808f19dc97f0a227a2320024d1a7879bfd49997e29fa0276049940957a4f2",
+              "bytes": 154239
+            }
+          }
+        },
+        "text-tracing": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "277c997dd0e3e52d46a949ed637b5cefb0b3cb7967b30fa202751e42eef3e81f",
+              "bytes": 694748
+            },
+            "exe": {
+              "sha256": "81f850e0b6b8f67616fcaa5472ba01c69eb6aca05163ff725136c118d7575044",
+              "bytes": 128144
+            },
+            "txt": {
+              "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+              "bytes": 282
+            },
+            "asm": {
+              "sha256": "3a8dc0c01583581af400945f51747680d9246bf314be9d1428b036c04c46d046",
+              "bytes": 954313
+            }
+          }
+        },
+        "text-arc": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "92258aba6abccd8c10b6196d5629a50a3f988e63653faf44eb83ef12e24e5fdf",
+              "bytes": 694771
+            },
+            "exe": {
+              "sha256": "0b441f91e4eb6af1188ec99d99817eb6d5277dc1c181cb1c81f50956d5c94b8c",
+              "bytes": 127736
+            },
+            "txt": {
+              "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+              "bytes": 282
+            },
+            "asm": {
+              "sha256": "ac45e95392c9671c6e2dd3abe936573eecbd93125fb947aae04d8404d7120feb",
+              "bytes": 1002316
+            }
+          }
+        },
+        "bytes-tracing": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "9385141b32f9306fa96a2287a34093d354275a3062b16c75bf3560c554c0dfe5",
+              "bytes": 888711
+            },
+            "exe": {
+              "sha256": "9933ebc2d1c0b588006338fac51155f563d99a7cd18f04f59181766e435d9028",
+              "bytes": 131664
+            },
+            "txt": {
+              "sha256": "1f5a694e644fe4de9181d362ce1dc50793a89f9dde19b68998f00f25a4b2f93a",
+              "bytes": 1478
+            }
+          }
+        },
+        "bytes-arc": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "abd209e1edc367ad0b0be25fd1f4efed0211a8cd5b27b554604f05f19d5cf4bb",
+              "bytes": 888734
+            },
+            "exe": {
+              "sha256": "b7e77cdbe48201a917b475f16f43538e3b5e12f90ee8cf9c734e2a8731d1e17d",
+              "bytes": 131312
+            },
+            "txt": {
+              "sha256": "1f5a694e644fe4de9181d362ce1dc50793a89f9dde19b68998f00f25a4b2f93a",
+              "bytes": 1478
+            }
+          }
+        },
+        "metrics-tracing": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "d548f388d9f09d6dc85724acadd2dabba3dc5bd56fd31d45dad41cf610dc4818",
+              "bytes": 672148
+            },
+            "exe": {
+              "sha256": "cf05af29b811eeaa26c592f4c174bead7a84c42480ad6eac43a4e70e111ed851",
+              "bytes": 105016
+            },
+            "txt": {
+              "sha256": "3df25bbb6fd9826dfb5d6678f5640123e90b354370baecef070fc1175d5761f7",
+              "bytes": 167
+            }
+          }
+        },
+        "metrics-arc": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "bfa1faf67bc494e1489c65c097f43ed1782152ec7cc3d2e438ff3f31e55d0163",
+              "bytes": 672171
+            },
+            "exe": {
+              "sha256": "d61803b4a3940319d47b27fab63a95494796894bd5d65a8670bd3c89645440b4",
+              "bytes": 100512
+            },
+            "txt": {
+              "sha256": "3df25bbb6fd9826dfb5d6678f5640123e90b354370baecef070fc1175d5761f7",
+              "bytes": 167
+            }
+          }
+        }
+      },
+      "kernels": {
+        "baseline": {
+          "output": "kernel run threads 1: native requests 3, native peak 69648, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 6, native peak 69648, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 6,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "cde993cb4a6b52b8ec5a31259996f7099c0c9347617f43e342dc2df388bf37a9",
+              "bytes": 705812
+            },
+            "exe": {
+              "sha256": "32dacb1a04269a6644549efe7a32d1e62c6ad7fc1e93a1db1cfac6c17edbcc86",
+              "bytes": 130448
+            },
+            "txt": {
+              "sha256": "db19b352ce270b01c5565ed1e685a27a5471e5a8611a3614aca30e28748b873b",
+              "bytes": 458
+            },
+            "asm": {
+              "sha256": "7ceb79e697ba8658b43763ced5cba41014b73cb0f6af6be5ebd6f1c4f4b5a3e1",
+              "bytes": 1068412
+            }
+          }
+        },
+        "tracing": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 4104, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "04f2b81429caac012ca97c8ff2d1f9f00432c80ea4b55b91e2b9adca4fe1f9fe",
+              "bytes": 706938
+            },
+            "exe": {
+              "sha256": "f76747ffd00554a6bff761b7201fae0926987f992540d6a6c9f81af3a4c7ba76",
+              "bytes": 126848
+            },
+            "txt": {
+              "sha256": "682aabfb643808a8adab54d968d191015e4aa63bb019bc5a6ed4d9d9f5bce00e",
+              "bytes": 598
+            },
+            "asm": {
+              "sha256": "9c377d2f49a0a9c847d71eb30d6772f3b31a975c5a0638787bb71f9914c4e2e1",
+              "bytes": 982817
+            }
+          }
+        },
+        "arc": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 4104, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "b82d08c613b6b8e6f48c375e6d7c3d988ab622fb4d7ff3f019d814b1516c3a71",
+              "bytes": 706961
+            },
+            "exe": {
+              "sha256": "f9450990b72b7a7fa80bec10d7556e85ac7ece688bcb30c258100b236f2981e2",
+              "bytes": 126448
+            },
+            "txt": {
+              "sha256": "682aabfb643808a8adab54d968d191015e4aa63bb019bc5a6ed4d9d9f5bce00e",
+              "bytes": 598
+            },
+            "asm": {
+              "sha256": "3621d226da0f6b2d8acfbb8fa7c800d61355e11e0fa3aed54458e62aaaec48e1",
+              "bytes": 990102
+            }
+          }
+        }
+      },
+      "codeInspection": {
+        "symbol": "fwp_kernel_eval",
+        "packedMultiplyInstructions": [
+          "14153:\t66 0f 59 d0          \tmulpd  %xmm0,%xmm2",
+          "1415c:\t66 0f 59 c1          \tmulpd  %xmm1,%xmm0"
+        ],
+        "scope": "Instrumented ARC allocation-probe binary at O2. The generic elementwise multiply branch uses packed double instructions, with memory-backed arithmetic workspace and a chunk memcpy. This does not prove register-only computation, absence of spills, cache behavior, or uninstrumented speed."
+      }
+    },
+    "ubuntu-24.04-arm": {
+      "jobId": 116948016871,
+      "overallJobConclusion": "success",
+      "values": {
+        "ternary-tracing": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "19d5ca1fcfd4ef0747dcf3b99836ebe528d35c9f269f2cf0a2406079b505fb67",
+              "bytes": 642709
+            },
+            "exe": {
+              "sha256": "f2d6f908f6d9bd4ef780f4b7c4a0b09ae2b0299df1927c4bddb36c7c449e4093",
+              "bytes": 80272
+            },
+            "txt": {
+              "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+              "bytes": 75
+            },
+            "asm": {
+              "sha256": "bbd83075f155a0a7d62b409379edd46566c669f6bdb2ad16ba23f4d6893c0d5a",
+              "bytes": 172117
+            }
+          }
+        },
+        "ternary-arc": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "bcfcdfb001170447b460f96e01045445e752b6f2dc7277f6b41c9b9e7bf28fd0",
+              "bytes": 642732
+            },
+            "exe": {
+              "sha256": "63f6ecf7c2ff24226b33c81a1a4762306c43bc7d8bdd55f7e2bad0993bd829bc",
+              "bytes": 79752
+            },
+            "txt": {
+              "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+              "bytes": 75
+            },
+            "asm": {
+              "sha256": "ddfe70d3135ff659922f4508ea4c60acdf695c1bd3e35ada2ef0da61f87a1ab3",
+              "bytes": 120277
+            }
+          }
+        },
+        "text-tracing": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "277c997dd0e3e52d46a949ed637b5cefb0b3cb7967b30fa202751e42eef3e81f",
+              "bytes": 694748
+            },
+            "exe": {
+              "sha256": "906121d4326e0b2809503642cdddeca69b105057b7437989ca54221045d17bf6",
+              "bytes": 154376
+            },
+            "txt": {
+              "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+              "bytes": 282
+            },
+            "asm": {
+              "sha256": "776b061b0634d8d14c298cd8e7d2fa7ca245277f3855edf83afb7609641afba7",
+              "bytes": 694157
+            }
+          }
+        },
+        "text-arc": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "92258aba6abccd8c10b6196d5629a50a3f988e63653faf44eb83ef12e24e5fdf",
+              "bytes": 694771
+            },
+            "exe": {
+              "sha256": "ed25979529feb4251d1139e6983db75d484c80d00a223f19ad359f19aa7b2a1d",
+              "bytes": 153968
+            },
+            "txt": {
+              "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+              "bytes": 282
+            },
+            "asm": {
+              "sha256": "6b6d6a401c292fd5fc928c9c4eedcdecbb9054c47c790e5fe22a6991a74571f3",
+              "bytes": 739170
+            }
+          }
+        },
+        "bytes-tracing": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "9385141b32f9306fa96a2287a34093d354275a3062b16c75bf3560c554c0dfe5",
+              "bytes": 888711
+            },
+            "exe": {
+              "sha256": "b6e17e69e565a42d5232d0017b66f1828a908e52baa21329999c08caac081c8f",
+              "bytes": 153800
+            },
+            "txt": {
+              "sha256": "1f5a694e644fe4de9181d362ce1dc50793a89f9dde19b68998f00f25a4b2f93a",
+              "bytes": 1478
+            }
+          }
+        },
+        "bytes-arc": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "abd209e1edc367ad0b0be25fd1f4efed0211a8cd5b27b554604f05f19d5cf4bb",
+              "bytes": 888734
+            },
+            "exe": {
+              "sha256": "520d5a3d135e0e611f2946aa98e9938205faef00f60def80c8e046d4c6c9f001",
+              "bytes": 153448
+            },
+            "txt": {
+              "sha256": "1f5a694e644fe4de9181d362ce1dc50793a89f9dde19b68998f00f25a4b2f93a",
+              "bytes": 1478
+            }
+          }
+        },
+        "metrics-tracing": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "d548f388d9f09d6dc85724acadd2dabba3dc5bd56fd31d45dad41cf610dc4818",
+              "bytes": 672148
+            },
+            "exe": {
+              "sha256": "f1d5500ce00a1cc32113aa66cf5587a91abbad5b115a745c83fe7e433ed769a4",
+              "bytes": 151752
+            },
+            "txt": {
+              "sha256": "3df25bbb6fd9826dfb5d6678f5640123e90b354370baecef070fc1175d5761f7",
+              "bytes": 167
+            }
+          }
+        },
+        "metrics-arc": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "bfa1faf67bc494e1489c65c097f43ed1782152ec7cc3d2e438ff3f31e55d0163",
+              "bytes": 672171
+            },
+            "exe": {
+              "sha256": "47abb082eb960b2605fd35774aa2551bf9abe413b47a9df827cdaa1f47d1cc8f",
+              "bytes": 151344
+            },
+            "txt": {
+              "sha256": "3df25bbb6fd9826dfb5d6678f5640123e90b354370baecef070fc1175d5761f7",
+              "bytes": 167
+            }
+          }
+        }
+      },
+      "kernels": {
+        "baseline": {
+          "output": "kernel run threads 1: native requests 3, native peak 69648, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 6, native peak 69648, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 8224, managed requests 0, final native and charged storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 6,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 8224,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "cde993cb4a6b52b8ec5a31259996f7099c0c9347617f43e342dc2df388bf37a9",
+              "bytes": 705812
+            },
+            "exe": {
+              "sha256": "9a2cb78f121329f35c161d8c55009964a95b9c2bf35f138ea0bc3931c5e1895a",
+              "bytes": 153088
+            },
+            "txt": {
+              "sha256": "5e6a8da5087204305f58edaf41d1677833d725ea9d9092cbf68117d8f2bc1d22",
+              "bytes": 458
+            },
+            "asm": {
+              "sha256": "63194328b4d9954682b18125155d8f4368aa02623aca303268c923eeff691876",
+              "bytes": 769596
+            }
+          }
+        },
+        "tracing": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 4104, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 8224, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 8224,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "04f2b81429caac012ca97c8ff2d1f9f00432c80ea4b55b91e2b9adca4fe1f9fe",
+              "bytes": 706938
+            },
+            "exe": {
+              "sha256": "20e21da45b6ebea8e253468219ab60792ffc75ce3bb00c0d1c9364c50cfb04d2",
+              "bytes": 153584
+            },
+            "txt": {
+              "sha256": "f490f464f7ad483dcbffa4c0771a69b941fd281fc3ccfb46d94895dbcaefb5a5",
+              "bytes": 598
+            },
+            "asm": {
+              "sha256": "90fc86b05732a03d01b9884bef72ec57d6e099f9f51081b188e3d3b1f284c255",
+              "bytes": 714363
+            }
+          }
+        },
+        "arc": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 4104, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "b82d08c613b6b8e6f48c375e6d7c3d988ab622fb4d7ff3f019d814b1516c3a71",
+              "bytes": 706961
+            },
+            "exe": {
+              "sha256": "6366f16945959ec64daf7b1a48f5912be4ed59a689355f80d8a6a1ea4764490b",
+              "bytes": 153176
+            },
+            "txt": {
+              "sha256": "682aabfb643808a8adab54d968d191015e4aa63bb019bc5a6ed4d9d9f5bce00e",
+              "bytes": 598
+            },
+            "asm": {
+              "sha256": "925f83f5b104ac0287323a482433faffaf015732a89c067ac8fd4f6ca7d1f1de",
+              "bytes": 731759
+            }
+          }
+        }
+      },
+      "codeInspection": {
+        "symbol": "fwp_kernel_eval",
+        "packedMultiplyInstructions": [
+          "12d34:\t6e60dc20 \tfmul\tv0.2d, v1.2d, v0.2d",
+          "12d38:\t6e63dc41 \tfmul\tv1.2d, v2.2d, v3.2d"
+        ],
+        "scope": "Instrumented ARC allocation-probe binary at O2. The generic elementwise multiply branch uses packed double instructions, with memory-backed arithmetic workspace and a chunk memcpy. This does not prove register-only computation, absence of spills, cache behavior, or uninstrumented speed."
+      }
+    },
+    "macos-15": {
+      "jobId": 116948016776,
+      "overallJobConclusion": "success",
+      "values": {
+        "ternary-tracing": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "19d5ca1fcfd4ef0747dcf3b99836ebe528d35c9f269f2cf0a2406079b505fb67",
+              "bytes": 642709
+            },
+            "exe": {
+              "sha256": "8a0ea11320b0fd3e990422178c4761e05b16b6493245e272b0d542f5ee2dc4df",
+              "bytes": 69624
+            },
+            "txt": {
+              "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+              "bytes": 75
+            },
+            "asm": {
+              "sha256": "c0633289ac93ed5def5a7153a746b10440d3efdde1f4cb553e1a42399c6ef7e5",
+              "bytes": 133872
+            }
+          }
+        },
+        "ternary-arc": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "bcfcdfb001170447b460f96e01045445e752b6f2dc7277f6b41c9b9e7bf28fd0",
+              "bytes": 642732
+            },
+            "exe": {
+              "sha256": "0d1c82345580ee501f8d615fb10b682d09b2c557c3a00d213ae4fc30917473a4",
+              "bytes": 52408
+            },
+            "txt": {
+              "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+              "bytes": 75
+            },
+            "asm": {
+              "sha256": "f0b0e56b4747c1811dc47df033f95d4d3244ab4483bb51197bae8f0a29d64d8c",
+              "bytes": 93645
+            }
+          }
+        },
+        "text-tracing": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "277c997dd0e3e52d46a949ed637b5cefb0b3cb7967b30fa202751e42eef3e81f",
+              "bytes": 694748
+            },
+            "exe": {
+              "sha256": "f8c560dc6e6b9f699458d302d3d96698a87e14cba8a7629538f71594f507c96e",
+              "bytes": 109640
+            },
+            "txt": {
+              "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+              "bytes": 282
+            },
+            "asm": {
+              "sha256": "aed535b95ab6fb1f2c2e7770cd1f17d1dff7042c58517cc911b67184079aef85",
+              "bytes": 544714
+            }
+          }
+        },
+        "text-arc": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "92258aba6abccd8c10b6196d5629a50a3f988e63653faf44eb83ef12e24e5fdf",
+              "bytes": 694771
+            },
+            "exe": {
+              "sha256": "9280ff51a7d7ce994f0e6c78ff244c78fecd980a3a0eda2c4f06ef26c9771862",
+              "bytes": 125752
+            },
+            "txt": {
+              "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+              "bytes": 282
+            },
+            "asm": {
+              "sha256": "be2d2f9e07dec413a270acd0920981946666a0e7861fabb8c98b2dfa3797cfae",
+              "bytes": 566010
+            }
+          }
+        },
+        "bytes-tracing": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "9385141b32f9306fa96a2287a34093d354275a3062b16c75bf3560c554c0dfe5",
+              "bytes": 888711
+            },
+            "exe": {
+              "sha256": "3396239f2cc0a7ae088b7b821596d7f553baf8e683e894d324b0b25ca35ac613",
+              "bytes": 125736
+            },
+            "txt": {
+              "sha256": "1f5a694e644fe4de9181d362ce1dc50793a89f9dde19b68998f00f25a4b2f93a",
+              "bytes": 1478
+            }
+          }
+        },
+        "bytes-arc": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "abd209e1edc367ad0b0be25fd1f4efed0211a8cd5b27b554604f05f19d5cf4bb",
+              "bytes": 888734
+            },
+            "exe": {
+              "sha256": "b1367196d07b3c1ec95282489cfb91787c8990fdd3ea3dde7fba606fbae61134",
+              "bytes": 125384
+            },
+            "txt": {
+              "sha256": "1f5a694e644fe4de9181d362ce1dc50793a89f9dde19b68998f00f25a4b2f93a",
+              "bytes": 1478
+            }
+          }
+        },
+        "metrics-tracing": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "d548f388d9f09d6dc85724acadd2dabba3dc5bd56fd31d45dad41cf610dc4818",
+              "bytes": 672148
+            },
+            "exe": {
+              "sha256": "bd58ea430cdce2dcebb66ddbe71bc689bb41d468bc696ff54a313637afab3a88",
+              "bytes": 107384
+            },
+            "txt": {
+              "sha256": "3df25bbb6fd9826dfb5d6678f5640123e90b354370baecef070fc1175d5761f7",
+              "bytes": 167
+            }
+          }
+        },
+        "metrics-arc": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "bfa1faf67bc494e1489c65c097f43ed1782152ec7cc3d2e438ff3f31e55d0163",
+              "bytes": 672171
+            },
+            "exe": {
+              "sha256": "e80a52594893add31e9220b23039ea899fa7cab9770e42f36e4d448f75adb66d",
+              "bytes": 106968
+            },
+            "txt": {
+              "sha256": "3df25bbb6fd9826dfb5d6678f5640123e90b354370baecef070fc1175d5761f7",
+              "bytes": 167
+            }
+          }
+        }
+      },
+      "kernels": {
+        "baseline": {
+          "output": "kernel run threads 1: native requests 3, native peak 69648, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 6, native peak 69648, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 6,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "cde993cb4a6b52b8ec5a31259996f7099c0c9347617f43e342dc2df388bf37a9",
+              "bytes": 705812
+            },
+            "exe": {
+              "sha256": "b47f9e761137a2f8dc743d65a3ecbade71e8e3876208b2ef6e137f7e11440588",
+              "bytes": 124640
+            },
+            "txt": {
+              "sha256": "db19b352ce270b01c5565ed1e685a27a5471e5a8611a3614aca30e28748b873b",
+              "bytes": 458
+            },
+            "asm": {
+              "sha256": "7eb0371baf89edf464eabc8ab5b2b15ffa6b45f2c82ee6e325a3d782a4685555",
+              "bytes": 563814
+            }
+          }
+        },
+        "tracing": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 4104, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "04f2b81429caac012ca97c8ff2d1f9f00432c80ea4b55b91e2b9adca4fe1f9fe",
+              "bytes": 706938
+            },
+            "exe": {
+              "sha256": "f28a8d6cb7364db8741bd7e888285c4d71e53bf3075d871fdd87359c694edd0c",
+              "bytes": 125192
+            },
+            "txt": {
+              "sha256": "682aabfb643808a8adab54d968d191015e4aa63bb019bc5a6ed4d9d9f5bce00e",
+              "bytes": 598
+            },
+            "asm": {
+              "sha256": "de643485fe0b84b1709145c5143e46bf5d2c1d6f80dbc61f52a4a91fee1737b4",
+              "bytes": 578309
+            }
+          }
+        },
+        "arc": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 8200, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 8200,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "b82d08c613b6b8e6f48c375e6d7c3d988ab622fb4d7ff3f019d814b1516c3a71",
+              "bytes": 706961
+            },
+            "exe": {
+              "sha256": "d25df97afb091c9dfa6d100728432d2df02a21ee161810fc2b0b30fd0ea29722",
+              "bytes": 124776
+            },
+            "txt": {
+              "sha256": "1dac30144b4dba5f0cdfbdd2a43b196a7ac23b881654a279c71ed6f268a0e52d",
+              "bytes": 598
+            },
+            "asm": {
+              "sha256": "1117175a4caa16ea4c137f58b37157d682e519c90224869ac965ab8ee04a42a7",
+              "bytes": 580253
+            }
+          }
+        }
+      },
+      "codeInspection": {
+        "symbol": "fwp_kernel_eval",
+        "packedMultiplyInstructions": [
+          "0000000100010030\tfmul.2d\tv0, v0, v4",
+          "0000000100010034\tfmul.2d\tv1, v1, v5",
+          "0000000100010038\tfmul.2d\tv2, v2, v6",
+          "000000010001003c\tfmul.2d\tv3, v3, v7"
+        ],
+        "scope": "Instrumented ARC allocation-probe binary at O2. The generic elementwise multiply branch uses packed double instructions, with memory-backed arithmetic workspace and a chunk memcpy. This does not prove register-only computation, absence of spills, cache behavior, or uninstrumented speed."
+      }
+    },
+    "macos-15-intel": {
+      "jobId": 116948016816,
+      "overallJobConclusion": "success",
+      "values": {
+        "ternary-tracing": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "19d5ca1fcfd4ef0747dcf3b99836ebe528d35c9f269f2cf0a2406079b505fb67",
+              "bytes": 642709
+            },
+            "exe": {
+              "sha256": "ec99b7be8bf65299a0080901c7f761575737af4808300ac4507f24f912f0b70b",
+              "bytes": 36024
+            },
+            "txt": {
+              "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+              "bytes": 75
+            },
+            "asm": {
+              "sha256": "eafb3a17df7499a8e82eb77f11493025abe174bacd41bfa24180e0c50df9346c",
+              "bytes": 148948
+            }
+          }
+        },
+        "ternary-arc": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "bcfcdfb001170447b460f96e01045445e752b6f2dc7277f6b41c9b9e7bf28fd0",
+              "bytes": 642732
+            },
+            "exe": {
+              "sha256": "a38dec98f0c75e85f9b04c67c62bed9c21ce6bef37bd5aadf16da320582ad654",
+              "bytes": 31400
+            },
+            "txt": {
+              "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+              "bytes": 75
+            },
+            "asm": {
+              "sha256": "674e8a90df6d1b237db71586b8175bc68c4a4454d1ee9d22ef61a45585d8990e",
+              "bytes": 102327
+            }
+          }
+        },
+        "text-tracing": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "277c997dd0e3e52d46a949ed637b5cefb0b3cb7967b30fa202751e42eef3e81f",
+              "bytes": 694748
+            },
+            "exe": {
+              "sha256": "d8269e7fa26a97a0748be8fe556474dc268642e7725073c739b28453206c848d",
+              "bytes": 100496
+            },
+            "txt": {
+              "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+              "bytes": 282
+            },
+            "asm": {
+              "sha256": "f0c9fd5ce5da8391e346febebf02ddb548fcffa45ae06da30d3d8cb4faa93e1c",
+              "bytes": 654863
+            }
+          }
+        },
+        "text-arc": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "92258aba6abccd8c10b6196d5629a50a3f988e63653faf44eb83ef12e24e5fdf",
+              "bytes": 694771
+            },
+            "exe": {
+              "sha256": "a896229244c8dafed251cfb9ae8f3949f938babe5a92952f8309d7211b3b5976",
+              "bytes": 104184
+            },
+            "txt": {
+              "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+              "bytes": 282
+            },
+            "asm": {
+              "sha256": "216545f246089c865681a938c127edb9a906bb40a991056de0b4fa5cbff62fea",
+              "bytes": 692604
+            }
+          }
+        },
+        "bytes-tracing": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "9385141b32f9306fa96a2287a34093d354275a3062b16c75bf3560c554c0dfe5",
+              "bytes": 888711
+            },
+            "exe": {
+              "sha256": "261d39bbc18c855f61a893c6c31cd704ada67a6c614ee128fa19000b5cec8013",
+              "bytes": 108264
+            },
+            "txt": {
+              "sha256": "1f5a694e644fe4de9181d362ce1dc50793a89f9dde19b68998f00f25a4b2f93a",
+              "bytes": 1478
+            }
+          }
+        },
+        "bytes-arc": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "abd209e1edc367ad0b0be25fd1f4efed0211a8cd5b27b554604f05f19d5cf4bb",
+              "bytes": 888734
+            },
+            "exe": {
+              "sha256": "ed55e7d81edd1588707d52da0efa7323d59ebcbfde85e9b75ea71f6457804238",
+              "bytes": 112000
+            },
+            "txt": {
+              "sha256": "1f5a694e644fe4de9181d362ce1dc50793a89f9dde19b68998f00f25a4b2f93a",
+              "bytes": 1478
+            }
+          }
+        },
+        "metrics-tracing": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "d548f388d9f09d6dc85724acadd2dabba3dc5bd56fd31d45dad41cf610dc4818",
+              "bytes": 672148
+            },
+            "exe": {
+              "sha256": "3a1b25f4703669f2cf13761e3ed3debc8249a564c9e559ee6779e78d5c9071ff",
+              "bytes": 85984
+            },
+            "txt": {
+              "sha256": "3df25bbb6fd9826dfb5d6678f5640123e90b354370baecef070fc1175d5761f7",
+              "bytes": 167
+            }
+          }
+        },
+        "metrics-arc": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "bfa1faf67bc494e1489c65c097f43ed1782152ec7cc3d2e438ff3f31e55d0163",
+              "bytes": 672171
+            },
+            "exe": {
+              "sha256": "7f85b8082754ac7492fdf232cbb365496bba855a7939c15eae22bd69cc19cc73",
+              "bytes": 85560
+            },
+            "txt": {
+              "sha256": "3df25bbb6fd9826dfb5d6678f5640123e90b354370baecef070fc1175d5761f7",
+              "bytes": 167
+            }
+          }
+        }
+      },
+      "kernels": {
+        "baseline": {
+          "output": "kernel run threads 1: native requests 3, native peak 69648, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 6, native peak 69648, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 6,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "cde993cb4a6b52b8ec5a31259996f7099c0c9347617f43e342dc2df388bf37a9",
+              "bytes": 705812
+            },
+            "exe": {
+              "sha256": "2c260e15a9b6550fc67ac09cc07afa4dfd3a7cf02c432fa85c268b67d7d46896",
+              "bytes": 103112
+            },
+            "txt": {
+              "sha256": "db19b352ce270b01c5565ed1e685a27a5471e5a8611a3614aca30e28748b873b",
+              "bytes": 458
+            },
+            "asm": {
+              "sha256": "cdf3f7a3f2b2287a1f1dd9dc84fbb6ecbfd787d5f718dfa9414edcbb6db0e9da",
+              "bytes": 690988
+            }
+          }
+        },
+        "tracing": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 4104, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "04f2b81429caac012ca97c8ff2d1f9f00432c80ea4b55b91e2b9adca4fe1f9fe",
+              "bytes": 706938
+            },
+            "exe": {
+              "sha256": "79b419321b98633068d834a48d9173f60b1c8e2cf5f61eb3edd85fa0acbf41a5",
+              "bytes": 107768
+            },
+            "txt": {
+              "sha256": "682aabfb643808a8adab54d968d191015e4aa63bb019bc5a6ed4d9d9f5bce00e",
+              "bytes": 598
+            },
+            "asm": {
+              "sha256": "0b660cb4f893064b49be833083aa16ef629bee4c33b4fafaab3a240f34f00870",
+              "bytes": 706479
+            }
+          }
+        },
+        "arc": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 8200, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 8200,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "b82d08c613b6b8e6f48c375e6d7c3d988ab622fb4d7ff3f019d814b1516c3a71",
+              "bytes": 706961
+            },
+            "exe": {
+              "sha256": "812fb05fa70a1e7aba203296aaf66757125290060351d1441019d4913f00aeda",
+              "bytes": 107352
+            },
+            "txt": {
+              "sha256": "1dac30144b4dba5f0cdfbdd2a43b196a7ac23b881654a279c71ed6f268a0e52d",
+              "bytes": 598
+            },
+            "asm": {
+              "sha256": "e2d63ea74397e4df65bf8fb4fe0c8e27e58179d6e4f7a1c29a7c1ecb93aef5c7",
+              "bytes": 718730
+            }
+          }
+        }
+      },
+      "codeInspection": {
+        "symbol": "fwp_kernel_eval",
+        "packedMultiplyInstructions": [
+          "00000001000125d1\tmulpd\t%xmm0, %xmm2",
+          "00000001000125da\tmulpd\t%xmm1, %xmm0"
+        ],
+        "scope": "Instrumented ARC allocation-probe binary at O2. The generic elementwise multiply branch uses packed double instructions, with memory-backed arithmetic workspace and a chunk memcpy. This does not prove register-only computation, absence of spills, cache behavior, or uninstrumented speed."
+      }
+    },
+    "windows-2025": {
+      "jobId": 116948016894,
+      "overallJobConclusion": "failure",
+      "values": {
+        "ternary-tracing": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "19d5ca1fcfd4ef0747dcf3b99836ebe528d35c9f269f2cf0a2406079b505fb67",
+              "bytes": 642709
+            },
+            "exe": {
+              "sha256": "fdd316387e5f8eacddf009c3591c7270036defa627c9f31b0ed122fe7fa4a3ea",
+              "bytes": 94208
+            },
+            "txt": {
+              "sha256": "2fc57a8a7775f7ba3ca7b23ba42d9237322ab6b80c39352361a4fd1bc857a9e4",
+              "bytes": 77
+            },
+            "asm": {
+              "sha256": "a0c47f93f0669e670883cbbdaed391e9978f97bedffdf29fa9a676fb76f75412",
+              "bytes": 343283
+            }
+          }
+        },
+        "ternary-arc": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "bcfcdfb001170447b460f96e01045445e752b6f2dc7277f6b41c9b9e7bf28fd0",
+              "bytes": 642732
+            },
+            "exe": {
+              "sha256": "b2e18a4549e94720173db4de49f99319deea1f869a143cf3d137013d1bc08c42",
+              "bytes": 87552
+            },
+            "txt": {
+              "sha256": "2fc57a8a7775f7ba3ca7b23ba42d9237322ab6b80c39352361a4fd1bc857a9e4",
+              "bytes": 77
+            },
+            "asm": {
+              "sha256": "06a577a9c5746662c9f4e0a91c3622bd0064f69d8c0ea27443d2fc275c46b374",
+              "bytes": 259411
+            }
+          }
+        },
+        "text-tracing": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "277c997dd0e3e52d46a949ed637b5cefb0b3cb7967b30fa202751e42eef3e81f",
+              "bytes": 694748
+            },
+            "exe": {
+              "sha256": "21b08fc8fdb141e83098ded482c0cc89c758110b6c60585de4c83631fa9b9dc3",
+              "bytes": 169984
+            },
+            "txt": {
+              "sha256": "14a33b1d5221968bafee96b38b1578eab66f8e998fba55c2e8afd142360f2c94",
+              "bytes": 287
+            },
+            "asm": {
+              "sha256": "7ca62ebca705c9c938677ca3366acc1169df8a16adb09db860b1b79f9a1dd935",
+              "bytes": 1239769
+            }
+          }
+        },
+        "text-arc": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "92258aba6abccd8c10b6196d5629a50a3f988e63653faf44eb83ef12e24e5fdf",
+              "bytes": 694771
+            },
+            "exe": {
+              "sha256": "1f14584e96533a74cd5cd310b90823eca754a13b63af47083ee160be93940b1a",
+              "bytes": 174592
+            },
+            "txt": {
+              "sha256": "14a33b1d5221968bafee96b38b1578eab66f8e998fba55c2e8afd142360f2c94",
+              "bytes": 287
+            },
+            "asm": {
+              "sha256": "9332ecd1ac9ef0ece827a3d406528f34ece3d40d07283fafd0de2181e6689d6a",
+              "bytes": 1331922
+            }
+          }
+        },
+        "bytes-tracing": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "9385141b32f9306fa96a2287a34093d354275a3062b16c75bf3560c554c0dfe5",
+              "bytes": 888711
+            },
+            "exe": {
+              "sha256": "15e718ef99f4ca0bb62660f21bbbc475cfa3af6934d22ad05a38df8bff78585f",
+              "bytes": 181248
+            },
+            "txt": {
+              "sha256": "3243583a5bacdff79d3bf08355ef718baacd0b411423880b55f0d736598248bf",
+              "bytes": 1494
+            }
+          }
+        },
+        "bytes-arc": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "abd209e1edc367ad0b0be25fd1f4efed0211a8cd5b27b554604f05f19d5cf4bb",
+              "bytes": 888734
+            },
+            "exe": {
+              "sha256": "2d3379fb15bee326c289feab09278d7cf6287bf06d29f9e23e95f6dff4c6201a",
+              "bytes": 187392
+            },
+            "txt": {
+              "sha256": "3243583a5bacdff79d3bf08355ef718baacd0b411423880b55f0d736598248bf",
+              "bytes": 1494
+            }
+          }
+        },
+        "metrics-tracing": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "d548f388d9f09d6dc85724acadd2dabba3dc5bd56fd31d45dad41cf610dc4818",
+              "bytes": 672148
+            },
+            "exe": {
+              "sha256": "ce0868fea38b9cc977a18cc3d87c5f7a9e657dfa4581788ece1c13f49ee0d564",
+              "bytes": 151040
+            },
+            "txt": {
+              "sha256": "6455214bc79218d5624b9dde628ce0ceb249dea34c1c9c843efed8e5cf0ff621",
+              "bytes": 169
+            }
+          }
+        },
+        "metrics-arc": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "bfa1faf67bc494e1489c65c097f43ed1782152ec7cc3d2e438ff3f31e55d0163",
+              "bytes": 672171
+            },
+            "exe": {
+              "sha256": "778d703e94c0145dd36f1bdbb23a7ad7fe466a1507f6f531542fff7e6ab5cc63",
+              "bytes": 148992
+            },
+            "txt": {
+              "sha256": "6455214bc79218d5624b9dde628ce0ceb249dea34c1c9c843efed8e5cf0ff621",
+              "bytes": 169
+            }
+          }
+        }
+      },
+      "kernels": {
+        "baseline": {
+          "output": "kernel run threads 1: native requests 3, native peak 69648, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 6, native peak 69648, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 6,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "cde993cb4a6b52b8ec5a31259996f7099c0c9347617f43e342dc2df388bf37a9",
+              "bytes": 705812
+            },
+            "exe": {
+              "sha256": "4d810431665e8ed440742bd2a4dd517760cbcb58775b71d28949caa3890ffd6f",
+              "bytes": 168960
+            },
+            "txt": {
+              "sha256": "ab4a08fda87efed744523f689241c5a1d5a73457103a131967c01e5b6317eeb6",
+              "bytes": 462
+            },
+            "asm": {
+              "sha256": "d32f98f4c23507d49221422d4ab419276c8219b85cdfe646a8a893ccf0cf0f5c",
+              "bytes": 1225046
+            }
+          }
+        },
+        "tracing": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 4104, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "04f2b81429caac012ca97c8ff2d1f9f00432c80ea4b55b91e2b9adca4fe1f9fe",
+              "bytes": 706938
+            },
+            "exe": {
+              "sha256": "612c23767014b929309624e53c8146119fc93d180a2376e8287f916503e540bc",
+              "bytes": 179712
+            },
+            "txt": {
+              "sha256": "4d86e1b4cb581b0c7edea54d8a845df52dc9b968a6148844712d12264f262628",
+              "bytes": 604
+            },
+            "asm": {
+              "sha256": "a7cf1afab3eb7ca7640d9612f726392bff263c1b35b1c6c4d5d3ce06507eda24",
+              "bytes": 1382772
+            }
+          }
+        },
+        "arc": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 4104, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "b82d08c613b6b8e6f48c375e6d7c3d988ab622fb4d7ff3f019d814b1516c3a71",
+              "bytes": 706961
+            },
+            "exe": {
+              "sha256": "ea4f66b0f65014eabbeccd5c7eeedf6187978260f49b9901332498fcfae40ddd",
+              "bytes": 180224
+            },
+            "txt": {
+              "sha256": "4d86e1b4cb581b0c7edea54d8a845df52dc9b968a6148844712d12264f262628",
+              "bytes": 604
+            },
+            "asm": {
+              "sha256": "97196ff49499f5d38f107859b74d26b8577739577a4b0880e66d332783b55cef",
+              "bytes": 1408033
+            }
+          }
+        }
+      },
+      "codeInspection": {
+        "symbol": "fwp_kernel_eval",
+        "packedMultiplyInstructions": [
+          "140014c64: 66 0f 59 d0                 \tmulpd\t%xmm0, %xmm2",
+          "140014c6e: 66 0f 59 c1                 \tmulpd\t%xmm1, %xmm0"
+        ],
+        "scope": "Instrumented ARC allocation-probe binary at O2. The generic elementwise multiply branch uses packed double instructions, with memory-backed arithmetic workspace and a chunk memcpy. This does not prove register-only computation, absence of spills, cache behavior, or uninstrumented speed."
+      }
+    },
+    "windows-11-arm": {
+      "jobId": 116948016348,
+      "overallJobConclusion": "failure",
+      "values": {
+        "ternary-tracing": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "19d5ca1fcfd4ef0747dcf3b99836ebe528d35c9f269f2cf0a2406079b505fb67",
+              "bytes": 642709
+            },
+            "exe": {
+              "sha256": "3a71ba0ff64d06969aa274d83e2cfc10bb844f40406347d7da3b158e5542d836",
+              "bytes": 89088
+            },
+            "txt": {
+              "sha256": "2fc57a8a7775f7ba3ca7b23ba42d9237322ab6b80c39352361a4fd1bc857a9e4",
+              "bytes": 77
+            },
+            "asm": {
+              "sha256": "377401b14e9391c757b8a6f9ae7425b706e40644828a16dd22ca94abbfd6ab03",
+              "bytes": 225000
+            }
+          }
+        },
+        "ternary-arc": {
+          "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+          "files": {
+            "c": {
+              "sha256": "bcfcdfb001170447b460f96e01045445e752b6f2dc7277f6b41c9b9e7bf28fd0",
+              "bytes": 642732
+            },
+            "exe": {
+              "sha256": "3a92ec3626bd1dcc90aa97fdc4c46ce8f5872f70e7ed92f0a5595ac7ec82af5a",
+              "bytes": 84480
+            },
+            "txt": {
+              "sha256": "2fc57a8a7775f7ba3ca7b23ba42d9237322ab6b80c39352361a4fd1bc857a9e4",
+              "bytes": 77
+            },
+            "asm": {
+              "sha256": "f58707c008bf385d0125e1648bd3094736dbff8428c0b604e4a7674a42591dd7",
+              "bytes": 170839
+            }
+          }
+        },
+        "text-tracing": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "277c997dd0e3e52d46a949ed637b5cefb0b3cb7967b30fa202751e42eef3e81f",
+              "bytes": 694748
+            },
+            "exe": {
+              "sha256": "26f64fe5adbe0c274c4597428e4585eb1ccbc5b5f3bdacaa7ba7c214db14bd88",
+              "bytes": 156160
+            },
+            "txt": {
+              "sha256": "14a33b1d5221968bafee96b38b1578eab66f8e998fba55c2e8afd142360f2c94",
+              "bytes": 287
+            },
+            "asm": {
+              "sha256": "2c19c0e895c8e5fe4b5cf6fe5a4e901b2915d248957cdc9ecf114a52d6b5c7cc",
+              "bytes": 771782
+            }
+          }
+        },
+        "text-arc": {
+          "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+          "files": {
+            "c": {
+              "sha256": "92258aba6abccd8c10b6196d5629a50a3f988e63653faf44eb83ef12e24e5fdf",
+              "bytes": 694771
+            },
+            "exe": {
+              "sha256": "dcb03ba1121e25ee049451fbced855481e2329a4533b59238e4f03b76348228c",
+              "bytes": 160256
+            },
+            "txt": {
+              "sha256": "14a33b1d5221968bafee96b38b1578eab66f8e998fba55c2e8afd142360f2c94",
+              "bytes": 287
+            },
+            "asm": {
+              "sha256": "cc10fa255ba30462c16fe593368f911e042cac59c9f21eb54fcf5093f16c43a4",
+              "bytes": 820390
+            }
+          }
+        },
+        "bytes-tracing": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "9385141b32f9306fa96a2287a34093d354275a3062b16c75bf3560c554c0dfe5",
+              "bytes": 888711
+            },
+            "exe": {
+              "sha256": "86ee9d7a1c829396b279eb9cd4964a92bdac2efa4f5dbb3c938c86a8d40ce830",
+              "bytes": 167936
+            },
+            "txt": {
+              "sha256": "3243583a5bacdff79d3bf08355ef718baacd0b411423880b55f0d736598248bf",
+              "bytes": 1494
+            }
+          }
+        },
+        "bytes-arc": {
+          "output": "byte case 0: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 1: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 2: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 3: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 4: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 5: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 6: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 7: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 8: 2 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 9: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 10: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 11: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 12: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 13: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 14: 1 managed allocation failures checked; final charged delta 0; native buffers 0\nbyte case 15: 1 managed allocation failures checked; final charged delta 0; native buffers 0\n",
+          "files": {
+            "c": {
+              "sha256": "abd209e1edc367ad0b0be25fd1f4efed0211a8cd5b27b554604f05f19d5cf4bb",
+              "bytes": 888734
+            },
+            "exe": {
+              "sha256": "21262d75cb21f4e2eddff8bc4faa6dd6b5a1c4b08c002a0205b55d44611f0aeb",
+              "bytes": 172032
+            },
+            "txt": {
+              "sha256": "3243583a5bacdff79d3bf08355ef718baacd0b411423880b55f0d736598248bf",
+              "bytes": 1494
+            }
+          }
+        },
+        "metrics-tracing": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "d548f388d9f09d6dc85724acadd2dabba3dc5bd56fd31d45dad41cf610dc4818",
+              "bytes": 672148
+            },
+            "exe": {
+              "sha256": "eb35293033642fa87384f90281739bc61c2adcbf8dd4ceaff8b5af0e5064717f",
+              "bytes": 139776
+            },
+            "txt": {
+              "sha256": "6455214bc79218d5624b9dde628ce0ceb249dea34c1c9c843efed8e5cf0ff621",
+              "bytes": 169
+            }
+          }
+        },
+        "metrics-arc": {
+          "output": "snapshot 0: 12 managed allocation requests; final charged delta 0; native scratch 0\nsnapshot 1: 1 managed allocation requests; final charged delta 0; native scratch 0\n",
+          "files": {
+            "c": {
+              "sha256": "bfa1faf67bc494e1489c65c097f43ed1782152ec7cc3d2e438ff3f31e55d0163",
+              "bytes": 672171
+            },
+            "exe": {
+              "sha256": "7dd6f754ab7b151df26c7d18b6168ba12c82a9e8337ca5b0b3edd2424524fef2",
+              "bytes": 138752
+            },
+            "txt": {
+              "sha256": "6455214bc79218d5624b9dde628ce0ceb249dea34c1c9c843efed8e5cf0ff621",
+              "bytes": 169
+            }
+          }
+        }
+      },
+      "kernels": {
+        "baseline": {
+          "output": "kernel run threads 1: native requests 3, native peak 69648, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 6, native peak 69648, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 6,
+              "nativePeakBytes": 69648,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "cde993cb4a6b52b8ec5a31259996f7099c0c9347617f43e342dc2df388bf37a9",
+              "bytes": 705812
+            },
+            "exe": {
+              "sha256": "e91bc32e5f9c4e436dc4d7cab00df716c005f726407b6a7e728ab3d9e5a87b4a",
+              "bytes": 153600
+            },
+            "txt": {
+              "sha256": "ab4a08fda87efed744523f689241c5a1d5a73457103a131967c01e5b6317eeb6",
+              "bytes": 462
+            },
+            "asm": {
+              "sha256": "6aa5c2c9e0f25cb05aa8d8155d45c782fbec7e96dc057e57c0351516a785a9f6",
+              "bytes": 751889
+            }
+          }
+        },
+        "tracing": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 4104, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "04f2b81429caac012ca97c8ff2d1f9f00432c80ea4b55b91e2b9adca4fe1f9fe",
+              "bytes": 706938
+            },
+            "exe": {
+              "sha256": "b1006f9b222dcaa4465ca95b767be270bccf8f71ff2e13a1ae2939b8c3bda2a6",
+              "bytes": 164352
+            },
+            "txt": {
+              "sha256": "4d86e1b4cb581b0c7edea54d8a845df52dc9b968a6148844712d12264f262628",
+              "bytes": 604
+            },
+            "asm": {
+              "sha256": "a82391d77e4b8c6c1ff46411c0e14932fc543abc08b746827798521040fedb26",
+              "bytes": 867555
+            }
+          }
+        },
+        "arc": {
+          "output": "kernel run threads 1: native requests 2, native peak 4104, managed requests 1, final native and charged storage 0\nkernel run threads 4: native requests 5, native peak 4104, managed requests 1, final native and charged storage 0\nkernel sum threads 1: native requests 3, native peak 4128, managed requests 0, final native and charged storage 0\nkernel sum threads 4: native requests 5, native peak 4128, managed requests 0, final native and charged storage 0\nfinal reduction block: 4095 elements without index overflow\nallocation and worker-start failures: all started workers joined; final storage 0\n",
+          "counts": [
+            {
+              "operation": "run",
+              "requestedWorkers": 1,
+              "nativeRequests": 2,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "run",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4104,
+              "managedRequests": 1,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 1,
+              "nativeRequests": 3,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            },
+            {
+              "operation": "sum",
+              "requestedWorkers": 4,
+              "nativeRequests": 5,
+              "nativePeakBytes": 4128,
+              "managedRequests": 0,
+              "finalNativeBytes": 0,
+              "finalChargedDelta": 0
+            }
+          ],
+          "files": {
+            "c": {
+              "sha256": "b82d08c613b6b8e6f48c375e6d7c3d988ab622fb4d7ff3f019d814b1516c3a71",
+              "bytes": 706961
+            },
+            "exe": {
+              "sha256": "61fcc3b1a08583f2b81e96bff6646aa36ea83bc5d1cfd57ab481f6da79eb9917",
+              "bytes": 164864
+            },
+            "txt": {
+              "sha256": "4d86e1b4cb581b0c7edea54d8a845df52dc9b968a6148844712d12264f262628",
+              "bytes": 604
+            },
+            "asm": {
+              "sha256": "56d320d62a31fc50a08fccb0feb11f13451202f99247ed5fff4504227de986b5",
+              "bytes": 870996
+            }
+          }
+        }
+      },
+      "codeInspection": {
+        "symbol": "fwp_kernel_eval",
+        "packedMultiplyInstructions": [
+          "14001223c: 6e60dc20    \tfmul\tv0.2d, v1.2d, v0.2d",
+          "140012240: 6e63dc41    \tfmul\tv1.2d, v2.2d, v3.2d"
+        ],
+        "scope": "Instrumented ARC allocation-probe binary at O2. The generic elementwise multiply branch uses packed double instructions, with memory-backed arithmetic workspace and a chunk memcpy. This does not prove register-only computation, absence of spills, cache behavior, or uninstrumented speed."
+      }
+    }
+  },
+  "sourceTests": {
+    "tests/cpu_kernel_ownership.rs": "c8331ee94b62632c3ca77a4e6047d6cc8a8a0288a5d52a3491222d0078382f7e",
+    "tests/metrics_ownership.rs": "f9ad5125089e932052e0f83828392a5de64b11a5682a7deb44a9a1ba340dd6f4",
+    "tests/byte_decoder_ownership.rs": "34175d6619d11b9f38aa2fe38732c73e7e46e8a1c87c75cbc2cc8c9295f95c88",
+    "tests/text_decoder_ownership.rs": "a9c32a9f625cb664f223312050eed859cf446b3d616de3f80703ad39df34fdd6",
+    "tests/ternary_ownership.rs": "0381cfc24187f0421efc51905395360cde09dec58327c386a520840e7f39d51d",
+    "tests/device_bounds.rs": "e46652bc5587a034356d46d58d102bb90d3fb87306d1def768fe57482bfe12f1",
+    "tests/wasm_arc.rs": "0a4902021356cedc5b6eb182b98841f68a6f140bf71496f3cb07eb233b910646",
+    "tests/library_unload.rs": "145f0e982a7f000fb6b50cd621599a12f742c97772edc91ca5123eb315323657",
+    "tests/fixtures/windows_library_unload.c": "28141f60ac910a8a3d2aa45ec36ebff65636fcb3dd3e84a21bd7e35dea6571b3",
+    "tests/fixtures/windows_library_unload_host.c": "70df3b116a3a383c1b340df6b5902d5cebf6eb23e07de618723465bfc91727c9",
+    "tests/fixtures/windows_library_unload.h": "97d53e011b070cb50848d0bc73e05f024600485f7963e81cef2bfe6c0d495362"
+  },
+  "sourceTestsHead": "234da5778830c69f52236de655dd85d240c206ec",
+  "runtimeSourceHead": "457f00d3952bcef23df965de64793980dbccda56",
+  "runtimeSourceHashes": {
+    "runtime/fwp_rt_kernel.c": "78deb49e8ed9d3f8710b50840adfd88ef8638356146425f22ebf043d660e84e6",
+    "runtime/fwp_rt_task.c": "48e28320eddfdb98e30f52c1059f7ddf07c97b204585e7c3406bb014c60ba688",
+    "runtime/fwp_rt_decode.c": "a257dd6d98cce04204920cd6c13a69a6d800beb3414d0bfc7fc26f21fa63c09b",
+    "runtime/fwp_rt_http2.c": "c1bd69e638678a97e4dd07de6c8cdc0366d580f83d7e7946aa3da2a048430bda",
+    "runtime/fwp_rt_prims.c": "0072710c87c3fba639d6a19c38e2e2d20a46535840906467159f8a624c8e8594",
+    "runtime/fwp_rt_ops.c": "fca1d3f54883ce0228d6319b13eeced4be81f92c8496740b0190a7c4cb44a975",
+    "src/ownership.rs": "fccfafb2d811607787d30334ecde3735c3783c37a3ffef956c511202b69e273a",
+    "src/arc.rs": "71fcc33ce333f600eab1d92438325dc7d6a5dfd69a1aa5bd39a2cf217e08d99a",
+    "src/numerics.rs": "3184c960f86064c6eb1c5dfcce9a331482ef4a53a4302b9da289501cc1b13420",
+    "src/cgen.rs": "fc85091377fd7534451477ac4b4ce06646a58fa98ee5bf3daa701cf00f76cbc7"
+  }
+}

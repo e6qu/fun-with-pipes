@@ -293,3 +293,36 @@ results for `simd.splat`, `simd.from-array`, `simd.sum`, and the six lane-wise b
 operations. Their runtime paths must own wrappers, shared boxed lanes and reduction
 accumulators, and release partial results on failure. Contracts alone are not
 acceptance; [the handoff](development-state.md) records native and WASI checks.
+
+## Decoded values, metrics, CPU tensors and DNS
+
+These operations now have explicit contracts in the following ownership batch.
+A contract describes implementation; [the handoff](development-state.md) states
+which native/WASI checks have passed and which delivery gates remain. A decoder
+turns encoded input into ordinary values. A snapshot is an independent copy of
+current state. Neither returns pointers into temporary parsing or registry memory.
+
+| Operations | Arguments | Result and cleanup |
+|---|---|---|
+| `trit.from-sign`, `trit.to-int`, `tint.to-int` | Borrow input | Inline scalar |
+| `tint.of-int`, `tint.from-trits` | Borrow input | Owned optional scalar wrapper |
+| `tint.trits`, `trits.unpack` | Borrow value/count/bytes as applicable | Owned list; partial-list cleanup |
+| `trits.pack` | Borrow trit list | Fresh bytes; no temporary digit array |
+| `url.decode`, `form.decode`, `url.split`, HTTP-head parsers | Borrow text/bytes | Owned optional/result fields and list nodes; release partial fields and scratch |
+| `http.field-ok`, `http.content-length`, `int.parse-hex` | Borrow inputs | Boolean/integer, or fresh optional integer wrapper |
+| `zlib.gunzip`, `zlib.inflate`, `ws.inflate` | Borrow limit and bytes | Owned bytes/error/result; protected native output buffer |
+| `ws.parse`, `ws.close-parse` | Borrow frame options and/or bytes | Owned record/tuple with copied payload |
+| `zlib.crc32` | Borrow seed and bytes | Inline checksum |
+| `metrics.add`, `metrics.set`, `metrics.observe` | Borrow name and number | Unit; registry owns a native copy of each distinct name |
+| `metrics.snapshot` | Borrow unit | Owned list of copied name/kind/value tuples; release partial construction |
+| `dns.resolve` | Borrow hostname | Owned address strings/list; release OS resolver entries and partial results |
+| `syntax.show` | Borrow syntax tree | Fresh text; release formatting buffer even if result allocation traps |
+| `device.run` | Borrow worker count, element count, instruction array, constants and input arrays | Owned numeric array; workers write distinct ranges and all finish before return/cleanup |
+| `device.sum` | Same five borrowed arguments | Inline F64; release input table, worker workspace and block sums |
+
+The compression/frame helpers are native-only. Process metrics retain registry
+entries until process exit or library teardown; snapshots have ordinary value
+lifetimes. CPU workers retain no language references after the call. Reporting
+worker-start failure joins already started workers before releasing borrowed
+inputs or pending output. These contracts do not extend checked ARC to network
+connections, servers, retained host callbacks or GPU execution.
