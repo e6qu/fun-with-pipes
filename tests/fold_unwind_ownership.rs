@@ -94,6 +94,9 @@ static int dead_scratch(V v) {
     return 0;
 }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     for (volatile int mode = 0; mode < 3; mode++) {
         input_seed = fwp_rc_fresh(fwp_str_new("seed", 4));
@@ -169,7 +172,7 @@ int main(void) {
         assert!(cancelled.contains(update));
         cancelled = cancelled.replace(update, &format!("{update} cancel_after_fold_result();"));
     }
-    let cancelled_probe = probe.replace("static volatile V input_seed, source_list, input_capture;", "static volatile V input_seed, source_list, input_capture;\nstatic fwp_task fold_cancel;\nstatic void cancel_after_fold_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&fold_cancel, 0, sizeof fold_cancel); fwp_cur = &fold_cancel; fwp_budget = 1000000;\n        if (!setjmp(fold_cancel.base))").replace("        fwp_handlers = h.prev;", "        fwp_cur = NULL; if (!fold_cancel.unwinding) return 7;\n        fwp_handlers = h.prev;");
+    let cancelled_probe = probe.replace("static volatile V input_seed, source_list, input_capture;", "static volatile V input_seed, source_list, input_capture;\nstatic fwp_task fold_cancel;\nstatic void cancel_after_fold_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&fold_cancel, 0, sizeof fold_cancel); fwp_cur = &fold_cancel; fwp_budget = 1000000;\n#ifdef _WIN32\n        /* This synthetic task executes on main's stack. */\n        fold_cancel.ctx.top = fwp_gc.main_top;\n#endif\n        if (!setjmp(fold_cancel.base))").replace("        fwp_handlers = h.prev;", "        fwp_cur = NULL; if (!fold_cancel.unwinding) return 7;\n        fwp_handlers = h.prev;");
     let preparing = runtime.replace(
         "fi->owned->arguments(args + i, c->n + i, 1);",
         "fwp_trap(\"injected borrowed argument preparation failure\");",
@@ -242,6 +245,9 @@ static int recover_prepare(void) { return 1; }
 static fwp_obj scalar_tail = {1, 2, {1, 0}};
 static fwp_obj scalar_head = {1, 2, {2, PTR(&scalar_tail)}};
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     first = fwp_rc_fresh(fwp_str_new("first",5)); second = fwp_rc_fresh(fwp_str_new("second",6));
     function_value = fwp_rc_fresh(fwp_pap(STEP,0,NULL));

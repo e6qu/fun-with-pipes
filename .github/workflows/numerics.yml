@@ -50,7 +50,7 @@ jobs:
         run: cargo test --no-fail-fast --test mapped_array_construction --test numeric_array_fusion --test map_ownership --test array_element_ownership --test arc_execution --test ad_tape_scopes
       - name: Numeric zip/map construction and partial-result cleanup
         if: inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows'
-        run: cargo test --no-fail-fast --test zip_map_fusion --test unzip_cleanup --test list_construction_cleanup --test zip_ownership --test zip_unwind_ownership --test map_unwind_ownership --test selection_unwind_ownership --test list_structure_ownership --test list_generation_ownership --test state_sequence_ownership --test mapped_array_construction --test numeric_array_fusion --test map_ownership --test arc_execution --test ad_tape_scopes
+        run: cargo test --no-fail-fast --test zip_map_fusion --test unzip_cleanup --test list_construction_cleanup --test zip_ownership --test zip_unwind_ownership --test fold_unwind_ownership --test map_unwind_ownership --test selection_unwind_ownership --test list_structure_ownership --test list_generation_ownership --test state_sequence_ownership --test mapped_array_construction --test numeric_array_fusion --test map_ownership --test arc_execution --test ad_tape_scopes
       - name: Interpreter console state on Windows
         if: inputs.suite == 'processes' && runner.os == 'Windows'
         run: cargo test --lib sys::tty::tests::native_console -- --exact

@@ -239,12 +239,30 @@ The combined source is published and dispatched as recorded in Next above;
 the Linux AMD64 actual-WASI job already passes. No failing or canceled run is
 acceptance.
 
-The combined run passes native Mac ARM/Linux ARM and both actual-WASI count
-jobs so far. Windows AMD64 reports eight byte-output assertions in five older
-probes: their replacement C mains omitted binary stdout, so successful messages
-ended in CRLF instead of LF. All new runtime cleanup tests pass on that host.
-The five fixtures now set binary stdout explicitly under `_WIN32`; native
-runtime/compiler source is unchanged. The `zip-windows` suite reruns the same
-structural tests on both native Windows hosts without repeating passed Unix/WASI
-jobs. Full Windows production coverage now includes these older regressions too.
-Formatting passes (1.09 s). The Windows repair still needs runner validation.
+The combined run `38847420495` passes all four Unix hosts and both actual-WASI
+count jobs. Windows initially reported eight byte-output assertions in five
+older probes: replacement C mains omitted binary stdout, producing CRLF. The
+repair at `2ab0c7ac` passes those assertions on both native Windows hosts in
+`38848492011`, but uncovers a later access violation in zip's cancellation test.
+All newly added runtime cleanup tests pass there. Neither failing run counts as
+acceptance.
+
+Diagnostic revision `523a6e07` identifies probe variants and recovery stages in
+`38849794851`. Review found the synthetic canceled task omitted Windows' stack
+scan boundary, unlike the established loop-cancellation fixture. The pending
+repair sets that boundary to the main stack in zip, map, selection and fold
+probes. Fold also gets binary stdout and joins focused/full Windows coverage.
+Native compiler/runtime code is unchanged by these fixture repairs. Do not
+assert the crash is resolved until the native rerun passes.
+
+The standalone zip test harness compiles (0.26 s) and both accepted-compiler Mac
+tests pass (8.93 s) under the guard. This supplements native Windows acceptance.
+The `zip-windows` suite runs the structural tests on both actual Windows hosts;
+it does not repeat passed Unix/WASI jobs. Full final-head acceptance remains
+required after transfer to the next delivery.
+
+Further preparation `/private/tmp/fwp-wasi-arc`, branch `checked-wasi-ownership`,
+is anchored at `e5e05748`; only its later changes belong to that future batch.
+It probes synchronous WASI ARC with actual physical-free controls in
+`38850138218` at `9d50a67`. Its own handoff lists pending scope and validation;
+it is not a second PR or supported-target claim.
