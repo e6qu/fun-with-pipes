@@ -16,8 +16,9 @@ Base: `ac3060d1`. Runtime/test source: `24caa70b`; later documentation/evidence
 commits do not change it. Do not open another PR. After #153 acceptance, rebase
 only this branch's delta after `ac3060d1` onto its accepted squash.
 
-Next: finish and repair six-host native run `38947981439` and actual WASI/browser
-run `38947985548`, both at `24caa70b`. Earlier queued native/WASI jobs
+Next: publish the test-harness and inventory-path fixes found by Linux ARM64 in native run
+`38947981439`; rerun the six-host context suite on the repaired source. Actual
+WASI/browser run `38947985548` tests runtime source `24caa70b`. Earlier queued native/WASI jobs
 `38946737398`/`38945989400` were canceled as superseded. Retain final allocation,
 layout, compiler/CPU and binary evidence before claiming verified support.
 Do not broaden ARC admission beyond the tested ownership contracts.
@@ -40,8 +41,9 @@ The five scopes also borrow typed callbacks and own their results. Response
 capture protects the callback result before copying headers directly into an
 owned list, preserving order and duplicates without a temporary pointer array.
 Existing capture/task controls use actual compiler-generated result types.
-Five ownership contracts are proposed for promotion; the frozen inventory
-baseline is unchanged. CI must verify the precise new inventory.
+The ownership inventory passes on Linux ARM64: five scope contracts are
+promoted, giving 346 contract declarations and eight remaining reviews. The
+frozen inventory baseline is unchanged. Runtime verification is still pending.
 
 `service_scope_ownership` compares raw/optimized interpretation with native
 O1/O2 tracing/ARC execution, including caller aliases and returned functions.
@@ -54,7 +56,17 @@ Both new tests have permanent Windows coverage and are assigned to the existing
 Mac GC shard: this preparation has 232 integration targets; #153 has 230.
 Windows fixture repairs declare the required Windows 10 API target before system
 headers and use `_putenv_s` explicitly instead of POSIX-only environment calls.
-Native Windows verification of those repairs remains pending.
+Native Windows verification of those repairs remains pending. Linux ARM64
+passes the repeated-allocation assertions but exposed two harness defects:
+negative controls returned through library shutdown, whose child cancellation
+replaced the original failure code; and the callback-result ledger included
+lazy scheduler startup. Prepared repairs use `_Exit` only for failed controls
+and initialize the scheduler before the result-lifetime ledger. Successful
+controls still execute full shutdown. The allocation report still includes
+startup separately; this does not hide the larger task cost. Windows ARM64
+also exposed host path separators in the inventory keys (`lib\\...` versus
+`lib/...` in the frozen baseline). The scanner and source-hash keys now emit
+repository paths with forward slashes; the contract assertions are unchanged.
 
 ## Retained evidence and limits
 
@@ -100,10 +112,10 @@ Artifact download (16.32s), evidence retention (8.18s), and existing binary
 inspection (0.13s each) passed under the guard. No local native build was used.
 
 Service streams/connections, remote results, process exit and GPU ownership
-remain. A syntax issue noticed during preparation also needs a separate tested
-repair: `String -> (() -> String) ! {Network}` cannot currently annotate effects
-on the outer call. The current ownership fixture returns its function inside
-an explicitly typed tuple; this does not resolve the parser issue.
+remain. Preserve the existing effect rule in `docs/design.md`: only the final
+arrow of a binding may have effects, so partial application does not perform
+work. The function-and-string tuple in the ownership fixture tests returned
+functions and shared data together; no parser or effect-rule change is proposed.
 The service guide introduces callbacks, `const`, settings, deadlines, headers,
 streaming and compression before its examples. Preserve those explanations.
 

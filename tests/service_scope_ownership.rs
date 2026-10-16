@@ -43,8 +43,8 @@ fn scope_results_preserve_aliases_and_release_partial_captures() {
             .find("static void *fwp_main_thread(void *arg) {")
             .unwrap();
         let (runtime, main) = code.split_at(start);
-        let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t scope_budget=fwp_gc.budget;\n")
-            .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.budget!=scope_budget || fwp_gc.ncollect) exit(248);\n");
+        let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t scope_budget=fwp_gc.budget;\n")
+            .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.budget!=scope_budget || fwp_gc.ncollect) { fprintf(stderr,\"scope charged delta %lld; collections %zu\\n\",(long long)(scope_budget-fwp_gc.budget),fwp_gc.ncollect); exit(248); }\n");
         let measured = format!("{runtime}{main}");
         let borrowed = "V r = fwp_apply_borrowed(f, 1, &unit);";
         assert_eq!(measured.matches(borrowed).count(), 1);

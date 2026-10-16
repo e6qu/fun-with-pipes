@@ -106,6 +106,8 @@ static void parent(void *arg, int stop) {
     if (fwp_cur->gctx != saved_context || fwp_cleanups) _Exit(49);
 }
 
+/* Failure controls bypass teardown so cancellation cannot replace the original
+ * failure code. Successful runs still execute complete library shutdown. */
 int main(void) {
     fwp_lib_init();
     fwp_gc_start(__builtin_frame_address(0));
@@ -135,29 +137,29 @@ int main(void) {
         fwp_task *task = fwp_spawn_task(0, parent, 0, 0, 0);
         if (stage == 3) {
             fwp_p_task_yield();
-            if (!entered || task->done) return 50;
+            if (!entered || task->done) _Exit(50);
             fwp_p_task_cancel(PTR(task));
         }
         fwp_await(task);
         if (stage >= 4) {
             if (escaped || child_checked || !task->done || cancelled || typed || trapped != 1 ||
                 metadata_attempts != (stage == 4) || metadata_frees || fail_metadata ||
-                metadata_block || fwp_cur->gctx != &before || fwp_cleanups) return 56;
+                metadata_block || fwp_cur->gctx != &before || fwp_cleanups) _Exit(56);
             fwp_cur->gctx = 0;
             continue;
         }
-        if (metadata_frees) return 55;
+        if (metadata_frees) _Exit(55);
         if (!escaped || escaped->done || child_checked || !task->done ||
             cancelled != (stage == 3) || typed != (stage == 1) ||
-            trapped != (stage == 2) || fwp_cur->gctx != &before || fwp_cleanups) return 51;
+            trapped != (stage == 2) || fwp_cur->gctx != &before || fwp_cleanups) _Exit(51);
         /* This private fixture mutates source buffers to detect borrowed copies. */
         memset(STR(original_name)->d, '?', STR(original_name)->len);
         memset(STR(original_value)->d, '?', STR(original_value)->len);
         released = 1;
         fwp_make_ready(escaped);
         fwp_await(escaped);
-        if (child_checked != 1 || !escaped->done || escaped->gctx_owner) return 52;
-        if (metadata_attempts != 1 || metadata_frees != 1 || metadata_block) return 54;
+        if (child_checked != 1 || !escaped->done || escaped->gctx_owner) _Exit(52);
+        if (metadata_attempts != 1 || metadata_frees != 1 || metadata_block) _Exit(54);
         FWP_KEEP_ALIVE(PTR(task)); FWP_KEEP_ALIVE(PTR(escaped));
         FWP_KEEP_ALIVE(metadata); FWP_KEEP_ALIVE(duration);
         fwp_cur->gctx = 0;
@@ -170,12 +172,12 @@ int main(void) {
                      .capture_owner=&capture, .metadata_owner=&saturated};
     jmp_buf failed;
     fwp_cur->trap_jb = &failed; fwp_cur->trap_cleanup = fwp_cleanups;
-    if (!setjmp(failed)) { g_context_acquire(&context); return 57; }
+    if (!setjmp(failed)) { g_context_acquire(&context); _Exit(57); }
     if (tls.users != 1 || capture.users != 1 || saturated.users != SIZE_MAX ||
-        strcmp(fwp_trap_msg, "too many outgoing metadata owners")) return 57;
+        strcmp(fwp_trap_msg, "too many outgoing metadata owners")) _Exit(57);
     stage = 9; fwp_cur->gctx = &context;
     if (fwp_p_grpc_with_gzip(0) != 42 || tls.users != 1 || capture.users != 1 ||
-        saturated.users != SIZE_MAX || fwp_cur->gctx != &context || fwp_cleanups) return 58;
+        saturated.users != SIZE_MAX || fwp_cur->gctx != &context || fwp_cleanups) _Exit(58);
     fwp_cur->gctx = 0; fwp_cur->trap_jb = 0;
     fwp_lib_finish();
     return 0;

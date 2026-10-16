@@ -61,7 +61,7 @@ files.extend(path for path in sorted((root / 'runtime').rglob('*'))
              if path.is_file() and path.suffix in {'.c', '.h', '.S'})
 files.extend(sorted((root / 'lib').rglob('*.fwp')))
 files.extend([Path(__file__).resolve(), root / 'scripts/primitive-inventory.rs'])
-source_hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+source_hashes = {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
                  for path in files}
 observed = dict(head=head, baselineHead=baseline['head'], baselineSha256=baseline_hash,
                 declarations=len(rows), distinctSymbols=len({row['symbol'] for row in rows}),
