@@ -79,8 +79,8 @@ existing cleanup stack and rejects a failed native receive allocation before use
 The new `native_sockets` control uses real runtime unwind with injected wait,
 allocation and timeout outcomes; existing real socket/web peers remain required.
 This does not promote socket handles to checked ARC or establish final-owner
-lifetimes. Local `cargo fmt` passed under the guard (1.31s); native validation is
-pending a focused `sockets` run against this combined integration branch.
+lifetimes. Local `cargo fmt` passed under the guard (1.31s); native validation runs in
+focused `sockets` run `38898918147` against this combined integration branch.
 
 ## Recorded results and current checks
 
@@ -93,9 +93,19 @@ Actual WASI `38891578037` passes both hosts at `c8f4646c`, including registry
 shutdown, 32-bit count narrowing and final-block overflow controls.
 
 Fresh preparation `cba3e810` adds DNS and moves existing private-list helpers into
-the common primitive file. Native run `38897597329` passes Linux ARM64/AMD64 and Windows AMD64;
-other hosts and actual WASI `38897600949` are still running. Earlier evidence does not cover these new changes. Full
-combined integration checks have not yet run.
+the common primitive file. [DNS evidence](measurements/dns-ownership-2026-10-16.json) records all six native
+jobs `38897597329` and both actual WASI regression jobs `38897600949` passing.
+The six native artifact sets each report 81 distinct addresses, 162 managed
+requests, cleanup at every injected failure and zero final managed/native storage.
+The report preserves source/binary hashes and explicitly excludes resolver speed
+and C/Rust comparisons. Guarded evidence verification passed in 0.25s.
+
+Later integration `7224b3de` moves the resolver cleanup helper and fixes socket
+scratch storage. Focused six-host run `38898918147` passes Windows AMD64, ARM macOS
+and ARM Linux; remaining hosts are running. Its initial workflow also ran unrelated
+filesystem tests; selection now names `paths`/`filesystem` explicitly so future
+focused runs do not pick them accidentally. No coverage was removed from full CI.
+Full combined production checks have not yet run.
 
 For the fixed 8193-element F64 kernel, one-worker native temporary allocations
 fall from three to two and native peak from 69,648 to 4,104 bytes against immutable

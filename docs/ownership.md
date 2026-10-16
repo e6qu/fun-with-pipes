@@ -547,8 +547,10 @@ bytes instead of passing a shortened hostname to the operating system.
 
 The DNS tests compare real numeric and localhost lookups, then use a deterministic
 resolver peer to check 81 distinct addresses and every result-allocation failure.
-These additions await native CI; the earlier owned-values/kernel report does not
-cover them. Socket handles and retained networking callbacks still need separate
+[DNS evidence](measurements/dns-ownership-2026-10-16.json) records six native
+hosts passing, including 162 allocation-failure positions and deliberate omitted
+cleanup. Both actual WASI jobs pass common-helper regressions; they do not test
+DNS. The earlier owned-values/kernel report does not cover DNS. Socket handles and retained networking callbacks still need separate
 ownership work. This does not add WASI networking or prove faster DNS lookups.
 
 TCP/UDP receive scratch and UDP-send resolver entries are also registered on the
