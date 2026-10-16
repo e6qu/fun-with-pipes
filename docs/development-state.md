@@ -7,14 +7,18 @@ are evidence, not a second backlog. Keep one open delivery PR at a time.
 ## Current delivery and integration
 
 [PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is the only open delivery.
-Its head is `c81b0c9f016f0e359f22e8819792baba0760ab30`; production `38890080777`
-is running and docs `38890080771` pass. ARM macOS regular/stress, benchmarks and
-both Windows jobs pass; Linux and Intel macOS remain running. Do not alter this
-head for the following work. A prior run exposed an unformatted vector example;
-the current head fixes it and checks language formatting before long suites.
+Its current head is `485665795e47f6d7d6e078d386bc56b9c8cdeded`; fresh production
+`38901011355` and docs `38901011298` are queued/running. Earlier `c81b0c9f` passed
+ARM macOS, Windows and benchmarks, but both Intel jobs exceeded 90 minutes with
+many tests remaining; that superseded run is canceled. The proposed repair uses
+Rust optimization level 1 for CI compiler/test binaries while explicitly retaining
+debug assertions and overflow checks. Test coverage and generated-C flags stay
+unchanged. Runner comparison `38901188943` tests profiles 0/1 on identical `c81b0c9f`
+source with separate warm caches and balanced sample order. Do not claim a speedup
+until the evidence and full gates pass.
 
 Integration worktree: `/private/tmp/fwp-owned-values-delivery`, branch
-`owned-values-delivery`, based on that exact head. It applies only the delta after
+`owned-values-delivery`, based on previous head `c81b0c9f`. It applies only the delta after
 `3577ba3780c19051845a5beba3f064f608cedf1e` from preparation `cba3e810` on
 `owned-cpu-kernels`. Numerical optimizations, measurements and early formatting
 checks from #152 remain. The preparation worktree is `/private/tmp/fwp-owned-kernels`;
@@ -80,7 +84,7 @@ The new `native_sockets` control uses real runtime unwind with injected wait,
 allocation and timeout outcomes; existing real socket/web peers remain required.
 This does not promote socket handles to checked ARC or establish final-owner
 lifetimes. Local `cargo fmt` passed under the guard (1.31s); native validation runs in
-focused `sockets` run `38898918147` against this combined integration branch.
+focused `sockets` run `38898918147` at `7224b3de`, which passes all six hosts.
 
 ## Recorded results and current checks
 
@@ -101,8 +105,8 @@ The report preserves source/binary hashes and explicitly excludes resolver speed
 and C/Rust comparisons. Guarded evidence verification passed in 0.25s.
 
 Later integration `7224b3de` moves the resolver cleanup helper and fixes socket
-scratch storage. Focused six-host run `38898918147` passes Windows AMD64, ARM macOS
-and ARM Linux; remaining hosts are running. Its initial workflow also ran unrelated
+scratch storage. Focused six-host run `38898918147` passes all six native hosts, including DNS
+and socket scratch omission controls at O1/O2. Its initial workflow also ran unrelated
 filesystem tests; selection now names `paths`/`filesystem` explicitly so future
 focused runs do not pick them accidentally. No coverage was removed from full CI.
 Full combined production checks have not yet run.
@@ -168,3 +172,21 @@ Socket/callback lifetimes, mutable cycles and host re-entry need explicit polici
 beyond the inventory count. The existing OpenCL runtime build violates the no-JIT
 direction and remains unresolved; CPU changes do not fix that gap. No JIT, new
 backend or distributed execution is authorized as a workaround.
+
+The next memory slice should cover UDP handles and all five UDP operations. An
+address list is ordinary data; a socket also owns an operating-system descriptor,
+so last-owner destruction is observable. Preserve explicit close through aliases,
+original function lifetimes, captures in closures/records/tasks, and pending I/O
+cancellation. Do not make sockets non-capturable merely to reuse File's simpler
+contract. Ordinary File handles have an independent resource count and forbid
+captures; copying that policy blindly would change existing networking semantics.
+Closure/container cleanup with `FWP_FREE=0`, unknown retained callback graphs and
+GC/library finalizer removal need explicit review before promoting UDP contracts.
+No UDP-handle implementation has been added in this delivery.
+
+A bounded accepted-interpreter probe creates a socket in a helper, returns its
+address, then binds that address again after the helper returns. Raw and optimized
+interpretation both print `rebound` (0.26s/0.25s under the guard). This establishes
+the reference result, not native ownership support. Native lifetime/alias/capture,
+allocation-failure and long-running descriptor-count controls remain to implement
+for that next slice after this delivery.
