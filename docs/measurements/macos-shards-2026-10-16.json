@@ -2246,8 +2246,8 @@
     "gc": 1751.707786
   },
   "projectedSeconds": {
-    "regular": 5050.939663499999,
-    "gc": 4995.280511
+    "regular": 5126.799663499996,
+    "gc": 5126.800511000001
   },
   "scope": "Fixed test assignment after Intel macOS GC exceeded its 90-minute gate in run 38861611494. Median observed target durations guide a one-time longest-first assignment; CI reads the explicit lists and never silently reshuffles them. Runtime estimates are not passing gates or guaranteed completion times. Future targets need explicit placement.",
   "jobLogs": {
@@ -2337,6 +2337,7 @@
       "pipe_ownership",
       "preempt",
       "prefix_ownership",
+      "range_array",
       "record_conversion_ownership",
       "record_update_ownership",
       "resource_frame_fields",
@@ -2477,6 +2478,7 @@
       "typed_state_ownership",
       "unwind_cleanup",
       "unzip_cleanup",
+      "vector_ownership",
       "wasm_resource_counts",
       "web",
       "worker_boxing_ownership",

@@ -7,17 +7,22 @@ belongs in [delivery history](roadmap-history.md).
 ## Active delivery and next batch
 
 [PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is the only open delivery.
-Its final head is `796f5a4c3cd920eb49f709f9a0a5551dc98481fc`, in worktree
-`/private/tmp/fwp-wasi-delivery`. Docs `38861611496` passes; production
-`38861611494` still needs both Linux jobs and Intel macOS GC. Six other production
-jobs pass. Require all nine jobs and docs for this exact head before squash merge.
+Its final head is `27cdc7ff1b9c59b025159768b11452ab5adbc58c`, in worktree
+`/private/tmp/fwp-wasi-delivery`. Fresh production `38872161681` has all nine jobs running; docs
+`38872161673` is the matching documentation gate. Previous head `796f5a4c` did not pass acceptance:
+Intel macOS GC exceeded the 90-minute job limit in `38861611494`; the run was
+canceled after that timeout. Six jobs had passed, with both Linux jobs unfinished.
+The repair assigns tests explicitly using measured durations, keeping full
+coverage and existing limits. New tests no longer reshuffle unrelated targets.
+Require all nine jobs and docs for the repaired exact head before squash merge.
 Accepted #150 is `729db67f71386750aad0bbe477f546e5276b0223`; its duplicate
 postmerge production `38860909658` is confirmed canceled.
 
 The next combined batch is now in the main workspace
 `/Users/zardoz/projects/fun-with-pipes`, branch `owned-numerics-delivery`, based on
-#151's tested head. It combines only the prepared hash/range delta and vector
-ownership delta. Once #151 merges, transfer this combined delta onto the verified
+#151's previous head `796f5a4c`. It combines the prepared hash/range and vector
+ownership changes and the CI repair, with 221 explicit integration targets
+(the repair's 219 plus `range_array` and `vector_ownership`). Once #151 merges, transfer this combined delta onto the verified
 squash commit before opening its PR. Do not replay #151's old commit chain.
 
 Preparation sources remain available for evidence: `borrowed-hash-arguments`
@@ -27,8 +32,8 @@ through `8d692024` in `/private/tmp/fwp-hash-borrows` (delta after `28cc4d0e`), 
 or additional PRs. Review conflicts preserved #151's allocation counter repair,
 accepted history, and the new zero-retain assertions.
 
-Next: finish vector cost evidence, verify the combined source/docs, and merge
-#151 once its exact-head gates pass. Rebase only this batch's delta, publish one
+Next: merge #151 once its repaired exact-head gates pass. The combined source,
+docs and four-host vector cost evidence are ready for full validation. Rebase only this batch's delta, publish one
 substantial PR, then require fresh full production and documentation acceptance.
 
 ## Roadmap status
@@ -131,6 +136,12 @@ generated library docs pass after regeneration (1.27 s); the final documentation
 audit passes (2.80 s). No changed compiler was built locally. The earlier
 local diagnostic compilation stopped with an OS signal error; no process remained
 and limits were not raised. Do not restart that refused workload.
+
+The CI repair is incorporated here with 221 explicit targets. Guarded
+`python3 scripts/test-macos-test-shards.py` passes (0.30 s);
+`python3 scripts/check-roadmap.py` passes (2.82 s). The measured balance projects
+about 85.45 minutes per Intel job, which is an estimate, not acceptance. Existing
+assignments match #151; only the two new targets were added.
 
 ## Delivery rules and remaining direction
 

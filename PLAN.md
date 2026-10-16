@@ -80,7 +80,9 @@ sizes, and extends checked ownership to maintained text tools.
 [PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is the only open delivery.
 It adds checked ARC for synchronous WASI programs, streams structural hashes
 without an encoding buffer, and combines eligible hashing pipelines into loops.
-Its exact final head still needs all nine production jobs; documentation passes.
+Its previous Intel macOS GC job exceeded the 90-minute limit. The repair uses
+explicit, measured test assignments without reducing coverage or raising limits;
+fresh exact-head production and documentation checks are required.
 Paired measurements retain both improvements and slower samples. Accepted work
 and its evidence belong in [delivery history](docs/roadmap-history.md).
 
