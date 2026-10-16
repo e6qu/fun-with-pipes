@@ -38,8 +38,12 @@ so a completed task does not retain stale context pointers. Programs without
 service support omit the field. No checked ARC admission changes are made.
 
 Initial `38942724799` stopped at a test Clippy lint, now fixed. Replacement
-`38943086313` at `ad77934c` passes Linux ARM64; other hosts remain active. That
-revision tests stack settings and inline task copies only.
+`38943086313` at `ad77934c` passes Linux ARM64 and Intel Mac; other Unix hosts
+remain active. Windows AMD64 failed five C probes because their headers were
+included before declaring the Windows 10 API target. The ordinary-program
+allocation probe passed there. All five fixtures now declare the target first;
+this repair needs Windows verification. That revision tests stack settings and
+inline task copies only.
 
 The next combined follow-up also borrows TLS/capture owners in synchronous
 scopes and packs outgoing header pointers/text into one owned allocation. Child
@@ -51,8 +55,11 @@ separate controls for lost inheritance, a borrowed parent stack, omitted free,
 omitted unwind cleanup and omitted child retain. Existing TLS/capture controls
 now require a single owner inside ordinary and nested scopes.
 
-Next: complete `context-storage` run `38944540937` at published `7469df49` on
-Linux, including actual interpreter/native gRPC calls. Then require `context-owners`
+Next: complete Linux `context-storage` run `38945353977` at `74f30a47`, including
+actual interpreter/native gRPC calls. Queued `38944540937` was superseded after
+narrowing the capture fixture's owner-allocation hook so it does not match the
+new outgoing-header owner. The subsequent API-target fixture repair is Windows
+only; include it in the final six-host run. Then require `context-owners`
 on all six hosts and real WASI regressions. The new changes are unverified until
 those checks pass. Allocation assertions require no per-call overhead versus
 plain updates for gzip/deadline/empty headers; nonempty copied headers require
@@ -65,8 +72,8 @@ After #153 is accepted, rebase only this branch's delta after `ac3060d1` onto it
 accepted squash; keep one active delivery PR.
 
 Local checks use `python3 scripts/local-guard.py` with unchanged limits. The
-accepted compiler interpreted all five 32-call examples, both raw and optimized,
-and printed `32` in every case (1.80s); this does not validate the new native
+accepted compiler interpreted all seven 32-call examples, both raw and optimized,
+and printed `32` in every case (2.28s); this does not validate the new native
 instrumentation. A named helper
 needed an explicit `I64 -> () ! {Network, State[I64]}` signature because generic
 signatures remain explicit. Formatting passes (1.12s); partition/concurrent-runner checks pass (1.03s),

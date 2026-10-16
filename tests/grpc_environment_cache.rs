@@ -28,6 +28,9 @@ fn environment_tls_cache_releases_after_task_and_finalizer_teardown() {
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_environment").unwrap();
     assert!(generated.contains("#define FWP_GCTX_OWNERS 1"));
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 static void *owned[16];static int nowned,frees,entered,cancelled,finalized,order_error;
 static const char *expected;

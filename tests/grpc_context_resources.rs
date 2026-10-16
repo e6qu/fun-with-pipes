@@ -52,6 +52,9 @@ fn scoped_tls_options_release_after_callbacks_and_escaped_tasks() {
     assert_eq!(generated.matches(prepare).count(), 1);
     generated=generated.replacen(prepare,"    if(fail_spawn&&t->cfn==child){fail_spawn=0;fwp_trap(\"child prepare trap\");}\n    fwp_scope *s = detached ? 0 : fwp_cur->scope;",1);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <stdint.h>
 static int stage,frees,entered,cancelled,trapped,typed,scope_returned,fail_spawn,borrow_depth;

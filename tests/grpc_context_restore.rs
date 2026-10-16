@@ -37,6 +37,9 @@ fn grpc_context_restores_on_nested_failures_and_cancelled_callbacks() {
     method = method.replacen(callback, "V r = observed_callback(f);", 1);
     let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdint.h>
 static int stage,depth,entered,cancelled,typed,trapped;
 static void *prior_context,*child_prior_context,*inner_context,*nested_context;

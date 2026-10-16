@@ -246,7 +246,7 @@ fn children_keep_scope_settings_after_return_failure_and_cancellation() {
     assert_eq!(generated[start..end].matches(callback).count(), 1);
     let method = generated[start..end].replace(callback, "V r = scope_callback(f);");
     let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
-    let hooks = "#include <stdint.h>\n#include <stddef.h>\nstatic uintptr_t scope_callback(uintptr_t);\nstatic void inherited_child(void *, int);\nstatic void *metadata_alloc(size_t);\nstatic void metadata_free(void *);\nstatic void metadata_no_release(void *);\n";
+    let hooks = "#if defined(_WIN32) && !defined(_WIN32_WINNT)\n#define _WIN32_WINNT 0x0a00\n#endif\n#include <stdint.h>\n#include <stddef.h>\nstatic uintptr_t scope_callback(uintptr_t);\nstatic void inherited_child(void *, int);\nstatic void *metadata_alloc(size_t);\nstatic void metadata_free(void *);\nstatic void metadata_no_release(void *);\n";
     let fixture = include_str!("fixtures/service_context_inheritance.c");
     let inherit = "    t->gctx = fwp_cur->gctx;";
     assert_eq!(generated.matches(inherit).count(), 1);
