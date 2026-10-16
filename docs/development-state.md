@@ -22,7 +22,7 @@ full builds, gates and benchmarks run on GitHub. Do not raise resource limits.
 
 ## Next action and unresolved results
 
-Finish [Windows repair run 38850334050](https://github.com/e6qu/fun-with-pipes/actions/runs/38850334050)
+Next: finish [Windows repair run 38850334050](https://github.com/e6qu/fun-with-pipes/actions/runs/38850334050)
 at `ed015878`. Earlier combined tests pass all four Unix hosts and both actual
 WASI count jobs. Windows initially exposed CRLF output assertions in older C
 probes. The binary-stdout repair passes those assertions but exposes a later zip
