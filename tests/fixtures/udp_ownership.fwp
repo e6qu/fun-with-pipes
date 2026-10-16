@@ -24,6 +24,16 @@ delayed : UdpSocket -> () -> String ! {Async, IO, Network, FileIO}
 delayed = curry (.0 | tap (const 1s | task.sleep) | udp.local-addr)
 waiting : UdpSocket -> () -> () ! {Async, IO, Network, FileIO}
 waiting = curry (.0 | attempt (udp.recv-from 64) | ignore)
+close-pending : UdpSocket -> (Option[()], Option[()]) ! {Async, IO, Network, FileIO}
+close-pending =
+    make {
+        socket = id,
+        first = compose waiting task.spawn,
+        second = compose waiting task.spawn,
+    }
+    | tap (const () | task.yield)
+    | tap (.socket | udp.close)
+    | both (.first | task.await) (.second | task.await)
 main = [
     () | address | udp.bind | udp.close | const "rebound" | echo,
     "127.0.0.1:0" | udp.bind | holder | inside | echo,
@@ -46,5 +56,6 @@ main = [
     | tap task.cancel
     | task.await
     | echo,
+    "127.0.0.1:0" | udp.bind | close-pending | echo,
     range 0 64 | each (const "127.0.0.1:0" | udp.bind | ignore),
 ] | ignore

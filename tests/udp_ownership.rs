@@ -39,7 +39,7 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
     );
     assert_eq!(
         raw.stdout,
-        b"rebound\nFalse\nholder released\n\nping\nNone\nNone\n"
+        b"rebound\nFalse\nholder released\n\nping\nNone\nNone\n(Some (), Some ())\n"
     );
     let optimized = checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
@@ -73,6 +73,13 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
         for opt in ["-O1", "-O2"] {
             let binary = dir.join("udp.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            if arc {
+                let symbols = checked(Command::new("nm").arg(&binary));
+                let symbols = String::from_utf8_lossy(&symbols.stdout);
+                for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                    assert!(!symbols.contains(name), "ARC binary contains {name}");
+                }
+            }
             let native = checked(
                 Command::new(&binary)
                     .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
@@ -91,19 +98,58 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
                 )
                 .replace(
                     "    fwp_cl_finish();\n",
-                    "    fwp_cl_finish();\n    if(fwp_gc.budget<udp_budget) exit(248);\n",
+                    "    fwp_cl_finish();\n    if(fwp_gc.budget<udp_budget) { fprintf(stderr,\"UDP charged storage left: %lld\\n\",(long long)(udp_budget-fwp_gc.budget)); exit(248); }\n",
                 );
+            let body = if arc {
+                body.replace(
+                    "if(fwp_gc.budget<udp_budget)",
+                    "if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget<udp_budget)",
+                )
+            } else {
+                body
+            };
             let mut measured = code.clone();
             measured.replace_range(start..end, &body);
             fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
-            let native = checked(
-                Command::new(&binary)
+            let native = Command::new(&binary)
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            if let Some(path) = std::env::var_os("FWP_UDP_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                let label = format!("lifetime-{}-{opt}", if arc { "arc" } else { "tracing" });
+                std::fs::write(path.join(format!("{label}.c")), &measured).unwrap();
+                std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                std::fs::write(path.join(format!("{label}.stdout")), &native.stdout).unwrap();
+                std::fs::write(path.join(format!("{label}.stderr")), &native.stderr).unwrap();
+                std::fs::write(
+                    path.join(format!("{label}.status")),
+                    format!("{:?}\n", native.status.code()),
+                )
+                .unwrap();
+            }
+            assert!(native.status.success(), "{arc}/{opt}: {native:?}");
+            assert_eq!(native.stdout, raw.stdout);
+            if cfg!(target_os = "linux") && !arc && opt == "-O1" {
+                let omitted = measured.replace(
+                    "    fwp_mem_free(w);",
+                    "    /* omitted descriptor wait-list release */",
+                );
+                assert_ne!(measured, omitted);
+                fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
+                let output = Command::new(&binary)
                     .env("FWP_GC", "off")
                     .env("FWP_GC_STRESS", "0")
                     .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
-            assert_eq!(native.stdout, raw.stdout);
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert_eq!(output.status.code(), Some(248), "{output:?}");
+            }
         }
     }
 }

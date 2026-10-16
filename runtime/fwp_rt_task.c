@@ -427,7 +427,7 @@ static void fwp_wake_all(fwp_wl *wl) {
 typedef struct { fwp_wl rd, wr; uint32_t mask; } fwp_fdw;
 /* entries are allocated individually: wait lists must not move */
 static fwp_fdw **fwp_fdws = 0;
-static size_t fwp_nfdws = 0;
+static size_t fwp_nfdws = 0, fwp_live_fdws = 0;
 
 static fwp_fdw *fwp_fdw_get(int fd) {
     if ((size_t)fd >= fwp_nfdws) {
@@ -437,14 +437,20 @@ static fwp_fdw *fwp_fdw_get(int fd) {
         memset(fwp_fdws + fwp_nfdws, 0, (n - fwp_nfdws) * sizeof(fwp_fdw *));
         fwp_nfdws = n;
     }
-    if (!fwp_fdws[fd]) fwp_fdws[fd] = (fwp_fdw *)fwp_mem_alloc(sizeof(fwp_fdw));
+    if (!fwp_fdws[fd]) {
+        fwp_fdws[fd] = (fwp_fdw *)fwp_mem_alloc(sizeof(fwp_fdw));
+        fwp_live_fdws++;
+    }
     return fwp_fdws[fd];
 }
 
 /* register the events the descriptor's waiters need; -1 if epoll refuses
  * the descriptor */
 static int fwp_fd_sync(int fd) {
-    fwp_fdw *w = fwp_fdw_get(fd);
+    /* A close can wake a parked task and dispose its wait lists before that
+     * task resumes. Synchronizing the old descriptor must not recreate them. */
+    if (fd < 0 || (size_t)fd >= fwp_nfdws || !fwp_fdws[fd]) return 0;
+    fwp_fdw *w = fwp_fdws[fd];
     uint32_t want = (w->rd.head ? EPOLLIN | EPOLLRDHUP : 0) | (w->wr.head ? EPOLLOUT : 0);
     if (want == w->mask) return 0;
     struct epoll_event ev;
@@ -479,6 +485,13 @@ static void fwp_fd_closing(fwp_socket_t fd) {
     w->mask = 0;
     fwp_wake_io(&w->rd);
     fwp_wake_io(&w->wr);
+    fwp_fdws[fd] = NULL;
+    fwp_mem_free(w);
+    if (!--fwp_live_fdws) {
+        fwp_mem_free(fwp_fdws);
+        fwp_fdws = NULL;
+        fwp_nfdws = 0;
+    }
 #else
     (void)fd;
 #endif
@@ -1485,7 +1498,7 @@ static void fwp_sock_final(void *p) {
         s->tls = 0;
     }
 #endif
-    if (s->fd != FWP_INVALID_SOCKET) { fwp_socket_close(s->fd); s->fd = FWP_INVALID_SOCKET; }
+    if (s->fd != FWP_INVALID_SOCKET) { fwp_fd_closing(s->fd); fwp_socket_close(s->fd); s->fd = FWP_INVALID_SOCKET; }
 }
 
 static V fwp_sock_new(fwp_socket_t fd, int kind) {
@@ -1518,7 +1531,6 @@ static void fwp_udp_drop(V value) {
     if (!value) return;
     fwp_sock *s = SOCK(value);
     if (!s->refs || --s->refs) return;
-    if (s->fd != FWP_INVALID_SOCKET) fwp_fd_closing(s->fd);
     fwp_sock_final(s);
     fwp_gc_forget_finalizer(s);
 #ifndef FWP_RESOURCE_NO_FREE
@@ -2060,6 +2072,7 @@ static void fwp_library_tasks_finish(void) {
 #ifdef __linux__
     fwp_fdws = 0;
     fwp_nfdws = 0;
+    fwp_live_fdws = 0;
 #endif
     fwp_io_waiting = 0;
     fwp_cur = fwp_root = fwp_zombie = 0;

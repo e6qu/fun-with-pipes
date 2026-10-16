@@ -227,3 +227,19 @@ cycles and 301 aliases, constructor and all three receive allocation failures,
 omitted-cleanup controls, a suspended receive cancellation, and real library
 unload with a host-owned socket. Raw reference output passes (0.25s), Rust
 formatting passes (1.31s); these new native tests still require runner validation.
+
+Expanded run `38905209906` at `947a6868` fails its Linux ARM64 lifetime
+storage assertion after adding suspended receive cancellation. Constructor,
+301-alias, all three receive failures and real library unload controls pass on
+that host. Linux kept a descriptor's wait-list record and table after close;
+`fwp_fd_sync` also recreated entries for tasks resumed after another owner closed
+the socket. The repair releases closed-descriptor records, releases the table
+when empty, and makes synchronization of a removed descriptor a no-op. Ordinary
+and finalizer-driven closes share that cleanup. A fresh runner check is required;
+no baseline subtraction or weakened assertion hides the retained storage.
+
+The polling repair also adds two simultaneous receivers closed through another
+alias; raw interpretation returns `(Some (), Some ())` (guard, 0.38s). A Linux
+omitted-wait-list-free control must fail the unchanged charged-storage assertion.
+Functional C, binaries, statuses and output now survive failed runner checks.
+Checked ARC binaries are inspected for tracing symbols and assert zero collections.
