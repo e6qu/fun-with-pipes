@@ -88,7 +88,7 @@ jobs:
         run: cargo test --no-fail-fast --test service_value_ownership --test grpc_peer_completion --test http2_peer_cleanup
       - name: HTTP/2 body interpreter and native agreement
         if: ${{ !cancelled() && inputs.suite == 'service-values' }}
-        run: cargo test --lib h2web::tests::body_bounds_and_error_order_agree_with_native
+        run: cargo test --lib grpc::web::tests::body_bounds_and_error_order_agree_with_native -- --exact
       - name: HTTP/2 body source lifetime
         if: ${{ !cancelled() && inputs.suite == 'service-values' && runner.os != 'Windows' }}
         run: cargo test --test http2_body_roots

@@ -41,13 +41,17 @@
 typedef struct { unsigned char *d; size_t len, cap; } h2_buf;
 
 static void h2b_reserve(h2_buf *b, size_t n) {
-    if (b->len + n <= b->cap) return;
+    if (n > SIZE_MAX - b->len) { fprintf(stderr, "fwp: HTTP/2 buffer too large\n"); exit(102); }
+    size_t needed = b->len + n;
+    if (needed <= b->cap) return;
     size_t c = b->cap ? b->cap : 256;
-    while (c < b->len + n) c *= 2;
-    b->d = (unsigned char *)realloc(b->d, c);
-    if (!b->d) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+    while (c < needed) c = c > SIZE_MAX / 2 ? needed : c * 2;
+    unsigned char *data = (unsigned char *)realloc(b->d, c);
+    if (!data) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+    b->d = data;
     b->cap = c;
 }
+
 static void h2b_put(h2_buf *b, const void *p, size_t n) {
     if (!n) return;
     h2b_reserve(b, n);
@@ -209,17 +213,28 @@ typedef struct { char *name, *value; } h2_hdr;
 typedef struct { h2_hdr *v; size_t n, cap; } h2_hdrs;
 
 static void h2_hdrs_add(h2_hdrs *h, const char *name, size_t nl, const char *value, size_t vl) {
-    if (h->n == h->cap) {
-        h->cap = h->cap ? h->cap * 2 : 8;
-        h->v = (h2_hdr *)realloc(h->v, h->cap * sizeof(h2_hdr));
+    h2_hdr copy = {0};
+    size_t limit = SIZE_MAX / sizeof(h2_hdr);
+    if (nl == SIZE_MAX || vl == SIZE_MAX || h->n >= limit) {
+        fprintf(stderr, "fwp: HTTP/2 headers too large\n"); exit(102);
     }
-    h2_hdr *e = &h->v[h->n++];
-    e->name = (char *)malloc(nl + 1);
-    memcpy(e->name, name, nl);
-    e->name[nl] = 0;
-    e->value = (char *)malloc(vl + 1);
-    memcpy(e->value, value, vl);
-    e->value[vl] = 0;
+    if (h->n == h->cap) {
+        size_t cap = h->cap ? (h->cap > limit / 2 ? limit : h->cap * 2) : 8;
+        h2_hdr *entries = (h2_hdr *)realloc(h->v, cap * sizeof(h2_hdr));
+        if (!entries) goto no_memory;
+        h->v = entries; h->cap = cap;
+    }
+    copy.name = (char *)malloc(nl + 1);
+    if (!copy.name) goto no_memory;
+    copy.value = (char *)malloc(vl + 1);
+    if (!copy.value) goto no_memory;
+    memcpy(copy.name, name, nl); copy.name[nl] = 0;
+    memcpy(copy.value, value, vl); copy.value[vl] = 0;
+    h->v[h->n++] = copy;
+    return;
+no_memory:
+    free(copy.name); free(copy.value);
+    fprintf(stderr, "fwp: out of memory\n"); exit(102);
 }
 
 static void h2_hdrs_free(h2_hdrs *h) {

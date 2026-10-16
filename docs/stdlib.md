@@ -2193,11 +2193,13 @@ grpc.metadata : () -> List[(String, String)] ! {Network}
 grpc.header : String -> Option[String] ! {Network}
 
 # add a header to the response of the call the current task serves: sent
-# with its first message (so set it before sending any)
+# with its first message (so set it before sending any). Copies both strings,
+# lowercases the name and replaces carriage returns/newlines in the value with
+# spaces. The input strings are unchanged; outside a served call this does nothing.
 grpc.set-header : String -> String -> () ! {Network}
 
 # add a trailer to the response of the call the current task serves: sent
-# with its status
+# with its status. Copies and normalizes the strings as `grpc.set-header` does.
 grpc.set-trailer : String -> String -> () ! {Network}
 
 # run a function whose calls compress their messages with gzip

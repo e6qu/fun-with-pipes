@@ -50,6 +50,9 @@ fn serving_peer_owner_survives_children_and_releases_at_completion() {
     let generated = generated.replacen(sender,
         "    g_sender *x = (g_sender *)arg;\n    observed_sender = fwp_cur; while(!x->serving->task->done) fwp_park(0,fwp_now_ns()+1); peer_child(0,cancelled); return;", 1);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 static int stage,peer_frees,children;

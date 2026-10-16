@@ -6,8 +6,7 @@ This is independent preparation in `/private/tmp/fwp-service-values`, branch
 The active delivery remains PR #153; its work is in the main workspace and
 `/private/tmp/fwp-tcp-owners`. Do not publish a second delivery PR.
 
-Next: prepare explicit ownership for copied service request metadata and body
-results. Establish complete/partial result cleanup without a temporary pointer
+Next: finish the combined copied-service-result checks and retain their evidence. Establish complete/partial result cleanup without a temporary pointer
 array, preserve source header order, and retain the original request context
 while copying. Use existing typed value/field cleanup, with no new surface
 syntax. This is not proof that service callbacks or stream handles can run
@@ -45,13 +44,30 @@ generated result descriptors. Its focused run `38927180411` failed compiling the
 count used usize where the IR requires u32. The helper now converts its fixed
 small argument count; the superseded run is canceled. A following test
 repair updates the interpreter/native body comparison to pass the new descriptor
-and adds explicit populated-result GC stress/reuse runs. Run the final combined
+and adds explicit populated-result GC stress/reuse runs. Run `38927862049` at `47bc253b` found that the test helper had not marked its
+primitive functions as generated roots, so result descriptors were absent. The
+helper now names both functions explicitly. The older metadata-only Windows ARM
+job also found a fixture header-order issue: it now selects the Windows 10 API
+before including CRT headers. These are test repairs, not waived checks. The combined checks add request-field
+agreement with the interpreter and correct the body-test module filter
+(`grpc::web`, not the source filename). No zero-test run counts as verification.
+
+During this review, raw HTTP/2 header allocation was found to dereference failed
+allocations, and buffer growth could overflow. The combined repair preserves
+existing entries/buffers, frees partial new headers and rejects impossible sizes
+with the existing protocol allocation exit status 102. A standalone probe injects
+all three header allocation failures into empty and populated tables, a buffer
+resize failure and four size overflows; omitted temporary cleanup must fail.
+Outgoing response metadata now normalizes its owned copy in place, removing two
+temporary string buffers. Input strings remain unchanged. This does not establish
+recoverable allocation failure for the protocol layer or owned service streams.
+Run the final combined
 preparation before claiming acceptance.
 Service stream/context ownership remains outside these result contracts.
 
 Local checks: guarded Rust formatting passes (1.19s); the accepted interpreter
-prints `[]` then `None` for the empty-context fixture (0.25s); the contract
-inventory passes (1.30s), reporting 339 contracted declarations and 15 remaining
+prints `[]`, `None`, `()`, `()` for the empty-context fixture (0.26s); the contract
+inventory passes (1.12s), reporting 341 contracted declarations and 13 remaining
 review symbols for this implementation. Counts are not support proof.
 The standalone stdlib generator was regenerated and rechecked; latest formatting
 passes in 1.30s, documentation audit in 2.66s and macOS partition checks in 0.25s.

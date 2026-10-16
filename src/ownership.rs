@@ -162,6 +162,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "grpc.set-header" | "grpc.set-trailer" => (&[B, B], R, None, &[]),
         "http2.body" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
         "http2.request" | "grpc.metadata" | "grpc.peer-subject" => {
             (&[B], ResultOwnership::OwnedTree, None, &[])

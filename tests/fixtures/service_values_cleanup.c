@@ -25,6 +25,18 @@ int main(void) {
     char peer[]="CN=client";g_serving serving={0};serving.headers=&headers;serving.peer=peer;
     g_ctx ctx={0};ctx.serving=&serving;fwp_cur->gctx=&ctx;
     intptr_t budget=fwp_gc.budget;
+    g_stream outgoing={0};serving.s=&outgoing;
+    V key=fwp_rc_fresh(fwp_cstr("X-Name")),value=fwp_rc_fresh(fwp_cstr("one\r\ntwo"));
+    fwp_p_grpc_set_meta(0,key,value);fwp_p_grpc_set_meta(0,key,value);fwp_p_grpc_set_meta(1,key,value);
+    if(strcmp(STR(key)->d,"X-Name")||strcmp(STR(value)->d,"one\r\ntwo"))return 247;
+    fwp_rc_free_obj(key);fwp_rc_free_obj(value);
+    if(outgoing.out_headers.n!=2||outgoing.out_trailers.n!=1)return 247;
+    for(int which=0;which<2;which++) {
+        h2_hdrs *h=which?&outgoing.out_trailers:&outgoing.out_headers;
+        for(size_t i=0;i<h->n;i++)if(strcmp(h->v[i].name,"x-name")||strcmp(h->v[i].value,"one  two"))return 247;
+        h2_hdrs_free(h);
+    }
+    serving.s=NULL;
     V metadata=fwp_p_grpc_metadata(METADATA_TYPE),subject=fwp_p_grpc_peer_subject(SUBJECT_TYPE);
     METADATA_TYPE->dup(metadata);SUBJECT_TYPE->dup(subject);
     METADATA_TYPE->drop(metadata);SUBJECT_TYPE->drop(subject);

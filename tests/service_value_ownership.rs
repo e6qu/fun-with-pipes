@@ -183,3 +183,39 @@ fn http2_request_and_body_copies_release_every_partial_result() {
         }
     }
 }
+
+#[test]
+fn protocol_buffers_preserve_existing_storage_on_allocation_failure() {
+    let dir = fwp::cgen::TempDir::new("h2-allocation-failures").unwrap();
+    let code = include_str!("fixtures/h2_allocation_failures.c")
+        .replace(
+            "/* SOCKET_RUNTIME */",
+            include_str!("../runtime/fwp_rt_socket.c"),
+        )
+        .replace("/* H2_RUNTIME */", include_str!("../runtime/fwp_rt_h2.c"));
+    let broken = code.replace(
+        "free(copy.name); free(copy.value);",
+        "/* omit partial header cleanup */",
+    );
+    assert_ne!(code, broken);
+    let binary = dir.join("h2-allocation-failures.exe");
+    for opt in ["-O1", "-O2"] {
+        for (source, expected) in [(&code, 0), (&broken, 248)] {
+            fwp::cgen::compile_c(source, &binary, opt).unwrap();
+            let output = Command::new(&binary).output().unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+            if expected == 0 && opt == "-O2" {
+                if let Some(path) = std::env::var_os("FWP_SERVICE_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    std::fs::write(path.join("h2-allocation-failures.c"), source).unwrap();
+                    std::fs::copy(&binary, path.join("h2-allocation-failures.exe")).unwrap();
+                    std::fs::write(path.join("h2-allocation-failures.stdout"), &output.stdout)
+                        .unwrap();
+                    std::fs::write(path.join("h2-allocation-failures.stderr"), &output.stderr)
+                        .unwrap();
+                }
+            }
+        }
+    }
+}

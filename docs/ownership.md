@@ -659,3 +659,13 @@ and an existing `host` header takes precedence over `:authority`. Partial string
 pairs, lists and result wrappers use the existing typed cleanup on failure.
 These changes do not yet own the stream itself or remove tracing from a server.
 Native failure and lifetime checks are pending for this preparation.
+
+Outgoing gRPC response headers and trailers also copy their input strings.
+Normalization now happens in the owned copy: names become lowercase, and carriage
+returns/newlines in values become spaces. This removes two temporary buffers
+without changing input strings. The protocol layer now checks raw header
+allocations and buffer-size growth before using them. Failed header construction
+preserves earlier entries and frees its partial new strings; impossible sizes
+and allocation failure retain the existing exit status 102. This is a bounded
+allocation check, not a claim that protocol allocation failures can be recovered
+inside a running service. Native controls remain pending for this preparation.

@@ -1,2 +1,8 @@
 # Outside a served request there are no incoming headers or peer certificate.
-main = [() | grpc.metadata | echo, () | grpc.peer-subject | echo] | ignore
+# Setting response metadata has no effect without an active served request.
+main = [
+    () | grpc.metadata | echo,
+    () | grpc.peer-subject | echo,
+    grpc.set-header "X-Name" "one\r\ntwo" | echo,
+    grpc.set-trailer "X-Name" "value" | echo,
+] | ignore

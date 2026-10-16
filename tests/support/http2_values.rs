@@ -63,9 +63,15 @@ pub fn generated() -> String {
         ]
         .into(),
         exports: vec![("available".into(), 0)],
+        named: vec![("request".into(), 1), ("body".into(), 2)],
         ..Program::default()
     };
     let (code, _) = fwp::cgen::generate_library(&program, "http2_values").unwrap();
+    if let Some(path) = std::env::var_os("FWP_SERVICE_ARTIFACTS") {
+        let path = std::path::PathBuf::from(path);
+        std::fs::create_dir_all(&path).unwrap();
+        std::fs::write(path.join("http2-generated.c"), &code).unwrap();
+    }
     let descriptor = |prefix: &str| {
         code.lines()
             .find_map(|line| {

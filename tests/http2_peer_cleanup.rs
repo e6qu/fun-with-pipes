@@ -19,6 +19,9 @@ fn peer_subject_copy_and_option_failures_release_temporary_storage() {
         .replacen(copy, "subject.values[0] = fwp_rc_fresh(metadata_copy(peer));", 1)
         .replacen("result.values[4] = fwp_decode_variant(&subject, 1);", "if(stage==2)fwp_trap(\"metadata option allocation\"); result.values[4] = fwp_decode_variant(&subject, 1);", 1);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 static int stage,subject_calls,buffer_frees;

@@ -980,7 +980,7 @@ mod tests {
 
     #[test]
     fn body_bounds_and_error_order_agree_with_native() {
-        use crate::ir::{Body, Func};
+        use crate::ir::{Body, Func, TypeShape};
         use std::process::Command;
 
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -1047,6 +1047,72 @@ mod tests {
         }
         assert_eq!(expected, "ok:\nok:\nerr:413\nok:\nerr:413\nok:00ffc0800a\nerr:413\nok:00ffc0800a\nerr:0\nerr:0\nerr:408\nerr:413\nok:\n");
 
+        // Compare request copying too: synthetic host, explicit host, then no headers.
+        for case in 0..3 {
+            let mut headers = vec![
+                (":method", "POST"),
+                (":path", "/echo"),
+                (":authority", "example.test"),
+                ("x-a", "one"),
+                ("x-b", "two"),
+                ("x-a", "three"),
+            ];
+            if case == 1 {
+                headers.push(("host", "explicit.test"));
+            }
+            if case == 2 {
+                headers.clear();
+            }
+            stream.borrow_mut().headers = headers
+                .into_iter()
+                .map(|(k, v)| (k.into(), v.into()))
+                .collect();
+            let value = request(std::slice::from_ref(&call))
+                .unwrap_or_else(|_| panic!("interpreter request failed"));
+            let Value::Record(fields) = value else {
+                panic!("request must be a tuple")
+            };
+            let text = |v: &Value| {
+                let Value::Str(s) = v else {
+                    panic!("expected string")
+                };
+                s.to_string()
+            };
+            expected.push_str(&format!(
+                "request:{}|{}|{}|none\n",
+                text(&fields[0]),
+                text(&fields[1]),
+                text(&fields[3])
+            ));
+            assert!(matches!(&fields[4], Value::Data(0, _)));
+            for pair in fields[2].list_items() {
+                let Value::Record(pair) = pair else {
+                    panic!("header must be a pair")
+                };
+                expected.push_str(&format!("{}:{}\n", text(&pair[0]), text(&pair[1])));
+            }
+        }
+        let string = MT::con("std::String");
+        let option = MT::Con("std::Option".into(), vec![string.clone()]);
+        let tuple = |fields: Vec<MT>| {
+            MT::Record(
+                fields
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, t)| (i.to_string(), t))
+                    .collect(),
+            )
+        };
+        let request_type = tuple(vec![
+            string.clone(),
+            string.clone(),
+            MT::Con(
+                "std::List".into(),
+                vec![tuple(vec![string.clone(), string.clone()])],
+            ),
+            string.clone(),
+            option.clone(),
+        ]);
         let unit = MT::unit();
         let program = Program {
             funcs: vec![
@@ -1058,17 +1124,33 @@ mod tests {
                     body: Body::Prim("tls.available".into()),
                 },
                 Func {
-                    name: "web".into(),
-                    arity: 0,
-                    locals: vec![],
-                    ty: unit,
-                    body: Body::Prim("http2.connect".into()),
+                    name: "request".into(),
+                    arity: 1,
+                    locals: vec![MT::con("std::H2Stream")],
+                    ty: MT::Fun(Box::new(MT::con("std::H2Stream")), Box::new(request_type)),
+                    body: Body::Prim("http2.request".into()),
                 },
             ],
+            shapes: [(
+                option,
+                TypeShape::Adt(vec![("None".into(), vec![]), ("Some".into(), vec![string])]),
+            )]
+            .into(),
             exports: vec![("available".into(), 0)],
+            named: vec![("request".into(), 1)],
             ..Program::default()
         };
         let (generated, _) = crate::cgen::generate_library(&program, "body_bounds").unwrap();
+        let descriptor = generated
+            .lines()
+            .find_map(|line| {
+                line.trim()
+                    .strip_prefix("return fwp_p_http2_request(l0, ")
+                    .and_then(|line| line.strip_suffix(");"))
+            })
+            .unwrap()
+            .to_owned();
+        let generated = generated + &format!("\n#define REQUEST_TYPE ({descriptor})\n");
         let rows = cases
             .iter()
             .map(|&(max, len, end, reset, dead)| {
@@ -1107,6 +1189,20 @@ int main(void){
   if(OBJ(r)->tag==0){V b=OBJ(r)->f[0];printf("ok:");for(size_t j=0;j<STR(b)->len;j++)printf("%02x",(unsigned char)STR(b)->d[j]);puts("");}
   else printf("err:%lld\n",(long long)(int64_t)OBJ(r)->f[0]);
   if(OBJ(r)->tag==0)fwp_rc_free_obj(OBJ(r)->f[0]);fwp_rc_free_obj(r);
+ }
+ for(int example=0;example<3;example++){
+  h2_hdrs_free(&s->headers);
+  if(example<2){
+   h2_hdrs_add(&s->headers,":method",7,"POST",4);h2_hdrs_add(&s->headers,":path",5,"/echo",5);
+   h2_hdrs_add(&s->headers,":authority",10,"example.test",12);
+   h2_hdrs_add(&s->headers,"x-a",3,"one",3);h2_hdrs_add(&s->headers,"x-b",3,"two",3);h2_hdrs_add(&s->headers,"x-a",3,"three",5);
+   if(example==1)h2_hdrs_add(&s->headers,"host",4,"explicit.test",13);
+  }
+  V r=fwp_p_http2_request(call,REQUEST_TYPE);
+  if(OBJ(r)->f[4]!=FWP_NONE)return 247;
+  printf("request:%s|%s|%s|none\n",STR(OBJ(r)->f[0])->d,STR(OBJ(r)->f[1])->d,STR(OBJ(r)->f[3])->d);
+  for(V list=OBJ(r)->f[2];list;list=OBJ(list)->f[1]){V pair=OBJ(list)->f[0];printf("%s:%s\n",STR(OBJ(pair)->f[0])->d,STR(OBJ(pair)->f[1])->d);}
+  REQUEST_TYPE->drop(r);
  }
  FWP_KEEP_ALIVE(call);fwp_lib_finish();return 0;
 }

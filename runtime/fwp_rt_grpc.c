@@ -2601,12 +2601,12 @@ static V fwp_p_grpc_set_meta(int trailer, V name, V value) {
     g_serving *sv = g_ctx_of()->serving;
     fwp_str *k = STR(name), *v = STR(value);
     if (!sv || !sv->s || k->len == 0 || k->d[0] == ':') return FWP_UNIT;
-    char *lk = (char *)malloc(k->len + 1), *lv = (char *)malloc(v->len + 1);
-    for (size_t i = 0; i < k->len; i++) lk[i] = (char)tolower((unsigned char)k->d[i]);
-    for (size_t i = 0; i < v->len; i++) lv[i] = v->d[i] == '\r' || v->d[i] == '\n' ? ' ' : v->d[i];
-    h2_hdrs_add(trailer ? &sv->s->out_trailers : &sv->s->out_headers, lk, k->len, lv, v->len);
-    free(lk);
-    free(lv);
+    h2_hdrs *headers = trailer ? &sv->s->out_trailers : &sv->s->out_headers;
+    h2_hdrs_add(headers, k->d, k->len, v->d, v->len);
+    h2_hdr *copy = &headers->v[headers->n - 1];
+    for (size_t i = 0; i < k->len; i++) copy->name[i] = (char)tolower((unsigned char)copy->name[i]);
+    for (size_t i = 0; i < v->len; i++)
+        if (copy->value[i] == '\r' || copy->value[i] == '\n') copy->value[i] = ' ';
     return FWP_UNIT;
 }
 
