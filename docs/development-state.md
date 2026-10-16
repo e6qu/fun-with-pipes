@@ -10,16 +10,22 @@ Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparatio
 Preparation base: `ac3060d1`. The latest test repair limits diagnostics to
 modes that support them; it does not change the compiler or library.
 
-Next: publish the test repair and run all six native hosts again. Actual
-WebAssembly run `38962206780` uses unchanged library/compiler source `2a98d395`.
-Run `38963627765` found that ARC also rejects reuse verification, which retains
-freed storage for comparison. Tracing still tests both reuse settings with GC
-stress; ARC tests ordinary freeing. The earlier normal-completion measurement
-hook repair remains. The Linux ARM64 allocation comparison passes: increasing
-from 32 to 128 iterations avoids 96 requests and 3,072 requested bytes versus
-the former mapping definition. Complete native semantic and cross-host checks
-are still required. Retain the final comparison and inspect its binaries after
-those pass. Guarded Rust formatting passes (0.14s).
+Next: diagnose Linux ARM64's division-trap crash from native run `38964567808`
+at `d29d1c5b`. Its allocation check passes, but tracing/O1/reuse-verification-off
+terminates by signal instead of printing the expected division error. Other
+hosts' functional checks pass; their larger suites are still running. Preserve
+the failing executable, source and status; the temporary `iteration-traps` CI
+suite collects a debugger backtrace on the native ARM64 runner. Fix the cause,
+then repeat all six hosts and any affected WebAssembly checks.
+
+Both actual WebAssembly jobs in `38962206780` pass at library/compiler source
+`2a98d395`, including semantic agreement and physical reclamation controls.
+Earlier test-setup mistakes are repaired: normal-completion measurement hooks
+are unique, and collector/reuse-retention diagnostics apply only to tracing.
+The Linux ARM64 allocation comparison saves 96 requests and 3,072 requested
+bytes over 96 additional elements against the previous mapping definition.
+This passing allocation check does not establish correct trapping behavior.
+Guarded formatting passes (0.26s); the last handoff audit passed (2.53s).
 
 After #153 passes and merges, preserve the preparation's current head under a
 remote evidence tag before rebasing: the reports refer to earlier source commits.
@@ -98,7 +104,8 @@ Explicit process exit passes seven native status cases and actual WASI execution
 It preserves earlier output and uses the low eight status bits; it does not
 promise ordinary cleanup before process termination. Broader WASI/browser and
 physical-storage checks pass on both Linux architectures in `38955989639` at
-compiler source `79ce442f`. The newer library change below requires its fresh run.
+compiler source `79ce442f`. The newer library change also passes both actual WebAssembly jobs in
+`38962206780` at `2a98d395`.
 
 Service reflection cleanup at `9fa2a0f4` passes the complete Linux AMD64 run
 `38959410533`. Reflection lets tools ask a server which methods it provides.
@@ -120,7 +127,7 @@ Library formatting passes (0.01s).
 
 New tests in `state_sequence_ownership` compare raw/optimized interpretation with
 O1/O2 tracing/ARC. Collector stress/verification applies only to tracing; reuse
-verification applies to both modes. A separate executable control
+verification applies only to tracing; ARC checks ordinary freeing. A separate executable control
 uses the old mapping definition and compares managed allocation slopes at 32/128
 elements. Both must print the same count; the new definition must eliminate at
 least one allocation per element. `each-storage.tsv`, source and binaries are
@@ -150,7 +157,7 @@ jobs remain to be verified on the next PR.
 Passing tuple-forwarding artifacts are under
 `/private/tmp/fwp-context-forwarded-evidence/38958562126/`. The report helper is
 `/private/tmp/fwp-retain-context-final.py`: pass a successful six-host run, its
-exact source, artifact directory, output path and `--capture-requests 1` through
+exact source, artifact directory, output path, `--each-comparison` and `--capture-requests 1` through
 the local guard. It validates jobs, counters, layouts, inventory and capture
 controls. New source needs new binary observations. Earlier owned-scope artifacts
 are under `/private/tmp/fwp-context-final-evidence/38953639844/`.

@@ -274,10 +274,35 @@ fn each_preserves_aliases_effect_order_and_early_failures() {
                         .env("FWP_REUSE_VERIFY", reuse)
                         .output()
                         .unwrap();
+                    if output.stdout != raw.stdout
+                        || output.stderr != raw.stderr
+                        || output.status.code() != raw.status.code()
+                    {
+                        if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
+                            let path = PathBuf::from(path);
+                            std::fs::create_dir_all(&path).unwrap();
+                            let stem = format!("each-{name}-{mode}{opt}");
+                            std::fs::copy(&binary, path.join(format!("{stem}.exe"))).unwrap();
+                            std::fs::copy(&input, path.join(format!("{stem}.fwp"))).unwrap();
+                            checked(
+                                Command::new(compiler)
+                                    .args(["build", "--gc", mode, opt, "--emit-c"])
+                                    .arg(&input)
+                                    .arg("-o")
+                                    .arg(path.join(format!("{stem}.c"))),
+                            );
+                            std::fs::write(
+                                path.join(format!("{stem}.txt")),
+                                format!("reuse={reuse}\n{output:?}\n"),
+                            )
+                            .unwrap();
+                        }
+                    }
                     assert_eq!(
                         (&output.stdout, &output.stderr, output.status.code()),
                         (&raw.stdout, &raw.stderr, raw.status.code()),
-                        "{name}/{mode}/{opt}/{reuse}"
+                        "{name}/{mode}/{opt}/{reuse}: {:?}",
+                        output.status
                     );
                 }
             }

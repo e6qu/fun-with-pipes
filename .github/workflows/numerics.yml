@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, iteration-traps, macos-shards, ci-profile]
         default: numerical
       source_revision:
         description: Full source commit for the CI profile comparison
@@ -17,6 +17,37 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  iteration_traps:
+    if: inputs.suite == 'iteration-traps'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 1
+      FWP_CONTEXT_ARTIFACTS: context-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Iteration outputs and failures
+        run: cargo test --test state_sequence_ownership each_preserves_aliases_effect_order_and_early_failures -- --exact --nocapture
+      - name: Debug retained native failure
+        if: failure()
+        env:
+          FWP_GC: 'on'
+          FWP_GC_STRESS: '1'
+          FWP_GC_VERIFY: '1'
+          FWP_REUSE_VERIFY: '0'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gdb
+          gdb --batch -ex 'set pagination off' -ex run -ex bt -ex 'info registers' --args context-evidence/each-trap-tracing-O1.exe > context-evidence/trap-debug.txt 2>&1
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: iteration-trap-arm64
+          path: context-evidence/
+          if-no-files-found: ignore
   paths:
     if: inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
