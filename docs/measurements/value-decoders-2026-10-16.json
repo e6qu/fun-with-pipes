@@ -1,0 +1,539 @@
+{
+  "head": "e912227b3f95360311a6df0d1e82f0109a8d385c",
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38879829259",
+  "sourceTests": {
+    "tests/ternary_ownership.rs": "0381cfc24187f0421efc51905395360cde09dec58327c386a520840e7f39d51d",
+    "tests/text_decoder_ownership.rs": "a9c32a9f625cb664f223312050eed859cf446b3d616de3f80703ad39df34fdd6",
+    "tests/fixtures/ternary_cleanup.c": "25a8bb448574cf8d7a1fa5c07cad0d50358d07c9fc5e30e8866df10ec07c0d32",
+    "tests/fixtures/text_decoder_cleanup.c": "17b55570ed9b14a4213c83255243681984f25eec8bef8615649cde8574af945b"
+  },
+  "scope": "All ternary/text ownership tests passed on six native hosts. The overall Windows jobs failed neighboring web/std-library checks due to missing peer dependencies; that repair and added byte decoding require fresh validation. This intermediate report is not final acceptance. O2 positive-control generated C, executable, disassembly and output are hashed here; the same tests also run O1, both checked ARC and tracing with collection disabled, and deliberately broken cleanup controls. Semantic tests separately run tracing stress, GC verification and reuse verification against raw interpretation. No timing, C/Rust parity, cache behavior or register-pressure claim. Test inputs exist before counting; packing/conversion counts include their result requests. All created inputs are explicitly freed before exit. Managed requests are not system malloc counts.",
+  "cases": {
+    "ternary": "Pack 40 balanced ternary digits to eight bytes, or convert them to an optional width-40 integer: one result allocation each. Constructed list has separate storage.",
+    "text": [
+      "URL percent decode: scratch, string, Some",
+      "URL split: scratch, four strings, record, Some",
+      "Two-header HTTP request: eight header objects, three strings, record, Ok",
+      "Two-header HTTP response: eight header objects, two strings, record, Ok",
+      "Invalid header after one constructed header: four released header objects, error string, Err"
+    ]
+  },
+  "reports": {
+    "ubuntu-latest": {
+      "ternary-tracing": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "50540914b211e14f7c9a54249cd1aaa4cb243a8a57981ab7d2fc69fcc59015b0",
+            "bytes": 639692
+          },
+          "exe": {
+            "sha256": "620afadc254c204da887042b878daff00e9a03f8af76ae207583cb930f2e2d47",
+            "bytes": 42000
+          },
+          "asm": {
+            "sha256": "5ba8d558bfa47565854c985c95aa2bece52e81cb23026149fc2bc5b20bde7e99",
+            "bytes": 231495
+          },
+          "txt": {
+            "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+            "bytes": 75
+          }
+        }
+      },
+      "ternary-arc": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "153f2a240caac004b3d4856f7aaaa29da5b0f2098bc67ae43fe212ebf35521ef",
+            "bytes": 639715
+          },
+          "exe": {
+            "sha256": "85ff00ac51c444f743eaf69c03d5172254f6a8583f56f57b29b77829653695d9",
+            "bytes": 33288
+          },
+          "asm": {
+            "sha256": "e40c023b704553a00de152bd23b1428785dcf4a529fe043c4fef7d206060d864",
+            "bytes": 154239
+          },
+          "txt": {
+            "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+            "bytes": 75
+          }
+        }
+      },
+      "text-tracing": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "b04479dfcaec27baf9d2e4a12e26770f06aa2bc8e52229d5c87032ed63959e4e",
+            "bytes": 691731
+          },
+          "exe": {
+            "sha256": "81f850e0b6b8f67616fcaa5472ba01c69eb6aca05163ff725136c118d7575044",
+            "bytes": 128144
+          },
+          "asm": {
+            "sha256": "68588a357564f379d14570d96decc1a53bb63888425637e4e4d7a54233f065b6",
+            "bytes": 954313
+          },
+          "txt": {
+            "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+            "bytes": 282
+          }
+        }
+      },
+      "text-arc": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "6eb391d56611c365f7f5da44c3a8078d7cd8a191d4266fcc68261e84cfb9155d",
+            "bytes": 691754
+          },
+          "exe": {
+            "sha256": "0b441f91e4eb6af1188ec99d99817eb6d5277dc1c181cb1c81f50956d5c94b8c",
+            "bytes": 127736
+          },
+          "asm": {
+            "sha256": "e23d84bf684c686108e5448ca4efbb478ef1e629f9a109b994d08b1894a75397",
+            "bytes": 1002316
+          },
+          "txt": {
+            "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+            "bytes": 282
+          }
+        }
+      }
+    },
+    "ubuntu-24.04-arm": {
+      "ternary-tracing": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "50540914b211e14f7c9a54249cd1aaa4cb243a8a57981ab7d2fc69fcc59015b0",
+            "bytes": 639692
+          },
+          "exe": {
+            "sha256": "f2d6f908f6d9bd4ef780f4b7c4a0b09ae2b0299df1927c4bddb36c7c449e4093",
+            "bytes": 80272
+          },
+          "asm": {
+            "sha256": "8a07f5320adee8efe8c4789af14dccabdefd62eb705c653ca0c13bf4f3c14563",
+            "bytes": 172117
+          },
+          "txt": {
+            "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+            "bytes": 75
+          }
+        }
+      },
+      "ternary-arc": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "153f2a240caac004b3d4856f7aaaa29da5b0f2098bc67ae43fe212ebf35521ef",
+            "bytes": 639715
+          },
+          "exe": {
+            "sha256": "63f6ecf7c2ff24226b33c81a1a4762306c43bc7d8bdd55f7e2bad0993bd829bc",
+            "bytes": 79752
+          },
+          "asm": {
+            "sha256": "5bca66fd0129bbca984510586d9af78e055d0cc53b8c898a4fcaf0ba119eb5a4",
+            "bytes": 120277
+          },
+          "txt": {
+            "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+            "bytes": 75
+          }
+        }
+      },
+      "text-tracing": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "b04479dfcaec27baf9d2e4a12e26770f06aa2bc8e52229d5c87032ed63959e4e",
+            "bytes": 691731
+          },
+          "exe": {
+            "sha256": "906121d4326e0b2809503642cdddeca69b105057b7437989ca54221045d17bf6",
+            "bytes": 154376
+          },
+          "asm": {
+            "sha256": "ab7c397f8d32f114ea04b1e5cdda281b2092d3b1a5a7fbc532f7636eea47d823",
+            "bytes": 694157
+          },
+          "txt": {
+            "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+            "bytes": 282
+          }
+        }
+      },
+      "text-arc": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "6eb391d56611c365f7f5da44c3a8078d7cd8a191d4266fcc68261e84cfb9155d",
+            "bytes": 691754
+          },
+          "exe": {
+            "sha256": "ed25979529feb4251d1139e6983db75d484c80d00a223f19ad359f19aa7b2a1d",
+            "bytes": 153968
+          },
+          "asm": {
+            "sha256": "c5b61d39bf83528be0b7bd76fe35090197ac85befb3a3ae05692743c77e426ff",
+            "bytes": 739170
+          },
+          "txt": {
+            "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+            "bytes": 282
+          }
+        }
+      }
+    },
+    "macos-15": {
+      "ternary-tracing": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "50540914b211e14f7c9a54249cd1aaa4cb243a8a57981ab7d2fc69fcc59015b0",
+            "bytes": 639692
+          },
+          "exe": {
+            "sha256": "8a0ea11320b0fd3e990422178c4761e05b16b6493245e272b0d542f5ee2dc4df",
+            "bytes": 69624
+          },
+          "asm": {
+            "sha256": "bc12c4a93344418e132a772fec994d41efa77ffc2672d6498bb460fe024d5465",
+            "bytes": 133872
+          },
+          "txt": {
+            "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+            "bytes": 75
+          }
+        }
+      },
+      "ternary-arc": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "153f2a240caac004b3d4856f7aaaa29da5b0f2098bc67ae43fe212ebf35521ef",
+            "bytes": 639715
+          },
+          "exe": {
+            "sha256": "0d1c82345580ee501f8d615fb10b682d09b2c557c3a00d213ae4fc30917473a4",
+            "bytes": 52408
+          },
+          "asm": {
+            "sha256": "4a2d6538d7575467fb968c310825c3bc7efbf6d4cb4fa8b57c7566169d6ee98d",
+            "bytes": 93645
+          },
+          "txt": {
+            "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+            "bytes": 75
+          }
+        }
+      },
+      "text-tracing": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "b04479dfcaec27baf9d2e4a12e26770f06aa2bc8e52229d5c87032ed63959e4e",
+            "bytes": 691731
+          },
+          "exe": {
+            "sha256": "f8c560dc6e6b9f699458d302d3d96698a87e14cba8a7629538f71594f507c96e",
+            "bytes": 109640
+          },
+          "asm": {
+            "sha256": "b79733fdcd211393552695ae27a09ed5da7c1b61c5e06b161df9db1b8126252d",
+            "bytes": 544714
+          },
+          "txt": {
+            "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+            "bytes": 282
+          }
+        }
+      },
+      "text-arc": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "6eb391d56611c365f7f5da44c3a8078d7cd8a191d4266fcc68261e84cfb9155d",
+            "bytes": 691754
+          },
+          "exe": {
+            "sha256": "9280ff51a7d7ce994f0e6c78ff244c78fecd980a3a0eda2c4f06ef26c9771862",
+            "bytes": 125752
+          },
+          "asm": {
+            "sha256": "3da668c322475585c786800ed11d717d4ce0727b06dc0a8453e7a1070895e0f1",
+            "bytes": 566010
+          },
+          "txt": {
+            "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+            "bytes": 282
+          }
+        }
+      }
+    },
+    "macos-15-intel": {
+      "ternary-tracing": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "50540914b211e14f7c9a54249cd1aaa4cb243a8a57981ab7d2fc69fcc59015b0",
+            "bytes": 639692
+          },
+          "exe": {
+            "sha256": "ec99b7be8bf65299a0080901c7f761575737af4808300ac4507f24f912f0b70b",
+            "bytes": 36024
+          },
+          "asm": {
+            "sha256": "257bea8c09b6dd4cbc357e7f6e67eadf28530a5752a69d9707ab06280359546a",
+            "bytes": 148948
+          },
+          "txt": {
+            "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+            "bytes": 75
+          }
+        }
+      },
+      "ternary-arc": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "153f2a240caac004b3d4856f7aaaa29da5b0f2098bc67ae43fe212ebf35521ef",
+            "bytes": 639715
+          },
+          "exe": {
+            "sha256": "a38dec98f0c75e85f9b04c67c62bed9c21ce6bef37bd5aadf16da320582ad654",
+            "bytes": 31400
+          },
+          "asm": {
+            "sha256": "83cc5355e5d384106a313fae3630e0ed54225af541d0d59002bd2cfec45ef789",
+            "bytes": 102327
+          },
+          "txt": {
+            "sha256": "2647f18231ea56680b75efbc45b2d46ad372d929a0c698256d0da0749523d9db",
+            "bytes": 75
+          }
+        }
+      },
+      "text-tracing": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "b04479dfcaec27baf9d2e4a12e26770f06aa2bc8e52229d5c87032ed63959e4e",
+            "bytes": 691731
+          },
+          "exe": {
+            "sha256": "d8269e7fa26a97a0748be8fe556474dc268642e7725073c739b28453206c848d",
+            "bytes": 100496
+          },
+          "asm": {
+            "sha256": "a52744a752744e2a5e83e1e123269530d874e19f56d9a14cac300d0e42edd22f",
+            "bytes": 654863
+          },
+          "txt": {
+            "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+            "bytes": 282
+          }
+        }
+      },
+      "text-arc": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "6eb391d56611c365f7f5da44c3a8078d7cd8a191d4266fcc68261e84cfb9155d",
+            "bytes": 691754
+          },
+          "exe": {
+            "sha256": "a896229244c8dafed251cfb9ae8f3949f938babe5a92952f8309d7211b3b5976",
+            "bytes": 104184
+          },
+          "asm": {
+            "sha256": "7e7d1fc8f97c46d00f1edbda703cdb7bc566bc776848ea0d8e9b79e836f06b8e",
+            "bytes": 692604
+          },
+          "txt": {
+            "sha256": "18ca2af4f71eafb96d530a387773774f9dcc28d04497e8a53cb18af89a2b2a1e",
+            "bytes": 282
+          }
+        }
+      }
+    },
+    "windows-2025": {
+      "ternary-tracing": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "50540914b211e14f7c9a54249cd1aaa4cb243a8a57981ab7d2fc69fcc59015b0",
+            "bytes": 639692
+          },
+          "exe": {
+            "sha256": "d79903e50a88ce05effabd25a61c56e8d9398bbfcc1a18e2deb29e891ba950da",
+            "bytes": 94208
+          },
+          "asm": {
+            "sha256": "0245a61eff176540519594d157b4be6950c64a231e92d151f583e162bd10c792",
+            "bytes": 343283
+          },
+          "txt": {
+            "sha256": "2fc57a8a7775f7ba3ca7b23ba42d9237322ab6b80c39352361a4fd1bc857a9e4",
+            "bytes": 77
+          }
+        }
+      },
+      "ternary-arc": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "153f2a240caac004b3d4856f7aaaa29da5b0f2098bc67ae43fe212ebf35521ef",
+            "bytes": 639715
+          },
+          "exe": {
+            "sha256": "98cc6c588792c592d905d6f1a3fc7c3064037a03791db24f657296fbcfe32f31",
+            "bytes": 87552
+          },
+          "asm": {
+            "sha256": "110eb68a38e58edddfeca4286fdcbd1bd63aa325aad7f50874839a901a1b8ad5",
+            "bytes": 259411
+          },
+          "txt": {
+            "sha256": "2fc57a8a7775f7ba3ca7b23ba42d9237322ab6b80c39352361a4fd1bc857a9e4",
+            "bytes": 77
+          }
+        }
+      },
+      "text-tracing": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "b04479dfcaec27baf9d2e4a12e26770f06aa2bc8e52229d5c87032ed63959e4e",
+            "bytes": 691731
+          },
+          "exe": {
+            "sha256": "6cb6fd1fc89855cf6232ed7e5b915f523528345d29be707064a7d0a9ce427790",
+            "bytes": 169984
+          },
+          "asm": {
+            "sha256": "5ed8fcb707b0373e0bf5d6755008d7abb656223715f3e45a9bf42b5f26eb021b",
+            "bytes": 1239769
+          },
+          "txt": {
+            "sha256": "14a33b1d5221968bafee96b38b1578eab66f8e998fba55c2e8afd142360f2c94",
+            "bytes": 287
+          }
+        }
+      },
+      "text-arc": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "6eb391d56611c365f7f5da44c3a8078d7cd8a191d4266fcc68261e84cfb9155d",
+            "bytes": 691754
+          },
+          "exe": {
+            "sha256": "36bf9d18f58b3773d782eacc628b6d80e1474860204c504407fdabb789e225cb",
+            "bytes": 174592
+          },
+          "asm": {
+            "sha256": "250fddfe0dc7d76f228272f927e651339c46d0224912b3133e1790b2b2c0326d",
+            "bytes": 1331922
+          },
+          "txt": {
+            "sha256": "14a33b1d5221968bafee96b38b1578eab66f8e998fba55c2e8afd142360f2c94",
+            "bytes": 287
+          }
+        }
+      }
+    },
+    "windows-11-arm": {
+      "ternary-tracing": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "50540914b211e14f7c9a54249cd1aaa4cb243a8a57981ab7d2fc69fcc59015b0",
+            "bytes": 639692
+          },
+          "exe": {
+            "sha256": "86fe86ce1b5dc60fa5d856d0d29f08aff5bcf7a850e404e725f6bfa9b22bfe19",
+            "bytes": 89088
+          },
+          "asm": {
+            "sha256": "824f16844fe8e91a1418e77ee96a113088333c355dd412b078bd795c604fd598",
+            "bytes": 225000
+          },
+          "txt": {
+            "sha256": "2fc57a8a7775f7ba3ca7b23ba42d9237322ab6b80c39352361a4fd1bc857a9e4",
+            "bytes": 77
+          }
+        }
+      },
+      "ternary-arc": {
+        "output": "pack 40 trits: 1 allocation request\nconvert 40 trits: 1 allocation request\n",
+        "files": {
+          "c": {
+            "sha256": "153f2a240caac004b3d4856f7aaaa29da5b0f2098bc67ae43fe212ebf35521ef",
+            "bytes": 639715
+          },
+          "exe": {
+            "sha256": "52154ed18309ad6e300a16c17cacf558b2dc550a49d643ae14e8a033b3f183bd",
+            "bytes": 84480
+          },
+          "asm": {
+            "sha256": "a8244a9179fae5d5ac89e9c024cdaca7c18e3f5c12010fee0c6d33b80c9d07d4",
+            "bytes": 170839
+          },
+          "txt": {
+            "sha256": "2fc57a8a7775f7ba3ca7b23ba42d9237322ab6b80c39352361a4fd1bc857a9e4",
+            "bytes": 77
+          }
+        }
+      },
+      "text-tracing": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "b04479dfcaec27baf9d2e4a12e26770f06aa2bc8e52229d5c87032ed63959e4e",
+            "bytes": 691731
+          },
+          "exe": {
+            "sha256": "030f76619d1b093a5a676492362cab102a76b7331a5b1728e9b05bbe1b0bb56d",
+            "bytes": 156160
+          },
+          "asm": {
+            "sha256": "14ad687d2148d02796867c4c6a3e89b0a099889ef3825b38f579abd9fb7a37ad",
+            "bytes": 771782
+          },
+          "txt": {
+            "sha256": "14a33b1d5221968bafee96b38b1578eab66f8e998fba55c2e8afd142360f2c94",
+            "bytes": 287
+          }
+        }
+      },
+      "text-arc": {
+        "output": "decoder 0: 3 allocation requests; final charged delta 0\ndecoder 1: 7 allocation requests; final charged delta 0\ndecoder 2: 13 allocation requests; final charged delta 0\ndecoder 3: 12 allocation requests; final charged delta 0\ndecoder 4: 6 allocation requests; final charged delta 0\n",
+        "files": {
+          "c": {
+            "sha256": "6eb391d56611c365f7f5da44c3a8078d7cd8a191d4266fcc68261e84cfb9155d",
+            "bytes": 691754
+          },
+          "exe": {
+            "sha256": "6a7b833b5a53bee1732dd4c943f8619797b7fb3fe1e30f2ea5885a167f5b15c6",
+            "bytes": 160256
+          },
+          "asm": {
+            "sha256": "70171d90b910dd229e30ae06580a9ed03c7668025b473fde4078534e4f8197f3",
+            "bytes": 820390
+          },
+          "txt": {
+            "sha256": "14a33b1d5221968bafee96b38b1578eab66f8e998fba55c2e8afd142360f2c94",
+            "bytes": 287
+          }
+        }
+      }
+    }
+  }
+}

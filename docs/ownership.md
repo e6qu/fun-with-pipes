@@ -137,6 +137,13 @@ not support for that platform.
 
 ## Value decoders
 
+The [intermediate decoder evidence](measurements/value-decoders-2026-10-16.json)
+retains native ternary and URL/HTTP request counts and artifact hashes on all six
+hosts. It explicitly records the neighboring Windows peer-dependency failures;
+these passing ownership tests are not acceptance of that whole run. The following
+compressed-byte additions and Windows repair need their fresh checks.
+
+
 Compressed bytes and WebSocket frames are also value-decoding boundaries. The
 prepared native implementation owns their returned bytes/text and Result/tuple
 wrappers, including malformed-input results. Existing compression encoders protect

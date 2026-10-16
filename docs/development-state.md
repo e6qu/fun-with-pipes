@@ -74,7 +74,11 @@ dependencies with HTTP/2 curl support. Web tests use that configured client,
 portable gzip fixture construction/null devices and console shutdown events on
 Windows. Interpreter shutdown registers the corresponding Windows console handler,
 matching native behavior. Full Windows CI includes these web/std-library checks.
-Fresh runner checks must validate both the added byte ownership and this repair.
+Revision `8f848fde` now has six-native `38881941135` and two-WASI `38881944210`
+queued/running. Fresh runner checks must validate both added byte ownership and
+this repair. The [intermediate evidence](measurements/value-decoders-2026-10-16.json)
+retains all six ternary/text artifact sets and exact counts (guarded 0.13 s),
+including the neighboring Windows gate failures.
 
 Local byte fixture interpretation passes (0.25 s), formatting passes (1.12 s),
 and inventory passes (1.25 s): 293 contracted declarations, 50 distinct remaining
