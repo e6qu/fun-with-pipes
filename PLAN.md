@@ -81,11 +81,11 @@ gate passes. Earlier accepted work belongs in [delivery evidence](docs/roadmap-h
 
 The following combined batch prepares synchronous WASI ARC, allocation-free
 structural hashing and specialization of eagerly captured pipeline callbacks.
-Actual WASI ownership and six-host hash checks pass before the new fusion change;
-that change has its own pending native/WASI checks. The initial equivalent C/Rust
-comparison confirms substantial hash-buffer savings but also remaining pipeline
-allocations and overhead. Repeat those measurements after fusion before claiming
-a speedup or selecting another optimization.
+Six-host native checks and both actual WASI ownership jobs pass. Four-host
+comparisons and paired repeats confirm fewer allocations and lower small-workload
+CPU time, while preserving slower elapsed samples and remaining C/Rust gaps.
+Large-input timing is mostly unchanged. The final combined gate must cover the
+later restriction to known callback bodies as well as all transferred changes.
 
 The preparation is being transferred on top of #150's exact tree, preserving all
 Windows stress/cancellation coverage and earlier CPU reports. Open its delivery
