@@ -1073,13 +1073,13 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - name: Coverage and failure propagation
-        run: python3 scripts/test-macos-test-shards.py
+        run: python3 scripts/test-native-test-runner.py
       - name: Real Cargo test artifacts and concurrent execution
         run: |
           python3 - <<'PYTHON'
           import importlib.util, json, os, subprocess
           from pathlib import Path
-          spec = importlib.util.spec_from_file_location('shards', 'scripts/run-macos-test-shard.py')
+          spec = importlib.util.spec_from_file_location('shards', 'scripts/run-native-tests.py')
           shards = importlib.util.module_from_spec(spec)
           spec.loader.exec_module(shards)
           metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--no-deps', '--format-version', '1']))

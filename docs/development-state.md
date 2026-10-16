@@ -120,6 +120,19 @@ buffers, allocator pages/metadata and total process memory. Final-header tests
 require one allocation per nonempty header scope, no retained charge growth,
 and no per-call overhead for gzip/deadline/empty/ignored headers versus plain.
 
+## CI scheduling follow-up
+
+The shared `scripts/run-native-tests.py` now has explicit `--all` selection for
+Linux and retains both existing Mac shards. Linux still runs every Cargo target
+and GC stress test, with two executable workers and one harness thread each.
+Every produced executable must match the requested target set; missing or
+duplicate artifacts fail before execution. Failures do not skip remaining
+executables. Per-executable logs are uploaded. Seven Python coverage and failure
+checks pass under the local guard (1.07s), including the real 233-target Cargo
+metadata. The documentation audit passes (2.90s); an earlier invocation used a
+nonexistent script name and was corrected to `scripts/check-roadmap.py`.
+Native CI must verify the new scheduling; no speedup is claimed.
+
 ## Local checks and next work
 
 Use `python3 scripts/local-guard.py` with unchanged limits; native compilation

@@ -86,8 +86,14 @@ The supported platform matrix is Linux, macOS and Windows on ARM64 and AMD64,
 with separate binaries. The reusable Windows workflow runs both native Windows
 architectures. Preserve the complete matrix for each accepted revision; see
 [the platform matrix](PLAN.md#platform-objective-and-current-evidence).
+Linux builds every Cargo test target once, then runs two test executables at a
+time with one harness thread each. All Linux stress tests remain enabled. Each
+executable has an uploaded log, and any failure fails the job. The runner checks
+that Cargo produced every requested executable before starting tests. This
+scheduling change needs final-head CI verification; it is not a measured speedup.
+
 For each macOS architecture, the two jobs use the explicit integration-target
-lists in `scripts/macos-test-shards.json`, read by `scripts/run-macos-test-shard.py`.
+lists in `scripts/macos-test-shards.json`, read by `scripts/run-native-tests.py`.
 New targets must be assigned deliberately; adding one must not move unrelated
 tests between jobs. Remove obsolete entries when deleting targets. The runner
 rejects missing, duplicate, obsolete or unknown targets. Unit, example and

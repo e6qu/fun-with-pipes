@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify stable macOS assignment, complete coverage and failure propagation."""
+"""Verify full native coverage, stable Mac shards and failure propagation."""
 import importlib.util
 import json
 from pathlib import Path
@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location(
-    "macos_shards", Path(__file__).with_name("run-macos-test-shard.py"))
+    "macos_shards", Path(__file__).with_name("run-native-tests.py"))
 SHARDS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(SHARDS)
 
@@ -48,6 +48,29 @@ class Coverage(unittest.TestCase):
             ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=SHARDS.ROOT))
         self.assert_coverage(value, SHARDS.assignment(SHARDS.SCHEDULE))
 
+    def test_all_targets_preserve_unit_targets_and_stress_cases(self):
+        value = metadata(["z", "a", "b"])
+        schedule = {"regular": ["a", "z"], "gc": ["b"]}
+        args, available, selected = SHARDS.command(value, "all", schedule)
+        self.assertEqual(args, ["cargo", "test", "--no-fail-fast", "--all-targets", "--"])
+        self.assertEqual(available, ["a", "b", "z"])
+        self.assertEqual(selected, available)
+        keys = [("lib", "fwp"), ("bin", "fwp"), ("example", "demo"),
+                ("bench", "speed"), *[("test", name) for name in available]]
+        messages = [{"reason": "compiler-artifact", "package_id": "root",
+                     "target": {"kind": [kind], "name": name},
+                     "profile": {"test": True}, "executable": f"/{kind}-{name}"}
+                    for kind, name in keys]
+        encode = lambda rows: "\n".join(json.dumps(row) for row in rows)
+        result = SHARDS.test_executables(encode(messages), value, "all", selected)
+        self.assertEqual({key for key, _ in result}, set(keys))
+        for missing in range(len(messages)):
+            with self.assertRaises(ValueError):
+                SHARDS.test_executables(encode(messages[:missing] + messages[missing + 1:]),
+                                       value, "all", selected)
+        with self.assertRaises(ValueError):
+            SHARDS.command(metadata(["a", "b", "z", "new"]), "all", schedule)
+
     def test_new_targets_do_not_move_existing_work(self):
         before = {"regular": ["a", "z"], "gc": ["b"]}
         after = {"regular": ["a", "z"], "gc": ["b", "new"]}
@@ -75,7 +98,7 @@ class Coverage(unittest.TestCase):
                     SHARDS.assignment(path)
 
     def test_failed_test_command_is_not_reported_as_success(self):
-        with patch("sys.argv", ["run-macos-test-shard.py", "--shard", "gc", "--logs", "/unused"]), \
+        with patch("sys.argv", ["run-native-tests.py", "--shard", "gc", "--logs", "/unused"]), \
              patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "gc": ["b"]}), \
              patch.object(SHARDS.subprocess, "check_output", return_value=json.dumps(metadata(["a", "b"])).encode()), \
              patch.object(SHARDS.subprocess, "run", side_effect=subprocess.CalledProcessError(1, ["cargo", "test"])):
