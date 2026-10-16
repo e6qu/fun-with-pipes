@@ -958,6 +958,91 @@ impl Fuser<'_> {
         )
     }
 
+    /// Run after existing consumers have fused: replacing map too early would
+    /// hide it from fold/array construction and reintroduce their list results.
+    /// Numeric zip inputs have no resource owners whose destruction would move
+    /// across a callback. Keep both eager inputs and the existing zip-with result
+    /// cleanup, but specialize away the pair consumed by a known map function.
+    fn map_zip(&mut self, map: FuncId, args: &[Expr]) -> Option<Expr> {
+        if std::env::var("FWP_ZIP_MAP").as_deref() == Ok("0") {
+            return None;
+        }
+        let (callback, captures) = fn_value(self.funcs, &args[0], 1)?;
+        let mut producer = &args[1];
+        let mut bindings = Vec::new();
+        while let Expr::Let(local, value, body) = producer {
+            let ty = self.locals.get(*local as usize)?;
+            let numeric_list = matches!(ty, MT::Con(name, elements)
+                if name == "std::List" && elements.len() == 1 && unboxed_numeric(&elements[0]));
+            if !unboxed_numeric(ty) && !numeric_list {
+                return None;
+            }
+            // Only numeric owners can remain live through the mapped callbacks;
+            // extending a resource-bearing local's lifetime is observable.
+            bindings.push((*local, (**value).clone()));
+            producer = body;
+        }
+        let Expr::Call(zip, inputs) = producer else {
+            return None;
+        };
+        if prim_sym(self.funcs, *zip) != Some("zip") || inputs.len() != 2 {
+            return None;
+        }
+        let (zip_params, _) = self.funcs[*zip].ty.params(2);
+        let left = elem(zip_params[0])?;
+        let right = elem(zip_params[1])?;
+        if !unboxed_numeric(&left) || !unboxed_numeric(&right) {
+            return None;
+        }
+        let (callback_params, result) = self.funcs[callback].ty.params(captures.len() + 1);
+        let result = result.clone();
+        let mut parameters: Vec<MT> = callback_params[..captures.len()]
+            .iter()
+            .map(|ty| (*ty).clone())
+            .collect();
+        parameters.extend([left.clone(), right.clone()]);
+        let n = captures.len() as Local;
+        let mut call: Vec<Expr> = (0..n).map(Expr::Local).collect();
+        // zip ys xs forms (x, y), while zip-with calls f y x.
+        call.push(Expr::Record(vec![Expr::Local(n + 1), Expr::Local(n)]));
+        let body = Expr::Call(callback, call);
+        let all: Vec<Func> = self.funcs.iter().chain(&self.made).cloned().collect();
+        let (body, locals) = crate::opt::simplify(&all, self.shapes, body, parameters.clone());
+        let ty = parameters
+            .into_iter()
+            .rev()
+            .fold(result.clone(), |result, parameter| {
+                MT::Fun(Box::new(parameter), Box::new(result))
+            });
+        let specialized = self.new_func(Func {
+            name: "fused-zip-map".into(),
+            arity: n + 2,
+            locals,
+            ty,
+            body: Body::Expr(body),
+        });
+        let function = if captures.is_empty() {
+            Expr::Func(specialized)
+        } else {
+            Expr::Apply(Box::new(Expr::Func(specialized)), captures)
+        };
+        let output = self.funcs[map].ty.params(2).1.clone();
+        let callback_ty = fun2(&left, &right, &result);
+        let zip_ty = MT::Fun(
+            Box::new(callback_ty),
+            Box::new(fun2(zip_params[0], zip_params[1], &output)),
+        );
+        let zip_with = self.prim("zip-with", zip_ty, 3);
+        let mut result = Expr::Call(
+            zip_with,
+            vec![function, inputs[0].clone(), inputs[1].clone()],
+        );
+        for (local, value) in bindings.into_iter().rev() {
+            result = Expr::Let(local, Box::new(value), Box::new(result));
+        }
+        Some(result)
+    }
+
     /// Lists built by `map` and `filter` chains no consumer took: fused
     /// one by one, outermost first.
     fn lists(&mut self, e: Expr) -> Expr {
@@ -968,6 +1053,17 @@ impl Fuser<'_> {
             if crate::opt::uses(body, *local) == 1 {
                 let mut body = (**body).clone();
                 if let Expr::Call(id, args) = first_evaluated(&mut body) {
+                    if prim_sym(self.funcs, *id) == Some("map")
+                        && args.len() == 2
+                        && matches!(&args[1], Expr::Local(l) if l == local)
+                        && self.beh.expr(&args[0]) == none()
+                    {
+                        let inputs = vec![args[0].clone(), (**value).clone()];
+                        if let Some(fused) = self.map_zip(*id, &inputs) {
+                            *first_evaluated(&mut body) = fused;
+                            return self.lists(body);
+                        }
+                    }
                     if matches!(
                         self.std_name(*id),
                         Some(
@@ -999,6 +1095,16 @@ impl Fuser<'_> {
             if matches!(prim_sym(self.funcs, *id), Some("map" | "filter")) {
                 if let Some(r) = self.materialize(&e) {
                     return r;
+                }
+                if prim_sym(self.funcs, *id) == Some("map") {
+                    let Expr::Call(_, args) = &e else {
+                        unreachable!()
+                    };
+                    if args.len() == 2 {
+                        if let Some(r) = self.map_zip(*id, args) {
+                            return r;
+                        }
+                    }
                 }
             }
         }
@@ -1462,11 +1568,20 @@ fn map_locals(e: &Expr, f: &mut dyn FnMut(&Expr) -> Expr) -> Expr {
     }
 }
 
-/// The subexpression an expression evaluates first, through `Let`s.
+/// The first evaluated operation, through lets and trivial record prefixes.
+/// Reading a local/constant cannot move an effect or a resource frame. Stop at
+/// every other preceding expression, even a function value of unknown arity.
 fn first_evaluated(e: &mut Expr) -> &mut Expr {
-    match e {
-        Expr::Let(_, v, _) => first_evaluated(v),
-        e => e,
+    let first_field = match &*e {
+        Expr::Record(fields) => fields
+            .iter()
+            .position(|field| !matches!(field, Expr::Local(_) | Expr::Const(_))),
+        _ => None,
+    };
+    match (e, first_field) {
+        (Expr::Let(_, v, _), _) => first_evaluated(v),
+        (Expr::Record(fields), Some(first)) => first_evaluated(&mut fields[first]),
+        (e, _) => e,
     }
 }
 

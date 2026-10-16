@@ -118,6 +118,9 @@ static int dead_scratch(V v) {
     return 0;
 }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     for (volatile int mode = 0; mode < 6; mode++) {
         input_leaf = fwp_rc_fresh(fwp_str_new("a", 1));
@@ -156,8 +159,12 @@ int main(void) {
     assert_eq!(emitted.matches(release).count(), 1);
     let runtime = emitted.replace(release, "static volatile V observed_result, observed_scratch, observed_built, observed_built_element;\nstatic size_t observed_count;\nstatic void fwp_map_release(void *arg) {").replace("    V built = owner->built;", "    V built = owner->built;\n    observed_count = count; observed_result = count ? items[0] : 0; observed_scratch = PTR(items); observed_built = built; observed_built_element = built ? OBJ(built)->f[0] : 0;").replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
     let allocate = "        V fields[] = {owner->items[owner->count - 1], owner->built};";
-    assert_eq!(runtime.matches(allocate).count(), 1);
-    let builder = runtime.replace(allocate, &format!("        if (owner->count == 1 && owner->built) fwp_trap(\"injected map allocation failure\");\n{allocate}"));
+    let start = runtime.find("static V fwp_map_finish_protected(").unwrap();
+    let end = start + runtime[start..].find("\n}\n").unwrap() + 3;
+    let helper = &runtime[start..end];
+    assert_eq!(helper.matches(allocate).count(), 1);
+    let mut builder = runtime.clone();
+    builder.replace_range(start..end, &helper.replace(allocate, &format!("        if (owner->count == 1 && owner->built) fwp_trap(\"injected map allocation failure\");\n{allocate}")));
     let builder_probe = probe.replace("fwp_str_new(\"stop\", 4)", "fwp_str_new(\"b\", 1)").replace("        if (!dead_string(stop)) return 5;", "        if (!dead_string(stop)) return 5;\n        if (!observed_built || !dead_string(observed_built_element)) return 6;\n        if (fwp_reuse_verify ? OBJ(observed_built)->tag != 0xdead : *fwp_rc_slot(observed_built) != 0) return 7;");
     let cancelled = "static void cancel_map_after_result(void);\n".to_string()
         + &runtime
@@ -170,7 +177,7 @@ int main(void) {
                 "owner.count = kept; if (owner.count == 1) cancel_map_after_result();",
             );
     assert_ne!(cancelled, runtime);
-    let cancelled_probe = probe.replace("static volatile V source_list, input_leaf, input_alias;", "static volatile V source_list, input_leaf, input_alias;\nstatic fwp_task map_cancel;\nstatic void cancel_map_after_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&map_cancel, 0, sizeof map_cancel); fwp_cur = &map_cancel; fwp_budget = 1000000;\n        if (!setjmp(map_cancel.base))").replace("        fwp_handlers = h.prev;", "        fwp_cur = NULL; if (!map_cancel.unwinding) return 8;\n        fwp_handlers = h.prev;");
+    let cancelled_probe = probe.replace("static volatile V source_list, input_leaf, input_alias;", "static volatile V source_list, input_leaf, input_alias;\nstatic fwp_task map_cancel;\nstatic void cancel_map_after_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&map_cancel, 0, sizeof map_cancel); fwp_cur = &map_cancel; fwp_budget = 1000000;\n#ifdef _WIN32\n        /* This synthetic task executes on main's stack. */\n        map_cancel.ctx.top = fwp_gc.main_top;\n#endif\n        if (!setjmp(map_cancel.base))").replace("        fwp_handlers = h.prev;", "        fwp_cur = NULL; if (!map_cancel.unwinding) return 8;\n        fwp_handlers = h.prev;");
     for opt in ["-O1", "-O2"] {
         for (code, probe) in [
             (&runtime, &probe),
@@ -241,6 +248,9 @@ static V address_word(V input) {
     return FWP_TRUE;
 }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     scalar_word = fwp_rc_fresh(fwp_str_new("scalar alias", 12)); scalar_head.f[0] = scalar_word; source = PTR(&scalar_head);
     fwp_trap_recover = recover_scalar; fwp_trap_jb = &scalar_trap; fwp_trap_cleanup = 0;

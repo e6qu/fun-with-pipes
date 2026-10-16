@@ -83,9 +83,42 @@ fn filesystem_values_match_raw_interpretation() {
             assert!(!root.join("made").exists());
             assert_eq!(std::fs::read(root.join("input")).unwrap(), vec![255; 70000]);
         }
+        if gc == "arc" {
+            let owned = code
+                .lines()
+                .find(|line| line.contains("return fwp_rc_fresh(fwp_p_file_read("))
+                .expect("text reads have an owning result");
+            let unowned = owned.replace("return fwp_rc_fresh(", "return ");
+            let unowned = unowned.strip_suffix(");").unwrap().to_string() + ";";
+            let broken = code.replace(owned, &unowned);
+            fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
+            let result = Command::new(&binary)
+                .current_dir(&root)
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(
+                result.status.code(),
+                Some(195),
+                "missing text owner: {result:?}"
+            );
+        }
     }
 }
 fn instrument(mut code: String) -> String {
+    let start = "static void fwp_file_buffer_cleanup(";
+    let a = code.find(start).unwrap();
+    let b = a + code[a..].find("\n}\n").unwrap() + 3;
+    let body = code[a..b].replace("free(", "file_buffer_free(");
+    assert_ne!(body, code[a..b]);
+    code.replace_range(a..b, &body);
+    code = code.replace(
+        start,
+        &format!("static void file_buffer_free(void *);\n{start}"),
+    );
     let start = "static V fwp_p_file_info(";
     let mut offset = 0;
     while let Some(found) = code[offset..].find(start) {
@@ -111,6 +144,7 @@ fn instrument(mut code: String) -> String {
     for start in [
         "static V fwp_p_file_append(",
         "static V fwp_p_file_write_bytes(",
+        "static V fwp_p_file_write_new(",
     ] {
         let a = code.find(start).unwrap();
         let b = a + code[a..].find("\n}\n").unwrap() + 3;
@@ -119,12 +153,12 @@ fn instrument(mut code: String) -> String {
             .replace("fclose(", "file_close_probe(");
         code.replace_range(a..b, &body);
     }
-    code=code.replace("static V fwp_p_file_append(","static size_t file_write_probe(const void *,size_t,size_t,FILE *);static int file_close_probe(FILE *);\nstatic V fwp_p_file_append(");
+    code=code.replace("static V fwp_p_file_write_new(","static size_t file_write_probe(const void *,size_t,size_t,FILE *);static int file_close_probe(FILE *);\nstatic V fwp_p_file_write_new(");
     code.push_str(include_str!("fixtures/file_values_probe.c"));
     code
 }
 #[test]
-fn metadata_and_byte_reads_release_complete_and_partial_storage() {
+fn metadata_and_file_values_release_complete_and_partial_storage() {
     let dir = fwp::cgen::TempDir::new("file-value-cleanup").unwrap();
     let input = dir.join("input");
     std::fs::write(&input, vec![255; 70000]).unwrap();
@@ -182,6 +216,7 @@ fn metadata_and_byte_reads_release_complete_and_partial_storage() {
             (missing_count, 182),
             (unprotected, 189),
             (code.replace("errno = error;", "(void)error;"), 192),
+            (code.replace("file_buffer_free(b->d);", "(void)b->d;"), 199),
         ] {
             assert_ne!(broken, code);
             fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();

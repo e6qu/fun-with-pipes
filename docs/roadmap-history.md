@@ -48,6 +48,32 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Owned processes and numeric mapped arrays (PR #149)
+
+[PR #149](https://github.com/e6qu/fun-with-pipes/pull/149) merged as
+`58ed740cc785382b0cd818d4af970a1fa49516e6` after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38841142126)
+and [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38841118993)
+passed for `5748f7496a8f1db0e93145c53e380a0703affc2f`. The merge tree, parent and
+single-line subject with empty body were verified. Duplicate post-merge production
+`38851195546` was requested canceled; documentation may finish normally.
+
+Process calls own argument scratch, captured output, handles and partial results.
+POSIX child signal behavior agrees with interpretation while preserving the
+parent's signal policy; terminal echo is restored on traps, and Windows uses
+real console queries. Maintained shell composition exercises repeated results.
+Synchronous waiting still does not establish cancellation/deadline responsiveness.
+
+Mapped inline numeric results construct arrays without temporary list nodes and
+keep known callbacks as direct calls. Callback order, aliases and failed
+allocations have six-host focused and full acceptance. The repeated derivative
+workload removes 2,097,152 allocation requests; retains and peak memory stay the
+same. [Measurements](benchmarks.md#building-numeric-arrays-without-temporary-list-nodes)
+retain four-host comparisons, an independent repeat and the CPU/collector
+investigation. Tiny nested timings remain mixed. Tape layout stays unchanged
+because its alternative did not show a portable improvement. This delivery does
+not finish removal of tracing GC or establish C/Rust parity.
+
 ## Record moves and application utilities (PR #148)
 
 [PR #148](https://github.com/e6qu/fun-with-pipes/pull/148) merged as

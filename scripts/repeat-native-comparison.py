@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Repeat verified mapped-array binaries, measuring child CPU and collector activity."""
+"""Repeat verified comparison binaries, measuring child CPU and collector activity."""
 import argparse
 import hashlib
 import importlib.util

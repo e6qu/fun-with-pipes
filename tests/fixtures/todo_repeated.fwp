@@ -1,0 +1,13 @@
+# The harness prepends the maintained todo example. Each iteration resets its
+# file, edits it through exported commands and returns a list retained by main.
+cycle : I64 -> List[String] ! {FileIO, IO, Error[IoError]}
+cycle = const (Store {file = "tasks.txt"})
+    | tap (.file | flip file.write-new "")
+    | tap (flip add-item ["buy", "héllo"] | echo)
+    | tap (flip add-item ["write", "世界"] | echo)
+    | tap (flip done 1 | echo)
+    | tap (flip done 3 | echo)
+    | tap (list-items | echo)
+    | tap (clear | echo)
+    | list-items
+main = [range 0 64 | map cycle | echo, file.remove "tasks.txt"] | ignore

@@ -1,161 +1,133 @@
 # Session handoff
 
-Updated 2026-10-16. [PR #148](https://github.com/e6qu/fun-with-pipes/pull/148)
-merged as `853d6669dbf7dea78483376865190c218c9fece6` after all nine production
-jobs in [38825629531](https://github.com/e6qu/fun-with-pipes/actions/runs/38825629531)
-and [docs 38825487182](https://github.com/e6qu/fun-with-pipes/actions/runs/38825487182)
-passed for `93b1741abcf5ab2a61460746c0077564e0328c0e`. Tree equality and the exact
-single-line subject with empty body were verified. Duplicate post-merge production
-`38835480889` was canceled; documentation `38835480750` may finish normally.
-[History](roadmap-history.md) records this and the earlier accepted #147.
+Updated 2026-10-16. [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149)
+merged as `58ed740cc785382b0cd818d4af970a1fa49516e6` after all nine production jobs in
+[38841142126](https://github.com/e6qu/fun-with-pipes/actions/runs/38841142126) and
+[docs 38841118993](https://github.com/e6qu/fun-with-pipes/actions/runs/38841118993)
+passed for `5748f7496a8f1db0e93145c53e380a0703affc2f`. Tree equality, parent and the
+one-line subject with empty body were verified. Duplicate post-merge production
+`38851195546` was requested canceled. [History](roadmap-history.md) records the
+delivery and remaining limits.
 
-Current delivery branch: `owned-process-delivery` in
-`/Users/zardoz/projects/fun-with-pipes`, based on accepted `853d6669`. It contains
-changes after `81d113aa` from preparation `owned-process-utilities` at
-`ad53a46a`, including verified derivative reports/profiling through `cfdf4d79`, plus numeric
-map-to-array preparation after that anchor.
-Preparation revisions are preserved under remote `roadmap/revision-process-*`
-tags. No old parent preparation should be replayed. The single open delivery is [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149).
+Current delivery branch: `owned-list-text-delivery` in the root worktree, based
+on accepted `58ed740c`. It transfers only preparation changes after `1850f832`
+through `83f62bb7`, preserving #149's final mapped-array CPU report and explanation.
+The preparation worktree `/private/tmp/fwp-zip-map` retains its original branch;
+never replay its parent commits. No second delivery PR is open yet.
 
-Standing authorization: fix failures, require all nine production jobs and docs
-for the exact final head, then squash merge with a supplied one-line subject of
-at most 80 characters and an empty body. No trailers or attribution. Continue to
-the next substantial batch without another permission request. JIT is excluded.
+Standing authorization covers fixes, publication and squash merge after all nine
+production jobs plus documentation pass for the exact final head. Commit messages
+are one line, at most 80 characters, with an empty body and no attribution or
+trailers. JIT is excluded. Local checks use `python3 scripts/local-guard.py`;
+full builds, gates and benchmarks run on GitHub. Do not raise resource limits.
+
+## Next action and unresolved results
+
+Next: finish [Windows repair run 38850334050](https://github.com/e6qu/fun-with-pipes/actions/runs/38850334050)
+at `ed015878`. Earlier combined tests pass all four Unix hosts and both actual
+WASI count jobs. Windows initially exposed CRLF output assertions in older C
+probes. The binary-stdout repair passes those assertions but exposes a later zip
+cancellation access violation. [Diagnostic run 38849794851](https://github.com/e6qu/fun-with-pipes/actions/runs/38849794851)
+at `523a6e07` confirms it occurs in the synthetic cancellation case after ordinary
+callback and allocation-failure cases pass.
+
+The repair gives synthetic zip/map/selection/fold tasks the correct Windows stack
+scan boundary, following the established loop fixture. Fold also gets binary
+stdout and joins Windows coverage. These are fixture repairs, not changes to
+runtime behavior. Windows ARM64 now passes the repaired suite; AMD64 is still running. Do not
+claim complete native acceptance until both pass. All newly added runtime cleanup tests already pass on both Windows
+hosts. Failing or canceled runs never count as acceptance.
+
+Publish this one combined PR, fix any remaining failures, then require all nine
+production jobs plus docs for its exact final head. Squash merge with an explicit
+subject and empty body, verify the merge tree/message, and continue to the next
+substantial batch. Queued CI stops merging, not independent work.
 
 ## Roadmap status
 
-[PLAN.md](../PLAN.md) defines completion; none of the seven whole areas is done.
+[PLAN.md](../PLAN.md) defines completion. None of its seven whole areas is done.
 
-| Step | Status | Next concrete work |
+| Step | Status | Progress and remaining direction |
 |---|---|---|
-| 1 | In progress | Accept process and terminal ownership, then remaining deployment boundaries |
-| 2 | In progress | Validate numeric mapped-array construction without temporary list nodes |
-| 3 | In progress | Measure CPU effects and preserve actual native instructions |
-| 4 | In progress | Reduce confirmed derivative intermediates and retain mixed layout results |
-| 5 | Pending | Broaden CPU kernels; resolve runtime OpenCL compilation under no-JIT policy |
-| 6 | In progress | Preserve repeated comparable measurements and regression criteria |
-| 7 | In progress | Accept maintained process composition and real terminal checks |
+| 1 | In progress | Validate text/list cleanup, then remaining deployment boundaries and less counting |
+| 2 | In progress | Accept zip elimination; measure more closure, state and collection costs |
+| 3 | In progress | Retain instruction evidence; address C/Rust gaps, layout and cache behavior |
+| 4 | In progress | Accept fewer intermediates; address tape/workspace costs and memory scaling |
+| 5 | Pending | Broaden kernels; resolve runtime OpenCL compilation |
+| 6 | In progress | Keep repeated timings, equivalent work and physical storage checks |
+| 7 | In progress | Accept todo/grep ARC coverage, then larger and long-running applications |
 
-Next: monitor all nine production jobs plus docs for #149's exact final combined
-head.
-Fix failures, merge only when all pass, and continue. A queued gate stops merging,
-not independent development.
+## Changes and acceptance criteria
 
-## Combined delivery and evidence
+Numeric `zip | map` combines corresponding input elements and immediately applies
+a known function. For inline numeric inputs, the candidate passes the two values
+directly to that function, removing temporary pairs and list nodes. Preserve
+input evaluation order, shorter-list truncation, callback effects/traps and
+aliases. Managed inputs keep their existing lifetimes. Earlier fold/array
+optimizations run first so this change cannot reintroduce their removed output
+lists. `FWP_ZIP_MAP=0` disables only this transformation for comparison.
 
-Process calls own argument scratch, pipe endpoints, child resources, capture
-buffers, copied strings and their record. NUL arguments fail before OS calls;
-read/wait errors are reported and interrupted waits retried. Failure cleanup
-closes endpoints and reaps POSIX children or closes Windows handles. POSIX child
-SIGPIPE behavior agrees with interpretation; parent writes preserve the host
-handler, mask and already-pending signal. Calls remain synchronous: this is not
-proof of cancellation/deadline responsiveness while waiting for a child.
+Zip, unzip, repeat, chunks, scan and iterate now protect pending references,
+temporary buffers and partial results across failures. Retain and callback order
+stay unchanged. A positive I64 chunk size no longer wraps to zero on 32-bit WASI;
+4,294,967,296 produces one chunk for a three-element list.
 
-Secret terminal input restores echo on success and traps. Windows interpretation
-uses console APIs for echo and width. Tty/width observations return immediate
-values with explicit contracts; public tty arguments remain I32. CLI tests use
-native executable suffixes and directly connected processes. The maintained shell
-normalization tool runs 64 times with retained results and final cleanup checks.
+Text reads have a fresh-string ownership contract; replacement writes borrow
+their inputs. Existing protected runtime implementations are reused. Source
+comments and generated docs explain that `file.write-new` creates or truncates.
+Maintained todo/grep functions run 64 times with retained results; real CLI checks
+cover file arguments, stdin, Unicode, replacement, subcommands and exit status.
 
-All six native hosts passed process/signal/terminal/CLI regressions in
-[38831045963](https://github.com/e6qu/fun-with-pipes/actions/runs/38831045963)
-at `6e122959`; its only failure was a missing tty ownership contract. The repair
-and width comparison are at `8926a2fb`.
-[Combined rerun 38833152028](https://github.com/e6qu/fun-with-pipes/actions/runs/38833152028)
-passes on all six native hosts at `8926a2fb`. Later preparation
-changes add measurement scripts/reports/docs only, without changing tested
-runtime/compiler/fixtures. Final production acceptance is still required.
+Acceptance compares raw/optimized interpretation with native O1/O2 tracing/ARC,
+retained aliases and scalar bits that resemble addresses. Probes force retain,
+callback and allocation failures, including wide-counter overflow, collect during
+construction and deliberately omit individual cleanup actions. Missing cleanup
+must fail; lower allocation counts alone do not establish correctness or speed.
 
-Four-host derivative comparisons pass in
-[38828198160](https://github.com/e6qu/fun-with-pipes/actions/runs/38828198160)
-(paired versus old separate allocations),
-[38829628017](https://github.com/e6qu/fun-with-pipes/actions/runs/38829628017)
-(interleaved operation pairs), and
-[38832271631](https://github.com/e6qu/fun-with-pipes/actions/runs/38832271631)
-(native allocation sites). The three 2026-10-16 reports retain raw data, hashes,
-host/compiler details and actual instruction evidence where measured. Benchmark
-prose explains the comparisons and limits. Production tape layout stays unchanged;
-smaller code and fewer allocations did not establish a portable timing win.
+## Retained evidence
 
-Focused local checks use `python3 scripts/local-guard.py COMMAND...`. After transfer, `cargo fmt --all -- --check` passes (1.01 s), primitive
-inventory passes (1.11 s), and `python3 scripts/check-roadmap.py` passes (2.78 s). Inventory: 259 contracts, six scalar
-signatures, 94 review declarations, 19 templates and 84 review symbols.
-Edited-C mechanism probes pass process/signal failures and negative controls,
-maintained shell composition and real terminal restoration. They use the accepted
-#147 compiler plus current C, so they are supplemental, not changed-compiler
-acceptance. Full builds, full suites and timing runs remain on GitHub.
+| Check | Result |
+|---|---|
+| Numeric zip/map, six native hosts | [38842838108](https://github.com/e6qu/fun-with-pipes/actions/runs/38842838108), passed at `91146d68` |
+| Text files and maintained programs, six hosts | [38845110123](https://github.com/e6qu/fun-with-pipes/actions/runs/38845110123), passed at `0bae98f7` |
+| Expanded list cleanup and actual WASI counts | [38847420495](https://github.com/e6qu/fun-with-pipes/actions/runs/38847420495), Unix/WASI passed; Windows fixture failures described above |
+| Four-host zip costs | [38842840316](https://github.com/e6qu/fun-with-pipes/actions/runs/38842840316), all passed |
+| Independent verified-binary repeat | [38846124783](https://github.com/e6qu/fun-with-pipes/actions/runs/38846124783), all passed |
 
-## Numeric mapped-array construction
+[Allocation/timing evidence](measurements/zip-maps-2026-10-16.json) compares the
+same fwp compiler with only zip elimination changed. Repeated derivative requests
+fall from 23,087,625 to 18,892,809 and retains from 10,492,416 to 8,395,264; peak
+memory stays 840,888 bytes. The direct loop contains ARM64 vector multiply and
+AMD64 unrolled scalar multiply. These are not total instruction/spill counts or
+C/Rust parity claims.
 
-The candidate source/tests from `0fff9c2e` are now transferred into this combined
-PR, including Windows binary-stdout repair in the older scalar-array test. The
-preparation worktree `/private/tmp/fwp-ad-allocation-sites`, branch
-`profile-ad-allocations`, has anchor `cfdf4d79`; earlier parents were already in
-this delivery. Do not replay them. Remote `roadmap/revision-mapped-*` tags preserve
-`d16592be`, `da56521c` and `0fff9c2e` behind the measurements.
+[The independent repeat](measurements/zip-map-cpu-2026-10-16.json) preserves sixteen
+alternating elapsed/child-CPU samples, source/binary hashes, hardware and flags.
+Substantial direct/derivative CPU times improve on all four hosts. Tiny macOS
+ARM64 nested ARC remains 1.017 CPU / 1.027 elapsed, with overlapping samples;
+no universal speedup is claimed. Normal traced direct work collects twice in both
+variants on every host; other profiles collect zero times. Final storage is zero.
+[Benchmarks](benchmarks.md) explains the inputs, timing scope and limitations.
 
-The transformation constructs arrays from mapped inline numbers without temporary
-list nodes. Callback order, borrowed inputs and scratch cleanup are preserved.
-Known callbacks keep direct calls, including captures; unknown functions use
-ordinary dynamic calls. Boxed/managed results keep their existing path.
-[Six-host tests 38836403883](https://github.com/e6qu/fun-with-pipes/actions/runs/38836403883)
-pass at `0fff9c2e`, including raw/optimized/native agreement, O1/O2 tracing/ARC,
-checked traps, aliases, allocation counts and deliberate cleanup omissions.
-Earlier fixture failures are repaired; superseded runs are canceled.
+Guarded local probes supplement these runner checks. Edited-C controls reproduce
+old zip/unzip/list leaks, pass the repairs and reject omitted cleanup at O1/O2 in
+both modes. The latest standalone zip harness compiles (0.26 s) and its two Mac
+tests pass (8.93 s). Formatting passes (1.11 s); docs pass (2.52 s). No full compiler
+build was run locally. The accepted #148 Mac compiler is at
+`/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp`; its verified package revision
+is `93b1741a`. [The earlier preparation record](https://github.com/e6qu/fun-with-pipes/blob/ed015878/docs/development-state.md)
+preserves detailed probe commands, original failures and superseded runs.
 
-Three four-host comparisons pass: generic callbacks in
-[38834969974](https://github.com/e6qu/fun-with-pipes/actions/runs/38834969974),
-preserved direct callbacks in
-[38836050029](https://github.com/e6qu/fun-with-pipes/actions/runs/38836050029),
-and their independent repeat in
-[38837662593](https://github.com/e6qu/fun-with-pipes/actions/runs/38837662593).
-[The report](measurements/mapped-arrays-2026-10-16.json) retains every sample,
-verified binary/source hashes and actual ARM64/AMD64 instructions. Direct numeric
-requests fall from 532,996 to 8,708; repeated derivative requests fall from
-25,184,777 to 23,087,625. Retains and derivative peak memory do not change. Known
-callbacks preserve vectorized doubling. These compare fwp with itself, not C/Rust.
+## Following independent preparation
 
-The independent repeat's derivative ARC ratios enabled/disabled are Linux AMD64
-0.919, Linux ARM64 0.919, macOS ARM64 0.909 and macOS AMD64 0.895. Intel macOS
-tracing remains slower (1.019, versus 1.070 in the first run), and its tiny nested
-ARC case changes from 0.966 to 1.124. The investigation now passes on all four hosts in
-[38839170915](https://github.com/e6qu/fun-with-pipes/actions/runs/38839170915), reusing
-verified binaries from `38837662593` at diagnostic source `1850f832`. Sixteen
-alternating samples show Intel traced derivative elapsed/CPU ratios 0.913/0.917;
-all four hosts improve in this diagnostic. Normal/off collector profiles match
-exactly, with zero collections and final storage. Tiny nested CPU results remain
-mixed. [The retained report](measurements/mapped-array-cpu-2026-10-16.json) and
-benchmark explanation preserve those limits. Select the transformation for its
-allocation savings and measured substantial workloads; do not claim universal
-speedup. Full production acceptance is still pending.
+`/private/tmp/fwp-wasi-arc`, branch `checked-wasi-ownership`, is anchored at
+`e5e05748`; transfer only later changes after this zip/list/text batch is accepted.
+It prepares synchronous WASI ARC with physical-free controls, function/CLI entry
+checks and actual module inspection. Browser re-entry and host fibers remain
+unproved. Its handoff records the active run and failures. It has no PR and does
+not yet establish supported WASI ARC.
 
-Guarded local checks after transfer: formatting passes (1.26 s), inventory passes
-(1.12 s; the first invocation omitted its required arguments), docs pass (2.75 s).
-The script parses (0.18 s). Retention verifies all twelve host reports (0.38 s).
-Actual runner-emitted direct callback loops pass success, callback/final-allocation
-failures, collection and missing-free controls at O1/O2 in tracing/ARC (3.65 s).
-This small Mac probe supplements, rather than replaces, native CI.
-
-The accepted #148 Mac compiler is available for small local fixture checks at
-`/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp`. Package revision `93b1741a`
-and SHA-256 `9e79c06d7db07a45de341bd7769739a2eda6c58bbeeaff077cb77bbb1268fb43`
-are verified. No local full compiler build was run.
-
-Report retention verifies all four diagnostic reports and profile hashes (0.30 s).
-Docs at `1850f832` pass in `38839160662`; its draft production run was skipped and
-is not acceptance. Final source/runtime/tests still match the six-host candidate
-except the already validated process/tty contracts. Require the final combined
-production gate before merging.
-
-## Following preparation
-
-Worktree `/private/tmp/fwp-zip-map`, branch `fuse-numeric-zip-maps`, is anchored at
-`1850f832`. No second PR is open. It prepares elimination of immediately mapped
-numeric zip pairs using existing zip-with ownership and a specialized callback.
-It also repairs ordinary zip's unprotected pending fields/results on retain
-failure. Small isolated-pass counts for 129 numeric pairs fall from 390 to 131
-requests and from 129 to zero retains; raw/native cases pass. These use an older
-prebuilt compiler library and are not rebuilt-compiler acceptance. The worktree
-handoff records incomplete cleanup controls and pending six-host/performance
-checks. Transfer only changes after its anchor after #149 merges; never replay
-this current delivery's parent changes.
+After transfer, formatting passes (1.02 s), docs pass (2.53 s), and primitive
+inventory passes (1.11 s): 261 contracts, six scalar signatures, 19 templates and
+82 remaining review symbols. Source/runtime/tests/workflows match preparation
+`83f62bb7`; the transferred benchmark guide retains #149's final CPU investigation.

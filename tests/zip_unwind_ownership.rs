@@ -103,8 +103,12 @@ static int dead_scratch(V v) {
     return 0;
 }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     for (volatile int mode = 0; mode < 3; mode++) {
+        fprintf(stderr, "zip mode %d: inputs\n", (int)mode);
         input_leaf = fwp_rc_fresh(fwp_str_new("a", 1));
         input_alias = input_leaf; fwp_rc_dup(input_alias);
         V stop = fwp_rc_fresh(fwp_str_new("stop", 4));
@@ -115,12 +119,14 @@ int main(void) {
         h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups;
         fwp_handlers = &h;
         fwp_trap_recover = recover_map_trap; fwp_trap_jb = &h.jb; fwp_trap_cleanup = h.cleanup;
+        fprintf(stderr, "zip mode %d: call\n", (int)mode);
         if (!setjmp(h.jb)) {
             if (mode == 0) fDIRECT(source_list);
             else if (mode == 1) fCAPTURED(source_list);
             else fDYNAMIC(PTR(&fcTRANSFORM), source_list);
             return 1;
         }
+        fprintf(stderr, "zip mode %d: recovered\n", (int)mode);
         fwp_handlers = h.prev; fwp_trap_recover = NULL; fwp_trap_jb = NULL;
         if (fwp_cleanups || observed_count != 1 || !observed_result || !observed_scratch) return 2;
         if (!dead_string(observed_result) || !dead_scratch(observed_scratch) || !observed_second || !dead_scratch(observed_second)) return 3;
@@ -138,8 +144,12 @@ int main(void) {
     assert_eq!(emitted.matches(release).count(), 1);
     let runtime = emitted.replace(release, "static volatile V observed_result, observed_scratch, observed_built, observed_built_element, observed_second;\nstatic size_t observed_count;\nstatic int scratch_calls;\nstatic void fwp_map_release(void *arg) {").replace("    V built = owner->built;", "    V built = owner->built;\n    observed_count = count; observed_result = count ? items[0] : 0; observed_scratch = PTR(items); observed_built = built; observed_built_element = built ? OBJ(built)->f[0] : 0;").replace("    V *items = *slot;", "    V *items = *slot; observed_second = PTR(items);").replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
     let allocate = "        V fields[] = {owner->items[owner->count - 1], owner->built};";
-    assert_eq!(runtime.matches(allocate).count(), 1);
-    let builder = runtime.replace(allocate, &format!("        if (owner->count == 1 && owner->built) fwp_trap(\"injected map allocation failure\");\n{allocate}"));
+    let start = runtime.find("static V fwp_map_finish_protected(").unwrap();
+    let end = start + runtime[start..].find("\n}\n").unwrap() + 3;
+    let helper = &runtime[start..end];
+    assert_eq!(helper.matches(allocate).count(), 1);
+    let mut builder = runtime.clone();
+    builder.replace_range(start..end, &helper.replace(allocate, &format!("        if (owner->count == 1 && owner->built) fwp_trap(\"injected map allocation failure\");\n{allocate}")));
     let builder_probe = probe.replace("fwp_str_new(\"stop\", 4)", "fwp_str_new(\"b\", 1)").replace("        if (!dead_string(stop)) return 5;", "        if (!dead_string(stop)) return 5;\n        if (!observed_built || !dead_string(observed_built_element)) return 6;\n        if (fwp_reuse_verify ? OBJ(observed_built)->tag != 0xdead : *fwp_rc_slot(observed_built) != 0) return 7;");
     let cancelled = "static void cancel_map_after_result(void);\n".to_string()
         + &runtime.replace(
@@ -147,20 +157,21 @@ int main(void) {
             "        owner.count++; if (owner.count == 1) cancel_map_after_result();",
         );
     assert_ne!(cancelled, runtime);
-    let cancelled_probe = probe.replace("static volatile V source_list, input_leaf, input_alias;", "static volatile V source_list, input_leaf, input_alias;\nstatic fwp_task map_cancel;\nstatic void cancel_map_after_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&map_cancel, 0, sizeof map_cancel); fwp_cur = &map_cancel; fwp_budget = 1000000;\n        if (!setjmp(map_cancel.base))").replace("        fwp_handlers = h.prev;", "        fwp_cur = NULL; if (!map_cancel.unwinding) return 8;\n        fwp_handlers = h.prev;");
+    let cancelled_probe = probe.replace("static volatile V source_list, input_leaf, input_alias;", "static volatile V source_list, input_leaf, input_alias;\nstatic fwp_task map_cancel;\nstatic void cancel_map_after_result(void) { if (fwp_cur) { fwp_cur->cancelled = 1; fwp_budget = 0; } }").replace("        if (!setjmp(h.jb))", "        memset(&map_cancel, 0, sizeof map_cancel); fwp_cur = &map_cancel; fwp_budget = 1000000;\n#ifdef _WIN32\n        /* This synthetic task executes on main's stack. */\n        map_cancel.ctx.top = fwp_gc.main_top;\n#endif\n        if (!setjmp(map_cancel.base))").replace("        fwp_handlers = h.prev;", "        fwp_cur = NULL; if (!map_cancel.unwinding) return 8;\n        fwp_handlers = h.prev;");
     let allocate_second = "    V *a = (V *)fwp_mem_alloc((*n + 1) * sizeof(V));";
     assert_eq!(runtime.matches(allocate_second).count(), 1);
     let second_failure = "static int scratch_calls;\n".to_string() + &runtime.replace(allocate_second, &format!("    if (++scratch_calls == 2) fwp_trap(\"injected second scratch allocation failure\");\n{allocate_second}"));
     let second_probe = probe.replace("observed_count != 1 || !observed_result", "observed_count != 0 || observed_result").replace("!dead_string(observed_result) || !dead_scratch(observed_scratch) || !observed_second || !dead_scratch(observed_second)", "!dead_scratch(observed_scratch) || observed_second");
     for opt in ["-O1", "-O2"] {
-        for (code, probe) in [
-            (&runtime, &probe),
-            (&builder, &builder_probe),
-            (&cancelled, &cancelled_probe),
-            (&second_failure, &second_probe),
+        for (case, code, probe) in [
+            ("callback", &runtime, &probe),
+            ("builder", &builder, &builder_probe),
+            ("cancelled", &cancelled, &cancelled_probe),
+            ("second-scratch", &second_failure, &second_probe),
         ] {
             fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
             for poison in ["0", "1"] {
+                eprintln!("zip cleanup {case} {opt} poison={poison}");
                 let out = checked(
                     Command::new(&exe)
                         .env("FWP_GC_STRESS", "1")
@@ -224,6 +235,9 @@ static V address_word(V other, V input) {
     return scalar_word;
 }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     scalar_word = fwp_rc_fresh(fwp_str_new("scalar alias", 12)); source = PTR(&scalar_head);
     fwp_trap_recover = recover_scalar; fwp_trap_jb = &scalar_trap; fwp_trap_cleanup = 0;

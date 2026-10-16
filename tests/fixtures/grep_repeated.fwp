@@ -1,0 +1,12 @@
+# The harness prepends the maintained grep example and supplies both input files.
+# Searches cover case folding, prefixes, inverted counts and no matches.
+cycle : I64 -> Outcome[List[String]] ! {IO, FileIO, Error[IoError]}
+cycle = const ["first.txt", "second.txt"]
+    | tap (grep {ignore-case = True, invert = False, line-number = True, count = False} "apple" | echo)
+    | tap (grep {ignore-case = False, invert = True, line-number = False, count = True} "a" | echo)
+    | tap (grep {ignore-case = False, invert = False, line-number = False, count = True} "missing" | echo)
+    | grep {ignore-case = False, invert = False, line-number = False, count = False} "世界"
+main = [
+    range 0 64 | map cycle | echo,
+    ["absent.txt"] | attempt (grep {ignore-case = False, invert = False, line-number = False, count = False} "x" | ignore) | echo,
+] | ignore

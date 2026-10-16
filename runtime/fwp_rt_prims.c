@@ -24,16 +24,6 @@ static V *fwp_map_items(V xs, size_t *n) {
     FWP_KEEP_ALIVE(source);
     return a;
 }
-static V fwp_map_finish(V *a, size_t n) {
-    V result = 0;
-    for (size_t i = n; i; i--) {
-        V fields[] = {a[i - 1], result};
-        result = fwp_rc_fresh(fwp_data(1, 2, fields));
-    }
-    FWP_KEEP_ALIVE(a);
-    fwp_mem_free(a);
-    return result;
-}
 /* The completed prefix owns results; the remaining scratch words borrow the
  * source. During spine construction, each last prefix element transfers into
  * the typed partial list, so an allocation failure has exactly one owner. */
@@ -689,19 +679,29 @@ static V fwp_p_zip(V ys, V xs) {
 }
 
 /* Duplicate only statically reference-bearing fields, never scalar bits. */
-static V fwp_p_zip_owned(V ys, V xs, void (*dup_x)(V), void (*dup_y)(V)) {
+static V fwp_p_zip_owned(V ys, V xs, void (*dup_x)(V), void (*dup_y)(V),
+        void (*drop_x)(V), void (*drop_y)(V), void (*drop_pair)(V), void (*drop_list)(V)) {
     size_t n, m;
     V *a = fwp_map_items(xs, &n);
+    fwp_map_owner owner = {a, 0, 0, drop_pair, drop_list};
+    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);
     V *b = fwp_map_items(ys, &m);
+    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&b, &scratch_cleanup);
     size_t k = n < m ? n : m;
     for (size_t i = 0; i < k; i++) {
         if (dup_x) dup_x(a[i]);
+        fwp_value_owner left = {a[i], drop_x}; fwp_cleanup left_cleanup;
+        fwp_value_protect(&left, &left_cleanup);
         if (dup_y) dup_y(b[i]);
-        a[i] = fwp_rc_fresh(fwp_tuple2(a[i], b[i]));
+        fwp_value_owner right = {b[i], drop_y}; fwp_cleanup right_cleanup;
+        fwp_value_protect(&right, &right_cleanup);
+        a[i] = fwp_rc_fresh(fwp_tuple2(left.value, right.value));
+        owner.count++;
+        (void)fwp_value_finish(&right, &right_cleanup);
+        (void)fwp_value_finish(&left, &left_cleanup);
     }
-    V result = fwp_map_finish(a, k);
-    FWP_KEEP_ALIVE(b);
-    fwp_mem_free(b);
+    fwp_scratch_finish(&b, &scratch_cleanup);
+    V result = fwp_map_finish_protected(&owner, &cleanup);
     FWP_KEEP_ALIVE(xs);
     FWP_KEEP_ALIVE(ys);
     return result;
@@ -749,21 +749,46 @@ static V fwp_p_unzip(V ps) {
     return fwp_tuple2(fwp_list_from(l, n), fwp_list_from(r, n));
 }
 
-static V fwp_p_unzip_owned(V ps, void (*dup_x)(V), void (*dup_y)(V)) {
+static V fwp_p_unzip_owned(V ps, void (*dup_x)(V), void (*dup_y)(V),
+        void (*drop_x)(V), void (*drop_y)(V), void (*drop_left)(V), void (*drop_right)(V)) {
     size_t n;
     V *a = fwp_map_items(ps, &n);
+    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&a, &scratch_cleanup);
     V *l = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+    fwp_map_owner left = {l, 0, 0, drop_x, drop_left};
+    fwp_cleanup left_cleanup; fwp_map_protect(&left, &left_cleanup);
     V *r = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+    fwp_map_owner right = {r, 0, 0, drop_y, drop_right};
+    fwp_cleanup right_cleanup; fwp_map_protect(&right, &right_cleanup);
     for (size_t i = 0; i < n; i++) {
         l[i] = OBJ(a[i])->f[0]; r[i] = OBJ(a[i])->f[1];
         if (dup_x) dup_x(l[i]);
+        left.count++;
         if (dup_y) dup_y(r[i]);
+        right.count++;
     }
-    V left = fwp_map_finish(l, n);
-    V right = fwp_map_finish(r, n);
-    V result = fwp_rc_fresh(fwp_tuple2(left, right));
-    FWP_KEEP_ALIVE(a);
-    fwp_mem_free(a);
+    /* Both result owners must remain protected until the outer pair exists.
+     * Build the left spine first, preserving the ordinary construction order. */
+    for (int side = 0; side < 2; side++) {
+        fwp_map_owner *owner = side ? &right : &left;
+        while (owner->count) {
+            V fields[] = {owner->items[owner->count - 1], owner->built};
+            V node = fwp_rc_fresh(fwp_data(1, 2, fields));
+            owner->count--;
+            owner->built = node;
+        }
+    }
+    V result = fwp_rc_fresh(fwp_tuple2(left.built, right.built));
+    left.built = right.built = 0;
+#if FWP_UNWIND
+    fwp_cleanup_pop(&right_cleanup);
+#endif
+    fwp_map_release(&right);
+#if FWP_UNWIND
+    fwp_cleanup_pop(&left_cleanup);
+#endif
+    fwp_map_release(&left);
+    fwp_scratch_finish(&a, &scratch_cleanup);
     FWP_KEEP_ALIVE(ps);
     return result;
 }
@@ -775,16 +800,23 @@ static V fwp_p_repeat(V n, V x) {
     return r;
 }
 
-static V fwp_p_repeat_owned(V n, V x, void (*dup_element)(V)) {
+static V fwp_p_repeat_owned(V n, V x, void (*dup_element)(V),
+        void (*drop_element)(V), void (*drop_list)(V)) {
     size_t k = fwp_count_arg(n);
-    V result = 0;
+    fwp_value_owner result = {0, drop_list}, pending = {0, drop_element};
+    fwp_cleanup result_cleanup, pending_cleanup;
+    fwp_value_protect(&result, &result_cleanup);
+    fwp_value_protect(&pending, &pending_cleanup);
     for (size_t i = 0; i < k; i++) {
         if (dup_element) dup_element(x);
-        V fields[] = {x, result};
-        result = fwp_rc_fresh(fwp_data(1, 2, fields));
+        pending.value = x;
+        V fields[] = {x, result.value};
+        result.value = fwp_rc_fresh(fwp_data(1, 2, fields));
+        pending.value = 0;
     }
+    (void)fwp_value_finish(&pending, &pending_cleanup);
     FWP_KEEP_ALIVE(x);
-    return result;
+    return fwp_value_finish(&result, &result_cleanup);
 }
 
 static V fwp_p_nth(V n, V xs) {
@@ -872,22 +904,26 @@ static V fwp_p_scan(V f, V z, V xs) {
 
 /* Each stored state keeps its output reference while the callback borrows
  * it for the next step. Only the initial state comes from a borrowed input. */
-static V fwp_p_scan_owned(V f, V z, V xs) {
+static V fwp_p_scan_owned(V f, V z, V xs, void (*element_drop)(V), void (*list_drop)(V)) {
     V initial = z;
     size_t n;
     V *a = fwp_map_items(xs, &n);
+    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&a, &scratch_cleanup);
     if (n > SIZE_MAX / sizeof(V) - 2) fwp_trap("scan too large");
     V *out = (V *)fwp_mem_alloc((n + 2) * sizeof(V));
+    fwp_map_owner owner = {out, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);
     fwp_callback_argument_dup(f, z);
     out[0] = z;
+    owner.count++;
     for (size_t i = 0; i < n; i++) {
         V args[] = {z, a[i]};
         z = fwp_apply_borrowed(f, 2, args);
         out[i + 1] = z;
+        owner.count++;
     }
-    FWP_KEEP_ALIVE(a);
-    fwp_mem_free(a);
-    V result = fwp_map_finish(out, n + 1);
+    V result = fwp_map_finish_protected(&owner, &cleanup);
+    fwp_scratch_finish(&a, &scratch_cleanup);
     FWP_KEEP_ALIVE(initial);
     FWP_KEEP_ALIVE(f);
     FWP_KEEP_ALIVE(xs);
@@ -896,39 +932,51 @@ static V fwp_p_scan_owned(V f, V z, V xs) {
 
 static V fwp_p_chunks(V n, V xs) {
     if ((int64_t)n <= 0) fwp_trap("chunks: size must be positive");
-    size_t k = (size_t)(int64_t)n, len;
+    size_t k = fwp_count_arg(n), len;
     V *a = fwp_list_items(xs, &len);
-    size_t nc = (len + k - 1) / k;
+    size_t nc = len / k + (len % k != 0);
     V *cs = (V *)fwp_alloc((nc + 1) * sizeof(V));
     for (size_t c = 0; c < nc; c++) {
-        size_t s = c * k, e = s + k < len ? s + k : len;
-        cs[c] = fwp_list_from(a + s, e - s);
+        size_t s = c * k, count = len - s < k ? len - s : k;
+        cs[c] = fwp_list_from(a + s, count);
     }
     return fwp_list_from(cs, nc);
 }
 
-static V fwp_p_chunks_owned(V n, V xs, void (*dup_element)(V)) {
+static V fwp_p_chunks_owned(V n, V xs, void (*dup_element)(V),
+        void (*drop_element)(V), void (*drop_chunk)(V), void (*drop_result)(V)) {
     if ((int64_t)n <= 0) fwp_trap("chunks: size must be positive");
-    size_t k = (size_t)(int64_t)n, len;
+    size_t k = fwp_count_arg(n), len;
     V *a = fwp_map_items(xs, &len);
+    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&a, &scratch_cleanup);
     /* Avoid overflowing len + k - 1, including very large valid sizes. */
     size_t nc = len / k + (len % k != 0);
     V *cs = (V *)fwp_mem_alloc((nc + 1) * sizeof(V));
+    fwp_map_owner chunks = {cs, 0, 0, drop_chunk, drop_result};
+    fwp_cleanup chunks_cleanup; fwp_map_protect(&chunks, &chunks_cleanup);
+    fwp_value_owner chunk = {0, drop_chunk}, pending = {0, drop_element};
+    fwp_cleanup chunk_cleanup, pending_cleanup;
+    fwp_value_protect(&chunk, &chunk_cleanup);
+    fwp_value_protect(&pending, &pending_cleanup);
     for (size_t c = 0, start = 0; c < nc; c++) {
         size_t count = len - start < k ? len - start : k;
-        V chunk = 0;
         for (size_t j = count; j; j--) {
             V value = a[start + j - 1];
             if (dup_element) dup_element(value);
-            V fields[] = {value, chunk};
-            chunk = fwp_rc_fresh(fwp_data(1, 2, fields));
+            pending.value = value;
+            V fields[] = {value, chunk.value};
+            chunk.value = fwp_rc_fresh(fwp_data(1, 2, fields));
+            pending.value = 0;
         }
-        cs[c] = chunk;
+        cs[c] = chunk.value;
+        chunks.count++;
+        chunk.value = 0;
         start += count;
     }
-    V result = fwp_map_finish(cs, nc);
-    FWP_KEEP_ALIVE(a);
-    fwp_mem_free(a);
+    (void)fwp_value_finish(&pending, &pending_cleanup);
+    (void)fwp_value_finish(&chunk, &chunk_cleanup);
+    V result = fwp_map_finish_protected(&chunks, &chunks_cleanup);
+    fwp_scratch_finish(&a, &scratch_cleanup);
     FWP_KEEP_ALIVE(xs);
     return result;
 }
@@ -943,19 +991,23 @@ static V fwp_p_iterate(V n, V f, V x) {
     return fwp_list_from(a, k);
 }
 
-static V fwp_p_iterate_owned(V n, V f, V x) {
+static V fwp_p_iterate_owned(V n, V f, V x, void (*element_drop)(V), void (*list_drop)(V)) {
     size_t k = fwp_count_arg(n);
     if (!k) return 0;
     V initial = x;
     if (k >= SIZE_MAX / sizeof(V)) fwp_trap("iterate too large");
     V *a = (V *)fwp_mem_alloc((k + 1) * sizeof(V));
+    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);
     fwp_callback_argument_dup(f, x);
     a[0] = x;
+    owner.count++;
     for (size_t i = 1; i < k; i++) {
         x = fwp_apply_borrowed(f, 1, &x);
         a[i] = x;
+        owner.count++;
     }
-    V result = fwp_map_finish(a, k);
+    V result = fwp_map_finish_protected(&owner, &cleanup);
     FWP_KEEP_ALIVE(initial);
     FWP_KEEP_ALIVE(f);
     return result;
