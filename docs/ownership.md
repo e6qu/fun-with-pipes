@@ -368,3 +368,40 @@ final ARC storage, and deliberately removes one count to verify leak detection.
 Timestamps differ between executions; the test checks their format and the
 remaining fields rather than requiring identical clock readings. These records
 still allocate; avoiding that allocation is separate work.
+
+Child-process calls borrow their argument strings and input for the duration of
+execution. `process.run` and `process.run-input` return an owned record containing
+the exit status and copied standard-output/error strings; `process.call` returns
+an immediate status number. A nonzero child exit status is a result, whereas a
+failure to start or communicate with the child raises `Error[IoError]` of kind
+`spawn`. Arguments containing a zero byte are rejected before any OS call.
+
+The process owner releases argument scratch, pipe endpoints and capture buffers.
+It also reaps the child on POSIX and closes Windows process/thread handles. If
+execution unwinds before the child finishes, cleanup terminates and waits for
+that child. Captured strings stay protected while the result record is being
+constructed, so a later allocation failure releases earlier copies. Inputs can
+outlive the call; ownership of them is never transferred to the child. POSIX
+children receive ordinary SIGPIPE handling, matching interpretation. Parent writes
+block that signal only on the calling thread, consume only a newly generated
+broken-pipe signal, and restore the previous mask. They preserve the host's signal
+handler and any previously pending SIGPIPE, including when a child exits early.
+
+The new process regressions compare repeated raw-interpreter and native calls,
+including quoted/Unicode arguments, output larger than pipe capacity and a child
+that exits without reading its input. Instrumented probes force construction and
+OS failures, check resource cleanup and reject deliberately missing counts or
+buffer frees. These are candidate contracts pending the six-host and final
+production checks recorded in the handoff; they do not establish ownership for
+networking or arbitrary external-resource contexts. Process calls are synchronous;
+this cleanup does not establish deadline or cancellation responsiveness while
+waiting for a child.
+
+
+Secret terminal input uses the same owned optional string as ordinary line input.
+A registered cleanup restores the original echo setting before a trap leaves the
+read frame. The interpreter and native runtime query real Windows console modes
+and width; redirected streams continue to behave as ordinary input. Descriptor
+validation happens before narrowing to the OS integer type. Terminal tests use a
+real pseudo-terminal on POSIX and a private console on Windows, with a deliberately
+missing restore action required to fail. Platform results remain in the handoff.

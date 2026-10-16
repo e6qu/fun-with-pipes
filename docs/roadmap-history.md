@@ -48,6 +48,29 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Record moves and application utilities (PR #148)
+
+[PR #148](https://github.com/e6qu/fun-with-pipes/pull/148) merged as
+`853d6669dbf7dea78483376865190c218c9fece6`, with the same files as tested head
+`93b1741abcf5ab2a61460746c0077564e0328c0e`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38825629531)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38825487182)
+passed before merging. The squash subject and empty body were verified. Duplicate
+post-merge production run `38835480889` was canceled after the tree comparison.
+
+Flattened and uniquely owned boxed records can transfer fields without temporary
+child owners. Alias, sibling, wide-value, scalar-bit, resource and failure controls
+remain. Working-directory results, clock records, empty maps/sets and Boolean
+combinations have checked ownership. Missing working directories report a typed
+error in both engines; structured logs emit one newline. Maintained directory
+reports run repeatedly, and Windows probes use native executable/handle rules.
+
+[Focused six-host checks](https://github.com/e6qu/fun-with-pipes/actions/runs/38823885563)
+passed before the full gate. [Benchmarks](benchmarks.md) retain record-move
+allocation/count evidence and mixed C/Rust timing gaps. The matrix-output helper
+experiment was not adopted: smaller code did not establish a portable speedup.
+No whole roadmap work area was marked complete.
+
 ## Numerical precision and filesystem ownership (PR #147)
 
 [PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) merged as `c9127d2d`

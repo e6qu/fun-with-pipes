@@ -72,35 +72,35 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) passed all nine
-production jobs and documentation before merging. It extends owned numerical
-solvers, preserves F128 gradient precision, borrows F64 array data across loops,
-and owns console/environment/filesystem results and errors. Delivery evidence
-belongs in [the history](docs/roadmap-history.md), not a second active backlog.
+[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) and
+[#148](https://github.com/e6qu/fun-with-pipes/pull/148) passed all nine production
+jobs and documentation before merging. They extend owned numerical solvers and
+application utilities, preserve F128 gradient precision, borrow array data across
+loops and transfer record fields without unnecessary temporary owners. Their
+[delivery evidence](docs/roadmap-history.md) is history, not another active backlog.
 
-The current [PR #148](https://github.com/e6qu/fun-with-pipes/pull/148) combines:
+The current combined delivery covers:
 
-- Transfer fields from flattened and uniquely owned boxed records. Preserve
-  aliases, discarded siblings, wide values, resource lifetimes and failure cleanup.
-- Own working-directory and clock results. Report an unavailable working
-  directory explicitly; admit static empty maps/sets and Boolean combinations
-  to checked ARC.
-- Validate repeated runs of the maintained directory-report example and
-  timestamped logging. Fix duplicated log newlines and Windows regression probes.
-- Record current C/Rust costs and controlled record-move measurements. Keep the
-  slower results and actual instructions. Do not adopt the tested matrix-output
-  helper: its smaller code did not give a dependable portable timing improvement.
+- Own child-process arguments, captured strings/records, handles and temporary
+  storage; release them on errors and traps. Preserve host signal policy and match
+  interpreter child statuses.
+- Restore terminal echo before unwinding and use real Windows console queries.
+  Give terminal observations explicit contracts and repair portable CLI tests.
+- Exercise the maintained shell tool repeatedly, raw/native agreement, forced
+  failures and deliberately broken cleanup on all six native platforms.
+- Retain repeated derivative timing/layout comparisons and allocation-site
+  profiles. Production tape layout stays unchanged because timings are mixed.
 
-The complete focused batch passes Linux, macOS and Windows on both architectures.
-Require all nine production jobs plus documentation again for the combined PR's
-final head. Component results are evidence, not final delivery acceptance.
+The combined process/terminal focused gate is being completed. Require all nine
+production jobs plus documentation again for the final delivery head. Focused
+results do not replace full acceptance.
 
-The following preparation tackles child-process arguments, captured output,
-handles and failure cleanup, which still rely on tracing. Keep that work separate
-until this delivery is accepted. Then continue with confirmed application costs,
-derivative timing and memory scaling, and the other work areas above. Remaining
-matrix wrapper allocations and C/Rust timing gaps are not resolved by fewer
-reference counts.
+Four-host allocation profiling attributes 41.65% of managed requests in the
+repeated derivative workload to mapped list nodes. Following preparation builds
+numeric arrays directly from mapped results while preserving callback order;
+its semantic, cleanup and repeated timing comparisons are pending. Bundle it
+into this delivery only if that evidence supports adoption before the final gate.
+Remaining matrix wrappers, C/Rust gaps and the seven work areas above stay open.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

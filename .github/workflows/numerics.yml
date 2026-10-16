@@ -5,14 +5,14 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites]
         default: numerical
       evidence_run:
         description: Completed solver run to use for generated-code comparisons
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields'
+    if: inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes'
     strategy:
       fail-fast: false
       matrix:
@@ -40,11 +40,25 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - if: inputs.suite != 'fields'
+      - if: inputs.suite != 'fields' && inputs.suite != 'processes'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
       - name: Field movement and resource lifetime regressions
         if: inputs.suite == 'fields'
         run: cargo test --no-fail-fast --test clock_ownership --test directory_report --test working_directory --test arc_execution --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test borrowed_callbacks --test general_record_update_ownership
+      - name: Interpreter console state on Windows
+        if: inputs.suite == 'processes' && runner.os == 'Windows'
+        run: cargo test --lib sys::tty::tests::native_console -- --exact
+      - name: Child-process ownership and failure cleanup
+        if: inputs.suite == 'processes'
+        env:
+          FWP_PROCESS_ARTIFACTS: process-evidence
+        run: cargo test --no-fail-fast --test process_ownership --test terminal_ownership --test console_ownership --test windows_runtime --test windows_static_memory --test cli --test stdlib_doc
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'processes'
+        with:
+          name: process-${{ matrix.runner }}
+          path: process-evidence/
+          if-no-files-found: ignore
   array_borrow:
     if: inputs.suite == 'array-borrow'
     permissions:
@@ -367,6 +381,34 @@ jobs:
           path: |
             performance-evidence/
             target/bench.md
+  ad_metadata:
+    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release --bin fwp
+      - name: Attribute derivative allocations to native call sites
+        if: inputs.suite == 'ad-sites'
+        run: python3 scripts/measure-ad-allocation-sites.py --output metadata-evidence
+      - name: Repeat paired metadata costs with sustained derivatives
+        if: inputs.suite != 'ad-sites'
+        run: python3 scripts/measure-ad-metadata.py --comparison "${{ inputs.suite == 'ad-layout' && 'interleaved' || 'separate' }}" --output metadata-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ${{ inputs.suite }}-${{ matrix.runner }}
+          path: metadata-evidence/
   autodiff:
     if: inputs.suite == 'autodiff'
     strategy:
@@ -412,7 +454,7 @@ jobs:
         run: python3 scripts/measure-ad-registry.py --comparison search --output autodiff-evidence/search
       - name: Paired metadata allocation and binary measurements
         if: ${{ !cancelled() && steps.checkpoint_compiler.outcome == 'success' }}
-        run: python3 scripts/measure-ad-metadata.py --output autodiff-evidence/metadata
+        run: python3 scripts/measure-ad-metadata.py --comparison separate --output autodiff-evidence/metadata
       - uses: actions/upload-artifact@v7
         if: always()
         with:
