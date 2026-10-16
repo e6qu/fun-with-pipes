@@ -258,9 +258,11 @@ fn each_preserves_aliases_effect_order_and_early_failures() {
                         .arg(&binary),
                 );
                 for reuse in ["0", "1"] {
+                    let stress = if mode == "tracing" { "1" } else { "0" };
                     let output = Command::new(&binary)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_GC", if mode == "tracing" { "on" } else { "off" })
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
                         .env("FWP_GC_STATS", "0")
                         .env("FWP_REUSE_VERIFY", reuse)
                         .output()
@@ -323,8 +325,12 @@ fn each_avoids_allocating_a_discarded_result_list() {
                 );
             }
             let finish = "    fwp_cl_finish();\n";
-            assert_eq!(code.matches(finish).count(), 1);
-            code = code.replace(finish, &format!("{finish}fprintf(stderr,\"each-cost %llu %llu\\n\",each_requests,each_bytes);\n"));
+            let main = code
+                .find("static void *fwp_main_thread(void *arg) {")
+                .unwrap();
+            let (prefix, body) = code.split_at(main);
+            assert_eq!(body.matches(finish).count(), 1);
+            code = prefix.to_string() + &body.replace(finish, &format!("{finish}fprintf(stderr,\"each-cost %llu %llu\\n\",each_requests,each_bytes);\n"));
             fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
             let output = checked(
                 Command::new(&binary)

@@ -9,10 +9,15 @@ The only open delivery PR is #153; do not open a second before it is accepted.
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
 Preparation base: `ac3060d1`. Current implementation: `2a98d395`.
 
-Next: finish native run `38961921474` and actual WebAssembly run `38962206780`
-at `2a98d395`, fixing any failures. These verify the new fold-based `each` together
-with all prepared service/compiler changes. Retain the new allocation comparison
-and inspect its actual binaries. Do not claim the `each` saving from earlier runs.
+Next: publish the each fixture repair and require its replacement six-host run.
+Run `38961921474` at `2a98d395` found two test-setup errors: the shutdown hook
+matched three exit paths, and ARC correctly rejected collector-stress flags.
+The repair restricts measurement to normal main completion and uses collector
+stress only in tracing mode, with reuse verification in both modes. Native values
+in tracing mode already agreed with interpretation; allocation and ARC checks
+still need the repaired run. Actual WebAssembly run `38962206780` checks the
+unchanged library/compiler source at `2a98d395`. Retain the new allocation
+comparison and inspect its binaries after the native checks pass.
 
 After #153 passes and merges, preserve the preparation's current head under a
 remote evidence tag before rebasing: the reports refer to earlier source commits.
