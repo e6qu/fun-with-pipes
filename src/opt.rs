@@ -983,7 +983,15 @@ fn rewrite_hofs(
         budget: 0,
         resource_locals: Vec::new(),
     };
-    if !matches!(fexpr, Expr::Apply(..)) {
+    let Expr::Apply(function, captures) = fexpr else {
+        return;
+    };
+    let Expr::Func(id) = &**function else {
+        return;
+    };
+    if captures.len() >= funcs.get(*id).map_or(0, |f| f.arity as usize) {
+        // An unknown or saturated computation returning a function has no
+        // known callback body to expose. Do not add a forwarding wrapper.
         return;
     }
     let mut bindings = Vec::new();

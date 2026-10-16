@@ -2,7 +2,7 @@
 
 Updated 2026-10-16. Combined preparation in `/private/tmp/fwp-wasi-delivery`,
 branch `wasi-hash-delivery`, based on #150's exact head `7a7b40e1` while its final
-gates run. It transfers only `e5e05748..edb5d2ba` from
+gates run. It transfers only `e5e05748..562873af` from
 `/private/tmp/fwp-wasi-arc` / `checked-wasi-ownership`. Two workflow conflicts
 were resolved by retaining every #150 Windows test and selector and adding the
 new hash/WASI suites. Source/runtime/tests otherwise transfer unchanged.
@@ -150,8 +150,9 @@ The complete repair binds eager captures once in their original left-to-right
 order before the producer, then uses existing callback specialization. Fusion
 keeps those bindings outside its loop and crosses only consumer arguments proved
 free of effects/traps. Checked parameter types preserve constructor/nominal types.
-Resource-bearing captures retain their existing frames. No new syntax, switch or
-runtime wrapper is added.
+Resource-bearing captures retain their existing frames. Specialization requires
+a known partial-application body; unknown/saturated function computations do not
+gain a forwarding wrapper. No new syntax, switch or runtime wrapper is added.
 
 Tests require raw/native O1/O2 agreement, retained inputs, wide bitwise values,
 capture effects before input, a capture trap even for empty input, and an effectful
@@ -183,3 +184,10 @@ program C/modules before assertions. `38857203804` tests this repair; it is not
 accepted until the run passes. Native semantic and C/Rust measurement runs still
 use `d1ae668f`, before this WASI-specific change. Final combined native/WASI gates
 remain mandatory. No full local build or suite was run.
+
+The combined `src`, `runtime` and `lib` trees exactly match preparation `562873af`.
+The only workflow transfer differences preserve #150's extra Windows coverage
+and selectors. The known-callback restriction is a later source change than the
+queued focused runs, so final combined validation must cover it. The active #150
+head remains unchanged, with six production jobs and docs passing as of 05:52 UTC;
+two Linux jobs and regular Intel macOS remain running.
