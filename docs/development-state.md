@@ -1,25 +1,30 @@
 # Session handoff
 
-Updated 2026-10-16. The only open delivery is [PR #150](https://github.com/e6qu/fun-with-pipes/pull/150),
-head `7a7b40e1878ea062f64eceded6ae029b4124f976`. Eight of nine
+Updated 2026-10-16. [PR #150](https://github.com/e6qu/fun-with-pipes/pull/150)
+merged as `729db67f71386750aad0bbe477f546e5276b0223` after all nine
 [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38851567232)
-pass; Linux AMD64 is running. [Documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38851565415)
-passes at the same head. Root worktree branch: `owned-list-text-delivery`.
-[PR #149](https://github.com/e6qu/fun-with-pipes/pull/149) is accepted as `58ed740c`.
-Its duplicate post-merge production run `38851195546` is canceled.
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38851565415)
+passed for `7a7b40e1878ea062f64eceded6ae029b4124f976`. Tree equality, parent and
+the single-line subject with empty body were verified. Duplicate post-merge
+production `38860909658` was requested canceled; confirm its terminal status.
+[History](roadmap-history.md) records accepted work and limitations.
 
-Combined preparation lives in `/private/tmp/fwp-wasi-delivery`, branch
-`wasi-hash-delivery`, based on #150's exact head. It transfers only
-`e5e05748..dcedb71b` from `/private/tmp/fwp-wasi-arc` / `checked-wasi-ownership`.
-Source/runtime/library trees match `562873af`; workflow differences preserve
-all #150 Windows cancellation and zip/fold coverage. Do not replay old parents.
-This preparation has no PR yet.
+Current combined delivery: `/private/tmp/fwp-wasi-delivery`, branch
+`wasi-hash-delivery`, based on accepted `729db67f`. Only commits after #150's
+exact head were rebased onto its identical squash tree. Source/runtime/library
+trees match preparation `562873af`; workflow differences preserve every #150
+Windows cancellation and zip/fold test. The earlier preparation is
+`/private/tmp/fwp-wasi-arc`, anchored at `e5e05748`; do not replay its parents.
 
-Next: when #150's nine exact-head production jobs and docs pass, squash merge,
-verify tree equality, parent and message, and cancel redundant post-merge CI.
-Rebase only combined commits after `7a7b40e1` onto that verified merge. Update
-PLAN/history/this handoff, publish one combined delivery PR and require its own
-nine production jobs plus docs. Fix failures; focused success is not acceptance.
+Next: publish this combined WASI/hash delivery, then require all nine production
+jobs plus documentation for its exact final head. Fix failures and squash merge
+only after full acceptance. Focused checks below do not replace that gate.
+Independent following preparation is `/private/tmp/fwp-hash-borrows`, branch
+`borrowed-hash-arguments`, anchored at old pre-rebase `28cc4d0e`. It investigates
+stack hash tuples and direct integer range arrays; transfer only later commits
+after this delivery merges. Its focused runs are `38860420915` (six native hosts),
+`38860423500` (WASI) and `38860426497` (costs), at `ed78f26a`, before range changes.
+Do not open its delivery PR while this one remains open.
 
 Standing authorization covers fixes, publication and squash merge. Commit messages
 are exactly one line, at most 80 characters, with empty body and no attribution
@@ -131,5 +136,6 @@ compiler is `/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp`, revision `93b17
 A later guarded diagnostic compilation stopped with an OS signal permission
 error. No compiler/probe process remains; limits were not raised. Further compiler
 validation moved to CI. Do not restart that refused local workload. Small docs,
-formatting and report checks may still run under the fixed guard. Paired report
+formatting and report checks may still run under the fixed guard. Documentation passes
+after handoff consolidation (2.54 s). Paired report
 retention and sample inspection each passed in 0.14 s.

@@ -48,6 +48,29 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Numeric zip intermediates and owned list/text results (PR #150)
+
+[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) merged as
+`729db67f71386750aad0bbe477f546e5276b0223` after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38851567232)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38851565415)
+passed for `7a7b40e1878ea062f64eceded6ae029b4124f976`. The merge has the same files,
+parent `58ed740c` and the required one-line message with empty body.
+
+Known numeric zip/map callbacks avoid temporary pairs and input list nodes.
+Zip/unzip/repeat/chunks/scan/iterate protect partial construction; large I64 chunk
+sizes no longer truncate on WASI. File reads and replacement writes have checked
+ownership, exercised by maintained todo/grep functions and actual command lines.
+Windows cancellation fixtures now supply the stack boundary required by scanning.
+
+[Measurements](measurements/zip-maps-2026-10-16.json) reduce repeated derivative
+requests from 23,087,625 to 18,892,809 and retains from 10,492,416 to 8,395,264;
+peak stays 840,888 bytes. [Paired repeats](measurements/zip-map-cpu-2026-10-16.json)
+retain mixed tiny nested timings and actual instruction evidence. These compare
+fwp variants, not C/Rust parity. Tracing removal and the seven project work areas
+remain unfinished. Detailed focused checks are in the
+[accepted handoff](https://github.com/e6qu/fun-with-pipes/blob/7a7b40e1878ea062f64eceded6ae029b4124f976/docs/development-state.md).
+
 ## Owned processes and numeric mapped arrays (PR #149)
 
 [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149) merged as
@@ -56,7 +79,7 @@ batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.
 and [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/38841118993)
 passed for `5748f7496a8f1db0e93145c53e380a0703affc2f`. The merge tree, parent and
 single-line subject with empty body were verified. Duplicate post-merge production
-`38851195546` was requested canceled; documentation may finish normally.
+`38851195546` is confirmed canceled; documentation finished normally.
 
 Process calls own argument scratch, captured output, handles and partial results.
 POSIX child signal behavior agrees with interpretation while preserving the

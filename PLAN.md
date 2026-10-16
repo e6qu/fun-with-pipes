@@ -73,26 +73,25 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) is running its final
-nine production gates; documentation passes. It removes temporary numeric zip
-pairs, repairs partial-list cleanup and large WASI chunk sizes, and extends
-checked ownership to maintained text tools. Do not merge before every exact-head
-gate passes. Earlier accepted work belongs in [delivery evidence](docs/roadmap-history.md).
+[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) passed all nine production
+jobs and documentation before merging. It removes temporary numeric zip pairs,
+repairs partial-list cleanup and large WASI chunk sizes, and extends checked
+ownership to maintained text tools. Earlier accepted work belongs in
+[delivery evidence](docs/roadmap-history.md).
 
-The following combined batch prepares synchronous WASI ARC, allocation-free
+The current combined delivery adds synchronous WASI ARC, allocation-free
 structural hashing and specialization of eagerly captured pipeline callbacks.
 Six-host native checks and both actual WASI ownership jobs pass. Four-host
 comparisons and paired repeats confirm fewer allocations and lower small-workload
 CPU time, while preserving slower elapsed samples and remaining C/Rust gaps.
-Large-input timing is mostly unchanged. The final combined gate must cover the
-later restriction to known callback bodies as well as all transferred changes.
+Large-input timing is mostly unchanged. Require all nine production gates plus
+documentation for the final combined head, including its later restriction to
+known callback bodies and all transferred changes.
 
-The preparation is being transferred on top of #150's exact tree, preserving all
-Windows stress/cancellation coverage and earlier CPU reports. Open its delivery
-PR only after #150 merges, then require all nine production gates plus docs for
-the combined final head. Browser/service re-entry, retained host callbacks,
-remaining numerical and networking ownership, fewer runtime counts, and all seven
-work areas above remain open. A focused success does not complete a work area.
+Following preparation targets measured temporary hash tuples and input list nodes.
+Browser/service re-entry, retained host callbacks, remaining numerical/networking
+ownership, fewer runtime counts and all seven work areas remain open. A focused
+success does not complete a work area. Keep one delivery PR open at a time.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the
