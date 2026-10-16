@@ -140,3 +140,105 @@ int main(void){
         }
     }
 }
+
+#[path = "support/http2_values.rs"]
+mod http2_values;
+
+#[test]
+fn cached_stream_positions_preserve_values_and_report_storage() {
+    let mut generated = http2_values::generated();
+    let declaration = "typedef uint64_t V;";
+    assert_eq!(generated.matches(declaration).count(), 1);
+    generated = generated.replace(declaration, "typedef uint64_t V;\nstatic int measured;\nstatic unsigned long long requests, requested_bytes;\n");
+    for (marker, condition) in [
+        ("static inline void *fwp_alloc_init(size_t n) {", "1"),
+        (
+            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
+            "leaf != 0",
+        ),
+    ] {
+        assert_eq!(generated.matches(marker).count(), 1);
+        generated = generated.replace(
+            marker,
+            &format!("{marker} if(measured && ({condition})){{requests++;requested_bytes+=n;}}"),
+        );
+    }
+    let hooks = r#"
+#include <stdlib.h>
+static void *queued_messages[128];
+static size_t messages_freed;
+static void observe_free(void *);
+#define free(p) observe_free(p)
+"#;
+    let code = format!(
+        "{hooks}\n{generated}\n{}",
+        include_str!("fixtures/grpc_stream_storage.c")
+    );
+    let dir = fwp::cgen::TempDir::new("grpc-stream-storage").unwrap();
+    let memo = "if (cell->forced) return cell->memo;";
+    assert_eq!(code.matches(memo).count(), 1);
+    let broken = dir.join("without-cache.exe");
+    fwp::cgen::compile_c(
+        &code.replace(memo, "/* deliberately receive again */"),
+        &broken,
+        "-O2",
+    )
+    .unwrap();
+    let control = Command::new(&broken)
+        .args(["1", "0"])
+        .env("FWP_GC", "off")
+        .env("FWP_GC_STRESS", "0")
+        .env("FWP_GC_VERIFY", "0")
+        .env("FWP_REUSE_VERIFY", "0")
+        .output()
+        .unwrap();
+    assert_eq!(
+        control.status.code(),
+        Some(34),
+        "missing cache must be detected: {control:?}"
+    );
+    let mut report = String::from("elements\tmode\tconsumed\tsetup_requests\tsetup_bytes\treceive_requests\treceive_bytes\tsetup_charged_bytes\tafter_read_charged_bytes\tafter_clearing_roots_charged_bytes\tqueued_messages\tcollections\n");
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(format!("stream{opt}.exe"));
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for count in [1, 32, 128] {
+            for mode in [0, 1, 2] {
+                for stress in ["0", "1"] {
+                    let output = Command::new(&binary)
+                        .args([count.to_string(), mode.to_string()])
+                        .env("FWP_GC", if stress == "0" { "off" } else { "on" })
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_REUSE_VERIFY", "0")
+                        .output()
+                        .unwrap();
+                    assert!(
+                        output.status.success(),
+                        "{opt}/{count}/{mode}/{stress}: {output:?}"
+                    );
+                    assert!(output.stderr.is_empty(), "{output:?}");
+                    let row = String::from_utf8(output.stdout).unwrap();
+                    let fields: Vec<_> = row.split_whitespace().collect();
+                    assert_eq!(fields.len(), 12, "{row}");
+                    assert_eq!(fields[0], count.to_string());
+                    assert_eq!(fields[1], mode.to_string());
+                    if stress == "0" {
+                        assert_eq!(fields[11], "0", "measurement collected: {row}");
+                        if opt == "-O2" {
+                            report.push_str(&row);
+                        }
+                    }
+                }
+            }
+        }
+        if let Some(path) = std::env::var_os("FWP_STREAM_ARTIFACTS") {
+            let path = std::path::PathBuf::from(path);
+            std::fs::create_dir_all(&path).unwrap();
+            std::fs::write(path.join("stream.c"), &code).unwrap();
+            std::fs::copy(&binary, path.join(format!("stream{opt}.exe"))).unwrap();
+            std::fs::write(path.join("storage.tsv"), &report).unwrap();
+        }
+    }
+    eprint!("{report}");
+}
