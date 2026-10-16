@@ -58,6 +58,14 @@ int main(void) {
     fwp_rc_free_obj(inputs);fwp_rc_free_arr(data);fwp_rc_free_arr(constants);fwp_rc_free_arr(code);
     if(fwp_gc.budget!=initial)return 248;
 #ifndef KERNEL_BASELINE
+    kernel_counters_reset();
+    const int64_t last_code[] = {FWP_K_CONST};
+    const V last_constants[] = {fwp_from_f64(2.5)};
+    const fwp_kernel last = {.code=last_code, .ncode=1, .consts=last_constants, .depth=1};
+    double last_sum = 0;
+    fwp_kernel_sums(&last,SIZE_MAX,SIZE_MAX/FWP_KBLOCK,1,&last_sum);
+    if(last_sum!=(FWP_KBLOCK-1)*2.5 || atomic_load(&kernel_live))return 247;
+    puts("final reduction block: 4095 elements without index overflow");
     puts("allocation and worker-start failures: all started workers joined; final storage 0");
 #endif
     return 0;

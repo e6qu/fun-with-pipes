@@ -640,12 +640,14 @@ static void fwp_kernel_sums(const fwp_kernel *k, size_t n, size_t b0, size_t nb,
     double *stack = (double *)fwp_k_malloc((k->depth ? k->depth : 1) * FWP_KCHUNK * sizeof(double));
     double buf[FWP_KCHUNK];
     for (size_t b = 0; b < nb; b++) {
-        size_t start = (b0 + b) * FWP_KBLOCK, end = start + FWP_KBLOCK < n ? start + FWP_KBLOCK : n;
+        size_t start = (b0 + b) * FWP_KBLOCK;
+        size_t end = start + (n - start < FWP_KBLOCK ? n - start : FWP_KBLOCK);
         double acc = 0.0;
-        for (size_t i = start; i < end; i += FWP_KCHUNK) {
+        for (size_t i = start; i < end;) {
             size_t m = end - i < FWP_KCHUNK ? end - i : FWP_KCHUNK;
             fwp_kernel_eval(k, i, m, buf, stack);
             for (size_t j = 0; j < m; j++) acc += buf[j];
+            i += m;
         }
         sums[b] = acc;
     }

@@ -492,6 +492,39 @@ fn wasi_range_array_rejects_length_before_32_bit_truncation() {
 }
 
 #[test]
+fn wasi_cpu_kernel_final_reduction_block_does_not_wrap() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-kernel-final-block").unwrap();
+    let input = dir.join("main.fwp");
+    std::fs::write(&input, "main = ()\n").unwrap();
+    let code = emit(&input, &dir.join("main.c"), &[]);
+    let probe = r#"
+int main(void) {
+    const int64_t code[] = {FWP_K_CONST};
+    const V constants[] = {fwp_from_f64(2.5)};
+    const fwp_kernel kernel = {.code=code, .ncode=1, .consts=constants, .depth=1};
+    double sum = 0;
+    fwp_kernel_sums(&kernel,SIZE_MAX,SIZE_MAX/FWP_KBLOCK,1,&sum);
+    return sum == (FWP_KBLOCK-1)*2.5 ? 0 : 247;
+}
+"#;
+    let code = code[..code.find("int main(").unwrap()].to_string() + probe;
+    let end = "start + (n - start < FWP_KBLOCK ? n - start : FWP_KBLOCK)";
+    assert_eq!(code.matches(end).count(), 1);
+    let wrapped = code.replace(end, "start + FWP_KBLOCK < n ? start + FWP_KBLOCK : n");
+    for opt in ["-O1", "-O2"] {
+        for (candidate, expected) in [(&code, 0), (&wrapped, 247)] {
+            let binary = dir.join("last-block.wasm");
+            fwp::cgen::compile_for(candidate, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+            let output = wasi(&binary, dir.path()).output().unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+        }
+    }
+}
+
+#[test]
 fn wasi_cpu_kernels_check_counts_before_32_bit_truncation() {
     if !available() {
         return;

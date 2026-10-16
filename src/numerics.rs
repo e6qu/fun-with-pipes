@@ -698,7 +698,7 @@ impl Kernel<'_> {
         let mut buf = [0.0f64; CHUNK];
         for (k, s) in sums.iter_mut().enumerate() {
             let start = (b0 + k) * RBLOCK;
-            let end = n.min(start + RBLOCK);
+            let end = start + RBLOCK.min(n - start);
             let mut acc = 0.0f64;
             let mut i = start;
             while i < end {
@@ -1291,6 +1291,24 @@ fn matrix_product(a: &[Value]) -> R<Value> {
         }
     }
     Ok(f64_array(&result))
+}
+
+#[cfg(test)]
+mod kernel_boundary_tests {
+    use super::*;
+
+    #[test]
+    fn final_reduction_block_does_not_wrap_at_the_address_limit() {
+        let kernel = Kernel {
+            code: &[OP_CONST],
+            consts: &[2.5],
+            inputs: &[],
+            depth: 1,
+        };
+        let mut sums = [0.0];
+        kernel.sum_blocks(usize::MAX, usize::MAX / RBLOCK, &mut sums);
+        assert_eq!(sums[0], (RBLOCK - 1) as f64 * 2.5);
+    }
 }
 
 #[cfg(test)]

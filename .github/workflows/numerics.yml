@@ -74,6 +74,9 @@ jobs:
       - name: CPU kernel size validation order
         if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
         run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact
+      - name: Interpreter final reduction block
+        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        run: cargo test --lib numerics::kernel_boundary_tests::final_reduction_block_does_not_wrap_at_the_address_limit -- --exact
       - name: CPU kernel sanitized size and cleanup controls
         if: (inputs.suite == 'kernels' || inputs.suite == 'decoders') && runner.os != 'Windows'
         run: cargo test --test device_bounds device_allocations_are_bounded_and_cleanup_controls_detect_omissions -- --exact

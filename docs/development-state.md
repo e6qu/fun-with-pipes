@@ -123,6 +123,12 @@ at exit. Executables now register registry cleanup on first use; library teardow
 keeps its existing cleanup. A WASI negative control omits that registration and
 must expose the leak. Fresh combined checks must verify both repairs.
 
+Review also found that the final reduction block can overflow its end or loop
+index at the address limit. C and interpreter loops now use the remaining length
+before adding. Small native/interpreter/actual-WASI probes evaluate only the last
+4095 constant elements; a WASI control restores the wrapped end and must fail.
+These checks need CI; no large input or multi-billion-element loop runs locally.
+
 Six-native `38888712709` and WASI `38888716317` are incomplete/failed preparation,
 not acceptance. Allow their Windows dependency caches to finish before replacing
 the native run. The earlier `35e8f0ab` runs were superseded. Reference tables are
@@ -155,8 +161,8 @@ networking, plus exit and GPU execution. Raw pointers, foreign/host callback
 retention, mutable cycles and deployment exclusions also remain beyond that count.
 JIT is prohibited; the existing OpenCL runtime-build gap is unresolved by CPU work.
 
-Next: publish the cleanup repairs and run fresh combined six-native and actual
-WASI checks; fix every failure and retain final evidence. Independently finish #152's full gates and squash merge
+Next: publish the cleanup and final-block repairs and run fresh combined
+six-native and actual WASI checks; fix every failure and retain final evidence. Independently finish #152's full gates and squash merge
 when they pass. Then rebase this preparation delta onto that accepted merge,
 update the plan/history/handoff, open the next substantial PR and require all
 nine production jobs plus docs on its final head before merging.
