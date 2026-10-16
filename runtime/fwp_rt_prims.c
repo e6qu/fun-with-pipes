@@ -711,9 +711,10 @@ static V fwp_p_zip_owned(V ys, V xs, void (*dup_x)(V), void (*dup_y)(V),
         (void)fwp_value_finish(&left, &left_cleanup);
     }
     fwp_scratch_finish(&b, &scratch_cleanup);
+    V result = fwp_map_finish_protected(&owner, &cleanup);
     FWP_KEEP_ALIVE(xs);
     FWP_KEEP_ALIVE(ys);
-    return fwp_map_finish_protected(&owner, &cleanup);
+    return result;
 }
 
 /* data-last: the subject's element is the last argument (f y x) */

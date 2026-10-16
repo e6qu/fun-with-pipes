@@ -117,3 +117,10 @@ regression is reproduced before the repair, rather than inferred from inspection
 
 Current #149 docs pass at `5748f749`; the nine production jobs have begun running.
 Keep this preparation separate until that delivery merges. No gate is waived.
+
+
+Final review keeps borrowed zip inputs live until after result-list allocation,
+matching the existing map/zip-with contracts. The edited-C cleanup probe passes
+again (4.12 s); pair and list assembly also force real tracing collection. Initial
+queued tests `38842464287` and costs `38842467115` are superseded before any job
+starts. Replace them with this liveness repair, then record the new run IDs.

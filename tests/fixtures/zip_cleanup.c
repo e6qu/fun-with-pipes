@@ -29,10 +29,16 @@ static V *zip_probe_items(V xs,size_t *n){
     return fwp_map_items(xs,n);
 }
 static V zip_probe_pair(V x,V y){
+#ifndef FWP_ARC_ONLY
+    if(zip_collect)fwp_gc_collect();
+#endif
     if(zip_case==5&&++zip_pair_calls==2)fwp_trap("zip pair failure");
     return fwp_tuple2(x,y);
 }
 static V zip_probe_node(V *fields){
+#ifndef FWP_ARC_ONLY
+    if(zip_collect)fwp_gc_collect();
+#endif
     if(zip_case==6&&++zip_node_calls==2)fwp_trap("zip list failure");
     return fwp_data(1,2,fields);
 }
