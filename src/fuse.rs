@@ -907,6 +907,21 @@ impl Fuser<'_> {
     /// so the stages before it may not trap at all).
     fn consume(&mut self, cons_id: FuncId, args: &[Expr]) -> Option<Expr> {
         let kind = self.consumer(cons_id, args)?;
+        // Specializing a known callback can bind its eager captures before
+        // building the producer. Keep those computations outside the loop and
+        // in order. Only cross consumer arguments with no effects or traps.
+        if let Some(Expr::Let(local, value, body)) = args.last() {
+            if args[..args.len() - 1]
+                .iter()
+                .all(|arg| self.beh.expr(arg) == none())
+            {
+                let mut inner = args.to_vec();
+                *inner.last_mut().unwrap() = (**body).clone();
+                let consumed = self.consume(cons_id, &inner)?;
+                return Some(Expr::Let(*local, value.clone(), Box::new(consumed)));
+            }
+            return None;
+        }
         if kind == "array-map-list" {
             if std::env::var("FWP_MAP_ARRAY").as_deref() == Ok("0") {
                 return None;

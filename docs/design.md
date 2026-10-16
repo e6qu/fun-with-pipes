@@ -126,8 +126,13 @@ the ordinary ownership rules. Hash still uses its runtime type description.
 
 Bit shifts remain excluded from that proof because an oversized shift traps.
 Effectful callbacks and distinguishable traps still prevent interleaving. This
-adds no syntax or implicit conversion. The handoff separates implementation,
-focused checks and full acceptance; benchmarks retain the unfused baseline.
+adds no syntax or implicit conversion. A known callback's eager captures are
+bound once in their original left-to-right order before input evaluation; the
+existing specialization then sees direct calls. Capture bindings stay outside
+the fused loop and cannot cross effectful or trapping consumer arguments.
+Resource-bearing captures keep their original frames. The handoff separates
+implementation, focused checks and full acceptance; benchmarks retain the
+unfused baseline.
 
 ## Borrowing array data inside loops
 

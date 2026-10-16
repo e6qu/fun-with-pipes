@@ -167,6 +167,29 @@ fn hash_and_bitwise_fusion_preserve_effects_traps_and_wide_values() {
         ("effects", "main = range 0 3 | map (tap echo | hash) | fold (curry (tap echo | uncurry bit.xor)) 0u64 | echo\n", false, 0),
         ("distinct-traps", "main = [0, 9223372036854775807] | map (add 1 | hash) | fold (curry (const 0u64 | div 0u64)) 0u64 | echo\n", false, 101),
         ("shift-trap", "main = [1u8, 2u8] | map (bit.shl 8 | hash) | find (const True) | echo\n", false, 101),
+        ("capture-order", r#"
+left : () -> String ! {IO}
+left = const "left" | tap echo
+right : () -> String ! {IO}
+right = const "right" | tap echo
+input : () -> List[I64] ! {IO}
+input = const [1, 2, 3] | tap (const "input" | echo)
+main = input () | map (both (const (left ())) (const (right ())) | hash) | fold bit.xor 0u64 | echo
+"#, true, 0),
+        ("consumer-order", r#"
+seed : () -> U64 ! {IO}
+seed = const 0u64 | tap (const "seed" | echo)
+capture : () -> I64 ! {IO}
+capture = const 7 | tap (const "capture" | echo)
+input : () -> List[I64] ! {IO}
+input = const [1, 2, 3] | tap (const "input" | echo)
+main = input () | map (both id (const (capture ())) | hash) | fold bit.xor (seed ()) | echo
+"#, false, 0),
+        ("capture-trap", r#"
+input : () -> List[I64] ! {IO}
+input = const [] | tap (const "input" | echo)
+main = input () | map (both id (const (div 0 1)) | hash) | fold bit.xor 0u64 | echo
+"#, true, 101),
     ];
     for (label, source, fused, status) in cases {
         let input = dir.join("main.fwp");
@@ -178,6 +201,16 @@ fn hash_and_bitwise_fusion_preserve_effects_traps_and_wide_values() {
             .output()
             .unwrap();
         assert_eq!(raw.status.code(), Some(status), "{label}: {raw:?}");
+        if label == "capture-order" {
+            assert!(raw.stdout.starts_with(b"left\nright\ninput\n"));
+        }
+        if label == "consumer-order" {
+            assert!(raw.stdout.starts_with(b"seed\ncapture\ninput\n"));
+        }
+        if label == "capture-trap" {
+            assert!(raw.stdout.is_empty());
+            assert!(String::from_utf8_lossy(&raw.stderr).contains("division by zero"));
+        }
         if label == "distinct-traps" {
             assert!(String::from_utf8_lossy(&raw.stderr).contains("arithmetic overflow in I64"));
         }

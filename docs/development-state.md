@@ -151,3 +151,26 @@ accepted raw interpretation passes all four cases (0.61 s), the isolated harness
 compiles (0.50 s), formatting passes (0.97 s) and docs pass (2.55 s). These do not
 verify the changed compiler; focused native/WASI gates and repeated comparisons
 must pass on runners before adoption.
+
+Run `38855570657` at `1f8a5dc1` confirms the primitive proof alone is insufficient:
+Linux checks preserve all semantic cases, but the allocation test correctly
+fails because the measured callback captures a freshly built array and stays
+indirect. WASI `38855575805` and costs `38855581613` are superseded by the complete
+capture repair. They are not acceptance of that repair.
+
+The existing callback specialization now binds eager captures once, in original
+left-to-right order, before the producer. Fusion preserves those outer bindings
+and crosses only consumer arguments proved free of effects/traps. No new switch
+or wrapper runtime is added. Tests cover capture effects before input, a capture
+trap even for an empty input, and an effectful fold seed that must run first.
+Resource-bearing captures remain on their existing frame path.
+
+A small isolated build of only optimizer modules against the existing library
+passes typed IR and all seven positive reductions (0.74 s); capture trap order
+passes (1.84 s). An effectful string capture originally retained a conservative
+path because constructor IR lacks its own type; the repair takes the already
+checked partial-application parameter type. Its changed-compiler checks are
+runner work. A later guarded diagnostic compilation stopped with an OS signal
+permission error; no optimizer/compiler process remains, no limits were raised,
+and further compilation/validation moved to CI. Earlier successful probes are
+supplemental, never full compiler acceptance.
