@@ -45,7 +45,7 @@ fn wasi(binary: &Path, root: &Path) -> Command {
         .env("FWP_REUSE_VERIFY", "0");
     command
 }
-fn emit(source: &Path, cfile: &Path) -> String {
+fn emit(source: &Path, cfile: &Path, entry: &[&str]) -> String {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .args([
@@ -56,6 +56,7 @@ fn emit(source: &Path, cfile: &Path) -> String {
                 "wasm32-wasi",
                 "--emit-c",
             ])
+            .args(entry)
             .arg(source)
             .arg("-o")
             .arg(cfile),
@@ -68,7 +69,7 @@ fn emit(source: &Path, cfile: &Path) -> String {
 }
 
 fn allocator_source(source: &Path, cfile: &Path) -> String {
-    let code = emit(source, cfile).replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
+    let code = emit(source, cfile, &[]).replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
     let fixture = include_str!("fixtures/wasm_arc_counts.c");
     let split = fixture.find("static int wasm_arc_recover").unwrap();
     format!(
@@ -217,13 +218,8 @@ main = range 0 129 | map (choose | checks) | length | echo
                 .arg(&source)
                 .current_dir(dir.path()),
         );
-        let code = emit(&source, &dir.join("program.c"));
-        let begin = "    fwp_init_consts();\n";
-        let end = "    fwp_cl_finish();\n";
-        assert_eq!(code.matches(begin).count(), 1);
-        assert_eq!(code.matches(end).count(), 1);
-        let instrumented = code.replace(begin, &format!("{begin}    size_t base_live = wasm_arc_live, base_bytes = wasm_arc_bytes, base_counts = fwp_wasm_counts_live;\n"))
-            .replace(end, &format!("{end}    if (wasm_arc_live > base_live || wasm_arc_bytes > base_bytes || fwp_wasm_counts_live > base_counts) {{ fprintf(stderr, \"unreleased: %zu/%zu allocations, %zu/%zu bytes, %zu/%zu counts\\n\", wasm_arc_live, base_live, wasm_arc_bytes, base_bytes, fwp_wasm_counts_live, base_counts); exit(244); }}\n"));
+        let code = emit(&source, &dir.join("program.c"), &[]);
+        let instrumented = measured_program(&code);
         let needle = "    free((void *)(uintptr_t)value);";
         assert_eq!(instrumented.matches(needle).count(), 1);
         let omitted = instrumented.replace(needle, "    (void)value;");
@@ -249,6 +245,83 @@ main = range 0 129 | map (choose | checks) | length | echo
                 if expected == 0 {
                     assert_eq!(output.stdout, reference.stdout, "{name}, {opt}");
                 }
+            }
+        }
+    }
+}
+
+fn measured_program(code: &str) -> String {
+    let start = code
+        .find("static void *fwp_main_thread(void *arg) {")
+        .unwrap();
+    let finish = start + code[start..].find("\n}\n").unwrap() + 3;
+    let thread = &code[start..finish];
+    let begin = "    fwp_init_consts();\n";
+    let end = "    fwp_cl_finish();\n";
+    assert_eq!(thread.matches(begin).count(), 1);
+    assert_eq!(thread.matches(end).count(), 1);
+    let measured = thread.replace(begin, &format!("{begin}    size_t base_live = wasm_arc_live, base_bytes = wasm_arc_bytes, base_counts = fwp_wasm_counts_live;\n"))
+        .replace(end, &format!("{end}    if (wasm_arc_live > base_live || wasm_arc_bytes > base_bytes || fwp_wasm_counts_live > base_counts) {{ fprintf(stderr, \"unreleased: %zu/%zu allocations, %zu/%zu bytes, %zu/%zu counts\\n\", wasm_arc_live, base_live, wasm_arc_bytes, base_bytes, fwp_wasm_counts_live, base_counts); exit(244); }}\n"));
+    let mut result = code.to_owned();
+    result.replace_range(start..finish, &measured);
+    result
+}
+
+#[test]
+fn wasi_function_and_cli_entries_reclaim_inputs_and_results() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-arc-entries").unwrap();
+    let source = dir.join("commands.fwp");
+    std::fs::write(
+        &source,
+        "# expose: cli\nexport repeat-text : I64 -> String -> String\nrepeat-text = string.repeat\n",
+    )
+    .unwrap();
+    for cli in [false, true] {
+        let entry = if cli {
+            vec!["--cli"]
+        } else {
+            vec!["--fn", "repeat-text"]
+        };
+        let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+        command.args(["exec", "--interp"]).env("FWP_NO_OPT", "1");
+        if cli {
+            command.arg("--cli");
+        }
+        command.arg(&source).arg("repeat-text").args(["32", "λ"]);
+        let reference = checked(&mut command);
+        let code = measured_program(&emit(&source, &dir.join("entry.c"), &entry));
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("entry.wasm");
+            fwp::cgen::compile_for(
+                &format!(
+                    "{}\n{code}",
+                    include_str!("fixtures/wasm_arc_allocations.c")
+                ),
+                &binary,
+                opt,
+                fwp::cgen::Target::Wasi,
+            )
+            .unwrap();
+            let mut command = wasi(&binary, dir.path());
+            if cli {
+                command.arg("repeat-text");
+            }
+            let output = checked(command.args(["32", "λ"]));
+            assert_eq!(output.stdout, reference.stdout, "cli={cli}, {opt}");
+            let symbols = checked(Command::new("wasm-objdump").arg("--details").arg(&binary));
+            let symbols = String::from_utf8_lossy(&symbols.stdout);
+            assert!(
+                symbols.contains("<_start>"),
+                "module symbols missing: {symbols}"
+            );
+            for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                assert!(
+                    !symbols.contains(collector),
+                    "WASI ARC contains {collector}"
+                );
             }
         }
     }

@@ -99,3 +99,17 @@ entry coverage and inspect the produced modules for absence of tracing. Only
 then update supported-target documentation. The accepted #148 compiler at
 `/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp` remains available for small
 edited-C mechanism probes. No full compiler build was run locally.
+
+Focused prototype run `38850138218` at `9d50a67` passes the allocator and rejection
+checks on Linux AMD64; the whole-program test stops at an instrumentation
+assertion because three cleanup calls exist across different entry paths. The
+observer now targets only `fwp_main_thread`. Actual full-program evidence remains
+pending, not waived. New function and CLI fixtures use explicit `# expose: cli`;
+accepted-compiler raw invocations pass after repairing the initially missing
+annotation. The entry tests inspect actual module symbols with `wasm-objdump`,
+requiring `_start` and absence of tracing scan/mark/sweep functions.
+
+Guarded edited-C checks pass list, single-function and CLI physical ledgers and
+missing-free controls (3.50 s). Formatting passes (1.11 s). These run the host's
+non-tracing path using accepted #148 plus the candidate runtime; the actual
+32-bit WASI checks must still pass. The standalone harness also compiles (0.26 s).

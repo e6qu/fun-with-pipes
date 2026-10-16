@@ -85,7 +85,7 @@ jobs:
         with:
           node-version: 24
       - name: WASI toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Positive 64-bit counts on the actual 32-bit target
         run: cargo test --test wasm positive_64_bit_counts_saturate_before_wasi_allocation_and_slice_bounds -- --exact
   array_borrow:
@@ -549,7 +549,7 @@ jobs:
           node-version: 24
       - name: WebAssembly toolchain
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: OpenSSL 3
         if: runner.os == 'macOS'
         run: |
@@ -766,7 +766,7 @@ jobs:
         with:
           node-version: 24
       - name: WASI toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Checked WASI ownership and physical storage
         if: inputs.suite == 'wasi-arc'
         run: cargo test --no-fail-fast --test wasm_arc --test arc_execution --test wasm_resource_counts
