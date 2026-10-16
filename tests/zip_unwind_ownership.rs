@@ -108,6 +108,7 @@ int main(void) {
 #endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     for (volatile int mode = 0; mode < 3; mode++) {
+        fprintf(stderr, "zip mode %d: inputs\n", (int)mode);
         input_leaf = fwp_rc_fresh(fwp_str_new("a", 1));
         input_alias = input_leaf; fwp_rc_dup(input_alias);
         V stop = fwp_rc_fresh(fwp_str_new("stop", 4));
@@ -118,12 +119,14 @@ int main(void) {
         h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups;
         fwp_handlers = &h;
         fwp_trap_recover = recover_map_trap; fwp_trap_jb = &h.jb; fwp_trap_cleanup = h.cleanup;
+        fprintf(stderr, "zip mode %d: call\n", (int)mode);
         if (!setjmp(h.jb)) {
             if (mode == 0) fDIRECT(source_list);
             else if (mode == 1) fCAPTURED(source_list);
             else fDYNAMIC(PTR(&fcTRANSFORM), source_list);
             return 1;
         }
+        fprintf(stderr, "zip mode %d: recovered\n", (int)mode);
         fwp_handlers = h.prev; fwp_trap_recover = NULL; fwp_trap_jb = NULL;
         if (fwp_cleanups || observed_count != 1 || !observed_result || !observed_scratch) return 2;
         if (!dead_string(observed_result) || !dead_scratch(observed_scratch) || !observed_second || !dead_scratch(observed_second)) return 3;
@@ -160,14 +163,15 @@ int main(void) {
     let second_failure = "static int scratch_calls;\n".to_string() + &runtime.replace(allocate_second, &format!("    if (++scratch_calls == 2) fwp_trap(\"injected second scratch allocation failure\");\n{allocate_second}"));
     let second_probe = probe.replace("observed_count != 1 || !observed_result", "observed_count != 0 || observed_result").replace("!dead_string(observed_result) || !dead_scratch(observed_scratch) || !observed_second || !dead_scratch(observed_second)", "!dead_scratch(observed_scratch) || observed_second");
     for opt in ["-O1", "-O2"] {
-        for (code, probe) in [
-            (&runtime, &probe),
-            (&builder, &builder_probe),
-            (&cancelled, &cancelled_probe),
-            (&second_failure, &second_probe),
+        for (case, code, probe) in [
+            ("callback", &runtime, &probe),
+            ("builder", &builder, &builder_probe),
+            ("cancelled", &cancelled, &cancelled_probe),
+            ("second-scratch", &second_failure, &second_probe),
         ] {
             fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
             for poison in ["0", "1"] {
+                eprintln!("zip cleanup {case} {opt} poison={poison}");
                 let out = checked(
                     Command::new(&exe)
                         .env("FWP_GC_STRESS", "1")
