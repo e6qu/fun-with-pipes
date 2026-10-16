@@ -10,11 +10,20 @@ these preparation changes again.
 
 The combined preparation has been fast-forwarded into `owned-values-delivery`
 in `/Users/zardoz/projects/fun-with-pipes`.
-Next: publish the combined branch to draft PR #153 and validate its revised
-macOS test runner with the `macos-shards` focused suite on both native Macs.
-Then mark the PR ready and require all nine production jobs plus documentation
-on the exact head. Draft skips do not count as acceptance. Update this local handoff with their
-run IDs. The tested service source is `e715de1a`. Following changes retain evidence,
+PR #153 includes the decoder test repair on this branch; `ac3060d1` is the
+previous published head, not an acceptable merge candidate.
+Next: publish the decoder test repair and require all nine production jobs and
+documentation on its new exact head. Run `38941991952` at `ac3060d1` cannot be
+accepted: Windows ARM64 found a stale decoder instrumentation marker after
+checked HTTP/2 buffer growth replaced the old direct `realloc` assignment.
+The fixture now counts new buffers at the successful assignment, and requires
+exactly one match for every hook. Its deliberate missing-cleanup controls remain.
+Windows ARM64 decoder output and all TLS cases passed; remaining jobs continue
+to expose any other failures. The benchmark job passed. Both native Mac runner
+jobs `38938194232` and documentation `38938199569` passed at the older head.
+Draft CI `38938199980` was skipped and is not acceptance. Update the merge
+helper expected head and supply the replacement production/documentation IDs;
+use `--merge` only when its exact-head acceptance checks pass. The tested service source is `e715de1a`. Following changes retain evidence,
 update documentation and start the two longest measured GC stress cases first.
 This queue order keeps every case and all four workers; it has no language or
 runtime change and does not claim a measured total-CI speedup. The macOS shard
@@ -42,8 +51,9 @@ After all final-head gates pass, squash-merge with subject
 `Reduce temporary memory and clean up network resources` and an empty body.
 The whole message must be one line, at most 80 characters, with no trailers or
 attribution. Verify merged files, parent and message; cancel duplicate postmerge
-CI. `/private/tmp/fwp-merge-153.py` still names the failed old head/runs: update
-those before using it. Standing publication, fixes and merge authorization
+CI. `/private/tmp/fwp-merge-153.py` must name the repaired head and requires
+explicit `--production-run` and `--documentation-run` IDs. Change its expected
+head if repairs alter it; it must verify all nine jobs and docs before merging. Standing publication, fixes and merge authorization
 persists; failing tests are work to fix. JIT is excluded.
 
 ## Passing focused checks
@@ -110,6 +120,38 @@ Final documentation edits pass the bounded audit.
 PR #152 is accepted at `1fa0fec690b7747a9ffcf2d72903d16544889258`: all nine
 production jobs and documentation passed, merged files/message were verified,
 and duplicate CI was canceled. [Delivery history](roadmap-history.md) retains it.
+
+Independent preparation is now in `/private/tmp/fwp-context-owners`, branch
+`service-context-preparation`, based on `ac3060d1`. Tested source `9b137078` (documentation follow-up `3846e2d5`) adds
+a baseline storage probe, detached-child lifetime checks and clearer service
+documentation, not runtime ownership changes. Run `38941168779` passes the
+Linux baseline and child-lifetime checks; queued `38939097999` was canceled and superseded. The probe compares plain, gzip,
+deadline, outgoing-header and response-capture scopes at 1, 32 and 128 calls,
+including interpreter/native state results and charged storage with collection
+disabled. Detached children must retain normalized header copies, compression
+and the earliest deadline after their parent returns, fails, traps or is canceled.
+An intentionally broken inheritance path must fail the check. All five 32-call
+examples pass raw and optimized accepted-interpreter checks (1.80s); new native
+checks pass on Linux AMD64. The retained baseline measures one extra 64-byte
+managed request per gzip/deadline call; outgoing headers add five requests/128
+requested bytes and capture adds four/120. These exclude raw allocations and
+compare fwp scopes with a plain fwp state update, not C/Rust or elapsed time. Its new integration target makes that preparation 231 targets; this
+PR remains at 230. The stack-copy implementation at `ad77934c` passes Linux ARM64 and Intel Mac in run
+`38943086313`. Windows probes need the now-prepared API-target header-order
+repair; the ordinary Windows allocation probe passed. Other hosts remain active. Initial run `38942724799` had a
+Clippy lint in a new test and was superseded after repair. New combined head
+`7469df49` also borrows synchronous TLS/capture resources and packs outgoing
+headers into one owned allocation, shared only with inheriting children.
+All six native context checks now run in `38946737398` at `93ec650f`;
+queued Linux-only `38945353977` was canceled in favor of that combined check. queued `38944540937`
+was superseded after narrowing capture instrumentation. That source includes the Windows API-target and environment API fixture repairs
+and permanent Windows context coverage. Actual WASI/browser `38945989400`
+at `51e8e123` is queued. The stack-copy-only revision passed all four Unix hosts. Its tests cover allocation/size and
+counter failures, explicit cleanup, aliases and actual interpreter/native service
+calls. No checked ARC admission was changed. The next worktree handoff records
+required six-host/WASI checks and size/alignment evidence. Do not open a second
+PR. Rebase only that delta after
+`ac3060d1` onto the accepted #153 squash before publishing the next PR.
 
 After #153 acceptance, continue service streams, connections and retained request
 contexts. First measure repeated context scopes and child tasks that outlive

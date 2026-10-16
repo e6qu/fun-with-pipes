@@ -120,17 +120,15 @@ fn byte_decoders_release_native_buffers_and_partial_results() {
                 "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
                 "if(leaf!=0) byte_allocation();",
             ),
-            (
-                "    b->d = (unsigned char *)realloc(b->d, c);",
-                "if(!b->d) byte_buffers_live++;",
-            ),
+            ("    b->d = data;", "if(!b->d) byte_buffers_live++;"),
             (
                 "static void h2b_free(h2_buf *b) {",
                 "if(b->d) byte_buffers_live--;",
             ),
         ] {
-            assert!(code.contains(marker), "{marker}");
-            code = if marker.contains("realloc") {
+            assert_eq!(code.matches(marker).count(), 1, "{marker}");
+            // Count a new buffer only after checked allocation succeeds.
+            code = if marker.trim_start().starts_with("b->d =") {
                 code.replace(marker, &format!("    {hook}\n{marker}"))
             } else {
                 code.replace(marker, &format!("{marker} {hook}"))
