@@ -44,7 +44,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --test softfloat_core --test float_math -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test native_allocator --test windows_context --test native_sockets -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          cargo test --test native_allocator --test windows_context --test native_sockets --test library_unload -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo build --bin fwp 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

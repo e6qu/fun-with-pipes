@@ -520,8 +520,8 @@ pass. General removal of tracing remains unfinished.
 The next ownership batch prepares copied metric snapshots and syntax rendering.
 A metric registry stores names and numbers for a process or library instance.
 Repeated updates of an existing name reuse that entry; distinct names require
-more native storage. Process shutdown and library teardown free it. A snapshot copies names and kinds
-into an immutable list of tuples: subsequent updates cannot mutate an earlier
+more native storage. Process shutdown and library teardown free it. A snapshot
+copies names and kinds into an immutable list of tuples: subsequent updates cannot mutate an earlier
 snapshot. Construction now protects partial strings, tuples and list nodes,
 without a temporary pointer array. This registry lifetime is separate from the
 shorter lifetime of snapshot storage; it is not an allocation-free service claim.

@@ -129,12 +129,25 @@ before adding. Small native/interpreter/actual-WASI probes evaluate only the las
 4095 constant elements; a WASI control restores the wrapped end and must fail.
 These checks need CI; no large input or multi-billion-element loop runs locally.
 
-Six-native `38888712709` and WASI `38888716317` are incomplete/failed preparation,
-not acceptance. Allow their Windows dependency caches to finish before replacing
-the native run. The earlier `35e8f0ab` runs were superseded. Reference tables are
-updated, and the dead arithmetic exception list in `arc.rs` is removed: all 26
-entries already use the shared explicit contract table, checked against the
-inventory. Full final-head gates must cover that cleanup too.
+Source `c8f4646c4066ab0b23056a9279c4d6b4d48ad7be` passes the combined native
+Linux ARM64 and Intel macOS jobs in `38891574490`, and actual WASI ARM64 in
+`38891578037`; other Linux/macOS jobs are still running. Both Windows jobs pass
+kernel, decoder, metrics and web checks but fail `library_unload`, newly included
+in the focused suite: that test used POSIX loader/signal/thread-key APIs on Windows.
+
+A Windows peer now uses LoadLibrary/FreeLibrary, VirtualQuery, native sockets,
+fiber deletion, thread-key release and console-handler removal. It preserves
+checks for task cancellation, host-owned sockets, cached results, wide counts,
+metric names/registry storage, shared-library unload and static-library process
+exit. Deliberately omitted cleanup must fail at both O1/O2. It also verifies that
+a host thread already using fibers retains that state. Existing POSIX tests stay
+intact. Full Windows CI now includes this unload test; the peer needs fresh CI.
+
+Superseded `38888712709`, `38888716317` and `38891244195` were canceled only after
+Windows dependency caches were saved. The failed/incomplete runs are not acceptance.
+Reference tables are updated and the dead arithmetic exception list in `arc.rs`
+is removed: all 26 entries already use the shared explicit contract table, checked
+against the inventory. Full final-head gates must cover that cleanup too.
 
 ## Local checks and limits
 
@@ -161,8 +174,8 @@ networking, plus exit and GPU execution. Raw pointers, foreign/host callback
 retention, mutable cycles and deployment exclusions also remain beyond that count.
 JIT is prohibited; the existing OpenCL runtime-build gap is unresolved by CPU work.
 
-Next: publish the cleanup and final-block repairs and run fresh combined
-six-native and actual WASI checks; fix every failure and retain final evidence. Independently finish #152's full gates and squash merge
+Next: publish and validate the Windows unload peer in fresh combined native
+checks, finish actual WASI `38891578037`, fix every failure and retain evidence. Independently finish #152's full gates and squash merge
 when they pass. Then rebase this preparation delta onto that accepted merge,
 update the plan/history/handoff, open the next substantial PR and require all
 nine production jobs plus docs on its final head before merging.
