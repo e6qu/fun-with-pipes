@@ -19,7 +19,7 @@ later commits after #151 merges; never replay that old parent chain. Do not open
 another delivery PR while #151 is open. Its first implementation is `ed78f26a`;
 subsequent work adds direct range arrays and repairs the allocation counter.
 
-Next: validate the latest field-borrowing change with native unit/semantic checks,
+Next: validate the named-field forwarding repair with native unit/semantic checks,
 actual WASI and four-host costs. Earlier direct-range WASI `38861845639` passes
 both hosts at `a2f4ccd9`; its costs are `38861849157`. Native fixture repair
 `38862399186` runs at `61fde4cc`. Those earlier checks do not cover field borrowing. Fix failures, retain machine-code/allocation evidence
@@ -127,3 +127,14 @@ compiler vectorization, replacing an unsupported vector-extension guarantee.
 Generated docs were refreshed through `tests/stdlib_doc.rs` using the standalone
 generator (guarded 1.07 s). Borrowed-field fixtures pass the accepted interpreter
 (0.25 s); formatting/docs pass (1.06 / 2.57 s). No changed compiler was built locally.
+
+Field-borrowing run `38863443177` at `cf110b75` passes ownership/escape unit tests,
+raw/native semantic cases and range checks on Linux ARM64, but its zero-retain
+control fails. Generated C from cost run `38863448662` shows a stack tuple with
+named array aliases still duplicated before the call. The repair forwards only
+pure counted field/local reads into their immediate, sole hash use, across other
+pure reads only. It also exposes a tuple named immediately before its sole hash
+call. Other uses, calls and resource boundaries prevent forwarding. The verifier
+still checks parent liveness after all fields. New tests cover the named forms;
+failed budgets now print counts and retain generated C for diagnosis. No positive
+zero-count claim is made until the repaired runner checks and profiles pass.

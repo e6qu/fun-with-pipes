@@ -311,8 +311,17 @@ fn hash_reduction_removes_lists_and_temporary_heap_tuples() {
             let body = code[start..finish].replace("    fwp_init_consts();\n",
             "    fwp_init_consts();\n    hash_requests = 0; hash_retains = 0; intptr_t hash_budget = fwp_gc.budget;\n")
             .replace("    fwp_cl_finish();\n",
-            "    fwp_cl_finish();\n    if(hash_requests > 35 || hash_retains || fwp_gc.budget != hash_budget) exit(249);\n");
+            "    fwp_cl_finish();\n    if(hash_requests > 35 || hash_retains || fwp_gc.budget != hash_budget) { fprintf(stderr, \"hash requests=%u retains=%u budget=%lld/%lld\\n\", hash_requests, hash_retains, (long long)fwp_gc.budget, (long long)hash_budget); exit(249); }\n");
             code.replace_range(start..finish, &body);
+            if let Some(path) = std::env::var_os("FWP_HASH_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                std::fs::write(
+                    path.join(format!("hash-counts-arc-{arc}-stack-{stack}.c")),
+                    &code,
+                )
+                .unwrap();
+            }
             // A 35-request budget allows input construction and fixed setup, but
             // excludes 65 per-hash heap tuples. Disabling stack placement must fail.
             for opt in ["-O1", "-O2"] {
