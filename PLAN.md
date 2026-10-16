@@ -88,6 +88,11 @@ Large-input timing is mostly unchanged. Require all nine production gates plus
 documentation for the final combined head, including its later restriction to
 known callback bodies and all transferred changes.
 
+The exact-head Intel macOS GC gate exceeded 90 minutes. The current repair uses
+explicit measured test assignments instead of reshuffling sorted targets when
+new tests appear. All tests, the separate stress run and existing limits remain.
+Require fresh complete acceptance after this scheduling repair.
+
 Following preparation targets measured temporary hash tuples and input list nodes.
 Browser/service re-entry, retained host callbacks, remaining numerical/networking
 ownership, fewer runtime counts and all seven work areas remain open. A focused

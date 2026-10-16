@@ -86,16 +86,19 @@ The supported platform matrix is Linux, macOS and Windows on ARM64 and AMD64,
 with separate binaries. The reusable Windows workflow runs both native Windows
 architectures. Preserve the complete matrix for each accepted revision; see
 [the platform matrix](PLAN.md#platform-objective-and-current-evidence).
-For each macOS architecture, the two jobs split the integration targets using
-`scripts/run-macos-test-shard.py`: sorted Cargo target names alternate between
-the `regular` and `gc` shards, with REST and wide workers assigned to regular
-to leave room for the separate stress suite. The regular job also runs unit, example and
-benchmark targets. Both shards exclude `golden_programs_under_gc_stress`; the
-GC job runs that test separately, once, before its ordinary shard. Together
-they cover the full native test gate with OpenSSL within the existing
-90-minute job budgets. New integration targets join the partition automatically;
-unknown target kinds fail explicitly. The documentation job checks partition
-coverage and failure propagation. Neither macOS job alone is a complete gate.
+For each macOS architecture, the two jobs use the explicit integration-target
+lists in `scripts/macos-test-shards.json`, read by `scripts/run-macos-test-shard.py`.
+New targets must be assigned deliberately; adding one must not move unrelated
+tests between jobs. Remove obsolete entries when deleting targets. The runner
+rejects missing, duplicate, obsolete or unknown targets. Unit, example and
+benchmark targets run in regular; the GC job also runs its separate stress suite.
+Both ordinary shards skip `golden_programs_under_gc_stress` so that dedicated
+stress invocation runs exactly once. Together they retain the complete native
+coverage within the existing 90-minute limits. The documentation job verifies
+the real Cargo target set, assignment stability and failure propagation.
+[Recorded timings](docs/measurements/macos-shards-2026-10-16.json) explain the
+initial balance, including the GC job's separate workload; estimates are not
+passing gates or promises about future runner speed.
 Optional-tool skips are not platform coverage. Some older memory suites
 still require Linux `/proc` or `strace`; Darwin-specific regressions in
 `tests/macos.rs` assert that collection is armed and really runs, rather

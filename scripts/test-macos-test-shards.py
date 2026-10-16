@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""Verify that macOS sharding preserves coverage and propagates failures."""
-
+"""Verify stable macOS assignment, complete coverage and failure propagation."""
 import importlib.util
 import json
+from pathlib import Path
 import subprocess
+import tempfile
 import unittest
 from unittest.mock import patch
-
-from pathlib import Path
 
 SPEC = importlib.util.spec_from_file_location(
     "macos_shards", Path(__file__).with_name("run-macos-test-shard.py"))
@@ -23,46 +22,62 @@ def metadata(names):
                               {"name": "demo", "kind": ["example"]},
                               {"name": "speed", "kind": ["bench"]},
                               {"name": "build-script-build", "kind": ["custom-build"]},
-                          ] + [{"name": name, "kind": ["test"]}
-                               for name in names]}]}
+                          ] + [{"name": name, "kind": ["test"]} for name in names]}]}
 
 
 class Coverage(unittest.TestCase):
-    def test_partition_covers_odd_and_even_target_sets_once(self):
-        for names in [["a", "b"], ["z", "golden_run", "a", "m", "b"],
-                      ["a", "rest", "wide_workers", "z", "zz"]]:
-            outputs = [SHARDS.command(metadata(names), shard)
-                       for shard in SHARDS.SHARDS]
-            selected = [set(output[2]) for output in outputs]
-            self.assertFalse(selected[0] & selected[1])
-            self.assertEqual(selected[0] | selected[1], set(names))
-            self.assertTrue(({"rest", "wide_workers"} & set(names)) <= selected[0])
-            for shard, output in zip(SHARDS.SHARDS, outputs):
-                self.assertEqual(output, SHARDS.command(
-                    metadata(list(reversed(names))), shard))
-                args = output[0]
-                self.assertNotIn("build-script-build", args)
-                self.assertIn("--no-fail-fast", args)
-                self.assertEqual(args[-3:],
-                                 ["--", "--skip", "golden_programs_under_gc_stress"])
-                for flag in ["--lib", "--bins", "--examples", "--benches"]:
-                    self.assertEqual(flag in args, shard == "regular")
-                passed = [args[i + 1] for i, arg in enumerate(args) if arg == "--test"]
-                self.assertEqual(passed, output[2])
+    def assert_coverage(self, value, schedule):
+        outputs = [SHARDS.command(value, shard, schedule) for shard in SHARDS.SHARDS]
+        selected = [set(output[2]) for output in outputs]
+        expected = {target['name'] for target in value['packages'][0]['targets']
+                    if target['kind'] == ['test']}
+        self.assertFalse(selected[0] & selected[1])
+        self.assertEqual(selected[0] | selected[1], expected)
+        for shard, output in zip(SHARDS.SHARDS, outputs):
+            args = output[0]
+            self.assertNotIn("build-script-build", args)
+            self.assertIn("--no-fail-fast", args)
+            self.assertEqual(args[-3:], ["--", "--skip", "golden_programs_under_gc_stress"])
+            for flag in ["--lib", "--bins", "--examples", "--benches"]:
+                self.assertEqual(flag in args, shard == "regular")
+            self.assertEqual([args[i + 1] for i, arg in enumerate(args) if arg == "--test"], output[2])
 
-    def test_unknown_or_duplicate_targets_fail_instead_of_disappearing(self):
+    def test_repository_targets_are_assigned_exactly_once(self):
+        value = json.loads(subprocess.check_output(
+            ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=SHARDS.ROOT))
+        self.assert_coverage(value, SHARDS.assignment(SHARDS.SCHEDULE))
+
+    def test_new_targets_do_not_move_existing_work(self):
+        before = {"regular": ["a", "z"], "gc": ["b"]}
+        after = {"regular": ["a", "z"], "gc": ["b", "new"]}
+        self.assert_coverage(metadata(["z", "a", "b"]), before)
+        self.assert_coverage(metadata(["new", "z", "a", "b"]), after)
+        for shard in SHARDS.SHARDS:
+            old = SHARDS.command(metadata(["a", "b", "z"]), shard, before)[2]
+            new = SHARDS.command(metadata(["a", "b", "z", "new"]), shard, after)[2]
+            self.assertEqual(old, [name for name in new if name != "new"])
+
+    def test_unassigned_obsolete_duplicate_and_unknown_targets_fail(self):
+        schedule = {"regular": ["a"], "gc": ["b"]}
         invalid = metadata(["a", "b"])
         invalid["packages"][0]["targets"].append({"name": "new", "kind": ["custom"]})
-        for value in [invalid, metadata(["a", "a"]), metadata([])]:
+        for value in [invalid, metadata(["a", "a"]), metadata([]),
+                      metadata(["a"]), metadata(["a", "b", "new"])]:
             with self.assertRaises(ValueError):
-                SHARDS.command(value, "regular")
+                SHARDS.command(value, "regular", schedule)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "schedule.json"
+            for schedule in [{"regular": ["a"], "gc": ["a"]},
+                             {"regular": ["a"], "gc": []}, {"regular": ["a"]}]:
+                path.write_text(json.dumps(schedule))
+                with self.assertRaises(ValueError):
+                    SHARDS.assignment(path)
 
     def test_failed_test_command_is_not_reported_as_success(self):
         with patch("sys.argv", ["run-macos-test-shard.py", "--shard", "gc"]), \
-             patch.object(SHARDS.subprocess, "check_output",
-                          return_value=json.dumps(metadata(["a", "b"])).encode()), \
-             patch.object(SHARDS.subprocess, "run",
-                          side_effect=subprocess.CalledProcessError(1, ["cargo", "test"])):
+             patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "gc": ["b"]}), \
+             patch.object(SHARDS.subprocess, "check_output", return_value=json.dumps(metadata(["a", "b"])).encode()), \
+             patch.object(SHARDS.subprocess, "run", side_effect=subprocess.CalledProcessError(1, ["cargo", "test"])):
             with self.assertRaises(subprocess.CalledProcessError):
                 SHARDS.main()
 
