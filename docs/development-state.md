@@ -25,8 +25,12 @@ formatter; the deterministic TLS probe requires the exact reset diagnostic.
 The focused TCP workflow also runs the real TLS stream comparison, in addition
 to mutual TLS and existing socket lifetime/error controls.
 
-Next: publish this preparation, run `tcp-windows`, inspect the remaining old
-production results for additional failures, then publish the verified repair to
+Repair `abe3be17` is published; focused Windows run `38931783848` is queued.
+The following workflow edit saves and uploads each failed TLS/autodiff/golden
+step log immediately, while later checks continue, preserving the failing exit
+status. This removes the need to wait for the entire job before reading that log.
+Next: fix the focused run and inspect the remaining old production results for
+additional failures, then publish the verified repair to
 PR #153 and require all nine production jobs plus documentation on the new head.
 Do not restart full CI before incorporating any other discovered failures.
 `/private/tmp/fwp-merge-153.py` still targets the failed old head and must be
