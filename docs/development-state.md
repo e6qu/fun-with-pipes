@@ -8,7 +8,8 @@ belongs in [delivery history](roadmap-history.md).
 
 [PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is the only open delivery.
 Its final head is `27cdc7ff1b9c59b025159768b11452ab5adbc58c`, in worktree
-`/private/tmp/fwp-wasi-delivery`. Fresh production `38872161681` has all nine jobs running; docs
+`/private/tmp/fwp-wasi-delivery`. Production `38872161681` has passed ARM macOS (regular/stress), both Windows
+jobs and benchmarks; Linux and Intel macOS remain running. Docs
 `38872161673` passes for that exact head. Previous head `796f5a4c` did not pass acceptance:
 Intel macOS GC exceeded the 90-minute job limit in `38861611494`; the run was
 canceled after that timeout. Six jobs had passed, with both Linux jobs unfinished.
@@ -32,9 +33,9 @@ through `8d692024` in `/private/tmp/fwp-hash-borrows` (delta after `28cc4d0e`), 
 or additional PRs. Review conflicts preserved #151's allocation counter repair,
 accepted history, and the new zero-retain assertions.
 
-Next: merge #151 once its repaired exact-head gates pass. The combined source,
-docs and four-host vector cost evidence are ready for full validation. Rebase only this batch's delta, publish one
-substantial PR, then require fresh full production and documentation acceptance.
+Next: merge #151 once its repaired exact-head gates pass. Complete scalar-splat native/WASI, cost and paired checks below. Rebase only
+this batch's delta, publish one substantial PR, then require fresh full production
+and documentation acceptance.
 
 ## Roadmap status
 
@@ -112,12 +113,16 @@ hash/vector workload; it verifies matching reference sources and artifact hashes
 ## Following ownership preparation
 
 `owned-value-decoders` in `/private/tmp/fwp-owned-decoders`, based on `3577ba37`,
-is prepared through `7ff47312`. Only its later delta belongs to the following
+is prepared through `e912227b`. Only its later delta belongs to the following
 batch. It owns ternary and URL/form/HTTP decoder results, removes scratch arrays
-and tests allocation-failure cleanup. Six-native `38876430416` and actual WASI
-`38876434029` are queued/running. No second delivery PR is open. Its worktree
-handoff contains local checks and the 16 newly explicit primitive contracts;
-this work is not yet accepted and must not be replayed into the numerical delta.
+and tests allocation-failure cleanup. Linux ARM64 at `27334bdb` passed text
+semantics, cleanup and exact allocation assertions, but caught missing last-owner
+leaf destruction in the ternary fixture. The fixture correction also checks
+final input disposal. Fresh six-native `38879829259` and actual WASI
+`38879832821` are queued; superseded `38878658827`/`38878662408` and
+`38876430416`/`38876434029` are confirmed canceled. No second delivery PR is open.
+Its worktree handoff contains local checks and 16 newly explicit primitive
+contracts; this work is not yet accepted and is outside the numerical delta.
 
 ## Completed focused checks and measurements
 
@@ -160,11 +165,10 @@ startup/printing allocation internals differently; benchmarks explain that limit
 Actual code shows three vector constructions per mapped input, materialized
 range/result lists and scalar F64 multiply with per-element representation
 handling. The C reference uses register calculations and vector instructions.
-The next optimization should target these measured costs: prove eligible lane
-pipeline fusion without moving effects/traps, remove temporary vectors/constant
-weights where safe, and expose contiguous array data to the C optimizer. Preserve
-manual-record lengths, boxed ownership and checked division. This baseline is
-not a measurement of speedup from adding ownership contracts.
+The direct-storage, pipeline and scalar-splat changes above target those measured
+costs while preserving manual-record lengths, boxed ownership and checked
+division. This baseline is not a measurement of speedup from adding ownership
+contracts.
 
 ## Local verification and resolved failures
 

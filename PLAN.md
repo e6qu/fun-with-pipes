@@ -92,8 +92,12 @@ fields through hashing instead of repeatedly retaining them. The independent
 ownership verifier checks that those fields remain alive. Validate semantic,
 failure and physical-free tests across native targets and WASI; then retain
 four-host allocation profiles, generated machine code and paired C/Rust timing.
-The same batch prepares ownership for vector wrappers, boxed lanes and reduction
-accumulators, with alias and partial-failure checks. Focused checks are preparation,
+The same batch owns vector wrappers, boxed lanes and reduction accumulators,
+with alias and partial-failure checks. Measured costs guide direct F64 storage
+access and removal of intermediate lists/product vectors. Sole-use splat inputs
+can stay scalar while preserving ordered multiplication/addition and evaluation.
+Require matching allocation/code evidence and paired timing for the final change.
+Focused checks are preparation,
 not full production acceptance. Open this batch's
 PR only after #151 merges, then require fresh combined final-head gates.
 
