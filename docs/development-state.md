@@ -22,19 +22,22 @@ The test also saves whether the buffer is new before `realloc`, so it never
 examines the old pointer after a successful resize. Runtime behavior is unchanged. Five source hooks are unique and exclude the
 text buffer; native verification must still pass.
 
-Repair `1e76500045e9a83655e9697352676270b1ee7693` is published.
-Focused six-host decoder run: `38952492611`; documentation: `38952500689`.
-Draft production `38952500342` was skipped, not accepted.
-Local formatting (1.28s), unique runtime-marker checks (0.20s), and the
-documentation audit (3.14s) pass. Reviewing all canceled job logs (13.05s) found
-only the same duplicate hook failure on both Linux hosts, both Windows hosts
-and ARM Mac GC; incomplete jobs are not acceptance.
-This follow-up saves the pre-resize empty-buffer flag. `1e765000` remains the
-focused verification source; final production/documentation must use this newer
-published head. The five-hook source check (0.19s) and formatting (1.22s) pass.
-Next: require the focused `byte-decoders` suite on all six native hosts. Once that focused run passes, make the PR ready and require all nine
-production jobs plus documentation on its exact new head. A skipped draft CI
-run is not acceptance. Do not reuse the old head or acceptance IDs.
+The focused decoder workflow now avoids installing OpenSSL/curl for this pure
+compression/frame-decoding target. It uses no encrypted network operations; the
+full Windows network acceptance still installs and requires those dependencies.
+The old focused run `38952492611` is superseded: both Linux hosts and ARM Mac
+passed, while Windows was building unnecessary TLS dependencies. Its source
+also predates the pre-resize flag refinement.
+
+Next: publish this combined test/workflow repair, require its replacement
+`byte-decoders` run on all six native hosts, then make #153 ready. Require all
+nine production jobs and documentation on that exact final head. Draft-skipped
+CI is not acceptance. Update the merge helper's expected head before use.
+
+Local formatting (1.22s), five unique runtime hooks excluding text buffers
+(0.19s), and documentation audit (2.80s) pass. Reviewing all canceled production
+logs (13.05s) found only the duplicate-hook failure on both Linux hosts, both
+Windows hosts and ARM Mac GC. Incomplete jobs are not acceptance.
 
 After all final-head gates pass, squash-merge with subject
 `Reduce temporary memory and clean up network resources` and an empty body.
@@ -117,8 +120,7 @@ production jobs and documentation passed, merged files/message were verified,
 and duplicate CI was canceled. [Delivery history](roadmap-history.md) retains it.
 
 Independent preparation is in `/private/tmp/fwp-context-owners`, branch
-`service-context-preparation`, based on `ac3060d1`. Current combined source
-Current prepared source `975806e9` has six-host run `38953639844`.
+`service-context-preparation`, based on `ac3060d1`. Prepared source `975806e9` has six-host run `38953639844`.
 Earlier `38951742782` at `4656043f` exposed a Windows artifact copy using `probe`
 where the compiler writes `probe.exe`; the repair makes that path explicit.
 Windows AMD64's callback/result and decoder cleanup tests passed, but its O2
