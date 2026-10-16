@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-map-costs, zip-map-repeat]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-map-costs, zip-map-repeat]
         default: numerical
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
@@ -742,7 +742,7 @@ jobs:
           path: iteration-evidence/
 
   wasm_ownership:
-    if: inputs.suite == 'wasm'
+    if: inputs.suite == 'wasm' || inputs.suite == 'wasi-arc'
     strategy:
       fail-fast: false
       matrix:
@@ -754,6 +754,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_REQUIRE_WASM_RESOURCE_COUNTS: 1
+      FWP_REQUIRE_WASI_ARC: 1
       FWP_REQUIRE_WASI_GOLDENS: 1
       FWP_REQUIRE_FLOAT_WASI: 1
     steps:
@@ -766,13 +767,18 @@ jobs:
           node-version: 24
       - name: WASI toolchain
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+      - name: Checked WASI ownership and physical storage
+        if: inputs.suite == 'wasi-arc'
+        run: cargo test --no-fail-fast --test wasm_arc --test arc_execution --test wasm_resource_counts
       - name: WebAssembly compiler and exact Rust arithmetic
+        if: inputs.suite == 'wasm'
         env:
           CARGO_TARGET_WASM32_WASIP1_RUNNER: node tests/wasm/wasi-run.mjs
         run: |
           cargo test --lib --target wasm32-wasip1 softfloat:: -- --test-threads=1
       - name: Physical reclamation and resource controls
+        if: inputs.suite == 'wasm'
         run: cargo test --test wasm_resource_counts --test softfloat_core --test float_math --test array_size_limits
       - name: Actual WASI semantic agreement
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.suite == 'wasm' }}
         run: cargo test --no-fail-fast --test wasm --test browser --test exec_invocation_ownership

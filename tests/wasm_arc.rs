@@ -1,0 +1,255 @@
+//! Checked WASI ownership must reclaim storage and reject unproved retention.
+#![cfg(any(target_os = "linux", target_os = "macos"))]
+use std::path::Path;
+use std::process::{Command, Output};
+
+fn checked(command: &mut Command) -> Output {
+    let output = command.output().unwrap();
+    assert!(output.status.success(), "{command:?}: {output:?}");
+    output
+}
+fn available() -> bool {
+    let dir = fwp::cgen::TempDir::new("wasi-arc-toolchain").unwrap();
+    let source = dir.join("probe.c");
+    std::fs::write(&source, "int main(void){return 0;}\n").unwrap();
+    let ready = Command::new(std::env::var("FWP_WASM_CC").unwrap_or_else(|_| "clang".into()))
+        .arg("--target=wasm32-wasi")
+        .arg(source)
+        .arg("-o")
+        .arg(dir.join("probe.wasm"))
+        .output()
+        .is_ok_and(|o| o.status.success())
+        && Command::new("node")
+            .arg("--version")
+            .output()
+            .is_ok_and(|o| o.status.success());
+    assert!(
+        ready || std::env::var_os("FWP_REQUIRE_WASI_ARC").is_none(),
+        "required WASI ARC toolchain unavailable"
+    );
+    if !ready {
+        eprintln!("skipping actual WASI ARC: toolchain unavailable");
+    }
+    ready
+}
+fn wasi(binary: &Path, root: &Path) -> Command {
+    let mut command = Command::new("node");
+    command
+        .arg("--no-warnings")
+        .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/wasm/wasi-run.mjs"))
+        .arg(binary)
+        .current_dir(root)
+        .env("FWP_GC", "off")
+        .env("FWP_GC_STRESS", "0")
+        .env("FWP_GC_VERIFY", "0")
+        .env("FWP_REUSE_VERIFY", "0");
+    command
+}
+fn emit(source: &Path, cfile: &Path) -> String {
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build",
+                "--gc",
+                "arc",
+                "--target",
+                "wasm32-wasi",
+                "--emit-c",
+            ])
+            .arg(source)
+            .arg("-o")
+            .arg(cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    assert!(
+        code.contains("#define FWP_ARC_ONLY 1") && code.contains("#define FWP_RESOURCE_OWNERS 1")
+    );
+    code
+}
+
+fn allocator_source(source: &Path, cfile: &Path) -> String {
+    let code = emit(source, cfile).replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
+    let fixture = include_str!("fixtures/wasm_arc_counts.c");
+    let split = fixture.find("static int wasm_arc_recover").unwrap();
+    format!(
+        "#include <stdlib.h>\n{}\n#define free wasm_arc_observe_free\n{}{}",
+        &fixture[..split],
+        &code[..code.find("int main(").unwrap()],
+        &fixture[split..]
+    )
+}
+
+#[test]
+fn wasi_allocator_frees_graphs_and_rejects_escaped_counts() {
+    let actual_wasi = available();
+    let dir = fwp::cgen::TempDir::new("wasi-arc-counts").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(&source, "main = 42 | echo\n").unwrap();
+    let code = allocator_source(&source, &dir.join("main.c"));
+    let missing_free = code.replace("    free((void *)(uintptr_t)value);", "    (void)value;");
+    let missing_guard=code.replace("    if (entry && fwp_wasm_count(entry))\n        fwp_trap(\"internal: counted owner escaped ARC contract\");","    (void)entry;");
+    assert_ne!(missing_free, code);
+    assert_ne!(missing_guard, code);
+    for target in [fwp::cgen::Target::Native, fwp::cgen::Target::Wasi] {
+        if target == fwp::cgen::Target::Wasi && !actual_wasi {
+            continue;
+        }
+        let binary = dir.join(if target == fwp::cgen::Target::Wasi {
+            "probe.wasm"
+        } else {
+            "probe"
+        });
+        for opt in ["-O1", "-O2"] {
+            for (candidate, status) in [(&code, 0), (&missing_free, 237), (&missing_guard, 239)] {
+                let text = if target == fwp::cgen::Target::Native {
+                    format!("#define __wasm__ 1\n{candidate}")
+                } else {
+                    candidate.clone()
+                };
+                fwp::cgen::compile_for(&text, &binary, opt, target).unwrap();
+                let command = || {
+                    if target == fwp::cgen::Target::Wasi {
+                        wasi(&binary, dir.path())
+                    } else {
+                        let mut c = Command::new(&binary);
+                        c.env("FWP_GC", "off")
+                            .env("FWP_GC_STRESS", "0")
+                            .env("FWP_GC_VERIFY", "0")
+                            .env("FWP_REUSE_VERIFY", "0");
+                        c
+                    }
+                };
+                let result = command().output().unwrap();
+                assert_eq!(result.status.code(), Some(status), "{opt}: {result:?}");
+                if status == 0 {
+                    for (key, value) in [
+                        ("FWP_GC", "full"),
+                        ("FWP_GC_STRESS", "1"),
+                        ("FWP_GC_VERIFY", "1"),
+                        ("FWP_REUSE_VERIFY", "1"),
+                    ] {
+                        let result = command().env(key, value).output().unwrap();
+                        assert_eq!(result.status.code(), Some(101), "{key}: {result:?}");
+                        assert!(
+                            String::from_utf8_lossy(&result.stderr).contains("--gc arc cannot"),
+                            "{result:?}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn wasi_arc_rejects_unproved_entries_and_native_library_flags() {
+    let dir = fwp::cgen::TempDir::new("wasi-arc-reject").unwrap();
+    let source = dir.join("main.fwp");
+    for (program, extra, reason) in [
+        (
+            "main = task.yield ()\n",
+            vec![],
+            "WASI host fibers have no checked retention contract",
+        ),
+        (
+            "main = 42 | echo\n",
+            vec!["--staticlib"],
+            "require a native target",
+        ),
+        (
+            "main = 42 | echo\n",
+            vec!["--cdylib"],
+            "require a native target",
+        ),
+    ] {
+        std::fs::write(&source, program).unwrap();
+        let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build",
+                "--gc",
+                "arc",
+                "--target",
+                "wasm32-wasi",
+                "--emit-c",
+            ])
+            .args(extra)
+            .arg(&source)
+            .arg("-o")
+            .arg(dir.join("rejected.c"))
+            .output()
+            .unwrap();
+        assert!(!output.status.success());
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains(reason),
+            "{output:?}"
+        );
+    }
+}
+
+#[test]
+fn synchronous_wasi_programs_match_interpretation_and_free_physical_storage() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-arc-programs").unwrap();
+    std::fs::write(dir.join("input.txt"), "owned UTF-8: λ\n").unwrap();
+    let programs = [
+        ("lists", "main = range 0 64 | map (const [1, 2, 3] | scan add 0 | repeat 4 | flatten | chunks 3 | flatten | sum) | sum | echo\n"),
+        ("closures", r#"
+choose : I64 -> (String -> String)
+choose = if (rem 2 | eq 0)
+    (rem 8 | add 1 | flip string.repeat "x" | concat)
+    (rem 8 | add 1 | flip string.repeat "y" | flip concat)
+checks : (String -> String) -> (String, String, String)
+checks = make { 0 = apply "A", 1 = apply "B", 2 = apply "C" }
+main = range 0 129 | map (choose | checks) | length | echo
+"#),
+        ("text", "main = range 0 64 | map (const \"input.txt\" | file.read) | map string.length | sum | echo\n"),
+        ("derivatives", "main = range 0 16 | map (const (range 0 32 | map int.to-float) | vjp (map (mul 2.0)) (repeat 32 1.0) | sum) | sum | echo\n"),
+    ];
+    for (name, program) in programs {
+        let source = dir.join(&format!("{name}.fwp"));
+        std::fs::write(&source, program).unwrap();
+        let reference = checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["run", "--interp"])
+                .env("FWP_NO_OPT", "1")
+                .arg(&source)
+                .current_dir(dir.path()),
+        );
+        let code = emit(&source, &dir.join("program.c"));
+        let begin = "    fwp_init_consts();\n";
+        let end = "    fwp_cl_finish();\n";
+        assert_eq!(code.matches(begin).count(), 1);
+        assert_eq!(code.matches(end).count(), 1);
+        let instrumented = code.replace(begin, &format!("{begin}    size_t base_live = wasm_arc_live, base_bytes = wasm_arc_bytes, base_counts = fwp_wasm_counts_live;\n"))
+            .replace(end, &format!("{end}    if (wasm_arc_live > base_live || wasm_arc_bytes > base_bytes || fwp_wasm_counts_live > base_counts) {{ fprintf(stderr, \"unreleased: %zu/%zu allocations, %zu/%zu bytes, %zu/%zu counts\\n\", wasm_arc_live, base_live, wasm_arc_bytes, base_bytes, fwp_wasm_counts_live, base_counts); exit(244); }}\n"));
+        let needle = "    free((void *)(uintptr_t)value);";
+        assert_eq!(instrumented.matches(needle).count(), 1);
+        let omitted = instrumented.replace(needle, "    (void)value;");
+        for opt in ["-O1", "-O2"] {
+            for (candidate, expected) in [(&instrumented, 0), (&omitted, 244)] {
+                let binary = dir.join("program.wasm");
+                fwp::cgen::compile_for(
+                    &format!(
+                        "{}\n{candidate}",
+                        include_str!("fixtures/wasm_arc_allocations.c")
+                    ),
+                    &binary,
+                    opt,
+                    fwp::cgen::Target::Wasi,
+                )
+                .unwrap();
+                let output = wasi(&binary, dir.path()).output().unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{name}, {opt}: {output:?}"
+                );
+                if expected == 0 {
+                    assert_eq!(output.stdout, reference.stdout, "{name}, {opt}");
+                }
+            }
+        }
+    }
+}

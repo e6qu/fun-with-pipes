@@ -628,8 +628,12 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: --static is unavailable on macOS; use ordinary native linking or a Linux cross target");
         return ExitCode::from(2);
     }
-    if arc && (target.is_wasm() || rest || mcp || !services.is_empty()) {
-        eprintln!("fwp build: --gc arc requires a native executable or checked C library; WebAssembly and service boundaries are not yet eligible");
+    if lib.is_some() && target.is_wasm() {
+        eprintln!("fwp build: --staticlib/--cdylib require a native target");
+        return ExitCode::from(2);
+    }
+    if arc && (target == fwp::cgen::Target::Browser || rest || mcp || !services.is_empty()) {
+        eprintln!("fwp build: --gc arc requires a checked executable or C library; browser and service boundaries are not yet eligible");
         return ExitCode::from(2);
     }
     fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
