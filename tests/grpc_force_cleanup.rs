@@ -242,3 +242,89 @@ static void observe_free(void *);
     }
     eprint!("{report}");
 }
+
+#[test]
+fn incoming_stream_descriptions_outlive_their_input_text() {
+    let generated = http2_values::generated();
+    let allocation = "static void *fwp_mem_alloc(size_t n) { return fwp_alloc(n); }";
+    assert_eq!(generated.matches(allocation).count(), 1);
+    let generated = generated.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic size_t description_allocations, description_bytes;\nstatic int measure_description;\n").replace(allocation, "static void *fwp_mem_alloc(size_t n) { if(measure_description){description_allocations++;description_bytes+=n;} return fwp_alloc(n); }");
+    let fixture = r#"
+static jmp_buf description_failure;
+static int recover_description(void) { return 1; }
+int main(void) {
+    fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0));
+    for (size_t length=0; length<=2048; length+=128) {
+        char input[2049]; memset(input,'x',length); input[length]=0;
+        description_allocations=description_bytes=0; measure_description=1;
+        g_incoming *source=g_incoming_new(input,length);
+        measure_description=0;
+        if(description_allocations!=1||description_bytes!=sizeof(g_incoming)+length+1)return 2;
+        memset(input,'z',length);
+        (void)fwp_cstr("allocation after construction");
+        if(strlen(source->what)!=length)return 1;
+        for(size_t i=0;i<length;i++)if(source->what[i]!='x')return 1;
+        FWP_KEEP_ALIVE(PTR(source));
+        fwp_mem_free(source);
+    }
+    char name[2049]; memset(name,'a',sizeof name-1); name[sizeof name-1]=0;
+    for(int long_name=0;long_name<2;long_name++) {
+        const char *method=long_name?name:"module.method";
+        char *before=g_strdupf("%s (%s)",method,"localhost:1234");
+        if(!before)return 30;
+        description_allocations=description_bytes=0; measure_description=1;
+        g_incoming *source=g_incoming_format("%s (%s)",method,"localhost:1234");
+        measure_description=0;
+        if(strcmp(source->what,before)||description_allocations!=1||description_bytes!=sizeof(g_incoming)+strlen(before)+1)return 3;
+        if(long_name&&strlen(source->what)!=G_MESSAGE_BYTES-1)return 4;
+        free(before); fwp_mem_free(source);
+    }
+    volatile int trapped=0;
+    description_allocations=description_bytes=0; measure_description=1;
+    fwp_trap_recover=recover_description; fwp_trap_jb=&description_failure; fwp_trap_cleanup=0;
+    if(!setjmp(description_failure)) (void)g_incoming_new("",SIZE_MAX);
+    else trapped=1;
+    measure_description=0; fwp_trap_recover=0; fwp_trap_jb=0;
+    if(!trapped||description_allocations||strcmp(fwp_trap_msg,"stream description too long"))return 5;
+    fwp_lib_finish(); return 0;
+}
+"#;
+    let dir = fwp::cgen::TempDir::new("grpc-stream-description").unwrap();
+    let copied = "src->what = text;";
+    assert_eq!(generated.matches(copied).count(), 1);
+    let borrowed = generated.replace(copied, "src->what = what;");
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(format!("description{opt}.exe"));
+        fwp::cgen::compile_c(&format!("{borrowed}\n{fixture}"), &binary, opt).unwrap();
+        let control = Command::new(&binary)
+            .env("FWP_GC", "off")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0")
+            .output()
+            .unwrap();
+        assert_eq!(
+            control.status.code(),
+            Some(1),
+            "borrowed description must be detected: {control:?}"
+        );
+        let code = format!("{generated}\n{fixture}");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for stress in ["0", "1"] {
+            let output = Command::new(&binary)
+                .env("FWP_GC", if stress == "0" { "off" } else { "on" })
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            assert!(output.status.success(), "{opt}/{stress}: {output:?}");
+        }
+        if let Some(path) = std::env::var_os("FWP_STREAM_ARTIFACTS") {
+            let path = std::path::PathBuf::from(path);
+            std::fs::create_dir_all(&path).unwrap();
+            std::fs::write(path.join("description.c"), code).unwrap();
+            std::fs::copy(&binary, path.join(format!("description{opt}.exe"))).unwrap();
+        }
+    }
+}

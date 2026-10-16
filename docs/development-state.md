@@ -36,8 +36,15 @@ entering receive/decode work. Artifact hashes and exact-head CI success were
 rechecked under the local guard (1.30s). The common function stack frame remains;
 this is representation evidence, not a speed claim.
 
-Next: design the cached result's owner and the incoming source's lifetime before
-admitting remote calls to ARC. This controlled receive/cache measurement excludes
+Next: verify the stream-description lifetime repair, then design the cached
+result's owner and incoming source's lifetime before admitting remote calls to ARC.
+The client previously separately allocated its description without a matching
+release; the server borrowed its handler's text. Both now copy description bytes
+into the existing incoming-source allocation. Client truncation remains unchanged,
+and formatting scratch returns before receive may suspend. The new mutation,
+stack-lifetime, size-overflow, one-allocation and deliberate borrowed-text controls
+await CI, along with actual interpreter/native service calls. No ARC eligibility
+was expanded; the source object still follows its existing collector lifetime. This controlled receive/cache measurement excludes
 socket I/O, connection pooling and full remote-call performance. Existing cells
 have no explicit release operation; clearing C roots does not pretend otherwise.
 Do not mark stream ownership complete from a passing baseline.
@@ -45,9 +52,11 @@ Do not mark stream ownership complete from a passing baseline.
 Before combining after #154 acceptance, rebase only this branch's changes after
 `20f0f5f0` and preserve any measured source under a remote evidence tag. Keep one
 PR at a time. Full builds, native compilation and full tests belong on GitHub;
-local checks use `python3 scripts/local-guard.py` at unchanged limits. Formatting
-passes (1.09s). The focused new tests and workflow pass on Linux AMD64; broader hosts and real
-networking remain to verify. Workflow lint (0.89s) and handoff audit (2.39s) pass.
+local checks use `python3 scripts/local-guard.py` at unchanged limits. For the description repair, guarded `cargo fmt --all -- --check` passes (1.34s),
+`actionlint .github/workflows/numerics.yml` passes (1.01s), and
+`python3 scripts/check-roadmap.py` passes (2.40s). Native tests await CI.
+The preceding measurement baseline passes Linux AMD64; broader hosts and actual
+networking remain to verify for this preparation.
 
 Every commit/squash message is one line, at most 80 characters, without bodies,
 trailers or attribution. JIT is excluded. Failing tests are work to fix.

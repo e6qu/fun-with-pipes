@@ -94,6 +94,7 @@ jobs:
           clang --version > stream-evidence/c.txt
           lscpu > stream-evidence/cpu.txt
           cargo test --test grpc_force_cleanup -- --nocapture
+          cargo test --test grpc every_kind_of_call -- --exact
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'stream-storage'
         with:

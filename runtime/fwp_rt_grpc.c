@@ -198,8 +198,11 @@ static g_ctx *g_ctx_of(void) {
     return fwp_cur->gctx ? (g_ctx *)fwp_cur->gctx : &g_empty_ctx;
 }
 
+/* Diagnostic text includes its terminator; preserve existing truncation. */
+enum { G_MESSAGE_BYTES = 1024 };
+
 static char *g_strdupf(const char *fmt, ...) {
-    char buf[1024];
+    char buf[G_MESSAGE_BYTES];
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(buf, sizeof buf, fmt, ap);
@@ -208,7 +211,7 @@ static char *g_strdupf(const char *fmt, ...) {
 }
 
 static void g_trapf(const char *fmt, ...) {
-    char buf[1024];
+    char buf[G_MESSAGE_BYTES];
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(buf, sizeof buf, fmt, ap);
@@ -1289,6 +1292,29 @@ typedef struct {
     int results;               /* elements are Result[R, GrpcError] (client side) */
 } g_incoming;
 
+/* The description has the source's lifetime, with no separate raw allocation
+ * and no borrow from a serving handler that may already have returned. */
+static g_incoming *g_incoming_new(const char *what, size_t length) {
+    if (length > SIZE_MAX - sizeof(g_incoming) - 1)
+        fwp_trap("stream description too long");
+    g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src + length + 1);
+    char *text = (char *)(src + 1);
+    memcpy(text, what, length);
+    text[length] = 0;
+    src->what = text;
+    return src;
+}
+
+/* As with g_strdupf, formatting scratch ends before receiving may suspend. */
+static g_incoming *g_incoming_format(const char *format, ...) {
+    char description[G_MESSAGE_BYTES];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(description, sizeof description, format, args);
+    va_end(args);
+    return g_incoming_new(description, strlen(description));
+}
+
 /* a position in a received stream (GrpcCell): forcing it receives the
  * message there, once */
 typedef struct {
@@ -1722,11 +1748,10 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     }
     /* an Iterator: the first element now, so that a failure before it is
      * raised in the caller */
-    g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src);
+    g_incoming *src = g_incoming_format("%s (%s)", r->what, addr);
     src->c = c;
     src->s = s;
     src->dec = dec;
-    src->what = g_strdupf("%s (%s)", r->what, addr);
     src->deadline = deadline;
     src->results = r->m.output == 3;
     g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
@@ -2031,13 +2056,12 @@ static int g_run_method(g_job *j, char **msg) {
         fwp_cleanup_pop(&request_canonical);
         h2b_free(&canon);
     } else {
-        g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src);
+        g_incoming *src = g_incoming_new(j->what, strlen(j->what));
         src->c = j->c;
         src->s = j->s;
         src->server = 1;
         g_codec d = {0, m->schema, m->req_node, m->req[0], 0};
         src->dec = d;
-        src->what = j->what;
         g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
         cell->src = src;
         args[na++] = fwp_apply1(fwp_pap((uint32_t)m->iter_fn, 0, 0), PTR(cell));
