@@ -217,6 +217,9 @@ fn scalar_list_generation_does_not_count_address_shaped_bits() {
     let emitted = std::fs::read_to_string(cfile).unwrap();
     let mut probe = r#"
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
     V repeated = REPEAT_WRAPPER(601, bits);
@@ -230,7 +233,7 @@ int main(void) {
 "#
     .to_string();
     for (needle, placeholder) in [
-        ("return fwp_p_repeat_owned(l0, l1, NULL);", "REPEAT_WRAPPER"),
+        ("return fwp_p_repeat_owned(l0, l1, NULL,", "REPEAT_WRAPPER"),
         ("return fwp_p_range_owned(", "RANGE_WRAPPER"),
     ] {
         // Numeric kinds are emitted as an integer literal; find the range

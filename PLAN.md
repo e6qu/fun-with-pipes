@@ -72,38 +72,28 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) and
-[#148](https://github.com/e6qu/fun-with-pipes/pull/148) passed all nine production
-jobs and documentation before merging. They extend owned numerical solvers and
-application utilities, preserve F128 gradient precision, borrow array data across
-loops and transfer record fields without unnecessary temporary owners. Their
-[delivery evidence](docs/roadmap-history.md) is history, not another active backlog.
+[PR #149](https://github.com/e6qu/fun-with-pipes/pull/149) passed all nine production
+jobs and documentation before merging. It owns process/terminal resources and
+constructs mapped numeric arrays without temporary list nodes. Earlier accepted
+work and precise test records belong in [delivery evidence](docs/roadmap-history.md).
 
-The current combined delivery covers:
+The next combined delivery removes immediately mapped numeric zip pairs, repairs
+partial-list cleanup in zip/unzip/repeat/chunks/scan/iterate, fixes large I64 chunk
+sizes on WASI, and extends checked ARC to text reads and replacement writes.
+Maintained todo/grep programs exercise those contracts through functions and
+actual command lines. No new syntax or implicit conversions are introduced.
 
-- Own child-process arguments, captured strings/records, handles and temporary
-  storage; release them on errors and traps. Preserve host signal policy and match
-  interpreter child statuses.
-- Restore terminal echo before unwinding and use real Windows console queries.
-  Give terminal observations explicit contracts and repair portable CLI tests.
-- Exercise the maintained shell tool repeatedly, raw/native agreement, forced
-  failures and deliberately broken cleanup on all six native platforms.
-- Retain repeated derivative timing/layout comparisons and allocation-site
-  profiles. Production tape layout stays unchanged because timings are mixed.
-- Build numeric arrays directly from mapped results, avoiding temporary list
-  nodes while preserving callback order and known direct calls. Check failures,
-  aliases and actual ARM64/AMD64 instructions, and compare repeated timings.
-
-The process/terminal and numeric mapped-array focused gates each pass all six
-native hosts. The optimization removes 2,097,152 requests from the repeated
-512-derivative workload; retains and its peak memory do not change. Four-host
-comparisons and their independent repeat are recorded in the handoff, including
-slower cases. They compare fwp with itself, not with C or Rust.
+Focused native and actual-WASI results are recorded in the handoff. The Windows
+cancellation-fixture repair now passes on both native architectures. Four-host allocation,
+elapsed-time and CPU comparisons reduce repeated derivative requests by 4,194,304
+and retains by 2,097,152 beyond #149, while peak memory stays unchanged. Tiny nested
+timings remain mixed. These compare fwp variants, not C or Rust.
 
 Require all nine production jobs plus documentation for the final combined
-commit before merging. Focused results do not replace full acceptance.
-Remaining derivative intermediates, matrix wrappers, C/Rust gaps and the seven
-work areas above stay open.
+commit before merging. Focused results do not replace full acceptance. Following
+independent preparation investigates synchronous WASI ARC; browser re-entry and
+host-fiber lifetimes remain unproved. Remaining derivative intermediates, matrix
+wrappers, C/Rust gaps and all seven work areas above stay open.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

@@ -171,15 +171,18 @@ fn positive_64_bit_counts_saturate_before_wasi_allocation_and_slice_bounds() {
         ("negative", "sub 1 | generate-array | array.length", "0\n"),
         ("slice", "add 4294967296 | flip (array.slice 0) ([1i8, 2i8, 3i8] | array.from-list) | array.length", "3\n"),
         ("take", "add 4294967296 | flip take [1, 2, 3] | length", "3\n"),
+        ("chunks", "add 4294967296 | flip chunks [1, 2, 3] | length", "1\n"),
     ] {
         let source = tmp.join(format!("{label}.fwp"));
         std::fs::write(&source, format!("{prefix}main = read-all () | string.length | {expression} | echo\n")).unwrap();
         for opt in ["-O1", "-O2"] {
-            let wasm = tmp.join(format!("{label}{}.wasm", &opt[1..]));
-            let b = Command::new(fwp()).env_remove("FWP_NO_OPT")
+          for reuse in if label=="chunks" { &["0","1"][..] } else { &["1"][..] } {
+            let wasm = tmp.join(format!("{label}{}-{reuse}.wasm", &opt[1..]));
+            let b = Command::new(fwp()).env_remove("FWP_NO_OPT").env("FWP_REUSE", reuse)
                 .args(["build", "--target", "wasm32-wasi", opt]).arg(&source).arg("-o").arg(&wasm).output().unwrap();
             assert!(b.status.success(), "{label} {opt}: {}", String::from_utf8_lossy(&b.stderr));
             assert_eq!(run_wasi(&wasm, &[]), expected, "{label} {opt}");
+          }
         }
     }
     std::fs::remove_dir_all(tmp).unwrap();

@@ -247,6 +247,9 @@ fn scalar_structural_fields_do_not_count_address_shaped_bits() {
     let emitted = std::fs::read_to_string(cfile).unwrap();
     let mut probe = r#"
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
     V xs = fwp_rc_fresh(fwp_cons(bits, 0));
@@ -268,7 +271,7 @@ int main(void) {
         ("chunks", "CHUNKS_WRAPPER(", "l0, l1, NULL"),
     ] {
         let boundary = emitted
-            .find(&format!("return fwp_p_{symbol}_owned({args});"))
+            .find(&format!("return fwp_p_{symbol}_owned({args}"))
             .unwrap_or_else(|| panic!("missing actual scalar {symbol} wrapper"));
         let wrapper = emitted[..boundary]
             .rsplit("static V ")

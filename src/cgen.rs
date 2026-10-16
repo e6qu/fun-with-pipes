@@ -6984,6 +6984,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                         | "filter"
                                         | "take-while"
                                         | "zip-with"
+                                        | "scan"
+                                        | "iterate"
                                         | "list.ap"
                                         | "list.flat-map"
                                 ) {
@@ -7289,6 +7291,29 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                         "NULL".into()
                                     }
                                 }));
+                                if sym == "zip" {
+                                    args.extend(fields.iter().map(|ty| self.value_drop(ty)));
+                                    let result = func.ty.params(func.arity as usize).1;
+                                    args.push(self.value_drop(&element(result)?));
+                                    args.push(self.value_drop(result));
+                                }
+                                if sym == "unzip" {
+                                    args.extend(fields.iter().map(|ty| self.value_drop(ty)));
+                                    args.extend(fields.iter().map(|ty| {
+                                        self.value_drop(&MT::Con(
+                                            "std::List".into(),
+                                            vec![ty.clone()],
+                                        ))
+                                    }));
+                                }
+                                if matches!(sym.as_str(), "repeat" | "chunks") {
+                                    args.push(self.value_drop(&fields[0]));
+                                    let result = func.ty.params(func.arity as usize).1;
+                                    if sym == "chunks" {
+                                        args.push(self.value_drop(&element(result)?));
+                                    }
+                                    args.push(self.value_drop(result));
+                                }
                                 if sym == "list.transpose" {
                                     args.push(self.value_drop(&fields[0]));
                                     args.push(self.value_drop(&element(&func.locals[0])?));

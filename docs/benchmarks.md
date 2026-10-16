@@ -668,7 +668,9 @@ records which source versions completed the required tests.
 
 An allocation-site profile records the native instruction that requested each
 piece of managed storage. This explains what creates temporary objects; it does
-not measure how long that instruction takes. The
+not measure how long that instruction takes. This baseline predates direct
+numeric mapped-array construction; its counts identify the costs that motivated
+that later optimization. The
 [four-host report](measurements/ad-allocation-sites-2026-10-16.json) compares
 ordinary aggregate profiling against a diagnostic build with two allocation
 functions deliberately kept out of line. Requests, requested bytes, retains and
@@ -805,3 +807,76 @@ and the initial implementation moved work into another function, so they are not
 total instruction counts or proof of fewer spills. Remaining array reductions
 can still use indirect calls. Full semantic/platform acceptance is recorded in
 the handoff, separately from these measurements.
+
+## Mapping numeric pairs without building a temporary zip
+
+`xs | zip ys | map f` pairs corresponding elements, stops at the shorter list and
+applies `f` to each pair. For known callbacks and inline numeric inputs, the
+compiler can pass both numbers directly without constructing the intermediate
+pairs and list. Returned values still need their ordinary storage. Existing
+fold/array consumers get their own optimization first.
+
+[The four-host comparison](measurements/zip-maps-2026-10-16.json) uses the same fwp
+compiler, source, inputs and memory mode with `FWP_ZIP_MAP=0` and `1`. Other array
+fusion and derivative workspace reuse stay enabled. These are two fwp variants,
+not comparisons against C or Rust. Native compilation uses `-O2 -ffp-contract=off`.
+One warmup precedes eight alternating whole-process samples, including startup,
+input construction, calculation and output. Compilation and allocation profiles
+are measured separately; the report retains hardware, commands, hashes and sizes.
+
+Direct work forms 128 lists of 4,096 products `x * (x + 1)`, retaining the result
+lists before summing them. Repeated differentiation computes 512 reverse
+derivatives over 4,096 inputs. A nested control differentiates a first-element
+square twice over 256 inputs; it has much less eligible work.
+
+Ratios below are enabled elapsed time divided by disabled time. Below 1 is
+faster; above 1 is slower. Tracing uses its normal collector; checked ARC has no
+tracing collector.
+
+| Host | Direct tracing / ARC | Derivative tracing / ARC | Nested tracing / ARC |
+|---|---:|---:|---:|
+| Linux AMD64 | 0.616 / 0.605 | 0.828 / 0.825 | 1.033 / 0.951 |
+| Linux ARM64 | 0.632 / 0.595 | 0.791 / 0.769 | 0.990 / 0.999 |
+| macOS ARM64 | 0.733 / 0.621 | 0.710 / 0.793 | 1.045 / 1.030 |
+| macOS AMD64 | 0.624 / 0.569 | 0.784 / 0.741 | 0.956 / 1.012 |
+
+All four hosts and both modes agree on the allocation profiles:
+
+| Workload | Managed requests, disabled → enabled | Retains, disabled → enabled | Peak charged bytes, disabled → enabled |
+|---|---:|---:|---:|
+| Direct products | 2,106,373 → 1,057,669 | 524,672 → 384 | 17,208,584 → 17,077,512 |
+| Repeated derivative | 23,087,625 → 18,892,809 | 10,492,416 → 8,395,264 | 840,888 → 840,888 |
+| Nested derivative | 4,414 → 3,901 | 2,109 → 1,853 | 60,096 → 60,096 |
+
+Requests count managed objects, not necessarily system allocations. Profiles
+exclude initial constants and disable collection to verify counted cleanup;
+final charged memory and derivative tape storage are zero. Fewer requests do
+not reduce derivative peak memory here. Tiny nested timings remain mixed.
+
+Actual Linux ARM64 disassembly contains vector `fmul` inside the direct product
+loop. Linux AMD64 uses unrolled scalar `mulsd`. Known callbacks inline into that
+loop. The report retains selected generated and machine-code bodies; these are
+not total dynamic instruction counts or evidence about register spills. Full
+platform acceptance is tracked separately in the handoff.
+
+[A separate repeat](measurements/zip-map-cpu-2026-10-16.json) reuses the verified
+binaries, taking sixteen alternating samples of elapsed and child CPU time
+(user plus system CPU). It rebuilds allocation profiles separately with the
+normal collector and collection disabled. The normal traced direct workload
+collects twice in both variants on every host; other profiles collect zero times.
+All allocation, retain, peak and final-storage measurements match the original
+profiles. The repeated CPU ratios are:
+
+| Host | Direct tracing / ARC | Derivative tracing / ARC | Nested tracing / ARC |
+|---|---:|---:|---:|
+| Linux AMD64 | 0.631 / 0.616 | 0.822 / 0.817 | 0.960 / 1.001 |
+| Linux ARM64 | 0.628 / 0.596 | 0.799 / 0.789 | 0.985 / 0.978 |
+| macOS ARM64 | 0.655 / 0.591 | 0.804 / 0.813 | 0.989 / 1.017 |
+| macOS AMD64 | 0.544 / 0.519 | 0.810 / 0.788 | 0.987 / 0.944 |
+
+The macOS ARM64 nested ARC case remains slightly slower: median CPU increases
+from 1.5805 to 1.6075 ms, and elapsed time from 2.2604 to 2.3205 ms. CPU samples
+overlap (disabled 1.456–2.220 ms, enabled 1.463–2.322 ms). This test has little
+eligible work, and the repeat does not establish a benefit there. Adoption rests
+on substantial direct/derivative workloads and reduced ownership traffic; it
+does not promise a speedup for every program.
