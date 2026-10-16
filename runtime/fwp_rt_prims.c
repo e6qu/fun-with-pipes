@@ -759,21 +759,46 @@ static V fwp_p_unzip(V ps) {
     return fwp_tuple2(fwp_list_from(l, n), fwp_list_from(r, n));
 }
 
-static V fwp_p_unzip_owned(V ps, void (*dup_x)(V), void (*dup_y)(V)) {
+static V fwp_p_unzip_owned(V ps, void (*dup_x)(V), void (*dup_y)(V),
+        void (*drop_x)(V), void (*drop_y)(V), void (*drop_left)(V), void (*drop_right)(V)) {
     size_t n;
     V *a = fwp_map_items(ps, &n);
+    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&a, &scratch_cleanup);
     V *l = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+    fwp_map_owner left = {l, 0, 0, drop_x, drop_left};
+    fwp_cleanup left_cleanup; fwp_map_protect(&left, &left_cleanup);
     V *r = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+    fwp_map_owner right = {r, 0, 0, drop_y, drop_right};
+    fwp_cleanup right_cleanup; fwp_map_protect(&right, &right_cleanup);
     for (size_t i = 0; i < n; i++) {
         l[i] = OBJ(a[i])->f[0]; r[i] = OBJ(a[i])->f[1];
         if (dup_x) dup_x(l[i]);
+        left.count++;
         if (dup_y) dup_y(r[i]);
+        right.count++;
     }
-    V left = fwp_map_finish(l, n);
-    V right = fwp_map_finish(r, n);
-    V result = fwp_rc_fresh(fwp_tuple2(left, right));
-    FWP_KEEP_ALIVE(a);
-    fwp_mem_free(a);
+    /* Both result owners must remain protected until the outer pair exists.
+     * Build the left spine first, preserving the ordinary construction order. */
+    for (int side = 0; side < 2; side++) {
+        fwp_map_owner *owner = side ? &right : &left;
+        while (owner->count) {
+            V fields[] = {owner->items[owner->count - 1], owner->built};
+            V node = fwp_rc_fresh(fwp_data(1, 2, fields));
+            owner->count--;
+            owner->built = node;
+        }
+    }
+    V result = fwp_rc_fresh(fwp_tuple2(left.built, right.built));
+    left.built = right.built = 0;
+#if FWP_UNWIND
+    fwp_cleanup_pop(&right_cleanup);
+#endif
+    fwp_map_release(&right);
+#if FWP_UNWIND
+    fwp_cleanup_pop(&left_cleanup);
+#endif
+    fwp_map_release(&left);
+    fwp_scratch_finish(&a, &scratch_cleanup);
     FWP_KEEP_ALIVE(ps);
     return result;
 }

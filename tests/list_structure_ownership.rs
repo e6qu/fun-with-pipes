@@ -268,7 +268,7 @@ int main(void) {
         ("chunks", "CHUNKS_WRAPPER(", "l0, l1, NULL"),
     ] {
         let boundary = emitted
-            .find(&format!("return fwp_p_{symbol}_owned({args});"))
+            .find(&format!("return fwp_p_{symbol}_owned({args}"))
             .unwrap_or_else(|| panic!("missing actual scalar {symbol} wrapper"));
         let wrapper = emitted[..boundary]
             .rsplit("static V ")

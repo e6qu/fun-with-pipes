@@ -169,6 +169,11 @@ whose reference has already been duplicated. If a later retain fails, those
 owners unwind without losing the borrowed input or leaking a partial result.
 This cleanup applies independently of numeric pair elimination.
 
+`unzip` splits a list of pairs into two lists. Its pending duplicated fields and
+both partial lists stay owned until the outer result pair exists. A failure while
+building the right list must also release the completed left list. Typed cleanup
+preserves numeric bits without treating them as pointers.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C
@@ -188,7 +193,7 @@ field can transfer that field's ownership and release only the discarded fields.
 The new conversion path also checks whether a heap record has exactly one owner:
 if so, its fields transfer to the receiving function and only the outer record
 is freed. A shared record needs retained field references; a stack record keeps
-its existing child-owner rules. The candidate tests include aliases, pointer-like
+its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 

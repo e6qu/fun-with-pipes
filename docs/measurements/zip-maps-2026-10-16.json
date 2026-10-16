@@ -1,0 +1,2618 @@
+{
+  "run": 38842840316,
+  "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38842840316",
+  "interpretation": "Same fwp compiler, source, inputs, flags and memory mode with only numeric zip/map combination disabled/enabled. Other mapped-array/fold optimizations remain enabled. One warmup and eight alternating whole-process samples. Separate collection-disabled profiles prove counted cleanup. Retains and allocation requests are measured, not inferred from timings. No C/Rust comparison or universal speedup claim.",
+  "instructionScope": "Actual native disassembly and generated code for selected direct ARC workload functions. Separate symbols may disappear through inlining. These are static function bodies, not total dynamic instruction counts or a register-spill classification. Linux ARM64 inlines vector fmul in the work loop; Linux AMD64 uses scalar mulsd with unrolling.",
+  "reports": {
+    "ubuntu-latest": {
+      "head": "91146d684d723d835474e2a893a8adbe23004996",
+      "results": {
+        "direct": {
+          "source": "work : List[F64] -> List[F64]\nwork = both id (map (add 1.0)) | uncurry zip | map (uncurry mul)\nmain = range 0 128 | map (const (range 0 4096 | map int.to-float)) | map work | map sum | sum | echo\n",
+          "expected": "2932030832640.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "3002459a5a5f0e52b51f90a544ab344ae3844a926f5965ef14f9bf4380c59c4a",
+                  "binarySha256": "759044715b50cd193559cb1c2d66968c2cfb60e2bf8228d4089da056bfc83586",
+                  "assemblySha256": "dbca8d28788f2ee2d86743209f28d8ff8a274559ff43aba15a454bd0734e850c",
+                  "generatedBytes": 641745,
+                  "binaryBytes": 66168,
+                  "emitWallNs": 343517499,
+                  "compileWallNs": 1229518698,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 2106373,
+                    "requestedBytes": 67357752,
+                    "retains": 524672,
+                    "peakChargedBytes": 17208584,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    59642595,
+                    58394873,
+                    69982298,
+                    60186406,
+                    60064378,
+                    60550198,
+                    59603043,
+                    59163178
+                  ],
+                  "medianProcessWallNs": 59853486.5
+                },
+                "1": {
+                  "generatedSha256": "fd15fb82c26c859c586921e19ea06dd865dc4a868b01cd00f8838fe27ecb3a75",
+                  "binarySha256": "365496d446fbff1e21bfd9ab42ee14cf98f752050a4585749601c03e5d739fdc",
+                  "assemblySha256": "47a210b9730cb9a396b4c42e38711c3c6b78fc3c86b8ff0a8cd29e29cfc50a7c",
+                  "generatedBytes": 640526,
+                  "binaryBytes": 61904,
+                  "emitWallNs": 341922280,
+                  "compileWallNs": 864122937,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 1057669,
+                    "requestedBytes": 37996600,
+                    "retains": 384,
+                    "peakChargedBytes": 17077512,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    35877310,
+                    39301634,
+                    36882928,
+                    36476327,
+                    36517283,
+                    41755838,
+                    36876607,
+                    38829185
+                  ],
+                  "medianProcessWallNs": 36879767.5
+                }
+              },
+              "enabledOverDisabled": 0.6161674057199659
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f59f265742750d747b86561e52c0a5a783801c041535d4a90922cd615b9d8e70",
+                  "binarySha256": "614022fd17f44a2fe25ff1b3b0573b929215d479e00dde0aabee8f5c77bf1d4d",
+                  "assemblySha256": "0ce88a7baba846a17f22d3de0934882903806418f722b75498e7a3556e4ae2c0",
+                  "generatedBytes": 641768,
+                  "binaryBytes": 65680,
+                  "emitWallNs": 349497536,
+                  "compileWallNs": 858973052,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 2106373,
+                    "requestedBytes": 67357752,
+                    "retains": 524672,
+                    "peakChargedBytes": 17208584,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    57290090,
+                    49243106,
+                    49323394,
+                    52316082,
+                    47117210,
+                    48340032,
+                    48930367,
+                    55017092
+                  ],
+                  "medianProcessWallNs": 49283250.0
+                },
+                "1": {
+                  "generatedSha256": "c554796288b51b165bb3c13bf720d27b076d340fa66f8081f02074a43678650b",
+                  "binarySha256": "83e4e4503d2b98afe547bd519e75a0e75936033410d871b53782aa22340aa4c7",
+                  "assemblySha256": "ab01df88a34f8d19e711d2ab5b4fcc394bc3b5af98ddac797d79ce3a2f4d00c6",
+                  "generatedBytes": 640549,
+                  "binaryBytes": 61416,
+                  "emitWallNs": 353555288,
+                  "compileWallNs": 816128134,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 1057669,
+                    "requestedBytes": 37996600,
+                    "retains": 384,
+                    "peakChargedBytes": 17077512,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    29898462,
+                    28193690,
+                    27845068,
+                    34913569,
+                    39737236,
+                    28877983,
+                    35638128,
+                    29783388
+                  ],
+                  "medianProcessWallNs": 29840925.0
+                }
+              },
+              "enabledOverDisabled": 0.6054983183941806
+            }
+          }
+        },
+        "derivative": {
+          "source": "main = range 0 512 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "expected": "4194304.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f72a36ed61040175876a0681461f10bd4571a83b89406f53325d0ea4a724a130",
+                  "binarySha256": "c0cd78735f5de6ad98765be31aba3a53dd664ff025f4a23c27faedb4426e78f2",
+                  "assemblySha256": "0ec92fa73a59a164a62d44c72d04981a8ccfec250df5edcfbb037d920ce1814d",
+                  "generatedBytes": 667065,
+                  "binaryBytes": 106384,
+                  "emitWallNs": 359274945,
+                  "compileWallNs": 1263654280,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 23087625,
+                    "requestedBytes": 755388570,
+                    "retains": 10492416,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    759520687,
+                    738723512,
+                    756919698,
+                    737930321,
+                    731491458,
+                    739601921,
+                    752438178,
+                    743102895
+                  ],
+                  "medianProcessWallNs": 741352408.0
+                },
+                "1": {
+                  "generatedSha256": "e13fea0265b2c4acbb37b368c6bb44ce2f02d09e237740cda75abf9f010b8473",
+                  "binarySha256": "8ecc91b37b4a98b5a7ecc0a30ef62147c5e9ea052f842675c09d06439e2c0300",
+                  "assemblySha256": "559f92c024a7020c4fe2c4f12acbde35775eae874c6fe1dbea3682c01df0d96a",
+                  "generatedBytes": 666125,
+                  "binaryBytes": 102120,
+                  "emitWallNs": 361246176,
+                  "compileWallNs": 1232408712,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 18892809,
+                    "requestedBytes": 637943962,
+                    "retains": 8395264,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    623249226,
+                    613524973,
+                    620928087,
+                    612625384,
+                    614292878,
+                    609590996,
+                    611303431,
+                    615827460
+                  ],
+                  "medianProcessWallNs": 613908925.5
+                }
+              },
+              "enabledOverDisabled": 0.8280932507607097
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f0be640586338e216e943ef00b1f0091afcec340385aad3844ccf61f86c986e8",
+                  "binarySha256": "362ce94ecfa9b129433b3a94827aceebebc885ae94bc8a76684d1d72c60610a3",
+                  "assemblySha256": "9229e7d07954566069eecb6d794849e0d98fa084440ac7ac5c0f1343b2965bc1",
+                  "generatedBytes": 667088,
+                  "binaryBytes": 110080,
+                  "emitWallNs": 363692162,
+                  "compileWallNs": 1271846083,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 23087625,
+                    "requestedBytes": 755388570,
+                    "retains": 10492416,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    748097237,
+                    764657045,
+                    743286191,
+                    750196895,
+                    755677148,
+                    748643046,
+                    746368645,
+                    762702277
+                  ],
+                  "medianProcessWallNs": 749419970.5
+                },
+                "1": {
+                  "generatedSha256": "d9842aace96fbfe51cf82c8c0479931654cd368f514f12eeceeb2e4a36cc3c01",
+                  "binarySha256": "785805474b23bd5c36fd0bb35e4d4da34b9a1e1b2c775261b060bc8592c23bb1",
+                  "assemblySha256": "c53513b6d1c9d8584640ed65a69acea48dc1cd94a49dd8e5927b53fe3067833a",
+                  "generatedBytes": 666148,
+                  "binaryBytes": 101720,
+                  "emitWallNs": 364646196,
+                  "compileWallNs": 1232273071,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 18892809,
+                    "requestedBytes": 637943962,
+                    "retains": 8395264,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    618001192,
+                    628302104,
+                    613989692,
+                    630198275,
+                    616765757,
+                    626707830,
+                    612495453,
+                    618784777
+                  ],
+                  "medianProcessWallNs": 618392984.5
+                }
+              },
+              "enabledOverDisabled": 0.8251621371757933
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "expected": "2.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "5b7513c958ef75e4c2ad913414996dffd5c54229c0676be07913301e09bb54c5",
+                  "binarySha256": "ef175c1280878933d04aa13ceb66de9417d1a44acdfab8df8893287c6e804bb8",
+                  "assemblySha256": "887bba97088029ac513947d14c1f7e58d707139737ded87d6c8eef6435a2b173",
+                  "generatedBytes": 729678,
+                  "binaryBytes": 175800,
+                  "emitWallNs": 384904415,
+                  "compileWallNs": 1946134230,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4414,
+                    "requestedBytes": 131492,
+                    "retains": 2109,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1718276,
+                    1953120,
+                    1517256,
+                    1508624,
+                    1483807,
+                    1609904,
+                    2112462,
+                    1670369
+                  ],
+                  "medianProcessWallNs": 1640136.5
+                },
+                "1": {
+                  "generatedSha256": "e87a569684283a4a928b2466812f11054b8dc41901e86983ddaeae01213ceadf",
+                  "binarySha256": "b964aa9f2a6bbe0b0556063841989812a51c6ad22fb63c2effb82474a85ad591",
+                  "assemblySha256": "e968d4fba104c10a6a8ffa08e2d9448dc6e5b7089e8e8496ca28bb4ed2e5bce0",
+                  "generatedBytes": 728774,
+                  "binaryBytes": 175648,
+                  "emitWallNs": 383309539,
+                  "compileWallNs": 1909726782,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 3901,
+                    "requestedBytes": 117148,
+                    "retains": 1853,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1693891,
+                    2064152,
+                    1789281,
+                    1687288,
+                    1617688,
+                    2711546,
+                    1350278,
+                    1693751
+                  ],
+                  "medianProcessWallNs": 1693821.0
+                }
+              },
+              "enabledOverDisabled": 1.0327317269019987
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "97ec73c4420bcaff43b280359ab301f05cba66eb4492b2101f599e48e0b333ab",
+                  "binarySha256": "cee91743a11ad1cb4b68bce2e2f61a4bced6bcabb14d81f798ae7568292946c9",
+                  "assemblySha256": "dedbc224b0d852feb849edc3f9cce53087b8e143791599a7c87c68f8fc49cb43",
+                  "generatedBytes": 729701,
+                  "binaryBytes": 191776,
+                  "emitWallNs": 384694658,
+                  "compileWallNs": 2073377490,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4414,
+                    "requestedBytes": 131492,
+                    "retains": 2109,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2196897,
+                    1855245,
+                    1623399,
+                    2074072,
+                    1664689,
+                    1932519,
+                    1551986,
+                    1746822
+                  ],
+                  "medianProcessWallNs": 1801033.5
+                },
+                "1": {
+                  "generatedSha256": "c86803ee86f2b0478cf39659114d9a1cab27436b3cb636cff7618fdaa2ebf5d0",
+                  "binarySha256": "16d5e4dbe5ec7267d5141ddaf0932d92b6cddc514d39f66af2dd38c300b373c7",
+                  "assemblySha256": "051c8e14582e16da91221b481e133dd075afe42f302f051a5cfa924f4e262446",
+                  "generatedBytes": 728797,
+                  "binaryBytes": 187528,
+                  "emitWallNs": 398352636,
+                  "compileWallNs": 2076206373,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 3901,
+                    "requestedBytes": 117148,
+                    "retains": 1853,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    2081361,
+                    2058687,
+                    1687962,
+                    1609426,
+                    2258882,
+                    1738547,
+                    1543072,
+                    1606369
+                  ],
+                  "medianProcessWallNs": 1713254.5
+                }
+              },
+              "enabledOverDisabled": 0.951261872696982
+            }
+          }
+        }
+      },
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervm8k3b6",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "scope": "Same compiler, source, inputs, native flags and memory mode; only FWP_ZIP_MAP changes. Other array fusion, mapped-array construction and derivative workspace reuse enabled. One warmup and eight alternating process samples include startup, input construction, computation and output. Compilation and allocation profiling are separate. Profile constants excluded and collection disabled to check count-based cleanup. Timed tracing uses its normal collector. No C/Rust parity claim."
+    },
+    "ubuntu-24.04-arm": {
+      "head": "91146d684d723d835474e2a893a8adbe23004996",
+      "results": {
+        "direct": {
+          "source": "work : List[F64] -> List[F64]\nwork = both id (map (add 1.0)) | uncurry zip | map (uncurry mul)\nmain = range 0 128 | map (const (range 0 4096 | map int.to-float)) | map work | map sum | sum | echo\n",
+          "expected": "2932030832640.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "3002459a5a5f0e52b51f90a544ab344ae3844a926f5965ef14f9bf4380c59c4a",
+                  "binarySha256": "7d2a02eeff18d0195e51d0771b0bf1c1d6ed739c0d99a46eeda4c1271f8ad3a5",
+                  "assemblySha256": "dc3ddce4e2cbd501e314ef82f31f5fc8d3e27ccebdde653b4ac87bedb174bfa7",
+                  "generatedBytes": 641745,
+                  "binaryBytes": 84080,
+                  "emitWallNs": 293733958,
+                  "compileWallNs": 808063207,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 2106373,
+                    "requestedBytes": 67357752,
+                    "retains": 524672,
+                    "peakChargedBytes": 17208584,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    56046256,
+                    56999054,
+                    56423705,
+                    57067314,
+                    57466866,
+                    56356053,
+                    56443544,
+                    56514884
+                  ],
+                  "medianProcessWallNs": 56479214.0
+                },
+                "1": {
+                  "generatedSha256": "fd15fb82c26c859c586921e19ea06dd865dc4a868b01cd00f8838fe27ecb3a75",
+                  "binarySha256": "7320ba2b94751dff3d69d9c4293d734a82adf4628e24d20852933aaea62acd6f",
+                  "assemblySha256": "7eca16b364b370ca13b26b8bf813c17ad2f67e461eedf2beeeba7a3cce799fd1",
+                  "generatedBytes": 640526,
+                  "binaryBytes": 83920,
+                  "emitWallNs": 296235718,
+                  "compileWallNs": 664410849,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 1057669,
+                    "requestedBytes": 37996600,
+                    "retains": 384,
+                    "peakChargedBytes": 17077512,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    35205312,
+                    35738376,
+                    35796485,
+                    36499617,
+                    35234647,
+                    35660749,
+                    36018575,
+                    35634238
+                  ],
+                  "medianProcessWallNs": 35699562.5
+                }
+              },
+              "enabledOverDisabled": 0.6320832032117161
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f59f265742750d747b86561e52c0a5a783801c041535d4a90922cd615b9d8e70",
+                  "binarySha256": "7aa2a29224f740a81083b835563298e4ebf8b41e161450661dd0574bab62ae61",
+                  "assemblySha256": "c95fcbb6397954b7393d00f73f2700fb46864f3856ecd02a0875fb8379c3c315",
+                  "generatedBytes": 641768,
+                  "binaryBytes": 83592,
+                  "emitWallNs": 296856281,
+                  "compileWallNs": 675433787,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 2106373,
+                    "requestedBytes": 67357752,
+                    "retains": 524672,
+                    "peakChargedBytes": 17208584,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    45821862,
+                    47150684,
+                    46623317,
+                    46556153,
+                    46719024,
+                    46460575,
+                    46902996,
+                    47077354
+                  ],
+                  "medianProcessWallNs": 46671170.5
+                },
+                "1": {
+                  "generatedSha256": "c554796288b51b165bb3c13bf720d27b076d340fa66f8081f02074a43678650b",
+                  "binarySha256": "69c74edf989a2965e240ea4036dc9ca2b609548c98cef17aa992d160584e945d",
+                  "assemblySha256": "e39016ef5ab58741cba9b69ab5061e77b2ef356ad216c4734df3c17241dec951",
+                  "generatedBytes": 640549,
+                  "binaryBytes": 83432,
+                  "emitWallNs": 293036577,
+                  "compileWallNs": 616241964,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 1057669,
+                    "requestedBytes": 37996600,
+                    "retains": 384,
+                    "peakChargedBytes": 17077512,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    28408423,
+                    27813979,
+                    27611935,
+                    27756511,
+                    27608432,
+                    27072128,
+                    27823339,
+                    27966850
+                  ],
+                  "medianProcessWallNs": 27785245.0
+                }
+              },
+              "enabledOverDisabled": 0.5953406503914446
+            }
+          }
+        },
+        "derivative": {
+          "source": "main = range 0 512 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "expected": "4194304.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f72a36ed61040175876a0681461f10bd4571a83b89406f53325d0ea4a724a130",
+                  "binarySha256": "30ef326659bdbfbdf3a026535eaf60aa5ad56038579f6518c5b098ac0d5843f4",
+                  "assemblySha256": "cb446bdf838f2b8bbf8b698d027b582ba6374a04ae76c899c8cdbac75764da52",
+                  "generatedBytes": 667065,
+                  "binaryBytes": 153000,
+                  "emitWallNs": 305727530,
+                  "compileWallNs": 1017766092,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 23087625,
+                    "requestedBytes": 755388570,
+                    "retains": 10492416,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    730083914,
+                    719196577,
+                    683177359,
+                    685475992,
+                    706284727,
+                    677347010,
+                    706145343,
+                    712866884
+                  ],
+                  "medianProcessWallNs": 706215035.0
+                },
+                "1": {
+                  "generatedSha256": "e13fea0265b2c4acbb37b368c6bb44ce2f02d09e237740cda75abf9f010b8473",
+                  "binarySha256": "2fd6ab55e45297cabb9766ca6d48a8aa6b2a08290551890702745ac5957f944e",
+                  "assemblySha256": "22f627010707ef8089f437e69034fcec88e6bd63d666075ef34a6b77aa80a821",
+                  "generatedBytes": 666125,
+                  "binaryBytes": 152832,
+                  "emitWallNs": 309571502,
+                  "compileWallNs": 966576340,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 18892809,
+                    "requestedBytes": 637943962,
+                    "retains": 8395264,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    559447685,
+                    565748611,
+                    547918456,
+                    553540282,
+                    557115467,
+                    553305776,
+                    565078378,
+                    560277141
+                  ],
+                  "medianProcessWallNs": 558281576.0
+                }
+              },
+              "enabledOverDisabled": 0.7905263246059325
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f0be640586338e216e943ef00b1f0091afcec340385aad3844ccf61f86c986e8",
+                  "binarySha256": "7e617475601971eb8951967cbc746849d0c0fd869fc013e0bd71b5b051bc8f70",
+                  "assemblySha256": "ed1aae5f12705c3dff8c8947eb20855cb9174410f21c243e1da352742c096d80",
+                  "generatedBytes": 667088,
+                  "binaryBytes": 152568,
+                  "emitWallNs": 305010744,
+                  "compileWallNs": 1020076578,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 23087625,
+                    "requestedBytes": 755388570,
+                    "retains": 10492416,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    725137364,
+                    701267290,
+                    708982241,
+                    741268020,
+                    722092189,
+                    762810036,
+                    735387654,
+                    737477048
+                  ],
+                  "medianProcessWallNs": 730262509.0
+                },
+                "1": {
+                  "generatedSha256": "d9842aace96fbfe51cf82c8c0479931654cd368f514f12eeceeb2e4a36cc3c01",
+                  "binarySha256": "9afed81d6287c10b9437c1f1d006a88c97c9f8aaeb2069fee6df8545cf7763ca",
+                  "assemblySha256": "0506da6ccc47686ab354673cf5b0e6f5d258c86fb04f08f0a6904ec6f4a47493",
+                  "generatedBytes": 666148,
+                  "binaryBytes": 152400,
+                  "emitWallNs": 308451932,
+                  "compileWallNs": 974661071,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 18892809,
+                    "requestedBytes": 637943962,
+                    "retains": 8395264,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    561502881,
+                    567393140,
+                    561046449,
+                    558513020,
+                    552906765,
+                    561488710,
+                    559405646,
+                    576056066
+                  ],
+                  "medianProcessWallNs": 561267579.5
+                }
+              },
+              "enabledOverDisabled": 0.7685833143325177
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "expected": "2.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "5b7513c958ef75e4c2ad913414996dffd5c54229c0676be07913301e09bb54c5",
+                  "binarySha256": "ccaaabcf6d287cf2aec674d0dbde72d975681dd84245eab1fa7a30906400b225",
+                  "assemblySha256": "59848bdb5cf63c5fbbb11e03460f5d35fac89ea8ae4200e334d3f65320064461",
+                  "generatedBytes": 729678,
+                  "binaryBytes": 226512,
+                  "emitWallNs": 321866053,
+                  "compileWallNs": 1568312560,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4414,
+                    "requestedBytes": 131492,
+                    "retains": 2109,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1122858,
+                    1168952,
+                    1085132,
+                    1121218,
+                    1051031,
+                    1197253,
+                    1072605,
+                    1049255
+                  ],
+                  "medianProcessWallNs": 1103175.0
+                },
+                "1": {
+                  "generatedSha256": "e87a569684283a4a928b2466812f11054b8dc41901e86983ddaeae01213ceadf",
+                  "binarySha256": "d96dbf4ec2970088cbac8092b2bbb7392d89fd05280c6121ad088400a6c8e3bd",
+                  "assemblySha256": "cb36606f90a9f16b2493a5d6d83b288b580ebabde50f8f04d80f59a923e4af07",
+                  "generatedBytes": 728774,
+                  "binaryBytes": 226360,
+                  "emitWallNs": 328443800,
+                  "compileWallNs": 1583337898,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 3901,
+                    "requestedBytes": 117148,
+                    "retains": 1853,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1110571,
+                    1042880,
+                    1150137,
+                    1112498,
+                    1003010,
+                    1073806,
+                    1121786,
+                    1062750
+                  ],
+                  "medianProcessWallNs": 1092188.5
+                }
+              },
+              "enabledOverDisabled": 0.9900410179708569
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "97ec73c4420bcaff43b280359ab301f05cba66eb4492b2101f599e48e0b333ab",
+                  "binarySha256": "6ab351130d1fcee446538ffba9cc54dbd3bab79ccdb1ec92e3e59054748c132f",
+                  "assemblySha256": "58f135005cc12b29b42eb1416e033a4050fd35199e0df1428d9769749ee01ef2",
+                  "generatedBytes": 729701,
+                  "binaryBytes": 226104,
+                  "emitWallNs": 322504947,
+                  "compileWallNs": 1684034643,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-0.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4414,
+                    "requestedBytes": 131492,
+                    "retains": 2109,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1283065,
+                    1074421,
+                    1097636,
+                    1087773,
+                    1441103,
+                    1074061,
+                    966500,
+                    1099108
+                  ],
+                  "medianProcessWallNs": 1092704.5
+                },
+                "1": {
+                  "generatedSha256": "c86803ee86f2b0478cf39659114d9a1cab27436b3cb636cff7618fdaa2ebf5d0",
+                  "binarySha256": "caadaa2d55b532017a74140e1fbfa7ae4cd3f2eded185f7661ef982f379cd2f7",
+                  "assemblySha256": "661c9176cfea5adc794c4356878bc98f235353a72023a6d95c6abea6c0e7578a",
+                  "generatedBytes": 728797,
+                  "binaryBytes": 225952,
+                  "emitWallNs": 329202257,
+                  "compileWallNs": 1669536897,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-1.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 3901,
+                    "requestedBytes": 117148,
+                    "retains": 1853,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1079205,
+                    1052047,
+                    1068742,
+                    1103963,
+                    1068950,
+                    1477733,
+                    1141321,
+                    1151353
+                  ],
+                  "medianProcessWallNs": 1091584.0
+                }
+              },
+              "enabledOverDisabled": 0.9989745626562351
+            }
+          }
+        }
+      },
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmidgih",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "scope": "Same compiler, source, inputs, native flags and memory mode; only FWP_ZIP_MAP changes. Other array fusion, mapped-array construction and derivative workspace reuse enabled. One warmup and eight alternating process samples include startup, input construction, computation and output. Compilation and allocation profiling are separate. Profile constants excluded and collection disabled to check count-based cleanup. Timed tracing uses its normal collector. No C/Rust parity claim."
+    },
+    "macos-15": {
+      "head": "91146d684d723d835474e2a893a8adbe23004996",
+      "results": {
+        "direct": {
+          "source": "work : List[F64] -> List[F64]\nwork = both id (map (add 1.0)) | uncurry zip | map (uncurry mul)\nmain = range 0 128 | map (const (range 0 4096 | map int.to-float)) | map work | map sum | sum | echo\n",
+          "expected": "2932030832640.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "3002459a5a5f0e52b51f90a544ab344ae3844a926f5965ef14f9bf4380c59c4a",
+                  "binarySha256": "7ec64c65f286ade41c07afe584e25035fed96b236b533794c997743ff406170b",
+                  "assemblySha256": "d4e2b3ccf70cdde80c9590c5cf2dd99e43c5933af8da65c611a0675108977a34",
+                  "generatedBytes": 641745,
+                  "binaryBytes": 72720,
+                  "emitWallNs": 317517000,
+                  "compileWallNs": 677013083,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 2106373,
+                    "requestedBytes": 67357752,
+                    "retains": 524672,
+                    "peakChargedBytes": 17208584,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    57661875,
+                    47330667,
+                    47613500,
+                    48788542,
+                    48714000,
+                    50260875,
+                    66920083,
+                    53086000
+                  ],
+                  "medianProcessWallNs": 49524708.5
+                },
+                "1": {
+                  "generatedSha256": "fd15fb82c26c859c586921e19ea06dd865dc4a868b01cd00f8838fe27ecb3a75",
+                  "binarySha256": "035aabba63c6fdb33d0928ed4bfbb25dd2362bbae08fd7fe32aa9594d69acbd0",
+                  "assemblySha256": "e9c849a604a94d7104ad8d80c5557e3c7f0a24cb09638bd690c57a31f1b4090e",
+                  "generatedBytes": 640526,
+                  "binaryBytes": 72576,
+                  "emitWallNs": 315117250,
+                  "compileWallNs": 440116000,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 1057669,
+                    "requestedBytes": 37996600,
+                    "retains": 384,
+                    "peakChargedBytes": 17077512,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    40076500,
+                    38589250,
+                    34089208,
+                    38423667,
+                    31620500,
+                    31467708,
+                    36898125,
+                    35696625
+                  ],
+                  "medianProcessWallNs": 36297375.0
+                }
+              },
+              "enabledOverDisabled": 0.7329144602638096
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f59f265742750d747b86561e52c0a5a783801c041535d4a90922cd615b9d8e70",
+                  "binarySha256": "4995be245c75fb163e62dd05a047a42b7666c83b6ac874c924906fd541a59a30",
+                  "assemblySha256": "9a9e7660b7fc61ecbbba5efa013d92a8e9b08d53bfe8d4bb95edba15c854cb24",
+                  "generatedBytes": 641768,
+                  "binaryBytes": 72336,
+                  "emitWallNs": 259877542,
+                  "compileWallNs": 457479625,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 2106373,
+                    "requestedBytes": 67357752,
+                    "retains": 524672,
+                    "peakChargedBytes": 17208584,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    38900333,
+                    39045542,
+                    39620125,
+                    37853291,
+                    36935625,
+                    46006084,
+                    49958959,
+                    49307583
+                  ],
+                  "medianProcessWallNs": 39332833.5
+                },
+                "1": {
+                  "generatedSha256": "c554796288b51b165bb3c13bf720d27b076d340fa66f8081f02074a43678650b",
+                  "binarySha256": "cfc6c06e5eca4656eed4f46f808936dd121a5581e7be6c3d49642c919732fb0a",
+                  "assemblySha256": "6630cddc708d9a64112e90c7cd39157b44e68b1e70da0807a3f43d38af8703c3",
+                  "generatedBytes": 640549,
+                  "binaryBytes": 72192,
+                  "emitWallNs": 275220375,
+                  "compileWallNs": 436719875,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 1057669,
+                    "requestedBytes": 37996600,
+                    "retains": 384,
+                    "peakChargedBytes": 17077512,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    24983917,
+                    25635542,
+                    23543125,
+                    23219708,
+                    23882333,
+                    23356792,
+                    27759417,
+                    28112083
+                  ],
+                  "medianProcessWallNs": 24433125.0
+                }
+              },
+              "enabledOverDisabled": 0.6211890379064605
+            }
+          }
+        },
+        "derivative": {
+          "source": "main = range 0 512 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "expected": "4194304.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f72a36ed61040175876a0681461f10bd4571a83b89406f53325d0ea4a724a130",
+                  "binarySha256": "ad4623b68cdceecd02ddfd4bc1147a5450935b2f48db6037f7de8fe9d76d8274",
+                  "assemblySha256": "f01676445b57a1312adead5a6293793b62aa3fc5417b0f431e7d5c7ad24e8749",
+                  "generatedBytes": 667065,
+                  "binaryBytes": 108600,
+                  "emitWallNs": 257340167,
+                  "compileWallNs": 781286708,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 23087625,
+                    "requestedBytes": 755388570,
+                    "retains": 10492416,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    741752709,
+                    688511250,
+                    803426625,
+                    817416583,
+                    823432416,
+                    758202125,
+                    789623042,
+                    827188709
+                  ],
+                  "medianProcessWallNs": 796524833.5
+                },
+                "1": {
+                  "generatedSha256": "e13fea0265b2c4acbb37b368c6bb44ce2f02d09e237740cda75abf9f010b8473",
+                  "binarySha256": "eed9ffaac0db2e2f21f6aa3a67686b3bd674775fd8393d4c96b39fbb23a98e10",
+                  "assemblySha256": "74dbf76c187fdd4d8b5b14a14f064ac7dfd0e1ff8713d8bc8639927265e7ab0c",
+                  "generatedBytes": 666125,
+                  "binaryBytes": 108456,
+                  "emitWallNs": 274666167,
+                  "compileWallNs": 845363292,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 18892809,
+                    "requestedBytes": 637943962,
+                    "retains": 8395264,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    572672584,
+                    552678833,
+                    629498709,
+                    535141666,
+                    559086416,
+                    545904250,
+                    651305959,
+                    670684083
+                  ],
+                  "medianProcessWallNs": 565879500.0
+                }
+              },
+              "enabledOverDisabled": 0.7104354769624392
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f0be640586338e216e943ef00b1f0091afcec340385aad3844ccf61f86c986e8",
+                  "binarySha256": "5509b5af9448f97b66b56d550c46d3f584b9d0fb20d0af82a7d23540cbecc80b",
+                  "assemblySha256": "9e2810ff0125b8be20473682e33b558c924163fd26d303802ec258bd2f5307d4",
+                  "generatedBytes": 667088,
+                  "binaryBytes": 108240,
+                  "emitWallNs": 298142834,
+                  "compileWallNs": 705179834,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 23087625,
+                    "requestedBytes": 755388570,
+                    "retains": 10492416,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    698233709,
+                    619645500,
+                    778857542,
+                    742233417,
+                    857030041,
+                    762520084,
+                    760754750,
+                    720502084
+                  ],
+                  "medianProcessWallNs": 751494083.5
+                },
+                "1": {
+                  "generatedSha256": "d9842aace96fbfe51cf82c8c0479931654cd368f514f12eeceeb2e4a36cc3c01",
+                  "binarySha256": "1f342f12a8baac814eea698ce439b2160978c0acba810f42c10e5f10ed429cc6",
+                  "assemblySha256": "aa0c55cd482be16b228e022b219fe40fa52fc22b9545039289690bb4565bc024",
+                  "generatedBytes": 666148,
+                  "binaryBytes": 108080,
+                  "emitWallNs": 308496583,
+                  "compileWallNs": 632796833,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 18892809,
+                    "requestedBytes": 637943962,
+                    "retains": 8395264,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    564879750,
+                    558424083,
+                    583189500,
+                    633106959,
+                    748392917,
+                    630282667,
+                    600020459,
+                    592477083
+                  ],
+                  "medianProcessWallNs": 596248771.0
+                }
+              },
+              "enabledOverDisabled": 0.7934177847722204
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "expected": "2.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "5b7513c958ef75e4c2ad913414996dffd5c54229c0676be07913301e09bb54c5",
+                  "binarySha256": "9fa1b2c28dee277bfb6900c2490aed71ae116a3f906667bf7fcef6dd01a5e236",
+                  "assemblySha256": "3e872ce84be48bd0d41d7c91a94683fe9fd95b9171c435e5106223d62cf5140d",
+                  "generatedBytes": 729678,
+                  "binaryBytes": 148160,
+                  "emitWallNs": 316364875,
+                  "compileWallNs": 960637416,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4414,
+                    "requestedBytes": 131492,
+                    "retains": 2109,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    9267292,
+                    4034042,
+                    6695042,
+                    4409125,
+                    5879167,
+                    4057041,
+                    4253917,
+                    4632458
+                  ],
+                  "medianProcessWallNs": 4520791.5
+                },
+                "1": {
+                  "generatedSha256": "e87a569684283a4a928b2466812f11054b8dc41901e86983ddaeae01213ceadf",
+                  "binarySha256": "a5edca172862b55361a1893128137510d07fdeef1f80efbf314e12b92dba1487",
+                  "assemblySha256": "529c2d6b837ddd0f712baacc25c72d61405a92ced503c8b4c4b9b77ccd82b125",
+                  "generatedBytes": 728774,
+                  "binaryBytes": 148032,
+                  "emitWallNs": 328987167,
+                  "compileWallNs": 1110801791,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 3901,
+                    "requestedBytes": 117148,
+                    "retains": 1853,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    6409084,
+                    4457458,
+                    5086834,
+                    4294250,
+                    6053708,
+                    4992167,
+                    4250750,
+                    4271084
+                  ],
+                  "medianProcessWallNs": 4724812.5
+                }
+              },
+              "enabledOverDisabled": 1.0451294867281538
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "97ec73c4420bcaff43b280359ab301f05cba66eb4492b2101f599e48e0b333ab",
+                  "binarySha256": "e9e1e44d6d6f3ceef86b229b625877a9d8185f4147217465dbf99f382216a0da",
+                  "assemblySha256": "435966457d81a187b9fb3019e4b418248f1fa009011db6565608e4ee532a7410",
+                  "generatedBytes": 729701,
+                  "binaryBytes": 164368,
+                  "emitWallNs": 292956583,
+                  "compileWallNs": 1140991791,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4414,
+                    "requestedBytes": 131492,
+                    "retains": 2109,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    4568625,
+                    4336375,
+                    5646542,
+                    5340541,
+                    6507250,
+                    3845125,
+                    3968583,
+                    4339791
+                  ],
+                  "medianProcessWallNs": 4454208.0
+                },
+                "1": {
+                  "generatedSha256": "c86803ee86f2b0478cf39659114d9a1cab27436b3cb636cff7618fdaa2ebf5d0",
+                  "binarySha256": "4453da16a76899187156e5d82ecb34b613c177d710061e7670c95bf06b9ff77c",
+                  "assemblySha256": "3058598bb721eaa09e6b1341632766079cd05c513b22b124ab2902e0c07279d5",
+                  "generatedBytes": 728797,
+                  "binaryBytes": 164208,
+                  "emitWallNs": 455893625,
+                  "compileWallNs": 1386914250,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 3901,
+                    "requestedBytes": 117148,
+                    "retains": 1853,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    4562875,
+                    3968542,
+                    4584750,
+                    6061625,
+                    4591459,
+                    4367250,
+                    4726833,
+                    5224333
+                  ],
+                  "medianProcessWallNs": 4588104.5
+                }
+              },
+              "enabledOverDisabled": 1.0300606752087016
+            }
+          }
+        }
+      },
+      "hardware": {
+        "system": "Darwin",
+        "node": "sjc22-be104-952f1d79-9f4a-4853-bc7d-d7034efc1799-5A663CA275E1.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "scope": "Same compiler, source, inputs, native flags and memory mode; only FWP_ZIP_MAP changes. Other array fusion, mapped-array construction and derivative workspace reuse enabled. One warmup and eight alternating process samples include startup, input construction, computation and output. Compilation and allocation profiling are separate. Profile constants excluded and collection disabled to check count-based cleanup. Timed tracing uses its normal collector. No C/Rust parity claim."
+    },
+    "macos-15-intel": {
+      "head": "91146d684d723d835474e2a893a8adbe23004996",
+      "results": {
+        "direct": {
+          "source": "work : List[F64] -> List[F64]\nwork = both id (map (add 1.0)) | uncurry zip | map (uncurry mul)\nmain = range 0 128 | map (const (range 0 4096 | map int.to-float)) | map work | map sum | sum | echo\n",
+          "expected": "2932030832640.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "3002459a5a5f0e52b51f90a544ab344ae3844a926f5965ef14f9bf4380c59c4a",
+                  "binarySha256": "baa083749d7cea0f25ee5ab87dd5cb7ea668799590970855098698d50d064099",
+                  "assemblySha256": "b0b6f5d07ff66deb3e134666c540ffb8cbd0488488f72db5a61f8272cfae63ac",
+                  "generatedBytes": 641745,
+                  "binaryBytes": 55704,
+                  "emitWallNs": 746315280,
+                  "compileWallNs": 1243509317,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 2106373,
+                    "requestedBytes": 67357752,
+                    "retains": 524672,
+                    "peakChargedBytes": 17208584,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    130805482,
+                    125548688,
+                    122906953,
+                    126676082,
+                    129171679,
+                    121898584,
+                    125397197,
+                    121672130
+                  ],
+                  "medianProcessWallNs": 125472942.5
+                },
+                "1": {
+                  "generatedSha256": "fd15fb82c26c859c586921e19ea06dd865dc4a868b01cd00f8838fe27ecb3a75",
+                  "binarySha256": "8e190e83d2da84b39e0f754476935cec0b990f420eb905933568dd833c47ac00",
+                  "assemblySha256": "445cb580d945304519392c1cb70eb5466944f943f2c42ac38eff2d3824fcef62",
+                  "generatedBytes": 640526,
+                  "binaryBytes": 55560,
+                  "emitWallNs": 759438636,
+                  "compileWallNs": 1098400861,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 1057669,
+                    "requestedBytes": 37996600,
+                    "retains": 384,
+                    "peakChargedBytes": 17077512,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    77716957,
+                    80788457,
+                    75542146,
+                    76677417,
+                    78859410,
+                    79475433,
+                    76637428,
+                    79527672
+                  ],
+                  "medianProcessWallNs": 78288183.5
+                }
+              },
+              "enabledOverDisabled": 0.6239447480878199
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f59f265742750d747b86561e52c0a5a783801c041535d4a90922cd615b9d8e70",
+                  "binarySha256": "69caf39768f01f95fc8a54baebe9836cfbed578ac6e71f83ab7b94df33a99586",
+                  "assemblySha256": "eb168bf73e9065e7b46b293b2e13dcebe9155eed43c924008dc5278b4df05e5d",
+                  "generatedBytes": 641768,
+                  "binaryBytes": 55312,
+                  "emitWallNs": 698500994,
+                  "compileWallNs": 944726379,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 2106373,
+                    "requestedBytes": 67357752,
+                    "retains": 524672,
+                    "peakChargedBytes": 17208584,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    120875547,
+                    125102875,
+                    122618707,
+                    127691771,
+                    139163020,
+                    126129275,
+                    128785179,
+                    124439383
+                  ],
+                  "medianProcessWallNs": 125616075.0
+                },
+                "1": {
+                  "generatedSha256": "c554796288b51b165bb3c13bf720d27b076d340fa66f8081f02074a43678650b",
+                  "binarySha256": "4a768369b8e2422af309ab66b2899a6907fd39b998b50182581a262aa75331ff",
+                  "assemblySha256": "85a10f2f485dd31b57fa547a5f1dfc757f5285ae0635192608875b21e05aad54",
+                  "generatedBytes": 640549,
+                  "binaryBytes": 51080,
+                  "emitWallNs": 750450222,
+                  "compileWallNs": 1430073860,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/direct-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 0,
+                    "tapeRequestedBytes": 0,
+                    "peakTapeBytes": 0,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 1057669,
+                    "requestedBytes": 37996600,
+                    "retains": 384,
+                    "peakChargedBytes": 17077512,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    70179693,
+                    71201875,
+                    69567014,
+                    70292730,
+                    74324388,
+                    73315942,
+                    71706877,
+                    76592708
+                  ],
+                  "medianProcessWallNs": 71454376.0
+                }
+              },
+              "enabledOverDisabled": 0.5688314652404161
+            }
+          }
+        },
+        "derivative": {
+          "source": "main = range 0 512 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "expected": "4194304.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f72a36ed61040175876a0681461f10bd4571a83b89406f53325d0ea4a724a130",
+                  "binarySha256": "78b40ef8644bb8a780a80cb7001262a88469debb10bee669dc362442d02e9bcc",
+                  "assemblySha256": "339dd62f5810b0ea1ade5f58b4caf22e019dbcf3fb332f8c39c33c5b151867b8",
+                  "generatedBytes": 667065,
+                  "binaryBytes": 87200,
+                  "emitWallNs": 765605726,
+                  "compileWallNs": 1614127636,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 23087625,
+                    "requestedBytes": 755388570,
+                    "retains": 10492416,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1459297693,
+                    1385106757,
+                    1436764792,
+                    1459367294,
+                    1446027316,
+                    1434889402,
+                    1451652934,
+                    1469525499
+                  ],
+                  "medianProcessWallNs": 1448840125.0
+                },
+                "1": {
+                  "generatedSha256": "e13fea0265b2c4acbb37b368c6bb44ce2f02d09e237740cda75abf9f010b8473",
+                  "binarySha256": "d8e68bb5f3cfc82a52184062d8dc2e86bbfa7fd2801e02e6e79ce2d4810745bc",
+                  "assemblySha256": "cf17b98e046642795477fa2082efe0a09af77e74d6e2f1041bdec98888d80872",
+                  "generatedBytes": 666125,
+                  "binaryBytes": 87064,
+                  "emitWallNs": 795130321,
+                  "compileWallNs": 1771158807,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 18892809,
+                    "requestedBytes": 637943962,
+                    "retains": 8395264,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1141328410,
+                    1152251292,
+                    1131867000,
+                    1121350881,
+                    1112584348,
+                    1122267693,
+                    1316841772,
+                    1149131520
+                  ],
+                  "medianProcessWallNs": 1136597705.0
+                }
+              },
+              "enabledOverDisabled": 0.7844880089858086
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f0be640586338e216e943ef00b1f0091afcec340385aad3844ccf61f86c986e8",
+                  "binarySha256": "ea4416415a4f80b966ebb753cc1abf7683358211f692dacfd8fa2bcc0ee48577",
+                  "assemblySha256": "173e1e5e9f097b2d346f026f94fcfe2801404eb2eb260befd99b5a855c8edf0d",
+                  "generatedBytes": 667088,
+                  "binaryBytes": 90952,
+                  "emitWallNs": 798888127,
+                  "compileWallNs": 1622835267,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 23087625,
+                    "requestedBytes": 755388570,
+                    "retains": 10492416,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1484376230,
+                    1449559999,
+                    1360534229,
+                    1435155804,
+                    1369189951,
+                    1386188211,
+                    1601025289,
+                    1567028862
+                  ],
+                  "medianProcessWallNs": 1442357901.5
+                },
+                "1": {
+                  "generatedSha256": "d9842aace96fbfe51cf82c8c0479931654cd368f514f12eeceeb2e4a36cc3c01",
+                  "binarySha256": "93c78a1d13d6595705c60a2ad9a6a64c26ad83520229f340c8a98e33a5f2b05f",
+                  "assemblySha256": "ddf94adfcd4c57d04abca8fde387c618ab62e0c436cfb5a2027004fcdb0f2702",
+                  "generatedBytes": 666148,
+                  "binaryBytes": 90792,
+                  "emitWallNs": 903055000,
+                  "compileWallNs": 1498150487,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/derivative-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 16,
+                    "tapeRequestedBytes": 260712,
+                    "peakTapeBytes": 163944,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 18892809,
+                    "requestedBytes": 637943962,
+                    "retains": 8395264,
+                    "peakChargedBytes": 840888,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    1192622640,
+                    1085229448,
+                    1052415315,
+                    1040371351,
+                    1035033008,
+                    1035632533,
+                    1123870764,
+                    1139557257
+                  ],
+                  "medianProcessWallNs": 1068822381.5
+                }
+              },
+              "enabledOverDisabled": 0.7410243881830324
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "expected": "2.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "5b7513c958ef75e4c2ad913414996dffd5c54229c0676be07913301e09bb54c5",
+                  "binarySha256": "95e13690926b904b1d5f6a249aa7fe5a750fbc98c690435072acb838e7ce93c4",
+                  "assemblySha256": "e3bbb54182c9e8bd16a43ffc0240e27d2eb3fb1b64aa77af971c1e94e9ec6daf",
+                  "generatedBytes": 729678,
+                  "binaryBytes": 142864,
+                  "emitWallNs": 869378364,
+                  "compileWallNs": 2271960401,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4414,
+                    "requestedBytes": 131492,
+                    "retains": 2109,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    9535405,
+                    7926538,
+                    8687071,
+                    10212776,
+                    9988792,
+                    11835903,
+                    10963438,
+                    17167580
+                  ],
+                  "medianProcessWallNs": 10100784.0
+                },
+                "1": {
+                  "generatedSha256": "e87a569684283a4a928b2466812f11054b8dc41901e86983ddaeae01213ceadf",
+                  "binarySha256": "ac50ad878c63cea4c8c519402d4e65632cea9e4baaf37a5e78ba66cebad4abee",
+                  "assemblySha256": "12fe872717b40e442186c767cbc6ef58a8b9063e97bb7ce0847947aecca81c90",
+                  "generatedBytes": 728774,
+                  "binaryBytes": 142736,
+                  "emitWallNs": 834916191,
+                  "compileWallNs": 2170181870,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-tracing-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 3901,
+                    "requestedBytes": 117148,
+                    "retains": 1853,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    8884253,
+                    8959849,
+                    10719377,
+                    8566910,
+                    9116029,
+                    10254914,
+                    10856547,
+                    10191451
+                  ],
+                  "medianProcessWallNs": 9653740.0
+                }
+              },
+              "enabledOverDisabled": 0.9557416533211679
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "97ec73c4420bcaff43b280359ab301f05cba66eb4492b2101f599e48e0b333ab",
+                  "binarySha256": "7c890b781c68f80f42e64b8a5d82db6607f6ddf0bbdc0b85fa1d135d286e2c23",
+                  "assemblySha256": "96f6fd413f4e0037c88db44453e95e07e1ddb4f586960d682f1095585a9cacf6",
+                  "generatedBytes": 729701,
+                  "binaryBytes": 158952,
+                  "emitWallNs": 938409304,
+                  "compileWallNs": 2475701422,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-0.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-0",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 0,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 4414,
+                    "requestedBytes": 131492,
+                    "retains": 2109,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    9326356,
+                    7090443,
+                    7149464,
+                    7413462,
+                    7282693,
+                    7192052,
+                    7236245,
+                    7770681
+                  ],
+                  "medianProcessWallNs": 7259469.0
+                },
+                "1": {
+                  "generatedSha256": "c86803ee86f2b0478cf39659114d9a1cab27436b3cb636cff7618fdaa2ebf5d0",
+                  "binarySha256": "50cb2bc5893df4bed784e07ba2574fd9057e29a486f87ea60000bf3cac2dfb17",
+                  "assemblySha256": "79f9debc8079c4d7e94f4305b4c1f2e2383c2048723142466db604b26a04d3fc",
+                  "generatedBytes": 728797,
+                  "binaryBytes": 158792,
+                  "emitWallNs": 878108242,
+                  "compileWallNs": 2623441258,
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-1.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/nested-arc-1",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "fusedCallbackBodies": 1,
+                  "tape": {
+                    "tapeRequests": 12,
+                    "tapeRequestedBytes": 28000,
+                    "peakTapeBytes": 16632,
+                    "finalTapeBytes": 0
+                  },
+                  "managed": {
+                    "requests": 3901,
+                    "requestedBytes": 117148,
+                    "retains": 1853,
+                    "peakChargedBytes": 60096,
+                    "finalChargedBytes": 0,
+                    "collections": 0
+                  },
+                  "processWallNs": [
+                    7400442,
+                    7291976,
+                    7396946,
+                    7237279,
+                    7076689,
+                    7680719,
+                    7246676,
+                    7661973
+                  ],
+                  "medianProcessWallNs": 7344461.0
+                }
+              },
+              "enabledOverDisabled": 1.0117077433624966
+            }
+          }
+        }
+      },
+      "hardware": {
+        "system": "Darwin",
+        "node": "iad01-dz253-fa839a1f-ae3a-428d-b07a-607c8d665a11-BEC584E38942.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "machine": "x86_64",
+        "processor": "i386"
+      },
+      "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "scope": "Same compiler, source, inputs, native flags and memory mode; only FWP_ZIP_MAP changes. Other array fusion, mapped-array construction and derivative workspace reuse enabled. One warmup and eight alternating process samples include startup, input construction, computation and output. Compilation and allocation profiling are separate. Profile constants excluded and collection disabled to check count-based cleanup. Timed tracing uses its normal collector. No C/Rust parity claim."
+    }
+  },
+  "instructions": {
+    "ubuntu-latest": {
+      "0": {
+        "work": {
+          "symbol": "f7",
+          "generatedBody": "/* work : List[F64] -> List[F64] */\nstatic V f7(V l0) {\n    V l1 = 0;\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V l5 = 0;\n    V l6 = 0;\n    V t1 = fwp_k_map_owned(fwp_owned_k30, l0, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    l3 = t1;\n    V t2 = f23(l0, l3);\n    FWP_KEEP_ALIVE(l0);\n    FWP_KEEP_ALIVE(l3);\n    l4 = t2;\n    fwp_drop0(l0);\n    fwp_drop0(l3);\n    l5 = l4;\n    V t3 = fwp_k_map_owned(fwp_owned_k31, l5, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l5);\n    l6 = t3;\n    fwp_drop4(l5);\n    return l6;\n}\n",
+          "separateSymbol": true,
+          "assembly": "    7c40:\t41 57                \tpush   %r15\n    7c42:\t41 56                \tpush   %r14\n    7c44:\t41 55                \tpush   %r13\n    7c46:\t41 54                \tpush   %r12\n    7c48:\t53                   \tpush   %rbx\n    7c49:\t48 83 ec 40          \tsub    $0x40,%rsp\n    7c4d:\t49 89 fe             \tmov    %rdi,%r14\n    7c50:\t48 8d 74 24 10       \tlea    0x10(%rsp),%rsi\n    7c55:\te8 66 e5 ff ff       \tcall   61c0 <fwp_map_items>\n    7c5a:\t48 89 44 24 18       \tmov    %rax,0x18(%rsp)\n    7c5f:\t66 0f 57 c0          \txorpd  %xmm0,%xmm0\n    7c63:\t66 0f 11 44 24 28    \tmovupd %xmm0,0x28(%rsp)\n    7c69:\t4c 8d 25 90 e3 ff ff \tlea    -0x1c70(%rip),%r12        # 6000 <fwp_drop0>\n    7c70:\t4c 89 64 24 38       \tmov    %r12,0x38(%rsp)\n    7c75:\t48 8b 4c 24 10       \tmov    0x10(%rsp),%rcx\n    7c7a:\t48 85 c9             \ttest   %rcx,%rcx\n    7c7d:\t74 77                \tje     7cf6 <f7+0xb6>\n    7c7f:\t48 83 f9 04          \tcmp    $0x4,%rcx\n    7c83:\t73 04                \tjae    7c89 <f7+0x49>\n    7c85:\t31 d2                \txor    %edx,%edx\n    7c87:\teb 43                \tjmp    7ccc <f7+0x8c>\n    7c89:\t48 89 ca             \tmov    %rcx,%rdx\n    7c8c:\t48 83 e2 fc          \tand    $0xfffffffffffffffc,%rdx\n    7c90:\t31 f6                \txor    %esi,%esi\n    7c92:\t66 0f 28 05 36 24 00 \tmovapd 0x2436(%rip),%xmm0        # a0d0 <_IO_stdin_used+0xd0>\n    7c99:\t00 \n    7c9a:\t66 0f 1f 44 00 00    \tnopw   0x0(%rax,%rax,1)\n    7ca0:\t66 0f 10 0c f0       \tmovupd (%rax,%rsi,8),%xmm1\n    7ca5:\t66 0f 10 54 f0 10    \tmovupd 0x10(%rax,%rsi,8),%xmm2\n    7cab:\t66 0f 58 c8          \taddpd  %xmm0,%xmm1\n    7caf:\t66 0f 58 d0          \taddpd  %xmm0,%xmm2\n    7cb3:\t66 0f 11 0c f0       \tmovupd %xmm1,(%rax,%rsi,8)\n    7cb8:\t66 0f 11 54 f0 10    \tmovupd %xmm2,0x10(%rax,%rsi,8)\n    7cbe:\t48 83 c6 04          \tadd    $0x4,%rsi\n    7cc2:\t48 39 f2             \tcmp    %rsi,%rdx\n    7cc5:\t75 d9                \tjne    7ca0 <f7+0x60>\n    7cc7:\t48 39 d1             \tcmp    %rdx,%rcx\n    7cca:\t74 2a                \tje     7cf6 <f7+0xb6>\n    7ccc:\tf2 0f 10 05 4c 24 00 \tmovsd  0x244c(%rip),%xmm0        # a120 <_IO_stdin_used+0x120>\n    7cd3:\t00 \n    7cd4:\t66 66 66 2e 0f 1f 84 \tdata16 data16 cs nopw 0x0(%rax,%rax,1)\n    7cdb:\t00 00 00 00 00 \n    7ce0:\tf2 0f 10 0c d0       \tmovsd  (%rax,%rdx,8),%xmm1\n    7ce5:\tf2 0f 58 c8          \taddsd  %xmm0,%xmm1\n    7ce9:\tf2 0f 11 0c d0       \tmovsd  %xmm1,(%rax,%rdx,8)\n    7cee:\t48 ff c2             \tinc    %rdx\n    7cf1:\t48 39 d1             \tcmp    %rdx,%rcx\n    7cf4:\t75 ea                \tjne    7ce0 <f7+0xa0>\n    7cf6:\t48 89 4c 24 20       \tmov    %rcx,0x20(%rsp)\n    7cfb:\t48 8d 7c 24 18       \tlea    0x18(%rsp),%rdi\n    7d00:\te8 0b e6 ff ff       \tcall   6310 <fwp_map_finish_protected>\n    7d05:\t49 89 c7             \tmov    %rax,%r15\n    7d08:\t4c 89 f7             \tmov    %r14,%rdi\n    7d0b:\t48 89 c6             \tmov    %rax,%rsi\n    7d0e:\te8 0d 02 00 00       \tcall   7f20 <f23>\n    7d13:\t48 89 c3             \tmov    %rax,%rbx\n    7d16:\t4c 89 f7             \tmov    %r14,%rdi\n    7d19:\te8 e2 e2 ff ff       \tcall   6000 <fwp_drop0>\n    7d1e:\t4c 89 ff             \tmov    %r15,%rdi\n    7d21:\te8 da e2 ff ff       \tcall   6000 <fwp_drop0>\n    7d26:\t48 8d 74 24 10       \tlea    0x10(%rsp),%rsi\n    7d2b:\t48 89 df             \tmov    %rbx,%rdi\n    7d2e:\te8 8d e4 ff ff       \tcall   61c0 <fwp_map_items>\n    7d33:\t48 89 44 24 18       \tmov    %rax,0x18(%rsp)\n    7d38:\t66 0f 57 c0          \txorpd  %xmm0,%xmm0\n    7d3c:\t66 0f 11 44 24 28    \tmovupd %xmm0,0x28(%rsp)\n    7d42:\t4c 89 64 24 38       \tmov    %r12,0x38(%rsp)\n    7d47:\t4c 8b 7c 24 10       \tmov    0x10(%rsp),%r15\n    7d4c:\t4d 85 ff             \ttest   %r15,%r15\n    7d4f:\t0f 84 9e 01 00 00    \tje     7ef3 <f7+0x2b3>\n    7d55:\t49 89 c6             \tmov    %rax,%r14\n    7d58:\t45 31 e4             \txor    %r12d,%r12d\n    7d5b:\teb 39                \tjmp    7d96 <f7+0x156>\n    7d5d:\tf2 0f 11 44 24 08    \tmovsd  %xmm0,0x8(%rsp)\n    7d63:\tf2 0f 11 0c 24       \tmovsd  %xmm1,(%rsp)\n    7d68:\te8 d3 dd ff ff       \tcall   5b40 <fwp_rc_free_obj>\n    7d6d:\tf2 0f 10 0c 24       \tmovsd  (%rsp),%xmm1\n    7d72:\tf2 0f 10 44 24 08    \tmovsd  0x8(%rsp),%xmm0\n    7d78:\t0f 1f 84 00 00 00 00 \tnopl   0x0(%rax,%rax,1)\n    7d7f:\t00 \n    7d80:\tf2 0f 59 c1          \tmulsd  %xmm1,%xmm0\n    7d84:\tf2 43 0f 11 04 e6    \tmovsd  %xmm0,(%r14,%r12,8)\n    7d8a:\t49 ff c4             \tinc    %r12\n    7d8d:\t4d 39 e7             \tcmp    %r12,%r15\n    7d90:\t0f 84 5d 01 00 00    \tje     7ef3 <f7+0x2b3>\n    7d96:\t4b 8b 3c e6          \tmov    (%r14,%r12,8),%rdi\n    7d9a:\t48 89 f8             \tmov    %rdi,%rax\n    7d9d:\t48 2b 05 ec 63 00 00 \tsub    0x63ec(%rip),%rax        # e190 <fwp_gc+0x1030>\n    7da4:\t48 8b 0d 0d 64 00 00 \tmov    0x640d(%rip),%rcx        # e1b8 <fwp_gc+0x1058>\n    7dab:\t48 c1 e1 10          \tshl    $0x10,%rcx\n    7daf:\t48 39 c8             \tcmp    %rcx,%rax\n    7db2:\t73 6f                \tjae    7e23 <f7+0x1e3>\n    7db4:\t48 8b 0d 1d 64 00 00 \tmov    0x641d(%rip),%rcx        # e1d8 <fwp_gc+0x1078>\n    7dbb:\t48 89 c2             \tmov    %rax,%rdx\n    7dbe:\t48 c1 ea 10          \tshr    $0x10,%rdx\n    7dc2:\t48 69 d2 28 12 00 00 \timul   $0x1228,%rdx,%rdx\n    7dc9:\t0f b6 34 11          \tmovzbl (%rcx,%rdx,1),%esi\n    7dcd:\t48 25 ff ff 00 00    \tand    $0xffff,%rax\n    7dd3:\t75 1b                \tjne    7df0 <f7+0x1b0>\n    7dd5:\t40 80 fe 02          \tcmp    $0x2,%sil\n    7dd9:\t75 15                \tjne    7df0 <f7+0x1b0>\n    7ddb:\t48 8d 04 11          \tlea    (%rcx,%rdx,1),%rax\n    7ddf:\t48 05 28 02 00 00    \tadd    $0x228,%rax\n    7de5:\teb 28                \tjmp    7e0f <f7+0x1cf>\n    7de7:\t66 0f 1f 84 00 00 00 \tnopw   0x0(%rax,%rax,1)\n    7dee:\t00 00 \n    7df0:\t40 80 fe 01          \tcmp    $0x1,%sil\n    7df4:\t75 2d                \tjne    7e23 <f7+0x1e3>\n    7df6:\t48 8d 34 11          \tlea    (%rcx,%rdx,1),%rsi\n    7dfa:\t8b 4c 11 20          \tmov    0x20(%rcx,%rdx,1),%ecx\n    7dfe:\t48 0f af c1          \timul   %rcx,%rax\n    7e02:\t48 c1 e8 20          \tshr    $0x20,%rax\n    7e06:\t48 01 f0             \tadd    %rsi,%rax\n    7e09:\t48 05 28 02 00 00    \tadd    $0x228,%rax\n    7e0f:\t0f b6 08             \tmovzbl (%rax),%ecx\n    7e12:\t84 c9                \ttest   %cl,%cl\n    7e14:\t74 0d                \tje     7e23 <f7+0x1e3>\n    7e16:\t80 f9 fe             \tcmp    $0xfe,%cl\n    7e19:\t0f 83 a9 00 00 00    \tjae    7ec8 <f7+0x288>\n    7e1f:\tfe c1                \tinc    %cl\n    7e21:\t88 08                \tmov    %cl,(%rax)\n    7e23:\tf2 0f 10 47 08       \tmovsd  0x8(%rdi),%xmm0\n    7e28:\t48 89 f8             \tmov    %rdi,%rax\n    7e2b:\t48 2b 05 5e 63 00 00 \tsub    0x635e(%rip),%rax        # e190 <fwp_gc+0x1030>\n    7e32:\tf2 0f 10 4f 10       \tmovsd  0x10(%rdi),%xmm1\n    7e37:\t48 8b 0d 7a 63 00 00 \tmov    0x637a(%rip),%rcx        # e1b8 <fwp_gc+0x1058>\n    7e3e:\t48 c1 e1 10          \tshl    $0x10,%rcx\n    7e42:\t48 39 c8             \tcmp    %rcx,%rax\n    7e45:\t0f 83 35 ff ff ff    \tjae    7d80 <f7+0x140>\n    7e4b:\t48 8b 0d 86 63 00 00 \tmov    0x6386(%rip),%rcx        # e1d8 <fwp_gc+0x1078>\n    7e52:\t48 89 c2             \tmov    %rax,%rdx\n    7e55:\t48 c1 ea 10          \tshr    $0x10,%rdx\n    7e59:\t48 69 d2 28 12 00 00 \timul   $0x1228,%rdx,%rdx\n    7e60:\t0f b6 34 11          \tmovzbl (%rcx,%rdx,1),%esi\n    7e64:\t48 25 ff ff 00 00    \tand    $0xffff,%rax\n    7e6a:\t75 14                \tjne    7e80 <f7+0x240>\n    7e6c:\t40 80 fe 02          \tcmp    $0x2,%sil\n    7e70:\t75 0e                \tjne    7e80 <f7+0x240>\n    7e72:\t48 8d 04 11          \tlea    (%rcx,%rdx,1),%rax\n    7e76:\t48 05 28 02 00 00    \tadd    $0x228,%rax\n    7e7c:\teb 25                \tjmp    7ea3 <f7+0x263>\n    7e7e:\t66 90                \txchg   %ax,%ax\n    7e80:\t40 80 fe 01          \tcmp    $0x1,%sil\n    7e84:\t0f 85 f6 fe ff ff    \tjne    7d80 <f7+0x140>\n    7e8a:\t48 8d 34 11          \tlea    (%rcx,%rdx,1),%rsi\n    7e8e:\t8b 4c 11 20          \tmov    0x20(%rcx,%rdx,1),%ecx\n    7e92:\t48 0f af c1          \timul   %rcx,%rax\n    7e96:\t48 c1 e8 20          \tshr    $0x20,%rax\n    7e9a:\t48 01 f0             \tadd    %rsi,%rax\n    7e9d:\t48 05 28 02 00 00    \tadd    $0x228,%rax\n    7ea3:\t0f b6 08             \tmovzbl (%rax),%ecx\n    7ea6:\t85 c9                \ttest   %ecx,%ecx\n    7ea8:\t0f 84 d2 fe ff ff    \tje     7d80 <f7+0x140>\n    7eae:\t83 f9 01             \tcmp    $0x1,%ecx\n    7eb1:\t0f 84 a6 fe ff ff    \tje     7d5d <f7+0x11d>\n    7eb7:\t81 f9 ff 00 00 00    \tcmp    $0xff,%ecx\n    7ebd:\t74 1c                \tje     7edb <f7+0x29b>\n    7ebf:\tfe c9                \tdec    %cl\n    7ec1:\t88 08                \tmov    %cl,(%rax)\n    7ec3:\te9 b8 fe ff ff       \tjmp    7d80 <f7+0x140>\n    7ec8:\t49 89 fd             \tmov    %rdi,%r13\n    7ecb:\t48 89 c7             \tmov    %rax,%rdi\n    7ece:\te8 fd f6 ff ff       \tcall   75d0 <fwp_rc_wide_dup>\n    7ed3:\t4c 89 ef             \tmov    %r13,%rdi\n    7ed6:\te9 48 ff ff ff       \tjmp    7e23 <f7+0x1e3>\n    7edb:\t48 89 c7             \tmov    %rax,%rdi\n    7ede:\tf2 0f 11 44 24 08    \tmovsd  %xmm0,0x8(%rsp)\n    7ee4:\tf2 0f 11 0c 24       \tmovsd  %xmm1,(%rsp)\n    7ee9:\te8 32 de ff ff       \tcall   5d20 <fwp_rc_wide_drop>\n    7eee:\te9 7a fe ff ff       \tjmp    7d6d <f7+0x12d>\n    7ef3:\t4c 89 7c 24 20       \tmov    %r15,0x20(%rsp)\n    7ef8:\t48 8d 7c 24 18       \tlea    0x18(%rsp),%rdi\n    7efd:\te8 0e e4 ff ff       \tcall   6310 <fwp_map_finish_protected>\n    7f02:\t49 89 c6             \tmov    %rax,%r14\n    7f05:\t48 89 df             \tmov    %rbx,%rdi\n    7f08:\te8 b3 02 00 00       \tcall   81c0 <fwp_drop4>\n    7f0d:\t4c 89 f0             \tmov    %r14,%rax\n    7f10:\t48 83 c4 40          \tadd    $0x40,%rsp\n    7f14:\t5b                   \tpop    %rbx\n    7f15:\t41 5c                \tpop    %r12\n    7f17:\t41 5d                \tpop    %r13\n    7f19:\t41 5e                \tpop    %r14\n    7f1b:\t41 5f                \tpop    %r15\n    7f1d:\tc3                   \tret\n    7f1e:\t66 90                \txchg   %ax,%ax\n\n"
+        }
+      },
+      "1": {
+        "work": {
+          "symbol": "f7",
+          "generatedBody": "/* work : List[F64] -> List[F64] */\nstatic V f7(V l0) {\n    V l1 = 0;\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V t1 = fwp_k_map_owned(fwp_owned_k30, l0, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    l3 = t1;\n    V t2 = fwp_k_zip_with_owned(fwp_owned_k32, l0, l3, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    FWP_KEEP_ALIVE(l3);\n    l4 = t2;\n    fwp_drop0(l0);\n    fwp_drop0(l3);\n    return l4;\n}\n",
+          "separateSymbol": true,
+          "assembly": "    7a70:\t41 57                \tpush   %r15\n    7a72:\t41 56                \tpush   %r14\n    7a74:\t41 54                \tpush   %r12\n    7a76:\t53                   \tpush   %rbx\n    7a77:\t48 83 ec 38          \tsub    $0x38,%rsp\n    7a7b:\t48 89 fb             \tmov    %rdi,%rbx\n    7a7e:\t48 89 e6             \tmov    %rsp,%rsi\n    7a81:\te8 6a e5 ff ff       \tcall   5ff0 <fwp_map_items>\n    7a86:\t48 89 44 24 08       \tmov    %rax,0x8(%rsp)\n    7a8b:\t66 0f 57 c0          \txorpd  %xmm0,%xmm0\n    7a8f:\t66 0f 11 44 24 18    \tmovupd %xmm0,0x18(%rsp)\n    7a95:\t4c 8d 25 94 e3 ff ff \tlea    -0x1c6c(%rip),%r12        # 5e30 <fwp_drop0>\n    7a9c:\t4c 89 64 24 28       \tmov    %r12,0x28(%rsp)\n    7aa1:\t48 8b 0c 24          \tmov    (%rsp),%rcx\n    7aa5:\t48 85 c9             \ttest   %rcx,%rcx\n    7aa8:\t74 7c                \tje     7b26 <f7+0xb6>\n    7aaa:\t48 83 f9 04          \tcmp    $0x4,%rcx\n    7aae:\t73 04                \tjae    7ab4 <f7+0x44>\n    7ab0:\t31 d2                \txor    %edx,%edx\n    7ab2:\teb 48                \tjmp    7afc <f7+0x8c>\n    7ab4:\t48 89 ca             \tmov    %rcx,%rdx\n    7ab7:\t48 83 e2 fc          \tand    $0xfffffffffffffffc,%rdx\n    7abb:\t31 f6                \txor    %esi,%esi\n    7abd:\t66 0f 28 05 0b 16 00 \tmovapd 0x160b(%rip),%xmm0        # 90d0 <_IO_stdin_used+0xd0>\n    7ac4:\t00 \n    7ac5:\t66 66 2e 0f 1f 84 00 \tdata16 cs nopw 0x0(%rax,%rax,1)\n    7acc:\t00 00 00 00 \n    7ad0:\t66 0f 10 0c f0       \tmovupd (%rax,%rsi,8),%xmm1\n    7ad5:\t66 0f 10 54 f0 10    \tmovupd 0x10(%rax,%rsi,8),%xmm2\n    7adb:\t66 0f 58 c8          \taddpd  %xmm0,%xmm1\n    7adf:\t66 0f 58 d0          \taddpd  %xmm0,%xmm2\n    7ae3:\t66 0f 11 0c f0       \tmovupd %xmm1,(%rax,%rsi,8)\n    7ae8:\t66 0f 11 54 f0 10    \tmovupd %xmm2,0x10(%rax,%rsi,8)\n    7aee:\t48 83 c6 04          \tadd    $0x4,%rsi\n    7af2:\t48 39 f2             \tcmp    %rsi,%rdx\n    7af5:\t75 d9                \tjne    7ad0 <f7+0x60>\n    7af7:\t48 39 d1             \tcmp    %rdx,%rcx\n    7afa:\t74 2a                \tje     7b26 <f7+0xb6>\n    7afc:\tf2 0f 10 05 1c 16 00 \tmovsd  0x161c(%rip),%xmm0        # 9120 <_IO_stdin_used+0x120>\n    7b03:\t00 \n    7b04:\t66 66 66 2e 0f 1f 84 \tdata16 data16 cs nopw 0x0(%rax,%rax,1)\n    7b0b:\t00 00 00 00 00 \n    7b10:\tf2 0f 10 0c d0       \tmovsd  (%rax,%rdx,8),%xmm1\n    7b15:\tf2 0f 58 c8          \taddsd  %xmm0,%xmm1\n    7b19:\tf2 0f 11 0c d0       \tmovsd  %xmm1,(%rax,%rdx,8)\n    7b1e:\t48 ff c2             \tinc    %rdx\n    7b21:\t48 39 d1             \tcmp    %rdx,%rcx\n    7b24:\t75 ea                \tjne    7b10 <f7+0xa0>\n    7b26:\t48 89 4c 24 10       \tmov    %rcx,0x10(%rsp)\n    7b2b:\t48 8d 7c 24 08       \tlea    0x8(%rsp),%rdi\n    7b30:\te8 0b e6 ff ff       \tcall   6140 <fwp_map_finish_protected>\n    7b35:\t49 89 c6             \tmov    %rax,%r14\n    7b38:\t48 89 e6             \tmov    %rsp,%rsi\n    7b3b:\t48 89 c7             \tmov    %rax,%rdi\n    7b3e:\te8 ad e4 ff ff       \tcall   5ff0 <fwp_map_items>\n    7b43:\t49 89 c7             \tmov    %rax,%r15\n    7b46:\t48 89 44 24 08       \tmov    %rax,0x8(%rsp)\n    7b4b:\t66 0f 57 c0          \txorpd  %xmm0,%xmm0\n    7b4f:\t66 0f 11 44 24 10    \tmovupd %xmm0,0x10(%rsp)\n    7b55:\t48 c7 44 24 20 00 00 \tmovq   $0x0,0x20(%rsp)\n    7b5c:\t00 00 \n    7b5e:\t4c 89 64 24 28       \tmov    %r12,0x28(%rsp)\n    7b63:\t48 8d 74 24 30       \tlea    0x30(%rsp),%rsi\n    7b68:\t48 89 df             \tmov    %rbx,%rdi\n    7b6b:\te8 80 e4 ff ff       \tcall   5ff0 <fwp_map_items>\n    7b70:\t48 8b 14 24          \tmov    (%rsp),%rdx\n    7b74:\t48 8b 4c 24 30       \tmov    0x30(%rsp),%rcx\n    7b79:\t48 39 ca             \tcmp    %rcx,%rdx\n    7b7c:\t48 0f 42 ca          \tcmovb  %rdx,%rcx\n    7b80:\t48 85 c9             \ttest   %rcx,%rcx\n    7b83:\t0f 84 bf 00 00 00    \tje     7c48 <f7+0x1d8>\n    7b89:\t48 83 f9 06          \tcmp    $0x6,%rcx\n    7b8d:\t72 1a                \tjb     7ba9 <f7+0x139>\n    7b8f:\t48 8d 14 c8          \tlea    (%rax,%rcx,8),%rdx\n    7b93:\t49 39 d7             \tcmp    %rdx,%r15\n    7b96:\t0f 83 bc 00 00 00    \tjae    7c58 <f7+0x1e8>\n    7b9c:\t49 8d 14 cf          \tlea    (%r15,%rcx,8),%rdx\n    7ba0:\t48 39 d0             \tcmp    %rdx,%rax\n    7ba3:\t0f 83 af 00 00 00    \tjae    7c58 <f7+0x1e8>\n    7ba9:\t31 d2                \txor    %edx,%edx\n    7bab:\t48 89 cf             \tmov    %rcx,%rdi\n    7bae:\t48 89 d6             \tmov    %rdx,%rsi\n    7bb1:\t48 83 e7 03          \tand    $0x3,%rdi\n    7bb5:\t74 22                \tje     7bd9 <f7+0x169>\n    7bb7:\t48 89 d6             \tmov    %rdx,%rsi\n    7bba:\t66 0f 1f 44 00 00    \tnopw   0x0(%rax,%rax,1)\n    7bc0:\tf2 0f 10 04 f0       \tmovsd  (%rax,%rsi,8),%xmm0\n    7bc5:\tf2 41 0f 59 04 f7    \tmulsd  (%r15,%rsi,8),%xmm0\n    7bcb:\tf2 41 0f 11 04 f7    \tmovsd  %xmm0,(%r15,%rsi,8)\n    7bd1:\t48 ff c6             \tinc    %rsi\n    7bd4:\t48 ff cf             \tdec    %rdi\n    7bd7:\t75 e7                \tjne    7bc0 <f7+0x150>\n    7bd9:\t48 29 ca             \tsub    %rcx,%rdx\n    7bdc:\t48 83 fa fc          \tcmp    $0xfffffffffffffffc,%rdx\n    7be0:\t0f 87 c9 00 00 00    \tja     7caf <f7+0x23f>\n    7be6:\t66 2e 0f 1f 84 00 00 \tcs nopw 0x0(%rax,%rax,1)\n    7bed:\t00 00 00 \n    7bf0:\tf2 0f 10 04 f0       \tmovsd  (%rax,%rsi,8),%xmm0\n    7bf5:\tf2 41 0f 59 04 f7    \tmulsd  (%r15,%rsi,8),%xmm0\n    7bfb:\tf2 41 0f 11 04 f7    \tmovsd  %xmm0,(%r15,%rsi,8)\n    7c01:\tf2 0f 10 44 f0 08    \tmovsd  0x8(%rax,%rsi,8),%xmm0\n    7c07:\tf2 41 0f 59 44 f7 08 \tmulsd  0x8(%r15,%rsi,8),%xmm0\n    7c0e:\tf2 41 0f 11 44 f7 08 \tmovsd  %xmm0,0x8(%r15,%rsi,8)\n    7c15:\tf2 0f 10 44 f0 10    \tmovsd  0x10(%rax,%rsi,8),%xmm0\n    7c1b:\tf2 41 0f 59 44 f7 10 \tmulsd  0x10(%r15,%rsi,8),%xmm0\n    7c22:\tf2 41 0f 11 44 f7 10 \tmovsd  %xmm0,0x10(%r15,%rsi,8)\n    7c29:\tf2 0f 10 44 f0 18    \tmovsd  0x18(%rax,%rsi,8),%xmm0\n    7c2f:\tf2 41 0f 59 44 f7 18 \tmulsd  0x18(%r15,%rsi,8),%xmm0\n    7c36:\tf2 41 0f 11 44 f7 18 \tmovsd  %xmm0,0x18(%r15,%rsi,8)\n    7c3d:\t48 83 c6 04          \tadd    $0x4,%rsi\n    7c41:\t48 39 f1             \tcmp    %rsi,%rcx\n    7c44:\t75 aa                \tjne    7bf0 <f7+0x180>\n    7c46:\teb 67                \tjmp    7caf <f7+0x23f>\n    7c48:\t48 c7 44 24 10 00 00 \tmovq   $0x0,0x10(%rsp)\n    7c4f:\t00 00 \n    7c51:\t48 85 c0             \ttest   %rax,%rax\n    7c54:\t75 5e                \tjne    7cb4 <f7+0x244>\n    7c56:\teb 64                \tjmp    7cbc <f7+0x24c>\n    7c58:\t48 89 ca             \tmov    %rcx,%rdx\n    7c5b:\t48 83 e2 fc          \tand    $0xfffffffffffffffc,%rdx\n    7c5f:\t31 f6                \txor    %esi,%esi\n    7c61:\t66 66 66 66 66 66 2e \tdata16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)\n    7c68:\t0f 1f 84 00 00 00 00 \n    7c6f:\t00 \n    7c70:\t66 0f 10 04 f0       \tmovupd (%rax,%rsi,8),%xmm0\n    7c75:\t66 0f 10 4c f0 10    \tmovupd 0x10(%rax,%rsi,8),%xmm1\n    7c7b:\t66 41 0f 10 14 f7    \tmovupd (%r15,%rsi,8),%xmm2\n    7c81:\t66 0f 59 d0          \tmulpd  %xmm0,%xmm2\n    7c85:\t66 41 0f 10 44 f7 10 \tmovupd 0x10(%r15,%rsi,8),%xmm0\n    7c8c:\t66 0f 59 c1          \tmulpd  %xmm1,%xmm0\n    7c90:\t66 41 0f 11 14 f7    \tmovupd %xmm2,(%r15,%rsi,8)\n    7c96:\t66 41 0f 11 44 f7 10 \tmovupd %xmm0,0x10(%r15,%rsi,8)\n    7c9d:\t48 83 c6 04          \tadd    $0x4,%rsi\n    7ca1:\t48 39 f2             \tcmp    %rsi,%rdx\n    7ca4:\t75 ca                \tjne    7c70 <f7+0x200>\n    7ca6:\t48 39 d1             \tcmp    %rdx,%rcx\n    7ca9:\t0f 85 fc fe ff ff    \tjne    7bab <f7+0x13b>\n    7caf:\t48 89 4c 24 10       \tmov    %rcx,0x10(%rsp)\n    7cb4:\t48 89 c7             \tmov    %rax,%rdi\n    7cb7:\te8 24 df ff ff       \tcall   5be0 <fwp_mem_free>\n    7cbc:\t48 8d 7c 24 08       \tlea    0x8(%rsp),%rdi\n    7cc1:\te8 7a e4 ff ff       \tcall   6140 <fwp_map_finish_protected>\n    7cc6:\t49 89 c7             \tmov    %rax,%r15\n    7cc9:\t48 89 df             \tmov    %rbx,%rdi\n    7ccc:\te8 5f e1 ff ff       \tcall   5e30 <fwp_drop0>\n    7cd1:\t4c 89 f7             \tmov    %r14,%rdi\n    7cd4:\te8 57 e1 ff ff       \tcall   5e30 <fwp_drop0>\n    7cd9:\t4c 89 f8             \tmov    %r15,%rax\n    7cdc:\t48 83 c4 38          \tadd    $0x38,%rsp\n    7ce0:\t5b                   \tpop    %rbx\n    7ce1:\t41 5c                \tpop    %r12\n    7ce3:\t41 5e                \tpop    %r14\n    7ce5:\t41 5f                \tpop    %r15\n    7ce7:\tc3                   \tret\n    7ce8:\t0f 1f 84 00 00 00 00 \tnopl   0x0(%rax,%rax,1)\n    7cef:\t00 \n\n"
+        },
+        "fused-zip-map": {
+          "symbol": "w32",
+          "generatedBody": "/* fused-zip-map : F64 -> F64 -> F64 */\nstatic double w32(double al0, double al1) {\n    V l0 = fwp_from_f64(al0);\n    V l1 = fwp_from_f64(al1);\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V l5 = 0;\n    V l6 = 0;\n    V t1 = f29(l1, l0);\n    return fwp_f64(t1);\n}\n",
+          "separateSymbol": false,
+          "assembly": null
+        }
+      }
+    },
+    "ubuntu-24.04-arm": {
+      "0": {
+        "work": {
+          "symbol": "f7",
+          "generatedBody": "/* work : List[F64] -> List[F64] */\nstatic V f7(V l0) {\n    V l1 = 0;\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V l5 = 0;\n    V l6 = 0;\n    V t1 = fwp_k_map_owned(fwp_owned_k30, l0, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    l3 = t1;\n    V t2 = f23(l0, l3);\n    FWP_KEEP_ALIVE(l0);\n    FWP_KEEP_ALIVE(l3);\n    l4 = t2;\n    fwp_drop0(l0);\n    fwp_drop0(l3);\n    l5 = l4;\n    V t3 = fwp_k_map_owned(fwp_owned_k31, l5, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l5);\n    l6 = t3;\n    fwp_drop4(l5);\n    return l6;\n}\n",
+          "separateSymbol": true,
+          "assembly": "    6c20:\td10243ff \tsub\tsp, sp, #0x90\n    6c24:\t6d0323e9 \tstp\td9, d8, [sp, #48]\n    6c28:\ta9047bfd \tstp\tx29, x30, [sp, #64]\n    6c2c:\ta90567fa \tstp\tx26, x25, [sp, #80]\n    6c30:\ta9065ff8 \tstp\tx24, x23, [sp, #96]\n    6c34:\ta90757f6 \tstp\tx22, x21, [sp, #112]\n    6c38:\ta9084ff4 \tstp\tx20, x19, [sp, #128]\n    6c3c:\t910103fd \tadd\tx29, sp, #0x40\n    6c40:\td10063a1 \tsub\tx1, x29, #0x18\n    6c44:\taa0003f4 \tmov\tx20, x0\n    6c48:\t97fffa6a \tbl\t55f0 <fwp_map_items>\n    6c4c:\tf85e83a8 \tldur\tx8, [x29, #-24]\n    6c50:\tf0fffff6 \tadrp\tx22, 5000 <fwp_rc_free_obj+0xc8>\n    6c54:\t911062d6 \tadd\tx22, x22, #0x418\n    6c58:\tf90003e0 \tstr\tx0, [sp]\n    6c5c:\ta9017fff \tstp\txzr, xzr, [sp, #16]\n    6c60:\tf90013f6 \tstr\tx22, [sp, #32]\n    6c64:\tb4000348 \tcbz\tx8, 6ccc <f7+0xac>\n    6c68:\tf100111f \tcmp\tx8, #0x4\n    6c6c:\t54000062 \tb.cs\t6c78 <f7+0x58>  // b.hs, b.nlast\n    6c70:\taa1f03e9 \tmov\tx9, xzr\n    6c74:\t1400000e \tb\t6cac <f7+0x8c>\n    6c78:\t6f03f600 \tfmov\tv0.2d, #1.000000000000000000e+00\n    6c7c:\t927ef509 \tand\tx9, x8, #0xfffffffffffffffc\n    6c80:\t9100400a \tadd\tx10, x0, #0x10\n    6c84:\taa0903eb \tmov\tx11, x9\n    6c88:\tad7f8941 \tldp\tq1, q2, [x10, #-16]\n    6c8c:\tf100116b \tsubs\tx11, x11, #0x4\n    6c90:\t4e60d421 \tfadd\tv1.2d, v1.2d, v0.2d\n    6c94:\t4e60d442 \tfadd\tv2.2d, v2.2d, v0.2d\n    6c98:\tad3f8941 \tstp\tq1, q2, [x10, #-16]\n    6c9c:\t9100814a \tadd\tx10, x10, #0x20\n    6ca0:\t54ffff41 \tb.ne\t6c88 <f7+0x68>  // b.any\n    6ca4:\teb09011f \tcmp\tx8, x9\n    6ca8:\t54000120 \tb.eq\t6ccc <f7+0xac>  // b.none\n    6cac:\t1e6e1000 \tfmov\td0, #1.000000000000000000e+00\n    6cb0:\t8b090c0a \tadd\tx10, x0, x9, lsl #3\n    6cb4:\tcb090109 \tsub\tx9, x8, x9\n    6cb8:\tfd400141 \tldr\td1, [x10]\n    6cbc:\tf1000529 \tsubs\tx9, x9, #0x1\n    6cc0:\t1e602821 \tfadd\td1, d1, d0\n    6cc4:\tfc008541 \tstr\td1, [x10], #8\n    6cc8:\t54ffff81 \tb.ne\t6cb8 <f7+0x98>  // b.any\n    6ccc:\t910003e0 \tmov\tx0, sp\n    6cd0:\tf90007e8 \tstr\tx8, [sp, #8]\n    6cd4:\t97fffa97 \tbl\t5730 <fwp_map_finish_protected>\n    6cd8:\taa0003f5 \tmov\tx21, x0\n    6cdc:\taa1403e0 \tmov\tx0, x20\n    6ce0:\taa1503e1 \tmov\tx1, x21\n    6ce4:\t9400006d \tbl\t6e98 <f23>\n    6ce8:\taa0003f3 \tmov\tx19, x0\n    6cec:\taa1403e0 \tmov\tx0, x20\n    6cf0:\t97fff9ca \tbl\t5418 <fwp_drop0>\n    6cf4:\taa1503e0 \tmov\tx0, x21\n    6cf8:\t97fff9c8 \tbl\t5418 <fwp_drop0>\n    6cfc:\td10063a1 \tsub\tx1, x29, #0x18\n    6d00:\taa1303e0 \tmov\tx0, x19\n    6d04:\t97fffa3b \tbl\t55f0 <fwp_map_items>\n    6d08:\tf85e83b5 \tldur\tx21, [x29, #-24]\n    6d0c:\tf90003e0 \tstr\tx0, [sp]\n    6d10:\ta9017fff \tstp\txzr, xzr, [sp, #16]\n    6d14:\tf90013f6 \tstr\tx22, [sp, #32]\n    6d18:\tb4000a35 \tcbz\tx21, 6e5c <f7+0x23c>\n    6d1c:\taa0003f4 \tmov\tx20, x0\n    6d20:\tf00000d6 \tadrp\tx22, 21000 <fwp_gc+0xe88>\n    6d24:\t9106a2d6 \tadd\tx22, x22, #0x1a8\n    6d28:\tf00000d7 \tadrp\tx23, 21000 <fwp_gc+0xe88>\n    6d2c:\t52824518 \tmov\tw24, #0x1228                \t// #4648\n    6d30:\taa1503f9 \tmov\tx25, x21\n    6d34:\t14000006 \tb\t6d4c <f7+0x12c>\n    6d38:\t97fff880 \tbl\t4f38 <fwp_rc_free_obj>\n    6d3c:\t1e690900 \tfmul\td0, d8, d9\n    6d40:\tf1000739 \tsubs\tx25, x25, #0x1\n    6d44:\tfc008680 \tstr\td0, [x20], #8\n    6d48:\t540008a0 \tb.eq\t6e5c <f7+0x23c>  // b.none\n    6d4c:\tf9400280 \tldr\tx0, [x20]\n    6d50:\tf94002c8 \tldr\tx8, [x22]\n    6d54:\tf94016ca \tldr\tx10, [x22, #40]\n    6d58:\tcb080009 \tsub\tx9, x0, x8\n    6d5c:\teb0a413f \tcmp\tx9, x10, lsl #16\n    6d60:\t54000302 \tb.cs\t6dc0 <f7+0x1a0>  // b.hs, b.nlast\n    6d64:\td350fd28 \tlsr\tx8, x9, #16\n    6d68:\tf940faea \tldr\tx10, [x23, #496]\n    6d6c:\tf2403d29 \tands\tx9, x9, #0xffff\n    6d70:\t9b187d0b \tmul\tx11, x8, x24\n    6d74:\t386b694b \tldrb\tw11, [x10, x11]\n    6d78:\t540000a1 \tb.ne\t6d8c <f7+0x16c>  // b.any\n    6d7c:\t7100097f \tcmp\tw11, #0x2\n    6d80:\t54000061 \tb.ne\t6d8c <f7+0x16c>  // b.any\n    6d84:\t9b182908 \tmadd\tx8, x8, x24, x10\n    6d88:\t14000007 \tb\t6da4 <f7+0x184>\n    6d8c:\t7100057f \tcmp\tw11, #0x1\n    6d90:\t54000181 \tb.ne\t6dc0 <f7+0x1a0>  // b.any\n    6d94:\t9b182908 \tmadd\tx8, x8, x24, x10\n    6d98:\tb940210a \tldr\tw10, [x8, #32]\n    6d9c:\t9baa7d29 \tumull\tx9, w9, w10\n    6da0:\t8b498108 \tadd\tx8, x8, x9, lsr #32\n    6da4:\t9108a108 \tadd\tx8, x8, #0x228\n    6da8:\t39400109 \tldrb\tw9, [x8]\n    6dac:\t340000a9 \tcbz\tw9, 6dc0 <f7+0x1a0>\n    6db0:\t7103f93f \tcmp\tw9, #0xfe\n    6db4:\t54000442 \tb.cs\t6e3c <f7+0x21c>  // b.hs, b.nlast\n    6db8:\t11000529 \tadd\tw9, w9, #0x1\n    6dbc:\t39000109 \tstrb\tw9, [x8]\n    6dc0:\tf94002c8 \tldr\tx8, [x22]\n    6dc4:\tf94016ca \tldr\tx10, [x22, #40]\n    6dc8:\t6d40a408 \tldp\td8, d9, [x0, #8]\n    6dcc:\tcb080009 \tsub\tx9, x0, x8\n    6dd0:\teb0a413f \tcmp\tx9, x10, lsl #16\n    6dd4:\t54fffb42 \tb.cs\t6d3c <f7+0x11c>  // b.hs, b.nlast\n    6dd8:\td350fd28 \tlsr\tx8, x9, #16\n    6ddc:\tf940faea \tldr\tx10, [x23, #496]\n    6de0:\tf2403d29 \tands\tx9, x9, #0xffff\n    6de4:\t9b187d0b \tmul\tx11, x8, x24\n    6de8:\t386b694b \tldrb\tw11, [x10, x11]\n    6dec:\t540000a1 \tb.ne\t6e00 <f7+0x1e0>  // b.any\n    6df0:\t7100097f \tcmp\tw11, #0x2\n    6df4:\t54000061 \tb.ne\t6e00 <f7+0x1e0>  // b.any\n    6df8:\t9b182908 \tmadd\tx8, x8, x24, x10\n    6dfc:\t14000007 \tb\t6e18 <f7+0x1f8>\n    6e00:\t7100057f \tcmp\tw11, #0x1\n    6e04:\t54fff9c1 \tb.ne\t6d3c <f7+0x11c>  // b.any\n    6e08:\t9b182908 \tmadd\tx8, x8, x24, x10\n    6e0c:\tb940210a \tldr\tw10, [x8, #32]\n    6e10:\t9baa7d29 \tumull\tx9, w9, w10\n    6e14:\t8b498108 \tadd\tx8, x8, x9, lsr #32\n    6e18:\t9108a108 \tadd\tx8, x8, #0x228\n    6e1c:\t39400109 \tldrb\tw9, [x8]\n    6e20:\t34fff8e9 \tcbz\tw9, 6d3c <f7+0x11c>\n    6e24:\t7100052a \tsubs\tw10, w9, #0x1\n    6e28:\t54fff880 \tb.eq\t6d38 <f7+0x118>  // b.none\n    6e2c:\t7103fd3f \tcmp\tw9, #0xff\n    6e30:\t54000100 \tb.eq\t6e50 <f7+0x230>  // b.none\n    6e34:\t3900010a \tstrb\tw10, [x8]\n    6e38:\t17ffffc1 \tb\t6d3c <f7+0x11c>\n    6e3c:\taa0003fa \tmov\tx26, x0\n    6e40:\taa0803e0 \tmov\tx0, x8\n    6e44:\t97fffde9 \tbl\t65e8 <fwp_rc_wide_dup>\n    6e48:\taa1a03e0 \tmov\tx0, x26\n    6e4c:\t17ffffdd \tb\t6dc0 <f7+0x1a0>\n    6e50:\taa0803e0 \tmov\tx0, x8\n    6e54:\t97fff8b3 \tbl\t5120 <fwp_rc_wide_drop>\n    6e58:\t17ffffb9 \tb\t6d3c <f7+0x11c>\n    6e5c:\t910003e0 \tmov\tx0, sp\n    6e60:\tf90007f5 \tstr\tx21, [sp, #8]\n    6e64:\t97fffa33 \tbl\t5730 <fwp_map_finish_protected>\n    6e68:\taa0003f4 \tmov\tx20, x0\n    6e6c:\taa1303e0 \tmov\tx0, x19\n    6e70:\t94000097 \tbl\t70cc <fwp_drop4>\n    6e74:\taa1403e0 \tmov\tx0, x20\n    6e78:\ta9484ff4 \tldp\tx20, x19, [sp, #128]\n    6e7c:\ta94757f6 \tldp\tx22, x21, [sp, #112]\n    6e80:\ta9465ff8 \tldp\tx24, x23, [sp, #96]\n    6e84:\ta94567fa \tldp\tx26, x25, [sp, #80]\n    6e88:\ta9447bfd \tldp\tx29, x30, [sp, #64]\n    6e8c:\t6d4323e9 \tldp\td9, d8, [sp, #48]\n    6e90:\t910243ff \tadd\tsp, sp, #0x90\n    6e94:\td65f03c0 \tret\n\n"
+        }
+      },
+      "1": {
+        "work": {
+          "symbol": "f7",
+          "generatedBody": "/* work : List[F64] -> List[F64] */\nstatic V f7(V l0) {\n    V l1 = 0;\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V t1 = fwp_k_map_owned(fwp_owned_k30, l0, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    l3 = t1;\n    V t2 = fwp_k_zip_with_owned(fwp_owned_k32, l0, l3, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    FWP_KEEP_ALIVE(l3);\n    l4 = t2;\n    fwp_drop0(l0);\n    fwp_drop0(l3);\n    return l4;\n}\n",
+          "separateSymbol": true,
+          "assembly": "    6a40:\td101c3ff \tsub\tsp, sp, #0x70\n    6a44:\ta9047bfd \tstp\tx29, x30, [sp, #64]\n    6a48:\ta90557f6 \tstp\tx22, x21, [sp, #80]\n    6a4c:\ta9064ff4 \tstp\tx20, x19, [sp, #96]\n    6a50:\t910103fd \tadd\tx29, sp, #0x40\n    6a54:\td10023a1 \tsub\tx1, x29, #0x8\n    6a58:\taa0003f3 \tmov\tx19, x0\n    6a5c:\t97fffa6d \tbl\t5410 <fwp_map_items>\n    6a60:\tf85f83a8 \tldur\tx8, [x29, #-8]\n    6a64:\tf0fffff6 \tadrp\tx22, 5000 <fwp_mem_free+0x24>\n    6a68:\t9108e2d6 \tadd\tx22, x22, #0x238\n    6a6c:\tf90007e0 \tstr\tx0, [sp, #8]\n    6a70:\ta901ffff \tstp\txzr, xzr, [sp, #24]\n    6a74:\tf90017f6 \tstr\tx22, [sp, #40]\n    6a78:\tb4000348 \tcbz\tx8, 6ae0 <f7+0xa0>\n    6a7c:\tf100111f \tcmp\tx8, #0x4\n    6a80:\t54000062 \tb.cs\t6a8c <f7+0x4c>  // b.hs, b.nlast\n    6a84:\taa1f03e9 \tmov\tx9, xzr\n    6a88:\t1400000e \tb\t6ac0 <f7+0x80>\n    6a8c:\t6f03f600 \tfmov\tv0.2d, #1.000000000000000000e+00\n    6a90:\t927ef509 \tand\tx9, x8, #0xfffffffffffffffc\n    6a94:\t9100400a \tadd\tx10, x0, #0x10\n    6a98:\taa0903eb \tmov\tx11, x9\n    6a9c:\tad7f8941 \tldp\tq1, q2, [x10, #-16]\n    6aa0:\tf100116b \tsubs\tx11, x11, #0x4\n    6aa4:\t4e60d421 \tfadd\tv1.2d, v1.2d, v0.2d\n    6aa8:\t4e60d442 \tfadd\tv2.2d, v2.2d, v0.2d\n    6aac:\tad3f8941 \tstp\tq1, q2, [x10, #-16]\n    6ab0:\t9100814a \tadd\tx10, x10, #0x20\n    6ab4:\t54ffff41 \tb.ne\t6a9c <f7+0x5c>  // b.any\n    6ab8:\teb09011f \tcmp\tx8, x9\n    6abc:\t54000120 \tb.eq\t6ae0 <f7+0xa0>  // b.none\n    6ac0:\t1e6e1000 \tfmov\td0, #1.000000000000000000e+00\n    6ac4:\t8b090c0a \tadd\tx10, x0, x9, lsl #3\n    6ac8:\tcb090109 \tsub\tx9, x8, x9\n    6acc:\tfd400141 \tldr\td1, [x10]\n    6ad0:\tf1000529 \tsubs\tx9, x9, #0x1\n    6ad4:\t1e602821 \tfadd\td1, d1, d0\n    6ad8:\tfc008541 \tstr\td1, [x10], #8\n    6adc:\t54ffff81 \tb.ne\t6acc <f7+0x8c>  // b.any\n    6ae0:\t910023e0 \tadd\tx0, sp, #0x8\n    6ae4:\tf9000be8 \tstr\tx8, [sp, #16]\n    6ae8:\t97fffa9a \tbl\t5550 <fwp_map_finish_protected>\n    6aec:\td10023a1 \tsub\tx1, x29, #0x8\n    6af0:\taa0003f4 \tmov\tx20, x0\n    6af4:\t97fffa47 \tbl\t5410 <fwp_map_items>\n    6af8:\taa0003f5 \tmov\tx21, x0\n    6afc:\ta900ffe0 \tstp\tx0, xzr, [sp, #8]\n    6b00:\td10043a1 \tsub\tx1, x29, #0x10\n    6b04:\taa1303e0 \tmov\tx0, x19\n    6b08:\ta901ffff \tstp\txzr, xzr, [sp, #24]\n    6b0c:\tf90017f6 \tstr\tx22, [sp, #40]\n    6b10:\t97fffa40 \tbl\t5410 <fwp_map_items>\n    6b14:\ta97f23a9 \tldp\tx9, x8, [x29, #-16]\n    6b18:\teb09011f \tcmp\tx8, x9\n    6b1c:\t9a893108 \tcsel\tx8, x8, x9, cc\t// cc = lo, ul, last\n    6b20:\tb40002e8 \tcbz\tx8, 6b7c <f7+0x13c>\n    6b24:\tf100111f \tcmp\tx8, #0x4\n    6b28:\t54000103 \tb.cc\t6b48 <f7+0x108>  // b.lo, b.ul, b.last\n    6b2c:\td37df109 \tlsl\tx9, x8, #3\n    6b30:\t8b09000a \tadd\tx10, x0, x9\n    6b34:\teb0a02bf \tcmp\tx21, x10\n    6b38:\t54000422 \tb.cs\t6bbc <f7+0x17c>  // b.hs, b.nlast\n    6b3c:\t8b0902a9 \tadd\tx9, x21, x9\n    6b40:\teb09001f \tcmp\tx0, x9\n    6b44:\t540003c2 \tb.cs\t6bbc <f7+0x17c>  // b.hs, b.nlast\n    6b48:\taa1f03e9 \tmov\tx9, xzr\n    6b4c:\td37df12b \tlsl\tx11, x9, #3\n    6b50:\tcb090109 \tsub\tx9, x8, x9\n    6b54:\t8b0b000a \tadd\tx10, x0, x11\n    6b58:\t8b0b02ab \tadd\tx11, x21, x11\n    6b5c:\tfc408540 \tldr\td0, [x10], #8\n    6b60:\tfd400161 \tldr\td1, [x11]\n    6b64:\tf1000529 \tsubs\tx9, x9, #0x1\n    6b68:\t1e610800 \tfmul\td0, d0, d1\n    6b6c:\tfc008560 \tstr\td0, [x11], #8\n    6b70:\t54ffff61 \tb.ne\t6b5c <f7+0x11c>  // b.any\n    6b74:\tf9000be8 \tstr\tx8, [sp, #16]\n    6b78:\t14000003 \tb\t6b84 <f7+0x144>\n    6b7c:\tf9000bff \tstr\txzr, [sp, #16]\n    6b80:\tb4000040 \tcbz\tx0, 6b88 <f7+0x148>\n    6b84:\t97fff916 \tbl\t4fdc <fwp_mem_free>\n    6b88:\t910023e0 \tadd\tx0, sp, #0x8\n    6b8c:\t97fffa71 \tbl\t5550 <fwp_map_finish_protected>\n    6b90:\taa0003f5 \tmov\tx21, x0\n    6b94:\taa1303e0 \tmov\tx0, x19\n    6b98:\t97fff9a8 \tbl\t5238 <fwp_drop0>\n    6b9c:\taa1403e0 \tmov\tx0, x20\n    6ba0:\t97fff9a6 \tbl\t5238 <fwp_drop0>\n    6ba4:\taa1503e0 \tmov\tx0, x21\n    6ba8:\ta9464ff4 \tldp\tx20, x19, [sp, #96]\n    6bac:\ta94557f6 \tldp\tx22, x21, [sp, #80]\n    6bb0:\ta9447bfd \tldp\tx29, x30, [sp, #64]\n    6bb4:\t9101c3ff \tadd\tsp, sp, #0x70\n    6bb8:\td65f03c0 \tret\n    6bbc:\t927ef509 \tand\tx9, x8, #0xfffffffffffffffc\n    6bc0:\t9100400a \tadd\tx10, x0, #0x10\n    6bc4:\t910042ab \tadd\tx11, x21, #0x10\n    6bc8:\taa0903ec \tmov\tx12, x9\n    6bcc:\tad7f8d60 \tldp\tq0, q3, [x11, #-16]\n    6bd0:\tf100118c \tsubs\tx12, x12, #0x4\n    6bd4:\tad7f8941 \tldp\tq1, q2, [x10, #-16]\n    6bd8:\t9100814a \tadd\tx10, x10, #0x20\n    6bdc:\t6e60dc20 \tfmul\tv0.2d, v1.2d, v0.2d\n    6be0:\t6e63dc41 \tfmul\tv1.2d, v2.2d, v3.2d\n    6be4:\tad3f8560 \tstp\tq0, q1, [x11, #-16]\n    6be8:\t9100816b \tadd\tx11, x11, #0x20\n    6bec:\t54ffff01 \tb.ne\t6bcc <f7+0x18c>  // b.any\n    6bf0:\teb09011f \tcmp\tx8, x9\n    6bf4:\t54fffc00 \tb.eq\t6b74 <f7+0x134>  // b.none\n    6bf8:\t17ffffd5 \tb\t6b4c <f7+0x10c>\n\n"
+        },
+        "fused-zip-map": {
+          "symbol": "w32",
+          "generatedBody": "/* fused-zip-map : F64 -> F64 -> F64 */\nstatic double w32(double al0, double al1) {\n    V l0 = fwp_from_f64(al0);\n    V l1 = fwp_from_f64(al1);\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V l5 = 0;\n    V l6 = 0;\n    V t1 = f29(l1, l0);\n    return fwp_f64(t1);\n}\n",
+          "separateSymbol": false,
+          "assembly": null
+        }
+      }
+    },
+    "macos-15": {
+      "0": {
+        "work": {
+          "symbol": "f7",
+          "generatedBody": "/* work : List[F64] -> List[F64] */\nstatic V f7(V l0) {\n    V l1 = 0;\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V l5 = 0;\n    V l6 = 0;\n    V t1 = fwp_k_map_owned(fwp_owned_k30, l0, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    l3 = t1;\n    V t2 = f23(l0, l3);\n    FWP_KEEP_ALIVE(l0);\n    FWP_KEEP_ALIVE(l3);\n    l4 = t2;\n    fwp_drop0(l0);\n    fwp_drop0(l3);\n    l5 = l4;\n    V t3 = fwp_k_map_owned(fwp_owned_k31, l5, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l5);\n    l6 = t3;\n    fwp_drop4(l5);\n    return l6;\n}\n",
+          "separateSymbol": true,
+          "assembly": "00000001000058cc\tsub\tsp, sp, #0x90\n00000001000058d0\tstp\td9, d8, [sp, #0x30]\n00000001000058d4\tstp\tx26, x25, [sp, #0x40]\n00000001000058d8\tstp\tx24, x23, [sp, #0x50]\n00000001000058dc\tstp\tx22, x21, [sp, #0x60]\n00000001000058e0\tstp\tx20, x19, [sp, #0x70]\n00000001000058e4\tstp\tx29, x30, [sp, #0x80]\n00000001000058e8\tadd\tx29, sp, #0x80\n00000001000058ec\tmov\tx20, x0\n00000001000058f0\tadd\tx1, sp, #0x28\n00000001000058f4\tbl\t_fwp_map_items\n00000001000058f8\tstr\tx0, [sp]\n00000001000058fc\tstp\txzr, xzr, [sp, #0x10]\n0000000100005900\tadrp\tx24, -1 ; 0x100004000\n0000000100005904\tadd\tx24, x24, #0x4\n0000000100005908\tstr\tx24, [sp, #0x20]\n000000010000590c\tldr\tx8, [sp, #0x28]\n0000000100005910\tcbz\tx8, 0x100005984\n0000000100005914\tcmp\tx8, #0x8\n0000000100005918\tb.hs\t0x100005924\n000000010000591c\tmov\tx9, #0x0\n0000000100005920\tb\t0x100005964\n0000000100005924\tand\tx9, x8, #0xfffffffffffffff8\n0000000100005928\tadd\tx10, x0, #0x20\n000000010000592c\tfmov.2d\tv0, #1.00000000\n0000000100005930\tmov\tx11, x9\n0000000100005934\tldp\tq1, q2, [x10, #-0x20]\n0000000100005938\tldp\tq3, q4, [x10]\n000000010000593c\tfadd.2d\tv1, v1, v0\n0000000100005940\tfadd.2d\tv2, v2, v0\n0000000100005944\tfadd.2d\tv3, v3, v0\n0000000100005948\tfadd.2d\tv4, v4, v0\n000000010000594c\tstp\tq1, q2, [x10, #-0x20]\n0000000100005950\tstp\tq3, q4, [x10], #0x40\n0000000100005954\tsubs\tx11, x11, #0x8\n0000000100005958\tb.ne\t0x100005934\n000000010000595c\tcmp\tx8, x9\n0000000100005960\tb.eq\t0x100005984\n0000000100005964\tadd\tx10, x0, x9, lsl #3\n0000000100005968\tsub\tx9, x8, x9\n000000010000596c\tfmov\td0, #1.00000000\n0000000100005970\tldr\td1, [x10]\n0000000100005974\tfadd\td1, d1, d0\n0000000100005978\tstr\td1, [x10], #0x8\n000000010000597c\tsubs\tx9, x9, #0x1\n0000000100005980\tb.ne\t0x100005970\n0000000100005984\tstr\tx8, [sp, #0x8]\n0000000100005988\tmov\tx0, sp\n000000010000598c\tbl\t_fwp_map_finish_protected\n0000000100005990\tmov\tx21, x0\n0000000100005994\tmov\tx0, x20\n0000000100005998\tmov\tx1, x21\n000000010000599c\tbl\t_f23\n00000001000059a0\tmov\tx19, x0\n00000001000059a4\tadrp\tx22, 8 ; 0x10000d000\n00000001000059a8\tadd\tx22, x22, #0x38\n00000001000059ac\tldr\tx8, [x22]\n00000001000059b0\tsub\tx8, x20, x8\n00000001000059b4\tldr\tx9, [x22, #0x28]\n00000001000059b8\tcmp\tx8, x9, lsl #16\n00000001000059bc\tadrp\tx23, 8 ; 0x10000d000\n00000001000059c0\tb.hs\t0x100005a54\n00000001000059c4\tmov\tw25, #0x1228\n00000001000059c8\tldr\tx9, [x23, #0x80]\n00000001000059cc\tlsr\tx10, x8, #16\n00000001000059d0\tmadd\tx9, x10, x25, x9\n00000001000059d4\tldrb\tw10, [x9]\n00000001000059d8\tands\tx8, x8, #0xffff\n00000001000059dc\tb.ne\t0x1000059f8\n00000001000059e0\tcmp\tw10, #0x2\n00000001000059e4\tb.ne\t0x1000059f8\n00000001000059e8\tadd\tx0, x9, #0x228\n00000001000059ec\tldrb\tw8, [x0]\n00000001000059f0\tcbnz\tw8, 0x100005a18\n00000001000059f4\tb\t0x100005a54\n00000001000059f8\tcmp\tw10, #0x1\n00000001000059fc\tb.ne\t0x100005a54\n0000000100005a00\tldr\tw10, [x9, #0x20]\n0000000100005a04\tumull\tx8, w8, w10\n0000000100005a08\tadd\tx8, x9, x8, lsr #32\n0000000100005a0c\tadd\tx0, x8, #0x228\n0000000100005a10\tldrb\tw8, [x0]\n0000000100005a14\tcbz\tw8, 0x100005a54\n0000000100005a18\tsubs\tw9, w8, #0x1\n0000000100005a1c\tb.ne\t0x100005a48\n0000000100005a20\tldr\tx26, [x20, #0x10]\n0000000100005a24\tmov\tx0, x20\n0000000100005a28\tbl\t_fwp_rc_free_obj\n0000000100005a2c\tldr\tx8, [x22]\n0000000100005a30\tsub\tx8, x26, x8\n0000000100005a34\tldr\tx9, [x22, #0x28]\n0000000100005a38\tcmp\tx8, x9, lsl #16\n0000000100005a3c\tmov\tx20, x26\n0000000100005a40\tb.lo\t0x1000059c8\n0000000100005a44\tb\t0x100005a54\n0000000100005a48\tcmp\tw8, #0xff\n0000000100005a4c\tb.eq\t0x100005c70\n0000000100005a50\tstrb\tw9, [x0]\n0000000100005a54\tldr\tx8, [x22]\n0000000100005a58\tsub\tx8, x21, x8\n0000000100005a5c\tldr\tx9, [x22, #0x28]\n0000000100005a60\tcmp\tx8, x9, lsl #16\n0000000100005a64\tb.hs\t0x100005af8\n0000000100005a68\tmov\tw20, #0x1228\n0000000100005a6c\tldr\tx9, [x23, #0x80]\n0000000100005a70\tlsr\tx10, x8, #16\n0000000100005a74\tmadd\tx9, x10, x20, x9\n0000000100005a78\tldrb\tw10, [x9]\n0000000100005a7c\tands\tx8, x8, #0xffff\n0000000100005a80\tb.ne\t0x100005a9c\n0000000100005a84\tcmp\tw10, #0x2\n0000000100005a88\tb.ne\t0x100005a9c\n0000000100005a8c\tadd\tx0, x9, #0x228\n0000000100005a90\tldrb\tw8, [x0]\n0000000100005a94\tcbnz\tw8, 0x100005abc\n0000000100005a98\tb\t0x100005af8\n0000000100005a9c\tcmp\tw10, #0x1\n0000000100005aa0\tb.ne\t0x100005af8\n0000000100005aa4\tldr\tw10, [x9, #0x20]\n0000000100005aa8\tumull\tx8, w8, w10\n0000000100005aac\tadd\tx8, x9, x8, lsr #32\n0000000100005ab0\tadd\tx0, x8, #0x228\n0000000100005ab4\tldrb\tw8, [x0]\n0000000100005ab8\tcbz\tw8, 0x100005af8\n0000000100005abc\tsubs\tw9, w8, #0x1\n0000000100005ac0\tb.ne\t0x100005aec\n0000000100005ac4\tldr\tx25, [x21, #0x10]\n0000000100005ac8\tmov\tx0, x21\n0000000100005acc\tbl\t_fwp_rc_free_obj\n0000000100005ad0\tldr\tx8, [x22]\n0000000100005ad4\tsub\tx8, x25, x8\n0000000100005ad8\tldr\tx9, [x22, #0x28]\n0000000100005adc\tcmp\tx8, x9, lsl #16\n0000000100005ae0\tmov\tx21, x25\n0000000100005ae4\tb.lo\t0x100005a6c\n0000000100005ae8\tb\t0x100005af8\n0000000100005aec\tcmp\tw8, #0xff\n0000000100005af0\tb.eq\t0x100005c78\n0000000100005af4\tstrb\tw9, [x0]\n0000000100005af8\tadd\tx1, sp, #0x28\n0000000100005afc\tmov\tx0, x19\n0000000100005b00\tbl\t_fwp_map_items\n0000000100005b04\tstr\tx0, [sp]\n0000000100005b08\tstp\txzr, xzr, [sp, #0x10]\n0000000100005b0c\tstr\tx24, [sp, #0x20]\n0000000100005b10\tldr\tx21, [sp, #0x28]\n0000000100005b14\tcbz\tx21, 0x100005c34\n0000000100005b18\tmov\tx20, x0\n0000000100005b1c\tmov\tw24, #0x1228\n0000000100005b20\tmov\tx25, x21\n0000000100005b24\tb\t0x100005b3c\n0000000100005b28\tbl\t_fwp_rc_free_obj\n0000000100005b2c\tfmul\td0, d8, d9\n0000000100005b30\tstr\td0, [x20], #0x8\n0000000100005b34\tsubs\tx25, x25, #0x1\n0000000100005b38\tb.eq\t0x100005c34\n0000000100005b3c\tldr\tx0, [x20]\n0000000100005b40\tldr\tx8, [x22]\n0000000100005b44\tsub\tx9, x0, x8\n0000000100005b48\tldr\tx8, [x22, #0x28]\n0000000100005b4c\tcmp\tx9, x8, lsl #16\n0000000100005b50\tb.hs\t0x100005ba4\n0000000100005b54\tldr\tx8, [x23, #0x80]\n0000000100005b58\tlsr\tx10, x9, #16\n0000000100005b5c\tmadd\tx8, x10, x24, x8\n0000000100005b60\tldrb\tw10, [x8]\n0000000100005b64\tand\tx9, x9, #0xffff\n0000000100005b68\tcmp\tx9, #0x0\n0000000100005b6c\tccmp\tw10, #0x2, #0x0, eq\n0000000100005b70\tb.eq\t0x100005b88\n0000000100005b74\tcmp\tw10, #0x1\n0000000100005b78\tb.ne\t0x100005ba4\n0000000100005b7c\tldr\tw10, [x8, #0x20]\n0000000100005b80\tumull\tx9, w9, w10\n0000000100005b84\tadd\tx8, x8, x9, lsr #32\n0000000100005b88\tadd\tx8, x8, #0x228\n0000000100005b8c\tldrb\tw9, [x8]\n0000000100005b90\tcbz\tw9, 0x100005ba4\n0000000100005b94\tcmp\tw9, #0xfe\n0000000100005b98\tb.hs\t0x100005c14\n0000000100005b9c\tadd\tw9, w9, #0x1\n0000000100005ba0\tstrb\tw9, [x8]\n0000000100005ba4\tldp\td8, d9, [x0, #0x8]\n0000000100005ba8\tldr\tx8, [x22]\n0000000100005bac\tsub\tx9, x0, x8\n0000000100005bb0\tldr\tx8, [x22, #0x28]\n0000000100005bb4\tcmp\tx9, x8, lsl #16\n0000000100005bb8\tb.hs\t0x100005b2c\n0000000100005bbc\tldr\tx8, [x23, #0x80]\n0000000100005bc0\tlsr\tx10, x9, #16\n0000000100005bc4\tmadd\tx8, x10, x24, x8\n0000000100005bc8\tldrb\tw10, [x8]\n0000000100005bcc\tand\tx9, x9, #0xffff\n0000000100005bd0\tcmp\tx9, #0x0\n0000000100005bd4\tccmp\tw10, #0x2, #0x0, eq\n0000000100005bd8\tb.eq\t0x100005bf0\n0000000100005bdc\tcmp\tw10, #0x1\n0000000100005be0\tb.ne\t0x100005b2c\n0000000100005be4\tldr\tw10, [x8, #0x20]\n0000000100005be8\tumull\tx9, w9, w10\n0000000100005bec\tadd\tx8, x8, x9, lsr #32\n0000000100005bf0\tadd\tx8, x8, #0x228\n0000000100005bf4\tldrb\tw9, [x8]\n0000000100005bf8\tcbz\tw9, 0x100005b2c\n0000000100005bfc\tsubs\tw10, w9, #0x1\n0000000100005c00\tb.eq\t0x100005b28\n0000000100005c04\tcmp\tw9, #0xff\n0000000100005c08\tb.eq\t0x100005c28\n0000000100005c0c\tstrb\tw10, [x8]\n0000000100005c10\tb\t0x100005b2c\n0000000100005c14\tmov\tx26, x0\n0000000100005c18\tmov\tx0, x8\n0000000100005c1c\tbl\t_fwp_rc_wide_dup\n0000000100005c20\tmov\tx0, x26\n0000000100005c24\tb\t0x100005ba4\n0000000100005c28\tmov\tx0, x8\n0000000100005c2c\tbl\t_fwp_rc_wide_drop\n0000000100005c30\tb\t0x100005b2c\n0000000100005c34\tstr\tx21, [sp, #0x8]\n0000000100005c38\tmov\tx0, sp\n0000000100005c3c\tbl\t_fwp_map_finish_protected\n0000000100005c40\tmov\tx20, x0\n0000000100005c44\tmov\tx0, x19\n0000000100005c48\tbl\t_fwp_drop4\n0000000100005c4c\tmov\tx0, x20\n0000000100005c50\tldp\tx29, x30, [sp, #0x80]\n0000000100005c54\tldp\tx20, x19, [sp, #0x70]\n0000000100005c58\tldp\tx22, x21, [sp, #0x60]\n0000000100005c5c\tldp\tx24, x23, [sp, #0x50]\n0000000100005c60\tldp\tx26, x25, [sp, #0x40]\n0000000100005c64\tldp\td9, d8, [sp, #0x30]\n0000000100005c68\tadd\tsp, sp, #0x90\n0000000100005c6c\tret\n0000000100005c70\tbl\t_fwp_rc_wide_drop\n0000000100005c74\tb\t0x100005a54\n0000000100005c78\tbl\t_fwp_rc_wide_drop\n0000000100005c7c\tb\t0x100005af8\n"
+        }
+      },
+      "1": {
+        "work": {
+          "symbol": "f7",
+          "generatedBody": "/* work : List[F64] -> List[F64] */\nstatic V f7(V l0) {\n    V l1 = 0;\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V t1 = fwp_k_map_owned(fwp_owned_k30, l0, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    l3 = t1;\n    V t2 = fwp_k_zip_with_owned(fwp_owned_k32, l0, l3, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    FWP_KEEP_ALIVE(l3);\n    l4 = t2;\n    fwp_drop0(l0);\n    fwp_drop0(l3);\n    return l4;\n}\n",
+          "separateSymbol": true,
+          "assembly": "000000010000576c\tsub\tsp, sp, #0x90\n0000000100005770\tstp\tx26, x25, [sp, #0x40]\n0000000100005774\tstp\tx24, x23, [sp, #0x50]\n0000000100005778\tstp\tx22, x21, [sp, #0x60]\n000000010000577c\tstp\tx20, x19, [sp, #0x70]\n0000000100005780\tstp\tx29, x30, [sp, #0x80]\n0000000100005784\tadd\tx29, sp, #0x80\n0000000100005788\tmov\tx19, x0\n000000010000578c\tadd\tx1, sp, #0x38\n0000000100005790\tbl\t_fwp_map_items\n0000000100005794\tstr\tx0, [sp, #0x8]\n0000000100005798\tstp\txzr, xzr, [sp, #0x18]\n000000010000579c\tadrp\tx22, -2 ; 0x100003000\n00000001000057a0\tadd\tx22, x22, #0xea4\n00000001000057a4\tstr\tx22, [sp, #0x28]\n00000001000057a8\tldr\tx8, [sp, #0x38]\n00000001000057ac\tcbz\tx8, 0x100005820\n00000001000057b0\tcmp\tx8, #0x8\n00000001000057b4\tb.hs\t0x1000057c0\n00000001000057b8\tmov\tx9, #0x0\n00000001000057bc\tb\t0x100005800\n00000001000057c0\tand\tx9, x8, #0xfffffffffffffff8\n00000001000057c4\tadd\tx10, x0, #0x20\n00000001000057c8\tfmov.2d\tv0, #1.00000000\n00000001000057cc\tmov\tx11, x9\n00000001000057d0\tldp\tq1, q2, [x10, #-0x20]\n00000001000057d4\tldp\tq3, q4, [x10]\n00000001000057d8\tfadd.2d\tv1, v1, v0\n00000001000057dc\tfadd.2d\tv2, v2, v0\n00000001000057e0\tfadd.2d\tv3, v3, v0\n00000001000057e4\tfadd.2d\tv4, v4, v0\n00000001000057e8\tstp\tq1, q2, [x10, #-0x20]\n00000001000057ec\tstp\tq3, q4, [x10], #0x40\n00000001000057f0\tsubs\tx11, x11, #0x8\n00000001000057f4\tb.ne\t0x1000057d0\n00000001000057f8\tcmp\tx8, x9\n00000001000057fc\tb.eq\t0x100005820\n0000000100005800\tadd\tx10, x0, x9, lsl #3\n0000000100005804\tsub\tx9, x8, x9\n0000000100005808\tfmov\td0, #1.00000000\n000000010000580c\tldr\td1, [x10]\n0000000100005810\tfadd\td1, d1, d0\n0000000100005814\tstr\td1, [x10], #0x8\n0000000100005818\tsubs\tx9, x9, #0x1\n000000010000581c\tb.ne\t0x10000580c\n0000000100005820\tstr\tx8, [sp, #0x10]\n0000000100005824\tadd\tx0, sp, #0x8\n0000000100005828\tbl\t_fwp_map_finish_protected\n000000010000582c\tmov\tx20, x0\n0000000100005830\tadd\tx1, sp, #0x38\n0000000100005834\tbl\t_fwp_map_items\n0000000100005838\tmov\tx21, x0\n000000010000583c\tstp\tx0, xzr, [sp, #0x8]\n0000000100005840\tstp\txzr, xzr, [sp, #0x18]\n0000000100005844\tstr\tx22, [sp, #0x28]\n0000000100005848\tadd\tx1, sp, #0x30\n000000010000584c\tmov\tx0, x19\n0000000100005850\tbl\t_fwp_map_items\n0000000100005854\tldp\tx9, x8, [sp, #0x30]\n0000000100005858\tcmp\tx8, x9\n000000010000585c\tcsel\tx8, x8, x9, lo\n0000000100005860\tcbz\tx8, 0x100005904\n0000000100005864\tcmp\tx8, #0x8\n0000000100005868\tb.lo\t0x1000058d0\n000000010000586c\tlsl\tx9, x8, #3\n0000000100005870\tadd\tx10, x21, x9\n0000000100005874\tadd\tx9, x0, x9\n0000000100005878\tcmp\tx21, x9\n000000010000587c\tccmp\tx0, x10, #0x2, lo\n0000000100005880\tb.lo\t0x1000058d0\n0000000100005884\tand\tx9, x8, #0xfffffffffffffff8\n0000000100005888\tadd\tx10, x21, #0x20\n000000010000588c\tadd\tx11, x0, #0x20\n0000000100005890\tmov\tx12, x9\n0000000100005894\tldp\tq0, q1, [x11, #-0x20]\n0000000100005898\tldp\tq2, q3, [x11], #0x40\n000000010000589c\tldp\tq4, q5, [x10, #-0x20]\n00000001000058a0\tldp\tq6, q7, [x10]\n00000001000058a4\tfmul.2d\tv0, v0, v4\n00000001000058a8\tfmul.2d\tv1, v1, v5\n00000001000058ac\tfmul.2d\tv2, v2, v6\n00000001000058b0\tfmul.2d\tv3, v3, v7\n00000001000058b4\tstp\tq0, q1, [x10, #-0x20]\n00000001000058b8\tstp\tq2, q3, [x10], #0x40\n00000001000058bc\tsubs\tx12, x12, #0x8\n00000001000058c0\tb.ne\t0x100005894\n00000001000058c4\tcmp\tx8, x9\n00000001000058c8\tb.ne\t0x1000058d4\n00000001000058cc\tb\t0x1000058fc\n00000001000058d0\tmov\tx9, #0x0\n00000001000058d4\tlsl\tx11, x9, #3\n00000001000058d8\tadd\tx10, x0, x11\n00000001000058dc\tadd\tx11, x21, x11\n00000001000058e0\tsub\tx9, x8, x9\n00000001000058e4\tldr\td0, [x10], #0x8\n00000001000058e8\tldr\td1, [x11]\n00000001000058ec\tfmul\td0, d0, d1\n00000001000058f0\tstr\td0, [x11], #0x8\n00000001000058f4\tsubs\tx9, x9, #0x1\n00000001000058f8\tb.ne\t0x1000058e4\n00000001000058fc\tstr\tx8, [sp, #0x10]\n0000000100005900\tb\t0x10000590c\n0000000100005904\tstr\txzr, [sp, #0x10]\n0000000100005908\tcbz\tx0, 0x100005910\n000000010000590c\tbl\t_fwp_mem_free\n0000000100005910\tadd\tx0, sp, #0x8\n0000000100005914\tbl\t_fwp_map_finish_protected\n0000000100005918\tadrp\tx21, 8 ; 0x10000d000\n000000010000591c\tadd\tx21, x21, #0x38\n0000000100005920\tldr\tx8, [x21]\n0000000100005924\tsub\tx8, x19, x8\n0000000100005928\tldr\tx9, [x21, #0x28]\n000000010000592c\tcmp\tx8, x9, lsl #16\n0000000100005930\tb.hs\t0x1000059d0\n0000000100005934\tadrp\tx22, 8 ; 0x10000d000\n0000000100005938\tmov\tw23, #0x1228\n000000010000593c\tldr\tx9, [x22, #0x80]\n0000000100005940\tlsr\tx10, x8, #16\n0000000100005944\tmadd\tx9, x10, x23, x9\n0000000100005948\tldrb\tw10, [x9]\n000000010000594c\tands\tx8, x8, #0xffff\n0000000100005950\tb.ne\t0x10000596c\n0000000100005954\tcmp\tw10, #0x2\n0000000100005958\tb.ne\t0x10000596c\n000000010000595c\tadd\tx8, x9, #0x228\n0000000100005960\tldrb\tw9, [x8]\n0000000100005964\tcbnz\tw9, 0x10000598c\n0000000100005968\tb\t0x1000059d0\n000000010000596c\tcmp\tw10, #0x1\n0000000100005970\tb.ne\t0x1000059d0\n0000000100005974\tldr\tw10, [x9, #0x20]\n0000000100005978\tumull\tx8, w8, w10\n000000010000597c\tadd\tx8, x9, x8, lsr #32\n0000000100005980\tadd\tx8, x8, #0x228\n0000000100005984\tldrb\tw9, [x8]\n0000000100005988\tcbz\tw9, 0x1000059d0\n000000010000598c\tsubs\tw10, w9, #0x1\n0000000100005990\tb.ne\t0x1000059c4\n0000000100005994\tldr\tx25, [x19, #0x10]\n0000000100005998\tmov\tx24, x0\n000000010000599c\tmov\tx0, x19\n00000001000059a0\tbl\t_fwp_rc_free_obj\n00000001000059a4\tmov\tx0, x24\n00000001000059a8\tldr\tx8, [x21]\n00000001000059ac\tsub\tx8, x25, x8\n00000001000059b0\tldr\tx9, [x21, #0x28]\n00000001000059b4\tcmp\tx8, x9, lsl #16\n00000001000059b8\tmov\tx19, x25\n00000001000059bc\tb.lo\t0x10000593c\n00000001000059c0\tb\t0x1000059d0\n00000001000059c4\tcmp\tw9, #0xff\n00000001000059c8\tb.eq\t0x100005a9c\n00000001000059cc\tstrb\tw10, [x8]\n00000001000059d0\tldr\tx8, [x21]\n00000001000059d4\tsub\tx8, x20, x8\n00000001000059d8\tldr\tx9, [x21, #0x28]\n00000001000059dc\tcmp\tx8, x9, lsl #16\n00000001000059e0\tb.hs\t0x100005a80\n00000001000059e4\tadrp\tx19, 8 ; 0x10000d000\n00000001000059e8\tmov\tw22, #0x1228\n00000001000059ec\tldr\tx9, [x19, #0x80]\n00000001000059f0\tlsr\tx10, x8, #16\n00000001000059f4\tmadd\tx9, x10, x22, x9\n00000001000059f8\tldrb\tw10, [x9]\n00000001000059fc\tands\tx8, x8, #0xffff\n0000000100005a00\tb.ne\t0x100005a1c\n0000000100005a04\tcmp\tw10, #0x2\n0000000100005a08\tb.ne\t0x100005a1c\n0000000100005a0c\tadd\tx8, x9, #0x228\n0000000100005a10\tldrb\tw9, [x8]\n0000000100005a14\tcbnz\tw9, 0x100005a3c\n0000000100005a18\tb\t0x100005a80\n0000000100005a1c\tcmp\tw10, #0x1\n0000000100005a20\tb.ne\t0x100005a80\n0000000100005a24\tldr\tw10, [x9, #0x20]\n0000000100005a28\tumull\tx8, w8, w10\n0000000100005a2c\tadd\tx8, x9, x8, lsr #32\n0000000100005a30\tadd\tx8, x8, #0x228\n0000000100005a34\tldrb\tw9, [x8]\n0000000100005a38\tcbz\tw9, 0x100005a80\n0000000100005a3c\tsubs\tw10, w9, #0x1\n0000000100005a40\tb.ne\t0x100005a74\n0000000100005a44\tldr\tx24, [x20, #0x10]\n0000000100005a48\tmov\tx23, x0\n0000000100005a4c\tmov\tx0, x20\n0000000100005a50\tbl\t_fwp_rc_free_obj\n0000000100005a54\tmov\tx0, x23\n0000000100005a58\tldr\tx8, [x21]\n0000000100005a5c\tsub\tx8, x24, x8\n0000000100005a60\tldr\tx9, [x21, #0x28]\n0000000100005a64\tcmp\tx8, x9, lsl #16\n0000000100005a68\tmov\tx20, x24\n0000000100005a6c\tb.lo\t0x1000059ec\n0000000100005a70\tb\t0x100005a80\n0000000100005a74\tcmp\tw9, #0xff\n0000000100005a78\tb.eq\t0x100005ab0\n0000000100005a7c\tstrb\tw10, [x8]\n0000000100005a80\tldp\tx29, x30, [sp, #0x80]\n0000000100005a84\tldp\tx20, x19, [sp, #0x70]\n0000000100005a88\tldp\tx22, x21, [sp, #0x60]\n0000000100005a8c\tldp\tx24, x23, [sp, #0x50]\n0000000100005a90\tldp\tx26, x25, [sp, #0x40]\n0000000100005a94\tadd\tsp, sp, #0x90\n0000000100005a98\tret\n0000000100005a9c\tmov\tx19, x0\n0000000100005aa0\tmov\tx0, x8\n0000000100005aa4\tbl\t_fwp_rc_wide_drop\n0000000100005aa8\tmov\tx0, x19\n0000000100005aac\tb\t0x1000059d0\n0000000100005ab0\tmov\tx19, x0\n0000000100005ab4\tmov\tx0, x8\n0000000100005ab8\tbl\t_fwp_rc_wide_drop\n0000000100005abc\tmov\tx0, x19\n0000000100005ac0\tb\t0x100005a80\n"
+        },
+        "fused-zip-map": {
+          "symbol": "w32",
+          "generatedBody": "/* fused-zip-map : F64 -> F64 -> F64 */\nstatic double w32(double al0, double al1) {\n    V l0 = fwp_from_f64(al0);\n    V l1 = fwp_from_f64(al1);\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V l5 = 0;\n    V l6 = 0;\n    V t1 = f29(l1, l0);\n    return fwp_f64(t1);\n}\n",
+          "separateSymbol": false,
+          "assembly": null
+        }
+      }
+    },
+    "macos-15-intel": {
+      "0": {
+        "work": {
+          "symbol": "f7",
+          "generatedBody": "/* work : List[F64] -> List[F64] */\nstatic V f7(V l0) {\n    V l1 = 0;\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V l5 = 0;\n    V l6 = 0;\n    V t1 = fwp_k_map_owned(fwp_owned_k30, l0, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    l3 = t1;\n    V t2 = f23(l0, l3);\n    FWP_KEEP_ALIVE(l0);\n    FWP_KEEP_ALIVE(l3);\n    l4 = t2;\n    fwp_drop0(l0);\n    fwp_drop0(l3);\n    l5 = l4;\n    V t3 = fwp_k_map_owned(fwp_owned_k31, l5, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l5);\n    l6 = t3;\n    fwp_drop4(l5);\n    return l6;\n}\n",
+          "separateSymbol": true,
+          "assembly": "00000001000064c0\tpushq\t%rbp\n00000001000064c1\tmovq\t%rsp, %rbp\n00000001000064c4\tpushq\t%r15\n00000001000064c6\tpushq\t%r14\n00000001000064c8\tpushq\t%r13\n00000001000064ca\tpushq\t%r12\n00000001000064cc\tpushq\t%rbx\n00000001000064cd\tsubq\t$0x48, %rsp\n00000001000064d1\tmovq\t%rdi, %r15\n00000001000064d4\tleaq\t-0x40(%rbp), %rsi\n00000001000064d8\tcallq\t_fwp_map_items\n00000001000064dd\tmovq\t%rax, -0x68(%rbp)\n00000001000064e1\txorpd\t%xmm0, %xmm0\n00000001000064e5\tmovupd\t%xmm0, -0x58(%rbp)\n00000001000064ea\tleaq\t_fwp_drop0(%rip), %r12\n00000001000064f1\tmovq\t%r12, -0x48(%rbp)\n00000001000064f5\tmovq\t-0x40(%rbp), %rcx\n00000001000064f9\ttestq\t%rcx, %rcx\n00000001000064fc\tje\t0x100006576\n00000001000064fe\tcmpq\t$0x4, %rcx\n0000000100006502\tjae\t0x100006508\n0000000100006504\txorl\t%edx, %edx\n0000000100006506\tjmp\t0x10000654c\n0000000100006508\tmovq\t%rcx, %rdx\n000000010000650b\tandq\t$-0x4, %rdx\n000000010000650f\txorl\t%esi, %esi\n0000000100006511\tmovapd\t0x1d77(%rip), %xmm0\n0000000100006519\tnopl\t(%rax)\n0000000100006520\tmovupd\t(%rax,%rsi,8), %xmm1\n0000000100006525\tmovupd\t0x10(%rax,%rsi,8), %xmm2\n000000010000652b\taddpd\t%xmm0, %xmm1\n000000010000652f\taddpd\t%xmm0, %xmm2\n0000000100006533\tmovupd\t%xmm1, (%rax,%rsi,8)\n0000000100006538\tmovupd\t%xmm2, 0x10(%rax,%rsi,8)\n000000010000653e\taddq\t$0x4, %rsi\n0000000100006542\tcmpq\t%rsi, %rdx\n0000000100006545\tjne\t0x100006520\n0000000100006547\tcmpq\t%rdx, %rcx\n000000010000654a\tje\t0x100006576\n000000010000654c\tmovsd\t0x1d7c(%rip), %xmm0\n0000000100006554\tnopw\t%cs:(%rax,%rax)\n0000000100006560\tmovsd\t(%rax,%rdx,8), %xmm1\n0000000100006565\taddsd\t%xmm0, %xmm1\n0000000100006569\tmovsd\t%xmm1, (%rax,%rdx,8)\n000000010000656e\tincq\t%rdx\n0000000100006571\tcmpq\t%rdx, %rcx\n0000000100006574\tjne\t0x100006560\n0000000100006576\tmovq\t%rcx, -0x60(%rbp)\n000000010000657a\tleaq\t-0x68(%rbp), %rdi\n000000010000657e\tcallq\t_fwp_map_finish_protected\n0000000100006583\tmovq\t%rax, %r14\n0000000100006586\tmovq\t%r15, %rdi\n0000000100006589\tmovq\t%rax, %rsi\n000000010000658c\tcallq\t_f23\n0000000100006591\tmovq\t%r15, %rcx\n0000000100006594\tsubq\t0x4a9d(%rip), %rcx\n000000010000659b\tmovq\t%rax, %rbx\n000000010000659e\tmovq\t0x4abb(%rip), %rax\n00000001000065a5\tshlq\t$0x10, %rax\n00000001000065a9\tcmpq\t%rax, %rcx\n00000001000065ac\tjae\t0x100006653\n00000001000065b2\tmovq\t0x4ac7(%rip), %rax\n00000001000065b9\tmovq\t%rcx, %rdx\n00000001000065bc\tshrq\t$0x10, %rdx\n00000001000065c0\timulq\t$0x1228, %rdx, %rdx             ## imm = 0x1228\n00000001000065c7\tleaq\t(%rax,%rdx), %rdi\n00000001000065cb\tmovzbl\t(%rax,%rdx), %eax\n00000001000065cf\tcmpb\t$0x2, %al\n00000001000065d1\tsetne\t%dl\n00000001000065d4\tandq\t$0xffff, %rcx                   ## imm = 0xFFFF\n00000001000065db\tsetne\t%sil\n00000001000065df\torb\t%dl, %sil\n00000001000065e2\tjne\t0x1000065f0\n00000001000065e4\taddq\t$0x228, %rdi                    ## imm = 0x228\n00000001000065eb\tjmp\t0x100006609\n00000001000065ed\tnopl\t(%rax)\n00000001000065f0\tcmpb\t$0x1, %al\n00000001000065f2\tjne\t0x100006653\n00000001000065f4\tmovl\t0x20(%rdi), %eax\n00000001000065f7\timulq\t%rax, %rcx\n00000001000065fb\tshrq\t$0x20, %rcx\n00000001000065ff\taddq\t%rcx, %rdi\n0000000100006602\taddq\t$0x228, %rdi                    ## imm = 0x228\n0000000100006609\tmovzbl\t(%rdi), %eax\n000000010000660c\ttestl\t%eax, %eax\n000000010000660e\tje\t0x100006653\n0000000100006610\tcmpl\t$0x1, %eax\n0000000100006613\tjne\t0x100006644\n0000000100006615\tmovq\t0x10(%r15), %r13\n0000000100006619\tmovq\t%r15, %rdi\n000000010000661c\tcallq\t_fwp_rc_free_obj\n0000000100006621\tmovq\t%r13, %rcx\n0000000100006624\tsubq\t0x4a0d(%rip), %rcx\n000000010000662b\tmovq\t0x4a2e(%rip), %rax\n0000000100006632\tshlq\t$0x10, %rax\n0000000100006636\tmovq\t%r13, %r15\n0000000100006639\tcmpq\t%rax, %rcx\n000000010000663c\tjb\t0x1000065b2\n0000000100006642\tjmp\t0x100006653\n0000000100006644\tcmpl\t$0xff, %eax\n0000000100006649\tje\t0x100006906\n000000010000664f\tdecb\t%al\n0000000100006651\tmovb\t%al, (%rdi)\n0000000100006653\tmovq\t%r14, %rax\n0000000100006656\tsubq\t0x49db(%rip), %rax\n000000010000665d\tmovq\t0x49fc(%rip), %rcx\n0000000100006664\tshlq\t$0x10, %rcx\n0000000100006668\tcmpq\t%rcx, %rax\n000000010000666b\tjae\t0x100006714\n0000000100006671\tmovq\t0x4a08(%rip), %rcx\n0000000100006678\tmovq\t%rax, %rdx\n000000010000667b\tshrq\t$0x10, %rdx\n000000010000667f\timulq\t$0x1228, %rdx, %rdx             ## imm = 0x1228\n0000000100006686\tleaq\t(%rcx,%rdx), %rdi\n000000010000668a\tmovzbl\t(%rcx,%rdx), %ecx\n000000010000668e\tcmpb\t$0x2, %cl\n0000000100006691\tsetne\t%dl\n0000000100006694\tandq\t$0xffff, %rax                   ## imm = 0xFFFF\n000000010000669a\tsetne\t%sil\n000000010000669e\torb\t%dl, %sil\n00000001000066a1\tjne\t0x1000066b0\n00000001000066a3\taddq\t$0x228, %rdi                    ## imm = 0x228\n00000001000066aa\tjmp\t0x1000066ca\n00000001000066ac\tnopl\t(%rax)\n00000001000066b0\tcmpb\t$0x1, %cl\n00000001000066b3\tjne\t0x100006714\n00000001000066b5\tmovl\t0x20(%rdi), %ecx\n00000001000066b8\timulq\t%rcx, %rax\n00000001000066bc\tshrq\t$0x20, %rax\n00000001000066c0\taddq\t%rax, %rdi\n00000001000066c3\taddq\t$0x228, %rdi                    ## imm = 0x228\n00000001000066ca\tmovzbl\t(%rdi), %eax\n00000001000066cd\ttestl\t%eax, %eax\n00000001000066cf\tje\t0x100006714\n00000001000066d1\tcmpl\t$0x1, %eax\n00000001000066d4\tjne\t0x100006705\n00000001000066d6\tmovq\t0x10(%r14), %r15\n00000001000066da\tmovq\t%r14, %rdi\n00000001000066dd\tcallq\t_fwp_rc_free_obj\n00000001000066e2\tmovq\t%r15, %rax\n00000001000066e5\tsubq\t0x494c(%rip), %rax\n00000001000066ec\tmovq\t0x496d(%rip), %rcx\n00000001000066f3\tshlq\t$0x10, %rcx\n00000001000066f7\tmovq\t%r15, %r14\n00000001000066fa\tcmpq\t%rcx, %rax\n00000001000066fd\tjb\t0x100006671\n0000000100006703\tjmp\t0x100006714\n0000000100006705\tcmpl\t$0xff, %eax\n000000010000670a\tje\t0x100006910\n0000000100006710\tdecb\t%al\n0000000100006712\tmovb\t%al, (%rdi)\n0000000100006714\tleaq\t-0x40(%rbp), %rsi\n0000000100006718\tmovq\t%rbx, %rdi\n000000010000671b\tcallq\t_fwp_map_items\n0000000100006720\tmovq\t%rax, -0x68(%rbp)\n0000000100006724\txorpd\t%xmm0, %xmm0\n0000000100006728\tmovupd\t%xmm0, -0x58(%rbp)\n000000010000672d\tmovq\t%r12, -0x48(%rbp)\n0000000100006731\tmovq\t-0x40(%rbp), %r15\n0000000100006735\ttestq\t%r15, %r15\n0000000100006738\tje\t0x1000068dc\n000000010000673e\tmovq\t%rax, %r14\n0000000100006741\txorl\t%r12d, %r12d\n0000000100006744\tjmp\t0x100006776\n0000000100006746\tmovsd\t%xmm0, -0x38(%rbp)\n000000010000674b\tmovsd\t%xmm1, -0x30(%rbp)\n0000000100006750\tcallq\t_fwp_rc_free_obj\n0000000100006755\tmovsd\t-0x30(%rbp), %xmm1\n000000010000675a\tmovsd\t-0x38(%rbp), %xmm0\n000000010000675f\tnop\n0000000100006760\tmulsd\t%xmm1, %xmm0\n0000000100006764\tmovsd\t%xmm0, (%r14,%r12,8)\n000000010000676a\tincq\t%r12\n000000010000676d\tcmpq\t%r12, %r15\n0000000100006770\tje\t0x1000068dc\n0000000100006776\tmovq\t(%r14,%r12,8), %rdi\n000000010000677a\tmovq\t%rdi, %rcx\n000000010000677d\tsubq\t0x48b4(%rip), %rcx\n0000000100006784\tmovq\t0x48d5(%rip), %rax\n000000010000678b\tshlq\t$0x10, %rax\n000000010000678f\tcmpq\t%rax, %rcx\n0000000100006792\tjae\t0x1000067fd\n0000000100006794\tmovq\t0x48e5(%rip), %rdx\n000000010000679b\tmovq\t%rcx, %rax\n000000010000679e\tshrq\t$0x10, %rax\n00000001000067a2\timulq\t$0x1228, %rax, %rsi             ## imm = 0x1228\n00000001000067a9\tleaq\t(%rdx,%rsi), %rax\n00000001000067ad\tmovzbl\t(%rdx,%rsi), %edx\n00000001000067b1\tcmpb\t$0x2, %dl\n00000001000067b4\tsetne\t%sil\n00000001000067b8\tandq\t$0xffff, %rcx                   ## imm = 0xFFFF\n00000001000067bf\tsetne\t%r8b\n00000001000067c3\torb\t%sil, %r8b\n00000001000067c6\tjne\t0x1000067d0\n00000001000067c8\taddq\t$0x228, %rax                    ## imm = 0x228\n00000001000067ce\tjmp\t0x1000067e9\n00000001000067d0\tcmpb\t$0x1, %dl\n00000001000067d3\tjne\t0x1000067fd\n00000001000067d5\tmovl\t0x20(%rax), %edx\n00000001000067d8\timulq\t%rdx, %rcx\n00000001000067dc\tshrq\t$0x20, %rcx\n00000001000067e0\taddq\t%rcx, %rax\n00000001000067e3\taddq\t$0x228, %rax                    ## imm = 0x228\n00000001000067e9\tmovzbl\t(%rax), %ecx\n00000001000067ec\ttestb\t%cl, %cl\n00000001000067ee\tje\t0x1000067fd\n00000001000067f0\tcmpb\t$-0x2, %cl\n00000001000067f3\tjae\t0x1000068b2\n00000001000067f9\tincb\t%cl\n00000001000067fb\tmovb\t%cl, (%rax)\n00000001000067fd\tmovsd\t0x8(%rdi), %xmm0\n0000000100006802\tmovq\t%rdi, %rcx\n0000000100006805\tsubq\t0x482c(%rip), %rcx\n000000010000680c\tmovsd\t0x10(%rdi), %xmm1\n0000000100006811\tmovq\t0x4848(%rip), %rax\n0000000100006818\tshlq\t$0x10, %rax\n000000010000681c\tcmpq\t%rax, %rcx\n000000010000681f\tjae\t0x100006760\n0000000100006825\tmovq\t0x4854(%rip), %rdx\n000000010000682c\tmovq\t%rcx, %rax\n000000010000682f\tshrq\t$0x10, %rax\n0000000100006833\timulq\t$0x1228, %rax, %rsi             ## imm = 0x1228\n000000010000683a\tleaq\t(%rdx,%rsi), %rax\n000000010000683e\tmovzbl\t(%rdx,%rsi), %edx\n0000000100006842\tcmpb\t$0x2, %dl\n0000000100006845\tsetne\t%sil\n0000000100006849\tandq\t$0xffff, %rcx                   ## imm = 0xFFFF\n0000000100006850\tsetne\t%r8b\n0000000100006854\torb\t%sil, %r8b\n0000000100006857\tjne\t0x100006870\n0000000100006859\taddq\t$0x228, %rax                    ## imm = 0x228\n000000010000685f\tjmp\t0x10000688d\n0000000100006861\tnopw\t%cs:(%rax,%rax)\n0000000100006870\tcmpb\t$0x1, %dl\n0000000100006873\tjne\t0x100006760\n0000000100006879\tmovl\t0x20(%rax), %edx\n000000010000687c\timulq\t%rdx, %rcx\n0000000100006880\tshrq\t$0x20, %rcx\n0000000100006884\taddq\t%rcx, %rax\n0000000100006887\taddq\t$0x228, %rax                    ## imm = 0x228\n000000010000688d\tmovzbl\t(%rax), %ecx\n0000000100006890\ttestl\t%ecx, %ecx\n0000000100006892\tje\t0x100006760\n0000000100006898\tcmpl\t$0x1, %ecx\n000000010000689b\tje\t0x100006746\n00000001000068a1\tcmpl\t$0xff, %ecx\n00000001000068a7\tje\t0x1000068c5\n00000001000068a9\tdecb\t%cl\n00000001000068ab\tmovb\t%cl, (%rax)\n00000001000068ad\tjmp\t0x100006760\n00000001000068b2\tmovq\t%rdi, %r13\n00000001000068b5\tmovq\t%rax, %rdi\n00000001000068b8\tcallq\t_fwp_rc_wide_dup\n00000001000068bd\tmovq\t%r13, %rdi\n00000001000068c0\tjmp\t0x1000067fd\n00000001000068c5\tmovq\t%rax, %rdi\n00000001000068c8\tmovsd\t%xmm0, -0x38(%rbp)\n00000001000068cd\tmovsd\t%xmm1, -0x30(%rbp)\n00000001000068d2\tcallq\t_fwp_rc_wide_drop\n00000001000068d7\tjmp\t0x100006755\n00000001000068dc\tmovq\t%r15, -0x60(%rbp)\n00000001000068e0\tleaq\t-0x68(%rbp), %rdi\n00000001000068e4\tcallq\t_fwp_map_finish_protected\n00000001000068e9\tmovq\t%rax, %r14\n00000001000068ec\tmovq\t%rbx, %rdi\n00000001000068ef\tcallq\t_fwp_drop4\n00000001000068f4\tmovq\t%r14, %rax\n00000001000068f7\taddq\t$0x48, %rsp\n00000001000068fb\tpopq\t%rbx\n00000001000068fc\tpopq\t%r12\n00000001000068fe\tpopq\t%r13\n0000000100006900\tpopq\t%r14\n0000000100006902\tpopq\t%r15\n0000000100006904\tpopq\t%rbp\n0000000100006905\tretq\n0000000100006906\tcallq\t_fwp_rc_wide_drop\n000000010000690b\tjmp\t0x100006653\n0000000100006910\tcallq\t_fwp_rc_wide_drop\n0000000100006915\tjmp\t0x100006714\n000000010000691a\tnopw\t(%rax,%rax)\n"
+        }
+      },
+      "1": {
+        "work": {
+          "symbol": "f7",
+          "generatedBody": "/* work : List[F64] -> List[F64] */\nstatic V f7(V l0) {\n    V l1 = 0;\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V t1 = fwp_k_map_owned(fwp_owned_k30, l0, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    l3 = t1;\n    V t2 = fwp_k_zip_with_owned(fwp_owned_k32, l0, l3, NULL, fwp_drop0);\n    FWP_KEEP_ALIVE(l0);\n    FWP_KEEP_ALIVE(l3);\n    l4 = t2;\n    fwp_drop0(l0);\n    fwp_drop0(l3);\n    return l4;\n}\n",
+          "separateSymbol": true,
+          "assembly": "0000000100006300\tpushq\t%rbp\n0000000100006301\tmovq\t%rsp, %rbp\n0000000100006304\tpushq\t%r15\n0000000100006306\tpushq\t%r14\n0000000100006308\tpushq\t%r12\n000000010000630a\tpushq\t%rbx\n000000010000630b\tsubq\t$0x40, %rsp\n000000010000630f\tmovq\t%rdi, %r14\n0000000100006312\tleaq\t-0x28(%rbp), %rsi\n0000000100006316\tcallq\t_fwp_map_items\n000000010000631b\tmovq\t%rax, -0x50(%rbp)\n000000010000631f\txorpd\t%xmm0, %xmm0\n0000000100006323\tmovupd\t%xmm0, -0x40(%rbp)\n0000000100006328\tleaq\t_fwp_drop0(%rip), %r12\n000000010000632f\tmovq\t%r12, -0x30(%rbp)\n0000000100006333\tmovq\t-0x28(%rbp), %rcx\n0000000100006337\ttestq\t%rcx, %rcx\n000000010000633a\tje\t0x1000063b6\n000000010000633c\tcmpq\t$0x4, %rcx\n0000000100006340\tjae\t0x100006346\n0000000100006342\txorl\t%edx, %edx\n0000000100006344\tjmp\t0x10000638c\n0000000100006346\tmovq\t%rcx, %rdx\n0000000100006349\tandq\t$-0x4, %rdx\n000000010000634d\txorl\t%esi, %esi\n000000010000634f\tmovapd\t0x15d9(%rip), %xmm0\n0000000100006357\tnopw\t(%rax,%rax)\n0000000100006360\tmovupd\t(%rax,%rsi,8), %xmm1\n0000000100006365\tmovupd\t0x10(%rax,%rsi,8), %xmm2\n000000010000636b\taddpd\t%xmm0, %xmm1\n000000010000636f\taddpd\t%xmm0, %xmm2\n0000000100006373\tmovupd\t%xmm1, (%rax,%rsi,8)\n0000000100006378\tmovupd\t%xmm2, 0x10(%rax,%rsi,8)\n000000010000637e\taddq\t$0x4, %rsi\n0000000100006382\tcmpq\t%rsi, %rdx\n0000000100006385\tjne\t0x100006360\n0000000100006387\tcmpq\t%rdx, %rcx\n000000010000638a\tje\t0x1000063b6\n000000010000638c\tmovsd\t0x15ec(%rip), %xmm0\n0000000100006394\tnopw\t%cs:(%rax,%rax)\n00000001000063a0\tmovsd\t(%rax,%rdx,8), %xmm1\n00000001000063a5\taddsd\t%xmm0, %xmm1\n00000001000063a9\tmovsd\t%xmm1, (%rax,%rdx,8)\n00000001000063ae\tincq\t%rdx\n00000001000063b1\tcmpq\t%rdx, %rcx\n00000001000063b4\tjne\t0x1000063a0\n00000001000063b6\tmovq\t%rcx, -0x48(%rbp)\n00000001000063ba\tleaq\t-0x50(%rbp), %rdi\n00000001000063be\tcallq\t_fwp_map_finish_protected\n00000001000063c3\tmovq\t%rax, %rbx\n00000001000063c6\tleaq\t-0x28(%rbp), %rsi\n00000001000063ca\tmovq\t%rax, %rdi\n00000001000063cd\tcallq\t_fwp_map_items\n00000001000063d2\tmovq\t%rax, %r15\n00000001000063d5\tmovq\t%rax, -0x50(%rbp)\n00000001000063d9\txorpd\t%xmm0, %xmm0\n00000001000063dd\tmovupd\t%xmm0, -0x48(%rbp)\n00000001000063e2\tmovq\t$0x0, -0x38(%rbp)\n00000001000063ea\tmovq\t%r12, -0x30(%rbp)\n00000001000063ee\tleaq\t-0x58(%rbp), %rsi\n00000001000063f2\tmovq\t%r14, %rdi\n00000001000063f5\tcallq\t_fwp_map_items\n00000001000063fa\tmovq\t-0x28(%rbp), %rdx\n00000001000063fe\tmovq\t-0x58(%rbp), %rcx\n0000000100006402\tcmpq\t%rcx, %rdx\n0000000100006405\tcmovbq\t%rdx, %rcx\n0000000100006409\ttestq\t%rcx, %rcx\n000000010000640c\tje\t0x1000064d8\n0000000100006412\tcmpq\t$0x6, %rcx\n0000000100006416\tjb\t0x100006436\n0000000100006418\tleaq\t(%r15,%rcx,8), %rdx\n000000010000641c\tleaq\t(%rax,%rcx,8), %rsi\n0000000100006420\tcmpq\t%rsi, %r15\n0000000100006423\tsetb\t%sil\n0000000100006427\tcmpq\t%rdx, %rax\n000000010000642a\tsetb\t%dl\n000000010000642d\ttestb\t%dl, %sil\n0000000100006430\tje\t0x1000064e7\n0000000100006436\txorl\t%edx, %edx\n0000000100006438\tmovq\t%rcx, %rdi\n000000010000643b\tmovq\t%rdx, %rsi\n000000010000643e\tandq\t$0x3, %rdi\n0000000100006442\tje\t0x100006469\n0000000100006444\tmovq\t%rdx, %rsi\n0000000100006447\tnopw\t(%rax,%rax)\n0000000100006450\tmovsd\t(%rax,%rsi,8), %xmm0\n0000000100006455\tmulsd\t(%r15,%rsi,8), %xmm0\n000000010000645b\tmovsd\t%xmm0, (%r15,%rsi,8)\n0000000100006461\tincq\t%rsi\n0000000100006464\tdecq\t%rdi\n0000000100006467\tjne\t0x100006450\n0000000100006469\tsubq\t%rcx, %rdx\n000000010000646c\tcmpq\t$-0x4, %rdx\n0000000100006470\tja\t0x10000652f\n0000000100006476\tnopw\t%cs:(%rax,%rax)\n0000000100006480\tmovsd\t(%rax,%rsi,8), %xmm0\n0000000100006485\tmulsd\t(%r15,%rsi,8), %xmm0\n000000010000648b\tmovsd\t%xmm0, (%r15,%rsi,8)\n0000000100006491\tmovsd\t0x8(%rax,%rsi,8), %xmm0\n0000000100006497\tmulsd\t0x8(%r15,%rsi,8), %xmm0\n000000010000649e\tmovsd\t%xmm0, 0x8(%r15,%rsi,8)\n00000001000064a5\tmovsd\t0x10(%rax,%rsi,8), %xmm0\n00000001000064ab\tmulsd\t0x10(%r15,%rsi,8), %xmm0\n00000001000064b2\tmovsd\t%xmm0, 0x10(%r15,%rsi,8)\n00000001000064b9\tmovsd\t0x18(%rax,%rsi,8), %xmm0\n00000001000064bf\tmulsd\t0x18(%r15,%rsi,8), %xmm0\n00000001000064c6\tmovsd\t%xmm0, 0x18(%r15,%rsi,8)\n00000001000064cd\taddq\t$0x4, %rsi\n00000001000064d1\tcmpq\t%rsi, %rcx\n00000001000064d4\tjne\t0x100006480\n00000001000064d6\tjmp\t0x10000652f\n00000001000064d8\tmovq\t$0x0, -0x48(%rbp)\n00000001000064e0\ttestq\t%rax, %rax\n00000001000064e3\tjne\t0x100006533\n00000001000064e5\tjmp\t0x10000653b\n00000001000064e7\tmovq\t%rcx, %rdx\n00000001000064ea\tandq\t$-0x4, %rdx\n00000001000064ee\txorl\t%esi, %esi\n00000001000064f0\tmovupd\t(%rax,%rsi,8), %xmm0\n00000001000064f5\tmovupd\t0x10(%rax,%rsi,8), %xmm1\n00000001000064fb\tmovupd\t(%r15,%rsi,8), %xmm2\n0000000100006501\tmulpd\t%xmm0, %xmm2\n0000000100006505\tmovupd\t0x10(%r15,%rsi,8), %xmm0\n000000010000650c\tmulpd\t%xmm1, %xmm0\n0000000100006510\tmovupd\t%xmm2, (%r15,%rsi,8)\n0000000100006516\tmovupd\t%xmm0, 0x10(%r15,%rsi,8)\n000000010000651d\taddq\t$0x4, %rsi\n0000000100006521\tcmpq\t%rsi, %rdx\n0000000100006524\tjne\t0x1000064f0\n0000000100006526\tcmpq\t%rdx, %rcx\n0000000100006529\tjne\t0x100006438\n000000010000652f\tmovq\t%rcx, -0x48(%rbp)\n0000000100006533\tmovq\t%rax, %rdi\n0000000100006536\tcallq\t_fwp_mem_free\n000000010000653b\tleaq\t-0x50(%rbp), %rdi\n000000010000653f\tcallq\t_fwp_map_finish_protected\n0000000100006544\tmovq\t%r14, %rcx\n0000000100006547\tsubq\t0x3aea(%rip), %rcx\n000000010000654e\tmovq\t0x3b0b(%rip), %rdx\n0000000100006555\tshlq\t$0x10, %rdx\n0000000100006559\tcmpq\t%rdx, %rcx\n000000010000655c\tjae\t0x10000660b\n0000000100006562\tmovq\t0x3b17(%rip), %rdx\n0000000100006569\tmovq\t%rcx, %rsi\n000000010000656c\tshrq\t$0x10, %rsi\n0000000100006570\timulq\t$0x1228, %rsi, %rsi             ## imm = 0x1228\n0000000100006577\tleaq\t(%rdx,%rsi), %rdi\n000000010000657b\tmovzbl\t(%rdx,%rsi), %edx\n000000010000657f\tcmpb\t$0x2, %dl\n0000000100006582\tsetne\t%sil\n0000000100006586\tandq\t$0xffff, %rcx                   ## imm = 0xFFFF\n000000010000658d\tsetne\t%r8b\n0000000100006591\torb\t%sil, %r8b\n0000000100006594\tjne\t0x1000065a0\n0000000100006596\taddq\t$0x228, %rdi                    ## imm = 0x228\n000000010000659d\tjmp\t0x1000065ba\n000000010000659f\tnop\n00000001000065a0\tcmpb\t$0x1, %dl\n00000001000065a3\tjne\t0x10000660b\n00000001000065a5\tmovl\t0x20(%rdi), %edx\n00000001000065a8\timulq\t%rdx, %rcx\n00000001000065ac\tshrq\t$0x20, %rcx\n00000001000065b0\taddq\t%rcx, %rdi\n00000001000065b3\taddq\t$0x228, %rdi                    ## imm = 0x228\n00000001000065ba\tmovzbl\t(%rdi), %ecx\n00000001000065bd\ttestl\t%ecx, %ecx\n00000001000065bf\tje\t0x10000660b\n00000001000065c1\tcmpl\t$0x1, %ecx\n00000001000065c4\tjne\t0x1000065fb\n00000001000065c6\tmovq\t0x10(%r14), %r15\n00000001000065ca\tmovq\t%r14, %rdi\n00000001000065cd\tmovq\t%rax, %r14\n00000001000065d0\tcallq\t_fwp_rc_free_obj\n00000001000065d5\tmovq\t%r14, %rax\n00000001000065d8\tmovq\t%r15, %rcx\n00000001000065db\tsubq\t0x3a56(%rip), %rcx\n00000001000065e2\tmovq\t0x3a77(%rip), %rdx\n00000001000065e9\tshlq\t$0x10, %rdx\n00000001000065ed\tmovq\t%r15, %r14\n00000001000065f0\tcmpq\t%rdx, %rcx\n00000001000065f3\tjb\t0x100006562\n00000001000065f9\tjmp\t0x10000660b\n00000001000065fb\tcmpl\t$0xff, %ecx\n0000000100006601\tje\t0x1000066e4\n0000000100006607\tdecb\t%cl\n0000000100006609\tmovb\t%cl, (%rdi)\n000000010000660b\tmovq\t%rbx, %rcx\n000000010000660e\tsubq\t0x3a23(%rip), %rcx\n0000000100006615\tmovq\t0x3a44(%rip), %rdx\n000000010000661c\tshlq\t$0x10, %rdx\n0000000100006620\tcmpq\t%rdx, %rcx\n0000000100006623\tjae\t0x1000066d7\n0000000100006629\tmovq\t0x3a50(%rip), %rdx\n0000000100006630\tmovq\t%rcx, %rsi\n0000000100006633\tshrq\t$0x10, %rsi\n0000000100006637\timulq\t$0x1228, %rsi, %rsi             ## imm = 0x1228\n000000010000663e\tleaq\t(%rdx,%rsi), %rdi\n0000000100006642\tmovzbl\t(%rdx,%rsi), %edx\n0000000100006646\tcmpb\t$0x2, %dl\n0000000100006649\tsetne\t%sil\n000000010000664d\tandq\t$0xffff, %rcx                   ## imm = 0xFFFF\n0000000100006654\tsetne\t%r8b\n0000000100006658\torb\t%sil, %r8b\n000000010000665b\tjne\t0x100006670\n000000010000665d\taddq\t$0x228, %rdi                    ## imm = 0x228\n0000000100006664\tjmp\t0x10000668a\n0000000100006666\tnopw\t%cs:(%rax,%rax)\n0000000100006670\tcmpb\t$0x1, %dl\n0000000100006673\tjne\t0x1000066d7\n0000000100006675\tmovl\t0x20(%rdi), %edx\n0000000100006678\timulq\t%rdx, %rcx\n000000010000667c\tshrq\t$0x20, %rcx\n0000000100006680\taddq\t%rcx, %rdi\n0000000100006683\taddq\t$0x228, %rdi                    ## imm = 0x228\n000000010000668a\tmovzbl\t(%rdi), %ecx\n000000010000668d\ttestl\t%ecx, %ecx\n000000010000668f\tje\t0x1000066d7\n0000000100006691\tcmpl\t$0x1, %ecx\n0000000100006694\tjne\t0x1000066cb\n0000000100006696\tmovq\t0x10(%rbx), %r14\n000000010000669a\tmovq\t%rbx, %rdi\n000000010000669d\tmovq\t%rax, %rbx\n00000001000066a0\tcallq\t_fwp_rc_free_obj\n00000001000066a5\tmovq\t%rbx, %rax\n00000001000066a8\tmovq\t%r14, %rcx\n00000001000066ab\tsubq\t0x3986(%rip), %rcx\n00000001000066b2\tmovq\t0x39a7(%rip), %rdx\n00000001000066b9\tshlq\t$0x10, %rdx\n00000001000066bd\tmovq\t%r14, %rbx\n00000001000066c0\tcmpq\t%rdx, %rcx\n00000001000066c3\tjb\t0x100006629\n00000001000066c9\tjmp\t0x1000066d7\n00000001000066cb\tcmpl\t$0xff, %ecx\n00000001000066d1\tje\t0x1000066f4\n00000001000066d3\tdecb\t%cl\n00000001000066d5\tmovb\t%cl, (%rdi)\n00000001000066d7\taddq\t$0x40, %rsp\n00000001000066db\tpopq\t%rbx\n00000001000066dc\tpopq\t%r12\n00000001000066de\tpopq\t%r14\n00000001000066e0\tpopq\t%r15\n00000001000066e2\tpopq\t%rbp\n00000001000066e3\tretq\n00000001000066e4\tmovq\t%rax, %r14\n00000001000066e7\tcallq\t_fwp_rc_wide_drop\n00000001000066ec\tmovq\t%r14, %rax\n00000001000066ef\tjmp\t0x10000660b\n00000001000066f4\tmovq\t%rax, %rbx\n00000001000066f7\tcallq\t_fwp_rc_wide_drop\n00000001000066fc\tmovq\t%rbx, %rax\n00000001000066ff\tjmp\t0x1000066d7\n0000000100006701\tnopw\t%cs:(%rax,%rax)\n"
+        },
+        "fused-zip-map": {
+          "symbol": "w32",
+          "generatedBody": "/* fused-zip-map : F64 -> F64 -> F64 */\nstatic double w32(double al0, double al1) {\n    V l0 = fwp_from_f64(al0);\n    V l1 = fwp_from_f64(al1);\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V l5 = 0;\n    V l6 = 0;\n    V t1 = f29(l1, l0);\n    return fwp_f64(t1);\n}\n",
+          "separateSymbol": false,
+          "assembly": null
+        }
+      }
+    }
+  }
+}

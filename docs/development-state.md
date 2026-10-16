@@ -33,9 +33,9 @@ without raising its limits. Full builds, suites and timings run on GitHub.
 | 6 | In progress | Retain repeated timings, CPU time and normal-collector profiles |
 | 7 | In progress | Validate maintained todo/grep functions and command lines under ARC |
 
-Next: check the extended text-file/maintained-application suite on all six hosts;
-finish the four-host zip cost run below and inspect actual instructions before adopting a timing
-claim. Continue monitoring #149, merge it only after exact-head acceptance, then
+Next: validate the adjacent unzip cleanup repair and expanded structural-list
+suite on all six hosts; finish the verified-binary CPU/collector repeat below.
+Continue monitoring #149, merge it only after exact-head acceptance, then
 transfer this batch for the next substantial PR. Queued CI does not block fixes
 or independent preparation.
 
@@ -77,7 +77,7 @@ intentional cleanup omissions. Final delivery still needs the full nine jobs.
 [Six-host tests 38842838108](https://github.com/e6qu/fun-with-pipes/actions/runs/38842838108)
 pass at `91146d68`, including the newest consumer-order and numeric-binding
 fixtures. [Four-host costs 38842840316](https://github.com/e6qu/fun-with-pipes/actions/runs/38842840316)
-passes on Linux ARM64/AMD64; both Macs are queued/running. The earlier queued runs `38842464287` and
+passes on all four hosts. The earlier queued runs `38842464287` and
 `38842467115` are confirmed canceled; the liveness correction superseded them
 before any job started. Focused acceptance does not replace the final production gate.
 
@@ -135,8 +135,8 @@ raw and optimized interpretation and O1/O2 native tracing/ARC. Separate real CLI
 tests cover subcommands, file arguments, stdin, Unicode and exit statuses. CI
 suite `filesystem` includes these tests on all six native targets; Windows full
 acceptance includes them too. [Six-host filesystem run 38845110123](https://github.com/e6qu/fun-with-pipes/actions/runs/38845110123)
-is queued/running at `0bae98f7c9b7c8a67d15d4a5e8aac26ec83da00a`.
-Changed-compiler results are pending.
+passes on all six native hosts at `0bae98f7c9b7c8a67d15d4a5e8aac26ec83da00a`.
+Final production acceptance remains required.
 
 Bounded local checks: both repeated raw fixtures pass using accepted #148 (0.49 s).
 The standalone harnesses compile (0.26 s each); the C cleanup probe passes O1/O2
@@ -149,17 +149,40 @@ cross-platform acceptance. The documentation audit passes (2.42 s).
 
 ## Zip timing investigation
 
-The first Linux reports show derivative requests falling from 23,087,625 to
+All four verified reports show derivative requests falling from 23,087,625 to
 18,892,809 and retains from 10,492,416 to 8,395,264; peak memory stays 840,888 bytes.
 Elapsed enabled/disabled ratios are 0.828/0.825 (tracing/ARC) on AMD64 and
-0.791/0.769 on ARM64. Tiny nested AMD64 tracing is 1.033. These are preliminary
-observations; verify all raw hashes and retain the full four-host report before
-adoption. Do not call reduced allocation equivalent to C/Rust performance.
+0.791/0.769 on ARM64; macOS ARM64 is 0.710/0.793 and Intel 0.784/0.741.
+Tiny nested cases remain mixed. [The report](measurements/zip-maps-2026-10-16.json)
+retains all samples, hardware/flags, compile times, sizes and actual instructions.
+Hash/count retention passes (0.14 s). ARM64 has vector multiply in the direct
+loop; Linux AMD64 has unrolled scalar multiply. Neither proves total instruction
+or spill counts, and these comparisons do not measure C/Rust overhead.
 
 The existing verified-binary CPU/collector repeat script is renamed
 `scripts/repeat-native-comparison.py` so both mapped-array and zip comparisons use
-one implementation. Dispatch `zip-map-repeat` with evidence run `38842840316` only
-after all four original artifacts exist. This does not rebuild the compiler;
+one implementation. [Repeat 38846124783](https://github.com/e6qu/fun-with-pipes/actions/runs/38846124783)
+is queued/running at `60b94e9f`, using evidence run `38842840316`. This does not rebuild the compiler;
 it reuses verified timed binaries and separately instruments normal/off collector
 profiles. Use it to investigate small-workload timing variation and retain all
 slower cases alongside improvements.
+
+## Adjacent unzip failure cleanup
+
+Review found `unzip` left three scratch buffers, duplicated fields and either
+partial output list unprotected during traps. The repair keeps typed owners for
+both result lists until their outer pair exists. Retain order and left-then-right
+list construction stay unchanged. Scalar fields still receive no retain.
+
+The new probe forces failures at both output scratch allocations, both field
+retains (including actual wide-counter overflow), partial left/right lists and
+the outer pair. It also collects during construction and checks empty input.
+Missing field/list/scratch cleanup must fail. Local edited-C checks reproduce the
+old leak (248), pass the repair, and reject the three omissions at O1/O2 in both
+memory modes (8.01 s). These use accepted #148, not a rebuilt compiler.
+
+The expanded `zip-maps` suite now includes `unzip_cleanup`, `zip_ownership`,
+`zip_unwind_ownership` and `list_structure_ownership` alongside prior tests. The
+older scalar-structure fixture matched exact argument lists and needed updating
+for added destructor arguments; it still verifies the first retain arguments are
+NULL. This repair and expanded changed-compiler gate are pending.
