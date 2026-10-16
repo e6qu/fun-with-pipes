@@ -74,6 +74,14 @@ traps. Unproved runtime sharing still uses tracing.
 | Derivative tapes | Scoped owners and a bounded numeric workspace | Raw unscoped tape calls are not checked ARC |
 | External/network state | Explicit resource teardown where modeled | Freeing a C buffer does not prove the lifetime of every referenced fwp value |
 
+Fresh numeric result trees also need ownership before their first reference
+can be released. Native heap allocations already have an empty count slot;
+WASI allocations acquire their external slot when claimed. Native libraries use
+the native allocator even though they do not scan host roots.
+Generated ownership helpers distinguish those cases. An absent external slot is
+not proof that a freshly allocated wide integer is immortal. Physical storage
+checks and a control restoring that mistaken early return cover this boundary.
+
 ## Ownership boundaries
 
 A boundary is a call where ownership crosses between compiled code and a runtime,
