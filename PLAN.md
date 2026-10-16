@@ -83,8 +83,8 @@ sizes on WASI, and extends checked ARC to text reads and replacement writes.
 Maintained todo/grep programs exercise those contracts through functions and
 actual command lines. No new syntax or implicit conversions are introduced.
 
-Focused native and actual-WASI results are recorded in the handoff. The remaining
-Windows cancellation-fixture repair needs its native rerun. Four-host allocation,
+Focused native and actual-WASI results are recorded in the handoff. The Windows
+cancellation-fixture repair now passes on both native architectures. Four-host allocation,
 elapsed-time and CPU comparisons reduce repeated derivative requests by 4,194,304
 and retains by 2,097,152 beyond #149, while peak memory stays unchanged. Tiny nested
 timings remain mixed. These compare fwp variants, not C or Rust.

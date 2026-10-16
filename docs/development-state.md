@@ -6,14 +6,14 @@ merged as `58ed740cc785382b0cd818d4af970a1fa49516e6` after all nine production j
 [docs 38841118993](https://github.com/e6qu/fun-with-pipes/actions/runs/38841118993)
 passed for `5748f7496a8f1db0e93145c53e380a0703affc2f`. Tree equality, parent and the
 one-line subject with empty body were verified. Duplicate post-merge production
-`38851195546` was requested canceled. [History](roadmap-history.md) records the
+`38851195546` was requested canceled; its final status is checked separately. [History](roadmap-history.md) records the
 delivery and remaining limits.
 
 Current delivery branch: `owned-list-text-delivery` in the root worktree, based
 on accepted `58ed740c`. It transfers only preparation changes after `1850f832`
 through `83f62bb7`, preserving #149's final mapped-array CPU report and explanation.
 The preparation worktree `/private/tmp/fwp-zip-map` retains its original branch;
-never replay its parent commits. No second delivery PR is open yet.
+never replay its parent commits. The only open delivery is [PR #150](https://github.com/e6qu/fun-with-pipes/pull/150).
 
 Standing authorization covers fixes, publication and squash merge after all nine
 production jobs plus documentation pass for the exact final head. Commit messages
@@ -23,25 +23,21 @@ full builds, gates and benchmarks run on GitHub. Do not raise resource limits.
 
 ## Next action and unresolved results
 
-Next: finish [Windows repair run 38850334050](https://github.com/e6qu/fun-with-pipes/actions/runs/38850334050)
-at `ed015878`. Earlier combined tests pass all four Unix hosts and both actual
-WASI count jobs. Windows initially exposed CRLF output assertions in older C
-probes. The binary-stdout repair passes those assertions but exposes a later zip
-cancellation access violation. [Diagnostic run 38849794851](https://github.com/e6qu/fun-with-pipes/actions/runs/38849794851)
-at `523a6e07` confirms it occurs in the synthetic cancellation case after ordinary
-callback and allocation-failure cases pass.
+Next: require all nine production jobs plus docs for #150's exact final combined
+head, fix any failures, then squash merge with an explicit one-line subject and
+empty body. Verify the merge tree/message and continue. Focused acceptance below
+does not replace the final gate. Queued CI stops merging, not independent work.
 
-The repair gives synthetic zip/map/selection/fold tasks the correct Windows stack
-scan boundary, following the established loop fixture. Fold also gets binary
-stdout and joins Windows coverage. These are fixture repairs, not changes to
-runtime behavior. Windows ARM64 now passes the repaired suite; AMD64 is still running. Do not
-claim complete native acceptance until both pass. All newly added runtime cleanup tests already pass on both Windows
-hosts. Failing or canceled runs never count as acceptance.
-
-Publish this one combined PR, fix any remaining failures, then require all nine
-production jobs plus docs for its exact final head. Squash merge with an explicit
-subject and empty body, verify the merge tree/message, and continue to the next
-substantial batch. Queued CI stops merging, not independent work.
+[Windows repair run 38850334050](https://github.com/e6qu/fun-with-pipes/actions/runs/38850334050)
+passes on both native Windows architectures at `ed015878`. Combined list checks
+in `38847420495` pass on all four Unix hosts and both actual WASI count jobs.
+Windows first exposed CRLF assertions in older probes, then a cancellation crash.
+[Diagnostic 38849794851](https://github.com/e6qu/fun-with-pipes/actions/runs/38849794851)
+confirmed the synthetic canceled task lacked its Windows stack scan boundary.
+The repair supplies that boundary in zip/map/selection/fold probes, following the
+established loop fixture. Fold also gets binary stdout and joins full Windows
+coverage. These fixture repairs now pass; no earlier failing run is acceptance.
+The combined delivery's source/runtime/tests/workflows match that passing repair.
 
 ## Roadmap status
 
@@ -90,7 +86,7 @@ must fail; lower allocation counts alone do not establish correctness or speed.
 |---|---|
 | Numeric zip/map, six native hosts | [38842838108](https://github.com/e6qu/fun-with-pipes/actions/runs/38842838108), passed at `91146d68` |
 | Text files and maintained programs, six hosts | [38845110123](https://github.com/e6qu/fun-with-pipes/actions/runs/38845110123), passed at `0bae98f7` |
-| Expanded list cleanup and actual WASI counts | [38847420495](https://github.com/e6qu/fun-with-pipes/actions/runs/38847420495), Unix/WASI passed; Windows fixture failures described above |
+| Expanded list cleanup and actual WASI counts | [38847420495](https://github.com/e6qu/fun-with-pipes/actions/runs/38847420495), Unix/WASI passed; Windows fixture repairs pass in `38850334050` |
 | Four-host zip costs | [38842840316](https://github.com/e6qu/fun-with-pipes/actions/runs/38842840316), all passed |
 | Independent verified-binary repeat | [38846124783](https://github.com/e6qu/fun-with-pipes/actions/runs/38846124783), all passed |
 
