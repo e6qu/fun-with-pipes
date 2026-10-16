@@ -176,3 +176,15 @@ operation, matching File cleanup. Actual WASI program tests passed, but the whol
 regression gate remains failed until all controls pass. Neither failure is waived.
 Fresh six-native and WASI validation is required for this repair; the separate
 ARC-library test increment also remains under validation.
+
+The first ARC-library increment `b5429f12` failed on ARM macOS before execution:
+the test used `--sharedlib` instead of the supported `--cdylib`, so no library
+header was emitted. Corrected the probe. This exposed a driver bug: an unknown
+option could be treated as a filename, then silently replaced by a later filename.
+Build now rejects unknown options, unsupported optimization levels, extra inputs
+and missing option values. `compiler_options` checks both option positions and
+absence of unintended output on all six hosts; Windows and macOS production
+selection includes the new target (229 integration targets). No valid build mode
+or runtime policy is replaced. Guarded formatting/schedule checks pass (1.20s/0.13s).
+Next: run the repaired combined UDP/library/CLI focused suite and retain the
+collector-free WASI repair run at `7c3889ac`; then integrate only accepted changes.

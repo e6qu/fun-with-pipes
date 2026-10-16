@@ -15,6 +15,7 @@
     "channel_cycle_ownership",
     "cli",
     "compiler_diagnostics",
+    "compiler_options",
     "constructor_type_ownership",
     "constructor_unwind_ownership",
     "cpu_kernel_ownership",

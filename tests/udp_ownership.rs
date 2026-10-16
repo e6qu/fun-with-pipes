@@ -266,7 +266,7 @@ fn udp_library_unload_closes_retained_handles_and_preserves_host_socket() {
         let cfile = dir.join("library.c");
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .args(["build", "--gc", mode, "--sharedlib", "--emit-c"])
+                .args(["build", "--gc", mode, "--cdylib", "--emit-c"])
                 .arg(&input)
                 .arg("-o")
                 .arg(&cfile),

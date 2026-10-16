@@ -73,7 +73,7 @@ jobs:
         if: inputs.suite == 'udp'
         env:
           FWP_UDP_ARTIFACTS: udp-evidence
-        run: cargo test --no-fail-fast --lib resource::tests && cargo test --no-fail-fast --test udp_ownership --test native_sockets --test arc_tasks --test file_values --test file_inline_path
+        run: cargo test --no-fail-fast --lib resource::tests && cargo test --no-fail-fast --test compiler_options --test udp_ownership --test native_sockets --test arc_tasks --test file_values --test file_inline_path
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'udp'
         with:
@@ -433,7 +433,7 @@ jobs:
         shell: pwsh
         run: ./scripts/setup-windows.ps1
       - run: cargo fmt --all -- --check
-      - run: cargo test --test library_unload -- --nocapture
+      - run: cargo test --test library_unload --test compiler_options -- --nocapture
       - run: cargo test --test udp_ownership udp_library_unload -- --nocapture
   library:
     if: inputs.suite == 'library'
