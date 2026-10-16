@@ -135,6 +135,27 @@ lifetimes and cycles. Unknown calls remain explicit sharing boundaries. The
 [accepted evidence](roadmap-history.md) records platform runs; a skipped test is
 not support for that platform.
 
+## Value decoders
+
+A decoder turns an encoded value into ordinary language data. The current
+preparation gives balanced-ternary conversions, URL/form decoding and HTTP-head
+parsing explicit result owners. It does not yet establish accepted platform
+support; see the [handoff](development-state.md) for actual checks.
+
+Ternary list conversions traverse borrowed inputs directly and build owned
+lists. Packing writes the result bytes directly. Partial lists have cleanup if
+node allocation fails. Counts remain bounded by the available input bytes;
+invalid widths and oversized digit lists retain their existing optional results.
+
+URL decoding protects its temporary byte buffer and completed result fields
+until the outer optional value owns them. HTTP parsing copies names/values into
+owned header pairs and lists, without temporary line-index or value arrays.
+It reads headers from last to first while prepending them, preserving source
+order and the existing single invalid-header error. Parse rejection and allocation
+failure release completed fields and buffers. Input text stays borrowed and
+unchanged. Asynchronous connection lifetimes and retained callbacks remain
+separate work; owning a decoded message does not prove those boundaries safe.
+
 ## Representation and numerics
 
 Use the least costly representation that preserves behavior. A large dynamic

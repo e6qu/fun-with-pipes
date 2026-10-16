@@ -162,6 +162,19 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "url.decode"
+        | "form.decode"
+        | "url.split"
+        | "http.parse-request-head"
+        | "http.parse-response-head" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "http.field-ok" => (&[B, B], R, None, &[]),
+        "http.content-length" => (&[B], R, None, &[]),
+        "int.parse-hex" => (&[B], ResultOwnership::FreshOuter, None, &[]),
+        "trit.from-sign" | "trit.to-int" | "tint.to-int" => (&[B], R, None, &[]),
+        "tint.of-int" | "tint.from-trits" => (&[B], ResultOwnership::FreshOuter, None, &[]),
+        "tint.trits" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "trits.pack" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "trits.unpack" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
         // Bool tags are immortal immediates; these operations allocate nothing.
         "not" => (&[B], R, None, &[]),
         "and" | "or" => (&[B, B], R, None, &[]),

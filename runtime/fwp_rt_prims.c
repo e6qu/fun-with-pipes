@@ -198,6 +198,69 @@ static V fwp_value_finish(fwp_value_owner *owner, fwp_cleanup *cleanup) {
     owner->value = 0;
     return value;
 }
+/* Ternary conversion traverses borrowed input directly. List results own their
+ * completed prefix, so allocation failure releases it without tracing scratch. */
+static V fwp_p_tint_trits(V v, int w, void (*drop_list)(V)) {
+    int64_t x = (int64_t)v;
+    fwp_value_owner owner = {0, drop_list};
+    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);
+    for (int i = 0; i < w; i++) {
+        int64_t r = ((x % 3) + 3) % 3;
+        int64_t digit = r == 2 ? -1 : r;
+        owner.value = fwp_rc_fresh(fwp_cons((V)digit, owner.value));
+        x = (x - digit) / 3;
+    }
+    return fwp_value_finish(&owner, &cleanup);
+}
+
+static V fwp_p_tint_from_trits(V xs, int w) {
+    V source = xs;
+    int count = 0;
+    i128 acc = 0;
+    for (; xs; xs = OBJ(xs)->f[1]) {
+        if (count++ == w) return FWP_NONE;
+        acc = acc * 3 + (int64_t)OBJ(xs)->f[0];
+    }
+    V out;
+    V result = fwp_int_fits(acc, K_TINT, w, &out) ? fwp_some(out) : FWP_NONE;
+    FWP_KEEP_ALIVE(source); return result;
+}
+
+static V fwp_p_tint_of_int(V x, int w) {
+    V out;
+    return fwp_int_fits((int64_t)x, K_TINT, w, &out) ? fwp_some(out) : FWP_NONE;
+}
+
+static V fwp_p_trits_pack(V xs) {
+    V source = xs;
+    size_t n = fwp_list_len(xs), nb = n / 5 + (n % 5 != 0);
+    if (nb > SIZE_MAX - sizeof(fwp_str) - 1) fwp_trap("packed trits too large");
+    fwp_str *result = fwp_alloc_leaf(sizeof(fwp_str) + nb + 1);
+    result->len = nb; result->d[nb] = 0;
+    for (size_t c = 0; c < nb; c++) {
+        uint32_t byte = 0, power = 1;
+        for (size_t k = 0; k < 5 && xs; k++, power *= 3, xs = OBJ(xs)->f[1])
+            byte += (uint32_t)((int64_t)OBJ(xs)->f[0] + 1) * power;
+        result->d[c] = (char)(uint8_t)byte;
+    }
+    FWP_KEEP_ALIVE(source); return PTR(result);
+}
+
+static V fwp_p_trits_unpack(V nv, V bs, void (*drop_list)(V)) {
+    uint64_t n = (int64_t)nv < 0 ? 0 : (uint64_t)nv;
+    /* Compare before multiplying so even a wide byte length cannot overflow. */
+    if (STR(bs)->len <= n / 5) n = STR(bs)->len * 5;
+    static const uint32_t power[5] = {1, 3, 9, 27, 81};
+    fwp_value_owner owner = {0, drop_list};
+    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);
+    for (uint64_t i = n; i > 0; i--) {
+        uint32_t byte = (uint8_t)STR(bs)->d[(i - 1) / 5];
+        V digit = (V)((int64_t)((byte / power[(i - 1) % 5]) % 3) - 1);
+        owner.value = fwp_rc_fresh(fwp_cons(digit, owner.value));
+    }
+    FWP_KEEP_ALIVE(bs); return fwp_value_finish(&owner, &cleanup);
+}
+
 static V fwp_p_fold(V f, V z, V xs) {
     while (xs != 0) { z = fwp_apply2(f, z, OBJ(xs)->f[0]); xs = OBJ(xs)->f[1]; }
     return z;

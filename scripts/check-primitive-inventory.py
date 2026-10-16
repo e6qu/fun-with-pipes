@@ -97,6 +97,18 @@ for symbol in ['prim.zero', 'prim.one']:
 for symbol in ['prim.neg', 'prim.from-int', 'prim.from-float', 'bit.not', 'int.convert', 'float.to-int',
                'float.convert', 'int.to-float', 'sqrt', 'exp', 'ln', 'sin', 'cos', 'tan', 'floor', 'ceil', 'round']:
     bundle_contracts[symbol] = (1, 'Numeric', [])
+for symbol in ['trit.from-sign', 'trit.to-int', 'tint.to-int']:
+    bundle_contracts[symbol] = (1, 'Shared', [])
+for symbol in ['tint.of-int', 'tint.from-trits']:
+    bundle_contracts[symbol] = (1, 'FreshOuter', [])
+bundle_contracts['tint.trits'] = (1, 'OwnedTree', [])
+bundle_contracts['trits.pack'] = (1, 'FreshLeaf', [])
+bundle_contracts['trits.unpack'] = (2, 'OwnedTree', [])
+for symbol in ['url.decode', 'form.decode', 'url.split', 'http.parse-request-head', 'http.parse-response-head']:
+    bundle_contracts[symbol] = (1, 'OwnedTree', [])
+bundle_contracts['http.field-ok'] = (2, 'Shared', [])
+bundle_contracts['http.content-length'] = (1, 'Shared', [])
+bundle_contracts['int.parse-hex'] = (1, 'FreshOuter', [])
 bundle_contracts['abs'] = (1, 'Numeric', [0])
 for symbol in ['prim.add', 'prim.sub', 'prim.mul', 'prim.div', 'prim.rem',
                'wrapping.add', 'wrapping.sub', 'wrapping.mul',

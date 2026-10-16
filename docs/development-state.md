@@ -1,199 +1,80 @@
 # Session handoff
 
-Updated 2026-10-16. [PLAN.md](../PLAN.md) defines completion. None of its seven
-whole work areas is complete. This is the current action list; accepted evidence
-belongs in [delivery history](roadmap-history.md).
+Updated 2026-10-16. This worktree prepares the following ownership batch, not a
+second delivery PR. [PLAN.md](../PLAN.md) retains the seven project work areas.
 
-## Active delivery and next batch
+## Delivery chain
 
-[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is the only open delivery.
-Its final head is `27cdc7ff1b9c59b025159768b11452ab5adbc58c`, in worktree
-`/private/tmp/fwp-wasi-delivery`. Fresh production `38872161681` has all nine jobs running; docs
-`38872161673` passes for that exact head. Previous head `796f5a4c` did not pass acceptance:
-Intel macOS GC exceeded the 90-minute job limit in `38861611494`; the run was
-canceled after that timeout. Six jobs had passed, with both Linux jobs unfinished.
-The repair assigns tests explicitly using measured durations, keeping full
-coverage and existing limits. New tests no longer reshuffle unrelated targets.
-Require all nine jobs and docs for the repaired exact head before squash merge.
-Accepted #150 is `729db67f71386750aad0bbe477f546e5276b0223`; its duplicate
-postmerge production `38860909658` is confirmed canceled.
+PR #151 remains the only open delivery: final `27cdc7ff`, production
+`38872161681`, docs `38872161673` passes. Require all nine production jobs before
+squash merge. Its repaired macOS assignment preserves every target and limit.
+The main workspace `owned-numerics-delivery` is prepared through `3577ba37`:
+borrowed hash fields, direct range arrays, vector ownership, direct F64 storage,
+proved lane pipeline fusion and direct ordered dot. Combined native `38874211385`,
+WASI `38874214456` and four-host costs `38874218523` are queued/running. Preserve
+its full handoff when transferring or merging that batch.
 
-The next combined batch is now in the main workspace
-`/Users/zardoz/projects/fun-with-pipes`, branch `owned-numerics-delivery`, based on
-#151's previous head `796f5a4c`. It combines the prepared hash/range and vector
-ownership changes and the CI repair, with 221 explicit integration targets
-(the repair's 219 plus `range_array` and `vector_ownership`). Once #151 merges, transfer this combined delta onto the verified
-squash commit before opening its PR. Do not replay #151's old commit chain.
-
-Preparation sources remain available for evidence: `borrowed-hash-arguments`
-through `8d692024` in `/private/tmp/fwp-hash-borrows` (delta after `28cc4d0e`), and
-`owned-vector-preparation` through `43947be9` in `/private/tmp/fwp-owned-vectors`
-(delta after `aab2a928`). They are already incorporated here, not separate tasks
-or additional PRs. Review conflicts preserved #151's allocation counter repair,
-accepted history, and the new zero-retain assertions.
-
-Next: merge #151 once its repaired exact-head gates pass. The combined source,
-docs and four-host vector cost evidence are ready for full validation. Rebase only this batch's delta, publish one
-substantial PR, then require fresh full production and documentation acceptance.
+This worktree `/private/tmp/fwp-owned-decoders`, branch `owned-value-decoders`,
+is based on `3577ba37`. Only its later delta belongs to the following batch.
+Do not replay or separately publish the numerical preparation chain.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
 | 1 | In progress | Complete deployment and primitive ownership; remove tracing |
-| 2 | In progress | Deliver borrowed hash fields and direct range arrays |
+| 2 | In progress | Deliver numerical batch, then owned value decoders |
 | 3 | In progress | Measure remaining C/Rust gaps and inspect generated code |
 | 4 | In progress | Reduce derivative recording costs and validate scaling |
 | 5 | In progress | Measure lane kernels and resolve runtime OpenCL compilation |
 | 6 | In progress | Retain comparable, repeated measurements and storage costs |
 | 7 | In progress | Extend maintained programs across deployment boundaries |
 
-## Combined changes
+## Next ownership batch and acceptance
 
-Hash's explicit nonescape proof means its input is used only during the call;
-borrowing alone does not imply this. Existing stack placement removes temporary
-tuple allocations. Ownership lowering borrows temporary structural-tuple fields
-from live owners, including sole-use named fields. It never moves calls, traps or
-resource frames. The independent verifier checks owner liveness after every
-field; retained aliases and later consumption preserve ordinary ownership.
+Remove remaining collector-dependent scratch from value decoders. Begin with
+balanced ternary: trits are digits -1, 0 and +1; lists and packed bytes must have
+explicit owners, including partial-list cleanup. Traverse input lists directly,
+write packed bytes directly, and construct owned result lists without scratch
+arrays. Preserve digit order, width checks, negative counts and end-of-input.
+Then review URL/form and HTTP-head decoders: protect temporary native buffers and
+partially decoded fields on parse and allocation failures. Their current success
+and error paths still create unowned composite results and abandoned scratch.
+This is distinct from asynchronous socket/server ownership, which remains open.
 
-Immediate inline-integer `range | array.from-list` constructs packed storage
-without list nodes. Bounds retain their order; empty/descending ranges remain
-empty. Wide size arithmetic rejects oversized arrays before machine-size
-conversion, including on 32-bit WASI. I128/U128 retain the existing boxed path.
+Before claiming support, require raw/optimized interpreter and native parity,
+tracing stress/reuse verification, checked ARC zero final storage, injected
+partial-construction failures and negative controls. Exercise pure decoders on
+actual WASI where supported. Record allocations and generated code for the
+removed scratch; no speedup claim without comparable repeated measurements.
+Add explicit macOS assignments for new test targets without reshuffling old ones.
+Full builds, suites and evidence run on GitHub. Local checks use the unchanged
+fixed `python3 scripts/local-guard.py` limits. No compiler build is permitted as a
+retry of the earlier guard refusal. Keep one delivery PR, exact-head acceptance
+and one-line <=80-character commits with empty bodies and no attribution.
 
-The nine vector primitives own result wrappers, arrays, boxed integer aliases and
-reduction accumulators. Partial construction and replaced accumulators have
-cleanup on arithmetic/allocation failures. F128 lanes copy inline payload bits
-without retaining temporary scalar boxes. This preserves wrapping integer lane
-operations, checked division, float order and manual-record common-prefix behavior.
-The new lane example introduces notation and optional results before use. Library
-comments/generated docs describe C loops without promising vector instructions.
+## Current progress
 
-## Measured vector optimization in progress
+Direct owned ternary construction and URL/form/HTTP decoding are implemented.
+The latter uses existing typed decoder cleanup for partial fields and scratch;
+HTTP builds its owned header list without line/value scratch arrays. Header order,
+first-line checks and malformed-input messages remain unchanged. The fixture
+retains originals beside parsed values and exercises malformed early/late fields.
+Native failure controls inject every managed allocation until successful completion;
+missing partial-field/list cleanup must fail the charged-storage check.
 
-Extend this still-unpublished combined batch with direct F64 lane access. The
-measured kernels repeat representation checks inside each lane operation and
-sum. Resolve flat-array/view addresses once, use byte copies for valid C aliasing,
-and keep input owners alive. Fresh result arrays can be written directly;
-F64 lanes have no child ownership or language arithmetic traps. Preserve exact
-left-to-right sum order (including singleton negative zero), common-prefix
-lengths and all boxed paths. View/alias, cancellation-sensitive floating values and zero-lane checks were
-added to the existing vector regression target; the accepted interpreter passes
-them under the guard (0.26 s). Acceptance
-requires native/interpreter parity, native/WASI ownership gates, four-host
-allocation/code evidence and paired timings against `38869050349`. No speedup
-is claimed before those results. A further narrow proof recognizes F64 lane arithmetic/sums, integer-to-F64
-conversion, and splats whose declared length fits the array limit even on WASI32.
-This lets eligible pipelines discard intermediate lists; integer lane division
-and oversized splats remain unknown to this proof. Explicit tests preserve
-observable effects and distinguishable first traps. A sole immediate F64 multiply/sum now lowers to a direct ordered dot loop,
-removing the product vector while preserving input order, common-prefix lengths,
-individual product rounding and empty/singleton rules. Retained products keep
-ordinary storage. This requires fresh native/WASI and cost runs. Input splats
-remain measured costs to address. The first direct-storage revision `17742b18` passes both actual WASI jobs
-`38873001719` and the Linux ARM64/Windows ARM64 focused native jobs in
-`38872997832`. Its cost run `38873005668` has both Linux results; macOS remains
-queued. The following fusion revision `252b17bc` uses native `38873505915`, WASI
-`38873509149` and costs `38873512960`. These intermediate runs are superseded
-by the combined direct-dot head; cancel unfinished runs to avoid duplicate
-runner work and retain any completed evidence. They do not establish full
-acceptance of direct dot. Fresh six-native, two-WASI and four-cost runs are next.
+Both fixtures are included in actual WASI checks. Accepted-interpreter checks
+pass under the guard: ternary 0.26 s and text 0.25 s. The text fixture initially
+used the runtime symbol `int.parse-hex`; it now uses the declared library name
+`http.parse-hex`. Formatting passes (1.30 s), and inventory passes (1.07 s): 287
+contracted declarations and 56 distinct symbols still under review. Its frozen
+baseline is unchanged. These are preparation checks, not native acceptance.
 
-Four fusion semantic cases pass the accepted interpreter under the guard
-(0.63 s), including I64 overflow before the consumer's division error. The
-extended rounding/alias fixture also passes (0.26 s). Formatting passes (1.08 s),
-and the inventory audit passes (1.21 s) against its unchanged frozen baseline.
-The paired runner requires an explicit hash/vector workload and verifies matching
-reference sources as well as fwp source/binary/assembly identities. Its renamed
-`scripts/repeat-revision-comparison.py` preserves hash comparison and adds vector
-profiles; a full paired run is still required.
-
-
-## Completed focused checks and measurements
-
-Hash/range compiler revision `ac72124c` passes native `38864599295` on all six
-hosts and actual WASI `38864602220` on both Linux hosts. Four-host costs
-`38864604854` pass. All source/binary/assembly hashes were verified. The
-[borrowed-field report](measurements/hash-borrowed-fields-2026-10-16.json) shows
-two managed requests, zero retains and zero final charged storage for both
-workloads on all four hosts. Small/large peak charged bytes are 144/32,776.
-The inspected ARM64 loop uses a stack tuple and register-held state, with no
-allocation or count calls. This is not a dynamic spill/cache measurement.
-
-Two four-host paired runs, `38866837452` and `38867789225`, compare those binaries
-against post-fusion baseline `38856285939`. Both pass; their identities agree.
-The [paired report](measurements/hash-borrowed-cpu-2026-10-16.json) retains slower
-samples and remaining C/Rust overhead. First-run small ARM macOS and large Intel
-macOS ARC regressions did not repeat. Small Linux and Intel macOS CPU medians fall
-in both runs; large-input changes are generally small. No universal speedup or
-parity claim follows from fewer objects/counts. [Benchmarks](benchmarks.md) explain
-inputs, timing, ratios, managed/system memory scopes and remaining differences.
-
-Vector runtime revision `637b3eb2` passes native `38867603162` on all six hosts
-and actual WASI `38867607803` on both Linux hosts. These include all fifteen
-numeric formats, aliases, empty/singleton results, invalid lengths, array views,
-wide precision/wrapping, and injected partial-construction/accumulator failures.
-Missing-free controls fail as intended. Follow-up `6be8f245` adds the introductory
-example, manual-record compatibility case, generated-code capture and the
-runner-only C/Rust lane comparison; it does not change the runtime. The extended
-fixture and example pass the accepted #148 interpreter (0.25/0.26 s). Their
-changed-compiler execution still needs the combined production gate.
-
-Lane costs `38869050349` at `6be8f245` pass all four hosts. The retained
-[vector report](measurements/vector-lanes-2026-10-16.json) verifies every source,
-binary and assembly hash (guarded 0.20 s). All modes/hosts use 262,147 / 65,539
-managed requests for four/sixty-four lanes, zero retains and zero final charged
-storage. Linux ARM64 checked ARC takes 11.200 / 3.647 times C's CPU time.
-C/Rust stack arrays allocate no application heap storage. These scopes exclude
-startup/printing allocation internals differently; benchmarks explain that limit.
-
-Actual code shows three vector constructions per mapped input, materialized
-range/result lists and scalar F64 multiply with per-element representation
-handling. The C reference uses register calculations and vector instructions.
-The next optimization should target these measured costs: prove eligible lane
-pipeline fusion without moving effects/traps, remove temporary vectors/constant
-weights where safe, and expose contiguous array data to the C optimizer. Preserve
-manual-record lengths, boxed ownership and checked division. This baseline is
-not a measurement of speedup from adding ownership contracts.
-
-## Local verification and resolved failures
-
-The hash allocation counter originally missed `fwp_alloc_init`; both fast and
-nonduplicated slow paths are now counted, including #151's fix. The strict
-zero-retain control caught remaining named array aliases; `ac72124c` repaired
-only their sole, pure hash use. Range fixture signatures were made explicit.
-No assertion was weakened. Earlier failed/superseded focused runs are historical
-evidence, not remaining actions. The intermediate stack/range reports remain
-linked from benchmarks so the final changes can be traced.
-
-Vector formatting passed (1.11 s), docs passed (2.81 s), and the inventory audit
-passed (1.11 s): 271 contracted declarations, 72 remaining distinct review
-symbols. Its frozen baseline was unchanged. Combined formatting (1.29 s), docs (3.00 s)
-and inventory (1.30 s) pass. Compiler/runtime/test/workflow sources matched the
-prepared `43947be9` tree before the final library-comment clarification. Source-
-generated library docs pass after regeneration (1.27 s); the final documentation
-audit passes (2.80 s). No changed compiler was built locally. The earlier
-local diagnostic compilation stopped with an OS signal error; no process remained
-and limits were not raised. Do not restart that refused workload.
-
-The CI repair is incorporated here with 221 explicit targets. Guarded
-`python3 scripts/test-macos-test-shards.py` passes (0.30 s);
-`python3 scripts/check-roadmap.py` passes (2.82 s). The measured balance projects
-about 85.45 minutes per Intel job, which is an estimate, not acceptance. Existing
-assignments match #151; only the two new targets were added.
-
-## Delivery rules and remaining direction
-
-Standing authorization covers fixes, publication and squash merge after every
-exact-head gate passes. Every commit is one line, at most 80 characters, with
-empty body and no trailers or attribution. Verify merged tree, parent and exact
-message before canceling duplicate postmerge production. Skipped focused jobs
-are not acceptance. Keep one delivery PR open at a time.
-
-Use `python3 scripts/local-guard.py` for serial bounded local checks. Full builds,
-suites, benchmarks and large regeneration run on GitHub. Browser/service re-entry,
-retained host callbacks, remaining numerical/network contracts, derivative scaling
-and broader applications remain open. JIT is excluded; OpenCL's existing runtime
-compilation is an implementation gap to resolve, not an exception. Default
-tracing remains; this batch does not complete any whole roadmap area.
+Explicit macOS assignments add `ternary_ownership` to regular and
+`text_decoder_ownership` to GC; previous targets do not move. The `decoders`
+focused workflow covers all six native hosts, with full Windows inclusion and
+actual WASI fixtures. Local generated-library documentation passes (1.20 s) and the explicit target
+assignment tests pass (0.25 s). The first docs audit caught a missing required
+roadmap-status section in this preparation handoff; that section is restored.
+Next: publish the preparation and run six-native plus two-WASI gates. Fix all failures and retain
+actual allocation/code evidence before the later delivery is marked ready.

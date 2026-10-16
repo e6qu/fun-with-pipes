@@ -2710,10 +2710,6 @@ tensor.grad : TensorExpr[n] -> List[Vector[F64, n]]
 
 `lib/ternary.fwp`
 
-Balanced ternary: trits (-1, 0, +1), fixed-width balanced ternary
-integers TInt[N] (literals like 0t+-0, checked arithmetic), and dense
-packing of trits, five per byte.
-
 Balanced ternary is base three with digits -1, 0 and +1, called trits.
 TInt[N] has N trits; 0t+-0 means 1*9 - 1*3 + 0 = 6. Arithmetic checks its
 fixed-width range. Packing five trits into a byte is an encoding operation,

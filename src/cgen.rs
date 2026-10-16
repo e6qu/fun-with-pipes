@@ -5490,6 +5490,27 @@ impl<'p> Gen<'p> {
             }
             return Ok("return fwp_p_simd_dot_f64(l1, l0);".into());
         }
+        if matches!(
+            sym,
+            "url.decode"
+                | "form.decode"
+                | "url.split"
+                | "http.parse-request-head"
+                | "http.parse-response-head"
+        ) {
+            let descriptor = self.desc(&result);
+            let call = match sym {
+                "url.decode" => format!("fwp_p_url_decode(l0, 0, {descriptor})"),
+                "form.decode" => format!("fwp_p_url_decode(l0, 1, {descriptor})"),
+                "url.split" => format!("fwp_p_url_split(l0, {descriptor})"),
+                "http.parse-request-head" => format!("fwp_p_parse_request_head(l0, {descriptor})"),
+                "http.parse-response-head" => {
+                    format!("fwp_p_parse_response_head(l0, {descriptor})")
+                }
+                _ => unreachable!(),
+            };
+            return Ok(format!("return {call};"));
+        }
         if sym == "array._range" {
             let MT::Con(name, elements) = &result else {
                 return Err("direct range array result has no element type".into());
@@ -5702,13 +5723,19 @@ impl<'p> Gen<'p> {
             }
             "trit.to-int" | "tint.to-int" => "return l0;".into(),
             "tint.of-int" => format!("return fwp_p_tint_of_int(l0, {});", nk(&elem(&result, 0)).2),
-            "tint.trits" => format!("return fwp_p_tint_trits(l0, {});", nk(&p(0)).2),
+            "tint.trits" => {
+                let drop_list = self.value_drop(&result);
+                format!("return fwp_p_tint_trits(l0, {}, {drop_list});", nk(&p(0)).2)
+            },
             "tint.from-trits" => format!(
                 "return fwp_p_tint_from_trits(l0, {});",
                 nk(&elem(&result, 0)).2
             ),
             "trits.pack" => "return fwp_p_trits_pack(l0);".into(),
-            "trits.unpack" => "return fwp_p_trits_unpack(l0, l1);".into(),
+            "trits.unpack" => {
+                let drop_list = self.value_drop(&result);
+                format!("return fwp_p_trits_unpack(l0, l1, {drop_list});")
+            },
             "env.vars" => {
                 let drop_pair = self.value_drop(&elem(&result, 0));
                 let drop_list = self.value_drop(&result);
@@ -6250,11 +6277,6 @@ impl<'p> Gen<'p> {
                     ("string.split-once", "fwp_p_split_once(l0, l1)"),
                     ("bytes.find", "fwp_p_bytes_find(l0, l1)"),
                     ("url.encode", "fwp_p_url_encode(l0)"),
-                    ("url.decode", "fwp_p_url_decode(l0, 0)"),
-                    ("form.decode", "fwp_p_url_decode(l0, 1)"),
-                    ("url.split", "fwp_p_url_split(l0)"),
-                    ("http.parse-request-head", "fwp_p_parse_request_head(l0)"),
-                    ("http.parse-response-head", "fwp_p_parse_response_head(l0)"),
                     ("http.field-ok", "fwp_p_field_ok(l0, l1)"),
                     ("http.content-length", "fwp_p_content_length(l0)"),
                     ("prim.trap", "fwp_p_trap(l0)"),
