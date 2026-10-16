@@ -146,6 +146,29 @@ Focused semantic and cleanup checks pass on all six native hosts. The handoff
 records final delivery acceptance; [benchmarks](benchmarks.md#building-numeric-arrays-without-temporary-list-nodes)
 records the measured gains and limits.
 
+### Numeric pairs immediately mapped
+
+`xs | zip ys` pairs each `x` with the corresponding `y`, stopping when either
+list ends. `map f` then calls `f` on each pair. The next candidate combines these
+steps for known callbacks and inline numeric inputs: existing `zip-with`
+ownership handles the output, while a specialized callback can receive the two
+numbers directly. This avoids temporary pairs and their list nodes. Result
+values and their output list still need storage when they escape.
+
+Both input lists are evaluated in the original order, followed by callbacks in
+pair order. The transformation cannot move past an earlier call, trap or resource
+region. Managed inputs stay on their existing path because changing their last
+owner could change resource behavior. Existing fold and numeric-array consumers
+get their optimization first; this later transformation must not reintroduce
+list results they already eliminated. `FWP_ZIP_MAP=0` disables only this candidate
+for controlled comparisons. The handoff distinguishes its focused checks from
+full native acceptance.
+
+Ordinary zip also protects its temporary buffers, completed pairs and each field
+whose reference has already been duplicated. If a later retain fails, those
+owners unwind without losing the borrowed input or leaking a partial result.
+This cleanup applies independently of numeric pair elimination.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C

@@ -689,22 +689,31 @@ static V fwp_p_zip(V ys, V xs) {
 }
 
 /* Duplicate only statically reference-bearing fields, never scalar bits. */
-static V fwp_p_zip_owned(V ys, V xs, void (*dup_x)(V), void (*dup_y)(V)) {
+static V fwp_p_zip_owned(V ys, V xs, void (*dup_x)(V), void (*dup_y)(V),
+        void (*drop_x)(V), void (*drop_y)(V), void (*drop_pair)(V), void (*drop_list)(V)) {
     size_t n, m;
     V *a = fwp_map_items(xs, &n);
+    fwp_map_owner owner = {a, 0, 0, drop_pair, drop_list};
+    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);
     V *b = fwp_map_items(ys, &m);
+    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&b, &scratch_cleanup);
     size_t k = n < m ? n : m;
     for (size_t i = 0; i < k; i++) {
         if (dup_x) dup_x(a[i]);
+        fwp_value_owner left = {a[i], drop_x}; fwp_cleanup left_cleanup;
+        fwp_value_protect(&left, &left_cleanup);
         if (dup_y) dup_y(b[i]);
-        a[i] = fwp_rc_fresh(fwp_tuple2(a[i], b[i]));
+        fwp_value_owner right = {b[i], drop_y}; fwp_cleanup right_cleanup;
+        fwp_value_protect(&right, &right_cleanup);
+        a[i] = fwp_rc_fresh(fwp_tuple2(left.value, right.value));
+        owner.count++;
+        (void)fwp_value_finish(&right, &right_cleanup);
+        (void)fwp_value_finish(&left, &left_cleanup);
     }
-    V result = fwp_map_finish(a, k);
-    FWP_KEEP_ALIVE(b);
-    fwp_mem_free(b);
+    fwp_scratch_finish(&b, &scratch_cleanup);
     FWP_KEEP_ALIVE(xs);
     FWP_KEEP_ALIVE(ys);
-    return result;
+    return fwp_map_finish_protected(&owner, &cleanup);
 }
 
 /* data-last: the subject's element is the last argument (f y x) */

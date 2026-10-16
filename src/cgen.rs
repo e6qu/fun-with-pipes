@@ -7289,6 +7289,12 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                         "NULL".into()
                                     }
                                 }));
+                                if sym == "zip" {
+                                    args.extend(fields.iter().map(|ty| self.value_drop(ty)));
+                                    let result = func.ty.params(func.arity as usize).1;
+                                    args.push(self.value_drop(&element(result)?));
+                                    args.push(self.value_drop(result));
+                                }
                                 if sym == "list.transpose" {
                                     args.push(self.value_drop(&fields[0]));
                                     args.push(self.value_drop(&element(&func.locals[0])?));
