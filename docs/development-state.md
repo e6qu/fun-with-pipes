@@ -1,5 +1,10 @@
 # Session handoff
 
+This worktree is **unfinished UDP-handle preparation**, branch `owned-udp-lifetimes`
+in `/private/tmp/fwp-owned-udp`, based on `4d9ecadd`. The prepared delivery remains
+`owned-values-delivery`; do not include this delta until its acceptance checks pass.
+The earlier delivery/CI state below remains relevant.
+
 Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
 This file holds the next action and current evidence; old preparation branches
 are evidence, not a second backlog. Keep one open delivery PR at a time.
@@ -190,3 +195,28 @@ interpretation both print `rebound` (0.26s/0.25s under the guard). This establis
 the reference result, not native ownership support. Native lifetime/alias/capture,
 allocation-failure and long-running descriptor-count controls remain to implement
 for that next slice after this delivery.
+
+UDP acceptance before implementation: preserve all existing capturing and aliasing
+semantics; match raw/optimized interpreter and native results, including scope-end
+rebind; own descriptor storage and partial receive tuples; close on last owner and
+on constructor failure; retain handles through suspended I/O; explicit close affects
+all aliases. Verify closure/record/task holders, checked ARC with no tracing symbols,
+stress/reuse, disabled physical frees, library unload and repeated descriptor counts.
+No new surface syntax or capture prohibition. Partial implementation is not support.
+
+The first full UDP fixture reproduces an existing lifetime bug: the accepted raw
+interpreter prints `holder released`, but optimized interpretation retains the
+closure's socket and fails to bind its address again. The earlier scalar-address
+probe did not expose this. Preserve raw scope-end behavior in both engines.
+The fixture also covers a retained holder, explicit close through aliases, a UDP
+round trip, cancelled task captures and repeated creation. Its task constructor
+uses explicit prefix application because a function on the left of `|` denotes
+composition. New compiler/native tests are not yet run.
+
+Guarded preparation checks: `cargo fmt --all` passed (1.07s), accepted-compiler
+fixture formatting passed (0.01s), macOS schedule tests passed (0.13s), documentation
+audit passed (2.81s), and the primitive inventory passed (0.95s: 306 contracted
+declarations, 37 distinct symbols still under review). Native resource semantics
+and compiler unit tests require the six-host `udp` evidence workflow; constructor
+failure, exhaustive receive failures, unload and descriptor-ledger controls remain
+unfinished. This is a preparation commit, not completed support.

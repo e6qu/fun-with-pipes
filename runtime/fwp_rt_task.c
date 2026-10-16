@@ -1404,7 +1404,7 @@ static V fwp_p_channel_close(V ch) {
 
 /* kind: 0 listener, 1 conn, 2 udp; tls: a listener's TLS context, a
  * connection's TLS session (fwp_rt_tls.c), or 0 */
-typedef struct { fwp_socket_t fd; int kind; void *tls; } fwp_sock;
+typedef struct { fwp_socket_t fd; int kind; void *tls; uint64_t refs; } fwp_sock;
 
 #ifdef FWP_TLS
 /* TLS sessions (fwp_rt_tls.c, embedded in programs that use TLS): like
@@ -1475,7 +1475,6 @@ static int fwp_wait_fd(fwp_socket_t fd, int write, int64_t at) {
 }
 
 
-#ifdef FWP_LIBRARY
 /* Implicit teardown must not send close_notify or alter host SIGPIPE policy. */
 static void fwp_sock_final(void *p) {
     fwp_sock *s = (fwp_sock *)p;
@@ -1488,20 +1487,54 @@ static void fwp_sock_final(void *p) {
 #endif
     if (s->fd != FWP_INVALID_SOCKET) { fwp_socket_close(s->fd); s->fd = FWP_INVALID_SOCKET; }
 }
-#endif
 
 static V fwp_sock_new(fwp_socket_t fd, int kind) {
-    fwp_sock *s = (fwp_sock *)fwp_mem_alloc(sizeof(fwp_sock));
+    fwp_sock *s = kind == 2 ? (fwp_sock *)fwp_alloc_leaf(sizeof(fwp_sock))
+                            : (fwp_sock *)fwp_mem_alloc(sizeof(fwp_sock));
     s->fd = fd;
     s->kind = kind;
     s->tls = 0;
-#ifdef FWP_LIBRARY
+    s->refs = kind == 2 ? 1 : 0;
+#if defined(FWP_LIBRARY)
     fwp_gc_finalizer(s, fwp_sock_final);
+#elif !defined(FWP_ARC_ONLY)
+    if (kind == 2) fwp_gc_finalizer(s, fwp_sock_final);
 #endif
-    return PTR(s);
+    return kind == 2 ? fwp_rc_fresh(PTR(s)) : PTR(s);
 }
 
 #define SOCK(v) ((fwp_sock *)(uintptr_t)(v))
+
+/* Value owners are independent of conservative allocator sharing. Explicit
+ * close changes the shared descriptor; the final owner also closes it. */
+static void fwp_udp_dup(V value) {
+    if (!value) return;
+    fwp_sock *s = SOCK(value);
+    if (!s->refs) fwp_trap("internal: duplicate discarded UDP socket");
+    if (s->refs == UINT64_MAX) fwp_trap("reference count overflow");
+    s->refs++;
+}
+static void fwp_udp_drop(V value) {
+    if (!value) return;
+    fwp_sock *s = SOCK(value);
+    if (!s->refs || --s->refs) return;
+    if (s->fd != FWP_INVALID_SOCKET) fwp_fd_closing(s->fd);
+    fwp_sock_final(s);
+    fwp_gc_forget_finalizer(s);
+#ifndef FWP_RESOURCE_NO_FREE
+    if (!fwp_rc_last(value)) return;
+    if (fwp_reuse_verify < 0) {
+        const char *e = getenv("FWP_REUSE_VERIFY");
+        fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
+    }
+    /* This leaf has a socket layout, not a String header. Its zero owners and
+     * invalid descriptor already expose a later accidental use. */
+    if (fwp_reuse_verify) return;
+    intptr_t before = fwp_gc.budget;
+    fwp_mem_free(s);
+    fwp_gc.freed += (double)(fwp_gc.budget - before);
+#endif
+}
 
 /* split "host:port" (host may be bracketed IPv6); the host must not be
  * empty and the port is a decimal number up to 65535, as in the
@@ -1840,7 +1873,13 @@ static V fwp_p_udp_bind(V addr, const fwp_desc *err) {
         int error = errno; fwp_socket_close(fd); errno = error;
         return fwp_os_error("bind", STR(addr)->d, err);
     }
-    return fwp_sock_new(fd, 2);
+    fwp_connect_owner owner = {fd, NULL};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_connect_finish, &owner);
+    V result = fwp_sock_new(fd, 2);
+    owner.fd = FWP_INVALID_SOCKET;
+    fwp_cleanup_pop(&cleanup);
+    FWP_KEEP_ALIVE(addr);
+    return result;
 }
 
 static V fwp_p_udp_send_to(V addr, V data, V s, const fwp_desc *err) {
@@ -1863,34 +1902,6 @@ static V fwp_p_udp_send_to(V addr, V data, V s, const fwp_desc *err) {
     return FWP_UNIT;
 }
 
-static V fwp_p_udp_recv_from(V nv, V s, const fwp_desc *err) {
-    int64_t n = (int64_t)nv;
-    if (n < 1) n = 1;
-    char *buf = (char *)malloc((size_t)n);
-    if (!buf) fwp_trap("socket receive allocation failed");
-    fwp_cleanup buffer_cleanup;
-    fwp_cleanup_push(&buffer_cleanup, free, buf);
-    for (;;) {
-        fwp_socket_t fd = SOCK(s)->fd;
-        if (fd == FWP_INVALID_SOCKET) { fwp_cleanup_pop(&buffer_cleanup); free(buf); return fwp_closed_error("socket", err); }
-        struct sockaddr_storage ss;
-        socklen_t len = sizeof ss;
-        ssize_t k = fwp_socket_recvfrom(fd, buf, (size_t)n, 0, (struct sockaddr *)&ss, &len);
-        if (k >= 0) {
-            char a[128];
-            fwp_fmt_addr((struct sockaddr *)&ss, a, sizeof a);
-            V r = fwp_tuple2(fwp_str_new(buf, (size_t)k), fwp_cstr(a));
-            fwp_cleanup_pop(&buffer_cleanup); free(buf);
-            return r;
-        }
-        if (fwp_socket_again(errno)) {
-            fwp_wait_fd(fd, 0, 0);
-            continue;
-        }
-        fwp_cleanup_pop(&buffer_cleanup); free(buf);
-        return fwp_os_error("receive", 0, err);
-    }
-}
 
 
 #endif /* !FWP_FIBERS */

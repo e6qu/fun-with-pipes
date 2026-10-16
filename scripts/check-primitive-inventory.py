@@ -87,6 +87,11 @@ leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.he
 assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
 # These reviewed contract changes are checked against the frozen baseline.
 bundle_contracts = {}
+bundle_contracts['udp.bind'] = (1, 'OwnedResource', [])
+bundle_contracts['udp.local-addr'] = (1, 'FreshLeaf', [])
+bundle_contracts['udp.send-to'] = (3, 'Shared', [])
+bundle_contracts['udp.recv-from'] = (2, 'OwnedTree', [])
+bundle_contracts['udp.close'] = (1, 'Shared', [])
 bundle_contracts['dns.resolve'] = (1, 'OwnedTree', [])
 bundle_contracts['device.run'] = (5, 'FreshLeaf', [])
 bundle_contracts['device.sum'] = (5, 'Shared', [])

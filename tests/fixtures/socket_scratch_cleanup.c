@@ -1,3 +1,6 @@
+static const fwp_desc socket_leaf_type={.kind=K_STR,.drop=fwp_rc_free_obj};
+static const fwp_desc *const socket_tuple_fields[]={&socket_leaf_type,&socket_leaf_type};
+static const fwp_desc socket_tuple_type={.kind=K_RECORD,.n=2,.fields=socket_tuple_fields};
 static jmp_buf socket_jump;
 static int socket_recover(void) { return 1; }
 int main(void) {
@@ -11,7 +14,7 @@ int main(void) {
             fwp_trap_cleanup=fwp_cleanups; socket_inject=1;
             if(!setjmp(socket_jump)) {
                 if(operation==0) (void)fwp_tcp_read(64,PTR(&handle),0,NULL);
-                else if(operation==1) (void)fwp_p_udp_recv_from(64,PTR(&handle),NULL);
+                else if(operation==1) (void)fwp_p_udp_recv_from(64,PTR(&handle),NULL,&socket_tuple_type);
                 else (void)fwp_p_udp_send_to(address,data,PTR(&handle),NULL);
                 return 247;
             }
