@@ -80,4 +80,25 @@ compiler resolves 25 native sites covering 43 requests; totals and peak/final
 memory match the existing instrumentation (1.82 s). This is a focused mechanism
 check, not a full benchmark or changed-compiler acceptance. Full compiler builds
 and workload profiles run only on GitHub. The local script/output are under
-`/private/tmp/fwp-ad-site-check*`. Publication and four-host results remain pending.
+`/private/tmp/fwp-ad-site-check*`. All four hosts pass in run `38832271631` at `507ec27`. The retained report
+`docs/measurements/ad-allocation-sites-2026-10-16.json` verifies all source/binary
+hashes and aggregate counts (guarded retention check: 0.13 s). The benchmark
+guide explains the observed costs. Bundle this diagnostic and report into the
+process delivery before opening its PR; it needs no separate acceptance cycle.
+
+## Selected next optimization
+
+The profile attributes 41.65% of requests to mapped list nodes. Prepare direct
+construction for `map f | array.from-list` when the output is an inline numeric
+type. Preserve callback/input evaluation order, complete callbacks before packing
+the array, and retain existing behavior for boxed or managed element types. This
+is an internal compiler transformation, with no new surface primitive or syntax.
+The callback and input remain borrowed; numeric scratch and the result have
+explicit owners. This initial scope avoids changing boxed-value cleanup timing.
+
+Acceptance must compare raw/optimized interpretation and native tracing/ARC at
+O1/O2, including aliasing inputs, effects, checked failures, empty lists, numeric
+widths and negative cleanup controls. CI must measure allocations and repeated
+timings against the same compiler with this transformation disabled, including
+the derivative workload. Do not infer speed from allocation reduction. No
+implementation or support claim has been made yet.
