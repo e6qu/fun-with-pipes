@@ -143,3 +143,15 @@ revision preserves them as inline generated loops using the existing typed
 callback ownership entry, and adds real dynamic/captured callback cases. Unknown
 callbacks retain ordinary dynamic calls. Final semantics and timing must rerun
 for this change. Formatting passes; raw callback fixtures pass under the guard.
+
+The pre-direct candidate run `38835108890` exposed two new fixture mistakes:
+`transform` needed `export`, and ARC forbids the retention-based reuse verifier.
+The fixtures now export the function and enable reuse verification in tracing
+while ARC still checks final cleanup/counts. Windows also exposed a CRLF mismatch
+in the older scalar-array probe; its stdout now uses binary mode without changing
+the expected bytes. Callback/final-allocation cleanup and its negative control
+passed the completed hosts. The fixed count probe passes the accepted compiler
+locally (0.87 s); the unfused semantic fixture cases pass raw/native tracing/ARC
+O1/O2 (15.16 s). These validate fixtures, not the new optimization. Cancel the
+superseded direct-call test run `38836047263` and replace it at this test repair;
+its independent runtime-identical cost run `38836050029` remains valid.

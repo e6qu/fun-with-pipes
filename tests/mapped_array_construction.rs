@@ -112,7 +112,7 @@ main = [
                     let actual = Command::new(&binary)
                         .env("FWP_GC_STRESS", verify)
                         .env("FWP_GC_VERIFY", verify)
-                        .env("FWP_REUSE_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", verify)
                         .output()
                         .unwrap();
                     assert_eq!(
@@ -182,7 +182,7 @@ fn numeric_materialization_removes_list_nodes_without_retaining_inputs() {
     let input = dir.join("main.fwp");
     std::fs::write(
         &input,
-        "transform : List[F64] -> Array[F64]\ntransform = map (mul 2.0) | array.from-list\n",
+        "export transform : List[F64] -> Array[F64]\ntransform = map (mul 2.0) | array.from-list\n",
     )
     .unwrap();
     for gc in ["tracing", "arc"] {
