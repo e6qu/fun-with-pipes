@@ -13,15 +13,15 @@ Do not merge until every final-head gate passes. Use one squash subject, at most
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
 Base: `ac3060d1`. Runtime callback source: `24caa70b`; combined repairs and explicit-exit
-follow-up: `6b642a82`. Do not open another PR. After #153 acceptance, rebase
+follow-up: `6b642a82`; decoding cleanup and CI scheduling: `4656043f`. Do not open another PR. After #153 acceptance, rebase
 only this branch's delta after `ac3060d1` onto its accepted squash.
 
-Next: require all six native jobs in `38949852186` and focused actual WASI ARC
-run `38949856424`, both at `6b642a82`. This combines the harness/Windows path
-repairs with explicit exit. Queued `38949318919` was superseded. Broader actual
-WASI/browser run `38947985548` passes on both Linux architectures at callback
-source `24caa70b`; it predates explicit-exit tests. Earlier queued native/WASI jobs
-`38946737398`/`38945989400` were canceled as superseded. Retain final allocation,
+Next: require all six native jobs in `38951742782` at `4656043f`, combining the
+context, callback, exit and message-decoding checks. Queued `38949852186` was
+superseded before execution. Focused actual WASI ARC run `38949856424` at
+`6b642a82` checks explicit exit. Broader WASI/browser run `38947985548` passes on
+both Linux architectures at callback source `24caa70b`, before exit tests.
+Retain final allocation,
 layout, compiler/CPU and binary evidence before claiming verified support.
 Do not broaden ARC admission beyond the tested ownership contracts.
 
@@ -159,7 +159,9 @@ six Mac coverage/runner tests (1.10s), and documentation audit (2.67s) pass.
 Artifact download (16.32s), evidence retention (8.18s), and existing binary
 inspection (0.13s each) passed under the guard. No local native build was used.
 
-Service streams/connections, remote results and GPU ownership remain; the exit
+The ownership guide now records concrete next checks for remote stream caches,
+shared connections, early stop, detached users and cycles. These are requirements,
+not an implemented ownership policy. Service streams/connections, remote results and GPU ownership remain; the exit
 follow-up still needs its checks. Preserve the existing effect rule in `docs/design.md`: only the final
 arrow of a binding may have effects, so partial application does not perform
 work. The function-and-string tuple in the ownership fixture tests returned

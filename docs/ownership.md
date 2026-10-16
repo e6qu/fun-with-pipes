@@ -765,3 +765,26 @@ bytes when construction of the returned value traps. Tests cover successful and
 malformed messages, tagged error results and deliberate omission of cleanup.
 This repair remains under CI verification; service streams and remote result
 caches still need separate lifetime contracts.
+
+### What remains before remote calls can use ARC
+
+A lazy stream receives an element only when the program asks for it. fwp caches
+that element so asking through another reference to the same position does not
+receive a second message. The cache can hold both a value and the next stream
+position. Owning the copied result alone therefore does not settle the lifetime
+of the stream, its connection or the task receiving messages.
+
+The next service-memory work must establish these facts before removing its
+current collector requirement:
+
+| Work | Evidence required |
+|---|---|
+| Measure repeated calls and stream consumption | Count live connection, stream, message and cached-value storage for 1, 32 and 128 elements, including full consumption, early stop and retained earlier positions. Separate reusable connection-pool storage from per-call growth. |
+| Own each cached result | Repeated reads return the same value without receiving again. Releasing one iterator preserves other references; releasing the last reference releases its cached value and continuation. Partially constructed results release on failure. |
+| Keep connections and requests alive for their users | Sending, receiving and detached tasks remain valid after their creating scope returns. Completion, failure and cancellation release each acquired owner exactly once. |
+| Prevent ownership cycles | Identify which component owns each task, stream and connection. A pointer back to an owner must not silently become another owning reference. Any shared cycle needs an explicit policy and a test that drops every external reference. |
+| Admit supported remote calls without tracing | Compare interpreter/native values, errors and receive order; run stress and deliberate missing-cleanup controls; inspect actual binaries and repeat calls with collection disabled. |
+
+These are acceptance requirements, not implemented stream ownership. Keep the
+ordinary immutable iterator behavior and existing syntax while proving them.
+HTTP/2 server operations and GPU resource ownership also remain separate work.
