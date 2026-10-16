@@ -12,14 +12,14 @@ Do not merge until every final-head gate passes. Use one squash subject, at most
 ## Current action
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
-Base: `ac3060d1`. Runtime/test source: `24caa70b`; later documentation/evidence
-commits do not change it. Do not open another PR. After #153 acceptance, rebase
+Base: `ac3060d1`. Runtime callback source: `24caa70b`; combined repairs and explicit-exit
+follow-up: `6b642a82`. Do not open another PR. After #153 acceptance, rebase
 only this branch's delta after `ac3060d1` onto its accepted squash.
 
-Next: require all six native jobs in replacement run `38949318919` at
-`c9b17d41`. It repairs the harness and Windows path failures in `38947981439`,
-which is canceled as superseded. Actual
-WASI/browser run `38947985548` tests runtime source `24caa70b`. Earlier queued native/WASI jobs
+Next: require all six native jobs in `38949852186` and focused actual WASI ARC
+run `38949856424`, both at `6b642a82`. This combines the harness/Windows path
+repairs with explicit exit. Queued `38949318919` was superseded. Broader actual
+WASI/browser run `38947985548` covers callback/runtime source `24caa70b`. Earlier queued native/WASI jobs
 `38946737398`/`38945989400` were canceled as superseded. Retain final allocation,
 layout, compiler/CPU and binary evidence before claiming verified support.
 Do not broaden ARC admission beyond the tested ownership contracts.
@@ -47,7 +47,9 @@ promoted, giving 346 contract declarations and eight remaining reviews. The
 frozen inventory baseline is unchanged. Runtime verification is still pending.
 
 `service_scope_ownership` compares raw/optimized interpretation with native
-O1/O2 tracing/ARC execution, including caller aliases and returned functions.
+O1/O2 tracing/ARC execution, including caller aliases and returned functions. A later fixture extension
+adds actual typed callback failures whose string payloads must survive scope
+cleanup; its final-head production check is still required.
 It checks final charged storage with collection off, deliberate missing-borrow
 and partial-cleanup controls, and 13/14 captured-result allocation failure points.
 ARC binaries must exclude tracing functions. Scope support does not establish
@@ -71,7 +73,7 @@ repository paths with forward slashes; the contract assertions are unchanged.
 
 ## Explicit exit follow-up
 
-Prepared after `c9b17d41`, not yet native-verified: `exit` has the nonreturning
+Published in `6b642a82`, not yet native-verified: `exit` has the nonreturning
 ownership contract. It borrows its I32 status, produces no result and needs no
 collector. Runtime exit behavior is unchanged: output before exit is preserved,
 later steps do not run, and the process status uses the low eight bits. It does
@@ -82,7 +84,9 @@ The proposed inventory becomes 347 contracts/seven remaining reviews.
 and ARC, actual ARC WASI execution when the required toolchain is configured,
 and native ARC binaries without tracing symbols. It covers zero, 1, 255, 256,
 -1 and both I32 endpoints, using one compiled program per mode/optimization.
-It has permanent Windows/Mac coverage, making 233 preparation targets. Do not
+All seven cases pass in both accepted-interpreter modes (2.42s). Formatting
+(1.34s) and the documentation audit (2.75s) pass. The tests have permanent
+Windows/Mac coverage, making 233 preparation targets. Do not
 claim actual WASI support from a native-only job that does not run that check.
 
 ## Retained evidence and limits
@@ -122,7 +126,8 @@ Use `python3 scripts/local-guard.py` with unchanged limits; native compilation
 and full tests belong on CI. Earlier automatic review refused local compiler
 and standalone C builds; do not bypass or repeat those requests.
 
-The accepted interpreter runs all seven 32-call examples raw and optimized
+The accepted interpreter also runs the typed-failure example (0.25s), producing
+the four expected error strings. The accepted interpreter runs all seven 32-call examples raw and optimized
 (2.28s) and the new alias/returned-function example (0.26s). Formatting (1.30s),
 six Mac coverage/runner tests (1.10s), and documentation audit (2.67s) pass.
 Artifact download (16.32s), evidence retention (8.18s), and existing binary

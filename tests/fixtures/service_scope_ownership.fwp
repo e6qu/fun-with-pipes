@@ -16,6 +16,10 @@ capture = const | grpc.with-response-metadata
 # apply () to the first tuple field, calling the function with unit.
 defer : String -> (() -> String, String) ! {Network}
 defer = both const id | const | grpc.with-gzip
+# A typed failure leaves the scope through attempt's error handler. Its string
+# must survive that transfer while the scope's header storage is released.
+fail-scoped : String -> String ! {Network, Error[String]}
+fail-scoped = const | flip compose fail | grpc.with-metadata [("X-Failure", "active")]
 main = [
     range 0 16 | map (show | both id keep-gzip) | echo,
     "deadline" | both keep-deadline id | echo,
@@ -23,5 +27,6 @@ main = [
     "secure" | both keep-tls id | echo,
     "capture" | both capture id | echo,
     "later" | defer | first (apply ()) | echo,
+    range 0 4 | map (show | attempt fail-scoped) | echo,
     "nested" | keep-gzip | keep-metadata | keep-deadline | keep-tls | capture | echo,
 ] | ignore
