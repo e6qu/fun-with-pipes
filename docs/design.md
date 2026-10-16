@@ -309,6 +309,16 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
+A function that only forwards a callback's tuple can keep its existing storage.
+A callback is a function supplied by the caller; its concrete target may be
+unknown during compilation. Such calls return a boxed tuple. Unpacking that
+tuple into separate C fields and immediately boxing it again adds an allocation
+without changing the value. The prepared compiler change avoids this conversion
+when every return path forwards a callback result, including through local names
+or branches. Functions that build records or make known direct calls retain their
+existing choices. Alias, failure-cleanup and allocation checks must pass before
+acceptance; the [handoff](development-state.md) records current evidence.
+
 A closure contains a function and its already supplied arguments. Generated
 calls retain/release captured values according to their types. Shared top-level
 computed values have cached owners, released during teardown. A type descriptor

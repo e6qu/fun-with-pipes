@@ -770,9 +770,9 @@ impl Gen<'_> {
 /// C ABI determines register classes and caller-provided result storage.
 const MAX_UNBOXED: usize = 8;
 
-/// Most fields of a record returned as a struct whatever its tails: a
-/// wider one only when every tail builds it, so that a record a function
-/// passes on is not read into a struct and built again.
+/// Most record fields returned as a struct without requiring construction on
+/// every return path. Already-boxed dynamic call results stay boxed at any width.
+/// Wider records use structs only when every return path builds one.
 const MAX_ANY_RET: usize = 4;
 
 /// How a function's worker (`w<id>`) takes and returns records, for
@@ -856,7 +856,7 @@ fn mentions(ft: &MT, t: &MT) -> bool {
         }
 }
 
-/// Whether every result is built here or comes from a qualifying worker.
+/// Whether every result comes from an expression accepted by `builds`.
 /// Typed local bindings retain ownership context without hiding those origins.
 /// Caller-provided values have no entry in `known` and remain boxed.
 fn built_return(

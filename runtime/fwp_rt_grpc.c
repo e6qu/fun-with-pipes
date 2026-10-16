@@ -2255,11 +2255,19 @@ static int g_reflect(g_job *j, char **msg) {
             *msg = g.text;
             return GRPC_INVALID_ARGUMENT;
         }
+        fwp_cleanup reflection_request;
+        fwp_cleanup_push(&reflection_request, g_got_release, &g);
         h2_buf out = {0};
+        fwp_cleanup reflection_buffer;
+        fwp_cleanup_push(&reflection_buffer, g_h2_buffer_release, &out);
         g_reflection_response(j->srv, g.m->d, g.m->n, &out);
         free(g.m);
+        g.m = 0;
         g_send_msg(j->c, j->s, out.d, out.len, 0);
+        fwp_cleanup_pop(&reflection_buffer);
         h2b_free(&out);
+        fwp_cleanup_pop(&reflection_request);
+        g_got_release(&g);
     }
 }
 

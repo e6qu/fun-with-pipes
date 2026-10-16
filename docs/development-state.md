@@ -7,17 +7,18 @@ open delivery PR is #153. Do not open a second PR before it is accepted.
 ## Current action
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
-Base: `ac3060d1`. Published code: `2dbf9b64ef40a0c90f5ce061308d0d787f948afd`.
+Base: `ac3060d1`. Published code: `8684127d` (forwarding fixture repair and sender cleanup).
 The compiler change is `79ce442f`; `cb0ffeea` corrects its native test setup.
 
-Next: publish the corrected forwarding fixture and dispatch `context-owners`.
+Next: require all six jobs in `38958562126` at `8684127d`, and fix any failures.
 Run `38956983459` at `cb0ffeea` failed on Apple Silicon because the fixture looked
 for a generated Pair destructor that was not needed by its program. Its service
 allocation measurement passed. The correction supplies a real tuple consumer
 and tests its generated release, preserving alias, trap and extra-allocation
 controls. Focused CI now runs this test before the longer measurements and
 uploads its generated C on failure. Require all six native jobs on the repair.
-Actual WebAssembly run `38955989639` checks the unchanged compiler optimization.
+Actual WebAssembly run `38955989639` passes on both Linux architectures for the
+unchanged compiler optimization at `79ce442f`.
 Retain its allocation comparison against the passing `975806e9` report before
 claiming the saving across supported hosts.
 After #153 acceptance, rebase only this branch's changes after `ac3060d1` onto
@@ -110,14 +111,21 @@ a deliberately reintroduced result-box allocation must fail its count. The
 fixture enables real task unwind support and initializes the scheduler before
 counting result allocations. Existing
 record-worker and conversion controls run with it. Do not claim the one-allocation
-result until `38956983459` passes, or WebAssembly support until `38955989639` passes.
+result until `38958562126` passes, or WebAssembly support until `38955989639` passes.
 
 Sender cleanup at `2dbf9b64` registers a channel sender's encoded buffer before
 encoding and sending. It releases on success, encoding traps and cancellation
 while the send waits for connection space. The existing response test now covers
 all three paths and requires deliberately omitted sender cleanup to fail. This
-repair is not part of `38956983459`; Linux run `38957908016` checks it first.
-Final combined CI must verify all platforms.
+repair passes its Linux AMD64 regression in `38957908016`; that overall run
+failed only the now-repaired forwarding fixture. Current `38958562126` includes
+the sender fix on all six hosts. Final combined CI must still pass.
+
+The same cleanup now protects service-reflection requests and encoded responses.
+Reflection lets tools ask which methods a server provides. The test covers normal
+completion, encoding traps and blocked-send cancellation, including separate
+deliberately missing request/response cleanup. This later change needs its new
+Linux check and final combined native CI; it is not part of `38958562126`.
 
 The shared `scripts/run-native-tests.py` also adds explicit `--all` selection for
 Linux. It retains every Cargo target and stress case, with two executable workers
@@ -136,6 +144,12 @@ Pass `--capture-requests 1` for the forwarding change (`2` for its older baselin
 the helper validates both requested bytes and allocation counts against that target.
 It checks jobs, counts, layouts, inventory and capture controls. New source needs
 new binary observations; do not reuse instruction addresses from an older binary.
+Exploratory binary inspection of failed run `38956983459` is retained under
+`/private/tmp/fwp-context-forward-inspection/38956983459/linux-arm64/`. Its actual
+ARM64 forwarding function returns the callback result directly in `x0`; the old
+24-byte reallocation is absent and its frame falls from 192 to 144 bytes. These
+are observations of that instrumented binary, not acceptance or a speed claim.
+Repeat inspection against the passing replacement before retaining the report.
 The next PR description draft is `/private/tmp/fwp-context-pr-body.md`.
 
 Use `python3 scripts/local-guard.py COMMAND...` with unchanged limits. Full builds,
