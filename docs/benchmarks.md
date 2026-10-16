@@ -830,12 +830,32 @@ All four hosts and both modes agree on the allocation profiles:
 Requests count managed objects, not necessarily system allocations. Profiles
 exclude initial constants and disable collection to verify counted cleanup;
 final charged memory and derivative tape storage are zero. Fewer requests do
-not reduce derivative peak memory here. Tiny nested timings remain mixed; a
-verified-binary repeat checks child CPU time and normal-collector activity before
-dismissing these slower cases.
+not reduce derivative peak memory here. Tiny nested timings remain mixed.
 
 Actual Linux ARM64 disassembly contains vector `fmul` inside the direct product
 loop. Linux AMD64 uses unrolled scalar `mulsd`. Known callbacks inline into that
 loop. The report retains selected generated and machine-code bodies; these are
 not total dynamic instruction counts or evidence about register spills. Full
 platform acceptance is tracked separately in the handoff.
+
+[A separate repeat](measurements/zip-map-cpu-2026-10-16.json) reuses the verified
+binaries, taking sixteen alternating samples of elapsed and child CPU time
+(user plus system CPU). It rebuilds allocation profiles separately with the
+normal collector and collection disabled. The normal traced direct workload
+collects twice in both variants on every host; other profiles collect zero times.
+All allocation, retain, peak and final-storage measurements match the original
+profiles. The repeated CPU ratios are:
+
+| Host | Direct tracing / ARC | Derivative tracing / ARC | Nested tracing / ARC |
+|---|---:|---:|---:|
+| Linux AMD64 | 0.631 / 0.616 | 0.822 / 0.817 | 0.960 / 1.001 |
+| Linux ARM64 | 0.628 / 0.596 | 0.799 / 0.789 | 0.985 / 0.978 |
+| macOS ARM64 | 0.655 / 0.591 | 0.804 / 0.813 | 0.989 / 1.017 |
+| macOS AMD64 | 0.544 / 0.519 | 0.810 / 0.788 | 0.987 / 0.944 |
+
+The macOS ARM64 nested ARC case remains slightly slower: median CPU increases
+from 1.5805 to 1.6075 ms, and elapsed time from 2.2604 to 2.3205 ms. CPU samples
+overlap (disabled 1.456–2.220 ms, enabled 1.463–2.322 ms). This test has little
+eligible work, and the repeat does not establish a benefit there. Adoption rests
+on substantial direct/derivative workloads and reduced ownership traffic; it
+does not promise a speedup for every program.

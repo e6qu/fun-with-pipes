@@ -33,8 +33,8 @@ without raising its limits. Full builds, suites and timings run on GitHub.
 | 6 | In progress | Retain repeated timings, CPU time and normal-collector profiles |
 | 7 | In progress | Validate maintained todo/grep functions and command lines under ARC |
 
-Next: validate the adjacent unzip cleanup repair and expanded structural-list
-suite on all six hosts; finish the verified-binary CPU/collector repeat below.
+Next: validate the related list-construction cleanup repairs on all six hosts
+and the large chunk-size regression on actual WASI; inspect any failures.
 Continue monitoring #149, merge it only after exact-head acceptance, then
 transfer this batch for the next substantial PR. Queued CI does not block fixes
 or independent preparation.
@@ -162,10 +162,17 @@ or spill counts, and these comparisons do not measure C/Rust overhead.
 The existing verified-binary CPU/collector repeat script is renamed
 `scripts/repeat-native-comparison.py` so both mapped-array and zip comparisons use
 one implementation. [Repeat 38846124783](https://github.com/e6qu/fun-with-pipes/actions/runs/38846124783)
-is queued/running at `60b94e9f`, using evidence run `38842840316`. This does not rebuild the compiler;
+passes on all four hosts at `60b94e9f`, using evidence run `38842840316`. This does not rebuild the compiler;
 it reuses verified timed binaries and separately instruments normal/off collector
 profiles. Use it to investigate small-workload timing variation and retain all
-slower cases alongside improvements.
+slower cases alongside improvements. [Retained repeat evidence](measurements/zip-map-cpu-2026-10-16.json)
+verifies hashes and all sixteen sample pairs (0.26 s). The first retention check
+incorrectly expected zero collections in normal traced direct work; the actual
+reports show two collections in both variants on every host. Other profiles have
+zero collections; all final storage is zero, and all non-collection counts match.
+Direct and derivative CPU ratios improve on all hosts. Tiny macOS ARM64 nested
+ARC remains 1.017 CPU / 1.027 elapsed, with overlapping 1.46–2.32 ms CPU samples;
+retain this limitation rather than asserting universal improvement.
 
 ## Adjacent unzip failure cleanup
 
@@ -185,4 +192,34 @@ The expanded `zip-maps` suite now includes `unzip_cleanup`, `zip_ownership`,
 `zip_unwind_ownership` and `list_structure_ownership` alongside prior tests. The
 older scalar-structure fixture matched exact argument lists and needed updating
 for added destructor arguments; it still verifies the first retain arguments are
-NULL. This repair and expanded changed-compiler gate are pending.
+NULL. [Expanded zip/unzip run 38846340365](https://github.com/e6qu/fun-with-pipes/actions/runs/38846340365)
+is running at `ad9481220ddf2f86ec385bf037768c69d2ee6dc9`. Its changes precede the
+additional repairs below.
+
+## Related list-construction failures
+
+The same audit found unprotected pending references/partial lists in `repeat`
+and `chunks`, and unprotected state results/scratch in `scan` and `iterate`.
+Their existing typed owner records now protect the whole construction. Preserve
+the old retain/callback order and returned earlier states. No new runtime
+abstraction or language syntax is needed. Code generation supplies concrete
+element/list destructors; scalar tests still require NULL retain arguments.
+
+An additional `chunks` bug narrowed a positive I64 chunk size directly to
+32-bit `size_t`, so 4,294,967,296 became zero on WASI. Both owned and ordinary
+implementations now use the existing checked count conversion and division-based
+ceiling. The actual-WASI test expects one chunk for a three-element list with
+that size at O1/O2 and with ownership optimization on/off.
+
+The local edited-C probe independently reproduces all four old leaks (248 for
+repeat/chunks, 249 for scan/iterate), passes the repairs and rejects five missing
+cleanup controls. It covers retain/callback failures, both scratch allocations,
+pending elements and partial output nodes, with real collection at O1/O2 in both
+memory modes (11.11 s). The standalone Rust harness compiles (0.38 s); formatting
+passes (0.99 s). These are supplemental accepted-compiler probes.
+
+The next `zip-maps` dispatch includes these new controls, existing structural,
+generation and state-sequence semantic tests on six native hosts, and a separate
+required WASI count job on each Linux architecture. Full final-head production
+acceptance still follows focused results. Do not mistake the earlier narrower
+run for validation of these newest repairs.

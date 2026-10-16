@@ -174,6 +174,13 @@ both partial lists stay owned until the outer result pair exists. A failure whil
 building the right list must also release the completed left list. Typed cleanup
 preserves numeric bits without treating them as pointers.
 
+Other list builders use the same owner records for pending elements and partial
+results. `repeat` and `chunks` keep each duplicated field protected until its
+node exists. `scan` and `iterate` keep earlier states alive while a callback
+borrows the current state. Traps release completed states and temporary buffers.
+These rules preserve callback and retain order; the handoff records acceptance
+of the latest failure-cleanup repairs.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C

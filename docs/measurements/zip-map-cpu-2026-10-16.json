@@ -1,0 +1,4231 @@
+{
+  "run": 38846124783,
+  "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38846124783",
+  "interpretation": "Verified binaries from the numeric zip/map comparison; 16 alternating whole-process elapsed and child user+system CPU samples after warmup. Separately rebuilt normal/off collector profiles match the original allocation/retain/peak/final counts exactly. Normal traced direct work collects twice with either variant on every host; other profiles collect zero times. Final managed/tape storage is zero. Direct and derivative CPU time improves on all four hosts; tiny macOS ARM64 nested ARC remains slightly slower. Tiny nested cases remain mixed; no portable per-program speedup or C/Rust parity claim.",
+  "reports": {
+    "ubuntu-latest": {
+      "head": "60b94e9ffb228b407ddc6b23fb1ce4f2c539a7ba",
+      "emittedHead": "91146d684d723d835474e2a893a8adbe23004996",
+      "evidenceRun": "38842840316",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervm8k3b6",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.27\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "results": {
+        "direct": {
+          "source": "work : List[F64] -> List[F64]\nwork = both id (map (add 1.0)) | uncurry zip | map (uncurry mul)\nmain = range 0 128 | map (const (range 0 4096 | map int.to-float)) | map work | map sum | sum | echo\n",
+          "expected": "2932030832640.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "3002459a5a5f0e52b51f90a544ab344ae3844a926f5965ef14f9bf4380c59c4a",
+                  "binarySha256": "759044715b50cd193559cb1c2d66968c2cfb60e2bf8228d4089da056bfc83586",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 2
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    48067298,
+                    47848275,
+                    48963095,
+                    53065864,
+                    53960910,
+                    48537830,
+                    48896266,
+                    51691252,
+                    48303130,
+                    48220999,
+                    48101889,
+                    47922380,
+                    56243031,
+                    47950542,
+                    47935589,
+                    47529813
+                  ],
+                  "cpuNs": [
+                    47721000,
+                    47531000,
+                    48653000,
+                    52524000,
+                    53640000,
+                    48210000,
+                    48559000,
+                    51379000,
+                    47982000,
+                    47911000,
+                    47749000,
+                    47619000,
+                    55914000,
+                    47623000,
+                    47584000,
+                    47205000
+                  ],
+                  "medianWallNs": 48262064.5,
+                  "medianCpuNs": 47946500.0,
+                  "profileSourceSha256": "a52ec5875f79c87a99741284278d9d1113e3d70e14f894c270d2ab812bb5d28f",
+                  "profileBinarySha256": "3cde609c35e7d7af476e515fd2c40a0d548a661b4ba769b33fd9f5b068578e68"
+                },
+                "1": {
+                  "generatedSha256": "fd15fb82c26c859c586921e19ea06dd865dc4a868b01cd00f8838fe27ecb3a75",
+                  "binarySha256": "365496d446fbff1e21bfd9ab42ee14cf98f752050a4585749601c03e5d739fdc",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 2
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    31071726,
+                    29651919,
+                    29979024,
+                    31036775,
+                    36189357,
+                    30593999,
+                    30386183,
+                    29725602,
+                    30487972,
+                    30941520,
+                    36637510,
+                    29961779,
+                    30580323,
+                    34583826,
+                    38152934,
+                    30281860
+                  ],
+                  "cpuNs": [
+                    30756000,
+                    29317000,
+                    29693000,
+                    30691000,
+                    35881000,
+                    30288000,
+                    30068000,
+                    29428000,
+                    30135000,
+                    30639000,
+                    36317000,
+                    29660000,
+                    30225000,
+                    34268000,
+                    37837000,
+                    29955000
+                  ],
+                  "medianWallNs": 30587161.0,
+                  "medianCpuNs": 30256500.0,
+                  "profileSourceSha256": "1a3138e169ae0ecaa3cc915f3f3f7af18593e9772292ef92b99b09710ade771f",
+                  "profileBinarySha256": "114d576a3c0bcbf69ed7bb031a7125d0775100c94e6146123cc8079032bac22c"
+                }
+              },
+              "enabledOverDisabledWall": 0.6337723285749618,
+              "enabledOverDisabledCpu": 0.6310471045853191
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f59f265742750d747b86561e52c0a5a783801c041535d4a90922cd615b9d8e70",
+                  "binarySha256": "614022fd17f44a2fe25ff1b3b0573b929215d479e00dde0aabee8f5c77bf1d4d",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    39116892,
+                    38922145,
+                    39340420,
+                    38861395,
+                    48185006,
+                    38830190,
+                    46229891,
+                    38925030,
+                    39168618,
+                    38870689,
+                    45999433,
+                    38874946,
+                    40090493,
+                    39367550,
+                    39322854,
+                    39055862
+                  ],
+                  "cpuNs": [
+                    38797000,
+                    38598000,
+                    38991000,
+                    38545000,
+                    47875000,
+                    38408000,
+                    45857000,
+                    38598000,
+                    38870000,
+                    38538000,
+                    45687000,
+                    38514000,
+                    39759000,
+                    39056000,
+                    39011000,
+                    38756000
+                  ],
+                  "medianWallNs": 39142755.0,
+                  "medianCpuNs": 38833500.0,
+                  "profileSourceSha256": "39783ed1b8b3bc75bf06634a1436087cc86704b751cf103ccf64f976d383c774",
+                  "profileBinarySha256": "168bfb7fb934ae9d32ce018479d2e96b416ecbc4dce853a7c8571a913ea7d07d"
+                },
+                "1": {
+                  "generatedSha256": "c554796288b51b165bb3c13bf720d27b076d340fa66f8081f02074a43678650b",
+                  "binarySha256": "83e4e4503d2b98afe547bd519e75a0e75936033410d871b53782aa22340aa4c7",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    31101835,
+                    23453749,
+                    26623966,
+                    28867259,
+                    24522360,
+                    23663277,
+                    29794002,
+                    23927486,
+                    31398712,
+                    23822932,
+                    23964540,
+                    23840799,
+                    23842500,
+                    24001404,
+                    29354015,
+                    24572554
+                  ],
+                  "cpuNs": [
+                    30785000,
+                    23149000,
+                    26310000,
+                    28549000,
+                    24198000,
+                    23337000,
+                    29493000,
+                    23592000,
+                    31070000,
+                    23527000,
+                    23633000,
+                    23545000,
+                    23507000,
+                    23675000,
+                    29025000,
+                    24256000
+                  ],
+                  "medianWallNs": 24261882.0,
+                  "medianCpuNs": 23936500.0,
+                  "profileSourceSha256": "6c0edf0ce784af4fd25eb714a345fb6469a7962ea8b1d1feffaa9bc53c6e2e09",
+                  "profileBinarySha256": "f783d3ce4e9231bedd452bfe964700aa1f41ee0093b242104263db9d63117cc5"
+                }
+              },
+              "enabledOverDisabledWall": 0.6198307196312575,
+              "enabledOverDisabledCpu": 0.6163879124982297
+            }
+          }
+        },
+        "derivative": {
+          "source": "main = range 0 512 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "expected": "4194304.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f72a36ed61040175876a0681461f10bd4571a83b89406f53325d0ea4a724a130",
+                  "binarySha256": "c0cd78735f5de6ad98765be31aba3a53dd664ff025f4a23c27faedb4426e78f2",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    558097361,
+                    551604652,
+                    557369144,
+                    562596993,
+                    554951223,
+                    558114087,
+                    550088443,
+                    549325911,
+                    560644036,
+                    547131459,
+                    555066864,
+                    556355284,
+                    547452331,
+                    548164657,
+                    554137036,
+                    560832094
+                  ],
+                  "cpuNs": [
+                    557712000,
+                    551170000,
+                    556985000,
+                    562229000,
+                    554587000,
+                    557522000,
+                    549694000,
+                    548953000,
+                    560258000,
+                    546760000,
+                    554686000,
+                    555955000,
+                    547093000,
+                    547781000,
+                    553644000,
+                    560438000
+                  ],
+                  "medianWallNs": 555009043.5,
+                  "medianCpuNs": 554636500.0,
+                  "profileSourceSha256": "3c9e8e419a463e26bba9c5d4598fa7219681ebda1e680497fb9c6ba3c530fa25",
+                  "profileBinarySha256": "9de57af1c54b83375223a2551b81d3cce1f14fa4388e2116b41149f5241ec5ee"
+                },
+                "1": {
+                  "generatedSha256": "e13fea0265b2c4acbb37b368c6bb44ce2f02d09e237740cda75abf9f010b8473",
+                  "binarySha256": "8ecc91b37b4a98b5a7ecc0a30ef62147c5e9ea052f842675c09d06439e2c0300",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    456904297,
+                    463464018,
+                    452603878,
+                    463638515,
+                    456563736,
+                    468589977,
+                    451879764,
+                    456576125,
+                    456391048,
+                    453711733,
+                    460685970,
+                    456029261,
+                    451780322,
+                    454758523,
+                    451555129,
+                    452072690
+                  ],
+                  "cpuNs": [
+                    456037000,
+                    463017000,
+                    452130000,
+                    463272000,
+                    456223000,
+                    468194000,
+                    451525000,
+                    456168000,
+                    455999000,
+                    453358000,
+                    460343000,
+                    455634000,
+                    451391000,
+                    454390000,
+                    451192000,
+                    451700000
+                  ],
+                  "medianWallNs": 456210154.5,
+                  "medianCpuNs": 455816500.0,
+                  "profileSourceSha256": "63c1f63be5acdd7ba0b0709c9edeff10289d18c12a62d8b86a1121b01429cd1c",
+                  "profileBinarySha256": "76300b9d7690b3fc15f542c938dd1f504fca7cdc85cdc42a0f6eef555c1ea7a6"
+                }
+              },
+              "enabledOverDisabledWall": 0.8219868844353344,
+              "enabledOverDisabledCpu": 0.8218292521318017
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f0be640586338e216e943ef00b1f0091afcec340385aad3844ccf61f86c986e8",
+                  "binarySha256": "362ce94ecfa9b129433b3a94827aceebebc885ae94bc8a76684d1d72c60610a3",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    551126167,
+                    552389055,
+                    561754705,
+                    570402943,
+                    563998866,
+                    553727520,
+                    569951639,
+                    552518803,
+                    556696517,
+                    561727573,
+                    560587986,
+                    559167606,
+                    562327132,
+                    555554134,
+                    572570235,
+                    561644969
+                  ],
+                  "cpuNs": [
+                    550752000,
+                    552025000,
+                    561334000,
+                    569378000,
+                    563642000,
+                    553350000,
+                    569526000,
+                    552115000,
+                    556250000,
+                    561396000,
+                    560236000,
+                    558847000,
+                    561940000,
+                    555123000,
+                    572203000,
+                    561285000
+                  ],
+                  "medianWallNs": 561116477.5,
+                  "medianCpuNs": 560760500.0,
+                  "profileSourceSha256": "0996036e78ef01c3a3b43ca2c56b9ef4c561305a4a835a53cd9b71ba926feedd",
+                  "profileBinarySha256": "ef41e850ece54c5207cc26484d43182ff326508557e8e5615dbbfd5ad150ba01"
+                },
+                "1": {
+                  "generatedSha256": "d9842aace96fbfe51cf82c8c0479931654cd368f514f12eeceeb2e4a36cc3c01",
+                  "binarySha256": "785805474b23bd5c36fd0bb35e4d4da34b9a1e1b2c775261b060bc8592c23bb1",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    478347818,
+                    474162452,
+                    457431758,
+                    458049247,
+                    456045430,
+                    468424033,
+                    456282778,
+                    457196031,
+                    473728273,
+                    456191104,
+                    472129816,
+                    455134726,
+                    454746395,
+                    458882977,
+                    487777527,
+                    466760112
+                  ],
+                  "cpuNs": [
+                    477797000,
+                    473680000,
+                    457075000,
+                    457697000,
+                    455666000,
+                    467993000,
+                    455874000,
+                    456748000,
+                    472889000,
+                    455820000,
+                    471741000,
+                    454749000,
+                    454319000,
+                    458480000,
+                    487379000,
+                    466374000
+                  ],
+                  "medianWallNs": 458466112.0,
+                  "medianCpuNs": 458088500.0,
+                  "profileSourceSha256": "ca6a8e555cd82581bb7db4d0bed76752a65b9d3a71e7c22b71a0be1ba4dc03f4",
+                  "profileBinarySha256": "eed4c78de769cbb796dab78b87df8bcf4ff6034504b28b6a2279a8d5831253ed"
+                }
+              },
+              "enabledOverDisabledWall": 0.8170605041624357,
+              "enabledOverDisabledCpu": 0.8169057913315935
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "expected": "2.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "5b7513c958ef75e4c2ad913414996dffd5c54229c0676be07913301e09bb54c5",
+                  "binarySha256": "ef175c1280878933d04aa13ceb66de9417d1a44acdfab8df8893287c6e804bb8",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1419964,
+                    1298170,
+                    1382813,
+                    1413418,
+                    1336346,
+                    1177251,
+                    1651499,
+                    1913655,
+                    1198563,
+                    1668925,
+                    1124674,
+                    1426207,
+                    1178253,
+                    1305219,
+                    1366535,
+                    1117484
+                  ],
+                  "cpuNs": [
+                    1178000,
+                    1091000,
+                    1123000,
+                    1136000,
+                    1137000,
+                    963000,
+                    1020000,
+                    1241000,
+                    1004000,
+                    1248000,
+                    940000,
+                    1194000,
+                    1016000,
+                    1054000,
+                    1155000,
+                    937000
+                  ],
+                  "medianWallNs": 1351440.5,
+                  "medianCpuNs": 1107000.0,
+                  "profileSourceSha256": "4fb6579fc88a912d3977479f34a4d81df79a202de7b25ec83b70b41115fdb12f",
+                  "profileBinarySha256": "950ddf1c92e003d7bce9de62f6d0cef9d4760d2b9fd7b0553cff3d52cfc228a7"
+                },
+                "1": {
+                  "generatedSha256": "e87a569684283a4a928b2466812f11054b8dc41901e86983ddaeae01213ceadf",
+                  "binarySha256": "b964aa9f2a6bbe0b0556063841989812a51c6ad22fb63c2effb82474a85ad591",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1242167,
+                    1305425,
+                    1460117,
+                    1679250,
+                    2217031,
+                    1227275,
+                    1177912,
+                    1423624,
+                    1239833,
+                    1354061,
+                    1362533,
+                    1261535,
+                    1319530,
+                    1227175,
+                    1210726,
+                    1420880
+                  ],
+                  "cpuNs": [
+                    995000,
+                    1075000,
+                    1210000,
+                    1050000,
+                    1334000,
+                    1045000,
+                    971000,
+                    1061000,
+                    984000,
+                    1075000,
+                    1185000,
+                    1065000,
+                    1075000,
+                    1048000,
+                    1031000,
+                    1236000
+                  ],
+                  "medianWallNs": 1312477.5,
+                  "medianCpuNs": 1063000.0,
+                  "profileSourceSha256": "eb4711108f58c7bdf2cf2bce02ddc523f53d101e3ccd52c6d834d372469c9acf",
+                  "profileBinarySha256": "c66e3e9408076bccfe087906265d0cd90669c17621572e75e33d40a7570e3c26"
+                }
+              },
+              "enabledOverDisabledWall": 0.971169281962469,
+              "enabledOverDisabledCpu": 0.960252935862692
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "97ec73c4420bcaff43b280359ab301f05cba66eb4492b2101f599e48e0b333ab",
+                  "binarySha256": "cee91743a11ad1cb4b68bce2e2f61a4bced6bcabb14d81f798ae7568292946c9",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1561351,
+                    1401255,
+                    1612927,
+                    1215584,
+                    1435832,
+                    1447279,
+                    1289677,
+                    1241014,
+                    1345859,
+                    1739147,
+                    1196109,
+                    1199925,
+                    1715122,
+                    1420464,
+                    1191958,
+                    1274769
+                  ],
+                  "cpuNs": [
+                    1316000,
+                    1187000,
+                    1064000,
+                    1023000,
+                    1127000,
+                    1182000,
+                    1118000,
+                    1050000,
+                    1070000,
+                    1090000,
+                    1008000,
+                    985000,
+                    1346000,
+                    1182000,
+                    1002000,
+                    1062000
+                  ],
+                  "medianWallNs": 1373557.0,
+                  "medianCpuNs": 1080000.0,
+                  "profileSourceSha256": "53e4282205ae024c651b1c81e99fbc49231d01336558becd6db992af5127b902",
+                  "profileBinarySha256": "15d2496e616068c2647c13a32e0b20b279afa07c5106074d950c55ab5e327cec"
+                },
+                "1": {
+                  "generatedSha256": "c86803ee86f2b0478cf39659114d9a1cab27436b3cb636cff7618fdaa2ebf5d0",
+                  "binarySha256": "16d5e4dbe5ec7267d5141ddaf0932d92b6cddc514d39f66af2dd38c300b373c7",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1786408,
+                    1462591,
+                    1321333,
+                    1287719,
+                    1396333,
+                    1424475,
+                    1237720,
+                    1837183,
+                    1443834,
+                    1324878,
+                    1554457,
+                    1441941,
+                    1241181,
+                    1339916,
+                    1372389,
+                    1174357
+                  ],
+                  "cpuNs": [
+                    1077000,
+                    1230000,
+                    1136000,
+                    1056000,
+                    1075000,
+                    1108000,
+                    1079000,
+                    1060000,
+                    1164000,
+                    1084000,
+                    1257000,
+                    1138000,
+                    1069000,
+                    1077000,
+                    1126000,
+                    976000
+                  ],
+                  "medianWallNs": 1384361.0,
+                  "medianCpuNs": 1081500.0,
+                  "profileSourceSha256": "9304000112c9bddba8b3c1abf7258e0bec14f0a014457846c21cd92d9d97ed3a",
+                  "profileBinarySha256": "3b4d993351641801fe86d549a4da93bae0773604cb425a0addb858fd0a75e3fc"
+                }
+              },
+              "enabledOverDisabledWall": 1.00786570924978,
+              "enabledOverDisabledCpu": 1.0013888888888889
+            }
+          }
+        }
+      },
+      "scope": "Same verified binaries from the named run, one warmup and 16 alternating process samples. Elapsed time includes process startup/input/output; CPU time is the child user+system CPU delta. Normal collector and collection-disabled profiles are separate rebuilt binaries; original collection-disabled counts must match exactly. No compilation in timed intervals or C/Rust comparison."
+    },
+    "ubuntu-24.04-arm": {
+      "head": "60b94e9ffb228b407ddc6b23fb1ce4f2c539a7ba",
+      "emittedHead": "91146d684d723d835474e2a893a8adbe23004996",
+      "evidenceRun": "38842840316",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmidgih",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "results": {
+        "direct": {
+          "source": "work : List[F64] -> List[F64]\nwork = both id (map (add 1.0)) | uncurry zip | map (uncurry mul)\nmain = range 0 128 | map (const (range 0 4096 | map int.to-float)) | map work | map sum | sum | echo\n",
+          "expected": "2932030832640.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "3002459a5a5f0e52b51f90a544ab344ae3844a926f5965ef14f9bf4380c59c4a",
+                  "binarySha256": "7d2a02eeff18d0195e51d0771b0bf1c1d6ed739c0d99a46eeda4c1271f8ad3a5",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 2
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    56333308,
+                    57266635,
+                    56526168,
+                    56870771,
+                    56606515,
+                    56579573,
+                    56969365,
+                    56856923,
+                    57744845,
+                    57308432,
+                    57104941,
+                    56479146,
+                    57124548,
+                    56892985,
+                    56200052,
+                    56389400
+                  ],
+                  "cpuNs": [
+                    56021000,
+                    56585000,
+                    56178000,
+                    56525000,
+                    56276000,
+                    56255000,
+                    56639000,
+                    56510000,
+                    57417000,
+                    56966000,
+                    56784000,
+                    56154000,
+                    56420000,
+                    56559000,
+                    55864000,
+                    56041000
+                  ],
+                  "medianWallNs": 56863847.0,
+                  "medianCpuNs": 56465000.0,
+                  "profileSourceSha256": "a52ec5875f79c87a99741284278d9d1113e3d70e14f894c270d2ab812bb5d28f",
+                  "profileBinarySha256": "824559e257179f6459ccaf1a666ffe6077553560c3272792ca920ed1a1764d44"
+                },
+                "1": {
+                  "generatedSha256": "fd15fb82c26c859c586921e19ea06dd865dc4a868b01cd00f8838fe27ecb3a75",
+                  "binarySha256": "7320ba2b94751dff3d69d9c4293d734a82adf4628e24d20852933aaea62acd6f",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 2
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    35482623,
+                    36187387,
+                    35797291,
+                    35533203,
+                    35917100,
+                    35685402,
+                    35853072,
+                    35891902,
+                    35834057,
+                    35808307,
+                    36175396,
+                    35959393,
+                    35789916,
+                    35719968,
+                    35815970,
+                    35357390
+                  ],
+                  "cpuNs": [
+                    35105000,
+                    35829000,
+                    35429000,
+                    35161000,
+                    35579000,
+                    35329000,
+                    35488000,
+                    35529000,
+                    35468000,
+                    35484000,
+                    35846000,
+                    35517000,
+                    35460000,
+                    35330000,
+                    35453000,
+                    34902000
+                  ],
+                  "medianWallNs": 35812138.5,
+                  "medianCpuNs": 35464000.0,
+                  "profileSourceSha256": "1a3138e169ae0ecaa3cc915f3f3f7af18593e9772292ef92b99b09710ade771f",
+                  "profileBinarySha256": "cabfe3dade58a3bfab771c0fe17edbf0c635a3a4da7c458f02a0e6d0ece9786f"
+                }
+              },
+              "enabledOverDisabledWall": 0.6297874728735817,
+              "enabledOverDisabledCpu": 0.6280704861418578
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f59f265742750d747b86561e52c0a5a783801c041535d4a90922cd615b9d8e70",
+                  "binarySha256": "7aa2a29224f740a81083b835563298e4ebf8b41e161450661dd0574bab62ae61",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    46605519,
+                    46861391,
+                    46455304,
+                    46794507,
+                    46602375,
+                    46759749,
+                    46950985,
+                    46767541,
+                    46875366,
+                    46780588,
+                    47179403,
+                    46652748,
+                    46598535,
+                    46526899,
+                    46788331,
+                    46634501
+                  ],
+                  "cpuNs": [
+                    46296000,
+                    46537000,
+                    46133000,
+                    46450000,
+                    46280000,
+                    46358000,
+                    46588000,
+                    46443000,
+                    46521000,
+                    46428000,
+                    46825000,
+                    46329000,
+                    46266000,
+                    46183000,
+                    46450000,
+                    46302000
+                  ],
+                  "medianWallNs": 46763645.0,
+                  "medianCpuNs": 46393000.0,
+                  "profileSourceSha256": "39783ed1b8b3bc75bf06634a1436087cc86704b751cf103ccf64f976d383c774",
+                  "profileBinarySha256": "a75a6599d6cd43830b8d288665ceb017cc5dc9d841c652d9842b1e605e6ea940"
+                },
+                "1": {
+                  "generatedSha256": "c554796288b51b165bb3c13bf720d27b076d340fa66f8081f02074a43678650b",
+                  "binarySha256": "69c74edf989a2965e240ea4036dc9ca2b609548c98cef17aa992d160584e945d",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    28228306,
+                    27804836,
+                    27977257,
+                    28254721,
+                    27954627,
+                    28070331,
+                    27898318,
+                    27942164,
+                    27757543,
+                    28373953,
+                    28170542,
+                    28099370,
+                    28057661,
+                    28100841,
+                    28030950,
+                    27811651
+                  ],
+                  "cpuNs": [
+                    27878000,
+                    27418000,
+                    27656000,
+                    27929000,
+                    27586000,
+                    27700000,
+                    27522000,
+                    27589000,
+                    27444000,
+                    28031000,
+                    27730000,
+                    27743000,
+                    27652000,
+                    27723000,
+                    27679000,
+                    27424000
+                  ],
+                  "medianWallNs": 28044305.5,
+                  "medianCpuNs": 27667500.0,
+                  "profileSourceSha256": "6c0edf0ce784af4fd25eb714a345fb6469a7962ea8b1d1feffaa9bc53c6e2e09",
+                  "profileBinarySha256": "e11eff4c201f8806776164cd5062c11e9dcb1b28cd3af0450da91cba0e6666cb"
+                }
+              },
+              "enabledOverDisabledWall": 0.5997031561590206,
+              "enabledOverDisabledCpu": 0.5963722975448882
+            }
+          }
+        },
+        "derivative": {
+          "source": "main = range 0 512 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "expected": "4194304.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f72a36ed61040175876a0681461f10bd4571a83b89406f53325d0ea4a724a130",
+                  "binarySha256": "30ef326659bdbfbdf3a026535eaf60aa5ad56038579f6518c5b098ac0d5843f4",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    670201636,
+                    670466179,
+                    670672991,
+                    675034134,
+                    671395995,
+                    682462083,
+                    678870149,
+                    702828822,
+                    684819324,
+                    687133807,
+                    709575349,
+                    710677011,
+                    685394318,
+                    685701099,
+                    682549171,
+                    685482585
+                  ],
+                  "cpuNs": [
+                    669546000,
+                    669999000,
+                    670188000,
+                    674606000,
+                    670937000,
+                    682021000,
+                    678414000,
+                    702432000,
+                    684313000,
+                    686551000,
+                    709026000,
+                    710268000,
+                    684938000,
+                    685240000,
+                    682001000,
+                    685036000
+                  ],
+                  "medianWallNs": 683684247.5,
+                  "medianCpuNs": 683167000.0,
+                  "profileSourceSha256": "3c9e8e419a463e26bba9c5d4598fa7219681ebda1e680497fb9c6ba3c530fa25",
+                  "profileBinarySha256": "30a7646a705283a4ce0321c2e4bf6b0334f6ec68397734f5a80e4e282af5b313"
+                },
+                "1": {
+                  "generatedSha256": "e13fea0265b2c4acbb37b368c6bb44ce2f02d09e237740cda75abf9f010b8473",
+                  "binarySha256": "2fd6ab55e45297cabb9766ca6d48a8aa6b2a08290551890702745ac5957f944e",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    538391653,
+                    539950949,
+                    541406765,
+                    541248927,
+                    547046335,
+                    544071364,
+                    551454140,
+                    547561504,
+                    547484101,
+                    546021637,
+                    547637690,
+                    558148297,
+                    544039356,
+                    552189564,
+                    551440937,
+                    545350477
+                  ],
+                  "cpuNs": [
+                    537848000,
+                    539561000,
+                    540838000,
+                    540870000,
+                    546576000,
+                    543748000,
+                    550862000,
+                    546953000,
+                    547072000,
+                    545610000,
+                    547243000,
+                    557083000,
+                    543566000,
+                    551643000,
+                    550991000,
+                    544906000
+                  ],
+                  "medianWallNs": 546533986.0,
+                  "medianCpuNs": 546093000.0,
+                  "profileSourceSha256": "63c1f63be5acdd7ba0b0709c9edeff10289d18c12a62d8b86a1121b01429cd1c",
+                  "profileBinarySha256": "e28178e21a2a5305331075a0132dca3dbe26147b1ea63e0f01582fc596e6d81d"
+                }
+              },
+              "enabledOverDisabledWall": 0.7993953173537175,
+              "enabledOverDisabledCpu": 0.7993550625249756
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f0be640586338e216e943ef00b1f0091afcec340385aad3844ccf61f86c986e8",
+                  "binarySha256": "7e617475601971eb8951967cbc746849d0c0fd869fc013e0bd71b5b051bc8f70",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    690446844,
+                    681083108,
+                    696219479,
+                    689199745,
+                    714343876,
+                    700091820,
+                    694167763,
+                    688144520,
+                    707700071,
+                    728918350,
+                    684699528,
+                    703476086,
+                    762523819,
+                    731752128,
+                    686558454,
+                    718128302
+                  ],
+                  "cpuNs": [
+                    690002000,
+                    680655000,
+                    695843000,
+                    688649000,
+                    713981000,
+                    699703000,
+                    693737000,
+                    687600000,
+                    707219000,
+                    728391000,
+                    684195000,
+                    702794000,
+                    762044000,
+                    731197000,
+                    686005000,
+                    717681000
+                  ],
+                  "medianWallNs": 698155649.5,
+                  "medianCpuNs": 697773000.0,
+                  "profileSourceSha256": "0996036e78ef01c3a3b43ca2c56b9ef4c561305a4a835a53cd9b71ba926feedd",
+                  "profileBinarySha256": "4c5886a6207bea5a6dfc275747969551202942673c5c0785bc3895c78c70299e"
+                },
+                "1": {
+                  "generatedSha256": "d9842aace96fbfe51cf82c8c0479931654cd368f514f12eeceeb2e4a36cc3c01",
+                  "binarySha256": "9afed81d6287c10b9437c1f1d006a88c97c9f8aaeb2069fee6df8545cf7763ca",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    551183726,
+                    545495942,
+                    560074891,
+                    539433886,
+                    550485200,
+                    551167247,
+                    556985943,
+                    547213814,
+                    554204415,
+                    546249539,
+                    556791982,
+                    550723592,
+                    554736979,
+                    562295310,
+                    543939342,
+                    556718306
+                  ],
+                  "cpuNs": [
+                    550635000,
+                    544996000,
+                    559700000,
+                    539001000,
+                    550058000,
+                    550537000,
+                    556604000,
+                    546770000,
+                    553667000,
+                    545895000,
+                    556438000,
+                    550306000,
+                    554143000,
+                    561757000,
+                    543367000,
+                    556175000
+                  ],
+                  "medianWallNs": 551175486.5,
+                  "medianCpuNs": 550586000.0,
+                  "profileSourceSha256": "ca6a8e555cd82581bb7db4d0bed76752a65b9d3a71e7c22b71a0be1ba4dc03f4",
+                  "profileBinarySha256": "376d9b0d00b93f57c7b0d168abdfdb3339eee3ebe03397abdafbcedd94753ca8"
+                }
+              },
+              "enabledOverDisabledWall": 0.7894736465926142,
+              "enabledOverDisabledCpu": 0.7890617722382494
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "expected": "2.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "5b7513c958ef75e4c2ad913414996dffd5c54229c0676be07913301e09bb54c5",
+                  "binarySha256": "ccaaabcf6d287cf2aec674d0dbde72d975681dd84245eab1fa7a30906400b225",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1221749,
+                    1329503,
+                    1231221,
+                    1285562,
+                    1115916,
+                    1256076,
+                    1202927,
+                    1213774,
+                    1211374,
+                    1324807,
+                    1278874,
+                    1220126,
+                    1266347,
+                    1232812,
+                    1195391,
+                    1549194
+                  ],
+                  "cpuNs": [
+                    925000,
+                    993000,
+                    990000,
+                    978000,
+                    891000,
+                    966000,
+                    987000,
+                    964000,
+                    970000,
+                    992000,
+                    1016000,
+                    948000,
+                    1004000,
+                    936000,
+                    962000,
+                    939000
+                  ],
+                  "medianWallNs": 1232016.5,
+                  "medianCpuNs": 968000.0,
+                  "profileSourceSha256": "4fb6579fc88a912d3977479f34a4d81df79a202de7b25ec83b70b41115fdb12f",
+                  "profileBinarySha256": "d46a33a960cd6d76970ec68f69a0482c6e407b824b00c4d78e0f47821c66f24a"
+                },
+                "1": {
+                  "generatedSha256": "e87a569684283a4a928b2466812f11054b8dc41901e86983ddaeae01213ceadf",
+                  "binarySha256": "d96dbf4ec2970088cbac8092b2bbb7392d89fd05280c6121ad088400a6c8e3bd",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1194279,
+                    1743118,
+                    1239644,
+                    1135011,
+                    1136771,
+                    1134411,
+                    1250764,
+                    1161521,
+                    1146779,
+                    1176312,
+                    1360790,
+                    1308696,
+                    1214270,
+                    1181224,
+                    1126835,
+                    1151505
+                  ],
+                  "cpuNs": [
+                    960000,
+                    1002000,
+                    947000,
+                    912000,
+                    909000,
+                    925000,
+                    960000,
+                    972000,
+                    833000,
+                    972000,
+                    996000,
+                    1000000,
+                    970000,
+                    922000,
+                    820000,
+                    918000
+                  ],
+                  "medianWallNs": 1178768.0,
+                  "medianCpuNs": 953500.0,
+                  "profileSourceSha256": "eb4711108f58c7bdf2cf2bce02ddc523f53d101e3ccd52c6d834d372469c9acf",
+                  "profileBinarySha256": "6d17ef1d89fc530d2d8fa1ffb90ddeddf77f81c591d37ef4b2129a04c2e28306"
+                }
+              },
+              "enabledOverDisabledWall": 0.9567793937824697,
+              "enabledOverDisabledCpu": 0.9850206611570248
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "97ec73c4420bcaff43b280359ab301f05cba66eb4492b2101f599e48e0b333ab",
+                  "binarySha256": "6ab351130d1fcee446538ffba9cc54dbd3bab79ccdb1ec92e3e59054748c132f",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-0-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1133163,
+                    1089166,
+                    1115292,
+                    1128739,
+                    1120900,
+                    1094510,
+                    1115364,
+                    1147011,
+                    1138123,
+                    1157034,
+                    1120836,
+                    1128779,
+                    1129060,
+                    1129275,
+                    1059031,
+                    1431529
+                  ],
+                  "cpuNs": [
+                    894000,
+                    791000,
+                    902000,
+                    897000,
+                    913000,
+                    832000,
+                    915000,
+                    820000,
+                    920000,
+                    897000,
+                    920000,
+                    925000,
+                    932000,
+                    903000,
+                    799000,
+                    857000
+                  ],
+                  "medianWallNs": 1128759.0,
+                  "medianCpuNs": 899500.0,
+                  "profileSourceSha256": "53e4282205ae024c651b1c81e99fbc49231d01336558becd6db992af5127b902",
+                  "profileBinarySha256": "9360b14814a43fdcc3f1cfeb9c412fb48a2a3ced719d930cee00f137962a50a9"
+                },
+                "1": {
+                  "generatedSha256": "c86803ee86f2b0478cf39659114d9a1cab27436b3cb636cff7618fdaa2ebf5d0",
+                  "binarySha256": "caadaa2d55b532017a74140e1fbfa7ae4cd3f2eded185f7661ef982f379cd2f7",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-1-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1204486,
+                    1117036,
+                    1105420,
+                    1060079,
+                    1537843,
+                    1110677,
+                    1092917,
+                    1126540,
+                    1086830,
+                    1164673,
+                    1098557,
+                    1141258,
+                    1108997,
+                    1023770,
+                    1160945,
+                    1106604
+                  ],
+                  "cpuNs": [
+                    877000,
+                    885000,
+                    806000,
+                    797000,
+                    861000,
+                    882000,
+                    799000,
+                    904000,
+                    878000,
+                    890000,
+                    889000,
+                    908000,
+                    890000,
+                    744000,
+                    951000,
+                    779000
+                  ],
+                  "medianWallNs": 1109837.0,
+                  "medianCpuNs": 880000.0,
+                  "profileSourceSha256": "9304000112c9bddba8b3c1abf7258e0bec14f0a014457846c21cd92d9d97ed3a",
+                  "profileBinarySha256": "06d315d7b155e2cf978d962ea8d976e7b602cb961a729e04fbab95e66bf2bdfc"
+                }
+              },
+              "enabledOverDisabledWall": 0.983236457029357,
+              "enabledOverDisabledCpu": 0.9783212896053363
+            }
+          }
+        }
+      },
+      "scope": "Same verified binaries from the named run, one warmup and 16 alternating process samples. Elapsed time includes process startup/input/output; CPU time is the child user+system CPU delta. Normal collector and collection-disabled profiles are separate rebuilt binaries; original collection-disabled counts must match exactly. No compilation in timed intervals or C/Rust comparison."
+    },
+    "macos-15": {
+      "head": "60b94e9ffb228b407ddc6b23fb1ce4f2c539a7ba",
+      "emittedHead": "91146d684d723d835474e2a893a8adbe23004996",
+      "evidenceRun": "38842840316",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sat12-dp149-00f1e0c7-10d6-4b9f-9c83-8e94abd84021-5A928B3DD094.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "results": {
+        "direct": {
+          "source": "work : List[F64] -> List[F64]\nwork = both id (map (add 1.0)) | uncurry zip | map (uncurry mul)\nmain = range 0 128 | map (const (range 0 4096 | map int.to-float)) | map work | map sum | sum | echo\n",
+          "expected": "2932030832640.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "3002459a5a5f0e52b51f90a544ab344ae3844a926f5965ef14f9bf4380c59c4a",
+                  "binarySha256": "7ec64c65f286ade41c07afe584e25035fed96b236b533794c997743ff406170b",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 2
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    46615083,
+                    47967667,
+                    48286125,
+                    48560750,
+                    48538625,
+                    47978083,
+                    47476667,
+                    46035541,
+                    44933166,
+                    45032250,
+                    45435958,
+                    48520667,
+                    48524125,
+                    48828250,
+                    48339208,
+                    46219916
+                  ],
+                  "cpuNs": [
+                    45164000,
+                    44624000,
+                    44941000,
+                    45107000,
+                    45070000,
+                    44610000,
+                    44876000,
+                    44732000,
+                    42996000,
+                    43686000,
+                    43792000,
+                    45082000,
+                    45044000,
+                    45422000,
+                    45055000,
+                    44852000
+                  ],
+                  "medianWallNs": 47972875.0,
+                  "medianCpuNs": 44908500.0,
+                  "profileSourceSha256": "a52ec5875f79c87a99741284278d9d1113e3d70e14f894c270d2ab812bb5d28f",
+                  "profileBinarySha256": "30786b9c28395ca128140a3313e566ccefb48c8fdcd445485f6f4dfd5f0e195a"
+                },
+                "1": {
+                  "generatedSha256": "fd15fb82c26c859c586921e19ea06dd865dc4a868b01cd00f8838fe27ecb3a75",
+                  "binarySha256": "035aabba63c6fdb33d0928ed4bfbb25dd2362bbae08fd7fe32aa9594d69acbd0",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 2
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    32808458,
+                    32100292,
+                    32902292,
+                    32398209,
+                    33312958,
+                    32902250,
+                    30447500,
+                    31192958,
+                    32283333,
+                    34487500,
+                    30655375,
+                    32674875,
+                    33583708,
+                    32814041,
+                    30831875,
+                    31415250
+                  ],
+                  "cpuNs": [
+                    29411000,
+                    28770000,
+                    29514000,
+                    28990000,
+                    29896000,
+                    29412000,
+                    29178000,
+                    29866000,
+                    29068000,
+                    30602000,
+                    28613000,
+                    29355000,
+                    30040000,
+                    29447000,
+                    29467000,
+                    29872000
+                  ],
+                  "medianWallNs": 32536542.0,
+                  "medianCpuNs": 29429500.0,
+                  "profileSourceSha256": "1a3138e169ae0ecaa3cc915f3f3f7af18593e9772292ef92b99b09710ade771f",
+                  "profileBinarySha256": "7ace0e6b17d36adbd66c526611dc819c222a6129f30021f6c92db4350a3e1bf4"
+                }
+              },
+              "enabledOverDisabledWall": 0.6782278944090802,
+              "enabledOverDisabledCpu": 0.6553213756861174
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f59f265742750d747b86561e52c0a5a783801c041535d4a90922cd615b9d8e70",
+                  "binarySha256": "4995be245c75fb163e62dd05a047a42b7666c83b6ac874c924906fd541a59a30",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    36163416,
+                    41007292,
+                    40729750,
+                    41200417,
+                    39293417,
+                    38638208,
+                    37480792,
+                    39048166,
+                    38781541,
+                    38650625,
+                    38646917,
+                    38453500,
+                    39166292,
+                    39096958,
+                    38768041,
+                    41264000
+                  ],
+                  "cpuNs": [
+                    34888000,
+                    37486000,
+                    37433000,
+                    37831000,
+                    37239000,
+                    37199000,
+                    36248000,
+                    37645000,
+                    37454000,
+                    37292000,
+                    37173000,
+                    37161000,
+                    37558000,
+                    37638000,
+                    37397000,
+                    37609000
+                  ],
+                  "medianWallNs": 38914853.5,
+                  "medianCpuNs": 37415000.0,
+                  "profileSourceSha256": "39783ed1b8b3bc75bf06634a1436087cc86704b751cf103ccf64f976d383c774",
+                  "profileBinarySha256": "567e0e8ea7566d4929ef88360c5152e8d380ea9ea50f58ff3f741520ea3a867d"
+                },
+                "1": {
+                  "generatedSha256": "c554796288b51b165bb3c13bf720d27b076d340fa66f8081f02074a43678650b",
+                  "binarySha256": "cfc6c06e5eca4656eed4f46f808936dd121a5581e7be6c3d49642c919732fb0a",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    21691584,
+                    26160917,
+                    25224041,
+                    24466416,
+                    23435167,
+                    23052416,
+                    23372625,
+                    23375625,
+                    23568042,
+                    23511459,
+                    23671208,
+                    23683458,
+                    23484875,
+                    23463292,
+                    23031625,
+                    23422000
+                  ],
+                  "cpuNs": [
+                    20279000,
+                    22526000,
+                    21741000,
+                    21943000,
+                    22112000,
+                    21651000,
+                    22124000,
+                    22034000,
+                    22154000,
+                    22148000,
+                    22305000,
+                    22377000,
+                    22170000,
+                    22181000,
+                    21735000,
+                    22135000
+                  ],
+                  "medianWallNs": 23474083.5,
+                  "medianCpuNs": 22129500.0,
+                  "profileSourceSha256": "6c0edf0ce784af4fd25eb714a345fb6469a7962ea8b1d1feffaa9bc53c6e2e09",
+                  "profileBinarySha256": "13277352ccbca0e22b371f53b2a3abfee57496f621a66b0cf574a8a9e7950da6"
+                }
+              },
+              "enabledOverDisabledWall": 0.6032165455794405,
+              "enabledOverDisabledCpu": 0.5914606441266872
+            }
+          }
+        },
+        "derivative": {
+          "source": "main = range 0 512 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "expected": "4194304.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f72a36ed61040175876a0681461f10bd4571a83b89406f53325d0ea4a724a130",
+                  "binarySha256": "ad4623b68cdceecd02ddfd4bc1147a5450935b2f48db6037f7de8fe9d76d8274",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    617970583,
+                    624725834,
+                    612062959,
+                    622802542,
+                    604082666,
+                    604671291,
+                    610714875,
+                    603330250,
+                    611665042,
+                    608793417,
+                    600425917,
+                    664406834,
+                    639314000,
+                    646037792,
+                    639803000,
+                    629115375
+                  ],
+                  "cpuNs": [
+                    612445000,
+                    617714000,
+                    609663000,
+                    599211000,
+                    596746000,
+                    600630000,
+                    608614000,
+                    601737000,
+                    609631000,
+                    606225000,
+                    594355000,
+                    631241000,
+                    602261000,
+                    611261000,
+                    612866000,
+                    597974000
+                  ],
+                  "medianWallNs": 615016771.0,
+                  "medianCpuNs": 607419500.0,
+                  "profileSourceSha256": "3c9e8e419a463e26bba9c5d4598fa7219681ebda1e680497fb9c6ba3c530fa25",
+                  "profileBinarySha256": "d098248b03fb7b49a9f6672ee0c635ae1870853dfa7b72759c8445d354caef09"
+                },
+                "1": {
+                  "generatedSha256": "e13fea0265b2c4acbb37b368c6bb44ce2f02d09e237740cda75abf9f010b8473",
+                  "binarySha256": "eed9ffaac0db2e2f21f6aa3a67686b3bd674775fd8393d4c96b39fbb23a98e10",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    507323417,
+                    513968000,
+                    517186000,
+                    491629042,
+                    514686250,
+                    519593584,
+                    507576458,
+                    549666125,
+                    490626125,
+                    495209708,
+                    555196916,
+                    575215917,
+                    491920417,
+                    494508834,
+                    533623375,
+                    513045167
+                  ],
+                  "cpuNs": [
+                    484423000,
+                    484330000,
+                    506135000,
+                    485925000,
+                    485473000,
+                    488935000,
+                    504201000,
+                    547577000,
+                    487323000,
+                    492146000,
+                    491401000,
+                    528835000,
+                    487879000,
+                    489989000,
+                    481088000,
+                    483458000
+                  ],
+                  "medianWallNs": 513506583.5,
+                  "medianCpuNs": 488407000.0,
+                  "profileSourceSha256": "63c1f63be5acdd7ba0b0709c9edeff10289d18c12a62d8b86a1121b01429cd1c",
+                  "profileBinarySha256": "50b0788c9507aa7723a965a3f0a6b0d1c03d97cd0c0f3915960747d79576669c"
+                }
+              },
+              "enabledOverDisabledWall": 0.8349472855269503,
+              "enabledOverDisabledCpu": 0.8040686872910732
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f0be640586338e216e943ef00b1f0091afcec340385aad3844ccf61f86c986e8",
+                  "binarySha256": "5509b5af9448f97b66b56d550c46d3f584b9d0fb20d0af82a7d23540cbecc80b",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    606474125,
+                    620222208,
+                    608563875,
+                    601301833,
+                    605498833,
+                    606844084,
+                    612311042,
+                    600415166,
+                    593610000,
+                    601083000,
+                    619037542,
+                    611703916,
+                    606682041,
+                    608441500,
+                    652468375,
+                    606164834
+                  ],
+                  "cpuNs": [
+                    604567000,
+                    617610000,
+                    604784000,
+                    598600000,
+                    601623000,
+                    603374000,
+                    608746000,
+                    599077000,
+                    592068000,
+                    597069000,
+                    616267000,
+                    609416000,
+                    604882000,
+                    604797000,
+                    610500000,
+                    604090000
+                  ],
+                  "medianWallNs": 606763062.5,
+                  "medianCpuNs": 604675500.0,
+                  "profileSourceSha256": "0996036e78ef01c3a3b43ca2c56b9ef4c561305a4a835a53cd9b71ba926feedd",
+                  "profileBinarySha256": "54bef8992e59d79429dc61ddb582a54738ca61301b8600d0eab7dc7862ec0502"
+                },
+                "1": {
+                  "generatedSha256": "d9842aace96fbfe51cf82c8c0479931654cd368f514f12eeceeb2e4a36cc3c01",
+                  "binarySha256": "1f342f12a8baac814eea698ce439b2160978c0acba810f42c10e5f10ed429cc6",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    495692542,
+                    494130333,
+                    502866375,
+                    490671166,
+                    488061333,
+                    480380791,
+                    511987417,
+                    492582167,
+                    483507000,
+                    495061458,
+                    519510917,
+                    494715375,
+                    493233041,
+                    493442125,
+                    511030166,
+                    489982417
+                  ],
+                  "cpuNs": [
+                    493233000,
+                    491839000,
+                    483783000,
+                    486874000,
+                    484407000,
+                    478623000,
+                    508543000,
+                    491144000,
+                    482296000,
+                    491393000,
+                    491317000,
+                    492948000,
+                    491319000,
+                    491299000,
+                    492267000,
+                    488589000
+                  ],
+                  "medianWallNs": 493786229.0,
+                  "medianCpuNs": 491308000.0,
+                  "profileSourceSha256": "ca6a8e555cd82581bb7db4d0bed76752a65b9d3a71e7c22b71a0be1ba4dc03f4",
+                  "profileBinarySha256": "65cdf47b150a72dff6c5ba9172e0b5ab324cf16dc08f639041384e2aabab8c15"
+                }
+              },
+              "enabledOverDisabledWall": 0.8138040357392389,
+              "enabledOverDisabledCpu": 0.8125151424193637
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "expected": "2.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "5b7513c958ef75e4c2ad913414996dffd5c54229c0676be07913301e09bb54c5",
+                  "binarySha256": "9fa1b2c28dee277bfb6900c2490aed71ae116a3f906667bf7fcef6dd01a5e236",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    2607583,
+                    3066083,
+                    2974625,
+                    2760792,
+                    2517333,
+                    2697416,
+                    2636958,
+                    2313292,
+                    2235792,
+                    2727958,
+                    2901042,
+                    2225166,
+                    2245916,
+                    2397250,
+                    2340292,
+                    2248792
+                  ],
+                  "cpuNs": [
+                    1810000,
+                    2117000,
+                    1957000,
+                    1821000,
+                    1713000,
+                    1778000,
+                    1820000,
+                    1583000,
+                    1552000,
+                    1826000,
+                    1961000,
+                    1520000,
+                    1547000,
+                    1662000,
+                    1621000,
+                    1575000
+                  ],
+                  "medianWallNs": 2562458.0,
+                  "medianCpuNs": 1745500.0,
+                  "profileSourceSha256": "4fb6579fc88a912d3977479f34a4d81df79a202de7b25ec83b70b41115fdb12f",
+                  "profileBinarySha256": "6128bcae9a23ea586c393a4bc0a128d567b68620507cb06268e8109ee78acc2b"
+                },
+                "1": {
+                  "generatedSha256": "e87a569684283a4a928b2466812f11054b8dc41901e86983ddaeae01213ceadf",
+                  "binarySha256": "a5edca172862b55361a1893128137510d07fdeef1f80efbf314e12b92dba1487",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    2930166,
+                    2759750,
+                    3032208,
+                    2975708,
+                    2727917,
+                    2793750,
+                    2780333,
+                    2501292,
+                    2341125,
+                    2500584,
+                    2586084,
+                    2506417,
+                    2159208,
+                    2151458,
+                    2188375,
+                    2104791
+                  ],
+                  "cpuNs": [
+                    1894000,
+                    1864000,
+                    1958000,
+                    1917000,
+                    1836000,
+                    1944000,
+                    1934000,
+                    1704000,
+                    1621000,
+                    1728000,
+                    1726000,
+                    1716000,
+                    1475000,
+                    1529000,
+                    1526000,
+                    1494000
+                  ],
+                  "medianWallNs": 2546250.5,
+                  "medianCpuNs": 1727000.0,
+                  "profileSourceSha256": "eb4711108f58c7bdf2cf2bce02ddc523f53d101e3ccd52c6d834d372469c9acf",
+                  "profileBinarySha256": "7ff870a4ea22351339ddae9974ddaf72fd24568942a5d30c0fbe6475149b1dd2"
+                }
+              },
+              "enabledOverDisabledWall": 0.9936750182832265,
+              "enabledOverDisabledCpu": 0.989401317674019
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "97ec73c4420bcaff43b280359ab301f05cba66eb4492b2101f599e48e0b333ab",
+                  "binarySha256": "e9e1e44d6d6f3ceef86b229b625877a9d8185f4147217465dbf99f382216a0da",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    2288208,
+                    2271791,
+                    2161542,
+                    2102542,
+                    2078083,
+                    2249083,
+                    2227083,
+                    2168125,
+                    2242125,
+                    2335833,
+                    2199083,
+                    3435125,
+                    3168917,
+                    3109625,
+                    3087958,
+                    3335500
+                  ],
+                  "cpuNs": [
+                    1596000,
+                    1580000,
+                    1538000,
+                    1473000,
+                    1456000,
+                    1581000,
+                    1543000,
+                    1474000,
+                    1563000,
+                    1629000,
+                    1529000,
+                    2220000,
+                    2028000,
+                    2048000,
+                    1967000,
+                    2167000
+                  ],
+                  "medianWallNs": 2260437.0,
+                  "medianCpuNs": 1580500.0,
+                  "profileSourceSha256": "53e4282205ae024c651b1c81e99fbc49231d01336558becd6db992af5127b902",
+                  "profileBinarySha256": "5aa86679a9624ae0dac76247940e963d942ec4a468414df1f6fd62b87f2e5c74"
+                },
+                "1": {
+                  "generatedSha256": "c86803ee86f2b0478cf39659114d9a1cab27436b3cb636cff7618fdaa2ebf5d0",
+                  "binarySha256": "4453da16a76899187156e5d82ecb34b613c177d710061e7670c95bf06b9ff77c",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    2354041,
+                    2250750,
+                    2187625,
+                    2248833,
+                    2168583,
+                    2218125,
+                    2208875,
+                    2175542,
+                    2526833,
+                    2460250,
+                    2287000,
+                    2691666,
+                    3082042,
+                    3094208,
+                    3167667,
+                    3512417
+                  ],
+                  "cpuNs": [
+                    1639000,
+                    1573000,
+                    1512000,
+                    1463000,
+                    1511000,
+                    1576000,
+                    1538000,
+                    1493000,
+                    1760000,
+                    1674000,
+                    1557000,
+                    1818000,
+                    2023000,
+                    2056000,
+                    2128000,
+                    2322000
+                  ],
+                  "medianWallNs": 2320520.5,
+                  "medianCpuNs": 1607500.0,
+                  "profileSourceSha256": "9304000112c9bddba8b3c1abf7258e0bec14f0a014457846c21cd92d9d97ed3a",
+                  "profileBinarySha256": "588e196a8d1541b6e660a621b928de4150988a24fa1d8a3889f44e4996eed24d"
+                }
+              },
+              "enabledOverDisabledWall": 1.0265804797921818,
+              "enabledOverDisabledCpu": 1.0170832015185067
+            }
+          }
+        }
+      },
+      "scope": "Same verified binaries from the named run, one warmup and 16 alternating process samples. Elapsed time includes process startup/input/output; CPU time is the child user+system CPU delta. Normal collector and collection-disabled profiles are separate rebuilt binaries; original collection-disabled counts must match exactly. No compilation in timed intervals or C/Rust comparison."
+    },
+    "macos-15-intel": {
+      "head": "60b94e9ffb228b407ddc6b23fb1ce4f2c539a7ba",
+      "emittedHead": "91146d684d723d835474e2a893a8adbe23004996",
+      "evidenceRun": "38842840316",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sjc20-av659-53918a99-a7c9-4061-9da4-0cfc50901182-36598B5CAD1C.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "machine": "x86_64",
+        "processor": "i386"
+      },
+      "cpu": "Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\n",
+      "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "results": {
+        "direct": {
+          "source": "work : List[F64] -> List[F64]\nwork = both id (map (add 1.0)) | uncurry zip | map (uncurry mul)\nmain = range 0 128 | map (const (range 0 4096 | map int.to-float)) | map work | map sum | sum | echo\n",
+          "expected": "2932030832640.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "3002459a5a5f0e52b51f90a544ab344ae3844a926f5965ef14f9bf4380c59c4a",
+                  "binarySha256": "baa083749d7cea0f25ee5ab87dd5cb7ea668799590970855098698d50d064099",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 2
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    135322776,
+                    410739015,
+                    798064231,
+                    292042430,
+                    137062308,
+                    153844741,
+                    187183216,
+                    349160984,
+                    879647367,
+                    215863942,
+                    176065570,
+                    153188262,
+                    140195553,
+                    126341984,
+                    146708597,
+                    155305982
+                  ],
+                  "cpuNs": [
+                    131227000,
+                    392686000,
+                    764540000,
+                    286516000,
+                    131587000,
+                    149573000,
+                    181324000,
+                    344017000,
+                    859868000,
+                    208671000,
+                    171053000,
+                    149655000,
+                    136152000,
+                    122387000,
+                    141818000,
+                    147878000
+                  ],
+                  "medianWallNs": 165685776.0,
+                  "medianCpuNs": 160354000.0,
+                  "profileSourceSha256": "a52ec5875f79c87a99741284278d9d1113e3d70e14f894c270d2ab812bb5d28f",
+                  "profileBinarySha256": "507c0c4293e4d11e802b8d19cc12e4b2b0189e3f054efb4c55b067ff28276388"
+                },
+                "1": {
+                  "generatedSha256": "fd15fb82c26c859c586921e19ea06dd865dc4a868b01cd00f8838fe27ecb3a75",
+                  "binarySha256": "8e190e83d2da84b39e0f754476935cec0b990f420eb905933568dd833c47ac00",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 2
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    90510020,
+                    91341680,
+                    431503551,
+                    257486472,
+                    75188236,
+                    94215188,
+                    76337824,
+                    74994509,
+                    400445484,
+                    138072439,
+                    88421661,
+                    87379696,
+                    82343029,
+                    75961394,
+                    105624398,
+                    110161180
+                  ],
+                  "cpuNs": [
+                    86929000,
+                    87611000,
+                    418247000,
+                    237488000,
+                    71685000,
+                    90376000,
+                    72667000,
+                    71469000,
+                    278682000,
+                    129145000,
+                    83170000,
+                    83481000,
+                    78271000,
+                    71850000,
+                    100634000,
+                    101708000
+                  ],
+                  "medianWallNs": 90925850.0,
+                  "medianCpuNs": 87270000.0,
+                  "profileSourceSha256": "1a3138e169ae0ecaa3cc915f3f3f7af18593e9772292ef92b99b09710ade771f",
+                  "profileBinarySha256": "a0454ff9b18573eb9ea0848da181c8e5f8cd1e756946d7e82bb5eee381fef2b2"
+                }
+              },
+              "enabledOverDisabledWall": 0.5487848878469809,
+              "enabledOverDisabledCpu": 0.5442333836386993
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f59f265742750d747b86561e52c0a5a783801c041535d4a90922cd615b9d8e70",
+                  "binarySha256": "69caf39768f01f95fc8a54baebe9836cfbed578ac6e71f83ab7b94df33a99586",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 2106373,
+                        "requestedBytes": 67357752,
+                        "retains": 524672,
+                        "peakChargedBytes": 17208584,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    122671785,
+                    144279428,
+                    195929172,
+                    160705940,
+                    139897596,
+                    125039801,
+                    126202476,
+                    164643493,
+                    175983934,
+                    175105529,
+                    178091940,
+                    155572828,
+                    149626696,
+                    140763650,
+                    147738426,
+                    145256212
+                  ],
+                  "cpuNs": [
+                    118714000,
+                    140528000,
+                    176207000,
+                    151575000,
+                    133506000,
+                    121200000,
+                    122422000,
+                    156264000,
+                    164902000,
+                    163033000,
+                    167220000,
+                    150380000,
+                    145336000,
+                    136737000,
+                    142407000,
+                    140344000
+                  ],
+                  "medianWallNs": 148682561.0,
+                  "medianCpuNs": 143871500.0,
+                  "profileSourceSha256": "39783ed1b8b3bc75bf06634a1436087cc86704b751cf103ccf64f976d383c774",
+                  "profileBinarySha256": "a4fd4e9f674c753db827fa62480f6906e5689bd1418463e8732f0682c4fe6170"
+                },
+                "1": {
+                  "generatedSha256": "c554796288b51b165bb3c13bf720d27b076d340fa66f8081f02074a43678650b",
+                  "binarySha256": "4a768369b8e2422af309ab66b2899a6907fd39b998b50182581a262aa75331ff",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/direct-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 0,
+                        "tapeRequestedBytes": 0,
+                        "peakTapeBytes": 0,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 1057669,
+                        "requestedBytes": 37996600,
+                        "retains": 384,
+                        "peakChargedBytes": 17077512,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    67609922,
+                    69295888,
+                    106075532,
+                    91392738,
+                    72530079,
+                    76347141,
+                    66465951,
+                    68057799,
+                    87358054,
+                    93182583,
+                    82548934,
+                    81821015,
+                    73485057,
+                    68634302,
+                    83184170,
+                    92834892
+                  ],
+                  "cpuNs": [
+                    64059000,
+                    65086000,
+                    99505000,
+                    85685000,
+                    68438000,
+                    72034000,
+                    62830000,
+                    64983000,
+                    80436000,
+                    83687000,
+                    78504000,
+                    77330000,
+                    68626000,
+                    64752000,
+                    80188000,
+                    83734000
+                  ],
+                  "medianWallNs": 79084078.0,
+                  "medianCpuNs": 74682000.0,
+                  "profileSourceSha256": "6c0edf0ce784af4fd25eb714a345fb6469a7962ea8b1d1feffaa9bc53c6e2e09",
+                  "profileBinarySha256": "47692b508c13ffd42bac66951f441318fa312c48db5801a23b34a2a6519dc1ee"
+                }
+              },
+              "enabledOverDisabledWall": 0.5318988149524813,
+              "enabledOverDisabledCpu": 0.5190882141355306
+            }
+          }
+        },
+        "derivative": {
+          "source": "main = range 0 512 | map (const (range 0 4096 | map int.to-float) | vjp (map (mul 2.0)) (repeat 4096 1.0) | sum) | sum | echo\n",
+          "expected": "4194304.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f72a36ed61040175876a0681461f10bd4571a83b89406f53325d0ea4a724a130",
+                  "binarySha256": "78b40ef8644bb8a780a80cb7001262a88469debb10bee669dc362442d02e9bcc",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    2413794156,
+                    1890839226,
+                    1828110532,
+                    1659722143,
+                    1778158870,
+                    2440806049,
+                    1868616575,
+                    1784486606,
+                    1752945645,
+                    1867385893,
+                    1816431086,
+                    2099102134,
+                    2369525543,
+                    1602905343,
+                    1685336393,
+                    2695881357
+                  ],
+                  "cpuNs": [
+                    2067154000,
+                    1883151000,
+                    1821598000,
+                    1644663000,
+                    1772052000,
+                    2287411000,
+                    1861790000,
+                    1779067000,
+                    1747150000,
+                    1854921000,
+                    1793205000,
+                    2054358000,
+                    1962222000,
+                    1586014000,
+                    1678699000,
+                    1991100000
+                  ],
+                  "medianWallNs": 1847748212.5,
+                  "medianCpuNs": 1838259500.0,
+                  "profileSourceSha256": "3c9e8e419a463e26bba9c5d4598fa7219681ebda1e680497fb9c6ba3c530fa25",
+                  "profileBinarySha256": "ba177f48c95ed626eebcfeabca75daf3dfe2757155449b17c24071a1d08a5c7d"
+                },
+                "1": {
+                  "generatedSha256": "e13fea0265b2c4acbb37b368c6bb44ce2f02d09e237740cda75abf9f010b8473",
+                  "binarySha256": "d8e68bb5f3cfc82a52184062d8dc2e86bbfa7fd2801e02e6e79ce2d4810745bc",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1563508948,
+                    1701011500,
+                    2052935544,
+                    1381886306,
+                    1484166567,
+                    1655238198,
+                    1415978723,
+                    1429037947,
+                    1694022596,
+                    1831567095,
+                    1506582587,
+                    1749154791,
+                    1545295615,
+                    1263247179,
+                    1464210486,
+                    1536823989
+                  ],
+                  "cpuNs": [
+                    1546401000,
+                    1474635000,
+                    1488115000,
+                    1348075000,
+                    1476494000,
+                    1645446000,
+                    1407199000,
+                    1422829000,
+                    1687583000,
+                    1556817000,
+                    1490735000,
+                    1743880000,
+                    1501148000,
+                    1252978000,
+                    1454907000,
+                    1529286000
+                  ],
+                  "medianWallNs": 1541059802.0,
+                  "medianCpuNs": 1489425000.0,
+                  "profileSourceSha256": "63c1f63be5acdd7ba0b0709c9edeff10289d18c12a62d8b86a1121b01429cd1c",
+                  "profileBinarySha256": "b28b99a837c74044fee200cd5d718005f24f00318aa05ee9f063da13658e892b"
+                }
+              },
+              "enabledOverDisabledWall": 0.8340204534225737,
+              "enabledOverDisabledCpu": 0.8102365308053624
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "f0be640586338e216e943ef00b1f0091afcec340385aad3844ccf61f86c986e8",
+                  "binarySha256": "ea4416415a4f80b966ebb753cc1abf7683358211f692dacfd8fa2bcc0ee48577",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 23087625,
+                        "requestedBytes": 755388570,
+                        "retains": 10492416,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1763578402,
+                    1792798620,
+                    1772566777,
+                    1603222400,
+                    1630403976,
+                    1866374620,
+                    2186511303,
+                    1788645216,
+                    2120660012,
+                    2196530704,
+                    1920424546,
+                    2347442440,
+                    3631901208,
+                    2074701719,
+                    1884241259,
+                    1830406559
+                  ],
+                  "cpuNs": [
+                    1756241000,
+                    1788570000,
+                    1766118000,
+                    1562051000,
+                    1548928000,
+                    1858878000,
+                    2003106000,
+                    1782623000,
+                    2110275000,
+                    1952386000,
+                    1907833000,
+                    1814709000,
+                    2010860000,
+                    2061116000,
+                    1877655000,
+                    1741988000
+                  ],
+                  "medianWallNs": 1875307939.5,
+                  "medianCpuNs": 1836793500.0,
+                  "profileSourceSha256": "0996036e78ef01c3a3b43ca2c56b9ef4c561305a4a835a53cd9b71ba926feedd",
+                  "profileBinarySha256": "cbebcb9f5ae3c3658db074ef138354a066fdab7769078bb264ebab1e8a29d33a"
+                },
+                "1": {
+                  "generatedSha256": "d9842aace96fbfe51cf82c8c0479931654cd368f514f12eeceeb2e4a36cc3c01",
+                  "binarySha256": "93c78a1d13d6595705c60a2ad9a6a64c26ad83520229f340c8a98e33a5f2b05f",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/derivative-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 16,
+                        "tapeRequestedBytes": 260712,
+                        "peakTapeBytes": 163944,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 18892809,
+                        "requestedBytes": 637943962,
+                        "retains": 8395264,
+                        "peakChargedBytes": 840888,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    1516503066,
+                    1608048738,
+                    1874483558,
+                    1418569320,
+                    1876646802,
+                    1394692804,
+                    1342198368,
+                    1354629519,
+                    1437087479,
+                    1446151935,
+                    1553530289,
+                    1765956357,
+                    1427388520,
+                    1399252133,
+                    1462775474,
+                    1669507297
+                  ],
+                  "cpuNs": [
+                    1509932000,
+                    1508157000,
+                    1633959000,
+                    1411642000,
+                    1861052000,
+                    1388259000,
+                    1336129000,
+                    1349089000,
+                    1428524000,
+                    1439400000,
+                    1465774000,
+                    1641421000,
+                    1391353000,
+                    1392448000,
+                    1455235000,
+                    1480405000
+                  ],
+                  "medianWallNs": 1454463704.5,
+                  "medianCpuNs": 1447317500.0,
+                  "profileSourceSha256": "ca6a8e555cd82581bb7db4d0bed76752a65b9d3a71e7c22b71a0be1ba4dc03f4",
+                  "profileBinarySha256": "0093e777176734a0b754633bfe54e5a5dab28f14b59b2dfa28daa280900db5df"
+                }
+              },
+              "enabledOverDisabledWall": 0.7755865977338064,
+              "enabledOverDisabledCpu": 0.7879587444097553
+            }
+          }
+        },
+        "nested": {
+          "source": "square : List[t] -> t where Ring[t], Dup[t]\nsquare = head | option.unwrap-or zero | fork mul id id\nmain = range 0 256 | map int.to-float | grad (grad square | sum) | sum | echo\n",
+          "expected": "2.0\n",
+          "modes": {
+            "tracing": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "5b7513c958ef75e4c2ad913414996dffd5c54229c0676be07913301e09bb54c5",
+                  "binarySha256": "95e13690926b904b1d5f6a249aa7fe5a750fbc98c690435072acb838e7ce93c4",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    11776870,
+                    11837834,
+                    11133971,
+                    11533704,
+                    11813447,
+                    14272187,
+                    14339416,
+                    11955901,
+                    9915970,
+                    11341864,
+                    11754772,
+                    9561727,
+                    10882215,
+                    10376783,
+                    11182976,
+                    11263910
+                  ],
+                  "cpuNs": [
+                    5926000,
+                    5908000,
+                    5723000,
+                    6028000,
+                    5857000,
+                    6557000,
+                    7415000,
+                    5864000,
+                    4565000,
+                    5561000,
+                    5612000,
+                    4706000,
+                    5657000,
+                    5372000,
+                    5451000,
+                    5482000
+                  ],
+                  "medianWallNs": 11437784.0,
+                  "medianCpuNs": 5690000.0,
+                  "profileSourceSha256": "4fb6579fc88a912d3977479f34a4d81df79a202de7b25ec83b70b41115fdb12f",
+                  "profileBinarySha256": "16577fcf06fc34babd13e581fb11d1da4ee12c06dc275c402ac280153d513f0d"
+                },
+                "1": {
+                  "generatedSha256": "e87a569684283a4a928b2466812f11054b8dc41901e86983ddaeae01213ceadf",
+                  "binarySha256": "ac50ad878c63cea4c8c519402d4e65632cea9e4baaf37a5e78ba66cebad4abee",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-tracing-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    },
+                    "off": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    12030488,
+                    11634027,
+                    11774161,
+                    11406428,
+                    13264323,
+                    12454027,
+                    13430518,
+                    11477373,
+                    9861606,
+                    10667825,
+                    9589213,
+                    10238538,
+                    10011364,
+                    10475633,
+                    11368596,
+                    10732673
+                  ],
+                  "cpuNs": [
+                    5991000,
+                    6448000,
+                    5976000,
+                    5686000,
+                    7284000,
+                    6042000,
+                    7026000,
+                    5819000,
+                    4554000,
+                    4257000,
+                    4537000,
+                    5517000,
+                    4922000,
+                    4845000,
+                    5541000,
+                    5482000
+                  ],
+                  "medianWallNs": 11387512.0,
+                  "medianCpuNs": 5613500.0,
+                  "profileSourceSha256": "eb4711108f58c7bdf2cf2bce02ddc523f53d101e3ccd52c6d834d372469c9acf",
+                  "profileBinarySha256": "4330b346ea46e43a3982ee532f078090d5c24eac730e1e10e8e901529e518746"
+                }
+              },
+              "enabledOverDisabledWall": 0.9956047430166542,
+              "enabledOverDisabledCpu": 0.9865553602811951
+            },
+            "arc": {
+              "variants": {
+                "0": {
+                  "generatedSha256": "97ec73c4420bcaff43b280359ab301f05cba66eb4492b2101f599e48e0b333ab",
+                  "binarySha256": "7c890b781c68f80f42e64b8a5d82db6607f6ddf0bbdc0b85fa1d135d286e2c23",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-0-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-0-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 4414,
+                        "requestedBytes": 131492,
+                        "retains": 2109,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    10746940,
+                    10588147,
+                    11216525,
+                    11187844,
+                    10679831,
+                    10180431,
+                    9812581,
+                    11083442,
+                    11052260,
+                    11051748,
+                    11342606,
+                    11470141,
+                    11463513,
+                    11165994,
+                    9254143,
+                    10101152
+                  ],
+                  "cpuNs": [
+                    5316000,
+                    5258000,
+                    5671000,
+                    5492000,
+                    5383000,
+                    5195000,
+                    4379000,
+                    5500000,
+                    5335000,
+                    5436000,
+                    6006000,
+                    5685000,
+                    5576000,
+                    5527000,
+                    4462000,
+                    4796000
+                  ],
+                  "medianWallNs": 11052004.0,
+                  "medianCpuNs": 5409500.0,
+                  "profileSourceSha256": "53e4282205ae024c651b1c81e99fbc49231d01336558becd6db992af5127b902",
+                  "profileBinarySha256": "4b0a321b345094abaa66342fe40dfa57705763592cb4c1d007867c409e7917e4"
+                },
+                "1": {
+                  "generatedSha256": "c86803ee86f2b0478cf39659114d9a1cab27436b3cb636cff7618fdaa2ebf5d0",
+                  "binarySha256": "50cb2bc5893df4bed784e07ba2574fd9057e29a486f87ea60000bf3cac2dfb17",
+                  "profileCommand": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-1-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/comparison-repeat/nested-arc-1-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "profiles": {
+                    "normal": {
+                      "tape": {
+                        "tapeRequests": 12,
+                        "tapeRequestedBytes": 28000,
+                        "peakTapeBytes": 16632,
+                        "finalTapeBytes": 0
+                      },
+                      "managed": {
+                        "requests": 3901,
+                        "requestedBytes": 117148,
+                        "retains": 1853,
+                        "peakChargedBytes": 60096,
+                        "finalChargedBytes": 0,
+                        "collections": 0
+                      }
+                    }
+                  },
+                  "wallNs": [
+                    11302863,
+                    11342389,
+                    10246438,
+                    9368629,
+                    11435116,
+                    10902901,
+                    10676403,
+                    10446618,
+                    9868942,
+                    10469953,
+                    10130429,
+                    9747620,
+                    10161741,
+                    9427037,
+                    10546872,
+                    10901273
+                  ],
+                  "cpuNs": [
+                    5582000,
+                    5719000,
+                    4684000,
+                    4406000,
+                    5527000,
+                    5367000,
+                    5044000,
+                    5238000,
+                    4841000,
+                    5164000,
+                    4605000,
+                    4177000,
+                    4805000,
+                    4495000,
+                    5363000,
+                    5600000
+                  ],
+                  "medianWallNs": 10458285.5,
+                  "medianCpuNs": 5104000.0,
+                  "profileSourceSha256": "9304000112c9bddba8b3c1abf7258e0bec14f0a014457846c21cd92d9d97ed3a",
+                  "profileBinarySha256": "4bcc9a50ade00f74632811544be8f6ac12f0d474b8d93643de3b16292902e3ea"
+                }
+              },
+              "enabledOverDisabledWall": 0.9462795616071077,
+              "enabledOverDisabledCpu": 0.9435252796007024
+            }
+          }
+        }
+      },
+      "scope": "Same verified binaries from the named run, one warmup and 16 alternating process samples. Elapsed time includes process startup/input/output; CPU time is the child user+system CPU delta. Normal collector and collection-disabled profiles are separate rebuilt binaries; original collection-disabled counts must match exactly. No compilation in timed intervals or C/Rust comparison."
+    }
+  }
+}

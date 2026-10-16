@@ -230,7 +230,7 @@ int main(void) {
 "#
     .to_string();
     for (needle, placeholder) in [
-        ("return fwp_p_repeat_owned(l0, l1, NULL);", "REPEAT_WRAPPER"),
+        ("return fwp_p_repeat_owned(l0, l1, NULL,", "REPEAT_WRAPPER"),
         ("return fwp_p_range_owned(", "RANGE_WRAPPER"),
     ] {
         // Numeric kinds are emitted as an integer literal; find the range
