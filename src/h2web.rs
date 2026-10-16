@@ -1069,7 +1069,7 @@ mod tests {
                 .collect();
             let value = request(std::slice::from_ref(&call))
                 .unwrap_or_else(|_| panic!("interpreter request failed"));
-            let Value::Record(fields) = value else {
+            let Value::Record(fields) = &value else {
                 panic!("request must be a tuple")
             };
             let text = |v: &Value| {
@@ -1086,7 +1086,7 @@ mod tests {
             ));
             assert!(matches!(&fields[4], Value::Data(0, _)));
             for pair in fields[2].list_items() {
-                let Value::Record(pair) = pair else {
+                let Value::Record(pair) = &pair else {
                     panic!("header must be a pair")
                 };
                 expected.push_str(&format!("{}:{}\n", text(&pair[0]), text(&pair[1])));

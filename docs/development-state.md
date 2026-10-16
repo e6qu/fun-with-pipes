@@ -11,8 +11,11 @@ workspace `/Users/zardoz/projects/fun-with-pipes`. Do not open a competing PR.
 The combined implementation adds ARC binary symbol checks to `498f891c`.
 A Linux-only preparation option, `service-values-linux`, runs the same focused
 tests on one host to find failures before dispatching the six-platform matrix.
-Next: publish this workflow change, run the Linux preparation, fix every failure,
-then run `service-values` on all six native hosts. Verify the interpreter/native
+Linux preparation `38930571475` at `a6023f7a` caught two illegal moves from
+interpreter values in the new request comparison. The test now borrows their
+fields, preserving the value destructor. Next: publish and rerun the Linux
+preparation, then run `service-values` on all six native hosts once it passes.
+Queued runs `38929393764` and `38930262576` were canceled before execution. Verify the interpreter/native
 comparison actually runs one test, retain artifacts and inspect the binaries.
 No complete native acceptance is claimed yet. Full builds and checks stay on
 GitHub; local work uses `python3 scripts/local-guard.py` with unchanged limits.
