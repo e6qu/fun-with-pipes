@@ -5432,6 +5432,18 @@ impl<'p> Gen<'p> {
         if sym == "array.length" {
             return Ok("return (V)(int64_t)fwp_array_len(l0);".into());
         }
+        if sym == "array._map-list" {
+            let MT::Con(name, elements) = &result else {
+                return Err("numeric mapped array result has no element type".into());
+            };
+            if name != "std::Array" || elements.len() != 1 || scalar(&elements[0]).is_none() {
+                return Err("mapped array construction requires an inline numeric result".into());
+            }
+            let descriptor = self.desc(&elements[0]);
+            return Ok(format!(
+                "return fwp_p_array_map_list(l0, l1, {descriptor});"
+            ));
+        }
         if matches!(sym, "ad.tape-owned" | "ad.push-owned") {
             let MT::Record(fields) = &params[0] else {
                 return Err(format!("{sym} requires a scalar operation tuple"));

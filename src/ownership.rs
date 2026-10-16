@@ -500,6 +500,14 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[0, 1],
         ),
+        // Compiler-only numeric map/list materialization. Callback results are
+        // inline numbers; only the returned array owns managed storage.
+        "array._map-list" => (
+            &[B, B],
+            ResultOwnership::OwnedTree,
+            Some(Callback::Borrowed(0)),
+            &[],
+        ),
         "array.fold" => (
             &[B, C, B],
             ResultOwnership::ArrayOperation { consumed: Some(1) },

@@ -100,5 +100,13 @@ Acceptance must compare raw/optimized interpretation and native tracing/ARC at
 O1/O2, including aliasing inputs, effects, checked failures, empty lists, numeric
 widths and negative cleanup controls. CI must measure allocations and repeated
 timings against the same compiler with this transformation disabled, including
-the derivative workload. Do not infer speed from allocation reduction. No
-implementation or support claim has been made yet.
+the derivative workload. Do not infer speed from allocation reduction. The candidate is now implemented but unaccepted. `FWP_MAP_ARRAY=0` disables
+only this transformation for controlled comparisons; `FWP_ARRAY_FUSION=0` also
+disables it with the other array transformations. New regressions compare raw
+and optimized engines, effects/traps, managed-result exclusion, counts and
+callback-failure cleanup. The initial local probe accidentally requested a
+collection in ARC mode; its fixture now uses the actual `FWP_ARC_ONLY` guard.
+Edited-C mechanism checks pass in ARC and tracing (1.17 s each), including a
+missing-free negative control. Formatting passes. These use the accepted #147
+compiler plus current helper C, not the changed compiler. Full acceptance and
+performance evidence remain on CI. The next focused suite is `mapped-arrays`.

@@ -874,6 +874,11 @@ impl Fuser<'_> {
     /// The primitive a fused pipeline can end in, if `id` is one.
     fn consumer(&self, id: FuncId, args: &[Expr]) -> Option<&'static str> {
         match (prim_sym(self.funcs, id)?, args.len()) {
+            ("array.from-list", 1)
+                if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") =>
+            {
+                Some("array-map-list")
+            }
             ("fold", 3) => Some("fold"),
             ("array.fold", 3) if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") => {
                 Some("array-fold")
@@ -892,6 +897,31 @@ impl Fuser<'_> {
     /// so the stages before it may not trap at all).
     fn consume(&mut self, cons_id: FuncId, args: &[Expr]) -> Option<Expr> {
         let kind = self.consumer(cons_id, args)?;
+        if kind == "array-map-list" {
+            if std::env::var("FWP_MAP_ARRAY").as_deref() == Ok("0") {
+                return None;
+            }
+            let Expr::Call(map, inputs) = &args[0] else {
+                return None;
+            };
+            if prim_sym(self.funcs, *map) != Some("map") || inputs.len() != 2 {
+                return None;
+            }
+            let result = self.funcs[cons_id].ty.params(1).1.clone();
+            let MT::Con(name, elements) = &result else {
+                return None;
+            };
+            if name != "std::Array" || elements.len() != 1 || !unboxed_numeric(&elements[0]) {
+                return None;
+            }
+            // Callbacks still run in list order, all before array construction.
+            // Restrict outputs to inline numbers: there are no result resources
+            // whose destruction could move relative to later callbacks.
+            let parameters = self.funcs[*map].ty.params(2).0;
+            let ty = fun2(parameters[0], parameters[1], &result);
+            let fused = self.prim("array._map-list", ty, 2);
+            return Some(Expr::Call(fused, inputs.clone()));
+        }
         let (cparams, result_ty) = self.funcs[cons_id].ty.params(args.len());
         let cparams: Vec<MT> = cparams.into_iter().cloned().collect();
         let result_ty = result_ty.clone();
