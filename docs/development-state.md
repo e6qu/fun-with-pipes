@@ -18,11 +18,21 @@ The new repair matches the HTTP/2 assignment and its capacity update together,
 keeps the one-match assertion, and counts only successful first allocations.
 Explicit marker/replacement pairs remove the old marker-dependent insertion
 rule. The deliberately omitted buffer/partial-field cleanup controls remain.
-Runtime behavior is unchanged. Four source hooks are unique and exclude the
+The test also saves whether the buffer is new before `realloc`, so it never
+examines the old pointer after a successful resize. Runtime behavior is unchanged. Five source hooks are unique and exclude the
 text buffer; native verification must still pass.
 
-Next: publish the repair and run the `byte-decoders` suite on all six native
-hosts. Once that focused run passes, make the PR ready and require all nine
+Repair `1e76500045e9a83655e9697352676270b1ee7693` is published.
+Focused six-host decoder run: `38952492611`; documentation: `38952500689`.
+Draft production `38952500342` was skipped, not accepted.
+Local formatting (1.28s), unique runtime-marker checks (0.20s), and the
+documentation audit (3.14s) pass. Reviewing all canceled job logs (13.05s) found
+only the same duplicate hook failure on both Linux hosts, both Windows hosts
+and ARM Mac GC; incomplete jobs are not acceptance.
+This follow-up saves the pre-resize empty-buffer flag. `1e765000` remains the
+focused verification source; final production/documentation must use this newer
+published head. The five-hook source check (0.19s) and formatting (1.22s) pass.
+Next: require the focused `byte-decoders` suite on all six native hosts. Once that focused run passes, make the PR ready and require all nine
 production jobs plus documentation on its exact new head. A skipped draft CI
 run is not acceptance. Do not reuse the old head or acceptance IDs.
 
@@ -108,10 +118,15 @@ and duplicate CI was canceled. [Delivery history](roadmap-history.md) retains it
 
 Independent preparation is in `/private/tmp/fwp-context-owners`, branch
 `service-context-preparation`, based on `ac3060d1`. Current combined source
-`4656043f` has six-host native run `38951742782`. It adds message-decoding
+Current prepared source `975806e9` has six-host run `38953639844`.
+Earlier `38951742782` at `4656043f` exposed a Windows artifact copy using `probe`
+where the compiler writes `probe.exe`; the repair makes that path explicit.
+Windows AMD64's callback/result and decoder cleanup tests passed, but its O2
+child checks still need the replacement run. The new source also protects
+served-request decoding scratch. It adds message-decoding
 trap cleanup and the same two-executable Linux scheduling used on Mac. Queued
-`38949852186` was superseded. Focused actual WASI ARC run `38949856424` tests
-explicit exit at `6b642a82`. Broader WASI/browser run `38947985548` passes on both
+`38949852186` was superseded. Focused actual WASI ARC run `38949856424` passes on both Linux
+architectures, including actual explicit exit at `6b642a82`. Broader WASI/browser run `38947985548` passes on both
 Linux architectures at callback/runtime source `24caa70b`; it predates exit tests. Earlier context checks exposed harness
 and Windows inventory path bugs; repairs are included in the new source. Do not open a second PR. Rebase only its
 delta after `ac3060d1` onto the accepted #153 squash.

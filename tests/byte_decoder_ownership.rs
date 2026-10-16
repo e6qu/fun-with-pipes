@@ -121,8 +121,12 @@ fn byte_decoders_release_native_buffers_and_partial_results() {
                 "static inline void *fwp_gc_alloc(size_t n, int leaf) { if(leaf!=0) byte_allocation();",
             ),
             (
+                "    unsigned char *data = (unsigned char *)realloc(b->d, c);",
+                "    int byte_new_buffer = !b->d;\n    unsigned char *data = (unsigned char *)realloc(b->d, c);",
+            ),
+            (
                 "    b->d = data;\n    b->cap = c;",
-                "    if(!b->d) byte_buffers_live++;\n    b->d = data;\n    b->cap = c;",
+                "    if(byte_new_buffer) byte_buffers_live++;\n    b->d = data;\n    b->cap = c;",
             ),
             (
                 "static void h2b_free(h2_buf *b) {",
@@ -130,7 +134,7 @@ fn byte_decoders_release_native_buffers_and_partial_results() {
             ),
         ] {
             assert_eq!(code.matches(marker).count(), 1, "{marker}");
-            // Count only HTTP/2 buffers, after checked allocation succeeds.
+            // Remember emptiness before realloc; count only after it succeeds.
             code = code.replace(marker, replacement);
         }
         let code = code[..code.find("int main(").unwrap()].to_string()
