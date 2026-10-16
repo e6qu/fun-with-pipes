@@ -91,8 +91,8 @@ and documentation checks for the final combined PR head before squash merge.
 The following preparation owns ternary, URL/form/HTTP and compressed-byte/frame
 decoder results and partial constructions, metric snapshots, syntax text and CPU
 tensor output/scratch. It also repairs Windows web prerequisites, clocks, socket
-retry checks and shutdown handling. The decoder/Windows subset passes six-host
-checks; metrics and kernels still need combined native/WASI evidence. Keep this
+retry checks and shutdown handling. Owned-value/kernel checks pass on six native hosts and both actual WASI hosts;
+a separate six-host unload run verifies the repaired Windows test fixture. Keep this
 preparation separate until #152 merges; its current results belong in the handoff,
 and historical preparation branches are evidence rather than extra tasks.
 

@@ -521,8 +521,8 @@ The next ownership batch prepares copied metric snapshots and syntax rendering.
 A metric registry stores names and numbers for a process or library instance.
 Repeated updates of an existing name reuse that entry; distinct names require
 more native storage. Process shutdown and library teardown free it. A snapshot
-copies names and kinds into an immutable list of tuples: subsequent updates cannot mutate an earlier
-snapshot. Construction now protects partial strings, tuples and list nodes,
+copies names and kinds into an immutable list of tuples: subsequent updates cannot
+mutate an earlier snapshot. Construction now protects partial strings, tuples and list nodes,
 without a temporary pointer array. This registry lifetime is separate from the
 shorter lifetime of snapshot storage; it is not an allocation-free service claim.
 
@@ -531,5 +531,7 @@ lookup and string sorting. Observation suffixes are compared and copied directly
 without a temporary concatenated name. `syntax.show` borrows its syntax tree and
 returns new text; its native formatting buffer is protected if result allocation
 traps. Managed allocation fault tests, missing-cleanup controls, tracing stress,
-checked ARC and actual WASI checks are required before claiming verified support.
-The session handoff records their current results.
+checked ARC and actual WASI checks pass in preparation. Windows and POSIX library
+unload tests verify registry release separately. The
+[retained report](measurements/owned-values-and-kernels-2026-10-16.json) records
+the artifacts and repaired test failures; the handoff tracks full acceptance.

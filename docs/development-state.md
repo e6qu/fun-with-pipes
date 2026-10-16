@@ -129,38 +129,44 @@ before adding. Small native/interpreter/actual-WASI probes evaluate only the las
 4095 constant elements; a WASI control restores the wrapped end and must fail.
 These checks need CI; no large input or multi-billion-element loop runs locally.
 
-Source `c8f4646c4066ab0b23056a9279c4d6b4d48ad7be` passes the combined native
-Linux ARM64 and Intel macOS jobs in `38891574490`, and actual WASI ARM64 in
-`38891578037`; other Linux/macOS jobs are still running. Both Windows jobs pass
-kernel, decoder, metrics and web checks but fail `library_unload`, newly included
-in the focused suite: that test used POSIX loader/signal/thread-key APIs on Windows.
+[The combined evidence report](measurements/owned-values-and-kernels-2026-10-16.json)
+retains all six native allocation artifact sets at `457f00d3` from `38893386853`.
+All kernel, decoder, metrics, web and ordinary-library checks pass there. The two
+overall Windows jobs failed only the new unload fixture's export selection; the
+four Linux/macOS jobs pass. Windows fixtures now use the same ordinary external
+definitions as generated library tests. Focused unload `38894911944` at `234da577`
+passes **all six** native hosts, including every deliberate missing-cleanup control.
+Runtime sources are unchanged by that repair. Actual WASI `38891578037` at
+`c8f4646c` passes **both** hosts, including registry shutdown, count narrowing and
+final-block overflow controls. None of this replaces full final-head production.
 
-A Windows peer now uses LoadLibrary/FreeLibrary, VirtualQuery, native sockets,
-fiber deletion, thread-key release and console-handler removal. It preserves
-checks for task cancellation, host-owned sockets, cached results, wide counts,
-metric names/registry storage, shared-library unload and static-library process
-exit. Deliberately omitted cleanup must fail at both O1/O2. It also verifies that
-a host thread already using fibers retains that state. Existing POSIX tests stay
-intact. Full Windows CI now includes this unload test. Source `457f00d3` in `38893386853`
-passes native ARM Linux/macOS; Windows AMD64 exposes a fixture export mistake:
-adding `dllexport` to only `setup` suppresses the MinGW automatic exports used by
-the generated library, hiding `cached`. The fixture now uses the same ordinary
-external definitions as existing library tests and reports missing symbols by name.
-A focused `library-unload` suite validates the repair on six native targets without
-repeating unrelated decoder/kernel checks. Both actual WASI jobs at `c8f4646c`
-pass in `38891578037`; runtime/WASI test sources are unchanged by the Windows peer.
+The Windows unload peer uses LoadLibrary/FreeLibrary, VirtualQuery, native sockets,
+fiber deletion, thread-key release and console-handler removal. It verifies task
+cancellation, host-owned sockets/fiber state, cached results, wide counts and
+metric storage at shared unload and static process exit. POSIX checks remain.
+Full Windows CI now includes this test.
 
-Superseded `38888712709`, `38888716317` and `38891244195` were canceled only after
-Windows dependency caches were saved. The failed/incomplete runs are not acceptance.
-Reference tables are updated and the dead arithmetic exception list in `arc.rs`
-is removed: all 26 entries already use the shared explicit contract table, checked
-against the inventory. Full final-head gates must cover that cleanup too.
+For 8193 F64 values multiplied by 0.5, one-worker native temporary requests fall
+from three to two and native peak from 69,648 to 4,104 bytes. The result array
+remains. All native/charged final deltas are zero; managed/worker-start omission
+controls fail as intended. Four-worker peak varies with overlap. Actual retained
+ARM64/AMD64 ARC probe binaries contain packed multiply instructions and chunk
+copies; they still use arithmetic workspace. No timing, cache, register-only or
+C/Rust parity claim is made. Both runtime and repaired test hashes are retained.
+Local report/hash verification and six-host assembly inspection each passed under
+the guard in 0.13 s; raw artifacts are in `/private/tmp/fwp-owned-values-457`.
+
+The dead arithmetic exception list in `arc.rs` is removed: all 26 entries already
+use the shared explicit contract table, checked against the inventory. Full final
+production must cover the cleanup and integration with #152's final optimizer.
+Superseded failed/incomplete runs are historical evidence, not remaining tasks.
 
 The GC golden suite already uses four workers. No concurrency or coverage change
-was made. A local follow-up adds per-example start/elapsed logging so the next full
-production run can identify slow examples instead of reporting only total suite
-time. Golden interpreter/native tests share fixture paths, so any later scheduling
-change must preserve isolation; simply increasing worker counts is not justified.
+was made. Published `234da577` adds per-example start/elapsed logging for the next
+full production run. Golden interpreter/native tests share fixture paths; any
+later scheduling change must preserve isolation. PR #152's ARM macOS stress suite
+passed in 832.58 s. Accepted #151's Intel suite took 1228.83 s; these different hosts
+are not a before/after speed comparison.
 
 ## Local checks and limits
 
@@ -187,8 +193,11 @@ networking, plus exit and GPU execution. Raw pointers, foreign/host callback
 retention, mutable cycles and deployment exclusions also remain beyond that count.
 JIT is prohibited; the existing OpenCL runtime-build gap is unresolved by CPU work.
 
-Next: publish the DLL-export fixture repair, validate it with the focused
-`library-unload` suite, fix failures and retain the combined evidence. Actual WASI `38891578037` passes both hosts. Independently finish #152's full gates and squash merge
-when they pass. Then rebase this preparation delta onto that accepted merge,
-update the plan/history/handoff, open the next substantial PR and require all
-nine production jobs plus docs on its final head before merging.
+Next: finish #152's remaining full production gates and squash merge when all
+nine jobs plus docs pass on `c81b0c9f`. Preserve the root workspace's local handoff
+edits without adding a commit to that tested PR. Then rebase this preparation's
+complete delta after `3577ba37` onto the accepted merge, preserving #152's final
+optimizer, formatting preflight and numerical measurements. Resolve docs into one
+current handoff, publish the next substantial PR, and require fresh full production
+and docs on its final head. Do not rerun completed focused probes without a new
+source change, failure or unresolved concern.

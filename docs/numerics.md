@@ -309,9 +309,11 @@ The caller protects output and scratch through validation, allocation and worker
 startup. If a requested native worker cannot start, it joins every worker already
 started, frees pending storage and reports a trap. It does not silently execute
 missing workers on the caller. Counts are validated before conversion to WASI's
-32-bit address size. Focused native, WASI, allocation-failure and worker-failure
-checks are required before this preparation becomes accepted support; see the
-[session handoff](development-state.md). No timing improvement is claimed here.
+32-bit address size; final reduction blocks use remaining lengths to avoid index
+overflow. Focused native, WASI, allocation-failure and worker-failure checks pass;
+full delivery acceptance remains in the [session handoff](development-state.md).
+[Measured storage costs](benchmarks.md#cpu-tensor-output-storage) distinguish the
+removed buffer from remaining allocations. No timing improvement is claimed here.
 
 CPU reductions add each block of 4096 elements left to right from zero, then
 add block sums left to right. Changing the worker count preserves that order.
