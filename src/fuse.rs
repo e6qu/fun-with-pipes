@@ -923,6 +923,21 @@ impl Fuser<'_> {
             return None;
         }
         if kind == "array-map-list" {
+            let result = self.funcs[cons_id].ty.params(1).1.clone();
+            let MT::Con(name, elements) = &result else {
+                return None;
+            };
+            if name != "std::Array" || elements.len() != 1 || !unboxed_numeric(&elements[0]) {
+                return None;
+            }
+            if let Expr::Call(range, bounds) = &args[0] {
+                if prim_sym(self.funcs, *range) == Some("range") && bounds.len() == 2 {
+                    let parameters = self.funcs[*range].ty.params(2).0;
+                    let ty = fun2(parameters[0], parameters[1], &result);
+                    let direct = self.prim("array._range", ty, 2);
+                    return Some(Expr::Call(direct, bounds.clone()));
+                }
+            }
             if std::env::var("FWP_MAP_ARRAY").as_deref() == Ok("0") {
                 return None;
             }
@@ -930,13 +945,6 @@ impl Fuser<'_> {
                 return None;
             };
             if prim_sym(self.funcs, *map) != Some("map") || inputs.len() != 2 {
-                return None;
-            }
-            let result = self.funcs[cons_id].ty.params(1).1.clone();
-            let MT::Con(name, elements) = &result else {
-                return None;
-            };
-            if name != "std::Array" || elements.len() != 1 || !unboxed_numeric(&elements[0]) {
                 return None;
             }
             // Callbacks still run in list order, all before array construction.

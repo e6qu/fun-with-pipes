@@ -1,0 +1,15 @@
+# A lane is one position in a fixed-size vector. Vec[4, F64] has four F64
+# lanes. This signature supplies the lane count for simd.splat, which repeats
+# 2.0 into all four lanes; simd.mul multiplies corresponding lanes.
+double-four : Vec[4, F64] -> Vec[4, F64]
+double-four = simd.mul (simd.splat 2.0)
+
+# simd.from-array checks the length and returns Some vector or None.
+# option.map transforms the value inside Some and leaves None unchanged.
+# The first input prints Some [2.0, 4.0, 6.0, 8.0]; the second prints None.
+main = [
+    [1.0, 2.0, 3.0, 4.0] | array.from-list | simd.from-array
+        | option.map (double-four | simd.to-array | array.to-list) | echo,
+    [1.0, 2.0, 3.0] | array.from-list | simd.from-array
+        | option.map (double-four | simd.to-array | array.to-list) | echo,
+] | ignore

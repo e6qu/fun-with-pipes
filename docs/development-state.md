@@ -1,101 +1,148 @@
 # Session handoff
 
-Updated 2026-10-16. [PLAN.md](../PLAN.md) defines completion; no whole roadmap
-area is finished. [Delivery history](roadmap-history.md) preserves accepted work.
+Updated 2026-10-16. [PLAN.md](../PLAN.md) defines completion. None of its seven
+whole work areas is complete. This is the current action list; accepted evidence
+belongs in [delivery history](roadmap-history.md).
 
-## Active delivery
+## Active delivery and next batch
 
-[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151), branch
-`wasi-hash-delivery` in `/private/tmp/fwp-wasi-delivery`, remains the only open PR.
-It adds synchronous WASI ARC, streaming structural hashing and eligible callback
-pipeline fusion. Its final gate at `796f5a4c` did not pass: Intel macOS GC job
-`116844933823` in run `38861611494` exceeded the 90-minute limit. GitHub's check
-annotation confirms that cause. No failing assertion was reported before timeout.
-Six production jobs and docs `38861611496` passed; incomplete/canceled jobs are
-not acceptance. Never merge that run or count a focused skip as support.
+[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is the only open delivery.
+Its final head is `796f5a4c3cd920eb49f709f9a0a5551dc98481fc`, in worktree
+`/private/tmp/fwp-wasi-delivery`. Docs `38861611496` passes; production
+`38861611494` still needs both Linux jobs and Intel macOS GC. Six other production
+jobs pass. Require all nine jobs and docs for this exact head before squash merge.
+Accepted #150 is `729db67f71386750aad0bbe477f546e5276b0223`; its duplicate
+postmerge production `38860909658` is confirmed canceled.
 
-The current repair replaces alternating sorted target names with explicit lists
-in `scripts/macos-test-shards.json`. Adding a target previously shifted many
-existing targets to the other job. All 219 current integration targets now have
-one assignment; unit/example/bench targets remain in regular and GC stress stays
-in its separate invocation. The real Cargo target set is checked for missing,
-duplicate, obsolete or unknown entries. No test or job was removed, and neither
-job's 90-minute limit was raised.
+The next combined batch is now in the main workspace
+`/Users/zardoz/projects/fun-with-pipes`, branch `owned-numerics-delivery`, based on
+#151's tested head. It combines only the prepared hash/range delta and vector
+ownership delta. Once #151 merges, transfer this combined delta onto the verified
+squash commit before opening its PR. Do not replay #151's old commit chain.
 
-[Recorded target timings](measurements/macos-shards-2026-10-16.json) from completed
-#150/#151 and focused jobs guide the fixed initial assignment. Estimated regular
-and GC loads are 84.18/83.25 minutes including observed overhead. Those estimates
-are not passing CI or guaranteed future times. Local guarded coverage/stability/
-failure-propagation checks pass (0.25 s). The repair still needs fresh full gates
-and docs for the exact final head; query the PR head and checks after publication.
+Preparation sources remain available for evidence: `borrowed-hash-arguments`
+through `8d692024` in `/private/tmp/fwp-hash-borrows` (delta after `28cc4d0e`), and
+`owned-vector-preparation` through `43947be9` in `/private/tmp/fwp-owned-vectors`
+(delta after `aab2a928`). They are already incorporated here, not separate tasks
+or additional PRs. Review conflicts preserved #151's allocation counter repair,
+accepted history, and the new zero-retain assertions.
 
-Next: publish the CI repair, cancel only superseded failed-run work, and fix any
-new failures. Squash merge #151 only when all nine production jobs and docs pass
-for its final head. Verify the merged tree, parent and exact one-line message.
+Next: finish vector cost evidence, verify the combined source/docs, and merge
+#151 once its exact-head gates pass. Rebase only this batch's delta, publish one
+substantial PR, then require fresh full production and documentation acceptance.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
 | 1 | In progress | Complete deployment and primitive ownership; remove tracing |
-| 2 | In progress | Deliver borrowed hash fields, direct arrays and vector owners |
-| 3 | In progress | Reduce measured vector and other C/Rust gaps |
+| 2 | In progress | Deliver borrowed hash fields and direct range arrays |
+| 3 | In progress | Measure remaining C/Rust gaps and inspect generated code |
 | 4 | In progress | Reduce derivative recording costs and validate scaling |
-| 5 | In progress | Improve measured lane kernels and resolve runtime OpenCL compilation |
-| 6 | In progress | Retain comparable timing, allocation and machine-code evidence |
-| 7 | In progress | Extend maintained applications across deployment boundaries |
+| 5 | In progress | Measure lane kernels and resolve runtime OpenCL compilation |
+| 6 | In progress | Retain comparable, repeated measurements and storage costs |
+| 7 | In progress | Extend maintained programs across deployment boundaries |
 
-## Implementation evidence
+## Combined changes
 
-Native and actual WASI focused checks passed before full-gate publication. WASI
-uses counted synchronous owners with physical-free controls, fresh numeric boxes,
-wide reference counts and checked startup modes. Browser/service host re-entry
-remains excluded. Native-library plus WASM generation is rejected explicitly.
+Hash's explicit nonescape proof means its input is used only during the call;
+borrowing alone does not imply this. Existing stack placement removes temporary
+tuple allocations. Ownership lowering borrows temporary structural-tuple fields
+from live owners, including sole-use named fields. It never moves calls, traps or
+resource frames. The independent verifier checks owner liveness after every
+field; retained aliases and later consumption preserve ordinary ownership.
 
-Structural hashing streams the existing canonical typed bytes into FNV-1a.
-The independent interpreter retains buffered encoding. Native/WASI fixtures cover
-all widths, float bits, Unicode/NUL text, containers/views and aliases. Restoring
-the old buffer must fail the no-allocation control. Known callback captures remain
-eager and ordered; unknown forwarding wrappers do not receive the fusion proof.
-Hash/bitwise loop fusion preserves effects, first traps and resource frames.
+Immediate inline-integer `range | array.from-list` constructs packed storage
+without list nodes. Bounds retain their order; empty/descending ranges remain
+empty. Wide size arithmetic rejects oversized arrays before machine-size
+conversion, including on 32-bit WASI. I128/U128 retain the existing boxed path.
 
-Four-host source/binary/assembly comparisons and paired CPU repeats are retained
-in [benchmarks](benchmarks.md). They show lower small-workload counts and CPU time,
-while preserving slower elapsed samples and remaining C/Rust gaps. Large timing
-is mostly unchanged. The allocation test now counts both `fwp_alloc_init` and the
-nonduplicated slow allocation path; old benchmark profiles already did so.
-The CI repair changes scheduling only, not compiler/runtime sources.
+The nine vector primitives own result wrappers, arrays, boxed integer aliases and
+reduction accumulators. Partial construction and replaced accumulators have
+cleanup on arithmetic/allocation failures. F128 lanes copy inline payload bits
+without retaining temporary scalar boxes. This preserves wrapping integer lane
+operations, checked division, float order and manual-record common-prefix behavior.
+The new lane example introduces notation and optional results before use. Library
+comments/generated docs describe C loops without promising vector instructions.
 
-## Following combined batch
+## Completed focused checks and measurements
 
-The main workspace `/Users/zardoz/projects/fun-with-pipes` is on
-`owned-numerics-delivery`, prepared and published as `9b4f9d46`, based on old #151
-head `796f5a4c`. It already combines hash/range and vector preparations; do not
-replay those branches again. Propagate the CI repair there with its two additional
-integration targets, keeping existing assignments stable. After #151 merges,
-transfer only the combined delta onto its verified squash and open one substantial
-PR with fresh complete gates.
+Hash/range compiler revision `ac72124c` passes native `38864599295` on all six
+hosts and actual WASI `38864602220` on both Linux hosts. Four-host costs
+`38864604854` pass. All source/binary/assembly hashes were verified. The
+[borrowed-field report](measurements/hash-borrowed-fields-2026-10-16.json) shows
+two managed requests, zero retains and zero final charged storage for both
+workloads on all four hosts. Small/large peak charged bytes are 144/32,776.
+The inspected ARM64 loop uses a stack tuple and register-held state, with no
+allocation or count calls. This is not a dynamic spill/cache measurement.
 
-That batch's hash/range revision `ac72124c` passes six native checks
-`38864599295`, both WASI jobs `38864602220`, costs `38864604854`, and two paired
-runs `38866837452` / `38867789225`. Hash workloads use two managed requests, zero
-retains and zero final charged memory. Some timing regressions did not repeat;
-all samples and C/Rust overhead remain visible.
+Two four-host paired runs, `38866837452` and `38867789225`, compare those binaries
+against post-fusion baseline `38856285939`. Both pass; their identities agree.
+The [paired report](measurements/hash-borrowed-cpu-2026-10-16.json) retains slower
+samples and remaining C/Rust overhead. First-run small ARM macOS and large Intel
+macOS ARC regressions did not repeat. Small Linux and Intel macOS CPU medians fall
+in both runs; large-input changes are generally small. No universal speedup or
+parity claim follows from fewer objects/counts. [Benchmarks](benchmarks.md) explain
+inputs, timing, ratios, managed/system memory scopes and remaining differences.
 
-Vector runtime `637b3eb2` passes six native jobs `38867603162` and both WASI jobs
-`38867607803`. Four-host costs `38869050349` at `6be8f245` establish a remaining
-allocation/performance gap: three vector constructions per mapped input plus
-range/result lists. Checked ARC four-lane CPU is about 11.2 times C on Linux ARM64,
-despite zero retains and complete cleanup. Its next optimization must target
-measured storage/representation costs without changing effects, trap order or
-numeric rules. The main worktree handoff retains the full details and report links.
+Vector runtime revision `637b3eb2` passes native `38867603162` on all six hosts
+and actual WASI `38867607803` on both Linux hosts. These include all fifteen
+numeric formats, aliases, empty/singleton results, invalid lengths, array views,
+wide precision/wrapping, and injected partial-construction/accumulator failures.
+Missing-free controls fail as intended. Follow-up `6be8f245` adds the introductory
+example, manual-record compatibility case, generated-code capture and the
+runner-only C/Rust lane comparison; it does not change the runtime. The extended
+fixture and example pass the accepted #148 interpreter (0.25/0.26 s). Their
+changed-compiler execution still needs the combined production gate.
 
-## Working rules
+Lane costs `38869050349` at `6be8f245` pass all four hosts. The retained
+[vector report](measurements/vector-lanes-2026-10-16.json) verifies every source,
+binary and assembly hash (guarded 0.20 s). All modes/hosts use 262,147 / 65,539
+managed requests for four/sixty-four lanes, zero retains and zero final charged
+storage. Linux ARM64 checked ARC takes 11.200 / 3.647 times C's CPU time.
+C/Rust stack arrays allocate no application heap storage. These scopes exclude
+startup/printing allocation internals differently; benchmarks explain that limit.
 
-Standing authorization covers fixes, publication and passing-CI squash merge.
-Every commit is exactly one line, at most 80 characters, with no body, trailers
-or attribution. Use `python3 scripts/local-guard.py` for bounded serial local
-checks. Full builds, suites and measurements run on GitHub. The earlier local
-optimizer probe was stopped by the guard; no process remained and no limit was
-raised. Do not restart it. JIT is excluded. Default tracing, broader deployment
-ownership, derivative scaling and representative applications remain unfinished.
+Actual code shows three vector constructions per mapped input, materialized
+range/result lists and scalar F64 multiply with per-element representation
+handling. The C reference uses register calculations and vector instructions.
+The next optimization should target these measured costs: prove eligible lane
+pipeline fusion without moving effects/traps, remove temporary vectors/constant
+weights where safe, and expose contiguous array data to the C optimizer. Preserve
+manual-record lengths, boxed ownership and checked division. This baseline is
+not a measurement of speedup from adding ownership contracts.
+
+## Local verification and resolved failures
+
+The hash allocation counter originally missed `fwp_alloc_init`; both fast and
+nonduplicated slow paths are now counted, including #151's fix. The strict
+zero-retain control caught remaining named array aliases; `ac72124c` repaired
+only their sole, pure hash use. Range fixture signatures were made explicit.
+No assertion was weakened. Earlier failed/superseded focused runs are historical
+evidence, not remaining actions. The intermediate stack/range reports remain
+linked from benchmarks so the final changes can be traced.
+
+Vector formatting passed (1.11 s), docs passed (2.81 s), and the inventory audit
+passed (1.11 s): 271 contracted declarations, 72 remaining distinct review
+symbols. Its frozen baseline was unchanged. Combined formatting (1.29 s), docs (3.00 s)
+and inventory (1.30 s) pass. Compiler/runtime/test/workflow sources matched the
+prepared `43947be9` tree before the final library-comment clarification. Source-
+generated library docs pass after regeneration (1.27 s); the final documentation
+audit passes (2.80 s). No changed compiler was built locally. The earlier
+local diagnostic compilation stopped with an OS signal error; no process remained
+and limits were not raised. Do not restart that refused workload.
+
+## Delivery rules and remaining direction
+
+Standing authorization covers fixes, publication and squash merge after every
+exact-head gate passes. Every commit is one line, at most 80 characters, with
+empty body and no trailers or attribution. Verify merged tree, parent and exact
+message before canceling duplicate postmerge production. Skipped focused jobs
+are not acceptance. Keep one delivery PR open at a time.
+
+Use `python3 scripts/local-guard.py` for serial bounded local checks. Full builds,
+suites, benchmarks and large regeneration run on GitHub. Browser/service re-entry,
+retained host callbacks, remaining numerical/network contracts, derivative scaling
+and broader applications remain open. JIT is excluded; OpenCL's existing runtime
+compilation is an implementation gap to resolve, not an exception. Default
+tracing remains; this batch does not complete any whole roadmap area.

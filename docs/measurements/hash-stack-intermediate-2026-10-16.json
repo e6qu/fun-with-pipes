@@ -1,0 +1,3618 @@
+{
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38860426497",
+  "status": "Partial intermediate experiment: ARM Linux/macOS completed; remaining queued jobs canceled when combined range-array measurements superseded this revision. Not four-host acceptance.",
+  "reports": {
+    "macos-15": {
+      "head": "ed78f26ab370495523d019abeaadbf67dae08768",
+      "hardware": {
+        "system": "Darwin",
+        "node": "sjc22-bt151-2f0d1683-1242-44f9-855b-bac5ec7a9ceb-16B76400EF59.local",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "machine": "arm64",
+        "processor": "arm"
+      },
+      "cpu": "Apple M1 (Virtual)\n",
+      "cCompiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "rustCompiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "results": {
+        "small": {
+          "elements": 16,
+          "repetitions": 4096,
+          "canonicalBytesPerHash": 137,
+          "source": "main = range 0 4096 | map (both id (const (range 0 16 | array.from-list)) | hash) | fold bit.xor 0u64 | echo\n",
+          "expected": "16923962133875117568\n",
+          "variants": {
+            "fwp-tracing": {
+              "sourceSha256": "16e29f6b3c79567d73e587ee9939564ba4d5d6d8aee4faa8cd34b913961d69c6",
+              "binarySha256": "7f01bfde4f368f3b23dd65103019c1cdf62af25d6856ead0ed2025923e299920",
+              "assemblySha256": "434362ec69acc4672fabb12399466843855f451eb6e060dfff54674bd316f9a7",
+              "sourceBytes": 641313,
+              "binaryBytes": 71288,
+              "emitWallNs": 384165458,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-tracing.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-tracing",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 905872375
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-tracing-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-tracing-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 594345875
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 0,
+                  "hashBufferRequestedBytes": 0,
+                  "peakHashBufferCapacityBytes": 0
+                },
+                {
+                  "requests": 18,
+                  "requestedBytes": 549,
+                  "retains": 4096,
+                  "peakChargedBytes": 656,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1392640,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 7794125,
+                  "childCpuNs": 3982000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 5440083,
+                  "childCpuNs": 3838000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 4208166,
+                  "childCpuNs": 3035000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 5255583,
+                  "childCpuNs": 3775000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 9963750,
+                  "childCpuNs": 5844000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 7315500,
+                  "childCpuNs": 3777000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 11591167,
+                  "childCpuNs": 6812000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 11147084,
+                  "childCpuNs": 7355000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 6902167,
+                  "childCpuNs": 3279000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 7729458,
+                  "childCpuNs": 4061000
+                }
+              ],
+              "medianWallNs": 7522479.0,
+              "medianChildCpuNs": 3910000.0
+            },
+            "fwp-arc": {
+              "sourceSha256": "fe9a159e2e65bcaf0ea11bec199a125453c0ddc5d8e9009bd6d82bc408f6eaae",
+              "binarySha256": "94de6fd3614c1d4425bf03bfaf9f876d933c8e4bf7f1f9467c2c3044e19e2bb1",
+              "assemblySha256": "f3b7e59d88a2269186124366a0ce98b8b989da824331b172d56f2a09cacd5796",
+              "sourceBytes": 641336,
+              "binaryBytes": 70904,
+              "emitWallNs": 273048875,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 443795042
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 486577167
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 0,
+                  "hashBufferRequestedBytes": 0,
+                  "peakHashBufferCapacityBytes": 0
+                },
+                {
+                  "requests": 18,
+                  "requestedBytes": 549,
+                  "retains": 4096,
+                  "peakChargedBytes": 656,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1359872,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 4972167,
+                  "childCpuNs": 3610000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 5491292,
+                  "childCpuNs": 3875000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 4174583,
+                  "childCpuNs": 3050000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 5040625,
+                  "childCpuNs": 3231000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 13055167,
+                  "childCpuNs": 8725000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 8045583,
+                  "childCpuNs": 3998000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 8762625,
+                  "childCpuNs": 4295000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 7020708,
+                  "childCpuNs": 3214000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 8391500,
+                  "childCpuNs": 4714000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 9145000,
+                  "childCpuNs": 5440000
+                }
+              ],
+              "medianWallNs": 7533145.5,
+              "medianChildCpuNs": 3936500.0
+            },
+            "fwp-arc-buffered": {
+              "sourceSha256": "2ae13d9a4461efe144dcc12a31ae1c50792a839de7499a60fc81d58decc89c5d",
+              "binarySha256": "51286bef826513aa34b948907f4a6eb675e9abc50aed3885c51307766c6ac4e6",
+              "assemblySha256": "ce3350dd32be7efdcbf6a2c4e5754055efbff409e3e1253418a5025d66cd16e6",
+              "sourceBytes": 641446,
+              "binaryBytes": 70992,
+              "emitWallNs": 293557042,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-buffered.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-buffered",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 554836834
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-buffered-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-buffered-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 504498292
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 12288,
+                  "hashBufferRequestedBytes": 1835008,
+                  "peakHashBufferCapacityBytes": 256
+                },
+                {
+                  "requests": 18,
+                  "requestedBytes": 549,
+                  "retains": 4096,
+                  "peakChargedBytes": 656,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1392640,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 7292291,
+                  "childCpuNs": 6016000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 7453583,
+                  "childCpuNs": 5990000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 9179167,
+                  "childCpuNs": 7440000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 13630959,
+                  "childCpuNs": 8963000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 12288167,
+                  "childCpuNs": 8332000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 10592459,
+                  "childCpuNs": 6836000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 9624250,
+                  "childCpuNs": 5863000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 14703167,
+                  "childCpuNs": 9873000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 10171375,
+                  "childCpuNs": 6760000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 15061750,
+                  "childCpuNs": 10988000
+                }
+              ],
+              "medianWallNs": 10381917.0,
+              "medianChildCpuNs": 7138000.0
+            },
+            "c": {
+              "sourceSha256": "07c09206af546ebfda487da68ac0de59a4dd3ace6eb3ff4e1285f3a3a31016cb",
+              "binarySha256": "8ab857241b9fe011c1b2e5936b7863fb1a53a22b561d72785edba2e23818cd0e",
+              "assemblySha256": "efee4e9ebe0b18959b21e36f39c8b5bbca9602667ce5fe283c545a531fef6110",
+              "sourceBytes": 982,
+              "binaryBytes": 33504,
+              "emitWallNs": 0,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/c.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/c",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 126665417
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/c.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/c-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 105569292
+                }
+              ],
+              "profile": [
+                {
+                  "arrayAllocationRequests": 1,
+                  "arrayRequestedBytes": 128,
+                  "peakArrayBytes": 128,
+                  "finalArrayBytes": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1163264,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 4039375,
+                  "childCpuNs": 2866000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 4464875,
+                  "childCpuNs": 3192000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 3844083,
+                  "childCpuNs": 2723000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 3882792,
+                  "childCpuNs": 2704000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 7483166,
+                  "childCpuNs": 4016000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 6892708,
+                  "childCpuNs": 3527000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 7991750,
+                  "childCpuNs": 4158000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 7126209,
+                  "childCpuNs": 3033000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 6938542,
+                  "childCpuNs": 3555000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 10023000,
+                  "childCpuNs": 5799000
+                }
+              ],
+              "medianWallNs": 6915625.0,
+              "medianChildCpuNs": 3359500.0
+            },
+            "rust": {
+              "sourceSha256": "2cab9cda6f5c52fc65969f1f1b9cfb1e567016eef3f7fb425c732ae30c50d862",
+              "binarySha256": "e8ded22102894d69c81ea3e336606ca7217190a63ddfc13d1d314307bf0fa75c",
+              "assemblySha256": "0655d29d304a530661e58af3302e5823afd6763c19ec5a67ddc121437cb880a4",
+              "sourceBytes": 1930,
+              "binaryBytes": 470536,
+              "emitWallNs": 0,
+              "builds": [
+                {
+                  "command": [
+                    "rustc",
+                    "--edition=2021",
+                    "-C",
+                    "opt-level=2",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/reference.rs",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/rust"
+                  ],
+                  "wallNs": 246275625
+                },
+                {
+                  "command": [
+                    "rustc",
+                    "--edition=2021",
+                    "-C",
+                    "opt-level=2",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/reference.rs",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/rust-profile",
+                    "--cfg",
+                    "profile"
+                  ],
+                  "wallNs": 204405125
+                }
+              ],
+              "profile": [
+                {
+                  "arrayAllocationRequests": 1,
+                  "arrayRequestedBytes": 128,
+                  "peakArrayBytes": 128,
+                  "finalArrayBytes": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1425408,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 6705500,
+                  "childCpuNs": 4745000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 4858958,
+                  "childCpuNs": 3392000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 4016333,
+                  "childCpuNs": 2960000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 5506000,
+                  "childCpuNs": 3946000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 8421041,
+                  "childCpuNs": 4391000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 7696875,
+                  "childCpuNs": 4260000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 9531125,
+                  "childCpuNs": 5892000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 6532666,
+                  "childCpuNs": 3212000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 7832166,
+                  "childCpuNs": 4045000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 8519292,
+                  "childCpuNs": 4147000
+                }
+              ],
+              "medianWallNs": 7201187.5,
+              "medianChildCpuNs": 4096000.0
+            }
+          },
+          "ratios": {
+            "fwp-tracing": {
+              "c": {
+                "wall": 1.0877511432444644,
+                "cpu": 1.1638636701890162
+              },
+              "rust": {
+                "wall": 1.0446164608267734,
+                "cpu": 0.95458984375
+              },
+              "fwp-arc-buffered": {
+                "wall": 0.7245751434922857,
+                "cpu": 0.5477724852899972
+              }
+            },
+            "fwp-arc": {
+              "c": {
+                "wall": 1.0892935201084502,
+                "cpu": 1.1717517487721387
+              },
+              "rust": {
+                "wall": 1.046097674862653,
+                "cpu": 0.9610595703125
+              },
+              "fwp-arc-buffered": {
+                "wall": 0.7256025549038776,
+                "cpu": 0.5514850098066685
+              }
+            },
+            "fwp-arc-buffered": {
+              "c": {
+                "wall": 1.5012261364663353,
+                "cpu": 2.124720940616163
+              },
+              "rust": {
+                "wall": 1.4416951370867652,
+                "cpu": 1.74267578125
+              },
+              "fwp-arc-buffered": {
+                "wall": 1.0,
+                "cpu": 1.0
+              }
+            }
+          }
+        },
+        "large": {
+          "elements": 4096,
+          "repetitions": 1024,
+          "canonicalBytesPerHash": 32778,
+          "source": "main = range 0 1024 | map (both id (const (range 0 4096 | array.from-list)) | hash) | fold bit.xor 0u64 | echo\n",
+          "expected": "10625939880222842880\n",
+          "variants": {
+            "fwp-tracing": {
+              "sourceSha256": "19263f2e7a601468a3a4365c65a42853e780ea561b528d1e0c18e1c69e1a0758",
+              "binarySha256": "3745924c8f9b5b914c2bddf0f3498e200d4fa1517381107a7b634732c3722da7",
+              "assemblySha256": "4da8500c5fbe268e8f53d4c478d173ab28b91752a5f503e959e0c51029371dbf",
+              "sourceBytes": 641315,
+              "binaryBytes": 71288,
+              "emitWallNs": 325220958,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-tracing.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-tracing",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 491325292
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-tracing-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-tracing-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 540862833
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 0,
+                  "hashBufferRequestedBytes": 0,
+                  "peakHashBufferCapacityBytes": 0
+                },
+                {
+                  "requests": 4098,
+                  "requestedBytes": 131109,
+                  "retains": 1024,
+                  "peakChargedBytes": 163848,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1490944,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 60628667,
+                  "childCpuNs": 58538000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 56605875,
+                  "childCpuNs": 55229000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 68708208,
+                  "childCpuNs": 64300000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 55866417,
+                  "childCpuNs": 53778000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 61656125,
+                  "childCpuNs": 59702000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 56430541,
+                  "childCpuNs": 54876000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 65792959,
+                  "childCpuNs": 63314000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 69182250,
+                  "childCpuNs": 66650000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 62928791,
+                  "childCpuNs": 61224000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 58042000,
+                  "childCpuNs": 56337000
+                }
+              ],
+              "medianWallNs": 61142396.0,
+              "medianChildCpuNs": 59120000.0
+            },
+            "fwp-arc": {
+              "sourceSha256": "c05a13416e43b9618130a47c8848c1ef64d5ce50aa4cd9fb3964c8944f3bdf10",
+              "binarySha256": "cbd2e2a69b597518ee5449ec082b8c6e7a784ed2ac1e00616d0df188f6320215",
+              "assemblySha256": "62999eb14ecb778aeae8135bb08fa9f92d9cc2acdafc361d85799350f4df0f68",
+              "sourceBytes": 641338,
+              "binaryBytes": 70904,
+              "emitWallNs": 321514166,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 594626125
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 528650833
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 0,
+                  "hashBufferRequestedBytes": 0,
+                  "peakHashBufferCapacityBytes": 0
+                },
+                {
+                  "requests": 4098,
+                  "requestedBytes": 131109,
+                  "retains": 1024,
+                  "peakChargedBytes": 163848,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1490944,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 55583250,
+                  "childCpuNs": 53261000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 66735875,
+                  "childCpuNs": 64089000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 62364459,
+                  "childCpuNs": 60107000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 64409417,
+                  "childCpuNs": 60196000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 61737125,
+                  "childCpuNs": 59703000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 63249958,
+                  "childCpuNs": 60763000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 64824500,
+                  "childCpuNs": 63243000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 65645000,
+                  "childCpuNs": 62095000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 62373625,
+                  "childCpuNs": 60332000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 69584500,
+                  "childCpuNs": 67004000
+                }
+              ],
+              "medianWallNs": 63829687.5,
+              "medianChildCpuNs": 60547500.0
+            },
+            "fwp-arc-buffered": {
+              "sourceSha256": "e5e0f33a56c8fd98aee7b73c2adcdb2442e082bdbb0e7104f6c30dc9eaa8cf8a",
+              "binarySha256": "e50f9589ae59ee147397c33c59820b7bb52c10e9d46a9f8556d5eeeffb227cab",
+              "assemblySha256": "84739624dc1844bdbb4d935b735e460d5ec5c6ead59d17d0eba4ccadcf76a252",
+              "sourceBytes": 641448,
+              "binaryBytes": 70992,
+              "emitWallNs": 321510334,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-buffered.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-buffered",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 559280083
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-buffered-profile.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-buffered-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 454973417
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 11264,
+                  "hashBufferRequestedBytes": 134152192,
+                  "peakHashBufferCapacityBytes": 65536
+                },
+                {
+                  "requests": 4098,
+                  "requestedBytes": 131109,
+                  "retains": 1024,
+                  "peakChargedBytes": 163848,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 2162688,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 208862750,
+                  "childCpuNs": 204341000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 210502167,
+                  "childCpuNs": 207368000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 223754167,
+                  "childCpuNs": 220486000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 208439083,
+                  "childCpuNs": 206522000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 232375250,
+                  "childCpuNs": 230220000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 215167125,
+                  "childCpuNs": 213090000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 232329500,
+                  "childCpuNs": 229271000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 243007625,
+                  "childCpuNs": 239866000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 190082583,
+                  "childCpuNs": 186920000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 186702666,
+                  "childCpuNs": 183259000
+                }
+              ],
+              "medianWallNs": 212834646.0,
+              "medianChildCpuNs": 210229000.0
+            },
+            "c": {
+              "sourceSha256": "783f53eecff8257ccaa1d3c332bb72816c35991a13357a54b81413b2b60594b4",
+              "binarySha256": "a30d30a3b120833236843656621b41bc2f6299b97bb233dd2651d604a0af7bc6",
+              "assemblySha256": "0f3d1549d705546911653f23ab00f122a73016576519e720765ffc2a81bd3d75",
+              "sourceBytes": 984,
+              "binaryBytes": 33504,
+              "emitWallNs": 0,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/c.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/c",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 100642334
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/c.c",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/c-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 93434917
+                }
+              ],
+              "profile": [
+                {
+                  "arrayAllocationRequests": 1,
+                  "arrayRequestedBytes": 32768,
+                  "peakArrayBytes": 32768,
+                  "finalArrayBytes": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1228800,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 57145083,
+                  "childCpuNs": 55298000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 62350250,
+                  "childCpuNs": 60172000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 55009750,
+                  "childCpuNs": 52499000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 56918333,
+                  "childCpuNs": 55470000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 57337250,
+                  "childCpuNs": 55600000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 53687500,
+                  "childCpuNs": 51984000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 61770959,
+                  "childCpuNs": 57870000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 58691625,
+                  "childCpuNs": 56820000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 56359000,
+                  "childCpuNs": 54123000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 52242666,
+                  "childCpuNs": 50531000
+                }
+              ],
+              "medianWallNs": 57031708.0,
+              "medianChildCpuNs": 55384000.0
+            },
+            "rust": {
+              "sourceSha256": "80ba69faa8932d6c331499782018fefa940b6b55e6d63d0d9322218654d57220",
+              "binarySha256": "4566bfa80a63ae761954fe0cc594f30c202f762ad95080d25ed9ce227db1aa67",
+              "assemblySha256": "02300abf0e5c1227152ece28658670405fe23a5386bc57a669f25996f7fdeb4f",
+              "sourceBytes": 1932,
+              "binaryBytes": 470536,
+              "emitWallNs": 0,
+              "builds": [
+                {
+                  "command": [
+                    "rustc",
+                    "--edition=2021",
+                    "-C",
+                    "opt-level=2",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/reference.rs",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/rust"
+                  ],
+                  "wallNs": 216407917
+                },
+                {
+                  "command": [
+                    "rustc",
+                    "--edition=2021",
+                    "-C",
+                    "opt-level=2",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/reference.rs",
+                    "-o",
+                    "/Users/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/rust-profile",
+                    "--cfg",
+                    "profile"
+                  ],
+                  "wallNs": 206189792
+                }
+              ],
+              "profile": [
+                {
+                  "arrayAllocationRequests": 1,
+                  "arrayRequestedBytes": 32768,
+                  "peakArrayBytes": 32768,
+                  "finalArrayBytes": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1409024,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 62510333,
+                  "childCpuNs": 60293000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 52497958,
+                  "childCpuNs": 50941000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 63210917,
+                  "childCpuNs": 61434000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 63047416,
+                  "childCpuNs": 61361000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 61307625,
+                  "childCpuNs": 59473000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 56552458,
+                  "childCpuNs": 55267000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 59041083,
+                  "childCpuNs": 56777000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 66096333,
+                  "childCpuNs": 63772000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 52107333,
+                  "childCpuNs": 50662000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 54329208,
+                  "childCpuNs": 52749000
+                }
+              ],
+              "medianWallNs": 60174354.0,
+              "medianChildCpuNs": 58125000.0
+            }
+          },
+          "ratios": {
+            "fwp-tracing": {
+              "c": {
+                "wall": 1.072077238156711,
+                "cpu": 1.0674563050700563
+              },
+              "rust": {
+                "wall": 1.0160872852910061,
+                "cpu": 1.0171182795698925
+              },
+              "fwp-arc-buffered": {
+                "wall": 0.28727651794059883,
+                "cpu": 0.28121714891856026
+              }
+            },
+            "fwp-arc": {
+              "c": {
+                "wall": 1.1191964915376549,
+                "cpu": 1.0932308970099667
+              },
+              "rust": {
+                "wall": 1.0607457040585762,
+                "cpu": 1.0416774193548388
+              },
+              "fwp-arc-buffered": {
+                "wall": 0.29990271179815337,
+                "cpu": 0.28800736339896016
+              }
+            },
+            "fwp-arc-buffered": {
+              "c": {
+                "wall": 3.7318651933061515,
+                "cpu": 3.795843564928499
+              },
+              "rust": {
+                "wall": 3.5369660304122252,
+                "cpu": 3.6168430107526883
+              },
+              "fwp-arc-buffered": {
+                "wall": 1.0,
+                "cpu": 1.0
+              }
+            }
+          }
+        }
+      },
+      "scope": "All programs build one I64 array containing 0..N, hash the canonical tuple (iteration, array) with wrapping FNV-1a, and XOR the hashes. C/Rust encode the same schema directly; fwp uses ordinary pipes, generic type descriptors and immutable values. The iteration prefix changes each hash. One unprofiled RSS/warmup process precedes ten rotating wall/child-CPU samples including startup, input construction and printing; compilation and allocation profiles are separate. All use optimization level 2; C uses -ffp-contract=off. Buffered control restores only the old fwp ARC hash, not an older compiler. fwp counters distinguish managed storage from hash encoding-buffer requests/capacity; collection is disabled only for ownership profiles. C counts its explicit successful application malloc; Rust counts actual application allocator calls while its vector is live. These exclude allocator-internal and stdio storage; fwp managed counts can include output values. Peak RSS comes from uninstrumented programs. Ratios above one mean extra fwp time; no parity or universal speedup is assumed."
+    },
+    "ubuntu-24.04-arm": {
+      "head": "ed78f26ab370495523d019abeaadbf67dae08768",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmidgih",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cCompiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+      "rustCompiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "results": {
+        "small": {
+          "elements": 16,
+          "repetitions": 4096,
+          "canonicalBytesPerHash": 137,
+          "source": "main = range 0 4096 | map (both id (const (range 0 16 | array.from-list)) | hash) | fold bit.xor 0u64 | echo\n",
+          "expected": "16923962133875117568\n",
+          "variants": {
+            "fwp-tracing": {
+              "sourceSha256": "16e29f6b3c79567d73e587ee9939564ba4d5d6d8aee4faa8cd34b913961d69c6",
+              "binarySha256": "0062a69875de4ce332a0868372659aabf7279466a9ae1c5504d629731d10e623",
+              "assemblySha256": "4cba32c231f2089fa92bd489b16924a2b1a1a6ed6ca7079bd8b41698f0aa423b",
+              "sourceBytes": 641313,
+              "binaryBytes": 82624,
+              "emitWallNs": 297928056,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-tracing.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-tracing",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 821582658
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-tracing-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-tracing-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 618171732
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 0,
+                  "hashBufferRequestedBytes": 0,
+                  "peakHashBufferCapacityBytes": 0
+                },
+                {
+                  "requests": 18,
+                  "requestedBytes": 549,
+                  "retains": 4096,
+                  "peakChargedBytes": 656,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1560576,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 1749296,
+                  "childCpuNs": 1432000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 1507376,
+                  "childCpuNs": 1276000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 1426998,
+                  "childCpuNs": 1206000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 1492921,
+                  "childCpuNs": 1297000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 1538694,
+                  "childCpuNs": 1324000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 1561236,
+                  "childCpuNs": 1296000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 1502081,
+                  "childCpuNs": 1291000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 1574380,
+                  "childCpuNs": 1313000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 1466747,
+                  "childCpuNs": 1260000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 1555413,
+                  "childCpuNs": 1279000
+                }
+              ],
+              "medianWallNs": 1523035.0,
+              "medianChildCpuNs": 1293500.0
+            },
+            "fwp-arc": {
+              "sourceSha256": "fe9a159e2e65bcaf0ea11bec199a125453c0ddc5d8e9009bd6d82bc408f6eaae",
+              "binarySha256": "8a9911b2aa821800ea1d646e30c9477ee8a11921c07a7b86e78c794d634edb52",
+              "assemblySha256": "a93b946e98be4b35a744051cacf80578f9fb1eecd409db2f0ca82d1183f52a18",
+              "sourceBytes": 641336,
+              "binaryBytes": 82168,
+              "emitWallNs": 298775957,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 542700041
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 555511262
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 0,
+                  "hashBufferRequestedBytes": 0,
+                  "peakHashBufferCapacityBytes": 0
+                },
+                {
+                  "requests": 18,
+                  "requestedBytes": 549,
+                  "retains": 4096,
+                  "peakChargedBytes": 656,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1572864,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 1672165,
+                  "childCpuNs": 1288000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 1476035,
+                  "childCpuNs": 1267000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 1495345,
+                  "childCpuNs": 1282000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 1589075,
+                  "childCpuNs": 1284000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 1571523,
+                  "childCpuNs": 1311000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 1561932,
+                  "childCpuNs": 1278000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 1497145,
+                  "childCpuNs": 1297000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 1477114,
+                  "childCpuNs": 1237000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 1501352,
+                  "childCpuNs": 1198000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 1488554,
+                  "childCpuNs": 1265000
+                }
+              ],
+              "medianWallNs": 1499248.5,
+              "medianChildCpuNs": 1280000.0
+            },
+            "fwp-arc-buffered": {
+              "sourceSha256": "2ae13d9a4461efe144dcc12a31ae1c50792a839de7499a60fc81d58decc89c5d",
+              "binarySha256": "5ef094c8efd8ef927c9b12d69a019eb58cafd3e94354b2370aa9fd89d372d97e",
+              "assemblySha256": "dd428c61a20366ef1786c5dfb5b28eb90d56b2e4239919887fc339e5b0300b82",
+              "sourceBytes": 641446,
+              "binaryBytes": 82256,
+              "emitWallNs": 296597827,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-buffered.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-buffered",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 570310865
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-buffered-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/fwp-arc-buffered-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 567624298
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 12288,
+                  "hashBufferRequestedBytes": 1835008,
+                  "peakHashBufferCapacityBytes": 256
+                },
+                {
+                  "requests": 18,
+                  "requestedBytes": 549,
+                  "retains": 4096,
+                  "peakChargedBytes": 656,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1441792,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 4505049,
+                  "childCpuNs": 4263000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 4504321,
+                  "childCpuNs": 4246000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 4567341,
+                  "childCpuNs": 4259000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 4557158,
+                  "childCpuNs": 4275000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 4449757,
+                  "childCpuNs": 4211000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 4518312,
+                  "childCpuNs": 4262000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 4851881,
+                  "childCpuNs": 4203000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 4571317,
+                  "childCpuNs": 4255000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 4512864,
+                  "childCpuNs": 4208000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 4471684,
+                  "childCpuNs": 4231000
+                }
+              ],
+              "medianWallNs": 4515588.0,
+              "medianChildCpuNs": 4250500.0
+            },
+            "c": {
+              "sourceSha256": "07c09206af546ebfda487da68ac0de59a4dd3ace6eb3ff4e1285f3a3a31016cb",
+              "binarySha256": "a97812f0b4e2fc81ec9c3a2723da36233367d7bf1257e2c215f9ee3b51c11257",
+              "assemblySha256": "435b63cfa85547474dc29570440c3c3eb1299204a702ad7f4600e989a425afe9",
+              "sourceBytes": 982,
+              "binaryBytes": 70664,
+              "emitWallNs": 0,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/c.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/c",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 68080473
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/c.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/c-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 61863814
+                }
+              ],
+              "profile": [
+                {
+                  "arrayAllocationRequests": 1,
+                  "arrayRequestedBytes": 128,
+                  "peakArrayBytes": 128,
+                  "finalArrayBytes": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1413120,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 1180878,
+                  "childCpuNs": 891000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 1219068,
+                  "childCpuNs": 930000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 1174695,
+                  "childCpuNs": 894000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 1265233,
+                  "childCpuNs": 921000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 1242843,
+                  "childCpuNs": 971000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 1190142,
+                  "childCpuNs": 927000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 1156961,
+                  "childCpuNs": 937000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 1247058,
+                  "childCpuNs": 958000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 1101740,
+                  "childCpuNs": 862000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 1149657,
+                  "childCpuNs": 927000
+                }
+              ],
+              "medianWallNs": 1185510.0,
+              "medianChildCpuNs": 927000.0
+            },
+            "rust": {
+              "sourceSha256": "2cab9cda6f5c52fc65969f1f1b9cfb1e567016eef3f7fb425c732ae30c50d862",
+              "binarySha256": "0e16fe216f231b6f0bc6df7c70ca14f9b07f89e3a106ed0b1a3a828eb0df6834",
+              "assemblySha256": "6fc4e0d991adf73b5f820c91ef64a508fa48eb0fed05873493c38f9ec052dc01",
+              "sourceBytes": 1930,
+              "binaryBytes": 4620608,
+              "emitWallNs": 0,
+              "builds": [
+                {
+                  "command": [
+                    "rustc",
+                    "--edition=2021",
+                    "-C",
+                    "opt-level=2",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/reference.rs",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/rust"
+                  ],
+                  "wallNs": 143368130
+                },
+                {
+                  "command": [
+                    "rustc",
+                    "--edition=2021",
+                    "-C",
+                    "opt-level=2",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/reference.rs",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/small/rust-profile",
+                    "--cfg",
+                    "profile"
+                  ],
+                  "wallNs": 165059794
+                }
+              ],
+              "profile": [
+                {
+                  "arrayAllocationRequests": 1,
+                  "arrayRequestedBytes": 128,
+                  "peakArrayBytes": 128,
+                  "finalArrayBytes": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1736704,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 1284695,
+                  "childCpuNs": 1057000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 1298991,
+                  "childCpuNs": 1008000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 1271025,
+                  "childCpuNs": 1046000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 1283903,
+                  "childCpuNs": 1055000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 1375353,
+                  "childCpuNs": 1054000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 1347419,
+                  "childCpuNs": 1037000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 1254434,
+                  "childCpuNs": 1043000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 1282792,
+                  "childCpuNs": 1008000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 1303590,
+                  "childCpuNs": 1065000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 1666261,
+                  "childCpuNs": 1059000
+                }
+              ],
+              "medianWallNs": 1291843.0,
+              "medianChildCpuNs": 1050000.0
+            }
+          },
+          "ratios": {
+            "fwp-tracing": {
+              "c": {
+                "wall": 1.2847086907744347,
+                "cpu": 1.395361380798274
+              },
+              "rust": {
+                "wall": 1.1789629235131514,
+                "cpu": 1.2319047619047618
+              },
+              "fwp-arc-buffered": {
+                "wall": 0.3372838708934473,
+                "cpu": 0.30431713916009884
+              }
+            },
+            "fwp-arc": {
+              "c": {
+                "wall": 1.2646443302882304,
+                "cpu": 1.3807982740021576
+              },
+              "rust": {
+                "wall": 1.1605500823242454,
+                "cpu": 1.2190476190476192
+              },
+              "fwp-arc-buffered": {
+                "wall": 0.33201622911567663,
+                "cpu": 0.30114104223032584
+              }
+            },
+            "fwp-arc-buffered": {
+              "c": {
+                "wall": 3.808983475466255,
+                "cpu": 4.585221143473571
+              },
+              "rust": {
+                "wall": 3.4954619098450816,
+                "cpu": 4.048095238095238
+              },
+              "fwp-arc-buffered": {
+                "wall": 1.0,
+                "cpu": 1.0
+              }
+            }
+          }
+        },
+        "large": {
+          "elements": 4096,
+          "repetitions": 1024,
+          "canonicalBytesPerHash": 32778,
+          "source": "main = range 0 1024 | map (both id (const (range 0 4096 | array.from-list)) | hash) | fold bit.xor 0u64 | echo\n",
+          "expected": "10625939880222842880\n",
+          "variants": {
+            "fwp-tracing": {
+              "sourceSha256": "19263f2e7a601468a3a4365c65a42853e780ea561b528d1e0c18e1c69e1a0758",
+              "binarySha256": "52c693de0fdff98114e48f177441577c1b5d153b376e5b7612feb4f7ec3764fd",
+              "assemblySha256": "7899662cc1cc80593f26e2df2b1e65d619352f38c5b72bf92185ab4196e85155",
+              "sourceBytes": 641315,
+              "binaryBytes": 82624,
+              "emitWallNs": 298434726,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-tracing.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-tracing",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 604923554
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-tracing-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-tracing-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 622813012
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 0,
+                  "hashBufferRequestedBytes": 0,
+                  "peakHashBufferCapacityBytes": 0
+                },
+                {
+                  "requests": 4098,
+                  "requestedBytes": 131109,
+                  "retains": 1024,
+                  "peakChargedBytes": 163848,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 2387968,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 31782224,
+                  "childCpuNs": 31435000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 31739138,
+                  "childCpuNs": 31403000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 31710804,
+                  "childCpuNs": 31393000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 31705677,
+                  "childCpuNs": 31386000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 31748138,
+                  "childCpuNs": 31418000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 31745850,
+                  "childCpuNs": 31448000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 31679983,
+                  "childCpuNs": 31395000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 31898807,
+                  "childCpuNs": 31566000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 31699917,
+                  "childCpuNs": 31388000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 31898591,
+                  "childCpuNs": 31563000
+                }
+              ],
+              "medianWallNs": 31742494.0,
+              "medianChildCpuNs": 31410500.0
+            },
+            "fwp-arc": {
+              "sourceSha256": "c05a13416e43b9618130a47c8848c1ef64d5ce50aa4cd9fb3964c8944f3bdf10",
+              "binarySha256": "58f91441b9c04b0627c6c7fb3401e59c9e9c779351a3566b33413157714fbbe3",
+              "assemblySha256": "6149525b765c263939ef1137d529265f0720a458218428a147e7f262b770cb47",
+              "sourceBytes": 641338,
+              "binaryBytes": 82168,
+              "emitWallNs": 297198920,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 546664880
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 566393310
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 0,
+                  "hashBufferRequestedBytes": 0,
+                  "peakHashBufferCapacityBytes": 0
+                },
+                {
+                  "requests": 4098,
+                  "requestedBytes": 131109,
+                  "retains": 1024,
+                  "peakChargedBytes": 163848,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 2392064,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 31789031,
+                  "childCpuNs": 31445000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 31724259,
+                  "childCpuNs": 31422000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 31769808,
+                  "childCpuNs": 31426000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 31826044,
+                  "childCpuNs": 31471000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 31871282,
+                  "childCpuNs": 31498000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 31819661,
+                  "childCpuNs": 31503000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 31711973,
+                  "childCpuNs": 31388000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 31806814,
+                  "childCpuNs": 31465000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 31800086,
+                  "childCpuNs": 31470000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 31808174,
+                  "childCpuNs": 31475000
+                }
+              ],
+              "medianWallNs": 31803450.0,
+              "medianChildCpuNs": 31467500.0
+            },
+            "fwp-arc-buffered": {
+              "sourceSha256": "e5e0f33a56c8fd98aee7b73c2adcdb2442e082bdbb0e7104f6c30dc9eaa8cf8a",
+              "binarySha256": "8dea9ba791823eb886fce0ba61c0adc83988b5e8ec2b7c1f1705080ef92f4502",
+              "assemblySha256": "8e7864a3b2ebfb514f9f00a246ac0ba796c9876e025d0b8de867af9d32b16a53",
+              "sourceBytes": 641448,
+              "binaryBytes": 82256,
+              "emitWallNs": 299471361,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-buffered.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-buffered",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 570975294
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-buffered-profile.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/fwp-arc-buffered-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 574815544
+                }
+              ],
+              "profile": [
+                {
+                  "hashBufferRequests": 11264,
+                  "hashBufferRequestedBytes": 134152192,
+                  "peakHashBufferCapacityBytes": 65536
+                },
+                {
+                  "requests": 4098,
+                  "requestedBytes": 131109,
+                  "retains": 1024,
+                  "peakChargedBytes": 163848,
+                  "finalChargedBytes": 0,
+                  "collections": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 2400256,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 184281917,
+                  "childCpuNs": 183784000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 184593696,
+                  "childCpuNs": 183936000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 184315818,
+                  "childCpuNs": 183772000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 184314779,
+                  "childCpuNs": 183811000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 184378310,
+                  "childCpuNs": 183898000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 184158637,
+                  "childCpuNs": 183647000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 184285100,
+                  "childCpuNs": 183829000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 184112889,
+                  "childCpuNs": 183803000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 184391517,
+                  "childCpuNs": 183938000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 184197835,
+                  "childCpuNs": 183784000
+                }
+              ],
+              "medianWallNs": 184299939.5,
+              "medianChildCpuNs": 183807000.0
+            },
+            "c": {
+              "sourceSha256": "783f53eecff8257ccaa1d3c332bb72816c35991a13357a54b81413b2b60594b4",
+              "binarySha256": "fe840fe72fee3756c4c6557da6c1a306c3b240a7e44657e2beb5cf141911d692",
+              "assemblySha256": "1b0d299666c754b124c89560dc1872eaab319b5ce07bf6d8b23fc515c98d3dba",
+              "sourceBytes": 984,
+              "binaryBytes": 70664,
+              "emitWallNs": 0,
+              "builds": [
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=0",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/c.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/c",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 62854390
+                },
+                {
+                  "command": [
+                    "clang",
+                    "-O2",
+                    "-std=gnu11",
+                    "-ffp-contract=off",
+                    "-w",
+                    "-DPROFILE=1",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/c.c",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/c-profile",
+                    "-lm",
+                    "-lpthread"
+                  ],
+                  "wallNs": 62880748
+                }
+              ],
+              "profile": [
+                {
+                  "arrayAllocationRequests": 1,
+                  "arrayRequestedBytes": 32768,
+                  "peakArrayBytes": 32768,
+                  "finalArrayBytes": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1540096,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 30745860,
+                  "childCpuNs": 30429000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 30798297,
+                  "childCpuNs": 30466000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 30798664,
+                  "childCpuNs": 30454000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 30758460,
+                  "childCpuNs": 30442000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 30817983,
+                  "childCpuNs": 30462000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 30784770,
+                  "childCpuNs": 30448000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 30759667,
+                  "childCpuNs": 30439000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 30823278,
+                  "childCpuNs": 30506000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 30768483,
+                  "childCpuNs": 30442000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 30736876,
+                  "childCpuNs": 30420000
+                }
+              ],
+              "medianWallNs": 30776626.5,
+              "medianChildCpuNs": 30445000.0
+            },
+            "rust": {
+              "sourceSha256": "80ba69faa8932d6c331499782018fefa940b6b55e6d63d0d9322218654d57220",
+              "binarySha256": "80dd0070b7f4c1d71ddd152214249112198559f673805d97a99552a0297e5b57",
+              "assemblySha256": "c037dfa79240f7aae3b6edaa0f12e1dabea13320680d29ff0d53555cb33b769d",
+              "sourceBytes": 1932,
+              "binaryBytes": 4620632,
+              "emitWallNs": 0,
+              "builds": [
+                {
+                  "command": [
+                    "rustc",
+                    "--edition=2021",
+                    "-C",
+                    "opt-level=2",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/reference.rs",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/rust"
+                  ],
+                  "wallNs": 144648381
+                },
+                {
+                  "command": [
+                    "rustc",
+                    "--edition=2021",
+                    "-C",
+                    "opt-level=2",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/reference.rs",
+                    "-o",
+                    "/home/runner/work/fun-with-pipes/fun-with-pipes/metadata-evidence/large/rust-profile",
+                    "--cfg",
+                    "profile"
+                  ],
+                  "wallNs": 166341617
+                }
+              ],
+              "profile": [
+                {
+                  "arrayAllocationRequests": 1,
+                  "arrayRequestedBytes": 32768,
+                  "peakArrayBytes": 32768,
+                  "finalArrayBytes": 0
+                }
+              ],
+              "unprofiledProcessPeakRssBytes": 1740800,
+              "samples": [
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 30847894,
+                  "childCpuNs": 30540000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 30840606,
+                  "childCpuNs": 30558000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 30841086,
+                  "childCpuNs": 30513000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 30854853,
+                  "childCpuNs": 30539000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 30892106,
+                  "childCpuNs": 30557000
+                },
+                {
+                  "order": [
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust"
+                  ],
+                  "wallNs": 30870571,
+                  "childCpuNs": 30560000
+                },
+                {
+                  "order": [
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing"
+                  ],
+                  "wallNs": 30767082,
+                  "childCpuNs": 30485000
+                },
+                {
+                  "order": [
+                    "fwp-arc-buffered",
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc"
+                  ],
+                  "wallNs": 31030257,
+                  "childCpuNs": 30590000
+                },
+                {
+                  "order": [
+                    "c",
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered"
+                  ],
+                  "wallNs": 30844973,
+                  "childCpuNs": 30525000
+                },
+                {
+                  "order": [
+                    "rust",
+                    "fwp-tracing",
+                    "fwp-arc",
+                    "fwp-arc-buffered",
+                    "c"
+                  ],
+                  "wallNs": 30889786,
+                  "childCpuNs": 30557000
+                }
+              ],
+              "medianWallNs": 30851373.5,
+              "medianChildCpuNs": 30548500.0
+            }
+          },
+          "ratios": {
+            "fwp-tracing": {
+              "c": {
+                "wall": 1.0313831504567272,
+                "cpu": 1.031712924946625
+              },
+              "rust": {
+                "wall": 1.028884305588534,
+                "cpu": 1.028217424750806
+              },
+              "fwp-arc-buffered": {
+                "wall": 0.17223279663637653,
+                "cpu": 0.17088848629268744
+              }
+            },
+            "fwp-arc": {
+              "c": {
+                "wall": 1.0333637443986916,
+                "cpu": 1.033585153555592
+              },
+              "rust": {
+                "wall": 1.0308601009287317,
+                "cpu": 1.030083310146161
+              },
+              "fwp-arc-buffered": {
+                "wall": 0.17256354009817784,
+                "cpu": 0.17119859417758845
+              }
+            },
+            "fwp-arc-buffered": {
+              "c": {
+                "wall": 5.988308676391156,
+                "cpu": 6.0373460338315
+              },
+              "rust": {
+                "wall": 5.973800145397092,
+                "cpu": 6.016891173052687
+              },
+              "fwp-arc-buffered": {
+                "wall": 1.0,
+                "cpu": 1.0
+              }
+            }
+          }
+        }
+      },
+      "scope": "All programs build one I64 array containing 0..N, hash the canonical tuple (iteration, array) with wrapping FNV-1a, and XOR the hashes. C/Rust encode the same schema directly; fwp uses ordinary pipes, generic type descriptors and immutable values. The iteration prefix changes each hash. One unprofiled RSS/warmup process precedes ten rotating wall/child-CPU samples including startup, input construction and printing; compilation and allocation profiles are separate. All use optimization level 2; C uses -ffp-contract=off. Buffered control restores only the old fwp ARC hash, not an older compiler. fwp counters distinguish managed storage from hash encoding-buffer requests/capacity; collection is disabled only for ownership profiles. C counts its explicit successful application malloc; Rust counts actual application allocator calls while its vector is live. These exclude allocator-internal and stdio storage; fwp managed counts can include output values. Peak RSS comes from uninstrumented programs. Ratios above one mean extra fwp time; no parity or universal speedup is assumed."
+    }
+  },
+  "codeInspection": {
+    "artifact": "hash-costs-ubuntu-24.04-arm/small/fwp-arc.asm",
+    "binarySha256": "8a9911b2aa821800ea1d646e30c9477ee8a11921c07a7b86e78c794d634edb52",
+    "scope": "ARM64 main-thread frame is 304 bytes, including startup/cleanup. The selected hot-loop excerpt stores its tuple on the stack, calls structural hashing, increments the array count and calls its typed drop. This is static code inspection, not a dynamic instruction or spill count.",
+    "loopExcerpt": "    1a04:\t11000508 \tadd\tw8, w8, #0x1\n    1a08:\t39000008 \tstrb\tw8, [x0]\n    1a0c:\t910023e1 \tadd\tx1, sp, #0x8\n    1a10:\taa1603e0 \tmov\tx0, x22\n    1a14:\taa1503e2 \tmov\tx2, x21\n    1a18:\tfd0007e8 \tstr\td8, [sp, #8]\n    1a1c:\ta9014ffb \tstp\tx27, x19, [sp, #16]\n    1a20:\t940009db \tbl\t418c <fwp_hash_value>\n    1a24:\taa0003f7 \tmov\tx23, x0\n    1a28:\taa1303e0 \tmov\tx0, x19\n    1a2c:\t94000b75 \tbl\t4800 <fwp_drop2>\n    1a30:\t9100077b \tadd\tx27, x27, #0x1\n    1a34:\tca1402f4 \teor\tx20, x23, x20\n    1a38:\tf140077f \tcmp\tx27, #0x1, lsl #12\n    1a3c:\t540003a0 \tb.eq\t1ab0 <fwp_main_thread+0x27c>  // b.none\n    1a40:\tf9400348 \tldr\tx8, [x26]\n    1a44:\tf940174a \tldr\tx10, [x26, #40]\n    1a48:\tcb080269 \tsub\tx9, x19, x8\n    1a4c:\teb0a413f \tcmp\tx9, x10, lsl #16\n    1a50:\t54fffde2 \tb.cs\t1a0c <fwp_main_thread+0x1d8>  // b.hs, b.nlast\n    1a54:\td350fd28 \tlsr\tx8, x9, #16\n    1a58:\tf940e72a \tldr\tx10, [x25, #456]"
+  }
+}

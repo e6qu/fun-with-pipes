@@ -1,0 +1,16 @@
+# Half-open ranges include the lower bound and exclude the upper bound.
+# Narrow and large boundary values must survive packed array storage unchanged.
+main = [
+    range -128i8 -124i8 | array.from-list | array.to-list | echo,
+    range 252u8 255u8 | array.from-list | array.to-list | echo,
+    range -32768i16 -32765i16 | array.from-list | array.to-list | echo,
+    range 65532u16 65535u16 | array.from-list | array.to-list | echo,
+    range -2147483648i32 -2147483645i32 | array.from-list | array.to-list | echo,
+    range 4294967292u32 4294967295u32 | array.from-list | array.to-list | echo,
+    range -9223372036854775808 -9223372036854775805 | array.from-list | array.to-list | echo,
+    range 18446744073709551612u64 18446744073709551615u64 | array.from-list | array.to-list | echo,
+    range -2 3 | array.from-list | both array.to-list (array.slice 1 3 | array.to-list) | echo,
+    range 7 7 | array.from-list | array.to-list | echo,
+    range 8 3 | array.from-list | array.to-list | echo,
+    range 0 64 | map (const (range -4 4 | array.from-list) | both id (array.set 2 9)) | length | echo,
+] | ignore

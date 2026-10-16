@@ -126,6 +126,10 @@ for symbol in ['term.is-tty', 'term.width']:
     bundle_contracts[symbol] = (1, 'Shared', [])
 bundle_contracts['term.read-secret'] = (1, 'OwnedTree', [])
 bundle_contracts['list.transpose'] = (1, 'CopiedStructure', [0])
+for symbol in ['simd.splat', 'simd.from-array', 'simd.sum']:
+    bundle_contracts[symbol] = (1, 'OwnedTree', [])
+for symbol in ['simd.add', 'simd.sub', 'simd.mul', 'simd.div', 'simd.min', 'simd.max']:
+    bundle_contracts[symbol] = (2, 'OwnedTree', [])
 for symbol, arity in [('linalg.lu-solve', 3), ('linalg.inverse', 2),
                       ('linalg.cholesky', 2), ('linalg.qr', 3), ('linalg.cg', 5)]:
     bundle_contracts[symbol] = (arity, 'OwnedTree', [])

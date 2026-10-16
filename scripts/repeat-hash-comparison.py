@@ -105,7 +105,7 @@ def main():
         baselineRun=os.environ['BASELINE_RUN'], evidenceRun=os.environ['EVIDENCE_RUN'], hardware=platform.uname()._asdict(),
         cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
         profileCompiler=run([os.environ['CC'], '--version']).stdout, results=results,
-        scope='Verified binaries from two named runs execute together: before/after fwp tracing/ARC and the after run\'s matching C/Rust references. Same source, inputs, canonical bytes and output; one warmup then twelve balanced rotating whole-process wall/child-CPU samples. Compilation and normal/off collector profiles are separate; off profiles must reproduce original allocation/count measurements exactly. Original reports retain compilation, RSS and reference allocation scope. This compares callback/fusion revisions, not just streaming against buffered hash; no universal speed or parity claim.')
+        scope='Verified binaries from two named runs execute together: before/after fwp tracing/ARC and the after run\'s matching C/Rust references. Same source, inputs, canonical bytes and output; one warmup then twelve balanced rotating whole-process wall/child-CPU samples. Compilation and normal/off collector profiles are separate; off profiles must reproduce original allocation/count measurements exactly. Original reports retain compilation, RSS and reference allocation scope. This compares the two recorded compiler revisions as a whole; it does not isolate individual transformations or establish universal speed or parity.')
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: case['ratios'] for name, case in results.items()}, indent=2))
 

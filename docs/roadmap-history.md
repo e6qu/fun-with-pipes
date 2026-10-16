@@ -55,7 +55,8 @@ batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.
 [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38851567232)
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38851565415)
 passed for `7a7b40e1878ea062f64eceded6ae029b4124f976`. The merge has the same files,
-parent `58ed740c` and the required one-line message with empty body.
+parent `58ed740c` and the required one-line message with empty body. Duplicate
+production run `38860909658` was canceled after verification.
 
 Known numeric zip/map callbacks avoid temporary pairs and input list nodes.
 Zip/unzip/repeat/chunks/scan/iterate protect partial construction; large I64 chunk
@@ -164,7 +165,7 @@ both tracing and checked ARC against equivalent C/Rust kernels on four hosts.
 The [benchmark guide](benchmarks.md) states costs, instruction evidence and limits.
 This delivery does not remove tracing from the default runtime or finish the
 project's ownership/performance objectives. The earlier Intel compiler abort
-passed an unchanged retry; its unexplained cause remains recorded in the handoff.
+passed an unchanged retry; its cause remains unexplained in this historical record.
 
 ## Infix arithmetic and numeric loop cleanup (PR #145)
 

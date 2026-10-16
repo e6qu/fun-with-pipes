@@ -73,30 +73,33 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) passed all nine production
-jobs and documentation before merging. It removes temporary numeric zip pairs,
-repairs partial-list cleanup and large WASI chunk sizes, and extends checked
-ownership to maintained text tools. Earlier accepted work belongs in
-[delivery evidence](docs/roadmap-history.md).
+[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) is accepted. It removes
+temporary numeric zip pairs, repairs partial-list cleanup and large WASI chunk
+sizes, and extends checked ownership to maintained text tools.
 
-[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) adds synchronous WASI ARC, allocation-free
-structural hashing and specialization of eagerly captured pipeline callbacks.
-Six-host native checks and both actual WASI ownership jobs pass. Four-host
-comparisons and paired repeats confirm fewer allocations and lower small-workload
-CPU time, while preserving slower elapsed samples and remaining C/Rust gaps.
-Large-input timing is mostly unchanged. Require all nine production gates plus
-documentation for the final combined head, including its later restriction to
-known callback bodies and all transferred changes.
+[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is the only open delivery.
+It adds checked ARC for synchronous WASI programs, streams structural hashes
+without an encoding buffer, and combines eligible hashing pipelines into loops.
+Its exact final head still needs all nine production jobs; documentation passes.
+Paired measurements retain both improvements and slower samples. Accepted work
+and its evidence belong in [delivery history](docs/roadmap-history.md).
 
-The exact-head Intel macOS GC gate exceeded 90 minutes. The current repair uses
-explicit measured test assignments instead of reshuffling sorted targets when
-new tests appear. All tests, the separate stress run and existing limits remain.
-Require fresh complete acceptance after this scheduling repair.
+The following substantial batch removes temporary hashing tuples from the heap,
+constructs inline integer range arrays directly, and borrows temporary tuple
+fields through hashing instead of repeatedly retaining them. The independent
+ownership verifier checks that those fields remain alive. Validate semantic,
+failure and physical-free tests across native targets and WASI; then retain
+four-host allocation profiles, generated machine code and paired C/Rust timing.
+The same batch prepares ownership for vector wrappers, boxed lanes and reduction
+accumulators, with alias and partial-failure checks. Focused checks are preparation,
+not full production acceptance. Open this batch's
+PR only after #151 merges, then require fresh combined final-head gates.
 
-Following preparation targets measured temporary hash tuples and input list nodes.
-Browser/service re-entry, retained host callbacks, remaining numerical/networking
-ownership, fewer runtime counts and all seven work areas remain open. A focused
-success does not complete a work area. Keep one delivery PR open at a time.
+Browser/service re-entry, retained host callbacks, remaining numerical and
+networking ownership, derivative scaling, broader applications and the seven
+work areas above remain open. Current checked ARC support does not remove the
+collector from all fwp programs. Neither fewer allocations nor a single fast
+sample establishes zero-cost abstractions or parity with C/Rust.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

@@ -122,7 +122,25 @@ constraint excludes functions and resources. Integer `bit.and`, `bit.or`,
 `bit.xor` and `bit.not` are also total: every valid input has a result. The existing
 fusion analysis recognizes these contracts, so `map hash | fold bit.xor 0u64`
 can avoid its intermediate result list. It keeps captured inputs alive through
-the ordinary ownership rules. Hash still uses its runtime type description.
+the ordinary ownership rules. Hash still uses its runtime type description. Its separately reviewed nonescape
+contract proves that the input object is used only during the call, allowing
+existing stack placement for temporary tuples. Borrowing alone does not imply
+this guarantee: other borrowed inputs can be returned or retained.
+
+For a direct temporary tuple, ownership lowering can borrow its fields until
+hash returns. Existing sequence rules keep every field owner alive while later
+fields are evaluated. A later operation that consumes an alias must obtain its
+own reference; a failure must still release pending owners. The independent
+ownership verifier checks that counted fields have owners alive at the call,
+and the backend builds a stack record without extra child references. Ordinary
+escaping tuples still own their fields. Disabling stack placement retains the
+ordinary counted representation for comparison.
+
+A temporary tuple or its counted fields may have local names introduced by
+simplification. The ownership pass can expose their sole, immediate hash use
+across other plain local/field reads. It does not move calls, traps or resource
+frames. Other uses preserve ordinary ownership, so keeping an alias or consuming
+an owner later cannot turn a borrowed field into a dangling reference.
 
 Bit shifts remain excluded from that proof because an oversized shift traps.
 Effectful callbacks and distinguishable traps still prevent interleaving. This
@@ -133,6 +151,16 @@ the fused loop and cannot cross effectful or trapping consumer arguments.
 Resource-bearing captures keep their original frames. The handoff separates
 implementation, focused checks and full acceptance; benchmarks retain the
 unfused baseline.
+
+## Constructing integer range arrays directly
+
+`range lo hi` includes `lo` and excludes `hi`. When its only use is immediate
+`array.from-list`, inline integer elements can be written directly into packed
+array storage, without temporary list nodes. Bounds keep their original evaluation
+order; equal or descending bounds produce an empty array. Wide intermediate
+arithmetic checks the existing array size limit before converting to a machine
+size, including on 32-bit WASI. Boxed I128/U128 elements keep their existing path.
+The ordinary array-fusion comparison switch also controls this transformation.
 
 ## Borrowing array data inside loops
 
@@ -163,14 +191,14 @@ language notation is introduced.
 
 `FWP_MAP_ARRAY=0` disables this transformation for controlled comparisons;
 `FWP_ARRAY_FUSION=0` disables it along with the other array transformations.
-Focused semantic and cleanup checks pass on all six native hosts. The handoff
-records final delivery acceptance; [benchmarks](benchmarks.md#building-numeric-arrays-without-temporary-list-nodes)
+Semantic and cleanup checks passed on all six native hosts and in the full
+[PR #149 gate](roadmap-history.md#owned-processes-and-numeric-mapped-arrays-pr-149); [benchmarks](benchmarks.md#building-numeric-arrays-without-temporary-list-nodes)
 records the measured gains and limits.
 
 ### Numeric pairs immediately mapped
 
 `xs | zip ys` pairs each `x` with the corresponding `y`, stopping when either
-list ends. `map f` then calls `f` on each pair. The next candidate combines these
+list ends. `map f` then calls `f` on each pair. The compiler combines these
 steps for known callbacks and inline numeric inputs: existing `zip-with`
 ownership handles the output, while a specialized callback can receive the two
 numbers directly. This avoids temporary pairs and their list nodes. Result
@@ -181,9 +209,9 @@ pair order. The transformation cannot move past an earlier call, trap or resourc
 region. Managed inputs stay on their existing path because changing their last
 owner could change resource behavior. Existing fold and numeric-array consumers
 get their optimization first; this later transformation must not reintroduce
-list results they already eliminated. `FWP_ZIP_MAP=0` disables only this candidate
-for controlled comparisons. The handoff distinguishes its focused checks from
-full native acceptance.
+list results they already eliminated. `FWP_ZIP_MAP=0` disables only this transformation
+for controlled comparisons. [PR #150](roadmap-history.md#numeric-zip-intermediates-and-owned-listtext-results-pr-150)
+records its full native acceptance.
 
 Ordinary zip also protects its temporary buffers, completed pairs and each field
 whose reference has already been duplicated. If a later retain fails, those

@@ -15,8 +15,8 @@ ordinary returned values. Error construction now protects each completed string
 while allocating the next field and transfers the completed record to the handler.
 A previous runtime path left all three counts at zero and retained 64 charged bytes
 per small caught error when tracing was disabled. Repeated-catch and injected
-allocation-failure probes cover this repair; final runner acceptance is tracked
-in the [handoff](development-state.md).
+allocation-failure probes cover this repair, with accepted filesystem ownership
+evidence in [PR #147](roadmap-history.md#numerical-precision-and-filesystem-ownership-pr-147).
 
 ## Direction
 
@@ -332,7 +332,7 @@ arguments. Focused tests check repeated storage release and error preservation;
 all six native platforms pass, including the directory-error and composed
 application regressions and full production acceptance.
 
-The next candidate extends the same contracts to text shortcuts: `file.read`
+The same contracts cover text shortcuts: `file.read`
 returns a counted string, and `file.write-new` borrows its path and contents.
 The latter creates or replaces a file; its name does not mean exclusive creation.
 Both use the existing protected stream/buffer implementation. Invalid UTF-8 must
@@ -340,8 +340,8 @@ release the read buffer before raising `IoError`. Tests cover repeated reads,
 embedded NUL in contents, invalid paths, write/close failures and missing owners.
 The maintained `todo` and `grep` functions exercise these operations in repeated
 application calls with retained results. Their functions and real command lines
-pass focused checks on all six native hosts; full production acceptance remains
-pending in the handoff.
+passed focused checks on all six native hosts and full production acceptance in
+[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150).
 
 Current-directory lookup now returns a counted string and protects its OS path
 buffer until conversion finishes. It raises an explicit `IoError` of kind `cwd`
@@ -355,8 +355,8 @@ arrays are tracked in one stack record. Normal completion, singular-result exits
 and unwinding release scratch explicitly; outputs transfer to the returned value
 only after its container exists. No input retain or hidden managed workspace
 owner is needed. QR checks its square output size separately from input shape.
-See [numerical storage costs](numerics.md#dense-f64-solvers) and the
-[handoff](development-state.md) for validation status. Native arithmetic and
+See [numerical storage costs](numerics.md#dense-f64-solvers) and
+[accepted solver evidence](roadmap-history.md#numerical-precision-and-filesystem-ownership-pr-147). Native arithmetic and
 iteration order are unchanged.
 
 Scoped C calls can borrow strings/bytes and copy supported scalar/record values.
@@ -425,12 +425,12 @@ block that signal only on the calling thread, consume only a newly generated
 broken-pipe signal, and restore the previous mask. They preserve the host's signal
 handler and any previously pending SIGPIPE, including when a child exits early.
 
-The new process regressions compare repeated raw-interpreter and native calls,
+Process regressions compare repeated raw-interpreter and native calls,
 including quoted/Unicode arguments, output larger than pipe capacity and a child
 that exits without reading its input. Instrumented probes force construction and
 OS failures, check resource cleanup and reject deliberately missing counts or
-buffer frees. These contracts passed all six focused native hosts; final
-production acceptance remains pending in the handoff. They do not establish ownership for
+buffer frees. These contracts passed all six focused native hosts and full
+production acceptance in [PR #149](roadmap-history.md#owned-processes-and-numeric-mapped-arrays-pr-149). They do not establish ownership for
 networking or arbitrary external-resource contexts. Process calls are synchronous;
 this cleanup does not establish deadline or cancellation responsiveness while
 waiting for a child.
@@ -442,7 +442,8 @@ read frame. The interpreter and native runtime query real Windows console modes
 and width; redirected streams continue to behave as ordinary input. Descriptor
 validation happens before narrowing to the OS integer type. Terminal tests use a
 real pseudo-terminal on POSIX and a private console on Windows, with a deliberately
-missing restore action required to fail. Platform results remain in the handoff.
+missing restore action required to fail. Accepted platform evidence is recorded
+with [PR #149](roadmap-history.md#owned-processes-and-numeric-mapped-arrays-pr-149).
 
 ## Structural hashing without temporary storage
 
@@ -459,3 +460,20 @@ keep aliases live, count both libc and managed allocations inside hash calls,
 and verify that restoring the old buffered implementation fails the zero-allocation
 check. [The handoff](development-state.md) records which checks have passed; this
 change alone is not a measured timing improvement or a C/Rust parity claim.
+
+## Vector-library results
+
+A `Vec[N, T]` currently holds an array inside a record; each array entry is a lane.
+The prepared ownership path gives the result record and array one owner and
+retains borrowed boxed integer lanes when they are shared. F128 arrays store their
+128-bit payloads directly, so copying a lane does not retain a temporary scalar
+box. Converting a correctly sized array to a vector retains that array; a wrong
+length returns `None` without taking ownership. Partial arrays and wrappers are
+protected until construction finishes, including arithmetic and allocation failure.
+
+A reduction keeps one owned accumulator and releases each replaced boxed result.
+A one-lane sum owns its returned reference independently of the input. These
+changes preserve wrapping integer operations and existing division checks; they
+do not promise stack-only vectors or hardware vector instructions. Native and
+actual WASI acceptance remains tracked in the handoff until the required checks
+pass. General removal of tracing remains unfinished.

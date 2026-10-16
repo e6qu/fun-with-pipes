@@ -1,0 +1,13 @@
+# A temporary hash input can borrow its fields only while their owners live.
+# The first two lines retain the original array alongside the computed hash.
+# The last line creates an array before a later field fails, 64 times.
+bad : I64 -> I64 ! {Error[String]}
+bad = const "stop" | fail
+view : I64 -> U64 ! {Error[String]}
+view = both (range 0 | array.from-list) bad | hash
+main = [
+    range 0 16 | array.from-list | both (both id id | hash) array.to-list | echo,
+    range 0 16 | array.from-list | both (both id array.length | hash) array.to-list | echo,
+    range 0 16 | array.from-list | both id (array.set 2 99) | hash | echo,
+    range 0 64 | map (attempt view) | length | echo,
+] | ignore
