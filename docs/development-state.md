@@ -14,6 +14,18 @@ matched the measured preparation exactly before this final documentation update.
 `numerical-evidence-before-151` preserves that preparation and its measurement
 commit IDs. It is evidence, not another task or delivery PR.
 
+Production `38890080777` at `c81b0c9f` cannot be accepted: both Intel macOS jobs
+hit their 90-minute deadlines. Their completed tests pass; the remaining tests
+were not run. ARM macOS regular/stress, Windows ARM64/AMD64, benchmarks and docs
+passed; Linux jobs are still running. The Intel GC shard completed only 60 of
+its 97 targets, so rebalancing alone cannot supply enough capacity.
+
+The proposed repair builds CI's Rust compiler and test harnesses at optimization
+level 1 while explicitly preserving debug assertions and integer overflow checks.
+Generated-C optimization/stress settings, test selection, job count, time limits
+and local Cargo defaults remain unchanged. This is a candidate runtime-cost
+reduction, not a demonstrated speedup. Require fresh production/docs for the new
+head and retain the profile comparison on runners.
 Next: monitor #152's final-head production and documentation gates. Require all
 nine production jobs and documentation on its exact final head, fix failures,
 then squash-merge with an explicit one-line subject and empty
@@ -131,8 +143,14 @@ programs do not establish whole-language zero-cost abstractions.
 
 ## Following owned-value preparation
 
-The following combined batch lives in `/private/tmp/fwp-owned-kernels`, branch
-`owned-cpu-kernels`, currently published at `7c1bd94e`. Only its delta after
+The following combined delivery is integrated in `/private/tmp/fwp-owned-values-delivery`,
+branch `owned-values-delivery`, at `b7537a6a`, based on `c81b0c9f`. Its current
+handoff is authoritative for owned decoders, metrics, CPU kernels, DNS and socket
+scratch fixes. DNS/decoder checks pass six-native `38897597329` and both WASI
+`38897600949` at preparation `cba3e810`; socket checks `38898918147` are running
+at `7224b3de`, with Linux2, ARM macOS and Windows AMD64 passing.
+The original combined preparation is `/private/tmp/fwp-owned-kernels`, branch
+`owned-cpu-kernels`. Only its delta after
 `3577ba3780c19051845a5beba3f064f608cedf1e` belongs to the next delivery. It includes
 ternary, URL/form/HTTP, compressed-byte, metric and syntax results, plus CPU tensor
 output/scratch ownership. Inventory is 300 contracted declarations and 43 distinct
@@ -145,12 +163,22 @@ fixtures, Windows console shutdown, WebSocket clock selection and socket
 would-block handling. Native-only compressed-byte helpers remain unavailable on
 WASI. The worktree handoff retains intermediate evidence and repaired failures.
 
-Metrics/syntax and CPU kernels were added afterward. Their combined native
-`38888712709` and actual WASI `38888716317` are queued; earlier queued preparation
-runs were superseded to avoid duplicate work. Kernel evidence compares the old
-and new executor on identical inputs and retains C/binaries/disassembly; no timing
-claim is made. Finish those gates and fix failures, then rebase the complete
-preparation delta onto accepted #152 before opening its sole next delivery PR.
+Metrics/syntax and CPU kernels were added afterward. Actual WASI `38891578037`
+passes both hosts at `c8f4646c`, including registry shutdown, full 32-bit count
+checks and final-block index overflow controls. Native `38893386853` at `457f00d3`
+passes ARM Linux/macOS and AMD64 Linux; Intel macOS is running. Windows kernel,
+decoder and metric checks pass but its newly added library-unload peer needs a
+fixture export repair. Focused six-native `38894911944` at `234da577` validates
+that repair; runtime/WASI sources remain unchanged. See the preparation worktree's
+handoff for precise failure history and current results.
+
+Kernel evidence compares the old and new executor on identical inputs and retains
+C/binaries/disassembly; no timing claim is made. Single-worker native scratch falls
+from 69,648 to 4,104 bytes for 8193 F64 values, while the result array remains.
+Finish the unload repair and evidence, then rebase only the complete preparation
+delta onto accepted #152 before opening its sole next delivery PR. Do not replay
+numerical preparation ancestry. A later full run will also log individual GC
+stress example durations; no concurrency or coverage was reduced.
 
 ## Local checks and delivery constraints
 

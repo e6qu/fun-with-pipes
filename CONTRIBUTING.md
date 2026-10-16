@@ -104,6 +104,14 @@ still require Linux `/proc` or `strace`; Darwin-specific regressions in
 `tests/macos.rs` assert that collection is armed and really runs, rather
 than accepting a stress variable with collection disabled.
 
+Production CI builds the Rust compiler and test harnesses at optimization level 1
+with debug assertions and overflow checks explicitly enabled. This reduces the
+candidate cost of repeatedly running the compiler without changing test cases,
+generated-C flags, stress settings or local Cargo defaults. Full passing gates
+and runner measurements, rather than this setting alone, establish whether it
+solves the Intel timeout. [Cargo's profile settings](https://doc.rust-lang.org/cargo/reference/profiles.html)
+define these independent switches.
+
 CI runs a primitive inventory at the exact source commit
 before the regular Linux and ARM/Intel macOS gates. Its standalone Rust reader
 uses the actual ownership module; the Python audit compares declarations with
