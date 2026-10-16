@@ -17,6 +17,7 @@ a POSIX shell. `fwp run --interp` explicitly selects the interpreter; ordinary
 | File | What to learn | First run |
 |---|---|---|
 | [hello.fwp](hello.fwp) | A pipe sends a string to `print`, which adds a newline | `fwp run examples/hello.fwp` prints `hello, world` |
+| [vector-lanes.fwp](vector-lanes.fwp) | Fixed-size lanes, explicit types and checked array lengths | `fwp run examples/vector-lanes.fwp` doubles four numbers and rejects a three-element input |
 | [wordfreq.fwp](wordfreq.fwp) | Read text, normalize words, count occurrences, sort counts descending | `printf 'Pear pear apple\n' \| fwp run examples/wordfreq.fwp` prints `pear: 2`, then `apple: 1` |
 | [shell/tools.fwp](shell/tools.fwp) | Exported functions as process filters; lesson 7 | `fwp build examples/shell/tools.fwp --fn normalize -o normalize`, then `printf ' HELLO \n' \| ./normalize` prints `hello` |
 

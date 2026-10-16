@@ -219,6 +219,9 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
 "#),
         ("hashes", include_str!("fixtures/hash_values.fwp")),
         ("hash-fusion", include_str!("fixtures/hash_fusion.fwp")),
+        ("hash-borrowed-fields", include_str!("fixtures/hash_borrowed_fields.fwp")),
+        ("range-arrays", include_str!("fixtures/range_arrays.fwp")),
+        ("vectors", include_str!("fixtures/vector_ownership.fwp")),
         ("fresh-numerics", r#"
 main = [
     range 0 16 | map (const [1u128, 340282366920938463463374607431768211455u128] | map (checked.add 1u128)) | echo,
@@ -435,6 +438,39 @@ fn wasi_hash_borrows_values_without_allocating() {
             .unwrap();
             let output = wasi(&binary, dir.path()).output().unwrap();
             assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+        }
+    }
+}
+
+#[test]
+fn wasi_range_array_rejects_length_before_32_bit_truncation() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-range-limit").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(
+        &source,
+        "main = range 0 4294967296 | array.from-list | array.length | echo\n",
+    )
+    .unwrap();
+    let code = emit(&source, &dir.join("main.c"), &[]);
+    assert!(code.contains("return fwp_p_array_range(l0, l1,"));
+    let guard =
+        "    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");";
+    assert_eq!(code.matches(guard).count(), 1);
+    let truncated = code.replace(guard, "    /* omitted length guard */");
+    for opt in ["-O1", "-O2"] {
+        for (candidate, expected) in [(&code, 101), (&truncated, 0)] {
+            let binary = dir.join("main.wasm");
+            fwp::cgen::compile_for(candidate, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+            let actual = wasi(&binary, dir.path()).output().unwrap();
+            assert_eq!(actual.status.code(), Some(expected), "{opt}: {actual:?}");
+            if expected == 101 {
+                assert!(String::from_utf8_lossy(&actual.stderr).contains("array too large"));
+            } else {
+                assert_eq!(actual.stdout, b"0\n");
+            }
         }
     }
 }
