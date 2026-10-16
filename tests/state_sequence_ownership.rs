@@ -274,7 +274,10 @@ fn each_preserves_aliases_effect_order_and_early_failures() {
                         .env("FWP_REUSE_VERIFY", reuse)
                         .output()
                         .unwrap();
-                    if output.stdout != raw.stdout
+                    // Retain trap programs for instruction and startup inspection,
+                    // plus any unexpected result from the other cases.
+                    if (name == "trap" && *reuse == "0")
+                        || output.stdout != raw.stdout
                         || output.stderr != raw.stderr
                         || output.status.code() != raw.status.code()
                     {

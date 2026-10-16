@@ -10,29 +10,30 @@ Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparatio
 Preparation base: `ac3060d1`. The latest test repair limits diagnostics to
 modes that support them; it does not change the compiler or library.
 
-Next: publish and verify OS-provided native stack bounds on Linux ARM64 before
-restarting all six hosts. The first fix (`16643edf`, narrow run `38967903478`)
-failed: Clang emitted the same incomplete bound for `__builtin_dwarf_cfa()`.
-The replacement gets the full thread-stack limit through pthread APIs on Linux
-and macOS, matching Windows' existing OS-bound approach. It fails explicitly if
-the bound cannot be obtained. ARC and WebAssembly do not gain stack scanning.
-Include the existing native allocator/collector regression tests in the narrow run.
+Next: publish the cleaned-up batch and run all six native hosts, including the
+old/new iteration timing comparison. Linux ARM64's narrow run `38968698121`
+passes at `89b54a67`: iteration outputs/aliases/failures, allocation controls,
+state lifetimes and native allocator/collector regressions. The temporary
+debugger job and GDB script are removed. Tests retain generated trap programs
+for actual binary inspection and preserve unexpected outputs from other cases.
 
-Watchpoint run `38967186882` at `d7493bed` proves GC clears a live callback while
-its parent closure is allocated. The ARM64 binary stores it at `x29+24`, above
-the old scan limit. Artifacts are under `/private/tmp/fwp-each-trap/38965685165`,
-`38967186882` and `38967903478`. Remove temporary `iteration-traps` CI/GDB
-diagnostics after the fix passes and its generated binary is inspected. No
-native compilation ran locally; one read-only approval-review timeout was resolved.
+The repaired runtime obtains the complete Linux/macOS thread-stack bound from
+pthread APIs, matching Windows' existing OS-bound approach. A watchpoint in
+`38967186882` proved GC erased a live callback at `x29+24`, above the old scan
+limit, while allocating its parent closure. The compiler-frame-bound attempt
+failed and is removed. There is no extra wrapper or permanent-retention scheme;
+ARC and WebAssembly do not gain scanning. Final all-host acceptance is pending.
+Artifacts are under `/private/tmp/fwp-each-trap/38965685165`, `38967186882` and
+`38967903478`; the passing narrow run retains its test logs on GitHub.
 
-Native run `38964567808` at `d29d1c5b` passes five hosts; only Linux ARM64 fails. Linux ARM64's allocation control passes despite its
-trap failure. `each` still uses runtime callback dispatch in the recorded counting
-program. New `scripts/measure-list-each.py` is prepared to compare old/new native
-timing at 10,000/100,000/1,000,000 elements, with alternating order, seven samples,
-whole-process peak RSS, compilation time and binary sizes. Its syntax passes
-through the guard (0.12s); it has not run yet. Inspect any regression before
-accepting the library change. The measurements compare fwp implementations,
-not C/Rust parity. No native build or benchmark ran locally.
+The preceding six-host run `38964567808` passed all hosts except Linux ARM64.
+Its allocation comparison saves 96 requests and 3,072 requested bytes over 96
+extra elements. The counting program still uses runtime callback dispatch.
+`measure-list-each.py` compares old/new native timing at 10,000/100,000/1,000,000
+elements, with alternating order, seven samples, process peak memory, compilation
+time and binary sizes. Inspect any regression before accepting the library
+change. These are fwp-to-fwp comparisons, not C/Rust parity. No native build or
+benchmark ran locally.
 
 Both actual WebAssembly jobs in `38962206780` pass at library/compiler source
 `2a98d395`, including semantic agreement and physical reclamation controls.
