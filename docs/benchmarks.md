@@ -1135,6 +1135,42 @@ fwp's measured cost. The compiler has removed the targeted intermediate objects
 and count traffic, not every difference from handwritten code. Hardware, compiler
 flags, binary sizes, profiles and raw samples remain in the linked reports.
 
+## CPU tensor output storage
+
+A CPU tensor kernel evaluates a description of arithmetic over arrays. The
+[owned-value and kernel report](measurements/owned-values-and-kernels-2026-10-16.json)
+compares the previous fwp executor with the prepared executor that writes directly
+into its result array. Both process 8193 F64 (64-bit floating-point) values equal to their indices,
+multiply each by 0.5, and check the complete output and ordered sum. Inputs already
+exist when counting starts. This is a comparison between two fwp runtime
+implementations; it measures allocation and cleanup, not time or overhead against
+C/Rust. Only the executor is replaced in the baseline probe, not the whole compiler.
+
+The probe counts the executor's directly allocated temporary buffers as native
+storage. It counts the result array, allocated through fwp's value allocator, as
+managed storage. For one worker, all six native OS/architecture targets report:
+
+| Elementwise output cost | Previous executor | Prepared executor |
+|---|---:|---:|
+| Temporary native allocation requests | 3 | 2 |
+| Peak temporary native bytes | 69,648 | 4,104 |
+| Managed result-array requests | 1 | 1 |
+| Native storage remaining after the call | 0 | 0 |
+
+The change removes one 65,544-byte temporary output and its full copy. The result
+array remains, along with an input-pointer table and arithmetic workspace. The
+native-byte counter excludes managed objects, allocator metadata, thread stacks
+and resident process memory. Four-worker observations vary with how many workers
+overlap; separate peaks must not be added as if they occurred simultaneously.
+Reductions still allocate block sums and preserve their addition order.
+
+The retained reference-counted (ARC) probe binaries use packed double multiplication on ARM64 and
+AMD64, but still load/store arithmetic workspace and copy each completed chunk.
+That is evidence of vector instructions, not register-only execution or C/Rust
+parity. The report retains C, binary and disassembly hashes, failure controls and
+the separate Windows library-test repair. Full delivery acceptance remains in the
+[handoff](development-state.md).
+
 ## Fixed-size lane calculations against C and Rust
 
 A lane is one position in `Vec[N, F64]`; the introductory

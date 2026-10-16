@@ -168,45 +168,6 @@ pub(crate) fn check(prog: &Program, entries: &[crate::ir::FuncId]) -> Result<(),
             }
             continue;
         }
-        // Concrete word-sized arithmetic emits no managed allocation. Wider
-        // boxed numerics need their own counted-result contract before admission.
-        let arithmetic = matches!(
-            symbol,
-            "trit.from-sign"
-                | "trit.to-int"
-                | "tint.to-int"
-                | "prim.add"
-                | "prim.sub"
-                | "prim.mul"
-                | "prim.div"
-                | "prim.rem"
-                | "prim.neg"
-                | "prim.zero"
-                | "prim.one"
-                | "prim.from-int"
-                | "prim.from-float"
-                | "int.to-float"
-                | "float.convert"
-                | "sqrt"
-                | "exp"
-                | "ln"
-                | "sin"
-                | "cos"
-                | "tan"
-                | "floor"
-                | "ceil"
-                | "round"
-                | "pow"
-                | "abs"
-        );
-        if arithmetic
-            && !crate::rc::needs_rc(&prog.shapes, result)
-            && args
-                .iter()
-                .all(|arg| !crate::rc::needs_rc(&prog.shapes, arg))
-        {
-            continue;
-        }
         return Err(reject(format!(
             "primitive `{symbol}` has no tracing-free ownership contract"
         )));

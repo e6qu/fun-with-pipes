@@ -202,8 +202,15 @@ fn golden_programs_under_gc_stress() {
                 let Some(path) = queue.lock().unwrap().pop() else {
                     break;
                 };
+                let started = std::time::Instant::now();
+                eprintln!("GC stress example started: {}", path.display());
                 let want = std::fs::read_to_string(path.with_extension("out")).unwrap_or_default();
                 let got = stressed(&path, &dir.0);
+                eprintln!(
+                    "GC stress example finished: {} ({:.2}s)",
+                    path.display(),
+                    started.elapsed().as_secs_f64()
+                );
                 if got != want {
                     retain_stress_failure(&path, &dir.0, &want, &got);
                     failures.lock().unwrap().push(format!(

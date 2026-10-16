@@ -188,7 +188,7 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
             k = g_io_recv(c, buf, 65536, &ww);
             if (k == 0) break;
             if (k < 0) {
-                if (k == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
+                if (k == -1 && fwp_socket_again(errno)) {
                     fwp_wait_fd(c->fd, ww, fwp_now_ns() + 100000000LL);
                     continue;
                 }
@@ -219,7 +219,7 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
         int ww;
         ssize_t n = g_io_send(c, c->out.d, c->out.len, &ww);
         if (n > 0) { h2b_drop(&c->out, (size_t)n); continue; }
-        if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
+        if (n == -1 && fwp_socket_again(errno)) {
             fwp_wait_fd(c->fd, ww, fwp_now_ns() + 10000000LL);
             continue;
         }
@@ -462,40 +462,41 @@ static uint32_t w_adler32(const unsigned char *d, size_t n) {
     return b << 16 | a;
 }
 
-static V w_ok_bytes(h2_buf *b) {
-    V x = fwp_str_new(b->d ? (const char *)b->d : "", b->len);
-    h2b_free(b);
-    return fwp_data(0, 1, &x);
-}
+/* Native compression buffers must survive until copied and be freed on unwind. */
+static void w_buffer_release(void *value) { h2b_free((h2_buf *)value); }
 
-static V w_err_text(const char *m) {
-    V x = fwp_cstr(m);
-    return fwp_data(1, 1, &x);
+static V w_ok_bytes(h2_buf *b, const fwp_desc *type) {
+    fwp_decode_fields result;
+    fwp_decode_fields_begin(&result, 1, type->vfields[0], 1, NULL);
+    result.values[0] = fwp_rc_fresh(fwp_str_new(b->d ? (const char *)b->d : "", b->len));
+    return fwp_decode_variant(&result, 0);
 }
 
 static V fwp_p_zlib_gzip(V d) {
     h2_buf out = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, w_buffer_release, &out);
     h2_gzip((const unsigned char *)STR(d)->d, STR(d)->len, &out);
     V r = fwp_str_new((const char *)out.d, out.len);
-    h2b_free(&out);
+    fwp_cleanup_pop(&cleanup); h2b_free(&out);
     return r;
 }
 
-static V fwp_p_zlib_gunzip(V max, V d) {
+static V fwp_p_zlib_gunzip(V max, V d, const fwp_desc *type) {
     h2_buf out = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, w_buffer_release, &out);
     int64_t m = (int64_t)max;
-    if (!h2_gunzip((const unsigned char *)STR(d)->d, STR(d)->len, &out, m < 0 ? 0 : (size_t)m)) {
-        h2b_free(&out);
-        return w_err_text(h2_err);
-    }
-    return w_ok_bytes(&out);
+    int ok = h2_gunzip((const unsigned char *)STR(d)->d, STR(d)->len, &out, m < 0 ? 0 : (size_t)m);
+    V result = ok ? w_ok_bytes(&out, type) : fwp_http_err(h2_err, type);
+    fwp_cleanup_pop(&cleanup); h2b_free(&out);
+    FWP_KEEP_ALIVE(d); return result;
 }
 
 static V fwp_p_zlib_gzip_chunk(V d) {
     h2_buf out = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, w_buffer_release, &out);
     h2_gzip_chunk((const unsigned char *)STR(d)->d, STR(d)->len, &out);
     V r = fwp_str_new((const char *)out.d, out.len);
-    h2b_free(&out);
+    fwp_cleanup_pop(&cleanup); h2b_free(&out);
     return r;
 }
 
@@ -520,33 +521,38 @@ static V fwp_p_zlib_deflate(V d) {
     size_t n = STR(d)->len;
     h2_gzip((const unsigned char *)STR(d)->d, n, &g);
     h2_buf out = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, w_buffer_release, &out);
     h2b_byte(&out, 0x78);
     h2b_byte(&out, 0x01);
     h2b_put(&out, g.d + 10, g.len - 18);
     h2b_be32(&out, w_adler32((const unsigned char *)STR(d)->d, n));
     h2b_free(&g);
     V r = fwp_str_new((const char *)out.d, out.len);
-    h2b_free(&out);
+    fwp_cleanup_pop(&cleanup); h2b_free(&out);
     return r;
 }
 
-static V fwp_p_zlib_inflate(V max, V dv) {
+static V fwp_p_zlib_inflate(V max, V dv, const fwp_desc *type) {
     const unsigned char *d = (const unsigned char *)STR(dv)->d;
     size_t n = STR(dv)->len;
     int64_t m = (int64_t)max;
     size_t mx = m < 0 ? 0 : (size_t)m, used = 0;
     h2_buf out = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, w_buffer_release, &out);
+    const char *error = NULL;
     int wrapped = n >= 2 && (d[0] & 0x0f) == 8 && (((unsigned)d[0] << 8 | d[1]) % 31) == 0;
     if (!wrapped) {
-        if (!h2_inflate(d, n, &out, mx, &used)) { h2b_free(&out); return w_err_text(h2_err); }
-        return w_ok_bytes(&out);
+        if (!h2_inflate(d, n, &out, mx, &used)) error = h2_err;
+    } else if (d[1] & 0x20) error = "a preset dictionary is not supported";
+    else if (!h2_inflate(d + 2, n - 2, &out, mx, &used)) error = h2_err;
+    else {
+        size_t t = 2 + used;
+        if (t + 4 > n) error = "truncated zlib data";
+        else if (h2_rd32(d + t) != w_adler32(out.d, out.len)) error = "zlib checksum mismatch";
     }
-    if (d[1] & 0x20) return w_err_text("a preset dictionary is not supported");
-    if (!h2_inflate(d + 2, n - 2, &out, mx, &used)) { h2b_free(&out); return w_err_text(h2_err); }
-    size_t t = 2 + used;
-    if (t + 4 > n) { h2b_free(&out); return w_err_text("truncated zlib data"); }
-    if (h2_rd32(d + t) != w_adler32(out.d, out.len)) { h2b_free(&out); return w_err_text("zlib checksum mismatch"); }
-    return w_ok_bytes(&out);
+    V result = error ? fwp_http_err(error, type) : w_ok_bytes(&out, type);
+    fwp_cleanup_pop(&cleanup); h2b_free(&out);
+    FWP_KEEP_ALIVE(dv); return result;
 }
 
 /* ---------------------------------------------------------------- WebSocket */
@@ -609,9 +615,10 @@ static V fwp_p_ws_accept(V key) {
     w_sha1(in.d, in.len, dg);
     h2b_free(&in);
     h2_buf out = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, w_buffer_release, &out);
     w_base64(dg, 20, &out);
     V r = fwp_str_new((const char *)out.d, out.len);
-    h2b_free(&out);
+    fwp_cleanup_pop(&cleanup); h2b_free(&out);
     return r;
 }
 
@@ -620,14 +627,12 @@ static uint64_t w_mask_state = 0;
 static uint32_t w_mask_key(void) {
     uint64_t x = w_mask_state;
     if (!x) {
-        struct timespec t;
-        clock_gettime(CLOCK_REALTIME, &t);
 #ifdef _WIN32
         uint64_t pid = (uint64_t)GetCurrentProcessId();
 #else
         uint64_t pid = (uint64_t)getpid();
 #endif
-        x = (((uint64_t)t.tv_sec * 1000000000ull + (uint64_t)t.tv_nsec) ^ (pid << 32)) | 1;
+        x = ((uint64_t)fwp_unix_ns() ^ (pid << 32)) | 1;
     }
     x ^= x << 13;
     x ^= x >> 7;
@@ -644,9 +649,10 @@ static V fwp_p_ws_key(void) {
         for (int j = 0; j < 4; j++) k[4 * i + j] = (unsigned char)(x >> (24 - 8 * j));
     }
     h2_buf out = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, w_buffer_release, &out);
     w_base64(k, 16, &out);
     V r = fwp_str_new((const char *)out.d, out.len);
-    h2b_free(&out);
+    fwp_cleanup_pop(&cleanup); h2b_free(&out);
     return r;
 }
 
@@ -688,49 +694,59 @@ static V fwp_p_ws_frame(V mask, V opcode, V payload) {
     return PTR(r);
 }
 
-static V w_parsed(int64_t k, int fin, int64_t op, int masked, V payload) {
-    V f[5] = {(V)k, fin ? FWP_TRUE : FWP_FALSE, (V)op, masked ? FWP_TRUE : FWP_FALSE, payload};
-    return fwp_record(5, f);
+static V w_parsed(int64_t k, int fin, int64_t op, int masked, V payload, const fwp_desc *type) {
+    fwp_decode_fields fields;
+    fwp_decode_fields_begin(&fields, 5, type->fields, 5, NULL);
+    fields.values[0] = (V)k; fields.values[1] = fin ? FWP_TRUE : FWP_FALSE;
+    fields.values[2] = (V)op; fields.values[3] = masked ? FWP_TRUE : FWP_FALSE;
+    fields.values[4] = fwp_rc_fresh(payload);
+    return fwp_decode_record(&fields);
+}
+
+static V w_bytes_pair(V code, V bytes, const fwp_desc *type) {
+    fwp_decode_fields fields;
+    fwp_decode_fields_begin(&fields, 2, type->fields, 2, NULL);
+    fields.values[0] = code; fields.values[1] = fwp_rc_fresh(bytes);
+    return fwp_decode_record(&fields);
 }
 
 /* the first frame of a buffer: (bytes it took, FIN, opcode, masked,
  * payload unmasked); 0 bytes when more are needed, -1002 for a malformed
  * frame and -1009 for one larger than max */
-static V fwp_p_ws_parse(V maxv, V atv, V bufv) {
+static V fwp_p_ws_parse(V maxv, V atv, V bufv, const fwp_desc *type) {
     size_t off = (int64_t)atv < 0 ? 0 : (size_t)(int64_t)atv;
     if (off > STR(bufv)->len) off = STR(bufv)->len;
     const unsigned char *b = (const unsigned char *)STR(bufv)->d + off;
     size_t n = STR(bufv)->len - off;
     int64_t mx = (int64_t)maxv;
     if (mx < 0) mx = 0;
-    V empty = fwp_str_new("", 0);
-    if (n < 2) return w_parsed(0, 0, 0, 0, empty);
+    if (n < 2) return w_parsed(0, 0, 0, 0, fwp_str_new("", 0), type);
     unsigned b0 = b[0], b1 = b[1], op = b0 & 0x0f;
     if ((b0 & 0x30) || !(op == 0 || op == 1 || op == 2 || op == 8 || op == 9 || op == 10))
-        return w_parsed(-1002, 0, 0, 0, empty);
-    if (op >= 8 && (!(b0 & 0x80) || (b1 & 0x7f) > 125)) return w_parsed(-1002, 0, 0, 0, empty);
+        return w_parsed(-1002, 0, 0, 0, fwp_str_new("", 0), type);
+    if (op >= 8 && (!(b0 & 0x80) || (b1 & 0x7f) > 125)) return w_parsed(-1002, 0, 0, 0, fwp_str_new("", 0), type);
     int masked = (b1 & 0x80) != 0;
     size_t at = 2;
     uint64_t len = b1 & 0x7f;
     if (len == 126) {
-        if (n < 4) return w_parsed(0, 0, 0, 0, empty);
+        if (n < 4) return w_parsed(0, 0, 0, 0, fwp_str_new("", 0), type);
         len = (uint64_t)b[2] << 8 | b[3];
         at = 4;
     } else if (len == 127) {
-        if (n < 10) return w_parsed(0, 0, 0, 0, empty);
+        if (n < 10) return w_parsed(0, 0, 0, 0, fwp_str_new("", 0), type);
         len = 0;
         for (int i = 0; i < 8; i++) len = len << 8 | b[2 + i];
-        if (len >> 63) return w_parsed(-1002, 0, 0, 0, empty);
+        if (len >> 63) return w_parsed(-1002, 0, 0, 0, fwp_str_new("", 0), type);
         at = 10;
     }
-    if (len > (uint64_t)mx) return w_parsed(-1009, 0, 0, 0, empty);
+    if (len > (uint64_t)mx) return w_parsed(-1009, 0, 0, 0, fwp_str_new("", 0), type);
     unsigned char key[4] = {0, 0, 0, 0};
     if (masked) {
-        if (n < at + 4) return w_parsed(0, 0, 0, 0, empty);
+        if (n < at + 4) return w_parsed(0, 0, 0, 0, fwp_str_new("", 0), type);
         memcpy(key, b + at, 4);
         at += 4;
     }
-    if (n < at + len) return w_parsed(0, 0, 0, 0, empty);
+    if (n < at + len) return w_parsed(0, 0, 0, 0, fwp_str_new("", 0), type);
     fwp_str *r = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + len + 1);
     r->len = len;
     r->d[len] = 0;
@@ -739,7 +755,8 @@ static V fwp_p_ws_parse(V maxv, V atv, V bufv) {
         for (size_t i = 0; i < len; i++) r->d[i] = (char)(b[at + i] ^ key[i & 3]);
     else if (len)
         memcpy(r->d, b + at, len);
-    return w_parsed((int64_t)(at + len), (b0 & 0x80) != 0, op | (b0 & 0x40), masked, PTR(r));
+    V result = w_parsed((int64_t)(at + len), (b0 & 0x80) != 0, op | (b0 & 0x40), masked, PTR(r), type);
+    FWP_KEEP_ALIVE(bufv); return result;
 }
 
 /* permessage-deflate (RFC 7692) without context takeover, as
@@ -747,31 +764,34 @@ static V fwp_p_ws_parse(V maxv, V atv, V bufv) {
  * flush's final 00 00 ff ff */
 static V fwp_p_ws_deflate(V d) {
     h2_buf out = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, w_buffer_release, &out);
     h2_gzip_chunk((const unsigned char *)STR(d)->d, STR(d)->len, &out);
     V r = fwp_str_new((const char *)out.d, out.len - 4);
-    h2b_free(&out);
+    fwp_cleanup_pop(&cleanup); h2b_free(&out);
     return r;
 }
 
 /* (0, data), or (the close code of the failure, "") */
-static V fwp_p_ws_inflate(V maxv, V dv) {
+static V fwp_p_ws_inflate(V maxv, V dv, const fwp_desc *type) {
     size_t n = STR(dv)->len;
-    unsigned char *d = (unsigned char *)malloc(n + 6);
-    memcpy(d, STR(dv)->d, n);
+    if (n > SIZE_MAX - 6) fwp_trap("compressed message too large");
+    unsigned char *input = (unsigned char *)malloc(n + 6);
+    if (!input) fwp_trap("out of memory");
+    memcpy(input, STR(dv)->d, n);
+    h2_buf out = {0};
+    fwp_cleanup output_cleanup;
+    fwp_cleanup_push(&output_cleanup, w_buffer_release, &out);
     static const unsigned char tail[6] = {0, 0, 0xff, 0xff, 0x03, 0x00};
-    memcpy(d + n, tail, 6);
+    memcpy(input + n, tail, 6);
     int64_t m = (int64_t)maxv;
     size_t used = 0;
-    h2_buf out = {0};
-    int ok = h2_inflate(d, n + 6, &out, m < 0 ? 0 : (size_t)m, &used);
-    free(d);
-    if (!ok) {
-        h2b_free(&out);
-        return fwp_tuple2((V)(int64_t)(strstr(h2_err, "too large") ? 1009 : 1007), fwp_str_new("", 0));
-    }
-    V r = fwp_str_new(out.d ? (const char *)out.d : "", out.len);
-    h2b_free(&out);
-    return fwp_tuple2((V)(int64_t)0, r);
+    int ok = h2_inflate(input, n + 6, &out, m < 0 ? 0 : (size_t)m, &used);
+    free(input);
+    V code = ok ? 0 : (V)(int64_t)(strstr(h2_err, "too large") ? 1009 : 1007);
+    V bytes = fwp_str_new(ok && out.d ? (const char *)out.d : "", ok ? out.len : 0);
+    V result = w_bytes_pair(code, bytes, type);
+    fwp_cleanup_pop(&output_cleanup); h2b_free(&out);
+    FWP_KEEP_ALIVE(dv); return result;
 }
 
 static V fwp_p_ws_close_payload(V codev, V reason) {
@@ -784,23 +804,25 @@ static V fwp_p_ws_close_payload(V codev, V reason) {
         while (n > 0 && (r[n] & 0xc0) == 0x80) n--;
     }
     h2_buf out = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, w_buffer_release, &out);
     h2b_byte(&out, (unsigned)(code >> 8) & 0xff);
     h2b_byte(&out, (unsigned)code & 0xff);
     h2b_put(&out, r, n);
     V v = fwp_str_new((const char *)out.d, out.len);
-    h2b_free(&out);
+    fwp_cleanup_pop(&cleanup); h2b_free(&out);
     return v;
 }
 
-static V fwp_p_ws_close_parse(V p) {
+static V fwp_p_ws_close_parse(V p, const fwp_desc *type) {
     const unsigned char *d = (const unsigned char *)STR(p)->d;
     size_t n = STR(p)->len;
-    if (n == 0) return fwp_tuple2((V)(int64_t)1005, fwp_str_new("", 0));
-    if (n < 2) return fwp_tuple2((V)(int64_t)-1, fwp_str_new("", 0));
+    if (n == 0) return w_bytes_pair((V)(int64_t)1005, fwp_str_new("", 0), type);
+    if (n < 2) return w_bytes_pair((V)(int64_t)-1, fwp_str_new("", 0), type);
     int64_t code = (int64_t)d[0] << 8 | d[1];
     int valid = (code >= 1000 && code <= 1003) || (code >= 1007 && code <= 1014) || (code >= 3000 && code <= 4999);
-    if (!valid || !fwp_valid_utf8(d + 2, n - 2)) return fwp_tuple2((V)(int64_t)-1, fwp_str_new("", 0));
-    return fwp_tuple2((V)code, fwp_str_new((const char *)d + 2, n - 2));
+    if (!valid || !fwp_valid_utf8(d + 2, n - 2)) return w_bytes_pair((V)(int64_t)-1, fwp_str_new("", 0), type);
+    V result = w_bytes_pair((V)code, fwp_str_new((const char *)d + 2, n - 2), type);
+    FWP_KEEP_ALIVE(p); return result;
 }
 
 #endif /* __wasi__ */

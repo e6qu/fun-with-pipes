@@ -1,0 +1,8 @@
+# Numeric addresses need no external DNS server. Sort localhost results because
+# the operating system may vary their order between independent lookups.
+main = [
+    ["127.0.0.1", "::1", "localhost"]
+        | map (both id (dns.resolve | sort)) | echo,
+    "localhost\u{0}ignored" | attempt dns.resolve | result.map-err .message | echo,
+    range 0 32 | map (const "127.0.0.1" | dns.resolve) | hash | echo,
+] | ignore
