@@ -216,6 +216,13 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
         measurements[&("plain", 128)][2] - measurements[&("plain", 32)][2],
         "outgoing headers retain storage after their scope ends"
     );
+    assert_eq!(
+        measurements[&("capture", 128)][0]
+            - measurements[&("capture", 32)][0]
+            - (measurements[&("plain", 128)][0] - measurements[&("plain", 32)][0]),
+        96,
+        "capture allocates its result once without a forwarding wrapper copy"
+    );
     eprintln!("{report}\n{layouts}");
     // These counts do not establish collector-free service execution. Raw TLS/capture buffers,
     // allocator metadata, pages and total process memory are outside this count.

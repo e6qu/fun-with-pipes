@@ -810,7 +810,15 @@ fn abi_of(prog: &Program, f: &Func) -> Option<Abi> {
             small_record(prog, &f.locals[i as usize]).filter(|_| crate::opt::only_fields(body, i))
         })
         .collect();
-    let ret = small_record(prog, f.ty.params(f.arity as usize).1);
+    // A dynamic call already returns a boxed record. Forward that owner rather
+    // than unpacking it in the worker and allocating an identical closure result.
+    let ret = small_record(prog, f.ty.params(f.arity as usize).1).filter(|_| {
+        !built_return(
+            body,
+            &std::collections::HashSet::new(),
+            &|e| matches!(e, Expr::Apply(target, _) if !matches!(**target, Expr::Func(_))),
+        )
+    });
     let numeric = f.locals[..f.arity as usize]
         .iter()
         .any(|t| NativeNumber::of(t).is_some())

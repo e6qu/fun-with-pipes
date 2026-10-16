@@ -690,82 +690,80 @@ The instrumented ARM64 metadata, certificate, request and body functions use
 These are test-binary observations, not bounds on an ordinary server's total
 stack use. The report retains the instructions used to read those sizes.
 
-### Service settings and outgoing headers: under validation
+### Service settings, outgoing headers and callback results
 
 Helpers such as `grpc.with-gzip` and `grpc.with-metadata` run a callback with
-temporary settings for its service calls. The settings must stay valid while
-the callback runs, and a child task must keep its inherited settings after that
-callback returns. See [service scopes](services.md#settings-for-a-group-of-calls)
-for the language-level examples.
+temporary settings for its service calls. A callback is the function supplied
+to the helper. The settings must stay valid while it runs, and a child task
+must keep its inherited settings after the callback returns. See
+[service scopes](services.md#settings-for-a-group-of-calls) for examples.
 
-The [baseline](measurements/service-context-baseline-2026-10-16.json) compares
-repeated scopes with plain fwp state updates on Linux AMD64 at `-O2`. Every call
-increments the same state. The table shows the extra managed allocation cost
-per call, calculated from the difference between 32 and 128 calls, with
-collection disabled:
+The [earlier baseline](measurements/service-context-baseline-2026-10-16.json)
+and [owned-scope measurements](measurements/service-context-owned-2026-10-16.json)
+compare each service scope with plain fwp state updates at 1, 32 and 128 calls.
+Every call increments the same state. These are extra costs per call, calculated
+from the difference between 32 and 128 calls with collection disabled. Each
+cell shows **earlier → owned scopes**:
 
-| Scope | Extra allocation requests | Extra requested bytes | Extra bytes still charged after return |
+| Scope | Allocation requests | Requested bytes | Bytes still charged after return |
 |---|---:|---:|---:|
-| Compression setting | 1 | 64 | 64 |
-| Deadline setting | 1 | 64 | 64 |
-| One outgoing header | 5 | 128 | 144 |
-| Response-header capture | 4 | 120 | 112 |
+| Compression setting | 1 → 0 | 64 → 0 | 64 → 0 |
+| Deadline setting | 1 → 0 | 64 → 0 | 64 → 0 |
+| One outgoing header | 5 → 1 | 128 → 40 | 144 → 0 |
+| Response-header capture | 4 → 2 | 120 → 48 | 112 → 0 |
 
-Requested bytes are the sizes passed to the managed allocator. Charged bytes
-reflect its accounting, including size rounding and explicit releases. These
-counts exclude raw TLS/capture allocations, allocator pages and total process
-memory. They compare two fwp programs, not fwp with C or Rust, and do not measure
-speed. The report preserves the source revision, inputs and binaries; the old
-run did not record the exact CPU model or C compiler version.
+The earlier numbers are Linux AMD64 only. The new numbers match on Linux,
+macOS and Windows, each on ARM64 and AMD64, at source `975806e9`, with all six
+focused jobs passing in `38953639844`. Empty and ignored header lists add no
+per-call allocation. Requested bytes are allocator inputs; charged bytes include
+size rounding and explicit releases. Fixed scheduler startup remains in the raw
+rows and is excluded from the per-call difference. Raw TLS/capture allocations,
+allocator pages and total process memory are outside these counts. This compares
+fwp with earlier fwp, not with C or Rust, and does not measure speed.
 
-The new preparation keeps scope settings on the stack and stores a child's
-copy inside its task allocation. This enlarges service tasks; it does not add
-that field to programs without service support. Synchronous scopes borrow
-existing TLS/capture owners rather than incrementing their counts. Outgoing
-headers use one owned block for their pointer table and copied text. Children
-share that block only when they inherit it; otherwise it is freed when the
-scope ends. Empty or ignored header lists borrow the previous settings.
+Settings now live on the stack during a callback. A child copies them into its
+existing task record. This costs space per task: the Linux AMD64 service task
+grows from 1,512 bytes in the baseline to 1,584 bytes. Programs without service
+support omit the settings fields. The report records all six layouts, compiler
+versions, CPU details and actual ELF, Mach-O or PE binaries. The older baseline
+did not record its exact CPU model or C compiler version.
 
-These changes still need the native checks listed in the [handoff](development-state.md).
-Checks cover size overflow, allocation failure, source aliases, nested scopes,
-parent failure/cancellation and child cleanup, with deliberate broken controls.
-Measurements must include the larger task layout and remaining allocations.
-The callback-result changes below still need verification. Connections and
-streams need further ownership work. The preparation does not admit an entire
-service to checked ARC.
+Synchronous scopes borrow existing TLS/capture owners. Only independently live
+children retain shared owners. Outgoing headers use one owned block for pointers
+and copied text; empty or ignored lists borrow the previous settings. Overflow
+is checked before allocation. Scope return, error and cancellation release
+completed owners. Deliberately omitted inheritance, copying, release and child
+retention must fail the tests.
 
-The following callback-result change is also under validation. Service scopes
-borrow their callback function while it runs and take ownership of the value it
-returns. Response capture constructs an owned tuple containing that result and
-copied header pairs. It builds the list backwards to preserve header order
-without a temporary pointer array. Cleanup protects the callback result before
-copying headers, so allocation failure releases every completed field.
+The five helpers borrow their callback function and own its returned value.
+Response capture builds an owned tuple with that value and copied header pairs.
+It builds the list backwards to preserve order without a temporary pointer
+array. Allocation failure releases every completed field. Tests compare raw and
+optimized interpretation with native tracing/ARC execution, retain caller aliases
+and returned functions, check typed failures, and inspect ARC binaries for
+tracing functions. Capture controls cover 13/14 allocation-failure positions.
+Temporary decoding bytes also release on client result and served-request traps.
+These checks pass on all six native hosts at the source above. Final production
+acceptance remains separate; see the [handoff](development-state.md).
 
-The new `service_scope_ownership` checks compare raw/optimized interpretation
-with native execution in tracing and checked ARC modes, including strings shared
-with the caller and functions returned inside tuples. They disable collection
-to check final charged storage, deliberately remove borrowing/partial cleanup,
-and inspect ARC binaries for tracing functions. These checks are prepared, not
-yet passing evidence. Checked ARC admission of these synchronous scopes does
-not admit remote calls, server entry points or unproved retained request contexts.
+Actual Linux ARM64 instructions copy the 72-byte settings through four 16-byte
+registers and one eight-byte register onto the stack. That wrapper reserves
+144 stack bytes; its separate error handler reserves 464. These are instrumented
+O2 observations, not a whole-program stack bound. The wrapper still calls the
+callback helper, so fewer allocations do not prove that all call overhead is gone.
 
-The [intermediate stack-copy measurements](measurements/service-context-stack-2026-10-16.json)
-show the tradeoff before the packed-header and callback changes: repeated gzip
-and deadline scopes add no managed allocation relative to plain state updates
-on any of the six native hosts. The Linux AMD64 service task grows from 1,512 to
-1,576 bytes because it carries an inherited settings copy. This is a per-task
-cost; the removed 64-byte allocation was paid on every scope call. The report
-records all task sizes and alignments. Inspected ARM64/AMD64 instructions copy
-the settings directly to stack storage. These are memory counts and instrumented
-binaries, not a speed comparison. Separate Windows lifetime fixtures failed to
-compile in that intermediate run, so it does not establish full Windows acceptance.
+A further compiler optimization is under validation. The measured capture path
+unpacks a callback's already allocated tuple and rebuilds an identical tuple in
+a forwarding function. The prepared change passes that owner through directly
+when every return path forwards a dynamic callback result. Allocation tests
+require capture to fall from two requests to one while preserving aliases and
+failure cleanup. Do not treat that target as verified until its new checks pass.
 
-The prepared service-context batch also protects temporary message-decoding
-bytes when construction of the returned value traps, and protects the same
-temporary storage when decoding served request arguments. Tests cover successful and
-malformed messages, tagged error results and deliberate omission of cleanup.
-This repair remains under CI verification; service streams and remote result
-caches still need separate lifetime contracts.
+The [intermediate stack-copy report](measurements/service-context-stack-2026-10-16.json)
+preserves the earlier representation tradeoff. It predates packed headers and
+owned callback results, and its Windows fixtures failed before later repairs.
+Whole remote calls, service entry points and retained request contexts still
+need ownership work; these scope changes do not remove tracing from a server.
 
 ### What remains before remote calls can use ARC
 

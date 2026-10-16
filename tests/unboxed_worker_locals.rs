@@ -297,3 +297,154 @@ int main(void){
         }
     }
 }
+
+#[test]
+fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
+    use fwp::ir::*;
+    use fwp::value::{Closure, Value};
+    use std::rc::Rc;
+    let string = MT::con("std::String");
+    let pair = MT::con("Pair");
+    let callback = MT::Fun(Box::new(string.clone()), Box::new(pair.clone()));
+    let mut program = Program::default();
+    program.shapes.insert(
+        pair.clone(),
+        TypeShape::Record(vec![
+            ("first".into(), string.clone()),
+            ("second".into(), string.clone()),
+        ]),
+    );
+    program.funcs = vec![
+        Func {
+            name: "maker".into(),
+            arity: 1,
+            locals: vec![string.clone()],
+            ty: callback.clone(),
+            body: Body::Expr(Expr::Record(vec![Expr::Local(0), Expr::Local(0)])),
+        },
+        Func {
+            name: "forward".into(),
+            arity: 2,
+            locals: vec![callback.clone(), string.clone(), pair.clone()],
+            ty: MT::Fun(Box::new(callback.clone()), Box::new(callback.clone())),
+            body: Body::Expr(Expr::Let(
+                2,
+                Box::new(Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Local(1)])),
+                Box::new(Expr::Local(2)),
+            )),
+        },
+        Func {
+            name: "main".into(),
+            arity: 0,
+            locals: vec![],
+            ty: MT::Record(vec![
+                ("0".into(), callback.clone()),
+                ("1".into(), callback.clone()),
+            ]),
+            body: Body::Expr(Expr::Record(vec![Expr::Func(0), Expr::Func(3)])),
+        },
+        Func {
+            name: "failure".into(),
+            arity: 1,
+            locals: vec![string],
+            ty: callback,
+            body: Body::Prim("prim.trap".into()),
+        },
+    ];
+    program.main = Some(2);
+    program.named = vec![
+        ("maker".into(), 0),
+        ("forward".into(), 1),
+        ("failure".into(), 3),
+    ];
+    fwp::ir::check_locals(&program).unwrap();
+    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new()));
+    let args = |id| {
+        vec![
+            Value::Closure(Rc::new(Closure {
+                func: id,
+                args: vec![],
+            })),
+            Value::Str("hello".into()),
+        ]
+    };
+    assert_eq!(
+        interpreter.call(1, args(0)).unwrap(),
+        Value::Record(vec![Value::Str("hello".into()), Value::Str("hello".into())].into())
+    );
+    assert!(interpreter.call(1, args(3)).is_err());
+    let code = fwp::cgen::generate(&program).unwrap();
+    let declaration = "typedef uint64_t V;";
+    let allocation = "static inline void *fwp_alloc_init(size_t n) {";
+    assert_eq!(code.matches(declaration).count(), 1);
+    assert_eq!(code.matches(allocation).count(), 1);
+    let code = code
+        .replace(
+            declaration,
+            "typedef uint64_t V;\nstatic int forward_measuring,forward_requests;",
+        )
+        .replace(
+            allocation,
+            &format!("{allocation} if(forward_measuring)forward_requests++;"),
+        );
+    let destructor = code[code.find("/* Pair */\nstatic void fwp_drop").unwrap()..]
+        .split("static void ")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let fixture = r#"
+static volatile V forward_input;
+static jmp_buf forward_failure;
+static int forward_recover(void){return 1;}
+static V forward_extra_box(V value){
+ V fields[]={OBJ(value)->f[0],OBJ(value)->f[1]};
+ V result=fwp_rc_fresh(fwp_record(2,fields));fwp_rc_free_obj(value);return result;
+}
+int main(void){
+ fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+ forward_input=fwp_rc_fresh(fwp_str_new("hello",5));
+ fwp_rc_dup(forward_input);forward_requests=0;forward_measuring=1;
+ V result=f1(PTR(&fc0),forward_input);
+ forward_measuring=0;
+ if(forward_requests!=1)return 249;
+ if(OBJ(result)->f[0]!=forward_input||OBJ(result)->f[1]!=forward_input||!fwp_rc_last(result))return 250;
+ PAIR_DROP(result);
+ if(!fwp_rc_last(forward_input)||strcmp(STR(forward_input)->d,"hello"))return 251;
+ fwp_rc_dup(forward_input);
+ fwp_trap_recover=forward_recover;fwp_trap_jb=&forward_failure;fwp_trap_cleanup=0;
+ if(!setjmp(forward_failure)){(void)f1(PTR(&fc3),forward_input);return 252;}
+ fwp_trap_recover=0;fwp_trap_jb=0;
+ if(fwp_cleanups||!fwp_rc_last(forward_input)||strcmp(fwp_trap_msg,"hello"))return 253;
+ fwp_rc_free_obj(forward_input);return 0;
+}
+"#.replace("PAIR_DROP", destructor);
+    let prefix = &code[..code.find("int main(").unwrap()];
+    let good = format!("{prefix}\n{fixture}");
+    let broken = good.replace(
+        "V result=f1(PTR(&fc0),forward_input);",
+        "V result=forward_extra_box(f1(PTR(&fc0),forward_input));",
+    );
+    assert_ne!(good, broken);
+    let dir = fwp::cgen::TempDir::new("forwarded-record-owner").unwrap();
+    let binary = dir.join("forward.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+        let output = Command::new(&binary).env("FWP_GC", "off").output().unwrap();
+        assert_eq!(
+            output.status.code(),
+            Some(249),
+            "extra result box: {output:?}"
+        );
+        fwp::cgen::compile_c(&good, &binary, opt).unwrap();
+        for poison in ["0", "1"] {
+            checked(
+                Command::new(&binary)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", poison),
+            );
+        }
+    }
+}

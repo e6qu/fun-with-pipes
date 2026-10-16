@@ -1,19 +1,24 @@
 # Session handoff
 
 Updated 2026-10-16. This branch prepares the next combined service-memory PR.
-The only delivery PR is #153, repaired at `1e765000`; its authoritative handoff
+The only delivery PR is #153, repaired at `f6dc9940`; its authoritative handoff
 is `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
-It is temporarily draft while focused decoder run `38952492611` verifies a
-second instrumentation repair. Failed production `38946985320` was canceled;
-its marker matched two buffer implementations. The new repair targets HTTP/2
-specifically. Documentation `38952500689` covers the new head. All nine final
-production jobs must run after focused checks pass; skipped draft CI is not acceptance.
+It is temporarily draft while decoder run `38955537587` and documentation
+`38955543617` check the restored Windows TLS setup. The previous attempt to omit
+that dependency failed because generated WebSocket code still includes OpenSSL
+headers for parsing-only programs. Four Unix focused jobs passed, but the Windows
+failure must be repaired and rerun. All nine production gates still follow.
 Do not merge until every final-head gate passes. Use one squash subject, at most
 80 characters, an empty body, no trailers and no attribution.
 
 ## Current action
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
+Next: publish the record-forwarding optimization with the passing baseline
+report, then run the combined native `context-owners` and actual `wasm` suites.
+Fix failures, retain the new allocation comparison, and require all nine final
+production gates after #153 acceptance and rebase.
+
 Base: `ac3060d1`. Runtime callback source: `24caa70b`; combined repairs and explicit-exit
 follow-up: `6b642a82`; decoding cleanup and CI scheduling: `4656043f`. Do not open another PR. After #153 acceptance, rebase
 only this branch's delta after `ac3060d1` onto its accepted squash.
@@ -24,14 +29,26 @@ checks, but fails while retaining the child fixture binary after its O1 checks.
 The compiler writes `probe.exe`; process execution resolves the extension, but
 copying the extensionless `probe` path fails. The prepared fix names `probe.exe`
 explicitly on every host. O2 child checks still require the replacement run.
-Next: finish inspecting this run, then test the latest combined source including
-the Windows artifact-path repair and served-request cleanup on all six hosts. Queued `38949852186` was
-superseded before execution. Focused actual WASI ARC run `38949856424` at
+Source `975806e9` passes all six native hosts in `38953639844`, including
+Windows artifact retention and served-request cleanup. Retain its report as the
+baseline before the new record-forwarding optimization. Old `38951742782` passes both Mac hosts and Linux ARM64, including actual service
+calls, before cancellation of the remaining work. Windows AMD64 failed only the
+known evidence path. Queued `38949852186` was superseded before execution. Focused actual WASI ARC run `38949856424` at
 `6b642a82` passes on both Linux architectures, including actual WASI exit. Broader WASI/browser run `38947985548` passes on
 both Linux architectures at callback source `24caa70b`, before exit tests.
 Retain final allocation,
 layout, compiler/CPU and binary evidence before claiming verified support.
 Do not broaden ARC admission beyond the tested ownership contracts.
+Linux ARM64 passes the replacement run. Its artifacts are retained at
+`/private/tmp/fwp-context-final-evidence/38953639844/context-storage-ubuntu-24.04-arm`
+(download 4.92s). Actual binary inspection (0.14s) shows a 72-byte stack copy
+using four 16-byte registers and one eight-byte register; the wrapper reserves
+144 stack bytes and its separate handler 464. The root task requests 5,296
+bytes once, unchanged from the earlier intermediate size on this architecture
+because of layout padding. Outgoing headers add one 40-byte managed request per
+call versus plain state updates; response capture still adds two/48 bytes.
+Neither retains per-call charged storage; fixed scheduler startup is recorded
+separately. Other native hosts and the final combined report are still required.
 `/private/tmp/fwp-retain-context-final.py` prepares the final report only after
 all six native jobs pass. Supply the replacement passing run, its full source
 revision, an artifact directory and the report output path; run it through the local guard. It checks source, jobs, rows,
@@ -88,12 +105,13 @@ repository paths with forward slashes; the contract assertions are unchanged.
 
 ## Explicit exit follow-up
 
-Published in `6b642a82`, not yet native-verified: `exit` has the nonreturning
+Published in `6b642a82` and verified natively at `975806e9`: `exit` has the nonreturning
 ownership contract. It borrows its I32 status, produces no result and needs no
 collector. Runtime exit behavior is unchanged: output before exit is preserved,
 later steps do not run, and the process status uses the low eight bits. It does
 not promise ordinary scope unwinding or individually freed live values.
-The proposed inventory becomes 347 contracts/seven remaining reviews.
+The inventory passes on all six native hosts at `975806e9`: 347 contracts and
+seven remaining primitive reviews. Other ownership boundaries remain too.
 
 `process_exit_ownership` tests raw/optimized interpretation, O1/O2 native tracing
 and ARC, actual ARC WASI execution when the required toolchain is configured,
@@ -105,6 +123,15 @@ Windows/Mac coverage, making 233 preparation targets. Do not
 claim actual WASI support from a native-only job that does not run that check.
 
 ## Retained evidence and limits
+
+The [owned-scope report](measurements/service-context-owned-2026-10-16.json)
+records all six native jobs passing at `975806e9`, before the forwarding compiler
+optimization. Retention passes under the guard (33.72s). All hosts add one
+40-byte header allocation per call and two/48 bytes for capture, with no retained
+per-call charge. It preserves exact source, CPU/compiler, task sizes, binary
+formats and ARM64 instruction observations. The forwarding follow-up needs new
+measurements; do not overwrite this baseline with unverified numbers.
+
 
 The [baseline](measurements/service-context-baseline-2026-10-16.json), source
 `9b137078`, passed Linux run `38941168779`. It compares 1/32/128 fwp scope calls
@@ -121,8 +148,8 @@ count them as complete native acceptance. Header/capture costs in that report
 predate the packed-header and callback-result changes.
 
 On Linux AMD64 the service task grew from 1,512 to 1,576 bytes in that intermediate
-revision. The latest context adds another owner pointer and needs fresh layout
-measurements. Existing plain programs exclude service fields and are not a
+revision. The owned-scope report at `975806e9` records the final 72-byte context and
+1,584-byte Linux AMD64 service task. Existing plain programs exclude service fields and are not a
 substitute for the old service-task baseline. ARM64 and AMD64 instructions show
 64-byte copies into stack storage; the ARM wrapper reserves 128 stack bytes,
 with a separate 352-byte handler frame. These are instrumented O2 binaries,
@@ -151,6 +178,22 @@ existing served-buffer test now traps during request value decoding and verifies
 that omitting this cleanup fails, alongside response encoding and send-cancel
 controls. Formatting passes (1.34s). This follow-up is newer than native run
 `38951742782` and requires final-head native verification.
+
+## Measured record-forwarding optimization
+
+The passing `975806e9` ARM64 output explains a remaining capture allocation:
+`compose` calls a callback that already returns an owned tuple, unpacks it into
+fields, then allocates an identical tuple in its boxed entry. The prepared
+compiler change preserves the boxed result when every return path forwards a
+dynamic callback result. Known direct calls and functions constructing records
+keep their existing worker choices. No new syntax or implicit conversion is added.
+
+The existing scope measurement now requires one capture-result allocation per
+call, down from two in `975806e9`. A new native control compares interpreter
+results, shared strings and trapping callbacks, and requires a deliberately
+reintroduced result-box allocation to fail its count. Existing record-worker
+and conversion tests join the focused run. This is implemented but not yet
+native-verified; both native and actual WASI checks must cover it before claims.
 
 ## CI scheduling follow-up
 
