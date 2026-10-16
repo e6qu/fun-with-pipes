@@ -5,17 +5,17 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat]
         default: numerical
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
         type: string
       baseline_run:
-        description: Earlier hash-costs run for paired revision comparison
+        description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    if: inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
@@ -43,13 +43,31 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - if: inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays' && inputs.suite != 'zip-maps' && inputs.suite != 'zip-windows' && inputs.suite != 'hash' && inputs.suite != 'hash-windows'
+      - if: inputs.suite != 'vectors' && inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays' && inputs.suite != 'zip-maps' && inputs.suite != 'zip-windows' && inputs.suite != 'hash' && inputs.suite != 'hash-windows'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
+      - name: Vector ownership, boxed lanes and failure cleanup
+        if: inputs.suite == 'vectors'
+        env:
+          FWP_VECTOR_ARTIFACTS: vector-evidence
+        run: |
+          cargo test --lib ownership::tests
+          cargo test --lib fuse::tests
+          cargo test --no-fail-fast --test vector_ownership --test array_element_ownership --test arc_execution
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'vectors'
+        with:
+          name: vectors-${{ matrix.runner }}
+          path: vector-evidence/
+          if-no-files-found: ignore
       - name: Streaming hash ownership and canonical protocol
         if: inputs.suite == 'hash' || inputs.suite == 'hash-windows'
         env:
           FWP_HASH_ARTIFACTS: hash-evidence
-        run: cargo test --no-fail-fast --test hash_ownership --test protocol --test arc_execution
+        run: |
+          cargo test --lib rc::tests
+          cargo test --lib escape::tests
+          cargo test --lib ownership::tests
+          cargo test --no-fail-fast --test range_array --test hash_ownership --test protocol --test arc_execution
       - uses: actions/upload-artifact@v7
         if: always() && (inputs.suite == 'hash' || inputs.suite == 'hash-windows')
         with:
@@ -425,7 +443,7 @@ jobs:
             performance-evidence/
             target/bench.md
   mapped_array_repeat:
-    if: inputs.suite == 'mapped-array-repeat' || inputs.suite == 'zip-map-repeat' || inputs.suite == 'hash-repeat'
+    if: inputs.suite == 'mapped-array-repeat' || inputs.suite == 'zip-map-repeat' || inputs.suite == 'hash-repeat' || inputs.suite == 'vector-repeat'
     permissions:
       contents: read
       actions: read
@@ -442,23 +460,23 @@ jobs:
       BASELINE_RUN: ${{ inputs.baseline_run }}
     steps:
       - uses: actions/checkout@v7
-      - name: Download verified hash revisions
-        if: inputs.suite == 'hash-repeat'
+      - name: Download verified before and after revisions
+        if: inputs.suite == 'hash-repeat' || inputs.suite == 'vector-repeat'
         run: |
           test -n "$EVIDENCE_RUN"
           test -n "$BASELINE_RUN"
-          gh run download "$BASELINE_RUN" --name "hash-costs-${{ matrix.runner }}" --dir hash-before
-          gh run download "$EVIDENCE_RUN" --name "hash-costs-${{ matrix.runner }}" --dir hash-after
-      - name: Repeat hash revisions beside C and Rust
-        if: inputs.suite == 'hash-repeat'
-        run: python3 scripts/repeat-hash-comparison.py --before hash-before --after hash-after --output comparison-repeat
+          gh run download "$BASELINE_RUN" --name "${{ inputs.suite == 'hash-repeat' && 'hash-costs' || 'vector-costs' }}-${{ matrix.runner }}" --dir revision-before
+          gh run download "$EVIDENCE_RUN" --name "${{ inputs.suite == 'hash-repeat' && 'hash-costs' || 'vector-costs' }}-${{ matrix.runner }}" --dir revision-after
+      - name: Repeat revisions beside C and Rust
+        if: inputs.suite == 'hash-repeat' || inputs.suite == 'vector-repeat'
+        run: python3 scripts/repeat-revision-comparison.py --workload ${{ inputs.suite == 'hash-repeat' && 'hash' || 'vectors' }} --before revision-before --after revision-after --output comparison-repeat
       - name: Download verified comparison binaries
-        if: inputs.suite != 'hash-repeat'
+        if: inputs.suite != 'hash-repeat' && inputs.suite != 'vector-repeat'
         run: |
           test -n "$EVIDENCE_RUN"
           gh run download "$EVIDENCE_RUN" --name "${{ inputs.suite == 'zip-map-repeat' && 'zip-map-costs' || 'mapped-array-costs' }}-${{ matrix.runner }}" --dir comparison-input
       - name: Compare elapsed time, child CPU time and normal collection
-        if: inputs.suite != 'hash-repeat'
+        if: inputs.suite != 'hash-repeat' && inputs.suite != 'vector-repeat'
         run: python3 scripts/repeat-native-comparison.py --input comparison-input --output comparison-repeat
       - uses: actions/upload-artifact@v7
         if: always()
@@ -466,7 +484,7 @@ jobs:
           name: ${{ inputs.suite }}-${{ matrix.runner }}
           path: comparison-repeat/
   ad_metadata:
-    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites' || inputs.suite == 'mapped-array-costs' || inputs.suite == 'zip-map-costs' || inputs.suite == 'hash-costs'
+    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites' || inputs.suite == 'mapped-array-costs' || inputs.suite == 'zip-map-costs' || inputs.suite == 'hash-costs' || inputs.suite == 'vector-costs'
     strategy:
       fail-fast: false
       matrix:
@@ -482,6 +500,9 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bin fwp
+      - name: Compare equivalent F64 lane calculations in fwp C and Rust
+        if: inputs.suite == 'vector-costs'
+        run: python3 scripts/measure-vector-lanes.py --output metadata-evidence
       - name: Compare equivalent hashing in fwp C and Rust
         if: inputs.suite == 'hash-costs'
         run: python3 scripts/measure-hashing.py --output metadata-evidence
@@ -495,7 +516,7 @@ jobs:
         if: inputs.suite == 'ad-sites'
         run: python3 scripts/measure-ad-allocation-sites.py --output metadata-evidence
       - name: Repeat paired metadata costs with sustained derivatives
-        if: inputs.suite != 'ad-sites' && inputs.suite != 'mapped-array-costs' && inputs.suite != 'zip-map-costs' && inputs.suite != 'hash-costs'
+        if: inputs.suite != 'ad-sites' && inputs.suite != 'mapped-array-costs' && inputs.suite != 'zip-map-costs' && inputs.suite != 'hash-costs' && inputs.suite != 'vector-costs'
         run: python3 scripts/measure-ad-metadata.py --comparison "${{ inputs.suite == 'ad-layout' && 'interleaved' || 'separate' }}" --output metadata-evidence
       - uses: actions/upload-artifact@v7
         if: always()

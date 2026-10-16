@@ -5,6 +5,16 @@ on:
       full:
         type: boolean
         required: true
+# Optimize the compiler used by long suites while keeping development checks.
+# These workflow settings do not change local Cargo defaults or generated-C flags.
+env:
+  CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+  CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+  CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+  CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+  CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+  CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+
 jobs:
   native:
     strategy:
@@ -48,6 +58,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo build --bin fwp 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Language formatting preflight
+        shell: pwsh
+        run: |
+          ./target/debug/fwp.exe fmt --check lib examples docs/tutorials bench
+          exit $LASTEXITCODE
       - name: Interpreter golden outputs and exit statuses
         shell: pwsh
         run: |
@@ -56,7 +71,7 @@ jobs:
       - name: Generated programs with native resources and ownership stress
         shell: pwsh
         run: |
-          cargo test --test hash_ownership --test mapped_array_construction --test zip_map_fusion --test unzip_cleanup --test list_construction_cleanup --test list_generation_ownership --test list_structure_ownership --test state_sequence_ownership --test map_unwind_ownership --test selection_unwind_ownership --test zip_unwind_ownership --test fold_unwind_ownership --test windows_runtime --test windows_static_memory --test loop_unwind_ownership --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test file_construction_ownership --test file_inline_path --test file_storage_disposal -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          cargo test --test vector_ownership --test range_array --test hash_ownership --test mapped_array_construction --test zip_map_fusion --test unzip_cleanup --test list_construction_cleanup --test list_generation_ownership --test list_structure_ownership --test state_sequence_ownership --test map_unwind_ownership --test selection_unwind_ownership --test zip_unwind_ownership --test fold_unwind_ownership --test windows_runtime --test windows_static_memory --test loop_unwind_ownership --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test file_construction_ownership --test file_inline_path --test file_storage_disposal -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
       - name: Publish native diagnostics before dependency builds
         uses: actions/upload-artifact@v7

@@ -7,7 +7,8 @@
 //! either, or applies it (a closure applied hands the function its
 //! captured values, never itself). Anything else lets it escape:
 //! returning it, storing it in a constructor, record or closure, handing
-//! it to a primitive, a C function or a function value. A parameter passed on to the function
+//! it to a primitive without a nonescape contract, a C function or a function
+//! value. A parameter passed on to the function
 //! itself lives in a caller's frame, so it may; a value the function
 //! builds may not go to the function itself, as a call of itself in tail
 //! position is compiled as a jump, which reuses the frame that holds it.
@@ -19,9 +20,14 @@
 
 use crate::ir::{Body, Expr, FuncId, Local, Pat, Program};
 
+/// Existing compiler comparison switch for nonescaping stack aggregates.
+pub(crate) fn stack_enabled() -> bool {
+    std::env::var("FWP_STACK").map_or(true, |v| v != "0")
+}
+
 /// For each function, whether each parameter escapes (`false`: it does
-/// not). Non-expression functions let parameters escape except callback slots
-/// whose primitive contract proves synchronous invocation without retention.
+/// not). Non-expression functions let parameters escape except primitive slots
+/// with an explicit nonescape proof in the ownership inventory.
 pub fn params(prog: &Program) -> Vec<Vec<bool>> {
     let mut noesc: Vec<Vec<bool>> = prog
         .funcs
@@ -30,8 +36,8 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
             (0..f.arity as usize)
                 .map(|j| {
                     matches!(f.body, Body::Expr(_))
-                        || matches!(&f.body, Body::Prim(s) if crate::ownership::primitive(s)
-                    .is_some_and(|c| c.borrows_callback() && c.callback_argument() == Some(j)))
+                        || matches!(&f.body, Body::Prim(s)
+                            if crate::ownership::borrows_without_escape(s, j))
                 })
                 .collect()
         })
@@ -132,6 +138,36 @@ mod tests {
 
     fn l(x: Local) -> Expr {
         Expr::Local(x)
+    }
+
+    #[test]
+    fn hash_borrows_through_calls_but_returned_aliases_still_escape() {
+        let mut hash = func(1, l(0));
+        hash.body = Body::Prim("hash".into());
+        let mut state = func(1, l(0));
+        state.body = Body::Prim("get".into());
+        let p = prog(vec![
+            hash,
+            func(1, Expr::Call(0, vec![l(0)])),
+            func(1, Expr::Call(1, vec![l(0)])),
+            state,
+            func(1, Expr::Call(3, vec![l(0)])),
+            func(
+                1,
+                Expr::Let(1, Box::new(Expr::Call(0, vec![l(0)])), Box::new(l(0))),
+            ),
+        ]);
+        assert_eq!(
+            params(&p),
+            vec![
+                vec![true],
+                vec![true],
+                vec![true],
+                vec![false],
+                vec![false],
+                vec![false]
+            ]
+        );
     }
 
     #[test]

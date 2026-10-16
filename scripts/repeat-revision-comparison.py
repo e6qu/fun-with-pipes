@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare verified before/after hash binaries and C/Rust on the same runner."""
+"""Compare verified before/after numerical binaries and C/Rust on the same runner."""
 import argparse
 import hashlib
 import importlib.util
@@ -23,10 +23,15 @@ run = hashing.run
 def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'measure only on native runners'
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--workload', choices=['hash', 'vectors'], required=True)
     parser.add_argument('--before', type=Path, required=True)
     parser.add_argument('--after', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    keys = (['elements', 'repetitions', 'canonicalBytesPerHash'] if args.workload == 'hash'
+            else ['lanes', 'repetitions'])
+    filename = 'hash.fwp' if args.workload == 'hash' else 'lanes.fwp'
+    instrument = hashing.profile if args.workload == 'hash' else hashing.iteration.instrument
     directories = {'before': args.before.resolve(), 'after': args.after.resolve()}
     reports = {name: json.loads((directory / 'report.json').read_text()) for name, directory in directories.items()}
     for report in reports.values():
@@ -39,8 +44,10 @@ def main():
     results = {}
     for name, after in reports['after']['results'].items():
         before = reports['before']['results'][name]
-        for key in ['source', 'expected', 'elements', 'repetitions', 'canonicalBytesPerHash']:
+        for key in ['source', 'expected'] + keys:
             assert before[key] == after[key], (name, key)
+        for reference in ['c', 'rust']:
+            assert before['variants'][reference]['sourceSha256'] == after['variants'][reference]['sourceSha256']
         variants, binaries = {}, {}
         labels = [(phase, f'fwp-{mode}') for phase in ['before', 'after'] for mode in ['tracing', 'arc']]
         labels += [('after', 'c'), ('after', 'rust')]
@@ -50,7 +57,7 @@ def main():
             original = reports[phase]['results'][name]['variants'][variant]
             binary = directory / variant
             source = directory / ('reference.rs' if variant == 'rust' else variant + '.c')
-            assert (directory / 'hash.fwp').read_text() == after['source']
+            assert (directory / filename).read_text() == after['source']
             for path, key in [(binary, 'binarySha256'), (source, 'sourceSha256'), (directory / (variant + '.asm'), 'assemblySha256')]:
                 assert hashlib.sha256(path.read_bytes()).hexdigest() == original[key], (path, key)
             binary.chmod(0o755)
@@ -59,17 +66,24 @@ def main():
             if variant.startswith('fwp'):
                 cfile = out / f'{name}-{label}-profile.c'
                 measured = out / f'{name}-{label}-profile'
-                cfile.write_text(hashing.profile(source.read_text()))
+                cfile.write_text(instrument(source.read_text()))
                 profile_command = [os.environ['CC'], '-O2', '-std=gnu11', '-ffp-contract=off', '-w', str(cfile), '-o', str(measured), '-lm', '-lpthread']
                 run(profile_command, environment)
                 for collector in (['normal', 'off'] if variant == 'fwp-tracing' else ['off']):
                     result = run([measured], dict(environment, FWP_GC='off') if collector == 'off' else environment)
                     assert result.stdout == after['expected']
-                    counters = [json.loads(line) for line in result.stderr.splitlines()]
-                    assert len(counters) == 2
+                    if args.workload == 'hash':
+                        counters = [json.loads(line) for line in result.stderr.splitlines()]
+                        assert len(counters) == 2
+                        expected = original['profile']
+                        memory = counters[1]
+                    else:
+                        counters = json.loads(result.stderr)
+                        expected = original['profiles']['off']
+                        memory = counters
                     if collector == 'off':
-                        assert counters == original['profile'], (name, label, counters)
-                    assert counters[1]['finalChargedBytes'] == 0
+                        assert counters == expected, (name, label, counters)
+                    assert memory['finalChargedBytes'] == 0
                     profiles[collector] = counters
             warm = run([binary], environment)
             assert warm.stdout == after['expected'] and not warm.stderr
@@ -100,12 +114,12 @@ def main():
                                     for metric, key in [('wall', 'medianWallNs'), ('cpu', 'medianChildCpuNs')]}
                          for reference in [f'before-fwp-{mode}', 'after-c', 'after-rust']}
                   for mode in ['tracing', 'arc']}
-        results[name] = dict(source=after['source'], expected=after['expected'], elements=after['elements'], repetitions=after['repetitions'], variants=variants, ratios=ratios)
-    report = dict(head=os.environ['GITHUB_SHA'], beforeHead=reports['before']['head'], afterHead=reports['after']['head'],
+        results[name] = dict(source=after['source'], expected=after['expected'], variants=variants, ratios=ratios, **{key: after[key] for key in keys})
+    report = dict(workload=args.workload, head=os.environ['GITHUB_SHA'], beforeHead=reports['before']['head'], afterHead=reports['after']['head'],
         baselineRun=os.environ['BASELINE_RUN'], evidenceRun=os.environ['EVIDENCE_RUN'], hardware=platform.uname()._asdict(),
         cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
         profileCompiler=run([os.environ['CC'], '--version']).stdout, results=results,
-        scope='Verified binaries from two named runs execute together: before/after fwp tracing/ARC and the after run\'s matching C/Rust references. Same source, inputs, canonical bytes and output; one warmup then twelve balanced rotating whole-process wall/child-CPU samples. Compilation and normal/off collector profiles are separate; off profiles must reproduce original allocation/count measurements exactly. Original reports retain compilation, RSS and reference allocation scope. This compares callback/fusion revisions, not just streaming against buffered hash; no universal speed or parity claim.')
+        scope='Verified binaries from two named runs execute together: before/after fwp tracing/ARC and the after run\'s matching C/Rust references. Same source, inputs, arithmetic/encoding rules and output; one warmup then twelve balanced rotating whole-process wall/child-CPU samples. Compilation and normal/off collector profiles are separate; off profiles must reproduce original allocation/count measurements exactly. Original reports retain compilation, RSS and reference allocation scope. This compares the two recorded compiler revisions as a whole; it does not isolate individual transformations or establish universal speed or parity.')
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: case['ratios'] for name, case in results.items()}, indent=2))
 

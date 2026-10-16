@@ -105,6 +105,27 @@ pub fn prim_reads_only(sym: &str, j: usize) -> bool {
         .is_some_and(|c| c.argument(j) != crate::ownership::Argument::Share)
 }
 
+/// A direct temporary record can borrow its fields through a single-argument
+/// primitive with an explicit nonescape proof. The sequence pass keeps their
+/// owners alive; the verifier and backend use this same representation rule.
+/// Other records still consume their fields, including with stack storage off.
+pub fn borrows_record_argument(funcs: &[Func], id: FuncId, j: usize, e: &Expr) -> bool {
+    if funcs[id].arity != 1 || j != 0 || !matches!(e, Expr::Record(xs) if !xs.is_empty()) {
+        return false;
+    }
+    if !matches!(
+        funcs[id].ty.params(1).0.first().copied(),
+        Some(MT::Record(_))
+    ) {
+        return false;
+    }
+    matches!(&funcs[id].body, Body::Prim(symbol)
+        if crate::ownership::borrows_without_escape(symbol, j)
+            && crate::ownership::primitive(symbol)
+                .is_some_and(|c| c.argument(j) == crate::ownership::Argument::Borrow))
+        && crate::escape::stack_enabled()
+}
+
 /// Whether the primitive returns independently owned leaf or outer storage.
 pub fn prim_fresh(sym: &str) -> bool {
     crate::ownership::primitive(sym).is_some_and(|c| {
@@ -195,6 +216,20 @@ impl Pass<'_> {
                 })
             }
             Expr::Call(id, args) => {
+                if args.len() == 1 && borrows_record_argument(self.funcs, *id, 0, &args[0]) {
+                    let Expr::Record(fields) = &args[0] else {
+                        unreachable!()
+                    };
+                    let MT::Record(types) = self.funcs[*id].ty.params(1).0[0] else {
+                        unreachable!()
+                    };
+                    let types: Vec<_> = types.iter().map(|(_, ty)| ty.clone()).collect();
+                    let modes = vec![Mode::Borrow; fields.len()];
+                    let id = *id;
+                    return self.seq_typed(fields, &modes, &types, owned, borrowed, move |xs| {
+                        Expr::Call(id, vec![Expr::Record(xs)])
+                    });
+                }
                 let modes: Vec<Mode> = (0..args.len())
                     .map(|j| {
                         if consumes_arg(self.funcs, *id, j) {
@@ -304,6 +339,33 @@ impl Pass<'_> {
                 }
             }
             Expr::Let(x, v, b) => {
+                if self.counted(*x) && Self::plain_read(v) {
+                    if let Some(exposed) = self.forward_hash_field(*x, v, b) {
+                        return self.conv_typed(&exposed, owned, borrowed, expected);
+                    }
+                }
+                // Simplification may name a temporary tuple just before hash.
+                // Expose only its immediate, sole call use: no intervening
+                // evaluation or resource frame may move across its fields.
+                let call = |e: &Expr| match e {
+                    Expr::Call(id, args)
+                        if args.len() == 1
+                            && matches!(&args[0], Expr::Local(l) if l == x)
+                            && borrows_record_argument(self.funcs, *id, 0, v) =>
+                    {
+                        Some(Expr::Call(*id, vec![(**v).clone()]))
+                    }
+                    _ => None,
+                };
+                let exposed = match &**b {
+                    Expr::Let(y, value, tail) if !self.free(tail).contains(x) => {
+                        call(value).map(|value| Expr::Let(*y, Box::new(value), tail.clone()))
+                    }
+                    other => call(other),
+                };
+                if let Some(exposed) = exposed {
+                    return self.conv_typed(&exposed, owned, borrowed, expected);
+                }
                 let fb = self.free(b);
                 // the body owns what it uses; the value borrows those
                 let vo: Set = owned.difference(&fb).copied().collect();
@@ -394,6 +456,64 @@ impl Pass<'_> {
                 body: Box::new(self.conv_typed(body, owned, borrowed, expected)),
             },
             Expr::Dup(..) | Expr::Drop(..) => unreachable!("reference counting runs once"),
+        }
+    }
+
+    fn plain_read(e: &Expr) -> bool {
+        matches!(e, Expr::Local(_) | Expr::Const(_))
+            || matches!(e, Expr::Field(base, _) if matches!(&**base, Expr::Local(_)))
+    }
+
+    /// Forward a named pure field read into its immediate hash-only use. Only
+    /// other pure reads may intervene; no calls, traps or resource frames move.
+    /// Sequence ownership then borrows the original field instead of first
+    /// creating an owned alias merely to borrow it again.
+    fn forward_hash_field(&self, local: Local, value: &Expr, body: &Expr) -> Option<Expr> {
+        let call = |e: &Expr| {
+            let Expr::Call(id, args) = e else { return None };
+            if args.len() != 1 || !borrows_record_argument(self.funcs, *id, 0, &args[0]) {
+                return None;
+            }
+            let Expr::Record(fields) = &args[0] else {
+                unreachable!()
+            };
+            if !fields.iter().all(Self::plain_read)
+                || fields.iter().any(|e| {
+                    !matches!(e, Expr::Local(l) if *l == local) && self.free(e).contains(&local)
+                })
+                || !fields
+                    .iter()
+                    .any(|e| matches!(e, Expr::Local(l) if *l == local))
+            {
+                return None;
+            }
+            let fields = fields
+                .iter()
+                .map(|e| {
+                    if matches!(e, Expr::Local(l) if *l == local) {
+                        value.clone()
+                    } else {
+                        e.clone()
+                    }
+                })
+                .collect();
+            Some(Expr::Call(*id, vec![Expr::Record(fields)]))
+        };
+        match body {
+            Expr::Let(y, computation, tail) => {
+                if !self.free(tail).contains(&local) {
+                    if let Some(computation) = call(computation) {
+                        return Some(Expr::Let(*y, Box::new(computation), tail.clone()));
+                    }
+                }
+                if Self::plain_read(computation) && !self.free(computation).contains(&local) {
+                    return self
+                        .forward_hash_field(local, value, tail)
+                        .map(|tail| Expr::Let(*y, computation.clone(), Box::new(tail)));
+                }
+                None
+            }
+            other => call(other),
         }
     }
 
@@ -788,6 +908,43 @@ impl Checker<'_> {
             Expr::Call(id, args) => {
                 let before = self.calls.map(|_| owned_references(st));
                 args.iter().enumerate().try_for_each(|(j, a)| {
+                    if borrows_record_argument(self.funcs, *id, j, a) {
+                        let Expr::Record(fields) = a else {
+                            unreachable!()
+                        };
+                        let MT::Record(types) = self.funcs[*id].ty.params(1).0[0] else {
+                            unreachable!()
+                        };
+                        if fields.len() != types.len() {
+                            return Err("borrowed record field count differs from its type".into());
+                        }
+                        let mut owners = Vec::new();
+                        for (field, (_, ty)) in fields.iter().zip(types) {
+                            if needs_rc(self.shapes, ty) {
+                                match field {
+                                    Expr::Local(l) => owners.push(*l),
+                                    Expr::Field(base, _) if matches!(&**base, Expr::Local(_)) => {
+                                        let Expr::Local(l) = &**base else {
+                                            unreachable!()
+                                        };
+                                        owners.push(*l);
+                                    }
+                                    Expr::Const(_) => {}
+                                    _ => {
+                                        return Err(
+                                            "borrowed record field lacks a live owner".into()
+                                        )
+                                    }
+                                }
+                            }
+                            self.expr(field, st, false)?;
+                        }
+                        // A later scalar computation may consume an earlier
+                        // field's owner. Reading it earlier is not enough.
+                        return owners.into_iter().try_for_each(|l| {
+                            self.need_alive(st, l, "is borrowed by a temporary record")
+                        });
+                    }
                     let c = consumes_arg(self.funcs, *id, j);
                     self.expr(a, st, c || !matches!(a, Expr::Local(_)))
                 })?;
@@ -1030,6 +1187,97 @@ mod tests {
 
     fn checked(p: &Program, e: Expr) -> Result<(), String> {
         check(p, &p.funcs[0], &e, &p.funcs[0].locals)
+    }
+
+    fn hash_record_program(second: Expr, second_ty: MT) -> Program {
+        let record = MT::Record(vec![("0".into(), list()), ("1".into(), second_ty)]);
+        let body = Expr::Call(1, vec![Expr::Record(vec![Expr::Local(0), second])]);
+        let mut p = prog(vec![list()], vec![], body);
+        p.funcs[0].ty = MT::Fun(Box::new(list()), Box::new(MT::con("std::U64")));
+        p.funcs.push(Func {
+            name: "hash".into(),
+            arity: 1,
+            locals: vec![record.clone()],
+            ty: MT::Fun(Box::new(record), Box::new(MT::con("std::U64"))),
+            body: Body::Prim("hash".into()),
+        });
+        p.funcs.push(Func {
+            name: "consume".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(MT::con("std::I64"))),
+            body: Body::Expr(Expr::Const(Value::I64(0))),
+        });
+        p
+    }
+
+    #[test]
+    fn hash_record_fields_borrow_aliases_without_duplicate_owners() {
+        let p = hash_record_program(Expr::Local(0), list());
+        let (body, _) = counted(&p);
+        assert_eq!(
+            format!("{body:?}").contains("Dup("),
+            !crate::escape::stack_enabled()
+        );
+    }
+
+    #[test]
+    fn hash_record_named_just_before_its_only_call_borrows_fields() {
+        let mut p = hash_record_program(Expr::Local(0), list());
+        let record = p.funcs[1].locals[0].clone();
+        p.funcs[0].locals.extend([record, MT::con("std::U64")]);
+        p.funcs[0].body = Body::Expr(Expr::Let(
+            1,
+            Box::new(Expr::Record(vec![Expr::Local(0), Expr::Local(0)])),
+            Box::new(Expr::Let(
+                2,
+                Box::new(Expr::Call(1, vec![Expr::Local(1)])),
+                Box::new(Expr::Local(2)),
+            )),
+        ));
+        let (body, _) = counted(&p);
+        assert_eq!(
+            format!("{body:?}").contains("Dup("),
+            !crate::escape::stack_enabled()
+        );
+    }
+
+    #[test]
+    fn hash_record_named_field_reads_borrow_the_original_parent() {
+        let mut p = hash_record_program(Expr::Local(0), list());
+        let parent = MT::Record(vec![("0".into(), list()), ("1".into(), list())]);
+        p.funcs[0].ty = MT::Fun(Box::new(parent.clone()), Box::new(MT::con("std::U64")));
+        p.funcs[0].locals = vec![parent, list()];
+        p.funcs[0].body = Body::Expr(Expr::Let(
+            1,
+            Box::new(Expr::Field(Box::new(Expr::Local(0)), 0)),
+            Box::new(Expr::Call(
+                1,
+                vec![Expr::Record(vec![
+                    Expr::Local(1),
+                    Expr::Field(Box::new(Expr::Local(0)), 1),
+                ])],
+            )),
+        ));
+        let (body, _) = counted(&p);
+        assert_eq!(
+            format!("{body:?}").contains("Dup("),
+            !crate::escape::stack_enabled()
+        );
+    }
+
+    #[test]
+    fn hash_record_keeps_earlier_fields_alive_through_later_consumption() {
+        let p = hash_record_program(Expr::Call(2, vec![Expr::Local(0)]), MT::con("std::I64"));
+        let (body, _) = counted(&p);
+        assert!(format!("{body:?}").contains("Dup(0,"), "{body:?}");
+        let Body::Expr(raw) = &p.funcs[0].body else {
+            unreachable!()
+        };
+        assert!(
+            checked(&p, raw.clone()).is_err(),
+            "accepted a field after its owner was consumed"
+        );
     }
 
     #[test]

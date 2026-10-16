@@ -1823,6 +1823,172 @@ static V fwp_array_typed_new(size_t n, const fwp_desc *elem) {
     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
     return fwp_rc_fresh(fwp_array_new_packed(n, elem));
 }
+/* Vector storage owns its array and each boxed lane. These are ordinary C
+ * loops: a target compiler may vectorize eligible arithmetic, but ownership
+ * does not depend on that decision. */
+static V fwp_simd_finish(fwp_array_builder *owner, fwp_cleanup *cleanup) {
+    V result = fwp_rc_fresh(fwp_record(1, &owner->value));
+    fwp_array_builder_finish(owner, cleanup);
+    return result;
+}
+#define LANES(v) ARR(OBJ(v)->f[0])
+
+static V fwp_p_simd_splat(V x, size_t n, const fwp_desc *elem) {
+    fwp_array_builder result = {fwp_array_typed_new(n, elem), 0, elem};
+    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);
+    if (elem->kind == K_F64) {
+        unsigned char *data = (unsigned char *)ARR(result.value)->d;
+        for (size_t i = 0; i < n; i++) memcpy(data + i * sizeof(V), &x, sizeof x);
+        result.filled = n;
+    } else for (size_t i = 0; i < n; i++) {
+        if (elem->kind != K_F128 && elem->dup) elem->dup(x);
+        fwp_array_store(result.value, i, x, elem);
+        result.filled++;
+    }
+    FWP_KEEP_ALIVE(x);
+    return fwp_simd_finish(&result, &cleanup);
+}
+
+static V fwp_p_simd_from_array(V a, size_t n, void (*drop_array)(V), void (*drop_vector)(V)) {
+    if (fwp_array_len(a) != n) return FWP_NONE;
+    fwp_rc_dup(a);
+    fwp_value_owner owner = {a, drop_array};
+    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);
+    V vector = fwp_rc_fresh(fwp_record(1, &a));
+    fwp_value_finish(&owner, &cleanup);
+    owner.value = vector; owner.drop = drop_vector;
+    fwp_value_protect(&owner, &cleanup);
+    V result = fwp_rc_fresh(fwp_some(vector));
+    fwp_value_finish(&owner, &cleanup);
+    FWP_KEEP_ALIVE(a);
+    return result;
+}
+
+static int fwp_num_lt(int k, V a, V b) {
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F16 || k == K_BF16 || k == K_F128) return fwp_f128_compare(fwp_float_quad(k, a), fwp_float_quad(k, b)) == -1;
+#endif
+    if (k == K_F32 || k == K_F64) return fwp_as_f64(k, a) < fwp_as_f64(k, b);
+    if (k == K_U128) return fwp_u128(a) < fwp_u128(b);
+    if (k == K_I128) return fwp_i128(a) < fwp_i128(b);
+    return fwp_as_i128(k, a) < fwp_as_i128(k, b);
+}
+
+/* op: OP_ADD/OP_SUB/OP_MUL/OP_DIV, 5 = min, 6 = max; `subj` op `arg` */
+static V fwp_p_simd_op(int k, int op, V subj, V arg, const char *name, int w, const fwp_desc *elem) {
+    fwp_arr *xs = LANES(subj), *ys = LANES(arg);
+    size_t n = fwp_array_len(PTR(xs)) < fwp_array_len(PTR(ys)) ? fwp_array_len(PTR(xs)) : fwp_array_len(PTR(ys));
+    int fl = fwp_float_kind(k);
+    fwp_array_builder result = {fwp_array_typed_new(n, elem), 0, elem};
+    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);
+    if (k == K_F64 && op <= OP_DIV) {
+        /* A view and a flat F64 array both expose contiguous eight-byte lanes.
+         * Resolve their addresses once. Byte copies respect C effective types;
+         * casting the V storage to double pointers would not. The fresh result
+         * is not a view and its lanes need no cleanup before wrapper allocation. */
+        const unsigned char *left = fwp_array_data(PTR(xs)), *right = fwp_array_data(PTR(ys));
+        unsigned char *data = (unsigned char *)ARR(result.value)->d;
+        for (size_t i = 0; i < n; i++) {
+            double x, y, z;
+            memcpy(&x, left + i * sizeof x, sizeof x);
+            memcpy(&y, right + i * sizeof y, sizeof y);
+            switch (op) {
+            case OP_ADD: z = x + y; break;
+            case OP_SUB: z = x - y; break;
+            case OP_MUL: z = x * y; break;
+            default: z = x / y;
+            }
+            memcpy(data + i * sizeof z, &z, sizeof z);
+        }
+        result.filled = n;
+    } else for (size_t i = 0; i < n; i++) {
+        V x = fwp_array_load(PTR(xs), i, elem), y = fwp_array_load(PTR(ys), i, elem), value;
+        if (op == 5 || op == 6) {
+            value = op == 5 ? (fwp_num_lt(k, y, x) ? y : x) : (fwp_num_lt(k, x, y) ? y : x);
+            // Quad arrays store bits directly; other boxed lanes need an alias.
+            if (elem->kind != K_F128 && elem->dup) elem->dup(value);
+            fwp_array_store(result.value, i, value, elem);
+        } else {
+            value = !fl && op != OP_DIV ? fwp_wrapping(k, op, x, y) : fwp_arith(k, op, x, y, name, w);
+            if (elem->drop) value = fwp_rc_fresh(value);
+            fwp_array_store_owned(result.value, i, value, elem);
+        }
+        result.filled++;
+    }
+    FWP_KEEP_ALIVE(subj); FWP_KEEP_ALIVE(arg);
+    return fwp_simd_finish(&result, &cleanup);
+}
+
+/* Two proved equal-length splats need only their scalar lane values. Their
+ * source expressions have already run in order, even when the lane count is 0. */
+static V fwp_p_simd_splat_dot_f64(V count, V subj, V arg) {
+    uint64_t n = count;
+    if (!n) return fwp_from_f64(0.0);
+    double product = fwp_f64(subj) * fwp_f64(arg), sum = product;
+    for (uint64_t i = 1; i < n; i++) sum += product;
+    return fwp_from_f64(sum);
+}
+
+/* Immediate F64 multiply then sum: each product rounds before its addition,
+ * and additions retain left-to-right order. No product array is needed. */
+static V fwp_p_simd_dot_f64(V subj, V arg) {
+    V xs = OBJ(subj)->f[0], ys = OBJ(arg)->f[0];
+    size_t nx = fwp_array_len(xs), ny = fwp_array_len(ys), n = nx < ny ? nx : ny;
+    const unsigned char *left = fwp_array_data(xs), *right = fwp_array_data(ys);
+    double sum = 0.0;
+    for (size_t i = 0; i < n; i++) {
+        double x, y;
+        memcpy(&x, left + i * sizeof x, sizeof x);
+        memcpy(&y, right + i * sizeof y, sizeof y);
+        double product = x * y;
+        if (i == 0) sum = product;
+        else sum += product;
+    }
+    FWP_KEEP_ALIVE(subj); FWP_KEEP_ALIVE(arg);
+    return fwp_from_f64(sum);
+}
+
+static V fwp_p_simd_sum(int k, V v, const char *name, int w, const fwp_desc *elem) {
+    fwp_arr *xs = LANES(v);
+    if (fwp_array_len(PTR(xs)) == 0) {
+        V zero = fwp_from_i128(k, 0, name, w);
+        return elem->drop ? fwp_rc_fresh(zero) : zero;
+    }
+    if (k == K_F64) {
+        const unsigned char *data = fwp_array_data(PTR(xs));
+        size_t n = fwp_array_len(PTR(xs));
+        double sum; memcpy(&sum, data, sizeof sum);
+        /* Start at the first lane and preserve order: no reassociation or
+         * synthetic +0 which would change a singleton negative zero. */
+        for (size_t i = 1; i < n; i++) {
+            double lane; memcpy(&lane, data + i * sizeof lane, sizeof lane);
+            sum += lane;
+        }
+        FWP_KEEP_ALIVE(v); return fwp_from_f64(sum);
+    }
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F128) {
+        float128_t sum = fwp_f128(fwp_array_load(PTR(xs), 0, elem));
+        for (size_t i = 1; i < fwp_array_len(PTR(xs)); i++)
+            sum = f128_add(sum, fwp_f128(fwp_array_load(PTR(xs), i, elem)));
+        V result = fwp_rc_fresh(fwp_box_f128(sum));
+        FWP_KEEP_ALIVE(v); return result;
+    }
+#endif
+    int fl = fwp_float_kind(k);
+    fwp_value_owner acc = {fwp_array_retain(fwp_array_load(PTR(xs), 0, elem), elem->dup, elem), elem->drop};
+    fwp_cleanup cleanup; fwp_value_protect(&acc, &cleanup);
+    for (size_t i = 1; i < fwp_array_len(PTR(xs)); i++) {
+        V lane = fwp_array_load(PTR(xs), i, elem);
+        V next = fl ? fwp_arith(k, OP_ADD, acc.value, lane, name, w) : fwp_wrapping(k, OP_ADD, acc.value, lane);
+        if (elem->drop) next = fwp_rc_fresh(next);
+        if (elem->drop) elem->drop(acc.value);
+        acc.value = next;
+    }
+    FWP_KEEP_ALIVE(v);
+    return fwp_value_finish(&acc, &cleanup);
+}
+
 static V fwp_array_typed_copy(V a, size_t extra, void (*dup)(V), const fwp_desc *elem) {
     size_t n = fwp_array_len(a);
     if (extra > SIZE_MAX - n) fwp_trap("array too large");
@@ -1849,6 +2015,19 @@ static V fwp_p_array_from_list_typed(V xs, void (*dup)(V), const fwp_desc *elem)
     }
     FWP_KEEP_ALIVE(source);
     return fwp_array_builder_finish(&result, &cleanup);
+}
+/* Compiler-only inline integer range immediately consumed as an array. Wide
+ * arithmetic computes the distance without signed overflow or WASI truncation.
+ * No callbacks or boxed elements can interrupt initialization after allocation. */
+static V fwp_p_array_range(V lo, V hi, const fwp_desc *elem) {
+    i128 a = fwp_as_i128(elem->kind, lo), b = fwp_as_i128(elem->kind, hi);
+    u128 count = b > a ? (u128)(b - a) : 0;
+    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
+    size_t n = (size_t)count;
+    V result = fwp_array_typed_new(n, elem);
+    for (size_t i = 0; i < n; i++)
+        fwp_array_store(result, i, (V)(a + (i128)i), elem);
+    return result;
 }
 /* Compiler-only map followed immediately by numeric array construction.
  * Keep the same borrowed source snapshot and callback order as map, but pack

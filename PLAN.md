@@ -21,8 +21,8 @@ formats, a formatter, linter and language server. These are foundations to exten
 they do not establish that every abstraction is free or every program avoids GC.
 
 Default native execution still combines reference counting with tracing.
-Checked `--gc arc` removes tracing for supported programs; synchronous WASI
-entries are in the current validation batch. Some
+Checked `--gc arc` removes tracing for supported programs, including accepted
+synchronous WASI entries. Some
 closures, containers and call boundaries still allocate, and measured numerical
 workloads still have performance gaps. See [ownership](docs/ownership.md),
 [numerics](docs/numerics.md) and [benchmarks](docs/benchmarks.md) for current limits.
@@ -73,30 +73,32 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) passed all nine production
-jobs and documentation before merging. It removes temporary numeric zip pairs,
-repairs partial-list cleanup and large WASI chunk sizes, and extends checked
-ownership to maintained text tools. Earlier accepted work belongs in
-[delivery evidence](docs/roadmap-history.md).
+[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is accepted. It adds
+checked ARC for synchronous WASI programs, streams structural hashes without an
+encoding buffer, and combines eligible hashing pipelines into loops. All nine
+production jobs and documentation passed; the squash tree and one-line message
+were verified. [Delivery history](docs/roadmap-history.md) retains the gates,
+measurements and repaired macOS test scheduling.
 
-[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) adds synchronous WASI ARC, allocation-free
-structural hashing and specialization of eagerly captured pipeline callbacks.
-Six-host native checks and both actual WASI ownership jobs pass. Four-host
-comparisons and paired repeats confirm fewer allocations and lower small-workload
-CPU time, while preserving slower elapsed samples and remaining C/Rust gaps.
-Large-input timing is mostly unchanged. Require all nine production gates plus
-documentation for the final combined head, including its later restriction to
-known callback bodies and all transferred changes.
+[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is the only open delivery.
+It borrows temporary hash fields, constructs integer range arrays directly, owns
+vector wrappers/boxed lanes/reduction accumulators and removes eligible F64
+list/vector intermediates. Sole-use splats stay scalar while preserving ordered
+multiplication/addition, aliases, effects and traps. All six focused native jobs,
+both WASI jobs and four-host cost/paired checks pass. Require fresh full production
+and documentation checks for the final combined PR head before squash merge.
 
-The exact-head Intel macOS GC gate exceeded 90 minutes. The current repair uses
-explicit measured test assignments instead of reshuffling sorted targets when
-new tests appear. All tests, the separate stress run and existing limits remain.
-Require fresh complete acceptance after this scheduling repair.
+The following preparation owns ternary, URL/form/HTTP and compressed-byte/frame
+decoder results and partial constructions. It also repairs the Windows web-test
+prerequisites and shutdown handling exposed by the broader checks. Its actual
+results and unresolved Windows validation are in the handoff. Keep it separate
+until #152 merges; historical preparation branches are evidence, not extra tasks.
 
-Following preparation targets measured temporary hash tuples and input list nodes.
-Browser/service re-entry, retained host callbacks, remaining numerical/networking
-ownership, fewer runtime counts and all seven work areas remain open. A focused
-success does not complete a work area. Keep one delivery PR open at a time.
+Browser/service re-entry, retained host callbacks, remaining numerical and
+networking ownership, derivative scaling, broader applications and the seven
+work areas above remain open. Current checked ARC support does not remove the
+collector from all fwp programs. Neither fewer allocations nor a single fast
+sample establishes zero-cost abstractions or parity with C/Rust.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

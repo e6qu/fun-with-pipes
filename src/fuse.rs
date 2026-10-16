@@ -178,6 +178,26 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
         // resources. It reads canonical bytes without callbacks or language
         // traps. Its borrowed input stays owned by the ordinary fused loop.
         "hash" => none(),
+        // Integer conversion to F64 is defined for every supported integer.
+        // It can round, but neither invokes a callback nor raises a trap.
+        "int.to-float" if *result == MT::con("std::F64") => match num(params.first()?)? {
+            Num::Int(_) => none(),
+            Num::Float => None,
+        },
+        // F64 lane arithmetic/sum is total. Binary operations use the actual
+        // common prefix, so their new array is no larger than either valid
+        // input array, even for manually constructed records.
+        "simd.add" | "simd.sub" | "simd.mul" | "simd.div" | "simd.min" | "simd.max"
+            if f64_lanes(result).is_some() =>
+        {
+            none()
+        }
+        "simd.sum" if params.first().and_then(|t| f64_lanes(t)).is_some() => none(),
+        "simd._dot-f64" | "simd._splat-dot-f64" => none(),
+        // Splat has a declared size instead of an existing input array. Prove
+        // its array limit on all targets, including 32-bit WASI: eight header
+        // bytes and eight bytes per F64 lane. Larger shapes remain unknown.
+        "simd.splat" if f64_lanes(result).is_some_and(|n| n <= (u32::MAX as u64 - 8) / 8) => none(),
         // These integer operations are total, including boxed wide integers.
         // Shifts are deliberately absent: their bit count can trap.
         "bit.and" | "bit.or" | "bit.xor" | "bit.not" => match num(result)? {
@@ -218,6 +238,14 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
         {
             none()
         }
+        _ => None,
+    }
+}
+
+fn f64_lanes(ty: &MT) -> Option<u64> {
+    let MT::Con(name, args) = ty else { return None };
+    match (name.as_str(), args.as_slice()) {
+        ("std::Vec", [MT::Nat(n), element]) if *element == MT::con("std::F64") => Some(*n),
         _ => None,
     }
 }
@@ -370,6 +398,9 @@ impl Fuser<'_> {
             ),
             e => e,
         };
+        if let Some(direct) = self.splat_dot(&e) {
+            return direct;
+        }
         match &e {
             Expr::Call(id, args) if self.consumer(*id, args).is_some() => {
                 self.consume(*id, args).unwrap_or(e)
@@ -410,6 +441,87 @@ impl Fuser<'_> {
             }
             _ => e,
         }
+    }
+
+    /// Two consecutive splats whose only uses are the first dot call can stay
+    /// as scalar values. Do not move evaluation across any intervening work.
+    fn splat_dot(&mut self, expression: &Expr) -> Option<Expr> {
+        let Expr::Let(left, left_value, rest) = expression else {
+            return None;
+        };
+        let Expr::Let(right, right_value, body) = &**rest else {
+            return None;
+        };
+        if crate::opt::uses(rest, *left) != 1 || crate::opt::uses(body, *right) != 1 {
+            return None;
+        }
+        let splat = |expression: &Expr| {
+            let Expr::Call(id, args) = expression else {
+                return None;
+            };
+            if prim_sym(self.funcs, *id) != Some("simd.splat") || args.len() != 1 {
+                return None;
+            }
+            let count = f64_lanes(self.funcs[*id].ty.params(1).1)?;
+            (count <= (u32::MAX as u64 - 8) / 8).then(|| (count, args[0].clone()))
+        };
+        let (count, left_scalar) = splat(left_value)?;
+        let (other_count, right_scalar) = splat(right_value)?;
+        if count != other_count {
+            return None;
+        }
+        let mut body = (**body).clone();
+        let Expr::Call(id, args) = first_evaluated(&mut body) else {
+            return None;
+        };
+        let function = self
+            .funcs
+            .get(*id)
+            .or_else(|| self.made.get(id.checked_sub(self.funcs.len())?))?;
+        if !matches!(&function.body, Body::Prim(symbol) if symbol == "simd._dot-f64")
+            || args.len() != 2
+        {
+            return None;
+        }
+        let first = match &args[0] {
+            Expr::Local(l) => *l,
+            _ => return None,
+        };
+        let second = match &args[1] {
+            Expr::Local(l) => *l,
+            _ => return None,
+        };
+        if !((first == *left && second == *right) || (first == *right && second == *left)) {
+            return None;
+        }
+        let number = MT::con("std::F64");
+        let scalar_left = self.fresh(number.clone());
+        let scalar_right = self.fresh(number.clone());
+        let ty = MT::Fun(
+            Box::new(MT::con("std::U64")),
+            Box::new(fun2(&number, &number, &number)),
+        );
+        let direct = self.prim("simd._splat-dot-f64", ty, 3);
+        let local = |original| {
+            Expr::Local(if original == *left {
+                scalar_left
+            } else {
+                scalar_right
+            })
+        };
+        *first_evaluated(&mut body) = Expr::Call(
+            direct,
+            vec![Expr::Const(Value::U64(count)), local(first), local(second)],
+        );
+        Some(Expr::Let(
+            scalar_left,
+            Box::new(left_scalar),
+            Box::new(Expr::Let(
+                scalar_right,
+                Box::new(right_scalar),
+                Box::new(body),
+            )),
+        ))
     }
 
     fn std_name(&self, id: FuncId) -> Option<&str> {
@@ -889,6 +1001,17 @@ impl Fuser<'_> {
             {
                 Some("array-map-list")
             }
+            ("simd.sum", 1)
+                if self.funcs[id]
+                    .ty
+                    .params(1)
+                    .0
+                    .first()
+                    .and_then(|t| f64_lanes(t))
+                    .is_some() =>
+            {
+                Some("lane-dot")
+            }
             ("fold", 3) => Some("fold"),
             ("array.fold", 3) if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") => {
                 Some("array-fold")
@@ -922,7 +1045,37 @@ impl Fuser<'_> {
             }
             return None;
         }
+        if kind == "lane-dot" {
+            let Expr::Call(multiply, inputs) = &args[0] else {
+                return None;
+            };
+            if prim_sym(self.funcs, *multiply) != Some("simd.mul") || inputs.len() != 2 {
+                return None;
+            }
+            let (parameters, vector) = self.funcs[*multiply].ty.params(2);
+            f64_lanes(vector)?;
+            let ty = fun2(parameters[0], parameters[1], &MT::con("std::F64"));
+            let direct = self.prim("simd._dot-f64", ty, 2);
+            // The multiply's two arguments retain their original order. Only
+            // its sole, immediately consumed result array/wrapper disappears.
+            return Some(Expr::Call(direct, inputs.clone()));
+        }
         if kind == "array-map-list" {
+            let result = self.funcs[cons_id].ty.params(1).1.clone();
+            let MT::Con(name, elements) = &result else {
+                return None;
+            };
+            if name != "std::Array" || elements.len() != 1 || !unboxed_numeric(&elements[0]) {
+                return None;
+            }
+            if let Expr::Call(range, bounds) = &args[0] {
+                if prim_sym(self.funcs, *range) == Some("range") && bounds.len() == 2 {
+                    let parameters = self.funcs[*range].ty.params(2).0;
+                    let ty = fun2(parameters[0], parameters[1], &result);
+                    let direct = self.prim("array._range", ty, 2);
+                    return Some(Expr::Call(direct, bounds.clone()));
+                }
+            }
             if std::env::var("FWP_MAP_ARRAY").as_deref() == Ok("0") {
                 return None;
             }
@@ -930,13 +1083,6 @@ impl Fuser<'_> {
                 return None;
             };
             if prim_sym(self.funcs, *map) != Some("map") || inputs.len() != 2 {
-                return None;
-            }
-            let result = self.funcs[cons_id].ty.params(1).1.clone();
-            let MT::Con(name, elements) = &result else {
-                return None;
-            };
-            if name != "std::Array" || elements.len() != 1 || !unboxed_numeric(&elements[0]) {
                 return None;
             }
             // Callbacks still run in list order, all before array construction.
@@ -1781,5 +1927,69 @@ pub fn specialize_matrices(prog: &mut Program) {
                 (Pat::Wild, original),
             ],
         ));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn f64_lane_proofs_respect_sizes_and_numeric_rules() {
+        let f64 = MT::con("std::F64");
+        let i64 = MT::con("std::I64");
+        let vector = |n, t: MT| MT::Con("std::Vec".into(), vec![MT::Nat(n), t]);
+        let unary = |a, b| MT::Fun(Box::new(a), Box::new(b));
+        assert_eq!(
+            prim("int.to-float", &unary(i64.clone(), f64.clone()), &[]),
+            none()
+        );
+        let limit = (u32::MAX as u64 - 8) / 8;
+        assert_eq!(
+            prim(
+                "simd.splat",
+                &unary(f64.clone(), vector(limit, f64.clone())),
+                &[]
+            ),
+            none()
+        );
+        assert_eq!(
+            prim(
+                "simd.splat",
+                &unary(f64.clone(), vector(limit + 1, f64.clone())),
+                &[]
+            ),
+            None
+        );
+        assert_eq!(
+            prim(
+                "simd.splat",
+                &unary(i64.clone(), vector(4, i64.clone())),
+                &[]
+            ),
+            None
+        );
+        for symbol in [
+            "simd.add", "simd.sub", "simd.mul", "simd.div", "simd.min", "simd.max",
+        ] {
+            let v = vector(4, f64.clone());
+            assert_eq!(
+                prim(symbol, &unary(v.clone(), unary(v.clone(), v)), &[]),
+                none()
+            );
+        }
+        let integer = vector(4, i64.clone());
+        assert_eq!(
+            prim(
+                "simd.div",
+                &unary(integer.clone(), unary(integer.clone(), integer)),
+                &[]
+            ),
+            None
+        );
+        assert_eq!(
+            prim("simd.sum", &unary(vector(0, f64.clone()), f64), &[]),
+            none()
+        );
     }
 }

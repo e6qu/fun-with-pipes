@@ -236,8 +236,18 @@ impl<'p> Interp<'p> {
                     }
                     Value::tuple(vec![Value::list(l), Value::list(r)])
                 }
-                "range" => {
+                "range" | "array._range" => {
                     // `i < hi` before each step, so `i + 1` cannot overflow
+                    if sym == "array._range" {
+                        let lo = a[0].as_i128().unwrap();
+                        let hi = a[1].as_i128().unwrap();
+                        let count = (hi - lo).max(0) as u128;
+                        let limit =
+                            (usize::MAX - std::mem::size_of::<u64>()) / std::mem::size_of::<u64>();
+                        if count > limit as u128 {
+                            return trap("array too large");
+                        }
+                    }
                     let mut out = Vec::new();
                     if let (Value::U128(lo), Value::U128(hi)) = (&a[0], &a[1]) {
                         let mut i = *lo;
@@ -254,7 +264,11 @@ impl<'p> Interp<'p> {
                             i += 1;
                         }
                     }
-                    Value::list(out)
+                    if sym == "array._range" {
+                        Value::Array(Rc::new(out))
+                    } else {
+                        Value::list(out)
+                    }
                 }
                 "repeat" => Value::list(vec![a[1].clone(); int(&a[0]).max(0) as usize]),
                 "nth" => {
@@ -584,6 +598,36 @@ impl<'p> Interp<'p> {
                         out.push(simd_lane(sym, x, y, &params[0])?);
                     }
                     Value::tuple(vec![Value::Array(Rc::new(out))])
+                }
+                "simd._splat-dot-f64" => {
+                    let Value::U64(n) = &a[0] else {
+                        return trap("internal: splat dot lane count is not U64");
+                    };
+                    if *n == 0 {
+                        Value::F64(0.0)
+                    } else {
+                        let product = arith(Op::Mul, &a[2], &a[1], result)?;
+                        let mut sum = product.clone();
+                        for _ in 1..*n {
+                            sum = arith(Op::Add, &sum, &product, result)?;
+                        }
+                        sum
+                    }
+                }
+                "simd._dot-f64" => {
+                    let (ys, xs) = (lanes(&a[0]), lanes(&a[1]));
+                    // Keep an independent, materialized interpretation of the
+                    // original multiply-then-sum rather than sharing native code.
+                    let products = xs
+                        .iter()
+                        .zip(ys.iter())
+                        .map(|(x, y)| arith(Op::Mul, x, y, result))
+                        .collect::<R<Vec<_>>>()?;
+                    let mut sum = products.first().cloned().unwrap_or(Value::F64(0.0));
+                    for product in products.iter().skip(1) {
+                        sum = arith(Op::Add, &sum, product, result)?;
+                    }
+                    sum
                 }
                 "simd.sum" => {
                     let xs = lanes(&a[0]);
