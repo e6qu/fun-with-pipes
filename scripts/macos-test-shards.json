@@ -97,6 +97,7 @@
     "task_timer_order",
     "terminal_ownership",
     "ternary_ownership",
+    "cpu_kernel_ownership",
     "text_file_tools",
     "text_ownership",
     "tls_alpn_roots",

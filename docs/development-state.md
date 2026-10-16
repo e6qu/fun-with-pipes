@@ -139,3 +139,50 @@ Next: finish local documentation checks, publish the combined metrics/syntax
 preparation, and run fresh six-native plus actual WASI gates. Fix all failures.
 Monitor #152 separately; merge it only after all nine final-head production jobs
 and docs pass, then move only the delta after `3577ba37` into the next delivery.
+
+## CPU kernel ownership preparation
+
+This isolated branch starts at decoder preparation `21a621c6`; only later commits
+belong to CPU kernel work. Decoder native `38886468434` and actual WASI
+`38886471769` are validating separately. Combine only verified deltas into the
+next substantial delivery; do not replace a tested PR head for preparation.
+
+Review `device.run` and `device.sum`, the CPU executors for tensor expressions.
+The elementwise executor currently allocates a full native output buffer, then
+copies it into a language array. Let workers write result bytes directly into
+one owned output array. Protect input-pointer tables, output and reduction
+scratch until workers finish, including a thread-creation failure. The POSIX
+path must report that failure after joining started workers, matching Windows,
+instead of silently executing missing workers on the caller. Preserve the
+existing thread-count bounds and explicit WASI single-thread behavior.
+
+Validate malformed instructions, input lengths and size checks in their current
+order, including counts too large for WASI. Keep elementwise arithmetic and
+4096-element reduction order identical. Require interpreter/native bitwise
+parity, aliases/views, empty and chunk/block boundary sizes, tracing stress,
+checked ARC, real WASI and injected allocation/thread failures with cleanup
+controls. Retain allocation and generated-code evidence; do not claim faster
+execution without repeated comparable timings. GPU runtime compilation is
+unchanged by this CPU work and remains an unresolved no-JIT policy gap.
+
+Kernel implementation and tests are now prepared. Accepted-interpreter fixture
+passes under the guard (0.26 s); formatting passes (1.07 s); inventory passes
+(0.96 s) with 300 contracted declarations and 43 remaining review symbols.
+No native result is claimed yet. Automatic approval review rejected the proposed
+local C probe compilation under the standing resource rules; no probe executed
+and it will run on GitHub, without a local retry. Existing standalone size-probe
+controls are preserved with unwind-aware cleanup. New actual WASI controls omit
+each count check and must expose 32-bit truncation.
+
+Windows HTTP/2 repair `30399066` now passes both Windows hosts, Linux hosts and
+ARM macOS in `38886033175`; Intel macOS is still running. Metrics/syntax-only
+`21a621c6` gates `38886468434`/`38886471769` are still queued and can be superseded
+by the combined decoder, metrics and CPU-kernel preparation to avoid duplicate
+runner work. New `cpu_kernel_ownership` has an explicit macOS assignment (226
+targets total); full Windows includes its semantics/failure checks and the native
+size-validation-order test. Existing Unix sanitizer checks remain intact.
+
+Next: publish this combined preparation from `owned-cpu-kernels`, run six-native
+`decoders` plus actual `wasi-arc`, and fix every failure. Keep #152's current head
+unchanged until its nine production gates pass; combine this branch only after
+that PR merges, preserving the numerical delivery tree.

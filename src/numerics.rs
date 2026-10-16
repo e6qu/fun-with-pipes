@@ -580,7 +580,7 @@ fn workspace_fits(depth: usize) -> bool {
     depth <= usize::MAX / CHUNK / std::mem::size_of::<f64>()
 }
 
-fn check(code: &[i64], nconsts: usize, inputs: &[Vec<f64>], n: usize) -> R<usize> {
+fn check(code: &[i64], nconsts: usize, inputs: &[Vec<f64>], n: u64) -> R<usize> {
     let bad = || trap("device: malformed kernel");
     let (mut sp, mut depth, mut leaves, mut consts) = (0usize, 0usize, 0usize, 0usize);
     for &op in code {
@@ -612,7 +612,7 @@ fn check(code: &[i64], nconsts: usize, inputs: &[Vec<f64>], n: usize) -> R<usize
         return bad();
     }
     for (k, x) in inputs.iter().enumerate() {
-        if x.len() != n {
+        if x.len() as u64 != n {
             return trap(format!(
                 "device: input {} has {} elements, the kernel {}",
                 k,
@@ -1196,7 +1196,7 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
                 let code = ints(&a[2]);
                 let consts = f64s(&a[3]);
                 let ins = inputs(&a[4]);
-                let depth = check(&code, consts.len(), &ins, n)?;
+                let depth = check(&code, consts.len(), &ins, count)?;
                 let k = Kernel {
                     code: &code,
                     consts: &consts,
@@ -1211,6 +1211,9 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
                     }
                     f64_array(&run(threads, n, &k))
                 } else {
+                    if n as u64 != count {
+                        return trap("device: kernel too large");
+                    }
                     Value::F64(sum(threads, n, &k))
                 }
             }

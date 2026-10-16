@@ -139,10 +139,17 @@ fn device_allocations_are_bounded_and_cleanup_controls_detect_omissions() {
     };
     let device = extract("static V fwp_p_device_run(");
     let workspace = extract("static int fwp_kernel_workspace_fits(");
+    let owner_type =
+        "typedef struct { fwp_kernel kernel; V output; double *sums; } fwp_kernel_owner;";
+    assert!(source.contains(owner_type));
+    let owner = format!(
+        "{owner_type}\n{}",
+        extract("static void fwp_kernel_release(")
+    );
     let condition = "count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)";
-    let cleanup = "free((void *)k.inputs);\n        fwp_trap";
+    let cleanup = "free((void *)owner->kernel.inputs);";
     assert_eq!(device.matches(condition).count(), 1);
-    assert_eq!(device.matches(cleanup).count(), 1);
+    assert_eq!(owner.matches(cleanup).count(), 1);
     let directory = std::env::temp_dir().join(format!("fwp-device-bounds-{}", std::process::id()));
     std::fs::create_dir_all(&directory).unwrap();
     let artifacts = std::env::var_os("FWP_DEVICE_BOUNDS_ARTIFACTS")
@@ -150,23 +157,32 @@ fn device_allocations_are_bounded_and_cleanup_controls_detect_omissions() {
         .unwrap_or_else(|| directory.join("artifacts"));
     std::fs::create_dir_all(&artifacts).unwrap();
     for opt in ["-O1", "-O2"] {
-        for (label, body, fits, expected) in [
-            ("checked", device.clone(), workspace.clone(), 1),
+        for (label, body, ownership, fits, expected) in [
+            (
+                "checked",
+                device.clone(),
+                owner.clone(),
+                workspace.clone(),
+                1,
+            ),
             (
                 "omit-count",
                 device.replace(condition, "0"),
+                owner.clone(),
                 workspace.clone(),
                 129,
             ),
             (
                 "omit-cleanup",
-                device.replace(cleanup, "fwp_trap"),
+                device.clone(),
+                owner.replace(cleanup, ""),
                 workspace.clone(),
                 128,
             ),
             (
                 "omit-workspace",
                 device.clone(),
+                owner.clone(),
                 workspace.replace("depth <= SIZE_MAX / FWP_KCHUNK / sizeof(double)", "1"),
                 133,
             ),
@@ -175,6 +191,7 @@ fn device_allocations_are_bounded_and_cleanup_controls_detect_omissions() {
             let cfile = artifacts.join(format!("{name}.c"));
             let executable = directory.join(&name);
             let probe = include_str!("fixtures/device_bounds_probe.c")
+                .replace("/* OWNERS */", &ownership)
                 .replace("/* WORKSPACE */", &fits)
                 .replace("/* DEVICE_RUN */", &body);
             std::fs::write(&cfile, &probe).unwrap();

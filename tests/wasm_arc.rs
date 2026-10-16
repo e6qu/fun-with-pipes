@@ -225,6 +225,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("ternary", include_str!("fixtures/ternary_ownership.fwp")),
         ("text-decoders", include_str!("fixtures/text_decoder_ownership.fwp")),
         ("metrics", include_str!("fixtures/metrics_ownership.fwp")),
+        ("cpu-kernels", include_str!("fixtures/cpu_kernel_ownership.fwp")),
         ("fresh-numerics", r#"
 main = [
     range 0 16 | map (const [1u128, 340282366920938463463374607431768211455u128] | map (checked.add 1u128)) | echo,
@@ -461,8 +462,14 @@ fn wasi_range_array_rejects_length_before_32_bit_truncation() {
     assert!(code.contains("return fwp_p_array_range(l0, l1,"));
     let guard =
         "    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");";
-    assert_eq!(code.matches(guard).count(), 1);
-    let truncated = code.replace(guard, "    /* omitted length guard */");
+    let start = code.find("static V fwp_p_array_range(").unwrap();
+    let end = start + code[start..].find("\n}").unwrap() + 2;
+    assert_eq!(code[start..end].matches(guard).count(), 1);
+    let mut truncated = code.clone();
+    truncated.replace_range(
+        start..end,
+        &code[start..end].replace(guard, "    /* omitted length guard */"),
+    );
     for opt in ["-O1", "-O2"] {
         for (candidate, expected) in [(&code, 101), (&truncated, 0)] {
             let binary = dir.join("main.wasm");
@@ -473,6 +480,64 @@ fn wasi_range_array_rejects_length_before_32_bit_truncation() {
                 assert!(String::from_utf8_lossy(&actual.stderr).contains("array too large"));
             } else {
                 assert_eq!(actual.stdout, b"0\n");
+            }
+        }
+    }
+}
+
+#[test]
+fn wasi_cpu_kernels_check_counts_before_32_bit_truncation() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-cpu-count").unwrap();
+    for (operation, signature, guard, message) in [
+        (
+            "run",
+            "static V fwp_p_device_run(",
+            "if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");",
+            "array too large",
+        ),
+        (
+            "sum",
+            "static V fwp_p_device_sum(",
+            "if (count > SIZE_MAX) fwp_trap(\"device: kernel too large\");",
+            "device: kernel too large",
+        ),
+    ] {
+        let input = dir.join("main.fwp");
+        std::fs::write(&input,format!("main = device.{operation} 1 4294967296 ([1] | array.from-list) ([2.5] | array.from-list) [] | {} | echo\n",if operation=="run" {"array.length"}else{"id"})).unwrap();
+        let code = emit(&input, &dir.join("main.c"), &[]);
+        let start = code.find(signature).unwrap();
+        let end = start + code[start..].find("\n}").unwrap() + 2;
+        assert_eq!(code[start..end].matches(guard).count(), 1);
+        let mut truncated = code.clone();
+        truncated.replace_range(
+            start..end,
+            &code[start..end].replace(guard, "/* omitted count check */"),
+        );
+        for opt in ["-O1", "-O2"] {
+            for (candidate, expected) in [(&code, 101), (&truncated, 0)] {
+                let binary = dir.join("main.wasm");
+                fwp::cgen::compile_for(candidate, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+                let output = wasi(&binary, dir.path()).output().unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{operation}/{opt}: {output:?}"
+                );
+                if expected == 101 {
+                    assert!(String::from_utf8_lossy(&output.stderr).contains(message));
+                } else {
+                    assert_eq!(
+                        output.stdout,
+                        if operation == "run" {
+                            b"0\n".as_slice()
+                        } else {
+                            b"0.0\n".as_slice()
+                        }
+                    );
+                }
             }
         }
     }
