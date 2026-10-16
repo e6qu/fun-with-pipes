@@ -135,3 +135,43 @@ at O1/O2; missing object free and missing tape shutdown both fail with 244 (5.00
 Formatting passes (1.09 s), harness compilation passes (0.37 s). Actual WASI
 acceptance of this correction is pending. Superseded `38850647488` is confirmed
 canceled. No full compiler build ran locally.
+
+## Additional scope before implementation: structural hashing
+
+The current native `hash` first allocates a buffer containing the complete typed
+binary encoding, then computes FNV-1a over those bytes and frees the buffer. This
+is a confirmed avoidable allocation, and the missing borrowed-input contract
+currently excludes `hash` from checked ARC. The next candidate streams precisely
+the same bytes directly into the hash state; the interpreter's buffered encoding
+remains an independent reference. No new syntax or alternate runtime mode is
+needed.
+
+Acceptance must cover integer widths, floating bit patterns, packed arrays/views,
+strings/bytes, records, variants, maps/sets and nested values, plus aliases and
+traps in surrounding computations. Compare raw interpretation and native O1/O2
+tracing/ARC on all six hosts and actual WASI. Count all libc/managed allocations
+inside hash calls, verify that the old buffered path does allocate, and inspect
+actual generated functions. Preserve canonical byte order and wrapping FNV
+arithmetic. Lower allocation counts alone do not establish a timing improvement.
+
+Corrected synchronous WASI suite `38851711201` passes on both actual Linux hosts
+at `4a28443a`, including physical shutdown and negative controls, caught errors,
+nested derivatives, function/CLI entries and module inspection. Hashing is a new
+addition after that tested revision and requires its own combined checks.
+
+The hash candidate streams the canonical encoding directly into FNV-1a, retaining
+integer width, byte order, float bits and container order. The borrowed-input,
+immediate-result contract raises the inventory to 262 contracts and reduces
+remaining review symbols to 81 (guarded inventory passes, 0.99 s). A local edited-C
+probe passes canonical bytes, unchanged input counts and zero libc/managed
+requests at O1/O2 in both native modes; the old buffered path fails with 247
+(3.42 s). An initial probe incorrectly represented boxed I128 arrays as inline
+values; its fixture now follows actual runtime layout. F128 arrays are inline and
+have separate coverage. The accepted interpreter fixture passes (0.26 s) after
+correcting the Unicode escape and explicit empty-list type. Harnesses compile
+(0.50/0.26 s); formatting passes (1.08 s). These are supplemental checks.
+
+Next focused gates: `hash` on all six native hosts (including protocol/reference
+agreement and native ARC), plus `wasi-arc` on both actual WASI architectures with
+hash semantics and no-allocation controls added. Neither is final acceptance of
+the upcoming delivery. Keep #150's production head unchanged while it runs.

@@ -217,6 +217,7 @@ square : List[t] -> t where Ring[t], Dup[t]
 square = head | option.unwrap-or zero | fork mul id id
 main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
 "#),
+        ("hashes", include_str!("fixtures/hash_values.fwp")),
         ("derivatives", "main = range 0 16 | map (const (range 0 32 | map int.to-float) | vjp (map (mul 2.0)) (repeat 32 1.0) | sum) | sum | echo\n"),
     ];
     for (name, program) in programs {
@@ -351,6 +352,39 @@ fn wasi_function_and_cli_entries_reclaim_inputs_and_results() {
                     "WASI ARC contains {collector}"
                 );
             }
+        }
+    }
+}
+
+#[test]
+fn wasi_hash_borrows_values_without_allocating() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-hash-counts").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(&source, "main = 1.0f128 | echo\n").unwrap();
+    let code = emit(&source, &dir.join("hash.c"), &[]);
+    let code = &code[..code.find("int main(").unwrap()];
+    let old=code.replace("return fwp_hash_value(0xcbf29ce484222325ULL, v, d);",
+        "fwp_buf b={0};fwp_encode(&b,v,d);uint64_t h=0xcbf29ce484222325ULL;for(size_t i=0;i<b.len;i++){h^=(unsigned char)b.d[i];h*=0x100000001b3ULL;}free(b.d);return h;");
+    assert_ne!(code, old);
+    for opt in ["-O1", "-O2"] {
+        for (candidate, expected) in [(code, 0), (old.as_str(), 247)] {
+            let binary = dir.join("hash.wasm");
+            fwp::cgen::compile_for(
+                &format!(
+                    "{}\n{candidate}\n{}",
+                    include_str!("fixtures/hash_observer.c"),
+                    include_str!("fixtures/hash_counts.c")
+                ),
+                &binary,
+                opt,
+                fwp::cgen::Target::Wasi,
+            )
+            .unwrap();
+            let output = wasi(&binary, dir.path()).output().unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
         }
     }
 }
