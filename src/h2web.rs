@@ -1087,6 +1087,10 @@ mod tests {
             .collect::<Vec<_>>()
             .join(",");
         let fixture = r#"
+static const fwp_desc body_bytes={.kind=K_BYTES,.drop=fwp_rc_free_obj};
+static const fwp_desc *const body_fields[]={&body_bytes};
+static const fwp_desc *const *const body_variants[]={body_fields,NULL};
+static const fwp_desc body_type={.kind=K_ADT,.vfields=body_variants};
 struct body_case {int64_t max;size_t len;int end,reset,dead;};
 static const struct body_case cases[]={CASES};
 int main(void){
@@ -1099,9 +1103,10 @@ int main(void){
   const struct body_case *p=&cases[i];s->data.len=0;h2b_put(&s->data,bytes,p->len);
   s->remote_end=p->end;free(s->reset);s->reset=p->reset?strdup("reset"):0;
   free(c->dead);c->dead=p->dead?strdup("dead"):0;
-  V r=fwp_p_http2_body((V)p->max,PTR(&duration),call);
+  V r=fwp_p_http2_body((V)p->max,PTR(&duration),call,&body_type);
   if(OBJ(r)->tag==0){V b=OBJ(r)->f[0];printf("ok:");for(size_t j=0;j<STR(b)->len;j++)printf("%02x",(unsigned char)STR(b)->d[j]);puts("");}
   else printf("err:%lld\n",(long long)(int64_t)OBJ(r)->f[0]);
+  if(OBJ(r)->tag==0)fwp_rc_free_obj(OBJ(r)->f[0]);fwp_rc_free_obj(r);
  }
  FWP_KEEP_ALIVE(call);fwp_lib_finish();return 0;
 }

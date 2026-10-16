@@ -33,22 +33,26 @@ allocates a pointer scratch vector. Compiler calls now pass result descriptors,
 and both contracts are OwnedTree. The existing served-peer probe receives its
 option descriptor and releases the returned copy. A new focused probe checks duplicate header order, filtering, copied aliases,
 12 metadata and 2 subject allocation failures, omitted field cleanup, and
-empty public results in tracing/ARC. Six native `service-values` jobs are queued/running in `38926254969` for
-`bdb587c7`; no support claim is accepted yet. Full Windows and macOS schedules
-must include the new target. The uncommitted extension also copies HTTP/2 request and body results into typed
+empty public results in tracing/ARC. Linux ARM64/AMD64 and ARM macOS pass in `38926254969` at `bdb587c7`;
+Intel macOS and both Windows jobs remain queued/running. No complete support
+claim is accepted yet. Full Windows and macOS schedules
+must include the new target. Published `e2c4668f` also copies HTTP/2 request and body results into typed
 owners. It preserves host precedence, duplicate/header order, all byte values,
 empty results and size/reset/deadline decisions. The new allocation probe expects
 20 request and 2 body allocation failures with no retained result storage;
 existing peer-buffer and source-stream lifetime controls are updated to use
-generated result descriptors. Publish and test this combined preparation next.
+generated result descriptors. Its focused run is `38927180411`. A following test
+repair updates the interpreter/native body comparison to pass the new descriptor
+and adds explicit populated-result GC stress/reuse runs. Run the final combined
+preparation before claiming acceptance.
 Service stream/context ownership remains outside these result contracts.
 
 Local checks: guarded Rust formatting passes (1.19s); the accepted interpreter
 prints `[]` then `None` for the empty-context fixture (0.25s); the contract
-inventory passes (0.87s), reporting 337 contracted declarations and 17 remaining
+inventory passes (1.30s), reporting 339 contracted declarations and 15 remaining
 review symbols for this implementation. Counts are not support proof.
 The standalone stdlib generator was regenerated and rechecked; latest formatting
-passes in 1.29s, documentation audit in 2.79s and macOS partition checks in 0.25s.
+passes in 1.30s, documentation audit in 2.66s and macOS partition checks in 0.25s.
 All 230 integration targets are assigned, including the new service probe in the
 existing GC job. The full Windows TLS step also includes it.
 

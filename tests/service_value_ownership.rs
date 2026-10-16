@@ -113,6 +113,15 @@ fn copied_service_values_release_partial_results_and_preserve_aliases() {
                     Some(expected),
                     "{mode}/{opt}: {output:?}"
                 );
+                if expected == 0 && opt == "-O2" && mode == "tracing" {
+                    checked(
+                        Command::new(&binary)
+                            .env("FWP_SERVICE_STRESS", "1")
+                            .env("FWP_GC_STRESS", "1")
+                            .env("FWP_GC_VERIFY", "1")
+                            .env("FWP_REUSE_VERIFY", "1"),
+                    );
+                }
             }
         }
     }
@@ -162,6 +171,15 @@ fn http2_request_and_body_copies_release_every_partial_result() {
                 }
             }
             assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+            if expected == 0 && opt == "-O2" {
+                checked(
+                    Command::new(&binary)
+                        .env("FWP_SERVICE_STRESS", "1")
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", "1"),
+                );
+            }
         }
     }
 }

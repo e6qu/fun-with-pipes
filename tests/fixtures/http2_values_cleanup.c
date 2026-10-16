@@ -37,6 +37,10 @@ int main(void) {
     if(!request_matches(request)||OBJ(body)->tag!=0||STR(OBJ(body)->f[0])->len!=sizeof bytes||memcmp(STR(OBJ(body)->f[0])->d,bytes,sizeof bytes))return 247;
     REQUEST_TYPE->drop(request);BODY_TYPE->drop(body);
     stream.headers.v[3].value[0]='o';remote[0]='r';stream.data.d[0]=0;
+    if(getenv("FWP_SERVICE_STRESS")) {
+        if(!fwp_gc.ncollect||fwp_cleanups)return 247;
+        h2_hdrs_free(&stream.headers);h2b_free(&stream.data);fwp_lib_finish();return 0;
+    }
     if(fwp_gc.budget!=budget)return 248;
     for(int operation=0;operation<2;operation++) {
         const fwp_desc *type=operation?BODY_TYPE:REQUEST_TYPE;
@@ -80,6 +84,7 @@ int main(void) {
         BODY_TYPE->drop(body);h2b_free(&stream.data);
         if(fwp_gc.budget!=budget)return 248;
     }
+    printf("partial-result field owner: %zu bytes, alignment %zu, 8 inline values\n",sizeof(fwp_decode_fields),_Alignof(fwp_decode_fields));
     if(fwp_gc.ncollect||fwp_cleanups)return 247;
     fwp_lib_finish();return 0;
 }
