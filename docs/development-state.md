@@ -20,13 +20,13 @@ charged bytes with collection disabled. Raw TLS/capture buffers, allocator pages
 and total process memory remain outside those counters. This is an fwp baseline,
 not a speed or C/Rust comparison.
 
-Baseline `49e9e604` was published with focused Linux run `38939097999`.
-The preparation now also checks detached children after scope return, typed
-failure, trap and cancellation. They must retain header copies, compression and
-the earliest deadline, and restore their own nested scopes. A deliberately
-omitted inheritance path must fail. This fixture is prepared, not yet verified
-natively; the next publication supersedes the queued baseline with both checks.
-Next: finish the replacement `context-storage` run and retain its exact revision.
+Published head `9b137078` includes the measurements and detached-child checks.
+Replacement Linux run `38941168779` is queued; `38939097999` was canceled and
+superseded. Children must retain header copies, compression and the earliest
+deadline after scope return, typed failure, trap and cancellation, then restore
+their own nested scopes. A deliberately omitted inheritance path must fail.
+These native checks remain unverified until the run passes.
+Next: complete `38941168779` and retain its artifacts and exact revision.
 Fix failures and retain baseline artifacts before changing scope storage.
 Then prefer stack contexts for scopes that do not escape and explicit ownership
 for child tasks that keep the context after callback return. Preserve nested
@@ -40,8 +40,8 @@ accepted compiler interpreted all five 32-call examples, both raw and optimized,
 and printed `32` in every case (1.80s); this does not validate the new native
 instrumentation. A named helper
 needed an explicit `I64 -> () ! {Network, State[I64]}` signature because generic
-signatures remain explicit. Formatting passes (1.08s); partition/concurrent-runner checks pass (1.03s),
-and the documentation audit passes (2.75s). The service guide now introduces
+signatures remain explicit. Formatting passes (1.23s); partition/concurrent-runner checks pass (1.03s),
+and the documentation audit passes (2.98s). The service guide now introduces
 request contexts, callback functions, `const`, deadlines and response metadata
 before using their examples. Native work belongs on CI.
 The new test target is assigned to the existing macOS GC job, giving this

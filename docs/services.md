@@ -202,6 +202,10 @@ Whether a call streams is decided by the function's type:
 own message.) A client stream must be the function's only parameter
 besides an output channel; gRPC has no other request then.
 
+Flow control limits how much data a sender may send before the receiver is
+ready for more. Backpressure is the resulting wait: a slow receiver makes its
+sender wait rather than letting unsent data grow without a bound.
+
 * **`Iterator[R]` results** suit pure, lazy streams: the server forces
   the iterator one element at a time and sends each as it goes, within
   HTTP/2 flow control, so a slow client slows the computation down and an
@@ -238,7 +242,11 @@ ends, and a client stream sends the elements of the caller's iterator.
 A bidirectional call sends them from a task of its own while the caller
 receives the responses, so requests and responses interleave: the request
 iterator may be infinite, or wait for time to pass, and the call ends when
-the server ends it (`iter.count-from 1 | greeter.firsts` takes three).
+the server ends it. In the [test service](../tests/grpc/greeter.fwp), `firsts`
+takes three input values and multiplies each by ten. Thus
+`iter.count-from 1 | greeter.firsts` returns an iterator over `10`, `20`, `30`:
+the server ends the call after three requests even though its input can keep
+producing numbers.
 
 
 ### Errors and status codes
@@ -277,7 +285,7 @@ run a supplied function with temporary settings for its outgoing calls. The
 function takes `()` (unit, an input carrying no data). The previous settings are
 restored when it returns or fails. Nested metadata scopes add headers; deadlines
 keep the earlier limit, and TLS scopes replace the active TLS options. Child
-tasks inherit the settings visible when they start.
+tasks inherit the settings visible when they are created.
 This collection of settings is called the task's **request context**.
 
 In the [greeter test service](../tests/grpc/greeter.fwp), `slow n` waits
@@ -369,17 +377,24 @@ metadata. `Ann` has three characters, which explains the trailer's value.
 
 ### Compression
 
-Messages compressed with gzip (`grpc-encoding: gzip`) are accepted by
-servers and clients, which advertise `grpc-accept-encoding: gzip`.
-`grpc.with-gzip f` makes the calls `f` makes compress their requests, and
-a server compresses the responses of a call whose requests are
-compressed. Messages under 64 bytes are sent uncompressed (gRPC flags each
-message). DEFLATE is written from scratch (`src/gzip.rs`, and in C in
-`runtime/fwp_rt_h2.c`): decoding is complete; encoding uses fixed Huffman
-codes and a greedy LZ77 search, which compresses repetitive messages well
-but less than zlib. A message that decompresses to more than 64 MiB is
-rejected, and other encodings (`deflate`, `snappy`) fail the call with
-`INVALID_ARGUMENT`.
+Compression represents message bytes more compactly before sending them.
+Both fwp clients and servers accept gzip. `grpc.with-gzip f` enables it for
+requests made by the callback `f`; a server also enables it for responses to
+a call that uses compressed requests. Messages under 64 bytes are still sent
+uncompressed. Each message states whether its bytes are compressed, so both
+forms can appear in one call.
+
+A message that expands beyond 64 MiB during decompression is rejected. Asking
+for a different message encoding, such as `deflate` or `snappy`, fails with
+`INVALID_ARGUMENT`. The header `grpc-encoding: gzip` identifies gzip messages;
+`grpc-accept-encoding: gzip` tells the peer that gzip is accepted.
+
+The encoder finds repeated byte sequences and refers back to them (LZ77), then
+uses a fixed table of bit codes (fixed Huffman coding). The decoder also handles
+the other block forms in DEFLATE, the compression format inside gzip. The
+implementations are [Rust](../src/gzip.rs) and
+[C](../runtime/fwp_rt_h2.c). This describes their algorithm, not measured speed
+or compression-size parity with another implementation such as zlib.
 
 
 ### Concurrency
@@ -577,8 +592,8 @@ and, when Go is installed, to Go's HTTP/2 client and server.
 
 ## Limitations
 
-- gzip is the only compression of messages; the encoder compresses less
-  than zlib. Clients compress only within `grpc.with-gzip`.
+- gzip is the only supported message compression. Clients enable it within
+  `grpc.with-gzip`; messages below the size threshold remain uncompressed.
 - After the first element, a failure of a remote `Iterator[R]` result
   traps in the client, since forcing an iterator cannot raise an error;
   `Iterator[Result[R, GrpcError]]` reports it instead.
