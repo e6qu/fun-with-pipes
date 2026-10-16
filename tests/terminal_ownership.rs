@@ -36,6 +36,8 @@ fn terminal_echo_restores_after_success_and_traps() {
             "int original_main(int argc, char **argv)",
         );
         code.push_str(include_str!("fixtures/terminal_ownership_probe.c"));
+        // glibc declares pseudo-terminal allocation APIs with GNU/XSI features.
+        code = format!("#if defined(__linux__) && !defined(_GNU_SOURCE)\n#define _GNU_SOURCE 1\n#endif\n{code}");
         let binary = dir.join("probe.exe");
         for optimization in ["-O1", "-O2"] {
             fwp::cgen::compile_c(&code, &binary, optimization).unwrap();

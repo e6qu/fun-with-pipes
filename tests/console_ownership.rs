@@ -35,7 +35,7 @@ fn console_input_matches_raw_interpretation() {
         ),
         (
             "tty",
-            "[-1, 0, 1, 2, 3, 4294967296, 4294967297] | map term.is-tty | echo",
+            "[-2147483648, -1, 0, 1, 2, 3, 2147483647] | map term.is-tty | echo",
         ),
         ("fold", "0 | fold-lines (curry (.0 | add 1)) | echo"),
         ("args", "args () | echo"),

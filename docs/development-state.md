@@ -64,7 +64,8 @@ parent retains then releases captured records/strings. Parent and child use the
 same memory mode because tracing-stress environment settings are inherited.
 
 Terminal changes own secret-line results and restore echo before traps unwind.
-Descriptor validation precedes narrowing. Windows interpretation now uses real
+The internal C descriptor word is validated before narrowing; the public
+`term.is-tty` parameter remains I32. Windows interpretation now uses real
 console APIs for echo and width. Tests use real POSIX pseudo-terminals and a
 private Windows console; a missing restore action must fail. An isolated Windows
 Rust unit test checks interpreter console mode/width without affecting other tests.
@@ -107,10 +108,11 @@ is fwp versus fwp, not C/Rust parity. Within the substituted tape section, the
 material changes are paired storage/growth/disposal; later precision comments
 do not change these F64/nested workloads.
 
-Completed ARM reports are in `/private/tmp/fwp-ad-metadata-current`. On ARM macOS,
+All four reports and verified binaries are in `/private/tmp/fwp-ad-metadata-current`.
+The repository retains `docs/measurements/ad-metadata-repeat-2026-10-16.json`
+with raw samples and ARM64/AMD64 function disassembly. On ARM macOS,
 512 mapped derivatives have paired/control median ratios 1.086 without reuse and
-1.058 with reuse; Linux ARM ratios are 0.987 and 0.985. Keep all hosts/raw samples
-before drawing a conclusion. In the actual macOS ARM binary, append has 198
+1.058 with reuse; Linux ARM ratios are 0.987 and 0.985. Linux AMD64 ratios are 0.985/0.986; Intel macOS ratios are 0.960/1.020. In the actual macOS ARM binary, append has 198
 instructions versus 253 in the control; backward has 374 in both. Stack-address
 references are 15 versus 17 for append and 23 for both backward variants; these
 are not classified as register spills. Smaller code does not prove faster code.
@@ -123,3 +125,24 @@ runtime remains unchanged. Tiny numeric/nested correctness checks pass under
 the local guard (1.59 s); complete repeated profile/timing/binary evidence uses
 the `ad-layout` CI suite. Adopt nothing without results and semantic/failure
 regressions. Retain negative evidence if the experiment does not help.
+
+
+Latest results: all three process tests and repaired CLI examples pass on all
+six hosts in `38829032952`. Native terminal restoration and missing-restore
+controls pass on both macOS and Windows architectures; Windows interpreter
+console mode/width tests also pass. The only failures are the two fixture errors
+already corrected locally: public tty values must fit I32, and Linux needs
+feature declarations for pseudo-terminal APIs. The corrected I32 example passes
+the accepted interpreter under the guard (0.26 s). The C-only full-word validation
+probe remains. The next combined run must verify the fixes on all six hosts.
+
+The historical metadata comparison passes all four hosts. Interleaved comparison
+[38829628017](https://github.com/e6qu/fun-with-pipes/actions/runs/38829628017)
+is queued/running at `aff0e087`. The repeated 512-VJP workload makes 25,184,777
+managed allocation requests and 10,492,416 retains in both historical variants,
+versus 7,681/16 paired tape requests with reuse off/on. Peak charged managed
+storage is 840,888 bytes and peak tape payload 163,944 bytes; final
+storage/collections are zero. After the layout experiment, profile language-level
+allocation sites before selecting the next optimization. The benchmark guide
+explains timing scope and costs, including slower results. Report retention/hash
+and instruction checks pass under the guard (0.14 s); docs audit passes (2.53 s).

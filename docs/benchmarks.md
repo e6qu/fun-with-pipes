@@ -510,6 +510,49 @@ startup contributes less to the measured interval. The shorter cases remain as
 controls. New results must reproduce a slowdown before assigning it to metadata
 layout; changing the workload or sampling method alone is not a compiler speedup.
 
+### Repeating the longer derivative comparison
+
+[The current four-host report](measurements/ad-metadata-repeat-2026-10-16.json)
+uses compiler revision `48aa61dc` and the same separate-allocation tape control
+from `09f1a029`. Both execute the same ARC program. The longer case performs 512
+VJPs, each mapping multiplication by two over 4,096 F64 inputs with unit seeds;
+it sums the resulting derivatives to `4194304.0`. A VJP computes derivatives
+weighted by those seeds. This remains fwp versus fwp, with no C/Rust comparison.
+
+After one warmup, eight samples alternate the execution order. The clock includes
+process startup, input construction, derivatives and printing; compilation and
+allocation profiling are separate. Both variants use `-O2 -ffp-contract=off`.
+The report retains every sample, hardware/compiler details, verified source and
+binary hashes, and actual ARM64/AMD64 instructions.
+
+| Host | Paired/control time, reuse off | Paired/control time, reuse on |
+|---|---:|---:|
+| Linux AMD64 | 0.985 | 0.986 |
+| Linux ARM64 | 0.987 | 0.985 |
+| macOS ARM64 | 1.086 | 1.058 |
+| macOS Intel | 0.960 | 1.020 |
+
+A ratio above one is slower: ARM macOS takes 8.6% more time without reuse and
+5.8% more with reuse in this run. The previous short-workload slowdown is not a
+portable speed conclusion; the longer test still warrants investigation.
+
+For all four hosts, paired storage reduces tape allocation requests from 14,849
+to 7,681 without reuse and from 30 to 16 with reuse. Peak tape payload remains
+163,944 bytes. Both variants make 25,184,777 managed allocation requests for
+805,720,218 requested bytes and 10,492,416 retains; peak charged managed storage
+is 840,888 bytes. These separate peaks need not occur simultaneously. Final tape
+and charged managed storage are zero, with no tracing collections. These counts
+exclude allocator metadata and OS reservations. Avoiding language-level temporary
+values remains substantial work beyond reducing tape allocations.
+
+In the retained ARM macOS binary, the append function has 198 instructions
+versus 253 in the control; both backward functions have 374. Linux AMD64 counts
+are 239 versus 296 for append and 399 for both backward functions. The report
+also counts stack-address instructions without labeling them all as register
+spills. Smaller append code has not established a dependable speed improvement.
+The handoff tracks the next controlled layout experiment; production behavior
+is unchanged by that experiment.
+
 ## Selecting invariant array data once
 
 A slice may store an address into another array. The compiler now selects that
