@@ -219,6 +219,13 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
 "#),
         ("hashes", include_str!("fixtures/hash_values.fwp")),
         ("hash-fusion", include_str!("fixtures/hash_fusion.fwp")),
+        ("fresh-numerics", r#"
+main = [
+    range 0 16 | map (const [1u128, 340282366920938463463374607431768211455u128] | map (checked.add 1u128)) | echo,
+    range 0 16 | map (const [1i128, -2i128] | map (checked.mul 3i128)) | echo,
+    [0.25f128, 1.5f128, 2.0f128] | map (add 0.25f128) | echo,
+] | ignore
+"#),
         ("derivatives", "main = range 0 16 | map (const (range 0 32 | map int.to-float) | vjp (map (mul 2.0)) (repeat 32 1.0) | sum) | sum | echo\n"),
     ];
     for (name, program) in programs {
@@ -237,7 +244,15 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         assert_eq!(instrumented.matches(needle).count(), 1);
         let omitted = instrumented.replace(needle, "    (void)value;");
         let missing_shutdown = instrumented.replace("if (atexit(fwp_tape_finish))", "if (0)");
+        let unclaimed = instrumented.replace(
+            "#if FWP_GC\n        if (!c) return;\n#endif",
+            "        if (!c) return;",
+        );
         let mut candidates = vec![(&instrumented, 0), (&omitted, 244)];
+        if matches!(name, "hash-fusion" | "fresh-numerics") {
+            assert_ne!(unclaimed, instrumented);
+            candidates.push((&unclaimed, 244));
+        }
         if name.contains("derivatives") {
             assert_ne!(missing_shutdown, instrumented);
             candidates.push((&missing_shutdown, 244));
