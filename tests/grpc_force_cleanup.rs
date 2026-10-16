@@ -177,7 +177,7 @@ static void observe_free(void *);
     );
     let dir = fwp::cgen::TempDir::new("grpc-stream-storage").unwrap();
     let memo = "if (cell->forced) return cell->memo;";
-    assert_eq!(code.matches(memo).count(), 1);
+    assert_eq!(code.matches(memo).count(), 2);
     let broken = dir.join("without-cache.exe");
     fwp::cgen::compile_c(
         &code
@@ -267,6 +267,11 @@ static void observe_free(void *);
             std::fs::write(path.join("stream.c"), &code).unwrap();
             std::fs::copy(&binary, path.join(format!("stream{opt}.exe"))).unwrap();
             std::fs::write(path.join("storage.tsv"), &report).unwrap();
+            if opt == "-O2" {
+                let layout = Command::new(&binary).arg("--layout").output().unwrap();
+                assert!(layout.status.success(), "stream layout probe: {layout:?}");
+                std::fs::write(path.join("layout.tsv"), layout.stdout).unwrap();
+            }
         }
     }
     eprint!("{report}");

@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         stream_reader *cancelled=mode==1?&first:&second, *survived=mode==1?&second:&first;
         if(cancelled->completed||cancelled->cancelled!=1||survived->completed!=1||survived->cancelled)return 44;
     }
-    if(!cell->forced||cell->src||source->reader||source->read_waiters.head||source->read_waiters.tail)return 45;
+    if(!cell->forced||cell->src||source->reader||source->read_waiters.head)return 45;
     if(!stream->mhead||stream->mhead!=stream->mtail||stream->mhead->d[2]!='b')return 46;
     V text=OBJ(OBJ(cell->memo)->f[0])->f[0];
     if(STR(text)->len!=1||STR(text)->d[0]!='a')return 47;

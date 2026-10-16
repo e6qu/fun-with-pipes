@@ -20,6 +20,12 @@ static g_cell *next_cell(V value, size_t index) {
     return (g_cell *)(uintptr_t)OBJ(pair)->f[1];
 }
 int main(int argc, char **argv) {
+    if (argc == 2 && !strcmp(argv[1], "--layout")) {
+        printf("type\tbytes\talignment\tsource_offset\tcache_offset\treader_offset\twaiters_offset\n");
+        printf("cell\t%zu\t%zu\t%zu\t%zu\t-\t-\n", sizeof(g_cell), _Alignof(g_cell), offsetof(g_cell, src), offsetof(g_cell, memo));
+        printf("incoming\t%zu\t%zu\t-\t-\t%zu\t%zu\n", sizeof(g_incoming), _Alignof(g_incoming), offsetof(g_incoming, reader), offsetof(g_incoming, read_waiters));
+        return 0;
+    }
     if (argc != 3) return 30;
     size_t count = (size_t)strtoul(argv[1], NULL, 10);
     int mode = atoi(argv[2]); /* 0: consume all; 1: stop early; 2: retain first position */

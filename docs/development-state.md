@@ -77,7 +77,11 @@ receiver. Task pointers here are borrowed identities, not owning back-references
 Recursive reading of the same source traps explicitly. This does not add ARC
 eligibility or native cache destruction.
 
-Runner verification is pending. A deterministic native fixture starts two
+Focused run `38979280474` at `079bdd3e` passes interpreter lifetime/guard
+controls and native description/failure cleanup, but two new harness assumptions
+failed: the cache fast path now appears twice, and the intrusive wait list has
+only a head pointer. Both test assumptions are corrected; native concurrency
+and actual shared-service calls still require verification. A deterministic native fixture starts two
 readers before publishing two messages: both readers must see the first message,
 and the second message must remain queued. It also cancels the receiver or its
 waiter independently. Removing serialization must fail with different results;
@@ -88,9 +92,9 @@ interpreted/native servers; both must print `Some 524800`.
 
 The accepted prebuilt compiler formats this client (0.01s) and type-checks it
 (0.24s) under the guard. Rust formatting passes (1.36s), workflow lint passes
-(1.01s). No compiler or C program was built locally. Run `stream-storage` first,
-repair any failures, then `stream-owners` on all six native platforms and retain
-fresh measurements. The collector now requires the concurrency controls too.
+(1.01s). No compiler or C program was built locally. Rerun `stream-storage` after this harness repair, then `stream-owners` on all
+six native platforms and retain fresh measurements. The storage fixture also
+retains actual source/cell sizes, alignment and field offsets in `layout.tsv`. The collector now requires the concurrency controls too.
 The preceding six-host source-lifetime run remains tied to `d9ba5154`; it cannot
 validate this newer change.
 
