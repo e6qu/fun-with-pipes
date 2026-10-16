@@ -161,11 +161,17 @@ fn tcp_constructor_failures_release_real_descriptors() {
     assert!(code.contains(allocation_hook));
     code = code.replace(
         allocation_hook,
-        &format!("{allocation_hook} tcp_allocation();"),
+        &format!("{allocation_hook} if(leaf) tcp_allocation();"),
     );
     code = code.replace(
         "typedef uint64_t V;",
         "typedef uint64_t V;\nstatic void tcp_allocation(void);",
+    );
+    let initialized_hook = "static inline void *fwp_alloc_init(size_t n) {";
+    assert!(code.contains(initialized_hook));
+    code = code.replace(
+        initialized_hook,
+        &format!("{initialized_hook} tcp_allocation();"),
     );
     let declarations = r#"
 static fwp_socket_t tcp_open(int,int,int);

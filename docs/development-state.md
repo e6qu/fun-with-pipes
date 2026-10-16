@@ -163,3 +163,11 @@ The TCP suite runs real socket construction/lifetimes, UDP regressions, tasks an
 mutual TLS (including ARC) on all six hosts. Existing POSIX-specific TLS teardown
 and transfer probes run on Linux/macOS. Their results must not be described as
 Windows teardown evidence; Windows traffic and layout checks are separate.
+
+At `eaa42582`, ARM macOS passes task, TCP lifetime/zero-storage and all UDP
+checks. The constructor test did not trigger its second allocation failure:
+its hook missed `fwp_alloc_init`'s fast path. The hook now covers that path once,
+without double-counting its fallback into the general allocator. No runtime code
+changed for this repair. Independent TLS and POSIX teardown checks now run even
+when a preceding test fails, preserving a failed overall job. Fresh TCP checks
+are required; the exact-runtime WASI run `38918290525` remains applicable.

@@ -7,6 +7,7 @@ static void tcp_allocation(void) {
 }
 static jmp_buf tcp_jump;
 static int tcp_recover(void) { return 1; }
+static int tcp_failure(int line) { fprintf(stderr,"TCP failure probe at line %d\n",line); return 247; }
 static void tcp_track(fwp_socket_t fd) {
     if(fd==FWP_INVALID_SOCKET) return;
     if(tcp_live_count==16) abort();
@@ -43,13 +44,13 @@ int main(void) {
     for(int i=0;i<32;i++) {
         fwp_trap_recover=tcp_recover; fwp_trap_jb=&tcp_jump;
         fwp_trap_cleanup=fwp_cleanups; tcp_fail_header=1;
-        if(!setjmp(tcp_jump)) { (void)fwp_p_tcp_listen(address,TCP_ERROR); return 247; }
+        if(!setjmp(tcp_jump)) { (void)fwp_p_tcp_listen(address,TCP_ERROR); return tcp_failure(__LINE__); }
         tcp_fail_header=0; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
         tcp_expect(0,baseline);
     }
     V listener=fwp_p_tcp_listen(address,TCP_ERROR);
     for(int i=0;i<300;i++) fwp_sock_dup(listener);
-    if(SOCK(listener)->refs!=301) return 247;
+    if(SOCK(listener)->refs!=301) return tcp_failure(__LINE__);
     for(int i=0;i<300;i++) fwp_sock_drop(listener);
     V duration=fwp_rc_fresh(fwp_duration(1000000000LL));
     struct sockaddr_storage bound; socklen_t length=sizeof bound;
@@ -60,7 +61,7 @@ int main(void) {
         if(client==FWP_INVALID_SOCKET||fwp_socket_connect(client,(struct sockaddr *)&bound,length)) return 246;
         fwp_trap_recover=tcp_recover; fwp_trap_jb=&tcp_jump;
         fwp_trap_cleanup=fwp_cleanups; tcp_fail_header=1;
-        if(!setjmp(tcp_jump)) { (void)fwp_p_tcp_accept(listener,TCP_ERROR); return 247; }
+        if(!setjmp(tcp_jump)) { (void)fwp_p_tcp_accept(listener,TCP_ERROR); return tcp_failure(__LINE__); }
         tcp_fail_header=0; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
         tcp_expect(1,listening); fwp_socket_close(client);
     }
@@ -70,7 +71,7 @@ int main(void) {
         if(peer==FWP_INVALID_SOCKET||fwp_socket_connect(peer,(struct sockaddr *)&bound,length)) return 246;
         fwp_trap_recover=tcp_recover; fwp_trap_jb=&tcp_jump;
         fwp_trap_cleanup=fwp_cleanups; tcp_allocations_left=2;
-        if(!setjmp(tcp_jump)) { (void)fwp_p_tcp_accept_for(duration,listener,TCP_ERROR); return 247; }
+        if(!setjmp(tcp_jump)) { (void)fwp_p_tcp_accept_for(duration,listener,TCP_ERROR); return tcp_failure(__LINE__); }
         tcp_allocations_left=0; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
         tcp_expect(1,listening); fwp_socket_close(peer);
     }
@@ -78,13 +79,13 @@ int main(void) {
     fwp_socket_t client=fwp_socket_open(AF_INET,SOCK_STREAM,0);
     if(client==FWP_INVALID_SOCKET||fwp_socket_connect(client,(struct sockaddr *)&bound,length)) return 246;
     V accepted=fwp_p_tcp_accept(listener,TCP_ERROR);
-    if(tcp_live_count!=2||fwp_cleanups||SOCK(accepted)->fd==FWP_INVALID_SOCKET) return 247;
+    if(tcp_live_count!=2||fwp_cleanups||SOCK(accepted)->fd==FWP_INVALID_SOCKET) return tcp_failure(__LINE__);
     intptr_t connected=fwp_gc.budget;
     for(int failure=1;failure<=2;failure++) {
         if(fwp_socket_send(client,"a\0b",3,0)!=3) return 246;
         fwp_trap_recover=tcp_recover; fwp_trap_jb=&tcp_jump;
         fwp_trap_cleanup=fwp_cleanups; tcp_allocations_left=failure;
-        if(!setjmp(tcp_jump)) { (void)fwp_p_tcp_read_for(duration,64,accepted,TCP_ERROR); return 247; }
+        if(!setjmp(tcp_jump)) { (void)fwp_p_tcp_read_for(duration,64,accepted,TCP_ERROR); return tcp_failure(__LINE__); }
         tcp_allocations_left=0; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
         tcp_expect(2,connected);
     }

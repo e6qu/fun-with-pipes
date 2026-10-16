@@ -89,9 +89,13 @@ jobs:
         run: |
           cargo test --no-fail-fast --lib resource::tests
           cargo test --no-fail-fast --test native_sockets --test udp_ownership --test arc_tasks
-          cargo test --test tls mutual_tls -- --exact
+      - name: Mutual TLS with checked ARC
+        if: ${{ !cancelled() && inputs.suite == 'tcp' }}
+        env:
+          FWP_REQUIRE_TLS: '1'
+        run: cargo test --test tls mutual_tls -- --exact
       - name: Existing POSIX TLS teardown and session-transfer controls
-        if: inputs.suite == 'tcp' && runner.os != 'Windows'
+        if: ${{ !cancelled() && inputs.suite == 'tcp' && runner.os != 'Windows' }}
         run: cargo test --no-fail-fast --test tls_wire_ownership --test tls_alpn_roots --test tls_peer_subject_ownership --test tls_listener_ownership --test connect_cleanup --test library_resources
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'tcp'
