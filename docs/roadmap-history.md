@@ -48,6 +48,32 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Synchronous WASI ownership and streaming hashes (PR #151)
+
+[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) merged as `3dff03b6`
+at 2026-10-16 09:58 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38872161681)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38872161673)
+passed for `27cdc7ff`. Its tree matches that tested head, its parent is accepted
+#150, and its exact message is `Own WASI values and eliminate hashing intermediates`,
+with no body or trailers. Duplicate postmerge production `38884089916` is confirmed canceled after
+that verification.
+
+Synchronous WASI main/function/CLI entries can use checked ARC and physically free
+counted values. Fresh wide numeric results acquire external count entries before
+destruction. Startup rejects tracing/retention settings, and browser/service
+re-entry remains excluded. Structural hash streams canonical bytes directly into
+FNV-1a; total hash/bitwise pipeline proofs preserve eager capture, effect and trap
+order. Independent interpreter, physical-free and missing-counter controls cover
+the changes. Four-host C/Rust and paired reports preserve slower samples and
+remaining overhead; see [benchmarks](benchmarks.md).
+
+An earlier Intel macOS GC job timed out. Explicit measured assignments now cover
+all 219 integration targets without reshuffling old work when a test is added;
+unit/example/benchmark and dedicated stress checks remain. Both repaired Intel
+jobs passed within the unchanged 90-minute limits. Default tracing and all seven
+whole roadmap areas remain unfinished.
+
 ## Numeric zip intermediates and owned list/text results (PR #150)
 
 [PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) merged as
