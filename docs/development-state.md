@@ -20,7 +20,8 @@ charged bytes with collection disabled. Raw TLS/capture buffers, allocator pages
 and total process memory remain outside those counters. This is an fwp baseline,
 not a speed or C/Rust comparison.
 
-Next: publish this preparation and run the `context-storage` focused Linux job.
+Baseline `49e9e604` is published; focused Linux run `38939097999` is queued.
+Next: finish that `context-storage` run.
 Fix failures and retain baseline artifacts before changing scope storage.
 Then prefer stack contexts for scopes that do not escape and explicit ownership
 for child tasks that keep the context after callback return. Preserve nested
@@ -33,7 +34,10 @@ Local checks use `python3 scripts/local-guard.py` with unchanged limits. The
 accepted compiler interpreted the 32-call gzip/state example and printed `32`
 (0.25s); this does not validate the new native instrumentation. A named helper
 needed an explicit `I64 -> () ! {Network, State[I64]}` signature because generic
-signatures remain explicit. Formatting passes (1.08s). Native work belongs on CI.
+signatures remain explicit. Formatting passes (1.08s); partition/concurrent-runner checks pass (1.03s),
+and the documentation audit passes (2.75s). The service guide now introduces
+request contexts, callback functions, `const`, deadlines and response metadata
+before using their examples. Native work belongs on CI.
 The new test target is assigned to the existing macOS GC job, giving this
 preparation 231 integration targets; #153 still has 230.
 

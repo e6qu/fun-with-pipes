@@ -181,6 +181,11 @@ A stream sends a sequence without collecting every item into one reply first.
 types determine the direction of streaming. Closing, cancellation and errors
 therefore need rules beyond those of a single ordinary result.
 
+These are curried functions: `A -> B -> R` accepts one argument of type `A`,
+then one of type `B`. The remote interface collects those arguments into one
+request when the function is fully applied; it does not change the language's
+single-argument function model.
+
 Whether a call streams is decided by the function's type:
 
 | Function type | RPC | Messages |
@@ -265,9 +270,27 @@ lookup = if
 ```
 
 
+### Settings for a group of calls
+
+`grpc.with-metadata`, `grpc.with-deadline`, `grpc.with-gzip` and `grpc.with-tls`
+run a supplied function with temporary settings for its outgoing calls. The
+function takes `()` (unit, an input carrying no data). The previous settings are
+restored when it returns or fails. Nested metadata scopes add headers; deadlines
+keep the earlier limit, and TLS scopes replace the active TLS options. Child
+tasks inherit the settings visible when they start.
+This collection of settings is called the task's **request context**.
+
+In the [greeter test service](../tests/grpc/greeter.fwp), `slow n` waits
+`n` milliseconds and returns `n`. `const 20 | greeter.slow` is a function: `const 20` ignores its input
+and produces `20`, then the pipe passes that number to `greeter.slow`. Passing
+this function to a scope helper lets the helper install its settings before the
+call happens. `const` produces a constant function; it does not make an already
+evaluated expression run later.
+
 ### Deadlines and cancellation
 
-Deadlines use the task machinery of [concurrency.md](concurrency.md):
+A deadline limits how long an operation may take. A duration such as `2s` or
+`100ms` specifies seconds or milliseconds. Deadlines use the task machinery of [concurrency.md](concurrency.md):
 
 * **Server.** A call's `grpc-timeout` becomes the deadline of the task
   serving it. When it passes, the task (and every task it started) is
@@ -286,6 +309,12 @@ Deadlines use the task machinery of [concurrency.md](concurrency.md):
   their own: they fail with `DEADLINE_EXCEEDED` (a `GrpcError`) when it
   passes, and the task goes on.
 
+`greeter.nap` does the same work as `greeter.slow` and permits a `GrpcError`. `task.within` returns `Some result` on success or `None` when it
+cancels the task. `attempt` turns a permitted error into an `Err` value, so the
+third call can report its deadline error and continue.
+
+These expressions are entries in the [client's `main` list](../tests/grpc/client.fwp):
+
 ```fwp
 task.within 2s (const 20 | greeter.slow) | echo,
 task.within 100ms (const 2000 | greeter.slow) | echo,
@@ -294,10 +323,22 @@ task.within 100ms (const 2000 | greeter.slow) | echo,
     | echo,
 ```
 
+The first allows two seconds for a 20-millisecond request. The next two allow
+100 milliseconds for a two-second request: the second cancels its task, while
+the third catches the service-call error. In the third expression, the outer
+`const` supplies the callback as a value to `grpc.with-deadline` when `attempt`
+runs it; the inner `const 2000` supplies the call's numeric argument.
+
 
 ### Metadata
 
-| Function | |
+Metadata are name/value strings carried alongside a request or response.
+**Headers** precede the message body; **trailers** follow it with the final
+status. For example, a client can send an `x-user` header so the service knows
+which user initiated the call. HTTP/2's reserved fields, such as `:method`, are
+called pseudo-headers and are kept separate from application metadata.
+
+| Function | What it returns or changes |
 |---|---|
 | `grpc.metadata ()` | the request headers of the call the task serves, as `(name, value)` pairs with lower-case names (without pseudo-headers and `content-type`, `te`, `grpc-timeout`, `grpc-encoding`, `grpc-accept-encoding`, `fwp-fingerprint`); `[]` outside a call |
 | `grpc.header name` | one of them |
@@ -308,7 +349,7 @@ task.within 100ms (const 2000 | greeter.slow) | echo,
 | `grpc.peer-subject ()` | the subject of the client's certificate, on servers that require them ([tls.md](tls.md)) |
 
 Tasks started by a served function see its call's metadata. Binary
-headers (`-bin`) are passed as their base64 text. Response metadata leaves
+headers (`-bin`) are passed as base64 text, a printable encoding of bytes. Response metadata leaves
 out `content-type`, `grpc-status`, `grpc-message`, `grpc-encoding` and
 `grpc-accept-encoding`. `tagged` greets with response metadata, a header
 and a trailer:
@@ -317,8 +358,13 @@ and a trailer:
 export tagged : String -> String ! {Network}
 ```
 
-`grpc.with-response-metadata (const "Ann" | greeter.tagged)` is then
-`("tagged Ann", [("x-served-by", "greeter"), ("x-length", "3")])`.
+In the [test service](../tests/grpc/greeter.fwp), `tagged` prefixes its input
+with `"tagged "`, sends the header `x-served-by: greeter`, and adds a trailer
+containing the input's length. Thus
+`grpc.with-response-metadata (const "Ann" | greeter.tagged)` returns
+`("tagged Ann", [("x-served-by", "greeter"), ("x-length", "3")])`: the first
+tuple field is the function's result, and the second collects its response
+metadata. `Ann` has three characters, which explains the trailer's value.
 
 
 ### Compression
