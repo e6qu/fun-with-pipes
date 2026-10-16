@@ -1,11 +1,12 @@
 # Session handoff
 
 Updated 2026-10-16. This branch is independent preparation for the next service
-context batch. The only delivery PR remains #153 at `ac3060d1`; its authoritative
+context batch. The only delivery PR remains #153, repaired at `a0af12d9`; its authoritative
 handoff is in `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
 Do not open another PR or repeat that delivery. Both native Mac runner checks
-`38938194232` and documentation `38938199569` pass. PR #153 is ready and requires
-all nine production jobs in `38941991952` on exact head `ac3060d1`. Draft skips
+`38938194232` and documentation `38938199569` pass. PR #153 requires all nine production jobs in `38946985320` and documentation
+`38946985234` at `a0af12d9`. Earlier production found a stale decoder test hook;
+the new head fixes it without changing runtime behavior. Draft skips
 are not acceptance. Merge only the tested head with an explicit one-line subject,
 empty body and no trailers.
 
@@ -56,8 +57,10 @@ separate controls for lost inheritance, a borrowed parent stack, omitted free,
 omitted unwind cleanup and omitted child retain. Existing TLS/capture controls
 now require a single owner inside ordinary and nested scopes.
 
-Next: complete Linux `context-storage` run `38945353977` at `74f30a47`, including
-actual interpreter/native gRPC calls. Queued `38944540937` was superseded after
+Next: publish the callback-result follow-up and replace queued `38946737398`
+with all six native `context-owners` jobs on that combined head, including actual
+interpreter/native gRPC calls. Replace the queued WASI run on the same head. Queued Linux-only
+`38945353977` was canceled in favor of this combined check. Queued `38944540937` was superseded after
 narrowing the capture fixture's owner-allocation hook so it does not match the
 new outgoing-header owner. The subsequent API-target fixture repair is Windows
 only; include it in the final six-host run. Then require `context-owners`
@@ -82,8 +85,33 @@ signatures remain explicit. Formatting passes (1.12s); partition/concurrent-runn
 and the documentation audit passes (2.63s). The service guide now introduces
 request contexts, callback functions, `const`, deadlines and response metadata
 before using their examples. Native work belongs on CI.
-The new test target is assigned to the existing macOS GC job, giving this
-preparation 231 integration targets; #153 still has 230.
+The two new test targets are assigned to the existing macOS GC job, giving this
+preparation 232 integration targets; #153 still has 230.
+
+## Callback result follow-up
+
+Prepared after `93ec650f`, not yet validated natively: the five synchronous
+service scopes now borrow typed callbacks and own their returned values.
+Response capture protects the callback result, copies response headers directly
+into an owned list and releases partial values on allocation failure. It removes
+the temporary header pointer array. Existing capture task/failure controls now
+use a compiler-generated result descriptor and release their snapshots.
+
+`service_scope_ownership` adds raw/optimized interpreter comparisons, native
+O1/O2 tracing/ARC execution, aliases and returned functions, final charged-memory
+checks with collection off, deliberate missing-borrow/cleanup controls, and
+13/14 captured-result allocation-failure points. ARC binaries must exclude
+tracing functions. Five contracts are proposed for promotion; the immutable
+inventory baseline is unchanged and CI must verify the exact new inventory.
+Actual service and task stress checks must also pass; no whole-server ARC claim.
+The accepted interpreter runs the new alias/returned-function example (0.26s).
+Guarded formatting (1.30s), all six Mac assignment/runner checks (1.10s), and
+the documentation audit (2.67s) pass.
+Native compilation remains on CI. A syntax limitation noticed during preparation:
+`String -> (() -> String) ! {Network}` cannot currently annotate the outer call;
+record this for a separate parser/type-semantics check rather than changing it
+incidentally in the memory patch. The current fixture returns the function in
+an explicitly typed tuple.
 
 ## Roadmap status
 

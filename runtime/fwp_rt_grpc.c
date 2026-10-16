@@ -867,7 +867,6 @@ static int g_not_response_metadata(const char *k) {
     return 0;
 }
 
-static V g_pairs_value(const h2_hdrs *h);
 
 /* the metadata of a response (headers, then trailers) added to `out` */
 static void g_metadata_into(const g_stream *s, h2_hdrs *out) {
@@ -2549,7 +2548,8 @@ static V g_with_ctx(g_ctx *ctx, V f) {
     h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
-        V r = fwp_apply1(f, FWP_UNIT);
+        V unit = FWP_UNIT;
+        V r = fwp_apply_borrowed(f, 1, &unit);
         fwp_handlers = h.prev;
         fwp_cleanup_pop(&context_cleanup);
         g_context_restore(&owner);
@@ -2628,12 +2628,6 @@ static V fwp_p_grpc_with_metadata(V md, V f) {
     return result;
 }
 
-static V g_pairs_value(const h2_hdrs *h) {
-    V *items = (V *)fwp_alloc((h->n + 1) * sizeof(V));
-    for (size_t i = 0; i < h->n; i++) items[i] = fwp_tuple2(fwp_cstr(h->v[i].name), fwp_cstr(h->v[i].value));
-    return fwp_list_from(items, h->n);
-}
-
 /* a response header (0) or trailer (1) of the call the task serves */
 static V fwp_p_grpc_set_meta(int trailer, V name, V value) {
     g_serving *sv = g_ctx_of()->serving;
@@ -2655,7 +2649,7 @@ static V fwp_p_grpc_with_gzip(V f) {
     return g_with_ctx(ctx, f);
 }
 
-static V fwp_p_grpc_with_response_metadata(V f) {
+static V fwp_p_grpc_with_response_metadata(V f, const fwp_desc *result_type) {
     g_ctx *cur = g_ctx_of();
     g_ctx scope = *cur, *ctx = &scope;
     g_capture *owner = (g_capture *)calloc(1, sizeof *owner);
@@ -2666,16 +2660,30 @@ static V fwp_p_grpc_with_response_metadata(V f) {
     h2_hdrs *cap = &owner->headers;
     ctx->capture = cap;
     ctx->capture_owner = owner;
-    V r = g_with_ctx(ctx, f);
+    fwp_decode_fields result;
+    fwp_decode_fields_begin(&result, 2, result_type->fields, 2, NULL);
+    result.values[0] = g_with_ctx(ctx, f);
     if (cur->capture)
         for (size_t i = 0; i < cap->n; i++)
             h2_hdrs_add(cur->capture, cap->v[i].name, strlen(cap->v[i].name), cap->v[i].value,
                         strlen(cap->v[i].value));
-    V md = g_pairs_value(cap);
-    V result = fwp_tuple2(r, md);
+    const fwp_desc *list_type = result_type->fields[1];
+    /* Reverse construction preserves response order without a scratch array. */
+    for (size_t i = cap->n; i > 0; i--) {
+        const h2_hdr *header = &cap->v[i - 1];
+        fwp_decode_fields fields;
+        fwp_decode_fields_begin(&fields, 2, list_type->elem->fields, 2, NULL);
+        fields.values[0] = fwp_rc_fresh(fwp_cstr(header->name));
+        fields.values[1] = fwp_rc_fresh(fwp_cstr(header->value));
+        fwp_value_owner pair = {fwp_decode_record(&fields), list_type->elem->drop};
+        fwp_cleanup pair_cleanup; fwp_value_protect(&pair, &pair_cleanup);
+        result.values[1] = fwp_rc_fresh(fwp_cons(pair.value, result.values[1]));
+        fwp_value_finish(&pair, &pair_cleanup);
+    }
+    V value = fwp_decode_record(&result);
     fwp_cleanup_pop(&capture_cleanup);
     g_capture_release(owner);
-    return result;
+    return value;
 }
 
 static V fwp_p_grpc_peer_subject(const fwp_desc *option_type) {

@@ -32,7 +32,7 @@ fn grpc_context_restores_on_nested_failures_and_cancelled_callbacks() {
             .find("\nstatic V fwp_p_grpc_with_metadata")
             .unwrap();
     let mut method = generated[start..end].to_owned();
-    let callback = "V r = fwp_apply1(f, FWP_UNIT);";
+    let callback = "V r = fwp_apply_borrowed(f, 1, &unit);";
     assert_eq!(method.matches(callback).count(), 1);
     method = method.replacen(callback, "V r = observed_callback(f);", 1);
     let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);

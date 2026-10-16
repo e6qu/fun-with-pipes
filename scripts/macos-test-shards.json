@@ -208,6 +208,7 @@
     "selection_unwind_ownership",
     "serializer_leaf_ownership",
     "service_context_storage",
+    "service_scope_ownership",
     "service_value_ownership",
     "sort_callback_ownership",
     "stack",

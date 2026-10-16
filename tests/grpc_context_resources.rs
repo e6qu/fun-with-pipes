@@ -44,7 +44,7 @@ fn scoped_tls_options_release_after_callbacks_and_escaped_tasks() {
             .find("\nstatic V fwp_p_grpc_with_metadata")
             .unwrap();
     let method = generated[start..end].replace(
-        "V r = fwp_apply1(f, FWP_UNIT);",
+        "V r = fwp_apply_borrowed(f, 1, &unit);",
         "V r = observed_callback(f);",
     );
     generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);

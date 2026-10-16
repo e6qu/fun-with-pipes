@@ -242,7 +242,7 @@ fn children_keep_scope_settings_after_return_failure_and_cancellation() {
         + generated[start..]
             .find("\nstatic V fwp_p_grpc_with_metadata")
             .unwrap();
-    let callback = "V r = fwp_apply1(f, FWP_UNIT);";
+    let callback = "V r = fwp_apply_borrowed(f, 1, &unit);";
     assert_eq!(generated[start..end].matches(callback).count(), 1);
     let method = generated[start..end].replace(callback, "V r = scope_callback(f);");
     let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);

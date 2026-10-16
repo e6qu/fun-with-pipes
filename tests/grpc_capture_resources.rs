@@ -5,6 +5,17 @@ use std::process::Command;
 #[test]
 fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
     let unit = MT::unit();
+    let int = MT::con("std::I64");
+    let pair = MT::Record(vec![
+        ("0".into(), MT::con("std::String")),
+        ("1".into(), MT::con("std::String")),
+    ]);
+    let headers = MT::Con("std::List".into(), vec![pair.clone()]);
+    let result = MT::Record(vec![
+        ("0".into(), int.clone()),
+        ("1".into(), headers.clone()),
+    ]);
+    let callback = MT::Fun(Box::new(unit.clone()), Box::new(int));
     let program = Program {
         funcs: vec![
             Func {
@@ -21,20 +32,44 @@ fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
                 ty: unit,
                 body: Body::Prim("http2.connect".into()),
             },
+            Func {
+                name: "capture".into(),
+                arity: 1,
+                locals: vec![callback.clone()],
+                ty: MT::Fun(Box::new(callback), Box::new(result)),
+                body: Body::Prim("grpc.with-response-metadata".into()),
+            },
         ],
+        shapes: [(
+            headers.clone(),
+            TypeShape::Adt(vec![
+                ("Nil".into(), vec![]),
+                ("Cons".into(), vec![pair, headers]),
+            ]),
+        )]
+        .into(),
+        named: vec![("capture".into(), 2)],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_capture").unwrap();
     assert!(generated.contains("#define FWP_GCTX_OWNERS 1"));
-    let mut generated = generated;
+    let descriptor = generated
+        .lines()
+        .find_map(|line| {
+            line.trim()
+                .strip_prefix("return fwp_p_grpc_with_response_metadata(l0, ")
+                .and_then(|line| line.strip_suffix(");"))
+        })
+        .unwrap();
+    let mut generated = format!("{generated}\n#define CAPTURE_TYPE ({descriptor})\n");
     let start = generated.find("static V g_with_ctx(").unwrap();
     let end = start
         + generated[start..]
             .find("\nstatic V fwp_p_grpc_with_metadata")
             .unwrap();
     let method = generated[start..end].replace(
-        "V r = fwp_apply1(f, FWP_UNIT);",
+        "V r = fwp_apply_borrowed(f, 1, &unit);",
         "V r = observed_callback(f);",
     );
     generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
@@ -106,7 +141,7 @@ static uintptr_t observed_callback(uintptr_t f){
  check_capture();
  if(nested){h2_hdrs_add(g_ctx_of()->capture,"x",1,"before",6);return 42;}
  if(stage==10){nested=1;V r=fwp_p_grpc_with_gzip(0);nested=0;return r;}
- if(stage==9){nested=1;V r=fwp_p_grpc_with_response_metadata(0);nested=0;if(OBJ(r)->f[0]!=42||g_ctx_of()->capture->n!=1)_Exit(15);return 42;}
+ if(stage==9){nested=1;V r=fwp_p_grpc_with_response_metadata(0,CAPTURE_TYPE);nested=0;if(OBJ(r)->f[0]!=42||g_ctx_of()->capture->n!=1)_Exit(15);CAPTURE_TYPE->drop(r);return 42;}
  h2_hdrs_add(g_ctx_of()->capture,"x",1,"before",6);
  if(stage==1)fwp_fail(fwp_cstr("capture typed failure"),&string_descriptor);
  if(stage==2)fwp_trap("capture scope trap");
@@ -125,7 +160,7 @@ static void call(void *arg,int stop){
  if(!setjmp(failed)){
   if(!setjmp(handler.jb)){
    fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;
-   snapshot=fwp_p_grpc_with_response_metadata(0);scope_returned=1;
+   snapshot=fwp_p_grpc_with_response_metadata(0,CAPTURE_TYPE);scope_returned=1;
    size_t n;V *items=fwp_list_items(OBJ(snapshot)->f[1],&n);
    if(OBJ(snapshot)->f[0]!=42||n!=1||strcmp(STR(OBJ(items[0])->f[1])->d,"before"))_Exit(18);
    if(frees!=(stage==4||stage==5||stage==8?0:1))_Exit(1);
@@ -143,7 +178,7 @@ int main(void){
   fwp_await(task);
   if(stage==5){if(frees||!spawned||!entered||((fwp_task*)spawned)->done)return 3;fwp_make_ready(spawned);fwp_await(spawned);}
   if(!task->done||frees!=1||fwp_cleanups||cancelled!=(stage==3)||typed!=(stage==1)||trapped!=(stage==2||stage==6||stage==7)||task->gctx_owner)return 1;
-  FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(spawned));FWP_KEEP_ALIVE(snapshot);
+  FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(spawned));if(snapshot)CAPTURE_TYPE->drop(snapshot);snapshot=0;
  }
  // Failure to acquire capture ownership must not partially retain TLS options.
  g_tls *tls=g_tls_new("",0,"","","");tls->users=1;
@@ -161,7 +196,7 @@ int main(void){
  fwp_cur->gctx=0;FWP_KEEP_ALIVE(options);
  // Failed capture allocation never enters the callback or installs a context.
  fail_capture=1;callback_entries=0;
- if(!setjmp(failed)){fwp_p_grpc_with_response_metadata(0);return 9;}
+ if(!setjmp(failed)){fwp_p_grpc_with_response_metadata(0,CAPTURE_TYPE);return 9;}
  if(fail_capture||callback_entries||fwp_cur->gctx||fwp_cleanups||strcmp(fwp_trap_msg,"cannot allocate response metadata capture"))return 21;
  fwp_cur->trap_jb=0;
  fwp_lib_finish();return 0;

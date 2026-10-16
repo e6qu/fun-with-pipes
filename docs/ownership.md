@@ -732,3 +732,18 @@ parent failure/cancellation and child cleanup, with deliberate broken controls.
 Measurements must include the larger task layout and remaining allocations.
 Response-capture result values, connections and streams still need ownership
 work. The preparation does not admit an entire service to checked ARC.
+
+The following callback-result change is also under validation. Service scopes
+borrow their callback function while it runs and take ownership of the value it
+returns. Response capture constructs an owned tuple containing that result and
+copied header pairs. It builds the list backwards to preserve header order
+without a temporary pointer array. Cleanup protects the callback result before
+copying headers, so allocation failure releases every completed field.
+
+The new `service_scope_ownership` checks compare raw/optimized interpretation
+with native execution in tracing and checked ARC modes, including strings shared
+with the caller and functions returned inside tuples. They disable collection
+to check final charged storage, deliberately remove borrowing/partial cleanup,
+and inspect ARC binaries for tracing functions. These checks are prepared, not
+yet passing evidence. Checked ARC admission of these synchronous scopes does
+not admit remote calls, server entry points or unproved retained request contexts.
