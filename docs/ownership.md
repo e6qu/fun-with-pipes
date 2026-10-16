@@ -76,7 +76,8 @@ traps. Unproved runtime sharing still uses tracing.
 
 Fresh numeric result trees also need ownership before their first reference
 can be released. Native heap allocations already have an empty count slot;
-WASI and non-tracing library allocations acquire their external slot when claimed.
+WASI allocations acquire their external slot when claimed. Native libraries use
+the native allocator even though they do not scan host roots.
 Generated ownership helpers distinguish those cases. An absent external slot is
 not proof that a freshly allocated wide integer is immortal. Physical storage
 checks and a control restoring that mistaken early return cover this boundary.

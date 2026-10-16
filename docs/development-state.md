@@ -188,8 +188,8 @@ superseded runs are confirmed canceled.
 
 Source inspection explains the ten leaked boxes: `tree_owner_id` returns early
 when `fwp_rc_slot` is absent. Native fresh allocations already have a zero slot;
-WASI/non-tracing library allocations acquire their external slot only on first
-claim. Every generic wide bitwise result therefore stayed unowned. The repair
+WASI allocations acquire their external slot only on first claim. Native
+libraries still use the native allocator, although they cannot scan host roots. Every generic wide bitwise result therefore stayed unowned. The repair
 keeps the native absent-slot exclusion only under `FWP_GC`, rejects immediate
 values first, and claims fresh non-GC storage before traversing children.
 New actual-WASI cases cover checked I128/U128 result trees and F128 results;
