@@ -328,6 +328,25 @@ fn stream_aliases_are_consistent_across_tasks() {
             "native shared stream",
         );
     }
+    if let Some(path) = std::env::var_os("FWP_STREAM_ARTIFACTS") {
+        let path = PathBuf::from(path);
+        std::fs::create_dir_all(&path).unwrap();
+        let suffix = std::env::consts::EXE_SUFFIX;
+        std::fs::copy(
+            split.join(format!("shared-stream{suffix}")),
+            path.join("shared-client.exe"),
+        )
+        .unwrap();
+        std::fs::copy(
+            d.join("servers").join(format!("greeter{suffix}")),
+            path.join("shared-server.exe"),
+        )
+        .unwrap();
+        std::fs::copy(&client, path.join("shared-client.fwp")).unwrap();
+        std::fs::copy(dir().join("greeter.fwp"), path.join("shared-server.fwp")).unwrap();
+        std::fs::write(path.join("service-build.txt"), "Both executables built by this revision's fwp build --service greeter -O1. Client source: shared-stream.fwp; server built from client.fwp and greeter.fwp. Native C flags include -std=gnu11 -ffp-contract=off. These correctness binaries have no allocation counters and are not timed.
+").unwrap();
+    }
 }
 
 // ------------------------------------------------------------ interoperability

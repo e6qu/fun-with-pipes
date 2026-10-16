@@ -792,6 +792,25 @@ shutdown releases all queued messages. This isolates receive/cache storage;
 it excludes socket I/O, connection pooling, raw message storage and timing.
 It establishes a baseline, not explicit stream ownership.
 
+A receive source holds the connection, stream, message decoder, deadline and
+error description. A decoder turns received bytes into a typed value. The current
+preparation copies the description into the source's own allocation, so it stays
+valid for exactly that source's lifetime. Completed positions keep their cached
+value and continuation; only unread positions retain a reference to the source.
+The interpreter releases the source after the last such owner disappears. Native
+positions clear the obsolete reference, but their own cached values still rely
+on tracing. Clearing a reference alone is not explicit native destruction.
+
+Concurrent readers also need to agree on one value. The new receive guard lets
+one task receive while others wait for that same position's cache. Completion,
+failure and cancellation release the guard and wake waiters. Cancelling a waiting
+task leaves the receiving task running; existing client-call cancellation still
+resets the call's stream. Recursive reading of the same source traps. The guard
+borrows task identities and uses the scheduler's existing wait lists, with no
+allocation per element. [The handoff](development-state.md) separates passing
+lifetime checks from pending concurrency and Windows verification. Neither this
+change nor its controlled storage measurements admits whole services to ARC.
+
 The next service-memory work must establish these facts before removing its
 current collector requirement:
 

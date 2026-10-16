@@ -80,7 +80,8 @@ def main():
             assert int(item["bytes"]) % int(item["alignment"]) == 0
         names = ["source.txt", "rust.txt", "c.txt", "cpu.txt", "storage.tsv", "layout.tsv", "stream.c", "description.c",
                  "stream-O1.exe", "stream-O2.exe", "description-O1.exe", "description-O2.exe",
-                 "readers.c", "readers-O1.exe", "readers-O2.exe", "job.log"]
+                 "readers.c", "readers-O1.exe", "readers-O2.exe", "shared-client.exe",
+                 "shared-server.exe", "shared-client.fwp", "shared-server.fwp", "service-build.txt", "job.log"]
         hosts.append({"host": host, "job_url": job["url"], "rows": rows, "layout": layout,
                       "environment": {name: (folder / (name + ".txt")).read_text() for name in ["rust", "c", "cpu"]},
                       "files": {name: fingerprint(folder / name) for name in names},

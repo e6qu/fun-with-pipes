@@ -307,17 +307,22 @@ int main(void) {
         FWP_KEEP_ALIVE(PTR(source));
         fwp_mem_free(source);
     }
-    char name[2049]; memset(name,'a',sizeof name-1); name[sizeof name-1]=0;
-    for(int long_name=0;long_name<2;long_name++) {
-        const char *method=long_name?name:"module.method";
-        char *before=g_strdupf("%s (%s)",method,"localhost:1234");
+    const size_t lengths[]={0,1,1018,1019,1020,1021,1022,1023,1024,2048};
+    char name[2049], address[2049];
+    memset(address,'b',sizeof address-1); address[sizeof address-1]=0;
+    const char *addresses[]={"","x","localhost:1234",address};
+    for(size_t i=0;i<sizeof lengths/sizeof lengths[0];i++) {
+      memset(name,'a',sizeof name); name[lengths[i]]=0;
+      for(size_t j=0;j<sizeof addresses/sizeof addresses[0];j++) {
+        char *before=g_strdupf("%s (%s)",name,addresses[j]);
         if(!before)return 30;
         description_allocations=description_bytes=0; measure_description=1;
-        g_incoming *source=g_incoming_client(method,"localhost:1234");
+        g_incoming *source=g_incoming_client(name,addresses[j]);
         measure_description=0;
         if(strcmp(source->what,before)||description_allocations!=1||description_bytes!=sizeof(g_incoming)+strlen(before)+1)return 3;
-        if(long_name&&strlen(source->what)!=G_MESSAGE_BYTES-1)return 4;
+        if(strlen(source->what)>=G_MESSAGE_BYTES)return 4;
         free(before); fwp_mem_free(source);
+      }
     }
     volatile int trapped=0;
     description_allocations=description_bytes=0; measure_description=1;
@@ -331,8 +336,9 @@ int main(void) {
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-stream-description").unwrap();
     let copied = "src->what = text;";
-    assert_eq!(generated.matches(copied).count(), 1);
-    let borrowed = generated.replace(copied, "src->what = what;");
+    assert_eq!(generated.matches(copied).count(), 2);
+    // Mutate the copying constructor only; the client formats its own text.
+    let borrowed = generated.replacen(copied, "src->what = what;", 1);
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(format!("description{opt}.exe"));
         fwp::cgen::compile_c(&format!("{borrowed}\n{fixture}"), &binary, opt).unwrap();

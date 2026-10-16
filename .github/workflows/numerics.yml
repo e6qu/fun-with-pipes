@@ -92,7 +92,6 @@ jobs:
           mkdir -p stream-evidence
           git rev-parse HEAD > stream-evidence/source.txt
           rustc --version --verbose > stream-evidence/rust.txt
-          clang --version > stream-evidence/c.txt
           python3 - <<'PYENV'
           import os, pathlib, subprocess
           commands = {
@@ -100,6 +99,8 @@ jobs:
               "macOS": ["sysctl", "machdep.cpu", "hw.memsize"],
               "Windows": ["powershell", "-NoProfile", "-Command", "Get-CimInstance Win32_Processor | Format-List Name,Architecture,NumberOfCores,NumberOfLogicalProcessors"],
           }
+          compiler = subprocess.check_output([os.environ["CC"], "--version"], text=True)
+          pathlib.Path("stream-evidence/c.txt").write_text(compiler)
           details = subprocess.check_output(commands[os.environ["RUNNER_OS"]], text=True)
           pathlib.Path("stream-evidence/cpu.txt").write_text(details)
           PYENV

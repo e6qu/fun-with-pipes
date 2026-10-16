@@ -1307,11 +1307,21 @@ static g_incoming *g_incoming_new(const char *what, size_t length) {
     return src;
 }
 
-/* As with g_strdupf, formatting scratch ends before receiving may suspend. */
+/* Format directly into the source: no separate text allocation or 1 KiB
+ * scratch array in a caller that may later suspend. Preserve g_strdupf's limit. */
 static g_incoming *g_incoming_client(const char *method, const char *address) {
-    char description[G_MESSAGE_BYTES];
-    snprintf(description, sizeof description, "%s (%s)", method, address);
-    return g_incoming_new(description, strlen(description));
+    const size_t limit = G_MESSAGE_BYTES - 1;
+    size_t method_bytes = strlen(method), address_bytes = strlen(address);
+    if (method_bytes > limit) method_bytes = limit;
+    if (address_bytes > limit) address_bytes = limit;
+    /* Both terms are bounded before addition; the punctuation is " (" and ")". */
+    size_t length = method_bytes + address_bytes + 3;
+    if (length > limit) length = limit;
+    g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src + length + 1);
+    char *text = (char *)(src + 1);
+    snprintf(text, length + 1, "%s (%s)", method, address);
+    src->what = text;
+    return src;
 }
 
 /* a position in a received stream (GrpcCell): forcing it receives the
