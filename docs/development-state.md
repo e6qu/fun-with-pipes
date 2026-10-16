@@ -1,117 +1,111 @@
 # Session handoff
 
-Updated 2026-10-16. This branch is independent preparation for the next service
-context batch. The only delivery PR remains #153, repaired at `a0af12d9`; its authoritative
-handoff is in `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
-Do not open another PR or repeat that delivery. Both native Mac runner checks
-`38938194232` and documentation `38938199569` pass. PR #153 requires all nine production jobs in `38946985320` and documentation
-`38946985234` at `a0af12d9`. Earlier production found a stale decoder test hook;
-the new head fixes it without changing runtime behavior. Draft skips
-are not acceptance. Merge only the tested head with an explicit one-line subject,
-empty body and no trailers.
+Updated 2026-10-16. This branch prepares the next combined service-memory PR.
+The only delivery PR is #153, repaired at `a0af12d9`; its authoritative handoff
+is `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
+It requires all nine production jobs `38946985320` and documentation
+`38946985234` on that exact head. Earlier production found a stale decoder
+instrumentation hook; the repair changes the test, not runtime behavior.
+Do not merge until every final-head gate passes. Use one squash subject, at most
+80 characters, an empty body, no trailers and no attribution.
 
-## Preparation and acceptance
+## Current action
 
-Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`,
-based on #153 preparation `ac3060d1`. The runtime change below is implemented but not yet verified natively. The first step measures repeated plain, gzip, deadline, outgoing-header
-and response-capture scopes at 1, 32 and 128 calls. Every call increments state;
-raw/optimized interpretation and native output must agree on the final count.
-Instrumentation reports managed allocation requests, requested bytes and final
-charged bytes with collection disabled. Raw TLS/capture buffers, allocator pages
-and total process memory remain outside those counters. This is an fwp baseline,
-not a speed or C/Rust comparison.
+Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
+Base: `ac3060d1`. Runtime/test source: `24caa70b`; later documentation/evidence
+commits do not change it. Do not open another PR. After #153 acceptance, rebase
+only this branch's delta after `ac3060d1` onto its accepted squash.
 
-Baseline source `9b137078` passes Linux run `38941168779`; `3846e2d5` only improves
-documentation. Superseded `38939097999` was canceled. The retained
-[measurement](measurements/service-context-baseline-2026-10-16.json) records all
-15 programs, native ELF hashes and per-call differences versus plain fwp state
-updates. Between 32 and 128 calls, gzip/deadline add one 64-byte managed request
-per call, metadata adds five requests/128 requested bytes and capture adds
-four/120. These are memory counts, not timings or C/Rust comparisons; raw
-allocations are excluded. Artifact inspection passed under the guard (6.85s).
-Detached-child settings pass at O1/O2 with stress/reuse verification, including
-parent return, typed error, trap and cancellation. Omitting inheritance fails.
+Next: finish and repair six-host native run `38947981439` and actual WASI/browser
+run `38947985548`, both at `24caa70b`. Earlier queued native/WASI jobs
+`38946737398`/`38945989400` were canceled as superseded. Retain final allocation,
+layout, compiler/CPU and binary evidence before claiming verified support.
+Do not broaden ARC admission beyond the tested ownership contracts.
 
-Five service scope constructors now keep their settings on the stack. Child
-tasks copy settings into a typed field in their existing task allocation, while
-TLS/capture resources retain their separate owners. Completion clears the copy
-so a completed task does not retain stale context pointers. Programs without
-service support omit the field. No checked ARC admission changes are made.
+## Implemented, awaiting combined native verification
 
-Initial `38942724799` stopped at a test Clippy lint, now fixed. Replacement
-`38943086313` at `ad77934c` passes all four Unix hosts. Both Windows hosts failed five C probes because their headers were
-included before declaring the Windows 10 API target. The ordinary-program
-allocation probe passed there. All five fixtures now declare the target first;
-this repair needs Windows verification. The environment-cache fixture also now
-uses the Windows `_putenv_s` API explicitly, with checked failures, instead of
-POSIX-only environment functions. All context targets join permanent Windows CI. That revision tests stack settings and
-inline task copies only.
+Five service scope constructors keep settings on the stack. A child task copies
+settings into its existing task allocation; completion clears that copy. Programs
+without service support omit the field. Synchronous scopes borrow TLS/capture
+owners. Only independently live child tasks need extra owners.
 
-The next combined follow-up also borrows TLS/capture owners in synchronous
-scopes and packs outgoing header pointers/text into one owned allocation. Child
-tasks retain that block only when they actually inherit it. Empty or ignored
-header lists borrow the previous settings. Size arithmetic is checked before
-allocation. Tests cover allocation failure, four size-overflow cases, child
-return/error/trap/cancellation, owner overflow and atomic acquisition, and
-separate controls for lost inheritance, a borrowed parent stack, omitted free,
-omitted unwind cleanup and omitted child retain. Existing TLS/capture controls
-now require a single owner inside ordinary and nested scopes.
+Outgoing header pointers and text share one owned allocation. Child tasks retain
+that allocation when inheriting it. Empty or ignored header lists borrow the
+previous settings. Checked size arithmetic precedes allocation. Cleanup covers
+return, typed error, trap, cancellation, partial child preparation and counter
+overflow. Tests deliberately omit inheritance, copying, release, unwind cleanup
+and child retain; every broken variant must fail.
 
-Next: publish the callback-result follow-up and replace queued `38946737398`
-with all six native `context-owners` jobs on that combined head, including actual
-interpreter/native gRPC calls. Replace the queued WASI run on the same head. Queued Linux-only
-`38945353977` was canceled in favor of this combined check. Queued `38944540937` was superseded after
-narrowing the capture fixture's owner-allocation hook so it does not match the
-new outgoing-header owner. The subsequent API-target fixture repair is Windows
-only; include it in the final six-host run. Then require `context-owners`
-on all six hosts. Actual WASI/browser run `38945989400` at `51e8e123` is queued;
-the environment-fixture follow-up is native only. The new changes are unverified until
-those checks pass. Allocation assertions require no per-call overhead versus
-plain updates for gzip/deadline/empty headers; nonempty copied headers require
-one allocation per call and no retained charge after the scope ends. Retain
-`storage.tsv`, `layout.tsv`, compiler/CPU metadata and binaries. Measure the
-larger task header and inspect instructions; do not claim a speedup from counts.
-Capture result values and service streams/connections remain unfinished, and
-checked ARC admission is unchanged.
-After #153 is accepted, rebase only this branch's delta after `ac3060d1` onto its
-accepted squash; keep one active delivery PR.
+The five scopes also borrow typed callbacks and own their results. Response
+capture protects the callback result before copying headers directly into an
+owned list, preserving order and duplicates without a temporary pointer array.
+Existing capture/task controls use actual compiler-generated result types.
+Five ownership contracts are proposed for promotion; the frozen inventory
+baseline is unchanged. CI must verify the precise new inventory.
 
-Local checks use `python3 scripts/local-guard.py` with unchanged limits. The
-accepted compiler interpreted all seven 32-call examples, both raw and optimized,
-and printed `32` in every case (2.28s); this does not validate the new native
-instrumentation. A named helper
-needed an explicit `I64 -> () ! {Network, State[I64]}` signature because generic
-signatures remain explicit. Formatting passes (1.12s); partition/concurrent-runner checks pass (1.03s),
-and the documentation audit passes (2.63s). The service guide now introduces
-request contexts, callback functions, `const`, deadlines and response metadata
-before using their examples. Native work belongs on CI.
-The two new test targets are assigned to the existing macOS GC job, giving this
-preparation 232 integration targets; #153 still has 230.
+`service_scope_ownership` compares raw/optimized interpretation with native
+O1/O2 tracing/ARC execution, including caller aliases and returned functions.
+It checks final charged storage with collection off, deliberate missing-borrow
+and partial-cleanup controls, and 13/14 captured-result allocation failure points.
+ARC binaries must exclude tracing functions. Scope support does not establish
+collector-free remote calls, service entry points or retained request contexts.
 
-## Callback result follow-up
+Both new tests have permanent Windows coverage and are assigned to the existing
+Mac GC shard: this preparation has 232 integration targets; #153 has 230.
+Windows fixture repairs declare the required Windows 10 API target before system
+headers and use `_putenv_s` explicitly instead of POSIX-only environment calls.
+Native Windows verification of those repairs remains pending.
 
-Prepared after `93ec650f`, not yet validated natively: the five synchronous
-service scopes now borrow typed callbacks and own their returned values.
-Response capture protects the callback result, copies response headers directly
-into an owned list and releases partial values on allocation failure. It removes
-the temporary header pointer array. Existing capture task/failure controls now
-use a compiler-generated result descriptor and release their snapshots.
+## Retained evidence and limits
 
-`service_scope_ownership` adds raw/optimized interpreter comparisons, native
-O1/O2 tracing/ARC execution, aliases and returned functions, final charged-memory
-checks with collection off, deliberate missing-borrow/cleanup controls, and
-13/14 captured-result allocation-failure points. ARC binaries must exclude
-tracing functions. Five contracts are proposed for promotion; the immutable
-inventory baseline is unchanged and CI must verify the exact new inventory.
-Actual service and task stress checks must also pass; no whole-server ARC claim.
-The accepted interpreter runs the new alias/returned-function example (0.26s).
-Guarded formatting (1.30s), all six Mac assignment/runner checks (1.10s), and
-the documentation audit (2.67s) pass.
-Native compilation remains on CI. A syntax limitation noticed during preparation:
-`String -> (() -> String) ! {Network}` cannot currently annotate the outer call;
-record this for a separate parser/type-semantics check rather than changing it
-incidentally in the memory patch. The current fixture returns the function in
-an explicitly typed tuple.
+The [baseline](measurements/service-context-baseline-2026-10-16.json), source
+`9b137078`, passed Linux run `38941168779`. It compares 1/32/128 fwp scope calls
+with plain fwp state updates. Gzip/deadline added one 64-byte managed request per
+call; outgoing headers added five requests/128 requested bytes and capture four/120.
+Collection was disabled. These are memory measurements, not speed or C/Rust parity.
+
+The [intermediate stack-copy report](measurements/service-context-stack-2026-10-16.json)
+records source `ad77934c`, run `38943086313`. Ordinary allocation/output tests
+passed on all six native hosts: gzip/deadline add no per-call allocation relative
+to plain updates. All four Unix jobs also passed the detached-child tests.
+Windows jobs failed separate C fixtures before the API-target repair; do not
+count them as complete native acceptance. Header/capture costs in that report
+predate the packed-header and callback-result changes.
+
+On Linux AMD64 the service task grew from 1,512 to 1,576 bytes in that intermediate
+revision. The latest context adds another owner pointer and needs fresh layout
+measurements. Existing plain programs exclude service fields and are not a
+substitute for the old service-task baseline. ARM64 and AMD64 instructions show
+64-byte copies into stack storage; the ARM wrapper reserves 128 stack bytes,
+with a separate 352-byte handler frame. These are instrumented O2 binaries,
+not a total stack bound or a speed claim. Actual ELF, Mach-O and PE formats and
+source/binary hashes are retained for all six hosts.
+
+The probes measure managed requests, requested bytes and final charged storage
+from constant initialization through main cleanup. They exclude raw TLS/capture
+buffers, allocator pages/metadata and total process memory. Final-header tests
+require one allocation per nonempty header scope, no retained charge growth,
+and no per-call overhead for gzip/deadline/empty/ignored headers versus plain.
+
+## Local checks and next work
+
+Use `python3 scripts/local-guard.py` with unchanged limits; native compilation
+and full tests belong on CI. Earlier automatic review refused local compiler
+and standalone C builds; do not bypass or repeat those requests.
+
+The accepted interpreter runs all seven 32-call examples raw and optimized
+(2.28s) and the new alias/returned-function example (0.26s). Formatting (1.30s),
+six Mac coverage/runner tests (1.10s), and documentation audit (2.67s) pass.
+Artifact download (16.32s), evidence retention (8.18s), and existing binary
+inspection (0.13s each) passed under the guard. No local native build was used.
+
+Service streams/connections, remote results, process exit and GPU ownership
+remain. A syntax issue noticed during preparation also needs a separate tested
+repair: `String -> (() -> String) ! {Network}` cannot currently annotate effects
+on the outer call. The current ownership fixture returns its function inside
+an explicitly typed tuple; this does not resolve the parser issue.
+The service guide introduces callbacks, `const`, settings, deadlines, headers,
+streaming and compression before its examples. Preserve those explanations.
 
 ## Roadmap status
 

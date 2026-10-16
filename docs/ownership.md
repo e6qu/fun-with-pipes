@@ -730,8 +730,9 @@ These changes still need the native checks listed in the [handoff](development-s
 Checks cover size overflow, allocation failure, source aliases, nested scopes,
 parent failure/cancellation and child cleanup, with deliberate broken controls.
 Measurements must include the larger task layout and remaining allocations.
-Response-capture result values, connections and streams still need ownership
-work. The preparation does not admit an entire service to checked ARC.
+The callback-result changes below still need verification. Connections and
+streams need further ownership work. The preparation does not admit an entire
+service to checked ARC.
 
 The following callback-result change is also under validation. Service scopes
 borrow their callback function while it runs and take ownership of the value it
@@ -747,3 +748,14 @@ to check final charged storage, deliberately remove borrowing/partial cleanup,
 and inspect ARC binaries for tracing functions. These checks are prepared, not
 yet passing evidence. Checked ARC admission of these synchronous scopes does
 not admit remote calls, server entry points or unproved retained request contexts.
+
+The [intermediate stack-copy measurements](measurements/service-context-stack-2026-10-16.json)
+show the tradeoff before the packed-header and callback changes: repeated gzip
+and deadline scopes add no managed allocation relative to plain state updates
+on any of the six native hosts. The Linux AMD64 service task grows from 1,512 to
+1,576 bytes because it carries an inherited settings copy. This is a per-task
+cost; the removed 64-byte allocation was paid on every scope call. The report
+records all task sizes and alignments. Inspected ARM64/AMD64 instructions copy
+the settings directly to stack storage. These are memory counts and instrumented
+binaries, not a speed comparison. Separate Windows lifetime fixtures failed to
+compile in that intermediate run, so it does not establish full Windows acceptance.
