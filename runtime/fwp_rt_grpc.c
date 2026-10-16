@@ -1236,26 +1236,27 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
     /* the details of malformed messages differ between the backends: a
      * message names none */
     h2_buf canon = {0};
-    if (!pb_decode(k->schema, k->node, msg, n, &canon)) {
-        h2b_free(&canon);
-        *why = strdup("malformed message");
-        return G_DEC_BAD;
-    }
+    fwp_cleanup decoded_canonical;
+    fwp_cleanup_push(&decoded_canonical, g_h2_buffer_release, &canon);
+    int status = G_DEC_BAD;
+    if (!pb_decode(k->schema, k->node, msg, n, &canon)) goto done;
     fwp_rd rd = {canon.d, canon.len, 0};
+    const fwp_desc *type = k->ty;
+    status = G_DEC_OK;
     if (k->error) {
         uint64_t tag;
-        if (!rd_leb(&rd, &tag)) { h2b_free(&canon); *why = strdup("malformed message"); return G_DEC_BAD; }
+        if (!rd_leb(&rd, &tag)) { status = G_DEC_BAD; goto done; }
         if (tag == 1) {
-            int ok = fwp_decode(&rd, k->error, out);
-            h2b_free(&canon);
-            if (!ok) { *why = strdup("malformed message"); return G_DEC_BAD; }
-            return G_DEC_ERROR;
+            type = k->error;
+            status = G_DEC_ERROR;
         }
     }
-    int ok = fwp_decode(&rd, k->ty, out);
+    if (!fwp_decode(&rd, type, out)) status = G_DEC_BAD;
+ done:
+    fwp_cleanup_pop(&decoded_canonical);
     h2b_free(&canon);
-    if (!ok) { *why = strdup("malformed message"); return G_DEC_BAD; }
-    return G_DEC_OK;
+    if (status == G_DEC_BAD) *why = strdup("malformed message");
+    return status;
 }
 
 /* encode a message (with the oneof tag of `value` when `tag`) */

@@ -759,3 +759,9 @@ records all task sizes and alignments. Inspected ARM64/AMD64 instructions copy
 the settings directly to stack storage. These are memory counts and instrumented
 binaries, not a speed comparison. Separate Windows lifetime fixtures failed to
 compile in that intermediate run, so it does not establish full Windows acceptance.
+
+The prepared service-context batch also protects temporary message-decoding
+bytes when construction of the returned value traps. Tests cover successful and
+malformed messages, tagged error results and deliberate omission of cleanup.
+This repair remains under CI verification; service streams and remote result
+caches still need separate lifetime contracts.

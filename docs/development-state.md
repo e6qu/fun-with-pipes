@@ -19,7 +19,8 @@ only this branch's delta after `ac3060d1` onto its accepted squash.
 Next: require all six native jobs in `38949852186` and focused actual WASI ARC
 run `38949856424`, both at `6b642a82`. This combines the harness/Windows path
 repairs with explicit exit. Queued `38949318919` was superseded. Broader actual
-WASI/browser run `38947985548` covers callback/runtime source `24caa70b`. Earlier queued native/WASI jobs
+WASI/browser run `38947985548` passes on both Linux architectures at callback
+source `24caa70b`; it predates explicit-exit tests. Earlier queued native/WASI jobs
 `38946737398`/`38945989400` were canceled as superseded. Retain final allocation,
 layout, compiler/CPU and binary evidence before claiming verified support.
 Do not broaden ARC admission beyond the tested ownership contracts.
@@ -119,6 +120,18 @@ from constant initialization through main cleanup. They exclude raw TLS/capture
 buffers, allocator pages/metadata and total process memory. Final-header tests
 require one allocation per nonempty header scope, no retained charge growth,
 and no per-call overhead for gzip/deadline/empty/ignored headers versus plain.
+
+## Message-decoding cleanup follow-up
+
+Source review found an unprotected temporary protocol buffer in `g_decode`.
+It now registers cleanup before conversion and releases through one normal exit
+or trap unwinding. The added test uses actual protocol decoding for ordinary
+results, tagged success/error results, malformed wire data, invalid text and a
+missing tag. Injected result-allocation traps must free the temporary buffer;
+deliberately omitted cleanup must fail. O1/O2, GC stress/verification and reuse
+checks run on CI, with permanent Windows coverage in the existing canonical
+serialization target. This does not establish ownership of whole service streams.
+Formatting passes (1.20s); native results are pending.
 
 ## CI scheduling follow-up
 
