@@ -3,76 +3,79 @@
 Updated 2026-10-16. [PLAN.md](../PLAN.md) remains the project roadmap.
 This is independent preparation in `/private/tmp/fwp-service-values`, branch
 `service-value-preparation`, based on `a0447849f2dbce39e9e558001ac1fd75a842f028`.
-The active delivery remains PR #153; its work is in the main workspace and
-`/private/tmp/fwp-tcp-owners`. Do not publish a second delivery PR.
+PR #153 is the only delivery PR; its exact-head acceptance is tracked in the main
+workspace `/Users/zardoz/projects/fun-with-pipes`. Do not open a competing PR.
 
-Next: finish the combined copied-service-result checks and retain their evidence. Establish complete/partial result cleanup without a temporary pointer
-array, preserve source header order, and retain the original request context
-while copying. Use existing typed value/field cleanup, with no new surface
-syntax. This is not proof that service callbacks or stream handles can run
-without tracing. Keep those remaining lifetimes explicit.
+## Current action
 
-Acceptance: raw interpreter/native public output agreement where callable;
-focused native probes with multiple headers, missing values, binary bodies and
-all result-allocation failures; aliases remain valid after the source context
-changes; GC stress/reuse and zero final charged output storage with collection
-disabled; omitted cleanup controls must fail. Network contexts may still use
-tracing. State their retained cost and do not claim speed or C/Rust parity.
+The combined implementation adds ARC binary symbol checks to `498f891c`.
+Run `38929393764` was canceled while all six jobs were still queued, so the
+final focused run can include these checks and the streamlined handoff.
+Next: publish this head, dispatch `service-values`, then fix every failure, verify that the interpreter/native comparison actually
+runs one test, retain the native artifacts and inspect the resulting binaries.
+No complete native acceptance is claimed yet. Full builds and checks stay on
+GitHub; local work uses `python3 scripts/local-guard.py` with unchanged limits.
 
-Only after PR #153 is accepted, rebase this branch's delta after `a0447849` onto
-its accepted squash, combine verified follow-up work into one substantial PR,
-and require all nine production jobs plus documentation on its exact head.
-Commit and squash subjects remain one line, at most 80 characters, with no body,
-trailers or attribution. JIT is excluded. Keep local checks serial under
-`python3 scripts/local-guard.py`; full compilation/testing belongs on GitHub.
+After #153 is accepted, rebase only this branch's delta after `a0447849` onto its
+accepted squash, update delivery history and the current plan, and open one
+substantial follow-up PR. Require all nine production jobs plus documentation on
+the exact final head before squash merge. Commit subjects are one line, at most
+80 characters, with no body, trailers or attribution. JIT remains excluded.
 
-Published `bdb587c7` implements `grpc.metadata` and `grpc.peer-subject`:
-existing typed field/list owners protect partial results; metadata no longer
-allocates a pointer scratch vector. Compiler calls now pass result descriptors,
-and both contracts are OwnedTree. The existing served-peer probe receives its
-option descriptor and releases the returned copy. A new focused probe checks duplicate header order, filtering, copied aliases,
-12 metadata and 2 subject allocation failures, omitted field cleanup, and
-empty public results in tracing/ARC. Linux ARM64/AMD64 and ARM macOS pass in `38926254969` at `bdb587c7`;
-Intel macOS and both Windows jobs remain queued/running. No complete support
-claim is accepted yet. Full Windows and macOS schedules
-must include the new target. Published `e2c4668f` also copies HTTP/2 request and body results into typed
-owners. It preserves host precedence, duplicate/header order, all byte values,
-empty results and size/reset/deadline decisions. The new allocation probe expects
-20 request and 2 body allocation failures with no retained result storage;
-existing peer-buffer and source-stream lifetime controls are updated to use
-generated result descriptors. Its focused run `38927180411` failed compiling the new test helper: argument
-count used usize where the IR requires u32. The helper now converts its fixed
-small argument count; the superseded run is canceled. A following test
-repair updates the interpreter/native body comparison to pass the new descriptor
-and adds explicit populated-result GC stress/reuse runs. Run `38927862049` at `47bc253b` found that the test helper had not marked its
-primitive functions as generated roots, so result descriptors were absent. The
-helper now names both functions explicitly. The older metadata-only Windows ARM
-job also found a fixture header-order issue: it now selects the Windows 10 API
-before including CRT headers. These are test repairs, not waived checks. The combined checks add request-field
-agreement with the interpreter and correct the body-test module filter
-(`grpc::web`, not the source filename). No zero-test run counts as verification.
+## What this batch changes
 
-During this review, raw HTTP/2 header allocation was found to dereference failed
-allocations, and buffer growth could overflow. The combined repair preserves
-existing entries/buffers, frees partial new headers and rejects impossible sizes
-with the existing protocol allocation exit status 102. A standalone probe injects
-all three header allocation failures into empty and populated tables, a buffer
-resize failure and four size overflows; omitted temporary cleanup must fail.
-Outgoing response metadata now normalizes its owned copy in place, removing two
-temporary string buffers. Input strings remain unchanged. This does not establish
-recoverable allocation failure for the protocol layer or owned service streams.
-Run the final combined
-preparation before claiming acceptance.
-Service stream/context ownership remains outside these result contracts.
+Incoming gRPC metadata/certificate names and HTTP/2 request/body copies now have
+typed owners. Partial-result cleanup uses existing helpers; header lists no
+longer need temporary pointer arrays. Outgoing response headers normalize their
+owned copies directly, removing two temporary string buffers without changing
+the caller's strings. Six primitive contracts describe these operations.
 
-Local checks: guarded Rust formatting passes (1.19s); the accepted interpreter
-prints `[]`, `None`, `()`, `()` for the empty-context fixture (0.26s); the contract
-inventory passes (1.12s), reporting 341 contracted declarations and 13 remaining
-review symbols for this implementation. Counts are not support proof.
-The standalone stdlib generator was regenerated and rechecked; latest formatting
-passes in 1.30s, documentation audit in 2.66s and macOS partition checks in 0.25s.
-All 230 integration targets are assigned, including the new service probe in the
-existing GC job. The full Windows TLS step also includes it.
+Raw HTTP/2 header allocation now checks failed allocations, preserves earlier
+entries and releases partial new strings. Buffer growth checks overflow and
+preserves its old allocation on resize failure. These checks retain the protocol
+layer's existing exit status 102; they do not establish recovery inside a service.
+
+Acceptance covers duplicate/header order, host precedence, absent fields, binary
+bodies, size/reset/deadline decisions, input immutability and surviving aliases.
+Probes expect 12 metadata, 2 certificate-name, 20 request and 2 body allocation
+failures, with zero final charged result storage while collection is disabled.
+Separate populated-result stress/reuse checks must pass. Raw allocation probes
+cover six header failures, one resize failure and four impossible sizes.
+Deliberately omitting cleanup must fail. Existing source-stream and peer-buffer
+lifetime controls remain required. Output storage and stack cleanup records still
+have costs; there is no speed or C/Rust parity claim.
+
+## Checks and repairs so far
+
+Earlier metadata-only checks passed on Linux ARM64/AMD64 and ARM macOS. The
+superseded runs `38926254969`, `38927180411` and `38927862049` are canceled.
+They exposed test setup errors: wrong IR argument-count type, generated functions
+not marked as roots, and Windows API selection after CRT headers. Repairs are in
+the current head. The focused body-comparison filter now uses its actual module,
+`grpc::web`; an earlier zero-test invocation is not verification.
+
+Guarded local checks pass: Rust formatting 1.09s, accepted interpreter example
+0.26s (prints `[]`, `None`, `()`, `()`), contract inventory 1.12s (341 contracted
+declarations, 13 remaining reviews), generated stdlib documentation recheck 0.01s,
+roadmap audit 2.64s and macOS partition checks 0.25s. All 230 integration targets
+are assigned; the new service target uses the existing macOS GC job. Full Windows
+checks also include service results and peer-buffer cleanup.
+
+Earlier ARM64 metadata-only test binaries are retained under
+`/private/tmp/fwp-service-metadata-evidence`. Inspection found no tracing scan or
+sweep functions in that ARC executable. Its instrumented metadata/certificate
+functions use 448/272-byte stack frames; these are test-binary facts, not a cost
+comparison or evidence for the larger current batch. Final evidence must use the
+current successful revision. Draft review text is `/private/tmp/fwp-service-pr-body.md`.
+
+## Following ownership work
+
+Service streams/connections and retained request contexts still need explicit
+lifetimes; copied results do not prove a whole server can run without tracing.
+Remaining primitive reviews cover context scopes, deferred remote results,
+HTTP/2 serving/sending/responding, process exit and GPU execution. Preserve
+callback, cancellation, library-unload and child-task behavior while removing
+those dependencies; do not replace them with permanent retention.
 
 ## Roadmap status
 

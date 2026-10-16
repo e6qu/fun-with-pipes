@@ -97,9 +97,22 @@ fn copied_service_values_release_partial_results_and_preserve_aliases() {
                     .output()
                     .unwrap();
                 if expected == 0 && opt == "-O2" {
+                    let symbols = if mode == "arc" {
+                        let output = checked(Command::new("nm").arg(&binary));
+                        let symbols = String::from_utf8(output.stdout).unwrap();
+                        for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                            assert!(!symbols.contains(name), "ARC executable contains {name}");
+                        }
+                        Some(symbols)
+                    } else {
+                        None
+                    };
                     if let Some(path) = std::env::var_os("FWP_SERVICE_ARTIFACTS") {
                         let path = std::path::PathBuf::from(path);
                         std::fs::create_dir_all(&path).unwrap();
+                        if let Some(symbols) = symbols {
+                            std::fs::write(path.join("service-arc.nm"), symbols).unwrap();
+                        }
                         std::fs::write(path.join(format!("service-{mode}.c")), source).unwrap();
                         std::fs::copy(&binary, path.join(format!("service-{mode}.exe"))).unwrap();
                         std::fs::write(path.join(format!("service-{mode}.stdout")), &output.stdout)

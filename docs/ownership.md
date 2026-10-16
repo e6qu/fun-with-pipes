@@ -626,15 +626,15 @@ resolver peer to check 81 distinct addresses and every result-allocation failure
 [DNS evidence](measurements/dns-ownership-2026-10-16.json) records six native
 hosts passing, including 162 allocation-failure positions and deliberate omitted
 cleanup. Both actual WASI jobs pass common-helper regressions; they do not test
-DNS. The earlier owned-values/kernel report does not cover DNS. Socket handles and retained networking callbacks still need separate
-ownership work. This does not add WASI networking or prove faster DNS lookups.
+DNS. The earlier owned-values/kernel report does not cover DNS. Retained
+networking callbacks still need separate ownership work. This does not add WASI networking or prove faster DNS lookups.
 
 TCP/UDP receive scratch and UDP-send resolver entries are also registered on the
 runtime cleanup stack so cancellation and result-allocation failure can release
 them. Failed native receive allocation traps before the buffer is used. These
 repairs pass all six focused native hosts in `38898918147` at `7224b3de` and do
-not change socket-handle ownership;
-connections and listeners still require their separate lifetime work.
+not establish socket-handle ownership; the separate socket rules and acceptance
+above cover handles.
 
 ### Copied service metadata preparation
 

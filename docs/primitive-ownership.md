@@ -326,3 +326,23 @@ lifetimes. CPU workers retain no language references after the call. Reporting
 worker-start failure joins already started workers before releasing borrowed
 inputs or pending output. These contracts do not extend checked ARC to network
 connections, servers, retained host callbacks or GPU execution.
+
+## Copied service data
+
+These contracts describe the current preparation. [The handoff](development-state.md)
+records actual acceptance; they do not admit entire services into checked ARC.
+A request context holds information about the request being served. Returning a
+copy transfers ownership of the new data, not ownership of that context.
+
+| Operations | Arguments | Result and cleanup |
+|---|---|---|
+| `grpc.metadata` | Borrow unit | Owned list of copied header pairs, in source order |
+| `grpc.peer-subject` | Borrow unit | Owned optional copy of the client's certificate name |
+| `grpc.set-header`, `grpc.set-trailer` | Borrow name and value | Unit; the response owns normalized copies of both strings |
+| `http2.request` | Borrow stream | Owned method, path, headers, remote address and optional certificate name |
+| `http2.body` | Borrow limit, timeout and stream | Owned body bytes or an integer error wrapped in a result |
+
+Copied values do not borrow the source strings or body buffer. Typed cleanup
+releases partially copied fields if a managed result allocation fails. The source
+stream remains live during copying. The connections, streams, callbacks and
+request contexts themselves still need separate lifetime proofs.
