@@ -880,3 +880,63 @@ overlap (disabled 1.456–2.220 ms, enabled 1.463–2.322 ms). This test has lit
 eligible work, and the repeat does not establish a benefit there. Adoption rests
 on substantial direct/derivative workloads and reduced ownership traffic; it
 does not promise a speedup for every program.
+
+## Hashing values without constructing their encoded bytes
+
+`hash` computes a deterministic U64 fingerprint from a value's typed binary
+encoding. FNV-1a combines each byte with XOR and multiplication modulo 2^64;
+it is not a cryptographic hash. The candidate feeds those bytes directly into
+the running fingerprint instead of allocating a complete encoded byte buffer.
+The interpreter keeps its independent buffered implementation as a reference.
+
+[The four-host comparison](measurements/structural-hash-2026-10-16.json) measures
+fwp tracing, checked ARC, ARC with only the old hash buffer restored, and direct
+C and Rust implementations. Each builds one array containing integers 0 through
+N-1, hashes `(iteration, array)` repeatedly, then XORs the fingerprints. Including
+the changing iteration prevents reuse of a single hash. Small work hashes 16
+integers 4,096 times; large work hashes 4,096 integers 1,024 times. All encode the
+same little-endian I64 fields and array length, using identical wrapping hash
+arithmetic. C/Rust know that schema directly; fwp uses ordinary pipes and runtime
+type descriptions. Their outputs agree with raw interpretation.
+
+All use optimization level 2. After one warmup, ten rotating whole-process
+samples include startup, input construction, hashing and printing. Compilation,
+allocation profiles and uninstrumented process peak memory are recorded separately.
+CPU time means child user plus system time; elapsed time also includes scheduling.
+The report retains both, hardware, compiler versions, flags, hashes and all samples.
+These are small process measurements on shared runners, not universal speed claims.
+
+The table reports checked ARC CPU time divided by each reference's CPU time.
+A ratio of 1.67 means 67% extra CPU time. Below 1 means less time. The last two
+columns compare the same fwp program with its former encoded-byte buffer.
+
+| Host | Small / C | Small / Rust | Large / C | Large / Rust | Small / buffered fwp | Large / buffered fwp |
+|---|---:|---:|---:|---:|---:|---:|
+| Linux AMD64 | 1.670 | 1.542 | 1.044 | 1.044 | 0.318 | 0.165 |
+| Linux ARM64 | 1.824 | 1.660 | 1.033 | 1.029 | 0.350 | 0.160 |
+| macOS ARM64 | 1.435 | 1.236 | 1.016 | 1.012 | 0.553 | 0.285 |
+| macOS AMD64 | 1.475 | 1.328 | 1.018 | 1.012 | 0.374 | 0.079 |
+
+On every host, streaming removes all allocation requests inside the hash itself.
+The old buffer makes 12,288 growth requests for small work and 11,264 for large
+work, requesting 1,835,008 and 134,152,192 bytes cumulatively. Peak temporary
+capacity falls from 256 / 65,536 bytes to zero. Cumulative requested capacity is
+not simultaneously live memory or allocator-internal storage.
+
+The full fwp programs still make 12,309 / 7,173 managed requests and 12,288 / 3,072
+retains, with 295,112 / 163,848 peak charged bytes. These numbers are unchanged
+by streaming: input construction, tuple/list intermediates and output remain.
+C/Rust use one application array allocation of 128 / 32,768 bytes. C counts its
+explicit successful malloc; Rust measures allocator calls while that array lives.
+Those counts exclude stdio and allocator internals; fwp managed counters can
+include output values. All measured owned storage returns to zero. The profile
+disables collection to check cleanup; ordinary traced timing keeps it enabled.
+
+[Retained machine-code evidence](measurements/structural-hash-code-2026-10-16.json)
+identifies binaries, C source, disassembly and WASI modules by SHA-256. The selected
+Linux ARM64 hash visitor has a 96-byte stack frame and XOR/multiply instructions;
+its six calls recurse into the visitor, with no encoder or allocator call.
+This is one static function body, not proof of no spills or zero runtime overhead.
+The small-work gap points toward remaining pipeline storage and dispatch costs;
+the large-work CPU gap is about 1–4% on these hosts. Full delivery acceptance is
+tracked in the handoff separately from these focused measurements.

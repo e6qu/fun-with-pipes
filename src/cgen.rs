@@ -8321,7 +8321,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let arc = native_options().arc;
     if arc {
         if !matches!(mode, Mode::Main | Mode::Exec(..) | Mode::Library) {
-            return Err("--gc arc requires a native executable or checked C library".into());
+            return Err("--gc arc requires a checked executable or C library".into());
         }
         if !reuse_enabled() || !free_enabled() {
             return Err(
@@ -9572,6 +9572,16 @@ pub fn uses_services(prog: &Program) -> bool {
 pub fn check_target(prog: &Program, target: Target) -> Result<(), String> {
     if !target.is_wasm() {
         return Ok(());
+    }
+    if target == Target::Wasi && native_options().arc {
+        if let Some(symbol) = prog.funcs.iter().find_map(|function| match &function.body {
+            Body::Prim(symbol) if symbol.starts_with("task.") || symbol.starts_with("channel.") => {
+                Some(symbol)
+            }
+            _ => None,
+        }) {
+            return Err(format!("--gc arc: WASI host fibers have no checked retention contract (used by `{symbol}`)"));
+        }
     }
     if uses_services(prog) {
         return Err("services (gRPC calls) need the native target".into());

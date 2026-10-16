@@ -113,6 +113,27 @@ Recursion that would require infinitely many type specializations is rejected.
 Effect variables can be generalized without an explicit signature because effects
 are checked and erased before code generation.
 
+## Combining hash and bitwise pipelines
+
+A list pipeline can become one loop when running its stages element by element
+preserves effects, termination and which trap occurs first. Structural `hash`
+reads a finite immutable value without callbacks or language traps; its type
+constraint excludes functions and resources. Integer `bit.and`, `bit.or`,
+`bit.xor` and `bit.not` are also total: every valid input has a result. The existing
+fusion analysis recognizes these contracts, so `map hash | fold bit.xor 0u64`
+can avoid its intermediate result list. It keeps captured inputs alive through
+the ordinary ownership rules. Hash still uses its runtime type description.
+
+Bit shifts remain excluded from that proof because an oversized shift traps.
+Effectful callbacks and distinguishable traps still prevent interleaving. This
+adds no syntax or implicit conversion. A known callback's eager captures are
+bound once in their original left-to-right order before input evaluation; the
+existing specialization then sees direct calls. Capture bindings stay outside
+the fused loop and cannot cross effectful or trapping consumer arguments.
+Resource-bearing captures keep their original frames. The handoff separates
+implementation, focused checks and full acceptance; benchmarks retain the
+unfused baseline.
+
 ## Borrowing array data inside loops
 
 An array slice can store a pointer into another array rather than copying its
@@ -180,6 +201,15 @@ node exists. `scan` and `iterate` keep earlier states alive while a callback
 borrows the current state. Traps release completed states and temporary buffers.
 These rules preserve callback and retain order; the handoff records acceptance
 of the latest failure-cleanup repairs.
+
+### Hashing borrowed values
+
+`hash` computes FNV-1a over the existing typed binary encoding. Its native traversal
+streams bytes directly into the hash state, preserving widths, little-endian
+order, float bits and container order. It borrows arrays and nested fields without
+allocating an encoded copy or adjusting their reference counts. The interpreter's
+buffered encoder remains an independent reference. The handoff records acceptance;
+allocation removal does not by itself establish a wall-time improvement.
 
 ## Runtime
 
@@ -275,7 +305,7 @@ workspace may retain at most 512 KiB; the table's capacity is separate.
 [Numerics](numerics.md) defines tokens, precision and scope rules;
 [benchmarks](benchmarks.md) records saved allocations and mixed timing results.
 
-## Checked native ARC execution
+## Checked ARC execution
 
 `--gc arc` asks the compiler to prove that supported values can be released by
 automatic reference counting (ARC), without a tracing collector. It checks
@@ -289,9 +319,11 @@ functions/tasks/channel handles, and scoped C calls. Mutable
 cycles, raw pointers, unproved external callbacks and remote/service contexts
 remain excluded. Checked ARC supports native main and function executables,
 including CLI commands, and C libraries with copied inputs and pointer-free
-results. Every library export is checked as a separate entry. WebAssembly and
-service entry points remain excluded. The allocator still uses metadata and may
-retain reusable pages. See
+results. Every library export is checked as a separate entry. Synchronous WASI
+main/function/CLI entries use the same ownership checks and free counted storage
+through their existing external count table. Browser re-entry, WASI host fibers
+and service entry points remain excluded. The allocators still use metadata;
+native allocation may retain reusable pages. See
 [the precise memory contract](ownership.md#checked-arc-delivery).
 
 ## Executables and the pipe protocol
