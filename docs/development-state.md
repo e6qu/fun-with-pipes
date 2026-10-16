@@ -7,12 +7,19 @@ open delivery PR is #153. Do not open a second PR before it is accepted.
 ## Current action
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
-Base: `ac3060d1`. Current code: `cb0ffeea21a87750bffeb66e72180020b2acf7d8`.
+Base: `ac3060d1`. Published code: `2dbf9b64ef40a0c90f5ce061308d0d787f948afd`.
 The compiler change is `79ce442f`; `cb0ffeea` corrects its native test setup.
 
-Next: require native run `38956983459` and actual WebAssembly run `38955989639`
-for the new tuple-forwarding optimization. Fix any failures. Retain its allocation
-comparison against the passing `975806e9` report before claiming the saving.
+Next: publish the corrected forwarding fixture and dispatch `context-owners`.
+Run `38956983459` at `cb0ffeea` failed on Apple Silicon because the fixture looked
+for a generated Pair destructor that was not needed by its program. Its service
+allocation measurement passed. The correction supplies a real tuple consumer
+and tests its generated release, preserving alias, trap and extra-allocation
+controls. Focused CI now runs this test before the longer measurements and
+uploads its generated C on failure. Require all six native jobs on the repair.
+Actual WebAssembly run `38955989639` checks the unchanged compiler optimization.
+Retain its allocation comparison against the passing `975806e9` report before
+claiming the saving across supported hosts.
 After #153 acceptance, rebase only this branch's changes after `ac3060d1` onto
 its accepted squash. Then publish one combined PR and require all nine production
 jobs plus documentation on its final commit. Focused checks do not replace that
@@ -22,10 +29,10 @@ arrow may have effects; partial application is pure.
 PR #153 is in `/Users/zardoz/projects/fun-with-pipes`, branch
 `owned-values-delivery`, head `f6dc9940b562a52bc0a3b207fdd6fd58ac3d1aba`.
 Its authoritative handoff is that checkout's `docs/development-state.md`.
-It is temporarily draft while decoder run `38955537587` and documentation
-`38955543617` check the repaired test hook and restored Windows OpenSSL setup.
+All six decoder jobs in `38955537587` and documentation `38955543617` pass.
+The PR is ready; production run `38958379514` checks the exact same head.
 Generated WebSocket code needs those headers even for parsing-only programs.
-All nine production jobs must run after the focused checks pass. Draft-skipped
+All nine production jobs must pass before merge. Draft-skipped
 jobs are not acceptance. `/private/tmp/fwp-ready-153.py` checks readiness;
 `/private/tmp/fwp-merge-153.py` requires explicit production/documentation run IDs.
 Squash subjects must be one line, at most 80 characters, with an empty body and
@@ -105,11 +112,12 @@ counting result allocations. Existing
 record-worker and conversion controls run with it. Do not claim the one-allocation
 result until `38956983459` passes, or WebAssembly support until `38955989639` passes.
 
-A further local repair registers a channel sender's encoded buffer before
+Sender cleanup at `2dbf9b64` registers a channel sender's encoded buffer before
 encoding and sending. It releases on success, encoding traps and cancellation
 while the send waits for connection space. The existing response test now covers
 all three paths and requires deliberately omitted sender cleanup to fail. This
-repair is not part of `38956983459`; final combined CI must verify it.
+repair is not part of `38956983459`; Linux run `38957908016` checks it first.
+Final combined CI must verify all platforms.
 
 The shared `scripts/run-native-tests.py` also adds explicit `--all` selection for
 Linux. It retains every Cargo target and stress case, with two executable workers
@@ -124,6 +132,8 @@ Artifacts for the passing baseline are under
 `/private/tmp/fwp-context-final-evidence/38953639844/`. The report helper is
 `/private/tmp/fwp-retain-context-final.py`: pass a completed successful six-host
 run, its exact source, artifact directory and output path through the local guard.
+Pass `--capture-requests 1` for the forwarding change (`2` for its older baseline);
+the helper validates both requested bytes and allocation counts against that target.
 It checks jobs, counts, layouts, inventory and capture controls. New source needs
 new binary observations; do not reuse instruction addresses from an older binary.
 The next PR description draft is `/private/tmp/fwp-context-pr-body.md`.
@@ -131,7 +141,7 @@ The next PR description draft is `/private/tmp/fwp-context-pr-body.md`.
 Use `python3 scripts/local-guard.py COMMAND...` with unchanged limits. Full builds,
 native compilation and full tests belong on CI. Earlier automatic review refused
 local compiler/standalone C builds; do not bypass or repeat those requests.
-Recent guarded checks: formatting 1.08s, documentation audit 2.60s, evidence
+Recent guarded checks: formatting 1.20s, documentation audit 2.61s, evidence
 retention 33.72s, existing ARM64 binary inspection 0.14s. Earlier seven runner
 checks passed in 1.07s. No local native build was used.
 

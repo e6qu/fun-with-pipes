@@ -364,12 +364,20 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
             ty: MT::Fun(Box::new(unit.clone()), Box::new(unit)),
             body: Body::Prim("task.yield".into()),
         },
+        Func {
+            name: "discard_pair".into(),
+            arity: 1,
+            locals: vec![pair.clone()],
+            ty: MT::Fun(Box::new(pair), Box::new(MT::unit())),
+            body: Body::Expr(Expr::Const(Value::unit())),
+        },
     ];
     program.main = Some(2);
     program.named = vec![
         ("maker".into(), 0),
         ("forward".into(), 1),
         ("failure".into(), 3),
+        ("discard_pair".into(), 5),
     ];
     fwp::ir::check_locals(&program).unwrap();
     let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new()));
@@ -401,13 +409,6 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
             allocation,
             &format!("{allocation} if(forward_measuring)forward_requests++;"),
         );
-    let destructor = code[code.find("/* Pair */\nstatic void fwp_drop").unwrap()..]
-        .split("static void ")
-        .nth(1)
-        .unwrap()
-        .split('(')
-        .next()
-        .unwrap();
     let fixture = r#"
 static volatile V forward_input;
 static jmp_buf forward_failure;
@@ -424,7 +425,7 @@ int main(void){
  forward_measuring=0;
  if(forward_requests!=1)return 249;
  if(OBJ(result)->f[0]!=forward_input||OBJ(result)->f[1]!=forward_input||!fwp_rc_last(result))return 250;
- PAIR_DROP(result);
+ (void)f5(result);
  if(!fwp_rc_last(forward_input)||strcmp(STR(forward_input)->d,"hello"))return 251;
  fwp_rc_dup(forward_input);
  fwp_trap_recover=forward_recover;fwp_trap_jb=&forward_failure;fwp_trap_cleanup=0;
@@ -433,9 +434,14 @@ int main(void){
  if(fwp_cleanups||!fwp_rc_last(forward_input)||strcmp(fwp_trap_msg,"hello"))return 253;
  fwp_rc_free_obj(forward_input);return 0;
 }
-"#.replace("PAIR_DROP", destructor);
+"#;
     let prefix = &code[..code.find("int main(").unwrap()];
     let good = format!("{prefix}\n{fixture}");
+    if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
+        let path = std::path::PathBuf::from(path);
+        std::fs::create_dir_all(&path).unwrap();
+        std::fs::write(path.join("forwarded-record.c"), &good).unwrap();
+    }
     let broken = good.replace(
         "V result=f1(PTR(&fc0),forward_input);",
         "V result=forward_extra_box(f1(PTR(&fc0),forward_input));",
