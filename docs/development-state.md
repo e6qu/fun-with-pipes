@@ -208,3 +208,30 @@ hash visitor. It calls no allocator or encoder. This is static function evidence
 not a dynamic instruction count, absence of spills, or a timing comparison.
 Artifacts are under `/private/tmp/fwp-hash-artifacts/arm64`; all-platform evidence
 still needs final retention. Full #150 production remains running separately.
+
+## Measurement before further hash optimization
+
+The inspected ARM64 visitor has a 96-byte stack frame and dispatches on a runtime
+type descriptor. Removing the byte buffer does not establish zero overhead against
+handwritten code. Prepare a four-host comparison of the same tuple `(iteration,
+array)` encoding in fwp, C and Rust, with the array built once and each iteration
+included in the hashed bytes so work cannot be hoisted. Use small and larger
+arrays, matching integer widths and wrapping FNV arithmetic. Include both fwp
+memory modes and a control restoring only the former buffered hash.
+
+Retain rotating whole-process wall/CPU samples, process RSS, build commands/times,
+source and binary hashes, managed and temporary-buffer counts, and the reference
+array's actual allocations. Distinguish application allocation counts from
+runtime/stdio storage and explain representation differences. Do not select a
+further specialization until these measurements identify its cost.
+
+The runner-only `hash-costs` suite now measures 4,096 hashes of a 16-element array
+and 1,024 hashes of a 4,096-element array. Each hash includes the iteration index,
+then the array length and values; all implementations XOR the resulting U64s.
+Ten rotating samples compare tracing fwp, ARC fwp, ARC with only the old hash
+buffer restored, direct C and direct Rust. Flags, compilation, RSS, allocation
+scope and representation differences are explicit in the report. The tiny local
+three-iteration/four-element fixture agrees across accepted fwp, C and Rust;
+reference profiles observe one 32-byte application allocation and zero final
+storage. Profile JSON escaping was corrected before its guarded pass (2.06 s).
+No full benchmark ran locally and no performance conclusion is available yet.
