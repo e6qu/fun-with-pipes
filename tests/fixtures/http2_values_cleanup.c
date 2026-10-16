@@ -41,7 +41,7 @@ int main(void) {
         if(!fwp_gc.ncollect||fwp_cleanups)return 247;
         h2_hdrs_free(&stream.headers);h2b_free(&stream.data);fwp_lib_finish();return 0;
     }
-    if(fwp_gc.budget!=budget)return 248;
+    if(fwp_gc.budget!=budget){fprintf(stderr,"copied HTTP/2 result budget delta: %lld\n",(long long)(fwp_gc.budget-budget));return 248;}
     for(int operation=0;operation<2;operation++) {
         const fwp_desc *type=operation?BODY_TYPE:REQUEST_TYPE;
         int failed=0,completed=0;

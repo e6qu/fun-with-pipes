@@ -11,10 +11,13 @@ workspace `/Users/zardoz/projects/fun-with-pipes`. Do not open a competing PR.
 The combined implementation adds ARC binary symbol checks to `498f891c`.
 A Linux-only preparation option, `service-values-linux`, runs the same focused
 tests on one host to find failures before dispatching the six-platform matrix.
-Linux preparation `38930571475` at `a6023f7a` caught two illegal moves from
-interpreter values in the new request comparison. The test now borrows their
-fields, preserving the value destructor. Next: publish and rerun the Linux
-preparation, then run `service-values` on all six native hosts once it passes.
+Linux preparation `38932169877` at `3139b99c` passes compilation, gRPC copied
+results, raw protocol allocation checks, interpreter/native request/body agreement
+and the source-stream lifetime control. The HTTP/2 allocation probe exposed an
+incomplete test type table: its list lacked the recursive variant definition,
+so the generated list destructor was absent. Both manually constructed test
+programs now provide the complete list shape. Next: publish and rerun Linux,
+then run `service-values` on all six native hosts once it passes.
 Queued runs `38929393764` and `38930262576` were canceled before execution. Verify the interpreter/native
 comparison actually runs one test, retain artifacts and inspect the binaries.
 No complete native acceptance is claimed yet. Full builds and checks stay on

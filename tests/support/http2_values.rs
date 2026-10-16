@@ -17,14 +17,12 @@ pub fn generated() -> String {
                 .collect(),
         )
     };
-    let headers = MT::Con(
-        "std::List".into(),
-        vec![tuple(vec![string.clone(), string.clone()])],
-    );
+    let pair = tuple(vec![string.clone(), string.clone()]);
+    let headers = MT::Con("std::List".into(), vec![pair.clone()]);
     let request = tuple(vec![
         string.clone(),
         string.clone(),
-        headers,
+        headers.clone(),
         string.clone(),
         option.clone(),
     ]);
@@ -52,6 +50,13 @@ pub fn generated() -> String {
             ),
         ],
         shapes: [
+            (
+                headers.clone(),
+                TypeShape::Adt(vec![
+                    ("Nil".into(), vec![]),
+                    ("Cons".into(), vec![pair, headers]),
+                ]),
+            ),
             (
                 option,
                 TypeShape::Adt(vec![("None".into(), vec![]), ("Some".into(), vec![string])]),

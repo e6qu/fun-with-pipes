@@ -1103,13 +1103,12 @@ mod tests {
                     .collect(),
             )
         };
+        let pair = tuple(vec![string.clone(), string.clone()]);
+        let headers = MT::Con("std::List".into(), vec![pair.clone()]);
         let request_type = tuple(vec![
             string.clone(),
             string.clone(),
-            MT::Con(
-                "std::List".into(),
-                vec![tuple(vec![string.clone(), string.clone()])],
-            ),
+            headers.clone(),
             string.clone(),
             option.clone(),
         ]);
@@ -1131,10 +1130,19 @@ mod tests {
                     body: Body::Prim("http2.request".into()),
                 },
             ],
-            shapes: [(
-                option,
-                TypeShape::Adt(vec![("None".into(), vec![]), ("Some".into(), vec![string])]),
-            )]
+            shapes: [
+                (
+                    option,
+                    TypeShape::Adt(vec![("None".into(), vec![]), ("Some".into(), vec![string])]),
+                ),
+                (
+                    headers.clone(),
+                    TypeShape::Adt(vec![
+                        ("Nil".into(), vec![]),
+                        ("Cons".into(), vec![pair, headers]),
+                    ]),
+                ),
+            ]
             .into(),
             exports: vec![("available".into(), 0)],
             named: vec![("request".into(), 1)],
