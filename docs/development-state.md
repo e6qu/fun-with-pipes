@@ -220,3 +220,10 @@ declarations, 37 distinct symbols still under review). Native resource semantics
 and compiler unit tests require the six-host `udp` evidence workflow; constructor
 failure, exhaustive receive failures, unload and descriptor-ledger controls remain
 unfinished. This is a preparation commit, not completed support.
+
+Initial UDP preparation `91f24f63` runs in six-host workflow `38904425456`.
+The next test increment adds real descriptor accounting over 4096 bind/drop
+cycles and 301 aliases, constructor and all three receive allocation failures,
+omitted-cleanup controls, a suspended receive cancellation, and real library
+unload with a host-owned socket. Raw reference output passes (0.25s), Rust
+formatting passes (1.31s); these new native tests still require runner validation.

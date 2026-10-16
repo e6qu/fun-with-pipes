@@ -71,7 +71,15 @@ jobs:
           git show 21a621c699d11a84c05f955935dc95dcfb8adbf2:runtime/fwp_rt_kernel.c > kernel-baseline.c
       - name: UDP lifetimes and socket cleanup
         if: inputs.suite == 'udp'
+        env:
+          FWP_UDP_ARTIFACTS: udp-evidence
         run: cargo test --no-fail-fast --lib resource::tests && cargo test --no-fail-fast --test udp_ownership --test native_sockets --test arc_tasks --test file_values --test file_inline_path
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'udp'
+        with:
+          name: udp-${{ matrix.runner }}
+          path: udp-evidence/
+          if-no-files-found: ignore
       - name: Socket scratch and DNS ownership
         if: inputs.suite == 'sockets'
         env:

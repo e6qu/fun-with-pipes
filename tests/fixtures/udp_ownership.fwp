@@ -22,6 +22,8 @@ udp-echo =
     | option.unwrap-or "?"
 delayed : UdpSocket -> () -> String ! {Async, IO, Network, FileIO}
 delayed = curry (.0 | tap (const 1s | task.sleep) | udp.local-addr)
+waiting : UdpSocket -> () -> () ! {Async, IO, Network, FileIO}
+waiting = curry (.0 | attempt (udp.recv-from 64) | ignore)
 main = [
     () | address | udp.bind | udp.close | const "rebound" | echo,
     "127.0.0.1:0" | udp.bind | holder | inside | echo,
@@ -36,6 +38,11 @@ main = [
     "127.0.0.1:0" | udp.bind | tap udp.close | udp.local-addr | echo,
     "127.0.0.1:0" | udp.bind | udp-echo | echo,
     task.spawn (delayed (udp.bind "127.0.0.1:0"))
+    | tap task.cancel
+    | task.await
+    | echo,
+    task.spawn (waiting (udp.bind "127.0.0.1:0"))
+    | tap (const () | task.yield)
     | tap task.cancel
     | task.await
     | echo,
