@@ -113,13 +113,15 @@ missing-free negative control. Formatting passes. These use the accepted #147
 compiler plus current helper C, not the changed compiler. Full acceptance and
 performance evidence remain on CI. The next focused suite is `mapped-arrays`.
 
-The new Rust test harness compiles against the existing library (0.71 s, three
-tests listed) after correcting a mutable Command borrow. The old queued
-`38834469846` is confirmed canceled. [Six-host candidate run 38834524334](https://github.com/e6qu/fun-with-pipes/actions/runs/38834524334)
-is queued at `3ad4f223`. Later additions cover final-array allocation failure
-and add repeated timing/profile evidence; publish and validate that final source
-before adoption. Edited-C success/callback/allocation-failure and missing-free
-controls pass in tracing and ARC (1.19/1.22 s).
+The new Rust test harness compiles against the existing library after correcting
+a mutable Command borrow. Old queued `38834469846` is confirmed canceled.
+[Candidate run 38834524334](https://github.com/e6qu/fun-with-pipes/actions/runs/38834524334)
+at `3ad4f223` reached compiler checks but stopped on the test's new Clippy
+`chunks_exact_to_as_chunks` lint. The test now uses fixed-size chunks and asserts
+the full expected count length. Cancel that superseded run and replace it at the
+repair. Final-array allocation failure checks are also included. Edited-C
+success/callback/allocation-failure and missing-free controls pass in tracing
+and ARC (1.19/1.22 s). No changed-compiler acceptance is claimed yet.
 
 `scripts/measure-mapped-arrays.py` compares the same compiler with only
 `FWP_MAP_ARRAY` off/on, in tracing and ARC, using direct numeric work, repeated
@@ -128,4 +130,5 @@ alternating process samples, separate allocation profiles, peak/final memory,
 compiler/hardware/flags, compilation time, binary size and actual disassembly.
 Timed scope includes process startup and output; this is fwp versus fwp, not
 C/Rust parity. Script parsing passes (0.14 s); no local timing claim is made.
-The runner suite is `mapped-array-costs`. Results remain pending.
+The runner suite is `mapped-array-costs`. Four-host run `38834969974` is queued/running at `d16592be`; the later
+Clippy repair changes tests/docs only. Results remain pending.

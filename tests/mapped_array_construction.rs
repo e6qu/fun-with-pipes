@@ -206,14 +206,17 @@ fn numeric_materialization_removes_list_nodes_without_retaining_inputs() {
                     .split_whitespace()
                     .map(|s| s.parse().unwrap())
                     .collect();
+                assert_eq!(counts.len(), 12);
                 measurements.push(counts);
             }
         }
         assert_eq!(measurements[0], measurements[1]);
         assert_eq!(measurements[2], measurements[3]);
         for (unfused, fused) in measurements[0]
-            .chunks_exact(3)
-            .zip(measurements[2].chunks_exact(3))
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .zip(measurements[2].as_chunks::<3>().0)
         {
             assert_eq!(unfused[0], fused[0]);
             assert!(
