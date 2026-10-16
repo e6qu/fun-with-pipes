@@ -550,3 +550,9 @@ resolver peer to check 81 distinct addresses and every result-allocation failure
 These additions await native CI; the earlier owned-values/kernel report does not
 cover them. Socket handles and retained networking callbacks still need separate
 ownership work. This does not add WASI networking or prove faster DNS lookups.
+
+TCP/UDP receive scratch and UDP-send resolver entries are also registered on the
+runtime cleanup stack so cancellation and result-allocation failure can release
+them. Failed native receive allocation traps before the buffer is used. These
+repairs await focused native checks and do not change socket-handle ownership;
+connections and listeners still require their separate lifetime work.

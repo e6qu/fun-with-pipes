@@ -95,11 +95,6 @@ static V fwp_p_metrics_snapshot(const fwp_desc *list_type) {
 }
 
 #ifndef FWP_FIBERS
-static void fwp_addrinfo_release(void *arg) {
-    struct addrinfo **result = arg;
-    if (*result) freeaddrinfo(*result);
-    *result = NULL;
-}
 /* Resolver entries are temporary native storage; returned strings/list cells
  * have independent owners. Preserve first occurrence order without a fixed cap. */
 static V fwp_p_dns_resolve(V host, const fwp_desc *err, const fwp_desc *list_type) {

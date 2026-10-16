@@ -115,15 +115,19 @@ fn dns_releases_partial_lists_and_resolver_storage() {
         code = code
             .replace(init, &format!("{init} dns_allocation();"))
             .replace(slow, &format!("{slow} if(leaf!=0) dns_allocation();"));
+        for (marker, ending) in [
+            ("static void fwp_addrinfo_release(", "\n}\n"),
+            ("static V fwp_p_dns_resolve(", "\n}\n"),
+        ] {
+            let start = code.find(marker).unwrap();
+            let end = start + code[start..].find(ending).unwrap() + ending.len();
+            let resolver = code[start..end]
+                .replace("getaddrinfo(", "dns_getaddrinfo(")
+                .replace("freeaddrinfo(", "dns_freeaddrinfo(");
+            code.replace_range(start..end, &resolver);
+        }
         let start = code.find("static void fwp_addrinfo_release(").unwrap();
-        let end = start + code[start..].find("\n#endif").unwrap();
-        let resolver = code[start..end]
-            .replace("getaddrinfo(", "dns_getaddrinfo(")
-            .replace("freeaddrinfo(", "dns_freeaddrinfo(");
-        code.replace_range(
-            start..end,
-            &(include_str!("fixtures/dns_resolver.c").to_string() + &resolver),
-        );
+        code.insert_str(start, include_str!("fixtures/dns_resolver.c"));
         let code = code[..code.find("int main(").unwrap()].to_string()
             + &descriptors
             + include_str!("fixtures/dns_cleanup.c");

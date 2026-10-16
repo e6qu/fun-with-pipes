@@ -66,6 +66,22 @@ compression and networking are not WASI support.
   verifies cached values, metric storage, suspended tasks, TLS keys, console
   handlers and host-owned resources at unload and static process exit.
 
+## Socket scratch cleanup added during review
+
+Source review found that TCP/UDP receive scratch buffers are not registered for
+nonlocal cancellation or result-allocation failure, and UDP send resolver entries
+can survive cancellation. Fix these within this batch. Acceptance: inject wait
+cancellation, receive-result allocation failure and native allocation failure;
+require native storage to return to baseline, preserve timeout/normal/error
+behavior, and require omitted-cleanup controls to fail on all six native hosts.
+The implementation now registers receive buffers and UDP resolver entries on the
+existing cleanup stack and rejects a failed native receive allocation before use.
+The new `native_sockets` control uses real runtime unwind with injected wait,
+allocation and timeout outcomes; existing real socket/web peers remain required.
+This does not promote socket handles to checked ARC or establish final-owner
+lifetimes. Local `cargo fmt` passed under the guard (1.31s); native validation is
+pending a focused `sockets` run against this combined integration branch.
+
 ## Recorded results and current checks
 
 [The owned-values/kernel report](measurements/owned-values-and-kernels-2026-10-16.json)
@@ -77,8 +93,8 @@ Actual WASI `38891578037` passes both hosts at `c8f4646c`, including registry
 shutdown, 32-bit count narrowing and final-block overflow controls.
 
 Fresh preparation `cba3e810` adds DNS and moves existing private-list helpers into
-the common primitive file. Native run `38897597329` and actual WASI `38897600949`
-are queued/starting. Earlier evidence does not cover these new changes. Full
+the common primitive file. Native run `38897597329` passes Linux ARM64/AMD64 and Windows AMD64;
+other hosts and actual WASI `38897600949` are still running. Earlier evidence does not cover these new changes. Full
 combined integration checks have not yet run.
 
 For the fixed 8193-element F64 kernel, one-worker native temporary allocations
