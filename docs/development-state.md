@@ -38,7 +38,7 @@ that old parent chain or open a second delivery PR while #151 is open.
 
 This worktree, `/private/tmp/fwp-owned-vectors`, branch `owned-vector-preparation`,
 is a following preparation anchored at `aab2a928`. Transfer only its later commits
-after the preceding borrowed-hash delivery is accepted. It is not another open PR.
+into the same combined borrowed-hash delivery after #151 is accepted. It is not another open PR.
 The preceding preparation and its evidence remain in `/private/tmp/fwp-hash-borrows`.
 
 Next: establish complete ownership for the nine vector-library primitives.
@@ -64,7 +64,7 @@ The accepted #148 interpreter checks the lane fixture, including all fifteen
 numeric formats, empty/singleton results, invalid lengths, array views and
 retained aliases. The extended fixture also checks I128 wrapping, F128 precision,
 signed zero and repeated boxed results; its syntax check passes (0.26 s).
-Formatting passes (1.11 s). The inventory audit passes (1.11 s) with 271 contracted
+Formatting passes (1.11 s), and the docs audit passes (2.53 s). The inventory audit passes (1.11 s) with 271 contracted
 declarations and 72 remaining distinct review symbols; its frozen baseline is
 unchanged. These local results do not validate the changed compiler/runtime.
 
@@ -75,10 +75,22 @@ injects failure during both wrappers, partial lane arithmetic and accumulation;
 a missing-array-free control must fail. The WASI ownership suite includes the
 same lane program and its independent physical-allocation ledger/control.
 
-Next: run the focused `vectors` suite on all six native hosts and `wasi-arc` on
-both Linux hosts. Fix failures before calling this supported. Complete docs and
-retained evidence before transferring only this worktree's delta after the
-preceding delivery merges. No second delivery PR is authorized concurrently.
+Native `38867603162` at `637b3eb2` currently passes ARM macOS, both Windows hosts
+and Linux ARM64; Intel macOS is running and Linux AMD64 is queued. WASI
+`38867607803` passes ARM64; AMD64 is queued. These runs validate the runtime change
+but predate the new introductory example and manual-record compatibility case.
+The complete extended fixture passes the accepted interpreter (0.25 s).
+
+A new runner-only comparison measures four- and sixty-four-lane F64 dot products
+against C/Rust stack-array programs, with equal input values, multiplication and
+left-to-right addition. It retains startup/build/CPU/elapsed time, managed storage,
+reference allocation scope, real generated code and hashes. It makes no speed
+claim before runner results. C/Rust use direct valid integer output conversion;
+fwp checks optional conversion, an explicit remaining work difference.
+
+Next: finish the native/WASI checks and run `vector-costs` on all four cost hosts. Fix failures before calling this supported. Complete docs and
+retained evidence before transferring only this worktree's delta after #151 merges. Combine this related work with the hash/range batch to use
+one full acceptance cycle. No second delivery PR is authorized concurrently.
 
 The earlier borrowed-hash batch now passes six native checks `38864599295`, two
 WASI checks `38864602220` and four cost jobs `38864604854`. Its separate handoff

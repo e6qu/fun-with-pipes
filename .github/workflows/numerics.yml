@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs]
         default: numerical
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
@@ -47,9 +47,17 @@ jobs:
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
       - name: Vector ownership, boxed lanes and failure cleanup
         if: inputs.suite == 'vectors'
+        env:
+          FWP_VECTOR_ARTIFACTS: vector-evidence
         run: |
           cargo test --lib ownership::tests
           cargo test --no-fail-fast --test vector_ownership --test array_element_ownership --test arc_execution
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'vectors'
+        with:
+          name: vectors-${{ matrix.runner }}
+          path: vector-evidence/
+          if-no-files-found: ignore
       - name: Streaming hash ownership and canonical protocol
         if: inputs.suite == 'hash' || inputs.suite == 'hash-windows'
         env:
@@ -475,7 +483,7 @@ jobs:
           name: ${{ inputs.suite }}-${{ matrix.runner }}
           path: comparison-repeat/
   ad_metadata:
-    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites' || inputs.suite == 'mapped-array-costs' || inputs.suite == 'zip-map-costs' || inputs.suite == 'hash-costs'
+    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites' || inputs.suite == 'mapped-array-costs' || inputs.suite == 'zip-map-costs' || inputs.suite == 'hash-costs' || inputs.suite == 'vector-costs'
     strategy:
       fail-fast: false
       matrix:
@@ -491,6 +499,9 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bin fwp
+      - name: Compare equivalent F64 lane calculations in fwp C and Rust
+        if: inputs.suite == 'vector-costs'
+        run: python3 scripts/measure-vector-lanes.py --output metadata-evidence
       - name: Compare equivalent hashing in fwp C and Rust
         if: inputs.suite == 'hash-costs'
         run: python3 scripts/measure-hashing.py --output metadata-evidence
@@ -504,7 +515,7 @@ jobs:
         if: inputs.suite == 'ad-sites'
         run: python3 scripts/measure-ad-allocation-sites.py --output metadata-evidence
       - name: Repeat paired metadata costs with sustained derivatives
-        if: inputs.suite != 'ad-sites' && inputs.suite != 'mapped-array-costs' && inputs.suite != 'zip-map-costs' && inputs.suite != 'hash-costs'
+        if: inputs.suite != 'ad-sites' && inputs.suite != 'mapped-array-costs' && inputs.suite != 'zip-map-costs' && inputs.suite != 'hash-costs' && inputs.suite != 'vector-costs'
         run: python3 scripts/measure-ad-metadata.py --comparison "${{ inputs.suite == 'ad-layout' && 'interleaved' || 'separate' }}" --output metadata-evidence
       - uses: actions/upload-artifact@v7
         if: always()

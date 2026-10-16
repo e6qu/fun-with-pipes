@@ -39,6 +39,50 @@ list. The reverse example deliberately uses only the first input. `xs` in the
 last row is a placeholder for the vector from tutorial 20, not a global library
 variable.
 
+## Fixed-size lane operations
+
+Use `Vec[N, T]` when an operation acts on a fixed number of values independently.
+A **lane** is one position; `Vec[4, F64]` means four F64 lanes. The count is part
+of the type. `Vector[T]`, used by the matrix and differentiation helpers, instead
+has a length determined at runtime; the two names describe different APIs.
+
+[The complete lane example](../examples/vector-lanes.fwp) doubles four numbers.
+Its function signature supplies the lane count, so callers need no lane-count
+argument:
+
+```fwp
+double-four : Vec[4, F64] -> Vec[4, F64]
+double-four = simd.mul (simd.splat 2.0)
+```
+
+`simd.splat 2.0` fills all four lanes with 2.0. `simd.mul` multiplies matching
+lanes. `array.from-list` constructs the input array; `simd.from-array` checks its
+length and returns `Some vector` on success or `None` for the wrong length.
+`option.map` applies a function inside `Some` and leaves `None` unchanged:
+
+```fwp
+[1.0, 2.0, 3.0, 4.0] | array.from-list | simd.from-array
+    | option.map (double-four | simd.to-array | array.to-list) | echo
+```
+
+This prints `Some [2.0, 4.0, 6.0, 8.0]`, because each input is multiplied by two.
+A three-element input produces `None`. Converting back to a list here is for
+printing the example, not a requirement for subsequent vector operations.
+
+The exposed record definition also permits manual `Vec` construction without a
+length check. Binary lane operations currently process the common input prefix
+in that case. Use `simd.from-array` to validate lengths at an input boundary;
+the type annotation alone does not validate a manually supplied array.
+
+SIMD abbreviates single instruction, multiple data. The current implementation
+stores an array inside a record and emits C loops; the C compiler may turn suitable
+loops into vector instructions. The API alone guarantees neither those instructions
+nor a speedup. Integer lane addition, subtraction, multiplication and sum wrap on
+overflow; ordinary fwp integer arithmetic is checked. Division keeps its checks.
+Floating operations preserve their existing order and format. Choose these rules
+explicitly when using the lane API. Current ownership work and its native/WASI
+validation are recorded in [the handoff](development-state.md).
+
 ## Dense F64 solvers
 
 A dense matrix stores every element, including zeros. The existing solvers use
@@ -64,8 +108,8 @@ an enormous column count to overflow output allocation.
 The native implementation now owns these buffers explicitly and releases them
 on return, singular-result paths and unwinding. Partial result arrays remain
 protected until their containing result is constructed. Checked ARC contracts
-cover all six primitives; validation of this new batch is tracked in the
-[session handoff](development-state.md). These are existing algorithms with
+cover all six primitives, with accepted evidence in
+[PR #147](roadmap-history.md#numerical-precision-and-filesystem-ownership-pr-147). These are existing algorithms with
 unchanged arithmetic order, not a claim of BLAS-level speed or improved numerical
 stability. Conjugate gradient keeps its explicit iteration limit and tolerance;
 it does not automatically switch algorithms on difficult inputs.

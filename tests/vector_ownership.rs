@@ -27,9 +27,10 @@ fn emitted(source: &str, arc: bool, dir: &fwp::cgen::TempDir) -> String {
 fn vector_results_preserve_lanes_aliases_and_checked_failures() {
     let dir = fwp::cgen::TempDir::new("vector-ownership").unwrap();
     let division = "v : Array[I128] -> Option[Vec[4, I128]]\nv = simd.from-array\nmain = [8i128, 4i128, 6i128, 8i128] | array.from-list | v | option.map (simd.div (simd.splat 0i128)) | echo\n";
-    for (source, status) in [
-        (include_str!("fixtures/vector_ownership.fwp"), 0),
-        (division, 101),
+    for (name, source, status) in [
+        ("lanes", include_str!("fixtures/vector_ownership.fwp"), 0),
+        ("example", include_str!("../examples/vector-lanes.fwp"), 0),
+        ("division", division, 101),
     ] {
         let input = dir.join("main.fwp");
         std::fs::write(&input, source).unwrap();
@@ -59,6 +60,33 @@ fn vector_results_preserve_lanes_aliases_and_checked_failures() {
             for opt in ["-O1", "-O2"] {
                 let binary = dir.join("vector.exe");
                 fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                if opt == "-O2" && name == "lanes" {
+                    if let Some(path) = std::env::var_os("FWP_VECTOR_ARTIFACTS") {
+                        let path = std::path::PathBuf::from(path);
+                        std::fs::create_dir_all(&path).unwrap();
+                        let mode = if arc { "arc" } else { "tracing" };
+                        std::fs::write(path.join(format!("vector-{mode}.c")), &code).unwrap();
+                        std::fs::copy(&binary, path.join(format!("vector-{mode}.exe"))).unwrap();
+                        let mut disassemble = Command::new(if cfg!(target_os = "macos") {
+                            "otool"
+                        } else if cfg!(target_os = "windows") {
+                            "llvm-objdump"
+                        } else {
+                            "objdump"
+                        });
+                        let output = checked(
+                            disassemble
+                                .arg(if cfg!(target_os = "macos") {
+                                    "-tvV"
+                                } else {
+                                    "-d"
+                                })
+                                .arg(&binary),
+                        );
+                        std::fs::write(path.join(format!("vector-{mode}.asm")), output.stdout)
+                            .unwrap();
+                    }
+                }
                 let actual = Command::new(&binary)
                     .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
                     .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })

@@ -10,7 +10,16 @@ wide : Vec[4, I128] -> Vec[4, I128]
 wide = id
 quad : Vec[4, F128] -> Vec[4, F128]
 quad = id
+# Direct record construction does not check the type's lane count. Preserve
+# the existing common-prefix rule while ownership changes; public examples
+# use simd.from-array to validate external arrays instead.
+short-record : Vec[4, I128]
+short-record = { lanes = [2i128, 4i128] | array.from-list }
+long-record : Vec[4, I128]
+long-record = { lanes = [1i128, 2i128, 3i128] | array.from-list }
 main = [
+    short-record | simd.add long-record | simd.to-array | array.to-list | echo,
+
     170141183460469231731687303715884105727i128 | simd.splat | wide
         | both (simd.add (simd.splat 1i128) | simd.to-array | hash) simd.sum | echo,
     1.0000000000000000000000000000000002f128 | simd.splat | quad
