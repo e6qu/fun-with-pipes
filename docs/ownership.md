@@ -659,7 +659,9 @@ stream remains live during copying. Header order and duplicates are preserved,
 and an existing `host` header takes precedence over `:authority`. Partial strings,
 pairs, lists and result wrappers use the existing typed cleanup on failure.
 These changes do not yet own the stream itself or remove tracing from a server.
-Native failure and lifetime checks are pending for this preparation.
+These copied results pass focused allocation-failure and lifetime checks on all
+six native hosts at `e715de1a` (`38935341434`). Full delivery acceptance remains
+separate; see the [handoff](development-state.md).
 
 Outgoing gRPC response headers and trailers also copy their input strings.
 Normalization now happens in the owned copy: names become lowercase, and carriage
@@ -669,4 +671,21 @@ allocations and buffer-size growth before using them. Failed header construction
 preserves earlier entries and frees its partial new strings; impossible sizes
 and allocation failure retain the existing exit status 102. This is a bounded
 allocation check, not a claim that protocol allocation failures can be recovered
-inside a running service. Native controls remain pending for this preparation.
+inside a running service. Native controls pass on all six hosts in the same
+focused run. Response-header capture also checks its own allocation: failure
+traps before invoking the callback or installing the new context. Existing child
+task, cancellation and counter-overflow tests remain active.
+
+The [service-result report](measurements/service-values-2026-10-16.json) records
+12 incoming-metadata, 2 certificate-name, 20 request and 2 body allocation-failure
+points, each returning charged result storage to its baseline with collection
+disabled. Raw protocol buffers are counted separately. Returned values still
+allocate and typed cleanup uses stack records; this is cleanup evidence, not a
+speed comparison or a measurement of total server memory.
+
+Each partial-result cleanup record occupies 184 bytes, aligned to eight bytes,
+on all six measured hosts. It keeps up to eight field values inline on the stack.
+The instrumented ARM64 metadata, certificate, request and body functions use
+448, 272, 624 and 288-byte stack frames respectively, including saved registers.
+These are test-binary observations, not bounds on an ordinary server's total
+stack use. The report retains the instructions used to read those sizes.

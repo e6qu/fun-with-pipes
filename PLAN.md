@@ -87,10 +87,13 @@ owns copied service headers and bodies, removes temporary header-copy buffers,
 and checks raw protocol allocation failures and size overflow. It fixes Windows
 socket error wording to agree with the interpreter.
 
-The original numerical/socket batch has focused native and supported WASI
-evidence. Both Windows diagnostic-repair jobs pass. Service-result checks remain
-in progress; full production acceptance must run on the final combined head.
-The handoff identifies each exact revision and run. Keep one delivery PR open.
+The numerical/socket batch and copied service results have focused checks on
+all six native hosts, and both actual WASI regressions pass. Tests deliberately
+fail allocations and omit cleanup to verify that they detect lost storage.
+The [service report](docs/measurements/service-values-2026-10-16.json) retains
+binary formats, symbols, allocation counts and the tested source revision.
+Full production acceptance must still pass on the final combined head. Keep one
+delivery PR open; the handoff identifies the current checks and next action.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

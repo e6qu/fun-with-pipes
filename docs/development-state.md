@@ -2,139 +2,108 @@
 
 Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
 [PR #153](https://github.com/e6qu/fun-with-pipes/pull/153) is the only delivery PR.
-It is being expanded with copied service-data ownership so the required full CI
-restart also validates that coherent batch. Do not open a separate service PR.
+It combines decoded-value cleanup, smaller numerical temporaries, socket ownership
+and copied service-result ownership. Do not open a separate service PR or apply
+these preparation changes again.
 
-## Current workspaces and next action
+## Current action
 
-The published PR remains at `78e9a372abe0daad90318b9ae14751cf6587c31f` on
-`owned-values-delivery` in `/Users/zardoz/projects/fun-with-pipes`.
-The combined preparation is `/private/tmp/fwp-service-values`, branch
-`service-value-preparation`; it merges the socket repair from
-`/private/tmp/fwp-tcp-owners`, branch `tcp-owner-preparation` (`4e13d309`).
-Do not apply either batch again or rebase the service work as a separate delivery.
+Next: publish the combined preparation from `/private/tmp/fwp-service-values`,
+branch `service-value-preparation`, by fast-forwarding `owned-values-delivery`
+in `/Users/zardoz/projects/fun-with-pipes`. Then require all nine production jobs
+and documentation on the exact new PR head. Update this local handoff with their
+run IDs. The tested service source is `e715de1a`; the following changes retain
+evidence and update documentation only.
 
-Linux preparation `38933103425` passed at `c10bdb77`.
-Next: finish the combined preparation's `service-values` matrix on all six native
-hosts (`38934662876`) and both `wasi-arc` regressions (`38934584083`), at
-`c37b6afa`. A subsequent review found an unchecked response-capture allocation;
-the pending follow-up traps before invoking the callback or installing a context.
-Its existing lifetime test now injects that failure; Windows production runs it
-too. Service run `38934662876` passed Linux ARM64 and ARM macOS, but Windows
-AMD64 found CRLF translation in the C comparison fixture's stdout. Its actual
-body/header values agreed. The fixture now explicitly uses binary stdout on
-Windows, preserving exact-byte assertions and the negative-bound control.
-Rerun the six service hosts on the combined repair; the separately queued Linux
-capture follow-up `38934906327` is superseded by that run. Fix failures, retain artifacts and inspect binaries.
-`/private/tmp/fwp-retain-service-values.py RUN_ID` requires all six service jobs,
-actual interpreter/native comparison execution and expected allocation probes
-before writing the final report. Its current script has not run successfully.
+The old published head `78e9a372` must not be merged. Its Windows TLS comparison
+failed because native reset messages bypassed the interpreter's common wording.
+Repair `abe3be17` passes both Windows focused jobs `38931783848`; it preserves
+exact certificate errors and adds five actual native/interpreter error-code
+comparisons. That repair is included in the combined preparation. Inspect any
+unfinished jobs in old production `38925341899` for additional failures before
+starting the final full run. Old documentation `38925341680` passed.
 
-After focused acceptance, fast-forward the delivery branch to this combined
-work, rewrite the PR description to cover it, and require all nine production
-jobs plus documentation on the exact new head. Do not merge the failed old head.
-Squash subject: `Reduce temporary memory and clean up network resources`;
-empty body, no trailers or attribution, at most 80 characters. Verify the merge
-tree/parent/message and cancel duplicate postmerge CI. Update
-`/private/tmp/fwp-merge-153.py` to the final head and run IDs before using it.
-Standing publication/fix/merge authorization persists. JIT is excluded.
+After all final-head gates pass, squash-merge with subject
+`Reduce temporary memory and clean up network resources` and an empty body.
+The whole message must be one line, at most 80 characters, with no trailers or
+attribution. Verify merged files, parent and message; cancel duplicate postmerge
+CI. `/private/tmp/fwp-merge-153.py` still names the failed old head/runs: update
+those before using it. Standing publication, fixes and merge authorization
+persists; failing tests are work to fix. JIT is excluded.
 
-## Delivery failures and completed evidence
+## Passing focused checks
 
-Old production `38925341899` failed only the TLS stream comparison on both
-Windows hosts so far. Native messages bypassed the interpreter's common socket
-wording. Both Windows focused jobs `38931783848` pass repair `abe3be17`, including
-five native/interpreter error-code comparisons, real TLS stream snapshots,
-mutual TLS with ARC and the missing-error-capture control. The repair keeps exact
-client certificate errors and does not weaken the test. Other old production
-jobs are still running; inspect their results for additional failures. Benchmarks
-and both ARM macOS jobs passed; documentation `38925341680` passed.
+Service run `38935341434` passes all six native hosts at `e715de1a29a55fb08fe0ca1b339e5d38e493d4b8`.
+Both actual WASI jobs in `38934584083` pass at `c37b6afa`; later native follow-ups
+do not change WASI code. The [service report](measurements/service-values-2026-10-16.json)
+retains source/binary hashes, native formats, symbols, ARM64 instructions and
+allocation counts. `/private/tmp/fwp-retain-service-values.py` generated it from
+passing jobs and retained artifacts under `/private/tmp/fwp-service-final-evidence`.
 
-Windows now saves and uploads failed TLS, differentiation and output-comparison
-step logs before later checks finish, preserving each command's failing status.
-The job count and test coverage stay unchanged.
+Incoming service headers/certificate names and HTTP/2 request/body copies now
+own their returned storage. Every partial-result allocation is tested: 12 header,
+2 certificate-name, 20 request and 2 body failure points return charged storage
+to baseline with collection disabled. Aliases, source mutation, garbage-collection
+stress, memory reuse, header order/duplicates and all body bytes are covered.
+Thirteen body-limit/error-order cases and three request-header cases compare
+actual interpreter and native output. Deliberately omitting cleanup must fail.
 
-Existing reports retain decoded values/numerical workers, DNS, UDP and TCP/TLS
-evidence under `docs/measurements`. The TCP/TLS report includes the passing
-Windows diagnostic follow-up. Numerical temporary storage falls from 69,648 to
-4,104 bytes for the recorded 8,193-number, one-worker case; its result still uses
-65,552 bytes. These are memory measurements against earlier fwp, not speed or
-C/Rust parity. Actual ARC socket binaries exclude tracing functions; the socket
-counter fits the previous plain header, with one session pointer added for TLS.
+Outgoing response headers normalize their owned copies directly, removing two
+temporary string buffers. Raw header and buffer allocation checks preserve prior
+storage and reject size overflow; their existing failure exit status remains
+102. Response-capture allocation now traps before calling the callback or
+installing the context. Its existing escaped-child, cancellation and overflow
+checks pass on all six hosts. Generated standard-library documentation passes too.
 
-PR #152 remains accepted at `1fa0fec690b7747a9ffcf2d72903d16544889258`: all nine
-production jobs and documentation passed, merged files/message were verified,
-and duplicate CI was canceled. [Delivery history](roadmap-history.md) retains it.
+Earlier setup failures are repaired. The last Windows fixture failure was CRT
+newline translation; explicit binary stdout preserves the exact-byte comparison.
+Superseded service runs are canceled. Copied results do not establish ownership
+of the service's streams, connections or retained contexts, and do not establish
+that an entire server can execute without tracing.
 
-## Copied service data: implementation and pending checks
+Existing reports retain decoded-value, numerical-worker, DNS, UDP and TCP/TLS
+checks under `docs/measurements`. Numerical temporary storage falls from 69,648
+to 4,104 bytes for the recorded 8,193-number, one-worker case; the result still
+uses 65,552 bytes. These are memory measurements against earlier fwp, not speed
+or C/Rust parity. Actual ARC socket binaries exclude tracing functions. The
+socket counter fits the previous plain header; TLS adds one session pointer.
 
-Incoming gRPC metadata/certificate names and HTTP/2 request/body copies have typed
-owners. Partial-result cleanup uses existing helpers; header lists no longer need
-temporary pointer arrays. Outgoing response headers normalize owned copies
-directly, removing two temporary string buffers while preserving input strings.
-Six additional primitive contracts describe these operations.
-
-Raw protocol header allocation checks failure, preserves earlier entries and
-releases partial new strings. Buffer growth checks overflow and preserves its
-old allocation on resize failure. These failures use existing protocol exit
-status 102; they do not establish recovery inside a running service.
-
-Acceptance covers duplicate/header order, host precedence, absent fields, binary
-bodies, size/reset/deadline decisions, input immutability and surviving aliases.
-Probes expect 12 metadata, 2 certificate-name, 20 request and 2 body allocation
-failures, with zero final charged result storage while collection is disabled.
-Populated-result stress/reuse checks, raw header/buffer allocation controls and
-existing stream/peer lifetime checks must pass. Missing cleanup must fail.
-Returned values and stack cleanup records still have costs; there is no timing claim.
-
-Linux run `38932169877` passed gRPC ownership, raw protocol allocation checks,
-interpreter/native request/body agreement and the stream lifetime control. Its
-HTTP/2 allocation probe found an incomplete manually constructed test type table;
-both fixtures now include the recursive list shape and its destructor. Earlier
-test setup repairs fixed IR argument count, generated-function roots, Windows
-API header order and borrowed interpreter fields. No skipped or zero-test run is
-verification. Superseded preparation runs are canceled; the current action above
-is the only pending test sequence.
+Windows now uploads failed TLS, differentiation and output-comparison step logs
+before later checks finish. All nine production jobs and platform coverage remain.
+All 230 integration targets remain assigned to macOS jobs; Windows includes
+service-result, certificate-buffer and response-capture checks.
 
 ## Local checks and limits
 
-Local work remains serial under `python3 scripts/local-guard.py` with unchanged
-CPU/memory/disk/deadline limits. Earlier local compiler and standalone C builds
-were refused by automatic review; do not retry or bypass that restriction.
-Full compilation/testing belongs on GitHub.
+Keep local checks serial through `python3 scripts/local-guard.py`, with unchanged
+CPU, memory, disk and deadline limits. Full compilation/testing stays on GitHub.
+Earlier local compiler and standalone C builds were refused by automatic review;
+do not retry or bypass that restriction.
 
-Guarded formatting, accepted-interpreter examples, primitive inventory (341
-contracts, 13 remaining reviews), generated stdlib documentation, roadmap audit
-and macOS partition checks pass. Latest service formatting: 1.29s; example: 0.26s
-(`[]`, `None`, `()`, `()`); inventory: 1.12s; stdlib recheck: 0.01s; audit: 2.64s;
-partition checks: 0.25s. Combined-merge formatting passed in 1.35s and
-partition checks passed in 0.13s; response-capture repair formatting passed in 1.06s; `git diff --check` passed. The subsequent
-`python3 scripts/local-guard.py /private/tmp/fwp-service-stdlib-doc` printed a
-passing test, but its guard failed with a process-signal permission error. That
-invocation is not accepted as a passing guarded check, and the chained roadmap
-audit did not run. No workload remained. A later independent guarded roadmap
-audit passed in 2.67s (50 link sets, 106 immutable pairs, seven work areas). The service CI suite now also runs
-`stdlib_doc`; the final PR documentation job will recheck the combined handoff.
-Do not bypass the guard or change its limits.
-All 230 integration targets remain assigned; the new service target uses the
-existing macOS GC job. Windows includes service-result and peer-buffer probes.
+Guarded formatting passes (latest 1.18s); macOS partition checks pass (0.13s).
+The final independent roadmap audit passes (2.85s: 50 link sets, 106 immutable preparation
+pairs and seven work areas). `git diff --check` passes. Earlier accepted-interpreter
+examples and the primitive inventory pass (341 contracts, 13 remaining reviews).
+Guarded artifact retention and binary inspection passed in 16.91s.
+The local generated-doc recheck printed a passing test but its monitor failed
+with a process-signal permission error; that invocation was not accepted. The
+same documentation test subsequently passed on all six service CI hosts.
+Final documentation edits pass the bounded audit.
 
-Earlier metadata-only binaries in `/private/tmp/fwp-service-metadata-evidence`
-have no tracing scan/sweep functions in the inspected ARM64 ARC executable.
-Its instrumented metadata/certificate functions use 448/272-byte stack frames;
-these are test-binary facts, not evidence for the final combined batch or total
-stack cost. Final artifacts and report must identify their actual tested revision.
-Draft service review text: `/private/tmp/fwp-service-pr-body.md`.
+## Accepted delivery and following work
 
-## Following work
+PR #152 is accepted at `1fa0fec690b7747a9ffcf2d72903d16544889258`: all nine
+production jobs and documentation passed, merged files/message were verified,
+and duplicate CI was canceled. [Delivery history](roadmap-history.md) retains it.
 
-After #153 acceptance, continue ownership of service streams, connections and
-retained request contexts. Copied results do not prove a server can run without
-tracing. Remaining reviews cover context scopes, deferred remote results,
-HTTP/2 serving/sending/responding, process exit and GPU execution. Preserve
-callback, cancellation, library-unload and child-task behavior; do not replace
-unproved lifetimes with permanent retention. Continue measured optimization,
-differentiation and representative applications under the seven work areas.
+After #153 acceptance, continue service streams, connections and retained request
+contexts. First measure repeated context scopes and child tasks that outlive
+their creating callback. Prefer stack storage for scopes that do not escape;
+children must retain valid data after scope return, failure and cancellation.
+Do not replace unproved lifetimes with permanent retention. Remaining primitive
+reviews also cover deferred remote results, HTTP/2 serving/sending/responding,
+process exit and GPU execution. Continue the seven work areas below; completing
+this delivery does not finish the language's memory or performance goals.
 
 ## Roadmap status
 

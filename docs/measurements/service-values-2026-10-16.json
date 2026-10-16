@@ -1,0 +1,380 @@
+{
+  "date": "2026-10-16",
+  "revision": "e715de1a29a55fb08fe0ca1b339e5d38e493d4b8",
+  "focusedRun": "https://github.com/e6qu/fun-with-pipes/actions/runs/38935341434",
+  "sourceHashes": {
+    "runtime/fwp_rt_grpc.c": "013e08b6400a1242c5e45ea2872becd79933102d4019f5d3b34f9d4df858eae5",
+    "runtime/fwp_rt_http2.c": "bd31541cd0c21e033a0b3e527408571bf18e5d6f4c51a3334edcb6b4da0a9196",
+    "runtime/fwp_rt_h2.c": "d653c17f7f8a2faa9e89cac1a08d76eb9b2236d3f38f5dfa6b2f0d279a86193e",
+    "src/cgen.rs": "1a0e04e7c99c129514ec12753d5bf40a5df82c50fd88ecc2f4eef04a13d1b178",
+    "src/ownership.rs": "49bdfbfca10881419ff463a8ad6f16cedb0eb55258bc2fd83a4974189d0bcb86",
+    "src/h2web.rs": "70d3d9c0de17deac91090017b1d34b8fd81f00c6f201b56f06dc41015938cc71",
+    "lib/grpc.fwp": "0d0fe9a620dd470f5bb7d8a06150a9dbf495013677f60a39be4b3b8c55b25078",
+    "lib/http.fwp": "4fdc9cd341a0006b9bf9f2713b5112db4dedf6d962348570a51df0bbb11eff85",
+    "tests/service_value_ownership.rs": "1e6f14cf85175390c1aee3dabc06a3cb191a3df4d9485f197f9f7dea6e0cecec",
+    "tests/support/http2_values.rs": "1d9b0443de154e95cefc2722020c4eeb7c61efb3a94874399af9185740e10d3a",
+    "tests/grpc_capture_resources.rs": "b0b509f5b80a35410623866d8c50d158d17927f849fa299220624d753cc215be",
+    ".github/workflows/numerics.yml": "fc19dc71847e3100224bbdd1da05a3effd46b12e7569868c412cefe86c8a4bac"
+  },
+  "nativeChecks": [
+    {
+      "runner": "macos-15-intel",
+      "job": "https://github.com/e6qu/fun-with-pipes/actions/runs/38935341434/job/117089319785",
+      "conclusion": "success",
+      "binaryFormats": {
+        "h2-allocation-failures.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-macos-15-intel/h2-allocation-failures.exe: Mach-O 64-bit executable x86_64",
+        "http2-values.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-macos-15-intel/http2-values.exe: Mach-O 64-bit executable x86_64",
+        "service-arc.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-macos-15-intel/service-arc.exe: Mach-O 64-bit executable x86_64",
+        "service-tracing.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-macos-15-intel/service-tracing.exe: Mach-O 64-bit executable x86_64"
+      },
+      "artifactHashes": {
+        "h2-allocation-failures.c": "8525680763ac0c38c34ef6e7378f763359fcabbbab4722cb2dea5d128ebd7deb",
+        "h2-allocation-failures.exe": "2f4d00242acec265e5788cc3a1d7568ac88ce9a673ef06ac9f9f24f088f9e9c3",
+        "h2-allocation-failures.stderr": "e8aadf552605b05c2c4b50e7aed5b14dcf70fd360253268a16fef0648ae78654",
+        "h2-allocation-failures.stdout": "ed95fdd345dd4ed228667e1ec820c2cb066a9734f7079371e4c6efbb573d3bac",
+        "http2-generated.c": "3e01782a7ca7cafbe6a9807893a8ca4484738a9b15c69ad69092f4c7dbbad22f",
+        "http2-values.c": "e4abca890d2d78e30771cd713701c03fd19185539e8c5adb3a2d925f855e7f23",
+        "http2-values.exe": "9ade2bb4fa900e301c7ccc474fe4c358b3c2aa7e0067d0fc4b074aca42c3ad44",
+        "http2-values.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "http2-values.stdout": "5e0fa4d30fac2885f098bcf1df58f45ae38dc08f6fabfacc03148998c8d49ec1",
+        "service-arc.c": "b2c4162f8be36766fd99b287a8d574caabb06e3903fd2a20e16fe779df668abf",
+        "service-arc.exe": "6d75ce9abd7718f9055ff70b0a35be4a47878caacdb1c184f3933e56d7186721",
+        "service-arc.nm": "ba1d9639725948ad91a1634ad5c7b612f34a6f7cea9598e96fc7af4bd106b41d",
+        "service-arc.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-arc.stdout": "ba70199a3f33c1947d984e95b2311663c8469ca1d30d8c8d20ef85fe69aa6d72",
+        "service-tracing.c": "27c88b68032d424d5ef869a16df0fabe74573f3a1c86b404a9749097af032d2c",
+        "service-tracing.exe": "cb642cca7de0454e05f5f7d8d68214112ee3cf4ee4eb4223e369793812a2a024",
+        "service-tracing.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-tracing.stdout": "ba70199a3f33c1947d984e95b2311663c8469ca1d30d8c8d20ef85fe69aa6d72"
+      },
+      "outputs": {
+        "h2-allocation-failures.stdout": "6 header allocation failures, 1 resize failure and 4 size overflows: preserved storage, no temporary leaks\n",
+        "http2-values.stdout": "HTTP/2 result 0: 20 allocation failures; final charged delta 0\nHTTP/2 result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-arc.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-tracing.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n"
+      }
+    },
+    {
+      "runner": "macos-15",
+      "job": "https://github.com/e6qu/fun-with-pipes/actions/runs/38935341434/job/117089320151",
+      "conclusion": "success",
+      "binaryFormats": {
+        "h2-allocation-failures.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-macos-15/h2-allocation-failures.exe: Mach-O 64-bit executable arm64",
+        "http2-values.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-macos-15/http2-values.exe: Mach-O 64-bit executable arm64",
+        "service-arc.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-macos-15/service-arc.exe: Mach-O 64-bit executable arm64",
+        "service-tracing.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-macos-15/service-tracing.exe: Mach-O 64-bit executable arm64"
+      },
+      "artifactHashes": {
+        "h2-allocation-failures.c": "8525680763ac0c38c34ef6e7378f763359fcabbbab4722cb2dea5d128ebd7deb",
+        "h2-allocation-failures.exe": "ed626158514edad96707c480c7d4dd646cab5ca068fea0e4831b64159e23b460",
+        "h2-allocation-failures.stderr": "e8aadf552605b05c2c4b50e7aed5b14dcf70fd360253268a16fef0648ae78654",
+        "h2-allocation-failures.stdout": "ed95fdd345dd4ed228667e1ec820c2cb066a9734f7079371e4c6efbb573d3bac",
+        "http2-generated.c": "3e01782a7ca7cafbe6a9807893a8ca4484738a9b15c69ad69092f4c7dbbad22f",
+        "http2-values.c": "e4abca890d2d78e30771cd713701c03fd19185539e8c5adb3a2d925f855e7f23",
+        "http2-values.exe": "b4a9245227e71affa957f14741c15992915d71852da1df5d04a570b1d7c7158e",
+        "http2-values.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "http2-values.stdout": "5e0fa4d30fac2885f098bcf1df58f45ae38dc08f6fabfacc03148998c8d49ec1",
+        "service-arc.c": "b2c4162f8be36766fd99b287a8d574caabb06e3903fd2a20e16fe779df668abf",
+        "service-arc.exe": "2f9d99592a78488dd0e1d440a96995404ce8cef065798b6855e712199a52d8b5",
+        "service-arc.nm": "65b413b10882b6e8c1662e20a30e4d72ca11111f735206bbd0adb18db3d7578c",
+        "service-arc.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-arc.stdout": "ba70199a3f33c1947d984e95b2311663c8469ca1d30d8c8d20ef85fe69aa6d72",
+        "service-tracing.c": "27c88b68032d424d5ef869a16df0fabe74573f3a1c86b404a9749097af032d2c",
+        "service-tracing.exe": "7379b0448d9625545318a2466a6fc5c4f4d041a6fbc061772c505562ad1fdd4b",
+        "service-tracing.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-tracing.stdout": "ba70199a3f33c1947d984e95b2311663c8469ca1d30d8c8d20ef85fe69aa6d72"
+      },
+      "outputs": {
+        "h2-allocation-failures.stdout": "6 header allocation failures, 1 resize failure and 4 size overflows: preserved storage, no temporary leaks\n",
+        "http2-values.stdout": "HTTP/2 result 0: 20 allocation failures; final charged delta 0\nHTTP/2 result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-arc.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-tracing.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n"
+      }
+    },
+    {
+      "runner": "ubuntu-24.04-arm",
+      "job": "https://github.com/e6qu/fun-with-pipes/actions/runs/38935341434/job/117089320250",
+      "conclusion": "success",
+      "binaryFormats": {
+        "h2-allocation-failures.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-ubuntu-24.04-arm/h2-allocation-failures.exe: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=024fe22cb3c14b368106ec83e9d83c7d5f241be9, for GNU/Linux 3.7.0, not stripped",
+        "http2-values.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-ubuntu-24.04-arm/http2-values.exe: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=f102de03ce09a920b6ed853f9613cd3a4e9f0e74, for GNU/Linux 3.7.0, not stripped",
+        "service-arc.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-ubuntu-24.04-arm/service-arc.exe: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=4282f8c1b1f692ec7fb372e1db09ddec18ad9c4e, for GNU/Linux 3.7.0, not stripped",
+        "service-tracing.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-ubuntu-24.04-arm/service-tracing.exe: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=8620c5d66b07893fb44087e76d723f91f511aa9c, for GNU/Linux 3.7.0, not stripped"
+      },
+      "artifactHashes": {
+        "h2-allocation-failures.c": "8525680763ac0c38c34ef6e7378f763359fcabbbab4722cb2dea5d128ebd7deb",
+        "h2-allocation-failures.exe": "11deaf312317aa5ea33c28e29052b2043213c061752897f3982ccce4ea53328e",
+        "h2-allocation-failures.stderr": "e8aadf552605b05c2c4b50e7aed5b14dcf70fd360253268a16fef0648ae78654",
+        "h2-allocation-failures.stdout": "ed95fdd345dd4ed228667e1ec820c2cb066a9734f7079371e4c6efbb573d3bac",
+        "http2-generated.c": "3e01782a7ca7cafbe6a9807893a8ca4484738a9b15c69ad69092f4c7dbbad22f",
+        "http2-values.c": "e4abca890d2d78e30771cd713701c03fd19185539e8c5adb3a2d925f855e7f23",
+        "http2-values.exe": "50fc936058734738f417ceb7ceaed5e143eb1af4199a0117b76695520c7914ff",
+        "http2-values.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "http2-values.stdout": "5e0fa4d30fac2885f098bcf1df58f45ae38dc08f6fabfacc03148998c8d49ec1",
+        "service-arc.c": "b2c4162f8be36766fd99b287a8d574caabb06e3903fd2a20e16fe779df668abf",
+        "service-arc.exe": "b111dee3ddae451c6ab3de5e95ea0649cbc1d30d3d6117373418cb94b525068d",
+        "service-arc.nm": "39c53ece168e103d881cfc6d3d6d4482b4952661113544309669c3fe90e16454",
+        "service-arc.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-arc.stdout": "ba70199a3f33c1947d984e95b2311663c8469ca1d30d8c8d20ef85fe69aa6d72",
+        "service-tracing.c": "27c88b68032d424d5ef869a16df0fabe74573f3a1c86b404a9749097af032d2c",
+        "service-tracing.exe": "3b1c3c690a3a89ba149c0e7fb7141a982c71a4a57a3495fad2db65f305c72f7d",
+        "service-tracing.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-tracing.stdout": "ba70199a3f33c1947d984e95b2311663c8469ca1d30d8c8d20ef85fe69aa6d72"
+      },
+      "outputs": {
+        "h2-allocation-failures.stdout": "6 header allocation failures, 1 resize failure and 4 size overflows: preserved storage, no temporary leaks\n",
+        "http2-values.stdout": "HTTP/2 result 0: 20 allocation failures; final charged delta 0\nHTTP/2 result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-arc.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-tracing.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n"
+      }
+    },
+    {
+      "runner": "ubuntu-latest",
+      "job": "https://github.com/e6qu/fun-with-pipes/actions/runs/38935341434/job/117089320372",
+      "conclusion": "success",
+      "binaryFormats": {
+        "h2-allocation-failures.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-ubuntu-latest/h2-allocation-failures.exe: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=69996f36ea9bbed5315c986b9c54dcf0e0c9eee9, for GNU/Linux 3.2.0, not stripped",
+        "http2-values.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-ubuntu-latest/http2-values.exe: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=1f3d4c911e06bd14f4cfd5a4423caaaa36e61d47, for GNU/Linux 3.2.0, not stripped",
+        "service-arc.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-ubuntu-latest/service-arc.exe: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=87c0bd4745be045c7ee9cdd88063705e2e6b9968, for GNU/Linux 3.2.0, not stripped",
+        "service-tracing.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-ubuntu-latest/service-tracing.exe: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=85b9de2bf8492c072ec95dc0f5e46b06ceabe7e8, for GNU/Linux 3.2.0, not stripped"
+      },
+      "artifactHashes": {
+        "h2-allocation-failures.c": "8525680763ac0c38c34ef6e7378f763359fcabbbab4722cb2dea5d128ebd7deb",
+        "h2-allocation-failures.exe": "a75ad7ea8de23ce421e25cd86c3c3bf107382954eefcddc2765eccd71cefce2c",
+        "h2-allocation-failures.stderr": "e8aadf552605b05c2c4b50e7aed5b14dcf70fd360253268a16fef0648ae78654",
+        "h2-allocation-failures.stdout": "ed95fdd345dd4ed228667e1ec820c2cb066a9734f7079371e4c6efbb573d3bac",
+        "http2-generated.c": "3e01782a7ca7cafbe6a9807893a8ca4484738a9b15c69ad69092f4c7dbbad22f",
+        "http2-values.c": "e4abca890d2d78e30771cd713701c03fd19185539e8c5adb3a2d925f855e7f23",
+        "http2-values.exe": "a28070aae30a8f8cb4fb6ee845f7aa61115be1e970d824ad0f9704f22ad9a726",
+        "http2-values.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "http2-values.stdout": "5e0fa4d30fac2885f098bcf1df58f45ae38dc08f6fabfacc03148998c8d49ec1",
+        "service-arc.c": "b2c4162f8be36766fd99b287a8d574caabb06e3903fd2a20e16fe779df668abf",
+        "service-arc.exe": "dac51c0e836c647aff85fa1d9fb0828fa3eb5fe84a5c4f8dd5e6fe6fb17d4b25",
+        "service-arc.nm": "f1eec908bf32457e3395b42dfd05bfd7c494448a1c2a09c6bde0ad190e6f857c",
+        "service-arc.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-arc.stdout": "ba70199a3f33c1947d984e95b2311663c8469ca1d30d8c8d20ef85fe69aa6d72",
+        "service-tracing.c": "27c88b68032d424d5ef869a16df0fabe74573f3a1c86b404a9749097af032d2c",
+        "service-tracing.exe": "ca24e9645a831d61c47bb8faeac65c87c198ba6086eaea75a937cba4c0843b6f",
+        "service-tracing.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-tracing.stdout": "ba70199a3f33c1947d984e95b2311663c8469ca1d30d8c8d20ef85fe69aa6d72"
+      },
+      "outputs": {
+        "h2-allocation-failures.stdout": "6 header allocation failures, 1 resize failure and 4 size overflows: preserved storage, no temporary leaks\n",
+        "http2-values.stdout": "HTTP/2 result 0: 20 allocation failures; final charged delta 0\nHTTP/2 result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-arc.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-tracing.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n"
+      }
+    },
+    {
+      "runner": "windows-2025",
+      "job": "https://github.com/e6qu/fun-with-pipes/actions/runs/38935341434/job/117089320559",
+      "conclusion": "success",
+      "binaryFormats": {
+        "h2-allocation-failures.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-windows-2025/h2-allocation-failures.exe: PE32+ executable (console) x86-64, for MS Windows",
+        "http2-values.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-windows-2025/http2-values.exe: PE32+ executable (console) x86-64, for MS Windows",
+        "service-arc.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-windows-2025/service-arc.exe: PE32+ executable (console) x86-64, for MS Windows",
+        "service-tracing.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-windows-2025/service-tracing.exe: PE32+ executable (console) x86-64, for MS Windows"
+      },
+      "artifactHashes": {
+        "h2-allocation-failures.c": "8525680763ac0c38c34ef6e7378f763359fcabbbab4722cb2dea5d128ebd7deb",
+        "h2-allocation-failures.exe": "064a566ea2a0a5ff8c031678fe6874bcd0d71fb61e2d8c44f57347c215c88570",
+        "h2-allocation-failures.stderr": "c4b460621a2f85f61a814a58b5e9253d7572e1c203c44a23a5b672da918e7d00",
+        "h2-allocation-failures.stdout": "237d5569a43a2052e27bcc301ffe3bc4d8c82a24245c79e9c98f3af55f618480",
+        "http2-generated.c": "3e01782a7ca7cafbe6a9807893a8ca4484738a9b15c69ad69092f4c7dbbad22f",
+        "http2-values.c": "e4abca890d2d78e30771cd713701c03fd19185539e8c5adb3a2d925f855e7f23",
+        "http2-values.exe": "4bb04ebc5725e0ea79ed59670fa258c33c7d7ba997fea03205c6e89b9833a71d",
+        "http2-values.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "http2-values.stdout": "dfb603d743b1bbfdfbcee0912e557feca6bfb1d8e31d3aefd2a3e00e5b1e9563",
+        "service-arc.c": "b2c4162f8be36766fd99b287a8d574caabb06e3903fd2a20e16fe779df668abf",
+        "service-arc.exe": "85914efc0ad37eea1108f9361710bc4b536f869fcd6ff787672bc4823be61a41",
+        "service-arc.nm": "6b22cd629d1865642aceb4b31659117032ef10dda225bc227aa5adbf7c69342c",
+        "service-arc.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-arc.stdout": "3ae7feb52f2a31be96943ba80b48a994e5bbbefe9d776ac2d4f03ff96b0a49b0",
+        "service-tracing.c": "27c88b68032d424d5ef869a16df0fabe74573f3a1c86b404a9749097af032d2c",
+        "service-tracing.exe": "b0e37b6d81ffebdc21849d88cf991cff491d5c14e1a00ce6d3bdadfb7a874ecf",
+        "service-tracing.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-tracing.stdout": "3ae7feb52f2a31be96943ba80b48a994e5bbbefe9d776ac2d4f03ff96b0a49b0"
+      },
+      "outputs": {
+        "h2-allocation-failures.stdout": "6 header allocation failures, 1 resize failure and 4 size overflows: preserved storage, no temporary leaks\n",
+        "http2-values.stdout": "HTTP/2 result 0: 20 allocation failures; final charged delta 0\nHTTP/2 result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-arc.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-tracing.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n"
+      }
+    },
+    {
+      "runner": "windows-11-arm",
+      "job": "https://github.com/e6qu/fun-with-pipes/actions/runs/38935341434/job/117089322272",
+      "conclusion": "success",
+      "binaryFormats": {
+        "h2-allocation-failures.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-windows-11-arm/h2-allocation-failures.exe: PE32+ executable (console) Aarch64, for MS Windows",
+        "http2-values.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-windows-11-arm/http2-values.exe: PE32+ executable (console) Aarch64, for MS Windows",
+        "service-arc.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-windows-11-arm/service-arc.exe: PE32+ executable (console) Aarch64, for MS Windows",
+        "service-tracing.exe": "/private/tmp/fwp-service-final-evidence/38935341434/service-values-windows-11-arm/service-tracing.exe: PE32+ executable (console) Aarch64, for MS Windows"
+      },
+      "artifactHashes": {
+        "h2-allocation-failures.c": "8525680763ac0c38c34ef6e7378f763359fcabbbab4722cb2dea5d128ebd7deb",
+        "h2-allocation-failures.exe": "fb88e28dd5277202047cba04f46f0d2c4019b4edc89e002cf58436a6852ed66f",
+        "h2-allocation-failures.stderr": "c4b460621a2f85f61a814a58b5e9253d7572e1c203c44a23a5b672da918e7d00",
+        "h2-allocation-failures.stdout": "237d5569a43a2052e27bcc301ffe3bc4d8c82a24245c79e9c98f3af55f618480",
+        "http2-generated.c": "3e01782a7ca7cafbe6a9807893a8ca4484738a9b15c69ad69092f4c7dbbad22f",
+        "http2-values.c": "e4abca890d2d78e30771cd713701c03fd19185539e8c5adb3a2d925f855e7f23",
+        "http2-values.exe": "9d95e7909453af67215f2ef54c54a62fe70be49457c7956a93591c927961eb97",
+        "http2-values.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "http2-values.stdout": "dfb603d743b1bbfdfbcee0912e557feca6bfb1d8e31d3aefd2a3e00e5b1e9563",
+        "service-arc.c": "b2c4162f8be36766fd99b287a8d574caabb06e3903fd2a20e16fe779df668abf",
+        "service-arc.exe": "4d9ec8be07ae0dd54e94f936e814b88ddc92ad922667e527cdce722d154944ac",
+        "service-arc.nm": "4fe10adb8ad3dde0f3705087dc462bd9e3ce918376b24e6324d6c8e727230269",
+        "service-arc.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-arc.stdout": "3ae7feb52f2a31be96943ba80b48a994e5bbbefe9d776ac2d4f03ff96b0a49b0",
+        "service-tracing.c": "27c88b68032d424d5ef869a16df0fabe74573f3a1c86b404a9749097af032d2c",
+        "service-tracing.exe": "e7ff686d80985ea1ab9060c6217efca011d9a2136d76a6b3da7c2fc4a2d27dbb",
+        "service-tracing.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "service-tracing.stdout": "3ae7feb52f2a31be96943ba80b48a994e5bbbefe9d776ac2d4f03ff96b0a49b0"
+      },
+      "outputs": {
+        "h2-allocation-failures.stdout": "6 header allocation failures, 1 resize failure and 4 size overflows: preserved storage, no temporary leaks\n",
+        "http2-values.stdout": "HTTP/2 result 0: 20 allocation failures; final charged delta 0\nHTTP/2 result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-arc.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n",
+        "service-tracing.stdout": "service result 0: 12 allocation failures; final charged delta 0\nservice result 1: 2 allocation failures; final charged delta 0\npartial-result field owner: 184 bytes, alignment 8, 8 inline values\n"
+      }
+    }
+  ],
+  "behavior": [
+    "Raw and optimized interpretation agree with native empty-context metadata/header operations.",
+    "Thirteen body limit/error-order cases and three request-header cases compare actual interpreter/native output.",
+    "Populated copied results survive source mutation and aliases; tracing stress, verification and reuse poisoning pass.",
+    "O1/O2 allocation-failure probes release every partial result; omitted field/header cleanup fails.",
+    "POSIX source-stream major-collection control and all-native peer-buffer failure checks remain active.",
+    "Response metadata capture rejects allocator failure before callback entry or context installation; existing escaped-child, cancellation and counter-overflow checks remain active.",
+    "Generated standard-library documentation agrees with source comments on all six native hosts."
+  ],
+  "memoryScope": {
+    "comparison": "This is result cleanup and representation evidence, not a timing comparison with C/Rust or a previous fwp revision.",
+    "managedResults": "Final charged result storage returns to its initialized baseline with collection disabled. Raw connection/stream buffers are outside this budget.",
+    "copies": "Returned strings, lists and bodies still allocate. Metadata/request construction removes a temporary pointer array; outgoing response normalization removes two temporary string buffers.",
+    "rawProtocol": "Six header-allocation failures, one buffer resize failure and four size overflows preserve existing storage and release temporary headers. Protocol failure remains exit 102.",
+    "limits": [
+      "Service streams, connections, callbacks and retained contexts are not yet collector-free.",
+      "Checked ARC evidence here covers copied values and empty-context public calls, not entire servers.",
+      "Allocator metadata, page retention, OpenSSL and total process memory are not measured.",
+      "Test binary stack frames include instrumentation and are not a claim about ordinary program speed or total stack use."
+    ]
+  },
+  "arm64TestBinaryPrologues": {
+    "service-arc.exe": {
+      "_fwp_p_grpc_metadata": [
+        "_fwp_p_grpc_metadata:",
+        "0000000100001360\tsub\tsp, sp, #0x1c0",
+        "0000000100001364\tstp\tx28, x27, [sp, #0x160]",
+        "0000000100001368\tstp\tx26, x25, [sp, #0x170]",
+        "000000010000136c\tstp\tx24, x23, [sp, #0x180]",
+        "0000000100001370\tstp\tx22, x21, [sp, #0x190]",
+        "0000000100001374\tstp\tx20, x19, [sp, #0x1a0]",
+        "0000000100001378\tstp\tx29, x30, [sp, #0x1b0]",
+        "000000010000137c\tadd\tx29, sp, #0x1b0",
+        "0000000100001380\tmov\tx19, x0",
+        "0000000100001384\tadrp\tx8, 7 ; 0x100008000",
+        "0000000100001388\tldr\tx8, [x8, #0x8] ; literal pool symbol address: ___stack_chk_guard",
+        "000000010000138c\tldr\tx8, [x8]",
+        "0000000100001390\tstur\tx8, [x29, #-0x68]",
+        "0000000100001394\tbl\t_fwp_tasks_init",
+        "0000000100001398\tadrp\tx8, 12 ; 0x10000d000",
+        "000000010000139c\tldr\tx9, [x8, #0xf28]",
+        "00000001000013a0\tcbnz\tx9, 0x1000013b0"
+      ],
+      "_fwp_p_grpc_peer_subject": [
+        "_fwp_p_grpc_peer_subject:",
+        "00000001000018e4\tsub\tsp, sp, #0x110",
+        "00000001000018e8\tstp\tx28, x27, [sp, #0xc0]",
+        "00000001000018ec\tstp\tx24, x23, [sp, #0xd0]",
+        "00000001000018f0\tstp\tx22, x21, [sp, #0xe0]",
+        "00000001000018f4\tstp\tx20, x19, [sp, #0xf0]",
+        "00000001000018f8\tstp\tx29, x30, [sp, #0x100]",
+        "00000001000018fc\tadd\tx29, sp, #0x100",
+        "0000000100001900\tmov\tx19, x0",
+        "0000000100001904\tbl\t_fwp_tasks_init",
+        "0000000100001908\tadrp\tx8, 12 ; 0x10000d000",
+        "000000010000190c\tldr\tx9, [x8, #0xf28]",
+        "0000000100001910\tcbnz\tx9, 0x100001920",
+        "0000000100001914\tadrp\tx9, 2 ; 0x100003000",
+        "0000000100001918\tadd\tx9, x9, #0x18",
+        "000000010000191c\tstr\tx9, [x8, #0xf28]",
+        "0000000100001920\tadrp\tx8, 12 ; 0x10000d000",
+        "0000000100001924\tldr\tx8, [x8, #0xa28]"
+      ]
+    },
+    "http2-values.exe": {
+      "_fwp_p_http2_request": [
+        "_fwp_p_http2_request:",
+        "0000000100001bc8\tstp\tx28, x27, [sp, #-0x60]!",
+        "0000000100001bcc\tstp\tx26, x25, [sp, #0x10]",
+        "0000000100001bd0\tstp\tx24, x23, [sp, #0x20]",
+        "0000000100001bd4\tstp\tx22, x21, [sp, #0x30]",
+        "0000000100001bd8\tstp\tx20, x19, [sp, #0x40]",
+        "0000000100001bdc\tstp\tx29, x30, [sp, #0x50]",
+        "0000000100001be0\tadd\tx29, sp, #0x50",
+        "0000000100001be4\tsub\tsp, sp, #0x210",
+        "0000000100001be8\tmov\tx27, x1",
+        "0000000100001bec\tmov\tx26, x0",
+        "0000000100001bf0\tadd\tx8, sp, #0x130",
+        "0000000100001bf4\tadd\tx19, sp, #0x70",
+        "0000000100001bf8\tadrp\tx9, 7 ; 0x100008000",
+        "0000000100001bfc\tldr\tx9, [x9, #0x60] ; literal pool symbol address: ___stack_chk_guard",
+        "0000000100001c00\tldr\tx9, [x9]",
+        "0000000100001c04\tstur\tx9, [x29, #-0x68]",
+        "0000000100001c08\tldr\tx28, [x0, #0x8]"
+      ],
+      "_fwp_p_http2_body": [
+        "_fwp_p_http2_body:",
+        "0000000100002508\tsub\tsp, sp, #0x120",
+        "000000010000250c\tstp\tx28, x27, [sp, #0xc0]",
+        "0000000100002510\tstp\tx26, x25, [sp, #0xd0]",
+        "0000000100002514\tstp\tx24, x23, [sp, #0xe0]",
+        "0000000100002518\tstp\tx22, x21, [sp, #0xf0]",
+        "000000010000251c\tstp\tx20, x19, [sp, #0x100]",
+        "0000000100002520\tstp\tx29, x30, [sp, #0x110]",
+        "0000000100002524\tadd\tx29, sp, #0x110",
+        "0000000100002528\tmov\tx20, x3",
+        "000000010000252c\tmov\tx19, x2",
+        "0000000100002530\tmov\tw24, #0xca00",
+        "0000000100002534\tmovk\tw24, #0x3b9a, lsl #16",
+        "0000000100002538\tbic\tx25, x0, x0, asr #63",
+        "000000010000253c\tldr\tx21, [x1, #0x8]",
+        "0000000100002540\tmov\tx1, sp",
+        "0000000100002544\tmov\tw0, #0x6",
+        "0000000100002548\tbl\t0x100006548 ; symbol stub for: _clock_gettime"
+      ]
+    }
+  },
+  "wasiRegression": {
+    "revision": "c37b6afaeed6eb876d7010d21c9d87f8f7547042",
+    "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38934584083",
+    "jobs": [
+      {
+        "name": "wasm_ownership (ubuntu-24.04-arm)",
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38934584083/job/117086744195",
+        "conclusion": "success"
+      },
+      {
+        "name": "wasm_ownership (ubuntu-latest)",
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38934584083/job/117086744389",
+        "conclusion": "success"
+      }
+    ],
+    "scope": "Regression of supported synchronous WASI programs. gRPC and HTTP/2 services are not WASI support claims."
+  },
+  "layoutObservations": {
+    "partialResultOwnerBytes": 184,
+    "partialResultOwnerAlignmentBytes": 8,
+    "inlineValueSlots": 8,
+    "hosts": "All six native hosts report the same cleanup-record layout.",
+    "arm64InstrumentedFunctionFrameBytes": {
+      "grpc.metadata": 448,
+      "grpc.peer-subject": 272,
+      "http2.request": 624,
+      "http2.body": 288
+    },
+    "limits": "Function frames include saved registers and test instrumentation; values come from the retained prologues, not a production stack bound or speed comparison."
+  }
+}
