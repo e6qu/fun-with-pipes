@@ -188,3 +188,13 @@ selection includes the new target (229 integration targets). No valid build mode
 or runtime policy is replaced. Guarded formatting/schedule checks pass (1.20s/0.13s).
 Next: run the repaired combined UDP/library/CLI focused suite and retain the
 collector-free WASI repair run at `7c3889ac`; then integrate only accepted changes.
+
+At `818f7745`, ARM macOS and Windows AMD64 pass all ordinary UDP, allocation,
+header/tag, address and CLI checks. The expanded library test incorrectly expected
+ARC plus reuse-poison mode to succeed; the runtime correctly rejects retained
+storage under checked ARC. The test now requires exit 101 with that diagnostic,
+while tracing checks both poison settings and ARC checks real calls/unload with
+normal physical freeing. Missing-finalizer controls remain required in supported
+modes. This corrects the test matrix, not the ownership policy or a runtime failure.
+Run fresh combined native checks; the unchanged-runtime WASI repair is already
+passing ARM64 and awaiting AMD64 in `38908635005`.

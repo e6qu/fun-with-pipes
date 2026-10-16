@@ -305,11 +305,18 @@ fn udp_library_unload_closes_retained_handles_and_preserves_host_socket() {
                         .env("FWP_GC", "off")
                         .output()
                         .unwrap();
-                    assert_eq!(
-                        output.status.code(),
-                        Some(expected),
-                        "{opt}/{reuse}: {output:?}"
-                    );
+                    if mode == "arc" && reuse == "1" {
+                        assert_eq!(output.status.code(), Some(101), "{output:?}");
+                        assert!(String::from_utf8_lossy(&output.stderr).contains(
+                            "--gc arc cannot retain released storage for reuse verification"
+                        ));
+                    } else {
+                        assert_eq!(
+                            output.status.code(),
+                            Some(expected),
+                            "{mode}/{opt}/{reuse}: {output:?}"
+                        );
+                    }
                 }
             }
         }
