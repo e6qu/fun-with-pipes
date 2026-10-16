@@ -342,7 +342,10 @@ immutable allocations must not acquire untracked links to younger objects.
 [Ownership](ownership.md) explains these obligations and checked ARC mode.
 
 Linux, macOS and Windows find roots through their platform's executable-image
-and task-stack mechanisms. WebAssembly cannot scan hidden host locals, and a
+and task-stack mechanisms. Native entry uses the operating system's thread-stack
+limit. A frame pointer is a compiler's marker inside a function's stack storage;
+it can lie below live temporary values and is not a safe limit for scanning.
+WebAssembly cannot scan hidden host locals, and a
 native library cannot discover arbitrary host roots. Those modes free counted
 owners but retain unproved shared graphs. Disabling collection is not a lifetime
 proof. Resource cleanup also runs on failure, traps and task cancellation.

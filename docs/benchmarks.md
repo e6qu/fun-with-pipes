@@ -182,6 +182,37 @@ example, disabling one optimization in the current compiler isolates that
 optimization better than comparing unrelated compiler releases. It still does
 not reproduce every cost of an earlier release.
 
+## List iteration compared with its previous definition
+
+`each` calls a supplied function for every list element and returns `()`, meaning
+no result. Its previous definition used `map`, which builds a list of results,
+then discarded that list. The replacement walks the input with `fold`, keeping
+only a running value of `()`. Both must perform the same calls in the same order.
+
+The comparison counts elements using integer state:
+
+```fwp
+main = range 0 3 | run-state 0 (each (const (add 1) | modify)) | .1 | echo
+```
+
+`|` sends a result to the next function. `range 0 3` produces three integers.
+`const (add 1)` ignores each integer and supplies the increment function to
+`modify`, which updates the current state. `run-state 0` starts that state at zero
+and returns `(result, final-state)`. Positions start at zero, so `.1` selects the
+final count and `echo` prints `3`.
+
+[`measure-list-each.py`](../scripts/measure-list-each.py) compares both definitions
+at 10,000, 100,000 and 1,000,000 elements on Linux runners. It records seven samples
+in alternating order after a warmup. Timing includes process startup, input
+construction, updates, printing and cleanup. Both use the same C compiler and
+`-O2`, with tracing disabled and ordinary freeing enabled. The report also records
+peak process memory, build commands/times and binary sizes. Separate 32/128-element
+tests count allocations without contaminating timed executables with counters.
+
+This compares two fwp implementations, not fwp with C/Rust. Runtime callback
+dispatch remains in the counting example. The [handoff](development-state.md)
+records verification progress; fewer allocations alone do not establish a speedup.
+
 ## Measurement report index
 
 ### Current numerical comparison and record moves

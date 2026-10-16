@@ -10,8 +10,9 @@ Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparatio
 Preparation base: `ac3060d1`. The latest test repair limits diagnostics to
 modes that support them; it does not change the compiler or library.
 
-Next: publish the cleaned-up batch and run all six native hosts, including the
-old/new iteration timing comparison. Linux ARM64's narrow run `38968698121`
+Next: verify six-host native run `38969247542` at `dbb9dbec`, including the
+old/new iteration timing comparison, then retain its artifacts and measurements. Functional/allocator checks now
+pass on all six hosts; the larger service suite and timing steps remain. Linux ARM64's narrow run `38968698121`
 passes at `89b54a67`: iteration outputs/aliases/failures, allocation controls,
 state lifetimes and native allocator/collector regressions. The temporary
 debugger job and GDB script are removed. Tests retain generated trap programs
@@ -35,8 +36,9 @@ time and binary sizes. Inspect any regression before accepting the library
 change. These are fwp-to-fwp comparisons, not C/Rust parity. No native build or
 benchmark ran locally.
 
-Both actual WebAssembly jobs in `38962206780` pass at library/compiler source
-`2a98d395`, including semantic agreement and physical reclamation controls.
+Both actual WebAssembly jobs in `38967912068` pass at `16643edf`, including
+semantic agreement and physical reclamation controls. The later OS-bound fix
+changes native-only code. Earlier iteration WASI run `38962206780` also passed.
 Earlier test-setup mistakes are repaired: normal-completion measurement hooks
 are unique, and collector/reuse-retention diagnostics apply only to tracing.
 The Linux ARM64 allocation comparison saves 96 requests and 3,072 requested
