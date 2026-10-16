@@ -71,7 +71,7 @@ def main():
             expected = (row["elements"] + 1) // 2 if row["mode"] == 1 else row["elements"]
             assert row["consumed"] == expected and row["collections"] == 0
             assert row["queued_messages"] == row["elements"] - expected
-            assert row["receive_requests"] == 4 * expected and row["receive_bytes"] == 89 * expected
+            assert row["receive_requests"] == 4 * expected and row["receive_bytes"] == 81 * expected
             assert row["after_clearing_roots_charged_bytes"] == row["after_read_charged_bytes"]
         with (folder / "layout.tsv").open() as source:
             layout = list(csv.DictReader(source, delimiter="\t"))
@@ -90,7 +90,7 @@ def main():
     report = {
         "source_revision": args.head, "run_url": run["url"],
         "workload": "Receive queued protobuf messages with 16-character strings; 1/32/128 values, full/half consumption and retained first positions. Read each position twice.",
-        "results": "Four managed requests and 89 requested bytes per received value. Completed cells no longer retain incoming sources. Native cached storage still needs explicit owners and is not released merely by clearing C references with collection disabled.",
+        "results": "Four managed requests and 81 requested bytes per received value. Completed cells no longer retain incoming sources. Native cached storage still needs explicit owners and is not released merely by clearing C references with collection disabled.",
         "limits": "This is fwp representation and lifetime evidence, not a C/Rust comparison or timing benchmark. Excludes socket I/O, pooled connections, raw codec buffers and total process memory. Native services still require tracing.",
         "checks": required_tests,
         "modes": {"0": "consume all", "1": "consume ceil(elements/2)", "2": "consume all while retaining the first position"},

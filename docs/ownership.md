@@ -798,8 +798,9 @@ preparation copies the description into the source's own allocation, so it stays
 valid for exactly that source's lifetime. Completed positions keep their cached
 value and continuation; only unread positions retain a reference to the source.
 The interpreter releases the source after the last such owner disappears. Native
-positions clear the obsolete reference, but their own cached values still rely
-on tracing. Clearing a reference alone is not explicit native destruction.
+positions replace their source with the completed result in the same storage
+word; the compact representation is awaiting six-host verification. Cached values
+still rely on tracing. Clearing a reference alone is not explicit native destruction.
 
 Concurrent readers also need to agree on one value. The new receive guard lets
 one task receive while others wait for that same position's cache. Completion,
@@ -808,7 +809,7 @@ task leaves the receiving task running; existing client-call cancellation still
 resets the call's stream. Recursive reading of the same source traps. The guard
 borrows task identities and uses the scheduler's existing wait lists, with no
 allocation per element. [The handoff](development-state.md) separates passing
-lifetime checks from pending concurrency and Windows verification. Neither this
+six-host lifetime/concurrency checks from final description and artifact verification. Neither this
 change nor its controlled storage measurements admits whole services to ARC.
 
 The next service-memory work must establish these facts before removing its

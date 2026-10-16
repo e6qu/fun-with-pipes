@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
         g_failure failure = {0}; V error = 0; const fwp_desc *error_type = NULL;
         V value = g_force(position, 0, &failure, &error, &error_type);
         if (messages_freed != i + 1 || failure.text || error || error_type) return 33;
-        if (position->src) return 38;
+        if (!position->forced) return 38;
         unsigned long long before = requests;
         g_msg *next_message = stream->mhead;
         if (g_force(position, 0, &failure, &error, &error_type) != value ||
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     if (mode != 1) {
         g_failure failure = {0}; V error = 0; const fwp_desc *error_type = NULL;
         if (g_force(position, 0, &failure, &error, &error_type) != FWP_NONE) return 35;
-        if (position->src) return 38;
+        if (!position->forced) return 38;
     }
     if (retained) {
         g_failure failure = {0}; V error = 0; const fwp_desc *error_type = NULL;
@@ -82,6 +82,9 @@ int main(int argc, char **argv) {
         (void)next_cell(g_force(retained, 0, &failure, &error, &error_type), 0);
         if (requests != before || messages_freed != consumed) return 36;
     }
+    /* A 16-byte position plus decoded text and its two wrappers requests
+     * at most 81 bytes per element. Keeping both source and cache exceeds it. */
+    if (!fwp_gc.ncollect && requested_bytes - setup_bytes > 81 * consumed) return 38;
     double after_read = charged();
     /* Current cells have no explicit release operation. Clearing these C roots
      * measures the unresolved storage; it does not pretend to implement ownership. */

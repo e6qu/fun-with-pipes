@@ -87,11 +87,11 @@ int main(void){
    if(stage==0){if(r||cell->forced||cell->src!=src||!failure.text||strcmp(failure.text,"bad request")||frees)return 3;observed_free(failure.text);}
    else if(stage==9){if(r||cell->forced||cell->src!=src||error!=42||desc)return 4;}
    else{
-    if(!cell->forced||cell->memo!=r||cell->src)return 5;
+    if(!cell->forced||cell->memo!=r)return 5;
     if(stage==3){if(r!=FWP_NONE)return 6;}
     else{
      if(r==FWP_NONE)return 7;V value=OBJ(OBJ(r)->f[0])->f[0];
-     if(stage==4){g_cell *end=(g_cell *)(uintptr_t)OBJ(OBJ(r)->f[0])->f[1];if(end->src||!end->forced||end->memo!=FWP_NONE)return 12;V text=OBJ(OBJ(value)->f[0])->f[1];if(strcmp(STR(text)->d,"bad response from probe: decode reason"))return 8;}
+     if(stage==4){g_cell *end=(g_cell *)(uintptr_t)OBJ(OBJ(r)->f[0])->f[1];if(!end->forced||end->memo!=FWP_NONE)return 12;V text=OBJ(OBJ(value)->f[0])->f[1];if(strcmp(STR(text)->d,"bad response from probe: decode reason"))return 8;}
      else if((stage==7?OBJ(value)->f[0]:value)!=42)return 9;
     }
     int before=allocations;if(g_force(cell,0,&failure,&error,&desc)!=r||allocations!=before)return 10;
@@ -184,15 +184,14 @@ static void observe_free(void *);
     let dir = fwp::cgen::TempDir::new("grpc-stream-storage").unwrap();
     let memo = "if (cell->forced) return cell->memo;";
     assert_eq!(code.matches(memo).count(), 2);
+    // A separate source slot keeps the intentionally broken second receive valid.
+    // The same old layout below must fail the per-message storage budget.
+    let shared_slot = "union { g_incoming *src; V memo; };";
+    assert_eq!(code.matches(shared_slot).count(), 1);
+    let separate_slots = code.replace(shared_slot, "struct { g_incoming *src; V memo; };");
     let broken = dir.join("without-cache.exe");
     fwp::cgen::compile_c(
-        &code
-            .replace(memo, "/* deliberately receive again */")
-            .replace(
-                "cell->src = 0;",
-                "/* deliberately keep source for second receive */",
-            )
-            .replace("if (position->src) return 38;", ""),
+        &separate_slots.replace(memo, "/* deliberately receive again */"),
         &broken,
         "-O2",
     )
@@ -210,15 +209,9 @@ static void observe_free(void *);
         Some(34),
         "missing cache must be detected: {control:?}"
     );
-    // Keeping obsolete source edges must fail even while values remain correct.
-    let retained = dir.join("with-retained-source.exe");
-    assert_eq!(code.matches("cell->src = 0;").count(), 2);
-    fwp::cgen::compile_c(
-        &code.replace("cell->src = 0;", "/* deliberately retain source */"),
-        &retained,
-        "-O2",
-    )
-    .unwrap();
+    // Keeping both mutually exclusive fields costs another word per position.
+    let retained = dir.join("with-separate-source.exe");
+    fwp::cgen::compile_c(&separate_slots, &retained, "-O2").unwrap();
     let control = Command::new(&retained)
         .args(["1", "0"])
         .env("FWP_GC", "off")
@@ -230,7 +223,7 @@ static void observe_free(void *);
     assert_eq!(
         control.status.code(),
         Some(38),
-        "retained source must be detected: {control:?}"
+        "extra per-position storage must be detected: {control:?}"
     );
     let mut report = String::from("elements\tmode\tconsumed\tsetup_requests\tsetup_bytes\treceive_requests\treceive_bytes\tsetup_charged_bytes\tafter_read_charged_bytes\tafter_clearing_roots_charged_bytes\tqueued_messages\tcollections\n");
     for opt in ["-O1", "-O2"] {

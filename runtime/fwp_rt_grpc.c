@@ -1327,9 +1327,9 @@ static g_incoming *g_incoming_client(const char *method, const char *address) {
 /* a position in a received stream (GrpcCell): forcing it receives the
  * message there, once */
 typedef struct {
-    g_incoming *src;           /* only unread positions retain the source */
+    /* Unread positions hold a source; completed positions hold only a result. */
+    union { g_incoming *src; V memo; };
     int forced;
-    V memo;
 } g_cell;
 
 /* fail the call being served with a status: its task is cancelled and
@@ -1420,9 +1420,8 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
         }
         fwp_cleanup_pop(&received_cleanup);
         g_got_release(&g);
+        cell->memo = r; /* replaces the source after complete construction */
         cell->forced = 1;
-        cell->memo = r;
-        cell->src = 0; /* the complete cached result owns its continuation */
         fwp_cleanup_pop(&reading_cleanup);
         g_incoming_read_done(src);
         return r;
@@ -1487,9 +1486,8 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
     }
     fwp_cleanup_pop(&received_cleanup);
     g_got_release(&g);
+    cell->memo = r; /* failures before publication leave the source intact */
     cell->forced = 1;
-    cell->memo = r;
-    cell->src = 0; /* retain the source on every failure before publication */
     fwp_cleanup_pop(&reading_cleanup);
     g_incoming_read_done(src);
     return r;

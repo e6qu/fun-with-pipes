@@ -39,8 +39,21 @@ a suspended caller. Component lengths are bounded before addition. The existing
 their full length. Forty short/long method/address combinations exercise the
 punctuation and truncation boundaries against the old formatter.
 
-Next: publish this refinement with the updated evidence collection, run
-`stream-owners` on all six hosts, and retain the report with
+Comparison run `38981730504` checks `00c09cdc8fa0a42f829d2fb001f29fb765ada1c9`
+on all six hosts, retaining the 24-byte position layout. Its collector is saved
+as `/private/tmp/fwp-collect-stream-before-union.py`.
+
+The next prepared refinement stores the unread source and completed result in
+one shared word, selected by the existing completion flag. Only one is valid at
+a time. This should reduce each position from 24 to 16 bytes and each received
+16-character value from 89 to 81 requested bytes; CI must verify these predictions.
+Failures keep the original source until result construction completes. The
+missing-cache control still fails on a second receive; deliberately restoring
+separate fields must exceed the per-element storage budget. Tests read only the
+active field. No ARC admission or last-owner cleanup is claimed.
+
+Next: publish and run this compact layout on all six hosts, fix failures, inspect
+actual binaries and retain both comparison reports with
 `python3 scripts/local-guard.py python3 scripts/collect-stream-measurements.py`.
 Supply `--run`, exact `--head`, `--artifacts` and `--output`. The collector checks
 successful jobs, named unit/native/service tests, allocation rows, layouts,
@@ -114,7 +127,8 @@ Use the final run for new claims and fresh binary observations.
 Full builds, native compilation, large regeneration and full tests run on GitHub.
 Use `python3 scripts/local-guard.py COMMAND...` for serial bounded local checks;
 keep all limits unchanged. Recent guarded results: Rust formatting 1.09s,
-workflow lint 0.89s. The docs audit caught a missing roadmap status
+workflow lint 0.89s; compact-layout Rust formatting 1.23s and shared-stream docs
+audit 2.54s. The docs audit caught a missing roadmap status
 table in the rewritten handoff; it now passes after restoration (2.53s). The accepted prebuilt compiler formats the
 shared client in 0.01s and type-checks it in 0.24s. The collector was checked
 against passing one-host evidence in 4.93s; it rejected an incorrect source SHA.
