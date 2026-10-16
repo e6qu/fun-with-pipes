@@ -599,6 +599,21 @@ impl<'p> Interp<'p> {
                     }
                     Value::tuple(vec![Value::Array(Rc::new(out))])
                 }
+                "simd._dot-f64" => {
+                    let (ys, xs) = (lanes(&a[0]), lanes(&a[1]));
+                    // Keep an independent, materialized interpretation of the
+                    // original multiply-then-sum rather than sharing native code.
+                    let products = xs
+                        .iter()
+                        .zip(ys.iter())
+                        .map(|(x, y)| arith(Op::Mul, x, y, result))
+                        .collect::<R<Vec<_>>>()?;
+                    let mut sum = products.first().cloned().unwrap_or(Value::F64(0.0));
+                    for product in products.iter().skip(1) {
+                        sum = arith(Op::Add, &sum, product, result)?;
+                    }
+                    sum
+                }
                 "simd.sum" => {
                     let xs = lanes(&a[0]);
                     let mut acc = match xs.first() {

@@ -193,6 +193,7 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
             none()
         }
         "simd.sum" if params.first().and_then(|t| f64_lanes(t)).is_some() => none(),
+        "simd._dot-f64" => none(),
         // Splat has a declared size instead of an existing input array. Prove
         // its array limit on all targets, including 32-bit WASI: eight header
         // bytes and eight bytes per F64 lane. Larger shapes remain unknown.
@@ -916,6 +917,17 @@ impl Fuser<'_> {
             {
                 Some("array-map-list")
             }
+            ("simd.sum", 1)
+                if self.funcs[id]
+                    .ty
+                    .params(1)
+                    .0
+                    .first()
+                    .and_then(|t| f64_lanes(t))
+                    .is_some() =>
+            {
+                Some("lane-dot")
+            }
             ("fold", 3) => Some("fold"),
             ("array.fold", 3) if std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") => {
                 Some("array-fold")
@@ -948,6 +960,21 @@ impl Fuser<'_> {
                 return Some(Expr::Let(*local, value.clone(), Box::new(consumed)));
             }
             return None;
+        }
+        if kind == "lane-dot" {
+            let Expr::Call(multiply, inputs) = &args[0] else {
+                return None;
+            };
+            if prim_sym(self.funcs, *multiply) != Some("simd.mul") || inputs.len() != 2 {
+                return None;
+            }
+            let (parameters, vector) = self.funcs[*multiply].ty.params(2);
+            f64_lanes(vector)?;
+            let ty = fun2(parameters[0], parameters[1], &MT::con("std::F64"));
+            let direct = self.prim("simd._dot-f64", ty, 2);
+            // The multiply's two arguments retain their original order. Only
+            // its sole, immediately consumed result array/wrapper disappears.
+            return Some(Expr::Call(direct, inputs.clone()));
         }
         if kind == "array-map-list" {
             let result = self.funcs[cons_id].ty.params(1).1.clone();

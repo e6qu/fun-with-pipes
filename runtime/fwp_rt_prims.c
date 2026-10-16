@@ -1919,6 +1919,25 @@ static V fwp_p_simd_op(int k, int op, V subj, V arg, const char *name, int w, co
     return fwp_simd_finish(&result, &cleanup);
 }
 
+/* Immediate F64 multiply then sum: each product rounds before its addition,
+ * and additions retain left-to-right order. No product array is needed. */
+static V fwp_p_simd_dot_f64(V subj, V arg) {
+    V xs = OBJ(subj)->f[0], ys = OBJ(arg)->f[0];
+    size_t nx = fwp_array_len(xs), ny = fwp_array_len(ys), n = nx < ny ? nx : ny;
+    const unsigned char *left = fwp_array_data(xs), *right = fwp_array_data(ys);
+    double sum = 0.0;
+    for (size_t i = 0; i < n; i++) {
+        double x, y;
+        memcpy(&x, left + i * sizeof x, sizeof x);
+        memcpy(&y, right + i * sizeof y, sizeof y);
+        double product = x * y;
+        if (i == 0) sum = product;
+        else sum += product;
+    }
+    FWP_KEEP_ALIVE(subj); FWP_KEEP_ALIVE(arg);
+    return fwp_from_f64(sum);
+}
+
 static V fwp_p_simd_sum(int k, V v, const char *name, int w, const fwp_desc *elem) {
     fwp_arr *xs = LANES(v);
     if (fwp_array_len(PTR(xs)) == 0) {

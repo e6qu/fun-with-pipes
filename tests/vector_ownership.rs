@@ -208,6 +208,12 @@ fn f64_lane_pipelines_fuse_without_reordering_effects_or_traps() {
         for arc in [false, true] {
             let code = emitted(&source, arc, &dir);
             assert_eq!(code.contains("/* fused :"), fused, "{name}");
+            if name == "values" {
+                assert!(
+                    code.contains("/* simd._dot-f64 :"),
+                    "dot still materializes a product vector"
+                );
+            }
             for opt in ["-O1", "-O2"] {
                 let binary = dir.join("fusion.exe");
                 fwp::cgen::compile_c(&code, &binary, opt).unwrap();
