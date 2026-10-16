@@ -30,7 +30,7 @@ pub fn generated() -> String {
     ]);
     let primitive = |name: &str, args: Vec<MT>, result: MT| Func {
         name: name.into(),
-        arity: args.len(),
+        arity: args.len() as u32,
         locals: args.clone(),
         ty: args.into_iter().rev().fold(result, |result, arg| {
             MT::Fun(Box::new(arg), Box::new(result))

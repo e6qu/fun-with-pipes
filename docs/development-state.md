@@ -41,7 +41,9 @@ owners. It preserves host precedence, duplicate/header order, all byte values,
 empty results and size/reset/deadline decisions. The new allocation probe expects
 20 request and 2 body allocation failures with no retained result storage;
 existing peer-buffer and source-stream lifetime controls are updated to use
-generated result descriptors. Its focused run is `38927180411`. A following test
+generated result descriptors. Its focused run `38927180411` failed compiling the new test helper: argument
+count used usize where the IR requires u32. The helper now converts its fixed
+small argument count; the superseded run is canceled. A following test
 repair updates the interpreter/native body comparison to pass the new descriptor
 and adds explicit populated-result GC stress/reuse runs. Run the final combined
 preparation before claiming acceptance.
