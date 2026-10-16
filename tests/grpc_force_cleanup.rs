@@ -301,7 +301,7 @@ int main(void) {
         char *before=g_strdupf("%s (%s)",method,"localhost:1234");
         if(!before)return 30;
         description_allocations=description_bytes=0; measure_description=1;
-        g_incoming *source=g_incoming_format("%s (%s)",method,"localhost:1234");
+        g_incoming *source=g_incoming_client(method,"localhost:1234");
         measure_description=0;
         if(strcmp(source->what,before)||description_allocations!=1||description_bytes!=sizeof(g_incoming)+strlen(before)+1)return 3;
         if(long_name&&strlen(source->what)!=G_MESSAGE_BYTES-1)return 4;

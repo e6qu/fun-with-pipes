@@ -73,13 +73,28 @@ cannot also own the source. The native runtime clears the source pointer only
 after constructing its result. This does not yet add native reference counting
 or make remote calls eligible for ARC.
 
-Pending CI: real queued messages at 1/32/128 elements, repeated reads, retained
+Focused run `38977738266` passes at `451cc94e45343962a10e66605a763618edb07c51`: real queued messages at
+1/32/128 elements, repeated reads, retained
 first positions, full/early consumption, status errors and malformed messages.
 Interpreter weak references check that only the unread continuation owns the
 source, that reaching end releases it even with a retained prefix, and that the
 last early owner releases it. Native controls reject retained source edges and
 missing caches; existing decode/copy traps must leave the original source intact.
 Actual interpreter/native service combinations remain in the focused workflow.
+
+Next publish and run the six-host `stream-owners` suite, then retain its report.
+The collector was checked against the passing one-host run (4.93s) after rejecting
+an incorrect full commit argument; evidence is under
+`/private/tmp/fwp-stream-source-evidence/38977738266`. The measurement fixture now uses the production source
+constructor, including its copied description; compare setup bytes separately
+from per-element receive costs. Client formatting now takes explicit method and
+address arguments instead of a variadic format interface; truncation is unchanged.
+`collect-stream-measurements.py` verifies exact-head successful jobs, named unit/
+native/service tests, allocation rows, environment and artifact hashes. It does
+not execute downloaded binaries. Use it through the local guard after CI passes.
+Recent guarded checks: formatting 1.10s, workflow lint 1.03s, docs 2.51s. Earlier
+actual description-format helper inspection passed in 0.20s; its bounded scratch
+frame returns before receive. The explicit-argument revision needs fresh evidence.
 
 Next give cached native values and continuations explicit typed owners, with
 last-reference and partial-construction cleanup. The incoming source must own

@@ -44,8 +44,8 @@ int main(int argc, char **argv) {
     }
     const int schema[] = {PB_MSG, 1, 1, 4, PB_STR};
     const fwp_desc string_type = {.kind=K_STR, .name="String", .drop=fwp_rc_free_obj};
-    g_incoming *source = fwp_mem_alloc(sizeof *source);
-    source->c = connection; source->s = stream; source->what = "queued.string";
+    g_incoming *source = g_incoming_new("queued.string", strlen("queued.string"));
+    source->c = connection; source->s = stream;
     source->dec.schema = schema; source->dec.ty = &string_type;
     g_cell *position = fwp_mem_alloc(sizeof *position); position->src = source;
     g_cell *retained = mode == 2 ? position : NULL;

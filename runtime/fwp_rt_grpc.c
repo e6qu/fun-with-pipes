@@ -1306,12 +1306,9 @@ static g_incoming *g_incoming_new(const char *what, size_t length) {
 }
 
 /* As with g_strdupf, formatting scratch ends before receiving may suspend. */
-static g_incoming *g_incoming_format(const char *format, ...) {
+static g_incoming *g_incoming_client(const char *method, const char *address) {
     char description[G_MESSAGE_BYTES];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(description, sizeof description, format, args);
-    va_end(args);
+    snprintf(description, sizeof description, "%s (%s)", method, address);
     return g_incoming_new(description, strlen(description));
 }
 
@@ -1749,7 +1746,7 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     }
     /* an Iterator: the first element now, so that a failure before it is
      * raised in the caller */
-    g_incoming *src = g_incoming_format("%s (%s)", r->what, addr);
+    g_incoming *src = g_incoming_client(r->what, addr);
     src->c = c;
     src->s = s;
     src->dec = dec;
