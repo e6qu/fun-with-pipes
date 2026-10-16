@@ -8,7 +8,7 @@ one-line/empty-body message were verified. Duplicate `38860909658` is canceled.
 The only open delivery is [PR #151](https://github.com/e6qu/fun-with-pipes/pull/151),
 branch `wasi-hash-delivery` in `/private/tmp/fwp-wasi-delivery`. Current head is
 `796f5a4c3cd920eb49f709f9a0a5551dc98481fc`; full production `38861611494` and docs
-`38861611496` are queued. Earlier `38861119765` was canceled after the allocation
+`38861611496` passes; production is running. Earlier `38861119765` was canceled after the allocation
 counter repair. Require all nine jobs and docs for the exact final head before
 squash merge. That PR owns WASI ARC, streaming hash and callback/fusion changes.
 Its handoff, benchmarks and reports retain full evidence and remaining overhead.
@@ -19,8 +19,9 @@ later commits after #151 merges; never replay that old parent chain. Do not open
 another delivery PR while #151 is open. Its first implementation is `ed78f26a`;
 subsequent work adds direct range arrays and repairs the allocation counter.
 
-Next: publish the grouped preparation and run native hash/range, actual WASI and
-four-host C/Rust cost checks. Fix failures, retain machine-code/allocation evidence
+Next: rerun native hash/range after the fixture-signature repair. Actual WASI
+`38861845639` and four-host costs `38861849157` run at `a2f4ccd9`; their compiler
+source matches the fixture-only follow-up. Fix failures, retain machine-code/allocation evidence
 and repeat verified before/after binaries on the same hosts. Meanwhile monitor
 #151, fix its failures and squash merge after exact-head acceptance. Then rebase
 only this preparation's delta onto the verified merge and publish one substantial
@@ -78,10 +79,22 @@ benchmark instrumentation. This fix also ships in #151 as `796f5a4c`; reports
 already counted correctly and need no correction. The repaired tests still need
 runner validation; do not interpret the earlier failed control as acceptance.
 
-Initial stack-only WASI `38860423500` and costs `38860426497` run at `ed78f26a`.
-Costs may provide an intermediate comparison, but do not cover direct range
-construction. Supersede old semantic runs with the combined head. No current
-preparation change has full production acceptance yet.
+Initial stack-only native/WASI `38860420915` / `38860423500` were canceled.
+Intermediate costs `38860426497` completed ARM64 Linux/macOS; remaining queued
+jobs were canceled in favor of the combined revision. The two complete reports
+and verified ARM64 code are retained in
+[partial stack evidence](measurements/hash-stack-intermediate-2026-10-16.json).
+Small/large requests fall to 18/4,098 while retains remain 4,096/1,024. This does
+not establish four-host acceptance or a universal timing improvement.
+
+Combined native `38861843203` at `a2f4ccd9` passes hash semantics, the repaired
+negative control, range allocation budgets and failure cleanup on ARM macOS.
+Its range bound-order fixture failed because named constant functions lacked
+explicit generic/concrete signatures. The fixture now has concrete unit-input
+signatures; accepted-interpreter checks confirm bound order and the first trap
+(0.25 s each). Rerun native semantics; no assertion was weakened. WASI and cost
+runs need not restart for this test-source correction. No preparation change
+has full production acceptance yet.
 
 Guarded local formatting passes (1.07 s), docs (2.70 s). The tiny range fixture
 passes using the accepted #148 interpreter (0.24 s), confirming example syntax

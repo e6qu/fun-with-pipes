@@ -13,8 +13,8 @@ fn direct_range_arrays_preserve_values_and_bound_order() {
     let compiler = env!("CARGO_BIN_EXE_fwp");
     let cases = [
         ("values", include_str!("fixtures/range_arrays.fwp"), true, 0),
-        ("bounds", "lo = const -2 | tap (const \"lower\" | echo)\nhi = const 3 | tap (const \"upper\" | echo)\nmain = range (lo ()) (hi ()) | array.from-list | array.to-list | echo\n", true, 0),
-        ("trap", "lo = const 1 | div 0\nhi = const 9223372036854775807 | add 1\nmain = range (lo ()) (hi ()) | array.from-list | array.to-list | echo\n", true, 101),
+        ("bounds", "lo : () -> I64 ! {IO}\nlo = const -2 | tap (const \"lower\" | echo)\nhi : () -> I64 ! {IO}\nhi = const 3 | tap (const \"upper\" | echo)\nmain = range (lo ()) (hi ()) | array.from-list | array.to-list | echo\n", true, 0),
+        ("trap", "lo : () -> I64\nlo = const 1 | div 0\nhi : () -> I64\nhi = const 9223372036854775807 | add 1\nmain = range (lo ()) (hi ()) | array.from-list | array.to-list | echo\n", true, 101),
         ("wide", "main = range -2i128 3i128 | array.from-list | array.to-list | echo\n", false, 0),
     ];
     for (name, source, eligible, status) in cases {

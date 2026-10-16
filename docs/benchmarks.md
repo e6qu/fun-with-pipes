@@ -1018,3 +1018,21 @@ ratios are 1.014, 1.036, 1.031 and 1.327; ARC / Rust ratios are 1.026, 1.032,
 near-parity result. Hardware and timing variability are retained in the report;
 neither run justifies a general claim of parity. Remaining tuple allocations,
 array retains and input list construction are concrete next costs to address.
+
+### Intermediate stack placement experiment
+
+[The partial stack report](measurements/hash-stack-intermediate-2026-10-16.json)
+isolates the new nonescape proof for hash before direct range-array construction.
+ARM64 Linux and macOS completed; the remaining queued jobs were canceled when the
+combined experiment superseded this revision. This is not four-host acceptance.
+Both completed hosts reduce small managed requests from 4,114 to 18 and large
+requests from 5,122 to 4,098. Retains remain 4,096 / 1,024 and peak charged storage
+remains 656 / 163,848 bytes; final charged storage is zero. The array input still
+needs temporary range list nodes in this intermediate revision.
+
+The retained ARM64 code writes the tuple into stack slots, while the hot loop
+still increments the array reference count and calls its typed release. The
+main-thread stack frame is 304 bytes, including initialization and cleanup; this
+does not measure dynamic register spills. Raw C/Rust timings remain in the partial
+report, including slower large macOS samples. Compare the combined revision on
+all four hosts and repeat verified binaries together before claiming a speedup.
