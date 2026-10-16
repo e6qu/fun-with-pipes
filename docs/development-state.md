@@ -11,22 +11,24 @@ Base: accepted #153, `9bf203d7`. The original preparation is preserved remotely
 by `evidence/service-context-before-delivery-20261016` at `f366dd2b`; reports
 continue to name their measured sources. Do not apply the preparation again.
 
-Next: verify the corrected callback specialization on Linux AMD64 before
-restarting the six-host matrix and actual WebAssembly checks. Run `38971183112`
-at `f366dd2b` passed iteration semantics and direct-call counts, but failed the
-service-memory comparison: specialized loop bodies rebuilt nested callbacks
-and captured header lists on every element. The new repair binds aggregate
-captures once and specializes known synchronous service callbacks too. Earlier
-arguments and resource frames still constrain moving captures. Existing service
-allocation assertions remain unchanged; the repair awaits CI.
+Next: run the six-host native and actual WebAssembly checks on the corrected
+combined branch, then retain measurements and start final production acceptance.
+Focused Linux AMD64 run `38972104344` passes at `383f5770`: iteration semantics,
+allocation limits, captures, service lifetimes and repeated timing. The
+one-million-element case is 43.0% faster than the old mapping definition, with
+one fewer allocation and 32 fewer requested bytes per element. Dynamic dispatch
+stays at two calls for both 32 and 128 elements. This is a one-host fwp-to-fwp
+comparison; all-host acceptance and wider performance checks remain.
 
-Superseded combined native/WebAssembly runs `38971718592` and `38971721357`
-use `fbfc3555`; cancel them before dispatching replacements. Documentation
-`38971719319` passes. Draft-skipped production and dependency jobs are not
-acceptance. Final timings still need to establish that memory savings do not
-hide the baseline slowdown. Full compilation and testing remain on GitHub.
+The repair keeps aggregate captures outside loops and specializes known
+synchronous service callbacks, preserving the existing zero/one per-call service
+allocation limits. Earlier arguments and resource frames constrain moving
+captures. The preceding repair's allocation regression is fixed; its failed and
+canceled runs are superseded. Artifacts are under
+`/private/tmp/fwp-each-fixed-evidence/38972104344`. Draft-skipped production or
+dependency jobs are not acceptance. Full builds and tests remain on GitHub.
 
-All six native hosts pass at `dbb9dbec` in run `38969247542`. The
+The pre-specialization baseline passes all six native hosts at `dbb9dbec` in run `38969247542`. The
 [retained baseline](measurements/service-context-iteration-baseline-2026-10-16.json)
 records service memory, iteration allocation counts, repeated Linux timings,
 binary hashes and generated trap programs. Retention passed under the local
@@ -160,12 +162,12 @@ CI. Guarded workflow lint passes (1.44s); actual new-workflow jobs remain to be 
 
 Passing tuple-forwarding artifacts are under
 `/private/tmp/fwp-context-forwarded-evidence/38958562126/`. The report helper is
-`/private/tmp/fwp-retain-context-final.py`: pass a successful six-host run, its
+[`scripts/collect-service-measurements.py`](../scripts/collect-service-measurements.py): pass a successful six-host run, its
 exact source, artifact directory, output path, `--each-comparison` and `--capture-requests 1` through
 the local guard. It validates jobs, counters, layouts, inventory and capture
 controls. New source needs new binary observations. Earlier owned-scope artifacts
 are under `/private/tmp/fwp-context-final-evidence/38953639844/`.
-The next PR description is `/private/tmp/fwp-context-pr-body.md`.
+The PR description is maintained with `/private/tmp/fwp-context-pr-body.md`.
 
 Use `python3 scripts/local-guard.py COMMAND...` with unchanged limits. Full builds,
 native compilation and full tests belong on CI. Earlier automatic review refused
@@ -175,8 +177,13 @@ audit 2.64s, six-host report retention 37.47s, actual ARM64 stack-bound inspecti
 0.13s. Retaining the binary observation in the report passed in 1.84s. No local
 native build was used.
 
-Remote stream caches, connections, HTTP/2 server operations, retained host
-callbacks and GPU ownership remain. The [ownership guide](ownership.md#what-remains-before-remote-calls-can-use-arc)
+After this delivery, measure `g_cell`/`g_force` cached remote-stream results and
+`g_incoming` lifetimes in `runtime/fwp_rt_grpc.c`: 1/32/128 elements, repeated
+reads, full/early consumption and retained earlier positions. Count cached
+values separately from pooled connections, then test releasing every external
+reference. Keep stream ownership changes separate from measurement evidence.
+Connections, HTTP/2 server operations, retained host callbacks and GPU ownership
+also remain. The [ownership guide](ownership.md#what-remains-before-remote-calls-can-use-arc)
 sets concrete tests for repeated calls, early stop, aliases, detached users and
 cycles. Prefer ownership and borrowing; do not substitute permanent retention
 or silent tracing. All seven project work areas remain open.

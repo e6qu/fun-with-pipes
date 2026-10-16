@@ -218,6 +218,17 @@ longer on Linux ARM64. AMD64 median process peak memory falls from 79,268 to
 This compares two fwp implementations, not fwp with C/Rust. Fewer allocations
 alone do not establish a speedup.
 
+To reproduce the six-host service and iteration measurements, dispatch
+`.github/workflows/numerics.yml` with `suite=context-owners` on the source branch.
+The tests upload counts, generated C, executables, environment details and Linux
+timing samples. Once all six native jobs pass,
+[`collect-service-measurements.py`](../scripts/collect-service-measurements.py)
+checks the run and creates the report. Supply its exact commit with `--head`,
+the workflow number with `--run`, a download directory with `--artifacts`, a
+report path with `--output`, and `--capture-requests 1 --each-comparison` for the
+current implementation. It uses authenticated `gh`; it does not run downloaded
+executables. Local collection goes through the repository's resource guard.
+
 ## Measurement report index
 
 ### Current numerical comparison and record moves

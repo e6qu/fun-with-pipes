@@ -1,9 +1,9 @@
 {
-  "title": "Stack service settings, one outgoing-header allocation, and owned callback results",
+  "title": "Memory used by service helpers and list iteration",
   "source_revision": "dbb9dbec603b609973786cc36c3f68cab1ffafc8",
   "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38969247542",
   "comparison": "Each fwp service scope versus plain fwp state updates at 1/32/128 calls, O2, collection disabled. Managed requests, requested bytes and final charged storage from constant initialization through main cleanup. Fixed scheduler startup remains included in rows; per-call slopes subtract fixed costs.",
-  "limits": "Not elapsed time, peak/process memory or C/Rust parity. Excludes raw TLS/capture buffers, allocator metadata and pages. Plain programs omit service fields; their task sizes are not the old service-task baseline. Whole services and remote results remain outside checked ARC support.",
+  "limits": "Service allocation rows exclude raw TLS/capture buffers, allocator metadata, pages and total process memory; they do not measure speed. Separate iteration_timing entries retain elapsed time and peak process memory when present. Neither comparison establishes C/Rust parity. Plain programs omit service fields; their task sizes are not the old service-task baseline. Whole services and remote results remain outside checked ARC support.",
   "hosts": [
     {
       "runner": "macos-15",
