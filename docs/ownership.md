@@ -556,5 +556,6 @@ ownership work. This does not add WASI networking or prove faster DNS lookups.
 TCP/UDP receive scratch and UDP-send resolver entries are also registered on the
 runtime cleanup stack so cancellation and result-allocation failure can release
 them. Failed native receive allocation traps before the buffer is used. These
-repairs await focused native checks and do not change socket-handle ownership;
+repairs pass all six focused native hosts in `38898918147` at `7224b3de` and do
+not change socket-handle ownership;
 connections and listeners still require their separate lifetime work.
