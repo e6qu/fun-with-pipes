@@ -1,21 +1,25 @@
 # Session handoff
 
 Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
-This branch prepares one combined service-memory, compiler and iteration PR.
-The only open delivery PR is #153; do not open a second before it is accepted.
+This branch prepares the combined service-memory, compiler and iteration delivery.
+PR #153 is accepted; keep only one new delivery PR open.
 
 ## Current action
 
-Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
-Preparation base: `ac3060d1`.
+Workspace: `/Users/zardoz/projects/fun-with-pipes`, branch `service-iteration-delivery`.
+Base: accepted #153, `9bf203d7`. The original preparation is preserved remotely
+by `evidence/service-context-before-delivery-20261016` at `f366dd2b`; reports
+continue to name their measured sources. Do not apply the preparation again.
 
-Next: run the callback-specialization repair on Linux AMD64, then repeat the
-native matrix and WebAssembly checks before publication. The new `each` saves
-memory but the first timing comparison is slower; do not accept it on allocation
+Next: inspect focused run `38971183112` at `f366dd2b`, then run the
+native matrix and actual WebAssembly checks on the combined branch. The new
+`each` saves memory but the first timing comparison is slower; do not accept it on allocation
 counts alone. The optimizer now exposes calls through pure non-resource bindings
 and specializes callbacks discovered inside state handlers. The regression counts
 runtime dispatch as input grows and checks eager captures before input errors,
-including empty inputs. These changes await CI; no local build was run.
+including empty inputs. The functional/allocation step now passes on Linux
+AMD64, including zero extra runtime dispatch as input grows; repeated service checks and timing remain.
+No local build was run.
 
 All six native hosts pass at `dbb9dbec` in run `38969247542`. The
 [retained baseline](measurements/service-context-iteration-baseline-2026-10-16.json)
@@ -32,32 +36,28 @@ pthread APIs, matching Windows. A debugger watchpoint proved the old scan bound
 missed a live callback at `x29+24`; GC erased it while allocating another closure.
 All six hosts now pass the triggering case, including stress and reuse checks.
 ARC and WebAssembly do not gain stack scanning. The passing artifacts are under
-`/private/tmp/fwp-context-each-evidence/38969247542`; inspect the corrected native
-binaries along with the forthcoming callback changes. Temporary debugger jobs
+`/private/tmp/fwp-context-each-evidence/38969247542`; actual ARM64 instructions
+confirm the pthread queries, base-plus-size calculation and the previously missed callback slot. Guarded inspection passed
+(0.13s); inspect the forthcoming direct loop as well. Temporary debugger jobs
 and the ineffective compiler-frame-bound attempt have been removed.
 
 Both actual WebAssembly jobs in `38967912068` pass at `16643edf`; the subsequent
 stack-bound fix is native-only. The new optimizer change requires fresh actual
 WebAssembly checks. Formatting passes (1.11s); full validation remains on CI.
 
-After #153 passes and merges, preserve the preparation's current head under a
-remote evidence tag before rebasing: the reports refer to earlier source commits.
-Rebase only changes after `ac3060d1` onto the accepted squash. Preserve both the
-byte-decoder repair and context-owner suites when resolving workflow conflicts.
-Publish one combined PR; require all nine production jobs and documentation on
-its final head. The new dependency-cache workflow's two Windows jobs must also
-pass when introduced. Focused runs do not replace full acceptance.
+PR #153 merged as `9bf203d767a928f63f343a3644abc6df019c4179` after all nine
+production jobs (`38958379514`) and documentation (`38955543617`) passed at
+`f6dc9940`. Its tree matches that head, its parent is accepted #152, and its
+message is exactly `Reduce temporary memory and clean up network resources`
+with no body/trailers. Duplicate production run `38971260589` was canceled.
+[Delivery history](roadmap-history.md) retains this acceptance.
 
-PR #153 is in `/Users/zardoz/projects/fun-with-pipes`, branch
-`owned-values-delivery`, head `f6dc9940b562a52bc0a3b207fdd6fd58ac3d1aba`.
-Its six focused decoder jobs (`38955537587`) and documentation (`38955543617`)
-pass. It is ready; production run `38958379514` is running on that exact head.
-Use `/private/tmp/fwp-merge-153.py --production-run 38958379514
---documentation-run 38955543617` to check it, adding `--merge` only after all
-nine production jobs pass. The helper verifies the squash tree, parent and
-one-line message, then cancels duplicate production CI. Preserve the root's
-uncommitted handoff before switching branches. Standing authorization covers
-publication, fixes and merge; failing tests are tasks to fix.
+The combined branch retains accepted byte-decoder fixes and both focused suites.
+Publish one PR, using `/private/tmp/fwp-context-pr-body.md` after updating its
+results. Require all nine production jobs and documentation on its final head.
+The new dependency-cache workflow's two Windows jobs must also pass when
+introduced. Leave that workflow running after merge so later branches can reuse
+main's dependencies. Focused checks do not replace full acceptance.
 
 Every commit/squash message is one line, at most 80 characters, with no body,
 trailers or attribution. JIT is excluded. Preserve the effect rule: only the
@@ -115,37 +115,25 @@ excluded. These are fwp-to-fwp memory comparisons, not C/Rust parity or speed.
 
 Explicit process exit passes seven native status cases and actual WASI execution.
 It preserves earlier output and uses the low eight status bits; it does not
-promise ordinary cleanup before process termination. Broader WASI/browser and
-physical-storage checks pass on both Linux architectures in `38955989639` at
-compiler source `79ce442f`. The newer library change also passes both actual WebAssembly jobs in
-`38962206780` at `2a98d395`.
+promise ordinary cleanup before process termination. The six-host baseline also
+verifies reflection buffers: reflection lets tools ask a server which methods it
+provides. Request and response buffers release on success, encoding traps and
+cancelled sends; separate missing-cleanup controls must fail. Whole-service
+ownership is still unfinished.
 
-Service reflection cleanup at `9fa2a0f4` passes the complete Linux AMD64 run
-`38959410533`. Reflection lets tools ask a server which methods it provides.
-Request and response buffers release on success, encoding traps and cancelled
-sends; separate missing-cleanup controls must fail. The current six-host run
-includes this repair. Whole-service ownership is still unfinished.
+## Iteration implementation and acceptance
 
-## New iteration simplification awaiting checks
+`each = const | flip fold ()` walks the input without building discarded results.
+Unit, written `()`, is the running value of the fold; `const` ignores it and
+selects the supplied callback. No primitive or syntax was added.
 
-The measured plain `each` builds and discards a list of unit results. The new
-library definition is `each = const | flip fold ()`. Unit, written `()`, is the
-running value of the fold. `const` ignores that value and selects the supplied
-callback. This adds no primitive or syntax.
-
-Accepted-interpreter checks preserve shared inputs, ordered output, state updates
-and typed failure (0.26s). A division-trap check prints `2`, then `0`, and exits
-with the expected status 101 before visiting the final element (0.25s).
-Library formatting passes (0.01s).
-
-New tests in `state_sequence_ownership` compare raw/optimized interpretation with
-O1/O2 tracing/ARC. Collector stress/verification applies only to tracing; reuse
-verification applies only to tracing; ARC checks ordinary freeing. A separate executable control
-uses the old mapping definition and compares managed allocation slopes at 32/128
-elements. Both must print the same count; the new definition must eliminate at
-least one allocation per element. `each-storage.tsv`, source and binaries are
-uploaded with the context evidence. Earlier reports still use mapping-based
-`each`; retain a new report after the current native run passes.
+`state_sequence_ownership` compares raw/optimized interpretation with O1/O2
+tracing/ARC for shared inputs, ordered output, state updates and errors. Tracing
+also checks collector stress and reuse verification; ARC checks ordinary freeing.
+The allocation comparison runs the old mapping definition and the new fold at
+32/128 elements. Both must print the same count. The fold must eliminate at least
+one allocation per element and its dynamic call count must not grow with input.
+Sources, binaries and `each-storage.tsv` accompany the focused evidence.
 
 ## CI work awaiting full acceptance
 
@@ -162,8 +150,7 @@ key, and sibling branches cannot share their copies. It uses the pinned TLS
 setup script and native architecture validation without an unnecessary compiler
 installation. It runs on ready PRs changing those files, so both jobs must pass
 when introduced. Keep it running when cancelling duplicate postmerge production
-CI. Guarded actionlint passes on all changed workflows (1.27s); actual new-workflow
-jobs remain to be verified on the next PR.
+CI. Guarded workflow lint passes (1.44s); actual new-workflow jobs remain to be verified.
 
 ## Evidence and local checks
 
@@ -179,12 +166,10 @@ The next PR description is `/private/tmp/fwp-context-pr-body.md`.
 Use `python3 scripts/local-guard.py COMMAND...` with unchanged limits. Full builds,
 native compilation and full tests belong on CI. Earlier automatic review refused
 local compiler/standalone C builds; do not bypass or repeat those requests.
-Recent guarded checks: Rust formatting 1.08s, six actual generated sources with
-unique allocation/normal-completion hooks 0.13s, documentation audit 2.52s, report
-retention 20.42s, replacement ARM64/AMD64 binary inspection 0.13s. No local native
-build was used. An obsolete morning run (`38888712709`) has a stale in-progress
-listing, but all its jobs finished and GitHub reports it completed when cancelling;
-it is not using runners.
+Recent guarded checks: Rust formatting 1.11s, workflow lint 1.44s, documentation
+audit 2.64s, six-host report retention 37.47s, actual ARM64 stack-bound inspection
+0.13s. Retaining the binary observation in the report passed in 1.84s. No local
+native build was used.
 
 Remote stream caches, connections, HTTP/2 server operations, retained host
 callbacks and GPU ownership remain. The [ownership guide](ownership.md#what-remains-before-remote-calls-can-use-arc)

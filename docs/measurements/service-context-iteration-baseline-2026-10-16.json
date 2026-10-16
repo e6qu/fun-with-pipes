@@ -1852,7 +1852,19 @@
           }
         ]
       },
-      "binary_observations": null,
+      "binary_observations": {
+        "source_revision": "dbb9dbec603b609973786cc36c3f68cab1ffafc8",
+        "binary": "each-trap-tracing-O1.exe",
+        "binary_sha256": "c384c77f7e8219e73aacdaf4a2a7429d5125d9e271dc8c15de7c5ca79ff6f52e",
+        "assembly": "stack-bound.asm",
+        "assembly_sha256": "ce9b3802a3f39f81f001ed71008bb3aa357be354e017b771a931ef80e462c778",
+        "observations": [
+          "fwp_main_thread calls pthread_getattr_np at 0x1da4, pthread_attr_getstack at 0x1dc0 and pthread_attr_destroy at 0x1dcc.",
+          "It adds stack base and size at 0x1de8 and stores the resulting scan limit at 0x1e00.",
+          "The live callback remains stored at x29+24 at 0x2184; the complete OS stack bound includes it.",
+          "The same executable passes the trapping each case under tracing stress and verification."
+        ]
+      },
       "job": {
         "name": "paths (ubuntu-24.04-arm)",
         "databaseId": 117203268459,
@@ -2447,6 +2459,14 @@
         "iteration-timing/timings.json": {
           "bytes": 21763,
           "sha256": "d6103db7bbec5d321cf5560ec056e04cb97328cf69c63fb8fabdcbe3323c9e63"
+        },
+        "binary-observations.json": {
+          "bytes": 758,
+          "sha256": "594b784377e46580a4fbd1430f6b0f2913efde39a71cfab9fa6763ff1401e0b1"
+        },
+        "stack-bound.asm": {
+          "bytes": 13388,
+          "sha256": "ce9b3802a3f39f81f001ed71008bb3aa357be354e017b771a931ef80e462c778"
         }
       },
       "binaries": {

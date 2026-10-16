@@ -73,27 +73,20 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is accepted. It reduces
-temporary memory in hashing and numerical calculations while preserving results,
-floating-point operation order and errors. All nine production jobs and the
-documentation check passed, and the merged files match the tested commit.
-[Delivery history](docs/roadmap-history.md) retains the checks and measurements.
+[PR #153](https://github.com/e6qu/fun-with-pipes/pull/153) is accepted. It reduces
+temporary numerical storage and gives decoded values, socket handles and copied
+service results explicit cleanup. All nine production jobs and documentation
+passed; the merge has the same files as the tested commit.
+[Delivery history](docs/roadmap-history.md) retains its evidence.
 
-The current delivery, [PR #153](https://github.com/e6qu/fun-with-pipes/pull/153),
-reduces temporary numerical storage and gives decoded values and network
-resources explicit cleanup. UDP/TCP/TLS handles close when their last owner is
-released, including function and task captures. The combined preparation also
-owns copied service headers and bodies, removes temporary header-copy buffers,
-and checks raw protocol allocation failures and size overflow. It fixes Windows
-socket error wording to agree with the interpreter.
-
-The numerical/socket batch and copied service results have focused checks on
-all six native hosts, and both actual WASI regressions pass. Tests deliberately
-fail allocations and omit cleanup to verify that they detect lost storage.
-The [service report](docs/measurements/service-values-2026-10-16.json) retains
-binary formats, symbols, allocation counts and the tested source revision.
-Full production acceptance must still pass on the final combined head. Keep one
-delivery PR open; the handoff identifies the current checks and next action.
+The next combined delivery keeps temporary service settings on the stack, copies
+them into independently running child tasks, avoids rebuilding forwarded tuples,
+and releases message buffers on failure or cancellation. It replaces list
+iteration's discarded result list with a fold. That saves memory, but first
+measurements found a slowdown: callback specialization must remove unnecessary
+runtime dispatch before this change is accepted. The new tests also exposed and
+fixed an incomplete native stack scan. The handoff records exact checks, timing
+results and the current repair; full production acceptance is still required.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

@@ -377,6 +377,7 @@ fn each_avoids_allocating_a_discarded_result_list() {
                 );
             }
             for marker in [
+                "static V fwp_apply(V f, uint32_t n, V *args) {",
                 "static V fwp_apply_owned(V f, uint32_t n, V *args) {",
                 "static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start, uint32_t owned_len) {",
             ] {
