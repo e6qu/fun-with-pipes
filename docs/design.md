@@ -136,6 +136,12 @@ and the backend builds a stack record without extra child references. Ordinary
 escaping tuples still own their fields. Disabling stack placement retains the
 ordinary counted representation for comparison.
 
+A temporary tuple or its counted fields may have local names introduced by
+simplification. The ownership pass can expose their sole, immediate hash use
+across other plain local/field reads. It does not move calls, traps or resource
+frames. Other uses preserve ordinary ownership, so keeping an alias or consuming
+an owner later cannot turn a borrowed field into a dangling reference.
+
 Bit shifts remain excluded from that proof because an oversized shift traps.
 Effectful callbacks and distinguishable traps still prevent interleaving. This
 adds no syntax or implicit conversion. A known callback's eager captures are

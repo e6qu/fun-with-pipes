@@ -1,153 +1,129 @@
 # Session handoff
 
-Updated 2026-10-16. [PR #150](https://github.com/e6qu/fun-with-pipes/pull/150)
-merged as `729db67f71386750aad0bbe477f546e5276b0223` after all nine production
-jobs `38851567232` and docs `38851565415` passed for `7a7b40e1`. Tree, parent and
+Updated 2026-10-16. This file is the current action list; [PLAN.md](../PLAN.md)
+defines the remaining project work. None of its seven whole areas is complete.
+
+## Accepted and active deliveries
+
+[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) merged as
+`729db67f71386750aad0bbe477f546e5276b0223` after all nine production jobs
+`38851567232` and docs `38851565415` passed for `7a7b40e1`. Tree, parent and
 one-line/empty-body message were verified. Duplicate `38860909658` is canceled.
 
 The only open delivery is [PR #151](https://github.com/e6qu/fun-with-pipes/pull/151),
-branch `wasi-hash-delivery` in `/private/tmp/fwp-wasi-delivery`. Current head is
-`796f5a4c3cd920eb49f709f9a0a5551dc98481fc`; full production `38861611494` and docs
-`38861611496` passes; production is running. Earlier `38861119765` was canceled after the allocation
-counter repair. Require all nine jobs and docs for the exact final head before
-squash merge. That PR owns WASI ARC, streaming hash and callback/fusion changes.
-Its handoff, benchmarks and reports retain full evidence and remaining overhead.
+branch `wasi-hash-delivery` in `/private/tmp/fwp-wasi-delivery`, final head
+`796f5a4c3cd920eb49f709f9a0a5551dc98481fc`. Docs `38861611496` passes; production
+`38861611494` is running. Require all nine jobs and docs for that exact head.
+Earlier `38861119765` was canceled after repairing the allocation test counter.
+That PR owns synchronous WASI ARC, streaming hash and callback/fusion changes.
 
-This independent following preparation is `/private/tmp/fwp-hash-borrows`, branch
-`borrowed-hash-arguments`, anchored at old pre-rebase `28cc4d0e`. Transfer only
-later commits after #151 merges; never replay that old parent chain. Do not open
-another delivery PR while #151 is open. Its first implementation is `ed78f26a`;
-subsequent work adds direct range arrays and repairs the allocation counter.
-
-Next: validate the named-field forwarding repair with native unit/semantic checks,
-actual WASI and four-host costs. Earlier direct-range WASI `38861845639` passes
-both hosts at `a2f4ccd9`; its costs are `38861849157`. Native fixture repair
-`38862399186` runs at `61fde4cc`. Those earlier checks do not cover field borrowing. Fix failures, retain machine-code/allocation evidence
-and repeat verified before/after binaries on the same hosts. Meanwhile monitor
-#151, fix its failures and squash merge after exact-head acceptance. Then rebase
-only this preparation's delta onto the verified merge and publish one substantial
-PR. No whole roadmap area is complete.
-
-Standing authorization covers fixes, publication and passing-CI squash merge.
-Every commit is exactly one line, at most 80 characters, with empty body and no
-trailers or attribution. JIT is excluded. Keep local checks serial through
-`python3 scripts/local-guard.py`; full builds, suites and measurements run on CI.
-Never raise limits or restart the refused local optimizer compilation.
+The following preparation is `/private/tmp/fwp-hash-borrows`, branch
+`borrowed-hash-arguments`, anchored at old pre-rebase `28cc4d0e`. After #151
+merges, transfer only later commits onto its verified squash commit. Never replay
+that old parent chain or open a second delivery PR while #151 is open.
 
 ## Roadmap status
 
-[PLAN.md](../PLAN.md) defines completion. None of its seven whole areas is done.
-
-| Step | Status | Next concrete work |
+| Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | Deliver synchronous WASI ownership; host re-entry remains unproved |
-| 2 | In progress | Diagnose remaining allocations in measured hash pipelines |
-| 3 | In progress | Retain actual code and address measured C/Rust gaps |
-| 4 | In progress | Preserve nested derivative cleanup; broader tape costs remain |
+| 1 | In progress | Complete deployment and primitive ownership; remove tracing |
+| 2 | In progress | Deliver borrowed hash fields and direct range arrays |
+| 3 | In progress | Measure remaining C/Rust gaps and inspect generated code |
+| 4 | In progress | Reduce derivative recording costs and validate scaling |
 | 5 | Pending | Broaden kernels and resolve runtime OpenCL compilation |
-| 6 | In progress | Keep equivalent comparisons and physical storage evidence |
+| 6 | In progress | Retain comparable, repeated measurements and storage costs |
 | 7 | In progress | Extend maintained programs across deployment boundaries |
 
+## Current batch and acceptance
 
-## Changes and acceptance
+The batch removes hashing tuple allocations, builds packed integer range arrays
+directly, and removes unnecessary references to temporary tuple fields. Its
+latest compiler change is `ac72124c2fd10178d70b1b1dde5b9d56ce178a7f`.
 
-The latest unverified change borrows the fields of a temporary record
-passed directly to a proved nonescaping primitive. Existing sequence ownership
-keeps field owners alive until the call returns, including when later fields
-consume aliases or trap. The independent verifier rejects fields without owners
-or owners consumed by later fields. The backend uses stack storage without child
-count traffic. Structural tuple types are handled; nominal records retain their
-existing ownership. New unit tests and retained/mutated/error fixtures need CI.
-The disabled-stack path retains ordinary ownership. Require zero hot-loop retains,
-retained aliases, last-use cleanup, trap cleanup and actual WASI physical frees.
+- Hash's explicit nonescape proof means its input is used only during the call.
+  Borrowing alone does not establish this. Existing stack placement removes
+  temporary tuple storage; ordinary functions propagate the proof.
+- A direct structural tuple passed to hash borrows fields from live owners.
+  Ownership lowering preserves aliases and later consumption; the independent
+  verifier checks owner liveness after all fields. Plain named field reads and
+  sole-use tuples can be exposed without crossing calls, traps or resource frames.
+  Nominal records and escaping tuples retain their existing ownership.
+- Immediate inline-integer `range | array.from-list` writes packed array storage
+  directly. Bounds retain their order; equal/descending bounds are empty. Wide
+  arithmetic rejects oversize arrays before machine-size conversion. I128/U128
+  elements retain their existing boxed path. Existing comparison switches apply.
+- Tests compare raw interpreter and native results, all inline integer widths,
+  alias mutation, first traps, allocation failure and actual WASI physical frees.
+  Disabled optimizations and deliberately removed cleanup/size checks must fail
+  the corresponding controls. Hashing's measured loop must have zero retains.
+- SIMD library comments now describe C loops and possible compiler vectorization,
+  removing an unsupported instruction guarantee. Generated docs follow the source.
+  No SIMD runtime implementation changed in this batch.
 
-Hash reads its input only during the call. An explicit nonescape proof in the
-ownership inventory lets existing stack placement remove temporary heap tuples.
-Borrowing alone remains insufficient: other primitives can return or retain
-borrowed inputs. The proof propagates through ordinary functions; returning an
-alias still escapes. Tests preserve retained fields, canonical bytes, effects,
-traps, GC stress and actual WASI physical frees. Field reference counts remain
-until separately proved unnecessary; this is not a zero-ARC claim.
+At `ac72124c`, focused native `38864599295` passes five hosts, with ARM macOS
+running. WASI `38864602220` passes ARM64, with AMD64 running. Four-host costs
+`38864604854` pass Intel macOS and Linux ARM64; the other jobs remain pending.
+Those two reports show two managed allocation requests and zero retains for both
+workloads, with zero final charged storage. This is not yet four-host acceptance.
+These focused workflows contain intentionally unselected jobs: skipped jobs do
+not count as production support. The delivery still needs all nine full gates.
 
-An immediate inline-integer `range | array.from-list` now constructs packed array
-storage directly. Bounds keep their evaluation order; equal/descending ranges
-stay empty. Wide intermediate arithmetic checks the existing size limit before
-machine-size conversion. I128/U128 boxes keep the existing path. This uses the
-existing array-fusion comparison switch, with no new syntax or runtime fallback.
-Tests cover every inline integer width, extremes, aliases, bound effects/traps,
-allocation failure, constant allocation counts and actual 32-bit WASI. Removing
-the WASI length guard deliberately truncates 4,294,967,296 to zero; the control
-must expose that wrong result while the checked code traps before allocation.
+## Measurements and resolved failures
 
-## Results and unresolved failures
+[Benchmark explanations](benchmarks.md) introduce the implementations, workloads,
+timing and allocation scopes. Reports preserve raw samples and known overhead.
 
-The initial stack-only native run `38860420915` passes its semantic/alias/hash
-checks on Linux ARM64 but fails the disabled-stack allocation control: both
-variants appeared below budget. Inspection found the test counted `fwp_gc_alloc`
-but missed the `fwp_alloc_init` fast path used by records/list nodes. Both entries
-are now counted without counting the slow path twice, matching the existing
-benchmark instrumentation. This fix also ships in #151 as `796f5a4c`; reports
-already counted correctly and need no correction. The repaired tests still need
-runner validation; do not interpret the earlier failed control as acceptance.
+The intermediate stack report `hash-stack-intermediate-2026-10-16.json` covers
+only ARM Linux/macOS from `38860426497`. Small/large requests fell to 18/4,098;
+retains remained 4,096/1,024. The four-host direct-range report
+`hash-range-arrays-2026-10-16.json` is from passing `38861849157` at `a2f4ccd9`:
+two managed requests, 144/32,776 peak charged bytes and zero final storage, but
+still 4,096/1,024 retains. These are intermediate evidence, not new tasks.
 
-Initial stack-only native/WASI `38860420915` / `38860423500` were canceled.
-Intermediate costs `38860426497` completed ARM64 Linux/macOS; remaining queued
-jobs were canceled in favor of the combined revision. The two complete reports
-and verified ARM64 code are retained in
-[partial stack evidence](measurements/hash-stack-intermediate-2026-10-16.json).
-Small/large requests fall to 18/4,098 while retains remain 4,096/1,024. This does
-not establish four-host acceptance or a universal timing improvement.
+Resolved failures explain the current checks:
 
-Combined native `38861843203` at `a2f4ccd9` passes hash semantics, the repaired
-negative control, range allocation budgets and failure cleanup on ARM macOS.
-Its range bound-order fixture failed because named constant functions lacked
-explicit generic/concrete signatures. The fixture now has concrete unit-input
-signatures; accepted-interpreter checks confirm bound order and the first trap
-(0.25 s each). Rerun native semantics; no assertion was weakened. WASI and cost
-runs need not restart for this test-source correction. No preparation change
-has full production acceptance yet.
+- An allocation counter missed `fwp_alloc_init`, making the disabled-stack
+  control falsely pass. It now counts that fast path and the nonduplicated slow
+  allocation path. #151 includes the same repair as `796f5a4c`. Benchmark
+  instrumentation already counted both paths, so old reports need no correction.
+- Range bound-order fixtures lacked concrete unit-input signatures. Their repair
+  passed the accepted interpreter and five native hosts in `38862399186`; the
+  remaining queued job was superseded by the final combined focused run.
+- The first field-borrow implementation still retained named array aliases.
+  Linux ARM64's strict zero-retain control caught this in `38863443177`.
+  Generated C confirmed the remaining counts. The named-field repair is
+  `ac72124c`; the current five passing native hosts include that strict control.
+  Superseded native `38863443177` and costs `38863448662` are canceled. Earlier
+  WASI `38863445808` passed both hosts before that repair.
 
-Guarded local formatting passes (1.07 s), docs (2.70 s). The tiny range fixture
-passes using the accepted #148 interpreter (0.24 s), confirming example syntax
-and expected boundary values only. No changed compiler was built locally.
-The earlier diagnostic compile guard stopped with an OS signal error; no process
-remained and limits were not raised. Compiler validation stays on CI.
+Guarded local formatting passed before the latest doc consolidation. The final
+documentation audit passes (2.57 s), including all seven status rows. The inventory check at `1c5ace42` reports "Expected contract
+changes verified": 378 declarations, 368 symbols and 262 contracted declarations.
+The remaining review bucket has 91 declarations, not 91 independent features.
+Its frozen baseline was not changed. Small fixtures were checked with accepted
+#148's interpreter; no changed compiler was built locally. The local compiler
+probe previously stopped with an OS signal error; no process remained and no
+limit was raised. Changed-compiler validation remains on GitHub runners.
 
-## Following work
+## Next concrete actions
 
-Measure whether tuple fields still need per-hash retains, then target remaining
-C/Rust gaps with generated code and equivalent inputs. Browser/services, retained
-host callbacks, numerical/network contracts, derivative scaling and OpenCL's
-runtime compilation remain open. The baseline and paired reports in
-[benchmarks](benchmarks.md) retain slower samples; fewer allocations alone is not
-proof of improved speed. Broader representative programs remain required.
+Next: finish the final runner evidence and merge #151 when its exact-head gates
+pass, then publish the combined ownership and allocation batch.
 
-Library SIMD comments now state the actual C-loop implementation and possible C
-compiler vectorization, replacing an unsupported vector-extension guarantee.
-Generated docs were refreshed through `tests/stdlib_doc.rs` using the standalone
-generator (guarded 1.07 s). Borrowed-field fixtures pass the accepted interpreter
-(0.25 s); formatting/docs pass (1.06 / 2.57 s). No changed compiler was built locally.
+1. Monitor #151's exact-head gates, fix failures and squash merge when all pass.
+   Verify tree, parent and exact message; cancel only duplicate postmerge gates.
+2. Complete final native/WASI/cost checks for `ac72124c`. Retain all four cost
+   reports and verified generated source/binary/assembly hashes; inspect actual
+   hot-loop code. Run `hash-repeat` with baseline `38856285939` and final evidence
+   `38864604854`, retaining regressions and equivalent C/Rust comparisons.
+3. Transfer this batch after #151 merges, reconcile docs and publish one substantial
+   PR. Require fresh full production and docs checks for its combined final head.
+4. Use measured remaining costs and ownership gaps to select the next batch.
+   Browser/service boundaries, retained callbacks, numerical/network contracts,
+   derivative scaling and OpenCL runtime compilation remain open. JIT is excluded.
 
-Field-borrowing run `38863443177` at `cf110b75` passes ownership/escape unit tests,
-raw/native semantic cases and range checks on Linux ARM64, but its zero-retain
-control fails. Generated C from cost run `38863448662` shows a stack tuple with
-named array aliases still duplicated before the call. The repair forwards only
-pure counted field/local reads into their immediate, sole hash use, across other
-pure reads only. It also exposes a tuple named immediately before its sole hash
-call. Other uses, calls and resource boundaries prevent forwarding. The verifier
-still checks parent liveness after all fields. New tests cover the named forms;
-failed budgets now print counts and retain generated C for diagnosis. No positive
-zero-count claim is made until the repaired runner checks and profiles pass.
-
-The named-field repair is `ac72124c`, under native `38864599295`, WASI
-`38864602220` and costs `38864604854`. Prior field-borrowing WASI `38863445808`
-passed both hosts before that repair. The superseded native `38863443177` and
-cost `38863448662` runs were requested canceled. The old cost run completed
-Linux ARM64 and exposed the remaining alias counts in generated C.
-
-All four direct-range cost jobs `38861849157` passed at `a2f4ccd9` and are retained
-in [the range report](measurements/hash-range-arrays-2026-10-16.json), with every
-source/binary/assembly hash verified under the guard (0.13 s). Both workloads
-use two managed requests; small/large peak bytes are 144/32,776, and final storage
-is zero. Retains are still 4,096/1,024 at that revision. Benchmarks explain the
-C/Rust scopes and measured overhead. No zero-retain claim is established yet.
+Standing authorization covers fixes, publication and passing-CI squash merge.
+Every commit is one line, at most 80 characters, with no body or trailers. Use
+`python3 scripts/local-guard.py` for bounded serial local checks; do not increase
+limits or restart the refused optimizer compilation. Full builds, suites,
+benchmarks and large regeneration run on CI.
