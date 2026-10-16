@@ -1,4 +1,4 @@
-//! Scan and iterate preserve owned earlier states while borrowing callbacks.
+//! State sequences preserve owners; each visits in order without result nodes.
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
@@ -196,4 +196,180 @@ main = (10000, 0) | loop step | echo
     }
     eprintln!("state sequence graph MiB freed by counts: {freed:?}");
     assert!(freed[1] > freed[0] + 0.3, "{freed:?}");
+}
+
+#[test]
+fn each_preserves_aliases_effect_order_and_early_failures() {
+    let dir = Scratch::new("each-order");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let cases = [
+        (
+            "values",
+            r#"main = [
+    "a b c" | words | both (each echo) id | .1 | echo,
+    [] | each (concat "empty:" | echo),
+    range 0 3 | run-state 0 (each (const (add 1) | modify)) | .1 | echo,
+    "a stop later" | words | attempt (each (if (eq "stop") (const "stopped" | fail) echo)) | echo,
+] | ignore
+"#,
+            "a\nb\nc\n[\"a\", \"b\", \"c\"]\n3\na\nErr \"stopped\"\n",
+            0,
+        ),
+        (
+            "trap",
+            "main = [2, 0, 4] | each (both echo (flip div 12 | ignore) | ignore)\n",
+            "2\n0\n",
+            101,
+        ),
+    ];
+    for (name, source, expected, status) in cases {
+        let input = dir.0.join(format!("{name}.fwp"));
+        std::fs::write(&input, source).unwrap();
+        let raw = Command::new(compiler)
+            .args(["run", "--interp"])
+            .env("FWP_NO_OPT", "1")
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(raw.status.code(), Some(status), "{raw:?}");
+        assert_eq!(raw.stdout, expected.as_bytes());
+        let optimized = Command::new(compiler)
+            .args(["run", "--interp"])
+            .env_remove("FWP_NO_OPT")
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(
+            (
+                &optimized.stdout,
+                &optimized.stderr,
+                optimized.status.code()
+            ),
+            (&raw.stdout, &raw.stderr, raw.status.code())
+        );
+        for mode in ["tracing", "arc"] {
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.0.join(format!("{name}-{mode}{opt}.exe"));
+                checked(
+                    Command::new(compiler)
+                        .args(["build", "--gc", mode, opt])
+                        .arg(&input)
+                        .arg("-o")
+                        .arg(&binary),
+                );
+                for reuse in ["0", "1"] {
+                    let output = Command::new(&binary)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_REUSE_VERIFY", reuse)
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        (&output.stdout, &output.stderr, output.status.code()),
+                        (&raw.stdout, &raw.stderr, raw.status.code()),
+                        "{name}/{mode}/{opt}/{reuse}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn each_avoids_allocating_a_discarded_result_list() {
+    let dir = Scratch::new("each-cost");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let mut counts = std::collections::BTreeMap::new();
+    for (name, function) in [("map", "each-before"), ("fold", "each")] {
+        for count in [32, 128] {
+            let source = format!("each-before : (a -> () ! e) -> List[a] -> () ! e\neach-before = map | flip compose ignore\nmain = range 0 {count} | run-state 0 ({function} (const (add 1) | modify)) | .1 | echo\n");
+            let input = dir.0.join(format!("{name}-{count}.fwp"));
+            let cfile = dir.0.join(format!("{name}-{count}.c"));
+            let binary = dir.0.join(format!("{name}-{count}.exe"));
+            std::fs::write(&input, &source).unwrap();
+            let raw = checked(
+                Command::new(compiler)
+                    .args(["run", "--interp"])
+                    .env("FWP_NO_OPT", "1")
+                    .arg(&input),
+            );
+            assert_eq!(raw.stdout, format!("{count}\n").as_bytes());
+            checked(
+                Command::new(compiler)
+                    .args(["build", "--emit-c", "-O2"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let mut code = std::fs::read_to_string(&cfile).unwrap();
+            let declaration = "typedef uint64_t V;";
+            assert_eq!(code.matches(declaration).count(), 1);
+            code = code.replace(
+                declaration,
+                "typedef uint64_t V;\nstatic unsigned long long each_requests,each_bytes;",
+            );
+            for (marker, condition) in [
+                ("static inline void *fwp_alloc_init(size_t n) {", "1"),
+                (
+                    "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
+                    "leaf != 0",
+                ),
+            ] {
+                assert_eq!(code.matches(marker).count(), 1);
+                code = code.replace(
+                    marker,
+                    &format!("{marker} if({condition}){{each_requests++;each_bytes+=n;}}"),
+                );
+            }
+            let finish = "    fwp_cl_finish();\n";
+            assert_eq!(code.matches(finish).count(), 1);
+            code = code.replace(finish, &format!("{finish}fprintf(stderr,\"each-cost %llu %llu\\n\",each_requests,each_bytes);\n"));
+            fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+            let output = checked(
+                Command::new(&binary)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_REUSE_VERIFY", "0"),
+            );
+            assert_eq!(output.stdout, raw.stdout);
+            let stderr = String::from_utf8(output.stderr).unwrap();
+            let values: Vec<i64> = stderr
+                .trim()
+                .strip_prefix("each-cost ")
+                .unwrap()
+                .split_whitespace()
+                .map(|value| value.parse().unwrap())
+                .collect();
+            assert_eq!(values.len(), 2);
+            counts.insert((name, count), values);
+            if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
+                let path = PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                std::fs::write(path.join(format!("each-{name}-{count}.fwp")), source).unwrap();
+                std::fs::write(path.join(format!("each-{name}-{count}.c")), code).unwrap();
+                std::fs::copy(&binary, path.join(format!("each-{name}-{count}.exe"))).unwrap();
+            }
+        }
+    }
+    let growth = |name, metric| counts[&(name, 128)][metric] - counts[&(name, 32)][metric];
+    // The old implementation is an executable control: both versions print the
+    // same count, but map must allocate at least one discarded node per element.
+    assert!(growth("map", 0) - growth("fold", 0) >= 96, "{counts:?}");
+    assert!(
+        growth("map", 1) - growth("fold", 1) >= 24 * 96,
+        "{counts:?}"
+    );
+    assert!(growth("fold", 0) <= 96, "{counts:?}");
+    let mut report =
+        String::from("implementation\titerations\tmanaged_requests\trequested_bytes\n");
+    for ((name, count), values) in counts {
+        report.push_str(&format!("{name}\t{count}\t{}\t{}\n", values[0], values[1]));
+    }
+    eprint!("{report}");
+    if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
+        std::fs::write(PathBuf::from(path).join("each-storage.tsv"), report).unwrap();
+    }
 }

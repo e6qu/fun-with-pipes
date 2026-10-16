@@ -319,6 +319,15 @@ or branches. Functions that build records or make known direct calls retain thei
 existing choices. Alias, failure-cleanup and allocation checks must pass before
 acceptance; the [handoff](development-state.md) records current evidence.
 
+List `each` runs a callback from first to last and returns unit, written `()`.
+Its prepared definition, `const | flip fold ()`, uses unit as the running value
+of `fold`. Here `const` ignores that running value and selects the supplied
+callback; `fold` applies it to the next element. This replaces mapping to a list
+of unit results and immediately discarding that list. It adds no primitive or
+syntax. Tests compare output, aliases, state updates and early failures, and
+measure allocations against the previous mapping definition. Native verification
+is still required before claiming the allocation saving.
+
 A closure contains a function and its already supplied arguments. Generated
 calls retain/release captured values according to their types. Shared top-level
 computed values have cached owners, released during teardown. A type descriptor

@@ -7,10 +7,13 @@ open delivery PR is #153. Do not open a second PR before it is accepted.
 ## Current action
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
-Base: `ac3060d1`. Published code: `9fa2a0f4` (adds service-reflection cleanup).
+Base: `ac3060d1`. Published head: `6c538bef`. Runtime/compiler code: `9fa2a0f4`; the last
+commit adds dependency-cache CI and documentation.
 The compiler change is `79ce442f`; `cb0ffeea` corrects its native test setup.
 
 Next: require all six jobs in `38958562126` at `8684127d`, and fix any failures.
+Both Linux, both Windows and Apple Silicon pass; Intel Mac is finishing actual
+service calls. Reflection follow-up `38959410533` at `9fa2a0f4` is running on Linux.
 Run `38956983459` at `cb0ffeea` failed on Apple Silicon because the fixture looked
 for a generated Pair destructor that was not needed by its program. Its service
 allocation measurement passed. The correction supplies a real tuple consumer
@@ -94,8 +97,9 @@ Explicit `exit` also passes native checks at `975806e9` and actual WASI checks
 on both Linux architectures in `38949856424`, source `6b642a82`. Seven status
 cases preserve prior output and use the low eight bits of the exit status.
 Exit produces no result; it does not promise normal scope cleanup before process
-termination. Broader WASI/browser checks pass at `24caa70b` in `38947985548`.
-The compiler optimization below needs fresh WebAssembly checks.
+termination. Broader WASI/browser checks, including real process exit and
+physical-storage controls, pass on both Linux architectures at the new compiler
+source `79ce442f` in `38955989639`.
 
 ## Implemented follow-ups awaiting verification
 
@@ -111,7 +115,8 @@ a deliberately reintroduced result-box allocation must fail its count. The
 fixture enables real task unwind support and initializes the scheduler before
 counting result allocations. Existing
 record-worker and conversion controls run with it. Do not claim the one-allocation
-result until `38958562126` passes, or WebAssembly support until `38955989639` passes.
+result across native hosts until `38958562126` passes. The WebAssembly checks
+in `38955989639` already pass.
 
 Sender cleanup at `2dbf9b64` registers a channel sender's encoded buffer before
 encoding and sending. It releases on success, encoding traps and cancellation
@@ -131,6 +136,18 @@ The shared `scripts/run-native-tests.py` also adds explicit `--all` selection fo
 Linux. It retains every Cargo target and stress case, with two executable workers
 and one harness thread each. Missing/duplicate executables fail before execution;
 failed targets do not skip the remainder. Mac assignments remain unchanged.
+The measurement's plain `each` still builds and discards a list of unit results.
+A new library change uses `each = const | flip fold ()`: unit is the running
+value, and `const` selects the callback while ignoring that value. No primitive
+or syntax is added. Accepted-interpreter checks pass for aliases, state, ordered
+output and typed failure (0.26s), and preserve output `2`, `0` before a division
+trap with expected exit 101 (0.25s). Library formatting passes (0.01s).
+New native checks compare raw/optimized interpretation with O1/O2 tracing/ARC,
+then compare allocation slopes against the original mapping definition at
+32/128 elements. Focused CI runs these controls before the longer measurements.
+Do not claim a native saving until they pass; the earlier reports still describe
+the mapping-based `each`. This new source needs a combined six-host run.
+
 A separate dependency-only Windows workflow is prepared. Current main caches
 lack the new HTTP/2 dependency key; sibling preparation branches cannot share
 their copies. It builds/validates and caches the pinned dependencies after setup
@@ -138,7 +155,7 @@ changes merge, allowing later branches to reuse the main cache. It also runs on
 ready PRs changing those files, so both jobs must pass when this workflow is
 introduced. Keep it running when cancelling duplicate postmerge production CI.
 It uses the existing TLS script and architecture checks without installing an
-unneeded fwp compiler toolchain. Guarded actionlint passes (0.13s); actual jobs
+unneeded fwp compiler toolchain. Guarded actionlint passes for all changed workflows (1.27s); actual jobs
 remain to be verified on the next PR.
 
 Seven Python checks pass, including real Cargo metadata for 233 integration

@@ -83,11 +83,11 @@ jobs:
       - name: Service scope ownership contract inventory
         if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output context-evidence/contracts.json
-      - name: Forwarded record ownership
+      - name: Functional allocation and ownership
         if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
         env:
           FWP_CONTEXT_ARTIFACTS: context-evidence
-        run: cargo test --test unboxed_worker_locals -- --nocapture
+        run: cargo test --no-fail-fast --test unboxed_worker_locals --test state_sequence_ownership --test fold_unwind_ownership -- --nocapture
       - name: Repeated service context storage
         if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
         env:
