@@ -6,12 +6,12 @@ allocation diagnostic through `cfdf4d79` has been bundled into the process batch
 only changes after that anchor belong to this following compiler delivery. No
 second PR is open. Earlier parent changes must not be replayed.
 
-The only active PR is [#148](https://github.com/e6qu/fun-with-pipes/pull/148), at
-`93b1741abcf5ab2a61460746c0077564e0328c0e`, in the root worktree. Its final
-[production run 38825629531](https://github.com/e6qu/fun-with-pipes/actions/runs/38825629531)
-has eight passing jobs; only Linux AMD64 remains running.
-[Documentation 38825487182](https://github.com/e6qu/fun-with-pipes/actions/runs/38825487182)
-passes. The previous delivery merged in #147 as `c9127d2d` after all gates passed.
+PR #148 merged as `853d6669` after all nine production jobs and docs passed
+for `93b1741a`; tree and one-line message were verified. Duplicate post-merge
+production `38835480889` was canceled. The only active PR is now draft
+[#149](https://github.com/e6qu/fun-with-pipes/pull/149), root branch
+`owned-process-delivery`, at initial head `17696b4`. It contains the process,
+terminal and derivative reports. Root's handoff is the current delivery record.
 
 The following process/terminal batch is published at `ad53a46a` in
 `/private/tmp/fwp-process-utilities`, branch `owned-process-utilities`. Its
@@ -40,7 +40,7 @@ active, then continue. JIT is excluded. Failing tests are repair tasks.
 | 6 | In progress | Preserve equivalent-work profiles, raw samples and regression criteria |
 | 7 | In progress | Accept maintained application, process and terminal checks |
 
-Next: finish and merge #148, then deliver the combined process/terminal batch.
+Next: finish draft #149 and its combined final-head gate.
 In parallel, validate this numeric map-to-array candidate on six hosts and run
 four-host repeated comparisons. Fix failures before selecting it for the later
 PR. Transfer only changes after `cfdf4d79` onto accepted process main; no second
@@ -132,3 +132,14 @@ Timed scope includes process startup and output; this is fwp versus fwp, not
 C/Rust parity. Script parsing passes (0.14 s); no local timing claim is made.
 The runner suite is `mapped-array-costs`. Four-host run `38834969974` is queued/running at `d16592be`; the later
 Clippy repair changes tests/docs only. Results remain pending.
+
+The first cost comparison passes ARM Linux/macOS: direct numeric requests fall
+from 532,996 to 8,708 and the repeated derivative requests from 25,184,777 to
+23,087,625. Direct ARC time ratios are 0.788/0.868 and derivative ARC ratios
+0.966/0.950 respectively. Nested timings are mixed; retain all four-host results
+when complete. No general speed claim or full acceptance follows from two hosts.
+The old candidate lost known callback direct calls during fusion. The current
+revision preserves them as inline generated loops using the existing typed
+callback ownership entry, and adds real dynamic/captured callback cases. Unknown
+callbacks retain ordinary dynamic calls. Final semantics and timing must rerun
+for this change. Formatting passes; raw callback fixtures pass under the guard.

@@ -38,6 +38,8 @@ main = [
     ["a", "héllo", ""] | both (map string.length | array.from-list | array.to-list) id | echo,
 ] | ignore
 "#, true, 0),
+        ("dynamic", "pick : I64 -> (F64 -> F64)\npick = if (eq 0) (const (mul 2.0)) (const (add 3.0))\nmain = [1.0, 2.0] | map (args () | length | pick) | array.from-list | array.to-list | echo\n", true, 0),
+        ("captured", "main = [1.0, 2.0] | map (args () | length | int.to-float | add) | array.from-list | array.to-list | echo\n", true, 0),
         ("effects", "main = [1, 2, 3] | map (tap echo | add 4) | array.from-list | array.to-list | echo\n", true, 0),
         ("trap", "main = [1i8, 127i8, 2i8] | map (tap echo | add 1i8) | array.from-list | array.to-list | echo\n", true, 101),
         ("managed", "main = [\"a\", \"b\"] | map (concat \"!\") | array.from-list | array.to-list | echo\n", false, 0),
@@ -83,10 +85,26 @@ main = [
             for gc in ["tracing", "arc"] {
                 let code = emitted(compiler, &input, &dir.join("main.c"), gc, fused);
                 assert_eq!(
-                    code.contains("return fwp_p_array_map_list(l0, l1,"),
+                    code.contains("return fwp_p_array_map_list(l0, l1,")
+                        || code.contains("/* numeric mapped array: direct callback */"),
                     eligible && fused == "1",
                     "{name} {gc} {fused}"
                 );
+                if eligible && fused == "1" && name != "dynamic" {
+                    assert!(
+                        code.contains("/* numeric mapped array: direct callback */"),
+                        "known callback lost direct call: {name}"
+                    );
+                }
+                for body in code
+                    .split("/* numeric mapped array: direct callback */")
+                    .skip(1)
+                {
+                    let loop_body = body.split("fwp_scratch_finish").next().unwrap();
+                    assert!(
+                        loop_body.contains("fwp_owned_entry") && !loop_body.contains("fwp_apply_")
+                    );
+                }
                 for opt in ["-O1", "-O2"] {
                     let binary = dir.join("main.exe");
                     fwp::cgen::compile_c(&code, &binary, opt).unwrap();

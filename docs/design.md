@@ -133,7 +133,9 @@ current compiler validation and performance evidence for this new change.
 The candidate optimization recognizes `map f | array.from-list` when each mapped
 result is an inline integer, F32 or F64. It runs the same callbacks in the same
 order, stores their numeric results in temporary storage, then packs the array.
-It avoids allocating list nodes that would immediately be discarded. Input
+It avoids allocating list nodes that would immediately be discarded. Known
+callbacks keep direct calls, including their captured values; unknown callbacks
+use the ordinary dynamic call path. Input
 aliases stay alive; failures release the temporary storage. Boxed numbers and
 managed results keep their existing construction and cleanup rules. No new
 language notation is introduced.

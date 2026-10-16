@@ -55,7 +55,9 @@ def main():
                     dict(environment, FWP_MAP_ARRAY=enabled))
                 emit_ns = time.perf_counter_ns() - before
                 code = cfile.read_text()
-                fused_calls = code.count('return fwp_p_array_map_list(l0, l1,')
+                direct_calls = code.count('/* numeric mapped array: direct callback */')
+                dynamic_calls = code.count('return fwp_p_array_map_list(l0, l1,')
+                fused_calls = direct_calls + dynamic_calls
                 if enabled == '0': assert fused_calls == 0
                 if enabled == '1' and name != 'nested': assert fused_calls > 0, name
                 binary = out / stem
@@ -78,7 +80,7 @@ def main():
                     assemblySha256=hashlib.sha256(assembly.encode()).hexdigest(),
                     generatedBytes=cfile.stat().st_size, binaryBytes=binary.stat().st_size,
                     emitWallNs=emit_ns, compileWallNs=compile_ns, command=list(map(str, command)),
-                    fusedCallSites=fused_calls, tape=tape, managed=managed, processWallNs=[])
+                    fusedCallSites=fused_calls, directCallbackSites=direct_calls, dynamicCallbackSites=dynamic_calls, tape=tape, managed=managed, processWallNs=[])
                 binaries[enabled] = binary
             for sample in range(8):
                 for enabled in (['0', '1'] if sample % 2 == 0 else ['1', '0']):
