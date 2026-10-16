@@ -113,6 +113,22 @@ Recursion that would require infinitely many type specializations is rejected.
 Effect variables can be generalized without an explicit signature because effects
 are checked and erased before code generation.
 
+## Combining hash and bitwise pipelines
+
+A list pipeline can become one loop when running its stages element by element
+preserves effects, termination and which trap occurs first. Structural `hash`
+reads a finite immutable value without callbacks or language traps; its type
+constraint excludes functions and resources. Integer `bit.and`, `bit.or`,
+`bit.xor` and `bit.not` are also total: every valid input has a result. The existing
+fusion analysis recognizes these contracts, so `map hash | fold bit.xor 0u64`
+can avoid its intermediate result list. It keeps captured inputs alive through
+the ordinary ownership rules. Hash still uses its runtime type description.
+
+Bit shifts remain excluded from that proof because an oversized shift traps.
+Effectful callbacks and distinguishable traps still prevent interleaving. This
+adds no syntax or implicit conversion. The handoff separates implementation,
+focused checks and full acceptance; benchmarks retain the unfused baseline.
+
 ## Borrowing array data inside loops
 
 An array slice can store a pointer into another array rather than copying its

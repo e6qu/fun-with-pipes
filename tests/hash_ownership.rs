@@ -157,3 +157,133 @@ fn hashing_allocates_nothing_and_the_buffered_control_is_detected() {
         }
     }
 }
+
+#[test]
+fn hash_and_bitwise_fusion_preserve_effects_traps_and_wide_values() {
+    let dir = fwp::cgen::TempDir::new("hash-fusion").unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let cases = [
+        ("values", include_str!("fixtures/hash_fusion.fwp"), true, 0),
+        ("effects", "main = range 0 3 | map (tap echo | hash) | fold (curry (tap echo | uncurry bit.xor)) 0u64 | echo\n", false, 0),
+        ("distinct-traps", "main = [0, 9223372036854775807] | map (add 1 | hash) | fold (curry (const 0u64 | div 0u64)) 0u64 | echo\n", false, 101),
+        ("shift-trap", "main = [1u8, 2u8] | map (bit.shl 8 | hash) | find (const True) | echo\n", false, 101),
+    ];
+    for (label, source, fused, status) in cases {
+        let input = dir.join("main.fwp");
+        std::fs::write(&input, source).unwrap();
+        let raw = Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(raw.status.code(), Some(status), "{label}: {raw:?}");
+        if label == "distinct-traps" {
+            assert!(String::from_utf8_lossy(&raw.stderr).contains("arithmetic overflow in I64"));
+        }
+        let interpreted = Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(
+            (
+                &interpreted.stdout,
+                &interpreted.stderr,
+                interpreted.status.code()
+            ),
+            (&raw.stdout, &raw.stderr, raw.status.code()),
+            "{label}"
+        );
+        for arc in [false, true] {
+            let cfile = dir.join("main.c");
+            let mut build = Command::new(compiler);
+            build
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile);
+            if arc {
+                build.args(["--gc", "arc"]);
+            }
+            checked(&mut build);
+            let code = std::fs::read_to_string(cfile).unwrap();
+            assert_eq!(code.contains("/* fused :"), fused, "{label}");
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join("main.exe");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let actual = Command::new(binary)
+                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
+                    .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" })
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    (&actual.stdout, &actual.stderr, actual.status.code()),
+                    (&raw.stdout, &raw.stderr, raw.status.code()),
+                    "{label}/{arc}/{opt}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn hash_reduction_removes_intermediate_list_allocations() {
+    let dir = fwp::cgen::TempDir::new("hash-fusion-counts").unwrap();
+    let input = dir.join("main.fwp");
+    std::fs::write(&input, "main = range 0 65 | map (both id (const (range 0 16 | array.from-list)) | hash) | fold bit.xor 0u64 | echo\n").unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let raw = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    for arc in [false, true] {
+        let cfile = dir.join("main.c");
+        let mut build = Command::new(compiler);
+        build
+            .args(["build", "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile);
+        if arc {
+            build.args(["--gc", "arc"]);
+        }
+        checked(&mut build);
+        let mut code = std::fs::read_to_string(cfile).unwrap();
+        assert!(code.contains("/* fused :"));
+        let marker = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        assert_eq!(code.matches(marker).count(), 1);
+        code = code.replace(
+            marker,
+            &format!("static unsigned hash_requests;\n{marker} hash_requests++;"),
+        );
+        let start = code
+            .find("static void *fwp_main_thread(void *arg) {")
+            .unwrap();
+        let finish = start + code[start..].find("\n}\n").unwrap() + 3;
+        let body = code[start..finish].replace("    fwp_init_consts();\n",
+            "    fwp_init_consts();\n    hash_requests = 0; intptr_t hash_budget = fwp_gc.budget;\n")
+            .replace("    fwp_cl_finish();\n",
+            "    fwp_cl_finish();\n    if(hash_requests > 100 || fwp_gc.budget != hash_budget) exit(249);\n");
+        code.replace_range(start..finish, &body);
+        // The measured unfused baseline needs 216 requests at these sizes:
+        // 16 input nodes + 65 range nodes + 65 results + 65 tuples + 5 fixed.
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("main.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let actual = checked(
+                Command::new(binary)
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0"),
+            );
+            assert_eq!(actual.stdout, raw.stdout);
+        }
+    }
+}

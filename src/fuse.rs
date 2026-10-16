@@ -166,7 +166,7 @@ impl<'p> Behaviors<'p> {
     }
 }
 
-/// What a primitive can do: only arithmetic and comparisons are known.
+/// What a primitive can do: only the explicitly proved contracts below are known.
 fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
     let (params, result) = ty.params(2);
     match sym {
@@ -174,6 +174,16 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
             // primitive numbers only: anything else compares structurally
             params.first().and_then(|t| num(t)).map(|_| BTreeSet::new())
         }
+        // Hash accepts finite immutable structural values, not functions or
+        // resources. It reads canonical bytes without callbacks or language
+        // traps. Its borrowed input stays owned by the ordinary fused loop.
+        "hash" => none(),
+        // These integer operations are total, including boxed wide integers.
+        // Shifts are deliberately absent: their bit count can trap.
+        "bit.and" | "bit.or" | "bit.xor" | "bit.not" => match num(result)? {
+            Num::Int(_) => none(),
+            Num::Float => None,
+        },
         "prim.zero" | "prim.one" => num(result).map(|_| BTreeSet::new()),
         "prim.add" | "prim.sub" | "prim.mul" | "prim.neg" => match num(result)? {
             Num::Float => none(),

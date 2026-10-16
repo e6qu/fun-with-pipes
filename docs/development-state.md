@@ -125,3 +125,29 @@ zip/fold coverage, mapped-array CPU report, zip reports and selector choices.
 Merge new hash/hash-windows and WASI selectors into the accepted workflow.
 Rewrite the delivery section of PLAN and this handoff around the actual combined
 head; do not carry preparation-era next actions into the delivery.
+
+## Next measured change: prove total hash and bitwise stages
+
+The four-host baseline identifies 12,309 / 7,173 managed requests in hash/map/fold
+programs even after hash itself allocates nothing. Inspection confirms the fusion
+analysis rejects both `hash` and `bit.xor` as unknown. Hash's structural constraint
+excludes functions and resources; its immutable finite values have no callbacks
+or language traps. Integer AND/OR/XOR/NOT also have no traps; shifts remain
+excluded because an oversized shift traps. Recognize these existing contracts
+in the existing analysis, without new syntax, flags or a second optimizer.
+
+Acceptance must show the hash pipeline becomes one loop, fewer managed requests,
+unchanged retained inputs, and raw/native agreement at O1/O2 in both memory modes.
+Effectful callbacks, distinct traps and shifts must keep their original order;
+wide bitwise values need explicit coverage. Repeat the same C/Rust measurement
+on runners and retain the original baseline rather than assuming a timing gain.
+
+The existing analysis now recognizes structural hash and integer AND/OR/XOR/NOT.
+New focused tests require a fused loop, raw/native O1/O2 agreement, effects and
+distinct-trap order, oversized-shift rejection, wide integer results, retained
+strings and at most 100 managed requests for 65 hashes over 16 numbers (the
+unfused formula gives 216). Actual WASI also runs the positive fixture. Guarded
+accepted raw interpretation passes all four cases (0.61 s), the isolated harness
+compiles (0.50 s), formatting passes (0.97 s) and docs pass (2.55 s). These do not
+verify the changed compiler; focused native/WASI gates and repeated comparisons
+must pass on runners before adoption.

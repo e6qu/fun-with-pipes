@@ -218,6 +218,7 @@ square = head | option.unwrap-or zero | fork mul id id
 main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
 "#),
         ("hashes", include_str!("fixtures/hash_values.fwp")),
+        ("hash-fusion", include_str!("fixtures/hash_fusion.fwp")),
         ("derivatives", "main = range 0 16 | map (const (range 0 32 | map int.to-float) | vjp (map (mul 2.0)) (repeat 32 1.0) | sum) | sum | echo\n"),
     ];
     for (name, program) in programs {
