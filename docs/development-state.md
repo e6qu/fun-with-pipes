@@ -12,16 +12,21 @@ The main workspace `/Users/zardoz/projects/fun-with-pipes` tracks its branch
 has production `38915283341` running; benchmarks and documentation `38915283274`
 pass. Its decoded-value, numerical-worker and UDP changes are already combined.
 
-Next: fix any failures and require all nine production jobs plus documentation
-on that exact head. Squash-merge with explicit subject
-`Reduce temporary memory and clean up network resources` and an empty body.
-Verify the merge tree, parent and message, then cancel duplicate postmerge CI.
-`/private/tmp/fwp-merge-153.py --merge` checks these gates. Standing authorization
-covers publication, fixes and successive merges; do not request it again.
+Production `38915283341` failed on Windows ARM64 because the new byte-decoder
+tests require OpenSSL but ran before dependency installation. The workflow repair
+moves both decoder targets into the existing TLS step and preserves coverage.
+The earlier ordinary-resource step now finishes independent targets after a
+failure. Other current-head production jobs may still reveal additional fixes.
 
-After #153 acceptance, rebase only this branch's delta after `bb6d2ea3` onto the
-accepted squash. Integrate the following work only after its focused checks pass,
-then publish one substantial PR and require fresh complete acceptance.
+Next: to avoid another full acceptance cycle, combine this preparation into the same
+PR #153 after focused tests pass. Do not open a second delivery PR or wait to
+merge the known failing head. Update its plain-language description to cover
+TCP/TLS as well as decoded values, numerical workers and UDP. Publish the combined
+head once, require fresh nine-job production and documentation acceptance, then
+squash-merge with `Reduce temporary memory and clean up network resources` and
+an empty body. Verify merge tree, parent and message; cancel duplicate postmerge
+CI. `/private/tmp/fwp-merge-153.py` still names the old head/runs and MUST be
+updated before use. Standing authorization covers these steps.
 
 PR #152 is accepted as `1fa0fec6`, with all nine production jobs and docs passing,
 matching tested files, a single-line commit message and no trailers. Duplicate
@@ -51,7 +56,7 @@ Compiler contracts and source inspection do not establish tested support.
 
 Preparation `1487cd96` repairs the failure tests and adds real TCP library
 unload plus TLS executable inspection. Native replacement `38920866331` passes
-on ARM macOS; other hosts are pending. This includes all five TCP tests, UDP,
+on ARM macOS and both Linux hosts; other hosts are pending. This includes all five TCP tests, UDP,
 task cleanup, mutual TLS, POSIX TLS controls and actual socket-library unload.
 Earlier `38919269219` found obsolete test hooks and a Linux ARM64 negative control
 that assumed a conservative collector would discard a stale register. The repair
@@ -66,13 +71,21 @@ library dependency. These are representation observations, not throughput claims
 Artifacts are in `/private/tmp/fwp-tcp-148-evidence/macos-arm64` and the prior TCP
 probe is in `/private/tmp/fwp-tcp-59-evidence/macos-arm64`.
 
-That inspection exposed an unnecessary finalizer-table search when an ARC-only
-executable releases a socket: such sockets never register there. The pending
-runtime change omits that search only in ARC executables; tracing and unloadable
-libraries retain it. The native test traps if the executable performs the lookup.
-File cleanup already has the corresponding guard and needs no change. Publish
-this refinement with the plain-language ownership example, then require focused
-native and shared-runtime WASI checks on the new runtime before delivery.
+Refinement `33f8de56` removes an unnecessary finalizer-table search when an
+ARC-only executable releases a socket. Such sockets never register there;
+tracing and unloadable libraries retain the lookup. The native probe traps if
+an ARC executable performs it. File cleanup already uses the correct guard.
+Native `38921794654` and WASI `38921802829` began for this revision.
+
+Windows then exposed two existing native/interpreter differences. Native TCP
+and HTTP/2 listeners enabled Winsock `SO_REUSEADDR`, which can bind over a live
+listener; the interpreter does not. The repair keeps Unix reuse and Windows'
+ordinary bind behavior. Native TLS read the CRT errno slot, losing Windows socket
+resets; it now clears and captures Winsock's error slot as the interpreter does.
+Clean TLS shutdown is distinguished from a stale socket error. A deterministic
+native test covers handshake/read/write resets, clean shutdown and readiness
+waits; ignoring socket errors must make its negative control fail. These repairs
+need a fresh focused run. Do not normalize an unexpected successful read away.
 
 The native suite compares raw and optimized interpretation with O1/O2 tracing
 stress and ARC, checks cleanup without collections, and inspects ARC symbols.
@@ -98,7 +111,7 @@ are implementation counts, not support evidence. The documentation audit passes
 in 2.46s. Constructor evidence retention passes in 0.13s. The new TCP library fixture
 prints `True` under the accepted interpreter (guarded, 0.26s), and the updated
 Rust formatting check passes in 1.12s. Binary inspection passes under the guard
-in 0.25s/0.26s; the latest formatting check passes in 1.11s.
+in 0.25s/0.26s; the latest formatting check passes in 1.20s.
 
 ## Roadmap status
 

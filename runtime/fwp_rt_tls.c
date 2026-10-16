@@ -342,6 +342,8 @@ static ssize_t fwp_tls_outcome(SSL *ssl, int r, int during, int e, int *ww) {
         errno = EAGAIN;
         return -1;
     case SSL_ERROR_ZERO_RETURN:
+        e = 0; /* Clean TLS shutdown is independent of a socket error slot. */
+        /* fall through */
     case SSL_ERROR_SYSCALL:
         ERR_clear_error();
         if (!during) {
@@ -349,9 +351,11 @@ static ssize_t fwp_tls_outcome(SSL *ssl, int r, int during, int e, int *ww) {
             errno = e;
             return -1;
         }
-        if (e)
-            snprintf(fwp_tls_err, sizeof fwp_tls_err, "TLS handshake failed: %s", strerror(e));
-        else
+        if (e) {
+            char message[1024];
+            snprintf(fwp_tls_err, sizeof fwp_tls_err, "TLS handshake failed: %s",
+                     fwp_socket_message(e, message, sizeof message));
+        } else
             snprintf(fwp_tls_err, sizeof fwp_tls_err, "TLS handshake failed: connection closed");
         return -2;
     default: {
@@ -373,8 +377,15 @@ static ssize_t fwp_tls_outcome(SSL *ssl, int r, int during, int e, int *ww) {
 static ssize_t fwp_tls_step(SSL *ssl, int *ww) {
     ERR_clear_error();
     errno = 0;
+#ifdef _WIN32
+    WSASetLastError(0);
+#endif
     int r = SSL_do_handshake(ssl);
+#ifdef _WIN32
+    int e = WSAGetLastError();
+#else
     int e = errno;
+#endif
     return r == 1 ? 0 : fwp_tls_outcome(ssl, r, 1, e, ww);
 }
 
@@ -383,8 +394,15 @@ static ssize_t fwp_tls_recv(void *p, char *buf, size_t n, int *ww) {
     int during = !SSL_is_init_finished(ssl);
     ERR_clear_error();
     errno = 0;
+#ifdef _WIN32
+    WSASetLastError(0);
+#endif
     int r = SSL_read(ssl, buf, n > INT_MAX ? INT_MAX : (int)n);
+#ifdef _WIN32
+    int e = WSAGetLastError();
+#else
     int e = errno;
+#endif
     return r > 0 ? r : fwp_tls_outcome(ssl, r, during, e, ww);
 }
 
@@ -401,8 +419,15 @@ static ssize_t fwp_tls_send(void *p, const char *buf, size_t n, int *ww) {
     if (n > INT_MAX) n = INT_MAX;
     ERR_clear_error();
     errno = 0;
+#ifdef _WIN32
+    WSASetLastError(0);
+#endif
     int r = SSL_write(ssl, buf, (int)n);
+#ifdef _WIN32
+    int e = WSAGetLastError();
+#else
     int e = errno;
+#endif
     if (r > 0) {
         SSL_set_app_data(ssl, 0);
         return r;

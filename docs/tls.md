@@ -69,6 +69,13 @@ execution; acceptance remains recorded in the handoff.
 
 Connections use TLS 1.2 or 1.3, with OpenSSL's default ciphers.
 
+A socket reset is an IO error, not a successful empty read. On Windows, the
+native runtime reads Winsock's error value, matching the interpreter; that value
+is separate from the C library's `errno`. A completed TLS shutdown still returns
+end-of-stream. The focused tests check these cases independently of network
+packet timing, alongside real mutual-TLS connections.
+
+
 ## Connections
 
 `lib/tls.fwp` ([stdlib.md](stdlib.md#tls)). A TLS connection is a `Conn`,

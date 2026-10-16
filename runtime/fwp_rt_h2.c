@@ -549,8 +549,13 @@ static fwp_socket_t h2_listen(const char *addr, char *bound, size_t bn) {
             continue;
         }
 #endif
+#ifndef _WIN32
+        /* Winsock SO_REUSEADDR permits a second live listener on this port.
+         * Match the interpreter's ordinary bind policy; Unix reuse permits
+         * restarting after a previous listener closes. */
         int one = 1;
         setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&one, sizeof one);
+#endif
         if (fwp_socket_bind(fd, a->ai_addr, a->ai_addrlen) == 0 && fwp_socket_listen(fd, 128) == 0) break;
         err = errno;
         fwp_socket_close(fd);

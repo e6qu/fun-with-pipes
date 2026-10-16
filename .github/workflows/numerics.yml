@@ -95,6 +95,11 @@ jobs:
           FWP_REQUIRE_TLS: '1'
           FWP_TCP_CONSTRUCTOR_ARTIFACTS: tcp-evidence
         run: cargo test --test tls mutual_tls -- --exact
+      - name: Native TLS socket errors and clean shutdown
+        if: ${{ !cancelled() && inputs.suite == 'tcp' }}
+        env:
+          FWP_REQUIRE_TLS: '1'
+        run: cargo test --test tls native_tls_preserves_socket_errors_and_clean_shutdown -- --exact
       - name: Existing POSIX TLS teardown and session-transfer controls
         if: ${{ !cancelled() && inputs.suite == 'tcp' && runner.os != 'Windows' }}
         run: cargo test --no-fail-fast --test tls_wire_ownership --test tls_alpn_roots --test tls_peer_subject_ownership --test tls_listener_ownership --test connect_cleanup --test library_resources

@@ -1648,8 +1648,13 @@ static V fwp_p_tcp_listen(V addr, const fwp_desc *err) {
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
         fd = fwp_socket_open(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
         if (fd == FWP_INVALID_SOCKET) continue;
+#ifndef _WIN32
+        /* Winsock SO_REUSEADDR permits a second live listener on this port.
+         * Match the interpreter's ordinary bind policy; Unix reuse permits
+         * restarting after a previous listener closes. */
         int one = 1;
         setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&one, sizeof one);
+#endif
         if (fwp_socket_bind(fd, ai->ai_addr, ai->ai_addrlen) == 0 && fwp_socket_listen(fd, 1024) == 0) break;
         int e = errno;
         fwp_socket_close(fd);
