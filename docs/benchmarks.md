@@ -885,7 +885,7 @@ does not promise a speedup for every program.
 
 `hash` computes a deterministic U64 fingerprint from a value's typed binary
 encoding. FNV-1a combines each byte with XOR and multiplication modulo 2^64;
-it is not a cryptographic hash. The candidate feeds those bytes directly into
+it is not a cryptographic hash. The native implementation feeds those bytes directly into
 the running fingerprint instead of allocating a complete encoded byte buffer.
 The interpreter keeps its independent buffered implementation as a reference.
 
@@ -959,11 +959,11 @@ hosts agree on these ownership measurements in tracing and ARC modes:
 | Large array | 7,173 → 5,122 | 3,072 → 1,024 | 163,848 → 163,848 |
 
 Final charged storage is zero. Allocation profiles run separately with collection
-disabled. Generated C still allocates a tuple per hash and retains its captured
+disabled. At that measured revision, generated C still allocates a tuple per hash and retains its captured
 array field; input `range | array.from-list` also builds list nodes. Hash itself
 allocates nothing. A borrowed argument is not automatically nonescaping: its
 contract must separately prove that it cannot be retained before stack placement
-is safe. These remaining costs are candidates for further measured work.
+is safe. The following experiments address those measured costs.
 
 The following CPU ratios compare checked ARC against references measured beside
 it in this post-fusion run. They do not compare absolute times from different
@@ -1016,8 +1016,8 @@ Rust the corresponding ratios are 1.708, 1.303, 0.956 and 1.170. Large ARC / C
 ratios are 1.014, 1.036, 1.031 and 1.327; ARC / Rust ratios are 1.026, 1.032,
 0.999 and 1.404. The Intel Mac gap is substantially wider than the first run's
 near-parity result. Hardware and timing variability are retained in the report;
-neither run justifies a general claim of parity. Remaining tuple allocations,
-array retains and input list construction are concrete next costs to address.
+neither run justifies a general claim of parity. The following experiments address tuple allocations, array retains and input
+list construction while retaining these earlier samples for comparison.
 
 ### Intermediate stack placement experiment
 
@@ -1053,3 +1053,84 @@ ratios are 1.296, 1.247, 1.097 and 1.071. Large ARC / C ratios are
 These are simultaneous comparisons within this run, not before/after speedup
 claims across different runner invocations. The following field-borrowing work
 targets those remaining counts and requires its own semantic and timing evidence.
+
+### Borrowing temporary fields without counting them
+
+[The four-host borrowed-field report](measurements/hash-borrowed-fields-2026-10-16.json)
+combines stack tuples, direct range arrays and field borrowing. A borrow uses the
+array while its existing owner keeps it alive, so building a temporary hash tuple
+needs no additional reference. It preserves the same values and hash bytes as the
+programs above. Every host reports these counts in tracing and checked ARC modes:
+
+| Workload | Managed requests, post-fusion → current | Retains, post-fusion → current | Peak charged bytes, post-fusion → current |
+|---|---:|---:|---:|
+| Small array | 4,114 → 2 | 4,096 → 0 | 656 → 144 |
+| Large array | 5,122 → 2 | 1,024 → 0 | 163,848 → 32,776 |
+
+The two requests hold the input array and printed result; final charged storage
+is zero. The hash loop allocates no managed objects and performs no reference
+increments. These claims apply to these programs, not every fwp program or every
+system allocation. C/Rust still count only their one application array allocation.
+
+The retained ARM64 loop stores the tuple in stack slots and calls the hash visitor.
+The array pointer, iteration and XOR accumulator occupy registers across that
+call. The loop has no allocation or retain/release call. The recursive hash
+visitor still uses runtime type descriptions and its own stack; this excerpt
+is not a measurement of dynamic register spills or cache misses.
+
+CPU ratios against references measured in this run are:
+
+| Host | Small / C | Small / Rust | Large / C | Large / Rust |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 1.295 | 1.083 | 1.027 | 1.026 |
+| Linux ARM64 | 1.341 | 1.193 | 1.028 | 1.024 |
+| macOS ARM64 | 1.207 | 0.997 | 1.099 | 1.087 |
+| macOS AMD64 | 1.192 | 1.046 | 1.220 | 1.230 |
+
+For example, small Linux ARM64 work still uses about 34% extra CPU time against
+C and 19% against Rust. Large macOS gaps are wider than in the direct-range run:
+about 10% against C on ARM64 and 22% on AMD64. These separate runner invocations
+do not isolate the compiler change's timing effect. The paired comparisons below investigate that difference; lower counts alone
+cannot justify a speedup or parity claim.
+
+### Repeating the allocation and borrowing changes together
+
+[Two paired runs](measurements/hash-borrowed-cpu-2026-10-16.json) execute the same
+verified post-fusion baseline and current binaries beside C/Rust. Each run uses
+twelve balanced rotating whole-process samples, with separate normal/off
+collection profiles. Every current profile reproduces two requests, zero retains
+and zero final charged storage. Both runs retain all raw timing samples.
+
+Each entry below gives first-run / second-run CPU ratios of current to baseline.
+Below 1 means less CPU time; above 1 means more. These compare the complete batch,
+not the isolated contribution of any one transformation.
+
+| Host | Small ARC | Large ARC | Small tracing | Large tracing |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 0.909 / 0.910 | 0.989 / 0.996 | 0.909 / 0.988 | 0.995 / 0.993 |
+| Linux ARM64 | 0.934 / 0.919 | 0.992 / 0.993 | 0.921 / 0.912 | 0.995 / 0.994 |
+| macOS ARM64 | 1.032 / 0.918 | 0.983 / 1.000 | 0.926 / 0.905 | 0.966 / 0.989 |
+| macOS AMD64 | 0.935 / 0.967 | 1.008 / 0.997 | 0.991 / 0.946 | 0.993 / 1.065 |
+
+The first small ARM macOS ARC median rises from 3.496 to 3.609 ms CPU and 5.398 to
+5.620 ms elapsed. Its CPU ranges overlap: 2.870–5.811 ms before and 2.854–5.987 ms
+after. The repeat reverses that result: 2.168 to 1.991 ms CPU and an elapsed ratio
+of 0.949. The first large Intel macOS ARC CPU/elapsed ratios of 1.008/1.013 become
+0.997/0.971 in the repeat. These observations do not establish repeatable macOS
+regressions, but neither do they promise that every program becomes faster.
+Large-input changes are generally small; small Linux and Intel macOS CPU medians
+fall in both runs. The array and tuple storage reduction is reproducible.
+
+Remaining current ARC/C and ARC/Rust CPU ratios in the second run are:
+
+| Host | Small / C | Small / Rust | Large / C | Large / Rust |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 1.381 | 1.178 | 1.020 | 1.015 |
+| Linux ARM64 | 1.373 | 1.237 | 1.028 | 1.024 |
+| macOS ARM64 | 1.144 | 0.979 | 1.043 | 1.050 |
+| macOS AMD64 | 1.216 | 1.097 | 1.059 | 1.022 |
+
+Startup, input construction, printing and generic hash traversal remain part of
+fwp's measured cost. The compiler has removed the targeted intermediate objects
+and count traffic, not every difference from handwritten code. Hardware, compiler
+flags, binary sizes, profiles and raw samples remain in the linked reports.

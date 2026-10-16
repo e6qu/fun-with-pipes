@@ -60,11 +60,20 @@ latest compiler change is `ac72124c2fd10178d70b1b1dde5b9d56ce178a7f`.
   removing an unsupported instruction guarantee. Generated docs follow the source.
   No SIMD runtime implementation changed in this batch.
 
-At `ac72124c`, focused native `38864599295` passes five hosts, with ARM macOS
-running. WASI `38864602220` passes ARM64, with AMD64 running. Four-host costs
-`38864604854` pass Intel macOS and Linux ARM64; the other jobs remain pending.
-Those two reports show two managed allocation requests and zero retains for both
-workloads, with zero final charged storage. This is not yet four-host acceptance.
+At `ac72124c`, focused native `38864599295` passes all six hosts and WASI
+`38864602220` passes both actual WASI hosts. Four-host costs `38864604854` also
+pass. All four verified reports show two managed allocation requests and zero retains
+for both workloads, with zero final charged storage. Source/binary/assembly hashes
+were checked under the guard (0.13 s); the report is
+`hash-borrowed-fields-2026-10-16.json`. Its inspected ARM64 loop keeps state in
+registers and stores the tuple on the stack, with no allocation or count calls.
+Paired before/after run `38866837452` passes all four hosts and compares baseline
+`38856285939` against these final costs at documentation/script head `aab2a928`.
+Its raw report is `hash-borrowed-cpu-2026-10-16.json`. A second balanced run `38867789225` also passes all four hosts. The earlier small
+ARM macOS and large Intel macOS ARC regressions did not repeat. Both raw reports,
+remaining C/Rust overhead and the regression investigation are retained together;
+all binary/source/assembly identities agree across repeats (guarded 0.13 s).
+No universal speedup claim is justified.
 These focused workflows contain intentionally unselected jobs: skipped jobs do
 not count as production support. The delivery still needs all nine full gates.
 
@@ -112,13 +121,20 @@ pass, then publish the combined ownership and allocation batch.
 
 1. Monitor #151's exact-head gates, fix failures and squash merge when all pass.
    Verify tree, parent and exact message; cancel only duplicate postmerge gates.
-2. Complete final native/WASI/cost checks for `ac72124c`. Retain all four cost
-   reports and verified generated source/binary/assembly hashes; inspect actual
-   hot-loop code. Run `hash-repeat` with baseline `38856285939` and final evidence
-   `38864604854`, retaining regressions and equivalent C/Rust comparisons.
+2. Hash checks and two paired comparisons are complete at `ac72124c`. Preserve
+   their retained evidence while validating the combined vector batch below;
+   no hash compiler source changed after those focused checks.
 3. Transfer this batch after #151 merges, reconcile docs and publish one substantial
    PR. Require fresh full production and docs checks for its combined final head.
-4. Use measured remaining costs and ownership gaps to select the next batch.
+4. Combine the vector preparation into this same substantial delivery once its
+   focused checks pass. It is `/private/tmp/fwp-owned-vectors`, branch
+   `owned-vector-preparation`, anchored at `aab2a928`; transfer only later commits.
+   Runtime implementation `637b3eb2` runs native `38867603162` and WASI
+   `38867607803`. Follow-up `6be8f245` adds a concept-first runnable example,
+   manual-record compatibility coverage and a C/Rust lane comparison under
+   `38869050349`; it does not change the runtime. Its own handoff records the contracts and failure controls.
+   This avoids a separate full-matrix cycle for related numerical ownership.
+5. Use measured remaining costs and ownership gaps to select the next batch.
    Browser/service boundaries, retained callbacks, numerical/network contracts,
    derivative scaling and OpenCL runtime compilation remain open. JIT is excluded.
 

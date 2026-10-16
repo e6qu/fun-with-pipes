@@ -90,7 +90,9 @@ fields through hashing instead of repeatedly retaining them. The independent
 ownership verifier checks that those fields remain alive. Validate semantic,
 failure and physical-free tests across native targets and WASI; then retain
 four-host allocation profiles, generated machine code and paired C/Rust timing.
-Focused checks are preparation, not full production acceptance. Open this batch's
+The same batch prepares ownership for vector wrappers, boxed lanes and reduction
+accumulators, with alias and partial-failure checks. Focused checks are preparation,
+not full production acceptance. Open this batch's
 PR only after #151 merges, then require fresh combined final-head gates.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
