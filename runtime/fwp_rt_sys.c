@@ -322,6 +322,8 @@ typedef struct {
     pid_t pid;
     posix_spawn_file_actions_t actions;
     int actions_initialized;
+    posix_spawnattr_t attributes;
+    int attributes_initialized;
     fwp_buf out, err;
 } fwp_process;
 static void fwp_process_close(int *fd) {
@@ -344,9 +346,36 @@ static void fwp_process_finish(void *pointer) {
         posix_spawn_file_actions_destroy(&process->actions);
         process->actions_initialized = 0;
     }
+    if (process->attributes_initialized) {
+        posix_spawnattr_destroy(&process->attributes);
+        process->attributes_initialized = 0;
+    }
     fwp_mem_free(process->args); process->args = NULL;
     fwp_buf_release(&process->out);
     fwp_buf_release(&process->err);
+}
+
+/* Block broken-pipe delivery only on this thread around write. Libraries must
+ * preserve the host's signal disposition and any already-pending SIGPIPE. */
+static ssize_t fwp_process_write(int fd, const void *bytes, size_t size) {
+    sigset_t blocked, saved, pending;
+    sigemptyset(&blocked); sigaddset(&blocked, SIGPIPE);
+    if (pthread_sigmask(SIG_BLOCK, &blocked, &saved)) fwp_trap("cannot block SIGPIPE during process input");
+    if (sigpending(&pending)) {
+        pthread_sigmask(SIG_SETMASK, &saved, NULL);
+        fwp_trap("cannot inspect pending process signals");
+    }
+    int already_pending = sigismember(&pending, SIGPIPE);
+    ssize_t result = write(fd, bytes, size);
+    int failed = errno;
+    if (result < 0 && failed == EPIPE && !already_pending) {
+        if (sigpending(&pending) == 0 && sigismember(&pending, SIGPIPE)) {
+            int delivered; sigwait(&blocked, &delivered);
+        }
+    }
+    if (pthread_sigmask(SIG_SETMASK, &saved, NULL)) fwp_trap("cannot restore process signal mask");
+    errno = failed;
+    return result;
 }
 
 /* With capture, send input and collect both streams without pipe deadlock;
@@ -393,17 +422,28 @@ static V fwp_run_process(V argv, V input, int capture, const fwp_desc *err) {
         rc = posix_spawn_file_actions_adddup2(&process.actions, 2, 1);
         if (rc) { failed = rc; goto finish; }
     }
+    /* The parent ignores broken-pipe signals for its own IO. Rust Command
+     * restores SIGPIPE in children; native children must have the same policy. */
+    rc = posix_spawnattr_init(&process.attributes);
+    if (rc) { failed = rc; goto finish; }
+    process.attributes_initialized = 1;
+    sigset_t defaults; sigemptyset(&defaults); sigaddset(&defaults, SIGPIPE);
+    rc = posix_spawnattr_setsigdefault(&process.attributes, &defaults);
+    if (rc) { failed = rc; goto finish; }
+    rc = posix_spawnattr_setflags(&process.attributes, POSIX_SPAWN_SETSIGDEF);
+    if (rc) { failed = rc; goto finish; }
     pid_t pid;
-    rc = posix_spawnp(&pid, program, &process.actions, NULL, process.args, environ);
+    rc = posix_spawnp(&pid, program, &process.actions, &process.attributes, process.args, environ);
     if (rc) { failed = rc; goto finish; }
     process.pid = pid;
+    posix_spawnattr_destroy(&process.attributes);
+    process.attributes_initialized = 0;
     posix_spawn_file_actions_destroy(&process.actions);
     process.actions_initialized = 0;
     if (capture) {
         fwp_process_close(&process.fds[0]);
         fwp_process_close(&process.fds[3]);
         fwp_process_close(&process.fds[5]);
-        signal(SIGPIPE, SIG_IGN);
         int flags = fcntl(process.fds[1], F_GETFL);
         if (flags < 0 || fcntl(process.fds[1], F_SETFL, flags | O_NONBLOCK) < 0) {
             failed = errno; goto finish;
@@ -421,7 +461,7 @@ static V fwp_run_process(V argv, V input, int capture, const fwp_desc *err) {
                 failed = errno; goto finish;
             }
             if (iw >= 0 && pollfds[iw].revents) {
-                ssize_t written = write(process.fds[1], STR(input)->d + off, len - off);
+                ssize_t written = fwp_process_write(process.fds[1], STR(input)->d + off, len - off);
                 if (written > 0) off += (size_t)written;
                 /* A child may finish without reading all input, as in the interpreter. */
                 if (written < 0 && errno != EAGAIN && errno != EINTR) off = len;

@@ -12,7 +12,8 @@
 # starting the program; it cannot silently truncate an executable name or argument.
 
 # What a finished program wrote, and its exit status (128 plus the signal
-# number when a signal ended it).
+# number when a POSIX signal ended it). POSIX children start with ordinary
+# SIGPIPE handling, even though the parent handles its own broken pipes.
 ProcessOutput = { status: I32, stdout: String, stderr: String }
 
 # `["git", "status", "--short"] | process.run` runs a program with empty

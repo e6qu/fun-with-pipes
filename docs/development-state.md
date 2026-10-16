@@ -43,7 +43,7 @@ its own complete final-head production/docs gate. Failures are repair tasks.
 
 This worktree is `/private/tmp/fwp-process-utilities`, branch
 `owned-process-utilities`, based on `81d113aa`. The runtime/tests are published at
-`7e9e5bd8`; only subsequent experiment/docs edits are local. No process PR is open.
+`9fe30916`; subsequent POSIX signal fixes are local. No process PR is open.
 Do not replay the old parent preparation: #148 already contains its source/tests.
 Preserve root's local handoff when integrating the following delivery.
 
@@ -79,7 +79,7 @@ Rust unit test checks interpreter console mode/width without affecting other tes
   paths. Fixes preserve checks for every actual owned handle, use the OS suffix,
   and connect two native processes directly for the binary-protocol test.
 - [Complete process/terminal run 38829032952](https://github.com/e6qu/fun-with-pipes/actions/runs/38829032952)
-  at `7e9e5bd8` is queued/running. It includes composed shell calls, terminal
+  at `7e9e5bd8` exposed only the fixture errors described below. It includes composed shell calls, terminal
   ownership, console regressions, existing Windows/static-memory tests and CLI
   examples. Native Windows production also runs the new terminal unit/probes and
   full CLI cases. No new platform acceptance is claimed until results pass.
@@ -146,3 +146,21 @@ storage/collections are zero. After the layout experiment, profile language-leve
 allocation sites before selecting the next optimization. The benchmark guide
 explains timing scope and costs, including slower results. Report retention/hash
 and instruction checks pass under the guard (0.14 s); docs audit passes (2.53 s).
+
+
+A separate accepted-compiler probe confirmed another real process mismatch:
+raising SIGPIPE in a child returns 141 under raw interpretation but 7 under native
+execution because the child inherits ignored SIGPIPE. The local fix sets explicit
+spawn signal attributes and frees them with the process owner. Input writes now
+block SIGPIPE on the calling thread only, preserving the host disposition and
+pre-existing pending signal instead of installing a global ignore handler.
+Repeated captured/inherited child exits, an early-exit child under a host handler,
+and a real closed pipe with already-pending SIGPIPE exercise the policy. A mutant
+that installs global ignore must fail. Earlier extended failure checks pass
+(6.10 s), repeated signal cases pass (3.36 s), and library-doc regeneration/check
+passes (0.49 s) under the guard; the pending-signal/mutant additions pass (8.78 s), as do the repeated-call checks
+after that fix.
+
+Focused run `38830176031` at `9fe30916` remains wholly queued and will be
+superseded by the combined signal fixes. Do not count it as validation of these
+later changes. The final PR still requires all nine production jobs and docs.

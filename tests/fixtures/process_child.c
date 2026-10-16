@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #ifdef _WIN32
 #define _WIN32_WINNT 0x0a00
 #define WIN32_LEAN_AND_MEAN
@@ -28,6 +29,9 @@ int main(void) {
 int main(int count, char **args) {
 #endif
     int status = 7;
+#ifndef _WIN32
+    if (count > 1 && !strcmp(args[1], "sigpipe")) raise(SIGPIPE);
+#endif
     if (count > 1 && !strcmp(args[1], "success")) {
         fputs("ok\n", stdout); status = 0;
     } else if (count > 1 && !strcmp(args[1], "failure")) {

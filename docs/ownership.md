@@ -381,7 +381,11 @@ It also reaps the child on POSIX and closes Windows process/thread handles. If
 execution unwinds before the child finishes, cleanup terminates and waits for
 that child. Captured strings stay protected while the result record is being
 constructed, so a later allocation failure releases earlier copies. Inputs can
-outlive the call; ownership of them is never transferred to the child.
+outlive the call; ownership of them is never transferred to the child. POSIX
+children receive ordinary SIGPIPE handling, matching interpretation. Parent writes
+block that signal only on the calling thread, consume only a newly generated
+broken-pipe signal, and restore the previous mask. They preserve the host's signal
+handler and any previously pending SIGPIPE, including when a child exits early.
 
 The new process regressions compare repeated raw-interpreter and native calls,
 including quoted/Unicode arguments, output larger than pipe capacity and a child

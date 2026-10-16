@@ -22,6 +22,16 @@ fn repeated_processes_match_raw_execution_and_release_captured_output() {
     fwp::cgen::compile_c(include_str!("fixtures/process_child.c"), &child, "-O1").unwrap();
     let source = dir.join("processes.fwp");
     let child_literal = format!("{:?}", child.to_string_lossy());
+    let signal_cases = if cfg!(unix) {
+        format!(
+            r#"
+    | tap (const [{child_literal}, "sigpipe"] | process.run | .status | echo)
+    | tap (const [{child_literal}, "sigpipe"] | process.call | echo)"#
+        )
+    } else {
+        String::new()
+    };
+
     std::fs::write(
         &source,
         format!(
@@ -33,6 +43,7 @@ errors = const [[], ["no-such-program-fwp"], [{child_literal}, "bad\0argument"],
         Err _ -> .kind | echo)
 exercise : I64 -> () ! {{Process, IO, Error[IoError]}}
 exercise = tap errors | const ()
+{signal_cases}
     | tap (const [{child_literal}, "", "has space", "quote\"x", "back\\slash\\", "λ目录"]
         | process.run | echo)
     | tap (const [{child_literal}, "pump"] | process.run-input (string.repeat 200000 "x")
@@ -60,6 +71,9 @@ main = range 0 32 | each exercise
     assert_eq!(text.matches("65536").count(), 32 * 2);
     assert!(text.contains("λ目录"));
     assert_eq!(text.matches("expected failure").count(), 32);
+    if cfg!(unix) {
+        assert_eq!(text.lines().filter(|line| *line == "141").count(), 64);
+    }
     for mode in ["tracing", "arc"] {
         let cfile = dir.join("processes.c");
         checked(
@@ -177,7 +191,9 @@ fn process_failures_release_partial_results_buffers_handles_and_children() {
             r#"
 export exercise : I64 -> ProcessOutput ! {{Process, Error[IoError]}}
 exercise = if (eq 1) (const ["no-such-program-fwp"] | process.run)
-    (const [{child_literal}, "pump"] | process.run-input (string.repeat 200000 "x"))
+    (if (eq 2)
+        (const [{child_literal}, "silent"] | process.run-input (string.repeat 200000 "x"))
+        (const [{child_literal}, "pump"] | process.run-input (string.repeat 200000 "x")))
 main = 0 | exercise | .status | echo
 "#
         ),
@@ -231,7 +247,18 @@ main = 0 | exercise | .status | echo
         assert_ne!(unreleased, code);
         // A worker may rebuild the outer record after detecting the uncounted
         // original as shared. Then the extra child counts expose the same bug.
-        for (broken, expected) in [(uncounted, &[234, 235][..]), (unreleased, &[233][..])] {
+        let mut controls = vec![(uncounted, &[234, 235][..]), (unreleased, &[233][..])];
+        if cfg!(unix) {
+            let signature =
+                "static ssize_t fwp_process_write(int fd, const void *bytes, size_t size) {";
+            let changed = code.replace(
+                signature,
+                &format!("{signature}\n    signal(SIGPIPE, SIG_IGN);"),
+            );
+            assert_ne!(changed, code);
+            controls.push((changed, &[246]));
+        }
+        for (broken, expected) in controls {
             fwp::cgen::compile_c(&broken, &binary, "-O2").unwrap();
             let actual = run().output().unwrap();
             assert!(

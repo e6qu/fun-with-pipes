@@ -57,6 +57,8 @@ static void process_test_finish(void *pointer) {
     process_test_disposals++;
 }
 #else
+static volatile sig_atomic_t process_test_pipe_deliveries;
+static void process_test_pipe(int signal_number) { (void)signal_number; process_test_pipe_deliveries++; }
 static void process_test_append(fwp_buf *buffer, const void *bytes, size_t size) {
     process_test_appends++;
     if (process_test_mode == 5 && process_test_appends == 2)
@@ -108,7 +110,8 @@ static void process_test_result(V value) {
     for (int i = 1; i < 3; i++) {
         V text = OBJ(value)->f[i];
         if (*fwp_rc_slot(text) != 1) _Exit(235);
-        if (STR(text)->len != 65536 || STR(text)->d[0] != (i == 1 ? 'e' : 'o')) _Exit(238);
+        size_t expected = process_test_mode == 10 ? 0 : 65536;
+        if (STR(text)->len != expected || (expected && STR(text)->d[0] != (i == 1 ? 'e' : 'o'))) _Exit(238);
         process_test_drop(text);
     }
     process_test_drop(value);
@@ -130,7 +133,7 @@ int main(void) {
 #ifdef _WIN32
     const int mode_limit = 5;
 #else
-    const int mode_limit = 9;
+    const int mode_limit = 10;
 #endif
     for (process_test_collect = 0; process_test_collect <= collect_limit; process_test_collect++) {
         intptr_t budget = fwp_gc.budget;
@@ -156,11 +159,37 @@ int main(void) {
                 fwp_trap_recover = 0; fwp_trap_jb = 0; fwp_trap_cleanup = 0;
             } else {
 #ifndef _WIN32
+                struct sigaction old_pipe, host_pipe = {0};
+                sigset_t old_mask;
+                if (process_test_mode == 10) {
+                    host_pipe.sa_handler = process_test_pipe; sigemptyset(&host_pipe.sa_mask);
+                    if (sigaction(SIGPIPE, &host_pipe, &old_pipe) || pthread_sigmask(SIG_SETMASK, NULL, &old_mask)) return 245;
+                    process_test_pipe_deliveries = 0;
+                }
                 int saved_input = -1;
                 if (process_test_mode == 0 && repeat == 0) { saved_input = dup(0); close(0); }
 #endif
-                V result = fEXERCISE(0);
+                V result = fEXERCISE((V)(process_test_mode == 10 ? 2 : 0));
 #ifndef _WIN32
+                if (process_test_mode == 10) {
+                    struct sigaction current;
+                    sigset_t current_mask;
+                    if (sigaction(SIGPIPE, NULL, &current) || pthread_sigmask(SIG_SETMASK, NULL, &current_mask)) return 245;
+                    if (current.sa_handler != process_test_pipe || process_test_pipe_deliveries ||
+                        sigismember(&old_mask, SIGPIPE) != sigismember(&current_mask, SIGPIPE)) return 246;
+                    int closed_pipe[2]; sigset_t blocked, saved_mask, pending;
+                    if (pipe(closed_pipe)) return 245;
+                    close(closed_pipe[0]);
+                    sigemptyset(&blocked); sigaddset(&blocked, SIGPIPE);
+                    if (pthread_sigmask(SIG_BLOCK, &blocked, &saved_mask) || raise(SIGPIPE)) return 245;
+                    if (fwp_process_write(closed_pipe[1], "x", 1) != -1 || errno != EPIPE) return 246;
+                    close(closed_pipe[1]);
+                    if (sigpending(&pending) || !sigismember(&pending, SIGPIPE)) return 246;
+                    int delivered;
+                    if (sigwait(&blocked, &delivered) || delivered != SIGPIPE ||
+                        pthread_sigmask(SIG_SETMASK, &saved_mask, NULL)) return 245;
+                    if (sigaction(SIGPIPE, &old_pipe, NULL)) return 245;
+                }
                 if (process_test_mode == 0 && repeat == 0 && saved_input >= 0) {
                     if (dup2(saved_input, 0) < 0) return 241;
                     close(saved_input);
