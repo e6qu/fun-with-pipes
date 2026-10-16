@@ -65,6 +65,16 @@ During a combined delivery, draft PRs use explicitly dispatched focused checks.
 Marking the PR ready runs the complete production matrix; every final-head
 production job must pass before merge. Draft skips are never acceptance gates.
 
+Windows dependency setup uses an exact cache key for each architecture and setup
+script. The [dependency-only workflow](.github/workflows/windows-dependencies.yml)
+builds and validates these dependencies on `main` after setup changes merge, so
+later branches can reuse them. It also supports manual dispatch after cache
+eviction. GitHub permits reuse from the default branch, but not between sibling
+branches; see its [cache access rules](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching#restrictions-for-accessing-a-cache).
+This workflow does not run compiler tests and is not a production acceptance
+gate. Keep it running when cancelling duplicate postmerge production CI.
+Native test jobs still validate restored libraries and their architecture.
+
 CI runs these, and all of them must pass:
 
 ```

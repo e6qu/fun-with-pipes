@@ -7,7 +7,7 @@ open delivery PR is #153. Do not open a second PR before it is accepted.
 ## Current action
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
-Base: `ac3060d1`. Published code: `8684127d` (forwarding fixture repair and sender cleanup).
+Base: `ac3060d1`. Published code: `9fa2a0f4` (adds service-reflection cleanup).
 The compiler change is `79ce442f`; `cb0ffeea` corrects its native test setup.
 
 Next: require all six jobs in `38958562126` at `8684127d`, and fix any failures.
@@ -124,13 +124,23 @@ the sender fix on all six hosts. Final combined CI must still pass.
 The same cleanup now protects service-reflection requests and encoded responses.
 Reflection lets tools ask which methods a server provides. The test covers normal
 completion, encoding traps and blocked-send cancellation, including separate
-deliberately missing request/response cleanup. This later change needs its new
-Linux check and final combined native CI; it is not part of `38958562126`.
+deliberately missing request/response cleanup. This later change is checked by Linux run `38959410533` at `9fa2a0f4`; it also
+needs final combined native CI and is not part of `38958562126`.
 
 The shared `scripts/run-native-tests.py` also adds explicit `--all` selection for
 Linux. It retains every Cargo target and stress case, with two executable workers
 and one harness thread each. Missing/duplicate executables fail before execution;
 failed targets do not skip the remainder. Mac assignments remain unchanged.
+A separate dependency-only Windows workflow is prepared. Current main caches
+lack the new HTTP/2 dependency key; sibling preparation branches cannot share
+their copies. It builds/validates and caches the pinned dependencies after setup
+changes merge, allowing later branches to reuse the main cache. It also runs on
+ready PRs changing those files, so both jobs must pass when this workflow is
+introduced. Keep it running when cancelling duplicate postmerge production CI.
+It uses the existing TLS script and architecture checks without installing an
+unneeded fwp compiler toolchain. Guarded actionlint passes (0.13s); actual jobs
+remain to be verified on the next PR.
+
 Seven Python checks pass, including real Cargo metadata for 233 integration
 targets. Final production CI still needs to verify Linux's new scheduling.
 
@@ -149,7 +159,10 @@ Exploratory binary inspection of failed run `38956983459` is retained under
 ARM64 forwarding function returns the callback result directly in `x0`; the old
 24-byte reallocation is absent and its frame falls from 192 to 144 bytes. These
 are observations of that instrumented binary, not acceptance or a speed claim.
-Repeat inspection against the passing replacement before retaining the report.
+AMD64 inspection in the adjacent `linux-amd64` folder likewise returns directly
+in `rax`, with stack use excluding the incoming return address falling from
+184 to 120 bytes. Repeat inspection against the passing replacement before
+retaining the report.
 The next PR description draft is `/private/tmp/fwp-context-pr-body.md`.
 
 Use `python3 scripts/local-guard.py COMMAND...` with unchanged limits. Full builds,
