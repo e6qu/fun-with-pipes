@@ -182,6 +182,42 @@ example, disabling one optimization in the current compiler isolates that
 optimization better than comparing unrelated compiler releases. It still does
 not reproduce every cost of an earlier release.
 
+## List iteration compared with its previous definition
+
+`each` calls a supplied function for every list element and returns `()`, meaning
+no result. Its previous definition used `map`, which builds a list of results,
+then discarded that list. The replacement walks the input with `fold`, keeping
+only a running value of `()`. Both must perform the same calls in the same order.
+
+The comparison counts elements using integer state:
+
+```fwp
+main = range 0 3 | run-state 0 (each (const (add 1) | modify)) | .1 | echo
+```
+
+`|` sends a result to the next function. `range 0 3` produces three integers.
+`const (add 1)` ignores each integer and supplies the increment function to
+`modify`, which updates the current state. `run-state 0` starts that state at zero
+and returns `(result, final-state)`. Positions start at zero, so `.1` selects the
+final count and `echo` prints `3`.
+
+[`measure-list-each.py`](../scripts/measure-list-each.py) compares both definitions
+at 10,000, 100,000 and 1,000,000 elements on Linux runners. It records seven samples
+in alternating order after a warmup. Timing includes process startup, input
+construction, updates, printing and cleanup. Both use the same C compiler and
+`-O2`, with tracing disabled and ordinary freeing enabled. The report also records
+peak process memory, build commands/times and binary sizes. Separate 32/128-element
+tests count allocations without contaminating timed executables with counters.
+
+The [first comparison](measurements/service-context-iteration-baseline-2026-10-16.json)
+at `dbb9dbec` saves one managed allocation and 32 requested bytes per element,
+but the one-million-element program takes 16.6% longer on Linux AMD64 and 11.8%
+longer on Linux ARM64. AMD64 median process peak memory falls from 79,268 to
+37,688 KiB. Runtime callback dispatch remains in that measured loop; the
+[handoff](development-state.md) tracks its repair and fresh measurements.
+This compares two fwp implementations, not fwp with C/Rust. Fewer allocations
+alone do not establish a speedup.
+
 ## Measurement report index
 
 ### Current numerical comparison and record moves

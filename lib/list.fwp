@@ -84,7 +84,9 @@ enumerate : List[a] -> List[(I64, a)] where Dup[a]
 enumerate = fork zip id (length | range 0)
 
 each : (a -> () ! e) -> List[a] -> () ! e
-each = map | flip compose ignore
+# The running value is (). const ignores it and returns the callback, which
+# fold then applies to the current element. No list of unit results is needed.
+each = const | flip fold ()
 
 filter-map : (a -> Option[b] ! e) -> List[a] -> List[b] ! e
 filter-map = flip compose option.to-list | list.flat-map

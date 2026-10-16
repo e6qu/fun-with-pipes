@@ -159,6 +159,23 @@ __asm__(FWP_CTX_BEGIN
 /* a list of parked tasks */
 typedef struct { fwp_task *head; } fwp_wl;
 
+#ifdef FWP_GCTX_OWNERS
+/* Scope settings live on the caller's stack. A child stores its own snapshot
+ * here, inside the task allocation, so it never points into an expired scope.
+ * Pointed-to TLS, capture and copied-header resources have separate owners. */
+typedef struct {
+    const char **kv;
+    size_t n;
+    int64_t deadline;
+    struct g_serving *serving;
+    const struct g_tls *tls;
+    struct h2_hdrs *capture;
+    struct g_capture *capture_owner;
+    struct g_metadata *metadata_owner;
+    int gzip;
+} g_ctx;
+#endif
+
 struct fwp_task {
     uint64_t identity; /* Never reused when allocator slots or fibers are reused. */
 #ifdef _WIN32
@@ -200,6 +217,7 @@ struct fwp_task {
     void *gctx;                 /* gRPC context, inherited by children */
 #ifdef FWP_GCTX_OWNERS
     void *gctx_owner;           /* retained original context, even if gctx changes */
+    g_ctx gctx_storage;
 #endif
     /* links */
     fwp_task *next_ready;
@@ -842,6 +860,8 @@ static void fwp_task_main(void) {
         t->gctx_owner = 0;
         fwp_gctx_release(held);
     }
+    t->gctx = 0;
+    memset(&t->gctx_storage, 0, sizeof t->gctx_storage);
 #endif
     t->done = 1;
     t->cleanups = 0; /* no cleanup link may outlive its task stack */
@@ -933,6 +953,10 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     t->deadline = deadline;
     t->gctx = fwp_cur->gctx;
 #ifdef FWP_GCTX_OWNERS
+    if (t->gctx) {
+        t->gctx_storage = *(const g_ctx *)t->gctx;
+        t->gctx = &t->gctx_storage;
+    }
     void *context_hold = fwp_gctx_acquire ? fwp_gctx_acquire(t->gctx) : 0;
     fwp_cleanup context_cleanup;
     if (context_hold) fwp_cleanup_push(&context_cleanup, fwp_gctx_pending_release, &context_hold);

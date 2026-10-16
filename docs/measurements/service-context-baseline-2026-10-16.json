@@ -1,0 +1,1164 @@
+{
+  "title": "Service context storage before changing scope lifetimes",
+  "source_revision": "9b13707848492e0deb3899d312a8612bf6785fc8",
+  "run": {
+    "conclusion": "success",
+    "headSha": "9b13707848492e0deb3899d312a8612bf6785fc8",
+    "jobs": [
+      {
+        "completedAt": "2026-10-16T17:42:27Z",
+        "conclusion": "success",
+        "databaseId": 117108886991,
+        "name": "paths (ubuntu-latest)",
+        "startedAt": "2026-10-16T17:39:56Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-16T17:39:58Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-16T17:39:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:39:59Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 2,
+            "startedAt": "2026-10-16T17:39:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:08Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "number": 3,
+            "startedAt": "2026-10-16T17:39:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:08Z",
+            "conclusion": "skipped",
+            "name": "Native Windows toolchain",
+            "number": 4,
+            "startedAt": "2026-10-16T17:40:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:08Z",
+            "conclusion": "skipped",
+            "name": "Run actions/cache/restore@v4",
+            "number": 5,
+            "startedAt": "2026-10-16T17:40:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:08Z",
+            "conclusion": "skipped",
+            "name": "Native Windows TLS dependencies",
+            "number": 6,
+            "startedAt": "2026-10-16T17:40:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:08Z",
+            "conclusion": "skipped",
+            "name": "Run actions/cache/save@v4",
+            "number": 7,
+            "startedAt": "2026-10-16T17:40:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:08Z",
+            "conclusion": "skipped",
+            "name": "OpenSSL on macOS",
+            "number": 8,
+            "startedAt": "2026-10-16T17:40:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:10Z",
+            "conclusion": "success",
+            "name": "Run cargo fmt --all -- --check",
+            "number": 9,
+            "startedAt": "2026-10-16T17:40:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:47Z",
+            "conclusion": "success",
+            "name": "Run cargo clippy --all-targets -- -D warnings",
+            "number": 10,
+            "startedAt": "2026-10-16T17:40:10Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:47Z",
+            "conclusion": "skipped",
+            "name": "Filesystem ownership",
+            "number": 11,
+            "startedAt": "2026-10-16T17:40:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:47Z",
+            "conclusion": "skipped",
+            "name": "Retrieve immutable CPU kernel baseline",
+            "number": 12,
+            "startedAt": "2026-10-16T17:40:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:47Z",
+            "conclusion": "skipped",
+            "name": "UDP lifetimes and socket cleanup",
+            "number": 13,
+            "startedAt": "2026-10-16T17:40:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:40:47Z",
+            "conclusion": "skipped",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 14,
+            "startedAt": "2026-10-16T17:40:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:24Z",
+            "conclusion": "success",
+            "name": "Repeated service context storage",
+            "number": 15,
+            "startedAt": "2026-10-16T17:40:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 16,
+            "startedAt": "2026-10-16T17:42:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Copied service result ownership",
+            "number": 17,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "HTTP/2 body interpreter and native agreement",
+            "number": 18,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "HTTP/2 body source lifetime",
+            "number": 19,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 20,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "TCP and TLS value ownership",
+            "number": 21,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "TLS stream interpreter and native agreement",
+            "number": 22,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Mutual TLS with checked ARC",
+            "number": 23,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Native TLS socket errors and clean shutdown",
+            "number": 24,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Existing POSIX TLS teardown and session-transfer controls",
+            "number": 25,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 26,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Socket construction, scratch and DNS ownership",
+            "number": 27,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 28,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "CPU kernel ownership",
+            "number": 29,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "CPU kernel size validation order",
+            "number": 30,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Interpreter final reduction block",
+            "number": 31,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "CPU kernel sanitized size and cleanup controls",
+            "number": 32,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 33,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Value decoder ownership and partial-failure cleanup",
+            "number": 34,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 35,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Vector ownership, boxed lanes and failure cleanup",
+            "number": 36,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 37,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Streaming hash ownership and canonical protocol",
+            "number": 38,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 39,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Field movement and resource lifetime regressions",
+            "number": 40,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Numeric mapped-array construction and neighboring ownership",
+            "number": 41,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Numeric zip/map construction and partial-result cleanup",
+            "number": 42,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Interpreter console state on Windows",
+            "number": 43,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Child-process ownership and failure cleanup",
+            "number": 44,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:25Z",
+            "conclusion": "skipped",
+            "name": "Run actions/upload-artifact@v7",
+            "number": 45,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:26Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 90,
+            "startedAt": "2026-10-16T17:42:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-16T17:42:26Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 91,
+            "startedAt": "2026-10-16T17:42:26Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108886991"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888058,
+        "name": "console",
+        "startedAt": "2026-10-16T17:37:57Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888058"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888374,
+        "name": "numeric_fusion",
+        "startedAt": "2026-10-16T17:37:57Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888374"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888428,
+        "name": "array_borrow",
+        "startedAt": "2026-10-16T17:37:57Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888428"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888459,
+        "name": "syntax",
+        "startedAt": "2026-10-16T17:37:57Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888459"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888608,
+        "name": "list_counts_wasi",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888608"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888670,
+        "name": "windows_probe",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888670"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888724,
+        "name": "mapped_array_repeat",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888724"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888732,
+        "name": "wasm_ownership",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888732"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888760,
+        "name": "macos_shards",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888760"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888856,
+        "name": "autodiff",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888856"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108888925,
+        "name": "ci_profile",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108888925"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108889091,
+        "name": "ad_metadata",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108889091"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108889200,
+        "name": "library_unload",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108889200"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108889207,
+        "name": "precision",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108889207"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108889242,
+        "name": "bundle_preflight",
+        "startedAt": "2026-10-16T17:37:58Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108889242"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108933779,
+        "name": "record_moves",
+        "startedAt": "2026-10-16T17:38:04Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108933779"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108939562,
+        "name": "performance",
+        "startedAt": "2026-10-16T17:38:05Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108939562"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108947409,
+        "name": "solvers",
+        "startedAt": "2026-10-16T17:38:06Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108947409"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108948998,
+        "name": "library",
+        "startedAt": "2026-10-16T17:38:06Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108948998"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108953937,
+        "name": "matrix_alias",
+        "startedAt": "2026-10-16T17:38:07Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108953937"
+      },
+      {
+        "completedAt": "2026-10-16T17:37:57Z",
+        "conclusion": "skipped",
+        "databaseId": 117108955928,
+        "name": "portability",
+        "startedAt": "2026-10-16T17:38:07Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779/job/117108955928"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38941168779"
+  },
+  "comparison": "Each fwp scope versus a plain fwp state update at the same call count, using the same compiler and optimization. No C/Rust or elapsed-time comparison.",
+  "configuration": {
+    "runner": "ubuntu-latest",
+    "architecture": "AMD64",
+    "native_optimization": "-O2",
+    "compiler": "clang selected by CC; exact version and CPU model were not recorded by this baseline",
+    "memory_mode": "tracing runtime with collection disabled",
+    "collection_environment": {
+      "FWP_GC": "off",
+      "FWP_GC_STRESS": "0",
+      "FWP_GC_VERIFY": "0",
+      "FWP_GC_STATS": "0",
+      "FWP_REUSE_VERIFY": "0"
+    }
+  },
+  "measurement_scope": "From after constant initialization through main closure cleanup. Counts managed allocation requests and requested bytes; final charge uses runtime accounting. Includes loop/callback/output work. Excludes raw malloc/calloc buffers, allocator pages, metadata and total process memory.",
+  "limits": "Not a speed measurement, peak-memory bound or collector-free claim. Fixed per-program costs can differ; per-call changes use the difference between 32 and 128 calls.",
+  "rows": [
+    {
+      "case": "plain",
+      "iterations": 1,
+      "managed_requests": 8,
+      "requested_bytes": 258,
+      "final_charged_bytes": 0,
+      "collections": 0,
+      "files": {
+        "plain-1.fwp": {
+          "bytes": 160,
+          "sha256": "65703d90a875aaae51b09a163917e1ff7d5d1c4c6e1f59126978a12d05992a1c"
+        },
+        "plain-1.c": {
+          "bytes": 661504,
+          "sha256": "67ff0c7ef14c5827319e03826720a629b0041a3910076b82dd1db88c050f7803"
+        },
+        "plain-1-measured.c": {
+          "bytes": 662088,
+          "sha256": "f52ed084d047155cf0bb3d35eb015cd6d2082f1bc80659dfd9bc686221b2fbfd"
+        },
+        "plain-1.exe": {
+          "bytes": 79208,
+          "sha256": "3cff593584a1e0e6c176a73827471e0b2f1d1c4e981fcd1bb76259463ab9a92f"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=99024f43364244f6543be8a2a134b840c1d85cf3, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "plain",
+      "iterations": 32,
+      "managed_requests": 70,
+      "requested_bytes": 1995,
+      "final_charged_bytes": 0,
+      "collections": 0,
+      "files": {
+        "plain-32.fwp": {
+          "bytes": 161,
+          "sha256": "ab4f01c9a10e01c588dd325adbf1b055e3912e77ea1e4573b93854c95ebe2a5e"
+        },
+        "plain-32.c": {
+          "bytes": 661505,
+          "sha256": "a4a29ae35d34a7fb45aa7d950952c997946615bfc779841c668e59bf283c7a2b"
+        },
+        "plain-32-measured.c": {
+          "bytes": 662089,
+          "sha256": "a6aee730706eb3ae4a6c0b993f50177cd0a106973df0957ff24c51fe5878aa2c"
+        },
+        "plain-32.exe": {
+          "bytes": 79208,
+          "sha256": "9a74c15804365d7d8383ed2be56542c81a8715f6e576d0097e7f084befb420c5"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=b0b3b2ac2923913eba7bcff1ec3d0ac96de4bfbf, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "plain",
+      "iterations": 128,
+      "managed_requests": 262,
+      "requested_bytes": 7372,
+      "final_charged_bytes": 0,
+      "collections": 0,
+      "files": {
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 661506,
+          "sha256": "1138b95b2000d165a8c6fa2157b13832b7cf931ecebd209922da683437070b6a"
+        },
+        "plain-128-measured.c": {
+          "bytes": 662090,
+          "sha256": "d1554e65dfac2c4171754c092619abb4c028cd3015e0170e6c789c9c88284aa1"
+        },
+        "plain-128.exe": {
+          "bytes": 79216,
+          "sha256": "a55534bf50a95f573e041b49d45676acda4c3afcded68f4ca84f1e4564fa521a"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=9502b4e2d06e49e0e5a4619aee99e88012f3aded, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "gzip",
+      "iterations": 1,
+      "managed_requests": 12,
+      "requested_bytes": 1874,
+      "final_charged_bytes": 1664,
+      "collections": 0,
+      "files": {
+        "gzip-1.fwp": {
+          "bytes": 185,
+          "sha256": "40288c099ab5494c3d9d81ffadd7347a0457784c5fadcdc2288f19fdf4b327a6"
+        },
+        "gzip-1.c": {
+          "bytes": 872230,
+          "sha256": "02edc4bba31b35f20ef66c145f3f5c1b619ed40581cdf35fc9ae599b0bd514a3"
+        },
+        "gzip-1-measured.c": {
+          "bytes": 872814,
+          "sha256": "df31d5330885db2a27ea50ff1add5114eef1416d09cb8dfbfcebe4c0c739acd6"
+        },
+        "gzip-1.exe": {
+          "bytes": 89608,
+          "sha256": "505b3dc5ef7a1c3df8efcac27ad9fec9cd250f3296d2affb54cf228a30955c0c"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=939c936fc377a3775dce1a3e18aa9e1989ef8999, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "gzip",
+      "iterations": 32,
+      "managed_requests": 105,
+      "requested_bytes": 5595,
+      "final_charged_bytes": 3648,
+      "collections": 0,
+      "files": {
+        "gzip-32.fwp": {
+          "bytes": 186,
+          "sha256": "6c3ca3c246a5964ba4810ce966bbd91d10ac893839999995900db6b91721b29c"
+        },
+        "gzip-32.c": {
+          "bytes": 872231,
+          "sha256": "b94aafc0150af9041452935e6f52c491e4eea26719faea16e726f1142d5a5391"
+        },
+        "gzip-32-measured.c": {
+          "bytes": 872815,
+          "sha256": "9d71b32295449e5d080bf2d2baa2f2914a62cabeb4f03db11f198d2bb40ad615"
+        },
+        "gzip-32.exe": {
+          "bytes": 89608,
+          "sha256": "e9c54eee20d835f1e9999340f17234c93f3379d957760e68ffa3b10ef32a04a3"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=6fb3d30cee7b41781e077b1ad69be59dc4983fcc, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "gzip",
+      "iterations": 128,
+      "managed_requests": 393,
+      "requested_bytes": 17116,
+      "final_charged_bytes": 9792,
+      "collections": 0,
+      "files": {
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 872232,
+          "sha256": "87687fd59cb4f34ff1e4ed5cc44421934db3ac349909f55c0d32a57d7cf7be94"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 872816,
+          "sha256": "63a64604bfc002347246f3b709ef85a6d9583369f98271d67a7b69b7a1ba89b6"
+        },
+        "gzip-128.exe": {
+          "bytes": 89608,
+          "sha256": "f146dd3e09881787e5a74e73be7c54ecd4791fccd8da3f315a8c05ab9d5d3c43"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=d4d83e86b9f6a9ab62eda5b0e2132ec45834a716, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "deadline",
+      "iterations": 1,
+      "managed_requests": 13,
+      "requested_bytes": 1890,
+      "final_charged_bytes": 1664,
+      "collections": 0,
+      "files": {
+        "deadline-1.fwp": {
+          "bytes": 192,
+          "sha256": "c1ffac17fd41887c9d7315474b7dd11a3820716c7dd310992527b3ae246f3f5c"
+        },
+        "deadline-1.c": {
+          "bytes": 873465,
+          "sha256": "be9ddb4c28f55385c219d0ab487c092a1c4cead81278b7c9cafa4d960751d76d"
+        },
+        "deadline-1-measured.c": {
+          "bytes": 874049,
+          "sha256": "ea8f127ba454ad4de39370096f697288f9d7a3dc592e7a77f657a690a82254b2"
+        },
+        "deadline-1.exe": {
+          "bytes": 89688,
+          "sha256": "dcbce4591400d157d7a3a746d7d8abf06908a48ae1b2894316f33a9afea9ca68"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=834b0fc102f8c9f24bb3a77e875c54da503538a8, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "deadline",
+      "iterations": 32,
+      "managed_requests": 106,
+      "requested_bytes": 5611,
+      "final_charged_bytes": 3648,
+      "collections": 0,
+      "files": {
+        "deadline-32.fwp": {
+          "bytes": 193,
+          "sha256": "5c6c6fb58380c08a930b83d3c7165b6cb85818714d8164aa57494997afce8e81"
+        },
+        "deadline-32.c": {
+          "bytes": 873466,
+          "sha256": "5c4d606b0ef92144b5101108d6ad2d0496a21fb58be39d64bb41da58cfd780cf"
+        },
+        "deadline-32-measured.c": {
+          "bytes": 874050,
+          "sha256": "8d1fb1d3d793fb5aefde72e780bc5f864d71ee3134b5456f7c2f45dd9f5fbdbb"
+        },
+        "deadline-32.exe": {
+          "bytes": 89688,
+          "sha256": "8627d961b832e9958c52d9890bcdf4629f8e45f0c11ffeef57c342badbe89129"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=df2aab3ad27c2ce7c14ab1deee4132153b7be16f, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "deadline",
+      "iterations": 128,
+      "managed_requests": 394,
+      "requested_bytes": 17132,
+      "final_charged_bytes": 9792,
+      "collections": 0,
+      "files": {
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 873467,
+          "sha256": "80b52c9a7a2938e376839a5feae064e4f5a145d994a65e873bb329f2a1e3c537"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 874051,
+          "sha256": "51976b57ae8ddc5ab4e33c01521a21bdd7eb2b9b6735d304ebbf28982b343b89"
+        },
+        "deadline-128.exe": {
+          "bytes": 89688,
+          "sha256": "a63287448e2ee93048d5dcb946462131a3ac4b4b32e2c6fe0a5bf97155f75fe3"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=dc94810b68f1a14b03cbcbdead63b24920e9cbf4, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "metadata",
+      "iterations": 1,
+      "managed_requests": 19,
+      "requested_bytes": 2002,
+      "final_charged_bytes": 1808,
+      "collections": 0,
+      "files": {
+        "metadata-1.fwp": {
+          "bytes": 216,
+          "sha256": "5e5aa73dc19d95f8abfa0dfd19344ef0cc7484579fd9b2e76edd2196767accb2"
+        },
+        "metadata-1.c": {
+          "bytes": 875026,
+          "sha256": "bbfa2b8d6b9ae946fa7298c8922fc3f5868a8eae8b08eb4d18a84053826f89e4"
+        },
+        "metadata-1-measured.c": {
+          "bytes": 875610,
+          "sha256": "9f9cd595c5990a0c2303763eb89586d6b36f4671a0cc62fdefa4b9c4a10d356a"
+        },
+        "metadata-1.exe": {
+          "bytes": 90000,
+          "sha256": "0f0c833cd9b503998c2fd81fc3f8054496857b2f16231ad4a7bd997ff04d5277"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=47cd0b1caf1612c8c50bea40dae015348c7b9aea, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "metadata",
+      "iterations": 32,
+      "managed_requests": 236,
+      "requested_bytes": 7707,
+      "final_charged_bytes": 6272,
+      "collections": 0,
+      "files": {
+        "metadata-32.fwp": {
+          "bytes": 217,
+          "sha256": "b9439cfe6c6b162fa9b23e60f3cd686dd960637e56ee931e9fcbe09add880b6b"
+        },
+        "metadata-32.c": {
+          "bytes": 875027,
+          "sha256": "bc3905e568cc666427f073201073f2569d3e1c425fbc176266822ee5fa4f9174"
+        },
+        "metadata-32-measured.c": {
+          "bytes": 875611,
+          "sha256": "6b8f00f26243da9808f184608f277a96596653056d6e8f3886fdcbfc64c169b6"
+        },
+        "metadata-32.exe": {
+          "bytes": 90000,
+          "sha256": "3f58cc5419fddda95298c7b2df9dd490c2f2c6f4e34a3b4c9cf766c63b24cc57"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=9ed3ac4aeba15820e4957343af37ac5f0838a86c, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "metadata",
+      "iterations": 128,
+      "managed_requests": 908,
+      "requested_bytes": 25372,
+      "final_charged_bytes": 20096,
+      "collections": 0,
+      "files": {
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 875028,
+          "sha256": "3fe838d3a49719cc3ad42c0070f8cfd7d71410433677f770a7d4be792b89ca73"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 875612,
+          "sha256": "45cec3037dfaea159774c1920aadaad054686f44dfd3e0d5aec7c0c8098f91c6"
+        },
+        "metadata-128.exe": {
+          "bytes": 90008,
+          "sha256": "828ae4847096eca724c1b329c7ebe5e121dccd16f4e2339c6ec5db6a01677393"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=fe0cc50de4ae98147479d9c386b88fc85b872d8d, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "capture",
+      "iterations": 1,
+      "managed_requests": 16,
+      "requested_bytes": 1954,
+      "final_charged_bytes": 1712,
+      "collections": 0,
+      "files": {
+        "capture-1.fwp": {
+          "bytes": 203,
+          "sha256": "ba857dad9092499a8dc7805e659c86414b64339329b5ed347d6f2fa1481fba2a"
+        },
+        "capture-1.c": {
+          "bytes": 879434,
+          "sha256": "749b5f9448333564c43afebbd1c4ec4e859a7796844966ba98ce233127948a80"
+        },
+        "capture-1-measured.c": {
+          "bytes": 880018,
+          "sha256": "db4d432327c48caa4b0aa6965cf081a561251290cb54235f3588fdb5c92a9fa7"
+        },
+        "capture-1.exe": {
+          "bytes": 94808,
+          "sha256": "5e70974fd8e291d5767ba0dbf05b0fad9d43e50709b5a253c03bcb0f2c4e9b4f"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=dd3ec3a3a3ab45d073b9a240b695bf54e1eefd75, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "capture",
+      "iterations": 32,
+      "managed_requests": 202,
+      "requested_bytes": 7411,
+      "final_charged_bytes": 5184,
+      "collections": 0,
+      "files": {
+        "capture-32.fwp": {
+          "bytes": 204,
+          "sha256": "02900736f821deb45f5b6d693ba2ca5c9f26482f75f12cd38c60d5c1c4ec4f0a"
+        },
+        "capture-32.c": {
+          "bytes": 879435,
+          "sha256": "86eb3bd2efdb79fe176744e7916fc96cfc4adf3c9192f2b2168154fb78e4f673"
+        },
+        "capture-32-measured.c": {
+          "bytes": 880019,
+          "sha256": "ad8a1ce68af371a4301f90288d076d4082b08e470d108924ea226e21c5fe5eb0"
+        },
+        "capture-32.exe": {
+          "bytes": 94808,
+          "sha256": "c21e095a63b5eb615163851c004e9c96947da4c2c13ab1cb0b532c69bc22917a"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=e15be78ea5bf6065eb1f7fa890513063156f540c, for GNU/Linux 3.2.0, not stripped"
+    },
+    {
+      "case": "capture",
+      "iterations": 128,
+      "managed_requests": 778,
+      "requested_bytes": 24308,
+      "final_charged_bytes": 15936,
+      "collections": 0,
+      "files": {
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 879436,
+          "sha256": "f417d06335acfdcb3cf1935c0c58737237186a3c3c011575b77b8a3d7ad23c6d"
+        },
+        "capture-128-measured.c": {
+          "bytes": 880020,
+          "sha256": "be22319d3a5c4e431cde61cfc356774cc4c0174f0aea82b725af6fabe7bd6e74"
+        },
+        "capture-128.exe": {
+          "bytes": 94808,
+          "sha256": "e11197d4d87603928809671652ea9423ffff0c0fc9cf9efb6567c7893e69a661"
+        }
+      },
+      "binary_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=3cacaaef8e31394bd853a0bde0b21f345e65693c, for GNU/Linux 3.2.0, not stripped"
+    }
+  ],
+  "comparisons": [
+    {
+      "scope": "gzip",
+      "extra_over_plain_state_updates": [
+        {
+          "iterations": 1,
+          "managed_requests": 4,
+          "requested_bytes": 1616,
+          "final_charged_bytes": 1664
+        },
+        {
+          "iterations": 32,
+          "managed_requests": 35,
+          "requested_bytes": 3600,
+          "final_charged_bytes": 3648
+        },
+        {
+          "iterations": 128,
+          "managed_requests": 131,
+          "requested_bytes": 9744,
+          "final_charged_bytes": 9792
+        }
+      ],
+      "additional_cost_per_call_between_32_and_128": {
+        "managed_requests": "1",
+        "requested_bytes": "64",
+        "final_charged_bytes": "64"
+      }
+    },
+    {
+      "scope": "deadline",
+      "extra_over_plain_state_updates": [
+        {
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 1632,
+          "final_charged_bytes": 1664
+        },
+        {
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 3616,
+          "final_charged_bytes": 3648
+        },
+        {
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 9760,
+          "final_charged_bytes": 9792
+        }
+      ],
+      "additional_cost_per_call_between_32_and_128": {
+        "managed_requests": "1",
+        "requested_bytes": "64",
+        "final_charged_bytes": "64"
+      }
+    },
+    {
+      "scope": "metadata",
+      "extra_over_plain_state_updates": [
+        {
+          "iterations": 1,
+          "managed_requests": 11,
+          "requested_bytes": 1744,
+          "final_charged_bytes": 1808
+        },
+        {
+          "iterations": 32,
+          "managed_requests": 166,
+          "requested_bytes": 5712,
+          "final_charged_bytes": 6272
+        },
+        {
+          "iterations": 128,
+          "managed_requests": 646,
+          "requested_bytes": 18000,
+          "final_charged_bytes": 20096
+        }
+      ],
+      "additional_cost_per_call_between_32_and_128": {
+        "managed_requests": "5",
+        "requested_bytes": "128",
+        "final_charged_bytes": "144"
+      }
+    },
+    {
+      "scope": "capture",
+      "extra_over_plain_state_updates": [
+        {
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 1696,
+          "final_charged_bytes": 1712
+        },
+        {
+          "iterations": 32,
+          "managed_requests": 132,
+          "requested_bytes": 5416,
+          "final_charged_bytes": 5184
+        },
+        {
+          "iterations": 128,
+          "managed_requests": 516,
+          "requested_bytes": 16936,
+          "final_charged_bytes": 15936
+        }
+      ],
+      "additional_cost_per_call_between_32_and_128": {
+        "managed_requests": "4",
+        "requested_bytes": "120",
+        "final_charged_bytes": "112"
+      }
+    }
+  ],
+  "lifetime_checks": "Nested compression/deadline/metadata settings survive parent return, typed failure, trap and cancellation. Source header mutation must not alter copied child settings. Deliberately omitting inheritance fails. Positive runs use O1/O2, collection off/on, stress/verification and reuse verification.",
+  "retained_artifacts": "/private/tmp/fwp-context-baseline/38941168779",
+  "log_sha256": "6479d5e3bfb84ffdea20851729f6d3c9a381b0a5379c37deead26a6d3cacf8aa",
+  "binary_observations": {
+    "binary": "gzip-128.exe",
+    "architecture": "Linux AMD64",
+    "disassembly_sha256": "122d14a40b173959611cad52be7b74356b1c0862af8f4c510f8d021a8c380382",
+    "tool": "Apple LLVM objdump, disassembly of retained ELF executable; no local compilation",
+    "scope_allocation_bytes": 64,
+    "task_allocation_bytes": 1512,
+    "evidence": [
+      "f9 at 0xb4f7 increments measured bytes by 0x40 for the scope allocation; its slow allocation call receives 0x40 at 0xb5e0.",
+      "The root-task branch at 0xb572 adds 0x5e8 requested bytes; the slow allocation call receives 0x5e8 at 0xb66f, then publishes fwp_root at 0xb6b2.",
+      "The scope copy uses four 16-byte xmm loads/stores at 0xb61d through 0xb63b."
+    ],
+    "limits": "This is the instrumented O2 baseline on one host. It does not establish stack bounds or speed and is not a layout claim for other targets."
+  }
+}

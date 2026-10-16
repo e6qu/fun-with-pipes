@@ -181,6 +181,11 @@ A stream sends a sequence without collecting every item into one reply first.
 types determine the direction of streaming. Closing, cancellation and errors
 therefore need rules beyond those of a single ordinary result.
 
+These are curried functions: `A -> B -> R` accepts one argument of type `A`,
+then one of type `B`. The remote interface collects those arguments into one
+request when the function is fully applied; it does not change the language's
+single-argument function model.
+
 Whether a call streams is decided by the function's type:
 
 | Function type | RPC | Messages |
@@ -196,6 +201,10 @@ Whether a call streams is decided by the function's type:
 (Element messages follow the rule above: a nominal record element is its
 own message.) A client stream must be the function's only parameter
 besides an output channel; gRPC has no other request then.
+
+Flow control limits how much data a sender may send before the receiver is
+ready for more. Backpressure is the resulting wait: a slow receiver makes its
+sender wait rather than letting unsent data grow without a bound.
 
 * **`Iterator[R]` results** suit pure, lazy streams: the server forces
   the iterator one element at a time and sends each as it goes, within
@@ -233,7 +242,11 @@ ends, and a client stream sends the elements of the caller's iterator.
 A bidirectional call sends them from a task of its own while the caller
 receives the responses, so requests and responses interleave: the request
 iterator may be infinite, or wait for time to pass, and the call ends when
-the server ends it (`iter.count-from 1 | greeter.firsts` takes three).
+the server ends it. In the [test service](../tests/grpc/greeter.fwp), `firsts`
+takes three input values and multiplies each by ten. Thus
+`iter.count-from 1 | greeter.firsts` returns an iterator over `10`, `20`, `30`:
+the server ends the call after three requests even though its input can keep
+producing numbers.
 
 
 ### Errors and status codes
@@ -265,9 +278,27 @@ lookup = if
 ```
 
 
+### Settings for a group of calls
+
+`grpc.with-metadata`, `grpc.with-deadline`, `grpc.with-gzip` and `grpc.with-tls`
+run a supplied function with temporary settings for its outgoing calls. The
+function takes `()` (unit, an input carrying no data). The previous settings are
+restored when it returns or fails. Nested metadata scopes add headers; deadlines
+keep the earlier limit, and TLS scopes replace the active TLS options. Child
+tasks inherit the settings visible when they are created.
+This collection of settings is called the task's **request context**.
+
+In the [greeter test service](../tests/grpc/greeter.fwp), `slow n` waits
+`n` milliseconds and returns `n`. `const 20 | greeter.slow` is a function: `const 20` ignores its input
+and produces `20`, then the pipe passes that number to `greeter.slow`. Passing
+this function to a scope helper lets the helper install its settings before the
+call happens. `const` produces a constant function; it does not make an already
+evaluated expression run later.
+
 ### Deadlines and cancellation
 
-Deadlines use the task machinery of [concurrency.md](concurrency.md):
+A deadline limits how long an operation may take. A duration such as `2s` or
+`100ms` specifies seconds or milliseconds. Deadlines use the task machinery of [concurrency.md](concurrency.md):
 
 * **Server.** A call's `grpc-timeout` becomes the deadline of the task
   serving it. When it passes, the task (and every task it started) is
@@ -286,6 +317,12 @@ Deadlines use the task machinery of [concurrency.md](concurrency.md):
   their own: they fail with `DEADLINE_EXCEEDED` (a `GrpcError`) when it
   passes, and the task goes on.
 
+`greeter.nap` does the same work as `greeter.slow` and permits a `GrpcError`. `task.within` returns `Some result` on success or `None` when it
+cancels the task. `attempt` turns a permitted error into an `Err` value, so the
+third call can report its deadline error and continue.
+
+These expressions are entries in the [client's `main` list](../tests/grpc/client.fwp):
+
 ```fwp
 task.within 2s (const 20 | greeter.slow) | echo,
 task.within 100ms (const 2000 | greeter.slow) | echo,
@@ -294,10 +331,22 @@ task.within 100ms (const 2000 | greeter.slow) | echo,
     | echo,
 ```
 
+The first allows two seconds for a 20-millisecond request. The next two allow
+100 milliseconds for a two-second request: the second cancels its task, while
+the third catches the service-call error. In the third expression, the outer
+`const` supplies the callback as a value to `grpc.with-deadline` when `attempt`
+runs it; the inner `const 2000` supplies the call's numeric argument.
+
 
 ### Metadata
 
-| Function | |
+Metadata are name/value strings carried alongside a request or response.
+**Headers** precede the message body; **trailers** follow it with the final
+status. For example, a client can send an `x-user` header so the service knows
+which user initiated the call. HTTP/2's reserved fields, such as `:method`, are
+called pseudo-headers and are kept separate from application metadata.
+
+| Function | What it returns or changes |
 |---|---|
 | `grpc.metadata ()` | the request headers of the call the task serves, as `(name, value)` pairs with lower-case names (without pseudo-headers and `content-type`, `te`, `grpc-timeout`, `grpc-encoding`, `grpc-accept-encoding`, `fwp-fingerprint`); `[]` outside a call |
 | `grpc.header name` | one of them |
@@ -308,7 +357,7 @@ task.within 100ms (const 2000 | greeter.slow) | echo,
 | `grpc.peer-subject ()` | the subject of the client's certificate, on servers that require them ([tls.md](tls.md)) |
 
 Tasks started by a served function see its call's metadata. Binary
-headers (`-bin`) are passed as their base64 text. Response metadata leaves
+headers (`-bin`) are passed as base64 text, a printable encoding of bytes. Response metadata leaves
 out `content-type`, `grpc-status`, `grpc-message`, `grpc-encoding` and
 `grpc-accept-encoding`. `tagged` greets with response metadata, a header
 and a trailer:
@@ -317,23 +366,35 @@ and a trailer:
 export tagged : String -> String ! {Network}
 ```
 
-`grpc.with-response-metadata (const "Ann" | greeter.tagged)` is then
-`("tagged Ann", [("x-served-by", "greeter"), ("x-length", "3")])`.
+In the [test service](../tests/grpc/greeter.fwp), `tagged` prefixes its input
+with `"tagged "`, sends the header `x-served-by: greeter`, and adds a trailer
+containing the input's length. Thus
+`grpc.with-response-metadata (const "Ann" | greeter.tagged)` returns
+`("tagged Ann", [("x-served-by", "greeter"), ("x-length", "3")])`: the first
+tuple field is the function's result, and the second collects its response
+metadata. `Ann` has three characters, which explains the trailer's value.
 
 
 ### Compression
 
-Messages compressed with gzip (`grpc-encoding: gzip`) are accepted by
-servers and clients, which advertise `grpc-accept-encoding: gzip`.
-`grpc.with-gzip f` makes the calls `f` makes compress their requests, and
-a server compresses the responses of a call whose requests are
-compressed. Messages under 64 bytes are sent uncompressed (gRPC flags each
-message). DEFLATE is written from scratch (`src/gzip.rs`, and in C in
-`runtime/fwp_rt_h2.c`): decoding is complete; encoding uses fixed Huffman
-codes and a greedy LZ77 search, which compresses repetitive messages well
-but less than zlib. A message that decompresses to more than 64 MiB is
-rejected, and other encodings (`deflate`, `snappy`) fail the call with
-`INVALID_ARGUMENT`.
+Compression represents message bytes more compactly before sending them.
+Both fwp clients and servers accept gzip. `grpc.with-gzip f` enables it for
+requests made by the callback `f`; a server also enables it for responses to
+a call that uses compressed requests. Messages under 64 bytes are still sent
+uncompressed. Each message states whether its bytes are compressed, so both
+forms can appear in one call.
+
+A message that expands beyond 64 MiB during decompression is rejected. Asking
+for a different message encoding, such as `deflate` or `snappy`, fails with
+`INVALID_ARGUMENT`. The header `grpc-encoding: gzip` identifies gzip messages;
+`grpc-accept-encoding: gzip` tells the peer that gzip is accepted.
+
+The encoder finds repeated byte sequences and refers back to them (LZ77), then
+uses a fixed table of bit codes (fixed Huffman coding). The decoder also handles
+the other block forms in DEFLATE, the compression format inside gzip. The
+implementations are [Rust](../src/gzip.rs) and
+[C](../runtime/fwp_rt_h2.c). This describes their algorithm, not measured speed
+or compression-size parity with another implementation such as zlib.
 
 
 ### Concurrency
@@ -531,8 +592,8 @@ and, when Go is installed, to Go's HTTP/2 client and server.
 
 ## Limitations
 
-- gzip is the only compression of messages; the encoder compresses less
-  than zlib. Clients compress only within `grpc.with-gzip`.
+- gzip is the only supported message compression. Clients enable it within
+  `grpc.with-gzip`; messages below the size threshold remain uncompressed.
 - After the first element, a failure of a remote `Iterator[R]` result
   traps in the client, since forcing an iterator cannot raise an error;
   `Iterator[Result[R, GrpcError]]` reports it instead.

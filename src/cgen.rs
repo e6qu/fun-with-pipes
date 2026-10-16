@@ -770,9 +770,9 @@ impl Gen<'_> {
 /// C ABI determines register classes and caller-provided result storage.
 const MAX_UNBOXED: usize = 8;
 
-/// Most fields of a record returned as a struct whatever its tails: a
-/// wider one only when every tail builds it, so that a record a function
-/// passes on is not read into a struct and built again.
+/// Most record fields returned as a struct without requiring construction on
+/// every return path. Already-boxed dynamic call results stay boxed at any width.
+/// Wider records use structs only when every return path builds one.
 const MAX_ANY_RET: usize = 4;
 
 /// How a function's worker (`w<id>`) takes and returns records, for
@@ -810,7 +810,15 @@ fn abi_of(prog: &Program, f: &Func) -> Option<Abi> {
             small_record(prog, &f.locals[i as usize]).filter(|_| crate::opt::only_fields(body, i))
         })
         .collect();
-    let ret = small_record(prog, f.ty.params(f.arity as usize).1);
+    // A dynamic call already returns a boxed record. Forward that owner rather
+    // than unpacking it in the worker and allocating an identical closure result.
+    let ret = small_record(prog, f.ty.params(f.arity as usize).1).filter(|_| {
+        !built_return(
+            body,
+            &std::collections::HashSet::new(),
+            &|e| matches!(e, Expr::Apply(target, _) if !matches!(**target, Expr::Func(_))),
+        )
+    });
     let numeric = f.locals[..f.arity as usize]
         .iter()
         .any(|t| NativeNumber::of(t).is_some())
@@ -848,7 +856,7 @@ fn mentions(ft: &MT, t: &MT) -> bool {
         }
 }
 
-/// Whether every result is built here or comes from a qualifying worker.
+/// Whether every result comes from an expression accepted by `builds`.
 /// Typed local bindings retain ownership context without hiding those origins.
 /// Caller-provided values have no entry in `known` and remain boxed.
 fn built_return(
@@ -5559,6 +5567,12 @@ impl<'p> Gen<'p> {
             };
             return Ok(format!("return {call};"));
         }
+        if sym == "grpc.with-response-metadata" {
+            let descriptor = self.desc(&result);
+            return Ok(format!(
+                "return fwp_p_grpc_with_response_metadata(l0, {descriptor});"
+            ));
+        }
         if matches!(sym, "grpc.metadata" | "grpc.peer-subject") {
             let descriptor = self.desc(&result);
             let function = if sym == "grpc.metadata" {
@@ -6384,10 +6398,6 @@ impl<'p> Gen<'p> {
                     ("grpc.with-deadline", "fwp_p_grpc_with_deadline(l0, l1)"),
                     ("grpc.set-header", "fwp_p_grpc_set_meta(0, l0, l1)"),
                     ("grpc.set-trailer", "fwp_p_grpc_set_meta(1, l0, l1)"),
-                    (
-                        "grpc.with-response-metadata",
-                        "fwp_p_grpc_with_response_metadata(l0)",
-                    ),
                     ("grpc.with-gzip", "fwp_p_grpc_with_gzip(l0)"),
                     ("grpc._force", "fwp_p_grpc_force(l0)"),
                     ("http2.serve", "fwp_p_http2_serve(l0, l1, l2, l3, l4)"),

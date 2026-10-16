@@ -257,8 +257,13 @@ static inline uint8_t *fwp_rc_slot(V v) { (void)v; return NULL; }
 #endif
 #ifdef __linux__
 #include <elf.h>
+#include <pthread.h>
+/* This Linux extension may be hidden when an embedding C file has already
+ * included system headers without _GNU_SOURCE. */
+extern int pthread_getattr_np(pthread_t, pthread_attr_t *);
 #endif
 #ifdef __APPLE__
+#include <pthread.h>
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
 #include <sys/resource.h>
@@ -1521,7 +1526,8 @@ static void fwp_gc_report(void) {
             fwp_gc.pause_max, fwp_gc_status_kb("VmHWM"), fwp_gc.armed ? "" : " (collection off)");
 }
 
-/* called at the top of the main thread: collection may start */
+/* Native frame pointers can sit below live entry-frame locals. Obtain the
+ * thread's complete upper stack bound before enabling collection. */
 static void fwp_gc_start(void *top) {
     if (!fwp_gc.ready) fwp_gc_init();
 #ifdef _WIN32
@@ -1531,6 +1537,22 @@ static void fwp_gc_start(void *top) {
     ULONG_PTR low, high;
     GetCurrentThreadStackLimits(&low, &high);
     fwp_gc.main_top = (char *)high;
+#elif defined(__linux__)
+    (void)top;
+    pthread_attr_t attr;
+    if (pthread_getattr_np(pthread_self(), &attr))
+        fwp_trap("cannot read native stack bounds");
+    void *base = 0;
+    size_t size = 0;
+    int status = pthread_attr_getstack(&attr, &base, &size);
+    int destroyed = pthread_attr_destroy(&attr);
+    if (status || destroyed || !base || !size)
+        fwp_trap("cannot read native stack bounds");
+    fwp_gc.main_top = (char *)base + size;
+#elif defined(__APPLE__)
+    (void)top;
+    fwp_gc.main_top = (char *)pthread_get_stackaddr_np(pthread_self());
+    if (!fwp_gc.main_top) fwp_trap("cannot read native stack bounds");
 #else
     fwp_gc.main_top = (char *)top;
 #endif

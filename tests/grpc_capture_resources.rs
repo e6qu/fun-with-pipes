@@ -5,6 +5,17 @@ use std::process::Command;
 #[test]
 fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
     let unit = MT::unit();
+    let int = MT::con("std::I64");
+    let pair = MT::Record(vec![
+        ("0".into(), MT::con("std::String")),
+        ("1".into(), MT::con("std::String")),
+    ]);
+    let headers = MT::Con("std::List".into(), vec![pair.clone()]);
+    let result = MT::Record(vec![
+        ("0".into(), int.clone()),
+        ("1".into(), headers.clone()),
+    ]);
+    let callback = MT::Fun(Box::new(unit.clone()), Box::new(int));
     let program = Program {
         funcs: vec![
             Func {
@@ -21,27 +32,52 @@ fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
                 ty: unit,
                 body: Body::Prim("http2.connect".into()),
             },
+            Func {
+                name: "capture".into(),
+                arity: 1,
+                locals: vec![callback.clone()],
+                ty: MT::Fun(Box::new(callback), Box::new(result)),
+                body: Body::Prim("grpc.with-response-metadata".into()),
+            },
         ],
+        shapes: [(
+            headers.clone(),
+            TypeShape::Adt(vec![
+                ("Nil".into(), vec![]),
+                ("Cons".into(), vec![pair, headers]),
+            ]),
+        )]
+        .into(),
+        named: vec![("capture".into(), 2)],
         exports: vec![("available".into(), 0)],
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_capture").unwrap();
     assert!(generated.contains("#define FWP_GCTX_OWNERS 1"));
-    let mut generated = generated;
+    let descriptor = generated
+        .lines()
+        .find_map(|line| {
+            line.trim()
+                .strip_prefix("return fwp_p_grpc_with_response_metadata(l0, ")
+                .and_then(|line| line.strip_suffix(");"))
+        })
+        .unwrap();
+    let mut generated = format!("{generated}\n#define CAPTURE_TYPE ({descriptor})\n");
     let start = generated.find("static V g_with_ctx(").unwrap();
     let end = start
         + generated[start..]
             .find("\nstatic V fwp_p_grpc_with_metadata")
             .unwrap();
     let method = generated[start..end].replace(
-        "V r = fwp_apply1(f, FWP_UNIT);",
+        "V r = fwp_apply_borrowed(f, 1, &unit);",
         "V r = observed_callback(f);",
     );
     generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
-    generated = generated.replacen(
-        "    owner->users = 1;",
-        "    owner->users = 1; remember_capture(owner);",
-        1,
+    let capture_owner = "    owner->users = 1;\n    fwp_cleanup capture_cleanup;";
+    assert_eq!(generated.matches(capture_owner).count(), 1);
+    generated = generated.replace(
+        capture_owner,
+        "    owner->users = 1; remember_capture(owner);\n    fwp_cleanup capture_cleanup;",
     );
     let start = generated.find("static g_tls *g_tls_new(").unwrap();
     let end = start + generated[start..].find("\n/* the TLS options").unwrap();
@@ -87,8 +123,8 @@ static void no_release(void *p){(void)p;}
 static void remember_capture(void *p){if(!nested)watched=p;}
 static void remember_tls(void *p){g_tls *t=p;tls_objects[0]=t;}
 static void observed_free(void *p){if(p&&p==watched){watched=0;frees++;}if(p)for(int i=0;i<1;i++)if(tls_objects[i]==p){tls_objects[i]=0;tls_frees++;break;}free(p);}
-static void check_capture(void){g_ctx *ctx=g_ctx_of();if(!ctx->capture_owner||ctx->capture!=&ctx->capture_owner->headers||(!nested&&ctx->capture_owner!=watched)||frees)_Exit(10);}
-static void overflow_restore(void *p){g_capture *cap=p;if(cap->users!=SIZE_MAX)_Exit(11);cap->users=2;}
+static void check_capture(void){g_ctx *ctx=g_ctx_of();if(!ctx->capture_owner||ctx->capture!=&ctx->capture_owner->headers||(!nested&&ctx->capture_owner!=watched)||frees||ctx->capture_owner->users!=1)_Exit(10);}
+static void overflow_restore(void *p){g_capture *cap=p;if(cap->users!=SIZE_MAX)_Exit(11);cap->users=1;}
 static void child(void *arg,int stop){
  if(stop){cancelled++;return;}
  check_capture();if(!scope_returned)_Exit(12);
@@ -100,9 +136,12 @@ static void child(void *arg,int stop){
  if(stage==8)fwp_cur->gctx=&g_empty_ctx;
 }
 static uintptr_t observed_callback(uintptr_t f){
- callback_entries++;check_capture();
+ callback_entries++;
+ if(stage==11){g_ctx *ctx=g_ctx_of();if(!ctx->tls||ctx->tls->users!=1||!ctx->capture_owner||ctx->capture_owner->users!=SIZE_MAX)_Exit(22);return 42;}
+ check_capture();
  if(nested){h2_hdrs_add(g_ctx_of()->capture,"x",1,"before",6);return 42;}
- if(stage==9){nested=1;V r=fwp_p_grpc_with_response_metadata(0);nested=0;if(OBJ(r)->f[0]!=42||g_ctx_of()->capture->n!=1)_Exit(15);return 42;}
+ if(stage==10){nested=1;V r=fwp_p_grpc_with_gzip(0);nested=0;return r;}
+ if(stage==9){nested=1;V r=fwp_p_grpc_with_response_metadata(0,CAPTURE_TYPE);nested=0;if(OBJ(r)->f[0]!=42||g_ctx_of()->capture->n!=1)_Exit(15);CAPTURE_TYPE->drop(r);return 42;}
  h2_hdrs_add(g_ctx_of()->capture,"x",1,"before",6);
  if(stage==1)fwp_fail(fwp_cstr("capture typed failure"),&string_descriptor);
  if(stage==2)fwp_trap("capture scope trap");
@@ -121,7 +160,7 @@ static void call(void *arg,int stop){
  if(!setjmp(failed)){
   if(!setjmp(handler.jb)){
    fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;
-   snapshot=fwp_p_grpc_with_response_metadata(0);scope_returned=1;
+   snapshot=fwp_p_grpc_with_response_metadata(0,CAPTURE_TYPE);scope_returned=1;
    size_t n;V *items=fwp_list_items(OBJ(snapshot)->f[1],&n);
    if(OBJ(snapshot)->f[0]!=42||n!=1||strcmp(STR(OBJ(items[0])->f[1])->d,"before"))_Exit(18);
    if(frees!=(stage==4||stage==5||stage==8?0:1))_Exit(1);
@@ -132,14 +171,14 @@ static void call(void *arg,int stop){
 }
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
- for(stage=0;stage<10;stage++){
+ for(stage=0;stage<11;stage++){
   frees=entered=cancelled=trapped=typed=scope_returned=fail_spawn=nested=0;watched=spawned=0;snapshot=0;
   fwp_task *task=fwp_spawn_task(0,call,0,0,0);
   if(stage==3){fwp_p_task_yield();if(!entered||task->done||frees)return 2;fwp_p_task_cancel(PTR(task));}
   fwp_await(task);
   if(stage==5){if(frees||!spawned||!entered||((fwp_task*)spawned)->done)return 3;fwp_make_ready(spawned);fwp_await(spawned);}
   if(!task->done||frees!=1||fwp_cleanups||cancelled!=(stage==3)||typed!=(stage==1)||trapped!=(stage==2||stage==6||stage==7)||task->gctx_owner)return 1;
-  FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(spawned));FWP_KEEP_ALIVE(snapshot);
+  FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(spawned));if(snapshot)CAPTURE_TYPE->drop(snapshot);snapshot=0;
  }
  // Failure to acquire capture ownership must not partially retain TLS options.
  g_tls *tls=g_tls_new("",0,"","","");tls->users=1;
@@ -148,15 +187,16 @@ int main(void){
  if(!setjmp(failed)){g_context_acquire(&context);return 4;}
  if(tls->users!=1||cap.users!=SIZE_MAX||strcmp(fwp_trap_msg,"too many metadata capture owners"))return 5;
  g_tls_release(tls);if(tls_frees!=1)return 6;
- // Constructor ownership protects freshly copied TLS options when capture acquisition traps.
- tls_frees=0;V fields[5]={FWP_NONE,FWP_FALSE,FWP_NONE,FWP_NONE,FWP_NONE};V options=fwp_record(5,fields);
- context.tls=0;fwp_cur->gctx=&context;
- if(!setjmp(failed)){fwp_p_grpc_with_tls(options,0,0,1,2,3,4);return 7;}
- if(tls_frees!=1||cap.users!=SIZE_MAX||fwp_cleanups||strcmp(fwp_trap_msg,"too many metadata capture owners"))return 8;
+ // A synchronous scope borrows a saturated capture; no new owner is needed.
+ tls_frees=0;stage=11;V fields[5]={FWP_NONE,FWP_FALSE,FWP_NONE,FWP_NONE,FWP_NONE};V options=fwp_record(5,fields);
+ context.tls=0;context.capture=&cap.headers;fwp_cur->gctx=&context;
+ if(setjmp(failed))return 7;
+ if(fwp_p_grpc_with_tls(options,0,0,1,2,3,4)!=42)return 7;
+ if(tls_frees!=1||cap.users!=SIZE_MAX||fwp_cleanups||fwp_cur->gctx!=&context)return 8;
  fwp_cur->gctx=0;FWP_KEEP_ALIVE(options);
  // Failed capture allocation never enters the callback or installs a context.
  fail_capture=1;callback_entries=0;
- if(!setjmp(failed)){fwp_p_grpc_with_response_metadata(0);return 9;}
+ if(!setjmp(failed)){fwp_p_grpc_with_response_metadata(0,CAPTURE_TYPE);return 9;}
  if(fail_capture||callback_entries||fwp_cur->gctx||fwp_cleanups||strcmp(fwp_trap_msg,"cannot allocate response metadata capture"))return 21;
  fwp_cur->trap_jb=0;
  fwp_lib_finish();return 0;
@@ -166,16 +206,18 @@ int main(void){
     let exe = dir.join("probe");
     let finish = "fwp_gctx_release(held);";
     let pending = "fwp_gctx_release(*held);";
-    let scope = "if (owner->held) { g_context_release(owner->held); owner->held = 0; }";
-    for needle in [finish, pending, scope] {
+    let release = "    g_capture_release(owner);";
+    let unwind = "fwp_cleanup_push(&capture_cleanup, g_capture_release, owner);";
+    for needle in [finish, pending, release, unwind] {
         assert_eq!(generated.matches(needle).count(), 1);
     }
     let controls = [
         generated.replacen(finish, "no_release(held);", 1),
         generated.replacen(pending, "no_release(*held);", 1),
+        generated.replacen(release, "    no_release(owner);", 1),
         generated.replacen(
-            scope,
-            "if(owner->held){no_release(owner->held);owner->held=0;}",
+            unwind,
+            "fwp_cleanup_push(&capture_cleanup, no_release, owner);",
             1,
         ),
     ];

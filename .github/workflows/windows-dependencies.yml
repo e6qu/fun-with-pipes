@@ -1,0 +1,51 @@
+name: Cache native Windows dependencies
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/windows-dependencies.yml
+      - scripts/setup-windows-tls.ps1
+      - scripts/check-windows-tls.py
+      - scripts/package-native.py
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+    paths:
+      - .github/workflows/windows-dependencies.yml
+      - scripts/setup-windows-tls.ps1
+      - scripts/check-windows-tls.py
+      - scripts/package-native.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-dependencies-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  dependencies:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/cache/restore@v4
+        id: tls_cache
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Build or validate native TLS dependencies
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v4
+        if: env.FWP_WINDOWS_DEPS_READY == '1' && steps.tls_cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}

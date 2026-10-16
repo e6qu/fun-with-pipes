@@ -1,8 +1,9 @@
-//! Ownership at native primitive boundaries. Unknown primitives, foreign
-//! calls and remote calls keep the conservative runtime-sharing fallback.
+//! Ownership at native primitive boundaries. Unproved heap-sharing boundaries
+//! still require tracing; checked ARC rejects them rather than retaining forever.
 //! Contracts cover containers, text/byte results and synchronous list callbacks.
-//! Array/map/set elements are typed owners. Spawned task thunks retain a
-//! counted callback owner, as do deadline calls; other retained callbacks share.
+//! Array/map/set elements are typed owners. Spawned task thunks retain a counted
+//! callback owner. Synchronous service scopes borrow callbacks; detached children
+//! retain the shared settings they need for their independent lifetimes.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Argument {
@@ -19,7 +20,7 @@ pub enum ResultOwnership {
     Shared,
     /// Immutable static storage; no allocation or reference count is required.
     Static,
-    /// Transfers control to an effect handler; no normal result exists.
+    /// Exits, traps or transfers control to an effect handler; no normal result exists.
     Never,
     /// An owned resource or resource-bearing result prepared by the runtime.
     OwnedResource,
@@ -162,6 +163,24 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "grpc.with-gzip" => (
+            &[B],
+            ResultOwnership::OwnedCallback,
+            Some(Callback::Borrowed(0)),
+            &[0],
+        ),
+        "grpc.with-metadata" | "grpc.with-deadline" | "grpc.with-tls" => (
+            &[B, B],
+            ResultOwnership::OwnedCallback,
+            Some(Callback::Borrowed(1)),
+            &[1],
+        ),
+        "grpc.with-response-metadata" => (
+            &[B],
+            ResultOwnership::OwnedTree,
+            Some(Callback::Borrowed(0)),
+            &[0],
+        ),
         "grpc.set-header" | "grpc.set-trailer" => (&[B, B], R, None, &[]),
         "http2.body" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
         "http2.request" | "grpc.metadata" | "grpc.peer-subject" => {
@@ -279,7 +298,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Retained(0)),
             &[0],
         ),
-        "fail" | "prim.trap" => (&[B], ResultOwnership::Never, None, &[]),
+        "fail" | "prim.trap" | "exit" => (&[B], ResultOwnership::Never, None, &[]),
         "attempt" => (
             &[B, B],
             ResultOwnership::OwnedAttempt,

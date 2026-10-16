@@ -210,7 +210,7 @@ static int h2_huff_decode(const unsigned char *p, size_t n, h2_buf *out) {
 }
 
 typedef struct { char *name, *value; } h2_hdr;
-typedef struct { h2_hdr *v; size_t n, cap; } h2_hdrs;
+typedef struct h2_hdrs { h2_hdr *v; size_t n, cap; } h2_hdrs;
 
 static void h2_hdrs_add(h2_hdrs *h, const char *name, size_t nl, const char *value, size_t vl) {
     h2_hdr copy = {0};

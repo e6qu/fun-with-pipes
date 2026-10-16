@@ -32,14 +32,17 @@ fn grpc_context_restores_on_nested_failures_and_cancelled_callbacks() {
             .find("\nstatic V fwp_p_grpc_with_metadata")
             .unwrap();
     let mut method = generated[start..end].to_owned();
-    let callback = "V r = fwp_apply1(f, FWP_UNIT);";
+    let callback = "V r = fwp_apply_borrowed(f, 1, &unit);";
     assert_eq!(method.matches(callback).count(), 1);
     method = method.replacen(callback, "V r = observed_callback(f);", 1);
     let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdint.h>
 static int stage,depth,entered,cancelled,typed,trapped;
-static void *prior_context,*inner_context,*nested_context;
+static void *prior_context,*child_prior_context,*inner_context,*nested_context;
 static uintptr_t observed_callback(uintptr_t);
 static void no_restore(void *);
 "#;
@@ -55,7 +58,8 @@ static uintptr_t observed_callback(uintptr_t f){
  return 42;
 }
 static void call(void *arg,int stop){
- if(stop){cancelled++;if(fwp_cur->gctx!=prior_context)_Exit(1);return;}
+ if(stop){cancelled++;if(fwp_cur->gctx!=child_prior_context)_Exit(1);return;}
+ child_prior_context=fwp_cur->gctx;if(child_prior_context!=&fwp_cur->gctx_storage||g_ctx_of()->deadline!=1)_Exit(15);
  jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;
  fwp_handler handler={0};handler.prev=fwp_handlers;handler.cleanup=fwp_cleanups;handler.state_depth=fwp_state_len;fwp_handlers=&handler;
  if(!setjmp(failed)){
@@ -65,7 +69,7 @@ static void call(void *arg,int stop){
   }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"typed failure"))_Exit(13);FWP_KEEP_ALIVE(handler.value);}
  }else{trapped++;if(strcmp(fwp_trap_msg,"context trap"))_Exit(14);}
  fwp_handlers=handler.prev;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;
- if(fwp_cur->gctx!=prior_context||fwp_cleanups)_Exit(1);
+ if(fwp_cur->gctx!=child_prior_context||fwp_cleanups)_Exit(1);
 }
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
@@ -75,7 +79,7 @@ int main(void){
   depth=entered=cancelled=typed=trapped=0;fwp_task *task=fwp_spawn_task(0,call,0,0,0);
   if(stage==3){fwp_p_task_yield();if(!entered||task->done||task->gctx!=inner_context)return 2;fwp_p_task_cancel(PTR(task));}
   fwp_await(task);
-  if(!task->done||task->gctx!=prior_context||fwp_cur->gctx!=prior_context||cancelled!=(stage==3)||typed!=(stage==1||stage==5)||trapped!=(stage==2||stage==4)||fwp_cleanups)return 1;
+  if(!task->done||task->gctx||task->gctx_storage.deadline||fwp_cur->gctx!=prior_context||cancelled!=(stage==3)||typed!=(stage==1||stage==5)||trapped!=(stage==2||stage==4)||fwp_cleanups)return 1;
   FWP_KEEP_ALIVE(PTR(task));
  }
  fwp_cur->gctx=0;fwp_lib_finish();return 0;

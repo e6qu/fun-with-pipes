@@ -28,5 +28,5 @@ jobs:
           "$RUNNER_TEMP/fwp-tutorial-doc-check" --exact tutorial_readmes_match_their_programs
       - name: Local guard sampling integration checks
         run: python3 scripts/test-local-guard.py
-      - name: macOS test partition coverage and failure propagation
-        run: python3 scripts/test-macos-test-shards.py
+      - name: Native test coverage and failure propagation
+        run: python3 scripts/test-native-test-runner.py
