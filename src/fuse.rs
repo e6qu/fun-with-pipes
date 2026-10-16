@@ -193,7 +193,7 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
             none()
         }
         "simd.sum" if params.first().and_then(|t| f64_lanes(t)).is_some() => none(),
-        "simd._dot-f64" => none(),
+        "simd._dot-f64" | "simd._splat-dot-f64" => none(),
         // Splat has a declared size instead of an existing input array. Prove
         // its array limit on all targets, including 32-bit WASI: eight header
         // bytes and eight bytes per F64 lane. Larger shapes remain unknown.
@@ -398,6 +398,9 @@ impl Fuser<'_> {
             ),
             e => e,
         };
+        if let Some(direct) = self.splat_dot(&e) {
+            return direct;
+        }
         match &e {
             Expr::Call(id, args) if self.consumer(*id, args).is_some() => {
                 self.consume(*id, args).unwrap_or(e)
@@ -438,6 +441,87 @@ impl Fuser<'_> {
             }
             _ => e,
         }
+    }
+
+    /// Two consecutive splats whose only uses are the first dot call can stay
+    /// as scalar values. Do not move evaluation across any intervening work.
+    fn splat_dot(&mut self, expression: &Expr) -> Option<Expr> {
+        let Expr::Let(left, left_value, rest) = expression else {
+            return None;
+        };
+        let Expr::Let(right, right_value, body) = &**rest else {
+            return None;
+        };
+        if crate::opt::uses(rest, *left) != 1 || crate::opt::uses(body, *right) != 1 {
+            return None;
+        }
+        let splat = |expression: &Expr| {
+            let Expr::Call(id, args) = expression else {
+                return None;
+            };
+            if prim_sym(self.funcs, *id) != Some("simd.splat") || args.len() != 1 {
+                return None;
+            }
+            let count = f64_lanes(self.funcs[*id].ty.params(1).1)?;
+            (count <= (u32::MAX as u64 - 8) / 8).then(|| (count, args[0].clone()))
+        };
+        let (count, left_scalar) = splat(left_value)?;
+        let (other_count, right_scalar) = splat(right_value)?;
+        if count != other_count {
+            return None;
+        }
+        let mut body = (**body).clone();
+        let Expr::Call(id, args) = first_evaluated(&mut body) else {
+            return None;
+        };
+        let function = self
+            .funcs
+            .get(*id)
+            .or_else(|| self.made.get(id.checked_sub(self.funcs.len())?))?;
+        if !matches!(&function.body, Body::Prim(symbol) if symbol == "simd._dot-f64")
+            || args.len() != 2
+        {
+            return None;
+        }
+        let first = match &args[0] {
+            Expr::Local(l) => *l,
+            _ => return None,
+        };
+        let second = match &args[1] {
+            Expr::Local(l) => *l,
+            _ => return None,
+        };
+        if !((first == *left && second == *right) || (first == *right && second == *left)) {
+            return None;
+        }
+        let number = MT::con("std::F64");
+        let scalar_left = self.fresh(number.clone());
+        let scalar_right = self.fresh(number.clone());
+        let ty = MT::Fun(
+            Box::new(MT::con("std::U64")),
+            Box::new(fun2(&number, &number, &number)),
+        );
+        let direct = self.prim("simd._splat-dot-f64", ty, 3);
+        let local = |original| {
+            Expr::Local(if original == *left {
+                scalar_left
+            } else {
+                scalar_right
+            })
+        };
+        *first_evaluated(&mut body) = Expr::Call(
+            direct,
+            vec![Expr::Const(Value::U64(count)), local(first), local(second)],
+        );
+        Some(Expr::Let(
+            scalar_left,
+            Box::new(left_scalar),
+            Box::new(Expr::Let(
+                scalar_right,
+                Box::new(right_scalar),
+                Box::new(body),
+            )),
+        ))
     }
 
     fn std_name(&self, id: FuncId) -> Option<&str> {

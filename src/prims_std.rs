@@ -599,6 +599,21 @@ impl<'p> Interp<'p> {
                     }
                     Value::tuple(vec![Value::Array(Rc::new(out))])
                 }
+                "simd._splat-dot-f64" => {
+                    let Value::U64(n) = &a[0] else {
+                        return trap("internal: splat dot lane count is not U64");
+                    };
+                    if *n == 0 {
+                        Value::F64(0.0)
+                    } else {
+                        let product = arith(Op::Mul, &a[2], &a[1], result)?;
+                        let mut sum = product.clone();
+                        for _ in 1..*n {
+                            sum = arith(Op::Add, &sum, &product, result)?;
+                        }
+                        sum
+                    }
+                }
                 "simd._dot-f64" => {
                     let (ys, xs) = (lanes(&a[0]), lanes(&a[1]));
                     // Keep an independent, materialized interpretation of the

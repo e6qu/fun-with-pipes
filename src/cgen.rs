@@ -5481,6 +5481,19 @@ impl<'p> Gen<'p> {
         if sym == "array.length" {
             return Ok("return (V)(int64_t)fwp_array_len(l0);".into());
         }
+        if sym == "simd._splat-dot-f64" {
+            if result != MT::con("std::F64")
+                || params
+                    != [
+                        MT::con("std::U64"),
+                        MT::con("std::F64"),
+                        MT::con("std::F64"),
+                    ]
+            {
+                return Err("direct splat dot requires a lane count and two F64 values".into());
+            }
+            return Ok("return fwp_p_simd_splat_dot_f64(l0, l2, l1);".into());
+        }
         if sym == "simd._dot-f64" {
             if result != MT::con("std::F64")
                 || params.len() != 2

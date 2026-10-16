@@ -1919,6 +1919,16 @@ static V fwp_p_simd_op(int k, int op, V subj, V arg, const char *name, int w, co
     return fwp_simd_finish(&result, &cleanup);
 }
 
+/* Two proved equal-length splats need only their scalar lane values. Their
+ * source expressions have already run in order, even when the lane count is 0. */
+static V fwp_p_simd_splat_dot_f64(V count, V subj, V arg) {
+    uint64_t n = count;
+    if (!n) return fwp_from_f64(0.0);
+    double product = fwp_f64(subj) * fwp_f64(arg), sum = product;
+    for (uint64_t i = 1; i < n; i++) sum += product;
+    return fwp_from_f64(sum);
+}
+
 /* Immediate F64 multiply then sum: each product rounds before its addition,
  * and additions retain left-to-right order. No product array is needed. */
 static V fwp_p_simd_dot_f64(V subj, V arg) {
