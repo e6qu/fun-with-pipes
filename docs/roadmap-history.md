@@ -48,6 +48,32 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Less temporary memory in hashing and numerics (PR #152)
+
+[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) merged as `1fa0fec6`
+at 2026-10-16 14:18 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38901011355)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38901011298)
+passed for `48566579`. The user performed the merge. Its files match the tested
+head, its parent is accepted #151, and its one-line message is
+`Reduce temporary memory in hashing and numerical calculations (#152)`, with no
+body or trailers. Duplicate production `38914679717` is confirmed canceled.
+
+Selected hashing pipelines read existing fields without temporary containers.
+Integer ranges can become arrays directly. Numerical multiply-and-sum operations
+avoid intermediate product vectors, and repeated-number inputs can stay as scalar
+values. Each multiplication and addition retains its original order. Temporary
+numerical results are also released on failure. The
+[paired measurements](measurements/vector-paired-2026-10-16.json) compare prior
+and new fwp programs with C/Rust, retaining remaining overhead and slower samples.
+They establish improvements for the measured workloads, not language-wide parity.
+
+The first production attempt found an unformatted example; CI now checks language
+formatting before lengthy suites. Later Intel jobs exceeded 90 minutes. Building
+the Rust compiler and test harnesses with optimization level 1, while retaining
+assertions and overflow checks, allowed the final complete gate to pass within
+the unchanged limits. Coverage and generated-C settings were preserved.
+
 ## Synchronous WASI ownership and streaming hashes (PR #151)
 
 [PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) merged as `3dff03b6`

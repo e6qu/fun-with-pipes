@@ -1,33 +1,34 @@
 # Session handoff
 
 Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
-This worktree prepares the next combined delivery:
-`/private/tmp/fwp-owned-values-delivery`, branch `owned-values-delivery`. It now
-includes the fully checked UDP changes. There is only one open delivery PR.
+The current delivery is branch `owned-values-delivery` in
+`/private/tmp/fwp-owned-values-delivery`. It combines decoded-value cleanup,
+numerical worker storage and UDP socket lifetimes, including the passing UDP
+preparation through `2fd73fe2`. Do not apply that preparation again.
 
 ## Current delivery and next action
 
-[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) reduces temporary memory
-in hashing and numerical calculations. Its description now explains the changes,
-a concrete calculation, the benchmark comparisons and their remaining limits.
-Head `485665795e47f6d7d6e078d386bc56b9c8cdeded` has passing documentation
-`38901011298` and seven of nine production jobs in `38901011355`. Linux AMD64 and
-regular Intel macOS remain running. Do not merge before both pass.
+[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) was merged by the user
+at 2026-10-16 14:18 UTC as `1fa0fec690b7747a9ffcf2d72903d16544889258`.
+All nine production jobs `38901011355` and documentation `38901011298` pass
+for `485665795e47f6d7d6e078d386bc56b9c8cdeded`. The merge tree matches that
+head, its parent is accepted #151, and the one-line message has no trailers.
+Duplicate postmerge run `38914679717` is confirmed canceled.
 
-Next: require all nine production jobs and documentation on that exact head,
-then squash-merge with subject `Reduce temporary memory in hashing and numerical calculations`
-and an explicitly empty body. Verify the merge tree, parent and exact message,
-then cancel duplicate postmerge CI. Standing authorization covers these actions.
-
-After acceptance, rebase only this branch's delta after `c81b0c9f` onto the
-accepted squash. Preserve #152's CI optimization settings and final numerical
-changes. UDP preparation through `2fd73fe2` has already been combined here; do not
-apply it again. Its runtime and test files match the passing source `ffe6fc7d`.
-Open one combined PR and require all nine production jobs and documentation on
-its final head. The plain-language PR draft is
+The combined delivery is rebased onto that accepted squash. Runtime and test
+files are unchanged from `b4038995`; the rebase only adds #152's CI compiler
+optimization settings and their explanation. Original preparation is retained by
+remote tag `evidence/owned-values-before-152`. The plain-language PR draft is
 `/private/tmp/fwp-owned-values-pr-body.md`.
 
-## Prepared changes and evidence
+Next: publish this combined delivery and require all nine production jobs plus
+documentation on the final head. Fix any failures. Then squash-merge with the
+explicit subject `Reduce temporary memory and clean up network resources` and
+an empty body, verify the merge tree, parent and message, and cancel redundant
+postmerge CI. Continue the ownership work without opening a competing delivery PR.
+Standing authorization covers publication, fixes and these successive merges.
+
+## Changes and focused evidence
 
 The next batch fixes cleanup for decoded values, numerical results and temporary
 network buffers. It removes a full temporary array from CPU calculations. UDP
@@ -99,7 +100,12 @@ build was run.
 
 ## Remaining limits
 
-Full combined acceptance has not run. General tracing removal, TCP/TLS handle
+Combined formatting passes under the guard in 1.07s and documentation in 2.57s.
+The eight new integration targets are assigned to the macOS GC job; all previously
+accepted assignments stay unchanged. In #152, Intel regular took 83m25s and Intel
+GC took 70m27s, leaving more room in the latter under the 90-minute limit. This is
+a coverage-preserving assignment, not a promise about future runtime. Full
+combined acceptance has not run. General tracing removal, TCP/TLS handle
 ownership, callbacks retained by external code, cycles and host re-entry remain
 unfinished. Conservative function lifetimes can prevent some optimizations.
 The existing OpenCL runtime compilation still conflicts with the no-JIT objective;

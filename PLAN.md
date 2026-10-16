@@ -73,29 +73,20 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is accepted. It adds
-checked ARC for synchronous WASI programs, streams structural hashes without an
-encoding buffer, and combines eligible hashing pipelines into loops. All nine
-production jobs and documentation passed; the squash tree and one-line message
-were verified. [Delivery history](docs/roadmap-history.md) retains the gates,
-measurements and repaired macOS test scheduling.
+[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is accepted. It reduces
+temporary memory in hashing and numerical calculations while preserving results,
+floating-point operation order and errors. All nine production jobs and the
+documentation check passed, and the merged files match the tested commit.
+[Delivery history](docs/roadmap-history.md) retains the checks and measurements.
 
-[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is the only open delivery.
-It borrows temporary hash fields, constructs integer range arrays directly, owns
-vector wrappers/boxed lanes/reduction accumulators and removes eligible F64
-list/vector intermediates. Sole-use splats stay scalar while preserving ordered
-multiplication/addition, aliases, effects and traps. All six focused native jobs,
-both WASI jobs and four-host cost/paired checks pass. Require fresh full production
-and documentation checks for the final combined PR head before squash merge.
-
-The next combined delivery fixes cleanup for decoded values, CPU numerical
-results and network resources. Numerical workers avoid a second full result
-array. UDP sockets close when their last owner is released, including function
-and task captures; partial results are cleaned up on failure and cancellation.
-It also repairs invalid address/command handling and Windows checks discovered
-while testing. Focused native and supported WASI checks pass; full production
-acceptance must run on the combined PR. The handoff links the actual evidence.
-Keep one delivery PR open at a time.
+The current delivery fixes cleanup for decoded values, CPU numerical results and
+network resources. Numerical workers avoid a second full result array. UDP
+sockets close when their last owner is released, including function and task
+captures; partial results are cleaned up on failure and cancellation. It also
+repairs invalid address/command handling and Windows checks discovered while
+testing. Focused native and supported WASI checks pass; full production acceptance
+must run on the combined PR. The handoff links the evidence and identifies the
+current branch. Keep one delivery PR open at a time.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

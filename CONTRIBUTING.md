@@ -105,11 +105,11 @@ still require Linux `/proc` or `strace`; Darwin-specific regressions in
 than accepting a stress variable with collection disabled.
 
 Production CI builds the Rust compiler and test harnesses at optimization level 1
-with debug assertions and overflow checks explicitly enabled. This reduces the
-candidate cost of repeatedly running the compiler without changing test cases,
-generated-C flags, stress settings or local Cargo defaults. Full passing gates
-and runner measurements, rather than this setting alone, establish whether it
-solves the Intel timeout. [Cargo's profile settings](https://doc.rust-lang.org/cargo/reference/profiles.html)
+with debug assertions and overflow checks explicitly enabled. The measured selected tests run faster with this setting, while initial builds
+take longer; see the [profile comparison](docs/measurements/ci-compiler-profiles-2026-10-16.json).
+PR #152 passed the complete matrix within existing limits. This setting does not
+change test cases, generated-C flags, stress settings or local Cargo defaults,
+and does not guarantee the duration of future runs. [Cargo's profile settings](https://doc.rust-lang.org/cargo/reference/profiles.html)
 define these independent switches.
 
 CI runs a primitive inventory at the exact source commit
