@@ -38,10 +38,11 @@ fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
         "V r = observed_callback(f);",
     );
     generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
-    generated = generated.replacen(
-        "    owner->users = 1;",
-        "    owner->users = 1; remember_capture(owner);",
-        1,
+    let capture_owner = "    owner->users = 1;\n    fwp_cleanup capture_cleanup;";
+    assert_eq!(generated.matches(capture_owner).count(), 1);
+    generated = generated.replace(
+        capture_owner,
+        "    owner->users = 1; remember_capture(owner);\n    fwp_cleanup capture_cleanup;",
     );
     let start = generated.find("static g_tls *g_tls_new(").unwrap();
     let end = start + generated[start..].find("\n/* the TLS options").unwrap();
