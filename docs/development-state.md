@@ -33,7 +33,7 @@ without raising its limits. Full builds, suites and timings run on GitHub.
 | 6 | In progress | Retain repeated timings, CPU time and normal-collector profiles |
 | 7 | In progress | Validate maintained todo/grep functions and command lines under ARC |
 
-Next: run the extended text-file/maintained-application suite on all six hosts;
+Next: check the extended text-file/maintained-application suite on all six hosts;
 finish the four-host zip cost run below and inspect actual instructions before adopting a timing
 claim. Continue monitoring #149, merge it only after exact-head acceptance, then
 transfer this batch for the next substantial PR. Queued CI does not block fixes
@@ -134,7 +134,9 @@ Maintained `todo` and `grep` functions run 64 times with results retained, again
 raw and optimized interpretation and O1/O2 native tracing/ARC. Separate real CLI
 tests cover subcommands, file arguments, stdin, Unicode and exit statuses. CI
 suite `filesystem` includes these tests on all six native targets; Windows full
-acceptance includes them too. Changed-compiler results are pending.
+acceptance includes them too. [Six-host filesystem run 38845110123](https://github.com/e6qu/fun-with-pipes/actions/runs/38845110123)
+is queued/running at `0bae98f7c9b7c8a67d15d4a5e8aac26ec83da00a`.
+Changed-compiler results are pending.
 
 Bounded local checks: both repeated raw fixtures pass using accepted #148 (0.49 s).
 The standalone harnesses compile (0.26 s each); the C cleanup probe passes O1/O2
@@ -143,4 +145,21 @@ declaration-order error was repaired before that pass. Inventory passes (0.99 s)
 261 contracts, 92 review declarations, 82 review symbols. Formatting passes
 (1.11 s); two source-comment additions regenerate through the standalone standard
 library generator (0.38 s). These checks do not rebuild the compiler or establish
-cross-platform acceptance.
+cross-platform acceptance. The documentation audit passes (2.42 s).
+
+## Zip timing investigation
+
+The first Linux reports show derivative requests falling from 23,087,625 to
+18,892,809 and retains from 10,492,416 to 8,395,264; peak memory stays 840,888 bytes.
+Elapsed enabled/disabled ratios are 0.828/0.825 (tracing/ARC) on AMD64 and
+0.791/0.769 on ARM64. Tiny nested AMD64 tracing is 1.033. These are preliminary
+observations; verify all raw hashes and retain the full four-host report before
+adoption. Do not call reduced allocation equivalent to C/Rust performance.
+
+The existing verified-binary CPU/collector repeat script is renamed
+`scripts/repeat-native-comparison.py` so both mapped-array and zip comparisons use
+one implementation. Dispatch `zip-map-repeat` with evidence run `38842840316` only
+after all four original artifacts exist. This does not rebuild the compiler;
+it reuses verified timed binaries and separately instruments normal/off collector
+profiles. Use it to investigate small-workload timing variation and retain all
+slower cases alongside improvements.

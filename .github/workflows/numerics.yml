@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-map-costs]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-map-costs, zip-map-repeat]
         default: numerical
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
@@ -388,7 +388,7 @@ jobs:
             performance-evidence/
             target/bench.md
   mapped_array_repeat:
-    if: inputs.suite == 'mapped-array-repeat'
+    if: inputs.suite == 'mapped-array-repeat' || inputs.suite == 'zip-map-repeat'
     permissions:
       contents: read
       actions: read
@@ -404,17 +404,17 @@ jobs:
       EVIDENCE_RUN: ${{ inputs.evidence_run }}
     steps:
       - uses: actions/checkout@v7
-      - name: Download verified mapped-array binaries
+      - name: Download verified comparison binaries
         run: |
           test -n "$EVIDENCE_RUN"
-          gh run download "$EVIDENCE_RUN" --name "mapped-array-costs-${{ matrix.runner }}" --dir mapped-input
+          gh run download "$EVIDENCE_RUN" --name "${{ inputs.suite == 'zip-map-repeat' && 'zip-map-costs' || 'mapped-array-costs' }}-${{ matrix.runner }}" --dir comparison-input
       - name: Compare elapsed time, child CPU time and normal collection
-        run: python3 scripts/repeat-mapped-arrays.py --input mapped-input --output mapped-repeat
+        run: python3 scripts/repeat-native-comparison.py --input comparison-input --output comparison-repeat
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: mapped-array-repeat-${{ matrix.runner }}
-          path: mapped-repeat/
+          name: ${{ inputs.suite }}-${{ matrix.runner }}
+          path: comparison-repeat/
   ad_metadata:
     if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites' || inputs.suite == 'mapped-array-costs' || inputs.suite == 'zip-map-costs'
     strategy:
