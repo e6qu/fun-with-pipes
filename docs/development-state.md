@@ -9,7 +9,7 @@ belongs in [delivery history](roadmap-history.md).
 [PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is the only open delivery.
 Its final head is `27cdc7ff1b9c59b025159768b11452ab5adbc58c`, in worktree
 `/private/tmp/fwp-wasi-delivery`. Production `38872161681` has passed all four macOS jobs, both Windows jobs
-and benchmarks; both Linux jobs remain running. Docs
+and benchmarks; Linux ARM64 has also passed; only Linux AMD64 remains running. Docs
 `38872161673` passes for that exact head. Previous head `796f5a4c` did not pass acceptance:
 Intel macOS GC exceeded the 90-minute job limit in `38861611494`; the run was
 canceled after that timeout. Six jobs had passed, with both Linux jobs unfinished.
@@ -33,7 +33,7 @@ through `8d692024` in `/private/tmp/fwp-hash-borrows` (delta after `28cc4d0e`), 
 or additional PRs. Review conflicts preserved #151's allocation counter repair,
 accepted history, and the new zero-retain assertions.
 
-Next: merge #151 once its repaired exact-head gates pass. Complete scalar-splat native/WASI, cost and paired checks below. Rebase only
+Next: merge #151 once its repaired exact-head gates pass. Scalar-splat native/WASI, cost and paired checks below now pass. Rebase only
 this batch's delta, publish one substantial PR, then require fresh full production
 and documentation acceptance.
 
@@ -103,9 +103,13 @@ use two requests, 40 requested bytes, 48 peak charged bytes, zero retains/final
 storage. Both actual ARM64 loops use register state without calls, loads or
 stores in their calculation bodies (excerpt validation 0.15 s). Setup and output
 are outside those loops; this is not a dynamic cache/spill claim. Same-run C/Rust
-ratios and limits are in benchmarks. Paired run `38881665737` now compares these
-binaries with baseline `38869050349`; it must pass and its raw results be retained
-before the next delivery is finalized.
+ratios and limits are in benchmarks. Paired run `38881665737` passes all four hosts. Its
+[retained report](measurements/vector-paired-2026-10-16.json) verifies original
+artifact identities, twelve balanced samples and matching profiles (guarded
+0.19 s). ARC CPU ratios against baseline are 0.161/0.313 on Linux AMD64,
+0.116/0.241 on Linux ARM64, 0.327/0.416 on ARM macOS and 0.270/0.504 on Intel macOS
+for four/sixty-four lanes. Benchmarks retain remaining C/Rust gaps; no broad parity
+claim follows. The batch is ready for its final-head full production validation.
 Eight semantic cases pass the accepted interpreter (guarded 1.36 s); eager stage
 arguments print before pipe input and their division trap remains first. A
 retained-splat alias case is also included. Formatting passes (1.29 s) and docs

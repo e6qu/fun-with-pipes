@@ -1212,18 +1212,27 @@ the calculation loop no longer constructs lists, arrays or vector wrappers.
 C/Rust still report zero application heap requests in their narrower calculation
 scope. This does not imply fwp startup or printing uses no system allocation.
 
-Here is the final checked ARC CPU time divided by each reference's time in the
-same run. For example, 1.791 means about 79.1% extra CPU time; 0.887 means about
-11.3% less. Whole-process timings include runtime startup and output, which matter
-especially for the short four-lane workload. Paired before/after measurements
-are still required to isolate the revision change from differences between runs.
+The [paired comparison](measurements/vector-paired-2026-10-16.json) then runs the
+same baseline and final binaries together on each host, with matching C/Rust
+references. One warmup precedes twelve balanced orders. Artifact identities and
+collector-off profiles reproduce the original runs. This measures the complete
+compiler revision change; it does not isolate each transformation.
 
-| Host | Four lanes / C | Four lanes / Rust | Sixty-four lanes / C | Sixty-four lanes / Rust |
-|---|---:|---:|---:|---:|
-| Linux AMD64 | 1.791 | 1.327 | 1.107 | 1.121 |
-| Linux ARM64 | 1.466 | 1.242 | 0.887 | 0.984 |
-| macOS ARM64 | 1.125 | 0.981 | 1.111 | 0.905 |
-| macOS AMD64 | 1.161 | 1.057 | 1.049 | 0.926 |
+Each entry is a CPU-time ratio: final checked ARC divided by the stated reference.
+A ratio of 0.161 means about 83.9% less CPU time than before; 1.954 means about
+95.4% extra CPU time compared with C. Whole-process timings include startup and
+output, which matter especially for the short four-lane workload.
+
+| Host | Four lanes / before | Four lanes / C | Four lanes / Rust | 64 lanes / before | 64 lanes / C | 64 lanes / Rust |
+|---|---:|---:|---:|---:|---:|---:|
+| Linux AMD64 | 0.161 | 1.954 | 1.576 | 0.313 | 1.432 | 1.311 |
+| Linux ARM64 | 0.116 | 1.517 | 1.251 | 0.241 | 0.878 | 0.937 |
+| macOS ARM64 | 0.327 | 1.230 | 0.996 | 0.416 | 1.070 | 0.855 |
+| macOS AMD64 | 0.270 | 1.134 | 1.027 | 0.504 | 1.043 | 0.904 |
+
+All four hosts improve relative to the baseline in this paired run, while the
+C/Rust gaps vary by workload and host. Raw wall/CPU samples and their order remain
+in the report; these two small programs do not establish universal parity.
 
 The retained ARM64 calculation loops hold state in registers, with no calls,
 loads or stores inside the selected loop bodies. Vector instructions compute
