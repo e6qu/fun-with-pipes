@@ -39,6 +39,11 @@ static double context_start_charge;
     context_measure=0;
     fprintf(stderr,"context %llu %llu %.0f %zu\n",context_requests,context_bytes,
         fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget)-context_start_charge,fwp_gc.ncollect);
+#ifdef FWP_GCTX_OWNERS
+    fprintf(stderr,"layout %zu %zu %zu %zu\n",sizeof(g_ctx),_Alignof(g_ctx),sizeof(fwp_task),_Alignof(fwp_task));
+#else
+    fprintf(stderr,"layout 0 0 %zu %zu\n",sizeof(fwp_task),_Alignof(fwp_task));
+#endif
 "#);
     prefix.to_string() + &body
 }
@@ -66,6 +71,9 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
     let mut report = String::from(
         "case\titerations\tmanaged_requests\trequested_bytes\tfinal_charged_bytes\tcollections\n",
     );
+    let mut measurements = std::collections::BTreeMap::new();
+    let mut layouts =
+        String::from("case\tcontext_bytes\tcontext_alignment\ttask_bytes\ttask_alignment\n");
     for (name, body) in cases {
         for count in [1, 32, 128] {
             let label = format!("{name}-{count}");
@@ -112,7 +120,13 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
             );
             assert_eq!(output.stdout, raw.stdout);
             let counters = String::from_utf8(output.stderr).unwrap();
-            let fields: Vec<_> = counters.split_whitespace().collect();
+            let lines: Vec<_> = counters.lines().collect();
+            assert_eq!(lines.len(), 2, "{counters}");
+            let layout: Vec<_> = lines[1].split_whitespace().collect();
+            assert_eq!(layout.len(), 5, "{counters}");
+            assert_eq!(layout[0], "layout");
+            layouts.push_str(&format!("{label}\t{}\n", layout[1..].join("\t")));
+            let fields: Vec<_> = lines[0].split_whitespace().collect();
             assert_eq!(fields.len(), 5, "{counters}");
             assert_eq!(fields[0], "context");
             let values: Vec<i64> = fields[1..]
@@ -121,6 +135,7 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
                 .collect();
             assert!(values[..3].iter().all(|value| *value >= 0), "{counters}");
             assert_eq!(values[3], 0, "measurement collected garbage: {counters}");
+            measurements.insert((name, count), values.clone());
             report.push_str(&format!(
                 "{name}\t{count}\t{}\t{}\t{}\t{}\n",
                 values[0], values[1], values[2], values[3]
@@ -133,11 +148,21 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
                 std::fs::write(path.join(format!("{label}-measured.c")), &measured).unwrap();
                 std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
                 std::fs::write(path.join("storage.tsv"), &report).unwrap();
+                std::fs::write(path.join("layout.tsv"), &layouts).unwrap();
             }
         }
     }
-    eprintln!("{report}");
-    // This is a baseline, not a collector-free claim. Raw TLS/capture buffers,
+    for name in ["gzip", "deadline"] {
+        for metric in 0..3 {
+            assert_eq!(
+                measurements[&(name, 128)][metric] - measurements[&(name, 32)][metric],
+                measurements[&("plain", 128)][metric] - measurements[&("plain", 32)][metric],
+                "{name} scope allocates per call (metric {metric})"
+            );
+        }
+    }
+    eprintln!("{report}\n{layouts}");
+    // These counts do not establish collector-free service execution. Raw TLS/capture buffers,
     // allocator metadata, pages and total process memory are outside this count.
 }
 
@@ -161,17 +186,26 @@ fn children_keep_scope_settings_after_return_failure_and_cancellation() {
         inherit,
         &format!("{inherit}\n    if(t->cfn==inherited_child)t->gctx=0;"),
     );
+    let snapshot = "    if (t->gctx) {\n        t->gctx_storage = *(const g_ctx *)t->gctx;\n        t->gctx = &t->gctx_storage;\n    }";
+    assert_eq!(generated.matches(snapshot).count(), 1);
+    let borrowed = generated.replace(snapshot, "");
     let dir = fwp::cgen::TempDir::new("service-context-inheritance").unwrap();
     let binary = dir.join("probe");
     for optimization in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(
-            &format!("{hooks}\n{broken}\n{fixture}"),
-            &binary,
-            optimization,
-        )
-        .unwrap();
-        let output = Command::new(&binary).env("FWP_GC", "off").output().unwrap();
-        assert_eq!(output.status.code(), Some(41), "lost settings: {output:?}");
+        for (source, expected) in [(&broken, 41), (&borrowed, 53)] {
+            fwp::cgen::compile_c(
+                &format!("{hooks}\n{source}\n{fixture}"),
+                &binary,
+                optimization,
+            )
+            .unwrap();
+            let output = Command::new(&binary).env("FWP_GC", "off").output().unwrap();
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "invalid inherited settings: {output:?}"
+            );
+        }
         fwp::cgen::compile_c(
             &format!("{hooks}\n{generated}\n{fixture}"),
             &binary,

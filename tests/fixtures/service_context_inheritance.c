@@ -18,6 +18,8 @@ static void inherited_child(void *arg, int stop) {
     (void)arg;
     if (stop) _Exit(43);
     while (!released) { fwp_park(0, 0); fwp_check_cancel(); }
+    if (!fwp_cur->gctx) _Exit(41);
+    if (fwp_cur->gctx != &fwp_cur->gctx_storage) _Exit(53);
     check_inherited();
     child_checked++;
     /* Nested scopes must restore this child's inherited settings too. */

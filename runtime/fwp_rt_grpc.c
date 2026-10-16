@@ -131,27 +131,14 @@ static void g_serving_peer_release(g_serving *sv) {
 /* how a client's calls connect over TLS (`grpc.with-tls`, or the
  * FWP_SERVICE_<M>_CA, ... variables): malloc'ed strings ("" for none);
  * `key` tells connections with these options apart in the pool */
-typedef struct {
+typedef struct g_tls {
     char *ca, *name, *cert, *keyfile, *key;
     int insecure;
     size_t key_len;
     size_t users;              /* SIZE_MAX for read-once environment caches */
 } g_tls;
 
-typedef struct { h2_hdrs headers; size_t users; } g_capture;
-
-/* a task's gRPC context: metadata and deadline of the calls it makes, and
- * the call it serves */
-typedef struct {
-    const char **kv;
-    size_t n;
-    int64_t deadline;
-    g_serving *serving;
-    const g_tls *tls;
-    h2_hdrs *capture;          /* response metadata collected, or 0 */
-    g_capture *capture_owner; /* retained by dynamic scopes and inheriting tasks */
-    int gzip;                  /* the calls made compress their requests */
-} g_ctx;
+typedef struct g_capture { h2_hdrs headers; size_t users; } g_capture;
 
 static g_ctx g_empty_ctx;
 static g_conn *g_pool = 0;
@@ -2566,8 +2553,7 @@ static V g_with_ctx(g_ctx *ctx, V f) {
 
 static V fwp_p_grpc_with_metadata(V md, V f) {
     g_ctx *cur = g_ctx_of();
-    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
-    *ctx = *cur;
+    g_ctx scope = *cur, *ctx = &scope;
     size_t n;
     V *items = fwp_list_items(md, &n);
     ctx->kv = (const char **)fwp_alloc((cur->n + n + 1) * 2 * sizeof(char *));
@@ -2612,16 +2598,14 @@ static V fwp_p_grpc_set_meta(int trailer, V name, V value) {
 
 static V fwp_p_grpc_with_gzip(V f) {
     g_ctx *cur = g_ctx_of();
-    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
-    *ctx = *cur;
+    g_ctx scope = *cur, *ctx = &scope;
     ctx->gzip = 1;
     return g_with_ctx(ctx, f);
 }
 
 static V fwp_p_grpc_with_response_metadata(V f) {
     g_ctx *cur = g_ctx_of();
-    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
-    *ctx = *cur;
+    g_ctx scope = *cur, *ctx = &scope;
     g_capture *owner = (g_capture *)calloc(1, sizeof *owner);
     if (!owner) fwp_trap("cannot allocate response metadata capture");
     owner->users = 1;
@@ -2660,8 +2644,7 @@ static const char *g_opt_text(V o) { return o == FWP_NONE ? "" : STR(OBJ(o)->f[0
  * server-name, cert-file and key-file */
 static V fwp_p_grpc_with_tls(V o, V f, int ica, int iins, int iname, int icert, int ikey) {
     g_ctx *cur = g_ctx_of();
-    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
-    *ctx = *cur;
+    g_ctx scope = *cur, *ctx = &scope;
     V *fs = OBJ(o)->f;
     ctx->tls = g_tls_new(g_opt_text(fs[ica]), fs[iins] == FWP_TRUE, g_opt_text(fs[iname]), g_opt_text(fs[icert]),
                          g_opt_text(fs[ikey]));
@@ -2676,8 +2659,7 @@ static V fwp_p_grpc_with_tls(V o, V f, int ica, int iins, int iname, int icert, 
 
 static V fwp_p_grpc_with_deadline(V d, V f) {
     g_ctx *cur = g_ctx_of();
-    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
-    *ctx = *cur;
+    g_ctx scope = *cur, *ctx = &scope;
     ctx->deadline = g_earliest(cur->deadline, fwp_after(d));
     return g_with_ctx(ctx, f);
 }

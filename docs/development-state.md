@@ -12,8 +12,7 @@ empty body and no trailers.
 ## Preparation and acceptance
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`,
-based on #153 preparation `ac3060d1`. No runtime ownership change is implemented
-here yet. The first step measures repeated plain, gzip, deadline, outgoing-header
+based on #153 preparation `ac3060d1`. The runtime change below is implemented but not yet verified natively. The first step measures repeated plain, gzip, deadline, outgoing-header
 and response-capture scopes at 1, 32 and 128 calls. Every call increments state;
 raw/optimized interpretation and native output must agree on the final count.
 Instrumentation reports managed allocation requests, requested bytes and final
@@ -32,12 +31,21 @@ allocations are excluded. Artifact inspection passed under the guard (6.85s).
 Detached-child settings pass at O1/O2 with stress/reuse verification, including
 parent return, typed error, trap and cancellation. Omitting inheritance fails.
 
-Next: keep nonescaping scope settings on the stack and copy inherited settings
-into each service task's existing allocation. Measure the larger task header
-explicitly; tasks without service support must keep their current layout.
-Preserve TLS/capture resource ownership and nested restoration. Metadata buffers,
-response-capture results and broader connection/stream ownership remain separate
-unfinished costs. Do not admit unproved contexts to checked ARC.
+Five service scope constructors now keep their settings on the stack. Child
+tasks copy settings into a typed field in their existing task allocation, while
+TLS/capture resources retain their separate owners. Completion clears the copy
+so a completed task does not retain stale context pointers. Programs without
+service support omit the field. No checked ARC admission changes are made.
+
+Next: run `context-owners` on all six native hosts. Require the existing context,
+TLS, capture, peer, library-unload and task tests plus new escaped-child controls.
+The new control rejects borrowing the parent's scope even if its old bytes are
+still readable. Allocation checks require gzip/deadline per-call costs to match
+plain state updates between 32 and 128 calls. Record actual context/task sizes
+and alignments from `layout.tsv`, compare saved baseline allocations, inspect
+machine code and then run real WASI regressions. This implementation is unverified
+until those checks pass. Metadata buffers, capture results and streams/connections
+remain unfinished costs; do not admit unproved contexts to checked ARC.
 After #153 is accepted, rebase only this branch's delta after `ac3060d1` onto its
 accepted squash; keep one active delivery PR.
 
