@@ -2,7 +2,7 @@
 
 Updated 2026-10-16. Preparation worktree: `/private/tmp/fwp-zip-map`, branch
 `fuse-numeric-zip-maps`, anchored at `1850f832`. Current source and fixtures are
-`91146d684d723d835474e2a893a8adbe23004996`. Transfer only changes after the anchor;
+`91146d684d723d835474e2a893a8adbe23004996` for zip/map; text-file changes follow it. Transfer only changes after the anchor;
 its parents are part of the preceding delivery.
 
 The only active delivery is [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149),
@@ -25,16 +25,16 @@ without raising its limits. Full builds, suites and timings run on GitHub.
 
 | Step | Status | Next concrete work |
 |---|---|---|
-| 1 | In progress | Validate partial zip cleanup and remaining deployment boundaries |
+| 1 | In progress | Validate text-file ownership and partial zip cleanup |
 | 2 | In progress | Validate elimination of immediately mapped numeric zip pairs/nodes |
 | 3 | In progress | Measure direct calls, instructions and reference-count traffic |
 | 4 | In progress | Reduce measured derivative initialization intermediates |
 | 5 | Pending | Broaden CPU kernels and resolve runtime OpenCL compilation |
 | 6 | In progress | Retain repeated timings, CPU time and normal-collector profiles |
-| 7 | In progress | Preserve maintained applications across ownership changes |
+| 7 | In progress | Validate maintained todo/grep functions and command lines under ARC |
 
-Next: fix any failures in this batch's six-host test run and four-host cost run
-below; inspect emitted code and actual instructions before adopting a timing
+Next: run the extended text-file/maintained-application suite on all six hosts;
+finish the four-host zip cost run below and inspect actual instructions before adopting a timing
 claim. Continue monitoring #149, merge it only after exact-head acceptance, then
 transfer this batch for the next substantial PR. Queued CI does not block fixes
 or independent preparation.
@@ -75,10 +75,11 @@ intentional cleanup omissions. Final delivery still needs the full nine jobs.
 ## Checks and active evidence
 
 [Six-host tests 38842838108](https://github.com/e6qu/fun-with-pipes/actions/runs/38842838108)
-and [four-host costs 38842840316](https://github.com/e6qu/fun-with-pipes/actions/runs/38842840316)
-are queued/running at `91146d68`. The earlier queued runs `38842464287` and
+pass at `91146d68`, including the newest consumer-order and numeric-binding
+fixtures. [Four-host costs 38842840316](https://github.com/e6qu/fun-with-pipes/actions/runs/38842840316)
+passes on Linux ARM64/AMD64; both Macs are queued/running. The earlier queued runs `38842464287` and
 `38842467115` are confirmed canceled; the liveness correction superseded them
-before any job started. No current changed-compiler acceptance is claimed.
+before any job started. Focused acceptance does not replace the final production gate.
 
 The cost suite compares the same compiler with only `FWP_ZIP_MAP` changed, keeping
 mapped-array construction and other fusion enabled. Direct work constructs 128
@@ -98,7 +99,7 @@ Guarded local checks, supplemental to CI:
   stress (7.22 s). Ordered/captured/tiny derivative cases also match native ARC
   (7.13 s). Explicit expected output follows actual argument order: the zip
   argument prints before its piped subject. The newest consumer-order and numeric
-  binding fixtures await rebuilt-compiler CI.
+  binding fixtures now pass rebuilt-compiler CI on all six hosts.
 - Allocation/alias checks and missing-result cleanup controls pass tracing/ARC
   (5.28 s). For 129 numeric pairs, requests fall from 390 to 131, requested bytes
   from 12,408 to 5,176 and retains from 129 to zero. Final storage returns to its
@@ -114,3 +115,32 @@ The accepted #148 compiler is `/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp
 The isolated-pass harness and probes are `/private/tmp/fwp-zip-*`; they do not
 replace production binaries or native acceptance. No remaining local failure is
 being treated as a pass.
+
+## Text-file ownership and maintained applications
+
+This batch also supplies the missing `file.read` fresh-string contract and
+`file.write-new` borrowed-input contract. Both use already protected runtime
+implementations shared with accepted byte IO; no new wrapper or runtime path is
+introduced. `file.write-new` creates or truncates a file, which source comments
+and generated library documentation now explain explicitly.
+
+Acceptance adds repeated UTF-8 reads, empty/NUL contents, replacement writes,
+missing/invalid paths, invalid UTF-8 cleanup and write/close error preservation.
+The cleanup fixture counts actual buffer frees, and an omitted free must fail.
+An omitted string owner must fail the final live-storage check under ARC. The
+existing complete path-rejection fixture now also runs under ARC.
+
+Maintained `todo` and `grep` functions run 64 times with results retained, against
+raw and optimized interpretation and O1/O2 native tracing/ARC. Separate real CLI
+tests cover subcommands, file arguments, stdin, Unicode and exit statuses. CI
+suite `filesystem` includes these tests on all six native targets; Windows full
+acceptance includes them too. Changed-compiler results are pending.
+
+Bounded local checks: both repeated raw fixtures pass using accepted #148 (0.49 s).
+The standalone harnesses compile (0.26 s each); the C cleanup probe passes O1/O2
+tracing/ARC, forced collection and four broken controls (6.16 s). A test-only C
+declaration-order error was repaired before that pass. Inventory passes (0.99 s):
+261 contracts, 92 review declarations, 82 review symbols. Formatting passes
+(1.11 s); two source-comment additions regenerate through the standalone standard
+library generator (0.38 s). These checks do not rebuild the compiler or establish
+cross-platform acceptance.

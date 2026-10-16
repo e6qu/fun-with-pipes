@@ -293,8 +293,7 @@ Directory and environment snapshots now own their copied strings, pairs and list
 nodes through the existing protected list builder. Scratch buffers, partially
 constructed results and operating-system directory/environment handles are released
 on success and failure. Recursive directory creation releases its temporary path
-buffer. These three contracts pass focused tests on all six native targets; the
-combined delivery still needs its final production gate.
+buffer. These contracts have passed production acceptance on all six native targets.
 
 File-value runtime changes own metadata records and their duration fields,
 protecting the duration if record construction fails. Byte reads reuse the same
@@ -302,14 +301,23 @@ buffer/stream cleanup as text reads and return a fresh leaf. Existence checks,
 rename/remove, ordinary directory creation and append/byte writes borrow their
 arguments. Focused tests check repeated storage release and error preservation;
 all six native platforms pass, including the directory-error and composed
-application regressions. The combined delivery still needs its full production
-gate, tracked in the handoff.
+application regressions and full production acceptance.
+
+The next candidate extends the same contracts to text shortcuts: `file.read`
+returns a counted string, and `file.write-new` borrows its path and contents.
+The latter creates or replaces a file; its name does not mean exclusive creation.
+Both use the existing protected stream/buffer implementation. Invalid UTF-8 must
+release the read buffer before raising `IoError`. Tests cover repeated reads,
+embedded NUL in contents, invalid paths, write/close failures and missing owners.
+The maintained `todo` and `grep` functions exercise these operations in repeated
+application calls with retained results. Their changed-compiler checks are
+pending; see the handoff before claiming checked ARC support for these programs.
 
 Current-directory lookup now returns a counted string and protects its OS path
 buffer until conversion finishes. It raises an explicit `IoError` of kind `cwd`
 when the directory cannot be read. POSIX no longer substitutes `"."` or imposes a
-4 KiB buffer. This is a candidate contract: native six-host acceptance is tracked
-in the handoff. Other unreviewed IO primitives remain outside checked ARC.
+4 KiB buffer. This contract passed six-host and production acceptance in #148.
+Other unreviewed IO primitives remain outside checked ARC.
 
 The six dense F64 linear-algebra primitives borrow their input arrays and return
 independently owned results. Scratch pointers and partially constructed output

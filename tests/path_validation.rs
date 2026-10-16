@@ -34,7 +34,7 @@ fn invalid_paths_fail_before_accessing_or_modifying_prefixes() {
             "paths",
             include_str!("fixtures/path_validation.fwp"),
             13,
-            &["tracing"][..],
+            &["tracing", "arc"][..],
         ),
         (
             "resources",

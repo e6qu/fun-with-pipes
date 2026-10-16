@@ -399,7 +399,11 @@ foreign "fwp" file.close : File -> () ! {FileIO}
 foreign "fwp" file.read-all : File -> (String, File) ! {FileIO, Error[IoError]}
 foreign "fwp" file.write : String -> File -> File ! {FileIO, Error[IoError]}
 foreign "fwp" file.with : String -> (File -> (a, File) ! {FileIO, Error[IoError] | e}) -> a ! {FileIO, Error[IoError] | e}
+# Read the complete UTF-8 text. Missing files and invalid UTF-8 raise IoError.
+# For example, file.read "notes.txt" returns that file's contents as a String.
 foreign "fwp" file.read : String -> String ! {FileIO, Error[IoError]}
+# Create or replace a text file; an existing file is truncated, not appended.
+# For example, "hello\n" | file.write-new "notes.txt" leaves just that line.
 foreign "fwp" file.write-new : String -> String -> () ! {FileIO, Error[IoError]}
 
 # ------------------------------------------------------------- basic io

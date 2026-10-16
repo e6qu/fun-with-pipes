@@ -327,7 +327,13 @@ file.close : File -> () ! {FileIO}
 file.read-all : File -> (String, File) ! {FileIO, Error[IoError]}
 file.write : String -> File -> File ! {FileIO, Error[IoError]}
 file.with : String -> (File -> (a, File) ! {FileIO, Error[IoError] | e}) -> a ! {FileIO, Error[IoError] | e}
+
+# Read the complete UTF-8 text. Missing files and invalid UTF-8 raise IoError.
+# For example, file.read "notes.txt" returns that file's contents as a String.
 file.read : String -> String ! {FileIO, Error[IoError]}
+
+# Create or replace a text file; an existing file is truncated, not appended.
+# For example, "hello\n" | file.write-new "notes.txt" leaves just that line.
 file.write-new : String -> String -> () ! {FileIO, Error[IoError]}
 print : String -> () ! {IO}
 show : a -> String where Display[a]

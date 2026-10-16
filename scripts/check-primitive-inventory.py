@@ -111,9 +111,10 @@ for symbol in ['lines', 'read-line', 'read-lines', 'read-all', 'args', 'env.get'
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
 for symbol in ['dir.create-all', 'dir.create', 'dir.remove', 'file.remove', 'file.exists', 'file.is-dir']:
     bundle_contracts[symbol] = (1, 'Shared', [])
-for symbol in ['file.rename', 'file.append', 'file.write-bytes']:
+for symbol in ['file.rename', 'file.append', 'file.write-bytes', 'file.write-new']:
     bundle_contracts[symbol] = (2, 'Shared', [])
 bundle_contracts['file.read-bytes'] = (1, 'FreshLeaf', [])
+bundle_contracts['file.read'] = (1, 'FreshLeaf', [])
 bundle_contracts['env.cwd'] = (1, 'FreshLeaf', [])
 for symbol in ['time.monotonic', 'time.unix']:
     bundle_contracts[symbol] = (1, 'FreshLeaf', [])
