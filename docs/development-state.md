@@ -10,25 +10,32 @@ Do not apply either batch again or open a competing delivery PR.
 
 ## Current action and acceptance
 
-Next: publish this combined preparation into PR #153, refresh its plain-language
-description, and require all nine production jobs plus documentation on the new
-exact head. The earlier production run `38915283341` failed on both Windows hosts:
-byte-decoder tests ran before OpenSSL installation. Both decoder targets now run
-in the existing TLS step, preserving coverage. The superseded run was canceled;
-its partial Linux/Intel-Mac logs show no additional test failures. Its passing ARM
-Mac and benchmark jobs do not establish acceptance of this new combined head.
+PR #153 remains at `78e9a372abe0daad90318b9ae14751cf6587c31f`. Production
+`38925341899` failed its Windows ARM TLS stream comparison: the native socket
+formatter used localized Windows reset wording while the interpreter used its
+established common wording. Both implementations still rejected the connection;
+there was no successful read or weakened certificate check. Benchmarks and both
+ARM macOS jobs passed; other jobs are still running and may reveal further work.
+Documentation `38925341680` passed. Do not merge this head.
 
-After full acceptance, squash-merge with the explicit subject
-`Reduce temporary memory and clean up network resources` and an empty body.
-Verify the merge tree, parent and single-line message, then cancel duplicate
-postmerge CI. `/private/tmp/fwp-merge-153.py` MUST be refreshed with the new exact
-head and runs before use. Standing authorization covers publication, fixes and
-successive merges; do not request it again. Failed tests are work to fix.
+This preparation aligns five common Windows socket messages with the interpreter
+(permission, address already in use, aborted/reset/refused connections). The
+native socket probe now compares those actual OS codes against the interpreter's
+formatter; the deterministic TLS probe requires the exact reset diagnostic.
+The focused TCP workflow also runs the real TLS stream comparison, in addition
+to mutual TLS and existing socket lifetime/error controls.
 
-PR #152 is accepted as `1fa0fec690b7747a9ffcf2d72903d16544889258`. All nine
-production jobs and documentation passed, and the merged files match the tested
-head. Its single-line message has no trailers; duplicate run `38914679717` is
-canceled. [Delivery history](roadmap-history.md) retains the record.
+Next: publish this preparation, run `tcp-windows`, inspect the remaining old
+production results for additional failures, then publish the verified repair to
+PR #153 and require all nine production jobs plus documentation on the new head.
+Do not restart full CI before incorporating any other discovered failures.
+`/private/tmp/fwp-merge-153.py` still targets the failed old head and must be
+updated to the final head/run IDs before use. Squash subject remains
+`Reduce temporary memory and clean up network resources`, with an empty body.
+
+PR #152 is accepted as `1fa0fec690b7747a9ffcf2d72903d16544889258`; its nine
+production jobs and documentation passed, merge tree/message were verified and
+duplicate CI was canceled. Standing publication/fix/merge authorization persists.
 
 ## Combined changes and focused evidence
 

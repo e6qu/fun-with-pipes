@@ -84,5 +84,14 @@ int main(void) {
         CHECK(*fwp_socket_message(errno, error_text, sizeof error_text), 39);
         fwp_sockets_finish();
     }
+#ifdef _WIN32
+    const int common_errors[]={WSAEACCES,WSAEADDRINUSE,WSAECONNABORTED,WSAECONNRESET,WSAECONNREFUSED};
+#else
+    const int common_errors[]={EACCES,EADDRINUSE,ECONNABORTED,ECONNRESET,ECONNREFUSED};
+#endif
+    for(size_t i=0;i<sizeof common_errors/sizeof *common_errors;i++) {
+        char message[768];
+        printf("socket-message %d|%s\n",common_errors[i],fwp_socket_message(common_errors[i],message,sizeof message));
+    }
     return 0;
 }

@@ -1158,7 +1158,7 @@ int main(void){
  stale_error();result=fwp_tls_send(ssl,&byte,1,&wait);
  if(result!=-1||errno!=TEST_RESET||uncleared)return 247;
  stale_error();result=fwp_tls_step(ssl,&wait);
- if(result!=-2||strncmp(fwp_tls_err,"TLS handshake failed: ",22)||uncleared)return 247;
+ if(result!=-2||strcmp(fwp_tls_err,"TLS handshake failed: Connection reset by peer")||uncleared)return 247;
  error_kind=SSL_ERROR_ZERO_RETURN;
  stale_error();if(fwp_tls_recv(ssl,&byte,1,&wait)!=0||uncleared)return 247;
  stale_error();if(fwp_tls_send(ssl,&byte,1,&wait)!=-2||uncleared)return 247;

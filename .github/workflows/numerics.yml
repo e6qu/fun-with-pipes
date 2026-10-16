@@ -89,6 +89,11 @@ jobs:
         run: |
           cargo test --no-fail-fast --lib resource::tests
           cargo test --no-fail-fast --test native_sockets --test udp_ownership --test arc_tasks
+      - name: TLS stream interpreter and native agreement
+        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
+        env:
+          FWP_REQUIRE_TLS: '1'
+        run: cargo test --test tls streams -- --exact
       - name: Mutual TLS with checked ARC
         if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
         env:

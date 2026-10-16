@@ -14,6 +14,17 @@ fn native_socket_handles_errors_and_binary_transfers() {
         fwp::cgen::compile_c(&source, &binary, opt).unwrap();
         let result = Command::new(&binary).output().unwrap();
         assert!(result.status.success(), "{opt}: {result:?}");
+        let text = String::from_utf8(result.stdout).unwrap();
+        let mut compared = 0;
+        for line in text.lines() {
+            if let Some(pair) = line.strip_prefix("socket-message ") {
+                let (code, actual) = pair.split_once('|').unwrap();
+                let error = std::io::Error::from_raw_os_error(code.parse().unwrap());
+                assert_eq!(actual, fwp::h2::io_msg(&error), "{opt}: {code}");
+                compared += 1;
+            }
+        }
+        assert_eq!(compared, 5, "all common errors must be compared");
     }
 }
 
