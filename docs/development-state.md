@@ -94,10 +94,10 @@ raw/optimized output and native stress behavior must agree.
 |---|---|---|
 | `91f24f63` | `38904425456` | Initial lifetime checks pass Linux/Windows, both architectures; superseded before both macOS jobs completed; canceled. |
 | `947a6868` | `38905209906` | Expanded constructor/receive/unload checks pass on Linux ARM64; suspended receive exposes retained Linux polling storage. Windows2 and ARM macOS pass. Superseded run canceled. |
-| `89e66d53` | `38906218307` | Polling repair passes Linux AMD64, Windows AMD64 and ARM macOS; remaining hosts pending at this update. |
+| `89e66d53` | `38906218307` | Polling repair passes all six native hosts. |
 | `89e66d53` | `38906222140` | Actual WASI shared-helper regression queued; no networking claim. |
 
-Next: publish the address repair and explanatory docs as the next increment. Publish it and
+Next: publish the compact-header repair, then
 run fresh six-native `udp` and actual `wasi-arc` checks, retiring superseded work.
 Inspect any failure and fix it. Retain successful functional/cleanup C, binaries,
 statuses and outputs with exact source hashes before integrating into the delivery.
@@ -141,3 +141,18 @@ Remaining ownership review is mostly networking plus exit and GPU execution.
 Inventory counts do not settle retained callbacks, mutable cycles or host re-entry.
 The existing OpenCL runtime build remains incompatible with the no-JIT objective.
 No JIT, new backend or distributed execution is authorized as a workaround.
+
+Final representation review found that a separate UDP count field enlarged all
+TCP headers too. UDP now shares the existing TLS payload slot under the socket
+kind tag. Actual generated-runtime tests require the prior header size and proper
+64-bit alignment; a destructor probe with TLS enabled rejects treating a UDP
+counter as a TLS pointer. Its broken-tag control must exit 248. This layout change
+needs fresh runner checks; it is not a measured throughput improvement.
+
+The final focused increment keeps the previous header size on each ABI and tests
+TLS/UDP tag dispatch, including a deliberately missing-tag failure. Guarded
+`cargo fmt --all -- --check` and the documentation audit pass (1.11s/2.76s).
+The preceding polling implementation `89e66d53` passes all six native jobs in
+`38906218307`; the address and final header changes still require fresh checks.
+#152 now has passing Windows2, ARM macOS regular/GC, benchmarks and docs; Linux2
+and both Intel macOS jobs remain in progress. Do not merge early.

@@ -1417,7 +1417,9 @@ static V fwp_p_channel_close(V ch) {
 
 /* kind: 0 listener, 1 conn, 2 udp; tls: a listener's TLS context, a
  * connection's TLS session (fwp_rt_tls.c), or 0 */
-typedef struct { fwp_socket_t fd; int kind; void *tls; uint64_t refs; } fwp_sock;
+/* UDP owns a reference count where TCP/TLS stores its session pointer. The
+ * existing kind tag selects the member; counting UDP must not enlarge TCP. */
+typedef struct { fwp_socket_t fd; int kind; union { void *tls; uint64_t refs; }; } fwp_sock;
 
 #ifdef FWP_TLS
 /* TLS sessions (fwp_rt_tls.c, embedded in programs that use TLS): like
@@ -1492,7 +1494,7 @@ static int fwp_wait_fd(fwp_socket_t fd, int write, int64_t at) {
 static void fwp_sock_final(void *p) {
     fwp_sock *s = (fwp_sock *)p;
 #ifdef FWP_TLS
-    if (s->tls) {
+    if (s->kind != 2 && s->tls) {
         if (s->kind == 0) fwp_tls_server_drop(s->tls);
         else fwp_tls_dispose(s->tls);
         s->tls = 0;
@@ -1506,8 +1508,8 @@ static V fwp_sock_new(fwp_socket_t fd, int kind) {
                             : (fwp_sock *)fwp_mem_alloc(sizeof(fwp_sock));
     s->fd = fd;
     s->kind = kind;
-    s->tls = 0;
-    s->refs = kind == 2 ? 1 : 0;
+    if (kind == 2) s->refs = 1;
+    else s->tls = NULL;
 #if defined(FWP_LIBRARY)
     fwp_gc_finalizer(s, fwp_sock_final);
 #elif !defined(FWP_ARC_ONLY)

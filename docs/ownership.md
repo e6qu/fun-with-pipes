@@ -301,8 +301,10 @@ suspended task that holds the socket must keep it alive until its own original
 scope ends. Returning only an address string does not keep the socket alive.
 
 The current UDP preparation preserves those original scopes before optimization,
-uses a separate 64-bit owner count for descriptors, and owns both fields of a
-received `(Bytes, String)` pair while constructing it. Failure releases completed
+uses a separate 64-bit logical owner count for descriptors, and owns both fields of a
+received `(Bytes, String)` pair while constructing it. UDP stores its count in the
+slot that TCP uses for a TLS pointer; the socket-kind tag selects the member, so
+counting UDP does not enlarge TCP headers. Failure releases completed
 fields and receive scratch storage. Closing a Linux descriptor wakes its waiting
 tasks and releases its polling records; synchronization after wake does not
 recreate a closed descriptor's record. Disabling physical frees still closes the

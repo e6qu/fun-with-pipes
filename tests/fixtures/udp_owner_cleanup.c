@@ -1,3 +1,7 @@
+struct udp_previous_header { fwp_socket_t fd; int kind; void *tls; };
+_Static_assert(sizeof(fwp_sock)==sizeof(struct udp_previous_header), "UDP counting must not enlarge socket headers");
+_Static_assert(offsetof(fwp_sock,refs)==offsetof(fwp_sock,tls), "disjoint socket kinds share payload storage");
+_Static_assert(offsetof(fwp_sock,refs)%_Alignof(uint64_t)==0, "UDP owners must be aligned");
 static jmp_buf udp_jump;
 static int udp_recover(void) { return 1; }
 static void udp_expect_clean(intptr_t budget, size_t descriptors) {

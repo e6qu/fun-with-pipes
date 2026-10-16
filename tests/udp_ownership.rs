@@ -296,3 +296,30 @@ fn udp_library_unload_closes_retained_handles_and_preserves_host_socket() {
         }
     }
 }
+
+#[test]
+fn socket_kind_selects_tls_or_udp_count_without_increasing_header_size() {
+    let runtime = include_str!("../runtime/fwp_rt_task.c");
+    let start = runtime
+        .find("typedef struct { fwp_socket_t fd; int kind;")
+        .unwrap();
+    let end = start + runtime[start..].find("} fwp_sock;").unwrap() + "} fwp_sock;".len();
+    let layout = &runtime[start..end];
+    let start = runtime.find("static void fwp_sock_final(").unwrap();
+    let end = start + runtime[start..].find("\n}\n").unwrap() + 3;
+    let finalizer = &runtime[start..end];
+    let source = include_str!("fixtures/socket_kind_cleanup.c")
+        .replace("/* SOCKET_LAYOUT */", layout)
+        .replace("/* SOCKET_FINALIZER */", finalizer);
+    let dir = fwp::cgen::TempDir::new("socket-kind").unwrap();
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join("socket-kind.exe");
+        fwp::cgen::compile_c(&source, &binary, opt).unwrap();
+        checked(&mut Command::new(&binary));
+        let broken = source.replace("s->kind != 2 && s->tls", "s->tls");
+        assert_ne!(source, broken);
+        fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+        let output = Command::new(binary).output().unwrap();
+        assert_eq!(output.status.code(), Some(248), "{output:?}");
+    }
+}

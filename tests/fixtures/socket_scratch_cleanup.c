@@ -6,7 +6,7 @@ static int socket_recover(void) { return 1; }
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
     if(fwp_sockets_init()) return 246;
-    fwp_sock handle={0,2,NULL};
+    fwp_sock handle={.fd=0,.kind=2,.refs=1};
     V address=fwp_cstr("127.0.0.1:9"), data=fwp_cstr("x");
     for(int operation=0;operation<3;operation++) {
         for(socket_mode=0;socket_mode<(operation==2?1:3);socket_mode++) {
