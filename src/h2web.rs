@@ -1183,7 +1183,15 @@ static const fwp_desc *const *const body_variants[]={body_fields,NULL};
 static const fwp_desc body_type={.kind=K_ADT,.vfields=body_variants};
 struct body_case {int64_t max;size_t len;int end,reset,dead;};
 static const struct body_case cases[]={CASES};
+#if defined(_WIN32)
+#include <io.h>
+#include <fcntl.h>
+#endif
 int main(void){
+ // Compare exact diagnostic bytes; the host CRT must not translate LF to CRLF.
+#if defined(_WIN32)
+ if(_setmode(_fileno(stdout),_O_BINARY)==-1)return 246;
+#endif
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
  g_conn *c=g_conn_new(-1,"local",0);g_stream *s=g_stream_new(c,1);
  V call=g_call_value(c,s,1,0);

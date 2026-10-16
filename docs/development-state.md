@@ -19,9 +19,13 @@ Next: finish the combined preparation's `service-values` matrix on all six nativ
 hosts (`38934662876`) and both `wasi-arc` regressions (`38934584083`), at
 `c37b6afa`. A subsequent review found an unchecked response-capture allocation;
 the pending follow-up traps before invoking the callback or installing a context.
-Its existing lifetime test now injects that failure. Run a Linux preparation
-check for that repair, then include it in final production acceptance; Windows
-now runs this existing capture test too. Fix failures, retain artifacts and inspect binaries.
+Its existing lifetime test now injects that failure; Windows production runs it
+too. Service run `38934662876` passed Linux ARM64 and ARM macOS, but Windows
+AMD64 found CRLF translation in the C comparison fixture's stdout. Its actual
+body/header values agreed. The fixture now explicitly uses binary stdout on
+Windows, preserving exact-byte assertions and the negative-bound control.
+Rerun the six service hosts on the combined repair; the separately queued Linux
+capture follow-up `38934906327` is superseded by that run. Fix failures, retain artifacts and inspect binaries.
 `/private/tmp/fwp-retain-service-values.py RUN_ID` requires all six service jobs,
 actual interpreter/native comparison execution and expected allocation probes
 before writing the final report. Its current script has not run successfully.
@@ -108,7 +112,8 @@ partition checks passed in 0.13s; response-capture repair formatting passed in 1
 `python3 scripts/local-guard.py /private/tmp/fwp-service-stdlib-doc` printed a
 passing test, but its guard failed with a process-signal permission error. That
 invocation is not accepted as a passing guarded check, and the chained roadmap
-audit did not run. No workload remained. The service CI suite now also runs
+audit did not run. No workload remained. A later independent guarded roadmap
+audit passed in 2.67s (50 link sets, 106 immutable pairs, seven work areas). The service CI suite now also runs
 `stdlib_doc`; the final PR documentation job will recheck the combined handoff.
 Do not bypass the guard or change its limits.
 All 230 integration targets remain assigned; the new service target uses the
