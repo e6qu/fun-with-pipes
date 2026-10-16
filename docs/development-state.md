@@ -1,72 +1,69 @@
 # Session handoff
 
 Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
-This branch prepares the next combined service-memory and compiler PR. The only
-open delivery PR is #153. Do not open a second PR before it is accepted.
+This branch prepares one combined service-memory, compiler and iteration PR.
+The only open delivery PR is #153; do not open a second before it is accepted.
 
 ## Current action
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
-Base: `ac3060d1`. Published head: `6c538bef`. Runtime/compiler code: `9fa2a0f4`; the last
-commit adds dependency-cache CI and documentation.
-The compiler change is `79ce442f`; `cb0ffeea` corrects its native test setup.
+Preparation base: `ac3060d1`. Current implementation: `2a98d395`.
 
-Next: require all six jobs in `38958562126` at `8684127d`, and fix any failures.
-Both Linux, both Windows and Apple Silicon pass; Intel Mac is finishing actual
-service calls. Reflection follow-up `38959410533` at `9fa2a0f4` is running on Linux.
-Run `38956983459` at `cb0ffeea` failed on Apple Silicon because the fixture looked
-for a generated Pair destructor that was not needed by its program. Its service
-allocation measurement passed. The correction supplies a real tuple consumer
-and tests its generated release, preserving alias, trap and extra-allocation
-controls. Focused CI now runs this test before the longer measurements and
-uploads its generated C on failure. Require all six native jobs on the repair.
-Actual WebAssembly run `38955989639` passes on both Linux architectures for the
-unchanged compiler optimization at `79ce442f`.
-Retain its allocation comparison against the passing `975806e9` report before
-claiming the saving across supported hosts.
-After #153 acceptance, rebase only this branch's changes after `ac3060d1` onto
-its accepted squash. Then publish one combined PR and require all nine production
-jobs plus documentation on its final commit. Focused checks do not replace that
-acceptance. Preserve the existing effect rule: only a binding's final function
-arrow may have effects; partial application is pure.
+Next: finish native run `38961921474` and actual WebAssembly run `38962206780`
+at `2a98d395`, fixing any failures. These verify the new fold-based `each` together
+with all prepared service/compiler changes. Retain the new allocation comparison
+and inspect its actual binaries. Do not claim the `each` saving from earlier runs.
+
+After #153 passes and merges, preserve the preparation's current head under a
+remote evidence tag before rebasing: the reports refer to earlier source commits.
+Rebase only changes after `ac3060d1` onto the accepted squash. Preserve both the
+byte-decoder repair and context-owner suites when resolving workflow conflicts.
+Publish one combined PR; require all nine production jobs and documentation on
+its final head. The new dependency-cache workflow's two Windows jobs must also
+pass when introduced. Focused runs do not replace full acceptance.
 
 PR #153 is in `/Users/zardoz/projects/fun-with-pipes`, branch
 `owned-values-delivery`, head `f6dc9940b562a52bc0a3b207fdd6fd58ac3d1aba`.
-Its authoritative handoff is that checkout's `docs/development-state.md`.
-All six decoder jobs in `38955537587` and documentation `38955543617` pass.
-The PR is ready; production run `38958379514` checks the exact same head.
-Generated WebSocket code needs those headers even for parsing-only programs.
-All nine production jobs must pass before merge. Draft-skipped
-jobs are not acceptance. `/private/tmp/fwp-ready-153.py` checks readiness;
-`/private/tmp/fwp-merge-153.py` requires explicit production/documentation run IDs.
-Squash subjects must be one line, at most 80 characters, with an empty body and
-no trailers or attribution. Verify the merged tree, parent and message, then
-cancel duplicate postmerge CI. Standing authorization covers these actions.
+Its six focused decoder jobs (`38955537587`) and documentation (`38955543617`)
+pass. It is ready; production run `38958379514` is running on that exact head.
+Use `/private/tmp/fwp-merge-153.py --production-run 38958379514
+--documentation-run 38955543617` to check it, adding `--merge` only after all
+nine production jobs pass. The helper verifies the squash tree, parent and
+one-line message, then cancels duplicate production CI. Preserve the root's
+uncommitted handoff before switching branches. Standing authorization covers
+publication, fixes and merge; failing tests are tasks to fix.
 
-## Verified service-memory baseline
+Every commit/squash message is one line, at most 80 characters, with no body,
+trailers or attribution. JIT is excluded. Preserve the effect rule: only the
+last function arrow may have effects; partial application is pure.
 
-Source `975806e9e76d3df3c285fb3d8f6c826ba626298e` passes all six native hosts in
-`38953639844`, including actual interpreted/native service calls. The
-[owned-scope report](measurements/service-context-owned-2026-10-16.json) preserves
-CPU/compiler versions, layouts, counts, binary formats and ARM64 instructions.
-The inventory has 347 contract declarations and seven remaining primitive
-reviews. Other ownership boundaries remain too; this is not completion of GC removal.
+## Verified service and compiler changes
 
-Five service helpers keep settings on the stack, and child tasks copy settings
-into their existing task records. Synchronous calls borrow TLS/capture owners;
-children retain shared data when they need independent lifetimes. Header pointers
-and copied text occupy one allocation. Empty or ignored header lists borrow the
-previous settings. Tests cover parent return/error/trap/cancellation, child
-cleanup, size and count overflow, allocation failure and deliberately missing
-inheritance, copying, release and retention.
+Source `8684127de6efc46a4dd17c5d95ec9cced5c10e00` passes all six native hosts
+in `38958562126`, including actual interpreted/native service calls. The
+[forwarded-result report](measurements/service-context-forwarded-2026-10-16.json)
+retains CPU/compiler versions, layouts, counts, binary formats and actual ARM64
+and AMD64 instructions. The inventory has 347 contract declarations and seven
+remaining primitive reviews; other ownership boundaries remain too.
 
-The helpers also borrow their typed callbacks and own returned values. Response
-capture owns the callback result and copied headers, preserving order and
-duplicates. Tests compare raw/optimized interpretation with native tracing/ARC,
-retain caller aliases and returned functions, exercise typed failures and
-13/14 captured-result allocation failures, and inspect ARC binaries for tracing
-functions. Client and served-request decoding scratch releases on traps.
-The repaired Windows evidence path explicitly names `probe.exe`.
+Five service helpers keep settings on the stack. Children copy them into their
+existing task records, retaining shared data for independent lifetimes.
+Synchronous calls borrow callback functions and TLS/capture owners. Outgoing
+header pointers and copied text occupy one allocation; empty or ignored header
+lists borrow previous settings. Returned values and copied captured headers
+have owners. Client/server decoding scratch and channel send buffers release
+on failures and cancellation.
+
+Tests cover aliases, returned functions, typed errors, parent return/trap/
+cancellation, child cleanup, overflow and allocation failure. Deliberately missing
+inheritance, copying, release and retention must fail. Capture controls exercise
+13/14 allocation-failure positions and inspect ARC binaries for tracing functions.
+
+A compiler forwarding function now keeps its callback's returned tuple instead
+of unpacking and rebuilding it. An actual generated consumer checks tuple release
+and caller aliases; a trapping callback checks unwind cleanup. Deliberately
+reintroducing the extra allocation must fail. The fixture runs before the longer
+measurements and uploads its generated C on failure.
 
 For 1/32/128 calls, compared with plain fwp state updates at O2 and collection
 disabled, all six hosts have these extra costs per call:
@@ -75,133 +72,103 @@ disabled, all six hosts have these extra costs per call:
 |---|---:|---:|---:|
 | Compression, deadline, empty/ignored headers | 0 | 0 | 0 |
 | One outgoing header | 1 | 40 | 0 |
-| Response-header capture | 2 | 48 | 0 |
+| Response-header capture | 1 | 24 | 0 |
 
-Fixed scheduler startup remains in the raw rows; the per-call difference removes
+The [previous owned-scope report](measurements/service-context-owned-2026-10-16.json)
+at `975806e9` had two capture allocations/48 requested bytes per call. The new
+forwarding function returns directly in `x0` on ARM64 and `rax` on AMD64. Its
+stack use falls from 192 to 144 bytes on ARM64 and from 184 to 120 bytes on AMD64
+(excluding the incoming AMD64 return address). These are instrumented binary
+observations, not timing measurements or whole-program stack bounds.
+
+Settings occupy 72 bytes aligned to eight. Linux AMD64 service tasks grow from
+the original 1,512 to 1,584 bytes. Programs without service support omit those
+fields. Fixed scheduler startup remains in raw rows; per-call differences remove
 that fixed cost. Raw TLS/capture buffers, allocator pages and process memory are
-excluded. These are fwp-to-fwp memory comparisons, not speed or C/Rust parity.
-The original [baseline](measurements/service-context-baseline-2026-10-16.json)
-records the old heap settings. The intermediate
-[stack report](measurements/service-context-stack-2026-10-16.json) predates packed
-headers and owned results; its old Windows fixture failures are superseded.
+excluded. These are fwp-to-fwp memory comparisons, not C/Rust parity or speed.
 
-Settings occupy 72 bytes aligned to eight bytes. The Linux AMD64 service task
-is 1,584 bytes versus the original 1,512; all host layouts are in the report.
-Actual Linux ARM64 instructions copy the settings with four 16-byte registers
-and one eight-byte register. The wrapper reserves 144 stack bytes and its separate
-handler 464; these are instrumented binary observations, not a total stack bound.
-The callback helper remains a call. Programs without service support omit the
-settings fields.
+Explicit process exit passes seven native status cases and actual WASI execution.
+It preserves earlier output and uses the low eight status bits; it does not
+promise ordinary cleanup before process termination. Broader WASI/browser and
+physical-storage checks pass on both Linux architectures in `38955989639` at
+compiler source `79ce442f`. The newer library change below requires its fresh run.
 
-Explicit `exit` also passes native checks at `975806e9` and actual WASI checks
-on both Linux architectures in `38949856424`, source `6b642a82`. Seven status
-cases preserve prior output and use the low eight bits of the exit status.
-Exit produces no result; it does not promise normal scope cleanup before process
-termination. Broader WASI/browser checks, including real process exit and
-physical-storage controls, pass on both Linux architectures at the new compiler
-source `79ce442f` in `38955989639`.
+Service reflection cleanup at `9fa2a0f4` passes the complete Linux AMD64 run
+`38959410533`. Reflection lets tools ask a server which methods it provides.
+Request and response buffers release on success, encoding traps and cancelled
+sends; separate missing-cleanup controls must fail. The current six-host run
+includes this repair. Whole-service ownership is still unfinished.
 
-## Implemented follow-ups awaiting verification
+## New iteration simplification awaiting checks
 
-Generated code at the passing baseline shows why response capture still allocates
-twice: a forwarding function unpacks its callback's owned tuple and allocates an
-identical tuple in its boxed entry. `79ce442f` keeps that returned owner when
-every return path forwards a dynamic callback result. Known direct calls and
-functions constructing records retain their existing worker choices.
+The measured plain `each` builds and discards a list of unit results. The new
+library definition is `each = const | flip fold ()`. Unit, written `()`, is the
+running value of the fold. `const` ignores that value and selects the supplied
+callback. This adds no primitive or syntax.
 
-The allocation test now requires one capture-result allocation per call. A new
-native test compares interpreter results, shared strings and a trapping callback;
-a deliberately reintroduced result-box allocation must fail its count. The
-fixture enables real task unwind support and initializes the scheduler before
-counting result allocations. Existing
-record-worker and conversion controls run with it. Do not claim the one-allocation
-result across native hosts until `38958562126` passes. The WebAssembly checks
-in `38955989639` already pass.
+Accepted-interpreter checks preserve shared inputs, ordered output, state updates
+and typed failure (0.26s). A division-trap check prints `2`, then `0`, and exits
+with the expected status 101 before visiting the final element (0.25s).
+Library formatting passes (0.01s).
 
-Sender cleanup at `2dbf9b64` registers a channel sender's encoded buffer before
-encoding and sending. It releases on success, encoding traps and cancellation
-while the send waits for connection space. The existing response test now covers
-all three paths and requires deliberately omitted sender cleanup to fail. This
-repair passes its Linux AMD64 regression in `38957908016`; that overall run
-failed only the now-repaired forwarding fixture. Current `38958562126` includes
-the sender fix on all six hosts. Final combined CI must still pass.
+New tests in `state_sequence_ownership` compare raw/optimized interpretation with
+O1/O2 tracing/ARC, including stress and reuse checks. A separate executable control
+uses the old mapping definition and compares managed allocation slopes at 32/128
+elements. Both must print the same count; the new definition must eliminate at
+least one allocation per element. `each-storage.tsv`, source and binaries are
+uploaded with the context evidence. Earlier reports still use mapping-based
+`each`; retain a new report after the current native run passes.
 
-The same cleanup now protects service-reflection requests and encoded responses.
-Reflection lets tools ask which methods a server provides. The test covers normal
-completion, encoding traps and blocked-send cancellation, including separate
-deliberately missing request/response cleanup. This later change is checked by Linux run `38959410533` at `9fa2a0f4`; it also
-needs final combined native CI and is not part of `38958562126`.
+## CI work awaiting full acceptance
 
-The shared `scripts/run-native-tests.py` also adds explicit `--all` selection for
-Linux. It retains every Cargo target and stress case, with two executable workers
-and one harness thread each. Missing/duplicate executables fail before execution;
-failed targets do not skip the remainder. Mac assignments remain unchanged.
-The measurement's plain `each` still builds and discards a list of unit results.
-A new library change uses `each = const | flip fold ()`: unit is the running
-value, and `const` selects the callback while ignoring that value. No primitive
-or syntax is added. Accepted-interpreter checks pass for aliases, state, ordered
-output and typed failure (0.26s), and preserve output `2`, `0` before a division
-trap with expected exit 101 (0.25s). Library formatting passes (0.01s).
-New native checks compare raw/optimized interpretation with O1/O2 tracing/ARC,
-then compare allocation slopes against the original mapping definition at
-32/128 elements. Focused CI runs these controls before the longer measurements.
-Do not claim a native saving until they pass; the earlier reports still describe
-the mapping-based `each`. This new source needs a combined six-host run.
+`scripts/run-native-tests.py` adds explicit `--all` selection for Linux. It keeps
+every Cargo target and stress case, with two executable workers and one harness
+thread each. Missing/duplicate executables fail before tests; failing targets do
+not skip the remainder. Mac assignments stay unchanged. Seven Python checks
+pass, including real Cargo metadata for 233 integration targets. Final production
+CI must verify the Linux scheduling; no total-CI speedup is claimed.
 
-A separate dependency-only Windows workflow is prepared. Current main caches
-lack the new HTTP/2 dependency key; sibling preparation branches cannot share
-their copies. It builds/validates and caches the pinned dependencies after setup
-changes merge, allowing later branches to reuse the main cache. It also runs on
-ready PRs changing those files, so both jobs must pass when this workflow is
-introduced. Keep it running when cancelling duplicate postmerge production CI.
-It uses the existing TLS script and architecture checks without installing an
-unneeded fwp compiler toolchain. Guarded actionlint passes for all changed workflows (1.27s); actual jobs
-remain to be verified on the next PR.
+The dependency-only Windows workflow populates the default branch's exact cache
+after setup changes merge. Current main caches lack the new HTTP/2 dependency
+key, and sibling branches cannot share their copies. It uses the pinned TLS
+setup script and native architecture validation without an unnecessary compiler
+installation. It runs on ready PRs changing those files, so both jobs must pass
+when introduced. Keep it running when cancelling duplicate postmerge production
+CI. Guarded actionlint passes on all changed workflows (1.27s); actual new-workflow
+jobs remain to be verified on the next PR.
 
-Seven Python checks pass, including real Cargo metadata for 233 integration
-targets. Final production CI still needs to verify Linux's new scheduling.
+## Evidence and local checks
 
-## Evidence and local work
-
-Artifacts for the passing baseline are under
-`/private/tmp/fwp-context-final-evidence/38953639844/`. The report helper is
-`/private/tmp/fwp-retain-context-final.py`: pass a completed successful six-host
-run, its exact source, artifact directory and output path through the local guard.
-Pass `--capture-requests 1` for the forwarding change (`2` for its older baseline);
-the helper validates both requested bytes and allocation counts against that target.
-It checks jobs, counts, layouts, inventory and capture controls. New source needs
-new binary observations; do not reuse instruction addresses from an older binary.
-Exploratory binary inspection of failed run `38956983459` is retained under
-`/private/tmp/fwp-context-forward-inspection/38956983459/linux-arm64/`. Its actual
-ARM64 forwarding function returns the callback result directly in `x0`; the old
-24-byte reallocation is absent and its frame falls from 192 to 144 bytes. These
-are observations of that instrumented binary, not acceptance or a speed claim.
-AMD64 inspection in the adjacent `linux-amd64` folder likewise returns directly
-in `rax`, with stack use excluding the incoming return address falling from
-184 to 120 bytes. Repeat inspection against the passing replacement before
-retaining the report.
-The next PR description draft is `/private/tmp/fwp-context-pr-body.md`.
+Passing tuple-forwarding artifacts are under
+`/private/tmp/fwp-context-forwarded-evidence/38958562126/`. The report helper is
+`/private/tmp/fwp-retain-context-final.py`: pass a successful six-host run, its
+exact source, artifact directory, output path and `--capture-requests 1` through
+the local guard. It validates jobs, counters, layouts, inventory and capture
+controls. New source needs new binary observations. Earlier owned-scope artifacts
+are under `/private/tmp/fwp-context-final-evidence/38953639844/`.
+The next PR description is `/private/tmp/fwp-context-pr-body.md`.
 
 Use `python3 scripts/local-guard.py COMMAND...` with unchanged limits. Full builds,
 native compilation and full tests belong on CI. Earlier automatic review refused
 local compiler/standalone C builds; do not bypass or repeat those requests.
-Recent guarded checks: formatting 1.20s, documentation audit 2.61s, evidence
-retention 33.72s, existing ARM64 binary inspection 0.14s. Earlier seven runner
-checks passed in 1.07s. No local native build was used.
+Recent guarded checks: Rust formatting 1.08s, documentation audit 2.62s, report
+retention 20.42s, replacement ARM64/AMD64 binary inspection 0.13s. No local native
+build was used. An obsolete morning run (`38888712709`) has a stale in-progress
+listing, but all its jobs finished and GitHub reports it completed when cancelling;
+it is not using runners.
 
-Remote stream caches, shared connections, HTTP/2 server operations and GPU
-ownership remain. The [ownership guide](ownership.md#what-remains-before-remote-calls-can-use-arc)
+Remote stream caches, connections, HTTP/2 server operations, retained host
+callbacks and GPU ownership remain. The [ownership guide](ownership.md#what-remains-before-remote-calls-can-use-arc)
 sets concrete tests for repeated calls, early stop, aliases, detached users and
-cycles. Prefer ownership and borrowing; do not replace missing lifetime proofs
-with permanent retention or silent tracing. All seven project work areas remain
-open. JIT is excluded, not deferred.
+cycles. Prefer ownership and borrowing; do not substitute permanent retention
+or silent tracing. All seven project work areas remain open.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
 | 1 | In progress | Service and external ownership; remove tracing |
-| 2 | In progress | Avoid tuple rebuilding, allocations and unnecessary counts |
+| 2 | In progress | Remove discarded iteration results and remaining counts |
 | 3 | In progress | Reduce equivalent-work C/Rust gaps |
 | 4 | In progress | Differentiation precision, speed and memory scaling |
 | 5 | In progress | CPU kernels and GPU resource ownership |

@@ -699,7 +699,7 @@ must keep its inherited settings after the callback returns. See
 [service scopes](services.md#settings-for-a-group-of-calls) for examples.
 
 The [earlier baseline](measurements/service-context-baseline-2026-10-16.json)
-and [owned-scope measurements](measurements/service-context-owned-2026-10-16.json)
+and [owned-scope and forwarding measurements](measurements/service-context-forwarded-2026-10-16.json)
 compare each service scope with plain fwp state updates at 1, 32 and 128 calls.
 Every call increments the same state. These are extra costs per call, calculated
 from the difference between 32 and 128 calls with collection disabled. Each
@@ -710,11 +710,11 @@ cell shows **earlier → owned scopes**:
 | Compression setting | 1 → 0 | 64 → 0 | 64 → 0 |
 | Deadline setting | 1 → 0 | 64 → 0 | 64 → 0 |
 | One outgoing header | 5 → 1 | 128 → 40 | 144 → 0 |
-| Response-header capture | 4 → 2 | 120 → 48 | 112 → 0 |
+| Response-header capture | 4 → 1 | 120 → 24 | 112 → 0 |
 
 The earlier numbers are Linux AMD64 only. The new numbers match on Linux,
-macOS and Windows, each on ARM64 and AMD64, at source `975806e9`, with all six
-focused jobs passing in `38953639844`. Empty and ignored header lists add no
+macOS and Windows, each on ARM64 and AMD64, at source `8684127d`, with all six
+focused jobs passing in `38958562126`. Empty and ignored header lists add no
 per-call allocation. Requested bytes are allocator inputs; charged bytes include
 size rounding and explicit releases. Fixed scheduler startup remains in the raw
 rows and is excluded from the per-call difference. Raw TLS/capture allocations,
@@ -752,12 +752,20 @@ registers and one eight-byte register onto the stack. That wrapper reserves
 O2 observations, not a whole-program stack bound. The wrapper still calls the
 callback helper, so fewer allocations do not prove that all call overhead is gone.
 
-A further compiler optimization is under validation. The measured capture path
-unpacks a callback's already allocated tuple and rebuilds an identical tuple in
-a forwarding function. The prepared change passes that owner through directly
-when every return path forwards a dynamic callback result. Allocation tests
-require capture to fall from two requests to one while preserving aliases and
-failure cleanup. Do not treat that target as verified until its new checks pass.
+The earlier [owned-scope report](measurements/service-context-owned-2026-10-16.json)
+still had two allocations for response capture. A forwarding function unpacked
+its callback's tuple and allocated an identical tuple. The compiler now preserves
+that returned owner when every return path forwards a dynamic callback result.
+Aliases, failure cleanup and a deliberately reintroduced extra allocation are
+checked on all six hosts. Actual O2 instructions return that owner directly in
+`x0` on ARM64 and `rax` on AMD64. The forwarding function's stack use falls from
+192 to 144 bytes on ARM64 and from 184 to 120 bytes on AMD64, excluding AMD64's
+incoming return address. These are instrumented binary observations, not timing
+measurements or whole-program stack bounds.
+
+A later library change replaces list `each`'s discarded result list with a fold.
+Its native allocation and evaluation-order checks are still pending. The reports
+above retain the earlier `each` definition; they do not establish this newer saving.
 
 The [intermediate stack-copy report](measurements/service-context-stack-2026-10-16.json)
 preserves the earlier representation tradeoff. It predates packed headers and
