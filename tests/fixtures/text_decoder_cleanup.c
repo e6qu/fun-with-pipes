@@ -27,11 +27,21 @@ int main(void) {
                 completed=1;
             } else failures++;
             decoder_left=0; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
-            if(fwp_cleanups || fwp_gc.budget!=budget) return 248;
+            if(fwp_cleanups || fwp_gc.budget!=budget) {
+                fprintf(stderr,"decoder %d allocation %d: charged delta %lld; cleanup pending %d\n",which,allocation,(long long)(budget-fwp_gc.budget),fwp_cleanups!=NULL);
+                return 248;
+            }
             if(!fwp_rc_last(input)) return 249;
             if(completed) break;
         }
-        if(!completed || failures<3) return 247;
+        /* Counts are required output objects plus one URL scratch buffer;
+         * HTTP has no line-index or value scratch arrays. */
+        const int requests[]={3,7,13,12,6};
+        if(!completed || failures!=requests[which]) {
+            fprintf(stderr,"decoder %d: observed %d requests, expected %d; completed %d\n",which,failures,requests[which],completed);
+            return 247;
+        }
+        printf("decoder %d: %d allocation requests; final charged delta 0\n",which,failures);
         fwp_rc_drop(input);
     }
     return 0;

@@ -97,6 +97,19 @@ fn partial_ternary_lists_unwind_without_a_collector() {
         let code =
             code[..start].to_string() + "static V ternary_cons(V,V);\n" + &block + &code[end..];
         let code = code.replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
+        let code = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int ternary_count_active; static size_t ternary_allocations;");
+        let init = "static inline void *fwp_alloc_init(size_t n) {";
+        let slow = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        assert!(code.contains(init) && code.contains(slow));
+        let code = code
+            .replace(
+                init,
+                &format!("{init} if(ternary_count_active) ternary_allocations++;"),
+            )
+            .replace(
+                slow,
+                &format!("{slow} if(ternary_count_active && leaf!=0) ternary_allocations++;"),
+            );
         let code = code[..code.find("int main(").unwrap()].to_string()
             + include_str!("fixtures/ternary_cleanup.c");
         let broken = code.replace(
@@ -115,6 +128,33 @@ fn partial_ternary_lists_unwind_without_a_collector() {
                     .env("FWP_REUSE_VERIFY", "0")
                     .output()
                     .unwrap();
+                if expected == 0 && opt == "-O2" {
+                    if let Some(path) = std::env::var_os("FWP_DECODER_ARTIFACTS") {
+                        let path = std::path::PathBuf::from(path);
+                        std::fs::create_dir_all(&path).unwrap();
+                        let label = format!("ternary-{}", if arc { "arc" } else { "tracing" });
+                        std::fs::write(path.join(format!("{label}.c")), source).unwrap();
+                        std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                        std::fs::write(path.join(format!("{label}.txt")), &output.stdout).unwrap();
+                        let mut command = Command::new(if cfg!(target_os = "macos") {
+                            "otool"
+                        } else if cfg!(target_os = "windows") {
+                            "llvm-objdump"
+                        } else {
+                            "objdump"
+                        });
+                        let assembly = checked(
+                            command
+                                .arg(if cfg!(target_os = "macos") {
+                                    "-tvV"
+                                } else {
+                                    "-d"
+                                })
+                                .arg(&binary),
+                        );
+                        std::fs::write(path.join(format!("{label}.asm")), assembly.stdout).unwrap();
+                    }
+                }
                 assert_eq!(
                     output.status.code(),
                     Some(expected),

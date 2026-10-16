@@ -47,7 +47,15 @@ jobs:
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
       - name: Value decoder ownership and partial-failure cleanup
         if: inputs.suite == 'decoders'
+        env:
+          FWP_DECODER_ARTIFACTS: decoder-evidence
         run: cargo test --no-fail-fast --test ternary_ownership --test text_decoder_ownership --test web --test std_tests --test arc_execution --test stdlib_doc
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'decoders'
+        with:
+          name: decoders-${{ matrix.runner }}
+          path: decoder-evidence/
+          if-no-files-found: ignore
       - name: Vector ownership, boxed lanes and failure cleanup
         if: inputs.suite == 'vectors'
         env:

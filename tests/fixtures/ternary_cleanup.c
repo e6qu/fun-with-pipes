@@ -29,6 +29,22 @@ int main(void) {
         if(fwp_cleanups || fwp_gc.budget!=budget) return 248;
         if(!fwp_rc_last(bytes)) return 249;
     }
+    intptr_t budget=fwp_gc.budget;
+    ternary_remaining=-1;
+    V digits=fwp_p_tint_trits((V)(int64_t)-23,40,ternary_drop);
+    ternary_count_active=1; ternary_allocations=0;
+    V packed=fwp_rc_fresh(fwp_p_trits_pack(digits));
+    ternary_count_active=0;
+    if(ternary_allocations!=1) return 250;
+    printf("pack 40 trits: %zu allocation request\n",ternary_allocations);
+    ternary_count_active=1; ternary_allocations=0;
+    V converted=fwp_rc_fresh(fwp_p_tint_from_trits(digits,40));
+    ternary_count_active=0;
+    if(ternary_allocations!=1) return 251;
+    printf("convert 40 trits: %zu allocation request\n",ternary_allocations);
+    if(fwp_rc_release_last(converted)) fwp_rc_resource_free_obj(converted);
+    fwp_rc_drop(packed); ternary_drop(digits);
+    if(fwp_gc.budget!=budget) return 248;
     fwp_rc_drop(bytes);
     return 0;
 }

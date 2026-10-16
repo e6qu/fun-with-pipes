@@ -61,7 +61,12 @@ HTTP builds its owned header list without line/value scratch arrays. Header orde
 first-line checks and malformed-input messages remain unchanged. The fixture
 retains originals beside parsed values and exercises malformed early/late fields.
 Native failure controls inject every managed allocation until successful completion;
-missing partial-field/list cleanup must fail the charged-storage check.
+missing partial-field/list cleanup must fail the charged-storage check. Counts
+cover fast initialized objects and nonduplicated slow paths. HTTP counts must
+match output storage with no scratch arrays; packing/converting 40 trits needs
+only its result request. These are assertions awaiting native results, not
+reported measurements. Runner artifacts retain counts, generated C, binaries
+and disassembly; allocation evidence is not a timing or C/Rust parity claim.
 
 Both fixtures are included in actual WASI checks. Accepted-interpreter checks
 pass under the guard: ternary 0.26 s and text 0.25 s. The text fixture initially
@@ -78,3 +83,15 @@ assignment tests pass (0.25 s). The first docs audit caught a missing required
 roadmap-status section in this preparation handoff; that section is restored.
 Next: publish the preparation and run six-native plus two-WASI gates. Fix all failures and retain
 actual allocation/code evidence before the later delivery is marked ready.
+
+Focused local commands use the fixed guard:
+
+| Command after `python3 scripts/local-guard.py` | Result |
+|---|---|
+| `cargo fmt --all` | Pass, 1.09 s for final allocation checks |
+| `python3 scripts/test-macos-test-shards.py` | Pass, 0.25 s |
+| `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-decoder-inventory/candidate.json` | Pass, 1.07 s; baseline unchanged |
+| `python3 scripts/check-roadmap.py` | Pass, 2.73 s after restoring the status section |
+
+The standalone `tests/stdlib_doc.rs` generator was compiled/executed serially
+under the same guard with `FWP_BLESS=1` (1.20 s); its source comments are the input.

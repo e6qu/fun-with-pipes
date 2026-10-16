@@ -114,14 +114,12 @@ fn partial_text_decoders_release_fields_and_scratch_on_failure() {
             declaration,
             &format!("{declaration}\nstatic void decoder_allocation(void);"),
         );
-        for marker in [
-            "static inline void *fwp_alloc_init(size_t n) {",
-            "static inline void *fwp_alloc_leaf(size_t n) {",
-            "static void *fwp_mem_alloc(size_t n) {",
-        ] {
-            assert!(code.contains(marker), "{marker}");
-            code = code.replace(marker, &format!("{marker} decoder_allocation();"));
-        }
+        let init = "static inline void *fwp_alloc_init(size_t n) {";
+        let slow = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        assert!(code.contains(init) && code.contains(slow));
+        code = code
+            .replace(init, &format!("{init} decoder_allocation();"))
+            .replace(slow, &format!("{slow} if(leaf!=0) decoder_allocation();"));
         let code = code[..code.find("int main(").unwrap()].to_string()
             + &descriptors
             + include_str!("fixtures/text_decoder_cleanup.c");
@@ -141,6 +139,33 @@ fn partial_text_decoders_release_fields_and_scratch_on_failure() {
                     .env("FWP_REUSE_VERIFY", "0")
                     .output()
                     .unwrap();
+                if expected == 0 && opt == "-O2" {
+                    if let Some(path) = std::env::var_os("FWP_DECODER_ARTIFACTS") {
+                        let path = std::path::PathBuf::from(path);
+                        std::fs::create_dir_all(&path).unwrap();
+                        let label = format!("text-{}", if arc { "arc" } else { "tracing" });
+                        std::fs::write(path.join(format!("{label}.c")), source).unwrap();
+                        std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                        std::fs::write(path.join(format!("{label}.txt")), &output.stdout).unwrap();
+                        let mut command = Command::new(if cfg!(target_os = "macos") {
+                            "otool"
+                        } else if cfg!(target_os = "windows") {
+                            "llvm-objdump"
+                        } else {
+                            "objdump"
+                        });
+                        let assembly = checked(
+                            command
+                                .arg(if cfg!(target_os = "macos") {
+                                    "-tvV"
+                                } else {
+                                    "-d"
+                                })
+                                .arg(&binary),
+                        );
+                        std::fs::write(path.join(format!("{label}.asm")), assembly.stdout).unwrap();
+                    }
+                }
                 assert_eq!(
                     output.status.code(),
                     Some(expected),
