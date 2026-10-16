@@ -165,7 +165,13 @@ The existing pipeline analysis can therefore combine eligible F64 maps and
 reductions into a loop, eliminating their intermediate lists. It still rejects
 interleaving observable effects, unknown callbacks or distinguishable traps.
 Arithmetic keeps its original lane/iteration order; this does not authorize
-floating-point reassociation or remove temporary vector storage by itself.
+floating-point reassociation. When F64 multiply's result has a sole immediate
+sum use, the compiler also combines those two operations without a product
+vector. Input evaluation order and actual common-prefix length remain unchanged.
+Each multiplication rounds before its addition; additions start with the first
+product in lane order. An empty input prefix returns positive zero. A retained
+product vector still has ordinary storage. The interpreter keeps materialized
+products as an independent semantic reference.
 
 ## Reading F64 vector lanes directly
 

@@ -5481,6 +5481,15 @@ impl<'p> Gen<'p> {
         if sym == "array.length" {
             return Ok("return (V)(int64_t)fwp_array_len(l0);".into());
         }
+        if sym == "simd._dot-f64" {
+            if result != MT::con("std::F64")
+                || params.len() != 2
+                || params.iter().any(|t| vec_shape(t).1 != MT::con("std::F64"))
+            {
+                return Err("direct lane dot requires F64 vectors and result".into());
+            }
+            return Ok("return fwp_p_simd_dot_f64(l1, l0);".into());
+        }
         if sym == "array._range" {
             let MT::Con(name, elements) = &result else {
                 return Err("direct range array result has no element type".into());

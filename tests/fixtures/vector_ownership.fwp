@@ -17,7 +17,16 @@ short-record : Vec[4, I128]
 short-record = { lanes = [2i128, 4i128] | array.from-list }
 long-record : Vec[4, I128]
 long-record = { lanes = [1i128, 2i128, 3i128] | array.from-list }
+# These manual records intentionally have different actual lengths. The first
+# two products cancel only if each multiply rounds before the ordered sum.
+short-floats : Vec[4, F64]
+short-floats = { lanes = [-1.0000000000000004, 1.0000000000000002] | array.from-list }
+long-floats : Vec[4, F64]
+long-floats = { lanes = [1.0, 1.0000000000000002, 99.0] | array.from-list }
 main = [
+    short-floats | both (simd.dot long-floats) (simd.to-array | array.to-list) | echo,
+    short-floats | simd.mul long-floats | both simd.sum (simd.to-array | array.to-list) | echo,
+    [-0.0] | array.from-list | one | option.map (simd.dot (simd.splat 1.0) | hash) | echo,
     range 0 16 | map (int.to-float | simd.splat | simd._test-v4 | simd.dot (simd.splat 0.5)) | sum | echo,
     # F64 views keep their original backing array alive during every lane loop.
     [99.0, 10000000000000000.0, 1.0, -10000000000000000.0, -0.0, 88.0]

@@ -87,16 +87,28 @@ is claimed before those results. A further narrow proof recognizes F64 lane arit
 conversion, and splats whose declared length fits the array limit even on WASI32.
 This lets eligible pipelines discard intermediate lists; integer lane division
 and oversized splats remain unknown to this proof. Explicit tests preserve
-observable effects and distinguishable first traps. Temporary vectors remain
-measured costs to address. The first direct-storage revision `17742b18` has
-native `38872997832`, WASI `38873001719` and costs `38873005668` queued/running;
-those do not validate the following fusion extension. The four new semantic
-cases pass the accepted interpreter under the guard (0.63 s), including the
-expected I64 overflow before the consumer's division error; formatting passes
-(1.11 s). The paired runner now requires an explicit hash/vector workload and
-verifies matching references as well as fwp source/binary/assembly identities.
-Its renamed `scripts/repeat-revision-comparison.py` preserves hash comparison
-and adds vector profiles; a full paired run is still required.
+observable effects and distinguishable first traps. A sole immediate F64 multiply/sum now lowers to a direct ordered dot loop,
+removing the product vector while preserving input order, common-prefix lengths,
+individual product rounding and empty/singleton rules. Retained products keep
+ordinary storage. This requires fresh native/WASI and cost runs. Input splats
+remain measured costs to address. The first direct-storage revision `17742b18` passes both actual WASI jobs
+`38873001719` and the Linux ARM64/Windows ARM64 focused native jobs in
+`38872997832`. Its cost run `38873005668` has both Linux results; macOS remains
+queued. The following fusion revision `252b17bc` uses native `38873505915`, WASI
+`38873509149` and costs `38873512960`. These intermediate runs are superseded
+by the combined direct-dot head; cancel unfinished runs to avoid duplicate
+runner work and retain any completed evidence. They do not establish full
+acceptance of direct dot. Fresh six-native, two-WASI and four-cost runs are next.
+
+Four fusion semantic cases pass the accepted interpreter under the guard
+(0.63 s), including I64 overflow before the consumer's division error. The
+extended rounding/alias fixture also passes (0.26 s). Formatting passes (1.08 s),
+and the inventory audit passes (1.21 s) against its unchanged frozen baseline.
+The paired runner requires an explicit hash/vector workload and verifies matching
+reference sources as well as fwp source/binary/assembly identities. Its renamed
+`scripts/repeat-revision-comparison.py` preserves hash comparison and adds vector
+profiles; a full paired run is still required.
+
 
 ## Completed focused checks and measurements
 
