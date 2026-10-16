@@ -118,6 +118,9 @@ static int dead_scratch(V v) {
     return 0;
 }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     for (volatile int mode = 0; mode < 6; mode++) {
         input_leaf = fwp_rc_fresh(fwp_str_new("a", 1));
@@ -245,6 +248,9 @@ static V address_word(V input) {
     return FWP_TRUE;
 }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     scalar_word = fwp_rc_fresh(fwp_str_new("scalar alias", 12)); scalar_head.f[0] = scalar_word; source = PTR(&scalar_head);
     fwp_trap_recover = recover_scalar; fwp_trap_jb = &scalar_trap; fwp_trap_cleanup = 0;

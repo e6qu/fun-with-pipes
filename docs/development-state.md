@@ -36,9 +36,9 @@ without raising its limits. Full builds, suites and timings run on GitHub.
 | 6 | In progress | Retain repeated timings, CPU time and normal-collector profiles |
 | 7 | In progress | Validate maintained todo/grep functions and command lines under ARC |
 
-Next: monitor [combined native/WASI run 38847420495](https://github.com/e6qu/fun-with-pipes/actions/runs/38847420495)
-at `5c222c4b` and repair failures. It covers six native hosts and actual WASI
-count checks on both Linux architectures.
+Next: finish [combined native/WASI run 38847420495](https://github.com/e6qu/fun-with-pipes/actions/runs/38847420495)
+at `5c222c4b` and validate the Windows-only probe-output repair below. It covers
+six native hosts and actual WASI count checks on both Linux architectures.
 Continue monitoring #149, merge it only after exact-head acceptance, then
 transfer this batch for the next substantial PR. Queued CI does not block fixes
 or independent preparation.
@@ -238,3 +238,13 @@ protected helper. Latest formatting passes (1.11 s) and docs pass (2.41 s).
 The combined source is published and dispatched as recorded in Next above;
 the Linux AMD64 actual-WASI job already passes. No failing or canceled run is
 acceptance.
+
+The combined run passes native Mac ARM/Linux ARM and both actual-WASI count
+jobs so far. Windows AMD64 reports eight byte-output assertions in five older
+probes: their replacement C mains omitted binary stdout, so successful messages
+ended in CRLF instead of LF. All new runtime cleanup tests pass on that host.
+The five fixtures now set binary stdout explicitly under `_WIN32`; native
+runtime/compiler source is unchanged. The `zip-windows` suite reruns the same
+structural tests on both native Windows hosts without repeating passed Unix/WASI
+jobs. Full Windows production coverage now includes these older regressions too.
+Formatting passes (1.09 s). The Windows repair still needs runner validation.
