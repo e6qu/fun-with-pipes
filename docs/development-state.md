@@ -22,17 +22,17 @@ The test also saves whether the buffer is new before `realloc`, so it never
 examines the old pointer after a successful resize. Runtime behavior is unchanged. Five source hooks are unique and exclude the
 text buffer; native verification must still pass.
 
-The focused decoder workflow now avoids installing OpenSSL/curl for this pure
-compression/frame-decoding target. It uses no encrypted network operations; the
-full Windows network acceptance still installs and requires those dependencies.
-The old focused run `38952492611` is superseded: both Linux hosts and ARM Mac
-passed, while Windows was building unnecessary TLS dependencies. Its source
-also predates the pre-resize flag refinement.
+The focused run `38953880113` at `c3709a4d` passes all four Unix hosts but fails
+both Windows hosts because generated WebSocket code still includes OpenSSL
+headers, even for parsing-only programs. Removing TLS setup was incorrect.
+This repair restores the native TLS toolchain for the focused target. The
+precise decoder markers and pre-resize flag are unchanged.
 
-Next: publish this combined test/workflow repair, require its replacement
-`byte-decoders` run on all six native hosts, then make #153 ready. Require all
-nine production jobs and documentation on that exact final head. Draft-skipped
-CI is not acceptance. Update the merge helper's expected head before use.
+Next: publish the restored dependency setup, require the replacement six-host
+`byte-decoders` run, then make #153 ready. All nine production jobs and
+documentation must pass on the final head. Draft-skipped jobs are not acceptance.
+Update `/private/tmp/fwp-ready-153.py` and `/private/tmp/fwp-merge-153.py` with the
+new head/run IDs before use.
 
 Local formatting (1.22s), five unique runtime hooks excluding text buffers
 (0.19s), and documentation audit (2.80s) pass. Reviewing all canceled production
