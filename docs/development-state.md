@@ -2,7 +2,7 @@
 
 Updated 2026-10-16. Combined preparation in `/private/tmp/fwp-wasi-delivery`,
 branch `wasi-hash-delivery`, based on #150's exact head `7a7b40e1` while its final
-gates run. It transfers only `e5e05748..d1ae668f` from
+gates run. It transfers only `e5e05748..edb5d2ba` from
 `/private/tmp/fwp-wasi-arc` / `checked-wasi-ownership`. Two workflow conflicts
 were resolved by retaining every #150 Windows test and selector and adding the
 new hash/WASI suites. Source/runtime/tests otherwise transfer unchanged.
@@ -41,9 +41,10 @@ full builds, suites and measurements run on GitHub. Do not raise resource limits
 Next: monitor #150, fix any failures and merge only after its exact-head full
 gates pass. The complete capture repair `d1ae668f3f04d6fa113d137c73250efe26056295`
 has [native 38856280599](https://github.com/e6qu/fun-with-pipes/actions/runs/38856280599),
-[WASI 38856283417](https://github.com/e6qu/fun-with-pipes/actions/runs/38856283417) and
+[repaired WASI 38857203804](https://github.com/e6qu/fun-with-pipes/actions/runs/38857203804) and
 [costs 38856285939](https://github.com/e6qu/fun-with-pipes/actions/runs/38856285939)
-queued. Fix failures in the original preparation, then transfer only its follow-up
+queued. WASI uses `96c3b637` with the fresh-owner repair below; the later comment
+correction is `edb5d2ba`. Fix failures in the original preparation, then transfer only its follow-up
 diff here. Keep benchmark sources and binaries tied to their measured revisions.
 The new combined delivery still needs its own full production gate.
 
@@ -141,7 +142,9 @@ AND/OR/XOR/NOT as total; shifts remain excluded because oversized shifts trap.
 The first runner attempt at `1f8a5dc1` preserves semantic cases but correctly fails
 the allocation test: a freshly built array capture still hid the callback behind
 indirect calls. Superseded runs `38855570657`, `38855575805` and `38855581613` were
-requested canceled; confirm terminal statuses before recording cancellation.
+confirmed canceled. The queued initial complete-repair WASI run `38856283417`
+and diagnostic-only `38856960546` were also requested canceled in favor of the
+fresh-owner repair; confirm their terminal states.
 
 The complete repair binds eager captures once in their original left-to-right
 order before the producer, then uses existing callback specialization. Fusion
@@ -162,3 +165,21 @@ typed IR and all seven positive reductions (0.74 s); capture-trap order passes
 permission error. No compiler/probe process remains, no limits were raised, and
 further compiler validation moved to CI. Formatting alone subsequently passes
 (1.09 s). These local probes are supplemental, not full compiler acceptance.
+
+## Required WASI leak repair
+
+The completed superseded WASI run exposed ten 16-byte allocations left after the
+wide-bitwise fixture, despite zero live counts. Source inspection identified
+`tree_owner_id`: it skipped values with no existing count slot. Native allocator
+objects already have slots; WASI objects acquire external entries when first
+claimed. The repair keeps native slot exclusions, rejects immediate tags before
+traversal, and claims fresh WASI boxes. Native libraries still use the native
+allocator even though they cannot scan host roots.
+
+Actual-WASI regressions now include checked I128/U128 trees and F128 results.
+Restoring the old absent-slot return must fail the physical storage assertion
+with 244. The ledger records source lines/output phases and retains ordinary
+program C/modules before assertions. `38857203804` tests this repair; it is not
+accepted until the run passes. Native semantic and C/Rust measurement runs still
+use `d1ae668f`, before this WASI-specific change. Final combined native/WASI gates
+remain mandatory. No full local build or suite was run.

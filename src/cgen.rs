@@ -1508,7 +1508,10 @@ impl<'p> Gen<'p> {
         let id = self.tree_owner_defs.len();
         self.tree_owners.insert(mt.clone(), id);
         self.tree_owner_defs.push(String::new());
-        let mut body = format!("static void fwp_own_tree{id}(V v) {{\n    for (;;) {{\n        uint8_t *c = fwp_rc_slot(v);\n        if (!c) return;\n        if (*c) fwp_trap(\"internal: aliased fresh result tree\");\n        fwp_rc_fresh(v);\n");
+        // Native heap objects already have an allocator count slot. WASI
+        // objects gain an external entry only when first claimed, so
+        // a missing slot there is a fresh owner, not an immortal value.
+        let mut body = format!("static void fwp_own_tree{id}(V v) {{\n    for (;;) {{\n        if (v < 4096) return;\n        uint8_t *c = fwp_rc_slot(v);\n#if FWP_GC\n        if (!c) return;\n#endif\n        if (c && *c) fwp_trap(\"internal: aliased fresh result tree\");\n        fwp_rc_fresh(v);\n");
         if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128" | "std::F128"))
         {
             body.push_str("        return;\n    }\n}\n");
