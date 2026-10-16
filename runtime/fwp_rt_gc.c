@@ -1521,7 +1521,8 @@ static void fwp_gc_report(void) {
             fwp_gc.pause_max, fwp_gc_status_kb("VmHWM"), fwp_gc.armed ? "" : " (collection off)");
 }
 
-/* called at the top of the main thread: collection may start */
+/* Called at main-thread entry with its complete frame bound, not merely its
+ * frame pointer: compilers may place live locals above that pointer. */
 static void fwp_gc_start(void *top) {
     if (!fwp_gc.ready) fwp_gc_init();
 #ifdef _WIN32

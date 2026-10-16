@@ -1,8 +1,9 @@
-//! Ownership at native primitive boundaries. Unknown primitives, foreign
-//! calls and remote calls keep the conservative runtime-sharing fallback.
+//! Ownership at native primitive boundaries. Unproved heap-sharing boundaries
+//! still require tracing; checked ARC rejects them rather than retaining forever.
 //! Contracts cover containers, text/byte results and synchronous list callbacks.
-//! Array/map/set elements are typed owners. Spawned task thunks retain a
-//! counted callback owner, as do deadline calls; other retained callbacks share.
+//! Array/map/set elements are typed owners. Spawned task thunks retain a counted
+//! callback owner. Synchronous service scopes borrow callbacks; detached children
+//! retain the shared settings they need for their independent lifetimes.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Argument {

@@ -9520,7 +9520,14 @@ static size_t fwp_main_stack = (size_t)1 << 30;
 
 static void *fwp_main_thread(void *arg) {{
     (void)arg;
+#if defined(__linux__) || defined(__APPLE__)
+    /* Locals can sit above the frame pointer (observed on Linux ARM64).
+     * The canonical frame address bounds the entire entry frame. */
+    fwp_gc_start(__builtin_dwarf_cfa());
+#else
+    /* Windows obtains its stack bound from the OS; WebAssembly does not scan. */
     fwp_gc_start(__builtin_frame_address(0));
+#endif
     fwp_stack_guard_init(fwp_main_stack);
 #if defined(_WIN32) && defined(FWP_STATIC_MEMORY)
     fwp_static_touch_stack();

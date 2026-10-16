@@ -10,13 +10,28 @@ Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparatio
 Preparation base: `ac3060d1`. The latest test repair limits diagnostics to
 modes that support them; it does not change the compiler or library.
 
-Next: diagnose Linux ARM64's division-trap crash from native run `38964567808`
-at `d29d1c5b`. Its allocation check passes, but tracing/O1/reuse-verification-off
-terminates by signal instead of printing the expected division error. Other
-hosts' functional checks pass; their larger suites are still running. Preserve
-the failing executable, source and status; the temporary `iteration-traps` CI
-suite collects a debugger backtrace on the native ARM64 runner. Fix the cause,
-then repeat all six hosts and any affected WebAssembly checks.
+Next: publish and verify the full entry-frame scan bound. Diagnostic run
+`38967186882` at `d7493bed` proves GC clears a live callback while its parent
+closure is allocated. The exact ARM64 binary stores that callback at `x29+24`,
+above the frame pointer supplied as the old scan limit. Generated Linux/macOS
+entry code now supplies `__builtin_dwarf_cfa()`, the compiler's complete frame
+boundary. Windows already uses its OS stack bound; WebAssembly does not scan.
+The fix adds no runtime wrapper or retention workaround. First rerun the narrow
+ARM64 test, then all six native hosts and affected WebAssembly checks. Include
+native allocator/collector regression tests. Remove temporary `iteration-traps`
+CI/GDB diagnostics once the corrected binary passes and its bound is inspected.
+Artifacts are in `/private/tmp/fwp-each-trap/38965685165` and `38967186882`.
+Guarded formatting passes (1.10s). Inspection completed after one automatic
+approval-review timeout; no native compilation ran locally.
+
+Native run `38964567808` at `d29d1c5b` passes five hosts; only Linux ARM64 fails. Linux ARM64's allocation control passes despite its
+trap failure. `each` still uses runtime callback dispatch in the recorded counting
+program. New `scripts/measure-list-each.py` is prepared to compare old/new native
+timing at 10,000/100,000/1,000,000 elements, with alternating order, seven samples,
+whole-process peak RSS, compilation time and binary sizes. Its syntax passes
+through the guard (0.12s); it has not run yet. Inspect any regression before
+accepting the library change. The measurements compare fwp implementations,
+not C/Rust parity. No native build or benchmark ran locally.
 
 Both actual WebAssembly jobs in `38962206780` pass at library/compiler source
 `2a98d395`, including semantic agreement and physical reclamation controls.
@@ -25,7 +40,8 @@ are unique, and collector/reuse-retention diagnostics apply only to tracing.
 The Linux ARM64 allocation comparison saves 96 requests and 3,072 requested
 bytes over 96 additional elements against the previous mapping definition.
 This passing allocation check does not establish correct trapping behavior.
-Guarded formatting passes (0.26s); the last handoff audit passed (2.53s).
+Guarded formatting passes (0.26s) and workflow lint passes (1.27s);
+the last handoff audit passed (2.53s).
 
 After #153 passes and merges, preserve the preparation's current head under a
 remote evidence tag before rebasing: the reports refer to earlier source commits.
