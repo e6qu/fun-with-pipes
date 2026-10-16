@@ -38,6 +38,10 @@ exercise = tap errors | const ()
     | tap (const [{child_literal}, "pump"] | process.run-input (string.repeat 200000 "x")
         | both .status (both (.stdout | string.length) (.stderr | string.length)) | echo)
     | tap (const [{child_literal}, "silent"] | process.run-input (string.repeat 200000 "x") | .status | echo)
+    | tap (const [{child_literal}, "success"] | process.output | echo)
+    | tap (const [{child_literal}, "failure"] | attempt process.output | match
+        Ok _ -> const "unexpected success" | echo
+        Err _ -> both .kind .message | echo)
     | const [{child_literal}, "silent"] | process.call | echo
 main = range 0 32 | each exercise
 "#
@@ -55,6 +59,7 @@ main = range 0 32 | each exercise
     assert_eq!(text.matches("spawn").count(), 32 * 4);
     assert_eq!(text.matches("65536").count(), 32 * 2);
     assert!(text.contains("λ目录"));
+    assert_eq!(text.matches("expected failure").count(), 32);
     for mode in ["tracing", "arc"] {
         let cfile = dir.join("processes.c");
         checked(
@@ -236,6 +241,86 @@ main = 0 | exercise | .status | echo
                     .is_some_and(|status| expected.contains(&status)),
                 "{mode}, expected {expected:?}: {actual:?}"
             );
+        }
+    }
+}
+
+#[test]
+fn maintained_shell_function_runs_as_a_child_without_retaining_results() {
+    let dir = fwp::cgen::TempDir::new("process-shell-tool").unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let child = dir.join("normalize.exe");
+    let source = dir.join("shell-parent.fwp");
+    let child_literal = format!("{:?}", child.to_string_lossy());
+    std::fs::write(
+        &source,
+        format!(
+            r#"
+normalize : I64 -> ProcessOutput ! {{Process, Error[IoError]}}
+normalize = const [{child_literal}] | process.run-input "  Hello\n WORLD \n"
+main = range 0 64 | map normalize
+    | tap (each (both .status .stderr | echo))
+    | map .stdout | each echo
+"#
+        ),
+    )
+    .unwrap();
+    for mode in ["tracing", "arc"] {
+        checked(
+            Command::new(compiler)
+                .args(["build", "--gc", mode, "--fn", "normalize"])
+                .arg(
+                    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                        .join("examples/shell/tools.fwp"),
+                )
+                .arg("-o")
+                .arg(&child),
+        );
+        let reference = checked(
+            Command::new(compiler)
+                .env("FWP_NO_OPT", "1")
+                .env_remove("FWP_OUT")
+                .args(["run", "--interp"])
+                .arg(&source),
+        );
+        let text = String::from_utf8_lossy(&reference.stdout);
+        assert_eq!(text.matches("hello").count(), 64);
+        assert_eq!(text.matches("world").count(), 64);
+        let cfile = dir.join("parent.c");
+        checked(
+            Command::new(compiler)
+                .args(["build", "--gc", mode, "--emit-c"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let mut code = std::fs::read_to_string(cfile).unwrap();
+        if mode == "arc" {
+            let start = code
+                .find("static void *fwp_main_thread(void *arg) {")
+                .unwrap();
+            let (runtime, main) = code.split_at(start);
+            assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
+            assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t process_budget = fwp_gc.budget;\n")
+                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < process_budget) exit(232);\n");
+            code = format!("{runtime}{main}");
+        }
+        retain_code(&format!("shell-parent-{mode}.c"), &code);
+        let binary = dir.join("parent.exe");
+        for opt in ["-O1", "-O2"] {
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let stress = if mode == "arc" { "0" } else { "1" };
+            let actual = checked(
+                Command::new(&binary)
+                    .env_remove("FWP_OUT")
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress),
+            );
+            assert_eq!(actual.stdout, reference.stdout, "{mode} {opt}");
+            assert_eq!(actual.stderr, reference.stderr, "{mode} {opt}");
         }
     }
 }

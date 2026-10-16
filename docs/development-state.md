@@ -89,7 +89,7 @@ are not changed-compiler acceptance. Full builds, suites and timings stay on CI.
 
 `/private/tmp/fwp-process-utilities`, branch `owned-process-utilities`, is based
 on `81d113aa`; only changes after that anchor belong to the later batch. Its
-runtime/contracts and handoff are currently uncommitted and must be preserved.
+first process batch is published at `610f698b`; preserve later local additions.
 Do not include them in this PR. Once this delivery is accepted, transfer its
 finished changes onto the new main and require another full final-head gate.
 
@@ -106,7 +106,9 @@ Its local handoff records implementation state and the guarded baseline command.
 
 This handoff is in the later process preparation worktree, whose base remains
 `81d113aa`; the active PR #148 is in the root worktree. No process PR is open.
-The initial POSIX/Windows runtime and contract changes are uncommitted.
+The POSIX/Windows runtime and contract changes are published at `610f698b`.
+[Six-host run 38827570961](https://github.com/e6qu/fun-with-pipes/actions/runs/38827570961)
+is queued/running for that exact preparation head.
 
 Baseline `/private/tmp/fwp-process-baseline.py` passes under the guard (1.21 s):
 #147's downloaded compiler rejects checked ARC; eight captured child calls with
@@ -149,6 +151,23 @@ signatures, 95 review declarations, 19 templates and 85 review symbols.
 The docs/roadmap audit passes (2.40 s). CI retains emitted repeated-call and
 failure-probe C for inspection.
 
-Next: publish this preparation for the six-host `processes` suite. Fix actual compiler/platform
-failures, then transfer only changes after `81d113aa` once #148 is accepted. Full
-production acceptance must use that later PR's final head.
+Additional local tests cover `process.output` success and trimmed error messages,
+and build the maintained `examples/shell/tools.fwp` normalization executable.
+The parent retains 64 results, observes statuses/errors, then transfers and prints
+their output strings. Parent and child use the same memory mode because stress
+settings are inherited. A fixture initially omitted an explicit input signature,
+then accidentally combined a stressed tracing parent with an ARC child; both
+fixture errors are corrected. The focused edited-C composed check passes (4.32 s),
+and the expanded repeated-call/failure checks also pass. These additions await publication while the first actual-compiler run proceeds.
+
+The same batch will repeat the existing paired-versus-separate AD metadata
+comparison on four hosts using its eight alternating samples and sustained
+512-derivative case. This is current fwp versus the documented old tape-runtime
+control, not C/Rust, and includes process startup. The goal is to reproduce the
+previous timing regressions before choosing another layout change; no new
+performance claim or runtime optimization is implied. A dedicated `ad-metadata`
+workflow suite avoids repeating unrelated evidence generators.
+
+Next: fix actual compiler/platform failures from the six-host run, then publish
+the complete batch and transfer only changes after `81d113aa` once #148 is
+accepted. Full production acceptance must use that later PR's final head.

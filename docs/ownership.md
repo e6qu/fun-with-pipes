@@ -390,4 +390,6 @@ that exits without reading its input. Instrumented probes force construction and
 OS failures, check resource cleanup and reject deliberately missing counts or
 buffer frees. These are candidate contracts pending the six-host and final
 production checks recorded in the handoff; they do not establish ownership for
-networking or arbitrary external-resource contexts.
+networking or arbitrary external-resource contexts. Process calls are synchronous;
+this cleanup does not establish deadline or cancellation responsiveness while
+waiting for a child.

@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata]
         default: numerical
       evidence_run:
         description: Completed solver run to use for generated-code comparisons
@@ -378,6 +378,30 @@ jobs:
           path: |
             performance-evidence/
             target/bench.md
+  ad_metadata:
+    if: inputs.suite == 'ad-metadata'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release --bin fwp
+      - name: Repeat paired metadata costs with sustained derivatives
+        run: python3 scripts/measure-ad-metadata.py --output metadata-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ad-metadata-${{ matrix.runner }}
+          path: metadata-evidence/
   autodiff:
     if: inputs.suite == 'autodiff'
     strategy:

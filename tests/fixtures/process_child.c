@@ -27,7 +27,12 @@ int main(void) {
 #else
 int main(int count, char **args) {
 #endif
-    if (count > 1 && !strcmp(args[1], "pump")) {
+    int status = 7;
+    if (count > 1 && !strcmp(args[1], "success")) {
+        fputs("ok\n", stdout); status = 0;
+    } else if (count > 1 && !strcmp(args[1], "failure")) {
+        fputs(" expected failure \n", stderr);
+    } else if (count > 1 && !strcmp(args[1], "pump")) {
         char data[65536]; memset(data, 'e', sizeof data);
         if (fwrite(data, 1, sizeof data, stderr) != sizeof data) return 102;
         memset(data, 'o', sizeof data);
@@ -43,5 +48,5 @@ int main(int count, char **args) {
     for (int i = 0; i < count; i++) free(args[i]);
     free(args);
 #endif
-    return 7;
+    return status;
 }
