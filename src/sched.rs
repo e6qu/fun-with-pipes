@@ -546,6 +546,9 @@ fn earliest(a: Option<Instant>, b: Option<Instant>) -> Option<Instant> {
 /// is not a decimal number up to 65535 (Rust alone would accept `+80`,
 /// and look up an empty host).
 fn check_addr(addr: &str) -> Result<(), String> {
+    if addr.as_bytes().contains(&0) {
+        return Err("socket address contains a NUL byte".into());
+    }
     let ok = match addr.rsplit_once(':') {
         Some((host, port)) => {
             !host.is_empty()

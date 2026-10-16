@@ -93,3 +93,49 @@ fn socket_scratch_is_released_on_cancel_and_allocation_failure() {
         }
     }
 }
+
+#[test]
+fn socket_addresses_reject_nul_before_using_the_prefix() {
+    let dir = fwp::cgen::TempDir::new("socket-address").unwrap();
+    let input = dir.join("main.fwp");
+    std::fs::write(
+        &input,
+        include_str!("fixtures/socket_address_validation.fwp"),
+    )
+    .unwrap();
+    let expected = "socket address contains a NUL byte\n".repeat(4);
+    for raw in ["0", "1"] {
+        let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env("FWP_NO_OPT", raw)
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(output.stdout, expected.as_bytes());
+        assert!(output.stderr.is_empty());
+    }
+    let cfile = dir.join("main.c");
+    let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["build", "--emit-c"])
+        .arg(&input)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let code = std::fs::read_to_string(cfile).unwrap();
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join("socket-address.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let output = Command::new(binary)
+            .env("FWP_GC_STRESS", "1")
+            .env("FWP_GC_VERIFY", "1")
+            .env("FWP_REUSE_VERIFY", "1")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(output.stdout, expected.as_bytes());
+        assert!(output.stderr.is_empty());
+    }
+}

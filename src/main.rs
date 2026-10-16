@@ -453,7 +453,11 @@ fn build(args: &[String]) -> ExitCode {
             "--pgo" => pgo = true,
             "--pgo-input" => {
                 i += 1;
-                pgo_input = args.get(i).cloned();
+                let Some(value) = args.get(i) else {
+                    eprintln!("fwp build: --pgo-input needs a value");
+                    return ExitCode::from(2);
+                };
+                pgo_input = Some(value.clone());
             }
             "--memory" | "--memory=static" | "--memory=dynamic" => {
                 let v = match args[i].split_once('=') {
@@ -484,14 +488,20 @@ fn build(args: &[String]) -> ExitCode {
             }
             "--service" => {
                 i += 1;
-                if let Some(s) = args.get(i) {
-                    services.push(service_spec(s));
-                }
+                let Some(s) = args.get(i) else {
+                    eprintln!("fwp build: --service needs a value");
+                    return ExitCode::from(2);
+                };
+                services.push(service_spec(s));
             }
             a if a.starts_with("--service=") => services.push(service_spec(&a[10..])),
             "-o" => {
                 i += 1;
-                out = args.get(i).cloned();
+                let Some(value) = args.get(i) else {
+                    eprintln!("fwp build: -o needs a value");
+                    return ExitCode::from(2);
+                };
+                out = Some(value.clone());
             }
             "--emit-c" => emit_c = true,
             "--fat" => fat = true,
@@ -499,11 +509,13 @@ fn build(args: &[String]) -> ExitCode {
             "--cdylib" => lib = Some(fwp::cgen::LibKind::Shared),
             "--link" => {
                 i += 1;
-                if let Some(l) = args.get(i) {
-                    let mut links = fwp::ffi::links();
-                    links.push(l.clone());
-                    fwp::ffi::set_links(links);
-                }
+                let Some(l) = args.get(i) else {
+                    eprintln!("fwp build: --link needs a value");
+                    return ExitCode::from(2);
+                };
+                let mut links = fwp::ffi::links();
+                links.push(l.clone());
+                fwp::ffi::set_links(links);
             }
             "--target" => {
                 i += 1;
@@ -550,13 +562,27 @@ fn build(args: &[String]) -> ExitCode {
             }
             "--fn" => {
                 i += 1;
-                func = args.get(i).cloned();
+                let Some(value) = args.get(i) else {
+                    eprintln!("fwp build: --fn needs a value");
+                    return ExitCode::from(2);
+                };
+                func = Some(value.clone());
             }
             "--cli" => cli = true,
             "--rest" => rest = true,
             "--mcp" => mcp = true,
-            a if a.starts_with("-O") => opt = a.to_string(),
-            a => path = Some(a.to_string()),
+            a @ ("-O0" | "-O1" | "-O2" | "-O3") => opt = a.to_string(),
+            a if a.starts_with('-') => {
+                eprintln!("fwp build: unknown option `{a}`");
+                return ExitCode::from(2);
+            }
+            a => {
+                if path.is_some() {
+                    eprintln!("fwp build: expected one input file; unexpected `{a}`");
+                    return ExitCode::from(2);
+                }
+                path = Some(a.to_string());
+            }
         }
         i += 1;
     }

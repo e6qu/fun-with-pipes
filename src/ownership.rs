@@ -162,6 +162,11 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "udp.bind" => (&[B], ResultOwnership::OwnedResource, None, &[]),
+        "udp.local-addr" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "udp.send-to" => (&[B, B, B], R, None, &[]),
+        "udp.recv-from" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
+        "udp.close" => (&[B], R, None, &[]),
         "dns.resolve" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "device.run" => (&[B, B, B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "device.sum" => (&[B, B, B, B, B], R, None, &[]),

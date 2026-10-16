@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets, udp, ci-profile]
         default: numerical
       source_revision:
         description: Full source commit for the CI profile comparison
@@ -18,7 +18,7 @@ on:
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    if: inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
@@ -69,6 +69,17 @@ jobs:
         run: |
           git fetch --no-tags --depth=1 origin 21a621c699d11a84c05f955935dc95dcfb8adbf2
           git show 21a621c699d11a84c05f955935dc95dcfb8adbf2:runtime/fwp_rt_kernel.c > kernel-baseline.c
+      - name: UDP lifetimes and socket cleanup
+        if: inputs.suite == 'udp'
+        env:
+          FWP_UDP_ARTIFACTS: udp-evidence
+        run: cargo test --no-fail-fast --lib resource::tests && cargo test --no-fail-fast --test compiler_options --test udp_ownership --test native_sockets --test arc_tasks --test file_values --test file_inline_path
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'udp'
+        with:
+          name: udp-${{ matrix.runner }}
+          path: udp-evidence/
+          if-no-files-found: ignore
       - name: Socket scratch and DNS ownership
         if: inputs.suite == 'sockets'
         env:
@@ -422,7 +433,8 @@ jobs:
         shell: pwsh
         run: ./scripts/setup-windows.ps1
       - run: cargo fmt --all -- --check
-      - run: cargo test --test library_unload -- --nocapture
+      - run: cargo test --test library_unload --test compiler_options -- --nocapture
+      - run: cargo test --test udp_ownership udp_library_unload -- --nocapture
   library:
     if: inputs.suite == 'library'
     strategy:

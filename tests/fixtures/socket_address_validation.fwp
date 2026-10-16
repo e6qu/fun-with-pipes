@@ -1,0 +1,15 @@
+# A NUL byte must not redirect an operation to the valid address before it.
+message : Result[a, IoError] -> String
+message = match
+    Ok _ -> const "unexpected success"
+    Err _ -> .message
+main = [
+    "127.0.0.1:0\0ignored" | attempt tcp.listen | message | echo,
+    "127.0.0.1:9\0ignored" | attempt tcp.connect | message | echo,
+    "127.0.0.1:0\0ignored" | attempt udp.bind | message | echo,
+    "127.0.0.1:0"
+    | udp.bind
+    | attempt (udp.send-to "127.0.0.1:9\0ignored" ("x" | string.to-bytes))
+    | message
+    | echo,
+] | ignore

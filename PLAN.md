@@ -88,14 +88,14 @@ multiplication/addition, aliases, effects and traps. All six focused native jobs
 both WASI jobs and four-host cost/paired checks pass. Require fresh full production
 and documentation checks for the final combined PR head before squash merge.
 
-The following preparation owns ternary, URL/form/HTTP and compressed-byte/frame
-decoder results and partial constructions, metric snapshots, syntax text, CPU
-tensor output/scratch and DNS address lists. It also repairs Windows web
-prerequisites, clocks, socket retry checks, shutdown handling and unload tests.
-Focused owned-value/kernel checks pass on all six native hosts and both actual
-WASI hosts; all six DNS and socket-integration checks also pass. Their exact
-scope and results belong in the handoff. Publish this next delivery after #152
-merges; preparation branches remain evidence rather than additional tasks.
+The next combined delivery fixes cleanup for decoded values, CPU numerical
+results and network resources. Numerical workers avoid a second full result
+array. UDP sockets close when their last owner is released, including function
+and task captures; partial results are cleaned up on failure and cancellation.
+It also repairs invalid address/command handling and Windows checks discovered
+while testing. Focused native and supported WASI checks pass; full production
+acceptance must run on the combined PR. The handoff links the actual evidence.
+Keep one delivery PR open at a time.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

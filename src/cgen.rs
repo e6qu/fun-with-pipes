@@ -405,6 +405,7 @@ struct RemoteSpec {
 }
 
 struct Gen<'p> {
+    resource_captures: bool,
     prog: &'p Program,
     uncounted: &'p Program,
     descs: HashMap<MT, usize>,
@@ -534,13 +535,16 @@ impl Gen<'_> {
     fn value_dup(&self, ty: &MT) -> &'static str {
         if matches!(ty, MT::Con(n, _) if n == "std::File") {
             "fwp_file_dup"
+        } else if matches!(ty, MT::Con(n, _) if n == "std::UdpSocket") {
+            "fwp_udp_dup"
         } else {
             "fwp_rc_dup"
         }
     }
 
     fn resource_type(&self, ty: &MT) -> bool {
-        crate::resource::contains_file(&self.prog.shapes, ty)
+        crate::resource::contains_resource(&self.prog.shapes, ty)
+            || (self.resource_captures && crate::resource::may_hold_resource(&self.prog.shapes, ty))
     }
 
     fn live_calls(&self, id: FuncId, e: &Expr) -> HashMap<*const Expr, crate::rc::CallLiveness> {
@@ -1648,6 +1652,9 @@ impl<'p> Gen<'p> {
         if matches!(mt, MT::Con(n, _) if n == "std::File") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_file_drop(v); }}\n");
         }
+        if matches!(mt, MT::Con(n, _) if n == "std::UdpSocket") {
+            return format!("static void fwp_drop{id}(V v) {{ fwp_udp_drop(v); }}\n");
+        }
         if matches!(mt, MT::Con(n, _) if n == "std::Channel") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_channel_drop(v); }}\n");
         }
@@ -2473,9 +2480,11 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
     }
     let fields = record_fields(&prog.shapes, &f.locals[0])?;
     if fields.is_empty()
-        || fields
-            .iter()
-            .any(|(_, ty)| crate::resource::contains_file(&prog.shapes, ty))
+        || fields.iter().any(|(_, ty)| {
+            crate::resource::contains_resource(&prog.shapes, ty)
+                || (crate::resource::may_hold_resource(&prog.shapes, ty)
+                    && crate::resource::has_socket_values(&prog.funcs, &prog.shapes))
+        })
     {
         return None;
     }
@@ -6160,13 +6169,18 @@ impl<'p> Gen<'p> {
                     _ => format!("return fwp_p_tls_handshake(l0, {});", err),
                 }
             }
+            "udp.recv-from" => {
+                let err = self.desc(&MT::con("std::IoError"));
+                let tuple = self.desc(&result);
+                format!("return fwp_p_udp_recv_from(l0, l1, {err}, {tuple});")
+            }
             "dns.resolve" => {
                 let err = self.desc(&MT::con("std::IoError"));
                 let list = self.desc(&result);
                 format!("return fwp_p_dns_resolve(l0, {err}, {list});")
             }
             "tcp.listen" | "tcp.accept" | "tcp.accept-for" | "tcp.connect" | "tcp.read"
-            | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" | "udp.recv-from" => {
+            | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" => {
                 let err = self.desc(&MT::con("std::IoError"));
                 let (f, n) = match sym {
                     "tcp.listen" => ("fwp_p_tcp_listen", 1),
@@ -6179,7 +6193,6 @@ impl<'p> Gen<'p> {
                     "tcp.write-for" => ("fwp_p_tcp_write_for", 3),
                     "udp.bind" => ("fwp_p_udp_bind", 1),
                     "udp.send-to" => ("fwp_p_udp_send_to", 3),
-                    "udp.recv-from" => ("fwp_p_udp_recv_from", 2),
                     _ => unreachable!("listed socket primitive"),
                 };
                 let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
@@ -8430,7 +8443,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let resources = prog.funcs.iter().any(|f| {
         f.locals
             .iter()
-            .any(|t| crate::resource::contains_file(&prog.shapes, t))
+            .any(|t| crate::resource::contains_resource(&prog.shapes, t))
     });
     let reuse = reuse_enabled() || resources;
     let uncounted = prog;
@@ -8467,6 +8480,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         crate::arc::check(prog, &entries)?;
     }
     let mut g = Gen {
+        resource_captures: crate::resource::has_socket_values(&prog.funcs, &prog.shapes),
         prog,
         uncounted,
         descs: HashMap::new(),
@@ -8980,12 +8994,12 @@ static const fwp_exec_spec exec_spec{i} = {{
                     if g.unwind {
                         let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {drop}(CLO(v)->a[{j}]);");
                     } else {
-                        let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {{ if (duplicate) fwp_rc_dup(CLO(v)->a[{j}]); else {drop}(CLO(v)->a[{j}]); }}");
+                        let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {{ if (duplicate) {dup}(CLO(v)->a[{j}]); else {drop}(CLO(v)->a[{j}]); }}");
                     }
                 } else {
                     let _ = writeln!(
                         caps,
-                        "    if (duplicate && CLO(v)->n > {j}) fwp_rc_dup(CLO(v)->a[{j}]);"
+                        "    if (duplicate && CLO(v)->n > {j}) {dup}(CLO(v)->a[{j}]);"
                     );
                 }
                 if !matches!(f.body, Body::Expr(_) | Body::Ctor(_)) {
