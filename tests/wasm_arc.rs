@@ -251,6 +251,8 @@ main = [
         assert_eq!(instrumented.matches(needle).count(), 1);
         let omitted = instrumented.replace(needle, "    (void)value;");
         let missing_shutdown = instrumented.replace("if (atexit(fwp_tape_finish))", "if (0)");
+        let missing_metrics_shutdown =
+            instrumented.replace("if (atexit(fwp_metrics_finish))", "if (0)");
         let unclaimed = instrumented.replace(
             "#if FWP_GC\n        if (!c) return;\n#endif",
             "        if (!c) return;",
@@ -263,6 +265,10 @@ main = [
         if name.contains("derivatives") {
             assert_ne!(missing_shutdown, instrumented);
             candidates.push((&missing_shutdown, 244));
+        }
+        if name == "metrics" {
+            assert_ne!(missing_metrics_shutdown, instrumented);
+            candidates.push((&missing_metrics_shutdown, 244));
         }
         for opt in ["-O1", "-O2"] {
             for &(candidate, expected) in &candidates {

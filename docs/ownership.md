@@ -137,28 +137,26 @@ not support for that platform.
 
 ## Value decoders
 
-The [intermediate decoder evidence](measurements/value-decoders-2026-10-16.json)
-retains native ternary and URL/HTTP request counts and artifact hashes on all six
-hosts. It explicitly records the neighboring Windows peer-dependency failures;
-these passing ownership tests are not acceptance of that whole run. The following
-compressed-byte additions and Windows repair need their fresh checks.
-
-
-Compressed bytes and WebSocket frames are also value-decoding boundaries. The
-prepared native implementation owns their returned bytes/text and Result/tuple
-wrappers, including malformed-input results. Existing compression encoders protect
-their native output buffers if creating the language result traps. Tests count
-native buffers separately from managed storage and deliberately disable each
-cleanup to check detection. This covers synchronous conversion of bytes already
-in memory; socket, server and retained-callback lifetimes are separate work.
-These helpers are not currently available on WASI. See the handoff for pending
-native validation; a declared ownership contract alone is not acceptance.
-
-
-A decoder turns an encoded value into ordinary language data. The current
+A decoder turns encoded bytes or text into ordinary language values. The current
 preparation gives balanced-ternary conversions, URL/form decoding and HTTP-head
-parsing explicit result owners. It does not yet establish accepted platform
-support; see the [handoff](development-state.md) for actual checks.
+parsing explicit owners for their results. Complete and partial results must be
+released without relying on a later collection.
+
+The decoder subset passes focused checks on all six native hosts at `30399066`
+(`38886033175`). Actual WASI checks cover its available ternary/text helpers at
+`72321a55` (`38884843627`). These focused results precede the combined batch's
+full production acceptance; the [handoff](development-state.md) records current
+validation. [Earlier allocation evidence](measurements/value-decoders-2026-10-16.json)
+retains the six-host ternary/text counts and the neighboring Windows failures
+that were subsequently repaired.
+
+Compressed bytes and WebSocket frames are also decoding boundaries. Their native
+implementation owns copied bytes/text and result wrappers, including malformed
+input results. Compression encoders protect native output buffers if language
+result allocation traps. Tests count native buffers separately from managed
+storage and deliberately omit cleanup to check detection. This covers synchronous
+conversion of bytes already in memory; socket, server and retained-callback
+lifetimes remain separate work. These helpers are unavailable on WASI.
 
 Ternary list conversions traverse borrowed inputs directly and build owned
 lists. Packing writes the result bytes directly. Partial lists have cleanup if
@@ -522,7 +520,7 @@ pass. General removal of tracing remains unfinished.
 The next ownership batch prepares copied metric snapshots and syntax rendering.
 A metric registry stores names and numbers for a process or library instance.
 Repeated updates of an existing name reuse that entry; distinct names require
-more native storage. Library teardown frees it. A snapshot copies names and kinds
+more native storage. Process shutdown and library teardown free it. A snapshot copies names and kinds
 into an immutable list of tuples: subsequent updates cannot mutate an earlier
 snapshot. Construction now protects partial strings, tuples and list nodes,
 without a temporary pointer array. This registry lifetime is separate from the

@@ -45,11 +45,13 @@ int main(void) {
     if (!fwp_kernel_workspace_fits(0) || !fwp_kernel_workspace_fits(limit) || fwp_kernel_workspace_fits(limit + 1) || fwp_kernel_workspace_fits(SIZE_MAX)) return 133;
     V r = fwp_p_device_run(1, 3, 0, 0, 0);
     double values[] = {2.5, 2.5, 2.5};
-    if (ARR(r)->len != 3 || memcmp(ARR(r)->d, values, sizeof values) || input_owner) return 134;
+    if (ARR(r)->len != 3 || memcmp(ARR(r)->d, values, sizeof values)) return 134;
     free(ARR(r));
+    if (input_owner) {counted_free(input_owner); return 128;}
     r = fwp_p_device_run(1, (V)(int64_t)-1, 0, 0, 0);
-    if (ARR(r)->len || input_owner) return 135;
+    if (ARR(r)->len) return 135;
     free(ARR(r));
+    if (input_owner) {counted_free(input_owner); return 128;}
     fwp_p_device_run(1, UINT64_C(2305843009213693952), 0, 0, 0);
     return 130;
 }

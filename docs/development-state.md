@@ -12,8 +12,12 @@ head `27cdc7ff` passes all nine production jobs `38872161681` and docs
 postmerge production `38884089916` is confirmed canceled.
 
 [PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is the only open delivery.
-Final head `ed936381240c57d4af45d526ac16b744405c0ca6` has passing docs
-`38884587999`; production `38884588161` is running with no reported failures.
+Current head `c81b0c9f016f0e359f22e8819792baba0760ab30` has fresh production
+`38890080777` running and docs `38890080771` passing. Prior `ed936381` production
+`38884588161` failed because `examples/vector-lanes.fwp` was unformatted; the
+example is fixed, and language formatting now runs before long production suites.
+The old unfinished run was superseded. Prior passing jobs are not acceptance of
+the corrected head.
 Its main-workspace handoff retains numerical evidence and is authoritative for
 that PR. Do not change its head for this preparation. Draft-only skipped jobs
 are not acceptance. Use an explicit one-line subject, at most 80 characters,
@@ -109,9 +113,22 @@ uses targeted console events and a corresponding interpreter handler. No failed
 checks are removed. Superseded `38881941135`, `38886468434` and `38886471769` are
 confirmed canceled. Incomplete/canceled runs are not acceptance.
 
-Combined source `35e8f0ab` has six-native `38887912753` and actual WASI
-`38887916636` queued. Its follow-up adds the immutable kernel allocation baseline
-and streamlines this handoff; publish together before final preparation validation.
+Combined source `7c1bd94e` reached passing kernel value/allocation/baseline and
+validation-order checks on Intel macOS and Linux ARM64. Its Unix size probe
+failed because omitted input cleanup was detected during the first successful
+call, before the older expected trap case; the fixture now frees its other
+storage and consistently reports the missing owner. WASI ARM64 passed the new
+32-bit kernel count controls, but exposed seven live metric registry allocations
+at exit. Executables now register registry cleanup on first use; library teardown
+keeps its existing cleanup. A WASI negative control omits that registration and
+must expose the leak. Fresh combined checks must verify both repairs.
+
+Six-native `38888712709` and WASI `38888716317` are incomplete/failed preparation,
+not acceptance. Allow their Windows dependency caches to finish before replacing
+the native run. The earlier `35e8f0ab` runs were superseded. Reference tables are
+updated, and the dead arithmetic exception list in `arc.rs` is removed: all 26
+entries already use the shared explicit contract table, checked against the
+inventory. Full final-head gates must cover that cleanup too.
 
 ## Local checks and limits
 
@@ -126,11 +143,11 @@ probe. No such probe executed; it runs in CI, with no local workaround.
 |---|---|
 | Accepted compiler `run --interp tests/fixtures/cpu_kernel_ownership.fwp` | Pass, 0.26 s |
 | Accepted compiler `run --interp tests/fixtures/metrics_ownership.fwp` | Pass, 0.25 s |
-| `cargo fmt --all` | Pass, 1.08 s |
+| `cargo fmt --all` | Pass, 1.13 s |
 | Library-doc generator from source comments, before local C rejection | Pass, 0.74 s |
 | Primitive inventory with frozen baseline | Pass, 0.96 s; 300 contracts, 43 distinct review symbols |
 | `python3 scripts/test-macos-test-shards.py` | Pass, 0.13 s; 226 targets, old assignments unchanged |
-| `python3 scripts/check-roadmap.py` | Pass, 2.57 s |
+| `python3 scripts/check-roadmap.py` | Pass, 2.53 s |
 
 The accepted reference interpreter is `/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp`.
 No local check establishes native support. Unreviewed symbols are mostly
@@ -138,9 +155,8 @@ networking, plus exit and GPU execution. Raw pointers, foreign/host callback
 retention, mutable cycles and deployment exclusions also remain beyond that count.
 JIT is prohibited; the existing OpenCL runtime-build gap is unresolved by CPU work.
 
-Next: publish the combined baseline checks, supersede queued preparation runs,
-and require fresh six-native plus actual WASI results. Fix every failure and
-retain final evidence. Independently finish #152's full gates and squash merge
+Next: publish the cleanup repairs and run fresh combined six-native and actual
+WASI checks; fix every failure and retain final evidence. Independently finish #152's full gates and squash merge
 when they pass. Then rebase this preparation delta onto that accepted merge,
 update the plan/history/handoff, open the next substantial PR and require all
 nine production jobs plus docs on its final head before merging.

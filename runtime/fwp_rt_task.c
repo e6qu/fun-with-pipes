@@ -1968,12 +1968,20 @@ static V fwp_p_request_shutdown(void) {
 typedef struct { char *name; size_t len; const char *kind; double x; } fwp_metric;
 static fwp_metric *fwp_metrics = 0;
 static size_t fwp_nmetrics = 0, fwp_metrics_cap = 0;
+static void fwp_metrics_finish(void);
 
 /* The registry owns name bytes for its lifetime. Observation suffixes are
  * compared/copied directly, without allocating a temporary joined name. */
 static fwp_metric *fwp_metric_get(const char *name, size_t len,
         const char *suffix, size_t suffix_len, const char *kind) {
     if (len == SIZE_MAX || suffix_len > SIZE_MAX - len - 1) fwp_trap("out of memory");
+#ifndef FWP_LIBRARY
+    static int registered_finish;
+    if (!registered_finish) {
+        if (atexit(fwp_metrics_finish)) fwp_trap("cannot register metrics cleanup");
+        registered_finish = 1;
+    }
+#endif
     size_t total = len + suffix_len;
     for (size_t i = 0; i < fwp_nmetrics; i++)
         if (fwp_metrics[i].len == total && !memcmp(fwp_metrics[i].name, name, len) &&
