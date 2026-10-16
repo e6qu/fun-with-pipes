@@ -396,7 +396,7 @@ fn concurrent_reads_share_one_receive_and_cancel_independently() {
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(format!("readers{opt}.exe"));
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        for mode in 0..3 {
+        for mode in 0..4 {
             for stress in ["0", "1"] {
                 let output = Command::new(&binary)
                     .arg(mode.to_string())

@@ -27,6 +27,8 @@ def main():
     parser.add_argument("--run", required=True)
     parser.add_argument("--head", required=True)
     parser.add_argument("--artifacts", type=Path, required=True)
+    parser.add_argument("--baseline", type=Path, required=True,
+                        help="Passing six-host report with separate source/cache fields")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     run = json.loads(gh("run", "view", args.run, "--json", "headSha,status,conclusion,jobs,url"))
@@ -87,6 +89,38 @@ def main():
                       "files": {name: fingerprint(folder / name) for name in names},
                       "binary_observations": json.loads((folder / "binary-observations.json").read_text())
                       if (folder / "binary-observations.json").exists() else None})
+    baseline = json.loads(args.baseline.read_text())
+    previous = {host["host"]: host for host in baseline["hosts"]}
+    comparisons = []
+    for host in hosts:
+        before = previous[host["host"]]
+        old_rows = {(row["elements"], row["mode"]): row for row in before["rows"]}
+        savings = []
+        for row in host["rows"]:
+            old = old_rows[(row["elements"], row["mode"])]
+            for key in ["consumed", "queued_messages", "collections", "receive_requests"]:
+                assert old[key] == row[key], (host["host"], key)
+            assert old["receive_bytes"] - row["receive_bytes"] == 8 * row["consumed"]
+            savings.append({
+                "elements": row["elements"], "mode": row["mode"],
+                "requested_bytes_saved": old["receive_bytes"] - row["receive_bytes"],
+                "charged_bytes_saved_including_setup":
+                    old["after_read_charged_bytes"] - row["after_read_charged_bytes"],
+            })
+        old_cell = next(item for item in before["layout"] if item["type"] == "cell")
+        cell = next(item for item in host["layout"] if item["type"] == "cell")
+        assert int(old_cell["bytes"]) == 24 and int(cell["bytes"]) == 16
+        first = next(row for row in host["rows"] if (row["elements"], row["mode"]) == (1, 0))
+        old_first = old_rows[(1, 0)]
+        comparisons.append({
+            "host": host["host"], "position_bytes_before_after": [24, 16],
+            "requested_bytes_per_value_before_after": [89, 81],
+            "charged_bytes_per_value_before_after": [
+                old_first["after_read_charged_bytes"] - old_first["setup_charged_bytes"],
+                first["after_read_charged_bytes"] - first["setup_charged_bytes"],
+            ],
+            "rows": savings,
+        })
     report = {
         "source_revision": args.head, "run_url": run["url"],
         "workload": "Receive queued protobuf messages with 16-character strings; 1/32/128 values, full/half consumption and retained first positions. Read each position twice.",
@@ -95,6 +129,14 @@ def main():
         "checks": required_tests,
         "modes": {"0": "consume all", "1": "consume ceil(elements/2)", "2": "consume all while retaining the first position"},
         "hosts": hosts,
+        "comparison": {
+            "baseline_file": args.baseline.name,
+            "baseline_sha256": fingerprint(args.baseline)["sha256"],
+            "source_revision": baseline["source_revision"],
+            "run_url": baseline["run_url"],
+            "scope": "Same queued inputs and read patterns in two fwp revisions. Allocation counts and storage only; no timing or C/Rust parity claim.",
+            "hosts": comparisons,
+        },
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")

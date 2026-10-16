@@ -10,6 +10,7 @@ typedef struct {
     fwp_task *cancel;
     stream_reader *first, *second;
 } stream_producer;
+static int recover_recursive_read(void) { return 1; }
 static void read_position(void *p, int cancelled) {
     stream_reader *reader = p;
     if (cancelled) { reader->cancelled++; return; }
@@ -41,8 +42,8 @@ static void publish_messages(void *p, int cancelled) {
 }
 int main(int argc, char **argv) {
     if(argc!=2)return 30;
-    int mode=atoi(argv[1]); /* 0: both readers; 1: cancel receiver; 2: cancel waiter */
-    if(mode<0||mode>2)return 31;
+    int mode=atoi(argv[1]); /* 0: both; 1: cancel receiver; 2: cancel waiter; 3: recursion */
+    if(mode<0||mode>3)return 31;
     fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_tasks_init();
     fwp_cur->deadline=fwp_now_ns()+10000000000LL; /* bound a broken wakeup */
     g_server server={0}; server.module="readers";
@@ -54,6 +55,24 @@ int main(int argc, char **argv) {
     source->c=connection; source->s=stream; source->server=1;
     source->dec.schema=schema; source->dec.ty=&string_type;
     g_cell *cell=fwp_mem_alloc(sizeof *cell); cell->src=source;
+    if(mode==3) {
+        jmp_buf recursive;
+        source->reader=fwp_cur;
+        fwp_trap_recover=recover_recursive_read;
+        fwp_trap_jb=&recursive;
+        fwp_trap_cleanup=fwp_cleanups;
+        if(!setjmp(recursive)) {
+            g_failure failure={0}; V error=0; const fwp_desc *type=0;
+            (void)g_force(cell,0,&failure,&error,&type);
+            return 49;
+        }
+        fwp_trap_recover=0; fwp_trap_jb=0; fwp_trap_cleanup=0;
+        if(strcmp(fwp_trap_msg,"recursive stream read")||cell->forced||cell->src!=source||
+           source->reader!=fwp_cur||source->read_waiters.head)return 50;
+        source->reader=0;
+        FWP_KEEP_ALIVE(PTR(cell)); FWP_KEEP_ALIVE(PTR(source));
+        fwp_lib_finish(); return 0;
+    }
     stream_reader first={cell,0,0,0,0}, second={cell,0,0,0,0};
     fwp_task *a=fwp_spawn_task(0,read_position,&first,0,0);
     fwp_task *b=fwp_spawn_task(0,read_position,&second,0,0);

@@ -781,26 +781,25 @@ receive a second message. The cache can hold both a value and the next stream
 position. Owning the copied result alone therefore does not settle the lifetime
 of the stream, its connection or the task receiving messages.
 
-The [initial Linux AMD64 baseline](measurements/remote-stream-baseline-2026-10-16.json)
-uses real queued protobuf messages containing 16-character strings. Each received
-value adds four managed allocations requesting 89 bytes, charged as 112 bytes
-after allocator rounding. Setup charges another 688 bytes. At 128 received
-values, 15,024 managed bytes remain charged after the C references are cleared,
-with collection disabled. Repeated reads use the saved value without receiving
-or allocating again; deliberately disabling caching fails the check. Library
-shutdown releases all queued messages. This isolates receive/cache storage;
-it excludes socket I/O, connection pooling, raw message storage and timing.
-It establishes a baseline, not explicit stream ownership.
+The [six-host compact-storage report](measurements/remote-stream-compact-2026-10-16.json)
+uses real queued messages containing 16-character strings. Each received value
+adds four managed allocations requesting 81 bytes, charged as 96 bytes after
+allocator rounding. Setup charges another 704 bytes. At 128 received values,
+12,992 managed bytes remain charged after C references are cleared, with collection
+disabled. Repeated reads receive and allocate nothing more. The
+[benchmark guide](benchmarks.md#storage-for-received-stream-values) compares the
+preceding representation and explains the excluded costs. Whole-library shutdown
+frees queued raw messages; this does not prove explicit per-stream destruction.
 
 A receive source holds the connection, stream, message decoder, deadline and
-error description. A decoder turns received bytes into a typed value. The current
-preparation copies the description into the source's own allocation, so it stays
+error description. A decoder turns received bytes into a typed value. The runtime
+copies the description into the source's own allocation, so it stays
 valid for exactly that source's lifetime. Completed positions keep their cached
 value and continuation; only unread positions retain a reference to the source.
 The interpreter releases the source after the last such owner disappears. Native
 positions replace their source with the completed result in the same storage
-word; the compact representation is awaiting six-host verification. Cached values
-still rely on tracing. Clearing a reference alone is not explicit native destruction.
+word. The compact representation passes focused tests on all six native hosts;
+cached values still rely on tracing. Clearing a reference alone is not explicit native destruction.
 
 Concurrent readers also need to agree on one value. The new receive guard lets
 one task receive while others wait for that same position's cache. Completion,
@@ -808,9 +807,9 @@ failure and cancellation release the guard and wake waiters. Cancelling a waitin
 task leaves the receiving task running; existing client-call cancellation still
 resets the call's stream. Recursive reading of the same source traps. The guard
 borrows task identities and uses the scheduler's existing wait lists, with no
-allocation per element. [The handoff](development-state.md) separates passing
-six-host lifetime/concurrency checks from final description and artifact verification. Neither this
-change nor its controlled storage measurements admits whole services to ARC.
+allocation per element. [The handoff](development-state.md) records full delivery
+acceptance separately from these focused checks. Neither this change nor its
+controlled storage measurements admits whole services to ARC.
 
 The next service-memory work must establish these facts before removing its
 current collector requirement:
@@ -822,6 +821,23 @@ current collector requirement:
 | Keep connections and requests alive for their users | Sending, receiving and detached tasks remain valid after their creating scope returns. Completion, failure and cancellation release each acquired owner exactly once. |
 | Prevent ownership cycles | Identify which component owns each task, stream and connection. A pointer back to an owner must not silently become another owning reference. Any shared cycle needs an explicit policy and a test that drops every external reference. |
 | Admit supported remote calls without tracing | Compare interpreter/native values, errors and receive order; run stress and deliberate missing-cleanup controls; inspect actual binaries and repeat calls with collection disabled. |
+
+The existing `g_conn.refs` counter covers connection startup and its reader/writer
+tasks. Its last release closes the socket and releases input/output buffers;
+the collector still owns the connection object and its remaining buffers.
+Removing a stream from `g_conn.streams` only unlinks it. Its queued messages and
+metadata are released later by `g_stream_final`. Replacing tracing must preserve
+the distinction between closing a transport and destroying the values that still
+refer to it.
+
+The next implementation must assign owners to the pool, active calls, receive
+sources and I/O tasks, while keeping scheduler task identities and wait lists
+borrowed. A completed cache must own its value and continuation; an unread
+continuation must keep its connection, stream and decoder captures alive. Prefer
+moving that source owner forward to counting it anew for every message. Destruction
+of a long cached sequence must use bounded stack space, including the alternating
+position, optional result and tuple wrappers. Test partial construction and each
+last-owner case before admitting remote calls to checked ARC.
 
 These are acceptance requirements, not implemented stream ownership. Keep the
 ordinary immutable iterator behavior and existing syntax while proving them.

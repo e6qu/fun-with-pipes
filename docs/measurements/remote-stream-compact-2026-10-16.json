@@ -1,0 +1,2190 @@
+{
+  "source_revision": "ab9a0a0e51994840707add835a60cdcab9a2be51",
+  "run_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38982153357",
+  "workload": "Receive queued protobuf messages with 16-character strings; 1/32/128 values, full/half consumption and retained first positions. Read each position twice.",
+  "results": "Four managed requests and 81 requested bytes per received value. Completed cells no longer retain incoming sources. Native cached storage still needs explicit owners and is not released merely by clearing C references with collection disabled.",
+  "limits": "This is fwp representation and lifetime evidence, not a C/Rust comparison or timing benchmark. Excludes socket I/O, pooled connections, raw codec buffers and total process memory. Native services still require tracing.",
+  "checks": [
+    "cached_positions_release_the_source_after_end_and_last_early_owner",
+    "cached_error_ends_release_sources_and_failed_reads_keep_them",
+    "cached_stream_positions_preserve_values_and_report_storage",
+    "incoming_stream_descriptions_outlive_their_input_text",
+    "forced_cells_release_received_storage_and_decoder_failure_text",
+    "every_kind_of_call",
+    "concurrent_reads_share_one_receive_and_cancel_independently",
+    "recursive_and_cancelled_waiters_preserve_the_active_reader",
+    "stream_aliases_are_consistent_across_tasks"
+  ],
+  "modes": {
+    "0": "consume all",
+    "1": "consume ceil(elements/2)",
+    "2": "consume all while retaining the first position"
+  },
+  "hosts": [
+    {
+      "host": "windows-11-arm",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38982153357/job/117245246770",
+      "rows": [
+        {
+          "elements": 1,
+          "mode": 0,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 1,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 2,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 0,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 1,
+          "consumed": 16,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 64,
+          "receive_bytes": 1296,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 2240,
+          "after_clearing_roots_charged_bytes": 2240,
+          "queued_messages": 16,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 2,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 0,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 1,
+          "consumed": 64,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 256,
+          "receive_bytes": 5184,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 6848,
+          "after_clearing_roots_charged_bytes": 6848,
+          "queued_messages": 64,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 2,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        }
+      ],
+      "layout": [
+        {
+          "type": "cell",
+          "bytes": "16",
+          "alignment": "8",
+          "source_offset": "0",
+          "cache_offset": "0",
+          "reader_offset": "-",
+          "waiters_offset": "-"
+        },
+        {
+          "type": "incoming",
+          "bytes": "104",
+          "alignment": "8",
+          "source_offset": "-",
+          "cache_offset": "-",
+          "reader_offset": "88",
+          "waiters_offset": "96"
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg\n",
+        "cpu": "\n\nName                      : Cobalt 100\nArchitecture              : 12\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 4\n\n\n\n"
+      },
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "4e003f27b70013d5dbd5ec008981d76b67a38c1d79bb723888c22e0d6215943d"
+        },
+        "rust.txt": {
+          "bytes": 195,
+          "sha256": "0400e842b69023487d35975ececcd0edec4f13d84d2fc9a87a2de331b2df2d2f"
+        },
+        "c.txt": {
+          "bytes": 320,
+          "sha256": "bbec0636659c548c7f7d34f8897cc2a8b3c96ad0a5bb81a5234fbf62da9fe6a6"
+        },
+        "cpu.txt": {
+          "bytes": 144,
+          "sha256": "872708849a31923de2e0cf60aacb612bf4587a64983498b3f47f646bfda554e3"
+        },
+        "storage.tsv": {
+          "bytes": 555,
+          "sha256": "b002e44c5c31c69031d61e970160519c5a526398c9f67057d34858072a89a7ea"
+        },
+        "layout.tsv": {
+          "bytes": 123,
+          "sha256": "34a91e8eb61a474c781280017e4ad341a1ef86c2d654ca332f017199d4e2a29c"
+        },
+        "stream.c": {
+          "bytes": 868806,
+          "sha256": "e83a0a931e16278619cc4ac77312b1e69df41feea256990c0599204c61d4182b"
+        },
+        "description.c": {
+          "bytes": 865482,
+          "sha256": "c27c76597399cd8a1dfada472e70f9bb40a6709ba188864432036808c9c2736f"
+        },
+        "stream-O1.exe": {
+          "bytes": 143360,
+          "sha256": "6dc0806589802d5fb2fc426109d00ade1670630339504db693927c68ebbade49"
+        },
+        "stream-O2.exe": {
+          "bytes": 150528,
+          "sha256": "950eac13048f899273edcc157dd6c68cd510a7842b61bde0f5346af8a693e995"
+        },
+        "description-O1.exe": {
+          "bytes": 87552,
+          "sha256": "78ba24b53048459e33dcf2e50b965ec503de1bc4e631df1d8afe52d04216f674"
+        },
+        "description-O2.exe": {
+          "bytes": 87552,
+          "sha256": "73ca1a4bf87f33cc65d234d06734c24b1df47bc69ab384a4f0c0427e58f08980"
+        },
+        "readers.c": {
+          "bytes": 866639,
+          "sha256": "9b7606f8a1a6f29fee03597268489b54dbdabe3338554bf3c6c86c794a651f5d"
+        },
+        "readers-O1.exe": {
+          "bytes": 147968,
+          "sha256": "e1a4220ddc6e6bd43d9a3c06d706ed278296bdc8d38c6b611f9f95931ed5b167"
+        },
+        "readers-O2.exe": {
+          "bytes": 151040,
+          "sha256": "c003617795e96abf6aec854e3480ef19b127240f079ad7d9941747da56929990"
+        },
+        "shared-client.exe": {
+          "bytes": 239616,
+          "sha256": "49dea79c63017247371fbdcceb3956860ba2c4356ef28d00e8e9afefc8dd9711"
+        },
+        "shared-server.exe": {
+          "bytes": 298496,
+          "sha256": "4add11af4c68de0916b88bbb5eebcd4d75fe5b3c065afbf90c4e36fd181a5939"
+        },
+        "shared-client.fwp": {
+          "bytes": 535,
+          "sha256": "7b0a9b01b63108e06552c9f54163ed6e386b1429e70f2663cdd664a9711d5178"
+        },
+        "shared-server.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "service-build.txt": {
+          "bytes": 282,
+          "sha256": "1181bbaeb24d9915a52f08da6b8c806b912d8a6540a00cf71312c3ed48cd9a6a"
+        },
+        "job.log": {
+          "bytes": 51553,
+          "sha256": "b78015e89a12cebf1ecc97d15446d4e4938f53bdc8e552e9ccc9c1fdf5272093"
+        }
+      },
+      "binary_observations": null
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38982153357/job/117245246955",
+      "rows": [
+        {
+          "elements": 1,
+          "mode": 0,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 1,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 2,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 0,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 1,
+          "consumed": 16,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 64,
+          "receive_bytes": 1296,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 2240,
+          "after_clearing_roots_charged_bytes": 2240,
+          "queued_messages": 16,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 2,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 0,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 1,
+          "consumed": 64,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 256,
+          "receive_bytes": 5184,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 6848,
+          "after_clearing_roots_charged_bytes": 6848,
+          "queued_messages": 64,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 2,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        }
+      ],
+      "layout": [
+        {
+          "type": "cell",
+          "bytes": "16",
+          "alignment": "8",
+          "source_offset": "0",
+          "cache_offset": "0",
+          "reader_offset": "-",
+          "waiters_offset": "-"
+        },
+        {
+          "type": "incoming",
+          "bytes": "104",
+          "alignment": "8",
+          "source_offset": "-",
+          "cache_offset": "-",
+          "reader_offset": "88",
+          "waiters_offset": "96"
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+        "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n"
+      },
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "4e003f27b70013d5dbd5ec008981d76b67a38c1d79bb723888c22e0d6215943d"
+        },
+        "rust.txt": {
+          "bytes": 197,
+          "sha256": "ba203e33fe4a5b8e05147bb6e57fb1ddace26d9f799f357420b666887dd7e2f1"
+        },
+        "c.txt": {
+          "bytes": 116,
+          "sha256": "c0003bf916cbcae3cba03ba1cad136b6d501c1d343f380e58d5ba25cf693aafc"
+        },
+        "cpu.txt": {
+          "bytes": 2355,
+          "sha256": "e5f7302f9882c8b4eca9892fce7bab78f37c49da0f8babcb23d2c2db5ed004bc"
+        },
+        "storage.tsv": {
+          "bytes": 546,
+          "sha256": "002a04cd13e8c0459ab7c61b52e4dc5b57b4092909eddef657c924415349145d"
+        },
+        "layout.tsv": {
+          "bytes": 120,
+          "sha256": "2eb20d91c9e09c3fcb26d59cf681419d79f0649ed133a0513c50627a5d868dbe"
+        },
+        "stream.c": {
+          "bytes": 868806,
+          "sha256": "e83a0a931e16278619cc4ac77312b1e69df41feea256990c0599204c61d4182b"
+        },
+        "description.c": {
+          "bytes": 865482,
+          "sha256": "c27c76597399cd8a1dfada472e70f9bb40a6709ba188864432036808c9c2736f"
+        },
+        "stream-O1.exe": {
+          "bytes": 151952,
+          "sha256": "568c0b0fc9c95ca0a7f9ea61eaee8828c35243a8f511e0dd20ecc212a0727171"
+        },
+        "stream-O2.exe": {
+          "bytes": 152120,
+          "sha256": "2ccb135b6fb8c30d6e295ed667d48b163472666fa17fc1d4a0e5efddf0846476"
+        },
+        "description-O1.exe": {
+          "bytes": 80960,
+          "sha256": "ddb8a1b869d8dd228e9600f7586526f0d9c58c97159650f2e4ce522cce3422ed"
+        },
+        "description-O2.exe": {
+          "bytes": 81032,
+          "sha256": "ba55eff54477ea8678ed11755dac82aa4dc12a7eb796fa429de207c8a9721a91"
+        },
+        "readers.c": {
+          "bytes": 866639,
+          "sha256": "9b7606f8a1a6f29fee03597268489b54dbdabe3338554bf3c6c86c794a651f5d"
+        },
+        "readers-O1.exe": {
+          "bytes": 152784,
+          "sha256": "3bf62907e4f4f27506eb3b567f9f9fc11e7ef9c5018a923f68d06bed63a43191"
+        },
+        "readers-O2.exe": {
+          "bytes": 152768,
+          "sha256": "6ea7a26f71cf540c5d0b1240d7b0bcb9ebf7bc1bac64227d6aa8b86b5159ae5b"
+        },
+        "shared-client.exe": {
+          "bytes": 228712,
+          "sha256": "dba690e851f06537902a04300661b7ca542593550e02e5e4e1ff2321c5af6709"
+        },
+        "shared-server.exe": {
+          "bytes": 303808,
+          "sha256": "ee33f18aca1d3af89d411ed2f760b826b455280b57d71ddaa3c9e9b8047bca37"
+        },
+        "shared-client.fwp": {
+          "bytes": 535,
+          "sha256": "7b0a9b01b63108e06552c9f54163ed6e386b1429e70f2663cdd664a9711d5178"
+        },
+        "shared-server.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "service-build.txt": {
+          "bytes": 282,
+          "sha256": "1181bbaeb24d9915a52f08da6b8c806b912d8a6540a00cf71312c3ed48cd9a6a"
+        },
+        "job.log": {
+          "bytes": 42288,
+          "sha256": "3cc0d9bb7403247c702056d43680c43b2ceea74aa61f21bdcbf1ad647178c8dd"
+        }
+      },
+      "binary_observations": {
+        "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+        "disassembly": [
+          {
+            "binary": "stream-O2.exe",
+            "sha256": "2ccb135b6fb8c30d6e295ed667d48b163472666fa17fc1d4a0e5efddf0846476",
+            "file_header": "\n/private/tmp/fwp-stream-compact/38982153357/stream-storage-ubuntu-24.04-arm/stream-O2.exe:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000001f80\n",
+            "assembly": "stream-O2.exe.asm",
+            "assembly_sha256": "3a88314baaf27484300642d77a3d3e9166ee53ec150b49d2ac101628643422bf",
+            "force_entry": [
+              "",
+              "    33d4:      \tsub\tsp, sp, #0x170",
+              "    33d8:      \tstp\tx29, x30, [sp, #0x110]",
+              "    33dc:      \tstp\tx28, x27, [sp, #0x120]",
+              "    33e0:      \tstp\tx26, x25, [sp, #0x130]",
+              "    33e4:      \tstp\tx24, x23, [sp, #0x140]",
+              "    33e8:      \tstp\tx22, x21, [sp, #0x150]",
+              "    33ec:      \tstp\tx20, x19, [sp, #0x160]",
+              "    33f0:      \tadd\tx29, sp, #0x110",
+              "    33f4:      \tldr\tw8, [x0, #0x8]",
+              "    33f8:      \tmov\tx25, x0",
+              "    33fc:      \tcbnz\tw8, 0x3438 <g_force+0x64>",
+              "    3400:      \tldr\tx23, [x25]",
+              "    3404:      \tadrp\tx24, 0x32000 <queued_messages+0x368>",
+              "    3408:      \tldr\tx9, [x23, #0x58]",
+              "    340c:      \tldr\tx8, [x24, #0xd0]",
+              "    3410:      \tcbz\tx9, 0x345c <g_force+0x88>",
+              "    3414:      \tcmp\tx9, x8",
+              "    3418:      \tb.eq\t0x4348 <g_force+0xf74>",
+              "    341c:      \tbl\t0x85c0 <fwp_check_cancel>",
+              "    3420:      \tadd\tx0, x23, #0x60",
+              "    3424:      \tmov\tx1, xzr",
+              "    3428:      \tbl\t0x868c <fwp_park>",
+              "    342c:      \tbl\t0x85c0 <fwp_check_cancel>",
+              "    3430:      \tldr\tw8, [x25, #0x8]",
+              "    3434:      \tcbz\tw8, 0x3408 <g_force+0x34>",
+              "    3438:      \tldr\tx0, [x25]",
+              "    343c:      \tldp\tx20, x19, [sp, #0x160]",
+              "    3440:      \tldp\tx22, x21, [sp, #0x150]",
+              "    3444:      \tldp\tx24, x23, [sp, #0x140]",
+              "    3448:      \tldp\tx26, x25, [sp, #0x130]",
+              "    344c:      \tldp\tx28, x27, [sp, #0x120]",
+              "    3450:      \tldp\tx29, x30, [sp, #0x110]",
+              "    3454:      \tadd\tsp, sp, #0x170",
+              "    3458:      \tret",
+              "    345c:      \tadrp\tx26, 0x32000 <queued_messages+0x368>",
+              "    3460:      \tadrp\tx10, 0x9000 <fwp_gc_finalizer+0x20>",
+              "    3464:      \tadd\tx10, x10, #0x6d0",
+              "    3468:      \tldr\tx9, [x26, #0xc0]",
+              "    346c:      \tstr\tx8, [x23, #0x58]",
+              "    3470:      \tsub\tx8, x29, #0x20",
+              "    3474:      \tstur\tx23, [x29, #-0x10]",
+              "    3478:      \tmovi\tv0.2d, #0000000000000000",
+              "    347c:      \tldr\tx21, [x23, #0x48]",
+              "    3480:      \tstp\tx9, x10, [x29, #-0x20]",
+              "    3484:      \tstr\tx8, [x26, #0xc0]",
+              "    3488:      \tldp\tx27, x20, [x23]",
+              "    348c:      \tstur\txzr, [x29, #-0x30]",
+              "    3490:      \tstp\tq0, q0, [x29, #-0x50]",
+              "    3494:      \tldr\tx8, [x20, #0xa0]",
+              "    3498:      \tcbz\tx8, 0x34b8 <g_force+0xe4>",
+              "    349c:      \tstur\twzr, [x29, #-0x50]",
+              "    34a0:      \tstur\tx8, [x29, #-0x48]",
+              "    34a4:      \tldr\tx8, [x8]",
+              "    34a8:      \tstr\tx8, [x20, #0xa0]"
+            ]
+          },
+          {
+            "binary": "shared-client.exe",
+            "sha256": "dba690e851f06537902a04300661b7ca542593550e02e5e4e1ff2321c5af6709",
+            "file_header": "\n/private/tmp/fwp-stream-compact/38982153357/stream-storage-ubuntu-24.04-arm/shared-client.exe:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000004700\n",
+            "assembly": "shared-client.exe.asm",
+            "assembly_sha256": "4603633fa5d69a3ef1e787af4c78c44dfee097be585bffdfd88b03f38618be60",
+            "force_entry": [
+              "",
+              "    81f4:      \tsub\tsp, sp, #0x110",
+              "    81f8:      \tstp\tx29, x30, [sp, #0xb0]",
+              "    81fc:      \tstp\tx28, x27, [sp, #0xc0]",
+              "    8200:      \tstp\tx26, x25, [sp, #0xd0]",
+              "    8204:      \tstp\tx24, x23, [sp, #0xe0]",
+              "    8208:      \tstp\tx22, x21, [sp, #0xf0]",
+              "    820c:      \tstp\tx20, x19, [sp, #0x100]",
+              "    8210:      \tadd\tx29, sp, #0xb0",
+              "    8214:      \tldr\tw8, [x0, #0x8]",
+              "    8218:      \tmov\tx20, x0",
+              "    821c:      \tcbnz\tw8, 0x8268 <g_force+0x74>",
+              "    8220:      \tldr\tx19, [x20]",
+              "    8224:      \tmov\tx22, x4",
+              "    8228:      \tmov\tx23, x3",
+              "    822c:      \tmov\tx24, x2",
+              "    8230:      \tmov\tw21, w1",
+              "    8234:      \tadrp\tx25, 0x42000 <fwp_trap_msg+0x158>",
+              "    8238:      \tldr\tx8, [x19, #0x58]",
+              "    823c:      \tcbz\tx8, 0x828c <g_force+0x98>",
+              "    8240:      \tldr\tx9, [x25, #0x2b8]",
+              "    8244:      \tcmp\tx8, x9",
+              "    8248:      \tb.eq\t0x8860 <g_force+0x66c>",
+              "    824c:      \tbl\t0x71f8 <fwp_check_cancel>",
+              "    8250:      \tadd\tx0, x19, #0x60",
+              "    8254:      \tmov\tx1, xzr",
+              "    8258:      \tbl\t0x750c <fwp_park>",
+              "    825c:      \tbl\t0x71f8 <fwp_check_cancel>",
+              "    8260:      \tldr\tw8, [x20, #0x8]",
+              "    8264:      \tcbz\tw8, 0x8238 <g_force+0x44>",
+              "    8268:      \tldr\tx0, [x20]",
+              "    826c:      \tldp\tx20, x19, [sp, #0x100]",
+              "    8270:      \tldp\tx22, x21, [sp, #0xf0]",
+              "    8274:      \tldp\tx24, x23, [sp, #0xe0]",
+              "    8278:      \tldp\tx26, x25, [sp, #0xd0]",
+              "    827c:      \tldp\tx28, x27, [sp, #0xc0]",
+              "    8280:      \tldp\tx29, x30, [sp, #0xb0]",
+              "    8284:      \tadd\tsp, sp, #0x110",
+              "    8288:      \tret",
+              "    828c:      \tadrp\tx26, 0x42000 <fwp_trap_msg+0x158>",
+              "    8290:      \tadrp\tx9, 0x8000 <fwp_mem_free+0xc0>",
+              "    8294:      \tadd\tx9, x9, #0x970",
+              "    8298:      \tldr\tx8, [x26, #0x2a8]",
+              "    829c:      \tstp\tx9, x19, [x29, #-0x10]",
+              "    82a0:      \tldr\tx9, [x25, #0x2b8]",
+              "    82a4:      \tldr\tx2, [x19, #0x48]",
+              "    82a8:      \tsub\tx3, x29, #0x40",
+              "    82ac:      \tsub\tx27, x29, #0x40",
+              "    82b0:      \tstur\tx8, [x29, #-0x18]",
+              "    82b4:      \tsub\tx8, x29, #0x18",
+              "    82b8:      \tstr\tx8, [x26, #0x2a8]",
+              "    82bc:      \tldp\tx0, x1, [x19]",
+              "    82c0:      \tstr\tx9, [x19, #0x58]",
+              "    82c4:      \tbl\t0x8a20 <g_recv>",
+              "    82c8:      \tldr\tx8, [x26, #0x2a8]"
+            ]
+          }
+        ],
+        "scope": "Actual O2 fixture and O1 shared-service executables; static inspection only. No timing claim."
+      }
+    },
+    {
+      "host": "macos-15",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38982153357/job/117245246992",
+      "rows": [
+        {
+          "elements": 1,
+          "mode": 0,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 1,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 2,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 0,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 1,
+          "consumed": 16,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 64,
+          "receive_bytes": 1296,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 2240,
+          "after_clearing_roots_charged_bytes": 2240,
+          "queued_messages": 16,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 2,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 0,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 1,
+          "consumed": 64,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 256,
+          "receive_bytes": 5184,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 6848,
+          "after_clearing_roots_charged_bytes": 6848,
+          "queued_messages": 64,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 2,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        }
+      ],
+      "layout": [
+        {
+          "type": "cell",
+          "bytes": "16",
+          "alignment": "8",
+          "source_offset": "0",
+          "cache_offset": "0",
+          "reader_offset": "-",
+          "waiters_offset": "-"
+        },
+        {
+          "type": "incoming",
+          "bytes": "104",
+          "alignment": "8",
+          "source_offset": "-",
+          "cache_offset": "-",
+          "reader_offset": "88",
+          "waiters_offset": "96"
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+        "cpu": "machdep.cpu.cores_per_package: 3\nmachdep.cpu.core_count: 3\nmachdep.cpu.logical_per_package: 3\nmachdep.cpu.thread_count: 3\nmachdep.cpu.brand_string: Apple M1 (Virtual)\nhw.memsize: 7516192768\n"
+      },
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "4e003f27b70013d5dbd5ec008981d76b67a38c1d79bb723888c22e0d6215943d"
+        },
+        "rust.txt": {
+          "bytes": 192,
+          "sha256": "e003fd3d385fcd0de16bc6b049124efb20207831dd810fd4ab39ff079bbb12a5"
+        },
+        "c.txt": {
+          "bytes": 206,
+          "sha256": "df12815703ce3452ab4bd51ecbea4cf8155246b94b5b15113a580ff6aec2befd"
+        },
+        "cpu.txt": {
+          "bytes": 190,
+          "sha256": "c8a8ebf53a152d1eb149ef7fe68b192b46e1f65222da0fddeea2b4d3b18e81a0"
+        },
+        "storage.tsv": {
+          "bytes": 546,
+          "sha256": "002a04cd13e8c0459ab7c61b52e4dc5b57b4092909eddef657c924415349145d"
+        },
+        "layout.tsv": {
+          "bytes": 120,
+          "sha256": "2eb20d91c9e09c3fcb26d59cf681419d79f0649ed133a0513c50627a5d868dbe"
+        },
+        "stream.c": {
+          "bytes": 868806,
+          "sha256": "e83a0a931e16278619cc4ac77312b1e69df41feea256990c0599204c61d4182b"
+        },
+        "description.c": {
+          "bytes": 865482,
+          "sha256": "c27c76597399cd8a1dfada472e70f9bb40a6709ba188864432036808c9c2736f"
+        },
+        "stream-O1.exe": {
+          "bytes": 107904,
+          "sha256": "c5f7fe891303a26716ce68e9f09a01e7f702ac953682ac43c49dcd701370e715"
+        },
+        "stream-O2.exe": {
+          "bytes": 107984,
+          "sha256": "beb63a3112331fb50a342ba9e13b151f06b822586aefda5a5a0b49804fbb5e13"
+        },
+        "description-O1.exe": {
+          "bytes": 53584,
+          "sha256": "0a9e8b171ee0c57b2ee8295392e4136e940f38e118215e6f3a53c91178478976"
+        },
+        "description-O2.exe": {
+          "bytes": 53616,
+          "sha256": "8af09d60400644b8ea0799909528e990c5c064de6247bbbb5a4df29eaa2607eb"
+        },
+        "readers.c": {
+          "bytes": 866639,
+          "sha256": "9b7606f8a1a6f29fee03597268489b54dbdabe3338554bf3c6c86c794a651f5d"
+        },
+        "readers-O1.exe": {
+          "bytes": 108576,
+          "sha256": "1e60ebe2a26282410d036d3c4d2a540a557b041b369ded9529f55c09700ac473"
+        },
+        "readers-O2.exe": {
+          "bytes": 125216,
+          "sha256": "1b86bb738e6d797521d811f966e68fa94fb76142623e15886c871b033d8cd015"
+        },
+        "shared-client.exe": {
+          "bytes": 200352,
+          "sha256": "78bf91155b770f476ccc973acd2a1c5b6a19b3664bab0976589602d168c0c7dd"
+        },
+        "shared-server.exe": {
+          "bytes": 241400,
+          "sha256": "983aa695b7c39abb442c6bd7249841465c320524006a9bf0fbd731719a53d892"
+        },
+        "shared-client.fwp": {
+          "bytes": 535,
+          "sha256": "7b0a9b01b63108e06552c9f54163ed6e386b1429e70f2663cdd664a9711d5178"
+        },
+        "shared-server.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "service-build.txt": {
+          "bytes": 282,
+          "sha256": "1181bbaeb24d9915a52f08da6b8c806b912d8a6540a00cf71312c3ed48cd9a6a"
+        },
+        "job.log": {
+          "bytes": 44289,
+          "sha256": "acb75232a60fe003eaf219cfb42737fca174c76c5425b080df6ed27ab2003de1"
+        }
+      },
+      "binary_observations": null
+    },
+    {
+      "host": "macos-15-intel",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38982153357/job/117245247010",
+      "rows": [
+        {
+          "elements": 1,
+          "mode": 0,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 1,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 2,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 0,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 1,
+          "consumed": 16,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 64,
+          "receive_bytes": 1296,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 2240,
+          "after_clearing_roots_charged_bytes": 2240,
+          "queued_messages": 16,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 2,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 0,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 1,
+          "consumed": 64,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 256,
+          "receive_bytes": 5184,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 6848,
+          "after_clearing_roots_charged_bytes": 6848,
+          "queued_messages": 64,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 2,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        }
+      ],
+      "layout": [
+        {
+          "type": "cell",
+          "bytes": "16",
+          "alignment": "8",
+          "source_offset": "0",
+          "cache_offset": "0",
+          "reader_offset": "-",
+          "waiters_offset": "-"
+        },
+        {
+          "type": "incoming",
+          "bytes": "104",
+          "alignment": "8",
+          "source_offset": "-",
+          "cache_offset": "-",
+          "reader_offset": "88",
+          "waiters_offset": "96"
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+        "cpu": "machdep.cpu.mwait.linesize_min: 64\nmachdep.cpu.mwait.linesize_max: 64\nmachdep.cpu.mwait.extensions: 3\nmachdep.cpu.mwait.sub_Cstates: 286531872\nmachdep.cpu.thermal.sensor: 0\nmachdep.cpu.thermal.dynamic_acceleration: 0\nmachdep.cpu.thermal.invariant_APIC_timer: 1\nmachdep.cpu.thermal.thresholds: 0\nmachdep.cpu.thermal.ACNT_MCNT: 0\nmachdep.cpu.thermal.core_power_limits: 0\nmachdep.cpu.thermal.fine_grain_clock_mod: 0\nmachdep.cpu.thermal.package_thermal_intr: 0\nmachdep.cpu.thermal.hardware_feedback: 0\nmachdep.cpu.thermal.energy_policy: 0\nmachdep.cpu.xsave.extended_state: 7 832 832 0\nmachdep.cpu.xsave.extended_state1: 1 0 0 0\nmachdep.cpu.arch_perf.version: 0\nmachdep.cpu.arch_perf.number: 0\nmachdep.cpu.arch_perf.width: 0\nmachdep.cpu.arch_perf.events_number: 0\nmachdep.cpu.arch_perf.events: 0\nmachdep.cpu.arch_perf.fixed_number: 0\nmachdep.cpu.arch_perf.fixed_width: 0\nmachdep.cpu.cache.linesize: 64\nmachdep.cpu.cache.L2_associativity: 4\nmachdep.cpu.cache.size: 256\nmachdep.cpu.tlb.inst.large: 8\nmachdep.cpu.tlb.data.small: 64\nmachdep.cpu.tlb.data.small_level1: 64\nmachdep.cpu.address_bits.physical: 39\nmachdep.cpu.address_bits.virtual: 48\nmachdep.cpu.tsc_ccc.numerator: 266\nmachdep.cpu.tsc_ccc.denominator: 2\nmachdep.cpu.max_basic: 22\nmachdep.cpu.max_ext: 2147483656\nmachdep.cpu.vendor: GenuineIntel\nmachdep.cpu.brand_string: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\nmachdep.cpu.family: 6\nmachdep.cpu.model: 58\nmachdep.cpu.extmodel: 3\nmachdep.cpu.extfamily: 0\nmachdep.cpu.stepping: 10\nmachdep.cpu.feature_bits: 18373132009129901055\nmachdep.cpu.leaf7_feature_bits: 43806655 0\nmachdep.cpu.extfeature_bits: 1241850578944\nmachdep.cpu.signature: 198314\nmachdep.cpu.brand: 0\nmachdep.cpu.features: FPU VME DE PSE TSC MSR PAE MCE CX8 APIC SEP MTRR PGE MCA CMOV PAT PSE36 CLFSH MMX FXSR SSE SSE2 SS HTT PBE SSE3 PCLMULQDQ DTES64 DSCPL VMX SSSE3 FMA CX16 TPR SSE4.1 SSE4.2 x2APIC MOVBE POPCNT AES VMM PCID XSAVE OSXSAVE SEGLIM64 AVX1.0 RDRAND F16C\nmachdep.cpu.leaf7_features: RDWRFSGS TSC_THREAD_OFFSET SGX BMI1 HLE AVX2 SMEP BMI2 ERMS INVPCID RTM FPU_CSDS MPX RDSEED ADX SMAP CLFSOPT IPT\nmachdep.cpu.extfeatures: SYSCALL XD 1GBPAGE EM64T LAHF LZCNT PREFETCHW\nmachdep.cpu.logical_per_package: 4\nmachdep.cpu.cores_per_package: 4\nmachdep.cpu.microcode_version: 0\nmachdep.cpu.processor_flag: 0\nmachdep.cpu.core_count: 4\nmachdep.cpu.thread_count: 4\nhw.memsize: 15032385536\n"
+      },
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "4e003f27b70013d5dbd5ec008981d76b67a38c1d79bb723888c22e0d6215943d"
+        },
+        "rust.txt": {
+          "bytes": 191,
+          "sha256": "bf1658636877f9403ad0a32419fc3b0da3d3164f3585a184108063f8499d7434"
+        },
+        "c.txt": {
+          "bytes": 207,
+          "sha256": "2837c5948b45916f519912ef23256ae973af42c72decd6185aec65f45b804d3f"
+        },
+        "cpu.txt": {
+          "bytes": 2357,
+          "sha256": "34906f51eedf2b47df9e91be1563fcdf5a42c7337d9b6ec2da23ba90e96072a6"
+        },
+        "storage.tsv": {
+          "bytes": 546,
+          "sha256": "002a04cd13e8c0459ab7c61b52e4dc5b57b4092909eddef657c924415349145d"
+        },
+        "layout.tsv": {
+          "bytes": 120,
+          "sha256": "2eb20d91c9e09c3fcb26d59cf681419d79f0649ed133a0513c50627a5d868dbe"
+        },
+        "stream.c": {
+          "bytes": 868806,
+          "sha256": "e83a0a931e16278619cc4ac77312b1e69df41feea256990c0599204c61d4182b"
+        },
+        "description.c": {
+          "bytes": 865482,
+          "sha256": "c27c76597399cd8a1dfada472e70f9bb40a6709ba188864432036808c9c2736f"
+        },
+        "stream-O1.exe": {
+          "bytes": 90552,
+          "sha256": "10852fca5174bc7f8c5a83c14a64d04f01d4e152274de862b96fc0169215e77e"
+        },
+        "stream-O2.exe": {
+          "bytes": 94720,
+          "sha256": "1ff583e925cb769c57a5f54ac74b4524615b7c5cd6698ab1c469f327c35c289b"
+        },
+        "description-O1.exe": {
+          "bytes": 32560,
+          "sha256": "569e773f18580db35e9e8c1ac9dee82251617a243930b873459fd3b44b89b386"
+        },
+        "description-O2.exe": {
+          "bytes": 32600,
+          "sha256": "0454a4839f7ce0988d0bc6cbac5c21563fd229a4b4cc63588f761bde6674ad87"
+        },
+        "readers.c": {
+          "bytes": 866639,
+          "sha256": "9b7606f8a1a6f29fee03597268489b54dbdabe3338554bf3c6c86c794a651f5d"
+        },
+        "readers-O1.exe": {
+          "bytes": 95320,
+          "sha256": "4ded707efca992b575cac43a0480e0e71feb223e6717f1c26c03cbc14e82bf88"
+        },
+        "readers-O2.exe": {
+          "bytes": 99424,
+          "sha256": "b60bb8da9e9e0d7115c5f8fa7b92b1b5c1cde81cc18e5a8ebfeb50fa73639b53"
+        },
+        "shared-client.exe": {
+          "bytes": 186328,
+          "sha256": "77fe26bf5d8d2b1b19aa78e7809fffa7e0b27bca893dbdd7b7b50f2789b8ce53"
+        },
+        "shared-server.exe": {
+          "bytes": 247544,
+          "sha256": "5e383af5da4da226082b71ff027337d259e37cb6a36a56b694a1df71b6c5e117"
+        },
+        "shared-client.fwp": {
+          "bytes": 535,
+          "sha256": "7b0a9b01b63108e06552c9f54163ed6e386b1429e70f2663cdd664a9711d5178"
+        },
+        "shared-server.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "service-build.txt": {
+          "bytes": 282,
+          "sha256": "1181bbaeb24d9915a52f08da6b8c806b912d8a6540a00cf71312c3ed48cd9a6a"
+        },
+        "job.log": {
+          "bytes": 44167,
+          "sha256": "b8b7872b9ffe62712025333c304dd4a9d9703efbabcc13a2bf64b9a183fe340c"
+        }
+      },
+      "binary_observations": null
+    },
+    {
+      "host": "windows-2025",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38982153357/job/117245247032",
+      "rows": [
+        {
+          "elements": 1,
+          "mode": 0,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 1,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 2,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 0,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 1,
+          "consumed": 16,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 64,
+          "receive_bytes": 1296,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 2240,
+          "after_clearing_roots_charged_bytes": 2240,
+          "queued_messages": 16,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 2,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 0,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 1,
+          "consumed": 64,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 256,
+          "receive_bytes": 5184,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 6848,
+          "after_clearing_roots_charged_bytes": 6848,
+          "queued_messages": 64,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 2,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 653,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        }
+      ],
+      "layout": [
+        {
+          "type": "cell",
+          "bytes": "16",
+          "alignment": "8",
+          "source_offset": "0",
+          "cache_offset": "0",
+          "reader_offset": "-",
+          "waiters_offset": "-"
+        },
+        {
+          "type": "incoming",
+          "bytes": "104",
+          "alignment": "8",
+          "source_offset": "-",
+          "cache_offset": "-",
+          "reader_offset": "88",
+          "waiters_offset": "96"
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg\n",
+        "cpu": "\n\nName                      : AMD EPYC 7763 64-Core Processor                \nArchitecture              : 9\nNumberOfCores             : 2\nNumberOfLogicalProcessors : 4\n\n\n\n"
+      },
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "4e003f27b70013d5dbd5ec008981d76b67a38c1d79bb723888c22e0d6215943d"
+        },
+        "rust.txt": {
+          "bytes": 194,
+          "sha256": "341fed434cf52bd9ba5ab2f3507dbd943a2062212028574e529fc3e7e5ecd7a8"
+        },
+        "c.txt": {
+          "bytes": 316,
+          "sha256": "0d26d50244464d062f9140cb176b82ad8f08b888d9dfac2357ce75fd0162a6d7"
+        },
+        "cpu.txt": {
+          "bytes": 180,
+          "sha256": "b7abddf0593d5c6953701f94f96dc8cf45a10d7fbc3a6cda38c1b3adcb0e759e"
+        },
+        "storage.tsv": {
+          "bytes": 555,
+          "sha256": "b002e44c5c31c69031d61e970160519c5a526398c9f67057d34858072a89a7ea"
+        },
+        "layout.tsv": {
+          "bytes": 123,
+          "sha256": "34a91e8eb61a474c781280017e4ad341a1ef86c2d654ca332f017199d4e2a29c"
+        },
+        "stream.c": {
+          "bytes": 868806,
+          "sha256": "e83a0a931e16278619cc4ac77312b1e69df41feea256990c0599204c61d4182b"
+        },
+        "description.c": {
+          "bytes": 865482,
+          "sha256": "c27c76597399cd8a1dfada472e70f9bb40a6709ba188864432036808c9c2736f"
+        },
+        "stream-O1.exe": {
+          "bytes": 153600,
+          "sha256": "2720942f056663e5a9906c76af71ab5c11207ade017a98144ea1154b30f6aa4f"
+        },
+        "stream-O2.exe": {
+          "bytes": 168960,
+          "sha256": "d05c74032b1c3423944ab0bca2513882f0d8a494ecddab9bdde0dc820f67b9b8"
+        },
+        "description-O1.exe": {
+          "bytes": 91136,
+          "sha256": "d4d1a76b6076470d9134989c525e651ffa9067af9c285274afcb5a7cb9e14e32"
+        },
+        "description-O2.exe": {
+          "bytes": 92160,
+          "sha256": "421279c71c4b674cc753c9b9537f8070b9e9dee5d649020f4362435c4d5e8ca7"
+        },
+        "readers.c": {
+          "bytes": 866639,
+          "sha256": "9b7606f8a1a6f29fee03597268489b54dbdabe3338554bf3c6c86c794a651f5d"
+        },
+        "readers-O1.exe": {
+          "bytes": 159744,
+          "sha256": "53d6917cf918d3a3eb9556e13f911b0bbfdefe3db56f24ccd25624976150b9b8"
+        },
+        "readers-O2.exe": {
+          "bytes": 165888,
+          "sha256": "82995ae60636f1e9f0d2e62a4705be0e3edbc093515bf077f4ed925c82d59f2d"
+        },
+        "shared-client.exe": {
+          "bytes": 261632,
+          "sha256": "ecc19e00f6fcbc9727168fa163c50791a46a927ddb89c7fe69db70ad1801d252"
+        },
+        "shared-server.exe": {
+          "bytes": 323584,
+          "sha256": "6739f37b9f401726f4b6ef967d999a0bdb69969e122be71a4902896d990cb799"
+        },
+        "shared-client.fwp": {
+          "bytes": 535,
+          "sha256": "7b0a9b01b63108e06552c9f54163ed6e386b1429e70f2663cdd664a9711d5178"
+        },
+        "shared-server.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "service-build.txt": {
+          "bytes": 282,
+          "sha256": "1181bbaeb24d9915a52f08da6b8c806b912d8a6540a00cf71312c3ed48cd9a6a"
+        },
+        "job.log": {
+          "bytes": 51519,
+          "sha256": "0e6467fd910d21eee14ad11eafd500679ff5ed030a694d1405f506b5732b9db0"
+        }
+      },
+      "binary_observations": null
+    },
+    {
+      "host": "ubuntu-latest",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38982153357/job/117245247126",
+      "rows": [
+        {
+          "elements": 1,
+          "mode": 0,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 1,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 1,
+          "mode": 2,
+          "consumed": 1,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 4,
+          "receive_bytes": 81,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 800,
+          "after_clearing_roots_charged_bytes": 800,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 0,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 1,
+          "consumed": 16,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 64,
+          "receive_bytes": 1296,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 2240,
+          "after_clearing_roots_charged_bytes": 2240,
+          "queued_messages": 16,
+          "collections": 0
+        },
+        {
+          "elements": 32,
+          "mode": 2,
+          "consumed": 32,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 128,
+          "receive_bytes": 2592,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 3776,
+          "after_clearing_roots_charged_bytes": 3776,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 0,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 1,
+          "consumed": 64,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 256,
+          "receive_bytes": 5184,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 6848,
+          "after_clearing_roots_charged_bytes": 6848,
+          "queued_messages": 64,
+          "collections": 0
+        },
+        {
+          "elements": 128,
+          "mode": 2,
+          "consumed": 128,
+          "setup_requests": 4,
+          "setup_bytes": 645,
+          "receive_requests": 512,
+          "receive_bytes": 10368,
+          "setup_charged_bytes": 704,
+          "after_read_charged_bytes": 12992,
+          "after_clearing_roots_charged_bytes": 12992,
+          "queued_messages": 0,
+          "collections": 0
+        }
+      ],
+      "layout": [
+        {
+          "type": "cell",
+          "bytes": "16",
+          "alignment": "8",
+          "source_offset": "0",
+          "cache_offset": "0",
+          "reader_offset": "-",
+          "waiters_offset": "-"
+        },
+        {
+          "type": "incoming",
+          "bytes": "104",
+          "alignment": "8",
+          "source_offset": "-",
+          "cache_offset": "-",
+          "reader_offset": "88",
+          "waiters_offset": "96"
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+        "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              INTEL(R) XEON(R) PLATINUM 8573C\nCPU family:                              6\nModel:                                   207\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                2\nCPU(s) scaling MHz:                      127%\nCPU max MHz:                             2300.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                4599.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 vnmi avx512vbmi umip waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid cldemote movdiri movdir64b fsrm serialize tsxldtrk ibt amx_bf16 avx512_fp16 amx_tile amx_int8 arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                4 MiB (2 instances)\nL3 cache:                                260 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n"
+      },
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "4e003f27b70013d5dbd5ec008981d76b67a38c1d79bb723888c22e0d6215943d"
+        },
+        "rust.txt": {
+          "bytes": 196,
+          "sha256": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369"
+        },
+        "c.txt": {
+          "bytes": 110,
+          "sha256": "3635b8631d4ebcd8ed7586f4e01e7a6b44407de9d38db6e01daca9c242ed7a53"
+        },
+        "cpu.txt": {
+          "bytes": 3465,
+          "sha256": "5f3048ec0a614ef2ca6e62794a738c52e49b922bb8db51785ba5336098625ea9"
+        },
+        "storage.tsv": {
+          "bytes": 546,
+          "sha256": "002a04cd13e8c0459ab7c61b52e4dc5b57b4092909eddef657c924415349145d"
+        },
+        "layout.tsv": {
+          "bytes": 120,
+          "sha256": "2eb20d91c9e09c3fcb26d59cf681419d79f0649ed133a0513c50627a5d868dbe"
+        },
+        "stream.c": {
+          "bytes": 868806,
+          "sha256": "e83a0a931e16278619cc4ac77312b1e69df41feea256990c0599204c61d4182b"
+        },
+        "description.c": {
+          "bytes": 865482,
+          "sha256": "c27c76597399cd8a1dfada472e70f9bb40a6709ba188864432036808c9c2736f"
+        },
+        "stream-O1.exe": {
+          "bytes": 101336,
+          "sha256": "85c954eac545791f7e83c18947a4963da03e93a387e2d5abf6f2feabb1fb5ff6"
+        },
+        "stream-O2.exe": {
+          "bytes": 109592,
+          "sha256": "e658a1aae65fd466855ac819d5789b729112cb25eeba39f70dc7aaac7470ac4d"
+        },
+        "description-O1.exe": {
+          "bytes": 38640,
+          "sha256": "6b9cbefa2f39818fd30e9950cf267a9c5b4d9d3a98d4486f4f20e223e56729a6"
+        },
+        "description-O2.exe": {
+          "bytes": 38640,
+          "sha256": "e06b010f51cbef8932501db0ff5c47808c75a5f05489aeda5ab33d61d4cf15b6"
+        },
+        "readers.c": {
+          "bytes": 866639,
+          "sha256": "9b7606f8a1a6f29fee03597268489b54dbdabe3338554bf3c6c86c794a651f5d"
+        },
+        "readers-O1.exe": {
+          "bytes": 114456,
+          "sha256": "d868247cc4ef068cbb83883e4ca92435a2b681a365ec6f68264ded1ebafa4f3d"
+        },
+        "readers-O2.exe": {
+          "bytes": 114280,
+          "sha256": "047b4f2a6b4a972aa0e8447ca72e3ec12222c555c436aff16f75deac26bc179f"
+        },
+        "shared-client.exe": {
+          "bytes": 227176,
+          "sha256": "930f7079ff9722734cfead33d587e06f272bd09b2b4a520a68d3abd36b27bcf2"
+        },
+        "shared-server.exe": {
+          "bytes": 306368,
+          "sha256": "019c54a47f048ff82da5b78a2c9f3c7754c6384c9a9b83d566b48f1763633f62"
+        },
+        "shared-client.fwp": {
+          "bytes": 535,
+          "sha256": "7b0a9b01b63108e06552c9f54163ed6e386b1429e70f2663cdd664a9711d5178"
+        },
+        "shared-server.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "service-build.txt": {
+          "bytes": 282,
+          "sha256": "1181bbaeb24d9915a52f08da6b8c806b912d8a6540a00cf71312c3ed48cd9a6a"
+        },
+        "job.log": {
+          "bytes": 42244,
+          "sha256": "de8dad35b5c797694f2a310e314d68b26b1a5843d6fcbb7000e579e1efea6386"
+        }
+      },
+      "binary_observations": {
+        "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+        "disassembly": [
+          {
+            "binary": "stream-O2.exe",
+            "sha256": "e658a1aae65fd466855ac819d5789b729112cb25eeba39f70dc7aaac7470ac4d",
+            "file_header": "\n/private/tmp/fwp-stream-compact/38982153357/stream-storage-ubuntu-latest/stream-O2.exe:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000002480\n",
+            "assembly": "stream-O2.exe.asm",
+            "assembly_sha256": "d4cf88bf75384146418d22d72673a2fb1db108d8dc94813c0b0e06b528dfddb1",
+            "force_entry": [
+              "",
+              "    3ac0:      \tpushq\t%rbp",
+              "    3ac1:      \tpushq\t%r15",
+              "    3ac3:      \tpushq\t%r14",
+              "    3ac5:      \tpushq\t%r13",
+              "    3ac7:      \tpushq\t%r12",
+              "    3ac9:      \tpushq\t%rbx",
+              "    3aca:      \tsubq\t$0x138, %rsp            # imm = 0x138",
+              "    3ad1:      \tmovq\t%rdi, %r15",
+              "    3ad4:      \tcmpl\t$0x0, 0x8(%rdi)",
+              "    3ad8:      \tjne\t0x3b24 <g_force+0x64>",
+              "    3ada:      \tmovq\t(%r15), %r14",
+              "    3add:      \tleaq\t0x60(%r14), %r12",
+              "    3ae1:      \tnopw\t%cs:(%rax,%rax)",
+              "    3af0:      \tmovq\t0x58(%r14), %rax",
+              "    3af4:      \tmovq\t0x155dd(%rip), %rcx     # 0x190d8 <fwp_cur>",
+              "    3afb:      \ttestq\t%rax, %rax",
+              "    3afe:      \tje\t0x3b39 <g_force+0x79>",
+              "    3b00:      \tcmpq\t%rcx, %rax",
+              "    3b03:      \tje\t0x4f28 <g_force+0x1468>",
+              "    3b09:      \tcallq\t0x9a20 <fwp_check_cancel>",
+              "    3b0e:      \tmovq\t%r12, %rdi",
+              "    3b11:      \txorl\t%esi, %esi",
+              "    3b13:      \tcallq\t0x9ae0 <fwp_park>",
+              "    3b18:      \tcallq\t0x9a20 <fwp_check_cancel>",
+              "    3b1d:      \tcmpl\t$0x0, 0x8(%r15)",
+              "    3b22:      \tje\t0x3af0 <g_force+0x30>",
+              "    3b24:      \tmovq\t(%r15), %rax",
+              "    3b27:      \taddq\t$0x138, %rsp            # imm = 0x138",
+              "    3b2e:      \tpopq\t%rbx",
+              "    3b2f:      \tpopq\t%r12",
+              "    3b31:      \tpopq\t%r13",
+              "    3b33:      \tpopq\t%r14",
+              "    3b35:      \tpopq\t%r15",
+              "    3b37:      \tpopq\t%rbp",
+              "    3b38:      \tretq",
+              "    3b39:      \tmovq\t%rcx, 0x58(%r14)",
+              "    3b3d:      \tmovq\t0x15584(%rip), %rax     # 0x190c8 <fwp_cleanups>",
+              "    3b44:      \tmovq\t%rax, 0xe0(%rsp)",
+              "    3b4c:      \tleaq\t0x74bd(%rip), %rax      # 0xb010 <g_incoming_read_done>",
+              "    3b53:      \tmovq\t%rax, 0xe8(%rsp)",
+              "    3b5b:      \tmovq\t%r14, 0xf0(%rsp)",
+              "    3b63:      \tleaq\t0xe0(%rsp), %rax",
+              "    3b6b:      \tmovq\t%rax, 0x15556(%rip)     # 0x190c8 <fwp_cleanups>",
+              "    3b72:      \tmovq\t(%r14), %rax",
+              "    3b75:      \tmovq\t%rax, 0x60(%rsp)",
+              "    3b7a:      \tmovq\t0x8(%r14), %rcx",
+              "    3b7e:      \tmovq\t0x48(%r14), %rbp",
+              "    3b82:      \txorps\t%xmm0, %xmm0",
+              "    3b85:      \tmovaps\t%xmm0, 0x20(%rsp)",
+              "    3b8a:      \tmovaps\t%xmm0, 0x10(%rsp)",
+              "    3b8f:      \tmovq\t$0x0, 0x30(%rsp)",
+              "    3b98:      \tmovq\t0xa0(%rcx), %rax",
+              "    3b9f:      \ttestq\t%rax, %rax",
+              "    3ba2:      \tje\t0x3bd4 <g_force+0x114>"
+            ]
+          },
+          {
+            "binary": "shared-client.exe",
+            "sha256": "930f7079ff9722734cfead33d587e06f272bd09b2b4a520a68d3abd36b27bcf2",
+            "file_header": "\n/private/tmp/fwp-stream-compact/38982153357/stream-storage-ubuntu-latest/shared-client.exe:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000004840\n",
+            "assembly": "shared-client.exe.asm",
+            "assembly_sha256": "aa9fcce43da89b8f061069aa0f0d40b96900648d98b76612bac750a186d6902c",
+            "force_entry": [
+              "",
+              "    8900:      \tpushq\t%rbp",
+              "    8901:      \tpushq\t%r15",
+              "    8903:      \tpushq\t%r14",
+              "    8905:      \tpushq\t%r13",
+              "    8907:      \tpushq\t%r12",
+              "    8909:      \tpushq\t%rbx",
+              "    890a:      \tsubq\t$0xb8, %rsp",
+              "    8911:      \tmovq\t%rdi, %r14",
+              "    8914:      \tcmpl\t$0x0, 0x8(%rdi)",
+              "    8918:      \tjne\t0x8961 <g_force+0x61>",
+              "    891a:      \tmovq\t%r8, %r15",
+              "    891d:      \tmovq\t%rcx, %r13",
+              "    8920:      \tmovq\t%rdx, %r12",
+              "    8923:      \tmovl\t%esi, 0x4(%rsp)",
+              "    8927:      \tmovq\t(%r14), %rbx",
+              "    892a:      \tleaq\t0x60(%rbx), %rbp",
+              "    892e:      \tnop",
+              "    8930:      \tmovq\t0x58(%rbx), %rax",
+              "    8934:      \ttestq\t%rax, %rax",
+              "    8937:      \tje\t0x8976 <g_force+0x76>",
+              "    8939:      \tcmpq\t0x2a980(%rip), %rax     # 0x332c0 <fwp_cur>",
+              "    8940:      \tje\t0x90de <g_force+0x7de>",
+              "    8946:      \tcallq\t0x77f0 <fwp_check_cancel>",
+              "    894b:      \tmovq\t%rbp, %rdi",
+              "    894e:      \txorl\t%esi, %esi",
+              "    8950:      \tcallq\t0x7b20 <fwp_park>",
+              "    8955:      \tcallq\t0x77f0 <fwp_check_cancel>",
+              "    895a:      \tcmpl\t$0x0, 0x8(%r14)",
+              "    895f:      \tje\t0x8930 <g_force+0x30>",
+              "    8961:      \tmovq\t(%r14), %rax",
+              "    8964:      \taddq\t$0xb8, %rsp",
+              "    896b:      \tpopq\t%rbx",
+              "    896c:      \tpopq\t%r12",
+              "    896e:      \tpopq\t%r13",
+              "    8970:      \tpopq\t%r14",
+              "    8972:      \tpopq\t%r15",
+              "    8974:      \tpopq\t%rbp",
+              "    8975:      \tretq",
+              "    8976:      \tmovq\t0x2a943(%rip), %rax     # 0x332c0 <fwp_cur>",
+              "    897d:      \tmovq\t%rax, 0x58(%rbx)",
+              "    8981:      \tmovq\t0x2a928(%rip), %rax     # 0x332b0 <fwp_cleanups>",
+              "    8988:      \tmovq\t%rax, 0x38(%rsp)",
+              "    898d:      \tleaq\t0x8ac(%rip), %rax       # 0x9240 <g_incoming_read_done>",
+              "    8994:      \tmovq\t%rax, 0x40(%rsp)",
+              "    8999:      \tmovq\t%rbx, 0x48(%rsp)",
+              "    899e:      \tleaq\t0x38(%rsp), %rax",
+              "    89a3:      \tmovq\t%rax, 0x2a906(%rip)     # 0x332b0 <fwp_cleanups>",
+              "    89aa:      \tmovq\t(%rbx), %rdi",
+              "    89ad:      \tmovq\t0x8(%rbx), %rsi",
+              "    89b1:      \tmovq\t0x48(%rbx), %rdx",
+              "    89b5:      \tleaq\t0x10(%rsp), %rbp",
+              "    89ba:      \tmovq\t%rbp, %rcx",
+              "    89bd:      \tcallq\t0x9320 <g_recv>",
+              "    89c2:      \tmovq\t0x2a8e7(%rip), %rax     # 0x332b0 <fwp_cleanups>"
+            ]
+          }
+        ],
+        "scope": "Actual O2 fixture and O1 shared-service executables; static inspection only. No timing claim."
+      }
+    }
+  ],
+  "comparison": {
+    "baseline_file": "remote-stream-shared-2026-10-16.json",
+    "baseline_sha256": "adcff95e5c9be5962dd7cdb9e445792996d2aa6a0f47719c7d561e8b4c1126a2",
+    "source_revision": "00c09cdc8fa0a42f829d2fb001f29fb765ada1c9",
+    "run_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38981730504",
+    "scope": "Same queued inputs and read patterns in two fwp revisions. Allocation counts and storage only; no timing or C/Rust parity claim.",
+    "hosts": [
+      {
+        "host": "windows-11-arm",
+        "position_bytes_before_after": [
+          24,
+          16
+        ],
+        "requested_bytes_per_value_before_after": [
+          89,
+          81
+        ],
+        "charged_bytes_per_value_before_after": [
+          112,
+          96
+        ],
+        "rows": [
+          {
+            "elements": 1,
+            "mode": 0,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 1,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 2,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 32,
+            "mode": 0,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 32,
+            "mode": 1,
+            "requested_bytes_saved": 128,
+            "charged_bytes_saved_including_setup": 272
+          },
+          {
+            "elements": 32,
+            "mode": 2,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 128,
+            "mode": 0,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          },
+          {
+            "elements": 128,
+            "mode": 1,
+            "requested_bytes_saved": 512,
+            "charged_bytes_saved_including_setup": 1040
+          },
+          {
+            "elements": 128,
+            "mode": 2,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          }
+        ]
+      },
+      {
+        "host": "ubuntu-24.04-arm",
+        "position_bytes_before_after": [
+          24,
+          16
+        ],
+        "requested_bytes_per_value_before_after": [
+          89,
+          81
+        ],
+        "charged_bytes_per_value_before_after": [
+          112,
+          96
+        ],
+        "rows": [
+          {
+            "elements": 1,
+            "mode": 0,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 1,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 2,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 32,
+            "mode": 0,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 32,
+            "mode": 1,
+            "requested_bytes_saved": 128,
+            "charged_bytes_saved_including_setup": 272
+          },
+          {
+            "elements": 32,
+            "mode": 2,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 128,
+            "mode": 0,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          },
+          {
+            "elements": 128,
+            "mode": 1,
+            "requested_bytes_saved": 512,
+            "charged_bytes_saved_including_setup": 1040
+          },
+          {
+            "elements": 128,
+            "mode": 2,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          }
+        ]
+      },
+      {
+        "host": "macos-15",
+        "position_bytes_before_after": [
+          24,
+          16
+        ],
+        "requested_bytes_per_value_before_after": [
+          89,
+          81
+        ],
+        "charged_bytes_per_value_before_after": [
+          112,
+          96
+        ],
+        "rows": [
+          {
+            "elements": 1,
+            "mode": 0,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 1,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 2,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 32,
+            "mode": 0,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 32,
+            "mode": 1,
+            "requested_bytes_saved": 128,
+            "charged_bytes_saved_including_setup": 272
+          },
+          {
+            "elements": 32,
+            "mode": 2,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 128,
+            "mode": 0,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          },
+          {
+            "elements": 128,
+            "mode": 1,
+            "requested_bytes_saved": 512,
+            "charged_bytes_saved_including_setup": 1040
+          },
+          {
+            "elements": 128,
+            "mode": 2,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          }
+        ]
+      },
+      {
+        "host": "macos-15-intel",
+        "position_bytes_before_after": [
+          24,
+          16
+        ],
+        "requested_bytes_per_value_before_after": [
+          89,
+          81
+        ],
+        "charged_bytes_per_value_before_after": [
+          112,
+          96
+        ],
+        "rows": [
+          {
+            "elements": 1,
+            "mode": 0,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 1,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 2,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 32,
+            "mode": 0,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 32,
+            "mode": 1,
+            "requested_bytes_saved": 128,
+            "charged_bytes_saved_including_setup": 272
+          },
+          {
+            "elements": 32,
+            "mode": 2,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 128,
+            "mode": 0,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          },
+          {
+            "elements": 128,
+            "mode": 1,
+            "requested_bytes_saved": 512,
+            "charged_bytes_saved_including_setup": 1040
+          },
+          {
+            "elements": 128,
+            "mode": 2,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          }
+        ]
+      },
+      {
+        "host": "windows-2025",
+        "position_bytes_before_after": [
+          24,
+          16
+        ],
+        "requested_bytes_per_value_before_after": [
+          89,
+          81
+        ],
+        "charged_bytes_per_value_before_after": [
+          112,
+          96
+        ],
+        "rows": [
+          {
+            "elements": 1,
+            "mode": 0,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 1,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 2,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 32,
+            "mode": 0,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 32,
+            "mode": 1,
+            "requested_bytes_saved": 128,
+            "charged_bytes_saved_including_setup": 272
+          },
+          {
+            "elements": 32,
+            "mode": 2,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 128,
+            "mode": 0,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          },
+          {
+            "elements": 128,
+            "mode": 1,
+            "requested_bytes_saved": 512,
+            "charged_bytes_saved_including_setup": 1040
+          },
+          {
+            "elements": 128,
+            "mode": 2,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          }
+        ]
+      },
+      {
+        "host": "ubuntu-latest",
+        "position_bytes_before_after": [
+          24,
+          16
+        ],
+        "requested_bytes_per_value_before_after": [
+          89,
+          81
+        ],
+        "charged_bytes_per_value_before_after": [
+          112,
+          96
+        ],
+        "rows": [
+          {
+            "elements": 1,
+            "mode": 0,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 1,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 1,
+            "mode": 2,
+            "requested_bytes_saved": 8,
+            "charged_bytes_saved_including_setup": 32
+          },
+          {
+            "elements": 32,
+            "mode": 0,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 32,
+            "mode": 1,
+            "requested_bytes_saved": 128,
+            "charged_bytes_saved_including_setup": 272
+          },
+          {
+            "elements": 32,
+            "mode": 2,
+            "requested_bytes_saved": 256,
+            "charged_bytes_saved_including_setup": 528
+          },
+          {
+            "elements": 128,
+            "mode": 0,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          },
+          {
+            "elements": 128,
+            "mode": 1,
+            "requested_bytes_saved": 512,
+            "charged_bytes_saved_including_setup": 1040
+          },
+          {
+            "elements": 128,
+            "mode": 2,
+            "requested_bytes_saved": 1024,
+            "charged_bytes_saved_including_setup": 2064
+          }
+        ]
+      }
+    ]
+  }
+}

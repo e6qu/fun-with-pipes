@@ -1,151 +1,127 @@
 # Session handoff
 
-Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished project areas.
-This is remote-stream preparation in `/private/tmp/fwp-stream-caches`, branch
+Updated 2026-10-16 UTC. [PLAN.md](../PLAN.md) has seven unfinished project areas.
+Remote-stream preparation is in `/private/tmp/fwp-stream-caches`, branch
 `measure-remote-stream-storage`, based on `20f0f5f0`. There is no second PR.
 
 ## Current delivery
 
-[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) remains the active
-delivery in `/Users/zardoz/projects/fun-with-pipes`, branch
-`service-iteration-delivery`, at `51354d10d5a55e0b4153653f68b670f69712e4d9`.
-Final production run: `38977201910`; documentation: `38977126983`; Windows
-dependencies: `38977201787`. Documentation, dependencies, benchmarks and both
-Apple Silicon production jobs pass. Other production jobs are running.
+[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) is the active delivery
+in `/Users/zardoz/projects/fun-with-pipes`, branch `service-iteration-delivery`,
+at `51354d10d5a55e0b4153653f68b670f69712e4d9`. Production run `38977201910`
+still needs Linux ARM64/AMD64 and Intel macOS GC-stress completion; the other six
+production jobs, documentation `38977126983` and dependencies `38977201787` pass.
 
-The authorized merge watcher is exec session `96582`, running
-`/private/tmp/fwp-watch-154.py`. It checks every 45 seconds, stops on a failing
-gate, and requires all nine production jobs, docs and both new dependency jobs
-on the exact head. It supplies the one-line squash subject and empty body, then
-checks tree, parent and message. Inspect its output and
-`/private/tmp/fwp154-merge-record.json` before taking another merge action.
-Leave the postmerge Windows dependency-cache workflow running.
+Authorized merge watcher: exec session `96582`, `/private/tmp/fwp-watch-154.py`.
+It stops on failure and requires all nine production jobs, docs and both new
+dependency jobs on that exact head. It supplies the one-line squash subject and
+empty body and verifies tree, parent and message. Inspect its output and
+`/private/tmp/fwp154-merge-record.json` before another merge action. Leave the
+postmerge Windows dependency workflow running; cancel duplicate production CI.
 
-Before delivering this preparation, preserve its measured ancestry under a
-remote evidence tag, then rebase only changes after `20f0f5f0` onto accepted #154.
-Keep one delivery PR at a time. Recheck the combined final source before merging.
+Before delivering this preparation, preserve its measured ancestry with a remote
+evidence tag. Apply only changes after `20f0f5f0` to accepted #154, resolving the
+handoff and retaining #154's final iteration report/docs. A new delivery branch
+with one combined preparation commit avoids replaying intermediate handoff edits.
+Keep one delivery PR at a time and require full checks on the final combined head.
 
 ## Current preparation and next action
 
-All six native jobs pass in `38980361640` at
-`7b378e76dff097fa988a707b50e7dfc53072bdd4`. This verifies stream descriptions,
-source lifetime, concurrent readers, cancellation, native layout probes, and
-actual interpreted/native shared-stream clients and servers.
+Compact stream positions pass all six native hosts in `38982153357` at
+`ab9a0a0e51994840707add835a60cdcab9a2be51`. The preceding separate-field version
+passes all six in `38981730504` at `00c09cdc8fa0a42f829d2fb001f29fb765ada1c9`.
+Both include source-description copying, in-place client formatting, source
+lifetime, concurrent readers, cancellation and actual interpreted/native clients
+and servers. The previous Windows header-order and harness failures are fixed.
 
-The final refinement formats client descriptions directly into their source's
-allocation, avoiding a temporary 1 KiB array that a C compiler could inline into
-a suspended caller. Component lengths are bounded before addition. The existing
-1,023-byte client description limit is preserved; server descriptions retain
-their full length. Forty short/long method/address combinations exercise the
-punctuation and truncation boundaries against the old formatter.
+The added native recursive-read check still needs CI. It mirrors the passing
+interpreter check: recursion traps with the same message and preserves the
+already-active receiver. Run a focused Linux check before starting full delivery
+CI. Final production jobs will cover it on every platform.
 
-Comparison run `38981730504` checks `00c09cdc8fa0a42f829d2fb001f29fb765ada1c9`
-on all six hosts, retaining the 24-byte position layout. Its collector is saved
-as `/private/tmp/fwp-collect-stream-before-union.py`.
+Next: publish this final test/report/docs batch, run `stream-storage`, fix any
+failure, finish #154 acceptance, and prepare the combined stream PR. Use the
+plain description `/private/tmp/fwp-stream-pr-body.md`; update its measured table
+and test status before publication. No full compiler or native build belongs on
+this machine.
 
-The next prepared refinement stores the unread source and completed result in
-one shared word, selected by the existing completion flag. Only one is valid at
-a time. This should reduce each position from 24 to 16 bytes and each received
-16-character value from 89 to 81 requested bytes; CI must verify these predictions.
-Failures keep the original source until result construction completes. The
-missing-cache control still fails on a second receive; deliberately restoring
-separate fields must exceed the per-element storage budget. Tests read only the
-active field. No ARC admission or last-owner cleanup is claimed.
+## Implemented behavior and remaining limits
 
-Next: publish and run this compact layout on all six hosts, fix failures, inspect
-actual binaries and retain both comparison reports with
-`python3 scripts/local-guard.py python3 scripts/collect-stream-measurements.py`.
-Supply `--run`, exact `--head`, `--artifacts` and `--output`. The collector checks
-successful jobs, named unit/native/service tests, allocation rows, layouts,
-compiler/CPU details and artifact hashes. It never executes downloaded binaries.
-The workflow records the actual `CC` compiler, including Windows' selected
-native toolchain. It also retains the already-tested service executables at O1;
-fixture binaries and generated C are retained at O1/O2. This refinement still
-needs CI; the passing preceding run cannot verify it.
+A position represents either an unread source or a saved result. Native code now
+uses the same storage word for these alternatives, selected by its existing
+completion flag. It replaces the source only after constructing the complete
+result; failures preserve the unread source. The interpreter releases the source
+after its last unread owner disappears. Cached native results still rely on
+tracing and lack explicit last-owner destruction.
 
-## What is implemented and tested
+Descriptions share their source's allocation. Client formatting writes there
+directly, avoiding a temporary 1 KiB array, while preserving the existing
+1,023-byte text limit. Forty method/address combinations compare truncation and
+punctuation with the old formatter. Server descriptions keep their full length.
 
-A received stream position caches its value so every reference sees the same
-message. The interpreter represents a position as either unread source or cached
-value. Completing a position releases its source reference; the cached
-continuation keeps the next unread position alive. Normal and error ends retain
-no source. Native positions clear their obsolete source pointer after constructing
-the result. Failures before publication keep the original source intact.
+One task receives for a shared unread position; others wait for its saved result.
+Completion, errors and cancellation release the receive guard and wake waiters.
+Cancelling a waiting task leaves the receiver running. The cancellation fixture
+uses a server request stream; cancelling a client receiver can still reset the
+call. Borrowed task identities and scheduler wait lists add no per-value allocation.
+The deterministic two-reader test must fail when synchronization is disabled.
+A real client has two tasks sum 1..1024, both returning `Some 524800`, across all
+interpreted/native client/server combinations. The services guide explains its
+notation, output, cancellation and retention costs.
 
-Incoming descriptions share their source's allocation. This replaces a separate
-unreleased client allocation and a server borrow from handler storage. Mutation,
-allocation-size, overflow and deliberately borrowed-text controls pass.
+## Measurements and binary evidence
 
-One task receives at a time for a shared unread position. Other tasks wait and
-then use the cache. Completion, error and cancellation release the receive guard
-and wake waiters. Cancelling a waiter leaves the receiver running. The controlled
-cancellation fixture uses a server request stream; existing client-call
-cancellation still resets that call's stream. Task identities and wait lists are
-borrowed from the scheduler, not owning back-references. Recursive reading of
-the same source traps explicitly.
+The [preceding report](measurements/remote-stream-shared-2026-10-16.json) and
+[compact report](measurements/remote-stream-compact-2026-10-16.json) compare queued
+messages containing 16-character strings at 1/32/128 values: complete/half reads,
+repeated reads and retained earlier positions. On all six hosts:
 
-The deterministic native test starts two readers before supplying two messages:
-both must receive the first, leaving the second queued. Removing synchronization
-must produce different results and fail. Receiver/waiter cancellation are tested
-separately, with a ten-second task deadline bounding broken wakeups. Native
-O1/O2 runs check GC stress, verification and reuse. Interpreter weak references
-check early stop, retained earlier positions, failures and last-owner release.
-The actual shared-stream client sums 1..1024 in two tasks; both print
-`Some 524800` across interpreted/native server/client combinations.
+| Cost | Separate fields | Shared word |
+|---|---:|---:|
+| Bytes per position, alignment 8 | 24 | 16 |
+| Allocations per received value | 4 | 4 |
+| Requested bytes per value | 89 | 81 |
+| Allocator-charged bytes per value | 112 | 96 |
+| Fixed setup charged bytes | 720 | 704 |
+| Charged bytes after 128 values, including setup | 15,056 | 12,992 |
 
-Windows fixtures now choose the required Windows 10 API before their CRT headers.
-The preceding header-order and harness failures are fixed in the passing six-host
-run. Regular Windows CI now includes both native cleanup targets, interpreter
-source-lifetime tests and the shared-stream client/server test.
+These exclude sockets, pooling, raw message/codec buffers, allocator pages,
+process memory and elapsed time. They establish no C/Rust parity. Clearing C
+references alone still leaves cache storage charged with collection disabled.
 
-## Measurements and limits
+Artifacts: `/private/tmp/fwp-stream-before-union/38981730504` and
+`/private/tmp/fwp-stream-compact/38982153357`. Actual AMD64 and ARM64 O2 fixture
+and O1 service-client instructions use the shared source/result word; the common
+receive frames remain. Both reports retain instruction excerpts and hashes.
+No downloaded executable was run locally.
 
-The [initial baseline](measurements/remote-stream-baseline-2026-10-16.json) passes
-Linux AMD64 in `38973859489` at `deae732b`. It receives queued protobuf messages
-containing 16-character strings, at 1/32/128 elements, with repeated reads,
-full/half consumption and a retained first position. It records four managed
-requests/89 requested bytes per value, charged as 112 bytes after rounding.
-Setup charges 688 bytes; at 128 values, 15,024 bytes remain charged after clearing
-C references with collection disabled. Whole-library shutdown frees queued raw
-messages. Current source/description/guard storage has a different fixed setup
-cost; retain fresh rows rather than applying the baseline setup to it.
+Reproduce compact collection through `python3 scripts/local-guard.py python3
+scripts/collect-stream-measurements.py` with `--run`, `--head`, `--artifacts`,
+`--baseline docs/measurements/remote-stream-shared-2026-10-16.json`, and `--output`.
+The collector validates successful jobs, named tests, exact artifact revisions,
+matching inputs, layouts, allocation deltas, CPU/actual compiler details and hashes.
+The baseline collector is preserved at `00c09cdc` and privately at
+`/private/tmp/fwp-collect-stream-before-union.py`.
 
-These are controlled receive/cache measurements. They exclude socket I/O,
-connection pooling, raw codec/message buffers and whole-call timing. They are
-not comparisons against C/Rust. Native cached values still lack explicit
-last-reference destruction; services remain excluded from checked ARC.
+## Checks and next ownership work
 
-Earlier passing source-lifetime artifacts are under
-`/private/tmp/fwp-stream-source-evidence/38977738266`, at `451cc94e`. Actual AMD64
-instructions publish the cache and clear the source pointer; the common frame
-remains. This is representation evidence, not a speed claim. Earlier description
-artifacts are under `/private/tmp/fwp-stream-description-evidence/38977205160`.
-Use the final run for new claims and fresh binary observations.
+Guarded results: compact-layout formatting 1.23s; docs audit 2.52s; baseline
+collection 21.05s; compact collection 23.76s; comparison and binary-excerpt update
+1.56s. ARM64/AMD64 binary inspections pass in 0.13–0.14s. The handoff's missing
+status table was repaired and its audit passed. Local limits remain unchanged:
+64 GiB free disk, target below 2 GiB, aggregate RSS below 1 GiB, 180 seconds.
 
-## Checks and remaining ownership work
+Next give cached results and continuations typed owners and bounded-stack
+last-reference destruction, including partial construction and retained aliases.
+Move a source owner forward when possible. Establish owners for pools, calls,
+connections, streams and decoder captures; scheduler identities remain borrows.
+The existing connection counter controls transport closure, not complete object
+destruction. [Ownership](ownership.md#what-remains-before-remote-calls-can-use-arc)
+records these distinctions. Remote calls remain excluded from checked ARC.
+Retained host callbacks, GPU resources and all seven project areas remain open.
 
-Full builds, native compilation, large regeneration and full tests run on GitHub.
-Use `python3 scripts/local-guard.py COMMAND...` for serial bounded local checks;
-keep all limits unchanged. Recent guarded results: Rust formatting 1.09s,
-workflow lint 0.89s; compact-layout Rust formatting 1.23s and shared-stream docs
-audit 2.54s. The docs audit caught a missing roadmap status
-table in the rewritten handoff; it now passes after restoration (2.53s). The accepted prebuilt compiler formats the
-shared client in 0.01s and type-checks it in 0.24s. The collector was checked
-against passing one-host evidence in 4.93s; it rejected an incorrect source SHA.
-No compiler or C program was built locally.
-
-Next give native cached values and continuations explicit typed owners, with
-last-reference and partial-construction cleanup. Move the source to its unread
-continuation when possible, avoiding a retain/release for each message. The
-source must keep its connection, stream and decoder captures valid. Establish
-which references own each task/connection/stream and which merely borrow before
-admitting remote calls to ARC. Long cached chains need bounded-stack destruction.
-Connection pooling, detached users, cancellation, retained host callbacks and
-GPU ownership remain. Preserve immutable iterator behavior and existing syntax.
-
-Every commit/squash message is one line, at most 80 characters, with no body,
-trailers or attribution. JIT is excluded. Failing tests are work to fix.
-All seven areas in PLAN.md remain open; this delivery does not finish GC removal.
+Every commit/squash message is one line, at most 80 characters, with an empty
+body and no trailers or attribution. JIT is excluded. Failed tests are work to fix.
 
 ## Roadmap status
 
