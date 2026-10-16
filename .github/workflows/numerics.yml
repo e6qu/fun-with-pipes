@@ -5,13 +5,13 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat]
         default: numerical
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
         type: string
       baseline_run:
-        description: Earlier hash-costs run for paired revision comparison
+        description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
   paths:
@@ -51,6 +51,7 @@ jobs:
           FWP_VECTOR_ARTIFACTS: vector-evidence
         run: |
           cargo test --lib ownership::tests
+          cargo test --lib fuse::tests
           cargo test --no-fail-fast --test vector_ownership --test array_element_ownership --test arc_execution
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'vectors'
@@ -442,7 +443,7 @@ jobs:
             performance-evidence/
             target/bench.md
   mapped_array_repeat:
-    if: inputs.suite == 'mapped-array-repeat' || inputs.suite == 'zip-map-repeat' || inputs.suite == 'hash-repeat'
+    if: inputs.suite == 'mapped-array-repeat' || inputs.suite == 'zip-map-repeat' || inputs.suite == 'hash-repeat' || inputs.suite == 'vector-repeat'
     permissions:
       contents: read
       actions: read
@@ -459,23 +460,23 @@ jobs:
       BASELINE_RUN: ${{ inputs.baseline_run }}
     steps:
       - uses: actions/checkout@v7
-      - name: Download verified hash revisions
-        if: inputs.suite == 'hash-repeat'
+      - name: Download verified before and after revisions
+        if: inputs.suite == 'hash-repeat' || inputs.suite == 'vector-repeat'
         run: |
           test -n "$EVIDENCE_RUN"
           test -n "$BASELINE_RUN"
-          gh run download "$BASELINE_RUN" --name "hash-costs-${{ matrix.runner }}" --dir hash-before
-          gh run download "$EVIDENCE_RUN" --name "hash-costs-${{ matrix.runner }}" --dir hash-after
-      - name: Repeat hash revisions beside C and Rust
-        if: inputs.suite == 'hash-repeat'
-        run: python3 scripts/repeat-hash-comparison.py --before hash-before --after hash-after --output comparison-repeat
+          gh run download "$BASELINE_RUN" --name "${{ inputs.suite == 'hash-repeat' && 'hash-costs' || 'vector-costs' }}-${{ matrix.runner }}" --dir revision-before
+          gh run download "$EVIDENCE_RUN" --name "${{ inputs.suite == 'hash-repeat' && 'hash-costs' || 'vector-costs' }}-${{ matrix.runner }}" --dir revision-after
+      - name: Repeat revisions beside C and Rust
+        if: inputs.suite == 'hash-repeat' || inputs.suite == 'vector-repeat'
+        run: python3 scripts/repeat-revision-comparison.py --workload ${{ inputs.suite == 'hash-repeat' && 'hash' || 'vectors' }} --before revision-before --after revision-after --output comparison-repeat
       - name: Download verified comparison binaries
-        if: inputs.suite != 'hash-repeat'
+        if: inputs.suite != 'hash-repeat' && inputs.suite != 'vector-repeat'
         run: |
           test -n "$EVIDENCE_RUN"
           gh run download "$EVIDENCE_RUN" --name "${{ inputs.suite == 'zip-map-repeat' && 'zip-map-costs' || 'mapped-array-costs' }}-${{ matrix.runner }}" --dir comparison-input
       - name: Compare elapsed time, child CPU time and normal collection
-        if: inputs.suite != 'hash-repeat'
+        if: inputs.suite != 'hash-repeat' && inputs.suite != 'vector-repeat'
         run: python3 scripts/repeat-native-comparison.py --input comparison-input --output comparison-repeat
       - uses: actions/upload-artifact@v7
         if: always()

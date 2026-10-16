@@ -164,3 +164,65 @@ fn vector_partial_construction_and_accumulators_unwind() {
         }
     }
 }
+
+#[test]
+fn f64_lane_pipelines_fuse_without_reordering_effects_or_traps() {
+    let dir = fwp::cgen::TempDir::new("vector-fusion").unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let prefix = "dot : Vec[4, F64] -> F64\ndot = simd.dot (simd.splat 0.5)\n";
+    let cases = [
+        ("values", "main = range 0 16 | map (int.to-float | simd.splat | dot) | sum | echo\n", true, 0),
+        ("effects", "main = range 0 3 | map (tap echo | int.to-float | simd.splat | dot) | fold (curry (tap echo | uncurry add)) 0.0 | echo\n", false, 0),
+        ("distinct-traps", "main = [0, 9223372036854775807] | map (add 1 | int.to-float | simd.splat | dot) | fold (curry (const 1 | div 0 | int.to-float)) 0.0 | echo\n", false, 101),
+        ("zero-lanes", "zero : Vec[0, F64] -> F64\nzero = simd.sum\nmain = range 0 16 | map (int.to-float | simd.splat | zero) | sum | echo\n", true, 0),
+    ];
+    for (name, body, fused, status) in cases {
+        let source = prefix.to_string() + body;
+        let input = dir.join("main.fwp");
+        std::fs::write(&input, &source).unwrap();
+        let raw = Command::new(compiler)
+            .args(["run", "--interp"])
+            .env("FWP_NO_OPT", "1")
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(raw.status.code(), Some(status), "{name}: {raw:?}");
+        if name == "distinct-traps" {
+            assert!(String::from_utf8_lossy(&raw.stderr).contains("arithmetic overflow in I64"));
+        }
+        let optimized = Command::new(compiler)
+            .args(["run", "--interp"])
+            .env_remove("FWP_NO_OPT")
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(
+            (
+                &optimized.stdout,
+                &optimized.stderr,
+                optimized.status.code()
+            ),
+            (&raw.stdout, &raw.stderr, raw.status.code()),
+            "{name}"
+        );
+        for arc in [false, true] {
+            let code = emitted(&source, arc, &dir);
+            assert_eq!(code.contains("/* fused :"), fused, "{name}");
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join("fusion.exe");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let native = Command::new(&binary)
+                    .env("FWP_GC_STRESS", if arc { "0" } else { "1" })
+                    .env("FWP_GC_VERIFY", if arc { "0" } else { "1" })
+                    .env("FWP_REUSE_VERIFY", if arc { "0" } else { "1" })
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    (&native.stdout, &native.stderr, native.status.code()),
+                    (&raw.stdout, &raw.stderr, raw.status.code()),
+                    "{name}/{arc}/{opt}"
+                );
+            }
+        }
+    }
+}
