@@ -9,7 +9,8 @@ The only current PR is [#148](https://github.com/e6qu/fun-with-pipes/pull/148),
 branch `record-moves-and-utilities`, in `/Users/zardoz/projects/fun-with-pipes`.
 Its final head remains `93b1741abcf5ab2a61460746c0077564e0328c0e`.
 [Production 38825629531](https://github.com/e6qu/fun-with-pipes/actions/runs/38825629531)
-is running: benchmark, regular ARM macOS and both Windows jobs pass so far.
+is running: both regular macOS jobs, ARM macOS stress, benchmark and both
+Windows jobs pass. The two Linux jobs and Intel macOS stress remain.
 [Docs 38825487182](https://github.com/e6qu/fun-with-pipes/actions/runs/38825487182)
 passes. Ignore canceled old-head `38825485034` and skipped draft jobs.
 Keep that head unchanged; these progress notes belong in the following delivery.
@@ -43,7 +44,7 @@ its own complete final-head production/docs gate. Failures are repair tasks.
 
 This worktree is `/private/tmp/fwp-process-utilities`, branch
 `owned-process-utilities`, based on `81d113aa`. The runtime/tests are published at
-`9fe30916`; subsequent POSIX signal fixes are local. No process PR is open.
+`6e122959`; the combined runtime/tests and documentation are published. No process PR is open.
 Do not replay the old parent preparation: #148 already contains its source/tests.
 Preserve root's local handoff when integrating the following delivery.
 
@@ -161,6 +162,28 @@ that installs global ignore must fail. Earlier extended failure checks pass
 passes (0.49 s) under the guard; the pending-signal/mutant additions pass (8.78 s), as do the repeated-call checks
 after that fix.
 
-Focused run `38830176031` at `9fe30916` remains wholly queued and will be
-superseded by the combined signal fixes. Do not count it as validation of these
-later changes. The final PR still requires all nine production jobs and docs.
+[Focused run 38831045963](https://github.com/e6qu/fun-with-pipes/actions/runs/38831045963)
+is queued for the combined signal fixes at `6e122959`. The wholly queued old
+`38830176031` is confirmed canceled. Do not
+count it as validation of later changes. The final PR requires all nine
+production jobs and docs. No new source edits are pending.
+
+
+The interleaved trial now passes all four hosts. Its raw profiles, verified
+source/binary hashes and actual ARM64/AMD64 functions are retained in
+`docs/measurements/ad-layout-2026-10-16.json`. Sustained candidate/current ratios
+(reuse off/on) are Linux AMD64 1.012/1.012, Linux ARM64 1.001/1.010, ARM macOS
+0.930/0.938 and Intel macOS 1.005/0.986. Short cases vary, including a slower ARM
+macOS mapped case. Production layout stays unchanged pending repeated evidence.
+Both allocation blocks and all payload/count totals are unchanged; explicit
+region copies disappear. Append code shrinks, but backward code grows. Retention
+and hash checks pass under the guard (0.13 s). The benchmark guide explains costs.
+
+Independent next-task preparation is `/private/tmp/fwp-ad-allocation-sites`,
+branch `profile-ad-allocations`, based on `6e122959`, published at `507ec27`.
+[Four-host allocation-site run 38832271631](https://github.com/e6qu/fun-with-pipes/actions/runs/38832271631)
+is queued/running. Only its diff after `6e122959` belongs after this process
+batch. Its own handoff describes the diagnostic; preserve it without opening a
+second PR or replaying parent changes. A tiny two-element local check resolves
+25 native sites for 43 allocation requests and matches aggregate allocation and
+memory counters (1.82 s). No local benchmark or full compiler build was run.

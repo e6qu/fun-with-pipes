@@ -95,12 +95,18 @@ The complete focused batch passes Linux, macOS and Windows on both architectures
 Require all nine production jobs plus documentation again for the combined PR's
 final head. Component results are evidence, not final delivery acceptance.
 
-The following preparation tackles child-process arguments, captured output,
-handles and failure cleanup, which still rely on tracing. Keep that work separate
-until this delivery is accepted. Then continue with confirmed application costs,
-derivative timing and memory scaling, and the other work areas above. Remaining
-matrix wrapper allocations and C/Rust timing gaps are not resolved by fewer
-reference counts.
+The following batch owns child-process arguments, captured results, handles and
+failure cleanup, then extends secret terminal input and interpreter/native console
+agreement. It also fixes child signal behavior while preserving host signal
+policy. Require repeated maintained-program runs, real terminal checks, forced
+failures and final-head production acceptance before calling this delivered.
+
+Derivative comparisons retain mixed timings despite fewer tape allocations.
+An interleaved layout trial changes generated experimental C only; repeat
+promising results before adoption. Next, attribute the much larger language-level
+allocation/retain counts to actual native call sites and select an optimization
+from that evidence. Remaining matrix wrappers, C/Rust timing gaps and other work
+areas above are not resolved by fewer reference counts.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

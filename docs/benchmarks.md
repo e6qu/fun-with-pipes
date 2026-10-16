@@ -553,6 +553,42 @@ spills. Smaller append code has not established a dependable speed improvement.
 The handoff tracks the next controlled layout experiment; production behavior
 is unchanged by that experiment.
 
+### Interleaving recorded operation pairs
+
+[The layout trial](measurements/ad-layout-2026-10-16.json) changes only generated
+experimental C. Each operation has two parent indices and two derivative weights.
+Current storage keeps each side in its own region of a shared block; the trial
+places each operation's pair together. It keeps the two allocation blocks, their
+sizes and arithmetic order, and avoids moving second regions when capacity grows.
+Production runtime storage is unchanged.
+
+The same six derivative workloads run under ARC with reuse off/on, using the
+same flags, eight alternating samples and separate profiling as above. Output,
+allocation counts, requested bytes, peak/final memory and zero collections agree.
+For 512 mapped VJPs, explicit growth copies fall from 24,772,608 bytes to zero
+without reuse, or from 48,384 to zero with reuse. This excludes copying performed
+internally by the system allocator. Managed allocation costs remain unchanged.
+
+| Host | Interleaved/current time, reuse off | Interleaved/current time, reuse on |
+|---|---:|---:|
+| Linux AMD64 | 1.012 | 1.012 |
+| Linux ARM64 | 1.001 | 1.010 |
+| macOS ARM64 | 0.930 | 0.938 |
+| macOS Intel | 1.005 | 0.986 |
+
+The sustained case is 7.0%/6.2% faster on ARM macOS in this run, with mixed results
+elsewhere. Short cases also vary: ARM macOS's single mapped VJP without reuse is
+31.1% slower. These process timings include startup and output; absolute times
+from separate runner executions should not be compared as if hardware load were
+identical. Repeat promising results before selecting a new runtime layout.
+
+Native instructions also show a tradeoff. On ARM macOS, append shrinks from 198
+to 182 instructions but backward grows from 374 to 384. On Linux AMD64 the counts
+are 239 to 207 and 399 to 412. The report retains both function disassemblies.
+These counts alone explain neither the speed differences nor their cause. The
+next investigation attributes the much larger managed allocation count to actual
+call sites rather than assuming tape layout is the dominant cost.
+
 ## Selecting invariant array data once
 
 A slice may store an address into another array. The compiler now selects that
