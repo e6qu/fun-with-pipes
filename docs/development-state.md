@@ -3,10 +3,11 @@
 Updated 2026-10-16. This branch is independent preparation for the next service
 context batch. The only delivery PR remains #153 at `ac3060d1`; its authoritative
 handoff is in `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
-Do not open another PR or repeat that delivery. Its native macOS runner checks
-are `38938194232`, documentation `38938199569`; after passing, mark it ready and
-require all nine full production jobs. Draft skips are not acceptance. Merge
-only the tested head with an explicit one-line subject, empty body and no trailers.
+Do not open another PR or repeat that delivery. Both native Mac runner checks
+`38938194232` and documentation `38938199569` pass. PR #153 is ready and requires
+all nine production jobs in `38941991952` on exact head `ac3060d1`. Draft skips
+are not acceptance. Merge only the tested head with an explicit one-line subject,
+empty body and no trailers.
 
 ## Preparation and acceptance
 
@@ -20,18 +21,23 @@ charged bytes with collection disabled. Raw TLS/capture buffers, allocator pages
 and total process memory remain outside those counters. This is an fwp baseline,
 not a speed or C/Rust comparison.
 
-Published head `9b137078` includes the measurements and detached-child checks.
-Replacement Linux run `38941168779` is queued; `38939097999` was canceled and
-superseded. Children must retain header copies, compression and the earliest
-deadline after scope return, typed failure, trap and cancellation, then restore
-their own nested scopes. A deliberately omitted inheritance path must fail.
-These native checks remain unverified until the run passes.
-Next: complete `38941168779` and retain its artifacts and exact revision.
-Fix failures and retain baseline artifacts before changing scope storage.
-Then prefer stack contexts for scopes that do not escape and explicit ownership
-for child tasks that keep the context after callback return. Preserve nested
-restoration, typed errors, traps, cancellation, metadata/certificate lifetimes
-and child-task cleanup. The broader connection/stream ownership remains open.
+Baseline source `9b137078` passes Linux run `38941168779`; `3846e2d5` only improves
+documentation. Superseded `38939097999` was canceled. The retained
+[measurement](measurements/service-context-baseline-2026-10-16.json) records all
+15 programs, native ELF hashes and per-call differences versus plain fwp state
+updates. Between 32 and 128 calls, gzip/deadline add one 64-byte managed request
+per call, metadata adds five requests/128 requested bytes and capture adds
+four/120. These are memory counts, not timings or C/Rust comparisons; raw
+allocations are excluded. Artifact inspection passed under the guard (6.85s).
+Detached-child settings pass at O1/O2 with stress/reuse verification, including
+parent return, typed error, trap and cancellation. Omitting inheritance fails.
+
+Next: keep nonescaping scope settings on the stack and copy inherited settings
+into each service task's existing allocation. Measure the larger task header
+explicitly; tasks without service support must keep their current layout.
+Preserve TLS/capture resource ownership and nested restoration. Metadata buffers,
+response-capture results and broader connection/stream ownership remain separate
+unfinished costs. Do not admit unproved contexts to checked ARC.
 After #153 is accepted, rebase only this branch's delta after `ac3060d1` onto its
 accepted squash; keep one active delivery PR.
 
