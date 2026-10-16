@@ -65,13 +65,13 @@ counts or signal preservation must fail.
 ## Validation and current repair
 
 [Six-host run 38831045963](https://github.com/e6qu/fun-with-pipes/actions/runs/38831045963)
-tests source `6e122959`. Both Linux hosts passed process, signal, CLI and real
-terminal restoration tests, but rejected the new tty example in checked ARC:
-`term.is-tty` lacked an explicit ownership contract. Both tty and width operations
-have now been audited as nonallocating immediate results and given contracts.
-The console comparison now covers width with an explicit COLUMNS value. Run the
-combined six-host suite again at this fix; the other four old jobs are still
-running. This is the only currently observed unresolved acceptance failure.
+tests source `6e122959`. All six hosts passed process, signal, CLI and real
+terminal restoration tests; their only failure was the missing `term.is-tty`
+ownership contract. That repair and an explicit width comparison are published
+at `8926a2fb`; [rerun 38833152028](https://github.com/e6qu/fun-with-pipes/actions/runs/38833152028)
+is queued/running. Later changes only add the verified allocation profiling
+script/workflow/report and documentation, without changing runtime/compiler/tests.
+This remains an acceptance task until the combined rerun passes.
 
 Earlier native evidence: all three process tests and repaired CLI cases passed
 all six hosts at `7e9e5bd8` in
@@ -105,15 +105,19 @@ functions are retained in the two 2026-10-16 reports under `docs/measurements`.
 Neither comparison is C/Rust parity; production layout remains unchanged.
 
 The repeated 512-derivative case makes 25,184,777 managed allocations and
-10,492,416 retains, much more than tape allocation counts. Next attribute those
-costs to actual sites before selecting another optimization. Independent
-preparation `/private/tmp/fwp-ad-allocation-sites`, branch `profile-ad-allocations`,
-is based on `6e122959`, published at `507ec27`.
-[Four-host profiling run 38832271631](https://github.com/e6qu/fun-with-pipes/actions/runs/38832271631)
-is queued/running. Only its diff after `6e122959` belongs after this batch.
-A two-element local check resolves 25 native sites for 43 requests and matches
-aggregate counts/peak/final storage (1.82 s). Timing from this instrumentation is
-not a performance claim. No second PR is open.
+10,492,416 retains. All four hosts pass allocation-site profiling in
+[38832271631](https://github.com/e6qu/fun-with-pipes/actions/runs/38832271631)
+at `507ec27`. The report verifies source/binary hashes and exact agreement with
+aggregate counts/peak/final memory (guarded retention check: 0.13 s). Mapped list
+nodes account for 41.65% of requests. This diagnostic and its report are now
+included in this process delivery, avoiding a separate measurement-only PR.
+
+Following compiler preparation remains `/private/tmp/fwp-ad-allocation-sites`,
+branch `profile-ad-allocations`. Its next-change anchor is `cfdf4d79`: only changes
+after that commit belong to the subsequent delivery. Earlier diagnostic changes
+are included here. Its handoff specifies direct construction for numeric
+`map f | array.from-list`, preserving callback/effect/trap order and measuring
+allocation/timing differences. No implementation is accepted yet. Keep one PR.
 
 The draft transfer patch/body are `/private/tmp/fwp-process-delivery.patch` and
 `/private/tmp/fwp-process-pr-body.md`; refresh them after the current repair.

@@ -103,9 +103,9 @@ failures and final-head production acceptance before calling this delivered.
 
 Derivative comparisons retain mixed timings despite fewer tape allocations.
 An interleaved layout trial changes generated experimental C only; repeat
-promising results before adoption. Next, attribute the much larger language-level
-allocation/retain counts to actual native call sites and select an optimization
-from that evidence. Remaining matrix wrappers, C/Rust timing gaps and other work
+promising results before adoption. Four-host allocation-site profiling attributes 41.65% of managed requests to
+mapped list nodes. Next, test direct numeric array construction from mapped lists,
+preserving callback order and measuring both allocation and timing differences. Remaining matrix wrappers, C/Rust timing gaps and other work
 areas above are not resolved by fewer reference counts.
 
 Each delivery must state its workload, expected change and acceptance criteria
