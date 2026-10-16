@@ -38,11 +38,12 @@ so a completed task does not retain stale context pointers. Programs without
 service support omit the field. No checked ARC admission changes are made.
 
 Initial `38942724799` stopped at a test Clippy lint, now fixed. Replacement
-`38943086313` at `ad77934c` passes Linux ARM64 and Intel Mac; other Unix hosts
-remain active. Windows AMD64 failed five C probes because their headers were
+`38943086313` at `ad77934c` passes all four Unix hosts. Both Windows hosts failed five C probes because their headers were
 included before declaring the Windows 10 API target. The ordinary-program
 allocation probe passed there. All five fixtures now declare the target first;
-this repair needs Windows verification. That revision tests stack settings and
+this repair needs Windows verification. The environment-cache fixture also now
+uses the Windows `_putenv_s` API explicitly, with checked failures, instead of
+POSIX-only environment functions. All context targets join permanent Windows CI. That revision tests stack settings and
 inline task copies only.
 
 The next combined follow-up also borrows TLS/capture owners in synchronous
@@ -60,7 +61,8 @@ actual interpreter/native gRPC calls. Queued `38944540937` was superseded after
 narrowing the capture fixture's owner-allocation hook so it does not match the
 new outgoing-header owner. The subsequent API-target fixture repair is Windows
 only; include it in the final six-host run. Then require `context-owners`
-on all six hosts and real WASI regressions. The new changes are unverified until
+on all six hosts. Actual WASI/browser run `38945989400` at `51e8e123` is queued;
+the environment-fixture follow-up is native only. The new changes are unverified until
 those checks pass. Allocation assertions require no per-call overhead versus
 plain updates for gzip/deadline/empty headers; nonempty copied headers require
 one allocation per call and no retained charge after the scope ends. Retain
