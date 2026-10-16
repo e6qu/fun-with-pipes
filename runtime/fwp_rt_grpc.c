@@ -2623,6 +2623,7 @@ static V fwp_p_grpc_with_response_metadata(V f) {
     g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
     *ctx = *cur;
     g_capture *owner = (g_capture *)calloc(1, sizeof *owner);
+    if (!owner) fwp_trap("cannot allocate response metadata capture");
     owner->users = 1;
     fwp_cleanup capture_cleanup;
     fwp_cleanup_push(&capture_cleanup, g_capture_release, owner);

@@ -14,9 +14,14 @@ The combined preparation is `/private/tmp/fwp-service-values`, branch
 `/private/tmp/fwp-tcp-owners`, branch `tcp-owner-preparation` (`4e13d309`).
 Do not apply either batch again or rebase the service work as a separate delivery.
 
-Next: finish Linux preparation `38933103425` at `c10bdb77`, then run the
-combined preparation's `service-values` matrix on all six native hosts and both
-`wasi-arc` regressions. Fix failures, retain artifacts and inspect binaries.
+Linux preparation `38933103425` passed at `c10bdb77`.
+Next: finish the combined preparation's `service-values` matrix on all six native
+hosts (`38934662876`) and both `wasi-arc` regressions (`38934584083`), at
+`c37b6afa`. A subsequent review found an unchecked response-capture allocation;
+the pending follow-up traps before invoking the callback or installing a context.
+Its existing lifetime test now injects that failure. Run a Linux preparation
+check for that repair, then include it in final production acceptance; Windows
+now runs this existing capture test too. Fix failures, retain artifacts and inspect binaries.
 `/private/tmp/fwp-retain-service-values.py RUN_ID` requires all six service jobs,
 actual interpreter/native comparison execution and expected allocation probes
 before writing the final report. Its current script has not run successfully.
@@ -99,7 +104,7 @@ contracts, 13 remaining reviews), generated stdlib documentation, roadmap audit
 and macOS partition checks pass. Latest service formatting: 1.29s; example: 0.26s
 (`[]`, `None`, `()`, `()`); inventory: 1.12s; stdlib recheck: 0.01s; audit: 2.64s;
 partition checks: 0.25s. Combined-merge formatting passed in 1.35s and
-partition checks passed in 0.13s; `git diff --check` passed. The subsequent
+partition checks passed in 0.13s; response-capture repair formatting passed in 1.06s; `git diff --check` passed. The subsequent
 `python3 scripts/local-guard.py /private/tmp/fwp-service-stdlib-doc` printed a
 passing test, but its guard failed with a process-signal permission error. That
 invocation is not accepted as a passing guarded check, and the chained roadmap

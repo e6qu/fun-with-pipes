@@ -85,7 +85,7 @@ jobs:
         env:
           FWP_REQUIRE_TLS: '1'
           FWP_SERVICE_ARTIFACTS: service-evidence
-        run: cargo test --no-fail-fast --test service_value_ownership --test grpc_peer_completion --test http2_peer_cleanup --test stdlib_doc
+        run: cargo test --no-fail-fast --test service_value_ownership --test grpc_peer_completion --test http2_peer_cleanup --test grpc_capture_resources --test stdlib_doc
       - name: HTTP/2 body interpreter and native agreement
         if: ${{ !cancelled() && (inputs.suite == 'service-values' || inputs.suite == 'service-values-linux') }}
         run: cargo test --lib grpc::web::tests::body_bounds_and_error_order_agree_with_native -- --exact
