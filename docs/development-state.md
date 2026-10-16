@@ -70,6 +70,22 @@ operations, checked division, float order and manual-record common-prefix behavi
 The new lane example introduces notation and optional results before use. Library
 comments/generated docs describe C loops without promising vector instructions.
 
+## Measured vector optimization in progress
+
+Extend this still-unpublished combined batch with direct F64 lane access. The
+measured kernels repeat representation checks inside each lane operation and
+sum. Resolve flat-array/view addresses once, use byte copies for valid C aliasing,
+and keep input owners alive. Fresh result arrays can be written directly;
+F64 lanes have no child ownership or language arithmetic traps. Preserve exact
+left-to-right sum order (including singleton negative zero), common-prefix
+lengths and all boxed paths. View/alias, cancellation-sensitive floating values and zero-lane checks were
+added to the existing vector regression target; the accepted interpreter passes
+them under the guard (0.26 s). Acceptance
+requires native/interpreter parity, native/WASI ownership gates, four-host
+allocation/code evidence and paired timings against `38869050349`. No speedup
+is claimed before those results. Temporary vectors and materialized lists remain
+separate measured costs to address.
+
 ## Completed focused checks and measurements
 
 Hash/range compiler revision `ac72124c` passes native `38864599295` on all six

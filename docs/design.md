@@ -152,6 +152,23 @@ Resource-bearing captures keep their original frames. The handoff separates
 implementation, focused checks and full acceptance; benchmarks retain the
 unfused baseline.
 
+## Reading F64 vector lanes directly
+
+An F64 lane occupies eight contiguous bytes in both ordinary arrays and array
+views. Vector splats, arithmetic and sums can select the storage address once,
+then read or write those bytes without repeating the representation check for
+each lane. Byte copies respect C's aliasing rules; inputs remain borrowed from
+live owners, and results use fresh owned arrays. This does not assume a manual
+record's actual array length matches its declared lane count: binary operations
+still use the common prefix. Boxed and other numeric formats retain their own
+representation and cleanup rules.
+
+Summation starts with the first lane, adds each later lane in order and returns
+positive zero for an empty vector. It does not reassociate additions or insert
+an initial addition to zero, which would change a singleton negative zero.
+Native code and timing measurements determine whether a target compiler actually
+emits vector instructions; this source change alone is not evidence of speedup.
+
 ## Constructing integer range arrays directly
 
 `range lo hi` includes `lo` and excludes `hi`. When its only use is immediate
