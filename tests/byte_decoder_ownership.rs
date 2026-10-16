@@ -111,28 +111,27 @@ fn byte_decoders_release_native_buffers_and_partial_results() {
             descriptor("fwp_p_ws_inflate(l0, l1,"));
         let mut code = code.replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1")
             .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic void byte_allocation(void); static int byte_buffers_live;");
-        for (marker, hook) in [
+        for (marker, replacement) in [
             (
                 "static inline void *fwp_alloc_init(size_t n) {",
-                "byte_allocation();",
+                "static inline void *fwp_alloc_init(size_t n) { byte_allocation();",
             ),
             (
                 "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-                "if(leaf!=0) byte_allocation();",
+                "static inline void *fwp_gc_alloc(size_t n, int leaf) { if(leaf!=0) byte_allocation();",
             ),
-            ("    b->d = data;", "if(!b->d) byte_buffers_live++;"),
+            (
+                "    b->d = data;\n    b->cap = c;",
+                "    if(!b->d) byte_buffers_live++;\n    b->d = data;\n    b->cap = c;",
+            ),
             (
                 "static void h2b_free(h2_buf *b) {",
-                "if(b->d) byte_buffers_live--;",
+                "static void h2b_free(h2_buf *b) { if(b->d) byte_buffers_live--;",
             ),
         ] {
             assert_eq!(code.matches(marker).count(), 1, "{marker}");
-            // Count a new buffer only after checked allocation succeeds.
-            code = if marker.trim_start().starts_with("b->d =") {
-                code.replace(marker, &format!("    {hook}\n{marker}"))
-            } else {
-                code.replace(marker, &format!("{marker} {hook}"))
-            };
+            // Count only HTTP/2 buffers, after checked allocation succeeds.
+            code = code.replace(marker, replacement);
         }
         let code = code[..code.find("int main(").unwrap()].to_string()
             + &descriptors

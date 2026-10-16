@@ -8,53 +8,38 @@ these preparation changes again.
 
 ## Current action
 
-The combined preparation has been fast-forwarded into `owned-values-delivery`
-in `/Users/zardoz/projects/fun-with-pipes`.
-PR #153 includes the decoder test repair on this branch; `ac3060d1` is the
-previous published head, not an acceptable merge candidate.
-Next: publish the decoder test repair and require all nine production jobs and
-documentation on its new exact head. Run `38941991952` at `ac3060d1` cannot be
-accepted: Windows ARM64 found a stale decoder instrumentation marker after
-checked HTTP/2 buffer growth replaced the old direct `realloc` assignment.
-The fixture now counts new buffers at the successful assignment, and requires
-exactly one match for every hook. Its deliberate missing-cleanup controls remain.
-Windows ARM64 decoder output and all TLS cases passed; remaining jobs continue
-to expose any other failures. The benchmark job passed. Both native Mac runner
-jobs `38938194232` and documentation `38938199569` passed at the older head.
-Draft CI `38938199980` was skipped and is not acceptance. Update the merge
-helper expected head and supply the replacement production/documentation IDs;
-use `--merge` only when its exact-head acceptance checks pass. The tested service source is `e715de1a`. Following changes retain evidence,
-update documentation and start the two longest measured GC stress cases first.
-This queue order keeps every case and all four workers; it has no language or
-runtime change and does not claim a measured total-CI speedup. The macOS shard
-runner also builds its selected tests once and runs two executables concurrently,
-with one harness thread each. Cargo artifacts must cover exactly the selected
-integration and unit targets; missing/duplicate artifacts fail before execution.
-Each target retains its own log, and any failed target makes the job fail.
+PR #153 is temporarily draft while its decoder test repair gets focused native
+verification. The failed production run `38946985320` at `a0af12d9` was canceled;
+it must not be accepted. ARM Mac GC found that the replacement instrumentation
+marker `b->d = data` also matched the generic text buffer. The earlier repair
+therefore matched twice and failed its uniqueness assertion before native tests.
 
-The old published head `78e9a372` must not be merged. Its Windows TLS comparison
-failed because native reset messages bypassed the interpreter's common wording.
-Repair `abe3be17` passes both Windows focused jobs `38931783848`; it preserves
-exact certificate errors and adds five actual native/interpreter error-code
-comparisons. That repair is included in the combined preparation. Old production `38925341899` is complete: six jobs passed, both Windows jobs
-failed the known diagnostic comparison, and Intel GC timed out during TLS after
-90 minutes. Its completed tests contain no additional assertion failure. The
-concurrent runner addresses the long sequence of single-test executables without
-increasing the timeout or removing tests. Old documentation `38925341680` passed. Its Intel GC stress log is retained at
-`/private/tmp/fwp153-intel-gc-progress/gc-stress.log`: collection construction
-took 1,744s and HTTP took 175s. The test schedule now starts both first so shorter
-programs can run alongside them. Existing integration-shard assignments stay fixed.
-[Scheduling evidence](measurements/gc-stress-scheduling-2026-10-16.json) retains
-all observed example timings and the baseline log hash.
+The new repair matches the HTTP/2 assignment and its capacity update together,
+keeps the one-match assertion, and counts only successful first allocations.
+Explicit marker/replacement pairs remove the old marker-dependent insertion
+rule. The deliberately omitted buffer/partial-field cleanup controls remain.
+Runtime behavior is unchanged. Four source hooks are unique and exclude the
+text buffer; native verification must still pass.
+
+Next: publish the repair and run the `byte-decoders` suite on all six native
+hosts. Once that focused run passes, make the PR ready and require all nine
+production jobs plus documentation on its exact new head. A skipped draft CI
+run is not acceptance. Do not reuse the old head or acceptance IDs.
 
 After all final-head gates pass, squash-merge with subject
 `Reduce temporary memory and clean up network resources` and an empty body.
 The whole message must be one line, at most 80 characters, with no trailers or
 attribution. Verify merged files, parent and message; cancel duplicate postmerge
-CI. `/private/tmp/fwp-merge-153.py` must name the repaired head and requires
-explicit `--production-run` and `--documentation-run` IDs. Change its expected
-head if repairs alter it; it must verify all nine jobs and docs before merging. Standing publication, fixes and merge authorization
-persists; failing tests are work to fix. JIT is excluded.
+CI. Update `/private/tmp/fwp-merge-153.py` to the repaired head and supply the new
+production/documentation IDs; it verifies all nine jobs and docs before merging.
+Standing publication, fixes and merge authorization persists. Failing tests are
+work to fix. JIT is excluded.
+
+The Mac runner builds each selected target once and runs two executables at a
+time. Artifact checks reject missing/duplicate targets and every target gets a
+log. GC stress starts its two longest measured cases first, retaining all cases
+and four workers. Scheduling changes preserve the 90-minute limit; they do not
+yet establish a measured total-CI speedup.
 
 ## Passing focused checks
 
@@ -121,42 +106,43 @@ PR #152 is accepted at `1fa0fec690b7747a9ffcf2d72903d16544889258`: all nine
 production jobs and documentation passed, merged files/message were verified,
 and duplicate CI was canceled. [Delivery history](roadmap-history.md) retains it.
 
-Independent preparation is now in `/private/tmp/fwp-context-owners`, branch
-`service-context-preparation`, based on `ac3060d1`. Tested source `9b137078` (documentation follow-up `3846e2d5`) adds
-a baseline storage probe, detached-child lifetime checks and clearer service
-documentation, not runtime ownership changes. Run `38941168779` passes the
-Linux baseline and child-lifetime checks; queued `38939097999` was canceled and superseded. The probe compares plain, gzip,
-deadline, outgoing-header and response-capture scopes at 1, 32 and 128 calls,
-including interpreter/native state results and charged storage with collection
-disabled. Detached children must retain normalized header copies, compression
-and the earliest deadline after their parent returns, fails, traps or is canceled.
-An intentionally broken inheritance path must fail the check. All five 32-call
-examples pass raw and optimized accepted-interpreter checks (1.80s); new native
-checks pass on Linux AMD64. The retained baseline measures one extra 64-byte
-managed request per gzip/deadline call; outgoing headers add five requests/128
-requested bytes and capture adds four/120. These exclude raw allocations and
-compare fwp scopes with a plain fwp state update, not C/Rust or elapsed time. Its new integration target makes that preparation 231 targets; this
-PR remains at 230. The stack-copy implementation at `ad77934c` passes Linux ARM64 and Intel Mac in run
-`38943086313`. Windows probes need the now-prepared API-target header-order
-repair; the ordinary Windows allocation probe passed. Other hosts remain active. Initial run `38942724799` had a
-Clippy lint in a new test and was superseded after repair. New combined head
-`7469df49` also borrows synchronous TLS/capture resources and packs outgoing
-headers into one owned allocation, shared only with inheriting children.
-All six native context checks now run in `38946737398` at `93ec650f`;
-queued Linux-only `38945353977` was canceled in favor of that combined check. queued `38944540937`
-was superseded after narrowing capture instrumentation. That source includes the Windows API-target and environment API fixture repairs
-and permanent Windows context coverage. Actual WASI/browser `38945989400`
-at `51e8e123` is queued. The stack-copy-only revision passed all four Unix hosts. Its tests cover allocation/size and
-counter failures, explicit cleanup, aliases and actual interpreter/native service
-calls. No checked ARC admission was changed. The next worktree handoff records
-required six-host/WASI checks and size/alignment evidence. Do not open a second
-PR. Rebase only that delta after
-`ac3060d1` onto the accepted #153 squash before publishing the next PR.
+Independent preparation is in `/private/tmp/fwp-context-owners`, branch
+`service-context-preparation`, based on `ac3060d1`. Current combined source
+`4656043f` has six-host native run `38951742782`. It adds message-decoding
+trap cleanup and the same two-executable Linux scheduling used on Mac. Queued
+`38949852186` was superseded. Focused actual WASI ARC run `38949856424` tests
+explicit exit at `6b642a82`. Broader WASI/browser run `38947985548` passes on both
+Linux architectures at callback/runtime source `24caa70b`; it predates exit tests. Earlier context checks exposed harness
+and Windows inventory path bugs; repairs are included in the new source. Do not open a second PR. Rebase only its
+delta after `ac3060d1` onto the accepted #153 squash.
+
+That preparation moves scope settings to the stack, copies inherited settings
+inside child tasks, borrows synchronous TLS/capture owners and packs outgoing
+headers into one owned allocation. It also borrows typed callbacks and owns
+returned values/captured header copies. New tests cover aliases, returned
+functions, every partial-result allocation, child lifetimes, failure/cancellation,
+ARC binaries and deliberately broken cleanup. The five proposed new contracts
+need CI inventory and runtime validation. The exit contract is also prepared: no returned owner exists when a process
+terminates. Three new targets have permanent Windows/Mac coverage, giving that
+preparation 233 targets; #153 remains 230.
+
+Retained baseline `9b137078` passed Linux. Intermediate stack-copy `ad77934c`
+passed ordinary allocation/output tests on all six hosts, and all four complete
+Unix jobs. Separate Windows lifetime fixtures failed to compile; the new source
+repairs their API-target header order and environment APIs. Do not count those
+old Windows jobs as full acceptance. Gzip/deadline remove a 64-byte per-call
+managed request; Linux AMD64 service tasks grow from 1,512 to 1,576 bytes in
+that intermediate version. Actual ARM64/AMD64 instructions and all six native
+binary formats are retained in the preparation's measurement report. The current
+revision adds another owner pointer and needs new layout/memory measurements.
+Neither counts nor instruction inspection establishes a speedup or C/Rust parity.
+The preparation handoff records all current checks. Preserve the existing
+effect rule: partial application is pure; only the final arrow may have effects.
 
 After #153 acceptance, continue service streams, connections and retained request
-contexts. First measure repeated context scopes and child tasks that outlive
-their creating callback. Prefer stack storage for scopes that do not escape;
-children must retain valid data after scope return, failure and cancellation.
+contexts. Finish the prepared context/callback/exit checks and retain final allocation,
+layout and binary evidence. The stack/packed-header changes need verified child
+lifetimes after scope return, failure and cancellation.
 Do not replace unproved lifetimes with permanent retention. Remaining primitive
 reviews also cover deferred remote results, HTTP/2 serving/sending/responding,
 process exit and GPU execution. Continue the seven work areas below; completing
