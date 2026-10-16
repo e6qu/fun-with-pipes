@@ -909,7 +909,10 @@ fn bind_capture_value(
     let ty = expected
         .cloned()
         .or_else(|| type_of(&|id: FuncId| &funcs[id].ty, shapes, locals, e))?;
-    if crate::resource::contains_file(shapes, &ty) {
+    if crate::resource::contains_resource(shapes, &ty)
+        || (crate::resource::may_hold_resource(shapes, &ty)
+            && crate::resource::has_socket_values(funcs, shapes))
+    {
         return None;
     }
     let local = locals.len() as Local;

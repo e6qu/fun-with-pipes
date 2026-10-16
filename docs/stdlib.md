@@ -1109,6 +1109,8 @@ and DNS resolves hostnames to network addresses. A listener accepts incoming
 connections; a connection reads/writes bytes. A host:port address such as
 127.0.0.1:8080 selects this computer and a port. Suspending a task while IO
 waits lets other ready tasks run; it does not make IO instantaneous.
+A socket address containing a NUL byte fails with IoError instead of being
+silently shortened at that byte.
 
 ```fwp
 Listener = builtin
@@ -1133,10 +1135,21 @@ tcp.write : Bytes -> Conn -> () ! {Async, Network, Error[IoError]}
 tcp.write-for : Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]}
 tcp.close : Conn -> () ! {Network}
 tcp.peer-addr : Conn -> String ! {Network}
+
+# Bind a UDP socket to a host and port. Port 0 asks the operating system to
+# choose an unused port; udp.local-addr returns the resulting address.
+# Copies refer to the same socket. A closure or task can keep a socket alive.
+# Releasing its final owner closes it; udp.close closes it through every copy.
 udp.bind : String -> UdpSocket ! {Network, Error[IoError]}
 udp.local-addr : UdpSocket -> String ! {Network}
 udp.send-to : String -> Bytes -> UdpSocket -> () ! {Async, Network, Error[IoError]}
+
+# Receive one datagram, up to the requested byte count, and its sender address.
+# The returned bytes and address belong to the caller; the socket stays usable.
 udp.recv-from : I64 -> UdpSocket -> (Bytes, String) ! {Async, Network, Error[IoError]}
+
+# Close the shared socket. Repeating close is safe; pending operations wake
+# and report that the socket is closed.
 udp.close : UdpSocket -> () ! {Network}
 
 # Resolve a hostname or numeric IP address to distinct address strings, in the

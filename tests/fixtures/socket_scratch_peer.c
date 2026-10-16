@@ -30,7 +30,7 @@ static int socket_wait(fwp_socket_t fd, int write, int64_t at) {
     if(socket_mode==3) return 0;
     fwp_trap("injected socket wait cancellation"); return 0;
 }
-static struct addrinfo *socket_resolve(const char *address, int kind, int passive,
+static struct addrinfo *socket_resolve(V address, int kind, int passive,
                                       const char *operation, const fwp_desc *error) {
     struct addrinfo *result=fwp_resolve(address,kind,passive,operation,error);
     if(!result) abort(); socket_resolver_live++; return result;

@@ -291,6 +291,37 @@ an unshared header removes its library finalizer before freeing storage.
 `FWP_FREE=0` can keep ordinary storage for comparison while resource ownership
 still closes streams. Resource lifetime and physical storage lifetime are distinct.
 
+### UDP socket owners
+
+A UDP socket owns an operating-system descriptor: a handle used to send and
+receive datagrams. Unlike `File`, a socket can be copied and captured by a
+function. Copies refer to the same socket. Explicit `udp.close` closes it for
+all copies, and releasing its final owner also closes it. A closure, record or
+suspended task that holds the socket must keep it alive until its own original
+scope ends. Returning only an address string does not keep the socket alive.
+
+The current UDP preparation preserves those original scopes before optimization,
+uses a separate 64-bit logical owner count for descriptors, and owns both fields of a
+received `(Bytes, String)` pair while constructing it. UDP stores its count in the
+slot that TCP uses for a TLS pointer; the socket-kind tag selects the member, so
+counting UDP does not enlarge TCP headers. Failure releases completed
+fields and receive scratch storage. Closing a Linux descriptor wakes its waiting
+tasks and releases its polling records; synchronization after wake does not
+recreate a closed descriptor's record. Disabling physical frees still closes the
+socket when its logical owners finish. Library teardown closes retained sockets
+without taking ownership of host sockets.
+
+All six focused native jobs and both shared-runtime WASI regression jobs pass;
+[the UDP report](measurements/udp-ownership-2026-10-16.json) retains the exact
+results and an ARM64 binary inspection. Full combined production acceptance is
+still required. This does not establish whole-language GC removal. Opaque
+function types do not describe their captures, so programs using UDP currently
+preserve possible closure-holder frames conservatively. This may prevent some
+optimizations; there is no zero-cost or throughput claim. Tracing programs retain
+weak finalizers for unproved sharing, while checked ARC must prove ownership and
+exclude tracing from its binary. TCP/TLS ownership, arbitrary retained callbacks
+and mutable cycles remain separate work.
+
 ## Checked ARC delivery
 
 `fwp build --gc arc` excludes tracing code and rejects unsupported ownership.

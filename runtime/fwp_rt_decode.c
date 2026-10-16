@@ -95,6 +95,41 @@ static V fwp_p_metrics_snapshot(const fwp_desc *list_type) {
 }
 
 #ifndef FWP_FIBERS
+static V fwp_p_udp_recv_from(V nv, V s, const fwp_desc *err, const fwp_desc *tuple_type) {
+    int64_t n = (int64_t)nv;
+    if (n < 1) n = 1;
+    char *buf = (char *)malloc((size_t)n);
+    if (!buf) fwp_trap("socket receive allocation failed");
+    fwp_cleanup buffer_cleanup;
+    fwp_cleanup_push(&buffer_cleanup, free, buf);
+    for (;;) {
+        fwp_socket_t fd = SOCK(s)->fd;
+        if (fd == FWP_INVALID_SOCKET) { fwp_cleanup_pop(&buffer_cleanup); free(buf); return fwp_closed_error("socket", err); }
+        struct sockaddr_storage ss;
+        socklen_t len = sizeof ss;
+        ssize_t k = fwp_socket_recvfrom(fd, buf, (size_t)n, 0, (struct sockaddr *)&ss, &len);
+        if (k >= 0) {
+            char a[128];
+            fwp_fmt_addr((struct sockaddr *)&ss, a, sizeof a);
+            fwp_decode_fields fields;
+            fwp_decode_fields_begin(&fields, 2, tuple_type->fields, 2, NULL);
+            fields.values[0] = fwp_rc_fresh(fwp_str_new(buf, (size_t)k));
+            fields.values[1] = fwp_rc_fresh(fwp_cstr(a));
+            V r = fwp_decode_record(&fields);
+            fwp_cleanup_pop(&buffer_cleanup); free(buf);
+            FWP_KEEP_ALIVE(s);
+            return r;
+        }
+        if (fwp_socket_again(errno)) {
+            fwp_wait_fd(fd, 0, 0);
+            continue;
+        }
+        fwp_cleanup_pop(&buffer_cleanup); free(buf);
+        return fwp_os_error("receive", 0, err);
+    }
+}
+
+
 /* Resolver entries are temporary native storage; returned strings/list cells
  * have independent owners. Preserve first occurrence order without a fixed cap. */
 static V fwp_p_dns_resolve(V host, const fwp_desc *err, const fwp_desc *list_type) {

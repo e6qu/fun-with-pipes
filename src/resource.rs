@@ -2,35 +2,77 @@
 use crate::ir::*;
 use std::collections::HashSet;
 
-pub(crate) fn contains_file(shapes: &Shapes, ty: &MT) -> bool {
-    fn visit(shapes: &Shapes, ty: &MT, seen: &mut HashSet<MT>) -> bool {
+fn contains_where(shapes: &Shapes, ty: &MT, names: fn(&str) -> bool, closures: bool) -> bool {
+    fn visit(
+        shapes: &Shapes,
+        ty: &MT,
+        seen: &mut HashSet<MT>,
+        names: fn(&str) -> bool,
+        closures: bool,
+    ) -> bool {
         if !seen.insert(ty.clone()) {
             return false;
         }
         match ty {
-            MT::Con(n, _) if n == "std::File" => true,
-            MT::Record(fields) => fields.iter().any(|(_, t)| visit(shapes, t, seen)),
+            MT::Con(name, _) if names(name) => true,
+            MT::Record(fields) => fields
+                .iter()
+                .any(|(_, ty)| visit(shapes, ty, seen, names, closures)),
             MT::Con(_, args) => {
-                args.iter().any(|t| visit(shapes, t, seen))
+                args.iter()
+                    .any(|ty| visit(shapes, ty, seen, names, closures))
                     || match shapes.get(ty) {
-                        Some(TypeShape::Record(fields)) => {
-                            fields.iter().any(|(_, t)| visit(shapes, t, seen))
-                        }
-                        Some(TypeShape::Adt(variants)) => variants
+                        Some(TypeShape::Record(fields)) => fields
                             .iter()
-                            .any(|(_, fields)| fields.iter().any(|t| visit(shapes, t, seen))),
+                            .any(|(_, ty)| visit(shapes, ty, seen, names, closures)),
+                        Some(TypeShape::Adt(variants)) => variants.iter().any(|(_, fields)| {
+                            fields
+                                .iter()
+                                .any(|ty| visit(shapes, ty, seen, names, closures))
+                        }),
                         _ => false,
                     }
             }
-            // Resource captures are forbidden; an arrow mentioning File is
-            // not itself a File owner.
-            MT::Fun(..) | MT::Nat(_) => false,
+            // An arrow does not own its input/output types, but its runtime
+            // closure may own captures whose types are absent from the arrow.
+            MT::Fun(..) => closures,
+            MT::Nat(_) => false,
         }
     }
-    visit(shapes, ty, &mut HashSet::new())
+    visit(shapes, ty, &mut HashSet::new(), names, closures)
+}
+
+pub(crate) fn contains_resource(shapes: &Shapes, ty: &MT) -> bool {
+    contains_where(
+        shapes,
+        ty,
+        |name| matches!(name, "std::File" | "std::UdpSocket"),
+        false,
+    )
+}
+
+pub(crate) fn may_hold_resource(shapes: &Shapes, ty: &MT) -> bool {
+    contains_where(
+        shapes,
+        ty,
+        |name| matches!(name, "std::File" | "std::UdpSocket"),
+        true,
+    )
+}
+
+/// Socket values can be captured; File values cannot. Only programs that use
+/// these handles need to preserve opaque closure holders as resource owners.
+pub(crate) fn has_socket_values(funcs: &[Func], shapes: &Shapes) -> bool {
+    funcs.iter().any(|function| {
+        function
+            .locals
+            .iter()
+            .any(|ty| contains_where(shapes, ty, |name| name == "std::UdpSocket", false))
+    })
 }
 
 pub(crate) fn preserve_frames(program: &mut Program) {
+    let captures = has_socket_values(&program.funcs, &program.shapes);
     for function in &mut program.funcs {
         let Body::Expr(body) = &mut function.body else {
             continue;
@@ -38,7 +80,9 @@ pub(crate) fn preserve_frames(program: &mut Program) {
         let mut parameters = Vec::new();
         let mut bindings = Vec::new();
         for (i, ty) in function.locals.iter().enumerate() {
-            if contains_file(&program.shapes, ty) {
+            if contains_resource(&program.shapes, ty)
+                || (captures && may_hold_resource(&program.shapes, ty))
+            {
                 if i < function.arity as usize {
                     parameters.push(i as Local);
                 } else {
@@ -100,12 +144,12 @@ mod tests {
                 ("File".into(), vec![file.clone()]),
             ]),
         );
-        assert!(contains_file(&shapes, &node));
-        assert!(contains_file(
+        assert!(contains_resource(&shapes, &node));
+        assert!(contains_resource(
             &shapes,
             &MT::Con("std::Array".into(), vec![file.clone()])
         ));
-        assert!(!contains_file(
+        assert!(!contains_resource(
             &shapes,
             &MT::Fun(Box::new(file.clone()), Box::new(file))
         ));
@@ -116,7 +160,51 @@ mod tests {
                 ("End".into(), vec![]),
             ]),
         );
-        assert!(!contains_file(&shapes, &MT::con("ScalarNode")));
+        assert!(!contains_resource(&shapes, &MT::con("ScalarNode")));
+    }
+    #[test]
+    fn opaque_closure_holders_keep_socket_frames_only_when_needed() {
+        let arrow = MT::Fun(
+            Box::new(MT::Record(vec![])),
+            Box::new(MT::con("std::String")),
+        );
+        let holder = MT::con("Holder");
+        let mut shapes = Shapes::new();
+        shapes.insert(
+            holder.clone(),
+            TypeShape::Record(vec![("read".into(), arrow.clone())]),
+        );
+        assert!(!contains_resource(&shapes, &holder));
+        assert!(may_hold_resource(&shapes, &holder));
+        assert!(!contains_resource(&shapes, &arrow));
+        let function = Func {
+            name: "holder".into(),
+            arity: 1,
+            locals: vec![holder.clone()],
+            ty: MT::Fun(Box::new(holder), Box::new(MT::Record(vec![]))),
+            body: Body::Expr(Expr::Const(crate::value::Value::unit())),
+        };
+        let mut program = Program {
+            funcs: vec![function],
+            shapes,
+            ..Program::default()
+        };
+        preserve_frames(&mut program);
+        assert!(matches!(program.funcs[0].body, Body::Expr(Expr::Const(_))));
+        program.funcs[0].locals.push(MT::con("std::UdpSocket"));
+        preserve_frames(&mut program);
+        match &program.funcs[0].body {
+            Body::Expr(Expr::ResourceRegion {
+                parameters,
+                bindings,
+                ..
+            }) => {
+                assert_eq!(parameters, &[0]);
+                assert_eq!(bindings, &[1]);
+            }
+            _ => panic!("socket capture holder must retain its original frame"),
+        }
+        crate::ir::check_locals(&program).unwrap();
     }
     #[test]
     fn owner_metadata_rejects_missing_duplicate_and_scalar_slots() {
