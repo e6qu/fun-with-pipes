@@ -270,7 +270,7 @@ fn children_keep_scope_settings_after_return_failure_and_cancellation() {
     );
     let no_retain = generated.replace(retain, "(void)md;");
     let dir = fwp::cgen::TempDir::new("service-context-inheritance").unwrap();
-    let binary = dir.join("probe");
+    let binary = dir.join("probe.exe");
     for optimization in ["-O1", "-O2"] {
         for (source, expected) in [
             (&broken, 55),

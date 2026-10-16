@@ -18,18 +18,23 @@ Base: `ac3060d1`. Runtime callback source: `24caa70b`; combined repairs and expl
 follow-up: `6b642a82`; decoding cleanup and CI scheduling: `4656043f`. Do not open another PR. After #153 acceptance, rebase
 only this branch's delta after `ac3060d1` onto its accepted squash.
 
-Next: require all six native jobs in `38951742782` at `4656043f`, combining the
-context, callback, exit and message-decoding checks. Queued `38949852186` was
+Run `38951742782` at `4656043f` cannot establish complete acceptance: Windows
+AMD64 passes the ordinary allocation, callback ownership, exit and decode cleanup
+checks, but fails while retaining the child fixture binary after its O1 checks.
+The compiler writes `probe.exe`; process execution resolves the extension, but
+copying the extensionless `probe` path fails. The prepared fix names `probe.exe`
+explicitly on every host. O2 child checks still require the replacement run.
+Next: finish inspecting this run, then test the latest combined source including
+the Windows artifact-path repair and served-request cleanup on all six hosts. Queued `38949852186` was
 superseded before execution. Focused actual WASI ARC run `38949856424` at
-`6b642a82` checks explicit exit. Broader WASI/browser run `38947985548` passes on
+`6b642a82` passes on both Linux architectures, including actual WASI exit. Broader WASI/browser run `38947985548` passes on
 both Linux architectures at callback source `24caa70b`, before exit tests.
 Retain final allocation,
 layout, compiler/CPU and binary evidence before claiming verified support.
 Do not broaden ARC admission beyond the tested ownership contracts.
 `/private/tmp/fwp-retain-context-final.py` prepares the final report only after
-all six native jobs pass. Supply run `38951742782`, full source
-`4656043f087594931a5cc9644b6053968f8e3c7e`, an artifact directory and the report
-output path; run it through the local guard. It checks source, jobs, rows,
+all six native jobs pass. Supply the replacement passing run, its full source
+revision, an artifact directory and the report output path; run it through the local guard. It checks source, jobs, rows,
 allocation slopes, actual formats and capture-failure controls before writing.
 The next PR description draft is `/private/tmp/fwp-context-pr-body.md`; replace
 its pending validation paragraph with actual final-head results before acceptance.
