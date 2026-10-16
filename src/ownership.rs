@@ -137,6 +137,17 @@ impl Contract {
     }
 }
 
+/// Whether an argument's outer object is used only during this call. This is
+/// stronger than Borrow: borrowed inputs may otherwise be returned or retained.
+/// Hash only reads typed bytes and returns an immediate fingerprint. Synchronous
+/// callbacks may return captured children, but never the callback object itself.
+pub fn borrows_without_escape(symbol: &str, index: usize) -> bool {
+    if symbol == "hash" && index == 0 {
+        return true;
+    }
+    primitive(symbol).is_some_and(|c| c.borrows_callback() && c.callback_argument() == Some(index))
+}
+
 /// Complete array/map/set contracts and selected String/Bytes contracts. Comparison-only keys
 /// borrow; arrays/maps/sets own typed element references.
 /// Synchronous list/container callbacks borrow;
@@ -594,6 +605,18 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn borrowed_arguments_need_an_independent_nonescape_proof() {
+        assert!(borrows_without_escape("hash", 0));
+        assert!(!borrows_without_escape("hash", 1));
+        assert!(borrows_without_escape("map", 0));
+        assert!(!borrows_without_escape("map", 1));
+        assert!(!borrows_without_escape("task.spawn", 0));
+        for symbol in ["array.get", "get", "put", "ad.push-owned", "unknown"] {
+            assert!(!borrows_without_escape(symbol, 0), "{symbol}");
+        }
+    }
 
     #[test]
     fn declared_collection_and_text_boundaries_have_consistent_contracts() {

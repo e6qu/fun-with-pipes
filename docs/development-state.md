@@ -1,5 +1,15 @@
 # Session handoff
 
+Independent following preparation: `/private/tmp/fwp-hash-borrows`, branch
+`borrowed-hash-arguments`, anchored at `28cc4d0e`. Transfer only later commits.
+The active delivery and combined predecessor below must merge first.
+
+Next: validate an explicit nonescape contract for hash, using existing stack
+placement to remove per-hash heap tuples. Require raw/native agreement, retained
+aliases, GC stress, actual WASI physical frees, a disabled-stack negative control
+and repeated C/Rust costs before claiming improvement. The implementation is
+unverified; no new PR is open for this preparation.
+
 Updated 2026-10-16. The only open delivery is [PR #150](https://github.com/e6qu/fun-with-pipes/pull/150),
 head `7a7b40e1878ea062f64eceded6ae029b4124f976`. Eight of nine
 [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38851567232)

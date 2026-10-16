@@ -122,7 +122,11 @@ constraint excludes functions and resources. Integer `bit.and`, `bit.or`,
 `bit.xor` and `bit.not` are also total: every valid input has a result. The existing
 fusion analysis recognizes these contracts, so `map hash | fold bit.xor 0u64`
 can avoid its intermediate result list. It keeps captured inputs alive through
-the ordinary ownership rules. Hash still uses its runtime type description.
+the ordinary ownership rules. Hash still uses its runtime type description. Its separately reviewed nonescape
+contract proves that the input object is used only during the call, allowing
+existing stack placement for temporary tuples. Borrowing alone does not imply
+this guarantee: other borrowed inputs can be returned or retained. Tuple fields
+still obey their normal ownership rules.
 
 Bit shifts remain excluded from that proof because an oversized shift traps.
 Effectful callbacks and distinguishable traps still prevent interleaving. This

@@ -264,7 +264,7 @@ main = input () | map (both id (const (div 0 1)) | hash) | fold bit.xor 0u64 | e
 }
 
 #[test]
-fn hash_reduction_removes_intermediate_list_allocations() {
+fn hash_reduction_removes_lists_and_temporary_heap_tuples() {
     let dir = fwp::cgen::TempDir::new("hash-fusion-counts").unwrap();
     let input = dir.join("main.fwp");
     std::fs::write(&input, "main = range 0 65 | map (both id (const (range 0 16 | array.from-list)) | hash) | fold bit.xor 0u64 | echo\n").unwrap();
@@ -276,47 +276,55 @@ fn hash_reduction_removes_intermediate_list_allocations() {
             .arg(&input),
     );
     for arc in [false, true] {
-        let cfile = dir.join("main.c");
-        let mut build = Command::new(compiler);
-        build
-            .args(["build", "--emit-c"])
-            .arg(&input)
-            .arg("-o")
-            .arg(&cfile);
-        if arc {
-            build.args(["--gc", "arc"]);
-        }
-        checked(&mut build);
-        let mut code = std::fs::read_to_string(cfile).unwrap();
-        assert!(code.contains("/* fused :"));
-        let marker = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
-        assert_eq!(code.matches(marker).count(), 1);
-        code = code.replace(
-            marker,
-            &format!("static unsigned hash_requests;\n{marker} hash_requests++;"),
-        );
-        let start = code
-            .find("static void *fwp_main_thread(void *arg) {")
-            .unwrap();
-        let finish = start + code[start..].find("\n}\n").unwrap() + 3;
-        let body = code[start..finish].replace("    fwp_init_consts();\n",
+        for stack in [true, false] {
+            let cfile = dir.join("main.c");
+            let mut build = Command::new(compiler);
+            build
+                .env("FWP_STACK", if stack { "1" } else { "0" })
+                .args(["build", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile);
+            if arc {
+                build.args(["--gc", "arc"]);
+            }
+            checked(&mut build);
+            let mut code = std::fs::read_to_string(cfile).unwrap();
+            assert!(code.contains("/* fused :"));
+            let marker = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+            assert_eq!(code.matches(marker).count(), 1);
+            code = code.replace(
+                marker,
+                &format!("static unsigned hash_requests;\n{marker} hash_requests++;"),
+            );
+            let start = code
+                .find("static void *fwp_main_thread(void *arg) {")
+                .unwrap();
+            let finish = start + code[start..].find("\n}\n").unwrap() + 3;
+            let body = code[start..finish].replace("    fwp_init_consts();\n",
             "    fwp_init_consts();\n    hash_requests = 0; intptr_t hash_budget = fwp_gc.budget;\n")
             .replace("    fwp_cl_finish();\n",
-            "    fwp_cl_finish();\n    if(hash_requests > 100 || fwp_gc.budget != hash_budget) exit(249);\n");
-        code.replace_range(start..finish, &body);
-        // The measured unfused baseline needs 216 requests at these sizes:
-        // 16 input nodes + 65 range nodes + 65 results + 65 tuples + 5 fixed.
-        for opt in ["-O1", "-O2"] {
-            let binary = dir.join("main.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let actual = checked(
-                Command::new(binary)
+            "    fwp_cl_finish();\n    if(hash_requests > 35 || fwp_gc.budget != hash_budget) exit(249);\n");
+            code.replace_range(start..finish, &body);
+            // A 35-request budget allows input construction and fixed setup, but
+            // excludes 65 per-hash heap tuples. Disabling stack placement must fail.
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join("main.exe");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let actual = Command::new(binary)
                     .env("FWP_GC", "off")
                     .env("FWP_GC_STRESS", "0")
                     .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "0"),
-            );
-            assert_eq!(actual.stdout, raw.stdout);
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    actual.status.code(),
+                    Some(if stack { 0 } else { 249 }),
+                    "arc={arc} stack={stack} {opt}: {actual:?}"
+                );
+                assert_eq!(actual.stdout, raw.stdout);
+            }
         }
     }
 }
