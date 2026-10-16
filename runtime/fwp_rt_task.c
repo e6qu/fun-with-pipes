@@ -1666,6 +1666,13 @@ static V fwp_p_tcp_stop(V l) {
     return FWP_UNIT;
 }
 
+static void fwp_addrinfo_release(void *arg) {
+    struct addrinfo **result = arg;
+    int saved = errno;
+    if (*result) freeaddrinfo(*result);
+    *result = NULL;
+    errno = saved;
+}
 typedef struct { fwp_socket_t fd; struct addrinfo *addresses; } fwp_connect_owner;
 static void fwp_connect_finish(void *p) {
     fwp_connect_owner *owner = (fwp_connect_owner *)p;
@@ -1730,9 +1737,12 @@ static V fwp_tcp_read(V nv, V c, int64_t at, const fwp_desc *err) {
     int64_t n = (int64_t)nv;
     if (n < 1) n = 1;
     char *buf = (char *)malloc((size_t)n);
+    if (!buf) fwp_trap("socket receive allocation failed");
+    fwp_cleanup buffer_cleanup;
+    fwp_cleanup_push(&buffer_cleanup, free, buf);
     for (;;) {
         fwp_socket_t fd = SOCK(c)->fd;
-        if (fd == FWP_INVALID_SOCKET) { free(buf); return fwp_closed_error("connection", err); }
+        if (fd == FWP_INVALID_SOCKET) { fwp_cleanup_pop(&buffer_cleanup); free(buf); return fwp_closed_error("connection", err); }
         int ww = 0;
         ssize_t k;
 #ifdef FWP_TLS
@@ -1742,17 +1752,17 @@ static V fwp_tcp_read(V nv, V c, int64_t at, const fwp_desc *err) {
             k = fwp_socket_recv(fd, buf, (size_t)n, 0);
         if (k >= 0) {
             V r = fwp_str_new(buf, (size_t)k);
-            free(buf);
+            fwp_cleanup_pop(&buffer_cleanup); free(buf);
             return r;
         }
 #ifdef FWP_TLS
-        if (k == -2) { free(buf); return fwp_io_error("tls", fwp_tls_err, err); }
+        if (k == -2) { fwp_cleanup_pop(&buffer_cleanup); free(buf); return fwp_io_error("tls", fwp_tls_err, err); }
 #endif
         if (fwp_socket_again(errno)) {
-            if (!fwp_wait_fd(fd, ww, at)) { free(buf); return 0; }
+            if (!fwp_wait_fd(fd, ww, at)) { fwp_cleanup_pop(&buffer_cleanup); free(buf); return 0; }
             continue;
         }
-        free(buf);
+        fwp_cleanup_pop(&buffer_cleanup); free(buf);
         return fwp_os_error("read", 0, err);
     }
 }
@@ -1835,19 +1845,21 @@ static V fwp_p_udp_bind(V addr, const fwp_desc *err) {
 
 static V fwp_p_udp_send_to(V addr, V data, V s, const fwp_desc *err) {
     struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_DGRAM, 0, "send", err);
+    fwp_cleanup address_cleanup;
+    fwp_cleanup_push(&address_cleanup, fwp_addrinfo_release, &res);
     for (;;) {
         fwp_socket_t fd = SOCK(s)->fd;
-        if (fd == FWP_INVALID_SOCKET) { freeaddrinfo(res); return fwp_closed_error("socket", err); }
+        if (fd == FWP_INVALID_SOCKET) { fwp_cleanup_pop(&address_cleanup); fwp_addrinfo_release(&res); return fwp_closed_error("socket", err); }
         ssize_t k = fwp_socket_sendto(fd, STR(data)->d, STR(data)->len, 0, res->ai_addr, res->ai_addrlen);
         if (k >= 0) break;
         if (fwp_socket_again(errno)) {
             fwp_wait_fd(fd, 1, 0);
             continue;
         }
-        freeaddrinfo(res);
+        fwp_cleanup_pop(&address_cleanup); fwp_addrinfo_release(&res);
         return fwp_os_error("send", STR(addr)->d, err);
     }
-    freeaddrinfo(res);
+    fwp_cleanup_pop(&address_cleanup); fwp_addrinfo_release(&res);
     return FWP_UNIT;
 }
 
@@ -1855,9 +1867,12 @@ static V fwp_p_udp_recv_from(V nv, V s, const fwp_desc *err) {
     int64_t n = (int64_t)nv;
     if (n < 1) n = 1;
     char *buf = (char *)malloc((size_t)n);
+    if (!buf) fwp_trap("socket receive allocation failed");
+    fwp_cleanup buffer_cleanup;
+    fwp_cleanup_push(&buffer_cleanup, free, buf);
     for (;;) {
         fwp_socket_t fd = SOCK(s)->fd;
-        if (fd == FWP_INVALID_SOCKET) { free(buf); return fwp_closed_error("socket", err); }
+        if (fd == FWP_INVALID_SOCKET) { fwp_cleanup_pop(&buffer_cleanup); free(buf); return fwp_closed_error("socket", err); }
         struct sockaddr_storage ss;
         socklen_t len = sizeof ss;
         ssize_t k = fwp_socket_recvfrom(fd, buf, (size_t)n, 0, (struct sockaddr *)&ss, &len);
@@ -1865,14 +1880,14 @@ static V fwp_p_udp_recv_from(V nv, V s, const fwp_desc *err) {
             char a[128];
             fwp_fmt_addr((struct sockaddr *)&ss, a, sizeof a);
             V r = fwp_tuple2(fwp_str_new(buf, (size_t)k), fwp_cstr(a));
-            free(buf);
+            fwp_cleanup_pop(&buffer_cleanup); free(buf);
             return r;
         }
         if (fwp_socket_again(errno)) {
             fwp_wait_fd(fd, 0, 0);
             continue;
         }
-        free(buf);
+        fwp_cleanup_pop(&buffer_cleanup); free(buf);
         return fwp_os_error("receive", 0, err);
     }
 }

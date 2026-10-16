@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets]
         default: numerical
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
@@ -15,7 +15,7 @@ on:
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'kernels' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    if: inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
@@ -65,6 +65,17 @@ jobs:
         run: |
           git fetch --no-tags --depth=1 origin 21a621c699d11a84c05f955935dc95dcfb8adbf2
           git show 21a621c699d11a84c05f955935dc95dcfb8adbf2:runtime/fwp_rt_kernel.c > kernel-baseline.c
+      - name: Socket scratch and DNS ownership
+        if: inputs.suite == 'sockets'
+        env:
+          FWP_DECODER_ARTIFACTS: decoder-evidence
+        run: cargo test --no-fail-fast --test native_sockets --test dns_ownership
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'sockets'
+        with:
+          name: sockets-${{ matrix.runner }}
+          path: decoder-evidence/
+          if-no-files-found: ignore
       - name: CPU kernel ownership
         if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
         env:
@@ -90,7 +101,7 @@ jobs:
         if: inputs.suite == 'decoders'
         env:
           FWP_DECODER_ARTIFACTS: decoder-evidence
-        run: cargo test --no-fail-fast --test metrics_ownership --test library_unload --test byte_decoder_ownership --test ternary_ownership --test dns_ownership --test text_decoder_ownership --test web --test std_tests --test arc_execution --test stdlib_doc
+        run: cargo test --no-fail-fast --test metrics_ownership --test library_unload --test byte_decoder_ownership --test ternary_ownership --test dns_ownership --test native_sockets --test text_decoder_ownership --test web --test std_tests --test arc_execution --test stdlib_doc
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'decoders'
         with:
