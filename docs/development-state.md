@@ -78,7 +78,9 @@ combines eligible lane pipelines without intermediate lists, and removes sole
 immediate product vectors through ordered direct dot. The proof preserves
 floating-point order, common-prefix lengths, aliases, effects and first traps.
 
-Cost run `38874218523` has both Linux results; macOS is pending. On both Linux
+Cost run `38874218523` passes all four hosts; the retained
+[intermediate report](measurements/vector-direct-intermediate-2026-10-16.json)
+verifies all source/binary/assembly identities (guarded 0.15 s). On all four
 hosts, four/sixty-four-lane checked ARC requests fall from 262,147/65,539 to
 131,074/32,770, with zero retains/final storage and 128/1,312 peak charged bytes.
 These unpaired runs do not isolate timing improvements. Remaining CPU overhead
@@ -92,7 +94,10 @@ rounded product, ordered sum, retained aliases and effect/trap order. No generic
 constant-function conversion or floating reassociation is allowed. Require fresh
 native/WASI gates, four-host allocation/code evidence and paired timings against
 original baseline `38869050349`; keep the intermediate evidence visible.
-Seven semantic cases pass the accepted interpreter (guarded 1.24 s); eager stage
+Splat reduction revision `b1a34ea0` has native `38877218687`, actual WASI
+`38877223390` and four-host costs `38877226777` queued. These gates must finish
+before paired comparison and full delivery publication.
+Eight semantic cases pass the accepted interpreter (guarded 1.36 s); eager stage
 arguments print before pipe input and their division trap remains first. A
 retained-splat alias case is also included. Formatting passes (1.29 s) and docs
 pass (3.15 s). The hot-loop regression counts both initialized-object and leaf

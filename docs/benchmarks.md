@@ -1139,14 +1139,14 @@ flags, binary sizes, profiles and raw samples remain in the linked reports.
 
 A lane is one position in `Vec[N, F64]`; the introductory
 [lane example](../examples/vector-lanes.fwp) explains construction and optional
-length checks. [The four-host report](measurements/vector-lanes-2026-10-16.json)
+length checks. [The owned-vector baseline report](measurements/vector-lanes-2026-10-16.json)
 measures repeated dot products: fill every lane with the iteration index, multiply
 each by 0.5, sum lanes left to right, then sum iteration results. Four-lane work
 uses 32,768 iterations; sixty-four-lane work uses 8,192. Every value is exactly
 representable for these inputs, and outputs match raw interpretation.
 
 The C/Rust sources express the same arithmetic with fixed stack arrays and weights
-constructed once. Their compilers may eliminate those arrays. fwp currently makes
+constructed once. Their compilers may eliminate those arrays. At baseline revision `6be8f245`, fwp makes
 three vectors per iteration and materializes input and result lists. The comparison
 measures that abstraction cost; it does not pretend both programs allocate the
 same structures. fwp also checks optional final integer conversion; the reference
@@ -1160,7 +1160,7 @@ profiles have zero collections here; the reported costs are not collection pause
 The report retains hardware, versions, flags, raw samples, build costs, binary sizes,
 peak process memory and verified source/binary/assembly identities.
 
-The table gives current checked ARC CPU time divided by the reference's CPU time.
+The table gives baseline checked ARC CPU time divided by the reference's CPU time.
 For example, 11.200 means 11.2 times the C time, or about 1,020% extra CPU time.
 
 | Host | Four lanes / C | Four lanes / Rust | Sixty-four lanes / C | Sixty-four lanes / Rust |
@@ -1170,7 +1170,7 @@ For example, 11.200 means 11.2 times the C time, or about 1,020% extra CPU time.
 | macOS ARM64 | 2.921 | 2.554 | 2.223 | 1.749 |
 | macOS AMD64 | 4.500 | 3.959 | 2.056 | 1.844 |
 
-Every host and fwp mode agrees on the ownership profiles:
+At that baseline, every host and fwp mode agrees on the ownership profiles:
 
 | Workload | Managed requests | Cumulative requested bytes | Peak charged bytes | Retains / final charged bytes |
 |---|---:|---:|---:|---:|
@@ -1183,7 +1183,7 @@ calculation. Those reference scopes exclude startup and printing internals. Thei
 three declared arrays occupy 96 or 1,536 source-level bytes, but that is not a
 measured stack-frame size: optimization can remove them.
 
-Generated fwp C calls splat twice and multiplication once for each mapped input,
+Baseline generated fwp C calls splat twice and multiplication once for each mapped input,
 then releases all three vectors. The retained Linux ARM64 multiply loop uses
 scalar F64 multiplication and handles array representation in the loop; the C
 reference keeps calculations in registers and contains vector `fmul`/`fadd`
@@ -1192,3 +1192,18 @@ provides concrete next work: remove eligible list/vector intermediates, avoid
 rebuilding constant weights where semantics permit, and expose contiguous numeric
 storage to the C optimizer. Owned cleanup is verified; zero-cost lane abstraction
 and C/Rust parity remain unfinished.
+
+The [intermediate direct-dot report](measurements/vector-direct-intermediate-2026-10-16.json)
+retains all four hosts at `3577ba37`, after list fusion, direct F64 storage access
+and removal of the product vector. Requests are 131,074 / 32,770, peak charged
+storage is 128 / 1,312 bytes, and retains/final charged storage are zero for
+four/sixty-four lanes. Two splat arrays and wrappers still account for four
+requests per iteration. The code excerpts show the direct range loop and these
+two calls; the complete artifacts retain their compiled instructions.
+
+Its checked ARC CPU time is still 4.611 / 2.072 times C on Linux AMD64,
+5.902 / 1.910 on Linux ARM64, 2.193 / 1.690 on ARM macOS and 1.785 / 1.411 on
+Intel macOS. These ratios compare implementations within each run. Comparing
+CPU time with the earlier run does not establish a paired speedup. A following
+revision attempts to remove the two splats when their sole use is that dot;
+its pending gates and measurements are tracked in the handoff.
