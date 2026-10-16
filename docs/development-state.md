@@ -41,9 +41,11 @@ result's owner and incoming source's lifetime before admitting remote calls to A
 The client previously separately allocated its description without a matching
 release; the server borrowed its handler's text. Both now copy description bytes
 into the existing incoming-source allocation. Client truncation remains unchanged,
-and formatting scratch returns before receive may suspend. The new mutation,
+and formatting scratch returns before receive may suspend. The mutation,
 stack-lifetime, size-overflow, one-allocation and deliberate borrowed-text controls
-await CI, along with actual interpreter/native service calls. No ARC eligibility
+pass on Linux AMD64 in `38977205160` at `b84a7581`, along with actual interpreter/native
+service calls. Artifacts are retained under
+`/private/tmp/fwp-stream-description-evidence/38977205160` (guarded download 2.47s). No ARC eligibility
 was expanded; the source object still follows its existing collector lifetime. This controlled receive/cache measurement excludes
 socket I/O, connection pooling and full remote-call performance. Existing cells
 have no explicit release operation; clearing C roots does not pretend otherwise.
@@ -61,22 +63,33 @@ networking remain to verify for this preparation.
 Every commit/squash message is one line, at most 80 characters, without bodies,
 trailers or attribution. JIT is excluded. Failing tests are work to fix.
 
-## Remaining ownership questions
+## Current source lifetime preparation
 
-Candidate to investigate, not implemented: an unforced cell could own its
-incoming source and move that owner into the next cell after a successful receive.
-A forced cell would own its cached result instead. That may avoid a source
-retain/release on every element, while cached continuations keep aliases valid.
-Failed construction must leave the source with its original owner. Forced-end
-cells must not keep a dead source merely for type information. Unique consumers
-may later move results or reuse cell storage; aliases still require caching.
+A successfully read position now retains only its cached value and continuation.
+The next unread position retains the receive source; normal end and an error end
+retain none. Failure before publishing a complete cache keeps the original
+source. The interpreter expresses the two states directly, so a completed cell
+cannot also own the source. The native runtime clears the source pointer only
+after constructing its result. This does not yet add native reference counting
+or make remote calls eligible for ARC.
 
-A cached value and continuation need independent owners for aliases, early stop
-and retained positions. The incoming source must keep its stream/connection and
-codec captures alive. Define back-references and cycle policy before permitting
-ARC remote calls. After baseline collection, add last-reference cleanup and
-partial-allocation/error/cancellation controls, then actual interpreter/native
-service comparisons. Keep the existing immutable iterator behavior and syntax.
+Pending CI: real queued messages at 1/32/128 elements, repeated reads, retained
+first positions, full/early consumption, status errors and malformed messages.
+Interpreter weak references check that only the unread continuation owns the
+source, that reaching end releases it even with a retained prefix, and that the
+last early owner releases it. Native controls reject retained source edges and
+missing caches; existing decode/copy traps must leave the original source intact.
+Actual interpreter/native service combinations remain in the focused workflow.
+
+Next give cached native values and continuations explicit typed owners, with
+last-reference and partial-construction cleanup. The incoming source must own
+its stream/connection and decoder captures. Define back-references and cycle
+policy before permitting ARC remote calls. Connection pooling, retained tasks,
+server contexts, cancellation and detached users remain separate boundaries.
+Prefer moving the source into the next cell once construction succeeds; failure
+must leave the original owner intact. Avoid per-element source ARC traffic where
+that move suffices. Unique consumers may later move results or reuse cells;
+aliases must retain immutable cached behavior.
 
 ## Roadmap status
 

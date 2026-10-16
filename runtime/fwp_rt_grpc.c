@@ -1318,7 +1318,7 @@ static g_incoming *g_incoming_format(const char *format, ...) {
 /* a position in a received stream (GrpcCell): forcing it receives the
  * message there, once */
 typedef struct {
-    g_incoming *src;
+    g_incoming *src;           /* only unread positions retain the source */
     int forced;
     V memo;
 } g_cell;
@@ -1344,9 +1344,8 @@ typedef struct { int code; char *text; } g_failure;
 /* Option[(a, GrpcCell[a])]: the next element; with `first`, failures go
  * to *f or *err_desc (the cell stays unforced) instead of trapping */
 /* `Some((Err (GrpcError code text), <the end>))` */
-static V g_err_element(g_incoming *src, int code, const char *text) {
+static V g_err_element(int code, const char *text) {
     g_cell *last = (g_cell *)fwp_mem_alloc(sizeof *last);
-    last->src = src;
     last->forced = 1;
     last->memo = FWP_NONE;
     V f[2] = {(V)(int64_t)code, fwp_cstr(text)};
@@ -1381,7 +1380,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
                                          : strdup("unexpected error in a response");
                 fwp_cleanup text_cleanup;
                 fwp_cleanup_push(&text_cleanup, fwp_tls_subject_free, t);
-                r = g_err_element(src, GRPC_INTERNAL, t);
+                r = g_err_element(GRPC_INTERNAL, t);
                 fwp_cleanup_pop(&text_cleanup);
                 free(t);
             }
@@ -1390,12 +1389,13 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
         } else if (g.kind == G_END && g.code == 0) {
             r = FWP_NONE;
         } else {
-            r = g_err_element(src, g.kind == G_END ? g.code : GRPC_UNAVAILABLE, g.text);
+            r = g_err_element(g.kind == G_END ? g.code : GRPC_UNAVAILABLE, g.text);
         }
         fwp_cleanup_pop(&received_cleanup);
         g_got_release(&g);
         cell->forced = 1;
         cell->memo = r;
+        cell->src = 0; /* the complete cached result owns its continuation */
         return r;
     }
     if (g.kind == G_MSG) {
@@ -1456,6 +1456,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
     g_got_release(&g);
     cell->forced = 1;
     cell->memo = r;
+    cell->src = 0; /* retain the source on every failure before publication */
     return r;
 }
 

@@ -1552,10 +1552,7 @@ fn call_remote_at(
                 deadline,
                 results: shape.results.is_some(),
             });
-            let cell = Rc::new(StreamCell {
-                src: inc,
-                memo: RefCell::new(None),
-            });
+            let cell = Rc::new(RefCell::new(StreamCell::Pending(inc)));
             match force_cell(it, &cell, true) {
                 Ok(_) => {}
                 Err(CellErr::Ctl(e)) => return Err(e),
@@ -1574,7 +1571,7 @@ fn call_remote_at(
 /// A gRPC runtime object behind `GrpcStream` and `GrpcCell`.
 pub enum Obj {
     Call(Rc<Call>),
-    Cell(Rc<StreamCell>),
+    Cell(Rc<RefCell<StreamCell>>),
 }
 
 impl std::fmt::Debug for Obj {
@@ -1605,9 +1602,11 @@ pub struct Incoming {
 
 /// A position in a received stream; forcing it receives the message
 /// there (once).
-pub struct StreamCell {
-    src: Rc<Incoming>,
-    memo: RefCell<Option<Value>>,
+pub enum StreamCell {
+    /// Only an unread position keeps the receive source alive.
+    Pending(Rc<Incoming>),
+    /// The cached value owns its continuation; completed positions need no source.
+    Cached(Value),
 }
 
 enum CellErr {
@@ -1635,19 +1634,22 @@ fn fail_call(it: &mut Interp, st: Status) -> Ctl {
 
 /// `Option[(a, GrpcCell[a])]`: the next element of a received stream.
 /// With `first`, failures are returned instead of trapping.
-fn force_cell(it: &mut Interp, cell: &Rc<StreamCell>, first: bool) -> Result<Value, CellErr> {
-    if let Some(v) = cell.memo.borrow().clone() {
-        return Ok(v);
-    }
-    let src = cell.src.clone();
+fn force_cell(
+    it: &mut Interp,
+    cell: &Rc<RefCell<StreamCell>>,
+    first: bool,
+) -> Result<Value, CellErr> {
+    // Release the borrow before recv can hand control to another task. Keep the
+    // original pending state on failure; publish the complete cache on success.
+    let src = match &*cell.borrow() {
+        StreamCell::Cached(value) => return Ok(value.clone()),
+        StreamCell::Pending(source) => source.clone(),
+    };
     let got = recv(it, &src.conn, &src.stream, src.deadline)?;
     if src.results {
         // an `Err` element, then the end
         let err = |code: u32, msg: &str| {
-            let last = Rc::new(StreamCell {
-                src: src.clone(),
-                memo: RefCell::new(Some(opt(None))),
-            });
+            let last = Rc::new(RefCell::new(StreamCell::Cached(opt(None))));
             let e = Value::data(
                 1,
                 vec![Value::tuple(vec![Value::I64(code as i64), Value::str(msg)])],
@@ -1660,10 +1662,7 @@ fn force_cell(it: &mut Interp, cell: &Rc<StreamCell>, first: bool) -> Result<Val
         let v = match got {
             Got::Msg(m) => match decode_msg(it, &src.dec, &m)? {
                 Ok(Ok(x)) => {
-                    let next = Rc::new(StreamCell {
-                        src: src.clone(),
-                        memo: RefCell::new(None),
-                    });
+                    let next = Rc::new(RefCell::new(StreamCell::Pending(src.clone())));
                     opt(Some(Value::tuple(vec![
                         Value::data(0, vec![x]),
                         wrap(Native::Grpc(Obj::Cell(next))),
@@ -1676,7 +1675,7 @@ fn force_cell(it: &mut Interp, cell: &Rc<StreamCell>, first: bool) -> Result<Val
             Got::End(st) => err(st.code, &st.message),
             Got::Lost(m, _) => err(UNAVAILABLE, &m),
         };
-        *cell.memo.borrow_mut() = Some(v.clone());
+        *cell.borrow_mut() = StreamCell::Cached(v.clone());
         return Ok(v);
     }
     let failed = |f: Failure| -> CellErr {
@@ -1700,10 +1699,7 @@ fn force_cell(it: &mut Interp, cell: &Rc<StreamCell>, first: bool) -> Result<Val
     let v = match got {
         Got::Msg(m) => match decode_msg(it, &src.dec, &m)? {
             Ok(Ok(x)) => {
-                let next = Rc::new(StreamCell {
-                    src: src.clone(),
-                    memo: RefCell::new(None),
-                });
+                let next = Rc::new(RefCell::new(StreamCell::Pending(src.clone())));
                 opt(Some(Value::tuple(vec![
                     x,
                     wrap(Native::Grpc(Obj::Cell(next))),
@@ -1746,7 +1742,7 @@ fn force_cell(it: &mut Interp, cell: &Rc<StreamCell>, first: bool) -> Result<Val
             return Err(failed(Failure::Transport(m)));
         }
     };
-    *cell.memo.borrow_mut() = Some(v.clone());
+    *cell.borrow_mut() = StreamCell::Cached(v.clone());
     Ok(v)
 }
 
@@ -2143,10 +2139,7 @@ fn run_method(
                 deadline: None,
                 results: false,
             });
-            let cell = Rc::new(StreamCell {
-                src: inc,
-                memo: RefCell::new(None),
-            });
+            let cell = Rc::new(RefCell::new(StreamCell::Pending(inc)));
             let f = m
                 .iter_fn
                 .ok_or_else(|| Ctl::Trap("internal: no iterator function".into()))?;
@@ -2788,5 +2781,172 @@ mod pool_identity_tests {
             ClientTls::pool_key(&None, "localhost:1234"),
             key(ClientTls::default())
         );
+    }
+}
+
+#[cfg(test)]
+mod stream_source_tests {
+    use super::*;
+
+    fn queued(program: &Program, count: usize, results: bool, status: u32) -> Rc<Incoming> {
+        // A real socket supplies the connection's platform handle. All receive
+        // data is already queued, so these tests neither start tasks nor wait.
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let socket = TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+        let (_peer, _) = listener.accept().unwrap();
+        let connection = Rc::new(RefCell::new(Conn::new(socket, "queued".into(), None)));
+        let stream = Rc::new(RefCell::new(Stream {
+            id: 1,
+            remote_end: true,
+            trailers: vec![("grpc-status".into(), status.to_string())],
+            msgs: (0..count)
+                .map(|i| vec![10, 1, b'a' + (i % 26) as u8])
+                .collect(),
+            ..Stream::default()
+        }));
+        connection.borrow_mut().streams.insert(1, stream.clone());
+        let mut schema = Schema::default();
+        let ty = MT::con("std::String");
+        let method = schema.method(program, "queued", &[], &ty, None).unwrap();
+        Rc::new(Incoming {
+            conn: connection,
+            stream,
+            server: false,
+            dec: Decoder::Native {
+                schema: Rc::new(schema),
+                node: method.response,
+                ty,
+                error: None,
+            },
+            what: "queued.string".into(),
+            deadline: None,
+            results,
+        })
+    }
+
+    fn force(it: &mut Interp, cell: &Rc<RefCell<StreamCell>>) -> Value {
+        let Ok(value) = force_cell(it, cell, false) else {
+            panic!("queued receive failed")
+        };
+        value
+    }
+
+    fn element(value: &Value) -> (Value, Rc<RefCell<StreamCell>>) {
+        let Value::Data(1, fields) = value else {
+            panic!("expected Some")
+        };
+        let Value::Record(pair) = &fields[0] else {
+            panic!("expected pair")
+        };
+        let Native::Grpc(Obj::Cell(next)) = native(&pair[1]).unwrap() else {
+            panic!("expected next cell")
+        };
+        (pair[0].clone(), next.clone())
+    }
+
+    #[test]
+    fn cached_positions_release_the_source_after_end_and_last_early_owner() {
+        let program = Program::default();
+        let mut it = Interp::new(&program, Box::new(std::io::sink()));
+        for count in [1, 32, 128] {
+            for results in [false, true] {
+                for early in [false, true] {
+                    let source = queued(&program, count, results, OK);
+                    let weak = Rc::downgrade(&source);
+                    let first = Rc::new(RefCell::new(StreamCell::Pending(source)));
+                    let mut position = first.clone();
+                    let consumed = if early { count.div_ceil(2) } else { count };
+                    for i in 0..consumed {
+                        let value = force(&mut it, &position);
+                        assert!(matches!(*position.borrow(), StreamCell::Cached(_)));
+                        let again = force(&mut it, &position);
+                        let (Value::Data(_, a), Value::Data(_, b)) = (&value, &again) else {
+                            panic!("expected cached Some")
+                        };
+                        assert!(Rc::ptr_eq(a, b), "repeated read must return the cache");
+                        let (actual, next) = element(&value);
+                        let text = Value::str(&((b'a' + (i % 26) as u8) as char).to_string());
+                        assert_eq!(
+                            actual,
+                            if results {
+                                Value::data(0, vec![text])
+                            } else {
+                                text
+                            }
+                        );
+                        position = next;
+                        assert_eq!(
+                            weak.strong_count(),
+                            1,
+                            "only the unread continuation owns the source"
+                        );
+                    }
+                    if !early {
+                        assert_eq!(force(&mut it, &position), opt(None));
+                        assert!(
+                            weak.upgrade().is_none(),
+                            "cached positions must not retain a finished source"
+                        );
+                    }
+                    // Retained earlier positions still give the first value.
+                    let (actual, _) = element(&force(&mut it, &first));
+                    let text = Value::str("a");
+                    assert_eq!(
+                        actual,
+                        if results {
+                            Value::data(0, vec![text])
+                        } else {
+                            text
+                        }
+                    );
+                    drop(position);
+                    if early {
+                        assert_eq!(
+                            weak.strong_count(),
+                            1,
+                            "the retained prefix owns its unread continuation"
+                        );
+                    }
+                    drop(first);
+                    assert!(
+                        weak.upgrade().is_none(),
+                        "last early owner releases the source"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn cached_error_ends_release_sources_and_failed_reads_keep_them() {
+        let program = Program::default();
+        let mut it = Interp::new(&program, Box::new(std::io::sink()));
+        for results in [false, true] {
+            for malformed in [false, true] {
+                let source = queued(&program, 0, results, INTERNAL);
+                if malformed {
+                    source.stream.borrow_mut().msgs.push_back(vec![10, 5, b'x']);
+                }
+                let weak = Rc::downgrade(&source);
+                let cell = Rc::new(RefCell::new(StreamCell::Pending(source)));
+                let value = force_cell(&mut it, &cell, true);
+                if results {
+                    let Ok(value) = value else {
+                        panic!("expected error element")
+                    };
+                    let (error, end) = element(&value);
+                    assert!(matches!(error, Value::Data(1, _)));
+                    assert!(weak.upgrade().is_none(), "error end must not retain source");
+                    assert_eq!(force(&mut it, &end), opt(None));
+                    assert!(matches!(*cell.borrow(), StreamCell::Cached(_)));
+                } else {
+                    assert!(value.is_err());
+                    assert!(matches!(*cell.borrow(), StreamCell::Pending(_)));
+                    assert_eq!(weak.strong_count(), 1, "failure preserves original source");
+                }
+                drop(cell);
+                assert!(weak.upgrade().is_none());
+            }
+        }
     }
 }

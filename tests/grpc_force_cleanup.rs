@@ -81,14 +81,14 @@ int main(void){
   if(!setjmp(failed)){
    V r=g_force(cell,stage==0||stage==9,&failure,&error,&desc);
    if(stage==1||stage==2||stage==5||stage==8||stage==10)return 2;
-   if(stage==0){if(r||cell->forced||!failure.text||strcmp(failure.text,"bad request")||frees)return 3;observed_free(failure.text);}
-   else if(stage==9){if(r||cell->forced||error!=42||desc)return 4;}
+   if(stage==0){if(r||cell->forced||cell->src!=src||!failure.text||strcmp(failure.text,"bad request")||frees)return 3;observed_free(failure.text);}
+   else if(stage==9){if(r||cell->forced||cell->src!=src||error!=42||desc)return 4;}
    else{
-    if(!cell->forced||cell->memo!=r)return 5;
+    if(!cell->forced||cell->memo!=r||cell->src)return 5;
     if(stage==3){if(r!=FWP_NONE)return 6;}
     else{
      if(r==FWP_NONE)return 7;V value=OBJ(OBJ(r)->f[0])->f[0];
-     if(stage==4){V text=OBJ(OBJ(value)->f[0])->f[1];if(strcmp(STR(text)->d,"bad response from probe: decode reason"))return 8;}
+     if(stage==4){g_cell *end=(g_cell *)(uintptr_t)OBJ(OBJ(r)->f[0])->f[1];if(end->src||!end->forced||end->memo!=FWP_NONE)return 12;V text=OBJ(OBJ(value)->f[0])->f[1];if(strcmp(STR(text)->d,"bad response from probe: decode reason"))return 8;}
      else if((stage==7?OBJ(value)->f[0]:value)!=42)return 9;
     }
     int before=allocations;if(g_force(cell,0,&failure,&error,&desc)!=r||allocations!=before)return 10;
@@ -97,7 +97,7 @@ int main(void){
   fwp_trap_recover=0;fwp_trap_jb=0;
   int expected=stage==4||stage==10?3:stage==5?2:1;
   if(allocations!=expected||frees!=expected||fwp_cleanups)return 1;
-  if(trapped&&cell->forced)return 11;
+  if(trapped&&(cell->forced||cell->src!=src))return 11;
   FWP_KEEP_ALIVE(PTR(cell));FWP_KEEP_ALIVE(PTR(src));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
  }
  FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
@@ -179,7 +179,13 @@ static void observe_free(void *);
     assert_eq!(code.matches(memo).count(), 1);
     let broken = dir.join("without-cache.exe");
     fwp::cgen::compile_c(
-        &code.replace(memo, "/* deliberately receive again */"),
+        &code
+            .replace(memo, "/* deliberately receive again */")
+            .replace(
+                "cell->src = 0;",
+                "/* deliberately keep source for second receive */",
+            )
+            .replace("if (position->src) return 38;", ""),
         &broken,
         "-O2",
     )
@@ -196,6 +202,28 @@ static void observe_free(void *);
         control.status.code(),
         Some(34),
         "missing cache must be detected: {control:?}"
+    );
+    // Keeping obsolete source edges must fail even while values remain correct.
+    let retained = dir.join("with-retained-source.exe");
+    assert_eq!(code.matches("cell->src = 0;").count(), 2);
+    fwp::cgen::compile_c(
+        &code.replace("cell->src = 0;", "/* deliberately retain source */"),
+        &retained,
+        "-O2",
+    )
+    .unwrap();
+    let control = Command::new(&retained)
+        .args(["1", "0"])
+        .env("FWP_GC", "off")
+        .env("FWP_GC_STRESS", "0")
+        .env("FWP_GC_VERIFY", "0")
+        .env("FWP_REUSE_VERIFY", "0")
+        .output()
+        .unwrap();
+    assert_eq!(
+        control.status.code(),
+        Some(38),
+        "retained source must be detected: {control:?}"
     );
     let mut report = String::from("elements\tmode\tconsumed\tsetup_requests\tsetup_bytes\treceive_requests\treceive_bytes\tsetup_charged_bytes\tafter_read_charged_bytes\tafter_clearing_roots_charged_bytes\tqueued_messages\tcollections\n");
     for opt in ["-O1", "-O2"] {

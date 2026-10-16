@@ -56,16 +56,19 @@ int main(int argc, char **argv) {
         g_failure failure = {0}; V error = 0; const fwp_desc *error_type = NULL;
         V value = g_force(position, 0, &failure, &error, &error_type);
         if (messages_freed != i + 1 || failure.text || error || error_type) return 33;
+        if (position->src) return 38;
         unsigned long long before = requests;
         g_msg *next_message = stream->mhead;
         if (g_force(position, 0, &failure, &error, &error_type) != value ||
             requests != before || stream->mhead != next_message) return 34;
         position = next_cell(value, i);
+        if (position->src != source) return 39;
         FWP_KEEP_ALIVE(PTR(retained));
     }
     if (mode != 1) {
         g_failure failure = {0}; V error = 0; const fwp_desc *error_type = NULL;
         if (g_force(position, 0, &failure, &error, &error_type) != FWP_NONE) return 35;
+        if (position->src) return 38;
     }
     if (retained) {
         g_failure failure = {0}; V error = 0; const fwp_desc *error_type = NULL;
