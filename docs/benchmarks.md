@@ -1036,3 +1036,20 @@ main-thread stack frame is 304 bytes, including initialization and cleanup; this
 does not measure dynamic register spills. Raw C/Rust timings remain in the partial
 report, including slower large macOS samples. Compare the combined revision on
 all four hosts and repeat verified binaries together before claiming a speedup.
+
+[The direct-range report](measurements/hash-range-arrays-2026-10-16.json) then
+adds packed integer array construction without temporary range list nodes. All
+four hosts agree on two managed allocation requests for both workloads: array
+storage and the printed result. Small requested/peak bytes are 165 / 144; large
+requested/peak bytes are 32,805 / 32,776. Final charged storage is zero. The
+references count their single application array allocation; their allocator and
+printing scopes still differ as described above. This is not a claim of only two
+allocations in the whole operating-system process.
+
+Array retains remain 4,096 / 1,024 at this revision. Small ARC / C CPU ratios are
+1.387, 1.405, 1.192 and 1.210 on Linux AMD64/ARM64 and macOS ARM64/AMD64; ARC / Rust
+ratios are 1.296, 1.247, 1.097 and 1.071. Large ARC / C ratios are
+1.027, 1.027, 1.038 and 1.009; ARC / Rust ratios are 1.026, 1.025, 1.029 and 0.964.
+These are simultaneous comparisons within this run, not before/after speedup
+claims across different runner invocations. The following field-borrowing work
+targets those remaining counts and requires its own semantic and timing evidence.

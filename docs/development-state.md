@@ -138,3 +138,16 @@ call. Other uses, calls and resource boundaries prevent forwarding. The verifier
 still checks parent liveness after all fields. New tests cover the named forms;
 failed budgets now print counts and retain generated C for diagnosis. No positive
 zero-count claim is made until the repaired runner checks and profiles pass.
+
+The named-field repair is `ac72124c`, under native `38864599295`, WASI
+`38864602220` and costs `38864604854`. Prior field-borrowing WASI `38863445808`
+passed both hosts before that repair. The superseded native `38863443177` and
+cost `38863448662` runs were requested canceled. The old cost run completed
+Linux ARM64 and exposed the remaining alias counts in generated C.
+
+All four direct-range cost jobs `38861849157` passed at `a2f4ccd9` and are retained
+in [the range report](measurements/hash-range-arrays-2026-10-16.json), with every
+source/binary/assembly hash verified under the guard (0.13 s). Both workloads
+use two managed requests; small/large peak bytes are 144/32,776, and final storage
+is zero. Retains are still 4,096/1,024 at that revision. Benchmarks explain the
+C/Rust scopes and measured overhead. No zero-retain claim is established yet.
