@@ -4,7 +4,8 @@ Updated 2026-10-16. Preparation worktree: `/private/tmp/fwp-zip-map`, branch
 `fuse-numeric-zip-maps`, anchored at `1850f832`. Current source and fixtures are
 `91146d684d723d835474e2a893a8adbe23004996` for zip/map, `0bae98f7` for text files,
 `ad948122` for unzip and `62c9da5b` for related list repairs; fixture corrections
-follow them. Transfer only changes after the anchor;
+and unused-helper removal are at `5c222c4bdd6fbd762bcb139d5848d1c18f0fcf36`.
+Transfer only changes after the anchor;
 its parents are part of the preceding delivery.
 
 The only active delivery is [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149),
@@ -35,8 +36,9 @@ without raising its limits. Full builds, suites and timings run on GitHub.
 | 6 | In progress | Retain repeated timings, CPU time and normal-collector profiles |
 | 7 | In progress | Validate maintained todo/grep functions and command lines under ARC |
 
-Next: validate the related list-construction cleanup repairs on all six hosts
-and the large chunk-size regression on actual WASI; inspect any failures.
+Next: monitor [combined native/WASI run 38847420495](https://github.com/e6qu/fun-with-pipes/actions/runs/38847420495)
+at `5c222c4b` and repair failures. It covers six native hosts and actual WASI
+count checks on both Linux architectures.
 Continue monitoring #149, merge it only after exact-head acceptance, then
 transfer this batch for the next substantial PR. Queued CI does not block fixes
 or independent preparation.
@@ -199,8 +201,8 @@ at `ad9481220ddf2f86ec385bf037768c69d2ee6dc9` found a test instrumentation
 assumption: zip's allocation-failure probe searched the whole runtime for a
 unique loop, but unzip now has a similar protected loop. The zip, map and
 selection probes now instrument only `fwp_map_finish_protected`. Mac ARM's unzip
-test itself passed. Cancellation was requested for this superseded run and the
-newer `38847170626` at `62c9da5b`; confirm both stop before treating them as closed.
+test itself passed. This superseded run and the newer `38847170626` at `62c9da5b`
+are confirmed canceled. Neither is final acceptance.
 
 ## Related list-construction failures
 
@@ -224,7 +226,7 @@ pending elements and partial output nodes, with real collection at O1/O2 in both
 memory modes (11.11 s). The standalone Rust harness compiles (0.38 s); formatting
 passes (0.99 s). These are supplemental accepted-compiler probes.
 
-The next `zip-maps` dispatch includes these new controls, existing structural,
+The current `zip-maps` dispatch includes these new controls, existing structural,
 generation and state-sequence semantic tests on six native hosts, and a separate
 required WASI count job on each Linux architecture. Full final-head production
 acceptance still follows focused results. Do not mistake the earlier narrower
@@ -232,5 +234,7 @@ run for validation of these newest repairs.
 
 All callers now use protected list construction; the unused unprotected
 `fwp_map_finish` helper is removed. Failure-probe declarations target the retained
-protected helper. Latest formatting passes (1.11 s). Publish these fixture fixes
-and dispatch the combined native/WASI suite; no failing run is acceptance.
+protected helper. Latest formatting passes (1.11 s) and docs pass (2.41 s).
+The combined source is published and dispatched as recorded in Next above;
+the Linux AMD64 actual-WASI job already passes. No failing or canceled run is
+acceptance.
