@@ -79,7 +79,7 @@ repairs partial-list cleanup and large WASI chunk sizes, and extends checked
 ownership to maintained text tools. Earlier accepted work belongs in
 [delivery evidence](docs/roadmap-history.md).
 
-The current combined delivery adds synchronous WASI ARC, allocation-free
+[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) adds synchronous WASI ARC, allocation-free
 structural hashing and specialization of eagerly captured pipeline callbacks.
 Six-host native checks and both actual WASI ownership jobs pass. Four-host
 comparisons and paired repeats confirm fewer allocations and lower small-workload

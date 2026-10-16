@@ -6,18 +6,19 @@ merged as `729db67f71386750aad0bbe477f546e5276b0223` after all nine
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38851565415)
 passed for `7a7b40e1878ea062f64eceded6ae029b4124f976`. Tree equality, parent and
 the single-line subject with empty body were verified. Duplicate post-merge
-production `38860909658` was requested canceled; confirm its terminal status.
+production `38860909658` is confirmed canceled.
 [History](roadmap-history.md) records accepted work and limitations.
 
-Current combined delivery: `/private/tmp/fwp-wasi-delivery`, branch
+Current delivery: [PR #151](https://github.com/e6qu/fun-with-pipes/pull/151),
+`/private/tmp/fwp-wasi-delivery`, branch
 `wasi-hash-delivery`, based on accepted `729db67f`. Only commits after #150's
 exact head were rebased onto its identical squash tree. Source/runtime/library
 trees match preparation `562873af`; workflow differences preserve every #150
 Windows cancellation and zip/fold test. The earlier preparation is
 `/private/tmp/fwp-wasi-arc`, anchored at `e5e05748`; do not replay its parents.
 
-Next: publish this combined WASI/hash delivery, then require all nine production
-jobs plus documentation for its exact final head. Fix failures and squash merge
+Next: require all nine production jobs plus documentation for #151's exact final
+head. Fix failures and squash merge
 only after full acceptance. Focused checks below do not replace that gate.
 Independent following preparation is `/private/tmp/fwp-hash-borrows`, branch
 `borrowed-hash-arguments`, anchored at old pre-rebase `28cc4d0e`. It investigates
