@@ -96,6 +96,8 @@ main = range 0 129 | map (choose | checks) | length | echo
                     if let Some(path) = std::env::var_os("FWP_ARC_ARTIFACTS") {
                         let mut disassemble = Command::new(if cfg!(target_os = "macos") {
                             "otool"
+                        } else if cfg!(target_os = "windows") {
+                            "llvm-objdump"
                         } else {
                             "objdump"
                         });

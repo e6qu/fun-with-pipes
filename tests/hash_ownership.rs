@@ -62,6 +62,8 @@ fn hashes_match_typed_interpretation_and_preserve_aliases() {
                     std::fs::write(path.join(format!("hash-{mode}.c")), &code).unwrap();
                     let mut command = Command::new(if cfg!(target_os = "macos") {
                         "otool"
+                    } else if cfg!(target_os = "windows") {
+                        "llvm-objdump"
                     } else {
                         "objdump"
                     });

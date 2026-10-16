@@ -190,3 +190,21 @@ hash bytes and FNV-1a; generated library docs are regenerated through the existi
 standalone generator (0.37/0.38 s). Ownership/design/reference docs describe the
 synchronous WASI scope, external count-table costs and unproved host boundaries.
 Docs pass (2.43 s); formatting passes (0.98 s).
+
+Combined actual-WASI hash suite `38852610916` passes both hosts at `ef3e86da`.
+The corrected instrumented/module-artifact rerun `38853064238` also passes both
+hosts at `bea55914`. Native run `38853061610` passes Linux ARM/AMD and Mac ARM so
+far. Windows ARM's zero-allocation test passes, but artifact inspection finds that
+Git's `objdump` cannot read its ARM64 PE executable. Windows probes now select the
+compiler package's `llvm-objdump` explicitly; the neighboring ARC artifact path
+uses the same corrected tool. The `hash-windows` suite repeats only affected
+Windows checks, preserving all other native coverage.
+
+The retained Linux ARM64 ARC binary from `38853061610` has SHA-256
+`d4e3cdc3e0ce2020e785dabc39603ada719e278392f0c720ebdbcbf4c2ea781a`.
+Its actual `fwp_hash_value` body has 378 static instruction lines, a 96-byte stack
+frame, XOR/multiply in registers, and six calls only back to the same recursive
+hash visitor. It calls no allocator or encoder. This is static function evidence,
+not a dynamic instruction count, absence of spills, or a timing comparison.
+Artifacts are under `/private/tmp/fwp-hash-artifacts/arm64`; all-platform evidence
+still needs final retention. Full #150 production remains running separately.

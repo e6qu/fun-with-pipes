@@ -5,18 +5,18 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-map-costs, zip-map-repeat, hash]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-map-costs, zip-map-repeat, hash, hash-windows]
         default: numerical
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'hash'
+    if: inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+        runner: ${{ fromJSON(inputs.suite == 'hash-windows' && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
@@ -40,15 +40,15 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - if: inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays' && inputs.suite != 'zip-maps' && inputs.suite != 'hash'
+      - if: inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays' && inputs.suite != 'zip-maps' && inputs.suite != 'hash' && inputs.suite != 'hash-windows'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
       - name: Streaming hash ownership and canonical protocol
-        if: inputs.suite == 'hash'
+        if: inputs.suite == 'hash' || inputs.suite == 'hash-windows'
         env:
           FWP_HASH_ARTIFACTS: hash-evidence
         run: cargo test --no-fail-fast --test hash_ownership --test protocol --test arc_execution
       - uses: actions/upload-artifact@v7
-        if: always() && inputs.suite == 'hash'
+        if: always() && (inputs.suite == 'hash' || inputs.suite == 'hash-windows')
         with:
           name: hash-${{ matrix.runner }}
           path: hash-evidence/
