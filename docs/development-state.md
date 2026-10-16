@@ -54,6 +54,34 @@ fixed `python3 scripts/local-guard.py` limits. No compiler build is permitted as
 retry of the earlier guard refusal. Keep one delivery PR, exact-head acceptance
 and one-line <=80-character commits with empty bodies and no attribution.
 
+## Byte decoding and Windows peer checks
+
+The same batch now prepares six more contracts: gzip/deflate decoding, CRC32,
+WebSocket frame parsing, close-payload parsing and message inflation. Typed result
+fields own copied leaves and wrappers; frame parsing no longer allocates an unused
+empty payload on success. Existing synchronous compression encoders protect native
+output buffers across managed result allocation. Injected failures cover every
+managed allocation, with separate missing-field and missing-native-buffer cleanup
+controls. Native buffer allocations that terminate the process on failure retain
+that existing policy; this is not a claim of recoverable native-allocator OOM.
+These native-only helpers remain unavailable on WASI; no emulated support claim.
+
+Focused `e912227b` passes both actual WASI jobs `38879832821`; its six-native
+run `38879829259` exposed missing OpenSSL/curl prerequisites in the newly added
+Windows web/std-library checks. Ternary and text ownership tests themselves pass
+on both Windows architectures. The workflow now installs the pinned native peer
+dependencies with HTTP/2 curl support. Web tests use that configured client,
+portable gzip fixture construction/null devices and console shutdown events on
+Windows. Interpreter shutdown registers the corresponding Windows console handler,
+matching native behavior. Full Windows CI includes these web/std-library checks.
+Fresh runner checks must validate both the added byte ownership and this repair.
+
+Local byte fixture interpretation passes (0.25 s), formatting passes (1.12 s),
+and inventory passes (1.25 s): 293 contracted declarations, 50 distinct remaining
+review symbols. One new explicit macOS target raises the schedule to 224.
+Next: finish local documentation/shard checks, publish, then run fresh six-native
+and two-WASI gates. Retain failures and fix them before delivery acceptance.
+
 ## Current progress
 
 Direct owned ternary construction and URL/form/HTTP decoding are implemented.

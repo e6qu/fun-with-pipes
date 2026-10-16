@@ -167,6 +167,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         | "url.split"
         | "http.parse-request-head"
         | "http.parse-response-head" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "zlib.gunzip" | "zlib.inflate" | "ws.inflate" => {
+            (&[B, B], ResultOwnership::OwnedTree, None, &[])
+        }
+        "ws.parse" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "ws.close-parse" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "zlib.crc32" => (&[B, B], R, None, &[]),
         "http.field-ok" => (&[B, B], R, None, &[]),
         "http.content-length" => (&[B], R, None, &[]),
         "int.parse-hex" => (&[B], ResultOwnership::FreshOuter, None, &[]),

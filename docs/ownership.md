@@ -137,6 +137,17 @@ not support for that platform.
 
 ## Value decoders
 
+Compressed bytes and WebSocket frames are also value-decoding boundaries. The
+prepared native implementation owns their returned bytes/text and Result/tuple
+wrappers, including malformed-input results. Existing compression encoders protect
+their native output buffers if creating the language result traps. Tests count
+native buffers separately from managed storage and deliberately disable each
+cleanup to check detection. This covers synchronous conversion of bytes already
+in memory; socket, server and retained-callback lifetimes are separate work.
+These helpers are not currently available on WASI. See the handoff for pending
+native validation; a declared ownership contract alone is not acceptance.
+
+
 A decoder turns an encoded value into ordinary language data. The current
 preparation gives balanced-ternary conversions, URL/form decoding and HTTP-head
 parsing explicit result owners. It does not yet establish accepted platform

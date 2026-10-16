@@ -9,6 +9,7 @@
     "autodiff_workspace",
     "blocked_matrix",
     "browser",
+    "byte_decoder_ownership",
     "c-interop",
     "caf_ownership",
     "channel_cycle_ownership",

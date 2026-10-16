@@ -106,6 +106,11 @@ bundle_contracts['trits.pack'] = (1, 'FreshLeaf', [])
 bundle_contracts['trits.unpack'] = (2, 'OwnedTree', [])
 for symbol in ['url.decode', 'form.decode', 'url.split', 'http.parse-request-head', 'http.parse-response-head']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
+for symbol in ['zlib.gunzip', 'zlib.inflate', 'ws.inflate']:
+    bundle_contracts[symbol] = (2, 'OwnedTree', [])
+bundle_contracts['ws.parse'] = (3, 'OwnedTree', [])
+bundle_contracts['ws.close-parse'] = (1, 'OwnedTree', [])
+bundle_contracts['zlib.crc32'] = (2, 'Shared', [])
 bundle_contracts['http.field-ok'] = (2, 'Shared', [])
 bundle_contracts['http.content-length'] = (1, 'Shared', [])
 bundle_contracts['int.parse-hex'] = (1, 'FreshOuter', [])

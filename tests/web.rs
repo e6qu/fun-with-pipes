@@ -35,7 +35,7 @@ fn have(cmd: &str, arg: &str) -> bool {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
-        .is_ok()
+        .is_ok_and(|status| status.success())
 }
 
 fn have_cc() -> bool {
@@ -193,6 +193,11 @@ fn start(b: Backend, tls: bool, env: &[(&str, &str)]) -> Option<Server> {
     for (k, v) in env {
         cmd.env(k, v);
     }
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x00000200); // isolate CTRL_BREAK to this server
+    }
     let mut child = cmd
         .env("FWP_ADDR", "127.0.0.1:0")
         .stdout(Stdio::null())
@@ -218,12 +223,17 @@ fn start(b: Backend, tls: bool, env: &[(&str, &str)]) -> Option<Server> {
     })
 }
 
+fn curl_program() -> String {
+    std::env::var("FWP_TEST_CURL").unwrap_or_else(|_| "curl".into())
+}
+
 fn curl(args: &[&str]) -> String {
-    let out = Command::new("curl")
-        .args(["-s", "-m", "20"])
+    let out = Command::new(curl_program())
+        .args(["-sS", "-m", "20"])
         .args(args)
         .output()
         .expect("run curl");
+    assert!(out.status.success(), "curl {args:?}: {out:?}");
     String::from_utf8_lossy(&out.stdout).into_owned()
 }
 
@@ -238,7 +248,7 @@ fn backends() -> Vec<Backend> {
 // ------------------------------------------------------------------ curl
 
 fn curl_cleartext(b: Backend) {
-    if !have("curl", "--version") {
+    if !have(&curl_program(), "--version") {
         return;
     }
     let Some(srv) = start(b, false, &[]) else {
@@ -283,7 +293,15 @@ fn curl_cleartext(b: Backend) {
     );
     // compression: --compressed, over both versions
     for v in ["--http1.1", "--http2-prior-knowledge"] {
-        let headers = curl(&[v, "--compressed", "-D", "-", "-o", "/dev/null", &u("/big")]);
+        let headers = curl(&[
+            v,
+            "--compressed",
+            "-D",
+            "-",
+            "-o",
+            if cfg!(windows) { "NUL" } else { "/dev/null" },
+            &u("/big"),
+        ]);
         assert!(
             headers
                 .to_ascii_lowercase()
@@ -337,12 +355,8 @@ fn curl_cleartext(b: Backend) {
     // request bodies with a content encoding
     let dir = scratch(&format!("gz-{:?}", b));
     let gz = dir.join("body.gz");
-    let st = Command::new("sh")
-        .arg("-c")
-        .arg(format!("printf 'zipped body' | gzip > {}", gz.display()))
-        .status()
-        .unwrap();
-    if st.success() {
+    std::fs::write(&gz, fwp::gzip::gzip(b"zipped body")).unwrap();
+    {
         for v in ["--http1.1", "--http2-prior-knowledge"] {
             assert_eq!(
                 curl(&[
@@ -395,15 +409,15 @@ fn curl_cleartext(b: Backend) {
         "-w",
         "%{num_connects} %{http_version} %{http_code}\n",
         "-o",
-        "/dev/null",
+        if cfg!(windows) { "NUL" } else { "/dev/null" },
         "-o",
-        "/dev/null",
+        if cfg!(windows) { "NUL" } else { "/dev/null" },
         "-o",
-        "/dev/null",
+        if cfg!(windows) { "NUL" } else { "/dev/null" },
         "-o",
-        "/dev/null",
+        if cfg!(windows) { "NUL" } else { "/dev/null" },
         "-o",
-        "/dev/null",
+        if cfg!(windows) { "NUL" } else { "/dev/null" },
         &u("/slow"),
         &u("/slow"),
         &u("/slow"),
@@ -441,7 +455,7 @@ fn curl_h2c_and_compression_native() {
 
 #[test]
 fn curl_h2_over_tls_with_alpn() {
-    if !have("curl", "--version") || certs().is_none() {
+    if !have(&curl_program(), "--version") || certs().is_none() {
         return;
     }
     let ca = certs().unwrap().join("ca.pem");
@@ -476,7 +490,7 @@ fn curl_h2_over_tls_with_alpn() {
 
 #[test]
 fn h2_graceful_shutdown() {
-    if !have("curl", "--version") {
+    if !have(&curl_program(), "--version") {
         return;
     }
     for b in backends() {
@@ -486,12 +500,25 @@ fn h2_graceful_shutdown() {
             curl(&["--http2-prior-knowledge", "-w", "|%{http_code}", &u])
         });
         std::thread::sleep(Duration::from_millis(150));
-        let pid = srv.child.id().to_string();
+        #[cfg(unix)]
         assert!(Command::new("kill")
-            .args(["-TERM", &pid])
+            .args(["-TERM", &srv.child.id().to_string()])
             .status()
             .unwrap()
             .success());
+        #[cfg(windows)]
+        {
+            #[link(name = "kernel32")]
+            extern "system" {
+                fn GenerateConsoleCtrlEvent(event: u32, group: u32) -> i32;
+            }
+            assert_ne!(
+                unsafe { GenerateConsoleCtrlEvent(1, srv.child.id()) },
+                0,
+                "send CTRL_BREAK: {}",
+                std::io::Error::last_os_error()
+            );
+        }
         assert_eq!(slow.join().unwrap(), "slow|200", "{:?}", b);
         let st = srv.child.wait().unwrap();
         assert!(st.success(), "{:?}: {}", b, st);
@@ -797,7 +824,7 @@ fn raw_websocket(b: Backend) {
     assert_eq!(ws.close_code(), 1002);
 
     // not an upgrade request
-    if have("curl", "--version") {
+    if have(&curl_program(), "--version") {
         let u = format!("http://{}/ws", srv.addr);
         assert_eq!(
             curl(&["-w", "|%{http_code}", &u]),

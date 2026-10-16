@@ -5511,6 +5511,21 @@ impl<'p> Gen<'p> {
             };
             return Ok(format!("return {call};"));
         }
+        if matches!(
+            sym,
+            "zlib.gunzip" | "zlib.inflate" | "ws.parse" | "ws.close-parse" | "ws.inflate"
+        ) {
+            let descriptor = self.desc(&result);
+            let call = match sym {
+                "zlib.gunzip" => format!("fwp_p_zlib_gunzip(l0, l1, {descriptor})"),
+                "zlib.inflate" => format!("fwp_p_zlib_inflate(l0, l1, {descriptor})"),
+                "ws.parse" => format!("fwp_p_ws_parse(l0, l1, l2, {descriptor})"),
+                "ws.close-parse" => format!("fwp_p_ws_close_parse(l0, {descriptor})"),
+                "ws.inflate" => format!("fwp_p_ws_inflate(l0, l1, {descriptor})"),
+                _ => unreachable!(),
+            };
+            return Ok(format!("return {call};"));
+        }
         if sym == "array._range" {
             let MT::Con(name, elements) = &result else {
                 return Err("direct range array result has no element type".into());
@@ -6331,20 +6346,15 @@ impl<'p> Gen<'p> {
                     ("http2.data", "fwp_p_http2_data(l0, l1, l2)"),
                     ("http2.pooled", "fwp_p_http2_pooled(l0)"),
                     ("zlib.gzip", "fwp_p_zlib_gzip(l0)"),
-                    ("zlib.gunzip", "fwp_p_zlib_gunzip(l0, l1)"),
                     ("zlib.deflate", "fwp_p_zlib_deflate(l0)"),
                     ("zlib.gzip-chunk", "fwp_p_zlib_gzip_chunk(l0)"),
                     ("zlib.crc32", "fwp_p_zlib_crc32(l0, l1)"),
                     ("zlib.gzip-end", "fwp_p_zlib_gzip_end(l0, l1)"),
-                    ("zlib.inflate", "fwp_p_zlib_inflate(l0, l1)"),
                     ("ws.accept", "fwp_p_ws_accept(l0)"),
                     ("ws.key", "fwp_p_ws_key()"),
                     ("ws.frame", "fwp_p_ws_frame(l0, l1, l2)"),
-                    ("ws.parse", "fwp_p_ws_parse(l0, l1, l2)"),
                     ("ws.close-payload", "fwp_p_ws_close_payload(l0, l1)"),
-                    ("ws.close-parse", "fwp_p_ws_close_parse(l0)"),
                     ("ws.deflate", "fwp_p_ws_deflate(l0)"),
-                    ("ws.inflate", "fwp_p_ws_inflate(l0, l1)"),
                 ];
                 match simple.iter().find(|(n, _)| *n == sym) {
                     Some((_, c)) => format!("return {};", c),
