@@ -98,7 +98,9 @@ functions constructing records retain their existing worker choices.
 
 The allocation test now requires one capture-result allocation per call. A new
 native test compares interpreter results, shared strings and a trapping callback;
-a deliberately reintroduced result-box allocation must fail its count. Existing
+a deliberately reintroduced result-box allocation must fail its count. The
+fixture enables real task unwind support and initializes the scheduler before
+counting result allocations. Existing
 record-worker and conversion controls run with it. Do not claim the one-allocation
 result until `38955985581` passes, or WebAssembly support until `38955989639` passes.
 

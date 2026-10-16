@@ -305,6 +305,7 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
     use std::rc::Rc;
     let string = MT::con("std::String");
     let pair = MT::con("Pair");
+    let unit = MT::unit();
     let callback = MT::Fun(Box::new(string.clone()), Box::new(pair.clone()));
     let mut program = Program::default();
     program.shapes.insert(
@@ -340,8 +341,13 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
             ty: MT::Record(vec![
                 ("0".into(), callback.clone()),
                 ("1".into(), callback.clone()),
+                ("2".into(), unit.clone()),
             ]),
-            body: Body::Expr(Expr::Record(vec![Expr::Func(0), Expr::Func(3)])),
+            body: Body::Expr(Expr::Record(vec![
+                Expr::Func(0),
+                Expr::Func(3),
+                Expr::Call(4, vec![Expr::Const(Value::unit())]),
+            ])),
         },
         Func {
             name: "failure".into(),
@@ -349,6 +355,14 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
             locals: vec![string],
             ty: callback,
             body: Body::Prim("prim.trap".into()),
+        },
+        // Real task support enables recoverable trap cleanup in generated code.
+        Func {
+            name: "yield".into(),
+            arity: 1,
+            locals: vec![unit.clone()],
+            ty: MT::Fun(Box::new(unit.clone()), Box::new(unit)),
+            body: Body::Prim("task.yield".into()),
         },
     ];
     program.main = Some(2);
@@ -403,7 +417,7 @@ static V forward_extra_box(V value){
  V result=fwp_rc_fresh(fwp_record(2,fields));fwp_rc_free_obj(value);return result;
 }
 int main(void){
- fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
+ fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
  forward_input=fwp_rc_fresh(fwp_str_new("hello",5));
  fwp_rc_dup(forward_input);forward_requests=0;forward_measuring=1;
  V result=f1(PTR(&fc0),forward_input);
