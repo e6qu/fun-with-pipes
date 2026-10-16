@@ -1508,7 +1508,10 @@ impl<'p> Gen<'p> {
         let id = self.tree_owner_defs.len();
         self.tree_owners.insert(mt.clone(), id);
         self.tree_owner_defs.push(String::new());
-        let mut body = format!("static void fwp_own_tree{id}(V v) {{\n    for (;;) {{\n        uint8_t *c = fwp_rc_slot(v);\n        if (!c) return;\n        if (*c) fwp_trap(\"internal: aliased fresh result tree\");\n        fwp_rc_fresh(v);\n");
+        // Native heap objects already have an allocator count slot. WASI
+        // objects gain an external entry only when first claimed, so
+        // a missing slot there is a fresh owner, not an immortal value.
+        let mut body = format!("static void fwp_own_tree{id}(V v) {{\n    for (;;) {{\n        if (v < 4096) return;\n        uint8_t *c = fwp_rc_slot(v);\n#if FWP_GC\n        if (!c) return;\n#endif\n        if (c && *c) fwp_trap(\"internal: aliased fresh result tree\");\n        fwp_rc_fresh(v);\n");
         if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes" | "std::I128" | "std::U128" | "std::F128"))
         {
             body.push_str("        return;\n    }\n}\n");
@@ -8321,7 +8324,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let arc = native_options().arc;
     if arc {
         if !matches!(mode, Mode::Main | Mode::Exec(..) | Mode::Library) {
-            return Err("--gc arc requires a native executable or checked C library".into());
+            return Err("--gc arc requires a checked executable or C library".into());
         }
         if !reuse_enabled() || !free_enabled() {
             return Err(
@@ -9572,6 +9575,16 @@ pub fn uses_services(prog: &Program) -> bool {
 pub fn check_target(prog: &Program, target: Target) -> Result<(), String> {
     if !target.is_wasm() {
         return Ok(());
+    }
+    if target == Target::Wasi && native_options().arc {
+        if let Some(symbol) = prog.funcs.iter().find_map(|function| match &function.body {
+            Body::Prim(symbol) if symbol.starts_with("task.") || symbol.starts_with("channel.") => {
+                Some(symbol)
+            }
+            _ => None,
+        }) {
+            return Err(format!("--gc arc: WASI host fibers have no checked retention contract (used by `{symbol}`)"));
+        }
     }
     if uses_services(prog) {
         return Err("services (gRPC calls) need the native target".into());

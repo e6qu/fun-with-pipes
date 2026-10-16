@@ -63,8 +63,25 @@
 #define FWP_GC 1
 #endif
 
-#if defined(FWP_ARC_ONLY) && !FWP_GC
-#error "ARC requires the native counted allocator; WebAssembly is not eligible"
+#if defined(FWP_ARC_ONLY) && !defined(FWP_RESOURCE_OWNERS)
+#error "ARC requires counted ownership"
+#endif
+
+#ifdef FWP_ARC_ONLY
+static void fwp_arc_check_options(void) {
+    const char *e = getenv("FWP_GC");
+    if (e && *e && strcmp(e, "off") && strcmp(e, "0"))
+        fwp_trap("--gc arc cannot enable tracing, GC stress or GC verification");
+    e = getenv("FWP_GC_STRESS");
+    if (e && atol(e) > 0)
+        fwp_trap("--gc arc cannot enable tracing, GC stress or GC verification");
+    e = getenv("FWP_GC_VERIFY");
+    if (e && *e && strcmp(e, "0"))
+        fwp_trap("--gc arc cannot enable tracing, GC stress or GC verification");
+    e = getenv("FWP_REUSE_VERIFY");
+    if (e && *e && strcmp(e, "0"))
+        fwp_trap("--gc arc cannot retain released storage for reuse verification");
+}
 #endif
 
 #if !FWP_GC
@@ -98,7 +115,12 @@ static void *fwp_mem_realloc(void *p, size_t old, size_t n) {
     return p;
 }
 static void fwp_mem_free(void *p) { free(p); }
-static void fwp_gc_start(void *top) { (void)top; }
+static void fwp_gc_start(void *top) {
+    (void)top;
+#ifdef FWP_ARC_ONLY
+    fwp_arc_check_options();
+#endif
+}
 static void fwp_gc_finalizer(void *obj, void (*fn)(void *)) { (void)obj; (void)fn; }
 static void fwp_gc_forget_finalizer(void *obj) { (void)obj; }
 /* Entries track live counted owners; value layouts and reuse stay unchanged.
@@ -158,12 +180,20 @@ static inline void fwp_rc_drop(V value) {
     fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
     if (entry && fwp_wasm_count(entry) > 1) fwp_wasm_set_count(entry, entry->count - 1);
 }
-static inline void fwp_rc_share(V value) {
+static void fwp_wasm_forget_count(V value) {
     fwp_wasm_rc **link = fwp_wasm_count_link(value);
     if (*link) {
         fwp_wasm_rc *entry = *link; *link = entry->next;
         free(entry); fwp_wasm_counts_live--;
     }
+}
+static inline void fwp_rc_share(V value) {
+#ifdef FWP_ARC_ONLY
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    if (entry && fwp_wasm_count(entry))
+        fwp_trap("internal: counted owner escaped ARC contract");
+#endif
+    fwp_wasm_forget_count(value);
 }
 static inline int fwp_rc_last(V value) {
     fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
@@ -180,7 +210,7 @@ static inline int fwp_rc_release_last(V value) {
  * metadata before storage reuse so a recycled address never inherits owners. */
 static inline void fwp_rc_free_obj(V value) {
     if (!fwp_rc_last(value)) return;
-    fwp_rc_share(value);
+    fwp_wasm_forget_count(value);
 #ifndef FWP_RESOURCE_NO_FREE
     free((void *)(uintptr_t)value);
 #endif
@@ -429,12 +459,7 @@ static void fwp_gc_init(void) {
     fwp_gc.stress = e ? atol(e) : 0;
     if (fwp_gc.stress < 0) fwp_gc.stress = 0;
 #ifdef FWP_ARC_ONLY
-    e = getenv("FWP_GC");
-    if ((e && *e && strcmp(e,"off") && strcmp(e,"0")) || fwp_gc.stress || fwp_gc.verify)
-        fwp_trap("--gc arc cannot enable tracing, GC stress or GC verification");
-    e = getenv("FWP_REUSE_VERIFY");
-    if (e && *e && strcmp(e,"0"))
-        fwp_trap("--gc arc cannot retain released storage for reuse verification");
+    fwp_arc_check_options();
     fwp_gc.enabled = 0;
 #endif
     fwp_gc.budget = fwp_gc.budget_given = GC_MIN_BUDGET;

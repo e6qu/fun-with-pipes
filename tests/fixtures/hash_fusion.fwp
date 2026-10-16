@@ -1,0 +1,11 @@
+# Each line reduces hashes or bit patterns without retaining the mapped list.
+# Keep original strings alive alongside their reduction to test borrowed inputs.
+main = [
+    range 0 65 | map (both id (const (range 0 16 | array.from-list)) | hash) | fold bit.xor 0u64 | echo,
+    ["alpha", "βeta", ""] | both (map hash | fold bit.xor 0u64) id | echo,
+    range 0 8 | map hash | find (gt 0u64) | echo,
+    [] | list._test-ints | map hash | fold bit.xor 0u64 | echo,
+    [1i8, -2i8, 127i8] | map (bit.not | bit.and 15i8) | fold bit.or 0i8 | echo,
+    [1u128, 340282366920938463463374607431768211455u128] | map (bit.not | bit.and 255u128) | fold bit.xor 0u128 | echo,
+    [1i128, -2i128] | map (bit.or 256i128) | fold bit.and -1i128 | echo,
+] | ignore

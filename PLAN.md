@@ -21,7 +21,8 @@ formats, a formatter, linter and language server. These are foundations to exten
 they do not establish that every abstraction is free or every program avoids GC.
 
 Default native execution still combines reference counting with tracing.
-Checked `--gc arc` removes tracing only for supported native programs. Some
+Checked `--gc arc` removes tracing for supported programs; synchronous WASI
+entries are in the current validation batch. Some
 closures, containers and call boundaries still allocate, and measured numerical
 workloads still have performance gaps. See [ownership](docs/ownership.md),
 [numerics](docs/numerics.md) and [benchmarks](docs/benchmarks.md) for current limits.
@@ -72,28 +73,30 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #149](https://github.com/e6qu/fun-with-pipes/pull/149) passed all nine production
-jobs and documentation before merging. It owns process/terminal resources and
-constructs mapped numeric arrays without temporary list nodes. Earlier accepted
-work and precise test records belong in [delivery evidence](docs/roadmap-history.md).
+[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150) passed all nine production
+jobs and documentation before merging. It removes temporary numeric zip pairs,
+repairs partial-list cleanup and large WASI chunk sizes, and extends checked
+ownership to maintained text tools. Earlier accepted work belongs in
+[delivery evidence](docs/roadmap-history.md).
 
-The next combined delivery removes immediately mapped numeric zip pairs, repairs
-partial-list cleanup in zip/unzip/repeat/chunks/scan/iterate, fixes large I64 chunk
-sizes on WASI, and extends checked ARC to text reads and replacement writes.
-Maintained todo/grep programs exercise those contracts through functions and
-actual command lines. No new syntax or implicit conversions are introduced.
+[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) adds synchronous WASI ARC, allocation-free
+structural hashing and specialization of eagerly captured pipeline callbacks.
+Six-host native checks and both actual WASI ownership jobs pass. Four-host
+comparisons and paired repeats confirm fewer allocations and lower small-workload
+CPU time, while preserving slower elapsed samples and remaining C/Rust gaps.
+Large-input timing is mostly unchanged. Require all nine production gates plus
+documentation for the final combined head, including its later restriction to
+known callback bodies and all transferred changes.
 
-Focused native and actual-WASI results are recorded in the handoff. The Windows
-cancellation-fixture repair now passes on both native architectures. Four-host allocation,
-elapsed-time and CPU comparisons reduce repeated derivative requests by 4,194,304
-and retains by 2,097,152 beyond #149, while peak memory stays unchanged. Tiny nested
-timings remain mixed. These compare fwp variants, not C or Rust.
+The exact-head Intel macOS GC gate exceeded 90 minutes. The current repair uses
+explicit measured test assignments instead of reshuffling sorted targets when
+new tests appear. All tests, the separate stress run and existing limits remain.
+Require fresh complete acceptance after this scheduling repair.
 
-Require all nine production jobs plus documentation for the final combined
-commit before merging. Focused results do not replace full acceptance. Following
-independent preparation investigates synchronous WASI ARC; browser re-entry and
-host-fiber lifetimes remain unproved. Remaining derivative intermediates, matrix
-wrappers, C/Rust gaps and all seven work areas above stay open.
+Following preparation targets measured temporary hash tuples and input list nodes.
+Browser/service re-entry, retained host callbacks, remaining numerical/networking
+ownership, fewer runtime counts and all seven work areas remain open. A focused
+success does not complete a work area. Keep one delivery PR open at a time.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

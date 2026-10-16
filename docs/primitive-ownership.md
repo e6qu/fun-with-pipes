@@ -128,7 +128,7 @@ data-only channel payloads: no functions, tasks or channel handles at any nested
 position. The queue owns each retained message and the last channel owner releases
 remaining messages; the type restriction prevents a queue from owning a path
 back to its channel. Preserve callback,
-trap and task ordering when extending contracts. The finite review classifies this compatibility model. Checked native ARC separately enforces its proved eligibility
+trap and task ordering when extending contracts. The finite review classifies this compatibility model. Checked ARC separately enforces its proved eligibility
 and cycle policy, rejecting unproved shared boundaries.
 
 ## Complete runtime sharing
@@ -269,7 +269,7 @@ select reference destructors.
 The immutable baseline and exact contract promotions distinguish counted
 boundaries from reviewed tracing requirements. Preparation and historical
 binary/GC/reuse/omission controls remain in [history](roadmap-history.md).
-Checked native ARC has a separate [eligibility contract](ownership.md); no
+Checked ARC has a separate [eligibility contract](ownership.md); no
 blanket no-GC claim is established.
 
 ## Validation and limits

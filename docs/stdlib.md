@@ -293,6 +293,11 @@ ge : a -> a -> Bool where Ord[a]
 compare : a -> a -> Ordering where Ord[a]
 min : a -> a -> a where Ord[a]
 max : a -> a -> a where Ord[a]
+
+# hash returns a deterministic 64-bit fingerprint using FNV-1a over the typed
+# binary encoding. For example, 1i8 contributes one byte; 1i64 contributes eight
+# little-endian bytes, so their hashes need not match. This is not a cryptographic
+# hash. Native code borrows the input and hashes its bytes without a temporary buffer.
 hash : a -> U64 where Hash[a]
 not : Bool -> Bool
 and : Bool -> Bool -> Bool

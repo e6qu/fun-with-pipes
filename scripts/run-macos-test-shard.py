@@ -9,13 +9,26 @@ import subprocess
 ROOT = Path(__file__).resolve().parent.parent
 SHARDS = {"regular": 0, "gc": 1}
 UNIT_TARGETS = {"lib", "bin", "example", "bench"}
-# Intel GC timed out in run 38568712872; REST took 427 seconds there.
-# Wide workers took 144 seconds in run 38550733670. Move these to regular
-# to leave room for the separate stress suite without shifting other targets.
-REGULAR_TARGETS = {"rest", "wide_workers"}
+# Every integration target has an explicit assignment. Adding a target must not
+# reshuffle unrelated work or consume the GC job's separate stress allowance.
+SCHEDULE = ROOT / "scripts/macos-test-shards.json"
 
 
-def command(metadata, shard):
+def assignment(path):
+    schedule = json.loads(path.read_text())
+    if set(schedule) != set(SHARDS):
+        raise ValueError("schedule must contain exactly regular and gc")
+    for shard, names in schedule.items():
+        if not isinstance(names, list) or not names or any(
+                not isinstance(name, str) or not name for name in names):
+            raise ValueError(f"invalid target list for {shard}")
+    names = schedule["regular"] + schedule["gc"]
+    if len(names) != len(set(names)):
+        raise ValueError("duplicate target in macOS schedule")
+    return schedule
+
+
+def command(metadata, shard, schedule):
     packages = [package for package in metadata["packages"]
                 if Path(package["manifest_path"]).resolve() == ROOT / "Cargo.toml"]
     if len(packages) != 1:
@@ -33,9 +46,14 @@ def command(metadata, shard):
             raise ValueError(f"unassigned Cargo target: {target['name']} {kinds}")
     if not names or len(names) != len(set(names)):
         raise ValueError("expected nonempty, unique integration test targets")
-    selected = [name for index, name in enumerate(sorted(names))
-                if (0 if name in REGULAR_TARGETS else index % len(SHARDS))
-                == SHARDS[shard]]
+    assigned = schedule["regular"] + schedule["gc"]
+    if len(assigned) != len(set(assigned)):
+        raise ValueError("duplicate target in macOS schedule")
+    missing, obsolete = set(names) - set(assigned), set(assigned) - set(names)
+    if missing or obsolete:
+        raise ValueError(f"update scripts/macos-test-shards.json: "
+                         f"unassigned={sorted(missing)}, obsolete={sorted(obsolete)}")
+    selected = sorted(schedule[shard])
     if not selected:
         raise ValueError(f"empty integration test shard: {shard}")
     args = ["cargo", "test", "--no-fail-fast"]
@@ -55,7 +73,7 @@ def main():
     options = parser.parse_args()
     metadata = json.loads(subprocess.check_output(
         ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=ROOT))
-    args, all_targets, selected = command(metadata, options.shard)
+    args, all_targets, selected = command(metadata, options.shard, assignment(SCHEDULE))
     print(f"macOS {options.shard}: {len(selected)}/{len(all_targets)} "
           "integration targets", flush=True)
     print("\n".join(selected), flush=True)

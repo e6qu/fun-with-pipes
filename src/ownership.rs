@@ -455,7 +455,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "cli.parse" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
         "json.parse" | "json.read" | "csv.decode" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "parse-int" | "parse-float" => (&[B], ResultOwnership::FreshTree, None, &[]),
-        "length" => (&[B], R, None, &[]),
+        "length" | "hash" => (&[B], R, None, &[]),
         "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
         "pad-left" | "pad-right" | "replace" => (
             &[B, B, B],

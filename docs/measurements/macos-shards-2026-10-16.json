@@ -1,0 +1,2487 @@
+{
+  "observations": {
+    "150-gc": [
+      {
+        "target": "ad_tape_scopes",
+        "seconds": 63.01,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "arc_corpus",
+        "seconds": 374.94,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "arc_extensions",
+        "seconds": 126.86,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "arc_tasks",
+        "seconds": 24.13,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "array_element_ownership",
+        "seconds": 20.834727,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "array_size_limits",
+        "seconds": 20.83,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_capacity_bounds",
+        "seconds": 24.16,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_library",
+        "seconds": 8.99,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_precision",
+        "seconds": 22.21,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "bench",
+        "seconds": 0.005609,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "borrowed_callbacks",
+        "seconds": 0.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "browser",
+        "seconds": 0.36,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "c-interop",
+        "seconds": 0.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "caf_ownership",
+        "seconds": 12.42,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "channel_cycle_ownership",
+        "seconds": 4.42,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "cli",
+        "seconds": 154.710152,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "clock_ownership",
+        "seconds": 154.71,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "closure_ownership",
+        "seconds": 11.63,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "compiler_diagnostics",
+        "seconds": 10.03,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "console_ownership",
+        "seconds": 90.6,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "constructor_unwind_ownership",
+        "seconds": 14.22,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "decoder_partial",
+        "seconds": 7.683326,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "directory_report",
+        "seconds": 7.67,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "exec",
+        "seconds": 146.72,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "exec_protocol_ownership",
+        "seconds": 59.42,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "ffi",
+        "seconds": 22.74,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "field_context_ownership",
+        "seconds": 10.09,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_construction_disposal",
+        "seconds": 6.19,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_discard_ownership",
+        "seconds": 29.09,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_io_errors",
+        "seconds": 26.26,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_runtime_boundaries",
+        "seconds": 48.65,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_storage_disposal",
+        "seconds": 4.21,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_write_visibility",
+        "seconds": 6.07,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "float_formats",
+        "seconds": 31.78,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "float_literals",
+        "seconds": 20.562962,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "fmt",
+        "seconds": 20.55,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "fold_unwind_ownership",
+        "seconds": 18.27,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "gc",
+        "seconds": 4.9,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "golden_check",
+        "seconds": 91.37,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "golden_run",
+        "seconds": 270.21,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_canonical_encoding",
+        "seconds": 2.62,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_client_failure_text",
+        "seconds": 3.02,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_client_requests",
+        "seconds": 6.07,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_connect_startup",
+        "seconds": 18.11,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_context_resources",
+        "seconds": 8.23,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_environment_cache",
+        "seconds": 3.47,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_packed_options",
+        "seconds": 1.34,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_receive_cleanup",
+        "seconds": 9.89,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_request_encoding",
+        "seconds": 3.61,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_send_cleanup",
+        "seconds": 4.22,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_status_cleanup",
+        "seconds": 10.81,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "http2_body_roots",
+        "seconds": 1.91,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "http_server",
+        "seconds": 22.06,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "inline_caf_ownership",
+        "seconds": 21.37,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "iteration_consumers",
+        "seconds": 18.58,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "kernel_stack_bounds",
+        "seconds": 2.083653,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "library_input_ownership",
+        "seconds": 2.07,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "library_result_ownership",
+        "seconds": 5.91,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "linalg_ownership",
+        "seconds": 74.5,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_applicative_ownership",
+        "seconds": 33.43,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_copy_ownership",
+        "seconds": 13.58,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_option_ownership",
+        "seconds": 13.9,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_structure_ownership",
+        "seconds": 21.83,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "loop_preparation_ownership",
+        "seconds": 11.3,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "lsp",
+        "seconds": 7.62,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "map_ownership",
+        "seconds": 12.32,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "map_unwind_ownership",
+        "seconds": 15.78,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "match_context_ownership",
+        "seconds": 10.62,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "native_sockets",
+        "seconds": 0.44,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "numeric_array_fusion",
+        "seconds": 79.63,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "old_reclamation",
+        "seconds": 10.66,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "ownership",
+        "seconds": 10.39,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "path_validation",
+        "seconds": 25.867746,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "pipe_ownership",
+        "seconds": 25.86,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "prefix_ownership",
+        "seconds": 0.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "protocol",
+        "seconds": 8.49,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "record_conversion_ownership",
+        "seconds": 21.25,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "resource_frame_fields",
+        "seconds": 16.35,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "resource_frames",
+        "seconds": 27.412096,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "retained_thunk_ownership",
+        "seconds": 27.4,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "reuse_token_ownership",
+        "seconds": 26.89,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "runtime_call_ownership",
+        "seconds": 20.46,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "scope_thunk_ownership",
+        "seconds": 13.17,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "serializer_leaf_ownership",
+        "seconds": 19.57,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "softfloat_core",
+        "seconds": 4.51,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "stack",
+        "seconds": 16.8,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "stack_ownership",
+        "seconds": 12.73,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "static_memory",
+        "seconds": 0.035255,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "stdlib_doc",
+        "seconds": 0.02,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "system_snapshots",
+        "seconds": 17.48,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "task_ownership",
+        "seconds": 11.46,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "temporary_ownership",
+        "seconds": 6.84,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "text_file_tools",
+        "seconds": 50.43,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "tls",
+        "seconds": 131.3,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "tls_cache_ownership",
+        "seconds": 3.33,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "tls_peer_subject_ownership",
+        "seconds": 3.65,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "transpose_ownership",
+        "seconds": 14.69,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "unboxed_worker_locals",
+        "seconds": 4.29,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "unzip_cleanup",
+        "seconds": 11.6,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "variant_conversion_ownership",
+        "seconds": 13.86,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "wasm_resource_counts",
+        "seconds": 11.59,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "wide_counts",
+        "seconds": 15.23,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "windows_context",
+        "seconds": 0.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "windows_static_memory",
+        "seconds": 0.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "worker_boxing_ownership",
+        "seconds": 12.68,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "working_directory",
+        "seconds": 14.56,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "zip_ownership",
+        "seconds": 12.97,
+        "scope": "test harness reported duration"
+      }
+    ],
+    "150-regular": [
+      {
+        "target": "ad_tape_ownership",
+        "seconds": 63.34,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "aot",
+        "seconds": 89.57,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "arc_execution",
+        "seconds": 59.87,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "arc_library",
+        "seconds": 25.7,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "argument_preparation_ownership",
+        "seconds": 18.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "array_loop_borrows",
+        "seconds": 29.21,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "array_unwind_ownership",
+        "seconds": 43.3749,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "autodiff_checkpoint",
+        "seconds": 43.34,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_nested",
+        "seconds": 115.8,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_workspace",
+        "seconds": 83.97,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "blocked_matrix",
+        "seconds": 30.01,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "boxed_field_moves",
+        "seconds": 5.37,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "builds",
+        "seconds": 0.057537,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "cache_lifetime",
+        "seconds": 0.03,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "call_effects",
+        "seconds": 13.17,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "channel_queue_ownership",
+        "seconds": 18.88,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "cli_ownership",
+        "seconds": 15.81,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "closure_cleanup",
+        "seconds": 7.91,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "compiler_call_liveness",
+        "seconds": 33.45,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "connect_cleanup",
+        "seconds": 5.19,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "constructor_type_ownership",
+        "seconds": 13.717066,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "cross",
+        "seconds": 13.7,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "device_bounds",
+        "seconds": 121.04,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "examples",
+        "seconds": 203.55,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "exec_invocation_ownership",
+        "seconds": 25.68,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "fat",
+        "seconds": 27.2,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "ffi_pointer_arithmetic",
+        "seconds": 12.08,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "field_moves",
+        "seconds": 4.34,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_construction_ownership",
+        "seconds": 5.25,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_inline_path",
+        "seconds": 15.36,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_read_kinds",
+        "seconds": 12.74,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_runtime_ownership",
+        "seconds": 11.2,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_values",
+        "seconds": 31.58,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "filter_ownership",
+        "seconds": 27.79,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "float_linking",
+        "seconds": 77.38618,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "float_math",
+        "seconds": 77.37,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "fold_ownership",
+        "seconds": 23.433052,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "foreign_callback_ownership",
+        "seconds": 23.42,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "general_record_update_ownership",
+        "seconds": 31.99,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "golden_parse",
+        "seconds": 0.0472,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "grpc",
+        "seconds": 0.02,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_capture_resources",
+        "seconds": 53.92,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_client_receive",
+        "seconds": 19.49,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_connect_cleanup",
+        "seconds": 8.43,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_connection_addresses",
+        "seconds": 5.88,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_context_restore",
+        "seconds": 5.46,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_force_cleanup",
+        "seconds": 11.54,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_peer_completion",
+        "seconds": 22.78,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_render_cleanup",
+        "seconds": 5.65,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_response_encoding",
+        "seconds": 11.14,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_server_ownership",
+        "seconds": 16.24,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_tls_pool_identity",
+        "seconds": 6.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "http2_peer_cleanup",
+        "seconds": 4.33,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "infix",
+        "seconds": 32.64,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "io_error_ownership",
+        "seconds": 18.36,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "iterator_fusion",
+        "seconds": 192.19,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "leaf_ownership",
+        "seconds": 11.6,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "library_resources",
+        "seconds": 10.22,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "library_unload",
+        "seconds": 18.61,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "lint",
+        "seconds": 5.02,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_construction_cleanup",
+        "seconds": 25.35,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_generation_ownership",
+        "seconds": 33.55,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_order_ownership",
+        "seconds": 20.68,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "loop_ownership",
+        "seconds": 45.03,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "loop_unwind_ownership",
+        "seconds": 18.17,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "macos",
+        "seconds": 60.05,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "map_set_ownership",
+        "seconds": 35.78,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "mapped_array_construction",
+        "seconds": 179.25,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "native_allocator",
+        "seconds": 3.06,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "nested_loop_boxing",
+        "seconds": 20.7,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "numerics",
+        "seconds": 20.19,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "opencl_lifetime",
+        "seconds": 36.7,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "packed_numeric_storage",
+        "seconds": 56.75,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "pipe_modes",
+        "seconds": 5.43,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "preempt",
+        "seconds": 147.19,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "process_ownership",
+        "seconds": 58.79,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "raw_memory_ownership",
+        "seconds": 7.09,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "record_update_ownership",
+        "seconds": 30.02,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "resource_frame_variants",
+        "seconds": 21.85,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "resource_match_context",
+        "seconds": 39.09,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "rest",
+        "seconds": 477.13,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "retain_unwind_ownership",
+        "seconds": 19.31,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "reuse",
+        "seconds": 185.26,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "right_fold_ownership",
+        "seconds": 18.53,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "scalar_traps",
+        "seconds": 61.806831,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "selection_unwind_ownership",
+        "seconds": 61.78,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "services",
+        "seconds": 73.4,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "sort_callback_ownership",
+        "seconds": 35.45,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "stack_match_ownership",
+        "seconds": 11.39,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "state_sequence_ownership",
+        "seconds": 33.93,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "std_tests",
+        "seconds": 75.89,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "structural_buffer",
+        "seconds": 3.5,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "task_handle_ownership",
+        "seconds": 23.62,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "task_timer_order",
+        "seconds": 24.08,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "terminal_ownership",
+        "seconds": 12.23,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "text_ownership",
+        "seconds": 18.96,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "tls_alpn_roots",
+        "seconds": 3.1,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "tls_listener_ownership",
+        "seconds": 15.83,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "tls_wire_ownership",
+        "seconds": 6.89,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "typed_state_ownership",
+        "seconds": 23.34,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "unwind_cleanup",
+        "seconds": 9.2,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "variant_alias_ownership",
+        "seconds": 9.87,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "wasm",
+        "seconds": 0.45,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "web",
+        "seconds": 71.56,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "wide_workers",
+        "seconds": 140.97,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "windows_runtime",
+        "seconds": 0.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "within_thunk_ownership",
+        "seconds": 11.02,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "worker_preparation_ownership",
+        "seconds": 13.71,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "zip_map_fusion",
+        "seconds": 202.55,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "zip_unwind_ownership",
+        "seconds": 24.54,
+        "scope": "test harness reported duration"
+      }
+    ],
+    "151-regular": [
+      {
+        "target": "ad_tape_ownership",
+        "seconds": 39.23,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "aot",
+        "seconds": 87.86,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "arc_execution",
+        "seconds": 67.1,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "arc_library",
+        "seconds": 23.46,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "argument_preparation_ownership",
+        "seconds": 13.12,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "array_loop_borrows",
+        "seconds": 20.817338,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "array_unwind_ownership",
+        "seconds": 20.81,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_checkpoint",
+        "seconds": 56.48,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_nested",
+        "seconds": 97.81,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_workspace",
+        "seconds": 73.645721,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "blocked_matrix",
+        "seconds": 73.63,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "boxed_field_moves",
+        "seconds": 5.72,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "builds",
+        "seconds": 0.02,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "cache_lifetime",
+        "seconds": 13.71,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "call_effects",
+        "seconds": 37.74,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "channel_queue_ownership",
+        "seconds": 20.69,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "cli_ownership",
+        "seconds": 17.84,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "closure_cleanup",
+        "seconds": 8.31,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "compiler_call_liveness",
+        "seconds": 37.98,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "connect_cleanup",
+        "seconds": 5.88,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "constructor_type_ownership",
+        "seconds": 15.25,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "cross",
+        "seconds": 0.01,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "device_bounds",
+        "seconds": 92.31,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "examples",
+        "seconds": 161.108613,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "exec_invocation_ownership",
+        "seconds": 161.09,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "fat",
+        "seconds": 23.62,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "ffi_pointer_arithmetic",
+        "seconds": 10.784163,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "field_moves",
+        "seconds": 10.77,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_construction_ownership",
+        "seconds": 5.22,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_inline_path",
+        "seconds": 12.24,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_read_kinds",
+        "seconds": 6.95,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_runtime_ownership",
+        "seconds": 6.81,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_values",
+        "seconds": 17.99,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "filter_ownership",
+        "seconds": 14.41,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "float_linking",
+        "seconds": 36.61,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "float_math",
+        "seconds": 27.01,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "fold_ownership",
+        "seconds": 14.36,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "foreign_callback_ownership",
+        "seconds": 22.93,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "general_record_update_ownership",
+        "seconds": 20.69,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "golden_parse",
+        "seconds": 0.01,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc",
+        "seconds": 41.14,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_capture_resources",
+        "seconds": 9.4,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_client_receive",
+        "seconds": 14.23,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_connect_cleanup",
+        "seconds": 5.98,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_connection_addresses",
+        "seconds": 3.72,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_context_restore",
+        "seconds": 4.220965,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "grpc_force_cleanup",
+        "seconds": 4.2,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_peer_completion",
+        "seconds": 10.11,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_render_cleanup",
+        "seconds": 6.639237,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "grpc_response_encoding",
+        "seconds": 6.62,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_server_ownership",
+        "seconds": 19.63,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_tls_pool_identity",
+        "seconds": 6.59,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "http2_body_roots",
+        "seconds": 2.920394,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "http_server",
+        "seconds": 2.9,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "inline_caf_ownership",
+        "seconds": 35.85,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "iteration_consumers",
+        "seconds": 35.47,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "kernel_stack_bounds",
+        "seconds": 2.730654,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "library_input_ownership",
+        "seconds": 2.72,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "library_result_ownership",
+        "seconds": 10.22,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "linalg_ownership",
+        "seconds": 118.78,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_applicative_ownership",
+        "seconds": 37.57,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_copy_ownership",
+        "seconds": 18.91,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_option_ownership",
+        "seconds": 18.51,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_structure_ownership",
+        "seconds": 26.6,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "loop_preparation_ownership",
+        "seconds": 12.88,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "lsp",
+        "seconds": 8.13,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "map_ownership",
+        "seconds": 12.99,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "map_unwind_ownership",
+        "seconds": 18.84,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "match_context_ownership",
+        "seconds": 11.39,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "native_sockets",
+        "seconds": 0.36,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "numeric_array_fusion",
+        "seconds": 74.62,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "old_reclamation",
+        "seconds": 10.43,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "ownership",
+        "seconds": 10.17,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "path_validation",
+        "seconds": 34.62,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "pipe_ownership",
+        "seconds": 0.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "prefix_ownership",
+        "seconds": 17.11,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "protocol",
+        "seconds": 8.21,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "record_conversion_ownership",
+        "seconds": 18.99,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "resource_frame_fields",
+        "seconds": 16.66,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "resource_frames",
+        "seconds": 30.46,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "rest",
+        "seconds": 395.45,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "retained_thunk_ownership",
+        "seconds": 11.69,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "reuse_token_ownership",
+        "seconds": 30.24,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "runtime_call_ownership",
+        "seconds": 23.96,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "scope_thunk_ownership",
+        "seconds": 13.17,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "serializer_leaf_ownership",
+        "seconds": 18.44,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "softfloat_core",
+        "seconds": 4.1,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "stack",
+        "seconds": 15.2,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "stack_ownership",
+        "seconds": 13.12,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "static_memory",
+        "seconds": 0.05,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "stdlib_doc",
+        "seconds": 0.28,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "system_snapshots",
+        "seconds": 17.55,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "task_ownership",
+        "seconds": 9.59,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "temporary_ownership",
+        "seconds": 6.05,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "text_file_tools",
+        "seconds": 50.06,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "tls",
+        "seconds": 121.87,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "tls_cache_ownership",
+        "seconds": 4.06,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "tls_peer_subject_ownership",
+        "seconds": 3.61,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "transpose_ownership",
+        "seconds": 14.190642,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "unboxed_worker_locals",
+        "seconds": 14.17,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "unzip_cleanup",
+        "seconds": 10.9,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "variant_conversion_ownership",
+        "seconds": 13.64,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "wasm_arc",
+        "seconds": 3.37,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "web",
+        "seconds": 53.64,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "wide_workers",
+        "seconds": 94.14,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "windows_runtime",
+        "seconds": 0.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "within_thunk_ownership",
+        "seconds": 8.16,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "worker_preparation_ownership",
+        "seconds": 10.49,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "zip_map_fusion",
+        "seconds": 139.96,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "zip_unwind_ownership",
+        "seconds": 18.94,
+        "scope": "test harness reported duration"
+      }
+    ],
+    "151-gc": [
+      {
+        "target": "ad_tape_scopes",
+        "seconds": 105.14,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "arc_corpus",
+        "seconds": 524.57,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "arc_extensions",
+        "seconds": 209.08,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "arc_tasks",
+        "seconds": 34.01,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "array_element_ownership",
+        "seconds": 25.31,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "array_size_limits",
+        "seconds": 90.98,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_capacity_bounds",
+        "seconds": 30.33,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_library",
+        "seconds": 10.54,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "autodiff_precision",
+        "seconds": 30.7,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "bench",
+        "seconds": 0.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "borrowed_callbacks",
+        "seconds": 4.11,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "browser",
+        "seconds": 0.47,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "c-interop",
+        "seconds": 0.0,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "caf_ownership",
+        "seconds": 19.58,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "channel_cycle_ownership",
+        "seconds": 6.5,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "cli",
+        "seconds": 236.372108,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "clock_ownership",
+        "seconds": 236.36,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "closure_ownership",
+        "seconds": 18.93,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "compiler_diagnostics",
+        "seconds": 15.39,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "console_ownership",
+        "seconds": 129.32,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "constructor_unwind_ownership",
+        "seconds": 17.99,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "decoder_partial",
+        "seconds": 8.2,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "directory_report",
+        "seconds": 139.91,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "exec",
+        "seconds": 158.47,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "exec_protocol_ownership",
+        "seconds": 53.98,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "ffi",
+        "seconds": 22.39,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "field_context_ownership",
+        "seconds": 11.57,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_construction_disposal",
+        "seconds": 7.89,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_discard_ownership",
+        "seconds": 30.24,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_io_errors",
+        "seconds": 28.1,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_runtime_boundaries",
+        "seconds": 63.6,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_storage_disposal",
+        "seconds": 6.38,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "file_write_visibility",
+        "seconds": 8.47,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "float_formats",
+        "seconds": 46.41,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "float_literals",
+        "seconds": 29.35,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "fmt",
+        "seconds": 53.31,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "fold_unwind_ownership",
+        "seconds": 23.22,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "gc",
+        "seconds": 6.81,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "golden_check",
+        "seconds": 117.63,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "golden_run",
+        "seconds": 400.69,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_canonical_encoding",
+        "seconds": 4.45,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_client_failure_text",
+        "seconds": 4.26,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_client_requests",
+        "seconds": 9.49,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_connect_startup",
+        "seconds": 27.89,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_context_resources",
+        "seconds": 13.49,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_environment_cache",
+        "seconds": 5.51,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_packed_options",
+        "seconds": 1.94,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_receive_cleanup",
+        "seconds": 14.76,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_request_encoding",
+        "seconds": 6.04,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_send_cleanup",
+        "seconds": 6.37,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "grpc_status_cleanup",
+        "seconds": 18.04,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "hash_ownership",
+        "seconds": 117.27,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "http2_peer_cleanup",
+        "seconds": 5.11,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "infix",
+        "seconds": 34.83,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "io_error_ownership",
+        "seconds": 19.03,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "iterator_fusion",
+        "seconds": 199.82,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "leaf_ownership",
+        "seconds": 11.79,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "library_resources",
+        "seconds": 10.66,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "library_unload",
+        "seconds": 20.7,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "lint",
+        "seconds": 6.06,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_construction_cleanup",
+        "seconds": 26.36,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_generation_ownership",
+        "seconds": 33.18,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "list_order_ownership",
+        "seconds": 19.74,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "loop_ownership",
+        "seconds": 43.26,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "loop_unwind_ownership",
+        "seconds": 19.23,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "macos",
+        "seconds": 59.37,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "map_set_ownership",
+        "seconds": 37.22,
+        "scope": "test harness reported duration"
+      }
+    ],
+    "hash-focused": [
+      {
+        "target": "arc_execution",
+        "seconds": 52.86,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "hash_ownership",
+        "seconds": 113.85,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "protocol",
+        "seconds": 7.53,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "range_array",
+        "seconds": 75.86,
+        "scope": "test harness reported duration"
+      }
+    ],
+    "vector-focused": [
+      {
+        "target": "arc_execution",
+        "seconds": 68.788895,
+        "scope": "target start until next Cargo target starts"
+      },
+      {
+        "target": "array_element_ownership",
+        "seconds": 68.74,
+        "scope": "test harness reported duration"
+      },
+      {
+        "target": "vector_ownership",
+        "seconds": 131.52,
+        "scope": "test harness reported duration"
+      }
+    ]
+  },
+  "medianTargetSeconds": {
+    "ad_tape_ownership": 51.285,
+    "ad_tape_scopes": 84.075,
+    "aot": 88.715,
+    "arc_corpus": 449.755,
+    "arc_execution": 63.485,
+    "arc_extensions": 167.97,
+    "arc_library": 24.58,
+    "arc_tasks": 29.07,
+    "argument_preparation_ownership": 15.559999999999999,
+    "array_element_ownership": 25.31,
+    "array_loop_borrows": 25.013669,
+    "array_size_limits": 55.905,
+    "array_unwind_ownership": 32.09245,
+    "autodiff_capacity_bounds": 27.244999999999997,
+    "autodiff_checkpoint": 49.91,
+    "autodiff_library": 9.765,
+    "autodiff_nested": 106.805,
+    "autodiff_precision": 26.455,
+    "autodiff_workspace": 78.8078605,
+    "bench": 0.0028045,
+    "blocked_matrix": 51.82,
+    "borrowed_callbacks": 2.055,
+    "boxed_field_moves": 5.545,
+    "browser": 0.415,
+    "builds": 0.0387685,
+    "c-interop": 0.0,
+    "cache_lifetime": 6.87,
+    "caf_ownership": 16.0,
+    "call_effects": 25.455000000000002,
+    "channel_cycle_ownership": 5.46,
+    "channel_queue_ownership": 19.785,
+    "cli": 195.54113,
+    "cli_ownership": 16.825,
+    "clock_ownership": 195.53500000000003,
+    "closure_cleanup": 8.11,
+    "closure_ownership": 15.280000000000001,
+    "compiler_call_liveness": 35.715,
+    "compiler_diagnostics": 12.71,
+    "connect_cleanup": 5.535,
+    "console_ownership": 109.96,
+    "constructor_type_ownership": 14.483533000000001,
+    "constructor_unwind_ownership": 16.105,
+    "cross": 6.8549999999999995,
+    "decoder_partial": 7.941663,
+    "device_bounds": 106.67500000000001,
+    "directory_report": 73.78999999999999,
+    "examples": 182.3293065,
+    "exec": 152.595,
+    "exec_invocation_ownership": 93.385,
+    "exec_protocol_ownership": 56.7,
+    "fat": 25.41,
+    "ffi": 22.564999999999998,
+    "ffi_pointer_arithmetic": 11.432081499999999,
+    "field_context_ownership": 10.83,
+    "field_moves": 7.555,
+    "file_construction_disposal": 7.04,
+    "file_construction_ownership": 5.234999999999999,
+    "file_discard_ownership": 29.665,
+    "file_inline_path": 13.8,
+    "file_io_errors": 27.18,
+    "file_read_kinds": 9.845,
+    "file_runtime_boundaries": 56.125,
+    "file_runtime_ownership": 9.004999999999999,
+    "file_storage_disposal": 5.295,
+    "file_values": 24.784999999999997,
+    "file_write_visibility": 7.2700000000000005,
+    "filter_ownership": 21.1,
+    "float_formats": 39.095,
+    "float_linking": 56.99809,
+    "float_literals": 24.956481,
+    "float_math": 52.190000000000005,
+    "fmt": 36.93,
+    "fold_ownership": 18.896526,
+    "fold_unwind_ownership": 20.744999999999997,
+    "foreign_callback_ownership": 23.175,
+    "gc": 5.855,
+    "general_record_update_ownership": 26.34,
+    "golden_check": 104.5,
+    "golden_parse": 0.0286,
+    "golden_run": 335.45,
+    "grpc": 20.580000000000002,
+    "grpc_canonical_encoding": 3.535,
+    "grpc_capture_resources": 31.66,
+    "grpc_client_failure_text": 3.6399999999999997,
+    "grpc_client_receive": 16.86,
+    "grpc_client_requests": 7.78,
+    "grpc_connect_cleanup": 7.205,
+    "grpc_connect_startup": 23.0,
+    "grpc_connection_addresses": 4.8,
+    "grpc_context_resources": 10.86,
+    "grpc_context_restore": 4.8404825,
+    "grpc_environment_cache": 4.49,
+    "grpc_force_cleanup": 7.869999999999999,
+    "grpc_packed_options": 1.6400000000000001,
+    "grpc_peer_completion": 16.445,
+    "grpc_receive_cleanup": 12.325,
+    "grpc_render_cleanup": 6.1446185,
+    "grpc_request_encoding": 4.825,
+    "grpc_response_encoding": 8.88,
+    "grpc_send_cleanup": 5.295,
+    "grpc_server_ownership": 17.935,
+    "grpc_status_cleanup": 14.425,
+    "grpc_tls_pool_identity": 6.295,
+    "hash_ownership": 115.56,
+    "http2_body_roots": 2.415197,
+    "http2_peer_cleanup": 4.720000000000001,
+    "http_server": 12.479999999999999,
+    "infix": 33.735,
+    "inline_caf_ownership": 28.61,
+    "io_error_ownership": 18.695,
+    "iteration_consumers": 27.025,
+    "iterator_fusion": 196.005,
+    "kernel_stack_bounds": 2.4071534999999997,
+    "leaf_ownership": 11.695,
+    "library_input_ownership": 2.395,
+    "library_resources": 10.440000000000001,
+    "library_result_ownership": 8.065000000000001,
+    "library_unload": 19.655,
+    "linalg_ownership": 96.64,
+    "lint": 5.539999999999999,
+    "list_applicative_ownership": 35.5,
+    "list_construction_cleanup": 25.855,
+    "list_copy_ownership": 16.245,
+    "list_generation_ownership": 33.364999999999995,
+    "list_option_ownership": 16.205000000000002,
+    "list_order_ownership": 20.21,
+    "list_structure_ownership": 24.215,
+    "loop_ownership": 44.144999999999996,
+    "loop_preparation_ownership": 12.09,
+    "loop_unwind_ownership": 18.700000000000003,
+    "lsp": 7.875,
+    "macos": 59.709999999999994,
+    "map_ownership": 12.655000000000001,
+    "map_set_ownership": 36.5,
+    "map_unwind_ownership": 17.31,
+    "mapped_array_construction": 179.25,
+    "match_context_ownership": 11.004999999999999,
+    "native_allocator": 3.06,
+    "native_sockets": 0.4,
+    "nested_loop_boxing": 20.7,
+    "numeric_array_fusion": 77.125,
+    "numerics": 20.19,
+    "old_reclamation": 10.545,
+    "opencl_lifetime": 36.7,
+    "ownership": 10.280000000000001,
+    "packed_numeric_storage": 56.75,
+    "path_validation": 30.243873,
+    "pipe_modes": 5.43,
+    "pipe_ownership": 12.93,
+    "preempt": 147.19,
+    "prefix_ownership": 8.555,
+    "process_ownership": 58.79,
+    "protocol": 8.21,
+    "range_array": 75.86,
+    "raw_memory_ownership": 7.09,
+    "record_conversion_ownership": 20.119999999999997,
+    "record_update_ownership": 30.02,
+    "resource_frame_fields": 16.505000000000003,
+    "resource_frame_variants": 21.85,
+    "resource_frames": 28.936048,
+    "resource_match_context": 39.09,
+    "rest": 436.28999999999996,
+    "retain_unwind_ownership": 19.31,
+    "retained_thunk_ownership": 19.544999999999998,
+    "reuse": 185.26,
+    "reuse_token_ownership": 28.564999999999998,
+    "right_fold_ownership": 18.53,
+    "runtime_call_ownership": 22.21,
+    "scalar_traps": 61.806831,
+    "scope_thunk_ownership": 13.17,
+    "selection_unwind_ownership": 61.78,
+    "serializer_leaf_ownership": 19.005000000000003,
+    "services": 73.4,
+    "softfloat_core": 4.305,
+    "sort_callback_ownership": 35.45,
+    "stack": 16.0,
+    "stack_match_ownership": 11.39,
+    "stack_ownership": 12.925,
+    "state_sequence_ownership": 33.93,
+    "static_memory": 0.0426275,
+    "std_tests": 75.89,
+    "stdlib_doc": 0.15000000000000002,
+    "structural_buffer": 3.5,
+    "system_snapshots": 17.515,
+    "task_handle_ownership": 23.62,
+    "task_ownership": 10.525,
+    "task_timer_order": 24.08,
+    "temporary_ownership": 6.445,
+    "terminal_ownership": 12.23,
+    "text_file_tools": 50.245000000000005,
+    "text_ownership": 18.96,
+    "tls": 126.58500000000001,
+    "tls_alpn_roots": 3.1,
+    "tls_cache_ownership": 3.695,
+    "tls_listener_ownership": 15.83,
+    "tls_peer_subject_ownership": 3.63,
+    "tls_wire_ownership": 6.89,
+    "transpose_ownership": 14.440321,
+    "typed_state_ownership": 23.34,
+    "unboxed_worker_locals": 9.23,
+    "unwind_cleanup": 9.2,
+    "unzip_cleanup": 11.25,
+    "variant_alias_ownership": 9.87,
+    "variant_conversion_ownership": 13.75,
+    "vector_ownership": 131.52,
+    "wasm": 0.45,
+    "wasm_arc": 3.37,
+    "wasm_resource_counts": 11.59,
+    "web": 62.6,
+    "wide_counts": 15.23,
+    "wide_workers": 117.555,
+    "windows_context": 0.0,
+    "windows_runtime": 0.0,
+    "windows_static_memory": 0.0,
+    "within_thunk_ownership": 9.59,
+    "worker_boxing_ownership": 12.68,
+    "worker_preparation_ownership": 12.100000000000001,
+    "working_directory": 14.56,
+    "zip_map_fusion": 171.255,
+    "zip_ownership": 12.97,
+    "zip_unwind_ownership": 21.740000000000002
+  },
+  "overheadEstimateSeconds": {
+    "regular": 292.362273,
+    "gc": 1751.707786
+  },
+  "projectedSeconds": {
+    "regular": 5050.939663499999,
+    "gc": 4995.280511
+  },
+  "scope": "Fixed test assignment after Intel macOS GC exceeded its 90-minute gate in run 38861611494. Median observed target durations guide a one-time longest-first assignment; CI reads the explicit lists and never silently reshuffles them. Runtime estimates are not passing gates or guaranteed completion times. Future targets need explicit placement.",
+  "jobLogs": {
+    "150-gc": 116813691829,
+    "150-regular": 116813693429,
+    "151-regular": 116844933863,
+    "151-gc": 116844933823,
+    "hash-focused": 116854425081,
+    "vector-focused": 116863940630
+  },
+  "overheadExplanation": "Regular overhead is completed job wall time 3526s minus observed integration target time 3233.637727s. GC overhead is job start to first ordinary shard target: 1751.707786s, including its separately completed 1536.35s stress test. These are observed runner costs, not fixed future timing.",
+  "schedule": {
+    "regular": [
+      "aot",
+      "arc_corpus",
+      "arc_extensions",
+      "array_element_ownership",
+      "array_size_limits",
+      "autodiff_nested",
+      "autodiff_workspace",
+      "blocked_matrix",
+      "browser",
+      "c-interop",
+      "caf_ownership",
+      "channel_cycle_ownership",
+      "cli",
+      "compiler_diagnostics",
+      "constructor_type_ownership",
+      "constructor_unwind_ownership",
+      "cross",
+      "exec_protocol_ownership",
+      "fat",
+      "ffi",
+      "file_construction_disposal",
+      "file_construction_ownership",
+      "file_io_errors",
+      "file_runtime_ownership",
+      "file_storage_disposal",
+      "file_values",
+      "file_write_visibility",
+      "float_formats",
+      "float_linking",
+      "fmt",
+      "foreign_callback_ownership",
+      "golden_check",
+      "golden_parse",
+      "golden_run",
+      "grpc_capture_resources",
+      "grpc_client_requests",
+      "grpc_connect_cleanup",
+      "grpc_connection_addresses",
+      "grpc_context_resources",
+      "grpc_context_restore",
+      "grpc_peer_completion",
+      "grpc_render_cleanup",
+      "grpc_status_cleanup",
+      "grpc_tls_pool_identity",
+      "hash_ownership",
+      "http2_body_roots",
+      "io_error_ownership",
+      "iteration_consumers",
+      "iterator_fusion",
+      "leaf_ownership",
+      "library_input_ownership",
+      "library_resources",
+      "library_result_ownership",
+      "library_unload",
+      "lint",
+      "list_applicative_ownership",
+      "list_construction_cleanup",
+      "list_generation_ownership",
+      "list_order_ownership",
+      "list_structure_ownership",
+      "loop_ownership",
+      "loop_unwind_ownership",
+      "lsp",
+      "macos",
+      "map_ownership",
+      "map_set_ownership",
+      "map_unwind_ownership",
+      "mapped_array_construction",
+      "match_context_ownership",
+      "native_sockets",
+      "nested_loop_boxing",
+      "numeric_array_fusion",
+      "old_reclamation",
+      "pipe_ownership",
+      "preempt",
+      "prefix_ownership",
+      "record_conversion_ownership",
+      "record_update_ownership",
+      "resource_frame_fields",
+      "resource_frames",
+      "rest",
+      "retained_thunk_ownership",
+      "reuse",
+      "reuse_token_ownership",
+      "runtime_call_ownership",
+      "scalar_traps",
+      "services",
+      "softfloat_core",
+      "stack_match_ownership",
+      "state_sequence_ownership",
+      "stdlib_doc",
+      "system_snapshots",
+      "task_timer_order",
+      "terminal_ownership",
+      "text_file_tools",
+      "text_ownership",
+      "tls_alpn_roots",
+      "tls_cache_ownership",
+      "tls_listener_ownership",
+      "tls_peer_subject_ownership",
+      "unboxed_worker_locals",
+      "variant_alias_ownership",
+      "variant_conversion_ownership",
+      "wasm",
+      "wasm_arc",
+      "wide_counts",
+      "wide_workers",
+      "windows_context",
+      "windows_runtime",
+      "windows_static_memory",
+      "within_thunk_ownership",
+      "worker_preparation_ownership",
+      "zip_ownership",
+      "zip_unwind_ownership"
+    ],
+    "gc": [
+      "ad_tape_ownership",
+      "ad_tape_scopes",
+      "arc_execution",
+      "arc_library",
+      "arc_tasks",
+      "argument_preparation_ownership",
+      "array_loop_borrows",
+      "array_unwind_ownership",
+      "autodiff_capacity_bounds",
+      "autodiff_checkpoint",
+      "autodiff_library",
+      "autodiff_precision",
+      "bench",
+      "borrowed_callbacks",
+      "boxed_field_moves",
+      "builds",
+      "cache_lifetime",
+      "call_effects",
+      "channel_queue_ownership",
+      "cli_ownership",
+      "clock_ownership",
+      "closure_cleanup",
+      "closure_ownership",
+      "compiler_call_liveness",
+      "connect_cleanup",
+      "console_ownership",
+      "decoder_partial",
+      "device_bounds",
+      "directory_report",
+      "examples",
+      "exec",
+      "exec_invocation_ownership",
+      "ffi_pointer_arithmetic",
+      "field_context_ownership",
+      "field_moves",
+      "file_discard_ownership",
+      "file_inline_path",
+      "file_read_kinds",
+      "file_runtime_boundaries",
+      "filter_ownership",
+      "float_literals",
+      "float_math",
+      "fold_ownership",
+      "fold_unwind_ownership",
+      "gc",
+      "general_record_update_ownership",
+      "grpc",
+      "grpc_canonical_encoding",
+      "grpc_client_failure_text",
+      "grpc_client_receive",
+      "grpc_connect_startup",
+      "grpc_environment_cache",
+      "grpc_force_cleanup",
+      "grpc_packed_options",
+      "grpc_receive_cleanup",
+      "grpc_request_encoding",
+      "grpc_response_encoding",
+      "grpc_send_cleanup",
+      "grpc_server_ownership",
+      "http2_peer_cleanup",
+      "http_server",
+      "infix",
+      "inline_caf_ownership",
+      "kernel_stack_bounds",
+      "linalg_ownership",
+      "list_copy_ownership",
+      "list_option_ownership",
+      "loop_preparation_ownership",
+      "native_allocator",
+      "numerics",
+      "opencl_lifetime",
+      "ownership",
+      "packed_numeric_storage",
+      "path_validation",
+      "pipe_modes",
+      "process_ownership",
+      "protocol",
+      "raw_memory_ownership",
+      "resource_frame_variants",
+      "resource_match_context",
+      "retain_unwind_ownership",
+      "right_fold_ownership",
+      "scope_thunk_ownership",
+      "selection_unwind_ownership",
+      "serializer_leaf_ownership",
+      "sort_callback_ownership",
+      "stack",
+      "stack_ownership",
+      "static_memory",
+      "std_tests",
+      "structural_buffer",
+      "task_handle_ownership",
+      "task_ownership",
+      "temporary_ownership",
+      "tls",
+      "tls_wire_ownership",
+      "transpose_ownership",
+      "typed_state_ownership",
+      "unwind_cleanup",
+      "unzip_cleanup",
+      "wasm_resource_counts",
+      "web",
+      "worker_boxing_ownership",
+      "working_directory",
+      "zip_map_fusion"
+    ]
+  }
+}

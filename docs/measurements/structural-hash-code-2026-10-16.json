@@ -1,0 +1,201 @@
+{
+  "scope": "Static artifacts from six native hosts and actual WASI on two Linux hosts. No dynamic instruction, cache, or spill claim. Selected Linux ARM64 ARC hash visitor only; full disassembly stays in runner artifacts.",
+  "nativeRun": "https://github.com/e6qu/fun-with-pipes/actions/runs/38853061610",
+  "windowsRepairRun": "https://github.com/e6qu/fun-with-pipes/actions/runs/38853748654",
+  "wasiRun": "https://github.com/e6qu/fun-with-pipes/actions/runs/38853064238",
+  "artifacts": {
+    "arm64": {
+      "hash-arc.asm": {
+        "bytes": 1384102,
+        "sha256": "ca9428d48316d87fe5af5a2096bcd4baf552ea3026e4559a9cc01e421391a148"
+      },
+      "hash-arc.c": {
+        "bytes": 692108,
+        "sha256": "5c3b13925a36eac8a79247a0837f81720424868c8bf673b88b28c7d2acdbd95b"
+      },
+      "hash-arc.exe": {
+        "bytes": 230104,
+        "sha256": "d4e3cdc3e0ce2020e785dabc39603ada719e278392f0c720ebdbcbf4c2ea781a"
+      },
+      "hash-tracing.asm": {
+        "bytes": 1332603,
+        "sha256": "06dbb50e3990f7a38dab02d1ff6e268b9fa51c190bf44276edfa49704c1e761d"
+      },
+      "hash-tracing.c": {
+        "bytes": 691995,
+        "sha256": "a1ffcab9a9e6f24b10a3ea65532b55ff3c7ccd811fb4890d13d68e3629c1775e"
+      },
+      "hash-tracing.exe": {
+        "bytes": 230456,
+        "sha256": "1e30666e7edc1c78c82fe07a8c8db7264e1508ff3d90d38b348f241a0355e0e3"
+      }
+    },
+    "macos-15": {
+      "hash-arc.asm": {
+        "bytes": 1097051,
+        "sha256": "5504c6b31896316acff47d2967eaa1248cc77a81fa823ce22d9cde7513ce4d12"
+      },
+      "hash-arc.c": {
+        "bytes": 692108,
+        "sha256": "5c3b13925a36eac8a79247a0837f81720424868c8bf673b88b28c7d2acdbd95b"
+      },
+      "hash-arc.exe": {
+        "bytes": 183304,
+        "sha256": "c95afe4dcfcecb3944e4c9b5832b84b88892117801445326d29745323f303ece"
+      },
+      "hash-tracing.asm": {
+        "bytes": 1071213,
+        "sha256": "a83d4196acdbda62e672a6267d16f8ff80429a42dce194a82be1490d3ca101f2"
+      },
+      "hash-tracing.c": {
+        "bytes": 691995,
+        "sha256": "a1ffcab9a9e6f24b10a3ea65532b55ff3c7ccd811fb4890d13d68e3629c1775e"
+      },
+      "hash-tracing.exe": {
+        "bytes": 183608,
+        "sha256": "a9a93aa736c847c07e81a9efb6faa5a8f4086770506c53a2ded8bb7403165b64"
+      }
+    },
+    "macos-15-intel": {
+      "hash-arc.asm": {
+        "bytes": 1369028,
+        "sha256": "4e74112d630c9e6c5f3b897775bceefbb7558ed2dadd9783be3aa5323b1764c0"
+      },
+      "hash-arc.c": {
+        "bytes": 692108,
+        "sha256": "5c3b13925a36eac8a79247a0837f81720424868c8bf673b88b28c7d2acdbd95b"
+      },
+      "hash-arc.exe": {
+        "bytes": 177680,
+        "sha256": "9a454bd024a7c7942ea4f5ee960e5161eeff78afe3942933be9d7b29bd8fe854"
+      },
+      "hash-tracing.asm": {
+        "bytes": 1331313,
+        "sha256": "04c86b609b3d6e379812f50e393a1829cc76bb3d29c4b9c58d672aec8fcd9b9b"
+      },
+      "hash-tracing.c": {
+        "bytes": 691995,
+        "sha256": "a1ffcab9a9e6f24b10a3ea65532b55ff3c7ccd811fb4890d13d68e3629c1775e"
+      },
+      "hash-tracing.exe": {
+        "bytes": 173880,
+        "sha256": "f6a45da4cda08feacbbdcb6334a685b5d0dcf28412d09857f4e94f5ce3a7e2ca"
+      }
+    },
+    "ubuntu-latest": {
+      "hash-arc.asm": {
+        "bytes": 1913916,
+        "sha256": "3b7f5e03e33cbbb37809de0f3e813315709befc7edfa91d6443a1b61a2a6c4eb"
+      },
+      "hash-arc.c": {
+        "bytes": 692108,
+        "sha256": "5c3b13925a36eac8a79247a0837f81720424868c8bf673b88b28c7d2acdbd95b"
+      },
+      "hash-arc.exe": {
+        "bytes": 203104,
+        "sha256": "fba9e6a4722f4cc8f044304806e2de00e70692e4b50226aec08874a7c4f10ed0"
+      },
+      "hash-tracing.asm": {
+        "bytes": 1856953,
+        "sha256": "e674951a7bb94a14b91d0781adbd725a224e3fac4fc7f5e714a044617648ffd9"
+      },
+      "hash-tracing.c": {
+        "bytes": 691995,
+        "sha256": "a1ffcab9a9e6f24b10a3ea65532b55ff3c7ccd811fb4890d13d68e3629c1775e"
+      },
+      "hash-tracing.exe": {
+        "bytes": 199352,
+        "sha256": "be9cd4835c46d42bd2f42129065446111a8fc30f09b7d9c7d20c5c0e75188f81"
+      }
+    },
+    "wasi-ubuntu-24.04-arm": {
+      "cli.symbols": {
+        "bytes": 68573,
+        "sha256": "a4b4a934137c3668dbc4c13bd2c354062f4efae375f9e8a9b1fbff799f1ba49c"
+      },
+      "cli.wasm": {
+        "bytes": 320008,
+        "sha256": "0dd5e47adb01b43173b5537cce2eb5eca0b160d2006a7e439830e8fd6760817b"
+      },
+      "function.symbols": {
+        "bytes": 59484,
+        "sha256": "d8e582560b4911f7d05f31bccabe21be1491ec49cef28bb24a5884c8c418ebee"
+      },
+      "function.wasm": {
+        "bytes": 317625,
+        "sha256": "a20b04dd35f3fc96a1b5e298edf70ef3c1eb5c096006237f57b8ba6be22966be"
+      }
+    },
+    "wasi-ubuntu-latest": {
+      "cli.symbols": {
+        "bytes": 68573,
+        "sha256": "a4b4a934137c3668dbc4c13bd2c354062f4efae375f9e8a9b1fbff799f1ba49c"
+      },
+      "cli.wasm": {
+        "bytes": 320008,
+        "sha256": "0dd5e47adb01b43173b5537cce2eb5eca0b160d2006a7e439830e8fd6760817b"
+      },
+      "function.symbols": {
+        "bytes": 59484,
+        "sha256": "d8e582560b4911f7d05f31bccabe21be1491ec49cef28bb24a5884c8c418ebee"
+      },
+      "function.wasm": {
+        "bytes": 317625,
+        "sha256": "a20b04dd35f3fc96a1b5e298edf70ef3c1eb5c096006237f57b8ba6be22966be"
+      }
+    },
+    "windows-11-arm": {
+      "hash-arc.asm": {
+        "bytes": 1838372,
+        "sha256": "31d16da802960aab301a0a631bf2be2bb43f5f2959808310abeb033784919a6c"
+      },
+      "hash-arc.c": {
+        "bytes": 692108,
+        "sha256": "5c3b13925a36eac8a79247a0837f81720424868c8bf673b88b28c7d2acdbd95b"
+      },
+      "hash-arc.exe": {
+        "bytes": 409088,
+        "sha256": "651f786e7abca6f26370cd056f5810140bbc635e93275d36162b81a6fe5d0e5f"
+      },
+      "hash-tracing.asm": {
+        "bytes": 1813188,
+        "sha256": "58a6eedcc7970a7d76c9c33e35b6736cb3038bf7d2271f0d13a460a0b70b2d84"
+      },
+      "hash-tracing.c": {
+        "bytes": 691995,
+        "sha256": "a1ffcab9a9e6f24b10a3ea65532b55ff3c7ccd811fb4890d13d68e3629c1775e"
+      },
+      "hash-tracing.exe": {
+        "bytes": 407552,
+        "sha256": "897c81a2917dac7cef4078ed3e0098289a1bc4b9476ba36ac94fb9a3b6985de3"
+      }
+    },
+    "windows-2025": {
+      "hash-arc.asm": {
+        "bytes": 2949247,
+        "sha256": "92cf293b670889145d6d8838f78670b03725c28682fd409ea5cccc657bc10e91"
+      },
+      "hash-arc.c": {
+        "bytes": 692108,
+        "sha256": "5c3b13925a36eac8a79247a0837f81720424868c8bf673b88b28c7d2acdbd95b"
+      },
+      "hash-arc.exe": {
+        "bytes": 428544,
+        "sha256": "6631969535e4f409f8daf5b8c29009aaf88dcaa7c76650c92fa8701f7f69c66c"
+      },
+      "hash-tracing.asm": {
+        "bytes": 2891612,
+        "sha256": "8a0feb5f7c04b457f53cd93e747112b648dd4bbd5a5ce224a106d6b1e4ac9d00"
+      },
+      "hash-tracing.c": {
+        "bytes": 691995,
+        "sha256": "a1ffcab9a9e6f24b10a3ea65532b55ff3c7ccd811fb4890d13d68e3629c1775e"
+      },
+      "hash-tracing.exe": {
+        "bytes": 425472,
+        "sha256": "576b4fc87b6bffefc9ec6831eaf997f0bac5b39cd4f5adb3000e96c65c6466b3"
+      }
+    }
+  },
+  "linuxArm64ArcHashVisitor": "000000000000988c <fwp_hash_value>:\n    988c:\ta9ba7bfd \tstp\tx29, x30, [sp, #-96]!\n    9890:\tf9000bfb \tstr\tx27, [sp, #16]\n    9894:\ta90267fa \tstp\tx26, x25, [sp, #32]\n    9898:\ta9035ff8 \tstp\tx24, x23, [sp, #48]\n    989c:\ta90457f6 \tstp\tx22, x21, [sp, #64]\n    98a0:\ta9054ff4 \tstp\tx20, x19, [sp, #80]\n    98a4:\t910003fd \tmov\tx29, sp\n    98a8:\tb9400056 \tldr\tw22, [x2]\n    98ac:\t710072df \tcmp\tw22, #0x1c\n    98b0:\t54002d48 \tb.hi\t9e58 <fwp_hash_value+0x5cc>  // b.pmore\n    98b4:\t900000c8 \tadrp\tx8, 21000 <fwp_decimal_sum_D2A+0x234>\n    98b8:\t913ac108 \tadd\tx8, x8, #0xeb0\n    98bc:\taa0203f4 \tmov\tx20, x2\n    98c0:\t100000a9 \tadr\tx9, 98d4 <fwp_hash_value+0x48>\n    98c4:\t7876790a \tldrh\tw10, [x8, x22, lsl #1]\n    98c8:\t8b0a0929 \tadd\tx9, x9, x10, lsl #2\n    98cc:\taa0103f3 \tmov\tx19, x1\n    98d0:\td61f0120 \tbr\tx9\n    98d4:\t92401e68 \tand\tx8, x19, #0xff\n    98d8:\td2803669 \tmov\tx9, #0x1b3                 \t// #435\n    98dc:\td3483e6a \tubfx\tx10, x19, #8, #8\n    98e0:\tca000108 \teor\tx8, x8, x0\n    98e4:\tf2c02009 \tmovk\tx9, #0x100, lsl #32\n    98e8:\t1400002c \tb\t9998 <fwp_hash_value+0x10c>\n    98ec:\t92401e68 \tand\tx8, x19, #0xff\n    98f0:\td2803669 \tmov\tx9, #0x1b3                 \t// #435\n    98f4:\td3483e6a \tubfx\tx10, x19, #8, #8\n    98f8:\tca000108 \teor\tx8, x8, x0\n    98fc:\tf2c02009 \tmovk\tx9, #0x100, lsl #32\n    9900:\t9b097d08 \tmul\tx8, x8, x9\n    9904:\tca080148 \teor\tx8, x10, x8\n    9908:\td3505e6a \tubfx\tx10, x19, #16, #8\n    990c:\t9b097d08 \tmul\tx8, x8, x9\n    9910:\tca080148 \teor\tx8, x10, x8\n    9914:\td3587e6a \tubfx\tx10, x19, #24, #8\n    9918:\t9b097d08 \tmul\tx8, x8, x9\n    991c:\tca080148 \teor\tx8, x10, x8\n    9920:\td3609e6a \tubfx\tx10, x19, #32, #8\n    9924:\t9b097d08 \tmul\tx8, x8, x9\n    9928:\tca080148 \teor\tx8, x10, x8\n    992c:\td368be6a \tubfx\tx10, x19, #40, #8\n    9930:\t9b097d08 \tmul\tx8, x8, x9\n    9934:\tca080148 \teor\tx8, x10, x8\n    9938:\td370de6a \tubfx\tx10, x19, #48, #8\n    993c:\t9b097d08 \tmul\tx8, x8, x9\n    9940:\tca080148 \teor\tx8, x10, x8\n    9944:\t9b097d08 \tmul\tx8, x8, x9\n    9948:\tca53e108 \teor\tx8, x8, x19, lsr #56\n    994c:\t9b097d00 \tmul\tx0, x8, x9\n    9950:\t14000142 \tb\t9e58 <fwp_hash_value+0x5cc>\n    9954:\t92401e68 \tand\tx8, x19, #0xff\n    9958:\td2803669 \tmov\tx9, #0x1b3                 \t// #435\n    995c:\tca000108 \teor\tx8, x8, x0\n    9960:\tf2c02009 \tmovk\tx9, #0x100, lsl #32\n    9964:\t9b097d00 \tmul\tx0, x8, x9\n    9968:\t1400013c \tb\t9e58 <fwp_hash_value+0x5cc>\n    996c:\t92401e68 \tand\tx8, x19, #0xff\n    9970:\td2803669 \tmov\tx9, #0x1b3                 \t// #435\n    9974:\td3483e6a \tubfx\tx10, x19, #8, #8\n    9978:\tca000108 \teor\tx8, x8, x0\n    997c:\tf2c02009 \tmovk\tx9, #0x100, lsl #32\n    9980:\t9b097d08 \tmul\tx8, x8, x9\n    9984:\tca080148 \teor\tx8, x10, x8\n    9988:\td3505e6a \tubfx\tx10, x19, #16, #8\n    998c:\t9b097d08 \tmul\tx8, x8, x9\n    9990:\tca080148 \teor\tx8, x10, x8\n    9994:\td3587e6a \tubfx\tx10, x19, #24, #8\n    9998:\t9b097d08 \tmul\tx8, x8, x9\n    999c:\tca080148 \teor\tx8, x10, x8\n    99a0:\t9b097d00 \tmul\tx0, x8, x9\n    99a4:\t1400012d \tb\t9e58 <fwp_hash_value+0x5cc>\n    99a8:\tf9400277 \tldr\tx23, [x19]\n    99ac:\td2803668 \tmov\tx8, #0x1b3                 \t// #435\n    99b0:\tf2c02008 \tmovk\tx8, #0x100, lsl #32\n    99b4:\taa1703e9 \tmov\tx9, x23\n    99b8:\tf101fd3f \tcmp\tx9, #0x7f\n    99bc:\t9240192a \tand\tx10, x9, #0x7f\n    99c0:\td347fd29 \tlsr\tx9, x9, #7\n    99c4:\t1a9f97eb \tcset\tw11, hi\t// hi = pmore\n    99c8:\taa0b1d4a \torr\tx10, x10, x11, lsl #7\n    99cc:\tca00014a \teor\tx10, x10, x0\n    99d0:\t9b087d40 \tmul\tx0, x10, x8\n    99d4:\t54ffff28 \tb.hi\t99b8 <fwp_hash_value+0x12c>  // b.pmore\n    99d8:\tb4002417 \tcbz\tx23, 9e58 <fwp_hash_value+0x5cc>\n    99dc:\tf9401e95 \tldr\tx21, [x20, #56]\n    99e0:\t91004273 \tadd\tx19, x19, #0x10\n    99e4:\t14000004 \tb\t99f4 <fwp_hash_value+0x168>\n    99e8:\tf10006f7 \tsubs\tx23, x23, #0x1\n    99ec:\t91004273 \tadd\tx19, x19, #0x10\n    99f0:\t54002340 \tb.eq\t9e58 <fwp_hash_value+0x5cc>  // b.none\n    99f4:\tf85f8261 \tldur\tx1, [x19, #-8]\n    99f8:\taa1503e2 \tmov\tx2, x21\n    99fc:\t97ffffa4 \tbl\t988c <fwp_hash_value>\n    9a00:\t71004adf \tcmp\tw22, #0x12\n    9a04:\t54ffff21 \tb.ne\t99e8 <fwp_hash_value+0x15c>  // b.any\n    9a08:\tf9400261 \tldr\tx1, [x19]\n    9a0c:\tf9402282 \tldr\tx2, [x20, #64]\n    9a10:\t97ffff9f \tbl\t988c <fwp_hash_value>\n    9a14:\t17fffff5 \tb\t99e8 <fwp_hash_value+0x15c>\n    9a18:\tf9400268 \tldr\tx8, [x19]\n    9a1c:\td280366a \tmov\tx10, #0x1b3                 \t// #435\n    9a20:\tf2c0200a \tmovk\tx10, #0x100, lsl #32\n    9a24:\t92401d09 \tand\tx9, x8, #0xff\n    9a28:\td3483d0b \tubfx\tx11, x8, #8, #8\n    9a2c:\tca000129 \teor\tx9, x9, x0\n    9a30:\t9b0a7d29 \tmul\tx9, x9, x10\n    9a34:\tca090169 \teor\tx9, x11, x9\n    9a38:\td3505d0b \tubfx\tx11, x8, #16, #8\n    9a3c:\t9b0a7d29 \tmul\tx9, x9, x10\n    9a40:\tca090169 \teor\tx9, x11, x9\n    9a44:\td3587d0b \tubfx\tx11, x8, #24, #8\n    9a48:\t9b0a7d29 \tmul\tx9, x9, x10\n    9a4c:\tca090169 \teor\tx9, x11, x9\n    9a50:\td3609d0b \tubfx\tx11, x8, #32, #8\n    9a54:\t9b0a7d29 \tmul\tx9, x9, x10\n    9a58:\tca090169 \teor\tx9, x11, x9\n    9a5c:\td368bd0b \tubfx\tx11, x8, #40, #8\n    9a60:\t9b0a7d29 \tmul\tx9, x9, x10\n    9a64:\tca090169 \teor\tx9, x11, x9\n    9a68:\td370dd0b \tubfx\tx11, x8, #48, #8\n    9a6c:\t9b0a7d29 \tmul\tx9, x9, x10\n    9a70:\tca090169 \teor\tx9, x11, x9\n    9a74:\t9b0a7d29 \tmul\tx9, x9, x10\n    9a78:\tca48e128 \teor\tx8, x9, x8, lsr #56\n    9a7c:\tf9400669 \tldr\tx9, [x19, #8]\n    9a80:\t9b0a7d08 \tmul\tx8, x8, x10\n    9a84:\t92401d2b \tand\tx11, x9, #0xff\n    9a88:\tca080168 \teor\tx8, x11, x8\n    9a8c:\td3483d2b \tubfx\tx11, x9, #8, #8\n    9a90:\t9b0a7d08 \tmul\tx8, x8, x10\n    9a94:\tca080168 \teor\tx8, x11, x8\n    9a98:\td3505d2b \tubfx\tx11, x9, #16, #8\n    9a9c:\t9b0a7d08 \tmul\tx8, x8, x10\n    9aa0:\tca080168 \teor\tx8, x11, x8\n    9aa4:\td3587d2b \tubfx\tx11, x9, #24, #8\n    9aa8:\t9b0a7d08 \tmul\tx8, x8, x10\n    9aac:\tca080168 \teor\tx8, x11, x8\n    9ab0:\td3609d2b \tubfx\tx11, x9, #32, #8\n    9ab4:\t9b0a7d08 \tmul\tx8, x8, x10\n    9ab8:\tca080168 \teor\tx8, x11, x8\n    9abc:\td368bd2b \tubfx\tx11, x9, #40, #8\n    9ac0:\t9b0a7d08 \tmul\tx8, x8, x10\n    9ac4:\tca080168 \teor\tx8, x11, x8\n    9ac8:\td370dd2b \tubfx\tx11, x9, #48, #8\n    9acc:\t9b0a7d08 \tmul\tx8, x8, x10\n    9ad0:\tca080168 \teor\tx8, x11, x8\n    9ad4:\t9b0a7d08 \tmul\tx8, x8, x10\n    9ad8:\tca49e108 \teor\tx8, x8, x9, lsr #56\n    9adc:\t9b0a7d00 \tmul\tx0, x8, x10\n    9ae0:\t140000de \tb\t9e58 <fwp_hash_value+0x5cc>\n    9ae4:\tf9400268 \tldr\tx8, [x19]\n    9ae8:\td2803669 \tmov\tx9, #0x1b3                 \t// #435\n    9aec:\tf2c02009 \tmovk\tx9, #0x100, lsl #32\n    9af0:\taa0803ea \tmov\tx10, x8\n    9af4:\tf101fd5f \tcmp\tx10, #0x7f\n    9af8:\t9240194b \tand\tx11, x10, #0x7f\n    9afc:\td347fd4a \tlsr\tx10, x10, #7\n    9b00:\t1a9f97ec \tcset\tw12, hi\t// hi = pmore\n    9b04:\taa0c1d6b \torr\tx11, x11, x12, lsl #7\n    9b08:\tca00016b \teor\tx11, x11, x0\n    9b0c:\t9b097d60 \tmul\tx0, x11, x9\n    9b10:\t54ffff28 \tb.hi\t9af4 <fwp_hash_value+0x268>  // b.pmore\n    9b14:\tb4001a28 \tcbz\tx8, 9e58 <fwp_hash_value+0x5cc>\n    9b18:\t9100226a \tadd\tx10, x19, #0x8\n    9b1c:\t3840154b \tldrb\tw11, [x10], #1\n    9b20:\tf1000508 \tsubs\tx8, x8, #0x1\n    9b24:\tca0b000b \teor\tx11, x0, x11\n    9b28:\t9b097d60 \tmul\tx0, x11, x9\n    9b2c:\t54ffff81 \tb.ne\t9b1c <fwp_hash_value+0x290>  // b.any\n    9b30:\t140000ca \tb\t9e58 <fwp_hash_value+0x5cc>\n    9b34:\tf13ffe7f \tcmp\tx19, #0xfff\n    9b38:\t540015e8 \tb.hi\t9df4 <fwp_hash_value+0x568>  // b.pmore\n    9b3c:\t2a1303e8 \tmov\tw8, w19\n    9b40:\t140000ae \tb\t9df8 <fwp_hash_value+0x56c>\n    9b44:\tf9400275 \tldr\tx21, [x19]\n    9b48:\td2803668 \tmov\tx8, #0x1b3                 \t// #435\n    9b4c:\tf2c02008 \tmovk\tx8, #0x100, lsl #32\n    9b50:\t9240fab6 \tand\tx22, x21, #0x7fffffffffffffff\n    9b54:\taa1603e9 \tmov\tx9, x22\n    9b58:\tf101fd3f \tcmp\tx9, #0x7f\n    9b5c:\t9240192a \tand\tx10, x9, #0x7f\n    9b60:\td347fd29 \tlsr\tx9, x9, #7\n    9b64:\t1a9f97eb \tcset\tw11, hi\t// hi = pmore\n    9b68:\taa0b1d4a \torr\tx10, x10, x11, lsl #7\n    9b6c:\tca00014a \teor\tx10, x10, x0\n    9b70:\t9b087d40 \tmul\tx0, x10, x8\n    9b74:\t54ffff28 \tb.hi\t9b58 <fwp_hash_value+0x2cc>  // b.pmore\n    9b78:\tb4001716 \tcbz\tx22, 9e58 <fwp_hash_value+0x5cc>\n    9b7c:\tf9401e94 \tldr\tx20, [x20, #56]\n    9b80:\t5280081a \tmov\tw26, #0x40                  \t// #64\n    9b84:\taa1f03f7 \tmov\tx23, xzr\n    9b88:\t91002278 \tadd\tx24, x19, #0x8\n    9b8c:\t52800039 \tmov\tw25, #0x1                   \t// #1\n    9b90:\t72a1801a \tmovk\tw26, #0xc00, lsl #16\n    9b94:\t5280901b \tmov\tw27, #0x480                 \t// #1152\n    9b98:\t1400000b \tb\t9bc4 <fwp_hash_value+0x338>\n    9b9c:\t39400028 \tldrb\tw8, [x1]\n    9ba0:\tb9400289 \tldr\tw9, [x20]\n    9ba4:\t93401d0a \tsxtb\tx10, w8\n    9ba8:\t7100013f \tcmp\tw9, #0x0\n    9bac:\t9a880141 \tcsel\tx1, x10, x8, eq\t// eq = none\n    9bb0:\taa1403e2 \tmov\tx2, x20\n    9bb4:\t97ffff36 \tbl\t988c <fwp_hash_value>\n    9bb8:\t910006f7 \tadd\tx23, x23, #0x1\n    9bbc:\teb1702df \tcmp\tx22, x23\n    9bc0:\t540014c0 \tb.eq\t9e58 <fwp_hash_value+0x5cc>  // b.none\n    9bc4:\tb4000394 \tcbz\tx20, 9c34 <fwp_hash_value+0x3a8>\n    9bc8:\tb9400288 \tldr\tw8, [x20]\n    9bcc:\t7100111f \tcmp\tw8, #0x4\n    9bd0:\t5400018d \tb.le\t9c00 <fwp_hash_value+0x374>\n    9bd4:\t7100711f \tcmp\tw8, #0x1c\n    9bd8:\t54000268 \tb.hi\t9c24 <fwp_hash_value+0x398>  // b.pmore\n    9bdc:\t1ac82329 \tlsl\tw9, w25, w8\n    9be0:\t6a1a013f \ttst\tw9, w26\n    9be4:\t540001c1 \tb.ne\t9c1c <fwp_hash_value+0x390>  // b.any\n    9be8:\t6a1b013f \ttst\tw9, w27\n    9bec:\t54000141 \tb.ne\t9c14 <fwp_hash_value+0x388>  // b.any\n    9bf0:\t7100711f \tcmp\tw8, #0x1c\n    9bf4:\t54000181 \tb.ne\t9c24 <fwp_hash_value+0x398>  // b.any\n    9bf8:\t52800208 \tmov\tw8, #0x10                  \t// #16\n    9bfc:\t1400000f \tb\t9c38 <fwp_hash_value+0x3ac>\n    9c00:\t34000168 \tcbz\tw8, 9c2c <fwp_hash_value+0x3a0>\n    9c04:\t7100051f \tcmp\tw8, #0x1\n    9c08:\t540000a0 \tb.eq\t9c1c <fwp_hash_value+0x390>  // b.none\n    9c0c:\t7100091f \tcmp\tw8, #0x2\n    9c10:\t54000121 \tb.ne\t9c34 <fwp_hash_value+0x3a8>  // b.any\n    9c14:\t52800088 \tmov\tw8, #0x4                   \t// #4\n    9c18:\t14000008 \tb\t9c38 <fwp_hash_value+0x3ac>\n    9c1c:\t52800048 \tmov\tw8, #0x2                   \t// #2\n    9c20:\t14000006 \tb\t9c38 <fwp_hash_value+0x3ac>\n    9c24:\t7100151f \tcmp\tw8, #0x5\n    9c28:\t54000061 \tb.ne\t9c34 <fwp_hash_value+0x3a8>  // b.any\n    9c2c:\t52800028 \tmov\tw8, #0x1                   \t// #1\n    9c30:\t14000002 \tb\t9c38 <fwp_hash_value+0x3ac>\n    9c34:\t52800108 \tmov\tw8, #0x8                   \t// #8\n    9c38:\taa1803e9 \tmov\tx9, x24\n    9c3c:\tb6f80055 \ttbz\tx21, #63, 9c44 <fwp_hash_value+0x3b8>\n    9c40:\tf9400a69 \tldr\tx9, [x19, #16]\n    9c44:\t9b172501 \tmadd\tx1, x8, x23, x9\n    9c48:\tf1001d1f \tcmp\tx8, #0x7\n    9c4c:\t5400014c \tb.gt\t9c74 <fwp_hash_value+0x3e8>\n    9c50:\tf100051f \tcmp\tx8, #0x1\n    9c54:\t54fffa40 \tb.eq\t9b9c <fwp_hash_value+0x310>  // b.none\n    9c58:\tf100091f \tcmp\tx8, #0x2\n    9c5c:\t54000141 \tb.ne\t9c84 <fwp_hash_value+0x3f8>  // b.any\n    9c60:\t79400028 \tldrh\tw8, [x1]\n    9c64:\tb9400289 \tldr\tw9, [x20]\n    9c68:\t93403d0a \tsxth\tx10, w8\n    9c6c:\t7100053f \tcmp\tw9, #0x1\n    9c70:\t17ffffcf \tb\t9bac <fwp_hash_value+0x320>\n    9c74:\tf100211f \tcmp\tx8, #0x8\n    9c78:\t54000100 \tb.eq\t9c98 <fwp_hash_value+0x40c>  // b.none\n    9c7c:\tf100411f \tcmp\tx8, #0x10\n    9c80:\t54fff980 \tb.eq\t9bb0 <fwp_hash_value+0x324>  // b.none\n    9c84:\tb9400028 \tldr\tw8, [x1]\n    9c88:\tb9400289 \tldr\tw9, [x20]\n    9c8c:\t93407d0a \tsxtw\tx10, w8\n    9c90:\t7100093f \tcmp\tw9, #0x2\n    9c94:\t17ffffc6 \tb\t9bac <fwp_hash_value+0x320>\n    9c98:\tf9400021 \tldr\tx1, [x1]\n    9c9c:\t17ffffc5 \tb\t9bb0 <fwp_hash_value+0x324>\n    9ca0:\taa1f03e8 \tmov\tx8, xzr\n    9ca4:\tb40000b3 \tcbz\tx19, 9cb8 <fwp_hash_value+0x42c>\n    9ca8:\taa1303e9 \tmov\tx9, x19\n    9cac:\tf9400929 \tldr\tx9, [x9, #16]\n    9cb0:\t91000508 \tadd\tx8, x8, #0x1\n    9cb4:\tb5ffffc9 \tcbnz\tx9, 9cac <fwp_hash_value+0x420>\n    9cb8:\td2803669 \tmov\tx9, #0x1b3                 \t// #435\n    9cbc:\tf2c02009 \tmovk\tx9, #0x100, lsl #32\n    9cc0:\tf101fd1f \tcmp\tx8, #0x7f\n    9cc4:\t9240190a \tand\tx10, x8, #0x7f\n    9cc8:\td347fd08 \tlsr\tx8, x8, #7\n    9ccc:\t1a9f97eb \tcset\tw11, hi\t// hi = pmore\n    9cd0:\taa0b1d4a \torr\tx10, x10, x11, lsl #7\n    9cd4:\tca00014a \teor\tx10, x10, x0\n    9cd8:\t9b097d40 \tmul\tx0, x10, x9\n    9cdc:\t54ffff28 \tb.hi\t9cc0 <fwp_hash_value+0x434>  // b.pmore\n    9ce0:\tb4000bd3 \tcbz\tx19, 9e58 <fwp_hash_value+0x5cc>\n    9ce4:\tf9401e94 \tldr\tx20, [x20, #56]\n    9ce8:\tf9400661 \tldr\tx1, [x19, #8]\n    9cec:\taa1403e2 \tmov\tx2, x20\n    9cf0:\t97fffee7 \tbl\t988c <fwp_hash_value>\n    9cf4:\tf9400a73 \tldr\tx19, [x19, #16]\n    9cf8:\tb5ffff93 \tcbnz\tx19, 9ce8 <fwp_hash_value+0x45c>\n    9cfc:\t14000057 \tb\t9e58 <fwp_hash_value+0x5cc>\n    9d00:\ta9402668 \tldp\tx8, x9, [x19]\n    9d04:\td280366b \tmov\tx11, #0x1b3                 \t// #435\n    9d08:\tf2c0200b \tmovk\tx11, #0x100, lsl #32\n    9d0c:\t92401d0a \tand\tx10, x8, #0xff\n    9d10:\td3483d0c \tubfx\tx12, x8, #8, #8\n    9d14:\tca00014a \teor\tx10, x10, x0\n    9d18:\t9b0b7d4a \tmul\tx10, x10, x11\n    9d1c:\tca0a018a \teor\tx10, x12, x10\n    9d20:\td3505d0c \tubfx\tx12, x8, #16, #8\n    9d24:\t9b0b7d4a \tmul\tx10, x10, x11\n    9d28:\tca0a018a \teor\tx10, x12, x10\n    9d2c:\td3587d0c \tubfx\tx12, x8, #24, #8\n    9d30:\t9b0b7d4a \tmul\tx10, x10, x11\n    9d34:\tca0a018a \teor\tx10, x12, x10\n    9d38:\td3609d0c \tubfx\tx12, x8, #32, #8\n    9d3c:\t9b0b7d4a \tmul\tx10, x10, x11\n    9d40:\tca0a018a \teor\tx10, x12, x10\n    9d44:\td368bd0c \tubfx\tx12, x8, #40, #8\n    9d48:\t9b0b7d4a \tmul\tx10, x10, x11\n    9d4c:\tca0a018a \teor\tx10, x12, x10\n    9d50:\td370dd0c \tubfx\tx12, x8, #48, #8\n    9d54:\t9b0b7d4a \tmul\tx10, x10, x11\n    9d58:\tca0a018a \teor\tx10, x12, x10\n    9d5c:\t9b0b7d4a \tmul\tx10, x10, x11\n    9d60:\tca48e148 \teor\tx8, x10, x8, lsr #56\n    9d64:\t92401d2a \tand\tx10, x9, #0xff\n    9d68:\t9b0b7d08 \tmul\tx8, x8, x11\n    9d6c:\tca080148 \teor\tx8, x10, x8\n    9d70:\td3483d2a \tubfx\tx10, x9, #8, #8\n    9d74:\t9b0b7d08 \tmul\tx8, x8, x11\n    9d78:\tca080148 \teor\tx8, x10, x8\n    9d7c:\td3505d2a \tubfx\tx10, x9, #16, #8\n    9d80:\t9b0b7d08 \tmul\tx8, x8, x11\n    9d84:\tca080148 \teor\tx8, x10, x8\n    9d88:\td3587d2a \tubfx\tx10, x9, #24, #8\n    9d8c:\t9b0b7d08 \tmul\tx8, x8, x11\n    9d90:\tca080148 \teor\tx8, x10, x8\n    9d94:\td3609d2a \tubfx\tx10, x9, #32, #8\n    9d98:\t9b0b7d08 \tmul\tx8, x8, x11\n    9d9c:\tca080148 \teor\tx8, x10, x8\n    9da0:\td368bd2a \tubfx\tx10, x9, #40, #8\n    9da4:\t9b0b7d08 \tmul\tx8, x8, x11\n    9da8:\tca080148 \teor\tx8, x10, x8\n    9dac:\td370dd2a \tubfx\tx10, x9, #48, #8\n    9db0:\t9b0b7d08 \tmul\tx8, x8, x11\n    9db4:\tca080148 \teor\tx8, x10, x8\n    9db8:\t9b0b7d08 \tmul\tx8, x8, x11\n    9dbc:\tca49e108 \teor\tx8, x8, x9, lsr #56\n    9dc0:\t9b0b7d00 \tmul\tx0, x8, x11\n    9dc4:\t14000025 \tb\t9e58 <fwp_hash_value+0x5cc>\n    9dc8:\tb9401295 \tldr\tw21, [x20, #16]\n    9dcc:\t710006bf \tcmp\tw21, #0x1\n    9dd0:\t5400044b \tb.lt\t9e58 <fwp_hash_value+0x5cc>  // b.tstop\n    9dd4:\tf9401294 \tldr\tx20, [x20, #32]\n    9dd8:\t91002273 \tadd\tx19, x19, #0x8\n    9ddc:\tf8408661 \tldr\tx1, [x19], #8\n    9de0:\tf8408682 \tldr\tx2, [x20], #8\n    9de4:\t97fffeaa \tbl\t988c <fwp_hash_value>\n    9de8:\tf10006b5 \tsubs\tx21, x21, #0x1\n    9dec:\t54ffff81 \tb.ne\t9ddc <fwp_hash_value+0x550>  // b.any\n    9df0:\t1400001a \tb\t9e58 <fwp_hash_value+0x5cc>\n    9df4:\tb9400268 \tldr\tw8, [x19]\n    9df8:\t2a0803e8 \tmov\tw8, w8\n    9dfc:\td2803669 \tmov\tx9, #0x1b3                 \t// #435\n    9e00:\tf2c02009 \tmovk\tx9, #0x100, lsl #32\n    9e04:\taa0803ea \tmov\tx10, x8\n    9e08:\tf101fd5f \tcmp\tx10, #0x7f\n    9e0c:\t9240194b \tand\tx11, x10, #0x7f\n    9e10:\td347fd4a \tlsr\tx10, x10, #7\n    9e14:\t1a9f97ec \tcset\tw12, hi\t// hi = pmore\n    9e18:\taa0c1d6b \torr\tx11, x11, x12, lsl #7\n    9e1c:\tca00016b \teor\tx11, x11, x0\n    9e20:\t9b097d60 \tmul\tx0, x11, x9\n    9e24:\t54ffff28 \tb.hi\t9e08 <fwp_hash_value+0x57c>  // b.pmore\n    9e28:\tf9401689 \tldr\tx9, [x20, #40]\n    9e2c:\tb8687935 \tldr\tw21, [x9, x8, lsl #2]\n    9e30:\t710006bf \tcmp\tw21, #0x1\n    9e34:\t5400012b \tb.lt\t9e58 <fwp_hash_value+0x5cc>  // b.tstop\n    9e38:\tf9401a89 \tldr\tx9, [x20, #48]\n    9e3c:\t91002273 \tadd\tx19, x19, #0x8\n    9e40:\tf8687934 \tldr\tx20, [x9, x8, lsl #3]\n    9e44:\tf8408661 \tldr\tx1, [x19], #8\n    9e48:\tf8408682 \tldr\tx2, [x20], #8\n    9e4c:\t97fffe90 \tbl\t988c <fwp_hash_value>\n    9e50:\tf10006b5 \tsubs\tx21, x21, #0x1\n    9e54:\t54ffff81 \tb.ne\t9e44 <fwp_hash_value+0x5b8>  // b.any\n    9e58:\ta9454ff4 \tldp\tx20, x19, [sp, #80]\n    9e5c:\tf9400bfb \tldr\tx27, [sp, #16]\n    9e60:\ta94457f6 \tldp\tx22, x21, [sp, #64]\n    9e64:\ta9435ff8 \tldp\tx24, x23, [sp, #48]\n    9e68:\ta94267fa \tldp\tx26, x25, [sp, #32]\n    9e6c:\ta8c67bfd \tldp\tx29, x30, [sp], #96\n    9e70:\td65f03c0 \tret\n"
+}

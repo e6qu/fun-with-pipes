@@ -847,20 +847,82 @@ pub fn specialize_hofs(prog: &mut Program) {
             continue;
         }
         let mut body = body.clone();
-        let locals = &snapshot[id].locals;
+        let mut locals = snapshot[id].locals.clone();
         rewrite_hofs(
-            &mut body, &snapshot, &shapes, locals, base, &mut made, &mut seen,
+            &mut body,
+            &snapshot,
+            &shapes,
+            &mut locals,
+            base,
+            &mut made,
+            &mut seen,
         );
         prog.funcs[id].body = Body::Expr(body);
+        prog.funcs[id].locals = locals;
     }
     prog.funcs.extend(made);
+}
+
+/// Bind eager captured computations in their original left-to-right order.
+/// Only descend through known partial applications: entering an arbitrary call
+/// would move its arguments across that call's own effects. Resource-bearing
+/// results keep their original frame rather than gaining a new binding here.
+fn bind_captures(
+    e: &Expr,
+    expected: Option<&MT>,
+    funcs: &[Func],
+    shapes: &Shapes,
+    locals: &mut Vec<MT>,
+    bindings: &mut Vec<(Local, Expr)>,
+) -> Option<Expr> {
+    match e {
+        Expr::Local(_) | Expr::Const(_) => Some(e.clone()),
+        Expr::Func(id) if funcs.get(*id)?.arity > 0 => Some(e.clone()),
+        Expr::Apply(f, args) => {
+            if let Expr::Func(id) = &**f {
+                if args.len() < funcs.get(*id)?.arity as usize {
+                    let parameters = funcs[*id].ty.params(args.len()).0;
+                    let captures = args
+                        .iter()
+                        .zip(parameters)
+                        .map(|(a, ty)| bind_captures(a, Some(ty), funcs, shapes, locals, bindings))
+                        .collect::<Option<Vec<_>>>()?;
+                    return Some(Expr::Apply(f.clone(), captures));
+                }
+            }
+            bind_capture_value(e, expected, funcs, shapes, locals, bindings)
+        }
+        _ => bind_capture_value(e, expected, funcs, shapes, locals, bindings),
+    }
+}
+
+fn bind_capture_value(
+    e: &Expr,
+    expected: Option<&MT>,
+    funcs: &[Func],
+    shapes: &Shapes,
+    locals: &mut Vec<MT>,
+    bindings: &mut Vec<(Local, Expr)>,
+) -> Option<Expr> {
+    // The partial application's checked parameter type also covers literal
+    // and constructor results whose IR expression carries no nominal type.
+    let ty = expected
+        .cloned()
+        .or_else(|| type_of(&|id: FuncId| &funcs[id].ty, shapes, locals, e))?;
+    if crate::resource::contains_file(shapes, &ty) {
+        return None;
+    }
+    let local = locals.len() as Local;
+    locals.push(ty);
+    bindings.push((local, e.clone()));
+    Some(Expr::Local(local))
 }
 
 fn rewrite_hofs(
     e: &mut Expr,
     funcs: &[Func],
     shapes: &Shapes,
-    locals: &[MT],
+    locals: &mut Vec<MT>,
     base: usize,
     made: &mut Vec<Func>,
     seen: &mut Vec<(String, FuncId)>,
@@ -921,9 +983,39 @@ fn rewrite_hofs(
         budget: 0,
         resource_locals: Vec::new(),
     };
-    if !matches!(fexpr, Expr::Apply(..)) || !o.pure(fexpr) {
+    let Expr::Apply(function, captures) = fexpr else {
+        return;
+    };
+    let Expr::Func(id) = &**function else {
+        return;
+    };
+    if captures.len() >= funcs.get(*id).map_or(0, |f| f.arity as usize) {
+        // An unknown or saturated computation returning a function has no
+        // known callback body to expose. Do not add a forwarding wrapper.
         return;
     }
+    let mut bindings = Vec::new();
+    let normalized;
+    let fexpr = if o.pure(fexpr) {
+        fexpr
+    } else {
+        // Only the first argument can be lifted before the call without
+        // crossing earlier arguments (run-state's callback is argument 1).
+        if callback != 0 {
+            return;
+        }
+        let count = locals.len();
+        let Some(value) = bind_captures(fexpr, None, funcs, shapes, locals, &mut bindings) else {
+            locals.truncate(count);
+            return;
+        };
+        if bindings.is_empty() || !o.pure(&value) {
+            locals.truncate(count);
+            return;
+        }
+        normalized = value;
+        &normalized
+    };
     let mut caps = Vec::new();
     free_locals(fexpr, &mut caps);
     let k = caps.len();
@@ -972,6 +1064,10 @@ fn rewrite_hofs(
             caps.iter().map(|l| Expr::Local(*l)).collect(),
         )
     };
+    for (local, value) in bindings.into_iter().rev() {
+        let body = std::mem::replace(e, Expr::Const(crate::value::Value::unit()));
+        *e = Expr::Let(local, Box::new(value), Box::new(body));
+    }
 }
 
 /// An expression whose locals `caps[i]` become local `i`.
