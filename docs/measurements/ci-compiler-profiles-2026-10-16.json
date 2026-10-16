@@ -1,0 +1,843 @@
+{
+  "workflowRun": 38901188943,
+  "workflowHead": "7cbffbe01e9cb79b7025b14e240c2126ededb1bc",
+  "sourceHead": "c81b0c9f016f0e359f22e8819792baba0760ab30",
+  "scope": "Build and run the same linalg_ownership and arc_tasks tests with Rust compiler/test optimization 0 or 1. Debug assertions and overflow checks remain enabled; generated C flags and test coverage are unchanged. Each host builds separate targets/caches, warms each once, then measures order 0/1/1/0. Build timing is separate.",
+  "limits": "Two samples per profile and two hosted AMD64 runners. This is a CI workload comparison, not language speed against C/Rust, a full-gate speed prediction, or a memory/allocation comparison. Exact physical CPU model, host contention and resident memory were not sampled. Artifact profiles and executable hashes verify configurations; raw command logs remain in workflow artifacts.",
+  "hosts": [
+    {
+      "host": "linux-amd64",
+      "medianByProfile": {
+        "wallSeconds": [
+          49.90450743999999,
+          40.16474336500005
+        ],
+        "childCpuSeconds": [
+          63.700530499999985,
+          53.0546785
+        ]
+      },
+      "optimizedOverBaseline": {
+        "wallSeconds": 0.8048319766163402,
+        "childCpuSeconds": 0.8328765566559923
+      },
+      "raw": {
+        "sourceHead": "c81b0c9f016f0e359f22e8819792baba0760ab30",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "machine": "x86_64",
+        "logicalCpus": 4,
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "cc": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+        "targets": [
+          "linalg_ownership",
+          "arc_tasks"
+        ],
+        "builds": [
+          {
+            "command": [
+              "cargo",
+              "test",
+              "--no-run",
+              "--message-format=json",
+              "--test",
+              "linalg_ownership",
+              "--test",
+              "arc_tasks"
+            ],
+            "wallSeconds": 18.800989889,
+            "childCpuSeconds": 19.91724,
+            "exitCode": 0,
+            "artifacts": {
+              "linalg_ownership": {
+                "profile": {
+                  "opt_level": "0",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": true
+                },
+                "sha256": "cacf70dde9e9abf6d3562844cd083b96373f1bb678ca0ab67b111878ca3378dc"
+              },
+              "arc_tasks": {
+                "profile": {
+                  "opt_level": "0",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": true
+                },
+                "sha256": "aadae62862d7267890809f04ad650f30cb6cd6d09df438a5aaa30ddf89784e04"
+              },
+              "fwp": {
+                "profile": {
+                  "opt_level": "0",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": false
+                },
+                "sha256": "b875730ca8393317c0752b8aebac677e638f79503c12a7ca1d4cf60f323c8a58"
+              }
+            },
+            "optimizationLevel": 0
+          },
+          {
+            "command": [
+              "cargo",
+              "test",
+              "--no-run",
+              "--message-format=json",
+              "--test",
+              "linalg_ownership",
+              "--test",
+              "arc_tasks"
+            ],
+            "wallSeconds": 45.428950721,
+            "childCpuSeconds": 77.127527,
+            "exitCode": 0,
+            "artifacts": {
+              "linalg_ownership": {
+                "profile": {
+                  "opt_level": "1",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": true
+                },
+                "sha256": "b25a95490261db1477f5e8a672ba18cca10c88ea044f14b8b5610f972faaba5d"
+              },
+              "arc_tasks": {
+                "profile": {
+                  "opt_level": "1",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": true
+                },
+                "sha256": "e8327b8974b26292bb23b2fe36fa1e3c6c27cdd35dff64860b8b57334f2a6e1f"
+              },
+              "fwp": {
+                "profile": {
+                  "opt_level": "1",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": false
+                },
+                "sha256": "b09b25e96e7ea9e7ef3f5c25f77a59b71608fd43746efbc9e7bcd2976200503b"
+              }
+            },
+            "optimizationLevel": 1
+          }
+        ],
+        "samples": [
+          {
+            "optimizationLevel": 0,
+            "warmup": true,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-0/debug/deps/linalg_ownership-ced81dfcdc3b44e9",
+                  "--nocapture"
+                ],
+                "wallSeconds": 36.190497865,
+                "childCpuSeconds": 49.60382599999999,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-0/debug/deps/arc_tasks-b4849b996d008d97",
+                  "--nocapture"
+                ],
+                "wallSeconds": 13.855912289999992,
+                "childCpuSeconds": 13.86194400000001,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 50.04641015499999,
+            "childCpuSeconds": 63.46577
+          },
+          {
+            "optimizationLevel": 1,
+            "warmup": true,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-1/debug/deps/linalg_ownership-ca4d5cca0a413836",
+                  "--nocapture"
+                ],
+                "wallSeconds": 27.092935838000017,
+                "childCpuSeconds": 39.974071999999985,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-1/debug/deps/arc_tasks-878a5ae16a7a37c4",
+                  "--nocapture"
+                ],
+                "wallSeconds": 12.741744120000021,
+                "childCpuSeconds": 12.74311800000001,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 39.83467995800004,
+            "childCpuSeconds": 52.717189999999995
+          },
+          {
+            "optimizationLevel": 0,
+            "warmup": false,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-0/debug/deps/linalg_ownership-ced81dfcdc3b44e9",
+                  "--nocapture"
+                ],
+                "wallSeconds": 36.37183638100001,
+                "childCpuSeconds": 50.273979000000004,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-0/debug/deps/arc_tasks-b4849b996d008d97",
+                  "--nocapture"
+                ],
+                "wallSeconds": 13.640603031000012,
+                "childCpuSeconds": 13.642586999999988,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 50.01243941200002,
+            "childCpuSeconds": 63.91656599999999
+          },
+          {
+            "optimizationLevel": 1,
+            "warmup": false,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-1/debug/deps/linalg_ownership-ca4d5cca0a413836",
+                  "--nocapture"
+                ],
+                "wallSeconds": 27.51271259600003,
+                "childCpuSeconds": 40.49097699999999,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-1/debug/deps/arc_tasks-878a5ae16a7a37c4",
+                  "--nocapture"
+                ],
+                "wallSeconds": 12.688904619000027,
+                "childCpuSeconds": 12.68610999999997,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 40.201617215000056,
+            "childCpuSeconds": 53.17708699999996
+          },
+          {
+            "optimizationLevel": 1,
+            "warmup": false,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-1/debug/deps/linalg_ownership-ca4d5cca0a413836",
+                  "--nocapture"
+                ],
+                "wallSeconds": 27.338058425000042,
+                "childCpuSeconds": 40.14558100000003,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-1/debug/deps/arc_tasks-878a5ae16a7a37c4",
+                  "--nocapture"
+                ],
+                "wallSeconds": 12.78981109,
+                "childCpuSeconds": 12.786689000000015,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 40.12786951500004,
+            "childCpuSeconds": 52.932270000000045
+          },
+          {
+            "optimizationLevel": 0,
+            "warmup": false,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-0/debug/deps/linalg_ownership-ced81dfcdc3b44e9",
+                  "--nocapture"
+                ],
+                "wallSeconds": 36.075104109999984,
+                "childCpuSeconds": 49.75968699999994,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/home/runner/work/_temp/ci-profile-target-0/debug/deps/arc_tasks-b4849b996d008d97",
+                  "--nocapture"
+                ],
+                "wallSeconds": 13.721471357999974,
+                "childCpuSeconds": 13.724808000000037,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 49.79657546799996,
+            "childCpuSeconds": 63.48449499999998
+          }
+        ],
+        "scope": "Same runner and source; Rust optimization levels 0/1 with debug assertions and overflow checks enabled. Separate builds and caches, one complete warmup per profile, then balanced 0/1/1/0 test-harness runs. Generated-C flags and each target's test cases are unchanged. Build times are separate from test times. This measures CI workloads, not fwp/C/Rust program parity; two samples per profile do not characterize arbitrary runner noise.",
+        "status": "All selected tests pass in both profiles; compiler/harness artifacts retain debug and overflow checks"
+      },
+      "retainedFiles": {
+        "build-0.stderr": {
+          "sha256": "1780ed627f83f3a260b6127cfa0bcc840763e0203740817db9752c135a37a696",
+          "bytes": 192
+        },
+        "build-0.stdout": {
+          "sha256": "9305dcc2a3ac6e18afddaad63e0426b59247bc5f2aa17ff017e1803b2d95c0d0",
+          "bytes": 4215
+        },
+        "build-1.stderr": {
+          "sha256": "421818a33ba3f37651d0f9fe81bec2f153a12380256d3b3c5f8e2ddcbceeb5d5",
+          "bytes": 190
+        },
+        "build-1.stdout": {
+          "sha256": "69b18245e6ce1c4c0d9072314d9a366863919475a3d9cff8a8bda5fc892c84ed",
+          "bytes": 4215
+        },
+        "report.json": {
+          "sha256": "efc98c6ad7b79bc455c8ac72feb28d3921c4746f87727092303dd8483563142a",
+          "bytes": 8875
+        },
+        "sample-0-0-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-0-0-arc_tasks.stdout": {
+          "sha256": "ed47b6c3dbbb274e2dffd58547cf4b17b2837d6ce78f4c0722e9b379ec21e3f3",
+          "bytes": 185
+        },
+        "sample-0-0-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-0-0-linalg_ownership.stdout": {
+          "sha256": "a5cf9b8ba94a3f424d4b72cd2fd855bad71f4fcf22bbac94772c71d24efe0de9",
+          "bytes": 271
+        },
+        "sample-1-1-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-1-1-arc_tasks.stdout": {
+          "sha256": "14689fc06d7dbf3f0166a37c1e91022889047514eab4084cac546461054a1e1f",
+          "bytes": 185
+        },
+        "sample-1-1-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-1-1-linalg_ownership.stdout": {
+          "sha256": "a66fa202a8553ec18f743fa079af8e18315116bbb2fcbf4a972cc4a376db2661",
+          "bytes": 271
+        },
+        "sample-2-0-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-2-0-arc_tasks.stdout": {
+          "sha256": "0e2b3e7ead1182ba5fca20627348f902d50c76bf1b4afec85ca619a547427312",
+          "bytes": 185
+        },
+        "sample-2-0-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-2-0-linalg_ownership.stdout": {
+          "sha256": "6602f6de67f3932a787109bdb8b9c4e7190c6f8b4194a4ab277c601b37b35f68",
+          "bytes": 271
+        },
+        "sample-3-1-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-3-1-arc_tasks.stdout": {
+          "sha256": "52785de9296fefbd1645a543839cdbfc2e89111ba26a4d8bef31796d4230d6a4",
+          "bytes": 185
+        },
+        "sample-3-1-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-3-1-linalg_ownership.stdout": {
+          "sha256": "b851b3d31543bd396c4bc6dfa5ff9fb35ca13917a306819875a4bde769e0ece4",
+          "bytes": 271
+        },
+        "sample-4-1-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-4-1-arc_tasks.stdout": {
+          "sha256": "ed34e4e8a29d1d34cd2401c8a5d272a1064ce8d15e4671cf63bbe9a2d85d8494",
+          "bytes": 185
+        },
+        "sample-4-1-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-4-1-linalg_ownership.stdout": {
+          "sha256": "bdf3995bf5854b1823b77230cd3bf49299a8cd2056cc1d72b098830d81992d32",
+          "bytes": 271
+        },
+        "sample-5-0-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-5-0-arc_tasks.stdout": {
+          "sha256": "bfc4afd41c62812f71944e688c2928f2948e4261b047784761215b3818a91576",
+          "bytes": 185
+        },
+        "sample-5-0-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-5-0-linalg_ownership.stdout": {
+          "sha256": "21fc04f4b4600600ee108437b426b56a547add0bc55ea187240015b1b48689b5",
+          "bytes": 271
+        }
+      }
+    },
+    {
+      "host": "macos-amd64",
+      "medianByProfile": {
+        "wallSeconds": [
+          132.9224951640001,
+          99.26593706799991
+        ],
+        "childCpuSeconds": [
+          174.49325250000004,
+          136.58760550000008
+        ]
+      },
+      "optimizedOverBaseline": {
+        "wallSeconds": 0.7467956190976204,
+        "childCpuSeconds": 0.782767262017768
+      },
+      "raw": {
+        "sourceHead": "c81b0c9f016f0e359f22e8819792baba0760ab30",
+        "platform": "macOS-15.7.9-x86_64-i386-64bit-Mach-O",
+        "machine": "x86_64",
+        "logicalCpus": 4,
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+        "targets": [
+          "linalg_ownership",
+          "arc_tasks"
+        ],
+        "builds": [
+          {
+            "command": [
+              "cargo",
+              "test",
+              "--no-run",
+              "--message-format=json",
+              "--test",
+              "linalg_ownership",
+              "--test",
+              "arc_tasks"
+            ],
+            "wallSeconds": 108.929929466,
+            "childCpuSeconds": 115.70467,
+            "exitCode": 0,
+            "artifacts": {
+              "arc_tasks": {
+                "profile": {
+                  "opt_level": "0",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": true
+                },
+                "sha256": "ccb2eef9465df268c66085c66fc8eed20e34e28e34e002bd06ffa4f3fdc5056d"
+              },
+              "linalg_ownership": {
+                "profile": {
+                  "opt_level": "0",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": true
+                },
+                "sha256": "4f6307bc866f0bdfccf7c316c7e2065e21ecb92a4a5b6df440a435a1aad39943"
+              },
+              "fwp": {
+                "profile": {
+                  "opt_level": "0",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": false
+                },
+                "sha256": "7b3441f7d6245a862e33b0dfdbab456fadc35b78359dad8bb6120d64dd4c5ce1"
+              }
+            },
+            "optimizationLevel": 0
+          },
+          {
+            "command": [
+              "cargo",
+              "test",
+              "--no-run",
+              "--message-format=json",
+              "--test",
+              "linalg_ownership",
+              "--test",
+              "arc_tasks"
+            ],
+            "wallSeconds": 267.12542719299995,
+            "childCpuSeconds": 393.32718300000005,
+            "exitCode": 0,
+            "artifacts": {
+              "arc_tasks": {
+                "profile": {
+                  "opt_level": "1",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": true
+                },
+                "sha256": "ced5d092ddcb8a191b034b3ad5600d21e55ab716ecd9614e909f82df8bfc4937"
+              },
+              "linalg_ownership": {
+                "profile": {
+                  "opt_level": "1",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": true
+                },
+                "sha256": "8789070b8925719570b12bbbdf96fed1112b411740da9bfe618f151a927de193"
+              },
+              "fwp": {
+                "profile": {
+                  "opt_level": "1",
+                  "debuginfo": 2,
+                  "debug_assertions": true,
+                  "overflow_checks": true,
+                  "test": false
+                },
+                "sha256": "e0f3c4a150c5e85469787252686f35fc21e9ea4194e8fc375e480b6863d2adbb"
+              }
+            },
+            "optimizationLevel": 1
+          }
+        ],
+        "samples": [
+          {
+            "optimizationLevel": 0,
+            "warmup": true,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-0/debug/deps/linalg_ownership-26df6fbe1dadae3c",
+                  "--nocapture"
+                ],
+                "wallSeconds": 128.764682891,
+                "childCpuSeconds": 166.55335100000002,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-0/debug/deps/arc_tasks-94d434539a553a06",
+                  "--nocapture"
+                ],
+                "wallSeconds": 38.60209044299995,
+                "childCpuSeconds": 37.81913499999995,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 167.36677333399996,
+            "childCpuSeconds": 204.37248599999998
+          },
+          {
+            "optimizationLevel": 1,
+            "warmup": true,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-1/debug/deps/linalg_ownership-920ab42149f741aa",
+                  "--nocapture"
+                ],
+                "wallSeconds": 67.68515161800008,
+                "childCpuSeconds": 103.36074599999998,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-1/debug/deps/arc_tasks-5029c2252729bc31",
+                  "--nocapture"
+                ],
+                "wallSeconds": 26.914300551999986,
+                "childCpuSeconds": 27.551004000000027,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 94.59945217000006,
+            "childCpuSeconds": 130.91175
+          },
+          {
+            "optimizationLevel": 0,
+            "warmup": false,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-0/debug/deps/linalg_ownership-26df6fbe1dadae3c",
+                  "--nocapture"
+                ],
+                "wallSeconds": 101.61614158999998,
+                "childCpuSeconds": 142.37306000000012,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-0/debug/deps/arc_tasks-94d434539a553a06",
+                  "--nocapture"
+                ],
+                "wallSeconds": 24.76082299799998,
+                "childCpuSeconds": 25.164642999999998,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 126.37696458799996,
+            "childCpuSeconds": 167.53770300000014
+          },
+          {
+            "optimizationLevel": 1,
+            "warmup": false,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-1/debug/deps/linalg_ownership-920ab42149f741aa",
+                  "--nocapture"
+                ],
+                "wallSeconds": 65.51250645199991,
+                "childCpuSeconds": 97.87075899999996,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-1/debug/deps/arc_tasks-5029c2252729bc31",
+                  "--nocapture"
+                ],
+                "wallSeconds": 28.603458186999887,
+                "childCpuSeconds": 29.414618000000004,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 94.1159646389998,
+            "childCpuSeconds": 127.28537699999997
+          },
+          {
+            "optimizationLevel": 1,
+            "warmup": false,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-1/debug/deps/linalg_ownership-920ab42149f741aa",
+                  "--nocapture"
+                ],
+                "wallSeconds": 75.53078131799998,
+                "childCpuSeconds": 116.42000100000025,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-1/debug/deps/arc_tasks-5029c2252729bc31",
+                  "--nocapture"
+                ],
+                "wallSeconds": 28.88512817900005,
+                "childCpuSeconds": 29.46983299999995,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 104.41590949700003,
+            "childCpuSeconds": 145.8898340000002
+          },
+          {
+            "optimizationLevel": 0,
+            "warmup": false,
+            "targets": [
+              {
+                "target": "linalg_ownership",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-0/debug/deps/linalg_ownership-26df6fbe1dadae3c",
+                  "--nocapture"
+                ],
+                "wallSeconds": 105.52006902300013,
+                "childCpuSeconds": 147.02277299999997,
+                "exitCode": 0
+              },
+              {
+                "target": "arc_tasks",
+                "command": [
+                  "/Users/runner/work/_temp/ci-profile-target-0/debug/deps/arc_tasks-94d434539a553a06",
+                  "--nocapture"
+                ],
+                "wallSeconds": 33.947956717000125,
+                "childCpuSeconds": 34.426028999999986,
+                "exitCode": 0
+              }
+            ],
+            "wallSeconds": 139.46802574000026,
+            "childCpuSeconds": 181.44880199999994
+          }
+        ],
+        "scope": "Same runner and source; Rust optimization levels 0/1 with debug assertions and overflow checks enabled. Separate builds and caches, one complete warmup per profile, then balanced 0/1/1/0 test-harness runs. Generated-C flags and each target's test cases are unchanged. Build times are separate from test times. This measures CI workloads, not fwp/C/Rust program parity; two samples per profile do not characterize arbitrary runner noise.",
+        "status": "All selected tests pass in both profiles; compiler/harness artifacts retain debug and overflow checks"
+      },
+      "retainedFiles": {
+        "build-0.stderr": {
+          "sha256": "399bb3b8b72db273de6e58e036cd60dc96fdd031580d8ea4eaf3919d88d1a788",
+          "bytes": 193
+        },
+        "build-0.stdout": {
+          "sha256": "c0c047aaea798fc8b115167e7e43e714d58ad12456d054e08d8fc1741643daff",
+          "bytes": 4242
+        },
+        "build-1.stderr": {
+          "sha256": "05db5a82a715ac6c3c9083c0bfea09a64f7617226a1651d6b36574b45d7bdfe4",
+          "bytes": 191
+        },
+        "build-1.stdout": {
+          "sha256": "3408ebd568b461eebddfab1887ff24ab9250343d3b2672e8f84c57b5482adffd",
+          "bytes": 4242
+        },
+        "report.json": {
+          "sha256": "d01d1bc5e3313e2aba68eb1adba7e0359b78b81cac6cd01422039c2ac5dc0ed7",
+          "bytes": 9001
+        },
+        "sample-0-0-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-0-0-arc_tasks.stdout": {
+          "sha256": "0f8e48a2e825e1eecacd59292afa53822e2a1cfb333a7b0160a76838a6e304be",
+          "bytes": 185
+        },
+        "sample-0-0-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-0-0-linalg_ownership.stdout": {
+          "sha256": "c031eafe3e61055c1fa7a700ebdc3b80e8988cb430781b6a910e541f8636c82f",
+          "bytes": 383
+        },
+        "sample-1-1-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-1-1-arc_tasks.stdout": {
+          "sha256": "8aa11107a13074a7c7df5ed93daeea423262537a5d60142d4f2762de2433557d",
+          "bytes": 185
+        },
+        "sample-1-1-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-1-1-linalg_ownership.stdout": {
+          "sha256": "a8f3c7371587fd2a1cfc4c5fdb6488e09330ee4103b91d02e6e5b639fe1ad3cc",
+          "bytes": 382
+        },
+        "sample-2-0-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-2-0-arc_tasks.stdout": {
+          "sha256": "dada7d7c080b4f29a1363f031d58ee13f634e526ff1423d64219a54a2514103e",
+          "bytes": 185
+        },
+        "sample-2-0-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-2-0-linalg_ownership.stdout": {
+          "sha256": "fce5dcbbbe6599191094ca3744d06cfc0f8590a1159379722d09e6ff9930bb22",
+          "bytes": 383
+        },
+        "sample-3-1-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-3-1-arc_tasks.stdout": {
+          "sha256": "63a4e69f41c8662f33044bc93674d64483026d5e0afdf26f39652fd789e012ad",
+          "bytes": 185
+        },
+        "sample-3-1-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-3-1-linalg_ownership.stdout": {
+          "sha256": "531835ceec6e903ee7e04fa342dc81df45cb263a227db0d417a2f7c8d7097217",
+          "bytes": 382
+        },
+        "sample-4-1-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-4-1-arc_tasks.stdout": {
+          "sha256": "befcb70c1cb7368b614f13aa4ef0e3d08681fc2359e8f6e929b09ed486b65f99",
+          "bytes": 185
+        },
+        "sample-4-1-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-4-1-linalg_ownership.stdout": {
+          "sha256": "518cf6dbdb183e663f0c02ea6f2b6aae710e8b8695393d345e1c390afe4ebd81",
+          "bytes": 382
+        },
+        "sample-5-0-arc_tasks.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-5-0-arc_tasks.stdout": {
+          "sha256": "22d86fd07459a3edd13623d0426e08577e471ba393c7c338c8ba5774d83ad2e3",
+          "bytes": 185
+        },
+        "sample-5-0-linalg_ownership.stderr": {
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "sample-5-0-linalg_ownership.stdout": {
+          "sha256": "018c98b42b7cb6c29c31d39cb01940c6daa0da95cce8861f6d5e0a81dc57bfef",
+          "bytes": 383
+        }
+      }
+    }
+  ]
+}

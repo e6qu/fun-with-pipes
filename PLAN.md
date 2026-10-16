@@ -93,7 +93,7 @@ decoder results and partial constructions, metric snapshots, syntax text, CPU
 tensor output/scratch and DNS address lists. It also repairs Windows web
 prerequisites, clocks, socket retry checks, shutdown handling and unload tests.
 Focused owned-value/kernel checks pass on all six native hosts and both actual
-WASI hosts; DNS and integration changes have fresh checks underway. Their exact
+WASI hosts; all six DNS and socket-integration checks also pass. Their exact
 scope and results belong in the handoff. Publish this next delivery after #152
 merges; preparation branches remain evidence rather than additional tasks.
 
