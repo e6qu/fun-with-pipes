@@ -923,7 +923,7 @@ work, requesting 1,835,008 and 134,152,192 bytes cumulatively. Peak temporary
 capacity falls from 256 / 65,536 bytes to zero. Cumulative requested capacity is
 not simultaneously live memory or allocator-internal storage.
 
-The full fwp programs still make 12,309 / 7,173 managed requests and 12,288 / 3,072
+Before callback fusion, the full fwp programs make 12,309 / 7,173 managed requests and 12,288 / 3,072
 retains, with 295,112 / 163,848 peak charged bytes. These numbers are unchanged
 by streaming: input construction, tuple/list intermediates and output remain.
 C/Rust use one application array allocation of 128 / 32,768 bytes. C counts its
@@ -940,3 +940,46 @@ This is one static function body, not proof of no spills or zero runtime overhea
 The small-work gap points toward remaining pipeline storage and dispatch costs;
 the large-work CPU gap is about 1–4% on these hosts. Full delivery acceptance is
 tracked in the handoff separately from these focused measurements.
+
+### Keeping captured computations outside a fused hash loop
+
+The next transformation recognizes hash and bitwise reduction as total operations:
+valid inputs produce results without language traps or callbacks. It computes the
+known callback's captured array once, before input evaluation, then combines the
+map and fold into one loop. Effects and distinguishable traps still prevent
+interleaving. This uses existing syntax and preserves eager capture timing.
+
+[The post-fusion report](measurements/hash-pipelines-2026-10-16.json) repeats the
+same two programs, compiler settings and C/Rust work described above. All four
+hosts agree on these ownership measurements in tracing and ARC modes:
+
+| Workload | Managed requests, before → after | Retains, before → after | Peak charged bytes, before → after |
+|---|---:|---:|---:|
+| Small array | 12,309 → 4,114 | 12,288 → 4,096 | 295,112 → 656 |
+| Large array | 7,173 → 5,122 | 3,072 → 1,024 | 163,848 → 163,848 |
+
+Final charged storage is zero. Allocation profiles run separately with collection
+disabled. Generated C still allocates a tuple per hash and retains its captured
+array field; input `range | array.from-list` also builds list nodes. Hash itself
+allocates nothing. A borrowed argument is not automatically nonescaping: its
+contract must separately prove that it cannot be retained before stack placement
+is safe. These remaining costs are candidates for further measured work.
+
+The following CPU ratios compare checked ARC against references measured beside
+it in this post-fusion run. They do not compare absolute times from different
+runners. Twelve-sample paired repeats of both compiler revisions are tracked in
+the handoff before claiming a causal timing gain from fusion.
+
+| Host | Small / C | Small / Rust | Large / C | Large / Rust |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 1.427 | 1.238 | 1.021 | 1.020 |
+| Linux ARM64 | 1.476 | 1.322 | 1.033 | 1.031 |
+| macOS ARM64 | 1.218 | 1.150 | 0.998 | 1.029 |
+| macOS AMD64 | 1.231 | 1.149 | 1.023 | 1.019 |
+
+For example, small Linux ARM64 work takes about 48% extra CPU against C and 32%
+against Rust. Large results are close to the references in these samples, but a
+ratio near 1 is not a universal parity claim. Process startup, input construction
+and printing are included, and measured absolute times vary between runner
+invocations. The original reports retain all samples, hashes, build cost and
+memory scopes so those limitations remain visible.

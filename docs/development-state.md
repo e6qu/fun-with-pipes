@@ -2,7 +2,7 @@
 
 Updated 2026-10-16. Combined preparation in `/private/tmp/fwp-wasi-delivery`,
 branch `wasi-hash-delivery`, based on #150's exact head `7a7b40e1` while its final
-gates run. It transfers only `e5e05748..562873af` from
+gates run. It transfers only `e5e05748..dcedb71b` from
 `/private/tmp/fwp-wasi-arc` / `checked-wasi-ownership`. Two workflow conflicts
 were resolved by retaining every #150 Windows test and selector and adding the
 new hash/WASI suites. Source/runtime/tests otherwise transfer unchanged.
@@ -38,15 +38,24 @@ full builds, suites and measurements run on GitHub. Do not raise resource limits
 | 6 | In progress | Keep equivalent comparisons and physical storage evidence |
 | 7 | In progress | Extend maintained programs across deployment boundaries |
 
-Next: monitor #150, fix any failures and merge only after its exact-head full
-gates pass. The complete capture repair `d1ae668f3f04d6fa113d137c73250efe26056295`
-has [native 38856280599](https://github.com/e6qu/fun-with-pipes/actions/runs/38856280599),
-[repaired WASI 38857203804](https://github.com/e6qu/fun-with-pipes/actions/runs/38857203804) and
-[costs 38856285939](https://github.com/e6qu/fun-with-pipes/actions/runs/38856285939)
-queued. WASI uses `96c3b637` with the fresh-owner repair below; the later comment
-correction is `edb5d2ba`. Fix failures in the original preparation, then transfer only its follow-up
-diff here. Keep benchmark sources and binaries tied to their measured revisions.
-The new combined delivery still needs its own full production gate.
+Next: finish #150's two Linux production jobs, then merge only after all nine
+exact-head jobs plus docs pass. All other seven production jobs pass. The complete
+capture repair passes on all six native hosts in
+[38856280599](https://github.com/e6qu/fun-with-pipes/actions/runs/38856280599), and
+all four C/Rust cost jobs pass in
+[38856285939](https://github.com/e6qu/fun-with-pipes/actions/runs/38856285939), both
+at `d1ae668f`. Repaired WASI
+[38857203804](https://github.com/e6qu/fun-with-pipes/actions/runs/38857203804) at
+`96c3b637` passes ARM64; AMD64 is finishing. The later known-callback restriction
+and comments are in `562873af`; the combined final gate must cover that revision.
+
+The paired same-host repeat
+[38859143208](https://github.com/e6qu/fun-with-pipes/actions/runs/38859143208) is
+queued at `fb79b29d`, comparing verified baseline `38854304399` and after
+`38856285939` binaries beside C/Rust. Retain its results and any regressions before
+finalizing performance claims. Fix failures in the original preparation, then
+transfer only its follow-up diff here. The new combined delivery still needs
+its own final production gate after #150 merges.
 
 ## Changes and acceptance
 
@@ -85,7 +94,9 @@ aliases. The old buffered hash must fail the zero-allocation control.
 | WASI with hash and retained modules | [38853064238](https://github.com/e6qu/fun-with-pipes/actions/runs/38853064238), both hosts pass at `bea55914` |
 | Native hash semantics/counts | [38853061610](https://github.com/e6qu/fun-with-pipes/actions/runs/38853061610), four Unix hosts and Windows AMD64 pass |
 | Windows artifact repair | [38853748654](https://github.com/e6qu/fun-with-pipes/actions/runs/38853748654), both hosts pass at `07ddf192` |
-| Equivalent C/Rust hash comparison | [38854304399](https://github.com/e6qu/fun-with-pipes/actions/runs/38854304399), all four hosts pass at `34600beb` |
+| Equivalent C/Rust hash baseline | [38854304399](https://github.com/e6qu/fun-with-pipes/actions/runs/38854304399), all four hosts pass at `34600beb` |
+| Complete capture/fusion semantics | [38856280599](https://github.com/e6qu/fun-with-pipes/actions/runs/38856280599), all six native hosts pass at `d1ae668f` |
+| Post-fusion C/Rust comparison | [38856285939](https://github.com/e6qu/fun-with-pipes/actions/runs/38856285939), all four hosts pass at `d1ae668f` |
 
 The original WASI observer ran before normal autodiff `atexit` cleanup and reported
 four allocations / 2,248 bytes with zero counts. The corrected observer registers
@@ -185,9 +196,22 @@ accepted until the run passes. Native semantic and C/Rust measurement runs still
 use `d1ae668f`, before this WASI-specific change. Final combined native/WASI gates
 remain mandatory. No full local build or suite was run.
 
-The combined `src`, `runtime` and `lib` trees exactly match preparation `562873af`.
-The only workflow transfer differences preserve #150's extra Windows coverage
-and selectors. The known-callback restriction is a later source change than the
-queued focused runs, so final combined validation must cover it. The active #150
-head remains unchanged, with six production jobs and docs passing as of 05:52 UTC;
-two Linux jobs and regular Intel macOS remain running.
+The combined `src`, `runtime` and `lib` trees exactly match preparation `562873af`
+(and later evidence-only `dcedb71b`). Workflow transfer differences preserve #150's
+extra Windows coverage and selectors. The known-callback restriction is later
+than the focused native run, so the final combined gate must cover it.
+
+[Post-fusion measurements](measurements/hash-pipelines-2026-10-16.json) are retained
+with all source/binary/assembly hashes verified (guarded check, 0.14 s). Small
+requests fall 12,309 to 4,114, retains 12,288 to 4,096 and peak charged bytes
+295,112 to 656. Large requests fall 7,173 to 5,122 and retains 3,072 to 1,024;
+peak remains 163,848. These counts agree on all four hosts. Timing ratios against
+C/Rust are recorded, but absolute before/after runner times are not interchangeable.
+The paired repeat will isolate the revision comparison on common hosts.
+
+Generated code still allocates one tuple per hash and retains its array field;
+`range | array.from-list` still constructs input list nodes. Hash does not retain
+its tuple, but escape analysis currently lacks an explicit nonescaping contract
+for that parameter. Borrowing alone must not imply nonescape for all primitives.
+These are measured candidates for the following optimization batch, not completed
+ownership work or a reason to delay accepting the current proved improvements.
