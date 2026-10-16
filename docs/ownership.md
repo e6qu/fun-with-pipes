@@ -330,13 +330,42 @@ last owner closes the socket automatically. Function and task captures preserve
 the original lifetime. Returned optional connections, bytes and certificate text
 keep their partially built values alive and release them on allocation failure.
 
+For example, the following helper returns an address string. `()` is the unit
+value, used when there is no input data. `const` makes a function that ignores
+that input and returns the address text. Port `0` asks the operating system to
+choose an unused port. Each `|` passes the previous result to the next function.
+
+```fwp
+address : () -> String ! {Network, Error[IoError]}
+address = const "127.0.0.1:0" | tcp.listen | tcp.local-addr
+```
+
+The type says that `address` takes unit, returns a `String`, uses the network,
+and can report an `IoError`. It creates a listener and returns its address.
+The listener belongs to that helper's scope, so returning the string releases
+it; the string itself does not keep a port open. In contrast, returning a
+function that captures the listener keeps it open while that function lives.
+The native tests compare both cases with the interpreter, including rebinding
+the same port. For an application that needs a persistent listener, return or
+retain the listener itself instead of only its address.
+
 The common socket header stores a descriptor, a kind and a 64-bit owner count.
 UDP and programs without TLS keep the previous header size. In a TLS-enabled
 program, a stream handle adds a pointer to the TLS session or listener context;
 that pointer follows the common header in the same allocation. This costs one
 additional pointer for those stream handles, without a separate allocation for
-the count. Native layout, cleanup and real TLS behavior still need runner evidence.
-This is preparation, not accepted TCP/TLS support without tracing.
+the count. The passing ARM64 macOS TLS executable requests a 24-byte stream
+header: the count is at byte offset 8, and the TLS pointer is at byte offset 16.
+The plain TCP executable requests 16 bytes. These sizes describe the handle,
+not all memory used by the allocator, operating system or OpenSSL. The handoff
+records remaining native checks; full production acceptance is still required.
+
+ARC executables omit the finalizer-table lookup during socket release because
+they never register these sockets in that table. Tracing programs and unloadable
+libraries keep the lookup so they cannot later finalize reused storage. This
+removes a specific unnecessary operation; it does not remove all count or
+allocator metadata costs. This is preparation, not accepted TCP/TLS support
+without tracing.
 
 ## Checked ARC delivery
 

@@ -1541,7 +1541,9 @@ static void fwp_sock_drop(V value) {
     fwp_sock *s = SOCK(value);
     if (!s->refs || --s->refs) return;
     fwp_sock_final(s);
+#if defined(FWP_LIBRARY) || !defined(FWP_ARC_ONLY)
     fwp_gc_forget_finalizer(s);
+#endif
 #if !FWP_GC
     /* Collector-free allocator configurations own their count metadata and
      * storage through the same typed free used for other resource headers. */

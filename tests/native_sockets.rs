@@ -287,6 +287,14 @@ fn tcp_values_preserve_scopes_and_release_storage_without_tracing() {
             .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.budget<tcp_budget) { fprintf(stderr,\"TCP charged storage left: %lld\\n\",(long long)(tcp_budget-fwp_gc.budget)); exit(248); }\n");
         let mut measured = code.clone();
         measured.replace_range(start..end, &body);
+        if mode == "arc" {
+            let needle = "static void fwp_gc_forget_finalizer(void *obj) {\n";
+            assert!(measured.contains(needle));
+            measured = measured.replace(
+                needle,
+                &format!("{needle}    fwp_trap(\"unexpected executable finalizer lookup\");\n"),
+            );
+        }
         for opt in ["-O1", "-O2"] {
             let binary = dir.join("tcp.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();

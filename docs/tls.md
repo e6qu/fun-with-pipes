@@ -78,6 +78,14 @@ TLS, so code written for TCP connections works over TLS unchanged (the HTTP
 server and client of `lib/http.fwp` are such code). `tls.read`,
 `tls.write`, ... are the same functions under the TLS names.
 
+A connection owns both a socket and its TLS session. Copies share that same
+connection. `tcp.close` closes it for every copy; automatic cleanup closes it
+when its final owner finishes. A function or task that captures the connection
+keeps it alive. Closing a listener does not close connections it has already
+accepted: those connections retain the TLS configuration they still need.
+[Ownership](ownership.md#tcp-and-tls-socket-preparation) distinguishes the current
+TCP/TLS preparation and its tests from accepted checked-ARC support.
+
 | Function | |
 |---|---|
 | `tls.connect "host:port"` | connect, finish the handshake and verify the server's certificate with the system's CA certificates |

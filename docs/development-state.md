@@ -49,22 +49,30 @@ in TLS-enabled programs add a session pointer, within the same allocation. There
 is no separate counter allocation. This is not a claim of zero runtime overhead.
 Compiler contracts and source inspection do not establish tested support.
 
-The first broader run `38918284443` exposed a test hook that missed the
-initialized allocator. Repair `59e9b082` covers it without double counting.
-Replacement `38919269219` passes all five TCP tests, the UDP tests, task cleanup
-and mutual TLS on ARM macOS. Its old POSIX controls need updates: two still search
-for the previous cleanup text, the certificate-copy hook misses the new owned
-result, and Linux ARM64 can retain a stale register after a root fence is removed.
-The pending test repair checks actual premature session release instead of assuming
-that a conservative collector must discard a particular register. It also tests
-failure when wrapping certificate text in an optional result. These tests remain
-unverified until the replacement run passes; the runtime itself is unchanged.
+Preparation `1487cd96` repairs the failure tests and adds real TCP library
+unload plus TLS executable inspection. Native replacement `38920866331` passes
+on ARM macOS; other hosts are pending. This includes all five TCP tests, UDP,
+task cleanup, mutual TLS, POSIX TLS controls and actual socket-library unload.
+Earlier `38919269219` found obsolete test hooks and a Linux ARM64 negative control
+that assumed a conservative collector would discard a stale register. The repair
+checks actual premature session release and optional-certificate construction
+failure. The runtime was unchanged by these test fixes.
 
 Both actual WASI regression jobs `38918290525` pass for runtime `eaa42582`.
-New TCP library-unload coverage checks three retained descriptors over three real
-load/unload cycles, including an intentionally omitted cleanup. Mutual TLS now
-retains the executable and checks that tracing functions are absent. No second
-PR is open; publish this preparation and run the focused native suite next.
+ARM64 `nm`/`otool` inspection of the passing TLS executable confirms no tracing
+functions, a 24-byte stream header, its 64-bit count at offset 8 and TLS pointer
+at offset 16. The non-TLS TCP probe requests 16 bytes. OpenSSL remains a dynamic
+library dependency. These are representation observations, not throughput claims.
+Artifacts are in `/private/tmp/fwp-tcp-148-evidence/macos-arm64` and the prior TCP
+probe is in `/private/tmp/fwp-tcp-59-evidence/macos-arm64`.
+
+That inspection exposed an unnecessary finalizer-table search when an ARC-only
+executable releases a socket: such sockets never register there. The pending
+runtime change omits that search only in ARC executables; tracing and unloadable
+libraries retain it. The native test traps if the executable performs the lookup.
+File cleanup already has the corresponding guard and needs no change. Publish
+this refinement with the plain-language ownership example, then require focused
+native and shared-runtime WASI checks on the new runtime before delivery.
 
 The native suite compares raw and optimized interpretation with O1/O2 tracing
 stress and ARC, checks cleanup without collections, and inspects ARC symbols.
@@ -89,7 +97,8 @@ passes in 1.32s: 335 contracted declarations, 19 remaining review symbols. These
 are implementation counts, not support evidence. The documentation audit passes
 in 2.46s. Constructor evidence retention passes in 0.13s. The new TCP library fixture
 prints `True` under the accepted interpreter (guarded, 0.26s), and the updated
-Rust formatting check passes in 1.12s.
+Rust formatting check passes in 1.12s. Binary inspection passes under the guard
+in 0.25s/0.26s; the latest formatting check passes in 1.11s.
 
 ## Roadmap status
 
