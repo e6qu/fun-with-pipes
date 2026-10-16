@@ -87,8 +87,8 @@ static void no_release(void *p){(void)p;}
 static void remember_capture(void *p){if(!nested)watched=p;}
 static void remember_tls(void *p){g_tls *t=p;tls_objects[0]=t;}
 static void observed_free(void *p){if(p&&p==watched){watched=0;frees++;}if(p)for(int i=0;i<1;i++)if(tls_objects[i]==p){tls_objects[i]=0;tls_frees++;break;}free(p);}
-static void check_capture(void){g_ctx *ctx=g_ctx_of();if(!ctx->capture_owner||ctx->capture!=&ctx->capture_owner->headers||(!nested&&ctx->capture_owner!=watched)||frees)_Exit(10);}
-static void overflow_restore(void *p){g_capture *cap=p;if(cap->users!=SIZE_MAX)_Exit(11);cap->users=2;}
+static void check_capture(void){g_ctx *ctx=g_ctx_of();if(!ctx->capture_owner||ctx->capture!=&ctx->capture_owner->headers||(!nested&&ctx->capture_owner!=watched)||frees||ctx->capture_owner->users!=1)_Exit(10);}
+static void overflow_restore(void *p){g_capture *cap=p;if(cap->users!=SIZE_MAX)_Exit(11);cap->users=1;}
 static void child(void *arg,int stop){
  if(stop){cancelled++;return;}
  check_capture();if(!scope_returned)_Exit(12);
@@ -100,8 +100,11 @@ static void child(void *arg,int stop){
  if(stage==8)fwp_cur->gctx=&g_empty_ctx;
 }
 static uintptr_t observed_callback(uintptr_t f){
- callback_entries++;check_capture();
+ callback_entries++;
+ if(stage==11){g_ctx *ctx=g_ctx_of();if(!ctx->tls||ctx->tls->users!=1||!ctx->capture_owner||ctx->capture_owner->users!=SIZE_MAX)_Exit(22);return 42;}
+ check_capture();
  if(nested){h2_hdrs_add(g_ctx_of()->capture,"x",1,"before",6);return 42;}
+ if(stage==10){nested=1;V r=fwp_p_grpc_with_gzip(0);nested=0;return r;}
  if(stage==9){nested=1;V r=fwp_p_grpc_with_response_metadata(0);nested=0;if(OBJ(r)->f[0]!=42||g_ctx_of()->capture->n!=1)_Exit(15);return 42;}
  h2_hdrs_add(g_ctx_of()->capture,"x",1,"before",6);
  if(stage==1)fwp_fail(fwp_cstr("capture typed failure"),&string_descriptor);
@@ -132,7 +135,7 @@ static void call(void *arg,int stop){
 }
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
- for(stage=0;stage<10;stage++){
+ for(stage=0;stage<11;stage++){
   frees=entered=cancelled=trapped=typed=scope_returned=fail_spawn=nested=0;watched=spawned=0;snapshot=0;
   fwp_task *task=fwp_spawn_task(0,call,0,0,0);
   if(stage==3){fwp_p_task_yield();if(!entered||task->done||frees)return 2;fwp_p_task_cancel(PTR(task));}
@@ -148,11 +151,12 @@ int main(void){
  if(!setjmp(failed)){g_context_acquire(&context);return 4;}
  if(tls->users!=1||cap.users!=SIZE_MAX||strcmp(fwp_trap_msg,"too many metadata capture owners"))return 5;
  g_tls_release(tls);if(tls_frees!=1)return 6;
- // Constructor ownership protects freshly copied TLS options when capture acquisition traps.
- tls_frees=0;V fields[5]={FWP_NONE,FWP_FALSE,FWP_NONE,FWP_NONE,FWP_NONE};V options=fwp_record(5,fields);
- context.tls=0;fwp_cur->gctx=&context;
- if(!setjmp(failed)){fwp_p_grpc_with_tls(options,0,0,1,2,3,4);return 7;}
- if(tls_frees!=1||cap.users!=SIZE_MAX||fwp_cleanups||strcmp(fwp_trap_msg,"too many metadata capture owners"))return 8;
+ // A synchronous scope borrows a saturated capture; no new owner is needed.
+ tls_frees=0;stage=11;V fields[5]={FWP_NONE,FWP_FALSE,FWP_NONE,FWP_NONE,FWP_NONE};V options=fwp_record(5,fields);
+ context.tls=0;context.capture=&cap.headers;fwp_cur->gctx=&context;
+ if(setjmp(failed))return 7;
+ if(fwp_p_grpc_with_tls(options,0,0,1,2,3,4)!=42)return 7;
+ if(tls_frees!=1||cap.users!=SIZE_MAX||fwp_cleanups||fwp_cur->gctx!=&context)return 8;
  fwp_cur->gctx=0;FWP_KEEP_ALIVE(options);
  // Failed capture allocation never enters the callback or installs a context.
  fail_capture=1;callback_entries=0;
@@ -166,16 +170,18 @@ int main(void){
     let exe = dir.join("probe");
     let finish = "fwp_gctx_release(held);";
     let pending = "fwp_gctx_release(*held);";
-    let scope = "if (owner->held) { g_context_release(owner->held); owner->held = 0; }";
-    for needle in [finish, pending, scope] {
+    let release = "    g_capture_release(owner);";
+    let unwind = "fwp_cleanup_push(&capture_cleanup, g_capture_release, owner);";
+    for needle in [finish, pending, release, unwind] {
         assert_eq!(generated.matches(needle).count(), 1);
     }
     let controls = [
         generated.replacen(finish, "no_release(held);", 1),
         generated.replacen(pending, "no_release(*held);", 1),
+        generated.replacen(release, "    no_release(owner);", 1),
         generated.replacen(
-            scope,
-            "if(owner->held){no_release(owner->held);owner->held=0;}",
+            unwind,
+            "fwp_cleanup_push(&capture_cleanup, no_release, owner);",
             1,
         ),
     ];

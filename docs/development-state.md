@@ -37,18 +37,30 @@ TLS/capture resources retain their separate owners. Completion clears the copy
 so a completed task does not retain stale context pointers. Programs without
 service support omit the field. No checked ARC admission changes are made.
 
-Run `38942724799` at `13e3a25b` stopped at a Clippy range-loop lint in the new
-allocation assertion, before native checks. The loop is repaired, and evidence
-now records the actual compiler versions and CPU. Next: publish the repair and
-complete replacement `context-owners` checks on all six native hosts. Require the existing context,
-TLS, capture, peer, library-unload and task tests plus new escaped-child controls.
-The new control rejects borrowing the parent's scope even if its old bytes are
-still readable. Allocation checks require gzip/deadline per-call costs to match
-plain state updates between 32 and 128 calls. Record actual context/task sizes
-and alignments from `layout.tsv`, compare saved baseline allocations, inspect
-machine code and then run real WASI regressions. This implementation is unverified
-until those checks pass. Metadata buffers, capture results and streams/connections
-remain unfinished costs; do not admit unproved contexts to checked ARC.
+Initial `38942724799` stopped at a test Clippy lint, now fixed. Replacement
+`38943086313` at `ad77934c` passes Linux ARM64; other hosts remain active. That
+revision tests stack settings and inline task copies only.
+
+The next combined follow-up also borrows TLS/capture owners in synchronous
+scopes and packs outgoing header pointers/text into one owned allocation. Child
+tasks retain that block only when they actually inherit it. Empty or ignored
+header lists borrow the previous settings. Size arithmetic is checked before
+allocation. Tests cover allocation failure, four size-overflow cases, child
+return/error/trap/cancellation, owner overflow and atomic acquisition, and
+separate controls for lost inheritance, a borrowed parent stack, omitted free,
+omitted unwind cleanup and omitted child retain. Existing TLS/capture controls
+now require a single owner inside ordinary and nested scopes.
+
+Next: publish the combined follow-up and run `context-storage` on Linux first,
+including actual interpreter/native gRPC calls. Then require `context-owners`
+on all six hosts and real WASI regressions. The new changes are unverified until
+those checks pass. Allocation assertions require no per-call overhead versus
+plain updates for gzip/deadline/empty headers; nonempty copied headers require
+one allocation per call and no retained charge after the scope ends. Retain
+`storage.tsv`, `layout.tsv`, compiler/CPU metadata and binaries. Measure the
+larger task header and inspect instructions; do not claim a speedup from counts.
+Capture result values and service streams/connections remain unfinished, and
+checked ARC admission is unchanged.
 After #153 is accepted, rebase only this branch's delta after `ac3060d1` onto its
 accepted squash; keep one active delivery PR.
 

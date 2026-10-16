@@ -91,6 +91,9 @@ jobs:
           name: context-storage-${{ matrix.runner }}
           path: context-evidence/
           if-no-files-found: error
+      - name: Service scopes through actual interpreted and native calls
+        if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
+        run: cargo test --test grpc every_kind_of_call -- --exact
       - name: Copied service result ownership
         if: inputs.suite == 'service-values' || inputs.suite == 'service-values-linux'
         env:

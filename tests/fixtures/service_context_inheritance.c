@@ -4,14 +4,31 @@ static int stage, depth, entered, released, child_checked, cancelled, typed, tra
 static int64_t parent_deadline;
 static fwp_task *escaped;
 static V metadata, duration, original_name, original_value;
+static void *metadata_block;
+static size_t metadata_bytes;
+static int metadata_attempts, metadata_frees, fail_metadata;
+static void *metadata_alloc(size_t bytes) {
+    metadata_attempts++;
+    if (fail_metadata) { fail_metadata = 0; fwp_trap("out of memory"); }
+    if (metadata_block) _Exit(54);
+    metadata_bytes = bytes;
+    return metadata_block = fwp_alloc_leaf(bytes);
+}
+static void metadata_free(void *block) {
+    if (block != metadata_block) _Exit(54);
+    metadata_frees++; metadata_block = 0; fwp_mem_free(block);
+}
+static void metadata_no_release(void *block) { (void)block; }
 static const fwp_desc context_error = {.kind=K_STR, .name="String"};
 
 static void check_inherited(void) {
     g_ctx *ctx = g_ctx_of();
     if (!ctx->gzip || ctx->deadline != parent_deadline || ctx->n != 3) _Exit(41);
     const char *expected[] = {"x-parent", "parent", "x-name", "one  two", "x-name", "again"};
-    for (size_t i = 0; i < 6; i++)
-        if (strcmp(ctx->kv[i], expected[i])) _Exit(42);
+    for (size_t i = 0; i < 6; i++) {
+        uintptr_t address = (uintptr_t)ctx->kv[i], base = (uintptr_t)metadata_block;
+        if (strcmp(ctx->kv[i], expected[i]) || address < base || address - base >= metadata_bytes) _Exit(42);
+    }
 }
 
 static void inherited_child(void *arg, int stop) {
@@ -30,8 +47,17 @@ static void inherited_child(void *arg, int stop) {
 
 static uintptr_t scope_callback(uintptr_t ignored) {
     (void)ignored;
+    if (stage == 9) {
+        if (!g_ctx_of()->metadata_owner || g_ctx_of()->metadata_owner->users != SIZE_MAX) _Exit(58);
+        return 42;
+    }
     if (depth == 0) { depth = 1; return fwp_p_grpc_with_deadline(duration, 0); }
-    if (depth == 1) { depth = 2; return fwp_p_grpc_with_metadata(metadata, 0); }
+    if (depth == 1) {
+        depth = 2;
+        if (stage == 7) STR(original_name)->len = SIZE_MAX;
+        if (stage == 8) STR(original_value)->len = SIZE_MAX;
+        return fwp_p_grpc_with_metadata(metadata, 0);
+    }
     check_inherited();
     if (depth == 3) return 42;
     escaped = fwp_spawn_task(0, inherited_child, 0, 0, 1);
@@ -70,7 +96,9 @@ static void parent(void *arg, int stop) {
         }
     } else {
         trapped++;
-        if (strcmp(fwp_trap_msg, "scope trap")) _Exit(48);
+        const char *expected = stage >= 5 ? "outgoing metadata too large" : stage == 4 ? "out of memory" : "scope trap";
+        if (strcmp(fwp_trap_msg, expected)) _Exit(48);
+        STR(original_name)->len = 6; STR(original_value)->len = 8;
     }
     fwp_handlers = handler.prev;
     fwp_cur->trap_jb = saved_trap;
@@ -83,14 +111,16 @@ int main(void) {
     fwp_gc_start(__builtin_frame_address(0));
     fwp_tasks_init();
     fwp_trap_recover = g_trap_recover;
-    for (stage = 0; stage < 4; stage++) {
+    for (stage = 0; stage < 9; stage++) {
         depth = entered = released = child_checked = cancelled = typed = trapped = 0;
-        escaped = 0;
+        escaped = 0; metadata_block = 0; metadata_attempts = metadata_frees = 0; fail_metadata = stage == 4;
         const char *parent_headers[] = {"x-parent", "parent"};
         g_ctx before = {0};
         parent_deadline = fwp_now_ns() + INT64_C(60000000000);
         before.deadline = parent_deadline;
         before.kv = parent_headers; before.n = 1;
+        if (stage == 5) before.n = SIZE_MAX;
+        if (stage == 6) before.n = (SIZE_MAX - sizeof(g_metadata)) / 2 / sizeof(char *);
         fwp_cur->gctx = &before;
         original_name = fwp_cstr("X-Name");
         original_value = fwp_cstr("one\r\ntwo");
@@ -109,6 +139,14 @@ int main(void) {
             fwp_p_task_cancel(PTR(task));
         }
         fwp_await(task);
+        if (stage >= 4) {
+            if (escaped || child_checked || !task->done || cancelled || typed || trapped != 1 ||
+                metadata_attempts != (stage == 4) || metadata_frees || fail_metadata ||
+                metadata_block || fwp_cur->gctx != &before || fwp_cleanups) return 56;
+            fwp_cur->gctx = 0;
+            continue;
+        }
+        if (metadata_frees) return 55;
         if (!escaped || escaped->done || child_checked || !task->done ||
             cancelled != (stage == 3) || typed != (stage == 1) ||
             trapped != (stage == 2) || fwp_cur->gctx != &before || fwp_cleanups) return 51;
@@ -119,10 +157,26 @@ int main(void) {
         fwp_make_ready(escaped);
         fwp_await(escaped);
         if (child_checked != 1 || !escaped->done || escaped->gctx_owner) return 52;
+        if (metadata_attempts != 1 || metadata_frees != 1 || metadata_block) return 54;
         FWP_KEEP_ALIVE(PTR(task)); FWP_KEEP_ALIVE(PTR(escaped));
         FWP_KEEP_ALIVE(metadata); FWP_KEEP_ALIVE(duration);
         fwp_cur->gctx = 0;
     }
+    /* Failed child ownership is atomic across headers, TLS and capture. A
+     * synchronous scope can still borrow these owners without incrementing. */
+    g_metadata saturated = {.users=SIZE_MAX};
+    g_tls tls = {.users=1}; g_capture capture = {.users=1};
+    g_ctx context = {.tls=&tls, .capture=&capture.headers,
+                     .capture_owner=&capture, .metadata_owner=&saturated};
+    jmp_buf failed;
+    fwp_cur->trap_jb = &failed; fwp_cur->trap_cleanup = fwp_cleanups;
+    if (!setjmp(failed)) { g_context_acquire(&context); return 57; }
+    if (tls.users != 1 || capture.users != 1 || saturated.users != SIZE_MAX ||
+        strcmp(fwp_trap_msg, "too many outgoing metadata owners")) return 57;
+    stage = 9; fwp_cur->gctx = &context;
+    if (fwp_p_grpc_with_gzip(0) != 42 || tls.users != 1 || capture.users != 1 ||
+        saturated.users != SIZE_MAX || fwp_cur->gctx != &context || fwp_cleanups) return 58;
+    fwp_cur->gctx = 0; fwp_cur->trap_jb = 0;
     fwp_lib_finish();
     return 0;
 }

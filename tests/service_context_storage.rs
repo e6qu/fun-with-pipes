@@ -96,6 +96,14 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
             "const (const (add 1) | modify) | grpc.with-metadata [(\"X-Name\", \"one\\r\\ntwo\")]",
         ),
         (
+            "empty-metadata",
+            "const (const (add 1) | modify) | grpc.with-metadata []",
+        ),
+        (
+            "filtered-metadata",
+            "const (const (add 1) | modify) | grpc.with-metadata [(\"\", \"ignored\"), (\":path\", \"ignored\")]",
+        ),
+        (
             "capture",
             "const (const (add 1) | modify) | grpc.with-response-metadata | .0",
         ),
@@ -184,7 +192,7 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
             }
         }
     }
-    for name in ["gzip", "deadline"] {
+    for name in ["gzip", "deadline", "empty-metadata", "filtered-metadata"] {
         for (metric, label) in ["allocation requests", "requested bytes", "charged bytes"]
             .into_iter()
             .enumerate()
@@ -196,6 +204,18 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
             );
         }
     }
+    assert_eq!(
+        measurements[&("metadata", 128)][0]
+            - measurements[&("metadata", 32)][0]
+            - (measurements[&("plain", 128)][0] - measurements[&("plain", 32)][0]),
+        96,
+        "one packed outgoing-header allocation per call"
+    );
+    assert_eq!(
+        measurements[&("metadata", 128)][2] - measurements[&("metadata", 32)][2],
+        measurements[&("plain", 128)][2] - measurements[&("plain", 32)][2],
+        "outgoing headers retain storage after their scope ends"
+    );
     eprintln!("{report}\n{layouts}");
     // These counts do not establish collector-free service execution. Raw TLS/capture buffers,
     // allocator metadata, pages and total process memory are outside this count.
@@ -203,7 +223,20 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
 
 #[test]
 fn children_keep_scope_settings_after_return_failure_and_cancellation() {
-    let generated = http2_values::generated();
+    let mut generated = http2_values::generated();
+    for (original, observed) in [
+        (
+            "(g_metadata *)fwp_alloc_leaf(prefix + text)",
+            "(g_metadata *)metadata_alloc(prefix + text)",
+        ),
+        (
+            "if (--md->users == 0) fwp_mem_free(md);",
+            "if (--md->users == 0) metadata_free(md);",
+        ),
+    ] {
+        assert_eq!(generated.matches(original).count(), 1);
+        generated = generated.replace(original, observed);
+    }
     let start = generated.find("static V g_with_ctx(").unwrap();
     let end = start
         + generated[start..]
@@ -213,7 +246,7 @@ fn children_keep_scope_settings_after_return_failure_and_cancellation() {
     assert_eq!(generated[start..end].matches(callback).count(), 1);
     let method = generated[start..end].replace(callback, "V r = scope_callback(f);");
     let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
-    let hooks = "#include <stdint.h>\nstatic uintptr_t scope_callback(uintptr_t);\nstatic void inherited_child(void *, int);\n";
+    let hooks = "#include <stdint.h>\n#include <stddef.h>\nstatic uintptr_t scope_callback(uintptr_t);\nstatic void inherited_child(void *, int);\nstatic void *metadata_alloc(size_t);\nstatic void metadata_free(void *);\nstatic void metadata_no_release(void *);\n";
     let fixture = include_str!("fixtures/service_context_inheritance.c");
     let inherit = "    t->gctx = fwp_cur->gctx;";
     assert_eq!(generated.matches(inherit).count(), 1);
@@ -224,10 +257,28 @@ fn children_keep_scope_settings_after_return_failure_and_cancellation() {
     let snapshot = "    if (t->gctx) {\n        t->gctx_storage = *(const g_ctx *)t->gctx;\n        t->gctx = &t->gctx_storage;\n    }";
     assert_eq!(generated.matches(snapshot).count(), 1);
     let borrowed = generated.replace(snapshot, "");
+    let free = "if (--md->users == 0) metadata_free(md);";
+    let unwind = "fwp_cleanup_push(&metadata_cleanup, g_metadata_release, owner);";
+    let retain = "if (md) md->users++;";
+    for needle in [free, unwind, retain] {
+        assert_eq!(generated.matches(needle).count(), 1);
+    }
+    let leaked = generated.replace(free, "if (--md->users == 0) metadata_no_release(md);");
+    let no_unwind = generated.replace(
+        unwind,
+        "fwp_cleanup_push(&metadata_cleanup, metadata_no_release, owner);",
+    );
+    let no_retain = generated.replace(retain, "(void)md;");
     let dir = fwp::cgen::TempDir::new("service-context-inheritance").unwrap();
     let binary = dir.join("probe");
     for optimization in ["-O1", "-O2"] {
-        for (source, expected) in [(&broken, 41), (&borrowed, 53)] {
+        for (source, expected) in [
+            (&broken, 55),
+            (&borrowed, 53),
+            (&leaked, 54),
+            (&no_unwind, 54),
+            (&no_retain, 55),
+        ] {
             fwp::cgen::compile_c(
                 &format!("{hooks}\n{source}\n{fixture}"),
                 &binary,

@@ -162,7 +162,7 @@ typedef struct { fwp_task *head; } fwp_wl;
 #ifdef FWP_GCTX_OWNERS
 /* Scope settings live on the caller's stack. A child stores its own snapshot
  * here, inside the task allocation, so it never points into an expired scope.
- * Pointed-to TLS/capture resources have separate shared ownership. */
+ * Pointed-to TLS, capture and copied-header resources have separate owners. */
 typedef struct {
     const char **kv;
     size_t n;
@@ -171,6 +171,7 @@ typedef struct {
     const struct g_tls *tls;
     struct h2_hdrs *capture;
     struct g_capture *capture_owner;
+    struct g_metadata *metadata_owner;
     int gzip;
 } g_ctx;
 #endif
