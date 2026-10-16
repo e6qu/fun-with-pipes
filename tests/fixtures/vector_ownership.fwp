@@ -1,0 +1,86 @@
+# Each optional vector conversion checks its lane count. The tests retain
+# original arrays beside transformed vectors, then print both to expose aliases.
+four : Array[t] -> Option[Vec[4, t]] where Numeric[t]
+four = simd.from-array
+one : Array[t] -> Option[Vec[1, t]] where Numeric[t]
+one = simd.from-array
+empty : Array[t] -> Option[Vec[0, t]] where Numeric[t]
+empty = simd.from-array
+wide : Vec[4, I128] -> Vec[4, I128]
+wide = id
+quad : Vec[4, F128] -> Vec[4, F128]
+quad = id
+main = [
+    170141183460469231731687303715884105727i128 | simd.splat | wide
+        | both (simd.add (simd.splat 1i128) | simd.to-array | hash) simd.sum | echo,
+    1.0000000000000000000000000000000002f128 | simd.splat | quad
+        | both (simd.sub (simd.splat 1.0f128) | simd.to-array | hash) simd.sum | echo,
+    [-0.0f128, 0.0f128, -0.0f128, 0.0f128] | array.from-list | four
+        | option.map (both (simd.min (simd.splat 0.0f128) | simd.to-array | hash)
+                           (simd.max (simd.splat -0.0f128) | simd.to-array | hash)) | echo,
+    range 0i128 64i128 | map (simd.splat | wide | simd.mul (simd.splat 2i128) | simd.sum) | sum | echo,
+
+    [2i8, 4i8, 6i8, 8i8] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2i8) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2i8) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2i8) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2i8) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2i8) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2i8) | simd.to-array | array.to-list })) | echo,
+    [2i8] | array.from-list | one | option.map simd.sum | echo,
+    [2i8] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2i8] | array.from-list | four | echo,
+    [2i16, 4i16, 6i16, 8i16] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2i16) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2i16) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2i16) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2i16) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2i16) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2i16) | simd.to-array | array.to-list })) | echo,
+    [2i16] | array.from-list | one | option.map simd.sum | echo,
+    [2i16] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2i16] | array.from-list | four | echo,
+    [2i32, 4i32, 6i32, 8i32] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2i32) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2i32) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2i32) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2i32) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2i32) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2i32) | simd.to-array | array.to-list })) | echo,
+    [2i32] | array.from-list | one | option.map simd.sum | echo,
+    [2i32] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2i32] | array.from-list | four | echo,
+    [2i64, 4i64, 6i64, 8i64] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2i64) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2i64) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2i64) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2i64) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2i64) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2i64) | simd.to-array | array.to-list })) | echo,
+    [2i64] | array.from-list | one | option.map simd.sum | echo,
+    [2i64] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2i64] | array.from-list | four | echo,
+    [2i128, 4i128, 6i128, 8i128] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2i128) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2i128) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2i128) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2i128) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2i128) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2i128) | simd.to-array | array.to-list })) | echo,
+    [2i128] | array.from-list | one | option.map simd.sum | echo,
+    [2i128] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2i128] | array.from-list | four | echo,
+    [2u8, 4u8, 6u8, 8u8] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2u8) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2u8) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2u8) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2u8) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2u8) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2u8) | simd.to-array | array.to-list })) | echo,
+    [2u8] | array.from-list | one | option.map simd.sum | echo,
+    [2u8] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2u8] | array.from-list | four | echo,
+    [2u16, 4u16, 6u16, 8u16] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2u16) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2u16) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2u16) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2u16) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2u16) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2u16) | simd.to-array | array.to-list })) | echo,
+    [2u16] | array.from-list | one | option.map simd.sum | echo,
+    [2u16] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2u16] | array.from-list | four | echo,
+    [2u32, 4u32, 6u32, 8u32] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2u32) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2u32) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2u32) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2u32) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2u32) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2u32) | simd.to-array | array.to-list })) | echo,
+    [2u32] | array.from-list | one | option.map simd.sum | echo,
+    [2u32] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2u32] | array.from-list | four | echo,
+    [2u64, 4u64, 6u64, 8u64] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2u64) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2u64) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2u64) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2u64) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2u64) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2u64) | simd.to-array | array.to-list })) | echo,
+    [2u64] | array.from-list | one | option.map simd.sum | echo,
+    [2u64] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2u64] | array.from-list | four | echo,
+    [2u128, 4u128, 6u128, 8u128] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2u128) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2u128) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2u128) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2u128) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2u128) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2u128) | simd.to-array | array.to-list })) | echo,
+    [2u128] | array.from-list | one | option.map simd.sum | echo,
+    [2u128] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2u128] | array.from-list | four | echo,
+    [2f16, 4f16, 6f16, 8f16] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2f16) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2f16) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2f16) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2f16) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2f16) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2f16) | simd.to-array | array.to-list })) | echo,
+    [2f16] | array.from-list | one | option.map simd.sum | echo,
+    [2f16] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2f16] | array.from-list | four | echo,
+    [2bf16, 4bf16, 6bf16, 8bf16] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2bf16) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2bf16) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2bf16) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2bf16) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2bf16) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2bf16) | simd.to-array | array.to-list })) | echo,
+    [2bf16] | array.from-list | one | option.map simd.sum | echo,
+    [2bf16] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2bf16] | array.from-list | four | echo,
+    [2f32, 4f32, 6f32, 8f32] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2f32) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2f32) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2f32) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2f32) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2f32) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2f32) | simd.to-array | array.to-list })) | echo,
+    [2f32] | array.from-list | one | option.map simd.sum | echo,
+    [2f32] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2f32] | array.from-list | four | echo,
+    [2f64, 4f64, 6f64, 8f64] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2f64) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2f64) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2f64) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2f64) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2f64) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2f64) | simd.to-array | array.to-list })) | echo,
+    [2f64] | array.from-list | one | option.map simd.sum | echo,
+    [2f64] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2f64] | array.from-list | four | echo,
+    [2f128, 4f128, 6f128, 8f128] | array.from-list | both array.to-list (four | option.map (make { 0 = simd.sum, 1 = simd.add (simd.splat 2f128) | simd.to-array | array.to-list, 2 = simd.sub (simd.splat 2f128) | simd.to-array | array.to-list, 3 = simd.mul (simd.splat 2f128) | simd.to-array | array.to-list, 4 = simd.div (simd.splat 2f128) | simd.to-array | array.to-list, 5 = simd.min (simd.splat 2f128) | simd.to-array | array.to-list, 6 = simd.max (simd.splat 2f128) | simd.to-array | array.to-list })) | echo,
+    [2f128] | array.from-list | one | option.map simd.sum | echo,
+    [2f128] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
+    [2f128] | array.from-list | four | echo,
+    [1i128, 2i128, 3i128, 4i128, 5i128] | array.from-list | array.slice 1 4
+        | both (four | option.map (simd.min (simd.splat 3i128) | simd.to-array | array.to-list)) (array.set 1 99i128 | option.map array.to-list) | echo,
+    range 0i32 64i32 | map (simd.splat | simd._test-i4 | simd.sum) | sum | echo,
+] | ignore

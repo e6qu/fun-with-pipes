@@ -459,3 +459,20 @@ keep aliases live, count both libc and managed allocations inside hash calls,
 and verify that restoring the old buffered implementation fails the zero-allocation
 check. [The handoff](development-state.md) records which checks have passed; this
 change alone is not a measured timing improvement or a C/Rust parity claim.
+
+## Vector-library results
+
+A `Vec[N, T]` currently holds an array inside a record; each array entry is a lane.
+The prepared ownership path gives the result record and array one owner and
+retains borrowed boxed integer lanes when they are shared. F128 arrays store their
+128-bit payloads directly, so copying a lane does not retain a temporary scalar
+box. Converting a correctly sized array to a vector retains that array; a wrong
+length returns `None` without taking ownership. Partial arrays and wrappers are
+protected until construction finishes, including arithmetic and allocation failure.
+
+A reduction keeps one owned accumulator and releases each replaced boxed result.
+A one-lane sum owns its returned reference independently of the input. These
+changes preserve wrapping integer operations and existing division checks; they
+do not promise stack-only vectors or hardware vector instructions. Native and
+actual WASI acceptance remains tracked in the handoff until the required checks
+pass. General removal of tracing remains unfinished.

@@ -5720,10 +5720,13 @@ impl<'p> Gen<'p> {
                 format!("return {call};")
             }
             "simd.splat" => format!("return fwp_p_simd_splat(l0, {}, {});", vec_shape(&result).0, self.desc(&vec_shape(&result).1)),
-            "simd.from-array" => format!(
-                "return fwp_p_simd_from_array(l0, {});",
-                vec_shape(&elem(&result, 0)).0
-            ),
+            "simd.from-array" => {
+                let vector = elem(&result, 0);
+                let lanes = vec_shape(&vector).0;
+                let array_drop = self.value_drop(&p(0));
+                let vector_drop = self.value_drop(&vector);
+                format!("return fwp_p_simd_from_array(l0, {lanes}, {array_drop}, {vector_drop});")
+            }
             "simd.add" | "simd.sub" | "simd.mul" | "simd.div" | "simd.min" | "simd.max" => {
                 let (k, name, w) = nk(&vec_shape(&p(0)).1);
                 let op = match sym {

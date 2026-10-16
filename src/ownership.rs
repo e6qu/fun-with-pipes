@@ -449,6 +449,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "zip" => (&[B, B], ResultOwnership::CopiedStructure, None, &[0, 1]),
         "unzip" => (&[B], ResultOwnership::CopiedStructure, None, &[0]),
         "chunks" => (&[B, B], ResultOwnership::CopiedStructure, None, &[1]),
+        "simd.splat" | "simd.from-array" | "simd.sum" => {
+            (&[B], ResultOwnership::OwnedTree, None, &[])
+        }
+        "simd.add" | "simd.sub" | "simd.mul" | "simd.div" | "simd.min" | "simd.max" => {
+            (&[B, B], ResultOwnership::OwnedTree, None, &[])
+        }
         "linalg.lu-solve" | "linalg.qr" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
         "linalg.inverse" | "linalg.cholesky" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
         "linalg.det" => (&[B, B], ResultOwnership::Numeric, None, &[]),

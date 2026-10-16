@@ -221,6 +221,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("hash-fusion", include_str!("fixtures/hash_fusion.fwp")),
         ("hash-borrowed-fields", include_str!("fixtures/hash_borrowed_fields.fwp")),
         ("range-arrays", include_str!("fixtures/range_arrays.fwp")),
+        ("vectors", include_str!("fixtures/vector_ownership.fwp")),
         ("fresh-numerics", r#"
 main = [
     range 0 16 | map (const [1u128, 340282366920938463463374607431768211455u128] | map (checked.add 1u128)) | echo,

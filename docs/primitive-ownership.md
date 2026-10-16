@@ -287,3 +287,9 @@ hardware settings are preserved in
 They are scoped reclamation evidence, not blanket speed, register-placement or
 no-GC claims. Retained callbacks, exception/cancellation, unknown runtime boundaries and
 cycles remain explicit acceptance concerns.
+
+The prepared vector-library contracts use borrowed inputs and already-owned
+results for `simd.splat`, `simd.from-array`, `simd.sum`, and the six lane-wise binary
+operations. Their runtime paths must own wrappers, shared boxed lanes and reduction
+accumulators, and release partial results on failure. Contracts alone are not
+acceptance; [the handoff](development-state.md) records native and WASI checks.
