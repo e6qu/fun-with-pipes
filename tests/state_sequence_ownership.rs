@@ -257,7 +257,14 @@ fn each_preserves_aliases_effect_order_and_early_failures() {
                         .arg("-o")
                         .arg(&binary),
                 );
-                for reuse in ["0", "1"] {
+                // Reuse verification retains freed storage for comparison;
+                // checked ARC deliberately prohibits that diagnostic mode.
+                let reuse_modes: &[&str] = if mode == "tracing" {
+                    &["0", "1"]
+                } else {
+                    &["0"]
+                };
+                for reuse in reuse_modes {
                     let stress = if mode == "tracing" { "1" } else { "0" };
                     let output = Command::new(&binary)
                         .env("FWP_GC", if mode == "tracing" { "on" } else { "off" })

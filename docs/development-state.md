@@ -7,17 +7,19 @@ The only open delivery PR is #153; do not open a second before it is accepted.
 ## Current action
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
-Preparation base: `ac3060d1`. Current implementation: `2a98d395`.
+Preparation base: `ac3060d1`. The latest test repair limits diagnostics to
+modes that support them; it does not change the compiler or library.
 
-Next: publish the each fixture repair and require its replacement six-host run.
-Run `38961921474` at `2a98d395` found two test-setup errors: the shutdown hook
-matched three exit paths, and ARC correctly rejected collector-stress flags.
-The repair restricts measurement to normal main completion and uses collector
-stress only in tracing mode, with reuse verification in both modes. Native values
-in tracing mode already agreed with interpretation; allocation and ARC checks
-still need the repaired run. Actual WebAssembly run `38962206780` checks the
-unchanged library/compiler source at `2a98d395`. Retain the new allocation
-comparison and inspect its binaries after the native checks pass.
+Next: publish the test repair and run all six native hosts again. Actual
+WebAssembly run `38962206780` uses unchanged library/compiler source `2a98d395`.
+Run `38963627765` found that ARC also rejects reuse verification, which retains
+freed storage for comparison. Tracing still tests both reuse settings with GC
+stress; ARC tests ordinary freeing. The earlier normal-completion measurement
+hook repair remains. The Linux ARM64 allocation comparison passes: increasing
+from 32 to 128 iterations avoids 96 requests and 3,072 requested bytes versus
+the former mapping definition. Complete native semantic and cross-host checks
+are still required. Retain the final comparison and inspect its binaries after
+those pass. Guarded Rust formatting passes (0.14s).
 
 After #153 passes and merges, preserve the preparation's current head under a
 remote evidence tag before rebasing: the reports refer to earlier source commits.
@@ -117,7 +119,8 @@ with the expected status 101 before visiting the final element (0.25s).
 Library formatting passes (0.01s).
 
 New tests in `state_sequence_ownership` compare raw/optimized interpretation with
-O1/O2 tracing/ARC, including stress and reuse checks. A separate executable control
+O1/O2 tracing/ARC. Collector stress/verification applies only to tracing; reuse
+verification applies to both modes. A separate executable control
 uses the old mapping definition and compares managed allocation slopes at 32/128
 elements. Both must print the same count; the new definition must eliminate at
 least one allocation per element. `each-storage.tsv`, source and binaries are
@@ -156,7 +159,8 @@ The next PR description is `/private/tmp/fwp-context-pr-body.md`.
 Use `python3 scripts/local-guard.py COMMAND...` with unchanged limits. Full builds,
 native compilation and full tests belong on CI. Earlier automatic review refused
 local compiler/standalone C builds; do not bypass or repeat those requests.
-Recent guarded checks: Rust formatting 1.08s, documentation audit 2.62s, report
+Recent guarded checks: Rust formatting 1.08s, six actual generated sources with
+unique allocation/normal-completion hooks 0.13s, documentation audit 2.52s, report
 retention 20.42s, replacement ARM64/AMD64 binary inspection 0.13s. No local native
 build was used. An obsolete morning run (`38888712709`) has a stale in-progress
 listing, but all its jobs finished and GitHub reports it completed when cancelling;
