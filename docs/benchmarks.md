@@ -695,3 +695,92 @@ report retains individual native sites, language signatures where available,
 source/binary hashes, compiler commands and host details. Both variants are fwp;
 this establishes no C/Rust parity or timing improvement. It points to list
 intermediates as an optimization target before further tape-layout work.
+
+
+## Building numeric arrays without temporary list nodes
+
+`map f | array.from-list` first applies `f` to each list element, then creates an
+array from those results. When the results are inline numbers, the candidate
+compiler can store them in temporary numeric storage and pack the array directly.
+It preserves callback order and runs every callback before allocating the array.
+This avoids allocating a list node for each result. Known callbacks still compile
+to direct calls; choosing a function at runtime still requires an indirect call.
+
+The [four-host report](measurements/mapped-arrays-2026-10-16.json) compares the same
+compiler, program, inputs and native settings with this transformation disabled
+and enabled. Both sides are fwp; these results do not measure overhead against C
+or Rust. Native compilation uses `-O2 -ffp-contract=off`, other array optimizations
+and derivative workspace reuse stay enabled. One warmup precedes eight samples
+with alternating run order. Timing includes process startup, input construction,
+calculation and output. Compilation and allocation profiling are separate.
+Hardware, compiler commands, binary sizes, source/binary hashes and every sample
+are in the report.
+
+Three workloads check different uses:
+
+- Direct numeric work doubles 4,096 F64 list elements, constructs an array and
+  sums it, repeating 128 times. The printed total is 2,146,959,360.
+- Repeated differentiation computes 512 reverse derivatives of a function that
+  doubles 4,096 inputs. The printed total is 4,194,304.
+- Nested differentiation squares the first value of a 256-element input, then
+  differentiates twice and sums the result. It prints 2 and provides a control
+  with little eligible work.
+
+The following ratios are enabled time divided by disabled time for the revision
+that preserves known direct callbacks. A ratio of 0.5 means half the elapsed
+time; a ratio above 1 means slower. Tracing is the normal collector mode; ARC
+uses checked reference counting without tracing.
+
+| Host | Direct tracing / ARC | Derivative tracing / ARC | Nested tracing / ARC |
+|---|---:|---:|---:|
+| Linux AMD64 | 0.535 / 0.519 | 0.927 / 0.923 | 0.983 / 0.993 |
+| Linux ARM64 | 0.473 / 0.498 | 0.934 / 0.889 | 0.965 / 0.913 |
+| macOS ARM64 | 0.533 / 0.542 | 0.974 / 0.943 | 1.010 / 1.008 |
+| macOS AMD64 | 0.514 / 0.276 | 1.070 / 0.918 | 0.906 / 0.966 |
+
+An independent repeat uses the same generated sources and records the same
+allocation counts on every host:
+
+| Host | Direct tracing / ARC | Derivative tracing / ARC | Nested tracing / ARC |
+|---|---:|---:|---:|
+| Linux AMD64 | 0.492 / 0.517 | 0.918 / 0.919 | 0.887 / 1.001 |
+| Linux ARM64 | 0.470 / 0.496 | 0.892 / 0.919 | 0.967 / 0.918 |
+| macOS ARM64 | 0.581 / 0.533 | 0.983 / 0.909 | 0.896 / 1.003 |
+| macOS AMD64 | 0.476 / 0.471 | 1.019 / 0.895 | 0.986 / 1.124 |
+
+Intel macOS has large timing variation in the first run: disabled direct ARC
+samples range from 30 to 117 ms, while enabled samples range from 14 to 18 ms.
+The repeat narrows these to 29–30 and 14 ms. Its traced derivative median is
+still 2% slower, compared with 7% in the first run; both runs have overlapping
+samples. The tiny nested case changes from 3% faster to 12% slower in ARC.
+A separate diagnostic repeats the verified binaries with child CPU measurements
+and normal-collector profiles. Until that investigation finishes, do not dismiss
+the slower results or claim a portable tracing speedup.
+
+The report also retains the first implementation, which used indirect callback
+calls. Compare enabled/disabled within each revision; do not pool measurements
+from different revisions. Across both final-code runs, ARC direct numeric work
+improves and ARC repeated differentiation uses 6–11% less elapsed time. That is
+specific to these inputs and hosts, not a general language-speed claim.
+
+Allocation profiles agree across all four hosts and both memory modes:
+
+| Workload | Managed requests, disabled → enabled | Retains, both | Peak charged bytes, disabled → enabled |
+|---|---:|---:|---:|
+| Direct numeric | 532,996 → 8,708 | 256 | 300,312 → 294,920 |
+| Repeated derivative | 25,184,777 → 23,087,625 | 10,492,416 | 840,888 → 840,888 |
+| Nested derivative | 4,415 → 4,414 | 2,109 | 60,096 → 60,096 |
+
+Managed requests count runtime objects, not necessarily system malloc calls.
+Initial constants are excluded. Profiles disable collection to check cleanup;
+final charged memory, tape storage and collections are zero. The traced timings
+use the normal collector. Fewer requests do not establish lower derivative peak
+memory or less reference-count traffic: neither changes here.
+
+Actual ARM64 and AMD64 disassembly retains vectorized floating-point doubling in
+the known-callback loop (`fadd.2d` and `addpd`, respectively). Selected function
+bodies and stack-address instructions are retained. Those counts exclude callees,
+and the initial implementation moved work into another function, so they are not
+total instruction counts or proof of fewer spills. Remaining array reductions
+can still use indirect calls. Full semantic/platform acceptance is recorded in
+the handoff, separately from these measurements.

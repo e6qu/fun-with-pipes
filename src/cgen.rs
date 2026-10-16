@@ -4652,6 +4652,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 if matches!(
                     s.as_str(),
                     "map"
+                        | "array._map-list"
                         | "filter"
                         | "fold"
                         | "fold-right"
@@ -4684,6 +4685,52 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         }
         self.g.used_closures[g] = true;
+        if sym == "array._map-list" {
+            let result_type = self.g.prog.funcs[g].ty.params(n + 1).1.clone();
+            scalar(&result_type)?;
+            let descriptor = self.g.desc(&result_type);
+            let captures = match &args[0] {
+                Expr::Func(_) => Vec::new(),
+                Expr::Local(l) => (0..n).map(|j| format!("CLO(l{l})->a[{j}]")).collect(),
+                Expr::Apply(_, captures) => self.args(captures),
+                _ => return None,
+            };
+            let xs = self.expr(&args[1]);
+            let count = self.fresh();
+            let items = self.fresh();
+            let cleanup = self.fresh();
+            let index = self.fresh();
+            let arguments = self.fresh();
+            let values = captures
+                .iter()
+                .cloned()
+                .chain([format!("{items}[{index}]")])
+                .collect::<Vec<_>>()
+                .join(", ");
+            self.line("/* numeric mapped array: direct callback */");
+            self.line(&format!(
+                "size_t {count}; V *{items} = fwp_map_items({xs}, &{count});"
+            ));
+            self.line(&format!(
+                "fwp_cleanup {cleanup}; fwp_scratch_protect(&{items}, &{cleanup});"
+            ));
+            self.line(&format!(
+                "for (size_t {index} = 0; {index} < {count}; {index}++) {{"
+            ));
+            self.line(&format!("    V {arguments}[] = {{{values}}};"));
+            self.line(&format!("    fwp_args{g}({arguments}, 0, {});", n + 1));
+            self.line(&format!(
+                "    {items}[{index}] = fwp_owned_entry{g}({arguments});"
+            ));
+            self.line("}");
+            let result = self.bind(format!("fwp_array_typed_new({count}, {descriptor})"));
+            self.line(&format!("for (size_t {index} = 0; {index} < {count}; {index}++) fwp_array_store({result}, {index}, {items}[{index}], {descriptor});"));
+            self.line(&format!("fwp_scratch_finish(&{items}, &{cleanup});"));
+            for value in captures.iter().chain(std::iter::once(&xs)) {
+                self.line(&format!("FWP_KEEP_ALIVE({value});"));
+            }
+            return Some(result);
+        }
         if sym == "modify" {
             let mut values = match &args[0] {
                 Expr::Func(_) => Vec::new(),
@@ -5431,6 +5478,18 @@ impl<'p> Gen<'p> {
         let sp = scalar(&p(0));
         if sym == "array.length" {
             return Ok("return (V)(int64_t)fwp_array_len(l0);".into());
+        }
+        if sym == "array._map-list" {
+            let MT::Con(name, elements) = &result else {
+                return Err("numeric mapped array result has no element type".into());
+            };
+            if name != "std::Array" || elements.len() != 1 || scalar(&elements[0]).is_none() {
+                return Err("mapped array construction requires an inline numeric result".into());
+            }
+            let descriptor = self.desc(&elements[0]);
+            return Ok(format!(
+                "return fwp_p_array_map_list(l0, l1, {descriptor});"
+            ));
         }
         if matches!(sym, "ad.tape-owned" | "ad.push-owned") {
             let MT::Record(fields) = &params[0] else {

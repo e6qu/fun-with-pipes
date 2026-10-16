@@ -90,17 +90,20 @@ The current combined delivery covers:
   failures and deliberately broken cleanup on all six native platforms.
 - Retain repeated derivative timing/layout comparisons and allocation-site
   profiles. Production tape layout stays unchanged because timings are mixed.
+- Build numeric arrays directly from mapped results, avoiding temporary list
+  nodes while preserving callback order and known direct calls. Check failures,
+  aliases and actual ARM64/AMD64 instructions, and compare repeated timings.
 
-The combined process/terminal focused gate passes all six native hosts. Require all nine
-production jobs plus documentation again for the final delivery head. Focused
-results do not replace full acceptance.
+The process/terminal and numeric mapped-array focused gates each pass all six
+native hosts. The optimization removes 2,097,152 requests from the repeated
+512-derivative workload; retains and its peak memory do not change. Four-host
+comparisons and their independent repeat are recorded in the handoff, including
+slower cases. They compare fwp with itself, not with C or Rust.
 
-Four-host allocation profiling attributes 41.65% of managed requests in the
-repeated derivative workload to mapped list nodes. Following preparation builds
-numeric arrays directly from mapped results while preserving callback order;
-its semantic, cleanup and repeated timing comparisons are pending. Bundle it
-into this delivery only if that evidence supports adoption before the final gate.
-Remaining matrix wrappers, C/Rust gaps and the seven work areas above stay open.
+Require all nine production jobs plus documentation for the final combined
+commit before merging. Focused results do not replace full acceptance.
+Remaining derivative intermediates, matrix wrappers, C/Rust gaps and the seven
+work areas above stay open.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

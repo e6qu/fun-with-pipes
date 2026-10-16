@@ -11,8 +11,9 @@ single-line subject with empty body were verified. Duplicate post-merge producti
 
 Current delivery branch: `owned-process-delivery` in
 `/Users/zardoz/projects/fun-with-pipes`, based on accepted `853d6669`. It contains
-only changes after `81d113aa` from preparation `owned-process-utilities` at
-`ad53a46a`, including verified derivative reports/profiling through `cfdf4d79`.
+changes after `81d113aa` from preparation `owned-process-utilities` at
+`ad53a46a`, including verified derivative reports/profiling through `cfdf4d79`, plus numeric
+map-to-array preparation after that anchor.
 Preparation revisions are preserved under remote `roadmap/revision-process-*`
 tags. No old parent preparation should be replayed. The single open delivery is draft [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149).
 
@@ -35,9 +36,8 @@ the next substantial batch without another permission request. JIT is excluded.
 | 6 | In progress | Preserve repeated comparable measurements and regression criteria |
 | 7 | In progress | Accept maintained process composition and real terminal checks |
 
-Next: finish draft #149 by evaluating the numeric mapped-array candidate
-below. Include that optimization only after semantic/cleanup/profile evidence
-supports adoption, then run all nine production jobs and docs for the final head.
+Next: finish the numeric mapped-array timing investigation below, then run all
+nine production jobs and docs for draft #149's final combined head.
 Fix failures, merge only when all pass, and continue. A queued gate stops merging,
 not independent development.
 
@@ -85,35 +85,56 @@ maintained shell composition and real terminal restoration. They use the accepte
 #147 compiler plus current C, so they are supplemental, not changed-compiler
 acceptance. Full builds, full suites and timing runs remain on GitHub.
 
-## Numeric mapped-array candidate
+## Numeric mapped-array construction
 
-Worktree `/private/tmp/fwp-ad-allocation-sites`, branch `profile-ad-allocations`,
-is now anchored at `cfdf4d79`; only later changes belong to this candidate.
-The earlier profiler/report are already in this delivery. Current published
-candidate is `da56521c`. It constructs arrays directly from mapped inline numbers,
-retaining callback order, borrowed inputs and scratch cleanup. Boxed or managed
-results keep their existing path. Known callbacks keep direct calls, including
-captured values; unknown callbacks use the ordinary dynamic call path. No new
-surface syntax is added.
+The candidate source/tests from `0fff9c2e` are now transferred into this combined
+PR, including Windows binary-stdout repair in the older scalar-array test. The
+preparation worktree `/private/tmp/fwp-ad-allocation-sites`, branch
+`profile-ad-allocations`, has anchor `cfdf4d79`; earlier parents were already in
+this delivery. Do not replay them. Remote `roadmap/revision-mapped-*` tags preserve
+`d16592be`, `da56521c` and `0fff9c2e` behind the measurements.
 
-[Six-host tests 38836047263](https://github.com/e6qu/fun-with-pipes/actions/runs/38836047263)
-and [four-host comparison 38836050029](https://github.com/e6qu/fun-with-pipes/actions/runs/38836050029)
-are queued/running at that revision. Earlier missing Command-borrow and Clippy
-fixture errors are repaired; superseded `38834469846` and `38834524334` are
-confirmed canceled. Pre-direct-call tests `38835108890` continue for comparison.
-The standalone Rust harness compiles, raw dynamic/captured callback cases pass
-(0.38 s), and edited-C success/callback/final-allocation failures plus missing-free
-controls pass in tracing/ARC (1.19/1.22 s). Changed-compiler acceptance is pending.
+The transformation constructs arrays from mapped inline numbers without temporary
+list nodes. Callback order, borrowed inputs and scratch cleanup are preserved.
+Known callbacks keep direct calls, including captures; unknown functions use
+ordinary dynamic calls. Boxed/managed results keep their existing path.
+[Six-host tests 38836403883](https://github.com/e6qu/fun-with-pipes/actions/runs/38836403883)
+pass at `0fff9c2e`, including raw/optimized/native agreement, O1/O2 tracing/ARC,
+checked traps, aliases, allocation counts and deliberate cleanup omissions.
+Earlier fixture failures are repaired; superseded runs are canceled.
 
-The earlier [four-host comparison 38834969974](https://github.com/e6qu/fun-with-pipes/actions/runs/38834969974)
-at `d16592be` passes ARM Linux/macOS so far. Direct numeric requests fall from
-532,996 to 8,708; repeated derivative requests fall from 25,184,777 to 23,087,625.
-Direct ARC time ratios are 0.788/0.868 and derivative ARC ratios 0.966/0.950,
-respectively. Nested timings are mixed. Retain every host/sample when complete;
-this is fwp versus fwp, not C/Rust parity or a general speed claim. The latest
-revision must repeat timings because it now preserves known direct callbacks.
+Three four-host comparisons pass: generic callbacks in
+[38834969974](https://github.com/e6qu/fun-with-pipes/actions/runs/38834969974),
+preserved direct callbacks in
+[38836050029](https://github.com/e6qu/fun-with-pipes/actions/runs/38836050029),
+and their independent repeat in
+[38837662593](https://github.com/e6qu/fun-with-pipes/actions/runs/38837662593).
+[The report](measurements/mapped-arrays-2026-10-16.json) retains every sample,
+verified binary/source hashes and actual ARM64/AMD64 instructions. Direct numeric
+requests fall from 532,996 to 8,708; repeated derivative requests fall from
+25,184,777 to 23,087,625. Retains and derivative peak memory do not change. Known
+callbacks preserve vectorized doubling. These compare fwp with itself, not C/Rust.
 
-Do not silently adopt a slower or incorrect candidate. Inspect costs and preserve
-known direct callback calls when eliminating intermediates. If supported by
-focused evidence before the delivery's final gate, bundle it here to avoid an
-extra full CI cycle. Otherwise keep the preparation separate and continue fixes.
+The independent repeat's derivative ARC ratios enabled/disabled are Linux AMD64
+0.919, Linux ARM64 0.919, macOS ARM64 0.909 and macOS AMD64 0.895. Intel macOS
+tracing remains slower (1.019, versus 1.070 in the first run), and its tiny nested
+ARC case changes from 0.966 to 1.124. Investigate before final adoption: the new
+`mapped-array-repeat` suite reuses verified binaries from `38837662593`, records
+16 alternating child CPU/elapsed samples and separate normal/off collector
+profiles. It avoids another compiler build. Full acceptance has not started.
+
+Guarded local checks after transfer: formatting passes (1.26 s), inventory passes
+(1.12 s; the first invocation omitted its required arguments), docs pass (2.75 s).
+The script parses (0.18 s). Retention verifies all twelve host reports (0.38 s).
+Actual runner-emitted direct callback loops pass success, callback/final-allocation
+failures, collection and missing-free controls at O1/O2 in tracing/ARC (3.65 s).
+This small Mac probe supplements, rather than replaces, native CI.
+
+The accepted #148 Mac compiler is available for small local fixture checks at
+`/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp`. Package revision `93b1741a`
+and SHA-256 `9e79c06d7db07a45de341bd7769739a2eda6c58bbeeaff077cb77bbb1268fb43`
+are verified. No local full compiler build was run.
+
+After resolving the remaining timing concern, finalize the report and run all
+nine production jobs plus docs for the combined final head. Merge only after all
+pass, then continue measured derivative intermediates and ownership boundaries.

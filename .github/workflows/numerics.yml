@@ -5,14 +5,14 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat]
         default: numerical
       evidence_run:
-        description: Completed solver run to use for generated-code comparisons
+        description: Completed evidence run to use for generated-code comparisons
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes'
+    if: inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays'
     strategy:
       fail-fast: false
       matrix:
@@ -40,11 +40,14 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - if: inputs.suite != 'fields' && inputs.suite != 'processes'
+      - if: inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
       - name: Field movement and resource lifetime regressions
         if: inputs.suite == 'fields'
         run: cargo test --no-fail-fast --test clock_ownership --test directory_report --test working_directory --test arc_execution --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test borrowed_callbacks --test general_record_update_ownership
+      - name: Numeric mapped-array construction and neighboring ownership
+        if: inputs.suite == 'mapped-arrays'
+        run: cargo test --no-fail-fast --test mapped_array_construction --test numeric_array_fusion --test map_ownership --test array_element_ownership --test arc_execution --test ad_tape_scopes
       - name: Interpreter console state on Windows
         if: inputs.suite == 'processes' && runner.os == 'Windows'
         run: cargo test --lib sys::tty::tests::native_console -- --exact
@@ -381,8 +384,36 @@ jobs:
           path: |
             performance-evidence/
             target/bench.md
+  mapped_array_repeat:
+    if: inputs.suite == 'mapped-array-repeat'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      CC: clang
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download verified mapped-array binaries
+        run: |
+          test -n "$EVIDENCE_RUN"
+          gh run download "$EVIDENCE_RUN" --name "mapped-array-costs-${{ matrix.runner }}" --dir mapped-input
+      - name: Compare elapsed time, child CPU time and normal collection
+        run: python3 scripts/repeat-mapped-arrays.py --input mapped-input --output mapped-repeat
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mapped-array-repeat-${{ matrix.runner }}
+          path: mapped-repeat/
   ad_metadata:
-    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites'
+    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites' || inputs.suite == 'mapped-array-costs'
     strategy:
       fail-fast: false
       matrix:
@@ -398,11 +429,14 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bin fwp
+      - name: Compare numeric mapped-array costs
+        if: inputs.suite == 'mapped-array-costs'
+        run: python3 scripts/measure-mapped-arrays.py --output metadata-evidence
       - name: Attribute derivative allocations to native call sites
         if: inputs.suite == 'ad-sites'
         run: python3 scripts/measure-ad-allocation-sites.py --output metadata-evidence
       - name: Repeat paired metadata costs with sustained derivatives
-        if: inputs.suite != 'ad-sites'
+        if: inputs.suite != 'ad-sites' && inputs.suite != 'mapped-array-costs'
         run: python3 scripts/measure-ad-metadata.py --comparison "${{ inputs.suite == 'ad-layout' && 'interleaved' || 'separate' }}" --output metadata-evidence
       - uses: actions/upload-artifact@v7
         if: always()
