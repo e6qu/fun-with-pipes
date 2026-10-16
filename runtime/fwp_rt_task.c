@@ -1571,8 +1571,13 @@ static int fwp_split_addr(const char *addr, char *host, size_t hn, char *port, s
     return 1;
 }
 
-static struct addrinfo *fwp_resolve(const char *addr, int socktype, int passive, const char *kind,
+static struct addrinfo *fwp_resolve(V address, int socktype, int passive, const char *kind,
                                     const fwp_desc *err) {
+    const char *addr = STR(address)->d;
+    if (memchr(addr, 0, STR(address)->len)) {
+        fwp_io_error(kind, "socket address contains a NUL byte", err);
+        return NULL;
+    }
     if (fwp_sockets_init()) { fwp_os_error(kind, addr, err); return NULL; }
     char host[256], port[32], buf[512];
     if (!fwp_split_addr(addr, host, sizeof host, port, sizeof port)) {
@@ -1608,7 +1613,7 @@ static void fwp_fmt_addr(const struct sockaddr *sa, char *out, size_t n) {
 }
 
 static V fwp_p_tcp_listen(V addr, const fwp_desc *err) {
-    struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_STREAM, 1, "listen", err);
+    struct addrinfo *res = fwp_resolve(addr, SOCK_STREAM, 1, "listen", err);
     fwp_socket_t fd = FWP_INVALID_SOCKET;
     errno = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
@@ -1738,7 +1743,7 @@ static V fwp_p_tcp_connect(V addr, const fwp_desc *err) {
     fwp_connect_owner owner = {FWP_INVALID_SOCKET, 0};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_connect_finish, &owner);
-    struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_STREAM, 0, "connect", err);
+    struct addrinfo *res = fwp_resolve(addr, SOCK_STREAM, 0, "connect", err);
     owner.addresses = res;
     fwp_socket_t fd = FWP_INVALID_SOCKET;
     errno = 0;
@@ -1867,7 +1872,7 @@ static V fwp_p_sock_close(V c) {
 }
 
 static V fwp_p_udp_bind(V addr, const fwp_desc *err) {
-    struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_DGRAM, 1, "bind", err);
+    struct addrinfo *res = fwp_resolve(addr, SOCK_DGRAM, 1, "bind", err);
     fwp_socket_t fd = FWP_INVALID_SOCKET;
     errno = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
@@ -1895,7 +1900,7 @@ static V fwp_p_udp_bind(V addr, const fwp_desc *err) {
 }
 
 static V fwp_p_udp_send_to(V addr, V data, V s, const fwp_desc *err) {
-    struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_DGRAM, 0, "send", err);
+    struct addrinfo *res = fwp_resolve(addr, SOCK_DGRAM, 0, "send", err);
     fwp_cleanup address_cleanup;
     fwp_cleanup_push(&address_cleanup, fwp_addrinfo_release, &res);
     for (;;) {

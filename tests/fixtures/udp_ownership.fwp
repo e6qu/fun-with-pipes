@@ -57,5 +57,11 @@ main = [
     | task.await
     | echo,
     "127.0.0.1:0" | udp.bind | close-pending | echo,
+    "127.0.0.1:0\0ignored" | attempt udp.bind | result.is-ok | echo,
+    "127.0.0.1:0"
+    | udp.bind
+    | attempt (udp.send-to "127.0.0.1:9\0ignored" ("x" | string.to-bytes))
+    | result.is-ok
+    | echo,
     range 0 64 | each (const "127.0.0.1:0" | udp.bind | ignore),
 ] | ignore

@@ -39,7 +39,7 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
     );
     assert_eq!(
         raw.stdout,
-        b"rebound\nFalse\nholder released\n\nping\nNone\nNone\n(Some (), Some ())\n"
+        b"rebound\nFalse\nholder released\n\nping\nNone\nNone\n(Some (), Some ())\nFalse\nFalse\n"
     );
     let optimized = checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
