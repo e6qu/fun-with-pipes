@@ -48,7 +48,7 @@ static void inspect_owner(void){
  if(fwp_gc.ncollect<=before)exit(3);if(released)exit(1);
 }
 static __attribute__((noinline)) V protocol(void){
- V conn=fwp_sock_new(-1,1);SOCK(conn)->tls=watched_ssl;copy_active=1;
+ V conn=fwp_sock_new(-1,1);STREAM(conn)->tls=watched_ssl;copy_active=1;
  return fwp_p_tls_alpn(conn);
 }
 static int probe(int argc,char **argv){

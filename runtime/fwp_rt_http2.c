@@ -115,9 +115,9 @@ static void w_start(g_conn *c, g_stream *s) {
 /* the conn's socket and TLS session, which the HTTP/2 connection takes */
 static fwp_socket_t w_take(V conn, SSL **ssl) {
     fwp_socket_t fd = SOCK(conn)->fd;
-    *ssl = (SSL *)SOCK(conn)->tls;
+    *ssl = (SSL *)STREAM(conn)->tls;
     SOCK(conn)->fd = FWP_INVALID_SOCKET;
-    SOCK(conn)->tls = 0;
+    STREAM(conn)->tls = 0;
     return fd;
 }
 

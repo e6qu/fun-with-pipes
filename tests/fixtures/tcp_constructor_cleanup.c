@@ -1,7 +1,10 @@
 /* Real TCP descriptors; fail only allocation of their language-level handle. */
 static fwp_socket_t tcp_live[16];
 static size_t tcp_live_count;
-static int tcp_fail_header;
+static int tcp_fail_header, tcp_allocations_left;
+static void tcp_allocation(void) {
+    if(tcp_allocations_left > 0 && !--tcp_allocations_left) fwp_trap("injected TCP result allocation failure");
+}
 static jmp_buf tcp_jump;
 static int tcp_recover(void) { return 1; }
 static void tcp_track(fwp_socket_t fd) {
@@ -23,7 +26,7 @@ static int tcp_close(fwp_socket_t fd) {
 }
 static void *tcp_header_alloc(size_t bytes) {
     if(tcp_fail_header) fwp_trap("injected TCP header allocation failure");
-    return fwp_mem_alloc(bytes);
+    return fwp_alloc_leaf(bytes);
 }
 static void tcp_expect(size_t handles,intptr_t budget) {
     if(tcp_live_count!=handles||fwp_cleanups||fwp_gc.budget!=budget) {
@@ -45,6 +48,10 @@ int main(void) {
         tcp_expect(0,baseline);
     }
     V listener=fwp_p_tcp_listen(address,TCP_ERROR);
+    for(int i=0;i<300;i++) fwp_sock_dup(listener);
+    if(SOCK(listener)->refs!=301) return 247;
+    for(int i=0;i<300;i++) fwp_sock_drop(listener);
+    V duration=fwp_rc_fresh(fwp_duration(1000000000LL));
     struct sockaddr_storage bound; socklen_t length=sizeof bound;
     if(getsockname(SOCK(listener)->fd,(struct sockaddr *)&bound,&length)) return 246;
     intptr_t listening=fwp_gc.budget;
@@ -57,15 +64,34 @@ int main(void) {
         tcp_fail_header=0; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
         tcp_expect(1,listening); fwp_socket_close(client);
     }
+    /* The optional wrapper may fail after accept has already acquired a handle. */
+    for(int i=0;i<8;i++) {
+        fwp_socket_t peer=fwp_socket_open(AF_INET,SOCK_STREAM,0);
+        if(peer==FWP_INVALID_SOCKET||fwp_socket_connect(peer,(struct sockaddr *)&bound,length)) return 246;
+        fwp_trap_recover=tcp_recover; fwp_trap_jb=&tcp_jump;
+        fwp_trap_cleanup=fwp_cleanups; tcp_allocations_left=2;
+        if(!setjmp(tcp_jump)) { (void)fwp_p_tcp_accept_for(duration,listener,TCP_ERROR); return 247; }
+        tcp_allocations_left=0; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
+        tcp_expect(1,listening); fwp_socket_close(peer);
+    }
     /* Successful construction still transfers the descriptor to the handle. */
     fwp_socket_t client=fwp_socket_open(AF_INET,SOCK_STREAM,0);
     if(client==FWP_INVALID_SOCKET||fwp_socket_connect(client,(struct sockaddr *)&bound,length)) return 246;
     V accepted=fwp_p_tcp_accept(listener,TCP_ERROR);
     if(tcp_live_count!=2||fwp_cleanups||SOCK(accepted)->fd==FWP_INVALID_SOCKET) return 247;
-    fwp_sock_final(SOCK(accepted)); fwp_gc_forget_finalizer(SOCK(accepted)); fwp_mem_free(SOCK(accepted));
+    intptr_t connected=fwp_gc.budget;
+    for(int failure=1;failure<=2;failure++) {
+        if(fwp_socket_send(client,"a\0b",3,0)!=3) return 246;
+        fwp_trap_recover=tcp_recover; fwp_trap_jb=&tcp_jump;
+        fwp_trap_cleanup=fwp_cleanups; tcp_allocations_left=failure;
+        if(!setjmp(tcp_jump)) { (void)fwp_p_tcp_read_for(duration,64,accepted,TCP_ERROR); return 247; }
+        tcp_allocations_left=0; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
+        tcp_expect(2,connected);
+    }
+    fwp_sock_drop(accepted);
     fwp_socket_close(client);
-    fwp_sock_final(SOCK(listener)); fwp_gc_forget_finalizer(SOCK(listener)); fwp_mem_free(SOCK(listener));
-    tcp_expect(0,baseline); fwp_rc_free_obj(address);
-    puts("TCP: 32 failed listener constructions, 32 failed accepted connections; descriptors and temporary storage released");
+    fwp_sock_drop(listener);
+    fwp_rc_free_obj(duration); tcp_expect(0,baseline); fwp_rc_free_obj(address);
+    puts("TCP: 32 failed listener constructions, 32 failed accepted connections, optional-accept/read failures and 301 aliases; descriptors and temporary storage released");
     return 0;
 }

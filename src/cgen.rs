@@ -535,8 +535,9 @@ impl Gen<'_> {
     fn value_dup(&self, ty: &MT) -> &'static str {
         if matches!(ty, MT::Con(n, _) if n == "std::File") {
             "fwp_file_dup"
-        } else if matches!(ty, MT::Con(n, _) if n == "std::UdpSocket") {
-            "fwp_udp_dup"
+        } else if matches!(ty, MT::Con(n, _) if matches!(n.as_str(), "std::UdpSocket" | "std::Conn" | "std::Listener"))
+        {
+            "fwp_sock_dup"
         } else {
             "fwp_rc_dup"
         }
@@ -1652,8 +1653,9 @@ impl<'p> Gen<'p> {
         if matches!(mt, MT::Con(n, _) if n == "std::File") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_file_drop(v); }}\n");
         }
-        if matches!(mt, MT::Con(n, _) if n == "std::UdpSocket") {
-            return format!("static void fwp_drop{id}(V v) {{ fwp_udp_drop(v); }}\n");
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::UdpSocket" | "std::Conn" | "std::Listener"))
+        {
+            return format!("static void fwp_drop{id}(V v) {{ fwp_sock_drop(v); }}\n");
         }
         if matches!(mt, MT::Con(n, _) if n == "std::Channel") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_channel_drop(v); }}\n");

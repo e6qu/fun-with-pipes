@@ -162,6 +162,28 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "tcp.listen" | "tcp.connect" | "tcp.accept" => {
+            (&[B], ResultOwnership::OwnedResource, None, &[])
+        }
+        "tcp.accept-for" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
+        "tcp.local-addr" | "tcp.peer-addr" | "tls.alpn" => {
+            (&[B], ResultOwnership::FreshLeaf, None, &[])
+        }
+        "tcp.read" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "tcp.read-for" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "tcp.write" => (&[B, B], R, None, &[]),
+        "tcp.write-for" => (&[B, B, B], R, None, &[]),
+        "tcp.stop" | "tcp.close" | "tls.handshake" | "tls.secure" | "tls.available" => {
+            (&[B], R, None, &[])
+        }
+        "tls._connect" => (
+            &[B, B, B, B, B, B, B],
+            ResultOwnership::OwnedResource,
+            None,
+            &[],
+        ),
+        "tls._listen" => (&[B, B, B, B, B], ResultOwnership::OwnedResource, None, &[]),
+        "tls.peer-subject" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "udp.bind" => (&[B], ResultOwnership::OwnedResource, None, &[]),
         "udp.local-addr" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
         "udp.send-to" => (&[B, B, B], R, None, &[]),

@@ -300,11 +300,11 @@ all copies, and releasing its final owner also closes it. A closure, record or
 suspended task that holds the socket must keep it alive until its own original
 scope ends. Returning only an address string does not keep the socket alive.
 
-The current UDP preparation preserves those original scopes before optimization,
+The UDP implementation preserves those original scopes before optimization,
 uses a separate 64-bit logical owner count for descriptors, and owns both fields of a
-received `(Bytes, String)` pair while constructing it. UDP stores its count in the
-slot that TCP uses for a TLS pointer; the socket-kind tag selects the member, so
-counting UDP does not enlarge TCP headers. Failure releases completed
+received `(Bytes, String)` pair while constructing it. The socket count is aligned
+in the common header. The following TCP/TLS preparation keeps UDP headers the same
+size while giving stream handles a separate TLS field when needed. Failure releases completed
 fields and receive scratch storage. Closing a Linux descriptor wakes its waiting
 tasks and releases its polling records; synchronization after wake does not
 recreate a closed descriptor's record. Disabling physical frees still closes the
@@ -321,6 +321,22 @@ optimizations; there is no zero-cost or throughput claim. Tracing programs retai
 weak finalizers for unproved sharing, while checked ARC must prove ownership and
 exclude tracing from its binary. TCP/TLS ownership, arbitrary retained callbacks
 and mutable cycles remain separate work.
+
+### TCP and TLS socket preparation
+
+The next preparation extends logical socket owners to TCP connections and
+listeners. Copies share a handle; explicit close affects every copy, while the
+last owner closes the socket automatically. Function and task captures preserve
+the original lifetime. Returned optional connections, bytes and certificate text
+keep their partially built values alive and release them on allocation failure.
+
+The common socket header stores a descriptor, a kind and a 64-bit owner count.
+UDP and programs without TLS keep the previous header size. In a TLS-enabled
+program, a stream handle adds a pointer to the TLS session or listener context;
+that pointer follows the common header in the same allocation. This costs one
+additional pointer for those stream handles, without a separate allocation for
+the count. Native layout, cleanup and real TLS behavior still need runner evidence.
+This is preparation, not accepted TCP/TLS support without tracing.
 
 ## Checked ARC delivery
 

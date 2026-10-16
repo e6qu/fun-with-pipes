@@ -84,8 +84,9 @@ retry or bypass that restriction. About 92 GiB disk remains free.
 The accepted reference compiler is
 `/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp`.
 Guarded formatting, generated library documentation, interpreter examples and
-primitive inventory checks pass. The inventory has 306 contracted declarations
-and 37 distinct symbols still requiring review. The macOS schedule assigns all
+primitive inventory checks pass. The accepted delivery inventory has 306 contracted declarations and 37 review
+symbols. The new TCP/TLS preparation inventory passes with 335 contracted
+declarations and 19 review symbols; these counts do not establish tested support. The macOS schedule assigns all
 229 integration targets. Evidence retention with
 `python3 scripts/local-guard.py python3 /private/tmp/fwp-retain-udp-evidence.py`
 passes in 0.49s. Preparation documentation checks pass in 2.93s; the contributor
@@ -135,3 +136,30 @@ work into the next substantial delivery after #153; do not open a competing PR.
 
 Focused six-native socket validation and actual WASI shared-runtime regression
 checks must pass before integration. Local native builds remain prohibited.
+
+## Next ownership increment
+
+Extend the same logical socket ownership to TCP connections and listeners, while
+preserving original function/task lifetimes, explicit close through aliases and
+TLS session transfer. A shared socket header holds the descriptor, kind and
+64-bit owner count. Only TLS-enabled stream handles need an additional session
+pointer; UDP and plain-TCP programs keep their current header size. This requires
+no extra allocation for a counter and no new language syntax. The extra pointer
+in TLS-enabled stream handles must be measured and documented.
+
+Protect optional accepted connections, read results and certificate-subject
+results during construction. Check ordinary and reference-counted execution,
+real TCP/TLS traffic, allocation failures, cancellation, library unload and
+existing HTTP/2 transfers. Keep the earlier constructor run as evidence for its
+exact source. No broader TCP support is verified until the extended checks pass.
+
+The original TCP constructor revision `985fc772` runs six-host sockets
+`38916070418` and actual WASI `38916075039`. The broader socket ownership increment
+is unverified. Its raw accepted-interpreter TCP fixture passes in 0.25s with
+rebind, holder lifetime, transfer, timeout and concurrent-close output. Guarded
+primitive inventory passes in 1.32s. Fresh native TCP/TLS and WASI checks are next.
+
+The TCP suite runs real socket construction/lifetimes, UDP regressions, tasks and
+mutual TLS (including ARC) on all six hosts. Existing POSIX-specific TLS teardown
+and transfer probes run on Linux/macOS. Their results must not be described as
+Windows teardown evidence; Windows traffic and layout checks are separate.

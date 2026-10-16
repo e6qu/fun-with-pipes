@@ -85,9 +85,9 @@ static int probe(int argc,char **argv){
   r=SSL_do_handshake(server);if(r!=1){int e=SSL_get_error(server,r);if(e!=SSL_ERROR_WANT_READ&&e!=SSL_ERROR_WANT_WRITE)return 35;}
  }
  if(!SSL_is_init_finished(client)||!SSL_is_init_finished(server))return 36;
- V conn=fwp_sock_new(-1,1);SOCK(conn)->tls=client;
+ V conn=fwp_sock_new(-1,1);STREAM(conn)->tls=client;
  if(fwp_p_tls_peer_subject(fwp_sock_new(-1,1))!=FWP_NONE)return 37;
- V peer=fwp_sock_new(-1,1);SOCK(peer)->tls=server;if(fwp_p_tls_peer_subject(peer)!=FWP_NONE)return 42;SOCK(peer)->tls=0;
+ V peer=fwp_sock_new(-1,1);STREAM(peer)->tls=server;if(fwp_p_tls_peer_subject(peer)!=FWP_NONE)return 42;STREAM(peer)->tls=0;
  for(stage=0;stage<=5;stage++){
   cert_gets=cert_frees=bio_gets=bio_frees=buffer_frees=0;buffer=0;armed=1;
   if(stage==5){fwp_trap_recover=recover;fwp_trap_jb=&failure;fwp_trap_cleanup=fwp_cleanups;
@@ -104,7 +104,7 @@ static int probe(int argc,char **argv){
   armed=0;
  }
  stage=0;char *retry=fwp_tls_peer_subject(client);if(!retry||strcmp(retry,"CN=localhost,O=fwp"))return 43;free(retry);
- SOCK(conn)->tls=0;SSL_free(client);SSL_free(server);return 0;
+ STREAM(conn)->tls=0;SSL_free(client);SSL_free(server);return 0;
 }
 int main(int argc,char **argv){int status=probe(argc,argv);if(status)_Exit(status);return 0;}
 "#;

@@ -10,8 +10,8 @@ void setup(uintptr_t *descriptor) {
     *descriptor=(uintptr_t)SOCK(handle)->fd;
     /* This owner intentionally survives until library unload. */
     V released=fwp_p_udp_bind(address,NULL);
-    fwp_udp_dup(released);
+    fwp_sock_dup(released);
     fwp_p_sock_close(released);
-    fwp_udp_drop(released); fwp_udp_drop(released);
+    fwp_sock_drop(released); fwp_sock_drop(released);
     fwp_rc_free_obj(address);
 }

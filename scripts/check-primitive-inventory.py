@@ -87,6 +87,20 @@ leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.he
 assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
 # These reviewed contract changes are checked against the frozen baseline.
 bundle_contracts = {}
+for symbol in ['tcp.listen', 'tcp.connect', 'tcp.accept']:
+    bundle_contracts[symbol] = (1, 'OwnedResource', [])
+bundle_contracts['tcp.accept-for'] = (2, 'OwnedTree', [])
+for symbol in ['tcp.local-addr', 'tcp.peer-addr', 'tls.alpn']:
+    bundle_contracts[symbol] = (1, 'FreshLeaf', [])
+bundle_contracts['tcp.read'] = (2, 'FreshLeaf', [])
+bundle_contracts['tcp.read-for'] = (3, 'OwnedTree', [])
+bundle_contracts['tcp.write'] = (2, 'Shared', [])
+bundle_contracts['tcp.write-for'] = (3, 'Shared', [])
+for symbol in ['tcp.stop', 'tcp.close', 'tls.handshake', 'tls.secure', 'tls.available']:
+    bundle_contracts[symbol] = (1, 'Shared', [])
+bundle_contracts['tls._connect'] = (7, 'OwnedResource', [])
+bundle_contracts['tls._listen'] = (5, 'OwnedResource', [])
+bundle_contracts['tls.peer-subject'] = (1, 'OwnedTree', [])
 bundle_contracts['udp.bind'] = (1, 'OwnedResource', [])
 bundle_contracts['udp.local-addr'] = (1, 'FreshLeaf', [])
 bundle_contracts['udp.send-to'] = (3, 'Shared', [])

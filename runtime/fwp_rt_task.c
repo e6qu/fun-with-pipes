@@ -1417,9 +1417,13 @@ static V fwp_p_channel_close(V ch) {
 
 /* kind: 0 listener, 1 conn, 2 udp; tls: a listener's TLS context, a
  * connection's TLS session (fwp_rt_tls.c), or 0 */
-/* UDP owns a reference count where TCP/TLS stores its session pointer. The
- * existing kind tag selects the member; counting UDP must not enlarge TCP. */
-typedef struct { fwp_socket_t fd; int kind; union { void *tls; uint64_t refs; }; } fwp_sock;
+/* Every socket has logical value owners. TLS stream state extends this header;
+ * UDP and programs without TLS do not pay for an unused session pointer. */
+typedef struct { fwp_socket_t fd; int kind; uint64_t refs; } fwp_sock;
+#ifdef FWP_TLS
+typedef struct { fwp_sock socket; void *tls; } fwp_stream;
+#define STREAM(v) ((fwp_stream *)(uintptr_t)(v))
+#endif
 
 #ifdef FWP_TLS
 /* TLS sessions (fwp_rt_tls.c, embedded in programs that use TLS): like
@@ -1494,42 +1498,45 @@ static int fwp_wait_fd(fwp_socket_t fd, int write, int64_t at) {
 static void fwp_sock_final(void *p) {
     fwp_sock *s = (fwp_sock *)p;
 #ifdef FWP_TLS
-    if (s->kind != 2 && s->tls) {
-        if (s->kind == 0) fwp_tls_server_drop(s->tls);
-        else fwp_tls_dispose(s->tls);
-        s->tls = 0;
+    if (s->kind != 2 && ((fwp_stream *)s)->tls) {
+        if (s->kind == 0) fwp_tls_server_drop(((fwp_stream *)s)->tls);
+        else fwp_tls_dispose(((fwp_stream *)s)->tls);
+        ((fwp_stream *)s)->tls = 0;
     }
 #endif
     if (s->fd != FWP_INVALID_SOCKET) { fwp_fd_closing(s->fd); fwp_socket_close(s->fd); s->fd = FWP_INVALID_SOCKET; }
 }
 
 static V fwp_sock_new(fwp_socket_t fd, int kind) {
-    fwp_sock *s = kind == 2 ? (fwp_sock *)fwp_alloc_leaf(sizeof(fwp_sock))
-                            : (fwp_sock *)fwp_mem_alloc(sizeof(fwp_sock));
+    size_t bytes = sizeof(fwp_sock);
+#ifdef FWP_TLS
+    if (kind != 2) bytes = sizeof(fwp_stream);
+#endif
+    fwp_sock *s = (fwp_sock *)fwp_alloc_leaf(bytes);
     s->fd = fd;
     s->kind = kind;
-    if (kind == 2) s->refs = 1;
-    else s->tls = NULL;
-#if defined(FWP_LIBRARY)
-    fwp_gc_finalizer(s, fwp_sock_final);
-#elif !defined(FWP_ARC_ONLY)
-    if (kind == 2) fwp_gc_finalizer(s, fwp_sock_final);
+    s->refs = 1;
+#ifdef FWP_TLS
+    if (kind != 2) ((fwp_stream *)s)->tls = NULL;
 #endif
-    return kind == 2 ? fwp_rc_fresh(PTR(s)) : PTR(s);
+#if defined(FWP_LIBRARY) || !defined(FWP_ARC_ONLY)
+    fwp_gc_finalizer(s, fwp_sock_final);
+#endif
+    return fwp_rc_fresh(PTR(s));
 }
 
 #define SOCK(v) ((fwp_sock *)(uintptr_t)(v))
 
 /* Value owners are independent of conservative allocator sharing. Explicit
  * close changes the shared descriptor; the final owner also closes it. */
-static void fwp_udp_dup(V value) {
+static void fwp_sock_dup(V value) {
     if (!value) return;
     fwp_sock *s = SOCK(value);
-    if (!s->refs) fwp_trap("internal: duplicate discarded UDP socket");
+    if (!s->refs) fwp_trap("internal: duplicate discarded socket");
     if (s->refs == UINT64_MAX) fwp_trap("reference count overflow");
     s->refs++;
 }
-static void fwp_udp_drop(V value) {
+static void fwp_sock_drop(V value) {
     if (!value) return;
     fwp_sock *s = SOCK(value);
     if (!s->refs || --s->refs) return;
@@ -1708,11 +1715,10 @@ static V fwp_accept(V l, int64_t at, const fwp_desc *err) {
 #ifdef FWP_TLS
             /* the handshake happens on the first read or write, in the
              * task that serves the connection */
-            if (SOCK(l)->tls) {
-                SOCK(c)->tls = fwp_tls_accepted(SOCK(l)->tls, fd);
-                if (!SOCK(c)->tls) {
-                    SOCK(c)->fd = FWP_INVALID_SOCKET;
-                    fwp_socket_close(fd);
+            if (STREAM(l)->tls) {
+                STREAM(c)->tls = fwp_tls_accepted(STREAM(l)->tls, fd);
+                if (!STREAM(c)->tls) {
+                    fwp_sock_drop(c);
                     return fwp_io_error("tls", fwp_tls_err, err);
                 }
             }
@@ -1731,7 +1737,13 @@ static V fwp_p_tcp_accept(V l, const fwp_desc *err) { return fwp_accept(l, 0, er
 
 static V fwp_p_tcp_accept_for(V d, V l, const fwp_desc *err) {
     V c = fwp_accept(l, fwp_after(d), err);
-    return c ? fwp_some(c) : FWP_NONE;
+    if (!c) return FWP_NONE;
+    fwp_value_owner owner = {c, fwp_sock_drop};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
+    V result = fwp_rc_fresh(fwp_some(c));
+    fwp_cleanup_pop(&cleanup);
+    return result;
 }
 
 static V fwp_p_tcp_stop(V l) {
@@ -1742,7 +1754,7 @@ static V fwp_p_tcp_stop(V l) {
         fwp_socket_close(fd);
     }
 #ifdef FWP_TLS
-    if (SOCK(l)->tls) { fwp_tls_server_drop(SOCK(l)->tls); SOCK(l)->tls = 0; }
+    if (STREAM(l)->tls) { fwp_tls_server_drop(STREAM(l)->tls); STREAM(l)->tls = 0; }
 #endif
     return FWP_UNIT;
 }
@@ -1814,7 +1826,7 @@ static V fwp_tcp_read(V nv, V c, int64_t at, const fwp_desc *err) {
         int ww = 0;
         ssize_t k;
 #ifdef FWP_TLS
-        if (SOCK(c)->tls) k = fwp_tls_recv(SOCK(c)->tls, buf, (size_t)n, &ww);
+        if (STREAM(c)->tls) k = fwp_tls_recv(STREAM(c)->tls, buf, (size_t)n, &ww);
         else
 #endif
             k = fwp_socket_recv(fd, buf, (size_t)n, 0);
@@ -1839,7 +1851,13 @@ static V fwp_p_tcp_read(V n, V c, const fwp_desc *err) { return fwp_tcp_read(n, 
 
 static V fwp_p_tcp_read_for(V d, V n, V c, const fwp_desc *err) {
     V r = fwp_tcp_read(n, c, fwp_after(d), err);
-    return r ? fwp_some(r) : FWP_NONE;
+    if (!r) return FWP_NONE;
+    fwp_value_owner owner = {fwp_rc_fresh(r), fwp_rc_free_obj};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
+    V result = fwp_rc_fresh(fwp_some(r));
+    fwp_cleanup_pop(&cleanup);
+    return result;
 }
 
 /* `at` = 0: no timeout; a "timeout" error when it passes first */
@@ -1851,7 +1869,7 @@ static V fwp_tcp_write(V data, V c, int64_t at, const fwp_desc *err) {
         int ww = 1;
         ssize_t k;
 #ifdef FWP_TLS
-        if (SOCK(c)->tls) k = fwp_tls_send(SOCK(c)->tls, STR(data)->d + off, len - off, &ww);
+        if (STREAM(c)->tls) k = fwp_tls_send(STREAM(c)->tls, STR(data)->d + off, len - off, &ww);
         else
 #endif
             k = fwp_socket_send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);
@@ -1881,7 +1899,7 @@ static V fwp_p_sock_close(V c) {
         SOCK(c)->fd = FWP_INVALID_SOCKET;
         fwp_fd_closing(fd);
 #ifdef FWP_TLS
-        if (SOCK(c)->kind == 1 && SOCK(c)->tls) { fwp_tls_free(SOCK(c)->tls); SOCK(c)->tls = 0; }
+        if (SOCK(c)->kind == 1 && STREAM(c)->tls) { fwp_tls_free(STREAM(c)->tls); STREAM(c)->tls = 0; }
 #endif
         if (SOCK(c)->kind == 1) shutdown(fd, SHUT_RDWR);
         fwp_socket_close(fd);

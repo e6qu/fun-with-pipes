@@ -63,11 +63,11 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                     ));
                 }
                 "std::Bool" | "std::String" | "std::Bytes" | "std::File" | "std::UdpSocket"
-                | "std::I8" | "std::I16" | "std::I32" | "std::I64" | "std::I128" | "std::ISize"
-                | "std::U8" | "std::U16" | "std::U32" | "std::U64" | "std::U128" | "std::USize"
-                | "std::F16" | "std::BF16" | "std::F32" | "std::F64" | "std::F128"
-                | "std::TInt" | "std::Trit" | "std::Array" | "std::Map" | "std::Set"
-                | "std::Task" => return Ok(()),
+                | "std::Conn" | "std::Listener" | "std::I8" | "std::I16" | "std::I32"
+                | "std::I64" | "std::I128" | "std::ISize" | "std::U8" | "std::U16" | "std::U32"
+                | "std::U64" | "std::U128" | "std::USize" | "std::F16" | "std::BF16"
+                | "std::F32" | "std::F64" | "std::F128" | "std::TInt" | "std::Trit"
+                | "std::Array" | "std::Map" | "std::Set" | "std::Task" => return Ok(()),
                 _ => {}
             }
             match prog.shapes.get(ty) {

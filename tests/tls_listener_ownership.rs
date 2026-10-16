@@ -85,12 +85,12 @@ static int probe(int argc,char **argv){
   SSL_CTX *ctx=fwp_tls_server_ctx(argv[1],argv[2],wire,3,"");if(!ctx)return 31;
   watched_ctx=ctx;watched_owner=last_malloc;
   int listener[2];if(socketpair(AF_UNIX,SOCK_STREAM,0,listener))return 32;
-  V l=fwp_sock_new(listener[0],0);SOCK(l)->tls=ctx;
+  V l=fwp_sock_new(listener[0],0);STREAM(l)->tls=ctx;
   V conns[3]={0};SSL *transferred=0;int peers[3]={0};
   for(int i=0;i<sessions;i++){
    int pair[2];if(socketpair(AF_UNIX,SOCK_STREAM,0,pair))return 33;
    conns[i]=fwp_sock_new(pair[0],1);peers[i]=pair[1];
-   SOCK(conns[i])->tls=fwp_tls_accepted(ctx,pair[0]);if(!SOCK(conns[i])->tls)return 34;
+   STREAM(conns[i])->tls=fwp_tls_accepted(ctx,pair[0]);if(!STREAM(conns[i])->tls)return 34;
   }
   int transferred_fd=-1;if(sessions==3)transferred_fd=w_take(conns[2],&transferred);
   fwp_p_tcp_stop(l);fwp_p_tcp_stop(l);close(listener[1]);
@@ -98,7 +98,7 @@ static int probe(int argc,char **argv){
   if(!alive())return 2;
   // The first handshake selects ALPN after the listener owner is gone.
   for(int i=0;i<sessions;i++){
-   SSL *ssl=i==2&&transferred?transferred:(SSL *)SOCK(conns[i])->tls;
+   SSL *ssl=i==2&&transferred?transferred:(SSL *)STREAM(conns[i])->tls;
    if(!handshake(ssl))return 3;
    if(i==2&&transferred){fwp_tls_free(transferred);close(transferred_fd);}
    else {fwp_p_sock_close(conns[i]);fwp_p_sock_close(conns[i]);}
@@ -156,7 +156,7 @@ int main(int argc,char **argv){int status=probe(argc,argv);if(status)_Exit(statu
     let exe = dir.join("probe");
     let controls = [
         (
-            "fwp_tls_server_drop(SOCK(l)->tls);",
+            "fwp_tls_server_drop(STREAM(l)->tls);",
             "/* missing listener release */",
             1,
         ),

@@ -374,7 +374,22 @@ fn mutual_tls() {
     let d = scratch("mutual");
     let file = root().join("tests/tls/mutual.fwp");
     let expected = root().join("tests/tls/mutual.out");
-    for (i, mut cmd) in both_ways(&file, &d, "mutual").into_iter().enumerate() {
+    let mut commands = both_ways(&file, &d, "mutual");
+    if have_cc() {
+        let binary = d.join("mutual-arc");
+        build(
+            &[
+                file.to_str().unwrap(),
+                "--gc",
+                "arc",
+                "-o",
+                binary.to_str().unwrap(),
+            ],
+            &root(),
+        );
+        commands.push(Command::new(binary));
+    }
+    for (i, mut cmd) in commands.into_iter().enumerate() {
         cmd.current_dir(certs);
         let o = run(cmd, 120);
         // TLS 1.3 clients can finish their handshake before receiving the

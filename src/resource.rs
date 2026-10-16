@@ -46,7 +46,12 @@ pub(crate) fn contains_resource(shapes: &Shapes, ty: &MT) -> bool {
     contains_where(
         shapes,
         ty,
-        |name| matches!(name, "std::File" | "std::UdpSocket"),
+        |name| {
+            matches!(
+                name,
+                "std::File" | "std::UdpSocket" | "std::Conn" | "std::Listener"
+            )
+        },
         false,
     )
 }
@@ -55,7 +60,12 @@ pub(crate) fn may_hold_resource(shapes: &Shapes, ty: &MT) -> bool {
     contains_where(
         shapes,
         ty,
-        |name| matches!(name, "std::File" | "std::UdpSocket"),
+        |name| {
+            matches!(
+                name,
+                "std::File" | "std::UdpSocket" | "std::Conn" | "std::Listener"
+            )
+        },
         true,
     )
 }
@@ -64,10 +74,14 @@ pub(crate) fn may_hold_resource(shapes: &Shapes, ty: &MT) -> bool {
 /// these handles need to preserve opaque closure holders as resource owners.
 pub(crate) fn has_socket_values(funcs: &[Func], shapes: &Shapes) -> bool {
     funcs.iter().any(|function| {
-        function
-            .locals
-            .iter()
-            .any(|ty| contains_where(shapes, ty, |name| name == "std::UdpSocket", false))
+        function.locals.iter().any(|ty| {
+            contains_where(
+                shapes,
+                ty,
+                |name| matches!(name, "std::UdpSocket" | "std::Conn" | "std::Listener"),
+                false,
+            )
+        })
     })
 }
 

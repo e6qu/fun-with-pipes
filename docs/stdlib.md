@@ -1116,6 +1116,10 @@ silently shortened at that byte.
 Listener = builtin
 Conn = builtin
 UdpSocket = builtin
+
+# Listen for connections. Copies share the same listener. Explicit tcp.stop
+# affects every copy; releasing the last owner also closes it. A function or
+# task that captures a listener keeps it alive for its original scope.
 tcp.listen : String -> Listener ! {Network, Error[IoError]}
 tcp.local-addr : Listener -> String ! {Network}
 tcp.accept : Listener -> Conn ! {Async, Network, Error[IoError]}
@@ -1123,6 +1127,9 @@ tcp.accept-for : Duration -> Listener -> Option[Conn] ! {Async, Network, Error[I
 
 # stop listening
 tcp.stop : Listener -> () ! {Network}
+
+# Connect to a remote listener. Connection copies share one byte stream;
+# tcp.close closes it through every copy, and the last owner also closes it.
 tcp.connect : String -> Conn ! {Async, Network, Error[IoError]}
 
 # read up to n bytes; empty at end of stream

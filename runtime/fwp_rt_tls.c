@@ -487,7 +487,7 @@ static void fwp_host_of(const char *addr, char *out, size_t n) {
 
 /* ------------------------------------------------------------ primitives */
 
-static void fwp_tls_connect_drop(void *p) { fwp_p_sock_close(*(V *)p); }
+static void fwp_tls_connect_drop(void *p) { fwp_p_sock_close(*(V *)p); fwp_sock_drop(*(V *)p); }
 
 /* CA file, insecure, server name ("" for the host), protocols, client
  * certificate and key ("" for none), address */
@@ -502,14 +502,14 @@ static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V cert, V key, V 
     unsigned char *alpn = fwp_alpn_wire(protos, &alpn_n);
     if (!alpn) {
         fwp_cleanup_pop(&cleanup);
-        fwp_p_sock_close(c);
+        fwp_p_sock_close(c); fwp_sock_drop(c);
         return fwp_io_error("tls", fwp_tls_err, err);
     }
     SSL *ssl = fwp_tls_client_new(SOCK(c)->fd, STR(ca)->d, insecure == FWP_FALSE, host, alpn, alpn_n, STR(cert)->d,
                                   STR(key)->d);
     free(alpn);
     if (ssl) {
-        SOCK(c)->tls = ssl;
+        STREAM(c)->tls = ssl;
         if (fwp_tls_finish(ssl, SOCK(c)->fd, 0)) {
             fwp_cleanup_pop(&cleanup);
             return c;
@@ -518,7 +518,7 @@ static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V cert, V key, V 
     char msg[1024];
     snprintf(msg, sizeof msg, "%s: %s", STR(addr)->d, fwp_tls_err);
     fwp_cleanup_pop(&cleanup);
-    fwp_p_sock_close(c);
+    fwp_p_sock_close(c); fwp_sock_drop(c);
     return fwp_io_error("tls", msg, err);
 }
 
@@ -535,40 +535,44 @@ static V fwp_p_tls_listen(V cert, V key, V protos, V client_ca, V addr, const fw
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tls_server_drop, ctx);
     V l = fwp_p_tcp_listen(addr, err);
-    SOCK(l)->tls = ctx;
+    STREAM(l)->tls = ctx;
     fwp_cleanup_pop(&cleanup);
     return l;
 }
 
 static V fwp_p_tls_handshake(V c, const fwp_desc *err) {
     if (SOCK(c)->fd == FWP_INVALID_SOCKET) return fwp_closed_error("connection", err);
-    if (!SOCK(c)->tls || SOCK(c)->kind != 1 || SSL_is_init_finished((SSL *)SOCK(c)->tls)) return FWP_UNIT;
-    if (!fwp_tls_finish((SSL *)SOCK(c)->tls, SOCK(c)->fd, 0)) return fwp_io_error("tls", fwp_tls_err, err);
+    if (!STREAM(c)->tls || SOCK(c)->kind != 1 || SSL_is_init_finished((SSL *)STREAM(c)->tls)) return FWP_UNIT;
+    if (!fwp_tls_finish((SSL *)STREAM(c)->tls, SOCK(c)->fd, 0)) return fwp_io_error("tls", fwp_tls_err, err);
     return FWP_UNIT;
 }
 
 static V fwp_p_tls_alpn(V c) {
     const unsigned char *p = 0;
     unsigned n = 0;
-    if (SOCK(c)->tls && SOCK(c)->kind == 1) SSL_get0_alpn_selected((SSL *)SOCK(c)->tls, &p, &n);
+    if (STREAM(c)->tls && SOCK(c)->kind == 1) SSL_get0_alpn_selected((SSL *)STREAM(c)->tls, &p, &n);
     V result = fwp_str_new(p ? (const char *)p : "", p ? n : 0);
     /* Protocol bytes live in SSL storage, outside the collector's heap. */
     FWP_KEEP_ALIVE(c);
     return result;
 }
 
-static V fwp_p_tls_secure(V c) { return SOCK(c)->tls && SOCK(c)->kind == 1 ? FWP_TRUE : FWP_FALSE; }
+static V fwp_p_tls_secure(V c) { return STREAM(c)->tls && SOCK(c)->kind == 1 ? FWP_TRUE : FWP_FALSE; }
 
 static void fwp_tls_subject_free(void *p) { free(p); }
 
 static V fwp_p_tls_peer_subject(V c) {
-    if (!SOCK(c)->tls || SOCK(c)->kind != 1) return FWP_NONE;
-    char *s = fwp_tls_peer_subject((SSL *)SOCK(c)->tls);
+    if (!STREAM(c)->tls || SOCK(c)->kind != 1) return FWP_NONE;
+    char *s = fwp_tls_peer_subject((SSL *)STREAM(c)->tls);
     if (!s) return FWP_NONE;
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tls_subject_free, s);
-    V v = fwp_cstr(s);
+    V v = fwp_rc_fresh(fwp_cstr(s));
     fwp_cleanup_pop(&cleanup);
     fwp_tls_subject_free(s);
-    return fwp_some(v);
+    fwp_value_owner value = {v, fwp_rc_free_obj};
+    fwp_cleanup_push(&cleanup, fwp_value_release, &value);
+    V result = fwp_rc_fresh(fwp_some(v));
+    fwp_cleanup_pop(&cleanup);
+    return result;
 }
