@@ -234,8 +234,14 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         let needle = "    free((void *)(uintptr_t)value);";
         assert_eq!(instrumented.matches(needle).count(), 1);
         let omitted = instrumented.replace(needle, "    (void)value;");
+        let missing_shutdown = instrumented.replace("if (atexit(fwp_tape_finish))", "if (0)");
+        let mut candidates = vec![(&instrumented, 0), (&omitted, 244)];
+        if name.contains("derivatives") {
+            assert_ne!(missing_shutdown, instrumented);
+            candidates.push((&missing_shutdown, 244));
+        }
         for opt in ["-O1", "-O2"] {
-            for (candidate, expected) in [(&instrumented, 0), (&omitted, 244)] {
+            for &(candidate, expected) in &candidates {
                 let binary = dir.join("program.wasm");
                 fwp::cgen::compile_for(
                     &format!(
@@ -268,13 +274,24 @@ fn measured_program(code: &str) -> String {
     let finish = start + code[start..].find("\n}\n").unwrap() + 3;
     let thread = &code[start..finish];
     let begin = "    fwp_init_consts();\n";
-    let end = "    fwp_cl_finish();\n";
     assert_eq!(thread.matches(begin).count(), 1);
-    assert_eq!(thread.matches(end).count(), 1);
-    let measured = thread.replace(begin, &format!("{begin}    size_t base_live = wasm_arc_live, base_bytes = wasm_arc_bytes, base_counts = fwp_wasm_counts_live;\n"))
-        .replace(end, &format!("{end}    if (wasm_arc_live > base_live || wasm_arc_bytes > base_bytes || fwp_wasm_counts_live > base_counts) {{ fprintf(stderr, \"unreleased: %zu/%zu allocations, %zu/%zu bytes, %zu/%zu counts\\n\", wasm_arc_live, base_live, wasm_arc_bytes, base_bytes, fwp_wasm_counts_live, base_counts); exit(244); }}\n"));
+    // Register before program work. Later runtime atexit hooks, including the
+    // bounded autodiff workspace, must run first without test-forced cleanup.
+    let observer = r#"
+static size_t wasm_arc_base_live, wasm_arc_base_bytes, wasm_arc_base_counts;
+static void wasm_arc_check_shutdown(void) {
+    if (wasm_arc_live > wasm_arc_base_live || wasm_arc_bytes > wasm_arc_base_bytes ||
+        fwp_wasm_counts_live > wasm_arc_base_counts) {
+        fprintf(stderr, "unreleased: %zu/%zu allocations, %zu/%zu bytes, %zu/%zu counts\n",
+            wasm_arc_live, wasm_arc_base_live, wasm_arc_bytes, wasm_arc_base_bytes,
+            fwp_wasm_counts_live, wasm_arc_base_counts);
+        _Exit(244);
+    }
+}
+"#;
+    let measured = thread.replace(begin, &format!("{begin}    wasm_arc_base_live = wasm_arc_live; wasm_arc_base_bytes = wasm_arc_bytes; wasm_arc_base_counts = fwp_wasm_counts_live;\n    if (atexit(wasm_arc_check_shutdown)) _Exit(245);\n"));
     let mut result = code.to_owned();
-    result.replace_range(start..finish, &measured);
+    result.replace_range(start..finish, &format!("{observer}\n{measured}"));
     result
 }
 

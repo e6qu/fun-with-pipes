@@ -5,16 +5,15 @@ branch `checked-wasi-ownership`, anchored at `e5e05748`. Transfer only changes
 after that anchor; its parents belong to the preceding zip/list/text delivery.
 Do not replay them.
 
-The only open delivery is [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149)
-at `5748f749`, with exact-head production
-[38841142126](https://github.com/e6qu/fun-with-pipes/actions/runs/38841142126)
-still running and documentation passed. The root worktree owns that handoff.
-The following substantial batch is prepared in `/private/tmp/fwp-zip-map`, with
-combined native/WASI checks
-[38847420495](https://github.com/e6qu/fun-with-pipes/actions/runs/38847420495)
-at `5c222c4b`. Its two actual-WASI count jobs and Mac ARM native job pass; other
-native jobs are running. This preparation has no PR and must not displace either
-delivery. Their own handoffs preserve detailed evidence and remaining failures.
+[PR #149](https://github.com/e6qu/fun-with-pipes/pull/149) is accepted and merged as
+`58ed740c`. The only open delivery is now
+[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150), at
+`7a7b40e1878ea062f64eceded6ae029b4124f976`. It combines zip elimination, list cleanup
+and text-file ownership. Both Windows fixture repairs pass in `38850334050`,
+alongside the earlier four Unix and two actual-WASI focused checks. Final production
+[38851567232](https://github.com/e6qu/fun-with-pipes/actions/runs/38851567232) and
+[docs 38851565415](https://github.com/e6qu/fun-with-pipes/actions/runs/38851565415)
+are pending. The root worktree owns that handoff. This WASI preparation has no PR.
 
 Standing authorization covers fixes, publication and squash merge after all nine
 production jobs plus documentation pass for the exact final head. Commit subjects
@@ -36,11 +35,10 @@ without raising limits; full builds/gates and measurements run on GitHub.
 | 6 | In progress | Retain comparable timing and physical storage evidence |
 | 7 | In progress | Extend maintained-program checks across deployment boundaries |
 
-Next: prepare checked ARC for synchronous WASI main/function/CLI entry points,
-keeping unproved browser re-entry, libraries and asynchronous host fibers
-explicitly rejected. First review the non-tracing allocator's count removal and
-startup policy, then prove physical reclamation and semantic agreement. Continue
-monitoring the two preceding deliveries; only one PR may be active.
+Next: validate physical storage after ordinary shutdown on both actual WASI hosts.
+The current observer repair includes controls for missing object frees and omitted
+autodiff shutdown. Fix any failures before describing WASI ARC as supported.
+Monitor #150 concurrently; only one delivery PR may be active.
 
 ## Scope and acceptance before implementation
 
@@ -121,3 +119,19 @@ checks. Its queued rerun `38850647488` is superseded before acceptance by this
 expanded fixture set: caught file/callback errors and nested derivatives also
 need physical storage and semantic agreement. Preserve failed-run evidence;
 never treat the earlier partial checks as whole-program acceptance.
+
+Run `38850844450` at `a4869b99` passes allocator/rejection, function/CLI entries and
+module symbol checks on both actual WASI architectures. Repeated lists, closures,
+UTF-8 reads and caught file/callback errors pass their physical ledgers before the
+nested-derivative case reports four live allocations / 2,248 bytes and zero
+counts. The observer ran before the existing `atexit(fwp_tape_finish)` hook,
+which releases the bounded cache and registry. That result is not evidence of a
+persistent leak; the test must measure the actual declared shutdown boundary.
+
+The observer is now registered before program work so subsequent runtime shutdown
+hooks run first, without test-forced cleanup. A new negative control omits tape
+shutdown and must fail. Local accepted-compiler edited-C nested derivatives pass
+at O1/O2; missing object free and missing tape shutdown both fail with 244 (5.00 s).
+Formatting passes (1.09 s), harness compilation passes (0.37 s). Actual WASI
+acceptance of this correction is pending. Superseded `38850647488` is confirmed
+canceled. No full compiler build ran locally.
