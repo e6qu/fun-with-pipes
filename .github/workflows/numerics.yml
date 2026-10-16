@@ -87,7 +87,7 @@ jobs:
         if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
         env:
           FWP_CONTEXT_ARTIFACTS: context-evidence
-        run: cargo test --no-fail-fast --test process_exit_ownership --test grpc_canonical_encoding --test service_scope_ownership --test service_context_storage --test grpc_context_restore --test grpc_context_resources --test grpc_capture_resources --test grpc_packed_options --test grpc_environment_cache --test grpc_peer_completion --test http2_peer_cleanup --test library_unload --test arc_tasks --test stdlib_doc -- --nocapture
+        run: cargo test --no-fail-fast --test process_exit_ownership --test grpc_canonical_encoding --test grpc_response_encoding --test service_scope_ownership --test service_context_storage --test grpc_context_restore --test grpc_context_resources --test grpc_capture_resources --test grpc_packed_options --test grpc_environment_cache --test grpc_peer_completion --test http2_peer_cleanup --test library_unload --test arc_tasks --test stdlib_doc -- --nocapture
       - uses: actions/upload-artifact@v7
         if: always() && (inputs.suite == 'context-storage' || inputs.suite == 'context-owners')
         with:

@@ -2007,7 +2007,10 @@ static int g_run_method(g_job *j, char **msg) {
         g_msg *req = g_recv_one(j, &code, msg);
         if (!req) return code;
         h2_buf canon = {0};
+        fwp_cleanup request_canonical;
+        fwp_cleanup_push(&request_canonical, g_h2_buffer_release, &canon);
         if (!pb_decode(m->schema, m->req_node, req->d, req->n, &canon)) {
+            fwp_cleanup_pop(&request_canonical);
             h2b_free(&canon);
             free(req);
             *msg = strdup("malformed request message");
@@ -2017,10 +2020,12 @@ static int g_run_method(g_job *j, char **msg) {
         fwp_rd rd = {canon.d, canon.len, 0};
         for (int i = 0; i < m->nreq; i++)
             if (!fwp_decode(&rd, m->req[i], &args[na++])) {
+                fwp_cleanup_pop(&request_canonical);
                 h2b_free(&canon);
                 *msg = strdup("malformed request message");
                 return GRPC_INVALID_ARGUMENT;
             }
+        fwp_cleanup_pop(&request_canonical);
         h2b_free(&canon);
     } else {
         g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src);

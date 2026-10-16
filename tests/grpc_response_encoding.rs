@@ -3,7 +3,7 @@ use fwp::ir::*;
 use std::process::Command;
 
 #[test]
-fn served_response_buffers_release_on_encode_trap_and_cancelled_send() {
+fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -34,7 +34,8 @@ fn served_response_buffers_release_on_encode_trap_and_cancelled_send() {
     let mut method = generated[start..end].to_owned();
     for (before, after) in [
         ("g_recv_one(j, &code, msg)", "observed_request()"),
-        ("pb_decode(m->schema, m->req_node, req->d, req->n, &canon)", "1"),
+        ("pb_decode(m->schema, m->req_node, req->d, req->n, &canon)", "observed_request_decode(&canon)"),
+        ("fwp_decode(&rd, m->req[i], &args[na++])", "observed_argument(&rd, m->req[i], &args[na++])"),
         ("g_apply_user(fwp_pap((uint32_t)m->fn, 0, 0), (uint32_t)na, args, &v, &err, &ed)", "observed_user(&v,&err,&ed)"),
         ("g_iter_next(&next, &x)", "observed_next(&next, &x)"),
         ("fwp_encode(&canon, err, m->error);", "fwp_encode(&canon, err, m->error); watched_canonical=canon.d; if(stage==3)fwp_trap(\"canonical trap\");"),
@@ -54,22 +55,27 @@ fn served_response_buffers_release_on_encode_trap_and_cancelled_send() {
         1,
     );
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <stdint.h>
-static int stage,kind,response_frees,canonical_frees,wire_frees,cancelled,result;
-static void *watched_response,*watched_canonical,*watched_wire;
+static int stage,kind,response_frees,canonical_frees,wire_frees,cancelled,result,request_frees;
+static void *watched_response,*watched_canonical,*watched_wire,*watched_request;
 static void observed_free(void *);
 static void no_release(void *);
 static int observed_next(uintptr_t *,uintptr_t *);
 #define free(p) observed_free(p)
 #define observed_request() ((g_msg*)calloc(1,sizeof(g_msg)))
+#define observed_request_decode(buffer_) (stage==4?(h2b_put(buffer_,"request",7),watched_request=(buffer_)->d,1):1)
+#define observed_argument(reader_,type_,out_) (stage==4?(fwp_trap("request decode trap"),0):fwp_decode(reader_,type_,out_))
 #define observed_user(value_,error_,descriptor_) (*(value_)=0,*(error_)=42,*(descriptor_)=m->error,kind==2?1:0)
 #define observed_response(buffer_) do { h2b_put(buffer_,"response",8); watched_response=(buffer_)->d; if(stage==2)fwp_trap("response trap"); } while(0)
 #define observed_transcode(data_,length_,output_) (h2b_put(output_,data_,length_),watched_response=(output_)->d,stage==2?(fwp_trap("response trap"),0):1)
 "#;
     let fixture = r#"
 #undef free
-static void observed_free(void *p){if(p&&p==watched_response){response_frees++;watched_response=0;}if(p&&p==watched_canonical){canonical_frees++;watched_canonical=0;}if(p&&p==watched_wire){wire_frees++;watched_wire=0;}free(p);}
+static void observed_free(void *p){if(p&&p==watched_request){request_frees++;watched_request=0;}if(p&&p==watched_response){response_frees++;watched_response=0;}if(p&&p==watched_canonical){canonical_frees++;watched_canonical=0;}if(p&&p==watched_wire){wire_frees++;watched_wire=0;}free(p);}
 static void no_release(void *p){(void)p;}
 static int observed_next(uintptr_t *cur,uintptr_t *value){if(*cur)return 0;*cur=1;*value=42;return 1;}
 static void serve(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf trapped;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(trapped)){fwp_cur->trap_jb=&trapped;fwp_cur->trap_cleanup=fwp_cleanups;char *text=0;result=g_run_method(arg,&text);if(text)_Exit(7);}fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
@@ -77,18 +83,22 @@ int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);
  const fwp_desc descriptor={.kind=K_I64,.name="I64"};
- for(kind=0;kind<3;kind++)for(stage=0;stage<(kind==2?4:3);stage++){
+ for(kind=0;kind<3;kind++)for(stage=0;stage<5;stage++){
+  if(stage==3&&kind!=2)continue;
+  watched_request=0;request_frees=0;
   watched_response=watched_canonical=watched_wire=0;response_frees=canonical_frees=wire_frees=cancelled=0;result=-2;c->out.len=0;c->conn_window=stage==1?0:65535;
-  g_stream *s=g_stream_new(c,(uint32_t)(1+2*(kind*4+stage)));s->sent_headers=1;
-  fwp_rpc method={0};method.output=kind==1?1:0;method.resp=&descriptor;method.error=kind==2?&descriptor:0;
+  g_stream *s=g_stream_new(c,(uint32_t)(1+2*(kind*5+stage)));s->sent_headers=1;
+  const fwp_desc *request_fields[]={&descriptor};
+  fwp_rpc method={0};method.nreq=stage==4?1:0;method.req=request_fields;method.output=kind==1?1:0;method.resp=&descriptor;method.error=kind==2?&descriptor:0;
   g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;g_job job={0};job.c=c;job.s=s;job.srv=&srv;job.route=&route;strcpy(job.what,"probe");
   fwp_task *t=fwp_spawn_task(0,serve,&job,0,0);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_response||!watched_wire||response_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
-  if(!t->done||response_frees!=(stage==3?0:1)||canonical_frees!=(kind==2?1:0)||wire_frees!=(stage<2?1:0)||watched_response||watched_canonical||watched_wire||cancelled!=(stage==1)||fwp_cleanups)return 1;
+  if(!t->done||response_frees!=(stage>=3?0:1)||canonical_frees!=(kind==2&&stage!=4?1:0)||wire_frees!=(stage<2?1:0)||watched_response||watched_canonical||watched_wire||cancelled!=(stage==1)||fwp_cleanups||watched_request||request_frees!=(stage==4?1:0))return 1;
   if(stage==0){if(result!=-1)return 3;int found=0;const unsigned char errorbytes[]={1,42,0,0,0,0,0,0,0};const void *expected=kind==2?(const void*)errorbytes:(const void*)"response";size_t n=kind==2?9:8;for(size_t i=0;i+n<=c->out.len;i++)if(!memcmp(c->out.d+i,expected,n))found=1;if(!found)return 4;}
   if(stage==2&&strcmp(fwp_trap_msg,"response trap"))return 5;
   if(stage==3&&strcmp(fwp_trap_msg,"canonical trap"))return 6;
+  if(stage==4&&strcmp(fwp_trap_msg,"request decode trap"))return 8;
   FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
  }
  FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
@@ -109,8 +119,15 @@ int main(void){
         "fwp_cleanup_push(&error_canonical, no_release, &canon);",
         1,
     );
+    let request = "fwp_cleanup_push(&request_canonical, g_h2_buffer_release, &canon);";
+    assert_eq!(generated.matches(request).count(), 1);
+    let request_omitted = generated.replacen(
+        request,
+        "fwp_cleanup_push(&request_canonical, no_release, &canon);",
+        1,
+    );
     for opt in ["-O1", "-O2"] {
-        for broken in [&omitted, &canonical_omitted] {
+        for broken in [&omitted, &canonical_omitted, &request_omitted] {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
             let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
             assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");

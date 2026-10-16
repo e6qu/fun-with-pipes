@@ -1,11 +1,13 @@
 # Session handoff
 
 Updated 2026-10-16. This branch prepares the next combined service-memory PR.
-The only delivery PR is #153, repaired at `a0af12d9`; its authoritative handoff
+The only delivery PR is #153, repaired at `1e765000`; its authoritative handoff
 is `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
-It requires all nine production jobs `38946985320` and documentation
-`38946985234` on that exact head. Earlier production found a stale decoder
-instrumentation hook; the repair changes the test, not runtime behavior.
+It is temporarily draft while focused decoder run `38952492611` verifies a
+second instrumentation repair. Failed production `38946985320` was canceled;
+its marker matched two buffer implementations. The new repair targets HTTP/2
+specifically. Documentation `38952500689` covers the new head. All nine final
+production jobs must run after focused checks pass; skipped draft CI is not acceptance.
 Do not merge until every final-head gate passes. Use one squash subject, at most
 80 characters, an empty body, no trailers and no attribution.
 
@@ -24,6 +26,13 @@ both Linux architectures at callback source `24caa70b`, before exit tests.
 Retain final allocation,
 layout, compiler/CPU and binary evidence before claiming verified support.
 Do not broaden ARC admission beyond the tested ownership contracts.
+`/private/tmp/fwp-retain-context-final.py` prepares the final report only after
+all six native jobs pass. Supply run `38951742782`, full source
+`4656043f087594931a5cc9644b6053968f8e3c7e`, an artifact directory and the report
+output path; run it through the local guard. It checks source, jobs, rows,
+allocation slopes, actual formats and capture-failure controls before writing.
+The next PR description draft is `/private/tmp/fwp-context-pr-body.md`; replace
+its pending validation paragraph with actual final-head results before acceptance.
 
 ## Implemented, awaiting combined native verification
 
@@ -132,6 +141,11 @@ deliberately omitted cleanup must fail. O1/O2, GC stress/verification and reuse
 checks run on CI, with permanent Windows coverage in the existing canonical
 serialization target. This does not establish ownership of whole service streams.
 Formatting passes (1.20s); native results are pending.
+A follow-up applies the same protection while decoding a served request. The
+existing served-buffer test now traps during request value decoding and verifies
+that omitting this cleanup fails, alongside response encoding and send-cancel
+controls. Formatting passes (1.34s). This follow-up is newer than native run
+`38951742782` and requires final-head native verification.
 
 ## CI scheduling follow-up
 
