@@ -196,3 +196,19 @@ New actual-WASI cases cover checked I128/U128 result trees and F128 results;
 restoring the old absent-slot return must reproduce the physical leak (244).
 The assertion remains unchanged. Diagnostic run `38856960546` is superseded by
 the repair before acceptance; the full runner gate must still validate it.
+
+Mac ARM64 costs in `38856285939` at `d1ae668f` now pass: small managed requests
+fall from 12,309 to 4,114, retains 12,288 to 4,096 and peak charged bytes 295,112
+to 656. Large requests fall 7,173 to 5,122 and retains 3,072 to 1,024, while peak
+stays 163,848. Generated code still builds one tuple per hash and retains its
+array field; the runtime hash does not retain that tuple, but escape analysis
+has no explicit nonescaping contract for it yet. Do not infer that every borrowed
+argument is nonescaping. This is a measured next candidate, not an implemented
+ownership optimization.
+
+Absolute CPU times differ substantially between runner invocations, including
+C/Rust. Before claiming a causal timing improvement, `hash-repeat` reuses verified
+binaries from baseline `38854304399` and after run `38856285939` together on each
+host, with twelve balanced samples, C/Rust references, and separate normal/off
+profiles that must reproduce original counts. Its script passes a guarded syntax
+check (0.14 s). Dispatch only when every after-run artifact exists.
