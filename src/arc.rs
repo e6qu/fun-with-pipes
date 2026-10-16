@@ -1,4 +1,4 @@
-//! Eligibility for explicitly requested native reference-counted execution.
+//! Eligibility for explicitly requested reference-counted execution.
 //! Mutable runtime graphs and unmodeled external owners require tracing.
 use crate::ir::{Body, Program, TypeShape, MT};
 use crate::ownership::{Argument, Callback, ResultOwnership};

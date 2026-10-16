@@ -574,14 +574,74 @@ static void fwp_encode(fwp_buf *b, V v, const fwp_desc *d) {
     }
 }
 
-static uint64_t fwp_hash(V v, const fwp_desc *d) {
-    fwp_buf b = {0};
-    fwp_encode(&b, v, d);
-    uint64_t h = 0xcbf29ce484222325ULL;
-    for (size_t i = 0; i < b.len; i++) {
-        h ^= (unsigned char)b.d[i];
+/* Hash the canonical encoding as a stream, without a temporary byte buffer.
+ * Keep this traversal in agreement with fwp_encode and src/proto.rs. */
+static uint64_t fwp_hash_le(uint64_t h, uint64_t x, int n) {
+    for (int i = 0; i < n; i++) {
+        h ^= (x >> (8 * i)) & 0xff;
         h *= 0x100000001b3ULL;
     }
-    free(b.d);
     return h;
+}
+static uint64_t fwp_hash_leb128(uint64_t h, uint64_t x) {
+    for (;;) {
+        unsigned char c = x & 0x7f;
+        x >>= 7;
+        h = fwp_hash_le(h, c | (x ? 0x80 : 0), 1);
+        if (!x) return h;
+    }
+}
+static uint64_t fwp_hash_value(uint64_t h, V v, const fwp_desc *d) {
+    switch (d->kind) {
+    case K_I8: case K_U8: case K_TRIT: return fwp_hash_le(h, v, 1);
+    case K_I16: case K_U16: case K_F16: case K_BF16: return fwp_hash_le(h, v, 2);
+    case K_I32: case K_U32: case K_F32: return fwp_hash_le(h, v, 4);
+    case K_I64: case K_U64: case K_F64: case K_TINT: return fwp_hash_le(h, v, 8);
+#ifdef FWP_EXACT_FLOAT
+    case K_F128: {
+        float128_t x = fwp_f128(v);
+        return fwp_hash_le(fwp_hash_le(h, x.v[0], 8), x.v[1], 8);
+    }
+#endif
+    case K_I128: case K_U128: {
+        u128 x = d->kind == K_I128 ? (u128)fwp_i128(v) : fwp_u128(v);
+        return fwp_hash_le(fwp_hash_le(h, (uint64_t)x, 8), (uint64_t)(x >> 64), 8);
+    }
+    case K_STR: case K_BYTES:
+        h = fwp_hash_leb128(h, STR(v)->len);
+        for (uint64_t i = 0; i < STR(v)->len; i++) {
+            h ^= (unsigned char)STR(v)->d[i]; h *= 0x100000001b3ULL;
+        }
+        return h;
+    case K_LIST:
+        h = fwp_hash_leb128(h, fwp_list_len(v));
+        while (v) { h = fwp_hash_value(h, OBJ(v)->f[0], d->elem); v = OBJ(v)->f[1]; }
+        return h;
+    case K_ARRAY:
+        h = fwp_hash_leb128(h, fwp_array_len(v));
+        for (uint64_t i = 0; i < fwp_array_len(v); i++)
+            h = fwp_hash_value(h, fwp_array_load(v, i, d->elem), d->elem);
+        return h;
+    case K_MAP: case K_SET:
+        h = fwp_hash_leb128(h, MAP(v)->len);
+        for (uint64_t i = 0; i < MAP(v)->len; i++) {
+            h = fwp_hash_value(h, MAP(v)->d[2 * i], d->elem);
+            if (d->kind == K_MAP) h = fwp_hash_value(h, MAP(v)->d[2 * i + 1], d->elem2);
+        }
+        return h;
+    case K_RECORD:
+        for (int i = 0; i < d->n; i++) h = fwp_hash_value(h, OBJ(v)->f[i], d->fields[i]);
+        return h;
+    case K_ADT: {
+        uint32_t tag = fwp_tag(v);
+        h = fwp_hash_leb128(h, tag);
+        for (int i = 0; i < d->arity[tag]; i++)
+            h = fwp_hash_value(h, OBJ(v)->f[i], d->vfields[tag][i]);
+        return h;
+    }
+    default: return h;
+    }
+}
+static uint64_t fwp_hash(V v, const fwp_desc *d) {
+    return fwp_hash_value(0xcbf29ce484222325ULL, v, d);
 }

@@ -5,18 +5,18 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs]
         default: numerical
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows'
+    if: inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
-        runner: ${{ fromJSON(inputs.suite == 'zip-windows' && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
+        runner: ${{ fromJSON((inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
@@ -40,8 +40,19 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - if: inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays' && inputs.suite != 'zip-maps' && inputs.suite != 'zip-windows'
+      - if: inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays' && inputs.suite != 'zip-maps' && inputs.suite != 'zip-windows' && inputs.suite != 'hash' && inputs.suite != 'hash-windows'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
+      - name: Streaming hash ownership and canonical protocol
+        if: inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+        env:
+          FWP_HASH_ARTIFACTS: hash-evidence
+        run: cargo test --no-fail-fast --test hash_ownership --test protocol --test arc_execution
+      - uses: actions/upload-artifact@v7
+        if: always() && (inputs.suite == 'hash' || inputs.suite == 'hash-windows')
+        with:
+          name: hash-${{ matrix.runner }}
+          path: hash-evidence/
+          if-no-files-found: ignore
       - name: Field movement and resource lifetime regressions
         if: inputs.suite == 'fields'
         run: cargo test --no-fail-fast --test clock_ownership --test directory_report --test working_directory --test arc_execution --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test borrowed_callbacks --test general_record_update_ownership
@@ -85,7 +96,7 @@ jobs:
         with:
           node-version: 24
       - name: WASI toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Positive 64-bit counts on the actual 32-bit target
         run: cargo test --test wasm positive_64_bit_counts_saturate_before_wasi_allocation_and_slice_bounds -- --exact
   array_borrow:
@@ -439,7 +450,7 @@ jobs:
           name: ${{ inputs.suite }}-${{ matrix.runner }}
           path: comparison-repeat/
   ad_metadata:
-    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites' || inputs.suite == 'mapped-array-costs' || inputs.suite == 'zip-map-costs'
+    if: inputs.suite == 'ad-metadata' || inputs.suite == 'ad-layout' || inputs.suite == 'ad-sites' || inputs.suite == 'mapped-array-costs' || inputs.suite == 'zip-map-costs' || inputs.suite == 'hash-costs'
     strategy:
       fail-fast: false
       matrix:
@@ -455,6 +466,9 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bin fwp
+      - name: Compare equivalent hashing in fwp C and Rust
+        if: inputs.suite == 'hash-costs'
+        run: python3 scripts/measure-hashing.py --output metadata-evidence
       - name: Compare numeric zip/map allocation and timing costs
         if: inputs.suite == 'zip-map-costs'
         run: python3 scripts/measure-zip-maps.py --output metadata-evidence
@@ -465,7 +479,7 @@ jobs:
         if: inputs.suite == 'ad-sites'
         run: python3 scripts/measure-ad-allocation-sites.py --output metadata-evidence
       - name: Repeat paired metadata costs with sustained derivatives
-        if: inputs.suite != 'ad-sites' && inputs.suite != 'mapped-array-costs' && inputs.suite != 'zip-map-costs'
+        if: inputs.suite != 'ad-sites' && inputs.suite != 'mapped-array-costs' && inputs.suite != 'zip-map-costs' && inputs.suite != 'hash-costs'
         run: python3 scripts/measure-ad-metadata.py --comparison "${{ inputs.suite == 'ad-layout' && 'interleaved' || 'separate' }}" --output metadata-evidence
       - uses: actions/upload-artifact@v7
         if: always()
@@ -549,7 +563,7 @@ jobs:
           node-version: 24
       - name: WebAssembly toolchain
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: OpenSSL 3
         if: runner.os == 'macOS'
         run: |
@@ -742,7 +756,7 @@ jobs:
           path: iteration-evidence/
 
   wasm_ownership:
-    if: inputs.suite == 'wasm'
+    if: inputs.suite == 'wasm' || inputs.suite == 'wasi-arc'
     strategy:
       fail-fast: false
       matrix:
@@ -754,6 +768,8 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_REQUIRE_WASM_RESOURCE_COUNTS: 1
+      FWP_REQUIRE_WASI_ARC: 1
+      FWP_WASI_ARC_ARTIFACTS: wasi-arc-evidence
       FWP_REQUIRE_WASI_GOLDENS: 1
       FWP_REQUIRE_FLOAT_WASI: 1
     steps:
@@ -765,14 +781,25 @@ jobs:
         with:
           node-version: 24
       - name: WASI toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+      - name: Checked WASI ownership and physical storage
+        if: inputs.suite == 'wasi-arc'
+        run: cargo test --no-fail-fast --test wasm_arc --test arc_execution --test wasm_resource_counts
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'wasi-arc'
+        with:
+          name: wasi-arc-${{ matrix.runner }}
+          path: wasi-arc-evidence/
+          if-no-files-found: ignore
       - name: WebAssembly compiler and exact Rust arithmetic
+        if: inputs.suite == 'wasm'
         env:
           CARGO_TARGET_WASM32_WASIP1_RUNNER: node tests/wasm/wasi-run.mjs
         run: |
           cargo test --lib --target wasm32-wasip1 softfloat:: -- --test-threads=1
       - name: Physical reclamation and resource controls
+        if: inputs.suite == 'wasm'
         run: cargo test --test wasm_resource_counts --test softfloat_core --test float_math --test array_size_limits
       - name: Actual WASI semantic agreement
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.suite == 'wasm' }}
         run: cargo test --no-fail-fast --test wasm --test browser --test exec_invocation_ownership
