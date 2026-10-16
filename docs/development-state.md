@@ -5,15 +5,17 @@ second delivery PR. [PLAN.md](../PLAN.md) retains the seven project work areas.
 
 ## Delivery chain
 
-PR #151 remains the only open delivery: final `27cdc7ff`, production
-`38872161681`, docs `38872161673` passes. Require all nine production jobs before
-squash merge. Its repaired macOS assignment preserves every target and limit.
-The main workspace `owned-numerics-delivery` is prepared through `3577ba37`:
-borrowed hash fields, direct range arrays, vector ownership, direct F64 storage,
-proved lane pipeline fusion and direct ordered dot. Combined native `38874211385`,
-WASI `38874214456` and four-host costs `38874218523` pass. The main branch now
-also prepares scalar splat reduction at `b1a34ea0`, with fresh focused gates. Preserve
-its full handoff when transferring or merging that batch.
+PR #151 is accepted as `3dff03b644c4922845f7c4b9f3a9673dece5ef16`, with
+identical tested tree and verified one-line message. All nine production jobs
+`38872161681` and docs `38872161673` passed at `27cdc7ff`; duplicate postmerge
+production `38884089916` is confirmed canceled.
+
+PR #152 is now the sole active delivery. Final numerical head is
+`ed936381240c57d4af45d526ac16b744405c0ca6`, with production `38884588161` and
+docs `38884587999` queued/running. The draft-only skipped run is not acceptance.
+Its main-workspace handoff is authoritative for the numerical batch. Focused
+six-native, two-WASI, four-host costs and paired timing passed; do not change
+that PR head for unrelated decoder preparation. Merge only after all final gates.
 
 This worktree `/private/tmp/fwp-owned-decoders`, branch `owned-value-decoders`,
 is based on `3577ba37`. Only its later delta belongs to the following batch.
@@ -86,8 +88,14 @@ including the neighboring Windows gate failures.
 Local byte fixture interpretation passes (0.25 s), formatting passes (1.12 s),
 and inventory passes (1.25 s): 293 contracted declarations, 50 distinct remaining
 review symbols. One new explicit macOS target raises the schedule to 224.
-Next: finish local documentation/shard checks, publish, then run fresh six-native
-and two-WASI gates. Retain failures and fix them before delivery acceptance.
+All four Linux/macOS jobs and both WASI jobs pass at `8f848fde`. Windows AMD64
+job `116910514622` now has working OpenSSL/HTTP2 curl, but native byte/web/std
+checks fail linking `clock_gettime64`: WebSocket mask seeding still called the
+POSIX clock directly. It now reuses the existing platform-aware `fwp_unix_ns`.
+The independent gzip fixture at `c849cd54` is included in the next validation.
+Next: publish the clock repair and run fresh six-native and two-WASI gates.
+Preserve the current ARM Windows dependency build until its cache is saved;
+then supersede unfinished old tests. Fix all failures before delivery acceptance.
 
 ## Current progress
 

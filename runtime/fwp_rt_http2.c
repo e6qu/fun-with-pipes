@@ -627,14 +627,12 @@ static uint64_t w_mask_state = 0;
 static uint32_t w_mask_key(void) {
     uint64_t x = w_mask_state;
     if (!x) {
-        struct timespec t;
-        clock_gettime(CLOCK_REALTIME, &t);
 #ifdef _WIN32
         uint64_t pid = (uint64_t)GetCurrentProcessId();
 #else
         uint64_t pid = (uint64_t)getpid();
 #endif
-        x = (((uint64_t)t.tv_sec * 1000000000ull + (uint64_t)t.tv_nsec) ^ (pid << 32)) | 1;
+        x = ((uint64_t)fwp_unix_ns() ^ (pid << 32)) | 1;
     }
     x ^= x << 13;
     x ^= x >> 7;
