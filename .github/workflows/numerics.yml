@@ -35,7 +35,7 @@ jobs:
         if: inputs.evidence_run == ''
       - name: Iteration outputs and failures
         if: inputs.evidence_run == ''
-        run: cargo test --test state_sequence_ownership each_preserves_aliases_effect_order_and_early_failures -- --exact --nocapture
+        run: cargo test --no-fail-fast --test state_sequence_ownership --test native_allocator -- --nocapture
       - name: Retrieve retained failing executable
         if: inputs.evidence_run != ''
         env:

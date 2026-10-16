@@ -10,19 +10,20 @@ Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparatio
 Preparation base: `ac3060d1`. The latest test repair limits diagnostics to
 modes that support them; it does not change the compiler or library.
 
-Next: publish and verify the full entry-frame scan bound. Diagnostic run
-`38967186882` at `d7493bed` proves GC clears a live callback while its parent
-closure is allocated. The exact ARM64 binary stores that callback at `x29+24`,
-above the frame pointer supplied as the old scan limit. Generated Linux/macOS
-entry code now supplies `__builtin_dwarf_cfa()`, the compiler's complete frame
-boundary. Windows already uses its OS stack bound; WebAssembly does not scan.
-The fix adds no runtime wrapper or retention workaround. First rerun the narrow
-ARM64 test, then all six native hosts and affected WebAssembly checks. Include
-native allocator/collector regression tests. Remove temporary `iteration-traps`
-CI/GDB diagnostics once the corrected binary passes and its bound is inspected.
-Artifacts are in `/private/tmp/fwp-each-trap/38965685165` and `38967186882`.
-Guarded formatting passes (1.10s). Inspection completed after one automatic
-approval-review timeout; no native compilation ran locally.
+Next: publish and verify OS-provided native stack bounds on Linux ARM64 before
+restarting all six hosts. The first fix (`16643edf`, narrow run `38967903478`)
+failed: Clang emitted the same incomplete bound for `__builtin_dwarf_cfa()`.
+The replacement gets the full thread-stack limit through pthread APIs on Linux
+and macOS, matching Windows' existing OS-bound approach. It fails explicitly if
+the bound cannot be obtained. ARC and WebAssembly do not gain stack scanning.
+Include the existing native allocator/collector regression tests in the narrow run.
+
+Watchpoint run `38967186882` at `d7493bed` proves GC clears a live callback while
+its parent closure is allocated. The ARM64 binary stores it at `x29+24`, above
+the old scan limit. Artifacts are under `/private/tmp/fwp-each-trap/38965685165`,
+`38967186882` and `38967903478`. Remove temporary `iteration-traps` CI/GDB
+diagnostics after the fix passes and its generated binary is inspected. No
+native compilation ran locally; one read-only approval-review timeout was resolved.
 
 Native run `38964567808` at `d29d1c5b` passes five hosts; only Linux ARM64 fails. Linux ARM64's allocation control passes despite its
 trap failure. `each` still uses runtime callback dispatch in the recorded counting
